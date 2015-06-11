@@ -1,6 +1,10 @@
 *.class
 *.log
 
+# npm/bower specific
+node_modules/
+bower_components/
+
 # sbt specific
 .sbtopts
 .cache/
