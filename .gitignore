@@ -1,25 +1,14 @@
-*.class
 *.log
 
 # npm/bower specific
 node_modules/
 bower_components/
 
-# sbt specific
-.sbtopts
-.cache/
-.history/
-.lib/
-dist/*
+# leiningen specific
+.lein-failures
+.lein-repl-history
+figwheel_server.log
 target/
-lib_managed/
-src_managed/
-project/boot/
-project/plugins/project/
-
-# Scala-IDE specific
-.scala_dependencies
-.worksheet
 
 ### JetBrains template
 # Covers JetBrains IDEs: IntelliJ, RubyMine, PhpStorm, AppCode, PyCharm
@@ -60,13 +49,5 @@ project/plugins/project/
 # IntelliJ
 out/
 
-# mpeltonen/sbt-idea plugin
-.idea_modules/
-
 # JIRA plugin
 atlassian-ide-plugin.xml
-
-# Crashlytics plugin (for Android Studio and IntelliJ)
-com_crashlytics_export_strings.xml
-crashlytics.properties
-crashlytics-build.properties
