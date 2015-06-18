@@ -8,8 +8,9 @@
   (react/create-class
    {:render
     (fn []
-      [:div {}
-        "Hello World!"])}))
+      [:div {:style {:padding "1em"}}
+       [:div {} [:img {:src "broad_logo.png" :style {:height 36}}]]
+        [:div {:style {:padding-top "1em"}} "Hello World!"]])}))
 
 
 (defn ^:export render [element]
