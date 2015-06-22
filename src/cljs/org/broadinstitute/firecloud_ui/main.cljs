@@ -48,7 +48,7 @@
     :render
     (fn [{:keys [state]}]
       [:div {:style {:padding "1em"}}
-        [:div {} [:img {:src "broad_logo.png" :style {:height 36}}]]
+        [:div {} [:img {:src "assets/broad_logo.png" :style {:height 36}}]]
 
         (cond
           (:is-logged-in? @state) [LoggedIn]
@@ -61,6 +61,19 @@
       (session/on-log-out (fn [] (swap! state assoc :is-logged-in? false))))
     }))
 
-(defn ^:export render [element]
-  (react/render (react/create-element App) element))
 
+(defn- render-without-init [element]
+  (react/render (react/create-element App) element nil goog.DEBUG))
+
+
+(defonce dev-element (atom nil))
+
+
+(defn ^:export render [element]
+  (when goog.DEBUG
+    (reset! dev-element element))
+  (render-without-init element))
+
+
+(defn dev-reload [figwheel-data]
+  (render-without-init @dev-element))
