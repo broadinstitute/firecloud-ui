@@ -13,11 +13,11 @@
       }
     </style>
     <script src="https://apis.google.com/js/platform.js" async defer></script>
-    <script src="../../target/cljsbuild-compiler-0/goog/base.js"></script>
+    <script src="build/goog/base.js"></script>
   </head>
   <body>
     <div id="contentRoot"></div>
-    <script src="../../target/cljsbuild-main.js"></script>
+    <script src="compiled.js"></script>
     <script>goog.require('org.broadinstitute.firecloud_ui.main');</script>
     <script>
       var app = org.broadinstitute.firecloud_ui.main.render(document.getElementById('contentRoot'));
