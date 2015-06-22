@@ -6,10 +6,14 @@
     <meta name="google-signin-scope" content="profile email">
     <meta name="google-signin-client_id" content="806222273987-2ntvt4hnfsikqmhhc18l64vheh4cj34q.apps.googleusercontent.com">
     <title>FireCloud | Broad Institute</title>
+    <link href='http://fonts.googleapis.com/css?family=Roboto:400,500,700' rel='stylesheet' type='text/css'>
     <style>
       body {
-        font-family: "Helvetica Neue", Helvetica, sans-serif;
         margin: 0;
+        font-family: 'Roboto', sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-font-smoothing: antialiased;
+        -o-font-smoothing: antialiased;
       }
     </style>
     <script src="https://apis.google.com/js/platform.js" async defer></script>
