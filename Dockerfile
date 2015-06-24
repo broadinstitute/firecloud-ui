@@ -3,4 +3,5 @@ FROM httpd:2.4
 #RUN mkdir /usr/local/apache2/htdocs/target
 #RUN mkdir /usr/local/apache2/htdocs/src
 COPY target/ /usr/local/apache2/htdocs/
+COPY src/static/assets/ /usr/local/apache2/htdocs/assets/
 #COPY src/ /usr/local/apache2/htdocs/src
