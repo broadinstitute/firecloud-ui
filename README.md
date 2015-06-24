@@ -45,3 +45,12 @@ Run the Leiningen task to run tests:
 ```
 lein test
 ```
+
+## Create a Release
+
+Build in release mode and remove unnecessary build artifacts:
+```
+./script/release/build-release.sh
+```
+
+At this point, the `target` directory represents the root directory that should be served from a static web server.

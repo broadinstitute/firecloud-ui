@@ -2,8 +2,5 @@
 set -euo pipefail
 IFS=$'\n\t'
 
-./script/common/clean-build-dir.sh
-./script/common/create-index-html.sh dev
-./script/common/symlink-assets.sh
+./script/common/build.sh once
 
-lein cljsbuild once
