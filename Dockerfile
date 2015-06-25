@@ -2,7 +2,7 @@ FROM centos:7
 
 RUN curl https://raw.githubusercontent.com/technomancy/leiningen/stable/bin/lein > /usr/bin/lein
 RUN chmod 755 /usr/bin/lein
-RUN yum -y install java-1.8.0-openjdk php-cli && yum clean all
+RUN yum -y install java-1.8.0-openjdk php-cli ruby && yum clean all
 
 EXPOSE 8000
 
