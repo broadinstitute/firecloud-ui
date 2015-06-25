@@ -76,7 +76,17 @@
      [:div {}
       [:div {:style {:padding "50px 25px"}}
        [:div {:style {:marginBottom "2em"}} (logo)]
-       [:div {:className "g-signin2" :data-onsuccess "onSignIn" :data-theme "dark"}]]])})
+       [:div {:className "g-signin2" :data-onsuccess "onSignIn" :data-theme "dark"}]
+       [:div {:style {:paddingTop "25px" :fontSize ".75em"}}
+        [:p {:style {:fontWeight "bold"}} "Warning"]
+        [:p {} "This is a U.S. Government computer system, which may be accessed and used only for authorized Government
+          business by authorized personnel. Unauthorized access or use of this computer system may subject violators to
+          criminal, civil, and/or administrative action."]
+        [:p {} "All information on this computer system may be intercepted, recorded, read, copied, and disclosed by and
+          to authorized personnel for official purposes, including criminal investigations. Such information includes
+          sensitive data encrypted to comply with confidentiality and privacy requirements. Access or use of this computer
+          system by any person, whether authorized or unauthorized, constitutes consent to these terms. There is no right
+          of privacy in this system."]]]])})
 
 (react/defc App
   {:handleSignIn ; called from index.html on successful Google sign-in
