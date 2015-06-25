@@ -1,5 +1,5 @@
 <html>
-  <head>
+  <head profile="http://www.w3.org/2005/10/profile">
     <meta charset="utf-8">
     <meta http-equiv="Content-type" content="text/html;charset=utf-8">
     <meta name="viewport" content="initial-scale=1,width=device-width">
@@ -16,6 +16,7 @@
         -o-font-smoothing: antialiased;
       }
     </style>
+    <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
     <script src="https://apis.google.com/js/platform.js" async defer></script>
     <script src="build/goog/base.js"></script>
   </head>
