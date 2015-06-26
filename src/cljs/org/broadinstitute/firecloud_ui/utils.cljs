@@ -22,32 +22,51 @@
   (apply (.bind (aget obj (name method-name)) obj) args))
 
 
-(defn- create-canned-response [params-map]
-  (let [xhr (js-obj)]
-    (doseq [[k v] params-map]
-      (aset xhr (name k) v))
-    xhr))
-
-
 (defn ajax [arg-map]
-  (assert (:url arg-map) (str "Missing url parameter: " arg-map))
-  (assert (:on-done arg-map) (str "Missing on-done parameter: " arg-map))
-  (let [call-on-done (fn [xhr]
-                       ((:on-done arg-map) {:xhr xhr}))
-        canned-response-params (:canned-response arg-map)
-        delay-ms (:delay-ms canned-response-params)
-        canned-response-params (dissoc canned-response-params :delay-ms)
-        xhr (if canned-response-params
-              (create-canned-response canned-response-params)
-              (js/XMLHttpRequest.))
-        method (or (:method arg-map) "GET")]
-    (if canned-response-params
-      (if delay-ms
-        (js/setTimeout #(call-on-done xhr) delay-ms)
-        (call-on-done xhr))
-      (do
-        (.addEventListener xhr "loadend" #(call-on-done xhr))
-        (.open xhr method (:url arg-map))
-        (if-let [data (:data arg-map)]
-          (.send xhr data)
-          (.send xhr))))))
+  (let [url (:url arg-map)
+        on-done (:on-done arg-map)
+        method (or (:method arg-map) "GET")
+        data (:data arg-map)
+        with-credentials? (:with-credentials? arg-map)
+        canned-response-params (:canned-response arg-map)]
+    (assert url (str "Missing url parameter: " arg-map))
+    (assert on-done (str "Missing on-done callback: " arg-map))
+    (let [xhr (if-not canned-response-params
+                (js/XMLHttpRequest.)
+                (let [xhr (js-obj)]
+                  (doseq [[k v] (dissoc canned-response-params :delay-ms)]
+                    (aset xhr (name k) v))
+                  xhr))
+          call-on-done (fn []
+                         ((:on-done arg-map) {:xhr xhr
+                                              :status-code (.-status xhr)
+                                              :success? (and (>= (.-status xhr) 200) (< (.-status xhr) 300))}))]
+      (when with-credentials?
+        (set! (.-withCredentials xhr) true))
+      (if canned-response-params
+        (if-let [delay-ms (:delay-ms canned-response-params)]
+          (js/setTimeout call-on-done delay-ms)
+          (call-on-done))
+        (do
+          (.addEventListener xhr "loadend" call-on-done)
+          (.open xhr method url)
+          (if data
+            (.send xhr data)
+            (.send xhr)))))))
+
+
+(defn ajax-wc [arg-map]
+  (ajax (assoc arg-map :with-credentials? true)))
+
+
+(def use-local-orchestration-server? false)
+(def orchestration-url-root (if (and goog.DEBUG use-local-orchestration-server?)
+                              "http://local.broadinstitute.org:8080"
+                              ;; TODO(dmohs): Add real URL when it goes live.
+                              "TODO"))
+
+
+(defn ajax-orch [path arg-map]
+  (assert (= (subs path 0 1) "/") (str "Path must start with '/': " path))
+  (ajax-wc (assoc arg-map :url (str orchestration-url-root path))))
+
