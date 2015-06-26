@@ -133,6 +133,8 @@
    :top 0 :right 0 :bottom 0 :left 0
    :textAlign "left"})
 
+(def new-ws-input-style (merge common/input-text-style {:width "100%"}))
+
 (def modal-content
   {:transform "translate(-50%, 0px)"
    :backgroundColor "#f4f4f4"
@@ -141,13 +143,6 @@
 
 (def form-label
   {:marginBottom "0.16667em" :fontSize "88%"})
-
-(def text
-  {:backgroundColor "#fff"
-   :border "1px solid #cacaca" :borderRadius 3
-   :boxShadow "0px 1px 3px rgba(0,0,0,0.06)" :boxSizing "border-box"
-   :fontSize "88%"
-   :marginBottom "0.75em" :padding "0.5em" :width "100%"})
 
 (def select
   {:backgroundColor "#fff" ;;TODO background image?
@@ -167,15 +162,15 @@
      "Create New Workspace"]
     [:div {:style {:padding "22px 48px 40px" :boxSizing "inherit"}}
      [:div {:style form-label} "Name Your Workspace"]
-     [:input {:type "text" :style text :ref "wsName"}]
+     [:input {:type "text" :style new-ws-input-style :ref "wsName"}]
      [:div {:style form-label} "Workspace Description"]
-     [:textarea {:style text :rows 10 :cols 30 :ref "wsDesc"}]
+     [:textarea {:style new-ws-input-style :rows 10 :cols 30 :ref "wsDesc"}]
      [:div {:style form-label} "Research Purpose"]
      [:select {:style select} [:option {} "Option 1"] [:option {} "Option 2"] [:option {} "Option 3"]]
      [:div {:style form-label} "Billing Contact"]
      [:select {:style select} [:option {} "Option 1"] [:option {} "Option 2"] [:option {} "Option 3"]]
      [:div {:style form-label} "Share With (optional)"]
-     [:input {:type "text" :style text :ref "shareWith"}]
+     [:input {:type "text" :style new-ws-input-style :ref "shareWith"}]
      [:em {:style {:fontSize "69%"}} "Separate multiple emails with commas"]
      (let [clear-overlay (fn []
                            (set! (.-value (.getDOMNode (@refs "wsName"))) "")
