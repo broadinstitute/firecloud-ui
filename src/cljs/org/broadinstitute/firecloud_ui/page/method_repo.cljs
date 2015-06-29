@@ -37,27 +37,38 @@
                        (:methods props))})])])})
 
 
+(defn- create-mock-methods-list []
+  (map
+    (fn [i]
+      {
+       :namespace (rand-nth ["broad" "public" "nci"])
+       :name (str "Method " (inc i))
+       :synopsis (str "This is method " (inc i))})
+    (range (rand-int 100))))
+
+
 (react/defc Page
   {:render
    (fn [{:keys [state]}]
      [:div {:style {:padding "1em"}}
       [:h2 {} "Method Repository"]
       [:div {}
-       (if-not (:methods-loaded? @state)
-         [common/Spinner {:text "Loading methods..."}]
-         [MethodsList {:methods (:methods @state)}])]])
+       (cond
+         (:methods-loaded? @state) [MethodsList {:methods (:methods @state)}]
+         (:error-message @state) [:div {:style {:color "red"}}
+                                  "Methods service returned error: " (:error-message @state)]
+         :else [common/Spinner {:text "Loading methods..."}])]])
    :component-did-mount
    (fn [{:keys [state]}]
-     (utils/ajax {:url "todo"
-                  :on-done (fn [{:keys [xhr]}]
-                             (let [methods (js->clj (js/JSON.parse (.-responseText xhr)))]
-                               (swap! state assoc :methods-loaded? true :methods methods)))
-                  :canned-response
-                  {:responseText (js/JSON.stringify
-                                  (clj->js
-                                   (if (zero? (rand-int 2))
-                                     []
-                                     [{"namespace" "broad"
-                                       "name" "Print"
-                                       "synopsis" "Just prints something"}])))
-                   :delay-ms 1000}}))})
+     (utils/ajax-orch
+       "/methods"
+       {:on-done (fn [{:keys [success? xhr]}]
+                   (if success?
+                     (let [methods (js->clj (js/JSON.parse (.-responseText xhr)))]
+                       (swap! state assoc :methods-loaded? true :methods methods))
+                     (swap! state assoc :error-message (.-statusText xhr))))
+        :canned-response (when (and goog.DEBUG true) ; false to use live data during development
+                           {:responseText (js/JSON.stringify (clj->js (create-mock-methods-list)))
+                            :status 200
+                            :delay-ms (rand-int 2000)})}))})
+
