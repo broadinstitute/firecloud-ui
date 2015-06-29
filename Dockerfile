@@ -14,6 +14,7 @@ WORKDIR /usr/firecloud-ui
 RUN ./script/dev/build-once.sh
 RUN lein test
 
+RUN ./script/release/build-release.sh
 RUN cp -R /usr/firecloud-ui/target/* /var/www/html
 CMD /usr/sbin/httpd -e info -DFOREGROUND
 

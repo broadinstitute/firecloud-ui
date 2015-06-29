@@ -18,12 +18,16 @@
     </style>
     <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
     <script src="https://apis.google.com/js/platform.js" async defer></script>
-    <script src="build/goog/base.js"></script>
+    <?php if ($argv[1] != 'release') { ?>
+      <script src="build/goog/base.js"></script>
+    <?php } ?>
   </head>
   <body>
     <div id="contentRoot"></div>
     <script src="compiled.js"></script>
-    <script>goog.require('org.broadinstitute.firecloud_ui.main');</script>
+    <?php if ($argv[1] != 'release') { ?>
+      <script>goog.require('org.broadinstitute.firecloud_ui.main');</script>
+    <?php } ?>
     <script>
       var app = org.broadinstitute.firecloud_ui.main.render(document.getElementById('contentRoot'));
       function onSignIn(googleUser) {
