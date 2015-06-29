@@ -125,23 +125,45 @@
         [:div {:style {:clear "both"}}]])}))
 
 
+(defn- render-overlay [state refs]
+  [:div {:style {:display (if-not (:overlay-shown? @state) "none")
+                 :position "absolute"
+                 :top 0 :left 0 :width "100%" :height "100%"
+                 :background "rgba(82, 129, 197, 0.4)" :zIndex "99999"
+                 :textAlign "center"}}
+   [:div {:style {:width 300 :margin "100px auto"
+                  :backgroundColor "white" :border "1px solid black"
+                  :padding 15
+                  :textAlign "center"}}
+    [:div {} "Enter a name for the new Workspace:"]
+    [:div {:style {:padding "10px"}} [:input {:ref "wsName" :type "text"}]]
+    (let [clear-overlay (fn []
+                          (set! (.-value (.getDOMNode (@refs "wsName"))) "")
+                          (swap! state assoc :overlay-shown? false))]
+      [:div {}
+       [:button {:onClick #(let [n (.-value (.getDOMNode (@refs "wsName")))]
+                             (clear-overlay)
+                             (when-not (or (nil? n) (empty? n))
+                               (swap! state update-in [:workspaces] conj
+                                 {"name" n
+                                  "status" :not-started
+                                  "sample-count" (rand-int 1000)
+                                  "workflow-count" (rand-int 10)
+                                  "size-gb" (/ (rand-int 20) 2)})))}
+        "OK"]
+       [:button {:onClick clear-overlay} "Cancel"]])]])
+
+
 (react/defc Page
   {:render
    (fn [{:keys [state refs]}]
      [:div {}
+      (render-overlay state refs)
       [:div {:style {:padding "2em"}}
        [:div {:style {:float "right" :display (when-not (:workspaces-loaded? @state) "none")}}
         [common/Button
          {:text "Create New Workspace" :style :add
-          :onClick (fn [e]
-                     (let [n (js/prompt "Enter a name for the new Workspace:")]
-                       (when-not (or (nil? n) (empty? n))
-                         (swap! state update-in [:workspaces] conj
-                                {"name" n
-                                 "status" :not-started
-                                 "sample-count" (rand-int 1000)
-                                 "workflow-count" (rand-int 10)
-                                 "size-gb" (/ (rand-int 20) 2)}))))}]]
+          :onClick #(swap! state assoc :overlay-shown? true)}]]
        [:span {:style {:fontSize "180%"}} "Workspaces"]]
       (if-not (:workspaces-loaded? @state)
         [common/Spinner {:text "Loading workspaces..."}]
