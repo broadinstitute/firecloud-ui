@@ -6,7 +6,7 @@
     <meta name="google-signin-scope" content="profile email">
     <meta name="google-signin-client_id" content="806222273987-2ntvt4hnfsikqmhhc18l64vheh4cj34q.apps.googleusercontent.com">
     <title>FireCloud | Broad Institute</title>
-    <link href='http://fonts.googleapis.com/css?family=Roboto:400,500,700' rel='stylesheet' type='text/css'>
+    <link href='//fonts.googleapis.com/css?family=Roboto:400,500,700' rel='stylesheet' type='text/css'>
     <style>
       body {
         margin: 0;
