@@ -125,33 +125,81 @@
         [:div {:style {:clear "both"}}]])}))
 
 
+(defn- modal-background [state]
+  {:backgroundColor "rgba(82, 129, 197, 0.4)"
+   :display (when-not (:overlay-shown? @state) "none")
+   :overflowX "hidden" :overflowY "scroll"
+   :position "fixed" :zIndex 9999
+   :top 0 :right 0 :bottom 0 :left 0
+   :textAlign "left"})
+
+(def modal-content
+  {:transform "translate(-50%, 0px)"
+   :backgroundColor "#f4f4f4"
+   :position "relative" :marginBottom 60
+   :top 60 :left "50%" :width 500})
+
+(def form-label
+  {:marginBottom "0.16667em" :fontSize "88%"})
+
+(def text
+  {:backgroundColor "#fff"
+   :border "1px solid #cacaca" :borderRadius 3
+   :boxShadow "0px 1px 3px rgba(0,0,0,0.06)" :boxSizing "border-box"
+   :fontSize "88%"
+   :marginBottom "0.75em" :padding "0.5em" :width "100%"})
+
+(def select
+  {:backgroundColor "#fff" ;;TODO background image?
+   ;;:backgroundPosition "right center" :backgroundRepeat "no-repeat"
+   :borderColor "#cacaca" :borderRadius 2 :borderWidth 1 :borderStyle "solid"
+   :color "#000"
+   :marginBottom "0.75em" :padding "0.33em 0.5em"
+   :width "100%" :fontSize "88%"})
+
 (defn- render-overlay [state refs]
-  [:div {:style {:display (if-not (:overlay-shown? @state) "none")
-                 :position "absolute"
-                 :top 0 :left 0 :width "100%" :height "100%"
-                 :background "rgba(82, 129, 197, 0.4)" :zIndex "99999"
-                 :textAlign "center"}}
-   [:div {:style {:width 300 :margin "100px auto"
-                  :backgroundColor "white" :border "1px solid black"
-                  :padding 15
-                  :textAlign "center"}}
-    [:div {} "Enter a name for the new Workspace:"]
-    [:div {:style {:padding "10px"}} [:input {:ref "wsName" :type "text"}]]
-    (let [clear-overlay (fn []
-                          (set! (.-value (.getDOMNode (@refs "wsName"))) "")
-                          (swap! state assoc :overlay-shown? false))]
-      [:div {}
-       [:button {:onClick #(let [n (.-value (.getDOMNode (@refs "wsName")))]
-                             (clear-overlay)
-                             (when-not (or (nil? n) (empty? n))
-                               (swap! state update-in [:workspaces] conj
-                                 {"name" n
-                                  "status" :not-started
-                                  "sample-count" (rand-int 1000)
-                                  "workflow-count" (rand-int 10)
-                                  "size-gb" (/ (rand-int 20) 2)})))}
-        "OK"]
-       [:button {:onClick clear-overlay} "Cancel"]])]])
+  [:div {:style (modal-background state)}
+   [:div {:style modal-content}
+    [:div {:style {:backgroundColor "#fff"
+                   :borderBottom "1px solid #e3e3e3"
+                   :padding "20px 48px 18px"
+                   :fontSize "137%" :fontWeight 400 :lineHeight 1}}
+     "Create New Workspace"]
+    [:div {:style {:padding "22px 48px 40px" :boxSizing "inherit"}}
+     [:div {:style form-label} "Name Your Workspace"]
+     [:input {:type "text" :style text :ref "wsName"}]
+     [:div {:style form-label} "Workspace Description"]
+     [:textarea {:style text :rows 10 :cols 30 :ref "wsDesc"}]
+     [:div {:style form-label} "Research Purpose"]
+     [:select {:style select} [:option {} "Option 1"] [:option {} "Option 2"] [:option {} "Option 3"]]
+     [:div {:style form-label} "Billing Contact"]
+     [:select {:style select} [:option {} "Option 1"] [:option {} "Option 2"] [:option {} "Option 3"]]
+     [:div {:style form-label} "Share With (optional)"]
+     [:input {:type "text" :style text :ref "shareWith"}]
+     [:em {:style {:fontSize "69%"}} "Separate multiple emails with commas"]
+     (let [clear-overlay (fn []
+                           (set! (.-value (.getDOMNode (@refs "wsName"))) "")
+                           (set! (.-value (.getDOMNode (@refs "wsDesc"))) "")
+                           (set! (.-value (.getDOMNode (@refs "shareWith"))) "")
+                           (swap! state assoc :overlay-shown? false))]
+       [:div {:style {:marginTop 40 :textAlign "center"}}
+        [:a {:style {:marginRight 27 :paddingTop "0.52em"
+                     :display "inline-block" :cursor "pointer"
+                     :fontSize "106%" :fontWeight 500
+                     :verticalAlign "top"
+                     :color (:button-blue common/colors)} :onClick clear-overlay}
+         "Cancel"]
+        [common/Button {:text "Create Workspace"
+                        :onClick
+                        #(let [n (.-value (.getDOMNode (@refs "wsName")))]
+                           (clear-overlay)
+                           (when-not (or (nil? n) (empty? n))
+                             (swap! state update-in [:workspaces] conj
+                               {"name" n
+                                "status" :not-started
+                                "sample-count" (rand-int 1000)
+                                "workflow-count" (rand-int 10)
+                                "size-gb" (/ (rand-int 20) 2)})))}]])]]])
 
 
 (react/defc Page
