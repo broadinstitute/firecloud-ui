@@ -37,11 +37,10 @@
                        (:methods props))})])])})
 
 
-(defn- create-mock-methods-list []
+(defn- create-mock-methods []
   (map
     (fn [i]
-      {
-       :namespace (rand-nth ["broad" "public" "nci"])
+      {:namespace (rand-nth ["broad" "public" "nci"])
        :name (str "Method " (inc i))
        :synopsis (str "This is method " (inc i))})
     (range (rand-int 100))))
@@ -56,7 +55,7 @@
        (cond
          (:methods-loaded? @state) [MethodsList {:methods (:methods @state)}]
          (:error-message @state) [:div {:style {:color "red"}}
-                                  "Methods service returned error: " (:error-message @state)]
+                                  "FireCloud service returned error: " (:error-message @state)]
          :else [common/Spinner {:text "Loading methods..."}])]])
    :component-did-mount
    (fn [{:keys [state]}]
@@ -64,11 +63,10 @@
        "/methods"
        {:on-done (fn [{:keys [success? xhr]}]
                    (if success?
-                     (let [methods (js->clj (js/JSON.parse (.-responseText xhr)))]
+                     (let [methods (utils/parse-json-string (.-responseText xhr))]
                        (swap! state assoc :methods-loaded? true :methods methods))
                      (swap! state assoc :error-message (.-statusText xhr))))
-        :canned-response (when (and goog.DEBUG true) ; false to use live data during development
-                           {:responseText (js/JSON.stringify (clj->js (create-mock-methods-list)))
-                            :status 200
-                            :delay-ms (rand-int 2000)})}))})
+        :canned-response {:responseText (utils/->json-string (create-mock-methods))
+                          :status 200
+                          :delay-ms (rand-int 2000)}}))})
 
