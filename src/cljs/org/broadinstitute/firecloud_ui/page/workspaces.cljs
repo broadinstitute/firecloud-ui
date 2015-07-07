@@ -153,36 +153,42 @@
    :width "100%" :fontSize "88%"})
 
 (defn- render-overlay [state refs]
-  [:div {:style (modal-background state)}
-   [:div {:style modal-content}
-    [:div {:style {:backgroundColor "#fff"
-                   :borderBottom "1px solid #e3e3e3"
-                   :padding "20px 48px 18px"
-                   :fontSize "137%" :fontWeight 400 :lineHeight 1}}
-     "Create New Workspace"]
-    [:div {:style {:padding "22px 48px 40px" :boxSizing "inherit"}}
-     [:div {:style form-label} "Name Your Workspace"]
-     [:input {:type "text" :style new-ws-input-style :ref "wsName"}]
-     [:div {:style form-label} "Workspace Description"]
-     [:textarea {:style new-ws-input-style :rows 10 :cols 30 :ref "wsDesc"}]
-     [:div {:style form-label} "Research Purpose"]
-     [:select {:style select} [:option {} "Option 1"] [:option {} "Option 2"] [:option {} "Option 3"]]
-     [:div {:style form-label} "Billing Contact"]
-     [:select {:style select} [:option {} "Option 1"] [:option {} "Option 2"] [:option {} "Option 3"]]
-     [:div {:style form-label} "Share With (optional)"]
-     [:input {:type "text" :style new-ws-input-style :ref "shareWith"}]
-     [:em {:style {:fontSize "69%"}} "Separate multiple emails with commas"]
-     (let [clear-overlay (fn []
-                           (set! (.-value (.getDOMNode (@refs "wsName"))) "")
-                           (set! (.-value (.getDOMNode (@refs "wsDesc"))) "")
-                           (set! (.-value (.getDOMNode (@refs "shareWith"))) "")
-                           (swap! state assoc :overlay-shown? false))]
+  (let [clear-overlay (fn []
+                        (set! (.-value (.getDOMNode (@refs "wsName"))) "")
+                        (set! (.-value (.getDOMNode (@refs "wsDesc"))) "")
+                        (set! (.-value (.getDOMNode (@refs "shareWith"))) "")
+                        (swap! state assoc :overlay-shown? false))]
+    [:div {:style (modal-background state)
+           :onKeyDown (fn [e] (when (= 27 (.-keyCode e)) (clear-overlay)))}
+     [:div {:style modal-content}
+      [:div {:style {:backgroundColor "#fff"
+                     :borderBottom "1px solid #e3e3e3"
+                     :padding "20px 48px 18px"
+                     :fontSize "137%" :fontWeight 400 :lineHeight 1}}
+       "Create New Workspace"]
+      [:div {:style {:padding "22px 48px 40px" :boxSizing "inherit"}}
+       [:div {:style form-label} "Name Your Workspace"]
+       [:input {:type "text" :style new-ws-input-style :ref "wsName"}]
+       [:div {:style form-label} "Workspace Description"]
+       [:textarea {:style new-ws-input-style :rows 10 :cols 30 :ref "wsDesc"}]
+       [:div {:style form-label} "Research Purpose"]
+       [:select {:style select} [:option {} "Option 1"] [:option {} "Option 2"] [:option {} "Option 3"]]
+       [:div {:style form-label} "Billing Contact"]
+       [:select {:style select} [:option {} "Option 1"] [:option {} "Option 2"] [:option {} "Option 3"]]
+       [:div {:style form-label} "Share With (optional)"]
+       [:input {:type "text" :style new-ws-input-style :ref "shareWith"}]
+       [:em {:style {:fontSize "69%"}} "Separate multiple emails with commas"]
        [:div {:style {:marginTop 40 :textAlign "center"}}
-        [:a {:style {:marginRight 27 :paddingTop "0.52em"
-                     :display "inline-block" :cursor "pointer"
-                     :fontSize "106%" :fontWeight 500
+        [:a {:style {:marginRight 27 :marginTop 2 :padding "0.5em"
+                     :display "inline-block"
+                     :fontSize "106%" :fontWeight 500 :textDecoration "none"
                      :verticalAlign "top"
-                     :color (:button-blue common/colors)} :onClick clear-overlay}
+                     :color (:button-blue common/colors)}
+             :href "javascript:;"
+             :onClick clear-overlay
+             :onKeyDown (fn [e]
+                          (let [k (.-keyCode e)]
+                            (when (or (= 32 k) (= 13 k)) (clear-overlay))))}
          "Cancel"]
         [common/Button {:text "Create Workspace"
                         :onClick
@@ -202,7 +208,7 @@
                                                 :name n
                                                 :createdBy n
                                                 :createdDate (.toISOString (js/Date.))})
-                                :delay-ms (rand-int 2000)}})))}]])]]])
+                                :delay-ms (rand-int 2000)}})))}]]]]]))
 
 
 (defn- create-mock-workspaces []
@@ -251,4 +257,4 @@
                        (swap! state assoc :workspaces-loaded? true :workspaces workspaces))
                      (swap! state assoc :error-message (.-statusText xhr))))
         :canned-response {:responseText (utils/->json-string (create-mock-workspaces))
-                          :delay-ms (rand-int 2000)}}))})
+                          :status 200 :delay-ms (rand-int 2000)}}))})
