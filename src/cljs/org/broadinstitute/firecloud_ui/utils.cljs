@@ -1,4 +1,7 @@
-(ns org.broadinstitute.firecloud-ui.utils)
+(ns org.broadinstitute.firecloud-ui.utils
+  (:require
+    [clojure.string]
+    ))
 
 
 (defn rlog [& args]
@@ -22,13 +25,18 @@
   (apply (.bind (aget obj (name method-name)) obj) args))
 
 
+(def use-live-data? true)
+
+
 (defn ajax [arg-map]
   (let [url (:url arg-map)
         on-done (:on-done arg-map)
-        method (or (:method arg-map) "GET")
+        method (if-let [method (:method arg-map)] (clojure.string/upper-case (name method)) "GET")
+        headers (:headers arg-map)
         data (:data arg-map)
         with-credentials? (:with-credentials? arg-map)
-        canned-response-params (:canned-response arg-map)]
+        canned-response-params (when (and goog.DEBUG (not use-live-data?))
+                                 (:canned-response arg-map))]
     (assert url (str "Missing url parameter: " arg-map))
     (assert on-done (str "Missing on-done callback: " arg-map))
     (let [xhr (if-not canned-response-params
@@ -40,7 +48,8 @@
           call-on-done (fn []
                          ((:on-done arg-map) {:xhr xhr
                                               :status-code (.-status xhr)
-                                              :success? (and (>= (.-status xhr) 200) (< (.-status xhr) 300))}))]
+                                              :success? (and (>= (.-status xhr) 200)
+                                                             (< (.-status xhr) 300))}))]
       (when with-credentials?
         (set! (.-withCredentials xhr) true))
       (if canned-response-params
@@ -50,6 +59,8 @@
         (do
           (.addEventListener xhr "loadend" call-on-done)
           (.open xhr method url)
+          (doseq [[k v] headers]
+            (.setRequestHeader xhr k v))
           (if data
             (.send xhr data)
             (.send xhr)))))))
@@ -62,11 +73,18 @@
 (def use-local-orchestration-server? false)
 (def orchestration-url-root (if (and goog.DEBUG use-local-orchestration-server?)
                               "http://local.broadinstitute.org:8080"
-                              ;; TODO(dmohs): Add real URL when it goes live.
-                              "TODO"))
+                              "https://firecloud-ci.broadinstitute.org/api"))
 
 
 (defn ajax-orch [path arg-map]
   (assert (= (subs path 0 1) "/") (str "Path must start with '/': " path))
   (ajax-wc (assoc arg-map :url (str orchestration-url-root path))))
+
+
+(defn ->json-string [x]
+  (js/JSON.stringify (clj->js x)))
+
+
+(defn parse-json-string [x]
+  (js->clj (js/JSON.parse x)))
 

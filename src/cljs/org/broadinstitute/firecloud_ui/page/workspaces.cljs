@@ -194,12 +194,31 @@
                         #(let [n (.-value (.getDOMNode (@refs "wsName")))]
                            (clear-overlay)
                            (when-not (or (nil? n) (empty? n))
-                             (swap! state update-in [:workspaces] conj
-                               {"name" n
-                                "status" :not-started
-                                "sample-count" (rand-int 1000)
-                                "workflow-count" (rand-int 10)
-                                "size-gb" (/ (rand-int 20) 2)})))}]])]]])
+                             (utils/ajax-orch
+                              "/workspaces"
+                              {:method :post
+                               :data (utils/->json-string {:name n})
+                               :on-done (fn [{:keys [xhr]}]
+                                          (swap! state update-in [:workspaces] conj
+                                                 (utils/parse-json-string (.-responseText xhr))))
+                               :canned-response
+                               {:responseText (utils/->json-string
+                                               {:namespace "test"
+                                                :name n
+                                                :createdBy n
+                                                :createdDate (.toISOString (js/Date.))})
+                                :delay-ms (rand-int 2000)}})))}]])]]])
+
+
+(defn- create-mock-workspaces []
+  (map
+    (fn [i]
+      (let [ns (rand-nth ["broad" "public" "nci"])]
+        {:namespace ns
+         :name (str "Workspace " (inc i))
+         :createdBy ns
+         :createdDate (.toISOString (js/Date.))}))
+    (range (rand-int 100))))
 
 
 (react/defc Page
@@ -213,8 +232,8 @@
          {:text "Create New Workspace" :style :add
           :onClick #(swap! state assoc :overlay-shown? true)}]]
        [:span {:style {:fontSize "180%"}} "Workspaces"]]
-      (if-not (:workspaces-loaded? @state)
-        [common/Spinner {:text "Loading workspaces..."}]
+      (cond
+        (:workspaces-loaded? @state)
         [:div {}
          [:div {:style {:backgroundColor (:background-gray common/colors)
                         :borderTop (str "1px solid " (:line-gray common/colors))
@@ -223,21 +242,18 @@
           [common/TabBar {:items ["Mine" "Shared" "Read-Only"]}]]
          [:div {:style {:padding "2em 0" :textAlign "center"}}
           [FilterButtons]]
-         [:div {} [WorkspaceList {:ref "workspace-list" :workspaces (:workspaces @state)}]]])])
+         [:div {} [WorkspaceList {:ref "workspace-list" :workspaces (:workspaces @state)}]]]
+        (:error-message @state) [:div {:style {:color "red"}}
+                                  "FireCloud service returned error: " (:error-message @state)]
+        :else [common/Spinner {:text "Loading workspaces..."}])])
    :component-did-mount
    (fn [{:keys [state]}]
-     (utils/ajax {:url "todo"
-                  :on-done (fn [{:keys [xhr]}]
-                             (let [workspaces (js->clj (js/JSON.parse (.-responseText xhr)))]
-                               (swap! state assoc :workspaces-loaded? true :workspaces workspaces)))
-                  :canned-response
-                  {:responseText (js/JSON.stringify
-                                  (clj->js
-                                   (if (zero? (rand-int 2))
-                                     []
-                                     [{"name" "My First Workspace"
-                                       "status" :not-started
-                                       "sample-count" (rand-int 1000)
-                                       "workflow-count" (rand-int 10)
-                                       "size-gb" (/ (rand-int 20) 2)}])))
-                   :delay-ms 1000}}))})
+     (utils/ajax-orch
+       "/workspaces"
+       {:on-done (fn [{:keys [success? xhr]}]
+                   (if success?
+                     (let [workspaces (utils/parse-json-string (.-responseText xhr))]
+                       (swap! state assoc :workspaces-loaded? true :workspaces workspaces))
+                     (swap! state assoc :error-message (.-statusText xhr))))
+        :canned-response {:responseText (utils/->json-string (create-mock-workspaces))
+                          :delay-ms (rand-int 2000)}}))})
