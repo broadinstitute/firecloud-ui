@@ -4,6 +4,8 @@
    [dmohs.react :as react]
    [org.broadinstitute.firecloud-ui.common :as common]
    [org.broadinstitute.firecloud-ui.common.table :as table]
+   [org.broadinstitute.firecloud-ui.common.style :as style]
+   [org.broadinstitute.firecloud-ui.common.components :as comps]
    [org.broadinstitute.firecloud-ui.utils :as utils :refer [rlog jslog cljslog]]
    ))
 
@@ -30,21 +32,21 @@
   {:render
    (fn [{:keys [props]}]
      [:span {:style {:display "inline-block" :margin 2 :padding "1em 0 0 1em" :fontWeight "bold"}}
-      (:data props) [:span {:style {:color (:text-gray common/colors)}} " samples"]])})
+      (:data props) [:span {:style {:color (:text-gray style/colors)}} " samples"]])})
 
 
 (react/defc WorkflowsCell
   {:render
    (fn [{:keys [props]}]
      [:span {:style {:display "inline-block" :margin 2 :padding "1em 0 0 1em" :fontWeight "bold"}}
-      (:data props) [:span {:style {:color (:text-gray common/colors)}} " workflows"]])})
+      (:data props) [:span {:style {:color (:text-gray style/colors)}} " workflows"]])})
 
 
 (react/defc DataSizeCell
   {:render
    (fn [{:keys [props]}]
      [:span {:style {:display "inline-block" :margin 2 :padding "1em 0 0 1em" :fontWeight "bold"}}
-      (:data props) [:span {:style {:color (:text-gray common/colors)}} " GB"]])})
+      (:data props) [:span {:style {:color (:text-gray style/colors)}} " GB"]])})
 
 
 (react/defc OwnerCell
@@ -59,12 +61,12 @@
    (fn [{:keys [props]}]
      [:div {:style {:padding "0 4em"}}
       (if (zero? (count (:workspaces props)))
-        [:div {:style {:textAlign "center" :backgroundColor (:background-gray common/colors)
+        [:div {:style {:textAlign "center" :backgroundColor (:background-gray style/colors)
                        :padding "1em 0" :borderRadius 8}}
          "No workspaces to display."]
         [table/Table
          (let [cell-style {:flexBasis "10ex" :flexGrow 1 :whiteSpace "nowrap" :overflow "hidden"
-                           :borderLeft (str "1px solid " (:line-gray common/colors))}
+                           :borderLeft (str "1px solid " (:line-gray style/colors))}
                header-label (fn [text & [padding]]
                               [:span {:style {:paddingLeft (or padding "1em")}}
                                [:span {:style {:fontSize "90%"}} text]])]
@@ -107,11 +109,11 @@
           (fn [{:keys [props]}]
             [:div {:style {:float "left"
                            :backgroundColor (if (:active? props)
-                                              (:button-blue common/colors)
-                                              (:background-gray common/colors))
+                                              (:button-blue style/colors)
+                                              (:background-gray style/colors))
                            :color (when (:active? props) "white")
                            :marginLeft "1em" :padding "1ex" :width "16ex"
-                           :border (str "1px solid " (:line-gray common/colors))
+                           :border (str "1px solid " (:line-gray style/colors))
                            :borderRadius "2em"
                            :cursor "pointer"}}
              (:text props)])})]
@@ -130,36 +132,20 @@
    :display (when-not (:overlay-shown? @state) "none")
    :overflowX "hidden" :overflowY "scroll"
    :position "fixed" :zIndex 9999
-   :top 0 :right 0 :bottom 0 :left 0
-   :textAlign "left"})
+   :top 0 :right 0 :bottom 0 :left 0})
 
-(def new-ws-input-style (merge common/input-text-style {:width "100%"}))
-
-(def modal-content
+(def ^:private modal-content
   {:transform "translate(-50%, 0px)"
    :backgroundColor "#f4f4f4"
    :position "relative" :marginBottom 60
    :top 60 :left "50%" :width 500})
 
-(def form-label
-  {:marginBottom "0.16667em" :fontSize "88%"})
-
-(def select
-  {:backgroundColor "#fff" ;;TODO background image?
-   ;;:backgroundPosition "right center" :backgroundRepeat "no-repeat"
-   :borderColor "#cacaca" :borderRadius 2 :borderWidth 1 :borderStyle "solid"
-   :color "#000"
-   :marginBottom "0.75em" :padding "0.33em 0.5em"
-   :width "100%" :fontSize "88%"})
-
 (defn- render-overlay [state refs]
   (let [clear-overlay (fn []
-                        (set! (.-value (.getDOMNode (@refs "wsName"))) "")
-                        (set! (.-value (.getDOMNode (@refs "wsDesc"))) "")
-                        (set! (.-value (.getDOMNode (@refs "shareWith"))) "")
+                        (common/clear! refs "wsName" "wsDesc" "shareWith")
                         (swap! state assoc :overlay-shown? false))]
     [:div {:style (modal-background state)
-           :onKeyDown (fn [e] (when (= 27 (.-keyCode e)) (clear-overlay)))}
+           :onKeyDown (common/create-key-handler [:esc] clear-overlay)}
      [:div {:style modal-content}
       [:div {:style {:backgroundColor "#fff"
                      :borderBottom "1px solid #e3e3e3"
@@ -167,35 +153,32 @@
                      :fontSize "137%" :fontWeight 400 :lineHeight 1}}
        "Create New Workspace"]
       [:div {:style {:padding "22px 48px 40px" :boxSizing "inherit"}}
-       [:div {:style form-label} "Name Your Workspace"]
-       [:input {:type "text" :style new-ws-input-style :ref "wsName"}]
-       [:div {:style form-label} "Workspace Description"]
-       [:textarea {:style new-ws-input-style :rows 10 :cols 30 :ref "wsDesc"}]
-       [:div {:style form-label} "Research Purpose"]
-       [:select {:style select} [:option {} "Option 1"] [:option {} "Option 2"] [:option {} "Option 3"]]
-       [:div {:style form-label} "Billing Contact"]
-       [:select {:style select} [:option {} "Option 1"] [:option {} "Option 2"] [:option {} "Option 3"]]
-       [:div {:style form-label} "Share With (optional)"]
-       [:input {:type "text" :style new-ws-input-style :ref "shareWith"}]
-       [:em {:style {:fontSize "69%"}} "Separate multiple emails with commas"]
+       (style/create-form-label "Name Your Workspace")
+       (style/create-text-field {:style {:width "100%"} :ref "wsName"})
+       (style/create-form-label "Workspace Description")
+       (style/create-text-area  {:style {:width "100%"} :rows 10 :ref "wsDesc"})
+       (style/create-form-label "Research Purpose")
+       (style/create-select {}  "Option 1" "Option 2" "Option 3")
+       (style/create-form-label "Billing Contact")
+       (style/create-select {}  "Option 1" "Option 2" "Option 3")
+       (style/create-form-label "Share With (optional)")
+       (style/create-text-field {:style {:width "100%"} :ref "shareWith"})
+       (style/create-hint "Separate multiple emails with commas")
        [:div {:style {:marginTop 40 :textAlign "center"}}
         [:a {:style {:marginRight 27 :marginTop 2 :padding "0.5em"
                      :display "inline-block"
                      :fontSize "106%" :fontWeight 500 :textDecoration "none"
-                     :verticalAlign "top"
-                     :color (:button-blue common/colors)}
+                     :color (:button-blue style/colors)}
              :href "javascript:;"
              :onClick clear-overlay
-             :onKeyDown (fn [e]
-                          (let [k (.-keyCode e)]
-                            (when (or (= 32 k) (= 13 k)) (clear-overlay))))}
+             :onKeyDown (common/create-key-handler [:space :enter] clear-overlay)}
          "Cancel"]
-        [common/Button {:text "Create Workspace"
-                        :onClick
-                        #(let [n (.-value (.getDOMNode (@refs "wsName")))]
-                           (clear-overlay)
-                           (when-not (or (nil? n) (empty? n))
-                             (utils/ajax-orch
+        [comps/Button {:text "Create Workspace"
+                       :onClick
+                       #(let [n (.-value (.getDOMNode (@refs "wsName")))]
+                          (clear-overlay)
+                          (when-not (or (nil? n) (empty? n))
+                            (utils/ajax-orch
                               "/workspaces"
                               {:method :post
                                :data (utils/->json-string {:name n})
@@ -204,10 +187,10 @@
                                                  (utils/parse-json-string (.-responseText xhr))))
                                :canned-response
                                {:responseText (utils/->json-string
-                                               {:namespace "test"
-                                                :name n
-                                                :createdBy n
-                                                :createdDate (.toISOString (js/Date.))})
+                                                {:namespace "test"
+                                                 :name n
+                                                 :createdBy n
+                                                 :createdDate (.toISOString (js/Date.))})
                                 :delay-ms (rand-int 2000)}})))}]]]]]))
 
 
@@ -229,24 +212,24 @@
       (render-overlay state refs)
       [:div {:style {:padding "2em"}}
        [:div {:style {:float "right" :display (when-not (:workspaces-loaded? @state) "none")}}
-        [common/Button
+        [comps/Button
          {:text "Create New Workspace" :style :add
           :onClick #(swap! state assoc :overlay-shown? true)}]]
        [:span {:style {:fontSize "180%"}} "Workspaces"]]
       (cond
         (:workspaces-loaded? @state)
         [:div {}
-         [:div {:style {:backgroundColor (:background-gray common/colors)
-                        :borderTop (str "1px solid " (:line-gray common/colors))
-                        :borderBottom (str "1px solid " (:line-gray common/colors))
+         [:div {:style {:backgroundColor (:background-gray style/colors)
+                        :borderTop (str "1px solid " (:line-gray style/colors))
+                        :borderBottom (str "1px solid " (:line-gray style/colors))
                         :padding "0 1.5em"}}
-          [common/TabBar {:items ["Mine" "Shared" "Read-Only"]}]]
+          [comps/TabBar {:items ["Mine" "Shared" "Read-Only"]}]]
          [:div {:style {:padding "2em 0" :textAlign "center"}}
           [FilterButtons]]
          [:div {} [WorkspaceList {:ref "workspace-list" :workspaces (:workspaces @state)}]]]
         (:error-message @state) [:div {:style {:color "red"}}
                                   "FireCloud service returned error: " (:error-message @state)]
-        :else [common/Spinner {:text "Loading workspaces..."}])])
+        :else [comps/Spinner {:text "Loading workspaces..."}])])
    :component-did-mount
    (fn [{:keys [state]}]
      (utils/ajax-orch
