@@ -6,9 +6,9 @@ RUN yum -y install httpd java-1.8.0-openjdk php-cli ruby && yum clean all
 
 EXPOSE 80
 
-COPY project.clj /usr/firecloud-ui/project.clj
-COPY src  /usr/firecloud-ui/src
-COPY script /usr/firecloud-ui/script
+ADD project.clj /usr/firecloud-ui/project.clj
+ADD src  /usr/firecloud-ui/src
+ADD script /usr/firecloud-ui/script
 
 WORKDIR /usr/firecloud-ui
 RUN ./script/dev/build-once.sh
