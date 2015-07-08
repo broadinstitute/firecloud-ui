@@ -37,6 +37,13 @@
                        (:methods props))})])])})
 
 
+(defn- contains-text [text fields]
+  (fn [method]
+    (some #(not= -1 (.indexOf (method %) text)) fields)))
+
+(defn- filter-methods [methods fields text]
+  (filter (contains-text text fields) methods))
+
 (defn- create-mock-methods []
   (map
     (fn [i]
@@ -48,12 +55,27 @@
 
 (react/defc Page
   {:render
-   (fn [{:keys [state]}]
+   (fn [{:keys [state refs]}]
      [:div {:style {:padding "1em"}}
       [:h2 {} "Method Repository"]
       [:div {}
        (cond
-         (:methods-loaded? @state) [MethodsList {:methods (:methods @state)}]
+         (:methods-loaded? @state) [:div {}
+                                    (let [apply-filter #(swap! state assoc
+                                                          :filter-text
+                                                          (.-value (.getDOMNode (@refs "input"))))]
+                                      [:div {:style {:paddingBottom "1em" :paddingLeft "4em"}}
+                                       [:input {:style common/input-text-style
+                                                :type "text" :ref "input" :placeholder "Filter"
+                                                :onKeyDown (fn [e]
+                                                             (when (= 13 (.-keyCode e))
+                                                               (apply-filter)))}]
+                                       [:span {:style {:paddingLeft "1em"}}]
+                                       [common/Button {:text "Go" :onClick apply-filter}]])
+                                    [MethodsList {:methods (filter-methods
+                                                             (:methods @state)
+                                                             '("namespace" "name" "synopsis")
+                                                             (or (:filter-text @state) ""))}]]
          (:error-message @state) [:div {:style {:color "red"}}
                                   "FireCloud service returned error: " (:error-message @state)]
          :else [common/Spinner {:text "Loading methods..."}])]])
