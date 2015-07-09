@@ -1,4 +1,4 @@
-# firecloud-ui 
+# firecloud-ui
 
 FireCloud user interface for web browsers.
 
@@ -36,7 +36,7 @@ To connect, reload the browser window (see the Running section below).
 
 Start a static file server:
 ```
-./script/dev/serve-locally.sh
+./script/dev/serve-locally.py
 ```
 
 This will serve files at http://localhost:8000/. However, Google Sign-In expects an origin of

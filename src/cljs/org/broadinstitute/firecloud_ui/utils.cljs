@@ -66,19 +66,9 @@
             (.send xhr)))))))
 
 
-(defn ajax-wc [arg-map]
-  (ajax (assoc arg-map :with-credentials? true)))
-
-
-(def use-local-orchestration-server? false)
-(def orchestration-url-root (if (and goog.DEBUG use-local-orchestration-server?)
-                              "http://local.broadinstitute.org:8080"
-                              "https://firecloud-ci.broadinstitute.org/api"))
-
-
 (defn ajax-orch [path arg-map]
   (assert (= (subs path 0 1) "/") (str "Path must start with '/': " path))
-  (ajax-wc (assoc arg-map :url (str orchestration-url-root path))))
+  (ajax (assoc arg-map :url (str "/api" path))))
 
 
 (defn ->json-string [x]
