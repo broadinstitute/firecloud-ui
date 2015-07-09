@@ -34,16 +34,19 @@
 (react/defc Button
   {:get-default-props
    (fn []
-     {:color :blue})
+     {:color (:button-blue colors)})
    :render
    (fn [{:keys [props]}]
-     [:span {:style {:display "inline-block"
-                     :backgroundColor (case (:color props)
-                                        (:button-blue colors))
-                     :color "white" :fontWeight 500
-                     :borderRadius 2 :padding "0.7em 1em"
-                     :cursor "pointer"}
-             :onClick (fn [e] ((:onClick props) e))}
+     [:a {:style {:display "inline-block"
+                  :backgroundColor (:color props)
+                  :color "white" :fontWeight 500
+                  :borderRadius 2 :padding "0.7em 1em"
+                  :textDecoration "none"}
+          :href "javascript:;"
+          :onClick (fn [e] ((:onClick props) e))
+          :onKeyDown (fn [e]
+                       (let [k (.-keyCode e)]
+                         (when (or (= 32 k) (= 13 k)) ((:onClick props) e))))}
       (:text props)
       (when (= (:style props) :add)
         [:span {:style {:display "inline-block" :height "1em" :width "1em" :marginLeft "1em"
