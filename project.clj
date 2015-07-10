@@ -1,7 +1,11 @@
+;; define a root namesapce 'org.broadinstitute'
 (def root-ns "org.broadinstitute")
+
+;; set target as the relative build directory
 (def build-dir-relative "target")
 
 
+;; defproject settings for lein
 (defproject org.broadinstitute/firecloud-ui "0.0.1"
   :dependencies
   [
