@@ -1,6 +1,10 @@
+;; Create a namespace for these utilities
+;; requires imports
 (ns org.broadinstitute.firecloud-ui.page.method-repo
   (:require
+    ;; require clojure.string
    [clojure.string]
+    ;; require dmohs.react
    [dmohs.react :as react]
    [org.broadinstitute.firecloud-ui.common :as common]
    [org.broadinstitute.firecloud-ui.common.table :as table]
@@ -8,6 +12,9 @@
    ))
 
 
+
+
+;; HTML definition for methods list
 (react/defc MethodsList
   {:render
    (fn [{:keys [props]}]
@@ -37,13 +44,20 @@
                        (:methods props))})])])})
 
 
+
+;; helper function to test for containment
 (defn- contains-text [text fields]
   (fn [method]
     (some #(not= -1 (.indexOf (method %) text)) fields)))
 
+
+
+;; filtering methods by containment
 (defn- filter-methods [methods fields text]
   (filter (contains-text text fields) methods))
 
+
+;; create mock methods as placeholders
 (defn- create-mock-methods []
   (map
     (fn [i]
@@ -53,6 +67,7 @@
     (range (rand-int 100))))
 
 
+;; define 'Page' to be rendered for HTML
 (react/defc Page
   {:render
    (fn [{:keys [state refs]}]
@@ -88,6 +103,7 @@
                      (let [methods (utils/parse-json-string (.-responseText xhr))]
                        (swap! state assoc :methods-loaded? true :methods methods))
                      (swap! state assoc :error-message (.-statusText xhr))))
+        ;; TODO, replace create-mock methods!
         :canned-response {:responseText (utils/->json-string (create-mock-methods))
                           :status 200
                           :delay-ms (rand-int 2000)}}))})

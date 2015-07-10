@@ -1,3 +1,6 @@
+;; namespace for main items for rendering, calling other routines/codes in the repo
+;; and also external methods
+;; import with shorter names for code readability
 (ns org.broadinstitute.firecloud-ui.main
   (:require
    [dmohs.react :as react]
@@ -8,10 +11,13 @@
    [org.broadinstitute.firecloud-ui.utils :as utils]
    ))
 
-
+;; logo URL set
 (defn- logo []
   [:img {:src "assets/broad_logo.png" :style {:height 36}}])
 
+
+
+;; set footer
 (defn- footer []
   (let [thisyear (.getFullYear (js/Date.))
         startyear 2015
@@ -19,6 +25,9 @@
     [:div {:style {:padding "1em 0 1em 1ex" :fontSize "70%"}}
      (str "\u00A9 " yeartext " Broad Institute")]))
 
+
+
+;; set top-nav bar link/style
 (react/defc TopNavBarLink
   {:render
    (fn [{:keys [props state]}]
@@ -32,6 +41,8 @@
       (:name props)])})
 
 
+
+;;set the top nav var using the above link
 (react/defc TopNavBar
   {:render
    (fn [{:keys [props]}]
@@ -42,6 +53,9 @@
       [TopNavBarLink {:name "Method Repository"
                       :selected (= (:selected-item props) :methods)
                       :onClick (fn [e] ((:on-nav props) :methods))}]])})
+
+
+
 
 ;; Content to display when logged in via Google
 (react/defc LoggedIn
@@ -69,6 +83,9 @@
         :workspaces [workspaces/Page]
         :methods [method-repo/Page])])})
 
+
+
+
 ;; Content to display when logged out
 (react/defc LoggedOut
   {:render
@@ -88,8 +105,13 @@
           system by any person, whether authorized or unauthorized, constitutes consent to these terms. There is no right
           of privacy in this system."]]]])})
 
+
+
+
+
+;; define the main App
 (react/defc App
-  {:handleSignIn ; called from index.html on successful Google sign-in
+  {:handleSignIn ; NOTE : called from index.html on successful Google sign-in
    (fn [{:keys [state]} google-user]
      (session/set-current-user google-user)
      (swap! state assoc :is-logged-in? true))
@@ -104,18 +126,30 @@
    (fn [{:keys [state]}]
      (session/on-log-out (fn [] (swap! state assoc :is-logged-in? false))))})
 
+
+
+;; Create an App element with dmohs.react and
+;;
 (defn- render-without-init [element]
   (react/render (react/create-element App) element nil goog.DEBUG))
 
 
+
+;; token/holder for a dev-element
 (defonce dev-element (atom nil))
 
 
+
+
+;; ???
 (defn ^:export render [element]
   (when goog.DEBUG
     (reset! dev-element element))
   (render-without-init element))
 
 
+
+
+;; ???
 (defn dev-reload [figwheel-data]
   (render-without-init @dev-element))

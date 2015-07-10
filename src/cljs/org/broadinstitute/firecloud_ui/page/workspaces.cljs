@@ -1,3 +1,4 @@
+;; Namespace for HTML generation for workspaces
 (ns org.broadinstitute.firecloud-ui.page.workspaces
   (:require
    [clojure.string]
@@ -8,6 +9,7 @@
    ))
 
 
+;; status cell
 (react/defc StatusCell
   {:render
    (fn [{:keys [props]}]
@@ -17,6 +19,7 @@
                      :position "absolute" :top 0 :right 0 :bottom 0 :left 2}}]])})
 
 
+;; workspace cell
 (react/defc WorkspaceCell
   {:render
    (fn [{:keys [props]}]
@@ -26,13 +29,14 @@
        (:data props)]])})
 
 
+;; SamplesCell
 (react/defc SamplesCell
   {:render
    (fn [{:keys [props]}]
      [:span {:style {:display "inline-block" :margin 2 :padding "1em 0 0 1em" :fontWeight "bold"}}
       (:data props) [:span {:style {:color (:text-gray common/colors)}} " samples"]])})
 
-
+;; WorkflowsCell
 (react/defc WorkflowsCell
   {:render
    (fn [{:keys [props]}]
@@ -40,6 +44,7 @@
       (:data props) [:span {:style {:color (:text-gray common/colors)}} " workflows"]])})
 
 
+;; DataSizeCell
 (react/defc DataSizeCell
   {:render
    (fn [{:keys [props]}]
@@ -47,13 +52,15 @@
       (:data props) [:span {:style {:color (:text-gray common/colors)}} " GB"]])})
 
 
+
+;;OwnerCell
 (react/defc OwnerCell
   {:render
    (fn [{:keys [props]}]
      [:span {:style {:display "inline-block" :margin 2 :padding "1em 0 0 1em" :fontWeight "bold"}}
       (:data props)])})
 
-
+;; Workspace List
 (react/defc WorkspaceList
   {:render
    (fn [{:keys [props]}]
@@ -100,6 +107,8 @@
                        (:workspaces props))})])])})
 
 
+
+;; FilterButtons
 (react/defc FilterButtons
   (let [Button 
         (react/create-class
@@ -125,6 +134,12 @@
         [:div {:style {:clear "both"}}]])}))
 
 
+
+
+
+
+
+
 (defn- modal-background [state]
   {:backgroundColor "rgba(82, 129, 197, 0.4)"
    :display (when-not (:overlay-shown? @state) "none")
@@ -133,7 +148,18 @@
    :top 0 :right 0 :bottom 0 :left 0
    :textAlign "left"})
 
+
+
+
+
+
 (def new-ws-input-style (merge common/input-text-style {:width "100%"}))
+
+
+
+
+
+
 
 (def modal-content
   {:transform "translate(-50%, 0px)"
@@ -141,8 +167,20 @@
    :position "relative" :marginBottom 60
    :top 60 :left "50%" :width 500})
 
+
+
+
+
+
+
 (def form-label
   {:marginBottom "0.16667em" :fontSize "88%"})
+
+
+
+
+
+
 
 (def select
   {:backgroundColor "#fff" ;;TODO background image?
@@ -152,6 +190,12 @@
    :marginBottom "0.75em" :padding "0.33em 0.5em"
    :width "100%" :fontSize "88%"})
 
+
+
+
+
+
+;; EAS
 (defn- render-overlay [state refs]
   (let [clear-overlay (fn []
                         (set! (.-value (.getDOMNode (@refs "wsName"))) "")
@@ -195,6 +239,7 @@
                         #(let [n (.-value (.getDOMNode (@refs "wsName")))]
                            (clear-overlay)
                            (when-not (or (nil? n) (empty? n))
+                             ;; using ajax-orch, make an AJAX call
                              (utils/ajax-orch
                               "/workspaces"
                               {:method :post
@@ -211,6 +256,9 @@
                                 :delay-ms (rand-int 2000)}})))}]]]]]))
 
 
+
+
+;; return fake/mock workspaces for rendering in page
 (defn- create-mock-workspaces []
   (map
     (fn [i]
@@ -222,6 +270,10 @@
     (range (rand-int 100))))
 
 
+
+
+
+;; define the Page for the main renderer in main
 (react/defc Page
   {:render
    (fn [{:keys [state refs]}]

@@ -1,3 +1,4 @@
+;; Common UI/HTML elementw
 (ns org.broadinstitute.firecloud-ui.common
   (:require
    [dmohs.react :as react]
@@ -5,7 +6,7 @@
    [org.broadinstitute.firecloud-ui.utils :as utils :refer [rlog jslog cljslog]]
    ))
 
-
+;; define color RGB
 (def colors {:link-blue "#6690c5"
              :line-gray "#e6e6e6"
              :button-blue "#457fd2"
@@ -13,7 +14,7 @@
              :text-light "#7f7f7f"
              :text-gray "#666"})
 
-
+;; define text style for input
 (def input-text-style
   {:backgroundColor "#fff"
    :border "1px solid #cacaca" :borderRadius 3
@@ -22,6 +23,7 @@
    :marginBottom "0.75em" :padding "0.5em"})
 
 
+;; define Spinner for loading
 (react/defc Spinner
   {:render
    (fn [{:keys [props]}]
@@ -31,6 +33,8 @@
       (:text props)])})
 
 
+
+;; define a button for use and its style
 (react/defc Button
   {:get-default-props
    (fn []
@@ -55,6 +59,9 @@
           "+"]])])})
 
 
+
+
+;; Tab bar for navigation
 (react/defc TabBar
   (let [Tab (react/create-class
              {:get-initial-state
