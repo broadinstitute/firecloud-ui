@@ -6,33 +6,6 @@
     ))
 
 
-
-
-;; ?????
-(defn rlog [& args]
-  (let [arr (array)]
-    (doseq [x args] (.push arr x))
-    (js/console.log.apply js/console arr))
-  (last args))
-
-
-
-
-;; utility for javascript logging
-(defn jslog [& args]
-  (apply rlog (map clj->js args)))
-
-
-
-
-;; utility for clojurescript logging
-(defn cljslog [& args]
-  (apply rlog (map pr-str args)))
-
-
-
-
-
 ;;wrapper for calling external functions
 (defn call-external-object-method [obj method-name & args]
   "Call an external object's method by name, since a normal call will get renamed during

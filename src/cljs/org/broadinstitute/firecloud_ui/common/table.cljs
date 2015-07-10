@@ -4,7 +4,7 @@
    [clojure.string]
    [dmohs.react :as react]
    [org.broadinstitute.firecloud-ui.common :as common]
-   [org.broadinstitute.firecloud-ui.utils :as utils :refer [rlog jslog cljslog]]
+   [org.broadinstitute.firecloud-ui.log-utils :as utils :refer [rlog jslog cljslog]]
    ))
 
 ;; default cell and style

@@ -1,15 +1,13 @@
-;; Namespace for HTML generation for workspaces
 (ns org.broadinstitute.firecloud-ui.page.workspaces
   (:require
    [clojure.string]
    [dmohs.react :as react]
    [org.broadinstitute.firecloud-ui.common :as common]
    [org.broadinstitute.firecloud-ui.common.table :as table]
-   [org.broadinstitute.firecloud-ui.utils :as utils :refer [rlog jslog cljslog]]
+   [org.broadinstitute.firecloud-ui.utils :as net_utils]
+   [org.broadinstitute.firecloud-ui.log-utils :as utils :refer [rlog jslog cljslog]]
    ))
 
-
-;; status cell
 (react/defc StatusCell
   {:render
    (fn [{:keys [props]}]
@@ -18,8 +16,6 @@
       [:div {:style {:backgroundColor "rgba(0,0,0,0.2)"
                      :position "absolute" :top 0 :right 0 :bottom 0 :left 2}}]])})
 
-
-;; workspace cell
 (react/defc WorkspaceCell
   {:render
    (fn [{:keys [props]}]
@@ -28,39 +24,30 @@
       [:div {:style {:padding "1em 0 0 1em" :fontWeight 600}}
        (:data props)]])})
 
-
-;; SamplesCell
 (react/defc SamplesCell
   {:render
    (fn [{:keys [props]}]
      [:span {:style {:display "inline-block" :margin 2 :padding "1em 0 0 1em" :fontWeight "bold"}}
       (:data props) [:span {:style {:color (:text-gray common/colors)}} " samples"]])})
 
-;; WorkflowsCell
 (react/defc WorkflowsCell
   {:render
    (fn [{:keys [props]}]
      [:span {:style {:display "inline-block" :margin 2 :padding "1em 0 0 1em" :fontWeight "bold"}}
       (:data props) [:span {:style {:color (:text-gray common/colors)}} " workflows"]])})
 
-
-;; DataSizeCell
 (react/defc DataSizeCell
   {:render
    (fn [{:keys [props]}]
      [:span {:style {:display "inline-block" :margin 2 :padding "1em 0 0 1em" :fontWeight "bold"}}
       (:data props) [:span {:style {:color (:text-gray common/colors)}} " GB"]])})
 
-
-
-;;OwnerCell
 (react/defc OwnerCell
   {:render
    (fn [{:keys [props]}]
      [:span {:style {:display "inline-block" :margin 2 :padding "1em 0 0 1em" :fontWeight "bold"}}
       (:data props)])})
 
-;; Workspace List
 (react/defc WorkspaceList
   {:render
    (fn [{:keys [props]}]
@@ -106,9 +93,6 @@
                           "Me"])
                        (:workspaces props))})])])})
 
-
-
-;; FilterButtons
 (react/defc FilterButtons
   (let [Button 
         (react/create-class
@@ -133,13 +117,6 @@
         [Button {:text "Exception (0)"}]
         [:div {:style {:clear "both"}}]])}))
 
-
-
-
-
-
-
-
 (defn- modal-background [state]
   {:backgroundColor "rgba(82, 129, 197, 0.4)"
    :display (when-not (:overlay-shown? @state) "none")
@@ -148,18 +125,7 @@
    :top 0 :right 0 :bottom 0 :left 0
    :textAlign "left"})
 
-
-
-
-
-
 (def new-ws-input-style (merge common/input-text-style {:width "100%"}))
-
-
-
-
-
-
 
 (def modal-content
   {:transform "translate(-50%, 0px)"
@@ -167,20 +133,8 @@
    :position "relative" :marginBottom 60
    :top 60 :left "50%" :width 500})
 
-
-
-
-
-
-
 (def form-label
   {:marginBottom "0.16667em" :fontSize "88%"})
-
-
-
-
-
-
 
 (def select
   {:backgroundColor "#fff" ;;TODO background image?
@@ -190,12 +144,6 @@
    :marginBottom "0.75em" :padding "0.33em 0.5em"
    :width "100%" :fontSize "88%"})
 
-
-
-
-
-
-;; EAS
 (defn- render-overlay [state refs]
   (let [clear-overlay (fn []
                         (set! (.-value (.getDOMNode (@refs "wsName"))) "")
@@ -240,25 +188,21 @@
                            (clear-overlay)
                            (when-not (or (nil? n) (empty? n))
                              ;; using ajax-orch, make an AJAX call
-                             (utils/ajax-orch
+                             (net_utils/ajax-orch
                               "/workspaces"
                               {:method :post
-                               :data (utils/->json-string {:name n})
+                               :data (net_utils/->json-string {:name n})
                                :on-done (fn [{:keys [xhr]}]
                                           (swap! state update-in [:workspaces] conj
-                                                 (utils/parse-json-string (.-responseText xhr))))
+                                                 (net_utils/parse-json-string (.-responseText xhr))))
                                :canned-response
-                               {:responseText (utils/->json-string
+                               {:responseText (net_utils/->json-string
                                                {:namespace "test"
                                                 :name n
                                                 :createdBy n
                                                 :createdDate (.toISOString (js/Date.))})
                                 :delay-ms (rand-int 2000)}})))}]]]]]))
 
-
-
-
-;; return fake/mock workspaces for rendering in page
 (defn- create-mock-workspaces []
   (map
     (fn [i]
@@ -269,11 +213,6 @@
          :createdDate (.toISOString (js/Date.))}))
     (range (rand-int 100))))
 
-
-
-
-
-;; define the Page for the main renderer in main
 (react/defc Page
   {:render
    (fn [{:keys [state refs]}]
@@ -301,12 +240,12 @@
         :else [common/Spinner {:text "Loading workspaces..."}])])
    :component-did-mount
    (fn [{:keys [state]}]
-     (utils/ajax-orch
+     (net_utils/ajax-orch
        "/workspaces"
        {:on-done (fn [{:keys [success? xhr]}]
                    (if success?
-                     (let [workspaces (utils/parse-json-string (.-responseText xhr))]
+                     (let [workspaces (net_utils/parse-json-string (.-responseText xhr))]
                        (swap! state assoc :workspaces-loaded? true :workspaces workspaces))
                      (swap! state assoc :error-message (.-statusText xhr))))
-        :canned-response {:responseText (utils/->json-string (create-mock-workspaces))
+        :canned-response {:responseText (net_utils/->json-string (create-mock-workspaces))
                           :status 200 :delay-ms (rand-int 2000)}}))})

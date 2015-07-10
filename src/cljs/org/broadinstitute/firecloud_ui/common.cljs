@@ -3,7 +3,7 @@
   (:require
    [dmohs.react :as react]
    [clojure.string]
-   [org.broadinstitute.firecloud-ui.utils :as utils :refer [rlog jslog cljslog]]
+   [org.broadinstitute.firecloud-ui.log-utils :as utils :refer [rlog jslog cljslog]]
    ))
 
 ;; define color RGB

@@ -8,7 +8,8 @@
    [dmohs.react :as react]
    [org.broadinstitute.firecloud-ui.common :as common]
    [org.broadinstitute.firecloud-ui.common.table :as table]
-   [org.broadinstitute.firecloud-ui.utils :as utils :refer [rlog jslog cljslog]]
+   [org.broadinstitute.firecloud-ui.log-utils :as utils :refer [rlog jslog cljslog]]
+   [org.broadinstitute.firecloud-ui.utils :as net_utils]
    ))
 
 
@@ -96,15 +97,15 @@
          :else [common/Spinner {:text "Loading methods..."}])]])
    :component-did-mount
    (fn [{:keys [state]}]
-     (utils/ajax-orch
+     (net_utils/ajax-orch
        "/methods"
        {:on-done (fn [{:keys [success? xhr]}]
                    (if success?
-                     (let [methods (utils/parse-json-string (.-responseText xhr))]
+                     (let [methods (net_utils/parse-json-string (.-responseText xhr))]
                        (swap! state assoc :methods-loaded? true :methods methods))
                      (swap! state assoc :error-message (.-statusText xhr))))
         ;; TODO, replace create-mock methods!
-        :canned-response {:responseText (utils/->json-string (create-mock-methods))
+        :canned-response {:responseText (net_utils/->json-string (create-mock-methods))
                           :status 200
                           :delay-ms (rand-int 2000)}}))})
 
