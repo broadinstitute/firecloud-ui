@@ -3,6 +3,8 @@
    [clojure.string]
    [dmohs.react :as react]
    [org.broadinstitute.firecloud-ui.common :as common]
+   [org.broadinstitute.firecloud-ui.common.components :as comps]
+   [org.broadinstitute.firecloud-ui.common.style :as style]
    [org.broadinstitute.firecloud-ui.common.table :as table]
    [org.broadinstitute.firecloud-ui.utils :as utils :refer [rlog jslog cljslog]]
    ))
@@ -13,12 +15,12 @@
    (fn [{:keys [props]}]
      [:div {:style {:padding "0 4em"}}
       (if (zero? (count (:methods props)))
-        [:div {:style {:textAlign "center" :backgroundColor (:background-gray common/colors)
+        [:div {:style {:textAlign "center" :backgroundColor (:background-gray style/colors)
                        :padding "1em 0" :borderRadius 8}}
          "No methods to display."]
         [table/Table
          (let [cell-style {:flexBasis "8ex" :flexGrow 1 :whiteSpace "nowrap" :overflow "hidden"
-                           :borderLeft (str "1px solid " (:line-gray common/colors))}
+                           :borderLeft (str "1px solid " (:line-gray style/colors))}
                header-label (fn [text & [padding]]
                               [:span {:style {:paddingLeft (or padding "1em")}}
                                [:span {:style {:fontSize "90%"}} text]])]
@@ -65,20 +67,18 @@
                                                           :filter-text
                                                           (.-value (.getDOMNode (@refs "input"))))]
                                       [:div {:style {:paddingBottom "1em" :paddingLeft "4em"}}
-                                       [:input {:style common/input-text-style
-                                                :type "text" :ref "input" :placeholder "Filter"
-                                                :onKeyDown (fn [e]
-                                                             (when (= 13 (.-keyCode e))
-                                                               (apply-filter)))}]
+                                       (style/create-text-field {:ref "input" :placeholder "Filter"
+                                                                 :onKeyDown (common/create-key-handler
+                                                                              [:enter] apply-filter)})
                                        [:span {:style {:paddingLeft "1em"}}]
-                                       [common/Button {:text "Go" :onClick apply-filter}]])
+                                       [comps/Button {:text "Go" :onClick apply-filter}]])
                                     [MethodsList {:methods (filter-methods
                                                              (:methods @state)
-                                                             '("namespace" "name" "synopsis")
+                                                             ["namespace" "name" "synopsis"]
                                                              (or (:filter-text @state) ""))}]]
          (:error-message @state) [:div {:style {:color "red"}}
                                   "FireCloud service returned error: " (:error-message @state)]
-         :else [common/Spinner {:text "Loading methods..."}])]])
+         :else [comps/Spinner {:text "Loading methods..."}])]])
    :component-did-mount
    (fn [{:keys [state]}]
      (utils/ajax-orch

@@ -2,7 +2,7 @@
   (:require
    [clojure.string]
    [dmohs.react :as react]
-   [org.broadinstitute.firecloud-ui.common :as common]
+   [org.broadinstitute.firecloud-ui.common.style :as style]
    [org.broadinstitute.firecloud-ui.utils :as utils :refer [rlog jslog cljslog]]
    ))
 
@@ -24,12 +24,12 @@
 (react/defc Body
   {:render
    (fn [{:keys [props]}]
-     [:div {:style {:border (str "1px solid " (:line-gray common/colors))
+     [:div {:style {:border (str "1px solid " (:line-gray style/colors))
                     :borderRadius 4}}
       (map-indexed (fn [i row]
                      [:div {:style {:display "flex" :height "3.4em"
                                     :borderTop (when-not (zero? i)
-                                                 (str "1px solid " (:line-gray common/colors)))}}
+                                                 (str "1px solid " (:line-gray style/colors)))}}
                       (map-indexed
                        (fn [i cell-data]
                          [CellContainer {:index i
@@ -44,7 +44,7 @@
   {:render
    (fn [{:keys [props]}]
      [:div {}
-      [:div {:style {:color (:text-light common/colors)
+      [:div {:style {:color (:text-light style/colors)
                      :paddingBottom "1em" :display "flex"}}
        (map (fn [column]
               [:div {:style (merge (:style column) (:header-style column))}

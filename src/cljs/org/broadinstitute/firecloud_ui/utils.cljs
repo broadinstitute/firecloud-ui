@@ -88,3 +88,11 @@
 (defn parse-json-string [x]
   (js->clj (js/JSON.parse x)))
 
+
+(defn deep-merge [& maps]
+  (doseq [x maps] (assert (or (nil? x) (map? x)) (str "not a map: " x)))
+  (apply
+    merge-with
+    (fn [x1 x2] (if (and (map? x1) (map? x2)) (deep-merge x1 x2) x2))
+    maps))
+
