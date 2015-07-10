@@ -15,9 +15,29 @@
 (defn- footer []
   (let [thisyear (.getFullYear (js/Date.))
         startyear 2015
-        yeartext (if (= startyear thisyear) (str startyear) (str startyear "-" thisyear))]
-    [:div {:style {:padding "1em 0 1em 1ex" :fontSize "70%"}}
-     (str "\u00A9 " yeartext " Broad Institute")]))
+        yeartext (if (= startyear thisyear) (str startyear) (str startyear "-" thisyear))
+        spacer [:span {:style {:padding "0 0.6em 0 0.5em"}} "|"]
+        Link (react/create-class
+              {:render
+               (fn [{:keys [props state]}]
+                 [:a {:href (:href props)
+                      :style {:color (:footer-text style/colors)
+                              :textDecoration (when-not (:hovering? @state) "none")}
+                      :onMouseOver #(swap! state assoc :hovering? true)
+                      :onMouseOut  #(swap! state assoc :hovering? false)}
+                  (:text props)])})]
+    [:div {:style {:backgroundColor (:background-gray style/colors)
+                   :borderTop (str "2px solid " (:line-gray style/colors))
+                   :margin "2em 0px 0px" :padding "1em 25px 5em 25px"
+                   :color (:footer-text style/colors) :fontSize "90%"}}
+     [:div {:style {:display "block"}}
+      (str "\u00A9 " yeartext " Broad Institute")
+      spacer
+      [Link {:href "#" :text "Privacy Policy"}]
+      spacer
+      [Link {:href "#" :text "Terms of Service"}]
+      spacer
+      [Link {:href "#" :text "Support"}]]]))
 
 (react/defc TopNavBarLink
   {:render
