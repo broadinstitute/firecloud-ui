@@ -7,7 +7,8 @@
              :background-gray "#f4f4f4"
              :border-gray "#cacaca"
              :text-light "#7f7f7f"
-             :text-gray "#666"})
+             :text-gray "#666"
+             :footer-text "#989898"})
 
 
 (def ^:private input-text-style
