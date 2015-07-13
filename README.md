@@ -6,7 +6,11 @@ https://firecloud-ci.broadinstitute.org/
 
 ## Getting Started
 
+[ClojureScript](https://github.com/clojure/clojurescript) is used for the UI.
 We use the Leiningen build tool. To install, follow the installation instructions on the [Leiningen web site](http://leiningen.org/).
+The code incorporates usage of [react-cljs](https://github.com/dmohs/react-cljs) which is 
+a ClojureScript wrapper for React.  react-cljs largely follows React's top-level API 
+[https://facebook.github.io/react/docs/top-level-api.html](https://facebook.github.io/react/docs/top-level-api.html)
 
 ## Building
 
@@ -24,6 +28,8 @@ Watch files, rebuild, and reload changes into the running browser window:
 ```
 ./script/dev/start-hot-reloader.sh
 ```
+
+[figwheel](https://github.com/bhauman/lein-figwheel) is used to accomplish this.
 
 This can take around 20 seconds to completely start. When ready, it will display the following message:
 ```
