@@ -15,6 +15,12 @@
              :text-gray "#666"
              :text-light "#7f7f7f"})
 
+(defn color-for-status [status]
+  (case status
+    "Complete" (:success-green colors)
+    "Running" (:running-blue colors)
+    "Exception" (:exception-red colors)))
+
 
 (def ^:private input-text-style
   {:backgroundColor "#fff"

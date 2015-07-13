@@ -63,7 +63,7 @@
                                    :backgroundColor "white"}}])])})]
     {:get-initial-state
      (fn [{:keys [props]}]
-       {:active-tab 0})
+       {:active-tab-index 0})
      :render
      (fn [{:keys [props state]}]
        [:div {}
@@ -74,10 +74,57 @@
          (map-indexed
            (fn [i tab]
              [Tab {:index i :text (:text tab)
-                   :active? (= i (:active-tab @state))
+                   :active? (= i (:active-tab-index @state))
                    :onClick (fn [e]
-                              (swap! state assoc :active-tab i)
+                              (swap! state assoc :active-tab-index i)
                               (when-let [f (:onTabSelected tab)] (f e)))}])
            (:items props))
          [:div {:style {:clear "both"}}]]
-        [:div {} (:component (nth (:items props) (:active-tab @state)))]])}))
+        [:div {} (:component (nth (:items props) (:active-tab-index @state)))]])}))
+
+
+(react/defc CompleteIcon
+  {:get-default-props
+   (fn []
+     {:color (:success-green style/colors)
+      :size 24})
+   :render
+   (fn [{:keys [props]}]
+     (common/center {:style {:width (int (* 1.27 (:size props)))
+                             :height (int (* 1.27 (:size props)))
+                             :backgroundColor "fff" :borderRadius "100%"}}
+       (common/center {:style {:fontFamily "fontIcons" :color (:color props)
+                               :fontSize (int (* 0.5 (:size props)))}}
+         "")))})
+
+(react/defc RunningIcon
+  {:get-default-props
+   (fn []
+     {:color (:success-green style/colors)
+      :size 24})
+   :render
+   (fn [{:keys [props]}]
+     (let [hamburger-width (int (+ (:size props) 2))
+           hamburger-height (int (/ hamburger-width 6))
+           spacer-height (int (/ (- (:size props) 4 (* 3 hamburger-height)) 2))
+           hamburger (fn [color] [:div {:style {:height hamburger-height
+                                                :width hamburger-width
+                                                :borderRadius hamburger-height
+                                                :backgroundColor color}}])
+           spacer [:div {:style {:height spacer-height}}]]
+       (common/center {}
+         [:div {}
+          (hamburger "white")
+          spacer
+          (hamburger (:color props))
+          spacer
+          (hamburger (:color props))])))})
+
+(react/defc ExceptionIcon
+  {:get-default-props
+   (fn []
+     {:size 24})
+   :render
+   (fn [{:keys [props]}]
+     (common/center {}
+      [:span {:style {:fontFamily "fontIcons" :color "#fff" :fontSize (:size props)}} ""]))})
