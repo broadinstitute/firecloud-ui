@@ -1,14 +1,19 @@
 (ns org.broadinstitute.firecloud-ui.common.style
   (:require [org.broadinstitute.firecloud-ui.utils :as utils]))
 
-(def colors {:link-blue "#6690c5"
-             :line-gray "#e6e6e6"
-             :button-blue "#457fd2"
-             :background-gray "#f4f4f4"
+(def colors {:background-gray "#f4f4f4"
              :border-gray "#cacaca"
-             :text-light "#7f7f7f"
+             :button-blue "#457fd2"
+             :exception-red "#e85c46"
+             :footer-text "#989898"
+             :link-blue "#6690c5"
+             :line-gray "#e6e6e6"
+             :running-blue "#67688a"
+             :success-green "#7aac20"
+             :tag-background "#d4ecff"
+             :tag-foreground "#2c3c4d"
              :text-gray "#666"
-             :footer-text "#989898"})
+             :text-light "#7f7f7f"})
 
 
 (def ^:private input-text-style
