@@ -13,8 +13,10 @@
 (react/defc StatusCell
   {:render
    (fn [{:keys [props]}]
-     [:div {:style {:backgroundColor "#7aac20" :margin "2px 0 0 2px" :height "calc(100% - 4px)"
-                    :position "relative"}}
+     [:div {:style {:backgroundColor (:success-green style/colors)
+                    :margin "2px 0 0 2px" :height "calc(100% - 4px)"
+                    :position "relative" :cursor "pointer"}
+            :onClick #((get-in props [:data :onClick]))}
       [:div {:style {:backgroundColor "rgba(0,0,0,0.2)"
                      :position "absolute" :top 0 :right 0 :bottom 0 :left 2}}]])})
 
@@ -22,10 +24,12 @@
 (react/defc WorkspaceCell
   {:render
    (fn [{:keys [props]}]
-     [:div {:style {:backgroundColor "#7aac20" :marginTop 2 :height "calc(100% - 4px)"
-                    :color "white"}}
+     [:div {:style {:backgroundColor (:success-green style/colors)
+                    :marginTop 2 :height "calc(100% - 4px)"
+                    :color "white" :cursor "pointer"}
+            :onClick #((get-in props [:data :onClick]))}
       [:div {:style {:padding "1em 0 0 1em" :fontWeight 600}}
-       (:data props)]])})
+       (get-in props [:data :name])]])})
 
 
 (react/defc SamplesCell
@@ -93,8 +97,8 @@
                        :header-style {:borderLeft 0}
                        :component OwnerCell}]
             :data (map (fn [workspace]
-                         [(workspace "status")
-                          (workspace "name")
+                         [{:workspace workspace :onClick #((:onWorkspaceSelected props) workspace)}
+                          {:name (workspace "name") :onClick #((:onWorkspaceSelected props) workspace)}
                           (workspace "sample-count")
                           (workspace "workflow-count")
                           (workspace "size-gb")
@@ -136,7 +140,7 @@
 
 (def ^:private modal-content
   {:transform "translate(-50%, 0px)"
-   :backgroundColor "#f4f4f4"
+   :backgroundColor (:background-gray style/colors)
    :position "relative" :marginBottom 60
    :top 60 :left "50%" :width 500})
 
@@ -148,7 +152,7 @@
            :onKeyDown (common/create-key-handler [:esc] clear-overlay)}
      [:div {:style modal-content}
       [:div {:style {:backgroundColor "#fff"
-                     :borderBottom "1px solid #e3e3e3"
+                     :borderBottom (str "1px solid " (:line-gray style/colors))
                      :padding "20px 48px 18px"
                      :fontSize "137%" :fontWeight 400 :lineHeight 1}}
        "Create New Workspace"]
@@ -194,6 +198,63 @@
                                 :delay-ms (rand-int 2000)}})))}]]]]]))
 
 
+(defn- create-section-header [text]
+  [:h2 {:style {:fontSize 20 :fontWeight 500}} text])
+
+(defn- create-paragraph [& children]
+  [:div {:style {:margin "17px 0 0.33333em 0" :paddingBottom "1.5em"
+                 :fontSize 14 :lineHeight 1.5}}
+   children])
+
+(defn- render-tags [tags]
+  (let [tagstyle {:marginRight 13 :borderRadius 2 :padding "5px 13px"
+                  :backgroundColor (:tag-background style/colors)
+                  :color (:tag-foreground style/colors)
+                  :display "inline-block" :fontSize 15}]
+    [:div {}
+      (map (fn [tag] [:span {:style tagstyle} tag]) tags)]))
+
+(defn- render-selected-workspace [workspace]
+  [:div {}
+   [:div {:style {:backgroundColor (:background-gray style/colors)
+                  :borderTop (str "1px solid " (:line-gray style/colors))
+                  :borderBottom (str "1px solid " (:line-gray style/colors))
+                  :padding "0 1.5em"}}
+    [comps/TabBar {:items ["Summary" "Data" "Methods" "Monitor" "Files"]}]]
+   [:div {:style {:margin "45px 25px"}}
+    [:div {:style {:position "relative" :float "left" :display "inline-block"
+                   :top 0 :left 0 :width 290 :marginRight 40 :height "100%"}}
+     [:div {:style {:borderRadius 5 :backgroundColor (:success-green style/colors) :color "#fff"
+                    :fontSize 20 :fontWeight 400 :padding 25 :textAlign "center"}}
+      "Complete"]
+     [:div {:style {:marginTop 27}}
+      [:div {:style {:backgroundColor "transparent" :color (:button-blue style/colors)
+                     :border (str "1px solid " (:line-gray style/colors))
+                     :fontSize 17 :lineHeight 1 :position "relative"
+                     :padding "0.9em 0em"
+                     :textAlign "center" :cursor "pointer"
+                     :textDecoration "none"}}
+       "Edit this page"]]]
+    [:div {}
+     (create-section-header "Workspace Owner")
+     (create-paragraph
+      [:strong {} (workspace "createdBy")]
+      " ("
+      [:a {:href "#" :style {:color (:button-blue style/colors) :textDecoration "none"}}
+       "shared with -1 people"]
+      ")")
+     (create-section-header "Description")
+     (create-paragraph [:em {} "Description info not available yet"])
+     (create-section-header "Tags")
+     (create-paragraph (render-tags ["Fake" "Tag" "Placeholders"]))
+     (create-section-header "Research Purpose")
+     (create-paragraph [:em {} "Research purpose not available yet"])
+     (create-section-header "Billing Account")
+     (create-paragraph [:em {} "Billing account not available yet"])
+     ]
+    [:div {:style {:clear "both"}}]]])
+
+
 (defn- create-mock-workspaces []
   (map
     (fn [i]
@@ -205,28 +266,38 @@
     (range (rand-int 100))))
 
 
+(defn- render-workspaces-list [state]
+  [:div {}
+   [:div {:style {:backgroundColor (:background-gray style/colors)
+                  :borderTop (str "1px solid " (:line-gray style/colors))
+                  :borderBottom (str "1px solid " (:line-gray style/colors))
+                  :padding "0 1.5em"}}
+    [comps/TabBar {:items ["Mine" "Shared" "Read-Only"]}]]
+   [:div {:style {:padding "2em 0" :textAlign "center"}}
+    [FilterButtons]]
+   [:div {} [WorkspaceList {:ref "workspace-list" :workspaces (:workspaces @state)
+                            :onWorkspaceSelected
+                            (fn [workspace]
+                              (swap! state assoc :selected-workspace workspace))}]]])
+
+
 (react/defc Page
   {:render
    (fn [{:keys [state refs]}]
      [:div {}
       (render-overlay state refs)
       [:div {:style {:padding "2em"}}
-       [:div {:style {:float "right" :display (when-not (:workspaces-loaded? @state) "none")}}
+       [:div {:style {:float "right" :display (when (or (not (:workspaces-loaded? @state))
+                                                        (:selected-workspace @state)) "none")}}
         [comps/Button
          {:text "Create New Workspace" :style :add
           :onClick #(swap! state assoc :overlay-shown? true)}]]
-       [:span {:style {:fontSize "180%"}} "Workspaces"]]
+       [:span {:style {:fontSize "180%"}} (if-let [ws (:selected-workspace @state)]
+                                            (ws "name")
+                                            "Workspaces")]]
       (cond
-        (:workspaces-loaded? @state)
-        [:div {}
-         [:div {:style {:backgroundColor (:background-gray style/colors)
-                        :borderTop (str "1px solid " (:line-gray style/colors))
-                        :borderBottom (str "1px solid " (:line-gray style/colors))
-                        :padding "0 1.5em"}}
-          [comps/TabBar {:items ["Mine" "Shared" "Read-Only"]}]]
-         [:div {:style {:padding "2em 0" :textAlign "center"}}
-          [FilterButtons]]
-         [:div {} [WorkspaceList {:ref "workspace-list" :workspaces (:workspaces @state)}]]]
+        (:selected-workspace @state) (render-selected-workspace (:selected-workspace @state))
+        (:workspaces-loaded? @state) (render-workspaces-list state)
         (:error-message @state) [:div {:style {:color "red"}}
                                   "FireCloud service returned error: " (:error-message @state)]
         :else [comps/Spinner {:text "Loading workspaces..."}])])
@@ -240,4 +311,7 @@
                        (swap! state assoc :workspaces-loaded? true :workspaces workspaces))
                      (swap! state assoc :error-message (.-statusText xhr))))
         :canned-response {:responseText (utils/->json-string (create-mock-workspaces))
-                          :status 200 :delay-ms (rand-int 2000)}}))})
+                          :status 200 :delay-ms (rand-int 2000)}}))
+   :component-will-receive-props
+   (fn [{:keys [state]}]
+     (swap! state dissoc :selected-workspace))})
