@@ -199,60 +199,62 @@
 
 
 (defn- create-section-header [text]
-  [:h2 {:style {:fontSize 20 :fontWeight 500}} text])
+  [:h2 {:style {:fontSize "125%" :fontWeight 500}} text])
 
 (defn- create-paragraph [& children]
   [:div {:style {:margin "17px 0 0.33333em 0" :paddingBottom "1.5em"
-                 :fontSize 14 :lineHeight 1.5}}
+                 :fontSize "90%" :lineHeight 1.5}}
    children])
 
 (defn- render-tags [tags]
   (let [tagstyle {:marginRight 13 :borderRadius 2 :padding "5px 13px"
                   :backgroundColor (:tag-background style/colors)
                   :color (:tag-foreground style/colors)
-                  :display "inline-block" :fontSize 15}]
+                  :display "inline-block" :fontSize "94%"}]
     [:div {}
       (map (fn [tag] [:span {:style tagstyle} tag]) tags)]))
 
-(defn- render-selected-workspace [workspace]
-  [:div {}
-   [:div {:style {:backgroundColor (:background-gray style/colors)
-                  :borderTop (str "1px solid " (:line-gray style/colors))
-                  :borderBottom (str "1px solid " (:line-gray style/colors))
-                  :padding "0 1.5em"}}
-    [comps/TabBar {:items ["Summary" "Data" "Methods" "Monitor" "Files"]}]]
-   [:div {:style {:margin "45px 25px"}}
-    [:div {:style {:position "relative" :float "left" :display "inline-block"
-                   :top 0 :left 0 :width 290 :marginRight 40 :height "100%"}}
-     [:div {:style {:borderRadius 5 :backgroundColor (:success-green style/colors) :color "#fff"
-                    :fontSize 20 :fontWeight 400 :padding 25 :textAlign "center"}}
-      "Complete"]
-     [:div {:style {:marginTop 27}}
-      [:div {:style {:backgroundColor "transparent" :color (:button-blue style/colors)
-                     :border (str "1px solid " (:line-gray style/colors))
-                     :fontSize 17 :lineHeight 1 :position "relative"
-                     :padding "0.9em 0em"
-                     :textAlign "center" :cursor "pointer"
-                     :textDecoration "none"}}
-       "Edit this page"]]]
-    [:div {}
-     (create-section-header "Workspace Owner")
-     (create-paragraph
+(defn- render-workspace-summary [workspace]
+  [:div {:style {:margin "45px 25px"}}
+   [:div {:style {:position "relative" :float "left" :display "inline-block"
+                  :top 0 :left 0 :width 290 :marginRight 40 :height "100%"}}
+    [:div {:style {:borderRadius 5 :backgroundColor (:success-green style/colors) :color "#fff"
+                   :fontSize "125%" :fontWeight 400 :padding 25 :textAlign "center"}}
+     "Complete"]
+    [:div {:style {:marginTop 27}}
+     [:div {:style {:backgroundColor "transparent" :color (:button-blue style/colors)
+                    :border (str "1px solid " (:line-gray style/colors))
+                    :fontSize "106%" :lineHeight 1 :position "relative"
+                    :padding "0.9em 0em"
+                    :textAlign "center" :cursor "pointer"
+                    :textDecoration "none"}}
+      "Edit this page"]]]
+   [:div {}
+    (create-section-header "Workspace Owner")
+    (create-paragraph
       [:strong {} (workspace "createdBy")]
       " ("
       [:a {:href "#" :style {:color (:button-blue style/colors) :textDecoration "none"}}
        "shared with -1 people"]
       ")")
-     (create-section-header "Description")
-     (create-paragraph [:em {} "Description info not available yet"])
-     (create-section-header "Tags")
-     (create-paragraph (render-tags ["Fake" "Tag" "Placeholders"]))
-     (create-section-header "Research Purpose")
-     (create-paragraph [:em {} "Research purpose not available yet"])
-     (create-section-header "Billing Account")
-     (create-paragraph [:em {} "Billing account not available yet"])
-     ]
-    [:div {:style {:clear "both"}}]]])
+    (create-section-header "Description")
+    (create-paragraph [:em {} "Description info not available yet"])
+    (create-section-header "Tags")
+    (create-paragraph (render-tags ["Fake" "Tag" "Placeholders"]))
+    (create-section-header "Research Purpose")
+    (create-paragraph [:em {} "Research purpose not available yet"])
+    (create-section-header "Billing Account")
+    (create-paragraph [:em {} "Billing account not available yet"])]
+   [:div {:style {:clear "both"}}]])
+
+(defn- render-selected-workspace [workspace]
+  [:div {}
+   [comps/TabBar {:key "selected"
+                  :items [{:text "Summary" :component (render-workspace-summary workspace)}
+                          {:text "Data"}
+                          {:text "Methods"}
+                          {:text "Monitor"}
+                          {:text "Files"}]}]])
 
 
 (defn- create-mock-workspaces []
@@ -267,18 +269,18 @@
 
 
 (defn- render-workspaces-list [state]
-  [:div {}
-   [:div {:style {:backgroundColor (:background-gray style/colors)
-                  :borderTop (str "1px solid " (:line-gray style/colors))
-                  :borderBottom (str "1px solid " (:line-gray style/colors))
-                  :padding "0 1.5em"}}
-    [comps/TabBar {:items ["Mine" "Shared" "Read-Only"]}]]
-   [:div {:style {:padding "2em 0" :textAlign "center"}}
-    [FilterButtons]]
-   [:div {} [WorkspaceList {:ref "workspace-list" :workspaces (:workspaces @state)
-                            :onWorkspaceSelected
-                            (fn [workspace]
-                              (swap! state assoc :selected-workspace workspace))}]]])
+  (let [content [:div {}
+                 [:div {:style {:padding "2em 0" :textAlign "center"}}
+                  [FilterButtons]]
+                 [:div {} [WorkspaceList {:ref "workspace-list" :workspaces (:workspaces @state)
+                                          :onWorkspaceSelected
+                                          (fn [workspace]
+                                            (swap! state assoc :selected-workspace workspace))}]]]]
+    [:div {}
+     [comps/TabBar {:key "list"
+                    :items [{:text "Mine" :component content}
+                            {:text "Shared" :component content}
+                            {:text "Read-Only" :component content}]}]]))
 
 
 (react/defc Page
