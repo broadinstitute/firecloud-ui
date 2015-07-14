@@ -25,7 +25,7 @@
   (apply (.bind (aget obj (name method-name)) obj) args))
 
 
-(def use-live-data? true)
+(def use-live-data? false)
 
 
 (defn ajax [arg-map]

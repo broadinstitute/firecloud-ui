@@ -2,7 +2,9 @@
   (:require
     [dmohs.react :as react]
     [org.broadinstitute.firecloud-ui.common :as common]
-    [org.broadinstitute.firecloud-ui.common.style :as style]))
+    [org.broadinstitute.firecloud-ui.common.style :as style]
+    [org.broadinstitute.firecloud-ui.utils :as utils :refer [rlog jslog cljslog]]
+    ))
 
 
 (react/defc Spinner
@@ -51,7 +53,8 @@
                                 :cursor "pointer"
                                 :position "relative"}
                         :onMouseOver (fn [e] (swap! state assoc :hovering? true))
-                        :onMouseOut (fn [e] (swap! state assoc :hovering? false))}
+                        :onMouseOut (fn [e] (swap! state assoc :hovering? false))
+                        :onClick (fn [e] (rlog (str "clicked tabbar" e )))}
                   (:text props)
                   (when (or (:active? props) (:hovering? @state))
                     [:div {:style {:position "absolute" :top "-0.5ex" :left 0

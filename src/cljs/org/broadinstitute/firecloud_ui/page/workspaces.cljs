@@ -223,7 +223,12 @@
                  :borderTop (str "1px solid " (:line-gray style/colors))
                  :borderBottom (str "1px solid " (:line-gray style/colors))
                  :padding "0 1.5em"}}
-   [comps/TabBar {:items ["Summary" "Data" "Method Configurations-DSDEEPB-10-EDDIE" "Monitor" "Files"]}]]
+   [comps/TabBar {:items ["Summary" "Data" "Method Configurations-DSDEEPB-10-EDDIE" "Monitor" "Files" ]
+                  :onClick (fn [e] (rlog (str "clicked createworkspace tabs" e )))
+                  }
+
+    ]
+   ]
   )
 
 
@@ -233,7 +238,7 @@
 (defn- render-selected-workspace [workspace]
   [:div {}
    (create-workspace-tabs)
-   [:div {:style {:margin "45px 25px" :display "block"}}
+   [:div {:style {:margin "45px 25px" :display "block" :name "main_workspaces_div"   }}
     [:div {:style {:position "relative" :float "left" :display "inline-block"
                    :top 0 :left 0 :width 290 :marginRight 40 :height "100%"}}
      [:div {:style {:borderRadius 5 :backgroundColor (:success-green style/colors) :color "#fff"
