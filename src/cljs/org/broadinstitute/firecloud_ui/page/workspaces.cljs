@@ -201,6 +201,8 @@
 (defn- create-section-header [text]
   [:h2 {:style {:fontSize 20 :fontWeight 500}} text])
 
+
+
 (defn- create-paragraph [& children]
   [:div {:style {:margin "17px 0 0.33333em 0" :paddingBottom "1.5em"
                  :fontSize 14 :lineHeight 1.5}}
@@ -214,14 +216,24 @@
     [:div {}
       (map (fn [tag] [:span {:style tagstyle} tag]) tags)]))
 
+
+
+(defn- create-workspace-tabs []
+  [:div {:style {:backgroundColor (:background-gray style/colors)
+                 :borderTop (str "1px solid " (:line-gray style/colors))
+                 :borderBottom (str "1px solid " (:line-gray style/colors))
+                 :padding "0 1.5em"}}
+   [comps/TabBar {:items ["Summary" "Data" "Method Configurations-DSDEEPB-10-EDDIE" "Monitor" "Files"]}]]
+  )
+
+
+
+
+
 (defn- render-selected-workspace [workspace]
   [:div {}
-   [:div {:style {:backgroundColor (:background-gray style/colors)
-                  :borderTop (str "1px solid " (:line-gray style/colors))
-                  :borderBottom (str "1px solid " (:line-gray style/colors))
-                  :padding "0 1.5em"}}
-    [comps/TabBar {:items ["Summary" "Data" "Methods" "Monitor" "Files"]}]]
-   [:div {:style {:margin "45px 25px"}}
+   (create-workspace-tabs)
+   [:div {:style {:margin "45px 25px" :display "block"}}
     [:div {:style {:position "relative" :float "left" :display "inline-block"
                    :top 0 :left 0 :width 290 :marginRight 40 :height "100%"}}
      [:div {:style {:borderRadius 5 :backgroundColor (:success-green style/colors) :color "#fff"
