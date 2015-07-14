@@ -216,8 +216,9 @@
     [:div {}
       (map (fn [tag] [:span {:style tagstyle} tag]) tags)]))
 
-(def workspace-tabs-view-margins "45px 25px")
 
+
+(def workspace-tabs-view-margins "45px 25px")
 
 (defn- render-workspace-summary [workspace]
   [:div {:style {:margin workspace-tabs-view-margins}}
@@ -258,11 +259,13 @@
 
 (defn-
   render-workspace-method-configurations
-  [workspace]                                               ;; what does 'workspace' mean here?  I guess it's passing it as a parameter ? or is this some kind of object inheritance?
+  [workspace]
+  ;; what does 'workspace' mean here?  I guess it's passing
+  ;; it as a parameter ? or is this some kind of object inheritance?
   [:div
     {:style {:margin workspace-tabs-view-margins}}
 
-      [table/Table]
+   ;;  [table/Table]
    ]
 
 
