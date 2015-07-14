@@ -216,9 +216,10 @@
     [:div {}
       (map (fn [tag] [:span {:style tagstyle} tag]) tags)]))
 
+(def workspace-tabs-view-margins "45px 25px")
 
 (defn- render-workspace-summary [workspace]
-  [:div {:style {:margin "45px 25px"}}
+  [:div {:style {:margin workspace-tabs-view-margins }}
    [:div {:style {:position "relative" :float "left" :display "inline-block"
                   :top 0 :left 0 :width 290 :marginRight 40 :height "100%"}}
     [:div {:style {:borderRadius 5 :backgroundColor (:success-green style/colors) :color "#fff"
@@ -250,12 +251,25 @@
     (create-paragraph [:em {} "Billing account not available yet"])]
    [:div {:style {:clear "both"}}]])
 
+(defn-
+  render-workspace-method-configurations
+  [workspace]                                               ;; what does 'workspace' mean here?  I guess it's passing it as a parameter ? or is this some kind of object inheritance?
+  [:div
+    {:style {:margin workspace-tabs-view-margins}}
+
+      [table/Table]
+   ]
+
+
+  )
+
+
 (defn- render-selected-workspace [workspace]
   [:div {}
    [comps/TabBar {:key "selected"
                   :items [{:text "Summary" :component (render-workspace-summary workspace)}
                           {:text "Data"}
-                          {:text "Methods"}
+                          {:text "Method Configurations" :component (render-workspace-method-configurations workspace)  }
                           {:text "Monitor"}
                           {:text "Files"}]}]])
 
