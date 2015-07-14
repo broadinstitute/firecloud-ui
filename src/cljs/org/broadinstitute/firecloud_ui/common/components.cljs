@@ -54,7 +54,7 @@
                                 :position "relative"}
                         :onMouseOver (fn [e] (swap! state assoc :hovering? true))
                         :onMouseOut (fn [e] (swap! state assoc :hovering? false))
-                        :onClick (fn [e] (rlog (str "clicked tabbar" e )))}
+                        :onClick (fn [e] ((:onClick props) e))}
                   (:text props)
                   (when (or (:active? props) (:hovering? @state))
                     [:div {:style {:position "absolute" :top "-0.5ex" :left 0
@@ -63,14 +63,25 @@
                   (when (:active? props)
                     [:div {:style {:position "absolute" :bottom -1 :left 0 :width "100%" :height 2
                                    :backgroundColor "white"}}])])})]
-    {:get-default-props
-     (fn []
-       {:active-tab 0})
-     :render
+    {:get-initial-state
      (fn [{:keys [props]}]
+       {:active-tab 0
+        :active-component (:component (first (:items props)))})
+     :render
+     (fn [{:keys [props state]}]
        [:div {}
-        (map-indexed
-          (fn [i text]
-            [Tab {:index i :text text :active? (= i (:active-tab props))}])
-          (:items props))
-        [:div {:style {:clear "both"}}]])}))
+        [:div {:style {:backgroundColor (:background-gray style/colors)
+                       :borderTop (str "1px solid " (:line-gray style/colors))
+                       :borderBottom (str "1px solid " (:line-gray style/colors))
+                       :padding "0 1.5em"}}
+         (map-indexed
+           (fn [i tab]
+             [Tab {:index i :text (:text tab)
+                   :active? (= i (:active-tab @state))
+                   :onClick (fn [e]
+                              (swap! state assoc :active-tab i :active-component (:component tab))
+                              (when-let [f (:onTabSelected tab)] (f e)))}])
+           (:items props))
+         [:div {:style {:clear "both"}}]]
+        [:div {} (:active-component @state)]])
+     }))
