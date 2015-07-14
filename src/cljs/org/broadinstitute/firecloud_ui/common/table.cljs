@@ -43,6 +43,7 @@
 (react/defc Table
   {:render
    (fn [{:keys [props]}]
+     ;;expected in the props are : 1) "columns", 2) "data"
      [:div {}
       [:div {:style {:color (:text-light style/colors)
                      :paddingBottom "1em" :display "flex"}}

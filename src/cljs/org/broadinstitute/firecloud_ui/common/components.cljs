@@ -2,7 +2,9 @@
   (:require
     [dmohs.react :as react]
     [org.broadinstitute.firecloud-ui.common :as common]
-    [org.broadinstitute.firecloud-ui.common.style :as style]))
+    [org.broadinstitute.firecloud-ui.common.style :as style]
+    [org.broadinstitute.firecloud-ui.utils :as utils :refer [rlog jslog cljslog]]
+    ))
 
 
 (react/defc Spinner
@@ -51,7 +53,8 @@
                                 :cursor "pointer"
                                 :position "relative"}
                         :onMouseOver (fn [e] (swap! state assoc :hovering? true))
-                        :onMouseOut (fn [e] (swap! state assoc :hovering? false))}
+                        :onMouseOut (fn [e] (swap! state assoc :hovering? false))
+                        :onClick (fn [e] ((:onClick props) e))}
                   (:text props)
                   (when (or (:active? props) (:hovering? @state))
                     [:div {:style {:position "absolute" :top "-0.5ex" :left 0
@@ -60,14 +63,23 @@
                   (when (:active? props)
                     [:div {:style {:position "absolute" :bottom -1 :left 0 :width "100%" :height 2
                                    :backgroundColor "white"}}])])})]
-    {:get-default-props
-     (fn []
+    {:get-initial-state
+     (fn [{:keys [props]}]
        {:active-tab 0})
      :render
-     (fn [{:keys [props]}]
+     (fn [{:keys [props state]}]
        [:div {}
-        (map-indexed
-          (fn [i text]
-            [Tab {:index i :text text :active? (= i (:active-tab props))}])
-          (:items props))
-        [:div {:style {:clear "both"}}]])}))
+        [:div {:style {:backgroundColor (:background-gray style/colors)
+                       :borderTop (str "1px solid " (:line-gray style/colors))
+                       :borderBottom (str "1px solid " (:line-gray style/colors))
+                       :padding "0 1.5em"}}
+         (map-indexed
+           (fn [i tab]
+             [Tab {:index i :text (:text tab)
+                   :active? (= i (:active-tab @state))
+                   :onClick (fn [e]
+                              (swap! state assoc :active-tab i)
+                              (when-let [f (:onTabSelected tab)] (f e)))}])
+           (:items props))
+         [:div {:style {:clear "both"}}]]
+        [:div {} (:component (nth (:items props) (:active-tab @state)))]])}))

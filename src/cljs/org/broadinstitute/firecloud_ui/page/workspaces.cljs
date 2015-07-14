@@ -6,7 +6,8 @@
    [org.broadinstitute.firecloud-ui.common.table :as table]
    [org.broadinstitute.firecloud-ui.common.style :as style]
    [org.broadinstitute.firecloud-ui.common.components :as comps]
-   [org.broadinstitute.firecloud-ui.utils :as utils :refer [rlog jslog cljslog]]
+   [org.broadinstitute.firecloud-ui.utils :as utils :refer [rlog jslog cljslog getType parse-json-string ]]
+
    ))
 
 
@@ -84,25 +85,26 @@
                        :style cell-style
                        :header-style {:borderLeft 0}
                        :component SamplesCell}
-                      {:label ""
+                      {:label "Workflows"
                        :style cell-style
                        :header-style {:borderLeft 0}
                        :component WorkflowsCell}
-                      {:label ""
+                      {:label "Size"
                        :style cell-style
                        :header-style {:borderLeft 0}
                        :component DataSizeCell}
-                      {:label ""
+                      {:label "Owner"
                        :style cell-style
                        :header-style {:borderLeft 0}
                        :component OwnerCell}]
             :data (map (fn [workspace]
-                         [{:workspace workspace :onClick #((:onWorkspaceSelected props) workspace)}
+                         [
+                          {:workspace workspace :onClick #((:onWorkspaceSelected props) workspace)}
                           {:name (workspace "name") :onClick #((:onWorkspaceSelected props) workspace)}
                           (workspace "sample-count")
                           (workspace "workflow-count")
                           (workspace "size-gb")
-                          "Me"])
+                          "Me"]  )
                        (:workspaces props))})])])})
 
 
@@ -199,60 +201,283 @@
 
 
 (defn- create-section-header [text]
-  [:h2 {:style {:fontSize 20 :fontWeight 500}} text])
+  [:h2 {:style {:fontSize "125%" :fontWeight 500}} text])
+
+
 
 (defn- create-paragraph [& children]
   [:div {:style {:margin "17px 0 0.33333em 0" :paddingBottom "1.5em"
-                 :fontSize 14 :lineHeight 1.5}}
+                 :fontSize "90%" :lineHeight 1.5}}
    children])
 
 (defn- render-tags [tags]
   (let [tagstyle {:marginRight 13 :borderRadius 2 :padding "5px 13px"
                   :backgroundColor (:tag-background style/colors)
                   :color (:tag-foreground style/colors)
-                  :display "inline-block" :fontSize 15}]
+                  :display "inline-block" :fontSize "94%"}]
     [:div {}
       (map (fn [tag] [:span {:style tagstyle} tag]) tags)]))
 
-(defn- render-selected-workspace [workspace]
-  [:div {}
-   [:div {:style {:backgroundColor (:background-gray style/colors)
-                  :borderTop (str "1px solid " (:line-gray style/colors))
-                  :borderBottom (str "1px solid " (:line-gray style/colors))
-                  :padding "0 1.5em"}}
-    [comps/TabBar {:items ["Summary" "Data" "Methods" "Monitor" "Files"]}]]
-   [:div {:style {:margin "45px 25px"}}
-    [:div {:style {:position "relative" :float "left" :display "inline-block"
-                   :top 0 :left 0 :width 290 :marginRight 40 :height "100%"}}
-     [:div {:style {:borderRadius 5 :backgroundColor (:success-green style/colors) :color "#fff"
-                    :fontSize 20 :fontWeight 400 :padding 25 :textAlign "center"}}
-      "Complete"]
-     [:div {:style {:marginTop 27}}
-      [:div {:style {:backgroundColor "transparent" :color (:button-blue style/colors)
-                     :border (str "1px solid " (:line-gray style/colors))
-                     :fontSize 17 :lineHeight 1 :position "relative"
-                     :padding "0.9em 0em"
-                     :textAlign "center" :cursor "pointer"
-                     :textDecoration "none"}}
-       "Edit this page"]]]
-    [:div {}
-     (create-section-header "Workspace Owner")
-     (create-paragraph
+
+
+
+(def workspace-tabs-view-margins "45px 25px")
+
+
+(defn- render-workspace-summary [workspace]
+  [:div {:style {:margin workspace-tabs-view-margins }}
+   [:div {:style {:position "relative" :float "left" :display "inline-block"
+                  :top 0 :left 0 :width 290 :marginRight 40 :height "100%"}}
+    [:div {:style {:borderRadius 5 :backgroundColor (:success-green style/colors) :color "#fff"
+                   :fontSize 20 :fontWeight 400 :padding 25 :textAlign "center"}}
+     "Complete"]
+    [:div {:style {:marginTop 27}}
+     [:div {:style {:backgroundColor "transparent" :color (:button-blue style/colors)
+                    :border (str "1px solid " (:line-gray style/colors))
+
+                    :fontSize "106%" :lineHeight 1 :position "relative"
+
+                    :padding "0.9em 0em"
+                    :textAlign "center" :cursor "pointer"
+                    :textDecoration "none"}}
+      "Edit this page"]]]
+   [:div {}
+    (create-section-header "Workspace Owner")
+    (create-paragraph
       [:strong {} (workspace "createdBy")]
       " ("
       [:a {:href "#" :style {:color (:button-blue style/colors) :textDecoration "none"}}
        "shared with -1 people"]
       ")")
-     (create-section-header "Description")
-     (create-paragraph [:em {} "Description info not available yet"])
-     (create-section-header "Tags")
-     (create-paragraph (render-tags ["Fake" "Tag" "Placeholders"]))
-     (create-section-header "Research Purpose")
-     (create-paragraph [:em {} "Research purpose not available yet"])
-     (create-section-header "Billing Account")
-     (create-paragraph [:em {} "Billing account not available yet"])
-     ]
-    [:div {:style {:clear "both"}}]]])
+    (create-section-header "Description")
+    (create-paragraph [:em {} "Description info not available yet"])
+    (create-section-header "Tags")
+    (create-paragraph (render-tags ["Fake" "Tag" "Placeholders"]))
+    (create-section-header "Research Purpose")
+    (create-paragraph [:em {} "Research purpose not available yet"])
+    (create-section-header "Billing Account")
+    (create-paragraph [:em {} "Billing account not available yet"])]
+   [:div {:style {:clear "both"}}]])
+
+
+
+(defn-
+  render-workspace-method-configurations
+  [workspace]
+  ;; what does 'workspace' mean here?  I guess it's passing
+  ;; it as a parameter variable ? or is this some kind of object inheritance?
+  [:div
+    {:style {:margin workspace-tabs-view-margins}}
+   [:table
+    [:row [:col 1]]
+    ]
+   (let [x 456]
+
+     (utils/ajax-orch
+       "/workspaces"
+       {:on-done (fn [{:keys [success? xhr]}]
+                   (if success?
+                     ("success true")
+                     ("success false")))
+        :canned-response {:responseText "this is the response text"
+                          :status 200 :delay-ms (rand-int 2000)}
+        }))
+
+   ]
+
+  )
+
+
+
+(defn- create-mock-methodconfs []
+  ;;this maps a function to random integers
+  ;;the function that gets mapped is an anonymous function defined here
+  ;;the value passed to the anonymous function is a random integer
+
+  ;;FROM https://broadinstitute.atlassian.net/browse/DSDEEPB-10 (verbatim)
+
+  ;; The scope of this story is strictly the listing of method configurations.
+  ;;* name of the method configuration
+  ;;* root entity type
+  ;;* last updated?
+
+  ;;  Acceptance Criteria:
+  ;;  * Display as much information as possible from the API
+  ;;  * Draft a story reflecting work that needs to be completed on the API and Orchestration layers
+  ;;  * Needs to be reviewed by [~birger] before it can be closed
+  (map
+    (fn [i]
+      {
+       :method-conf-name (rand-nth ["rand_name_1" "rand_name_2" "rand_name_3" "rand_name_4"]    )
+       :method-conf-root-ent-type (str "method_conf_root_ent_type_" (inc i))
+       :method-conf-last-updated (str "method_conf_last_updated_" (inc i))
+       }
+      )
+    (range (rand-int 10)))
+  )
+
+
+
+
+
+(react/defc WorkspaceMethodsConfigurationsList
+            {:render
+             (fn [{:keys [props]}]
+               [:div {:style {:padding "0 4em"}}
+                ;;count the 'method-confs' to decide what to put in the component
+                (if (zero? (:method-conf-count props))
+                  [:div {:style {:textAlign "center" :backgroundColor (:background-gray style/colors)
+                                 :padding   "1em 0" :borderRadius 8}}
+                   (str (:no-confs-to-display-message props))]
+                  ;;if the count is NOT zero, then put a table here! :)
+                  [table/Table
+                   (let [
+                         ;;define the cell-style to be this map
+                         cell-style {:flexBasis  "8ex" :flexGrow 1 :whiteSpace "nowrap" :overflow "hidden"
+                                     :borderLeft (str "1px solid " (:line-gray style/colors))}
+                         ;; define the header-label to be this function
+                         ;; what does this function do????  It seems to apply a default or given padding to a text?
+                         header-label (fn [text & [padding]]
+                                        [:span {:style {:paddingLeft (or padding "1em")}}
+                                         [:span {:style {:fontSize "90%"}} text]])]
+                     {:columns [{:label (header-label "Conf Name")
+                                 :style (merge cell-style {:borderLeft "none"})}
+                                {:label        (header-label "Conf Root Entity Type")
+                                 :style        cell-style
+                                 :header-style {:borderLeft "none"}}
+                                {:label        (header-label "Last Updated")
+                                 :style        (merge cell-style {:flexBasis "30ex"})
+                                 :header-style {:borderLeft "none"}}]
+                      :data    (map (fn [m]
+                                      [
+                                       ;(:method-conf-name m)
+                                       ;(:method-conf-root-ent-type m)
+                                       ;(:method-conf-last-updated m)
+                                       (m "method-conf-name"  )
+                                       (m "method-conf-root-ent-type")
+                                       (m "method-conf-last-updated")
+                                       ])
+                                    (:method-confs props)
+                                    )
+                      })])])})
+
+
+
+
+
+(
+  def method-conf-ajax-call
+  (fn [ work_space_name_space_f work_space_name_f state_atom props-map]
+
+    (let [
+          ;; GET /{workspaceNamespace}/{workspaceName}/methodconfigs
+          url (str "/" (:selected-workspace-namespace props-map) "/"  (:selected-workspace props-map) "/methodconfigs"  )
+          ]
+      (utils/ajax-orch
+        url
+        {
+         :on-done (fn [{:keys [success? xhr  props   ]}]
+                    (if success?
+                      (let [method-confs (utils/parse-json-string (.-responseText xhr))]
+                        (swap! state_atom assoc :methods-loaded? true :methods methods))
+                      (swap! state_atom assoc :error-message (.-statusText xhr))
+                      )
+                    (swap! state_atom assoc :method-conf-count  (count (parse-json-string (.-responseText xhr))  ))
+                    (swap! state_atom assoc :method-confs-loaded? true)
+                    (swap! state_atom assoc :method-confs (parse-json-string (.-responseText xhr)))
+                    (rlog "The value of the url is" url )
+                    (rlog (str "the passed WorkSpaceNameSpace is " work_space_name_space_f " and the passed WorkSpaceName is " work_space_name_f   ))
+                    (rlog (str "the passed in workspace name is " (:selected-workspace props-map)))
+                    (rlog (str "the passed in workspace namespace is " (:selected-workspace-namespace props-map)))
+
+                    )
+         :canned-response {
+                           :responseText (utils/->json-string (create-mock-methodconfs)     )
+                           :status 200
+                           :delay-ms (rand-int 2000)
+                           }
+         }
+        )
+      );;let
+    )
+  )
+
+
+
+
+(react/defc WorkspaceMethodConfigurations
+            {
+             ;;Invoked once, only on the client (not on the server), immediately after the initial rendering occurs.
+             :component-did-mount
+             (fn [{:keys [state props]}]
+               (method-conf-ajax-call (:selected-workspace-namespace props) (:selected-workspace props)    state props   )
+               )
+
+             :render
+             ;;render must be a function
+             (fn [{:keys [state]}]
+                [:div {:style {:padding "1em"}}
+                ;;[:h2 {} "Configurations"]
+                (create-section-header "Method Configurations")
+                [:div {}
+                 (cond
+                   (:method-confs-loaded? @state)
+                   [:div {}
+                        [
+                         WorkspaceMethodsConfigurationsList
+                            {
+                             :method-conf-count (:method-conf-count @state)
+                             :no-confs-to-display-message "There are no method configurations to display."
+                             :method-confs (:method-confs @state)
+                             }
+                         ]
+                                              ;;(str (:methods-loaded? @state) (:method-content @state)    )
+                                              ;;
+                                              ;;(:table {} [:tr {} "tr content"] )
+                                              ;;[:table {} [:tr {} "tr stuff"] [:tr {} "another row"] ]
+                                              ]
+                   (:error-message @state) [:div {:style {:color "red"}}
+                                            "FireCloud service returned error: " (:error-message @state)]
+                   :else [comps/Spinner {:text "Loading configurations..."}])]]
+
+               )
+             }
+            )
+
+
+
+
+
+(defn- render-selected-workspace [workspace]
+  [:div {}
+
+   (let [
+         myWorkspaceMethodConfigurations WorkspaceMethodConfigurations
+
+         ]
+
+     (jslog "currently in render-selected-workspace and the workspace is " workspace  )
+     [comps/TabBar {:key   "selected"
+                    :items [{:text "Summary" :component (render-workspace-summary workspace)}
+                            {:text "Data"}
+                            {:text "Method Configurations" :component [
+                                                                       myWorkspaceMethodConfigurations
+                                                                          {
+                                                                           :selected-workspace (get workspace "name")
+                                                                           :selected-workspace-namespace (get workspace "namespace")
+                                                                           }
+
+                                                                       ]
+                             }
+                            {:text "Methods"}
+                            {:text "Monitor"}
+                            {:text "Files"}]}
+      ]
+     )
+   ]
+
+  )
+
 
 
 (defn- create-mock-workspaces []
@@ -267,18 +492,18 @@
 
 
 (defn- render-workspaces-list [state]
-  [:div {}
-   [:div {:style {:backgroundColor (:background-gray style/colors)
-                  :borderTop (str "1px solid " (:line-gray style/colors))
-                  :borderBottom (str "1px solid " (:line-gray style/colors))
-                  :padding "0 1.5em"}}
-    [comps/TabBar {:items ["Mine" "Shared" "Read-Only"]}]]
-   [:div {:style {:padding "2em 0" :textAlign "center"}}
-    [FilterButtons]]
-   [:div {} [WorkspaceList {:ref "workspace-list" :workspaces (:workspaces @state)
-                            :onWorkspaceSelected
-                            (fn [workspace]
-                              (swap! state assoc :selected-workspace workspace))}]]])
+  (let [content [:div {}
+                 [:div {:style {:padding "2em 0" :textAlign "center"}}
+                  [FilterButtons]]
+                 [:div {} [WorkspaceList {:ref "workspace-list" :workspaces (:workspaces @state)
+                                          :onWorkspaceSelected
+                                          (fn [workspace]
+                                            (swap! state assoc :selected-workspace workspace))}]]]]
+    [:div {}
+     [comps/TabBar {:key "list"
+                    :items [{:text "Mine" :component content}
+                            {:text "Shared" :component content}
+                            {:text "Read-Only" :component content}]}]]))
 
 
 (react/defc Page
