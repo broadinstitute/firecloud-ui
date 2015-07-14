@@ -261,15 +261,43 @@
   render-workspace-method-configurations
   [workspace]
   ;; what does 'workspace' mean here?  I guess it's passing
-  ;; it as a parameter ? or is this some kind of object inheritance?
+  ;; it as a parameter variable ? or is this some kind of object inheritance?
   [:div
     {:style {:margin workspace-tabs-view-margins}}
+   [:table
+    [:row [:col 1]]
+    ]
+   (let [x 456]
 
-   ;;  [table/Table]
+     (utils/ajax-orch
+       "/workspaces"
+       {:on-done (fn [{:keys [success? xhr]}]
+                   (if success?
+                     ("success true")
+                     ("success false")))
+        :canned-response {:responseText "this is the response text"
+                          :status 200 :delay-ms (rand-int 2000)}
+        }))
+
    ]
 
-
   )
+
+
+(react/defc render-workspace-method-configurations-compo
+            {:render
+             (fn [  {:keys [props]} ]
+               [:div
+
+                "inner"
+                ]
+
+               )
+
+
+             }
+
+            )
 
 
 
@@ -278,7 +306,7 @@
    [comps/TabBar {:key "selected"
                   :items [{:text "Summary" :component (render-workspace-summary workspace)}
                           {:text "Data"}
-                          {:text "Method Configurations" :component (render-workspace-method-configurations workspace)  }
+                          {:text "Method Configurations" :component (render-workspace-method-configurations workspace  )}
                           {:text "Methods"}
                           {:text "Monitor"}
                           {:text "Files"}]}]])
