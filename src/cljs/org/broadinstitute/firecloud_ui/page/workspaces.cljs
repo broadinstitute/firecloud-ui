@@ -199,36 +199,39 @@
 
 
 (defn- create-section-header [text]
-  [:h2 {:style {:fontSize 20 :fontWeight 500}} text])
+  [:h2 {:style {:fontSize "125%" :fontWeight 500}} text])
 
 
 
 (defn- create-paragraph [& children]
   [:div {:style {:margin "17px 0 0.33333em 0" :paddingBottom "1.5em"
-                 :fontSize 14 :lineHeight 1.5}}
+                 :fontSize "90%" :lineHeight 1.5}}
    children])
 
 (defn- render-tags [tags]
   (let [tagstyle {:marginRight 13 :borderRadius 2 :padding "5px 13px"
                   :backgroundColor (:tag-background style/colors)
                   :color (:tag-foreground style/colors)
-                  :display "inline-block" :fontSize 15}]
+                  :display "inline-block" :fontSize "94%"}]
     [:div {}
       (map (fn [tag] [:span {:style tagstyle} tag]) tags)]))
 
 (def workspace-tabs-view-margins "45px 25px")
 
+
 (defn- render-workspace-summary [workspace]
-  [:div {:style {:margin workspace-tabs-view-margins }}
+  [:div {:style {:margin workspace-tabs-view-margins}}
    [:div {:style {:position "relative" :float "left" :display "inline-block"
                   :top 0 :left 0 :width 290 :marginRight 40 :height "100%"}}
     [:div {:style {:borderRadius 5 :backgroundColor (:success-green style/colors) :color "#fff"
-                   :fontSize 20 :fontWeight 400 :padding 25 :textAlign "center"}}
+                   :fontSize "125%" :fontWeight 400 :padding 25 :textAlign "center"}}
+
      "Complete"]
     [:div {:style {:marginTop 27}}
      [:div {:style {:backgroundColor "transparent" :color (:button-blue style/colors)
                     :border (str "1px solid " (:line-gray style/colors))
-                    :fontSize 17 :lineHeight 1 :position "relative"
+
+                    :fontSize "106%" :lineHeight 1 :position "relative"
                     :padding "0.9em 0em"
                     :textAlign "center" :cursor "pointer"
                     :textDecoration "none"}}
@@ -251,6 +254,8 @@
     (create-paragraph [:em {} "Billing account not available yet"])]
    [:div {:style {:clear "both"}}]])
 
+
+
 (defn-
   render-workspace-method-configurations
   [workspace]                                               ;; what does 'workspace' mean here?  I guess it's passing it as a parameter ? or is this some kind of object inheritance?
@@ -264,12 +269,14 @@
   )
 
 
+
 (defn- render-selected-workspace [workspace]
   [:div {}
    [comps/TabBar {:key "selected"
                   :items [{:text "Summary" :component (render-workspace-summary workspace)}
                           {:text "Data"}
                           {:text "Method Configurations" :component (render-workspace-method-configurations workspace)  }
+                          {:text "Methods"}
                           {:text "Monitor"}
                           {:text "Files"}]}]])
 

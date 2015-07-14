@@ -65,8 +65,7 @@
                                    :backgroundColor "white"}}])])})]
     {:get-initial-state
      (fn [{:keys [props]}]
-       {:active-tab 0
-        :active-component (:component (first (:items props)))})
+       {:active-tab 0})
      :render
      (fn [{:keys [props state]}]
        [:div {}
@@ -79,9 +78,8 @@
              [Tab {:index i :text (:text tab)
                    :active? (= i (:active-tab @state))
                    :onClick (fn [e]
-                              (swap! state assoc :active-tab i :active-component (:component tab))
+                              (swap! state assoc :active-tab i)
                               (when-let [f (:onTabSelected tab)] (f e)))}])
            (:items props))
          [:div {:style {:clear "both"}}]]
-        [:div {} (:active-component @state)]])
-     }))
+        [:div {} (:component (nth (:items props) (:active-tab @state)))]])}))
