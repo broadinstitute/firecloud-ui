@@ -16,10 +16,15 @@ if len(sys.argv) > 1:
         print 'Usage: {} [local]'.format(sys.argv[0])
         sys.exit(1)
     _forward_path = ''
+    _server_name='local.broadinstitute.org'
     _connection = httplib.HTTPConnection('local.broadinstitute.org', 8080)
 else:
     _forward_path = '/api'
+    _server_name='firecloud-ci.broadinstitute.org'
     _connection = httplib.HTTPSConnection('firecloud-ci.broadinstitute.org')
+
+
+print "_server_name is '"+_server_name+"'"
 
 
 class Handler(SimpleHTTPServer.SimpleHTTPRequestHandler):
