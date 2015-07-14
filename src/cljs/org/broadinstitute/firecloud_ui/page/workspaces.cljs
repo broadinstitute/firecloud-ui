@@ -220,15 +220,23 @@
                   :top 0 :left 0 :width 290 :marginRight 40 :height "100%"}}
     [:div {:style {:borderRadius 5 :backgroundColor (:success-green style/colors) :color "#fff"
                    :fontSize "125%" :fontWeight 400 :padding 25 :textAlign "center"}}
-     "Complete"]
+     [:span {:style {:display "inline-block" :verticalAlign "middle"
+                     :width "2.5em" :height "2.5em" :position "relative"
+                     :backgroundColor "#fff" :borderRadius "100%"}}
+      [:span {:style {:fontFamily "fontIcons" :color (:success-green style/colors) :fontSize "90%"
+                      :position "absolute"
+                      :top "50%" :left "50%" :transform "translate(-50%, -50%)"}} ""]]
+     [:span {:style {:marginLeft "1.5ex"}} "Complete"]]
     [:div {:style {:marginTop 27}}
      [:div {:style {:backgroundColor "transparent" :color (:button-blue style/colors)
                     :border (str "1px solid " (:line-gray style/colors))
                     :fontSize "106%" :lineHeight 1 :position "relative"
-                    :padding "0.9em 0em"
+                    :padding "0.7em 0em"
                     :textAlign "center" :cursor "pointer"
                     :textDecoration "none"}}
-      "Edit this page"]]]
+      [:span {:style {:display "inline-block" :verticalAlign "middle"}}
+       [:span {:style {:fontFamily "fontIcons" :fontSize "135%"}} ""]]
+      [:span {:style {:marginLeft "1em"}} "Edit this page"]]]]
    [:div {}
     (create-section-header "Workspace Owner")
     (create-paragraph

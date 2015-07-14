@@ -15,6 +15,14 @@
         -moz-font-smoothing: antialiased;
         -o-font-smoothing: antialiased;
       }
+      @font-face {
+        font-family: "fontIcons";
+        src: url("assets/icons/fontIcons.eot");
+        src: url("assets/icons/fontIcons.eot?#iefix") format("eot"),
+          url("assets/icons/fontIcons.woff") format("woff"),
+          url("assets/icons/fontIcons.ttf") format("truetype"),
+          url("assets/icons/fontIcons.svg#fontIcons") format("svg");
+      }
     </style>
     <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
     <script src="https://apis.google.com/js/platform.js" async defer></script>
