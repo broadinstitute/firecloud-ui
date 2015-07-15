@@ -286,17 +286,21 @@
 
 (react/defc render-workspace-method-configurations-react-component
             {
-             ;; :somefunc (fn [] (set! ))
+             :component-did-mount
+             (fn [{:keys [state]}]
+               ;;(set! )
+               ;; reffering to the methods-loaded? (of the state) modify it here ...
+               )
 
              :render
-             ;;render must be a FUNction
+             ;;render must be a function
              (fn [{:keys [state]}]
 
      [:div {:style {:padding "1em"}}
       [:h2 {} "Configurations"]
       [:div {}
        (cond
-         (:methods-loaded? @state) [:div "yes"]
+         (:methods-loaded? @state) [:div (:methods-loaded? @state)]
          (:error-message @state) [:div {:style {:color "red"}}
                                   "FireCloud service returned error: " (:error-message @state)]
          :else [comps/Spinner {:text "Loading configurations..."}])]]
