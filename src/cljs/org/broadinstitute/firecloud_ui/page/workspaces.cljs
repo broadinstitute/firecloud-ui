@@ -284,20 +284,29 @@
   )
 
 
-(react/defc render-workspace-method-configurations-compo
-            {:render
-             (fn [  {:keys [props]} ]
-               [:div
+(react/defc render-workspace-method-configurations-react-component
+            {
+             ;; :somefunc (fn [] (set! ))
 
-                "inner"
-                ]
+             :render
+             ;;render must be a FUNction
+             (fn [{:keys [state]}]
+
+     [:div {:style {:padding "1em"}}
+      [:h2 {} "Configurations"]
+      [:div {}
+       (cond
+         (:methods-loaded? @state) [:div "yes"]
+         (:error-message @state) [:div {:style {:color "red"}}
+                                  "FireCloud service returned error: " (:error-message @state)]
+         :else [comps/Spinner {:text "Loading configurations..."}])]]
+
 
                )
-
-
              }
-
             )
+
+
 
 
 
@@ -306,7 +315,7 @@
    [comps/TabBar {:key "selected"
                   :items [{:text "Summary" :component (render-workspace-summary workspace)}
                           {:text "Data"}
-                          {:text "Method Configurations" :component (render-workspace-method-configurations workspace  )}
+                          {:text "Method Configurations" :component [render-workspace-method-configurations-react-component] }
                           {:text "Methods"}
                           {:text "Monitor"}
                           {:text "Files"}]}]])

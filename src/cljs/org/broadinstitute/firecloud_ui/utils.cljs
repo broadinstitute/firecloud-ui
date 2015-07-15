@@ -29,7 +29,9 @@
 
 
 (defn ajax [arg-map]
-  (let [url (:url arg-map)
+  (let
+    ;;setter/getter statements ; setting local values from what was passed in
+       [url (:url arg-map)
         on-done (:on-done arg-map)
         method (if-let [method (:method arg-map)] (clojure.string/upper-case (name method)) "GET")
         headers (:headers arg-map)
@@ -37,25 +39,34 @@
         with-credentials? (:with-credentials? arg-map)
         canned-response-params (when (and goog.DEBUG (not use-live-data?))
                                  (:canned-response arg-map))]
+    ;;critical assertions for url and on-done method
+    ;;a URL is absolutely necessary ; an on-done method is particularly necessary for AJAX calls
     (assert url (str "Missing url parameter: " arg-map))
     (assert on-done (str "Missing on-done callback: " arg-map))
+    ;;with setting/getting done, prepare for AJAX/ACAX
     (let [xhr (if-not canned-response-params
+                ;; if there isn't a canned response, then make an AJAX/XMLHttpRequest for subsequent usage below
                 (js/XMLHttpRequest.)
+                ;; if there IS a canned response, then ???
                 (let [xhr (js-obj)]
                   (doseq [[k v] (dissoc canned-response-params :delay-ms)]
                     (aset xhr (name k) v))
                   xhr))
+          ;; set up a call-back function
           call-on-done (fn []
                          ((:on-done arg-map) {:xhr xhr
                                               :status-code (.-status xhr)
                                               :success? (and (>= (.-status xhr) 200)
                                                              (< (.-status xhr) 300))}))]
+      ;; apply the credentials to the request before AJAX/ACAX
       (when with-credentials?
         (set! (.-withCredentials xhr) true))
       (if canned-response-params
+        ;; if the delay is canned, then set the call-on-done to be the callback when there's a timeout
         (if-let [delay-ms (:delay-ms canned-response-params)]
           (js/setTimeout call-on-done delay-ms)
           (call-on-done))
+        ;;  perform AJAX (ACAX??? for 'Asynchronous Clojurescript And Xml')
         (do
           (.addEventListener xhr "loadend" call-on-done)
           (.open xhr method url)
@@ -67,7 +78,10 @@
 
 
 (defn ajax-orch [path arg-map]
+  ;; verify that that path starts with "/"
   (assert (= (subs path 0 1) "/") (str "Path must start with '/': " path))
+  ;; add to the provided arg-map the URL then invoke AJAX with the
+  ;; augmented argmap and the path prefixed with "/api"
   (ajax (assoc arg-map :url (str "/api" path))))
 
 
