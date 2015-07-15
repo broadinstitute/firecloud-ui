@@ -286,10 +286,12 @@
 
 (react/defc render-workspace-method-configurations-react-component
             {
+             ;;Invoked once, only on the client (not on the server), immediately after the initial rendering occurs.
              :component-did-mount
              (fn [{:keys [state]}]
                ;;(set! )
-               ;; reffering to the methods-loaded? (of the state) modify it here ...
+               ;; referring to the methods-loaded? (of the state) do AJAX/something to modify it here ...
+
                )
 
              :render
@@ -297,7 +299,8 @@
              (fn [{:keys [state]}]
 
      [:div {:style {:padding "1em"}}
-      [:h2 {} "Configurations"]
+      ;;[:h2 {} "Configurations"]
+      (create-section-header "Method Configurations")
       [:div {}
        (cond
          (:methods-loaded? @state) [:div (:methods-loaded? @state)]
