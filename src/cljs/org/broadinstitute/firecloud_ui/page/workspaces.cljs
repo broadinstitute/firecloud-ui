@@ -9,22 +9,28 @@
    [org.broadinstitute.firecloud-ui.utils :as utils :refer [rlog jslog cljslog]]
    ))
 
+;; TODO - refactor this file into multiple files by page
 
 (react/defc StatusCell
   {:render
    (fn [{:keys [props]}]
-     [:div {:style {:backgroundColor (:success-green style/colors)
-                    :margin "2px 0 0 2px" :height "calc(100% - 4px)"
-                    :position "relative" :cursor "pointer"}
-            :onClick #((get-in props [:data :onClick]))}
-      [:div {:style {:backgroundColor "rgba(0,0,0,0.2)"
-                     :position "absolute" :top 0 :right 0 :bottom 0 :left 2}}]])})
+     (let [status (get-in props [:data :status])]
+       [:div {:style {:backgroundColor (style/color-for-status status)
+                      :margin "2px 0 0 2px" :height "calc(100% - 4px)"
+                      :position "relative" :cursor "pointer"}
+              :onClick #((get-in props [:data :onClick]))}
+        [:div {:style {:backgroundColor "rgba(0,0,0,0.2)"
+                       :position "absolute" :top 0 :right 0 :bottom 0 :left 2}}]
+        (case status
+          "Complete"  [comps/CompleteIcon]
+          "Running"   [comps/RunningIcon]
+          "Exception" [comps/ExceptionIcon])]))})
 
 
 (react/defc WorkspaceCell
   {:render
    (fn [{:keys [props]}]
-     [:div {:style {:backgroundColor (:success-green style/colors)
+     [:div {:style {:backgroundColor (style/color-for-status (get-in props [:data :status]))
                     :marginTop 2 :height "calc(100% - 4px)"
                     :color "white" :cursor "pointer"}
             :onClick #((get-in props [:data :onClick]))}
@@ -97,8 +103,8 @@
                        :header-style {:borderLeft 0}
                        :component OwnerCell}]
             :data (map (fn [workspace]
-                         [{:workspace workspace :onClick #((:onWorkspaceSelected props) workspace)}
-                          {:name (workspace "name") :onClick #((:onWorkspaceSelected props) workspace)}
+                         [{:status (workspace "status") :onClick #((:onWorkspaceSelected props) workspace)}
+                          {:name (workspace "name") :status (workspace "status") :onClick #((:onWorkspaceSelected props) workspace)}
                           (workspace "sample-count")
                           (workspace "workflow-count")
                           (workspace "size-gb")
@@ -199,10 +205,10 @@
 
 
 (defn- create-section-header [text]
-  [:h2 {:style {:fontSize "125%" :fontWeight 500}} text])
+  [:div {:style {:fontSize "125%" :fontWeight 500}} text])
 
 (defn- create-paragraph [& children]
-  [:div {:style {:margin "17px 0 0.33333em 0" :paddingBottom "1.5em"
+  [:div {:style {:margin "17px 0 0.33333em 0" :paddingBottom "2.5em"
                  :fontSize "90%" :lineHeight 1.5}}
    children])
 
@@ -217,16 +223,19 @@
 (defn- render-workspace-summary [workspace]
   [:div {:style {:margin "45px 25px"}}
    [:div {:style {:position "relative" :float "left" :display "inline-block"
-                  :top 0 :left 0 :width 290 :marginRight 40 :height "100%"}}
-    [:div {:style {:borderRadius 5 :backgroundColor (:success-green style/colors) :color "#fff"
-                   :fontSize "125%" :fontWeight 400 :padding 25 :textAlign "center"}}
-     [:span {:style {:display "inline-block" :verticalAlign "middle"
-                     :width "2.5em" :height "2.5em" :position "relative"
-                     :backgroundColor "#fff" :borderRadius "100%"}}
-      [:span {:style {:fontFamily "fontIcons" :color (:success-green style/colors) :fontSize "90%"
-                      :position "absolute"
-                      :top "50%" :left "50%" :transform "translate(-50%, -50%)"}} ""]]
-     [:span {:style {:marginLeft "1.5ex"}} "Complete"]]
+                  :top 0 :left 0 :width 290 :marginRight 40}}
+    ;; TODO - make the width of the float-left dynamic
+    [:div {:style {:borderRadius 5 :padding 25 :textAlign "center"
+                   :color "#fff" :backgroundColor (style/color-for-status (workspace "status"))
+                   :fontSize "125%" :fontWeight 400}}
+     [:span {:style {:display "inline-block" :marginRight 14 :marginTop -4
+                     :verticalAlign "middle" :position "relative"}}
+      (case (workspace "status")
+        "Complete"  [comps/CompleteIcon {:size 36}]
+        "Running"   [comps/RunningIcon {:size 36}]
+        "Exception" [comps/ExceptionIcon {:size 36}])]
+     [:span {:style {:marginLeft "1.5ex"}} (workspace "status")]
+     ]
     [:div {:style {:marginTop 27}}
      [:div {:style {:backgroundColor "transparent" :color (:button-blue style/colors)
                     :border (str "1px solid " (:line-gray style/colors))
@@ -237,7 +246,7 @@
       [:span {:style {:display "inline-block" :verticalAlign "middle"}}
        [:span {:style {:fontFamily "fontIcons" :fontSize "135%"}} ""]]
       [:span {:style {:marginLeft "1em"}} "Edit this page"]]]]
-   [:div {}
+   [:div {:style {:display "inline-block"}}
     (create-section-header "Workspace Owner")
     (create-paragraph
       [:strong {} (workspace "createdBy")]
@@ -268,9 +277,11 @@
 (defn- create-mock-workspaces []
   (map
     (fn [i]
-      (let [ns (rand-nth ["broad" "public" "nci"])]
+      (let [ns (rand-nth ["broad" "public" "nci"])
+            status (rand-nth ["Complete" "Running" "Exception"])]
         {:namespace ns
          :name (str "Workspace " (inc i))
+         :status status
          :createdBy ns
          :createdDate (.toISOString (js/Date.))}))
     (range (rand-int 100))))
@@ -317,8 +328,13 @@
        "/workspaces"
        {:on-done (fn [{:keys [success? xhr]}]
                    (if success?
-                     (let [workspaces (utils/parse-json-string (.-responseText xhr))]
-                       (swap! state assoc :workspaces-loaded? true :workspaces workspaces))
+                     (let [raw-workspaces (utils/parse-json-string (.-responseText xhr))
+                           ;; The following is just to make the icons work with the
+                           ;; current live data, which uses this missing field
+                           mapped-workspaces (map #(assoc % "status" "Complete") raw-workspaces)]
+                       (swap! state assoc :workspaces-loaded? true
+                                          :workspaces (if utils/use-live-data?
+                                                        mapped-workspaces raw-workspaces)))
                      (swap! state assoc :error-message (.-statusText xhr))))
         :canned-response {:responseText (utils/->json-string (create-mock-workspaces))
                           :status 200 :delay-ms (rand-int 2000)}}))
