@@ -331,7 +331,7 @@
         url
         {:on-done (fn [{:keys [success? xhr]}]
                     (if success?
-                      (let [methods (utils/parse-json-string (.-responseText xhr))]
+                      (let [method-confs (utils/parse-json-string (.-responseText xhr))]
                         (swap! state_atom assoc :methods-loaded? true :methods methods))
                       (swap! state_atom assoc :error-message (.-statusText xhr))))
          :canned-response {:responseText (utils/->json-string (create-mock-methodconfs))
