@@ -52,8 +52,9 @@
                   (doseq [[k v] (dissoc canned-response-params :delay-ms)]
                     (aset xhr (name k) v))
                   xhr))
-          ;; set up a call-back function
+          ;; set up a call-back function to be called when done
           call-on-done (fn []
+                         ;; the call-back function is passed in via the arg-map
                          ((:on-done arg-map) {:xhr xhr
                                               :status-code (.-status xhr)
                                               :success? (and (>= (.-status xhr) 200)
@@ -62,7 +63,8 @@
       (when with-credentials?
         (set! (.-withCredentials xhr) true))
       (if canned-response-params
-        ;; if the delay is canned, then set the call-on-done to be the callback when there's a timeout
+        ;; if a canned-response-params(which is conditionally set in the let above via goog.DEBUG and not using live data) via a passed in key-value in the arg-map
+        ;; then call the call-on-done using a timeout ; otherwise, simply use the
         (if-let [delay-ms (:delay-ms canned-response-params)]
           (js/setTimeout call-on-done delay-ms)
           (call-on-done))
