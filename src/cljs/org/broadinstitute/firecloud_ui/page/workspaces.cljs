@@ -290,7 +290,7 @@
                       :data    (map (fn [m]
                                       [(:method-conf-name m)
                                        (:method-conf-root-ent-type m)
-                                       (:method-conf-last-updatedm m)
+                                       (:method-conf-last-updated m)
                                        ])
                                     ((:method-confs props)))})])])})
 
@@ -316,8 +316,8 @@
     (fn [i]
       {
        :method-conf-name (rand-nth ["rand_name_1" "rand_name_2" "rand_name_3" "rand_name_4"]    )
-       :method-conf-root-ent-type (str "method_conf_root_ent_type" (inc i))
-       :method-conf-last-updated (str "method_conf_last_updated" (inc i))
+       :method-conf-root-ent-type (str "method_conf_root_ent_type_" (inc i))
+       :method-conf-last-updated (str "method_conf_last_updated_" (inc i))
        }
       )
     (range (rand-int 100)))
