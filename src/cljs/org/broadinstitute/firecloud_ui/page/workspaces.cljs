@@ -266,13 +266,13 @@
                 ;;count the 'method-confs' to decide what to put in the component
                 (if (zero? (count (:method-conf-name props)))
                   [:div {:style {:textAlign "center" :backgroundColor (:background-gray style/colors)
-                                 :padding "1em 0" :borderRadius 8}}
-                   (str (:no-confs-to-display-message props) ) ]
+                                 :padding   "1em 0" :borderRadius 8}}
+                   (str (:no-confs-to-display-message props))]
                   ;;if the count is NOT zero, then put a table here! :)
                   [table/Table
                    (let [
                          ;;define the cell-style to be this map
-                         cell-style {:flexBasis "8ex" :flexGrow 1 :whiteSpace "nowrap" :overflow "hidden"
+                         cell-style {:flexBasis  "8ex" :flexGrow 1 :whiteSpace "nowrap" :overflow "hidden"
                                      :borderLeft (str "1px solid " (:line-gray style/colors))}
                          ;; define the header-label to be this function
                          ;; what does this function do????  It seems to apply a default or given padding to a text?
@@ -281,17 +281,17 @@
                                          [:span {:style {:fontSize "90%"}} text]])]
                      {:columns [{:label (header-label "Conf Name")
                                  :style (merge cell-style {:borderLeft "none"})}
-                                {:label (header-label "Conf Root Entity Type")
-                                 :style cell-style
+                                {:label        (header-label "Conf Root Entity Type")
+                                 :style        cell-style
                                  :header-style {:borderLeft "none"}}
-                                {:label (header-label "Last Updated")
-                                 :style (merge cell-style {:flexBasis "30ex"})
+                                {:label        (header-label "Last Updated")
+                                 :style        (merge cell-style {:flexBasis "30ex"})
                                  :header-style {:borderLeft "none"}}]
-                      :data (map (fn [m]
-                                   [(m "method-conf-name")
-                                    (m "method-conf-root-ent-type")
-                                    (m "method-conf-last-updated")])
-                                 (:method-confs props))})])])})
+                      :data    (map (fn [m]
+                                      [(get m :method-conf-name)
+                                       (m :method-conf-root-ent-type)
+                                       (m :method-conf-last-updated)])
+                                    ((:method-confs props)))})])])})
 
 
 
@@ -336,7 +336,8 @@
                       (swap! state_atom assoc :error-message (.-statusText xhr))))
          :canned-response {:responseText (utils/->json-string (create-mock-methodconfs))
                            :status 200
-                           :delay-ms (rand-int 2000)}})
+                           :delay-ms (rand-int 2000)}}
+        )
       )                                                     ;;let
     )
   )
@@ -344,7 +345,7 @@
 
 
 
-(react/defc render-workspace-method-configurations-react-component
+(react/defc WorkspaceMethodConfigurations
             {
              ;;Invoked once, only on the client (not on the server), immediately after the initial rendering occurs.
              :component-did-mount
@@ -353,6 +354,7 @@
                ;; referring to the methods-loaded? (of the state) do AJAX/something to modify it here ...
                (swap! state assoc :method-confs create-mock-methodconfs )
                (swap! state assoc :method-confs-loaded? true)
+               (swap! state assoc :method-conf-name "the_name")
                (method-conf-ajax-call "ws_ns" "ws_n"   state    )
                )
 
@@ -372,8 +374,9 @@
                          WorkspaceMethodsConfigurationsList
                             {
                              :no-confs-to-display-message "There are no method configurations to display."
-                             ;;:method-conf-name "this is a name"
-                             ;;:method-confs (:method-confs @state)
+                             ;;:method-conf-name "this is a name
+                             :method-conf-name "this_is_the_name"
+                             :method-confs (:method-confs @state)
                              }
                          ]
 
@@ -401,7 +404,7 @@
    [comps/TabBar {:key "selected"
                   :items [{:text "Summary" :component (render-workspace-summary workspace)}
                           {:text "Data"}
-                          {:text "Method Configurations" :component [render-workspace-method-configurations-react-component] }
+                          {:text "Method Configurations" :component [WorkspaceMethodConfigurations] }
                           {:text "Methods"}
                           {:text "Monitor"}
                           {:text "Files"}]}]])
