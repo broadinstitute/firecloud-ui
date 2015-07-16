@@ -314,14 +314,19 @@
 ;;  * Needs to be reviewed by [~birger] before it can be closed
   (map
     (fn [i]
-      {:method-conf-name (rand-nth ["rand_name_1" "rand_name_2" "rand_name_3"])
+      {
+       :method-conf-name (rand-nth ["rand_name_1" "rand_name_2" "rand_name_3" "rand_name_4"]    )
        :method-conf-root-ent-type (str "method_conf_root_ent_type" (inc i))
-       :method-conf-last-updated (str "method_conf_last_updated" (inc i))})
-    (range (rand-int 100))))
+       :method-conf-last-updated (str "method_conf_last_updated" (inc i))
+       }
+      )
+    (range (rand-int 100)))
+  )
 
 
 
-(def method-conf-ajax-call
+(
+  def method-conf-ajax-call
   ;; GET /{workspaceNamespace}/{workspaceName}/methodconfigs
   (fn [ work_space_name_space_f work_space_name_f state_atom ]
 
@@ -330,7 +335,8 @@
           ]
       (utils/ajax-orch
         url
-        {:on-done (fn [{:keys [success? xhr]}]
+        {
+         :on-done (fn [{:keys [success? xhr]}]
                     (if success?
                       (let [method-confs (utils/parse-json-string (.-responseText xhr))]
                         (swap! state_atom assoc :methods-loaded? true :methods methods))
@@ -355,7 +361,6 @@
                ;; referring to the methods-loaded? (of the state) do AJAX/something to modify it here ...
                (swap! state assoc :method-confs create-mock-methodconfs )
                (swap! state assoc :method-confs-loaded? true)
-               (swap! state assoc :method-conf-name "the_name")
                (method-conf-ajax-call "ws_ns" "ws_n"   state    )
                )
 
