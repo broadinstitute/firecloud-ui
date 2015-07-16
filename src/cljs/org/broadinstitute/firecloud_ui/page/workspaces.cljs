@@ -315,6 +315,32 @@
 
 
 
+(def method-conf-ajax-call
+  ;; GET /{workspaceNamespace}/{workspaceName}/methodconfigs
+  (fn [ work_space_name_space_f work_space_name_f state_atom ]
+    (let [
+          url (str "/" work_space_name_space_f "/"   work_space_name_f "/methodconfigs"  )
+          ]
+      (utils/ajax-orch
+        url
+        {:on-done (fn [{:keys [success? xhr]}]
+                    (if success?
+                      (let [methods (utils/parse-json-string (.-responseText xhr))]
+                        (swap! state_atom assoc :methods-loaded? true :methods methods))
+                      (swap! state_atom assoc :error-message (.-statusText xhr))))
+         :canned-response {:responseText (utils/->json-string (create-mock-methodconfs))
+                           :status 200
+                           :delay-ms (rand-int 2000)}})
+      )                                                     ;;let
+    )
+
+
+
+  )
+
+
+
+
 (react/defc render-workspace-method-configurations-react-component
             {
              ;;Invoked once, only on the client (not on the server), immediately after the initial rendering occurs.
@@ -324,6 +350,7 @@
                ;; referring to the methods-loaded? (of the state) do AJAX/something to modify it here ...
                (swap! state assoc :method-confs create-mock-methodconfs )
                (swap! state assoc :method-confs-loaded? true)
+               (method-conf-ajax-call "ws_ns" "ws_n"   state    )
                )
 
              :render
