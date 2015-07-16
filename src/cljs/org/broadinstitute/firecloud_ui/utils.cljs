@@ -44,12 +44,16 @@
     (assert url (str "Missing url parameter: " arg-map))
     (assert on-done (str "Missing on-done callback: " arg-map))
     ;;with setting/getting done, prepare for AJAX/ACAX
+
+
+
     (let [xhr (if-not canned-response-params
                 ;; if there isn't a canned response, then make an AJAX/XMLHttpRequest for subsequent usage below
                 (js/XMLHttpRequest.)
-                ;; if there IS a canned response, then ???
+                ;; if there IS a canned response, then
+                ;;return the canned response as a javascript object map, but remove the delay
                 (let [xhr (js-obj)]
-                  (doseq [[k v] (dissoc canned-response-params :delay-ms)]
+                  (doseq [  [k v] (dissoc canned-response-params :delay-ms)]
                     (aset xhr (name k) v))
                   xhr))
           ;; set up a call-back function to be called when done
