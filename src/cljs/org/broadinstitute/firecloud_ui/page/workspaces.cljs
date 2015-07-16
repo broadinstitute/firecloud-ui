@@ -291,7 +291,7 @@
              (fn [{:keys [state]}]
                ;;(set! )
                ;; referring to the methods-loaded? (of the state) do AJAX/something to modify it here ...
-
+              (swap! state assoc :methods-loaded? "Methods are loaded!")
                )
 
              :render
@@ -303,7 +303,7 @@
       (create-section-header "Method Configurations")
       [:div {}
        (cond
-         (:methods-loaded? @state) [:div (:methods-loaded? @state)]
+         (:methods-loaded? @state) [:div {} (:methods-loaded? @state)     ]
          (:error-message @state) [:div {:style {:color "red"}}
                                   "FireCloud service returned error: " (:error-message @state)]
          :else [comps/Spinner {:text "Loading configurations..."}])]]
