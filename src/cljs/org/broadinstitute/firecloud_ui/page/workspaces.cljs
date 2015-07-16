@@ -340,7 +340,9 @@
                     (if success?
                       (let [method-confs (utils/parse-json-string (.-responseText xhr))]
                         (swap! state_atom assoc :methods-loaded? true :methods methods))
-                      (swap! state_atom assoc :error-message (.-statusText xhr))))
+                      (swap! state_atom assoc :error-message (.-statusText xhr))
+                      )
+                    )
          :canned-response {:responseText (utils/->json-string (create-mock-methodconfs))
                            :status 200
                            :delay-ms (rand-int 2000)}}
