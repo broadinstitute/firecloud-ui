@@ -264,7 +264,7 @@
              (fn [{:keys [props]}]
                [:div {:style {:padding "0 4em"}}
                 ;;count the 'method-confs' to decide what to put in the component
-                (if (zero? (count (:method-confs-count props)))
+                (if (zero? (count (:method-conf-name props)))
                   [:div {:style {:textAlign "center" :backgroundColor (:background-gray style/colors)
                                  :padding "1em 0" :borderRadius 8}}
                    (str (:something-passed props) "(no method confs to display this from list render)") ]
@@ -274,31 +274,31 @@
                          ;;define the cell-style to be this map
                          cell-style {:flexBasis "8ex" :flexGrow 1 :whiteSpace "nowrap" :overflow "hidden"
                                      :borderLeft (str "1px solid " (:line-gray style/colors))}
-                         ;;define the header-label to be this function
+                         ;; define the header-label to be this function
                          ;; what does this function do????  It seems to apply a default or given padding to a text?
                          header-label (fn [text & [padding]]
                                         [:span {:style {:paddingLeft (or padding "1em")}}
                                          [:span {:style {:fontSize "90%"}} text]])]
-                     {:columns [{:label (header-label "COL_1")
+                     {:columns [{:label (header-label "Conf Name")
                                  :style (merge cell-style {:borderLeft "none"})}
-                                {:label (header-label "COL_2")
+                                {:label (header-label "Conf Root Entity Type")
                                  :style cell-style
                                  :header-style {:borderLeft "none"}}
-                                {:label (header-label "COL_3")
+                                {:label (header-label "Last Updated")
                                  :style (merge cell-style {:flexBasis "30ex"})
                                  :header-style {:borderLeft "none"}}]
                       :data (map (fn [m]
-                                   [(m "col_1")
-                                    (m "col_2")
-                                    (m "col_3")])
+                                   [(m "method-conf-name")
+                                    (m "method-conf-root-ent-type")
+                                    (m "method-conf-last-updated")])
                                  (:method-confs props))})])])})
 
 
 
 (defn- create-mock-methodconfs []
-  ;;this maps a function to random integers
-  ;;the function that gets mapped is an anonymous function defined here
-  ;;the value passed to the anonymous function is a random integer
+;;this maps a function to random integers
+;;the function that gets mapped is an anonymous function defined here
+;;the value passed to the anonymous function is a random integer
 ;;FROM https://broadinstitute.atlassian.net/browse/DSDEEPB-10 (verbatim)
 ;; The scope of this story is strictly the listing of method configurations.
 ;;* name of the method configuration
@@ -307,8 +307,8 @@
   (map
     (fn [i]
       {:method-conf-name (rand-nth ["rand_name_1" "rand_name_2" "rand_name_3"])
-       :method-conf-root-ent-type (str "Method root entity type (mocked) # " (inc i))
-       :synopsis (str "This is mock method synopsis # " (inc i))})
+       :method-conf-root-ent-type (str "method_conf_root_ent_type" (inc i))
+       :method-conf-last-updated (str "method_conf_last_updated" (inc i))})
     (range (rand-int 100))))
 
 
@@ -320,7 +320,7 @@
              (fn [{:keys [state]}]
                ;;(set! )
                ;; referring to the methods-loaded? (of the state) do AJAX/something to modify it here ...
-
+               (swap! state assoc :method-confs create-mock-methodconfs )
                (swap! state assoc :method-confs-loaded? true)
                )
 
@@ -340,7 +340,8 @@
                          WorkspaceMethodsConfigurationsList
                             {
                              :something-passed "(this is passed from confs render)"
-
+                             :method-conf-name "this is a name"
+                             ;;:method-confs (:method-confs @state)
                              }
                          ]
 
