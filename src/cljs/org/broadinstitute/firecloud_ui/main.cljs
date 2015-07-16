@@ -4,6 +4,7 @@
    [org.broadinstitute.firecloud-ui.common.style :as style]
    [org.broadinstitute.firecloud-ui.nav :as nav]
    [org.broadinstitute.firecloud-ui.page.method-repo :as method-repo]
+   [org.broadinstitute.firecloud-ui.page.import-data :as import-data]
    [org.broadinstitute.firecloud-ui.page.workspaces :as workspaces]
    [org.broadinstitute.firecloud-ui.session :as session]
    [org.broadinstitute.firecloud-ui.utils :as utils :refer [rlog jslog cljslog]]
@@ -57,6 +58,9 @@
   {:render
    (fn [{:keys [props]}]
      [:div {:style {:textAlign "right"}}
+      [TopNavBarLink {:name "Import Data"
+                      :selected (= (:selected-item props) :import-data)
+                      :onClick (fn [e] ((:on-nav props) :import-data))}]
       [TopNavBarLink {:name "Workspaces"
                       :selected (= (:selected-item props) :workspaces)
                       :onClick (fn [e] ((:on-nav props) :workspaces))}]
@@ -70,9 +74,10 @@
    (fn [{:keys [props state]}]
      (let [nav-context (nav/parse-segment (:nav-context props))
            page (keyword (:segment nav-context))]
-       (when-not (contains? #{:workspaces :methods} page)
+       (when-not (contains? #{:import-data :workspaces :methods} page)
          (nav/navigate (:nav-context props) "workspaces"))
        [:div {}
+
         ;; Leave the Google button on the page to avoid possible errors.
         ;; TODO: figure out a better way to avoid the errors.
         [:div {:className "g-signin2" :data-onsuccess "onSignIn" :style {:display "none"}}]
@@ -88,6 +93,7 @@
           [TopNavBar {:selected-item page
                       :on-nav (fn [item] (nav/navigate (:nav-context props) (name item)))}]]]
         (case page
+          :import-data [import-data/Page {:nav-context nav-context}]
           :workspaces [workspaces/Page {:nav-context nav-context}]
           :methods [method-repo/Page {:nav-context nav-context}]
           [:div {} "Page not found."])]))})
