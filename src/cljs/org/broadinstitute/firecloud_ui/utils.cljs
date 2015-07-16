@@ -68,7 +68,7 @@
         (set! (.-withCredentials xhr) true))
       (if canned-response-params
         ;; if a canned-response-params(which is conditionally set in the let above via goog.DEBUG and not using live data) via a passed in key-value in the arg-map
-        ;; then call the call-on-done using a timeout ; otherwise, simply use the
+        ;; then call the call-on-done using a timeout ; otherwise, simply use the call-on-done
         (if-let [delay-ms (:delay-ms canned-response-params)]
           (js/setTimeout call-on-done delay-ms)
           (call-on-done))
