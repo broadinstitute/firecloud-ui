@@ -66,11 +66,19 @@
       (:data props)])})
 
 
+(defn- filter-workspaces [f workspaces]
+  (case f
+    :all workspaces
+    :complete  (filter (fn [ws] (= "Complete"  (ws "status"))) workspaces)
+    :running   (filter (fn [ws] (= "Running"   (ws "status"))) workspaces)
+    :exception (filter (fn [ws] (= "Exception" (ws "status"))) workspaces)))
+
 (react/defc WorkspaceList
   {:render
    (fn [{:keys [props]}]
+    (let [filtered-workspaces (filter-workspaces (:filter props) (:workspaces props))]
      [:div {:style {:padding "0 4em"}}
-      (if (zero? (count (:workspaces props)))
+      (if (zero? (count filtered-workspaces))
         [:div {:style {:textAlign "center" :backgroundColor (:background-gray style/colors)
                        :padding "1em 0" :borderRadius 8}}
          "No workspaces to display."]
@@ -109,32 +117,39 @@
                           (workspace "workflow-count")
                           (workspace "size-gb")
                           "Me"])
-                       (:workspaces props))})])])})
+                    filtered-workspaces)})])]))})
 
 
 (react/defc FilterButtons
-  (let [Button 
+  (let [Button
         (react/create-class
          {:render
           (fn [{:keys [props]}]
-            [:div {:style {:float "left"
-                           :backgroundColor (if (:active? props)
-                                              (:button-blue style/colors)
-                                              (:background-gray style/colors))
-                           :color (when (:active? props) "white")
-                           :marginLeft "1em" :padding "1ex" :width "16ex"
-                           :border (str "1px solid " (:line-gray style/colors))
-                           :borderRadius "2em"
-                           :cursor "pointer"}}
-             (:text props)])})]
+            (let [state (:state props)
+                  filter (:filter props)
+                  active? (= filter (:active-filter @state))]
+              [:div {:style {:float "left"
+                             :backgroundColor (if active?
+                                                (:button-blue style/colors)
+                                                (:background-gray style/colors))
+                             :color (when active? "white")
+                             :marginLeft "1em" :padding "1ex" :width "16ex"
+                             :border (str "1px solid " (:line-gray style/colors))
+                             :borderRadius "2em"
+                             :cursor "pointer"}
+                     :onClick #(swap! state assoc :active-filter filter)}
+               (:text props)]))})]
     {:render
-     (fn []
-       [:div {:style {:display "inline-block" :marginLeft "-1em"}}
-        [Button {:text "All (0)" :active? true}]
-        [Button {:text "Complete (0)"}]
-        [Button {:text "Running (0)"}]
-        [Button {:text "Exception (0)"}]
-        [:div {:style {:clear "both"}}]])}))
+     (fn [{:keys [props]}]
+       (let [state (:state props)
+             build-text (fn [name f]
+                          (str name " (" (count (filter-workspaces f (:workspaces @state))) ")"))]
+         [:div {:style {:display "inline-block" :marginLeft "-1em"}}
+          [Button {:text (build-text "All"       :all)       :state state :filter :all}]
+          [Button {:text (build-text "Complete"  :complete)  :state state :filter :complete}]
+          [Button {:text (build-text "Running"   :running)   :state state :filter :running}]
+          [Button {:text (build-text "Exception" :exception) :state state :filter :exception}]
+          [:div {:style {:clear "both"}}]]))}))
 
 
 (defn- modal-background [state]
@@ -199,6 +214,7 @@
                                {:responseText (utils/->json-string
                                                 {:namespace "test"
                                                  :name n
+                                                 :status (rand-nth ["Complete" "Running" "Exception"])
                                                  :createdBy n
                                                  :createdDate (.toISOString (js/Date.))})
                                 :delay-ms (rand-int 2000)}})))}]]]]]))
@@ -290,17 +306,23 @@
 (defn- render-workspaces-list [state]
   (let [content [:div {}
                  [:div {:style {:padding "2em 0" :textAlign "center"}}
-                  [FilterButtons]]
-                 [:div {} [WorkspaceList {:ref "workspace-list" :workspaces (:workspaces @state)
-                                          :onWorkspaceSelected
-                                          (fn [workspace]
-                                            (swap! state assoc :selected-workspace workspace))}]]]]
+                  [FilterButtons {:state state}]]
+                 [WorkspaceList {:ref "workspace-list"
+                                 :workspaces (:workspaces @state)
+                                 :filter (:active-filter @state)
+                                 :onWorkspaceSelected
+                                 (fn [workspace]
+                                   (swap! state assoc :selected-workspace workspace)
+                                   (common/scroll-to-top))}]]]
     [:div {}
      [comps/TabBar {:key "list"
                     :items [{:text "Mine" :component content}
                             {:text "Shared" :component content}
                             {:text "Read-Only" :component content}]}]]))
 
+
+(defn- mock-live-data [workspaces]
+  (map #(assoc % "status" "Complete") workspaces))
 
 (react/defc Page
   {:render
@@ -322,22 +344,23 @@
         (:error-message @state) [:div {:style {:color "red"}}
                                   "FireCloud service returned error: " (:error-message @state)]
         :else [comps/Spinner {:text "Loading workspaces..."}])])
+   :get-initial-state
+   (fn [] {:active-filter :all})
    :component-did-mount
    (fn [{:keys [state]}]
      (utils/ajax-orch
        "/workspaces"
        {:on-done (fn [{:keys [success? xhr]}]
                    (if success?
-                     (let [raw-workspaces (utils/parse-json-string (.-responseText xhr))
-                           ;; The following is just to make the icons work with the
-                           ;; current live data, which uses this missing field
-                           mapped-workspaces (map #(assoc % "status" "Complete") raw-workspaces)]
+                     (let [workspaces (utils/parse-json-string (.-responseText xhr))]
                        (swap! state assoc :workspaces-loaded? true
                                           :workspaces (if utils/use-live-data?
-                                                        mapped-workspaces raw-workspaces)))
+                                                        (mock-live-data workspaces)
+                                                        workspaces)))
                      (swap! state assoc :error-message (.-statusText xhr))))
         :canned-response {:responseText (utils/->json-string (create-mock-workspaces))
                           :status 200 :delay-ms (rand-int 2000)}}))
    :component-will-receive-props
    (fn [{:keys [state]}]
-     (swap! state dissoc :selected-workspace))})
+     (swap! state dissoc :selected-workspace)
+     (common/scroll-to-top))})
