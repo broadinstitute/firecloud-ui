@@ -306,6 +306,11 @@
 ;;* name of the method configuration
 ;;* root entity type
 ;;* last updated?
+
+;;  Acceptance Criteria:
+;;  * Display as much information as possible from the API
+;;  * Draft a story reflecting work that needs to be completed on the API and Orchestration layers
+;;  * Needs to be reviewed by [~birger] before it can be closed
   (map
     (fn [i]
       {:method-conf-name (rand-nth ["rand_name_1" "rand_name_2" "rand_name_3"])
@@ -318,6 +323,7 @@
 (def method-conf-ajax-call
   ;; GET /{workspaceNamespace}/{workspaceName}/methodconfigs
   (fn [ work_space_name_space_f work_space_name_f state_atom ]
+
     (let [
           url (str "/" work_space_name_space_f "/"   work_space_name_f "/methodconfigs"  )
           ]
@@ -333,9 +339,6 @@
                            :delay-ms (rand-int 2000)}})
       )                                                     ;;let
     )
-
-
-
   )
 
 
