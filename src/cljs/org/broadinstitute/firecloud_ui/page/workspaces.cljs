@@ -289,7 +289,7 @@
                                  :header-style {:borderLeft "none"}}]
                       :data    (map (fn [m]
                                       [(get m :method-conf-name)
-                                       (m :method-conf-root-ent-type)
+                                       (m :method-conf-root-ent-type) 
                                        (m :method-conf-last-updated)])
                                     ((:method-confs props)))})])])})
 
