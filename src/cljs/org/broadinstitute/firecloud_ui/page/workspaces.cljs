@@ -284,6 +284,37 @@
   )
 
 
+
+(react/defc WorkspaceMethodsConfigurationsList
+            {:render
+             (fn [{:keys [props]}]
+               [:div {:style {:padding "0 4em"}}
+                (if (zero? (count (:methods props)))
+                  [:div {:style {:textAlign "center" :backgroundColor (:background-gray style/colors)
+                                 :padding "1em 0" :borderRadius 8}}
+                   "No method configuratins to display."]
+                  [table/Table
+                   (let [cell-style {:flexBasis "8ex" :flexGrow 1 :whiteSpace "nowrap" :overflow "hidden"
+                                     :borderLeft (str "1px solid " (:line-gray style/colors))}
+                         header-label (fn [text & [padding]]
+                                        [:span {:style {:paddingLeft (or padding "1em")}}
+                                         [:span {:style {:fontSize "90%"}} text]])]
+                     {:columns [{:label (header-label "Namespace")
+                                 :style (merge cell-style {:borderLeft "none"})}
+                                {:label (header-label "Name")
+                                 :style cell-style
+                                 :header-style {:borderLeft "none"}}
+                                {:label (header-label "Synopsis")
+                                 :style (merge cell-style {:flexBasis "30ex"})
+                                 :header-style {:borderLeft "none"}}]
+                      :data (map (fn [m]
+                                   [(m "namespace")
+                                    (m "name")
+                                    (m "synopsis")])
+                                 (:methods props))})])])})
+
+
+
 (react/defc render-workspace-method-configurations-react-component
             {
              ;;Invoked once, only on the client (not on the server), immediately after the initial rendering occurs.
@@ -291,23 +322,29 @@
              (fn [{:keys [state]}]
                ;;(set! )
                ;; referring to the methods-loaded? (of the state) do AJAX/something to modify it here ...
-              (swap! state assoc :methods-loaded? "Methods are loaded!")
+               (swap! state assoc :methods-loaded? "Methods are loaded!")
+               (swap! state assoc :method-content "this is the content")
                )
 
              :render
              ;;render must be a function
              (fn [{:keys [state]}]
 
-     [:div {:style {:padding "1em"}}
-      ;;[:h2 {} "Configurations"]
-      (create-section-header "Method Configurations")
-      [:div {}
-       (cond
-         (:methods-loaded? @state) [:div {} (:methods-loaded? @state)     ]
-         (:error-message @state) [:div {:style {:color "red"}}
-                                  "FireCloud service returned error: " (:error-message @state)]
-         :else [comps/Spinner {:text "Loading configurations..."}])]]
-
+               [:div {:style {:padding "1em"}}
+                ;;[:h2 {} "Configurations"]
+                (create-section-header "Method Configurations")
+                [:div {}
+                 (cond
+                   (:methods-loaded? @state)
+                   [:div {}
+                                              ;;(str (:methods-loaded? @state) (:method-content @state)    )
+                                              ;;
+                                              ;;(:table {} [:tr {} "tr content"] )
+                                              ;;[:table {} [:tr {} "tr stuff"] [:tr {} "another row"] ]
+                                              ]
+                   (:error-message @state) [:div {:style {:color "red"}}
+                                            "FireCloud service returned error: " (:error-message @state)]
+                   :else [comps/Spinner {:text "Loading configurations..."}])]]
 
                )
              }
