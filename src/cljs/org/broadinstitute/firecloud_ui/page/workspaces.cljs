@@ -267,7 +267,7 @@
                 (if (zero? (count (:method-conf-name props)))
                   [:div {:style {:textAlign "center" :backgroundColor (:background-gray style/colors)
                                  :padding "1em 0" :borderRadius 8}}
-                   (str (:something-passed props) "(no method confs to display this from list render)") ]
+                   (str (:no-confs-to-display-message props) ) ]
                   ;;if the count is NOT zero, then put a table here! :)
                   [table/Table
                    (let [
@@ -299,7 +299,9 @@
 ;;this maps a function to random integers
 ;;the function that gets mapped is an anonymous function defined here
 ;;the value passed to the anonymous function is a random integer
+
 ;;FROM https://broadinstitute.atlassian.net/browse/DSDEEPB-10 (verbatim)
+
 ;; The scope of this story is strictly the listing of method configurations.
 ;;* name of the method configuration
 ;;* root entity type
@@ -339,8 +341,8 @@
                         [
                          WorkspaceMethodsConfigurationsList
                             {
-                             :something-passed "(this is passed from confs render)"
-                             :method-conf-name "this is a name"
+                             :no-confs-to-display-message "There are no method configurations to display."
+                             ;;:method-conf-name "this is a name"
                              ;;:method-confs (:method-confs @state)
                              }
                          ]
