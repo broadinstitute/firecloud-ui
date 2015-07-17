@@ -284,7 +284,7 @@
        :method-conf-last-updated (str "method_conf_last_updated_" (inc i))
        }
       )
-    (range (rand-int 100)))
+    (range (rand-int 10)))
   )
 
 
@@ -296,7 +296,7 @@
              (fn [{:keys [props]}]
                [:div {:style {:padding "0 4em"}}
                 ;;count the 'method-confs' to decide what to put in the component
-                (if (zero? (count (:method-conf-name props)))
+                (if (zero? (:method-conf-count props))
                   [:div {:style {:textAlign "center" :backgroundColor (:background-gray style/colors)
                                  :padding   "1em 0" :borderRadius 8}}
                    (str (:no-confs-to-display-message props))]
@@ -392,7 +392,7 @@
                         [
                          WorkspaceMethodsConfigurationsList
                             {
-                             :method-conf-name "placeholder"
+                             :method-conf-count (:method-conf-count @state)
                              :no-confs-to-display-message "There are no method configurations to display."
                              :method-confs (:method-confs @state)
                              }
