@@ -12,11 +12,18 @@
 
 
 (defn jslog [& args]
-  (apply rlog (map clj->js args)))
+  (apply rlog (map clj->js args))
+  (last args))
 
 
 (defn cljslog [& args]
-  (apply rlog (map pr-str args)))
+  (apply rlog (map pr-str args))
+  (last args))
+
+
+(defn str-index-of
+  ([s what] (.indexOf s what))
+  ([s what start-index] (.indexOf s what start-index)))
 
 
 (defn call-external-object-method [obj method-name & args]

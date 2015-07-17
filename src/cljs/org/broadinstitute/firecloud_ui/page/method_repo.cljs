@@ -76,8 +76,7 @@
                                                              (:methods @state)
                                                              ["namespace" "name" "synopsis"]
                                                              (or (:filter-text @state) ""))}]]
-         (:error-message @state) [:div {:style {:color "red"}}
-                                  "FireCloud service returned error: " (:error-message @state)]
+         (:error @state) (style/create-server-error-message (get-in @state [:error :message]))
          :else [comps/Spinner {:text "Loading methods..."}])]])
    :component-did-mount
    (fn [{:keys [state]}]
@@ -87,7 +86,8 @@
                    (if success?
                      (let [methods (utils/parse-json-string (.-responseText xhr))]
                        (swap! state assoc :methods-loaded? true :methods methods))
-                     (swap! state assoc :error-message (.-statusText xhr))))
+                     (swap! state assoc
+                            :error {:message (.-statusText xhr)})))
         :canned-response {:responseText (utils/->json-string (create-mock-methods))
                           :status 200
                           :delay-ms (rand-int 2000)}}))})

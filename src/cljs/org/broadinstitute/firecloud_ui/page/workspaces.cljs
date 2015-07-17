@@ -6,6 +6,7 @@
    [org.broadinstitute.firecloud-ui.common.table :as table]
    [org.broadinstitute.firecloud-ui.common.style :as style]
    [org.broadinstitute.firecloud-ui.common.components :as comps]
+   [org.broadinstitute.firecloud-ui.nav :as nav]
    [org.broadinstitute.firecloud-ui.utils :as utils :refer [rlog jslog cljslog]]
    ))
 
@@ -282,12 +283,15 @@
 
 (defn- render-selected-workspace [workspace]
   [:div {}
-   [comps/TabBar {:key "selected"
-                  :items [{:text "Summary" :component (render-workspace-summary workspace)}
-                          {:text "Data"}
-                          {:text "Methods"}
-                          {:text "Monitor"}
-                          {:text "Files"}]}]])
+   (if workspace
+     [comps/TabBar {:key "selected"
+                    :items [{:text "Summary" :component (render-workspace-summary workspace)}
+                            {:text "Data"}
+                            {:text "Methods"}
+                            {:text "Monitor"}
+                            {:text "Files"}]}]
+     [:div {:style {:textAlign "center" :color (:exception-red style/colors)}}
+      "Workspace not found."])])
 
 
 (defn- create-mock-workspaces []
@@ -303,17 +307,19 @@
     (range (rand-int 100))))
 
 
-(defn- render-workspaces-list [state]
+(defn- render-workspaces-list [state nav-context]
   (let [content [:div {}
                  [:div {:style {:padding "2em 0" :textAlign "center"}}
                   [FilterButtons {:state state}]]
-                 [WorkspaceList {:ref "workspace-list"
-                                 :workspaces (:workspaces @state)
-                                 :filter (:active-filter @state)
-                                 :onWorkspaceSelected
-                                 (fn [workspace]
-                                   (swap! state assoc :selected-workspace workspace)
-                                   (common/scroll-to-top))}]]]
+                 [WorkspaceList
+                  {:ref "workspace-list"
+                   :workspaces (:workspaces @state)
+                   :filter (:active-filter @state)
+                   :onWorkspaceSelected
+                   (fn [workspace]
+                     (nav/navigate
+                      nav-context (str (workspace "namespace") ":" (workspace "name")))
+                     (common/scroll-to-top))}]]]
     [:div {}
      [comps/TabBar {:key "list"
                     :items [{:text "Mine" :component content}
@@ -324,28 +330,37 @@
 (defn- mock-live-data [workspaces]
   (map #(assoc % "status" "Complete") workspaces))
 
+
+(defn- get-workspace-from-nav-segment [workspaces segment]
+  (when (and workspaces (not (clojure.string/blank? segment)))
+    (let [[ns n] (clojure.string/split segment #":")]
+      [ns n (first (filter
+                    (fn [ws] (and (= (ws "namespace") ns) (= (ws "name") n)))
+                    workspaces))])))
+
+
 (react/defc Page
   {:get-initial-state
    (fn [] {:active-filter :all})
    :render
-   (fn [{:keys [state refs]}]
-     [:div {}
-      (render-overlay state refs)
-      [:div {:style {:padding "2em"}}
-       [:div {:style {:float "right" :display (when (or (not (:workspaces-loaded? @state))
-                                                        (:selected-workspace @state)) "none")}}
-        [comps/Button
-         {:text "Create New Workspace" :style :add
-          :onClick #(swap! state assoc :overlay-shown? true)}]]
-       [:span {:style {:fontSize "180%"}} (if-let [ws (:selected-workspace @state)]
-                                            (ws "name")
-                                            "Workspaces")]]
-      (cond
-        (:selected-workspace @state) (render-selected-workspace (:selected-workspace @state))
-        (:workspaces-loaded? @state) (render-workspaces-list state)
-        (:error-message @state) [:div {:style {:color "red"}}
-                                  "FireCloud service returned error: " (:error-message @state)]
-        :else [comps/Spinner {:text "Loading workspaces..."}])])
+   (fn [{:keys [props state refs]}]
+     (let [nav-context (nav/parse-segment (:nav-context props))
+           [selected-ws-ns selected-ws-name selected-ws]
+           (get-workspace-from-nav-segment (:workspaces @state) (:segment nav-context))]
+       [:div {}
+        (render-overlay state refs)
+        [:div {:style {:padding "2em"}}
+         [:div {:style {:float "right" :display (when (or (not (:workspaces-loaded? @state))
+                                                          selected-ws-name) "none")}}
+          [comps/Button
+           {:text "Create New Workspace" :style :add
+            :onClick #(swap! state assoc :overlay-shown? true)}]]
+         [:span {:style {:fontSize "180%"}} (if selected-ws-name selected-ws-name "Workspaces")]]
+        (cond
+          selected-ws-name (render-selected-workspace selected-ws)
+          (:workspaces-loaded? @state) (render-workspaces-list state nav-context)
+          (:error @state) (style/create-server-error-message (get-in @state [:error :message]))
+          :else [comps/Spinner {:text "Loading workspaces..."}])]))
    :component-did-mount
    (fn [{:keys [state]}]
      (utils/ajax-orch
@@ -357,10 +372,7 @@
                                           :workspaces (if utils/use-live-data?
                                                         (mock-live-data workspaces)
                                                         workspaces)))
-                     (swap! state assoc :error-message (.-statusText xhr))))
+                     (swap! state assoc
+                            :error {:message (.-statusText xhr)})))
         :canned-response {:responseText (utils/->json-string (create-mock-workspaces))
-                          :status 200 :delay-ms (rand-int 2000)}}))
-   :component-will-receive-props
-   (fn [{:keys [state]}]
-     (swap! state dissoc :selected-workspace)
-     (common/scroll-to-top))})
+                          :status 200 :delay-ms (rand-int 2000)}}))})
