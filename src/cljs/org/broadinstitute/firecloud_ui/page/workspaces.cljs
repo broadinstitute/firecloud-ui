@@ -6,7 +6,7 @@
    [org.broadinstitute.firecloud-ui.common.table :as table]
    [org.broadinstitute.firecloud-ui.common.style :as style]
    [org.broadinstitute.firecloud-ui.common.components :as comps]
-   [org.broadinstitute.firecloud-ui.utils :as utils :refer [rlog jslog cljslog getType ]]
+   [org.broadinstitute.firecloud-ui.utils :as utils :refer [rlog jslog cljslog getType parse-json-string ]]
 
    ))
 
@@ -98,12 +98,13 @@
                        :header-style {:borderLeft 0}
                        :component OwnerCell}]
             :data (map (fn [workspace]
-                         [{:workspace workspace :onClick #((:onWorkspaceSelected props) workspace)}
+                         [
+                          {:workspace workspace :onClick #((:onWorkspaceSelected props) workspace)}
                           {:name (workspace "name") :onClick #((:onWorkspaceSelected props) workspace)}
                           (workspace "sample-count")
                           (workspace "workflow-count")
                           (workspace "size-gb")
-                          "Me"])
+                          "Me"]  )
                        (:workspaces props))})])])})
 
 
@@ -319,12 +320,18 @@
                                  :style        (merge cell-style {:flexBasis "30ex"})
                                  :header-style {:borderLeft "none"}}]
                       :data    (map (fn [m]
-                                      [(:method-conf-name m)
-                                       (:method-conf-root-ent-type m)
-                                       (:method-conf-last-updated m)
+                                      [
+                                       ;(:method-conf-name m)
+                                       ;(:method-conf-root-ent-type m)
+                                       ;(:method-conf-last-updated m)
+                                       (m "method-conf-name"  )
+                                       (m "method-conf-root-ent-type")
+                                       (m "method-conf-last-updated")
                                        ])
-                                    ;; (create-mock-methodconfs)
+
+
                                     (:method-confs props)
+                                    (rlog  (str "The type (used by WorkspaceMethodsConfigurationsList)  is " (getType (:method-confs props)  )  ))
                                     ;;(cljslog (str "the value of what gets passed via list is " (:method-confs props)   ))
                                     )
                       })])])})
@@ -358,11 +365,15 @@
                     (rlog "made it to end of on-done")
                     (swap! state_atom assoc :method-confs-loaded? true)
                     ;;(swap! state_atom assoc :method-confs (.-responseText xhr))
-                    (swap! state_atom assoc :method-confs (create-mock-methodconfs))
+                    (swap! state_atom assoc :method-confs (parse-json-string (.-responseText xhr)))
+                    ;;(swap! state_atom assoc :method-confs (parse-json-string    )
                     ;;(swap! state_atom assoc :method-confs (.-responseText xhr))
                     ;;(rlog (str "the value of the create-mock-methodconfs direct is "  create-mock-methodconfs    ))
                     ;;(rlog (str "the value of the create-mock-methodconfs called is "  (create-mock-methodconfs)    ))
-                    (rlog "the current value of responsetext is : " (.-responseText xhr))
+                    ;;(rlog "the current value of responsetext is : " (.-responseText xhr))
+                    ;;(rlog (str "the type of create-mock-methodconfs is " (getType create-mock-methodconfs)))
+                    ;;(rlog (str "the type of (create-mock-methodconfs) is " (getType (create-mock-methodconfs))))
+                    ;;(rlog (str "the type of ((create-mock-methodconfs)) is " (getType ((create-mock-methodconfs)))))
 
                     ;;(swap! state_atom  :methods-conf  (fn [] .-responseText xhr ))
 
@@ -373,7 +384,6 @@
                            :status 200
                            :delay-ms (rand-int 2000)
                            }
-
          }
         )
       );;let
@@ -420,9 +430,6 @@
                              :method-confs (:method-confs @state)
                              }
                          ]
-
-
-
                                               ;;(str (:methods-loaded? @state) (:method-content @state)    )
                                               ;;
                                               ;;(:table {} [:tr {} "tr content"] )
