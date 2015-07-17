@@ -9,6 +9,7 @@
    [dmohs/react "0.2.5"]
    [org.clojure/clojure "1.6.0"]
    [org.clojure/clojurescript "0.0-3211"]
+   [inflections "0.9.14"]
    ]
   :plugins [[lein-cljsbuild "1.0.5"] [lein-figwheel "0.3.1"]]
   :hooks [leiningen.cljsbuild]
