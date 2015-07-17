@@ -41,6 +41,20 @@
       spacer
       [Link {:href "#" :text "Support"}]]]))
 
+
+(def top-nav-bar-items
+  [{:key :workspaces
+    :name "Workspaces"
+    :component workspaces/Page}
+   {:key :methods
+    :name "Method Repository"
+    :component method-repo/Page}
+   {:key :import-data
+    :name "Import Data"
+    :component import-data/Page}
+   ])
+
+
 (react/defc TopNavBarLink
   {:render
    (fn [{:keys [props state]}]
@@ -58,15 +72,10 @@
   {:render
    (fn [{:keys [props]}]
      [:div {:style {:textAlign "right"}}
-      [TopNavBarLink {:name "Import Data"
-                      :selected (= (:selected-item props) :import-data)
-                      :onClick (fn [e] ((:on-nav props) :import-data))}]
-      [TopNavBarLink {:name "Workspaces"
-                      :selected (= (:selected-item props) :workspaces)
-                      :onClick (fn [e] ((:on-nav props) :workspaces))}]
-      [TopNavBarLink {:name "Method Repository"
-                      :selected (= (:selected-item props) :methods)
-                      :onClick (fn [e] ((:on-nav props) :methods))}]])})
+      (map (fn [item] [TopNavBarLink {:name (item :name)
+                                      :selected (= (:selected-item props) (item :key))
+                                      :onClick (fn [e] ((:on-nav props) (item :key)))}])
+            top-nav-bar-items)])})
 
 ;; Content to display when logged in via Google
 (react/defc LoggedIn
@@ -74,7 +83,7 @@
    (fn [{:keys [props state]}]
      (let [nav-context (nav/parse-segment (:nav-context props))
            page (keyword (:segment nav-context))]
-       (when-not (contains? #{:import-data :workspaces :methods} page)
+       (when-not (contains? (set (map :key top-nav-bar-items)) page)
          (nav/navigate (:nav-context props) "workspaces"))
        [:div {}
 
@@ -92,11 +101,11 @@
          [:div {}
           [TopNavBar {:selected-item page
                       :on-nav (fn [item] (nav/navigate (:nav-context props) (name item)))}]]]
-        (case page
-          :import-data [import-data/Page {:nav-context nav-context}]
-          :workspaces [workspaces/Page {:nav-context nav-context}]
-          :methods [method-repo/Page {:nav-context nav-context}]
-          [:div {} "Page not found."])]))})
+
+        (let [item (first (filter #(= (% :key) page) top-nav-bar-items))]
+          (if item
+            [(item :component) {:nav-context nav-context}]
+            [:div {} "Page not found."]))]))})
 
 ;; Content to display when logged out
 (react/defc LoggedOut
