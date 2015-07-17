@@ -12,6 +12,7 @@
       (set? thing) "set"
       (map? thing) "map"
       (seq? thing) "seq"
+      :else "unknown?!?! (function)"
       )
     )
   )
