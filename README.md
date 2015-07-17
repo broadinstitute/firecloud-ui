@@ -9,7 +9,7 @@ https://firecloud-ci.broadinstitute.org/
 [ClojureScript](https://github.com/clojure/clojurescript) is used for the UI.
 We use the Leiningen build tool. To install, follow the installation instructions on the [Leiningen web site](http://leiningen.org/).
 The code incorporates usage of [react-cljs](https://github.com/dmohs/react-cljs) which is 
-a ClojureScript wrapper for [React](https://facebook.github.io/react/docs/top-level-api.html)
+a ClojureScript wrapper for [React](https://facebook.github.io/react/).
 
 ## Building
 
@@ -28,7 +28,7 @@ Watch files, rebuild, and reload changes into the running browser window:
 ./script/dev/start-hot-reloader.sh
 ```
 
-[figwheel](https://github.com/bhauman/lein-figwheel) is used to accomplish this.
+[figwheel](https://github.com/bhauman/lein-figwheel) is used to accomplish this. [This video](https://www.youtube.com/watch?v=j-kj2qwJa_E) gives some insight into the productivity gains available when using this technology (up to about 15:00 is all that is necessary).
 
 This can take around 20 seconds to completely start. When ready, it will display the following message:
 ```
@@ -49,6 +49,11 @@ http://local.broadinstitute.org:8000/. To make your local instance available at 
 /etc/hosts:
 ```
 127.0.0.1 local.broadinstitute.org
+```
+
+By default, this script proxies the `/api` path to the production orchestration server. To have it proxy to a locally-running instance, call it like so:
+```
+./script/dev/serve-locally.py local
 ```
 
 ## Testing
