@@ -21,3 +21,7 @@
   [:div (utils/deep-merge props {:style {:position "absolute" :top "50%" :left "50%"
                                          :transform "translate(-50%, -50%)"}})
    children])
+
+(defn scroll-to [x y] (.scrollTo js/window x y))
+
+(defn scroll-to-top [] (scroll-to 0 0))
