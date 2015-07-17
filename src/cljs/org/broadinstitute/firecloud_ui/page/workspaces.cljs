@@ -353,9 +353,9 @@
                         (swap! state_atom assoc :methods-loaded? true :methods methods))
                       (swap! state_atom assoc :error-message (.-statusText xhr))
                       )
+                    (swap! state_atom assoc :method-conf-count  (count (parse-json-string (.-responseText xhr))  ))
                     (swap! state_atom assoc :method-confs-loaded? true)
                     (swap! state_atom assoc :method-confs (parse-json-string (.-responseText xhr)))
-
                     )
          :canned-response {
                            :responseText (utils/->json-string (create-mock-methodconfs)     )
@@ -382,8 +382,7 @@
              :render
              ;;render must be a function
              (fn [{:keys [state]}]
-               (rlog "The value of eddiekey in render is" (:eddiekey @state))
-               [:div {:style {:padding "1em"}}
+                [:div {:style {:padding "1em"}}
                 ;;[:h2 {} "Configurations"]
                 (create-section-header "Method Configurations")
                 [:div {}
@@ -393,8 +392,9 @@
                         [
                          WorkspaceMethodsConfigurationsList
                             {
+                             :method-conf-name "placeholder"
                              :no-confs-to-display-message "There are no method configurations to display."
-                              :method-confs (:method-confs @state)
+                             :method-confs (:method-confs @state)
                              }
                          ]
                                               ;;(str (:methods-loaded? @state) (:method-content @state)    )
