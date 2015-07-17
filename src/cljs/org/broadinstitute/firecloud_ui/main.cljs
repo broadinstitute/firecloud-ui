@@ -2,10 +2,11 @@
   (:require
    [dmohs.react :as react]
    [org.broadinstitute.firecloud-ui.common.style :as style]
+   [org.broadinstitute.firecloud-ui.nav :as nav]
    [org.broadinstitute.firecloud-ui.page.method-repo :as method-repo]
    [org.broadinstitute.firecloud-ui.page.workspaces :as workspaces]
    [org.broadinstitute.firecloud-ui.session :as session]
-   [org.broadinstitute.firecloud-ui.utils :as utils]
+   [org.broadinstitute.firecloud-ui.utils :as utils :refer [rlog jslog cljslog]]
    ))
 
 
@@ -65,29 +66,31 @@
 
 ;; Content to display when logged in via Google
 (react/defc LoggedIn
-  {:get-initial-state
-   (fn []
-     {:top-level-page :workspaces})
-   :render
-   (fn [{:keys [state]}]
-     [:div {}
-      ;; Leave the Google button on the page to avoid possible errors.
-      ;; TODO: figure out a better way to avoid the errors.
-      [:div {:className "g-signin2" :data-onsuccess "onSignIn" :style {:display "none"}}]
-      [:div {:style {:padding "1em" :borderBottom (str "1px solid " (:line-gray style/colors))}}
-       [:div {:style {:float "right" :fontSize "70%"}}
-        [:span {:style {:marginRight "1ex" :color (:link-blue style/colors)}}
-         (-> (session/get-current-user)
-             (utils/call-external-object-method :getBasicProfile)
-             (utils/call-external-object-method :getName))]
-        [:a {:href "javascript:;" :onClick (fn [e] (session/log-out))} "Log-Out"]]
-       (logo)
+  {:render
+   (fn [{:keys [props state]}]
+     (let [nav-context (nav/parse-segment (:nav-context props))
+           page (keyword (:segment nav-context))]
+       (when-not (contains? #{:workspaces :methods} page)
+         (nav/navigate (:nav-context props) "workspaces"))
        [:div {}
-        [TopNavBar {:selected-item (:top-level-page @state)
-                    :on-nav (fn [item] (swap! state assoc :top-level-page item))}]]]
-      (case (:top-level-page @state)
-        :workspaces [workspaces/Page]
-        :methods [method-repo/Page])])})
+        ;; Leave the Google button on the page to avoid possible errors.
+        ;; TODO: figure out a better way to avoid the errors.
+        [:div {:className "g-signin2" :data-onsuccess "onSignIn" :style {:display "none"}}]
+        [:div {:style {:padding "1em" :borderBottom (str "1px solid " (:line-gray style/colors))}}
+         [:div {:style {:float "right" :fontSize "70%"}}
+          [:span {:style {:marginRight "1ex" :color (:link-blue style/colors)}}
+           (-> (session/get-current-user)
+               (utils/call-external-object-method :getBasicProfile)
+               (utils/call-external-object-method :getName))]
+          [:a {:href "javascript:;" :onClick (fn [e] (session/log-out))} "Log-Out"]]
+         (logo)
+         [:div {}
+          [TopNavBar {:selected-item page
+                      :on-nav (fn [item] (nav/navigate (:nav-context props) (name item)))}]]]
+        (case page
+          :workspaces [workspaces/Page {:nav-context nav-context}]
+          :methods [method-repo/Page {:nav-context nav-context}]
+          [:div {} "Page not found."])]))})
 
 ;; Content to display when logged out
 (react/defc LoggedOut
@@ -113,16 +116,23 @@
    (fn [{:keys [state]} google-user]
      (session/set-current-user google-user)
      (swap! state assoc :is-logged-in? true))
+   :handle-hash-change
+   (fn [{:keys [state]}]
+     (swap! state assoc :root-nav-context (nav/create-nav-context)))
+   :get-initial-state
+   (fn []
+     {:root-nav-context (nav/create-nav-context)})
    :render
    (fn [{:keys [state]}]
      [:div {}
       (cond
-        (:is-logged-in? @state) [LoggedIn]
+        (:is-logged-in? @state) [LoggedIn {:nav-context (:root-nav-context @state)}]
         :else [LoggedOut])
       (footer)])
    :component-did-mount
-   (fn [{:keys [state]}]
-     (session/on-log-out (fn [] (swap! state assoc :is-logged-in? false))))})
+   (fn [{:keys [this state]}]
+     (session/on-log-out (fn [] (swap! state assoc :is-logged-in? false)))
+     (.addEventListener js/window "hashchange" (partial react/call :handle-hash-change this)))})
 
 (defn- render-without-init [element]
   (react/render (react/create-element App) element nil goog.DEBUG))
