@@ -3,6 +3,20 @@
     [clojure.string]
     ))
 
+(def getType
+  (fn [thing]
+    (cond
+      (coll? thing) "coll"
+      (list? thing) "list"
+      (vector? thing) "vector"
+      (set? thing) "set"
+      (map? thing) "map"
+      (seq? thing) "seq"
+      )
+    )
+  )
+
+
 
 (defn rlog [& args]
   (let [arr (array)]

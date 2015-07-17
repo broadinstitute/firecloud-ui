@@ -6,7 +6,8 @@
    [org.broadinstitute.firecloud-ui.common.table :as table]
    [org.broadinstitute.firecloud-ui.common.style :as style]
    [org.broadinstitute.firecloud-ui.common.components :as comps]
-   [org.broadinstitute.firecloud-ui.utils :as utils :refer [rlog jslog cljslog]]
+   [org.broadinstitute.firecloud-ui.utils :as utils :refer [rlog jslog cljslog getType ]]
+
    ))
 
 
@@ -258,6 +259,36 @@
 
 
 
+(defn- create-mock-methodconfs []
+  ;;this maps a function to random integers
+  ;;the function that gets mapped is an anonymous function defined here
+  ;;the value passed to the anonymous function is a random integer
+
+  ;;FROM https://broadinstitute.atlassian.net/browse/DSDEEPB-10 (verbatim)
+
+  ;; The scope of this story is strictly the listing of method configurations.
+  ;;* name of the method configuration
+  ;;* root entity type
+  ;;* last updated?
+
+  ;;  Acceptance Criteria:
+  ;;  * Display as much information as possible from the API
+  ;;  * Draft a story reflecting work that needs to be completed on the API and Orchestration layers
+  ;;  * Needs to be reviewed by [~birger] before it can be closed
+  (map
+    (fn [i]
+      {
+       :method-conf-name (rand-nth ["rand_name_1" "rand_name_2" "rand_name_3" "rand_name_4"]    )
+       :method-conf-root-ent-type (str "method_conf_root_ent_type_" (inc i))
+       :method-conf-last-updated (str "method_conf_last_updated_" (inc i))
+       }
+      )
+    (range (rand-int 100)))
+  )
+
+
+
+
 
 (react/defc WorkspaceMethodsConfigurationsList
             {:render
@@ -292,36 +323,13 @@
                                        (:method-conf-root-ent-type m)
                                        (:method-conf-last-updated m)
                                        ])
-                                    ((:method-confs props)))})])])})
+                                    ;; (create-mock-methodconfs)
+                                    (:method-confs props)
+                                    ;;(cljslog (str "the value of what gets passed via list is " (:method-confs props)   ))
+                                    )
+                      })])])})
 
 
-
-(defn- create-mock-methodconfs []
-;;this maps a function to random integers
-;;the function that gets mapped is an anonymous function defined here
-;;the value passed to the anonymous function is a random integer
-
-;;FROM https://broadinstitute.atlassian.net/browse/DSDEEPB-10 (verbatim)
-
-;; The scope of this story is strictly the listing of method configurations.
-;;* name of the method configuration
-;;* root entity type
-;;* last updated?
-
-;;  Acceptance Criteria:
-;;  * Display as much information as possible from the API
-;;  * Draft a story reflecting work that needs to be completed on the API and Orchestration layers
-;;  * Needs to be reviewed by [~birger] before it can be closed
-  (map
-    (fn [i]
-      {
-       :method-conf-name (rand-nth ["rand_name_1" "rand_name_2" "rand_name_3" "rand_name_4"]    )
-       :method-conf-root-ent-type (str "method_conf_root_ent_type_" (inc i))
-       :method-conf-last-updated (str "method_conf_last_updated_" (inc i))
-       }
-      )
-    (range (rand-int 100)))
-  )
 
 
 
@@ -342,12 +350,33 @@
                         (swap! state_atom assoc :methods-loaded? true :methods methods))
                       (swap! state_atom assoc :error-message (.-statusText xhr))
                       )
+                    (rlog "on-done in method-conf-ajax-call being called ")
+                    (rlog (str "passed eddiekey is " (:eddiekey @state_atom)))
+                    (swap! state_atom assoc :eddiekey "MODIFED value"   )
+                    (rlog (str "after mod but in on-done eddiekey is : " (:eddiekey @state_atom)))
+                    ;;
+                    (rlog "made it to end of on-done")
+                    (swap! state_atom assoc :method-confs-loaded? true)
+                    ;;(swap! state_atom assoc :method-confs (.-responseText xhr))
+                    (swap! state_atom assoc :method-confs (create-mock-methodconfs))
+                    ;;(swap! state_atom assoc :method-confs (.-responseText xhr))
+                    ;;(rlog (str "the value of the create-mock-methodconfs direct is "  create-mock-methodconfs    ))
+                    ;;(rlog (str "the value of the create-mock-methodconfs called is "  (create-mock-methodconfs)    ))
+                    (rlog "the current value of responsetext is : " (.-responseText xhr))
+
+                    ;;(swap! state_atom  :methods-conf  (fn [] .-responseText xhr ))
+
                     )
-         :canned-response {:responseText (utils/->json-string (create-mock-methodconfs))
+         :canned-response {
+                           :responseText (utils/->json-string (create-mock-methodconfs)     )
+                           ;;:responseText (utils/->json-string "someresponsetext")
                            :status 200
-                           :delay-ms (rand-int 2000)}}
+                           :delay-ms (rand-int 2000)
+                           }
+
+         }
         )
-      )                                                     ;;let
+      );;let
     )
   )
 
@@ -361,15 +390,19 @@
              (fn [{:keys [state]}]
                ;;(set! )
                ;; referring to the methods-loaded? (of the state) do AJAX/something to modify it here ...
-               (swap! state assoc :method-confs create-mock-methodconfs )
-               (swap! state assoc :method-confs-loaded? true)
+
+
+               ;;(swap! state assoc :method-confs create-mock-methodconfs )
+               (swap! state assoc :eddiekey  "this is a value here!!!!!")
+               (rlog (str "BEFORE pass the value is " (:eddiekey @state)))
                (method-conf-ajax-call "ws_ns" "ws_n"   state    )
+               (rlog (str "AFTER pass the value is " (:eddiekey @state)))
                )
 
              :render
              ;;render must be a function
              (fn [{:keys [state]}]
-
+               (rlog "The value of eddiekey in render is" (:eddiekey @state))
                [:div {:style {:padding "1em"}}
                 ;;[:h2 {} "Configurations"]
                 (create-section-header "Method Configurations")
