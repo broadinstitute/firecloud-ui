@@ -328,11 +328,7 @@
                                        (m "method-conf-root-ent-type")
                                        (m "method-conf-last-updated")
                                        ])
-
-
                                     (:method-confs props)
-                                    (rlog  (str "The type (used by WorkspaceMethodsConfigurationsList)  is " (getType (:method-confs props)  )  ))
-                                    ;;(cljslog (str "the value of what gets passed via list is " (:method-confs props)   ))
                                     )
                       })])])})
 
@@ -342,10 +338,10 @@
 
 (
   def method-conf-ajax-call
-  ;; GET /{workspaceNamespace}/{workspaceName}/methodconfigs
   (fn [ work_space_name_space_f work_space_name_f state_atom ]
 
     (let [
+          ;; GET /{workspaceNamespace}/{workspaceName}/methodconfigs
           url (str "/" work_space_name_space_f "/"   work_space_name_f "/methodconfigs"  )
           ]
       (utils/ajax-orch
@@ -357,30 +353,12 @@
                         (swap! state_atom assoc :methods-loaded? true :methods methods))
                       (swap! state_atom assoc :error-message (.-statusText xhr))
                       )
-                    (rlog "on-done in method-conf-ajax-call being called ")
-                    (rlog (str "passed eddiekey is " (:eddiekey @state_atom)))
-                    (swap! state_atom assoc :eddiekey "MODIFED value"   )
-                    (rlog (str "after mod but in on-done eddiekey is : " (:eddiekey @state_atom)))
-                    ;;
-                    (rlog "made it to end of on-done")
                     (swap! state_atom assoc :method-confs-loaded? true)
-                    ;;(swap! state_atom assoc :method-confs (.-responseText xhr))
                     (swap! state_atom assoc :method-confs (parse-json-string (.-responseText xhr)))
-                    ;;(swap! state_atom assoc :method-confs (parse-json-string    )
-                    ;;(swap! state_atom assoc :method-confs (.-responseText xhr))
-                    ;;(rlog (str "the value of the create-mock-methodconfs direct is "  create-mock-methodconfs    ))
-                    ;;(rlog (str "the value of the create-mock-methodconfs called is "  (create-mock-methodconfs)    ))
-                    ;;(rlog "the current value of responsetext is : " (.-responseText xhr))
-                    ;;(rlog (str "the type of create-mock-methodconfs is " (getType create-mock-methodconfs)))
-                    ;;(rlog (str "the type of (create-mock-methodconfs) is " (getType (create-mock-methodconfs))))
-                    ;;(rlog (str "the type of ((create-mock-methodconfs)) is " (getType ((create-mock-methodconfs)))))
-
-                    ;;(swap! state_atom  :methods-conf  (fn [] .-responseText xhr ))
 
                     )
          :canned-response {
                            :responseText (utils/->json-string (create-mock-methodconfs)     )
-                           ;;:responseText (utils/->json-string "someresponsetext")
                            :status 200
                            :delay-ms (rand-int 2000)
                            }
@@ -398,15 +376,7 @@
              ;;Invoked once, only on the client (not on the server), immediately after the initial rendering occurs.
              :component-did-mount
              (fn [{:keys [state]}]
-               ;;(set! )
-               ;; referring to the methods-loaded? (of the state) do AJAX/something to modify it here ...
-
-
-               ;;(swap! state assoc :method-confs create-mock-methodconfs )
-               (swap! state assoc :eddiekey  "this is a value here!!!!!")
-               (rlog (str "BEFORE pass the value is " (:eddiekey @state)))
                (method-conf-ajax-call "ws_ns" "ws_n"   state    )
-               (rlog (str "AFTER pass the value is " (:eddiekey @state)))
                )
 
              :render
@@ -420,14 +390,11 @@
                  (cond
                    (:method-confs-loaded? @state)
                    [:div {}
-                    ;;"put 'call' to WorkspaceMethodsConfigurationsList here cause the confs have been SUCCESSFULLY loaded"
                         [
                          WorkspaceMethodsConfigurationsList
                             {
                              :no-confs-to-display-message "There are no method configurations to display."
-                             ;;:method-conf-name "this is a name
-                             :method-conf-name "this_is_the_name"
-                             :method-confs (:method-confs @state)
+                              :method-confs (:method-confs @state)
                              }
                          ]
                                               ;;(str (:methods-loaded? @state) (:method-content @state)    )
