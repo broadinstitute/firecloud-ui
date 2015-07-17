@@ -69,8 +69,8 @@
 (defn- filter-workspaces [f workspaces]
   (case f
     :all workspaces
-    :complete  (filter (fn [ws] (= "Complete"  (ws "status"))) workspaces)
-    :running   (filter (fn [ws] (= "Running"   (ws "status"))) workspaces)
+    :complete (filter (fn [ws] (= "Complete" (ws "status"))) workspaces)
+    :running (filter (fn [ws] (= "Running" (ws "status"))) workspaces)
     :exception (filter (fn [ws] (= "Exception" (ws "status"))) workspaces)))
 
 (react/defc WorkspaceList
@@ -145,9 +145,9 @@
              build-text (fn [name f]
                           (str name " (" (count (filter-workspaces f (:workspaces @state))) ")"))]
          [:div {:style {:display "inline-block" :marginLeft "-1em"}}
-          [Button {:text (build-text "All"       :all)       :state state :filter :all}]
-          [Button {:text (build-text "Complete"  :complete)  :state state :filter :complete}]
-          [Button {:text (build-text "Running"   :running)   :state state :filter :running}]
+          [Button {:text (build-text "All" :all) :state state :filter :all}]
+          [Button {:text (build-text "Complete" :complete) :state state :filter :complete}]
+          [Button {:text (build-text "Running" :running) :state state :filter :running}]
           [Button {:text (build-text "Exception" :exception) :state state :filter :exception}]
           [:div {:style {:clear "both"}}]]))}))
 
@@ -325,7 +325,9 @@
   (map #(assoc % "status" "Complete") workspaces))
 
 (react/defc Page
-  {:render
+  {:get-initial-state
+   (fn [] {:active-filter :all})
+   :render
    (fn [{:keys [state refs]}]
      [:div {}
       (render-overlay state refs)
@@ -344,8 +346,6 @@
         (:error-message @state) [:div {:style {:color "red"}}
                                   "FireCloud service returned error: " (:error-message @state)]
         :else [comps/Spinner {:text "Loading workspaces..."}])])
-   :get-initial-state
-   (fn [] {:active-filter :all})
    :component-did-mount
    (fn [{:keys [state]}]
      (utils/ajax-orch
