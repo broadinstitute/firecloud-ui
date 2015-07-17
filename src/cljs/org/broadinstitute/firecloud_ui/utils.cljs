@@ -26,9 +26,10 @@
   ([s what start-index] (.indexOf s what start-index)))
 
 
-(defn call-external-object-method [obj method-name & args]
+(defn call-external-object-method
   "Call an external object's method by name, since a normal call will get renamed during
    advanced compilation and cause an error."
+  [obj method-name & args]
   (apply (.bind (aget obj (name method-name)) obj) args))
 
 
@@ -93,3 +94,11 @@
     (fn [x1 x2] (if (and (map? x1) (map? x2)) (deep-merge x1 x2) x2))
     maps))
 
+
+(defn generate-form-data
+  "Create a blob of multipart/form-data from the provided map."
+  [params]
+  (let [form-data (js/FormData.)]
+    (doseq [[k v] params]
+      (.append form-data (name k) v))
+    form-data))
