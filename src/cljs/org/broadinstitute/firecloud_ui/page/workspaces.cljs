@@ -85,15 +85,15 @@
                        :style cell-style
                        :header-style {:borderLeft 0}
                        :component SamplesCell}
-                      {:label ""
+                      {:label "Workflows"
                        :style cell-style
                        :header-style {:borderLeft 0}
                        :component WorkflowsCell}
-                      {:label ""
+                      {:label "Size"
                        :style cell-style
                        :header-style {:borderLeft 0}
                        :component DataSizeCell}
-                      {:label ""
+                      {:label "Owner"
                        :style cell-style
                        :header-style {:borderLeft 0}
                        :component OwnerCell}]
@@ -338,16 +338,16 @@
 
 (
   def method-conf-ajax-call
-  (fn [ work_space_name_space_f work_space_name_f state_atom ]
+  (fn [ work_space_name_space_f work_space_name_f state_atom props-map]
 
     (let [
           ;; GET /{workspaceNamespace}/{workspaceName}/methodconfigs
-          url (str "/" work_space_name_space_f "/"   work_space_name_f "/methodconfigs"  )
+          url (str "/" (:selected-workspace-namespace props-map) "/"  (:selected-workspace props-map) "/methodconfigs"  )
           ]
       (utils/ajax-orch
         url
         {
-         :on-done (fn [{:keys [success? xhr]}]
+         :on-done (fn [{:keys [success? xhr  props   ]}]
                     (if success?
                       (let [method-confs (utils/parse-json-string (.-responseText xhr))]
                         (swap! state_atom assoc :methods-loaded? true :methods methods))
@@ -356,6 +356,11 @@
                     (swap! state_atom assoc :method-conf-count  (count (parse-json-string (.-responseText xhr))  ))
                     (swap! state_atom assoc :method-confs-loaded? true)
                     (swap! state_atom assoc :method-confs (parse-json-string (.-responseText xhr)))
+                    (rlog "The value of the url is" url )
+                    (rlog (str "the passed WorkSpaceNameSpace is " work_space_name_space_f " and the passed WorkSpaceName is " work_space_name_f   ))
+                    (rlog (str "the passed in workspace name is " (:selected-workspace props-map)))
+                    (rlog (str "the passed in workspace namespace is " (:selected-workspace-namespace props-map)))
+
                     )
          :canned-response {
                            :responseText (utils/->json-string (create-mock-methodconfs)     )
@@ -375,8 +380,8 @@
             {
              ;;Invoked once, only on the client (not on the server), immediately after the initial rendering occurs.
              :component-did-mount
-             (fn [{:keys [state]}]
-               (method-conf-ajax-call "ws_ns" "ws_n"   state    )
+             (fn [{:keys [state props]}]
+               (method-conf-ajax-call (:selected-workspace-namespace props) (:selected-workspace props)    state props   )
                )
 
              :render
@@ -416,13 +421,32 @@
 
 (defn- render-selected-workspace [workspace]
   [:div {}
-   [comps/TabBar {:key "selected"
-                  :items [{:text "Summary" :component (render-workspace-summary workspace)}
-                          {:text "Data"}
-                          {:text "Method Configurations" :component [WorkspaceMethodConfigurations] }
-                          {:text "Methods"}
-                          {:text "Monitor"}
-                          {:text "Files"}]}]])
+   (let [
+         myWorkspaceMethodConfigurations WorkspaceMethodConfigurations
+
+         ]
+
+     (jslog "currently in render-selected-workspace and the workspace is " workspace  )
+     [comps/TabBar {:key   "selected"
+                    :items [{:text "Summary" :component (render-workspace-summary workspace)}
+                            {:text "Data"}
+                            {:text "Method Configurations" :component [
+                                                                       myWorkspaceMethodConfigurations
+                                                                          {
+                                                                           :selected-workspace (get workspace "name")
+                                                                           :selected-workspace-namespace (get workspace "namespace")
+                                                                           }
+
+                                                                       ]
+                             }
+                            {:text "Methods"}
+                            {:text "Monitor"}
+                            {:text "Files"}]}
+      ]
+     )
+   ]
+
+  )
 
 
 (defn- create-mock-workspaces []
