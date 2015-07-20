@@ -2,6 +2,7 @@
   (:require
     [dmohs.react :as react]
     [org.broadinstitute.firecloud-ui.common :as common]
+    [org.broadinstitute.firecloud-ui.common.icons :as icons]
     [org.broadinstitute.firecloud-ui.common.style :as style]))
 
 
@@ -93,9 +94,8 @@
      (common/center {:style {:width (int (* 1.27 (:size props)))
                              :height (int (* 1.27 (:size props)))
                              :backgroundColor "fff" :borderRadius "100%"}}
-       (common/center {:style {:fontFamily "fontIcons" :color (:color props)
-                               :fontSize (int (* 0.5 (:size props)))}}
-         "")))})
+       (common/center {}
+         (icons/font-icon {:style {:color (:color props) :fontSize (int (* 0.5 (:size props)))}} :status-done))))})
 
 (react/defc RunningIcon
   {:get-default-props
@@ -127,4 +127,4 @@
    :render
    (fn [{:keys [props]}]
      (common/center {}
-      [:span {:style {:fontFamily "fontIcons" :color "#fff" :fontSize (:size props)}} ""]))})
+      (icons/font-icon {:style {:color "#fff" :fontSize (:size props)}} :status-warning)))})

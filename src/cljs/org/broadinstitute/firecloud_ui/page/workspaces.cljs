@@ -3,9 +3,10 @@
    [clojure.string]
    [dmohs.react :as react]
    [org.broadinstitute.firecloud-ui.common :as common]
-   [org.broadinstitute.firecloud-ui.common.table :as table]
-   [org.broadinstitute.firecloud-ui.common.style :as style]
    [org.broadinstitute.firecloud-ui.common.components :as comps]
+   [org.broadinstitute.firecloud-ui.common.icons :as icons]
+   [org.broadinstitute.firecloud-ui.common.style :as style]
+   [org.broadinstitute.firecloud-ui.common.table :as table]
    [org.broadinstitute.firecloud-ui.nav :as nav]
    [org.broadinstitute.firecloud-ui.utils :as utils :refer [rlog jslog cljslog]]
    ))
@@ -261,7 +262,7 @@
                     :textAlign "center" :cursor "pointer"
                     :textDecoration "none"}}
       [:span {:style {:display "inline-block" :verticalAlign "middle"}}
-       [:span {:style {:fontFamily "fontIcons" :fontSize "135%"}} ""]]
+       (icons/font-icon {:style {:fontSize "135%"}} :pencil)]
       [:span {:style {:marginLeft "1em"}} "Edit this page"]]]]
    [:div {:style {:display "inline-block"}}
     (create-section-header "Workspace Owner")
