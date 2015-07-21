@@ -3,6 +3,7 @@
     [org.broadinstitute.firecloud-ui.utils :as utils]))
 
 (def ^:private icon-keys {:activity ""
+                          :angle-left ""
                           :angle-right ""
                           :document ""
                           :gear ""
