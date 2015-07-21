@@ -25,15 +25,17 @@
                   :backgroundColor (:color props)
                   :color "white" :fontWeight 500
                   :borderRadius 2 :padding "0.7em 1em"
+                  :fontFamily (when (:icon props) "fontIcons")
+                  :fontSize (when (:icon props) "80%")
                   :textDecoration "none"}
           :href "javascript:;"
           :onClick (fn [e] ((:onClick props) e))
           :onKeyDown (common/create-key-handler [:space :enter] (:onClick props))}
-      (:text props)
+      (or (:text props) (icons/icon-text (:icon props)))
       (when (= (:style props) :add)
         [:span {:style {:display "inline-block" :height "1em" :width "1em" :marginLeft "1em"
                         :position "relative"}}
-         [:span {:style {:position "absolute" :top "-50%" :fontSize "200%" :fontWeight "normal"}}
+         [:span {:style {:position "absolute" :top "-55%" :fontSize "200%" :fontWeight "normal"}}
           "+"]])])})
 
 
