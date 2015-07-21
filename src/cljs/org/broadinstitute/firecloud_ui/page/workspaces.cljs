@@ -220,23 +220,20 @@
 
 
 
-
 (def workspace-tabs-view-margins "45px 25px")
 
-
 (defn- render-workspace-summary [workspace]
-  [:div {:style {:margin workspace-tabs-view-margins }}
+  [:div {:style {:margin workspace-tabs-view-margins}}
    [:div {:style {:position "relative" :float "left" :display "inline-block"
                   :top 0 :left 0 :width 290 :marginRight 40 :height "100%"}}
     [:div {:style {:borderRadius 5 :backgroundColor (:success-green style/colors) :color "#fff"
-                   :fontSize 20 :fontWeight 400 :padding 25 :textAlign "center"}}
+                   :fontSize "125%" :fontWeight 400 :padding 25 :textAlign "center"}}
      "Complete"]
     [:div {:style {:marginTop 27}}
      [:div {:style {:backgroundColor "transparent" :color (:button-blue style/colors)
                     :border (str "1px solid " (:line-gray style/colors))
 
                     :fontSize "106%" :lineHeight 1 :position "relative"
-
                     :padding "0.9em 0em"
                     :textAlign "center" :cursor "pointer"
                     :textDecoration "none"}}
@@ -260,10 +257,7 @@
    [:div {:style {:clear "both"}}]])
 
 
-
-(defn-
-  render-workspace-method-configurations
-  [workspace]
+(defn-  render-workspace-method-configurations   [workspace]
   ;; what does 'workspace' mean here?  I guess it's passing
   ;; it as a parameter variable ? or is this some kind of object inheritance?
   [:div
@@ -286,6 +280,7 @@
    ]
 
   )
+
 
 
 
@@ -450,7 +445,6 @@
 
 (defn- render-selected-workspace [workspace]
   [:div {}
-
    (let [
          myWorkspaceMethodConfigurations WorkspaceMethodConfigurations
 
