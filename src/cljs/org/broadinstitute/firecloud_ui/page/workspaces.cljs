@@ -257,31 +257,6 @@
    [:div {:style {:clear "both"}}]])
 
 
-(defn-  render-workspace-method-configurations   [workspace]
-  ;; what does 'workspace' mean here?  I guess it's passing
-  ;; it as a parameter variable ? or is this some kind of object inheritance?
-  [:div
-    {:style {:margin workspace-tabs-view-margins}}
-   [:table
-    [:row [:col 1]]
-    ]
-   (let [x 456]
-
-     (utils/ajax-orch
-       "/workspaces"
-       {:on-done (fn [{:keys [success? xhr]}]
-                   (if success?
-                     ("success true")
-                     ("success false")))
-        :canned-response {:responseText "this is the response text"
-                          :status 200 :delay-ms (rand-int 2000)}
-        }))
-
-   ]
-
-  )
-
-
 
 
 (defn- create-mock-methodconfs []
