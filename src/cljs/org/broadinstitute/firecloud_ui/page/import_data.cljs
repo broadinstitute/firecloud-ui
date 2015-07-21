@@ -15,8 +15,8 @@
   (swap! state assoc
     :entities-loaded? true
     :uploadResults (utils/parse-json-string "[
-        { \"entityName\" : \"foo\", \"entityType\" : \"bar\", \"success\" : false, \"message\" : \"ohno\" },
-        { \"entityName\" : \"bar\", \"entityType\" : \"baz\", \"success\" : true, \"message\" : \"hooray\" }
+        { \"entityName\" : \"foo\", \"entityType\" : \"bar\", \"succeeded\" : false, \"message\" : \"ohno\" },
+        { \"entityName\" : \"bar\", \"entityType\" : \"baz\", \"succeeded\" : true, \"message\" : \"hooray\" }
       ]")))
 
 
@@ -25,7 +25,7 @@
     (str "/workspaces/" workspaceNamespace "/" workspaceName "/importEntitiesJSON")
     {:method :post
      :encType "multipart/form-data"
-     :on-done #(swap! state assoc :entities-loaded? true :uploadResults (utils/parse-json-string (.-responseText %)))
+     :on-done #(swap! state assoc :entities-loaded? true :uploadResults (utils/parse-json-string (-> (:xhr %) .-responseText)))
      :data (utils/generate-form-data {:entities entityFile})}))
 
 
@@ -70,6 +70,6 @@
              :data (map (fn [entity]
                           [(entity "entityName")
                            (entity "entityType")
-                           (str (entity "success"))
+                           (str (entity "succeeded"))
                            (entity "message")])
                      (:uploadResults @state))})]])])})
