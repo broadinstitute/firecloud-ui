@@ -24,3 +24,5 @@
 
 (defn font-icon [style key]
   [:span (utils/deep-merge {:style {:fontFamily "fontIcons"}} style) (key icon-keys)])
+
+(defn icon-text [key] (key icon-keys))

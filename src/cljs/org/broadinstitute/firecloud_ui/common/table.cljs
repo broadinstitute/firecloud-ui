@@ -5,7 +5,6 @@
    [inflections.core :refer [pluralize]]
    [org.broadinstitute.firecloud-ui.common.style :as style]
    [org.broadinstitute.firecloud-ui.common.icons :as icons]
-   [org.broadinstitute.firecloud-ui.utils :as utils :refer [rlog jslog cljslog]]
    ))
 
 
@@ -64,7 +63,7 @@
         [:div {:style {:display "block" :fontSize 13 :lineHeight 1.5
                        :padding "0px 48px" :verticalAlign "middle"}}
 
-         [:div {:style {:float "left" :display "inline-block" :width "25%" :padding "2em 0em" :verticalAlign "middle"}}
+         [:div {:style {:float "left" :display "inline-block" :width "25%" :padding "2.15em 0em" :verticalAlign "middle"}}
           [:b {} (str left-num " - " right-num)] (str " of " (pluralize num-total " result"))]
 
          [:div {:style {:float "left" :display "inline-block" :width "50%"
@@ -96,41 +95,38 @@
            (icons/font-icon {:style {:fontSize "70%"}} :angle-right)]]
 
          [:div {:style {:float "left" :display "inline-block" :width "25%"
-                        :padding "2em 0em" :textAlign "right"}}
+                        :padding "2.15em 0em" :textAlign "right"}}
           [:span {} "Display"]
-          [:span {} (style/create-select {:style {:width 60 :margin "0px 1em"} :ref "numRows"
+          [:span {} (style/create-select {:style {:width 60 :margin "0em 1em"} :ref "numRows"
                                           :onChange #(swap! state assoc
                                                       :rows-per-page (int (-> (@refs "numRows") .getDOMNode .-value))
                                                       :current-page 1)}
                       10 25 100 500)]
           [:span {} "rows per page"]]
 
-         [:div {:style {:clear "both"}}]]]))
-   })
+         [:div {:style {:clear "both"}}]]]))})
 
 
 (react/defc Table
   {:get-initial-state
-   (fn [{:keys [props]}]
+   (fn []
      {:rows-per-page 10
       :current-page 1})
    :render
    (fn [{:keys [state props]}]
-     (let [paginate (fn [data]
-                      (take (:rows-per-page @state)
-                        (drop (* (- (:current-page @state) 1) (:rows-per-page @state))
-                          data)))]
-       [:div {}
-        [Paginator {:num-rows (count (:data props))
-                    :parent-state state}]
-        [:div {:style {:color (:text-light style/colors)
-                       :paddingBottom "1em" :display "flex"}}
-         (map (fn [column]
-                [:div {:style (merge (:style column) (:header-style column))}
-                 (:label column)])
-           (:columns props))]
-        [Body {:columns (:columns props)
-               :data (paginate (:data props))}]]))
+     [:div {}
+      [Paginator {:num-rows (count (:data props))
+                  :parent-state state}]
+      [:div {:style {:color (:text-light style/colors)
+                     :paddingBottom "1em" :display "flex"}}
+       (map (fn [column]
+              [:div {:style (merge (:style column) (:header-style column))}
+               (:label column)])
+         (:columns props))]
+      [Body {:columns (:columns props)
+             :data (take (:rows-per-page @state)
+                     (drop (* (- (:current-page @state) 1) (:rows-per-page @state))
+                       (:data props)))}]])
    :component-will-receive-props
    (fn [{:keys [state]}]
      (swap! state assoc :current-page 1))})

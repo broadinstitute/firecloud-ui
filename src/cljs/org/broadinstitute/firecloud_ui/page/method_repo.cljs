@@ -71,7 +71,7 @@
                                                                  :onKeyDown (common/create-key-handler
                                                                               [:enter] apply-filter)})
                                        [:span {:style {:paddingLeft "1em"}}]
-                                       [comps/Button {:text "Go" :onClick apply-filter}]])
+                                       [comps/Button {:icon :search :onClick apply-filter}]])
                                     [MethodsList {:methods (filter-methods
                                                              (:methods @state)
                                                              ["namespace" "name" "synopsis"]
