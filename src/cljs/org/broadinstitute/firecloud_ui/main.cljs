@@ -5,7 +5,7 @@
    [org.broadinstitute.firecloud-ui.nav :as nav]
    [org.broadinstitute.firecloud-ui.page.method-repo :as method-repo]
    [org.broadinstitute.firecloud-ui.page.import-data :as import-data]
-   [org.broadinstitute.firecloud-ui.page.workspaces :as workspaces]
+   [org.broadinstitute.firecloud-ui.page.workspaces-list :as workspaces]
    [org.broadinstitute.firecloud-ui.session :as session]
    [org.broadinstitute.firecloud-ui.utils :as utils :refer [rlog jslog cljslog]]
    ))

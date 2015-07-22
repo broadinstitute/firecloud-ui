@@ -1,4 +1,4 @@
-(ns org.broadinstitute.firecloud-ui.page.workspaces
+(ns org.broadinstitute.firecloud-ui.page.workspaces-list
   (:require
    [clojure.string]
    [dmohs.react :as react]
@@ -8,10 +8,12 @@
    [org.broadinstitute.firecloud-ui.common.style :as style]
    [org.broadinstitute.firecloud-ui.common.table :as table]
    [org.broadinstitute.firecloud-ui.nav :as nav]
+   [org.broadinstitute.firecloud-ui.page.workspace.workspace-summary :refer [render-workspace-summary]]
+   [org.broadinstitute.firecloud-ui.page.workspace.workspace-data :refer [render-workspace-data]]
+   [org.broadinstitute.firecloud-ui.page.workspace.workspace-method-confs :refer [render-workspace-method-confs]]
    [org.broadinstitute.firecloud-ui.utils :as utils :refer [parse-json-string]]
    ))
 
-;; TODO - refactor this file into multiple files by page
 
 (react/defc StatusCell
   {:render
@@ -121,102 +123,6 @@
                           "Me"])
                     filtered-workspaces)})])]))})
 
-(react/defc EntitiesList
-  {:render
-   (fn [{:keys [props]}]
-     [:div {:style {:padding "0 4em"}}
-      (if (zero? (count (:entities props)))
-        [:div {:style {:textAlign "center" :backgroundColor (:background-gray style/colors)
-                       :padding "1em 0" :borderRadius 8}}
-         "No entities to display."]
-        [table/Table
-         (let [cell-style {:flexBasis "8ex" :flexGrow 1 :whiteSpace "nowrap" :overflow "hidden"
-                           :borderLeft (str "1px solid " (:line-gray style/colors))}
-               header-label (fn [text & [padding]]
-                              [:span {:style {:paddingLeft (or padding "1em")}}
-                               [:span {:style {:fontSize "90%"}} text]])]
-           {:columns [{:label (header-label "Entity Type")
-                       :style (merge cell-style {:borderLeft "none"})}
-                      {:label (header-label "Entity Name")
-                       :style cell-style
-                       :header-style {:borderLeft "none"}}
-                      {:label (header-label "Attributes")
-                       :style (merge cell-style {:flexBasis "30ex"})
-                       :header-style {:borderLeft "none"}}]
-            :data (map (fn [m]
-                         [(m "entityType") ;;properly map to entities after
-                          (m "name")
-                          (m "attributes")])
-                       (:entities props))})])])})
-
-(react/defc FilterButtons
-  (let [Button
-        (react/create-class
-         {:render
-          (fn [{:keys [props]}]
-            (let [state (:state props)
-                  filter (:filter props)
-                  active? (= filter (:active-filter @state))]
-              [:div {:style {:float "left"
-                             :backgroundColor (if active?
-                                                (:button-blue style/colors)
-                                                (:background-gray style/colors))
-                             :color (when active? "white")
-                             :marginLeft "1em" :padding "1ex" :width "16ex"
-                             :border (str "1px solid " (:line-gray style/colors))
-                             :borderRadius "2em"
-                             :cursor "pointer"}
-                     :onClick #(swap! state assoc :active-filter filter)}
-               (:text props)]))})]
-    {:render
-     (fn [{:keys [props]}]
-       (let [state (:state props)
-             build-text (fn [name f]
-                          (str name " (" (count (filter-workspaces f (:workspaces @state))) ")"))]
-         [:div {:style {:display "inline-block" :marginLeft "-1em"}}
-          [Button {:text (build-text "All" :all) :state state :filter :all}]
-          [Button {:text (build-text "Complete" :complete) :state state :filter :complete}]
-          [Button {:text (build-text "Running" :running) :state state :filter :running}]
-          [Button {:text (build-text "Exception" :exception) :state state :filter :exception}]
-          [:div {:style {:clear "both"}}]]))}))
-
-(react/defc EntityFilterButtons
-            (let [Button
-                  (react/create-class
-                    {:render
-                     (fn [{:keys [props]}]
-                       [:div {:style {:float "left"
-                                      :backgroundColor (if (:active? props)
-                                                         (:button-blue style/colors)
-                                                         (:background-gray style/colors))
-                                      :color (when (:active? props) "white")
-                                      :marginLeft "1em" :padding "1ex" :width "16ex"
-                                      :border (str "1px solid " (:line-gray style/colors))
-                                      :borderRadius "2em"
-                                      :cursor "pointer"}}
-                        (:text props)])})]
-              {:render
-               (fn []
-                 [:div {:style {:display "inline-block" :marginLeft "-1em"}}
-                  [Button {:text "sample" :active? true}]
-                  [Button {:text "aliquot"}]
-                  [Button {:text "all"}]
-                  [:div {:style {:clear "both"}}]])}))
-
-(defn- contains-text [text fields]
-  (fn [entity]
-    (some #(not= -1 (.indexOf (entity %) text)) fields)))
-
-(defn- filter-entities [entities fields text]
-  (filter (contains-text text fields) entities))
-
-(defn- create-mock-entities []
-  (map
-    (fn [i]
-      {:entityType (rand-nth ["sample"])
-       :name (str "entity" (inc i))
-       :attributes (str "entity" (inc i) " has no attributes")})
-    (range (rand-int 20))))
 
 (defn- modal-background [state]
   {:backgroundColor "rgba(82, 129, 197, 0.4)"
@@ -286,143 +192,13 @@
                                 :delay-ms (rand-int 2000)}})))}]]]]]))
 
 
-(defn- create-section-header [text]
-  [:div {:style {:fontSize "125%" :fontWeight 500}} text])
-
-(defn- create-paragraph [& children]
-  [:div {:style {:margin "17px 0 0.33333em 0" :paddingBottom "2.5em"
-                 :fontSize "90%" :lineHeight 1.5}}
-   children])
-
-(defn- render-tags [tags]
-  (let [tagstyle {:marginRight 13 :borderRadius 2 :padding "5px 13px"
-                  :backgroundColor (:tag-background style/colors)
-                  :color (:tag-foreground style/colors)
-                  :display "inline-block" :fontSize "94%"}]
-    [:div {}
-      (map (fn [tag] [:span {:style tagstyle} tag]) tags)]))
-
-(defn- render-workspace-summary [workspace]
-  [:div {:style {:margin "45px 25px"}}
-   [:div {:style {:position "relative" :float "left" :display "inline-block"
-                  :top 0 :left 0 :width 290 :marginRight 40}}
-    ;; TODO - make the width of the float-left dynamic
-    [:div {:style {:borderRadius 5 :padding 25 :textAlign "center"
-                   :color "#fff" :backgroundColor (style/color-for-status (workspace "status"))
-                   :fontSize "125%" :fontWeight 400}}
-     [:span {:style {:display "inline-block" :marginRight 14 :marginTop -4
-                     :verticalAlign "middle" :position "relative"}}
-      (case (workspace "status")
-        "Complete"  [comps/CompleteIcon {:size 36}]
-        "Running"   [comps/RunningIcon {:size 36}]
-        "Exception" [comps/ExceptionIcon {:size 36}])]
-     [:span {:style {:marginLeft "1.5ex"}} (workspace "status")]
-     ]
-    [:div {:style {:marginTop 27}}
-     [:div {:style {:backgroundColor "transparent" :color (:button-blue style/colors)
-                    :border (str "1px solid " (:line-gray style/colors))
-                    :fontSize "106%" :lineHeight 1 :position "relative"
-                    :padding "0.7em 0em"
-                    :textAlign "center" :cursor "pointer"
-                    :textDecoration "none"}}
-      [:span {:style {:display "inline-block" :verticalAlign "middle"}}
-       (icons/font-icon {:style {:fontSize "135%"}} :pencil)]
-      [:span {:style {:marginLeft "1em"}} "Edit this page"]]]]
-   [:div {:style {:display "inline-block"}}
-    (create-section-header "Workspace Owner")
-    (create-paragraph
-      [:strong {} (workspace "createdBy")]
-      " ("
-      [:a {:href "#" :style {:color (:button-blue style/colors) :textDecoration "none"}}
-       "shared with -1 people"]
-      ")")
-    (create-section-header "Description")
-    (create-paragraph [:em {} "Description info not available yet"])
-    (create-section-header "Tags")
-    (create-paragraph (render-tags ["Fake" "Tag" "Placeholders"]))
-    (create-section-header "Research Purpose")
-    (create-paragraph [:em {} "Research purpose not available yet"])
-    (create-section-header "Billing Account")
-    (create-paragraph [:em {} "Billing account not available yet"])]
-   [:div {:style {:clear "both"}}]])
-
-(defn- render-workspace-data [entities]
-  [:div {:style {:padding "2em 0" :textAlign "center"}}
-   [EntityFilterButtons]
-  [:div {:style {:padding "2em 0"}} [EntitiesList {:entities entities}]]])
-
-
-(defn- create-mock-methodconfs []
-  (map
-    (fn [i]
-      {:method-conf-name (rand-nth ["rand_name_1" "rand_name_2" "rand_name_3" "rand_name_4"])
-       :method-conf-root-ent-type (str "method_conf_root_ent_type_" (inc i))
-       :method-conf-last-updated (str "method_conf_last_updated_" (inc i))})
-    (range (rand-int 10))))
-
-
-(react/defc WorkspaceMethodsConfigurationsList
-  {:render
-   (fn [{:keys [props]}]
-     [:div {:style {:padding "0 4em"}}
-      (if (zero? (count (:method-confs props)))
-        [:div {:style {:textAlign "center" :backgroundColor (:background-gray style/colors)
-                       :padding "1em 0" :borderRadius 8}}
-         "There are no method configurations to display."]
-        [table/Table
-         (let [cell-style {:flexBasis  "8ex" :flexGrow 1 :whiteSpace "nowrap" :overflow "hidden"
-                           :borderLeft (str "1px solid " (:line-gray style/colors))}
-               header-label (fn [text & [padding]]
-                              [:span {:style {:paddingLeft (or padding "1em")}}
-                               [:span {:style {:fontSize "90%"}} text]])]
-           {:columns [{:label (header-label "Conf Name")
-                       :style (merge cell-style {:borderLeft "none"})}
-                      {:label (header-label "Conf Root Entity Type")
-                       :style cell-style
-                       :header-style {:borderLeft "none"}}
-                      {:label (header-label "Last Updated")
-                       :style (merge cell-style {:flexBasis "30ex"})
-                       :header-style {:borderLeft "none"}}]
-            :data (map (fn [m]
-                         [(m "method-conf-name")
-                          (m "method-conf-root-ent-type")
-                          (m "method-conf-last-updated")])
-                    (:method-confs props))})])])})
-
-
-(react/defc WorkspaceMethodConfigurations
-  {:component-did-mount
-   (fn [{:keys [state props]}]
-     (utils/ajax-orch
-       (str "/" (:selected-workspace-namespace props) "/" (:selected-workspace props) "/methodconfigs")
-       {:on-done (fn [{:keys [success? xhr]}]
-                   (if success?
-                     (swap! state assoc :method-confs-loaded? true :method-confs (parse-json-string (.-responseText xhr)))
-                     (swap! state assoc :error-message (.-statusText xhr))))
-        :canned-response {:responseText (utils/->json-string (create-mock-methodconfs))
-                          :status 200
-                          :delay-ms (rand-int 2000)}}))
-   :render
-   (fn [{:keys [state]}]
-     [:div {:style {:padding "1em"}}
-      [:div {}
-       (cond
-         (:method-confs-loaded? @state) [WorkspaceMethodsConfigurationsList {:method-confs (:method-confs @state)}]
-         (:error-message @state) [:div {:style {:color "red"}}
-                                  "FireCloud service returned error: " (:error-message @state)]
-         :else [comps/Spinner {:text "Loading configurations..."}])]])})
-
-
 (defn- render-selected-workspace [workspace entities]
   [:div {}
    (if workspace
      [comps/TabBar {:key "selected"
                     :items [{:text "Summary" :component (render-workspace-summary workspace)}
                             {:text "Data" :component (render-workspace-data entities)}
-                            {:text "Method Configurations"
-                             :component [WorkspaceMethodConfigurations
-                                         {:selected-workspace (workspace "name")
-                                          :selected-workspace-namespace (workspace "namespace")}]}
+                            {:text "Method Configurations" :component (render-workspace-method-confs workspace)}
                             {:text "Methods"}
                             {:text "Monitor"}
                             {:text "Files"}]}]
@@ -430,18 +206,36 @@
       "Workspace not found."])])
 
 
-(defn- create-mock-workspaces []
-  (map
-    (fn [i]
-      (let [ns (rand-nth ["broad" "public" "nci"])
-            status (rand-nth ["Complete" "Running" "Exception"])]
-        {:namespace ns
-         :name (str "Workspace " (inc i))
-         :status status
-         :createdBy ns
-         :createdDate (.toISOString (js/Date.))}))
-    (range (rand-int 100))))
-
+(react/defc FilterButtons
+  (let [Button
+        (react/create-class
+          {:render
+           (fn [{:keys [props]}]
+             (let [state (:state props)
+                   filter (:filter props)
+                   active? (= filter (:active-filter @state))]
+               [:div {:style {:float "left"
+                              :backgroundColor (if active?
+                                                 (:button-blue style/colors)
+                                                 (:background-gray style/colors))
+                              :color (when active? "white")
+                              :marginLeft "1em" :padding "1ex" :width "16ex"
+                              :border (str "1px solid " (:line-gray style/colors))
+                              :borderRadius "2em"
+                              :cursor "pointer"}
+                      :onClick #(swap! state assoc :active-filter filter)}
+                (:text props)]))})]
+    {:render
+     (fn [{:keys [props]}]
+       (let [state (:state props)
+             build-text (fn [name f]
+                          (str name " (" (count (filter-workspaces f (:workspaces @state))) ")"))]
+         [:div {:style {:display "inline-block" :marginLeft "-1em"}}
+          [Button {:text (build-text "All" :all) :state state :filter :all}]
+          [Button {:text (build-text "Complete" :complete) :state state :filter :complete}]
+          [Button {:text (build-text "Running" :running) :state state :filter :running}]
+          [Button {:text (build-text "Exception" :exception) :state state :filter :exception}]
+          [:div {:style {:clear "both"}}]]))}))
 
 (defn- render-workspaces-list [state nav-context]
   (let [content [:div {}
@@ -461,6 +255,27 @@
                     :items [{:text "Mine" :component content}
                             {:text "Shared" :component content}
                             {:text "Read-Only" :component content}]}]]))
+
+
+(defn- create-mock-workspaces []
+  (map
+    (fn [i]
+      (let [ns (rand-nth ["broad" "public" "nci"])
+            status (rand-nth ["Complete" "Running" "Exception"])]
+        {:namespace ns
+         :name (str "Workspace " (inc i))
+         :status status
+         :createdBy ns
+         :createdDate (.toISOString (js/Date.))}))
+    (range (rand-int 100))))
+
+(defn- create-mock-entities []
+  (map
+    (fn [i]
+      {:entityType (rand-nth ["sample"])
+       :name (str "entity" (inc i))
+       :attributes (str "entity" (inc i) " has no attributes")})
+    (range (rand-int 20))))
 
 
 (defn- mock-live-data [workspaces]
