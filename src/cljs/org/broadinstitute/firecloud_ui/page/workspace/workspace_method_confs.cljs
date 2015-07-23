@@ -19,9 +19,8 @@
                             :methodName (str "ms_n_" (inc i))
                             :methodVersion (str "ms_v_" (inc i))}
          :methodStoreConfig {:namespace (str "msc_ns_" (inc i))
-                             :name (str "msc_n_" (inc i))
-                             :version (str "msc_v_" (inc i))
-                             }
+                            :name (str "msc_n_" (inc i))
+                            :version (str "msc_v_" (inc i))}
          :inputs {:i1 (str "i_1_" (inc i))
                   :i2 (str "i_2_" (inc i))}
          :outputs {:o1 (str "o_1_" (inc i))
@@ -31,13 +30,9 @@
     (range (rand-int 50))))
 
 
-
-
-(defn
-  stringify_map
-  [the_map]
-  (for [s (keys the_map)] (let [k s v (get the_map k)] (str k "," v " ; ")))
-  )
+(defn stringify_map [the_map]
+  (for [s (keys the_map)]
+    (let [k s v (k the_map)] (str k "," v " ; "))))
 
 
 (react/defc WorkspaceMethodsConfigurationsList
@@ -56,42 +51,42 @@
                                [:span {:style {:fontSize "90%"}} text]])]
            {:columns [{:label (header-label "Name")
                        :style (merge cell-style {:borderLeft "none"})}
-                      {:label        (header-label "Namespace")
-                       :style        cell-style
+                      {:label (header-label "Namespace")
+                       :style cell-style
                        :header-style {:borderLeft "none"}}
-                      {:label        (header-label "Root Entity Type")
-                       :style        cell-style
+                      {:label (header-label "Root Entity Type")
+                       :style cell-style
                        :header-style {:borderLeft "none"}}
-                      {:label        (header-label "Workspace Name")
+                      {:label (header-label "Workspace Name")
                        :header-style {:borderLeft "none"}
-                       :style        cell-style}
-                      {:label        (header-label "Method Store Method")
-                       :style        cell-style
+                       :style cell-style}
+                      {:label (header-label "Method Store Method")
+                       :style cell-style
                        :header-style {:borderLeft "none"}}
-                      {:label        (header-label "Method Store Config")
-                       :style        cell-style
+                      {:label (header-label "Method Store Config")
+                       :style cell-style
                        :header-style {:borderLeft "none"}}
-                      {:label        (header-label "Inputs")
+                      {:label (header-label "Inputs")
                        :header-style {:borderLeft "none"}
-                       :style        cell-style}
-                      {:label        (header-label "Outputs")
-                       :style        cell-style
+                       :style cell-style}
+                      {:label (header-label "Outputs")
+                       :style cell-style
                        :header-style {:borderLeft "none"}}
-                      {:label        (header-label "Pre-Requisites")
-                       :style        (merge cell-style {:flexBasis "30ex"})
+                      {:label (header-label "Pre-Requisites")
+                       :style (merge cell-style {:flexBasis "30ex"})
                        :header-style {:borderLeft "none"}}]
             :data    (map (fn [m]
                             [(m "name")
                              (m "namespace")
                              (m "root-ent-type")
-                             (str (get (m "workspaceName") "namespace") ":"
-                                  (get (m "workspaceName") "name"))
-                             (str (get (m "methodStoreMethod") "methodNamespace") ":"
-                                  (get (m "methodStoreMethod") "methodName") ":"
-                                  (get (m "methodVersion") "methodVersion"))
+                             (str ((m "workspaceName") "namespace") ":"
+                               ((m "workspaceName") "name"))
+                             (str ((m "methodStoreMethod") "methodNamespace") ":"
+                               ((m "methodStoreMethod") "methodName") ":"
+                               ((m "methodVersion") "methodVersion"))
                              (str (get (m "methodStoreConfig") "namespace") ":"
-                                  (get (m "methodStoreConfig") "name") ":"
-                                  (get (m "methodStoreConfig") "version"))
+                               ((m "methodStoreConfig") "name") ":"
+                               ((m "methodStoreConfig") "version"))
                              (stringify_map (m "inputs"))
                              (stringify_map (m "outputs"))
                              (stringify_map (m "prerequisites"))])
