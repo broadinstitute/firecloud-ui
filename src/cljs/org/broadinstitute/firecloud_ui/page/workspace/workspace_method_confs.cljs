@@ -133,7 +133,7 @@
   {:component-did-mount
    (fn [{:keys [state props]}]
      (utils/ajax-orch
-       (str "/" (:selected-workspace-namespace props) "/" (:selected-workspace props) "/methodconfigs")
+       (str "/workspaces/" (:selected-workspace-namespace props) "/" (:selected-workspace props) "/methodconfigs")
        {:on-done (fn [{:keys [success? xhr]}]
                    (if success?
                      (swap! state assoc :method-confs-loaded? true :method-confs (utils/parse-json-string (.-responseText xhr)))
