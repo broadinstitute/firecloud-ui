@@ -206,41 +206,17 @@
       "Workspace not found."])])
 
 
-(react/defc FilterButtons
-  (let [Button
-        (react/create-class
-          {:render
-           (fn [{:keys [props]}]
-             (let [state (:state props)
-                   filter (:filter props)
-                   active? (= filter (:active-filter @state))]
-               [:div {:style {:float "left"
-                              :backgroundColor (if active?
-                                                 (:button-blue style/colors)
-                                                 (:background-gray style/colors))
-                              :color (when active? "white")
-                              :marginLeft "1em" :padding "1ex" :width "16ex"
-                              :border (str "1px solid " (:line-gray style/colors))
-                              :borderRadius "2em"
-                              :cursor "pointer"}
-                      :onClick #(swap! state assoc :active-filter filter)}
-                (:text props)]))})]
-    {:render
-     (fn [{:keys [props]}]
-       (let [state (:state props)
-             build-text (fn [name f]
-                          (str name " (" (count (filter-workspaces f (:workspaces @state))) ")"))]
-         [:div {:style {:display "inline-block" :marginLeft "-1em"}}
-          [Button {:text (build-text "All" :all) :state state :filter :all}]
-          [Button {:text (build-text "Complete" :complete) :state state :filter :complete}]
-          [Button {:text (build-text "Running" :running) :state state :filter :running}]
-          [Button {:text (build-text "Exception" :exception) :state state :filter :exception}]
-          [:div {:style {:clear "both"}}]]))}))
-
 (defn- render-workspaces-list [state nav-context]
-  (let [content [:div {}
+  (let [build-button (fn [name filter]
+                       {:text (str name " (" (count (filter-workspaces filter (:workspaces @state))) ")")
+                        :active? (= filter (:active-filter @state))
+                        :onClick #(swap! state assoc :active-filter filter)})
+        content [:div {}
                  [:div {:style {:padding "2em 0" :textAlign "center"}}
-                  [FilterButtons {:state state}]]
+                  [comps/FilterButtons {:buttons [(build-button "All" :all)
+                                                  (build-button "Complete" :complete)
+                                                  (build-button "Running" :running)
+                                                  (build-button "Exception" :exception)]}]]
                  [WorkspaceList
                   {:ref "workspace-list"
                    :workspaces (:workspaces @state)
