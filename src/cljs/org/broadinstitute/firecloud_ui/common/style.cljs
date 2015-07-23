@@ -1,5 +1,5 @@
 (ns org.broadinstitute.firecloud-ui.common.style
-  (:require [org.broadinstitute.firecloud-ui.utils :as utils]))
+  (:require [org.broadinstitute.firecloud-ui.utils :as utils :refer [deep-merge]]))
 
 (def colors {:background-gray "#f4f4f4"
              :border-gray "#cacaca"
@@ -45,15 +45,26 @@
   [:em {:style {:fontSize "69%"}} text])
 
 (defn create-text-field [props]
-  [:input (utils/deep-merge {:type "text" :style input-text-style} props)])
+  [:input (deep-merge {:type "text" :style input-text-style} props)])
 
 (defn create-text-area [props]
-  [:textarea (utils/deep-merge {:style input-text-style} props)])
+  [:textarea (deep-merge {:style input-text-style} props)])
 
 (defn create-select [props & options]
-  [:select (utils/deep-merge {:style select-style} props)
+  [:select (deep-merge {:style select-style} props)
    (map (fn [opt] [:option {} opt]) options)])
 
 (defn create-server-error-message [message]
   [:div {:style {:textAlign "center" :color (:exception-red colors)}}
    "FireCloud service returned error: " (or message "(no message provided)")])
+
+(defn center [props & children]
+  [:div (deep-merge props {:style {:position "absolute" :top "50%" :left "50%"
+                                         :transform "translate(-50%, -50%)"}})
+   children])
+
+(defn create-unselectable [type props & children]
+  [type (deep-merge {:style {:userSelect "none" :MozUserSelect "none"
+                             :WebkitTouchCallout "none" :WebkitUserSelect "none"
+                             :KhtmlUserSelect "none" :MsUserSelect "none"}} props)
+   children])

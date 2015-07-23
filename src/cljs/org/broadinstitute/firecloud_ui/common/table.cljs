@@ -66,9 +66,8 @@
          [:div {:style {:float "left" :display "inline-block" :width "25%" :padding "2.15em 0em" :verticalAlign "middle"}}
           [:b {} (str left-num " - " right-num)] (str " of " (pluralize num-total " result"))]
 
-         [:div {:style {:float "left" :display "inline-block" :width "50%"
-                        :padding "1.6em 0em" :verticalAlign "middle" :textAlign "center"
-                        :userSelect "none" :MozUserSelect "none" :WebkitTouchCallout "none" :WebkitUserSelect "none"}}
+         (style/create-unselectable :div {:style {:float "left" :display "inline-block" :width "50%"
+                                                 :padding "1.6em 0em" :verticalAlign "middle" :textAlign "center"}}
           [:div {:style {:display "inline-block" :padding "0.55em 0.9em"
                          :color (if allow-prev (:button-blue style/colors) (:border-gray style/colors))
                          :cursor (when allow-prev "pointer")}
@@ -76,33 +75,34 @@
            (icons/font-icon {:style {:fontSize "70%"}} :angle-left)
            [:span {:style {:paddingLeft "1em"}} "Prev"]]
 
-          (map (fn [n]
-                 (let [selected? (= n current-page)]
-                  [:div {:style {:paddingTop 5 :display "inline-block" :width 29 :height 24
-                                 :backgroundColor (when selected? (:button-blue style/colors))
-                                 :color (if selected? "white" (:button-blue style/colors))
-                                 :borderRadius (when selected? "100%")
-                                 :cursor (when-not selected? "pointer")}
-                         :onClick (when-not selected? (num-onClick n))}
-                   n]))
-               (range first-page-box (+ 1 last-page-box)))
+           [:span {}
+            (map (fn [n]
+                   (let [selected? (= n current-page)]
+                     [:div {:style {:paddingTop 5 :display "inline-block" :width 29 :height 24
+                                    :backgroundColor (when selected? (:button-blue style/colors))
+                                    :color (if selected? "white" (:button-blue style/colors))
+                                    :borderRadius (when selected? "100%")
+                                    :cursor (when-not selected? "pointer")}
+                            :onClick (when-not selected? (num-onClick n))}
+                      n]))
+              (range first-page-box (+ 1 last-page-box)))]
 
           [:div {:style {:display "inline-block" :padding "0.55em 0.9em"
                          :color (if allow-next (:button-blue style/colors) (:border-gray style/colors))
                          :cursor (when allow-next "pointer")}
                  :onClick (when allow-next #(swap! state assoc :current-page (+ current-page 1)))}
            [:span {:style {:paddingRight "1em"}} "Next"]
-           (icons/font-icon {:style {:fontSize "70%"}} :angle-right)]]
+           (icons/font-icon {:style {:fontSize "70%"}} :angle-right)])
 
          [:div {:style {:float "left" :display "inline-block" :width "25%"
                         :padding "2.15em 0em" :textAlign "right"}}
-          [:span {} "Display"]
-          [:span {} (style/create-select {:style {:width 60 :margin "0em 1em"} :ref "numRows"
-                                          :onChange #(swap! state assoc
-                                                      :rows-per-page (int (-> (@refs "numRows") .getDOMNode .-value))
-                                                      :current-page 1)}
-                      10 25 100 500)]
-          [:span {} "rows per page"]]
+          "Display"
+          (style/create-select {:style {:width 60 :margin "0em 1em"} :ref "numRows"
+                                :onChange #(swap! state assoc
+                                            :rows-per-page (-> (@refs "numRows") .getDOMNode .-value)
+                                            :current-page 1)}
+            10 25 100 500)
+          "rows per page"]
 
          [:div {:style {:clear "both"}}]]]))})
 

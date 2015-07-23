@@ -1,6 +1,4 @@
-(ns org.broadinstitute.firecloud-ui.common
-  (:require
-    [org.broadinstitute.firecloud-ui.utils :as utils]))
+(ns org.broadinstitute.firecloud-ui.common)
 
 
 (def keymap
@@ -16,11 +14,6 @@
 (defn clear! [refs & ids]
   (doseq [id ids]
     (set! (.-value (.getDOMNode (@refs id))) "")))
-
-(defn center [props & children]
-  [:div (utils/deep-merge props {:style {:position "absolute" :top "50%" :left "50%"
-                                         :transform "translate(-50%, -50%)"}})
-   children])
 
 (defn scroll-to [x y] (.scrollTo js/window x y))
 
