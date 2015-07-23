@@ -39,6 +39,32 @@
           "+"]])])})
 
 
+(react/defc FilterButtons
+  (let [Button
+        (react/create-class
+          {:render
+           (fn [{:keys [props]}]
+             [:div {:style {:float "left"
+                            :backgroundColor (if (:active? props)
+                                               (:button-blue style/colors)
+                                               (:background-gray style/colors))
+                            :color (when (:active? props) "white")
+                            :marginLeft "1em" :padding "1ex" :width "16ex"
+                            :border (str "1px solid " (:line-gray style/colors))
+                            :borderRadius "2em"
+                            :cursor "pointer"}
+                    :onClick (fn [e] ((:onClick props) e))}
+              (:text props)])})]
+    {:render
+     (fn [{:keys [props]}]
+       [:div {:style {:display "inline-block" :marginLeft "-1em"}}
+        (map (fn [button] [Button {:text (:text button)
+                                   :active? (:active? button)
+                                   :onClick (:onClick button)}])
+          (:buttons props))
+        [:div {:style {:clear "both"}}]])}))
+
+
 (react/defc TabBar
   (let [Tab (react/create-class
               {:get-initial-state
@@ -65,7 +91,7 @@
                     [:div {:style {:position "absolute" :bottom -1 :left 0 :width "100%" :height 2
                                    :backgroundColor "white"}}])])})]
     {:get-initial-state
-     (fn [{:keys [props]}]
+     (fn []
        {:active-tab-index 0})
      :render
      (fn [{:keys [props state]}]
