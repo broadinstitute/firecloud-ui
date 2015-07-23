@@ -93,10 +93,10 @@
       :size 24})
    :render
    (fn [{:keys [props]}]
-     (common/center {:style {:width (int (* 1.27 (:size props)))
-                             :height (int (* 1.27 (:size props)))
-                             :backgroundColor "fff" :borderRadius "100%"}}
-       (common/center {}
+     (style/center {:style {:width (int (* 1.27 (:size props)))
+                            :height (int (* 1.27 (:size props)))
+                            :backgroundColor "fff" :borderRadius "100%"}}
+       (style/center {}
          (icons/font-icon {:style {:color (:color props) :fontSize (int (* 0.5 (:size props)))}} :status-done))))})
 
 (react/defc RunningIcon
@@ -114,7 +114,7 @@
                                                 :borderRadius hamburger-height
                                                 :backgroundColor color}}])
            spacer [:div {:style {:height spacer-height}}]]
-       (common/center {}
+       (style/center {}
          [:div {}
           (hamburger "white")
           spacer
@@ -128,5 +128,5 @@
      {:size 24})
    :render
    (fn [{:keys [props]}]
-     (common/center {}
+     (style/center {}
       (icons/font-icon {:style {:color "#fff" :fontSize (:size props)}} :status-warning)))})
