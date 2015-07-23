@@ -41,7 +41,7 @@
      [:div {:style {:padding "0 4em"}}
       (if (zero? (count (:method-confs props)))
         [:div {:style {:textAlign "center" :backgroundColor (:background-gray style/colors)
-                       :padding   "1em 0" :borderRadius 8}}
+                       :padding "1em 0" :borderRadius 8}}
          "There are no method configurations to display."]
         [table/Table
          (let [cell-style {:flexBasis  "8ex" :flexGrow 1 :whiteSpace "nowrap" :overflow "hidden"
