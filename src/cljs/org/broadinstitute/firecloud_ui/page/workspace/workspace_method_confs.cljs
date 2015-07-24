@@ -10,29 +10,30 @@
 
 (defn- create-mock-methodconfs []
   (map
-    (fn [i] {:name (rand-nth ["rand_name_1" "rand_name_2" "rand_name_3" "rand_name_4"])
-         :namespace (str "ns_s_" (inc i))
-         :root-ent-type (str "r_e_t_" (inc i))
-         :workspaceName {:namespace (str "ws_ns_" (inc i))
-                        :name (str "ws_n_" (inc i))}
-         :methodStoreMethod {:methodNamespace (str "ms_ns_" (inc i))
-                            :methodName (str "ms_n_" (inc i))
-                            :methodVersion (str "ms_v_" (inc i))}
-         :methodStoreConfig {:namespace (str "msc_ns_" (inc i))
-                            :name (str "msc_n_" (inc i))
-                            :version (str "msc_v_" (inc i))}
-         :inputs {:i1 (str "i_1_" (inc i))
-                  :i2 (str "i_2_" (inc i))}
-         :outputs {:o1 (str "o_1_" (inc i))
-                  :o2 (str "o_2_" (inc i))}
-         :prerequisites {:p1 (str "p_1_" (inc i))
-                  :p2 (str "p_2_" (inc i))}})
+    (fn [i]
+      {:name (rand-nth ["rand_name_1" "rand_name_2" "rand_name_3" "rand_name_4"])
+       :namespace (str "ns_s_" (inc i))
+       :root-ent-type (str "r_e_t_" (inc i))
+       :workspaceName {:namespace (str "ws_ns_" (inc i))
+                       :name (str "ws_n_" (inc i))}
+       :methodStoreMethod {:methodNamespace (str "ms_ns_" (inc i))
+                           :methodName (str "ms_n_" (inc i))
+                           :methodVersion (str "ms_v_" (inc i))}
+       :methodStoreConfig {:namespace (str "msc_ns_" (inc i))
+                           :name (str "msc_n_" (inc i))
+                           :version (str "msc_v_" (inc i))}
+       :inputs {:i1 (str "i_1_" (inc i))
+                :i2 (str "i_2_" (inc i))}
+       :outputs {:o1 (str "o_1_" (inc i))
+                 :o2 (str "o_2_" (inc i))}
+       :prerequisites {:p1 (str "p_1_" (inc i))
+                       :p2 (str "p_2_" (inc i))}})
     (range (rand-int 50))))
 
 
 (defn stringify_map [the_map]
-  (for [s (keys the_map)]
-    (let [k s v (k the_map)] (str k "," v " ; "))))
+  (for [k (keys the_map)]
+    (str k "," (get the_map k) " ; ")))
 
 
 (react/defc WorkspaceMethodsConfigurationsList
@@ -44,7 +45,7 @@
                        :padding "1em 0" :borderRadius 8}}
          "There are no method configurations to display."]
         [table/Table
-         (let [cell-style {:flexBasis  "8ex" :flexGrow 1 :whiteSpace "nowrap" :overflow "hidden"
+         (let [cell-style {:flexBasis "8ex" :flexGrow 1 :whiteSpace "nowrap" :overflow "hidden"
                            :borderLeft (str "1px solid " (:line-gray style/colors))}
                header-label (fn [text & [padding]]
                               [:span {:style {:paddingLeft (or padding "1em")}}
@@ -83,7 +84,7 @@
                                ((m "workspaceName") "name"))
                              (str ((m "methodStoreMethod") "methodNamespace") ":"
                                ((m "methodStoreMethod") "methodName") ":"
-                               ((m "methodVersion") "methodVersion"))
+                               ((m "methodStoreMethod") "methodVersion"))
                              (str (get (m "methodStoreConfig") "namespace") ":"
                                ((m "methodStoreConfig") "name") ":"
                                ((m "methodStoreConfig") "version"))
