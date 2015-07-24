@@ -6,6 +6,7 @@
              :button-blue "#457fd2"
              :exception-red "#e85c46"
              :footer-text "#989898"
+             :header-darkgray "#4d4d4d"
              :link-blue "#6690c5"
              :line-gray "#e6e6e6"
              :running-blue "#67688a"

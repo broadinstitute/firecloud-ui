@@ -11,17 +11,17 @@
 (defn- create-mock-methodconfs []
   (map
     (fn [i]
-      {:name (rand-nth ["rand_name_1" "rand_name_2" "rand_name_3" "rand_name_4"])
-       :namespace (str "ns_s_" (inc i))
-       :root-ent-type (str "r_e_t_" (inc i))
+      {:name (str "Configuration " (inc i))
+       :namespace (rand-nth ["Broad" "nci"])
+       :rootEntityType "Task"
        :workspaceName {:namespace (str "ws_ns_" (inc i))
                        :name (str "ws_n_" (inc i))}
        :methodStoreMethod {:methodNamespace (str "ms_ns_" (inc i))
                            :methodName (str "ms_n_" (inc i))
                            :methodVersion (str "ms_v_" (inc i))}
-       :methodStoreConfig {:namespace (str "msc_ns_" (inc i))
-                           :name (str "msc_n_" (inc i))
-                           :version (str "msc_v_" (inc i))}
+       :methodStoreConfig {:methodConfigNamespace (str "msc_ns_" (inc i))
+                           :methodConfigName (str "msc_n_" (inc i))
+                           :methodConfigVersion (str "msc_v_" (inc i))}
        :inputs {:i1 (str "i_1_" (inc i))
                 :i2 (str "i_2_" (inc i))}
        :outputs {:o1 (str "o_1_" (inc i))
@@ -38,60 +38,56 @@
 
 (react/defc WorkspaceMethodsConfigurationsList
   {:render
-   (fn [{:keys [props]}]
-     [:div {:style {:padding "0 4em"}}
+   (fn [{:keys [props refs]}]
+     [:div {}
       (if (zero? (count (:method-confs props)))
         [:div {:style {:textAlign "center" :backgroundColor (:background-gray style/colors)
-                       :padding "1em 0" :borderRadius 8}}
+                       :padding "1em 0" :margin "0 4em" :borderRadius 8}}
          "There are no method configurations to display."]
-        [table/Table
-         (let [cell-style {:flexBasis "8ex" :flexGrow 1 :whiteSpace "nowrap" :overflow "hidden"
-                           :borderLeft (str "1px solid " (:line-gray style/colors))}
-               header-label (fn [text & [padding]]
-                              [:span {:style {:paddingLeft (or padding "1em")}}
-                               [:span {:style {:fontSize "90%"}} text]])]
-           {:columns [{:label (header-label "Name")
-                       :style (merge cell-style {:borderLeft "none"})}
-                      {:label (header-label "Namespace")
-                       :style cell-style
-                       :header-style {:borderLeft "none"}}
-                      {:label (header-label "Root Entity Type")
-                       :style cell-style
-                       :header-style {:borderLeft "none"}}
-                      {:label (header-label "Workspace Name")
-                       :header-style {:borderLeft "none"}
-                       :style cell-style}
-                      {:label (header-label "Method Store Method")
-                       :style cell-style
-                       :header-style {:borderLeft "none"}}
-                      {:label (header-label "Method Store Config")
-                       :style cell-style
-                       :header-style {:borderLeft "none"}}
-                      {:label (header-label "Inputs")
-                       :header-style {:borderLeft "none"}
-                       :style cell-style}
-                      {:label (header-label "Outputs")
-                       :style cell-style
-                       :header-style {:borderLeft "none"}}
-                      {:label (header-label "Pre-Requisites")
-                       :style (merge cell-style {:flexBasis "30ex"})
-                       :header-style {:borderLeft "none"}}]
-            :data    (map (fn [m]
-                            [(m "name")
-                             (m "namespace")
-                             (m "root-ent-type")
-                             (str ((m "workspaceName") "namespace") ":"
-                               ((m "workspaceName") "name"))
-                             (str ((m "methodStoreMethod") "methodNamespace") ":"
-                               ((m "methodStoreMethod") "methodName") ":"
-                               ((m "methodStoreMethod") "methodVersion"))
-                             (str (get (m "methodStoreConfig") "namespace") ":"
-                               ((m "methodStoreConfig") "name") ":"
-                               ((m "methodStoreConfig") "version"))
-                             (stringify_map (m "inputs"))
-                             (stringify_map (m "outputs"))
-                             (stringify_map (m "prerequisites"))])
-                          (:method-confs props))})])])})
+        [table/AdvancedTable
+         (let [header (fn [children] [:div {:style {:fontWeight 600 :fontSize 13
+                                                    :padding "14px 16px"
+                                                    :borderLeft "1px solid #777777"
+                                                    :color "#fff" :backgroundColor (:header-darkgray style/colors)}}
+                                      children])
+               cell (fn [children] [:span {:style {:paddingLeft 16}} children])]
+           {:columns [[:div {:style {:padding "13px 0px 12px 12px" :backgroundColor (:header-darkgray style/colors)}}
+                       [:input {:type "checkbox" :ref "allcheck"}]]
+                      (header "Name")
+                      (header "Namespace")
+                      (header "Type")
+                      (header "Workspace Name")
+                      (header "Method")
+                      (header "Config")
+                      (header "Inputs")
+                      (header "Outputs")
+                      (header "Prerequisites")]
+            :column-widths [42 200 200 100 160 210 290 200 200 200]
+            :data (:method-confs props)
+            :row-props (fn [row-num conf]
+                         (js/console.log (utils/->json-string conf))
+                         {:style {:fontSize "80%" :fontWeight 500 :lineHeight 1.2
+                                  :paddingTop 10 :paddingBottom 7
+                                  :backgroundColor (if (even? row-num) (:background-gray style/colors) "#fff")}})
+            :render-cell (fn [row-num col-num conf]
+                           (case col-num
+                             0 [:div {:style {:paddingLeft 12}} [:input {:type "checkbox"}]]
+                             1 (cell [:a {:href "javascript:;"
+                                          :style {:color (:button-blue style/colors)
+                                                  :textDecoration "none"}} (conf "name")])
+                             2 (cell (conf "namespace"))
+                             3 (cell (conf "rootEntityType"))
+                             4 (cell (str ((conf "workspaceName") "namespace") ":"
+                                       ((conf "workspaceName") "name")))
+                             5 (cell (str ((conf "methodStoreMethod") "methodNamespace") ":"
+                                       ((conf "methodStoreMethod") "methodName") ":"
+                                       ((conf "methodStoreMethod") "methodVersion")))
+                             6 (cell (str (get (conf "methodStoreConfig") "methodConfigNamespace") ":"
+                                       ((conf "methodStoreConfig") "methodConfigName") ":"
+                                       ((conf "methodStoreConfig") "methodConfigVersion")))
+                             7 (cell (stringify_map (conf "inputs")))
+                             8 (cell (stringify_map (conf "outputs")))
+                             9 (cell (stringify_map (conf "prerequisites")))))})])])})
 
 
 (react/defc WorkspaceMethodConfigurations
@@ -108,7 +104,7 @@
                           :delay-ms (rand-int 2000)}}))
    :render
    (fn [{:keys [state]}]
-     [:div {:style {:padding "1em"}}
+     [:div {:style {:padding "1em 0"}}
       [:div {}
        (cond
          (:method-confs-loaded? @state) [WorkspaceMethodsConfigurationsList {:method-confs (:method-confs @state)}]
@@ -120,6 +116,3 @@
   [WorkspaceMethodConfigurations
    {:selected-workspace (workspace "name")
     :selected-workspace-namespace (workspace "namespace")}])
-
-
-
