@@ -153,7 +153,8 @@
           (fn [row-num row]
             [:div ((:row-props props) row-num row)
              (map (fn [col-num]
-                    [:div {:style {:width (nth (:column-widths props) col-num) :float "left"}}
+                    [:div {:style {:width (nth (:column-widths props) col-num) :float "left"
+                                   :whiteSpace "nowrap" :overflow "hidden" :textOverflow "ellipsis"}}
                      ((:render-cell props) row-num col-num row)])
                (range (count (:column-widths props))))
              [:div {:style {:clear "both"}}]])
