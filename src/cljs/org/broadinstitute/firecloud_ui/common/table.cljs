@@ -130,3 +130,33 @@
    :component-will-receive-props
    (fn [{:keys [state]}]
      (swap! state assoc :current-page 1))})
+
+(react/defc AdvancedTable
+  {:get-initial-state
+   (fn []
+     {:rows-per-page 10
+      :current-page 1})
+   :render
+   (fn [{:keys [state props]}]
+     [:div {}
+      [Paginator {:num-rows (count (:data props))
+                  :parent-state state}]
+      [:div {:style {:overflowX "auto"}}
+       [:div {:style {:display "inline-block" :position "relative" :minWidth (reduce + (:column-widths props))}}
+        (map-indexed
+          (fn [i column]
+            [:div {:style {:float "left" :width (nth (:column-widths props) i)}} column])
+          (:columns props))
+        [:div {:style {:clear "both"}}]
+
+        (map-indexed
+          (fn [row-num row]
+            [:div ((:row-props props) row-num row)
+             (map (fn [col-num]
+                    [:div {:style {:width (nth (:column-widths props) col-num) :float "left"}}
+                     ((:render-cell props) row-num col-num row)])
+               (range (count (:column-widths props))))
+             [:div {:style {:clear "both"}}]])
+          (take (:rows-per-page @state)
+            (drop (* (- (:current-page @state) 1) (:rows-per-page @state))
+              (:data props))))]]])})
