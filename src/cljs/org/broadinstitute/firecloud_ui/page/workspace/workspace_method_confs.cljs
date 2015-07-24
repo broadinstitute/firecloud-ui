@@ -65,7 +65,6 @@
             :column-widths [42 200 200 100 160 210 290 200 200 200]
             :data (:method-confs props)
             :row-props (fn [row-num conf]
-                         (js/console.log (utils/->json-string conf))
                          {:style {:fontSize "80%" :fontWeight 500 :lineHeight 1.2
                                   :paddingTop 10 :paddingBottom 7
                                   :backgroundColor (if (even? row-num) (:background-gray style/colors) "#fff")}})
