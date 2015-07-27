@@ -67,7 +67,7 @@
           [:b {} (str left-num " - " right-num)] (str " of " (pluralize num-total " result"))]
 
          (style/create-unselectable :div {:style {:float "left" :display "inline-block" :width "50%"
-                                                 :padding "1.6em 0em" :verticalAlign "middle" :textAlign "center"}}
+                                                  :padding "1.6em 0em" :verticalAlign "middle" :textAlign "center"}}
           [:div {:style {:display "inline-block" :padding "0.55em 0.9em"
                          :color (if allow-prev (:button-blue style/colors) (:border-gray style/colors))
                          :cursor (when allow-prev "pointer")}
@@ -133,9 +133,11 @@
 
 (react/defc AdvancedTable
   {:get-initial-state
-   (fn []
+   (fn [{:keys [props]}]
      {:rows-per-page 10
-      :current-page 1})
+      :current-page 1
+      :column-widths (mapv #(:starting-width %) (:columns props))
+      :dragging? false})
    :render
    (fn [{:keys [state props]}]
      [:div {}
@@ -143,20 +145,38 @@
                   :parent-state state}]
       [:div {:style {:overflowX "auto"}}
        [:div {:style {:display "inline-block" :position "relative"
-                      :minWidth (reduce + (map #(:starting-width %) (:columns props)))}}
-        (map
-          (fn [column]
-            [:div {:style {:float "left" :width (:starting-width column)}} (:header-component column)])
-          (:columns props))
+                      :minWidth (reduce + (:column-widths @state))
+                      :cursor (when (:dragging? @state) "ew-resize")}
+              :onMouseUp (fn [e]
+                           (when (:dragging? @state)
+                             (swap! state assoc :dragging? false)
+                             (let [widths (:column-widths @state)
+                                   current-width (nth widths (:drag-column @state))
+                                   drag-amount (- (.-clientX e) (:drag-start @state))]
+                               (swap! state assoc :column-widths
+                                 (assoc widths (:drag-column @state) (+ current-width drag-amount))))))}
+        (style/create-unselectable :div {:style {:whiteSpace "nowrap" :overflow "hidden" :textOverflow "clip"}}
+          [:div {}
+           (map-indexed
+             (fn [col-num column]
+               (let [width (nth (:column-widths @state) col-num)]
+                 [:div {:style {:float "left" :position "relative" :width width}}
+                  (when (get column :resizable? true)
+                    [:div {:style {:float "right" :position "absolute" :width 4 :top 0 :bottom 0 :left (- width 4)
+                                   :cursor "ew-resize"}
+                           :onMouseDown (fn [e] (swap! state assoc
+                                                  :dragging? true :drag-start (.-clientX e) :drag-column col-num))}])
+                  (:header-component column)]))
+             (:columns props))])
         [:div {:style {:clear "both"}}]
 
         (map-indexed
           (fn [row-num row]
             [:div ((:row-props props) row-num row)
              (map-indexed (fn [col-num col]
-                    [:div {:style {:width (:starting-width col) :float "left"
-                                   :whiteSpace "nowrap" :overflow "hidden" :textOverflow "ellipsis"}}
-                     ((:cell-renderer col) row-num row)])
+                            [:div {:style {:width (nth (:column-widths @state) col-num) :float "left"
+                                           :whiteSpace "nowrap" :overflow "hidden" :textOverflow "ellipsis"}}
+                             ((:cell-renderer col) row-num row)])
                (:columns props))
              [:div {:style {:clear "both"}}]])
           (take (:rows-per-page @state)
