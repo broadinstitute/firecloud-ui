@@ -51,42 +51,43 @@
                                                     :color "#fff" :backgroundColor (:header-darkgray style/colors)}}
                                       children])
                cell (fn [children] [:span {:style {:paddingLeft 16}} children])]
-           {:columns [[:div {:style {:padding "13px 0px 12px 12px" :backgroundColor (:header-darkgray style/colors)}}
-                       [:input {:type "checkbox" :ref "allcheck"}]]
-                      (header "Name")
-                      (header "Namespace")
-                      (header "Type")
-                      (header "Workspace Name")
-                      (header "Method")
-                      (header "Config")
-                      (header "Inputs")
-                      (header "Outputs")
-                      (header "Prerequisites")]
-            :column-widths [42 200 200 100 160 210 290 200 200 200]
+           {:columns [{:header-component [:div {:style {:padding "13px 0 12px 12px"
+                                                        :backgroundColor (:header-darkgray style/colors)}}
+                                          [:input {:type "checkbox" :ref "allcheck"}]]
+                       :starting-width 42 :resizable? false
+                       :cell-renderer (fn [row-num conf]
+                                        [:div {:style {:paddingLeft 12}} [:input {:type "checkbox"}]])}
+                      {:header-component (header "Name") :starting-width 200
+                       :cell-renderer (fn [row-num conf]
+                                        (cell [:a {:href "javascript:;"
+                                                   :style {:color (:button-blue style/colors)
+                                                           :textDecoration "none"}} (conf "name")]))}
+                      {:header-component (header "Namespace") :starting-width 200
+                       :cell-renderer (fn [row-num conf] (cell (conf "namespace")))}
+                      {:header-component (header "Type") :starting-width 100
+                       :cell-renderer (fn [row-num conf] (cell (conf "rootEntityType")))}
+                      {:header-component (header "Workspace Name") :starting-width 160
+                       :cell-renderer (fn [row-num conf] (cell (str ((conf "workspaceName") "namespace") ":"
+                                                                 ((conf "workspaceName") "name"))))}
+                      {:header-component (header "Method") :starting-width 210
+                       :cell-renderer (fn [row-num conf] (cell (str ((conf "methodStoreMethod") "methodNamespace") ":"
+                                                                 ((conf "methodStoreMethod") "methodName") ":"
+                                                                 ((conf "methodStoreMethod") "methodVersion"))))}
+                      {:header-component (header "Config") :starting-width 290
+                       :cell-renderer (fn [row-num conf] (cell (str ((conf "methodStoreConfig") "methodConfigNamespace") ":"
+                                                                 ((conf "methodStoreConfig") "methodConfigName") ":"
+                                                                 ((conf "methodStoreConfig") "methodConfigVersion"))))}
+                      {:header-component (header "Inputs") :starting-width 200
+                       :cell-renderer (fn [row-num conf] (cell (stringify_map (conf "inputs"))))}
+                      {:header-component (header "Outputs") :starting-width 200
+                       :cell-renderer (fn [row-num conf] (cell (stringify_map (conf "outputs"))))}
+                      {:header-component (header "Prerequisites") :starting-width 200
+                       :cell-renderer (fn [row-num conf] (cell (stringify_map (conf "prerequisites"))))}]
             :data (:method-confs props)
             :row-props (fn [row-num conf]
-                         {:style {:fontSize "80%" :fontWeight 500 :lineHeight 1.2
+                         {:style {:fontSize "80%" :fontWeight 500
                                   :paddingTop 10 :paddingBottom 7
-                                  :backgroundColor (if (even? row-num) (:background-gray style/colors) "#fff")}})
-            :render-cell (fn [row-num col-num conf]
-                           (case col-num
-                             0 [:div {:style {:paddingLeft 12}} [:input {:type "checkbox"}]]
-                             1 (cell [:a {:href "javascript:;"
-                                          :style {:color (:button-blue style/colors)
-                                                  :textDecoration "none"}} (conf "name")])
-                             2 (cell (conf "namespace"))
-                             3 (cell (conf "rootEntityType"))
-                             4 (cell (str ((conf "workspaceName") "namespace") ":"
-                                       ((conf "workspaceName") "name")))
-                             5 (cell (str ((conf "methodStoreMethod") "methodNamespace") ":"
-                                       ((conf "methodStoreMethod") "methodName") ":"
-                                       ((conf "methodStoreMethod") "methodVersion")))
-                             6 (cell (str (get (conf "methodStoreConfig") "methodConfigNamespace") ":"
-                                       ((conf "methodStoreConfig") "methodConfigName") ":"
-                                       ((conf "methodStoreConfig") "methodConfigVersion")))
-                             7 (cell (stringify_map (conf "inputs")))
-                             8 (cell (stringify_map (conf "outputs")))
-                             9 (cell (stringify_map (conf "prerequisites")))))})])])})
+                                  :backgroundColor (if (even? row-num) (:background-gray style/colors) "#fff")}})})])])})
 
 
 (react/defc WorkspaceMethodConfigurations
