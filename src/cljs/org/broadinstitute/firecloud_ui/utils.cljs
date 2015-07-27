@@ -1,6 +1,6 @@
 (ns org.broadinstitute.firecloud-ui.utils
   (:require
-    [clojure.string]
+    [clojure.string :refer [join]]
     ))
 
 
@@ -104,6 +104,5 @@
     form-data))
 
 
-(defn stringify_map [the_map]
-  (for [k (keys the_map)]
-    (str k "," (get the_map k) " ; ")))
+(defn- map-to-string [m]
+  (join ", " (map (fn [k] (str k "→" (get m k))) (keys m))))

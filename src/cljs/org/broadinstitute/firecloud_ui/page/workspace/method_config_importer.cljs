@@ -1,4 +1,4 @@
-(ns org.broadinstitute.firecloud-ui.page.workspace.workspace-method-confs-import
+(ns org.broadinstitute.firecloud-ui.page.workspace.method-config-importer
   (:require
     [dmohs.react :as react]
     [org.broadinstitute.firecloud-ui.utils :as utils]
@@ -13,7 +13,7 @@
   (map
     (fn [i]
       {:name (str "Configuration " (inc i))
-       :namespace (rand-nth ["Broad" "nci"])
+       :namespace (rand-nth ["Broad" "nci" "public"])
        :rootEntityType "Task"
        :workspaceName {:namespace (str "ws_ns_" (inc i))
                        :name (str "ws_n_" (inc i))}
@@ -23,12 +23,11 @@
        :methodStoreConfig {:methodConfigNamespace (str "msc_ns_" (inc i))
                            :methodConfigName (str "msc_n_" (inc i))
                            :methodConfigVersion (str "msc_v_" (inc i))}
-       :inputs {:i1 (str "i_1_" (inc i))
-                :i2 (str "i_2_" (inc i))}
-       :outputs {:o1 (str "o_1_" (inc i))
-                 :o2 (str "o_2_" (inc i))}
-       :prerequisites {:p1 (str "p_1_" (inc i))
-                       :p2 (str "p_2_" (inc i))}})
+       :inputs {"Input 1" "[some value]"
+                "Input 2" "[some value]"}
+       :outputs {"Output 1" "[some value]"
+                 "Output 2" "[some value]"}
+       :prerequisites ["Predicate 1" "Predicate 2"]})
     (range (rand-int 50))))
 
 
@@ -75,11 +74,11 @@
                                                                  ((conf "methodStoreConfig") "methodConfigName") ":"
                                                                  ((conf "methodStoreConfig") "methodConfigVersion"))))}
                       {:header-component (header "Inputs") :starting-width 200
-                       :cell-renderer (fn [row-num conf] (cell (utils/stringify_map (conf "inputs"))))}
+                       :cell-renderer (fn [row-num conf] (cell (utils/map-to-string (conf "inputs"))))}
                       {:header-component (header "Outputs") :starting-width 200
-                       :cell-renderer (fn [row-num conf] (cell (utils/stringify_map (conf "outputs"))))}
+                       :cell-renderer (fn [row-num conf] (cell (utils/map-to-string (conf "outputs"))))}
                       {:header-component (header "Prerequisites") :starting-width 200
-                       :cell-renderer (fn [row-num conf] (cell (utils/stringify_map (conf "prerequisites"))))}]
+                       :cell-renderer (fn [row-num conf] (cell (clojure.string/join ", " (conf "prerequisites"))))}]
             :data (:method-confs props)
             :row-props (fn [row-num conf]
                          {:style {:fontSize "80%" :fontWeight 500

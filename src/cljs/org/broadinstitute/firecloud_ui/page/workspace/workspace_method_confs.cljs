@@ -1,20 +1,23 @@
 (ns org.broadinstitute.firecloud-ui.page.workspace.workspace-method-confs
   (:require
     [dmohs.react :as react]
-    [org.broadinstitute.firecloud-ui.common.components :as comps]
-    [org.broadinstitute.firecloud-ui.utils :as utils]
-    [org.broadinstitute.firecloud-ui.common.icons :as icons]
+    [clojure.string :refer [join]]
     [org.broadinstitute.firecloud-ui.common :as common]
-    [org.broadinstitute.firecloud-ui.common.table :as table]
+    [org.broadinstitute.firecloud-ui.common.components :as comps]
+    [org.broadinstitute.firecloud-ui.common.icons :as icons]
     [org.broadinstitute.firecloud-ui.common.style :as style]
-    [org.broadinstitute.firecloud-ui.page.workspace.workspace-method-confs-import :as importmc]))
+    [org.broadinstitute.firecloud-ui.common.table :as table]
+    [org.broadinstitute.firecloud-ui.page.workspace.method-config-importer :as importmc]
+    [org.broadinstitute.firecloud-ui.page.workspace.method-config-editor :refer [MethodConfigEditor]]
+    [org.broadinstitute.firecloud-ui.utils :as utils]
+    ))
 
 
 (defn- create-mock-methodconfs []
   (map
     (fn [i]
       {:name (str "Configuration " (inc i))
-       :namespace (rand-nth ["Broad" "nci"])
+       :namespace (rand-nth ["Broad" "nci" "public"])
        :rootEntityType "Task"
        :workspaceName {:namespace (str "ws_ns_" (inc i))
                        :name (str "ws_n_" (inc i))}
@@ -24,12 +27,11 @@
        :methodStoreConfig {:methodConfigNamespace (str "msc_ns_" (inc i))
                            :methodConfigName (str "msc_n_" (inc i))
                            :methodConfigVersion (str "msc_v_" (inc i))}
-       :inputs {:i1 (str "i_1_" (inc i))
-                :i2 (str "i_2_" (inc i))}
-       :outputs {:o1 (str "o_1_" (inc i))
-                 :o2 (str "o_2_" (inc i))}
-       :prerequisites {:p1 (str "p_1_" (inc i))
-                       :p2 (str "p_2_" (inc i))}})
+       :inputs {"Input 1" "[some value]"
+                "Input 2" "[some value]"}
+       :outputs {"Output 1" "[some value]"
+                 "Output 2" "[some value]"}
+       :prerequisites ["Predicate 1" "Predicate 2"]})
     (range (rand-int 50))))
 
 
@@ -39,7 +41,7 @@
      [:div {}
       (importmc/render-import-overlay state)
       [:div {:style {:float "right" :padding "0 2em 1em 0"}}
-       [comps/Button {:text "Import Configurations ..."
+       [comps/Button {:text "Import Configurations..."
                       :onClick #(swap! state assoc :import-overlay-shown? true)}]]
       [:div {:style {:clear "both"}}]
       (if (zero? (count (:method-confs props)))
@@ -53,17 +55,15 @@
                                                     :color "#fff" :backgroundColor (:header-darkgray style/colors)}}
                                       children])
                cell (fn [children] [:span {:style {:paddingLeft 16}} children])]
-           {:columns [{:header-component [:div {:style {:padding "13px 0 12px 12px"
-                                                        :backgroundColor (:header-darkgray style/colors)}}
-                                          [:input {:type "checkbox" :ref "allcheck"}]]
-                       :starting-width 42 :resizable? false
-                       :cell-renderer (fn [row-num conf]
-                                        [:div {:style {:paddingLeft 12}} [:input {:type "checkbox"}]])}
-                      {:header-component (header "Name") :starting-width 200
+           {:columns [{:header-component (header "Name") :starting-width 200
                        :cell-renderer (fn [row-num conf]
                                         (cell [:a {:href "javascript:;"
                                                    :style {:color (:button-blue style/colors)
-                                                           :textDecoration "none"}} (conf "name")]))}
+                                                           :textDecoration "none"}
+                                                   :onClick (fn [e]
+                                                              (common/scroll-to-top)
+                                                              (swap! (:parent-state props) assoc :selected-method-config conf))}
+                                               (conf "name")]))}
                       {:header-component (header "Namespace") :starting-width 200
                        :cell-renderer (fn [row-num conf] (cell (conf "namespace")))}
                       {:header-component (header "Type") :starting-width 100
@@ -80,11 +80,11 @@
                                                                  ((conf "methodStoreConfig") "methodConfigName") ":"
                                                                  ((conf "methodStoreConfig") "methodConfigVersion"))))}
                       {:header-component (header "Inputs") :starting-width 200
-                       :cell-renderer (fn [row-num conf] (cell (utils/stringify_map (conf "inputs"))))}
+                       :cell-renderer (fn [row-num conf] (cell (utils/map-to-string (conf "inputs"))))}
                       {:header-component (header "Outputs") :starting-width 200
-                       :cell-renderer (fn [row-num conf] (cell (utils/stringify_map (conf "outputs"))))}
+                       :cell-renderer (fn [row-num conf] (cell (utils/map-to-string (conf "outputs"))))}
                       {:header-component (header "Prerequisites") :starting-width 200
-                       :cell-renderer (fn [row-num conf] (cell (utils/stringify_map (conf "prerequisites"))))}]
+                       :cell-renderer (fn [row-num conf] (cell (join ", " (conf "prerequisites"))))}]
             :data (:method-confs props)
             :row-props (fn [row-num conf]
                          {:style {:fontSize "80%" :fontWeight 500
@@ -92,29 +92,37 @@
                                   :backgroundColor (if (even? row-num) (:background-gray style/colors) "#fff")}})})])])})
 
 
+;; Rawls is screwed up right now: Prerequisites should simply be a list of strings, not a map.
+;; Delete this when the backend is fixed
+(defn- fix-configs [configs]
+  (map (fn [conf] (assoc conf :prerequisites [])) configs))
+
 (react/defc WorkspaceMethodConfigurations
-  {:component-did-mount
-   (fn [{:keys [state props]}]
-     (utils/ajax-orch
-       (str "/workspaces/" (:selected-workspace-namespace props) "/" (:selected-workspace props) "/methodconfigs")
-       {:on-done (fn [{:keys [success? xhr]}]
-                   (if success?
-                     (swap! state assoc :method-confs-loaded? true :method-confs (utils/parse-json-string (.-responseText xhr)))
-                     (swap! state assoc :error-message (.-statusText xhr))))
-        :canned-response {:responseText (utils/->json-string (create-mock-methodconfs))
-                          :status 200
-                          :delay-ms (rand-int 2000)}}))
-   :render
+  {:render
    (fn [{:keys [state]}]
      [:div {:style {:padding "1em 0"}}
       [:div {}
        (cond
-         (:method-confs-loaded? @state) [WorkspaceMethodsConfigurationsList {:method-confs (:method-confs @state)}]
+         (:selected-method-config @state) [MethodConfigEditor {:config (:selected-method-config @state)}]
+         (:method-confs-loaded? @state) [WorkspaceMethodsConfigurationsList {:method-confs (:method-confs @state)
+                                                                             :parent-state state}]
          (:error-message @state) [:div {:style {:color "red"}}
                                   "FireCloud service returned error: " (:error-message @state)]
-         :else [comps/Spinner {:text "Loading configurations..."}])]])})
+         :else [comps/Spinner {:text "Loading configurations..."}])]])
+   :component-did-mount
+   (fn [{:keys [state props]}]
+     (utils/ajax-orch
+       (str "/workspaces/" (get-in props [:workspace "namespace"]) "/" (get-in props [:workspace "name"]) "/methodconfigs")
+       {:on-done (fn [{:keys [success? xhr]}]
+                   (if success?
+                     (swap! state assoc :method-confs-loaded? true :method-confs (fix-configs (utils/parse-json-string (.-responseText xhr))))
+                     (swap! state assoc :error-message (.-statusText xhr))))
+        :canned-response {:responseText (utils/->json-string (create-mock-methodconfs))
+                          :status 200
+                          :delay-ms (rand-int 2000)}}))
+   :component-will-receive-props
+   (fn [{:keys [state]}]
+     (swap! state dissoc :selected-method-config))})
 
 (defn render-workspace-method-confs [workspace]
-  [WorkspaceMethodConfigurations
-   {:selected-workspace (workspace "name")
-    :selected-workspace-namespace (workspace "namespace")}])
+  [WorkspaceMethodConfigurations {:workspace workspace}])

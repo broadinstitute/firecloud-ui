@@ -199,7 +199,6 @@
                     :items [{:text "Summary" :component (render-workspace-summary workspace)}
                             {:text "Data" :component (render-workspace-data entities)}
                             {:text "Method Configurations" :component (render-workspace-method-confs workspace)}
-                            {:text "Methods"}
                             {:text "Monitor"}
                             {:text "Files"}]}]
      [:div {:style {:textAlign "center" :color (:exception-red style/colors)}}
