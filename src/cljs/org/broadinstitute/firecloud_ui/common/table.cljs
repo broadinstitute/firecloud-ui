@@ -142,21 +142,22 @@
       [Paginator {:num-rows (count (:data props))
                   :parent-state state}]
       [:div {:style {:overflowX "auto"}}
-       [:div {:style {:display "inline-block" :position "relative" :minWidth (reduce + (:column-widths props))}}
-        (map-indexed
-          (fn [i column]
-            [:div {:style {:float "left" :width (nth (:column-widths props) i)}} column])
+       [:div {:style {:display "inline-block" :position "relative"
+                      :minWidth (reduce + (map #(:starting-width %) (:columns props)))}}
+        (map
+          (fn [column]
+            [:div {:style {:float "left" :width (:starting-width column)}} (:header-component column)])
           (:columns props))
         [:div {:style {:clear "both"}}]
 
         (map-indexed
           (fn [row-num row]
             [:div ((:row-props props) row-num row)
-             (map (fn [col-num]
-                    [:div {:style {:width (nth (:column-widths props) col-num) :float "left"
+             (map-indexed (fn [col-num col]
+                    [:div {:style {:width (:starting-width col) :float "left"
                                    :whiteSpace "nowrap" :overflow "hidden" :textOverflow "ellipsis"}}
-                     ((:render-cell props) row-num col-num row)])
-               (range (count (:column-widths props))))
+                     ((:cell-renderer col) row-num row)])
+               (:columns props))
              [:div {:style {:clear "both"}}]])
           (take (:rows-per-page @state)
             (drop (* (- (:current-page @state) 1) (:rows-per-page @state))
