@@ -11,6 +11,7 @@
    [org.broadinstitute.firecloud-ui.page.workspace.workspace-summary :refer [render-workspace-summary]]
    [org.broadinstitute.firecloud-ui.page.workspace.workspace-data :refer [render-workspace-data]]
    [org.broadinstitute.firecloud-ui.page.workspace.workspace-method-confs :refer [render-workspace-method-confs]]
+   [org.broadinstitute.firecloud-ui.page.workspace.workspace-method-confs-import :refer  [  render-import-confs  ]]
    [org.broadinstitute.firecloud-ui.utils :as utils :refer [parse-json-string]]
    ))
 
@@ -199,6 +200,7 @@
                     :items [{:text "Summary" :component (render-workspace-summary workspace)}
                             {:text "Data" :component (render-workspace-data entities)}
                             {:text "Method Configurations" :component (render-workspace-method-confs workspace)}
+                            {:text "Import Method Configurations" :component (render-import-confs workspace )}
                             {:text "Methods"}
                             {:text "Monitor"}
                             {:text "Files"}]}]
