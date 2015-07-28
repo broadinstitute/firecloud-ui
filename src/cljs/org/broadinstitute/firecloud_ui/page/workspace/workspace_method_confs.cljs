@@ -9,7 +9,6 @@
     [org.broadinstitute.firecloud-ui.common.style :as style]))
 
 
-
 (defn- create-mock-methodconfs []
   (map
     (fn [i]
@@ -38,10 +37,9 @@
     (str k "," (get the_map k) " ; ")))
 
 
-
 (react/defc ImportWorkspaceMethodsConfigurationsList
   {:render
-   (fn [{:keys [props refs state]}]
+   (fn [{:keys [props]}]
      [:div {}
       (if (zero? (count (:method-confs props)))
         [:div {:style {:textAlign "center" :backgroundColor (:background-gray style/colors)
@@ -56,20 +54,13 @@
                cell (fn [children] [:span {:style {:paddingLeft 16}} children])]
            {:columns [{:header-component [:div {:style {:padding "13px 0 12px 12px"
                                                         :backgroundColor (:header-darkgray style/colors)}}
-                                          [:input {:type "checkbox" :ref "allcheck"}]
+                                          [:input {:type "checkbox" :ref "imcallcheck"}]
                                           ]
                        :starting-width 42 :resizable? false
                        :cell-renderer (fn [row-num conf]
                                     [:div
                                       {:style {:paddingLeft 12}} [:input {
-                                         :type "checkbox" :id (str "import_mc_checkbox_" row-num )
-                                                          :onClick (fn [e] (let [
-                                                            check_box_id_str (str "import_mc_checkbox_" row-num )
-                                                            clicked_checkbox_element (.getElementById js/document (name check_box_id_str))
-                                                            checked_status (.-checked clicked_checkbox_element)]
-                                                            nil
-                                                            ;TODO something here that modifies the "Import Selected Workspaces" button
-                                                            ))}]])}
+                                         :type "checkbox" :ref (str "imc_" row-num)}]])}
                       {:header-component (header "Name") :starting-width 200
                        :cell-renderer (fn [row-num conf]
                                         (cell [:a {:href "javascript:;"
@@ -110,23 +101,20 @@
    :position "fixed" :zIndex 9999
    :top 0 :right 0 :bottom 0 :left 0})
 
+
 (def ^:private modal-import-content
   {
-   ;:transform "translate(-50%, 0px)" ORIGINAL
-   :transform "translate(-50%,0px)"
+   :transform "translate(-50%, 0px)"
    :backgroundColor (:background-gray style/colors)
    :position "relative" :marginBottom 60
    :top 60
-   ;:left "50%"  ORIGINAL
    :left "50%"
-   ;:width 500 ORIGINAL
    :width "75%"
    })
 
 
-(defn- render-import-overlay [state refs]
+(defn- render-import-overlay [state]
   (let [clear-import-overlay (fn []
-      (common/clear! refs "wsName" "wsDesc" "shareWith")
       (swap! state assoc :import-overlay-shown? false))]
     [:div {
       :style (modal-import-background state)
@@ -144,18 +132,15 @@
         [ImportWorkspaceMethodsConfigurationsList {:method-confs (utils/parse-json-string
                                                                   (utils/->json-string
                                                                     (create-mock-methodconfs)))}]]
-        [comps/Button {:style :add   :text "Add selected to workspace" :onClick
-                        ;TODO
-                        ; 1) acquire list of selected confs and
-                        ; 2) use orch API (post) to copy them to the workspace
-                       (fn [] nil)}]]]]))
+        [comps/Button {:style :add   :text "Add selected to workspace"
+                       :onClick #(swap! state assoc :import-overlay-shown? false)}]]]]))
 
 
 (react/defc WorkspaceMethodsConfigurationsList
   {:render
    (fn [{:keys [props refs state]}]
      [:div {}
-      (render-import-overlay state refs)
+      (render-import-overlay state)
       [comps/Button {:text "Import Configurations ..."
                      :onClick #(swap! state assoc :import-overlay-shown? true)}]
       (if (zero? (count (:method-confs props)))
