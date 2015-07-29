@@ -3,9 +3,11 @@
     [dmohs.react :as react]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
     [org.broadinstitute.firecloud-ui.utils :as utils]
+    [org.broadinstitute.firecloud-ui.common.icons :as icons]
+    [org.broadinstitute.firecloud-ui.common :as common]
     [org.broadinstitute.firecloud-ui.common.table :as table]
-    [org.broadinstitute.firecloud-ui.common.style :as style]))
-
+    [org.broadinstitute.firecloud-ui.common.style :as style]
+    [org.broadinstitute.firecloud-ui.page.workspace.workspace-method-confs-import :as importmc]))
 
 
 (defn- create-mock-methodconfs []
@@ -31,15 +33,17 @@
     (range (rand-int 50))))
 
 
-(defn stringify_map [the_map]
-  (for [k (keys the_map)]
-    (str k "," (get the_map k) " ; ")))
+
+
 
 
 (react/defc WorkspaceMethodsConfigurationsList
   {:render
-   (fn [{:keys [props refs]}]
+   (fn [{:keys [props refs state]}]
      [:div {}
+      (importmc/render-import-overlay state)
+      [comps/Button {:text "Import Configurations ..."
+                     :onClick #(swap! state assoc :import-overlay-shown? true)}]
       (if (zero? (count (:method-confs props)))
         [:div {:style {:textAlign "center" :backgroundColor (:background-gray style/colors)
                        :padding "1em 0" :margin "0 4em" :borderRadius 8}}
@@ -78,11 +82,11 @@
                                                                  ((conf "methodStoreConfig") "methodConfigName") ":"
                                                                  ((conf "methodStoreConfig") "methodConfigVersion"))))}
                       {:header-component (header "Inputs") :starting-width 200
-                       :cell-renderer (fn [row-num conf] (cell (stringify_map (conf "inputs"))))}
+                       :cell-renderer (fn [row-num conf] (cell (utils/stringify_map (conf "inputs"))))}
                       {:header-component (header "Outputs") :starting-width 200
-                       :cell-renderer (fn [row-num conf] (cell (stringify_map (conf "outputs"))))}
+                       :cell-renderer (fn [row-num conf] (cell (utils/stringify_map (conf "outputs"))))}
                       {:header-component (header "Prerequisites") :starting-width 200
-                       :cell-renderer (fn [row-num conf] (cell (stringify_map (conf "prerequisites"))))}]
+                       :cell-renderer (fn [row-num conf] (cell (utils/stringify_map (conf "prerequisites"))))}]
             :data (:method-confs props)
             :row-props (fn [row-num conf]
                          {:style {:fontSize "80%" :fontWeight 500

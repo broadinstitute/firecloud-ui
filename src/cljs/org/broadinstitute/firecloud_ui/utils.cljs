@@ -102,3 +102,8 @@
     (doseq [[k v] params]
       (.append form-data (name k) v))
     form-data))
+
+
+(defn stringify_map [the_map]
+  (for [k (keys the_map)]
+    (str k "," (get the_map k) " ; ")))
