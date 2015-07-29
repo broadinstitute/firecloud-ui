@@ -22,7 +22,7 @@
                           :view-mode-tiles ""
                           :x ""})
 
-(defn font-icon [style key]
-  [:span (utils/deep-merge {:style {:fontFamily "fontIcons"}} style) (key icon-keys)])
+(defn font-icon [props key]
+  [:span (utils/deep-merge {:style {:fontFamily "fontIcons"}} props) (key icon-keys)])
 
 (defn icon-text [key] (key icon-keys))

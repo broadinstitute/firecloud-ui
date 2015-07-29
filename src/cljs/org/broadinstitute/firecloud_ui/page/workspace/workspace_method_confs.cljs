@@ -33,17 +33,15 @@
     (range (rand-int 50))))
 
 
-
-
-
-
 (react/defc WorkspaceMethodsConfigurationsList
   {:render
    (fn [{:keys [props refs state]}]
      [:div {}
       (importmc/render-import-overlay state)
-      [comps/Button {:text "Import Configurations ..."
-                     :onClick #(swap! state assoc :import-overlay-shown? true)}]
+      [:div {:style {:float "right" :padding "0 2em 1em 0"}}
+       [comps/Button {:text "Import Configurations ..."
+                      :onClick #(swap! state assoc :import-overlay-shown? true)}]]
+      [:div {:style {:clear "both"}}]
       (if (zero? (count (:method-confs props)))
         [:div {:style {:textAlign "center" :backgroundColor (:background-gray style/colors)
                        :padding "1em 0" :margin "0 4em" :borderRadius 8}}

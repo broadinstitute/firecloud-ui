@@ -63,10 +63,10 @@
         [:div {:style {:display "block" :fontSize 13 :lineHeight 1.5
                        :padding "0px 48px" :verticalAlign "middle"}}
 
-         [:div {:style {:float "left" :display "inline-block" :width "25%" :padding "2.15em 0em" :verticalAlign "middle"}}
+         [:div {:style {:float "left" :display "inline-block" :width "33.33%" :padding "2.15em 0em" :verticalAlign "middle"}}
           [:b {} (str left-num " - " right-num)] (str " of " (pluralize num-total " result"))]
 
-         (style/create-unselectable :div {:style {:float "left" :display "inline-block" :width "50%"
+         (style/create-unselectable :div {:style {:float "left" :display "inline-block" :width "33.33%"
                                                   :padding "1.6em 0em" :verticalAlign "middle" :textAlign "center"}}
           [:div {:style {:display "inline-block" :padding "0.55em 0.9em"
                          :color (if allow-prev (:button-blue style/colors) (:border-gray style/colors))
@@ -94,7 +94,7 @@
            [:span {:style {:paddingRight "1em"}} "Next"]
            (icons/font-icon {:style {:fontSize "70%"}} :angle-right)])
 
-         [:div {:style {:float "left" :display "inline-block" :width "25%"
+         [:div {:style {:float "left" :display "inline-block" :width "33.33%"
                         :padding "2.15em 0em" :textAlign "right"}}
           "Display"
           (style/create-select {:style {:width 60 :margin "0em 1em"} :ref "numRows"
