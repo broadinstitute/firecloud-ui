@@ -15,6 +15,8 @@
   (doseq [id ids]
     (set! (.-value (.getDOMNode (@refs id))) "")))
 
+(defn clear-both [] [:div {:style {:clear "both"}}])
+
 (defn scroll-to [x y] (.scrollTo js/window x y))
 
 (defn scroll-to-top [] (scroll-to 0 0))

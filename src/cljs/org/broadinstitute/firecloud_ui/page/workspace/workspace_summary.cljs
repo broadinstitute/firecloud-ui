@@ -23,8 +23,7 @@
 
 (defn render-workspace-summary [workspace]
   [:div {:style {:margin "45px 25px"}}
-   [:div {:style {:position "relative" :float "left" :display "inline-block"
-                  :top 0 :left 0 :width 290 :marginRight 40}}
+   [:div {:style {:float "left" :display "inline-block" :width 290 :marginRight 40}}
     ;; TODO - make the width of the float-left dynamic
     [:div {:style {:borderRadius 5 :padding 25 :textAlign "center"
                    :color "#fff" :backgroundColor (style/color-for-status (workspace "status"))
@@ -32,18 +31,16 @@
      [:span {:style {:display "inline-block" :marginRight 14 :marginTop -4
                      :verticalAlign "middle" :position "relative"}}
       (case (workspace "status")
-        "Complete"  [comps/CompleteIcon {:size 36}]
-        "Running"   [comps/RunningIcon {:size 36}]
+        "Complete" [comps/CompleteIcon {:size 36}]
+        "Running" [comps/RunningIcon {:size 36}]
         "Exception" [comps/ExceptionIcon {:size 36}])]
-     [:span {:style {:marginLeft "1.5ex"}} (workspace "status")]
-     ]
+     [:span {:style {:marginLeft "1.5ex"}} (workspace "status")]]
     [:div {:style {:marginTop 27}}
      [:div {:style {:backgroundColor "transparent" :color (:button-blue style/colors)
                     :border (str "1px solid " (:line-gray style/colors))
                     :fontSize "106%" :lineHeight 1 :position "relative"
                     :padding "0.7em 0em"
-                    :textAlign "center" :cursor "pointer"
-                    :textDecoration "none"}}
+                    :textAlign "center" :cursor "pointer"}}
       [:span {:style {:display "inline-block" :verticalAlign "middle"}}
        (icons/font-icon {:style {:fontSize "135%"}} :pencil)]
       [:span {:style {:marginLeft "1em"}} "Edit this page"]]]]
