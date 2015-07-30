@@ -147,14 +147,16 @@
        [:div {:style {:display "inline-block" :position "relative"
                       :minWidth (reduce + (:column-widths @state))
                       :cursor (when (:dragging? @state) "ew-resize")}
-              :onMouseUp (fn [e]
-                           (when (:dragging? @state)
-                             (swap! state assoc :dragging? false)
-                             (let [widths (:column-widths @state)
-                                   current-width (nth widths (:drag-column @state))
-                                   drag-amount (- (.-clientX e) (:drag-start @state))]
-                               (swap! state assoc :column-widths
-                                 (assoc widths (:drag-column @state) (+ current-width drag-amount))))))}
+              :onMouseMove (fn [e]
+                             (when (:dragging? @state)
+                               (let [widths (:column-widths @state)
+                                     current-width (nth widths (:drag-column @state))
+                                     new-mouse-x (.-clientX e)
+                                     drag-amount (- new-mouse-x (:mouse-x @state))]
+                                 (swap! state update-in [:column-widths]
+                                   assoc (:drag-column @state) (+ current-width drag-amount))
+                                 (swap! state assoc :mouse-x new-mouse-x))))
+              :onMouseUp #(swap! state assoc :dragging? false)}
         (style/create-unselectable :div {:style {:whiteSpace "nowrap" :overflow "hidden" :textOverflow "clip"}}
           [:div {}
            (map-indexed
@@ -162,10 +164,10 @@
                (let [width (nth (:column-widths @state) col-num)]
                  [:div {:style {:float "left" :position "relative" :width width}}
                   (when (get column :resizable? true)
-                    [:div {:style {:float "right" :position "absolute" :width 4 :top 0 :bottom 0 :left (- width 4)
+                    [:div {:style {:position "absolute" :width 20 :top 0 :bottom 0 :left (- width 10) :zIndex 1
                                    :cursor "ew-resize"}
                            :onMouseDown (fn [e] (swap! state assoc
-                                                  :dragging? true :drag-start (.-clientX e) :drag-column col-num))}])
+                                                  :dragging? true :mouse-x (.-clientX e) :drag-column col-num))}])
                   (:header-component column)]))
              (:columns props))])
         [:div {:style {:clear "both"}}]
