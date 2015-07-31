@@ -57,7 +57,7 @@
                    :style {:color (:button-blue style/colors) :textDecoration "none"}
                    :onClick (fn [e]
                               (common/scroll-to-top)
-                              (swap! (:parent-state props) assoc :selected-method-config config))}
+                              (swap! (:parent-state props) assoc :selected-method-config config :selected-index row-index))}
                (config "name")])}
            {:header "Namespace" :starting-width 200 :sort-by :value}
            {:header "Type" :starting-width 100 :sort-by :value}
@@ -90,7 +90,22 @@
 ;; Rawls is screwed up right now: Prerequisites should simply be a list of strings, not a map.
 ;; Delete this when the backend is fixed
 (defn- fix-configs [configs]
-  (map (fn [conf] (assoc conf :prerequisites [])) configs))
+  (if utils/use-live-data?
+    (mapv (fn [conf] (assoc conf "prerequisites" (vals (conf "prerequisites")))) configs)
+    configs))
+
+(defn- load-workspaces [state props]
+  (swap! state assoc :method-confs-loaded? false)
+  (utils/ajax-orch
+    (str "/workspaces/" (get-in props [:workspace "namespace"]) "/" (get-in props [:workspace "name"]) "/methodconfigs")
+    {:on-done (fn [{:keys [success? xhr]}]
+                (if success?
+                  (swap! state assoc :method-confs-loaded? true
+                    :method-confs (fix-configs (vec (utils/parse-json-string (.-responseText xhr)))))
+                  (swap! state assoc :error-message (.-statusText xhr))))
+     :canned-response {:responseText (utils/->json-string (create-mock-methodconfs))
+                       :status 200
+                       :delay-ms (rand-int 2000)}}))
 
 (react/defc WorkspaceMethodConfigurations
   {:render
@@ -98,7 +113,14 @@
      [:div {:style {:padding "1em 0"}}
       [:div {}
        (cond
-         (:selected-method-config @state) [MethodConfigEditor {:config (:selected-method-config @state)}]
+         (:selected-method-config @state)
+         [MethodConfigEditor {:workspace (:workspace props)
+                              :config (:selected-method-config @state)
+                              :onCommit (fn [new-conf]
+                                          (if utils/use-live-data?
+                                            (load-workspaces state props)
+                                            (swap! state update-in [:method-confs]
+                                              assoc (:selected-index @state) new-conf)))}]
          (:method-confs-loaded? @state) [WorkspaceMethodsConfigurationsList {:workspace (:workspace props)
                                                                              :method-confs (:method-confs @state)
                                                                              :parent-state state}]
@@ -107,18 +129,10 @@
          :else [comps/Spinner {:text "Loading configurations..."}])]])
    :component-did-mount
    (fn [{:keys [state props]}]
-     (utils/ajax-orch
-       (str "/workspaces/" (get-in props [:workspace "namespace"]) "/" (get-in props [:workspace "name"]) "/methodconfigs")
-       {:on-done (fn [{:keys [success? xhr]}]
-                   (if success?
-                     (swap! state assoc :method-confs-loaded? true :method-confs (fix-configs (utils/parse-json-string (.-responseText xhr))))
-                     (swap! state assoc :error-message (.-statusText xhr))))
-        :canned-response {:responseText (utils/->json-string (create-mock-methodconfs))
-                          :status 200
-                          :delay-ms (rand-int 2000)}}))
+     (load-workspaces state props))
    :component-will-receive-props
    (fn [{:keys [state]}]
-     (swap! state dissoc :selected-method-config))})
+     (swap! state dissoc :selected-method-config :selected-index))})
 
 (defn render-workspace-method-confs [workspace]
   [WorkspaceMethodConfigurations {:workspace workspace}])
