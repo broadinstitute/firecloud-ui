@@ -3,6 +3,7 @@
    [clojure.string]
    [dmohs.react :as react]
    [inflections.core :refer [pluralize]]
+   [org.broadinstitute.firecloud-ui.common :refer [clear-both]]
    [org.broadinstitute.firecloud-ui.common.style :as style]
    [org.broadinstitute.firecloud-ui.common.icons :as icons]
    ))
@@ -59,7 +60,7 @@
            allow-next (< current-page num-pages)
            left-num (+ 1 (* (- current-page 1) rows-per-page))
            right-num (min num-total (* current-page rows-per-page))]
-       [:div {:style {:border "1px solid #ebebeb" :boxShadow "-3px -6px 23px -7px #ebebeb inset" :marginBottom 24}}
+       [:div {:style {:border "1px solid #ebebeb" :boxShadow "-3px -6px 23px -7px #ebebeb inset"}}
         [:div {:style {:display "block" :fontSize 13 :lineHeight 1.5
                        :padding "0px 48px" :verticalAlign "middle"}}
 
@@ -104,7 +105,7 @@
             10 25 100 500)
           "rows per page"]
 
-         [:div {:style {:clear "both"}}]]]))})
+         (clear-both)]]))})
 
 
 (react/defc Table
@@ -114,19 +115,23 @@
       :current-page 1})
    :render
    (fn [{:keys [state props]}]
-     [:div {}
-      [Paginator {:num-rows (count (:data props))
-                  :parent-state state}]
-      [:div {:style {:color (:text-light style/colors)
-                     :paddingBottom "1em" :display "flex"}}
-       (map (fn [column]
-              [:div {:style (merge (:style column) (:header-style column))}
-               (:label column)])
-         (:columns props))]
-      [Body {:columns (:columns props)
-             :data (take (:rows-per-page @state)
-                     (drop (* (- (:current-page @state) 1) (:rows-per-page @state))
-                       (:data props)))}]])
+     (let [paginator-above (= :above (:paginator props))
+           paginator-below (= :below (get props :paginator :below))
+           paginator [Paginator {:num-rows (count (:data props)) :parent-state state}]
+           paginator-space (or (:paginator-space props) 24)]
+       [:div {}
+        (when paginator-above [:div {:style {:paddingBottom paginator-space}} paginator])
+        [:div {:style {:color (:text-light style/colors)
+                       :paddingBottom "1em" :display "flex"}}
+         (map (fn [column]
+                [:div {:style (merge (:style column) (:header-style column))}
+                 (:label column)])
+           (:columns props))]
+        [Body {:columns (:columns props)
+               :data (take (:rows-per-page @state)
+                       (drop (* (- (:current-page @state) 1) (:rows-per-page @state))
+                         (:data props)))}]
+        (when paginator-below [:div {:style {:paddingTop paginator-space}} paginator])]))
    :component-will-receive-props
    (fn [{:keys [state]}]
      (swap! state assoc :current-page 1))})
@@ -140,47 +145,55 @@
       :dragging? false})
    :render
    (fn [{:keys [state props]}]
-     [:div {}
-      [Paginator {:num-rows (count (:data props))
-                  :parent-state state}]
-      [:div {:style {:overflowX "auto"}}
-       [:div {:style {:display "inline-block" :position "relative"
-                      :minWidth (reduce + (:column-widths @state))
-                      :cursor (when (:dragging? @state) "ew-resize")}
-              :onMouseMove (fn [e]
-                             (when (:dragging? @state)
-                               (let [widths (:column-widths @state)
-                                     current-width (nth widths (:drag-column @state))
-                                     new-mouse-x (.-clientX e)
-                                     drag-amount (- new-mouse-x (:mouse-x @state))]
-                                 (swap! state update-in [:column-widths]
-                                   assoc (:drag-column @state) (+ current-width drag-amount))
-                                 (swap! state assoc :mouse-x new-mouse-x))))
-              :onMouseUp #(swap! state assoc :dragging? false)}
-        (style/create-unselectable :div {:style {:whiteSpace "nowrap" :overflow "hidden" :textOverflow "clip"}}
-          [:div {}
-           (map-indexed
-             (fn [col-num column]
-               (let [width (nth (:column-widths @state) col-num)]
-                 [:div {:style {:float "left" :position "relative" :width width}}
-                  (when (get column :resizable? true)
-                    [:div {:style {:position "absolute" :width 20 :top 0 :bottom 0 :left (- width 10) :zIndex 1
-                                   :cursor "ew-resize"}
-                           :onMouseDown (fn [e] (swap! state assoc
-                                                  :dragging? true :mouse-x (.-clientX e) :drag-column col-num))}])
-                  (:header-component column)]))
-             (:columns props))])
-        [:div {:style {:clear "both"}}]
+     (let [paginator-above (= :above (:paginator props))
+           paginator-below (= :below (get props :paginator :below))
+           paginator [Paginator {:num-rows (count (:data props)) :parent-state state}]
+           paginator-space (or (:paginator-space props) 24)]
+       [:div {}
+        (when paginator-above [:div {:style {:paddingBottom paginator-space}} paginator])
+        [:div {:style {:overflowX "auto"}}
+         [:div {:style {:display "inline-block" :position "relative"
+                        :minWidth (reduce + (:column-widths @state))
+                        :cursor (when (:dragging? @state) "ew-resize")}
+                :onMouseMove (fn [e]
+                               (when (:dragging? @state)
+                                 (let [widths (:column-widths @state)
+                                       current-width (nth widths (:drag-column @state))
+                                       new-mouse-x (.-clientX e)
+                                       drag-amount (- new-mouse-x (:mouse-x @state))
+                                       new-width (+ current-width drag-amount)]
+                                   (when (>= new-width 10)
+                                     (swap! state update-in [:column-widths]
+                                       assoc (:drag-column @state) (+ current-width drag-amount))
+                                     (swap! state assoc :mouse-x new-mouse-x)))))
+                :onMouseUp #(swap! state assoc :dragging? false)}
+          (style/create-unselectable :div {:style {:whiteSpace "nowrap" :overflow "hidden" :textOverflow "clip"}}
+            [:div {}
+             (map-indexed
+               (fn [col-num column]
+                 (let [width (nth (:column-widths @state) col-num)]
+                   ;; TODO - make min/max width available as properties, default to min of 10
+                   [:div {:style {:float "left" :position "relative" :width width :minWidth 10}}
+                    (when (get column :resizable? true)
+                      [:div {:style {:position "absolute" :width 20 :top 0 :bottom 0 :left (- width 10) :zIndex 1
+                                     :cursor "ew-resize"}
+                             :onMouseDown (fn [e] (swap! state assoc
+                                                    :dragging? true :mouse-x (.-clientX e) :drag-column col-num))}])
+                    (:header-component column)]))
+               (:columns props))])
+          (clear-both)
 
-        (map-indexed
-          (fn [row-num row]
-            [:div ((:row-props props) row-num row)
-             (map-indexed (fn [col-num col]
-                            [:div {:style {:width (nth (:column-widths @state) col-num) :float "left"
-                                           :whiteSpace "nowrap" :overflow "hidden" :textOverflow "ellipsis"}}
-                             ((:cell-renderer col) row-num row)])
-               (:columns props))
-             [:div {:style {:clear "both"}}]])
-          (take (:rows-per-page @state)
-            (drop (* (- (:current-page @state) 1) (:rows-per-page @state))
-              (:data props))))]]])})
+          (map-indexed
+            (fn [row-num row]
+              [:div ((:row-props props) row-num row)
+               (map-indexed (fn [col-num col]
+                              [:div {:style {:width (nth (:column-widths @state) col-num) :float "left"
+                                             :whiteSpace "nowrap" :overflow "hidden" :textOverflow "ellipsis"}}
+                               ((:cell-renderer col) row-num row)])
+                 (:columns props))
+               (clear-both)])
+            (take (:rows-per-page @state)
+              (drop (* (- (:current-page @state) 1) (:rows-per-page @state))
+                (:data props))))]]
+
+        (when paginator-below [:div {:style {:paddingTop paginator-space}} paginator])]))})

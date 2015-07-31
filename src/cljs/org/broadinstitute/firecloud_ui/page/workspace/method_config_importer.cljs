@@ -83,7 +83,8 @@
             :row-props (fn [row-num conf]
                          {:style {:fontSize "80%" :fontWeight 500
                                   :paddingTop 10 :paddingBottom 7
-                                  :backgroundColor (if (even? row-num) (:background-gray style/colors) "#fff")}})})])])})
+                                  :backgroundColor (if (even? row-num) (:background-gray style/colors) "#fff")}})
+            :paginator :below :paginator-space 8})])])})
 
 
 (defn- modal-import-background [state]
