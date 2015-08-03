@@ -124,72 +124,58 @@
                     filtered-workspaces)})])]))})
 
 
-(defn- modal-background [state]
-  {:backgroundColor "rgba(82, 129, 197, 0.4)"
-   :display (when-not (:overlay-shown? @state) "none")
-   :overflowX "hidden" :overflowY "scroll"
-   :position "fixed" :zIndex 9999
-   :top 0 :right 0 :bottom 0 :left 0})
+(defn- clear-overlay [state refs]
+  (common/clear! refs "wsName" "wsDesc" "shareWith")
+  (swap! state assoc :overlay-shown? false))
 
-(def ^:private modal-content
-  {:transform "translate(-50%, 0px)"
-   :backgroundColor (:background-gray style/colors)
-   :position "relative" :marginBottom 60
-   :top 60 :left "50%" :width 500})
-
-(defn- render-overlay [state refs]
-  (let [clear-overlay (fn []
-                        (common/clear! refs "wsName" "wsDesc" "shareWith")
-                        (swap! state assoc :overlay-shown? false))]
-    [:div {:style (modal-background state)
-           :onKeyDown (common/create-key-handler [:esc] clear-overlay)}
-     [:div {:style modal-content}
-      [:div {:style {:backgroundColor "#fff"
-                     :borderBottom (str "1px solid " (:line-gray style/colors))
-                     :padding "20px 48px 18px"
-                     :fontSize "137%" :fontWeight 400 :lineHeight 1}}
-       "Create New Workspace"]
-      [:div {:style {:padding "22px 48px 40px" :boxSizing "inherit"}}
-       (style/create-form-label "Name Your Workspace")
-       (style/create-text-field {:style {:width "100%"} :ref "wsName"})
-       (style/create-form-label "Workspace Description")
-       (style/create-text-area  {:style {:width "100%"} :rows 10 :ref "wsDesc"})
-       (style/create-form-label "Research Purpose")
-       (style/create-select {}  "Option 1" "Option 2" "Option 3")
-       (style/create-form-label "Billing Contact")
-       (style/create-select {}  "Option 1" "Option 2" "Option 3")
-       (style/create-form-label "Share With (optional)")
-       (style/create-text-field {:style {:width "100%"} :ref "shareWith"})
-       (style/create-hint "Separate multiple emails with commas")
-       [:div {:style {:marginTop 40 :textAlign "center"}}
-        [:a {:style {:marginRight 27 :marginTop 2 :padding "0.5em"
-                     :display "inline-block"
-                     :fontSize "106%" :fontWeight 500 :textDecoration "none"
-                     :color (:button-blue style/colors)}
-             :href "javascript:;"
-             :onClick clear-overlay
-             :onKeyDown (common/create-key-handler [:space :enter] clear-overlay)}
-         "Cancel"]
-        [comps/Button {:text "Create Workspace"
-                       :onClick
-                       #(let [n (.-value (.getDOMNode (@refs "wsName")))]
-                          (clear-overlay)
-                          (when-not (or (nil? n) (empty? n))
-                            (utils/ajax-orch
-                              "/workspaces"
-                              {:method :post
-                               :data (utils/->json-string {:name n})
-                               :on-done (fn [{:keys [xhr]}]
-                                          (swap! state update-in [:workspaces] conj
-                                                 (utils/parse-json-string (.-responseText xhr))))
-                               :canned-response
-                               {:responseText (utils/->json-string
-                                                {:namespace "test"
-                                                 :name n
-                                                 :status (rand-nth ["Complete" "Running" "Exception"])
-                                                 :createdBy n
-                                                 :createdDate (.toISOString (js/Date.))})
-                                :delay-ms (rand-int 2000)}})))}]]]]]))
+(defn- render-modal [state refs]
+  (react/create-element [:div {}
+   [:div {:style {:backgroundColor "#fff"
+                  :borderBottom (str "1px solid " (:line-gray style/colors))
+                  :padding "20px 48px 18px"
+                  :fontSize "137%" :fontWeight 400 :lineHeight 1}}
+    "Create New Workspace"]
+   [:div {:style {:padding "22px 48px 40px" :backgroundColor (:background-gray style/colors)}}
+    (style/create-form-label "Name Your Workspace")
+    (style/create-text-field {:style {:width "100%"} :ref "wsName"})
+    (style/create-form-label "Workspace Description")
+    (style/create-text-area  {:style {:width "100%"} :rows 10 :ref "wsDesc"})
+    (style/create-form-label "Research Purpose")
+    (style/create-select {}  "Option 1" "Option 2" "Option 3")
+    (style/create-form-label "Billing Contact")
+    (style/create-select {}  "Option 1" "Option 2" "Option 3")
+    (style/create-form-label "Share With (optional)")
+    (style/create-text-field {:style {:width "100%"} :ref "shareWith"})
+    (style/create-hint "Separate multiple emails with commas")
+    [:div {:style {:marginTop 40 :textAlign "center"}}
+     [:a {:style {:marginRight 27 :marginTop 2 :padding "0.5em"
+                  :display "inline-block"
+                  :fontSize "106%" :fontWeight 500 :textDecoration "none"
+                  :color (:button-blue style/colors)}
+          :href "javascript:;"
+          :onClick #(clear-overlay state refs)
+          :onKeyDown (common/create-key-handler [:space :enter] #(clear-overlay state refs))}
+      "Cancel"]
+     [comps/Button {:text "Create Workspace"
+                    :onClick
+                    #(let [n (.-value (.getDOMNode (@refs "wsName")))]
+                      (clear-overlay state refs)
+                      (when-not (or (nil? n) (empty? n))
+                        (utils/ajax-orch
+                          "/workspaces"
+                          {:method :post
+                           :data (utils/->json-string {:name n})
+                           :on-done (fn [{:keys [xhr]}]
+                                      (swap! state update-in [:workspaces] conj
+                                        (utils/parse-json-string (.-responseText xhr))))
+                           :canned-response
+                           {:responseText (utils/->json-string
+                                            {:namespace "test"
+                                             :name n
+                                             :status (rand-nth ["Complete" "Running" "Exception"])
+                                             :createdBy n
+                                             :createdDate (.toISOString (js/Date.))})
+                            :delay-ms (rand-int 2000)}})))}]]]]))
 
 
 (defn- render-selected-workspace [workspace entities]
@@ -274,7 +260,11 @@
            [selected-ws-ns selected-ws-name selected-ws]
            (get-workspace-from-nav-segment (:workspaces @state) (:segment nav-context))]
        [:div {}
-        (render-overlay state refs)
+        [comps/ModalDialog
+         {:show-when (:overlay-shown? @state)
+          :dismiss-self #(clear-overlay state refs)
+          :width 500
+          :content (render-modal state refs)}]
         [:div {:style {:padding "2em"}}
          [:div {:style {:float "right" :display (when (or (not (:workspaces-loaded? @state))
                                                           selected-ws-name) "none")}}

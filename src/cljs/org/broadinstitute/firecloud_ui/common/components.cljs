@@ -112,6 +112,21 @@
         [:div {} (:component (nth (:items props) (:active-tab-index @state)))]])}))
 
 
+(react/defc ModalDialog
+  {:render
+   (fn [{:keys [props]}]
+     [:div {:style {:backgroundColor "rgba(82, 129, 197, 0.4)"
+                    :display (when-not (:show-when props) "none")
+                    :overflowX "hidden" :overflowY "scroll"
+                    :position "fixed" :zIndex 9999
+                    :top 0 :right 0 :bottom 0 :left 0}
+            :onKeyDown (common/create-key-handler [:esc] #((:dismiss-self props)))}
+      [:div {:style {:transform "translate(-50%, 0px)"
+                     :position "relative" :marginBottom 60
+                     :top 60 :left "50%" :width (:width props)}}
+       (:content props)]])})
+
+
 (react/defc CompleteIcon
   {:get-default-props
    (fn []
