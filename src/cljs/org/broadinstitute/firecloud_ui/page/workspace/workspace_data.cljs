@@ -4,7 +4,7 @@
     [org.broadinstitute.firecloud-ui.common.components :as comps]
     [org.broadinstitute.firecloud-ui.common.table :as table]
     [org.broadinstitute.firecloud-ui.common.style :as style]
-    ))
+    [org.broadinstitute.firecloud-ui.utils :as utils]))
 
 
 (defn- filter-entities [entities active-filter]
@@ -12,6 +12,14 @@
     :sample (filter (fn [entity] (= "sample" (entity "entityType"))) entities)
     :aliquot (filter (fn [entity] (= "aliquot" (entity "entityType"))) entities)
     entities))
+
+(defn- create-mock-entities []
+  (map
+    (fn [i]
+      {:entityType (rand-nth ["sample" "participant"])
+       :name (str "entity" (inc i))
+       :attributes (str "entity" (inc i) " has no attributes")})
+    (range (rand-int 20))))
 
 (react/defc EntitiesList
   {:render
@@ -37,7 +45,7 @@
                          :style (merge cell-style {:flexBasis "30ex"})
                          :header-style {:borderLeft "none"}}]
               :data (map (fn [m]
-                           [(m "entityType") ;;properly map to entities after
+                           [(m "entityType")
                             (m "name")
                             (m "attributes")])
                       filtered-entities)})])]))})
@@ -57,8 +65,24 @@
         [comps/FilterButtons {:buttons [(make-button "Sample" :sample)
                                         (make-button "Aliquot" :aliquot)
                                         (make-button "All" :all)]}]
-        [:div {:style {:padding "2em 0"}} [EntitiesList {:entities (:entities props)
-                                                         :active-filter (:active-filter @state)}]]]))})
 
-(defn render-workspace-data [entities]
-  [WorkspaceData {:entities entities}])
+        [:div {:style {:padding "2em 0"}}
+         (cond
+           (:entities-loaded? @state) [EntitiesList {:entities (:entities @state) :active-filter (:active-filter @state)}]
+           (:error-message @state) [:div {:style {:color "red"}}
+                                    "FireCloud service returned error: " (:error-message @state)]
+           :else [comps/Spinner {:text "Loading entities..."}])]]))
+    :component-did-mount
+    (fn [{:keys [state props]}]
+      (utils/ajax-orch
+        (str "/workspaces/" (get-in props [:workspace "namespace"]) "/" (get-in props [:workspace "name"]) "/entities/sample")
+        {:on-done (fn [{:keys [success? xhr]}]
+                    (if success?
+                      (swap! state assoc :entities-loaded? true :entities (utils/parse-json-string (.-responseText xhr)))
+                      (swap! state assoc :error-message (.-statusText xhr))))
+         :canned-response {:responseText (utils/->json-string (create-mock-entities))
+                           :status 200
+                           :delay-ms (rand-int 2000)}}))})
+
+(defn render-workspace-data [workspace entities]
+  [WorkspaceData {:workspace workspace :entities entities}])

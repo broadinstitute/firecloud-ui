@@ -183,7 +183,7 @@
    (if workspace
      [comps/TabBar {:key "selected"
                     :items [{:text "Summary" :component (render-workspace-summary workspace)}
-                            {:text "Data" :component (render-workspace-data entities)}
+                            {:text "Data" :component (render-workspace-data workspace entities)}
                             {:text "Method Configurations" :component (render-workspace-method-confs workspace)}
                             {:text "Monitor"}
                             {:text "Files"}]}]
@@ -229,14 +229,6 @@
          :createdBy ns
          :createdDate (.toISOString (js/Date.))}))
     (range (rand-int 100))))
-
-(defn- create-mock-entities []
-  (map
-    (fn [i]
-      {:entityType (rand-nth ["sample"])
-       :name (str "entity" (inc i))
-       :attributes (str "entity" (inc i) " has no attributes")})
-    (range (rand-int 20))))
 
 
 (defn- mock-live-data [workspaces]
@@ -291,15 +283,4 @@
                      (swap! state assoc
                             :error {:message (.-statusText xhr)})))
         :canned-response {:responseText (utils/->json-string (create-mock-workspaces))
-                          :status 200 :delay-ms (rand-int 2000)}})
-     (utils/ajax-orch
-       "/workspaces/broad-dsde-dev/testws/entities/sample"
-       {:on-done (fn [{:keys [success? xhr]}]
-                   (if success?
-                     (let [entities (utils/parse-json-string (.-responseText xhr))]
-                       (swap! state assoc :entities-loaded? true
-                              :entities entities))
-                     (swap! state assoc :error-message (.-statusText xhr))))
-        :canned-response {:responseText (utils/->json-string (create-mock-entities))
-                          :status 200
-                          :delay-ms (rand-int 2000)}}))})
+                          :status 200 :delay-ms (rand-int 2000)}}))})
