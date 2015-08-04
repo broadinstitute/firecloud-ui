@@ -1,15 +1,15 @@
 (ns org.broadinstitute.firecloud-ui.page.workspace.workspace-method-confs
   (:require
     [dmohs.react :as react]
-    [clojure.string :refer [join]]
+    clojure.string
     [org.broadinstitute.firecloud-ui.common :as common]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
     [org.broadinstitute.firecloud-ui.common.icons :as icons]
     [org.broadinstitute.firecloud-ui.common.style :as style]
-    [org.broadinstitute.firecloud-ui.common.table :as table]
+    [org.broadinstitute.firecloud-ui.common.table-v2 :as table]
     [org.broadinstitute.firecloud-ui.page.workspace.method-config-importer :as importmc]
     [org.broadinstitute.firecloud-ui.page.workspace.method-config-editor :refer [MethodConfigEditor]]
-    [org.broadinstitute.firecloud-ui.utils :as utils]
+    [org.broadinstitute.firecloud-ui.utils :as utils :refer [rlog jslog cljslog]]
     ))
 
 
@@ -43,53 +43,48 @@
       [:div {:style {:float "right" :padding "0 2em 1em 0"}}
        [comps/Button {:text "Import Configurations..."
                       :onClick #(swap! state assoc :import-overlay-shown? true)}]]
-      [:div {:style {:clear "both"}}]
+      (common/clear-both)
       (if (zero? (count (:method-confs props)))
         [:div {:style {:textAlign "center" :backgroundColor (:background-gray style/colors)
                        :padding "1em 0" :margin "0 4em" :borderRadius 8}}
          "There are no method configurations to display."]
-        [table/AdvancedTable
-         (let [header (fn [children] [:div {:style {:fontWeight 600 :fontSize 13
-                                                    :padding "14px 16px"
-                                                    :borderLeft "1px solid #777777"
-                                                    :color "#fff" :backgroundColor (:header-darkgray style/colors)}}
-                                      children])
-               cell (fn [children] [:span {:style {:paddingLeft 16}} children])]
-           {:columns [{:header-component (header "Name") :starting-width 200
-                       :cell-renderer (fn [row-num conf]
-                                        (cell [:a {:href "javascript:;"
-                                                   :style {:color (:button-blue style/colors)
-                                                           :textDecoration "none"}
-                                                   :onClick (fn [e]
-                                                              (common/scroll-to-top)
-                                                              (swap! (:parent-state props) assoc :selected-method-config conf))}
-                                               (conf "name")]))}
-                      {:header-component (header "Namespace") :starting-width 200
-                       :cell-renderer (fn [row-num conf] (cell (conf "namespace")))}
-                      {:header-component (header "Type") :starting-width 100
-                       :cell-renderer (fn [row-num conf] (cell (conf "rootEntityType")))}
-                      {:header-component (header "Workspace Name") :starting-width 160
-                       :cell-renderer (fn [row-num conf] (cell (str ((conf "workspaceName") "namespace") ":"
-                                                                 ((conf "workspaceName") "name"))))}
-                      {:header-component (header "Method") :starting-width 210
-                       :cell-renderer (fn [row-num conf] (cell (str ((conf "methodStoreMethod") "methodNamespace") ":"
-                                                                 ((conf "methodStoreMethod") "methodName") ":"
-                                                                 ((conf "methodStoreMethod") "methodVersion"))))}
-                      {:header-component (header "Config") :starting-width 290
-                       :cell-renderer (fn [row-num conf] (cell (str ((conf "methodStoreConfig") "methodConfigNamespace") ":"
-                                                                 ((conf "methodStoreConfig") "methodConfigName") ":"
-                                                                 ((conf "methodStoreConfig") "methodConfigVersion"))))}
-                      {:header-component (header "Inputs") :starting-width 200
-                       :cell-renderer (fn [row-num conf] (cell (utils/map-to-string (conf "inputs"))))}
-                      {:header-component (header "Outputs") :starting-width 200
-                       :cell-renderer (fn [row-num conf] (cell (utils/map-to-string (conf "outputs"))))}
-                      {:header-component (header "Prerequisites") :starting-width 200
-                       :cell-renderer (fn [row-num conf] (cell (join ", " (conf "prerequisites"))))}]
-            :data (:method-confs props)
-            :row-props (fn [row-num conf]
-                         {:style {:fontSize "80%" :fontWeight 500
-                                  :paddingTop 10 :paddingBottom 7
-                                  :backgroundColor (if (even? row-num) (:background-gray style/colors) "#fff")}})})])])})
+        [table/Table
+         {:columns
+          [{:header "Name" :starting-width 200
+            :content-renderer
+            (fn [row-index config]
+              [:a {:href "javascript:;"
+                   :style {:color (:button-blue style/colors) :textDecoration "none"}
+                   :onClick (fn [e]
+                              (common/scroll-to-top)
+                              (swap! (:parent-state props) assoc :selected-method-config config))}
+               (config "name")])}
+           {:header "Namespace" :starting-width 200}
+           {:header "Type" :starting-width 100}
+           {:header "Workspace Name" :starting-width 160}
+           {:header "Method" :starting-width 210}
+           {:header "Config" :starting-width 290}
+           {:header "Inputs" :starting-width 200}
+           {:header "Outputs" :starting-width 200}
+           {:header "Prerequisites" :starting-width 200}]
+          :resizable-columns? true
+          :data (map
+                  (fn [config]
+                    [config
+                     (config "namespace")
+                     (config "rootEntityType")
+                     (clojure.string/join
+                       ":" (map #(get-in config ["workspaceName" %]) ["namespace" "name"]))
+                     (clojure.string/join
+                       ":" (map #(get-in config ["methodStoreMethod" %])
+                             ["methodNamespace" "methodName" "methodVersion"]))
+                     (clojure.string/join
+                       ":" (map #(get-in config ["methodStoreConfig" %])
+                             ["methodConfigNamespace" "methodConfigName" "methodConfigVersion"]))
+                     (utils/map-to-string (config "inputs"))
+                     (utils/map-to-string (config "outputs"))
+                     (clojure.string/join ", " (config "prerequisites"))])
+                  (:method-confs props))}])])})
 
 
 ;; Rawls is screwed up right now: Prerequisites should simply be a list of strings, not a map.
