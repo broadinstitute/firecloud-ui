@@ -66,18 +66,18 @@
                                                      (:header-darkgray style/colors)}}
                                         children])
                  cell (fn [children] [:span {:style {:paddingLeft 16}} children])]
-             {:columns [{:header-component [:div {:style {:padding "13px 0 12px 12px"
-                                                          :backgroundColor (:header-darkgray style/colors)}}
-                                            [:input {:type "checkbox" :ref "imcallcheck"}]]
-                         :starting-width 42 :resizable? false
+             {:columns [{:header-component (header "Name") :starting-width 200
                          :cell-renderer (fn [row-num conf]
-                                          [:div {:style {:paddingLeft 12}}
-                                           [:input {:type "checkbox" :ref (str "imc_" row-num)}]])}
-                        {:header-component (header "Name") :starting-width 200
-                         :cell-renderer (fn [row-num conf]
-                                          (cell [:a {:href "javascript:;"
-                                                     :style {:color (:button-blue style/colors)
-                                                             :textDecoration "none"}} (conf "name")]))}
+                                          (cell [:a {:onClick
+                                                     (fn [] (js/alert
+                                                              (str "TODO : process/prompt for "
+                                                                "import of this method configuration "
+                                                                conf " into the workspace →"
+                                                                (get props :workspace) )))
+                                                     :href "javascript:;"
+                                                     :style {:color
+                                                              (:button-blue style/colors) :textDecoration "none"}}
+                                                 (conf "name")]))}
                         {:header-component (header "Namespace") :starting-width 200
                          :cell-renderer (fn [row-num conf] (cell (conf "namespace")))}
                         {:header-component (header "Type") :starting-width 100
@@ -133,7 +133,7 @@
    :width "90%"})
 
 
-(defn render-import-overlay [state]
+(defn render-import-overlay [state  workspace ]
   (let [clear-import-overlay #(swap! state assoc :import-overlay-shown? false)]
     (when (:import-overlay-shown? @state)
       [:div {:style modal-import-background
@@ -147,9 +147,6 @@
         [:div {:style {:backgroundColor "#fff"
                        :borderBottom (str "1px solid " (:line-gray style/colors))
                        :padding "20px 48px 18px"}}
-         [:div {:style {:fontSize 24 :align "center" :textAlign "center" :paddingBottom "0.5em"}}
-          "Select Method Configurations For Import"]
-         [ImportWorkspaceMethodsConfigurationsList]
-         [:div {:style {:paddingTop "0.5em"}}
-          [comps/Button {:style :add :text "Add selected to workspace"
-                         :onClick #(swap! state assoc :import-overlay-shown? false)}]]]]])))
+         [:div {:style {:fontSize 24 :align "center" :textAlign "center" :paddingBottom "0.5em"}} "Select A Method Configuration For Import"]
+         [ImportWorkspaceMethodsConfigurationsList {:workspace workspace}]
+         [:div {:style {:paddingTop "0.5em"}}]]]])))
