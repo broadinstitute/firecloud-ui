@@ -39,7 +39,7 @@
   {:render
    (fn [{:keys [props refs state]}]
      [:div {}
-      (importmc/render-import-overlay state)
+      (importmc/render-import-overlay state (:workspace props) )
       [:div {:style {:float "right" :padding "0 2em 1em 0"}}
        [comps/Button {:text "Import Configurations..."
                       :onClick #(swap! state assoc :import-overlay-shown? true)}]]
@@ -99,12 +99,13 @@
 
 (react/defc WorkspaceMethodConfigurations
   {:render
-   (fn [{:keys [state]}]
+   (fn [{:keys [state props]}]
      [:div {:style {:padding "1em 0"}}
       [:div {}
        (cond
          (:selected-method-config @state) [MethodConfigEditor {:config (:selected-method-config @state)}]
-         (:method-confs-loaded? @state) [WorkspaceMethodsConfigurationsList {:method-confs (:method-confs @state)
+         (:method-confs-loaded? @state) [WorkspaceMethodsConfigurationsList {:workspace (:workspace props)
+                                                                             :method-confs (:method-confs @state)
                                                                              :parent-state state}]
          (:error-message @state) [:div {:style {:color "red"}}
                                   "FireCloud service returned error: " (:error-message @state)]
