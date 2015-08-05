@@ -59,7 +59,8 @@
           (style/create-message-well "No workspaces to display.")
           (let [border-style (str "1px solid " (:line-gray style/colors))]
             [table/Table
-             {:header-row-style {:fontWeight nil :fontSize "90%"
+             {:cell-padding-left nil
+              :header-row-style {:fontWeight nil :fontSize "90%"
                                  :color (:text-light style/colors) :backgroundColor nil}
               :header-style {:padding "0 0 1em 14px" :overflow nil}
               :body-style {:fontSize nil :fontWeight nil

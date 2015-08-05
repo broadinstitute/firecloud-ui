@@ -50,7 +50,7 @@
          "There are no method configurations to display."]
         [table/Table
          {:columns
-          [{:header "Name" :starting-width 200
+          [{:header "Name" :starting-width 200 :sort-by #(% "name")
             :content-renderer
             (fn [row-index config]
               [:a {:href "javascript:;"
@@ -59,8 +59,8 @@
                               (common/scroll-to-top)
                               (swap! (:parent-state props) assoc :selected-method-config config))}
                (config "name")])}
-           {:header "Namespace" :starting-width 200}
-           {:header "Type" :starting-width 100}
+           {:header "Namespace" :starting-width 200 :sort-by :value}
+           {:header "Type" :starting-width 100 :sort-by :value}
            {:header "Workspace Name" :starting-width 160}
            {:header "Method" :starting-width 210}
            {:header "Config" :starting-width 290}
