@@ -6,7 +6,7 @@
    [org.broadinstitute.firecloud-ui.common.components :as comps]
    [org.broadinstitute.firecloud-ui.common.icons :as icons]
    [org.broadinstitute.firecloud-ui.common.style :as style]
-   [org.broadinstitute.firecloud-ui.common.table :as table]
+   [org.broadinstitute.firecloud-ui.common.table-v2 :as table]
    [org.broadinstitute.firecloud-ui.nav :as nav]
    [org.broadinstitute.firecloud-ui.page.workspace.workspace-summary :refer [render-workspace-summary]]
    [org.broadinstitute.firecloud-ui.page.workspace.workspace-data :refer [render-workspace-data]]
@@ -42,34 +42,6 @@
        (get-in props [:data :name])]])})
 
 
-(react/defc SamplesCell
-  {:render
-   (fn [{:keys [props]}]
-     [:span {:style {:display "inline-block" :margin 2 :padding "1em 0 0 1em" :fontWeight "bold"}}
-      (:data props) [:span {:style {:color (:text-gray style/colors)}} " samples"]])})
-
-
-(react/defc WorkflowsCell
-  {:render
-   (fn [{:keys [props]}]
-     [:span {:style {:display "inline-block" :margin 2 :padding "1em 0 0 1em" :fontWeight "bold"}}
-      (:data props) [:span {:style {:color (:text-gray style/colors)}} " workflows"]])})
-
-
-(react/defc DataSizeCell
-  {:render
-   (fn [{:keys [props]}]
-     [:span {:style {:display "inline-block" :margin 2 :padding "1em 0 0 1em" :fontWeight "bold"}}
-      (:data props) [:span {:style {:color (:text-gray style/colors)}} " GB"]])})
-
-
-(react/defc OwnerCell
-  {:render
-   (fn [{:keys [props]}]
-     [:span {:style {:display "inline-block" :margin 2 :padding "1em 0 0 1em" :fontWeight "bold"}}
-      (:data props)])})
-
-
 (defn- filter-workspaces [f workspaces]
   (case f
     :all workspaces
@@ -77,51 +49,45 @@
     :running (filter (fn [ws] (= "Running" (ws "status"))) workspaces)
     :exception (filter (fn [ws] (= "Exception" (ws "status"))) workspaces)))
 
+
 (react/defc WorkspaceList
   {:render
    (fn [{:keys [props]}]
-    (let [filtered-workspaces (filter-workspaces (:filter props) (:workspaces props))]
-     [:div {:style {:padding "0 4em"}}
-      (if (zero? (count filtered-workspaces))
-        [:div {:style {:textAlign "center" :backgroundColor (:background-gray style/colors)
-                       :padding "1em 0" :borderRadius 8}}
-         "No workspaces to display."]
-        [table/Table
-         (let [cell-style {:flexBasis "10ex" :flexGrow 1 :whiteSpace "nowrap" :overflow "hidden"
-                           :borderLeft (str "1px solid " (:line-gray style/colors))}
-               header-label (fn [text & [padding]]
-                              [:span {:style {:paddingLeft (or padding "1em")}}
-                               [:span {:style {:fontSize "90%"}} text]])]
-           {:columns [{:label (header-label "Status" "1ex") :component StatusCell
-                       :style {:flexBasis "7ex" :flexGrow 0}}
-                      {:label (header-label "Workspace")
-                       :style (merge cell-style {:flexBasis "15ex" :marginRight 2
-                                                 :borderLeft "none"})
-                       :component WorkspaceCell}
-                      {:label (header-label "Description")
-                       :style cell-style
-                       :header-style {:borderLeft 0}
-                       :component SamplesCell}
-                      {:label ""
-                       :style cell-style
-                       :header-style {:borderLeft 0}
-                       :component WorkflowsCell}
-                      {:label ""
-                       :style cell-style
-                       :header-style {:borderLeft 0}
-                       :component DataSizeCell}
-                      {:label ""
-                       :style cell-style
-                       :header-style {:borderLeft 0}
-                       :component OwnerCell}]
-            :data (map (fn [workspace]
-                         [{:status (workspace "status") :onClick #((:onWorkspaceSelected props) workspace)}
-                          {:name (workspace "name") :status (workspace "status") :onClick #((:onWorkspaceSelected props) workspace)}
-                          (workspace "sample-count")
-                          (workspace "workflow-count")
-                          (workspace "size-gb")
-                          "Me"])
-                    filtered-workspaces)})])]))})
+     (let [filtered-workspaces (filter-workspaces (:filter props) (:workspaces props))]
+       [:div {:style {:padding "0 4em"}}
+        (if (zero? (count filtered-workspaces))
+          [:div {:style {:textAlign "center" :backgroundColor (:background-gray style/colors)
+                         :padding "1em 0" :borderRadius 8}}
+           "No workspaces to display."]
+          (let [border-style (str "1px solid " (:line-gray style/colors))]
+            [table/Table
+             {:header-row-style {:fontWeight nil :fontSize "90%"
+                                 :color (:text-light style/colors) :backgroundColor nil}
+              :header-style {:padding "0 0 1em 14px" :overflow nil}
+              :body-style {:fontSize nil :fontWeight nil
+                           :borderLeft border-style :borderRight border-style
+                           :borderBottom border-style :borderRadius 4}
+              :row-style {:height 56 :borderTop border-style}
+              :even-row-style {:backgroundColor nil}
+              :cell-content-style {:padding nil}
+              :columns
+              [{:header [:div {:style {:marginLeft -6}} "Status"] :starting-width 60
+                :content-renderer (fn [row-index data]
+                                    [StatusCell {:data data}])}
+               {:header "Workspace" :starting-width 250
+                :content-renderer (fn [row-index data]
+                                    [WorkspaceCell {:data data}])}
+               {:header "Description" :starting-width 400
+                :content-renderer (fn [row-index data]
+                                    [:div {:style {:padding "1.1em 0 0 14px"}}
+                                     "No data available."])}]
+              :data (map (fn [workspace]
+                           [{:status (workspace "status")
+                             :onClick #((:onWorkspaceSelected props) workspace)}
+                            {:name (workspace "name") :status (workspace "status")
+                             :onClick #((:onWorkspaceSelected props) workspace)}
+                            workspace])
+                      filtered-workspaces)}]))]))})
 
 
 (defn- clear-overlay [state refs]
