@@ -21,6 +21,7 @@
 
 
 (defn- submit-entities [state workspaceName workspaceNamespace entityFile]
+  (swap! state assoc :message "")
   (utils/ajax-orch
     (str "/workspaces/" workspaceNamespace "/" workspaceName "/importEntities")
     {:method :post
