@@ -2,7 +2,7 @@
   (:require
     [dmohs.react :as react]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
-    [org.broadinstitute.firecloud-ui.common.table :as table]
+    [org.broadinstitute.firecloud-ui.common.table-v2 :as table]
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.utils :as utils]))
 
@@ -22,67 +22,56 @@
     (range (rand-int 20))))
 
 (react/defc EntitiesList
-  {:render
-   (fn [{:keys [props]}]
-     (let [filtered-entities (filter-entities (:entities props) (:active-filter props))]
-       [:div {:style {:padding "0 4em"}}
-        (if (zero? (count filtered-entities))
-          [:div {:style {:textAlign "center" :backgroundColor (:background-gray style/colors)
-                         :padding "1em 0" :borderRadius 8}}
-           "No entities to display."]
-          [table/Table
-           (let [cell-style {:flexBasis "8ex" :flexGrow 1 :whiteSpace "nowrap" :overflow "hidden"
-                             :borderLeft (str "1px solid " (:line-gray style/colors))}
-                 header-label (fn [text & [padding]]
-                                [:span {:style {:paddingLeft (or padding "1em")}}
-                                 [:span {:style {:fontSize "90%"}} text]])]
-             {:columns [{:label (header-label "Entity Type")
-                         :style (merge cell-style {:borderLeft "none"})}
-                        {:label (header-label "Entity Name")
-                         :style cell-style
-                         :header-style {:borderLeft "none"}}
-                        {:label (header-label "Attributes")
-                         :style (merge cell-style {:flexBasis "30ex"})
-                         :header-style {:borderLeft "none"}}]
-              :data (map (fn [m]
-                           [(m "entityType")
-                            (m "name")
-                            (m "attributes")])
-                      filtered-entities)})])]))})
-
-
-(react/defc WorkspaceData
   {:get-initial-state
    (fn []
      {:active-filter :sample})
    :render
-   (fn [{:keys [state props]}]
-     (let [make-button (fn [name filter]
+   (fn [{:keys [props state]}]
+     (let [filtered-entities (filter-entities (:entities props) (:active-filter @state))
+           make-button (fn [name filter]
                          {:text name
                           :active? (= filter (:active-filter @state))
                           :onClick #(swap! state assoc :active-filter filter)})]
-       [:div {:style {:padding "2em 0" :textAlign "center"}}
-        [comps/FilterButtons {:buttons [(make-button "Sample" :sample)
-                                        (make-button "Aliquot" :aliquot)
-                                        (make-button "All" :all)]}]
+       [:div {}
+        [:div {:style {:margin "2em 0" :textAlign "center"}}
+         [comps/FilterButtons {:buttons [(make-button "Sample" :sample)
+                                         (make-button "Aliquot" :aliquot)
+                                         (make-button "All" :all)]}]]
+        (if (zero? (count filtered-entities))
+          (style/create-message-well "No entities to display.")
+          [table/Table
+           {:columns [{:header "Entity Type" :starting-width 100}
+                      {:header "Entity Name" :starting-width 100}
+                      {:header "Attributes" :starting-width 400}]
+            :data (map (fn [m]
+                         [(m "entityType")
+                          (m "name")
+                          (m "attributes")])
+                    filtered-entities)}])]))})
 
-        [:div {:style {:padding "2em 0"}}
-         (cond
-           (:entities-loaded? @state) [EntitiesList {:entities (:entities @state) :active-filter (:active-filter @state)}]
-           (:error-message @state) [:div {:style {:color "red"}}
-                                    "FireCloud service returned error: " (:error-message @state)]
-           :else [comps/Spinner {:text "Loading entities..."}])]]))
-    :component-did-mount
-    (fn [{:keys [state props]}]
-      (utils/ajax-orch
-        (str "/workspaces/" (get-in props [:workspace "namespace"]) "/" (get-in props [:workspace "name"]) "/entities/sample")
-        {:on-done (fn [{:keys [success? xhr]}]
-                    (if success?
-                      (swap! state assoc :entities-loaded? true :entities (utils/parse-json-string (.-responseText xhr)))
-                      (swap! state assoc :error-message (.-statusText xhr))))
-         :canned-response {:responseText (utils/->json-string (create-mock-entities))
-                           :status 200
-                           :delay-ms (rand-int 2000)}}))})
+
+(react/defc WorkspaceData
+  {:render
+   (fn [{:keys [state]}]
+     [:div {:style {:marginTop "1em"}}
+      (cond
+        (:entities-loaded? @state) [EntitiesList {:entities (:entities @state)}]
+        (:error @state) (style/create-server-error-message (get-in @state [:error :message]))
+        :else [:div {:style {:textAlign "center"}} [comps/Spinner {:text "Loading entities..."}]])])
+   :component-did-mount
+   (fn [{:keys [state props]}]
+     (utils/ajax-orch
+       (str "/workspaces/" (get-in props [:workspace "namespace"])
+         "/" (get-in props [:workspace "name"]) "/entities/sample")
+       {:on-done (fn [{:keys [success? xhr]}]
+                   (if success?
+                     (swap! state assoc
+                       :entities-loaded? true
+                       :entities (utils/parse-json-string (.-responseText xhr)))
+                     (swap! state assoc :error {:message (.-statusText xhr)})))
+        :canned-response {:responseText (utils/->json-string (create-mock-entities))
+                          :status 200
+                          :delay-ms (rand-int 2000)}}))})
 
 (defn render-workspace-data [workspace entities]
   [WorkspaceData {:workspace workspace :entities entities}])

@@ -56,9 +56,7 @@
      (let [filtered-workspaces (filter-workspaces (:filter props) (:workspaces props))]
        [:div {:style {:padding "0 4em"}}
         (if (zero? (count filtered-workspaces))
-          [:div {:style {:textAlign "center" :backgroundColor (:background-gray style/colors)
-                         :padding "1em 0" :borderRadius 8}}
-           "No workspaces to display."]
+          (style/create-message-well "No workspaces to display.")
           (let [border-style (str "1px solid " (:line-gray style/colors))]
             [table/Table
              {:header-row-style {:fontWeight nil :fontSize "90%"
