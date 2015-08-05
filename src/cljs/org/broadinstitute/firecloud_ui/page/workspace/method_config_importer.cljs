@@ -52,6 +52,31 @@
    :render
    (fn [{:keys [state props]}]
      [:div {}
+      [comps/ModalDialog
+       {:height 250
+        :width 600
+        :content [:div {}
+                  [:div {:style {:backgroundColor "#fff"
+                                 :borderBottom (str "1px solid " (:line-gray style/colors))
+                                 :padding "20px 48px 18px"
+                                 :fontSize "137%" :fontWeight 400 :lineHeight 1}}
+                   "Import a Method Configuration"]
+                  [:div {:style {:padding "22px 48px 40px" :backgroundColor (:background-gray style/colors)}}
+                   (str "Selected Method Configuration Name : " (:selected-mc-name @state))
+                   [:br]
+                   (str "Selected Method Configuration Namespace : " (:selected-mc-namespace @state))
+                   [:hr]
+                   "Destination Name : "
+                   (style/create-text-field {:style {:ref "destinationName"}})
+                   [:br]
+                   "Destination Namespace : "
+                   (style/create-text-field {:style {:ref "destinationNamespace"}})
+                   [:br]
+                   [comps/Button
+                    {:icon :plus
+                     :onClick (fn [] (swap! state assoc :show-import-mc-modal? false))}]]]
+        :show-when (:show-import-mc-modal? @state)
+        :dismiss-self (fn [] (swap! state assoc :show-import-mc-modal? false))}]
       (cond
         (:loaded-import-confs? @state)
         (if (zero? (count (:method-confs @state)))
@@ -68,12 +93,11 @@
                  cell (fn [children] [:span {:style {:paddingLeft 16}} children])]
              {:columns [{:header-component (header "Name") :starting-width 200
                          :cell-renderer (fn [row-num conf]
-                                          (cell [:a {:onClick
-                                                     (fn [] (js/alert
-                                                              (str "TODO : process/prompt for "
-                                                                "import of this method configuration "
-                                                                conf " into the workspace →"
-                                                                (get props :workspace) )))
+                                          (cell [:a {:onClick (fn []
+                                                                (swap! state assoc
+                                                                  :selected-mc-name (conf "name")
+                                                                  :selected-mc-namespace (conf "namespace")
+                                                                  :show-import-mc-modal? true))
                                                      :href "javascript:;"
                                                      :style {:color
                                                               (:button-blue style/colors) :textDecoration "none"}}
