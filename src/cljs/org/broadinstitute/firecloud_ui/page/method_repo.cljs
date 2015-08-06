@@ -5,7 +5,7 @@
    [org.broadinstitute.firecloud-ui.common :as common]
    [org.broadinstitute.firecloud-ui.common.components :as comps]
    [org.broadinstitute.firecloud-ui.common.style :as style]
-   [org.broadinstitute.firecloud-ui.common.table :as table]
+   [org.broadinstitute.firecloud-ui.common.table-v2 :as table]
    [org.broadinstitute.firecloud-ui.utils :as utils :refer [rlog jslog cljslog]]
    ))
 
@@ -15,28 +15,16 @@
    (fn [{:keys [props]}]
      [:div {:style {:padding "0 4em"}}
       (if (zero? (count (:methods props)))
-        [:div {:style {:textAlign "center" :backgroundColor (:background-gray style/colors)
-                       :padding "1em 0" :borderRadius 8}}
-         "No methods to display."]
+        (style/create-message-well "No methods to display.")
         [table/Table
-         (let [cell-style {:flexBasis "8ex" :flexGrow 1 :whiteSpace "nowrap" :overflow "hidden"
-                           :borderLeft (str "1px solid " (:line-gray style/colors))}
-               header-label (fn [text & [padding]]
-                              [:span {:style {:paddingLeft (or padding "1em")}}
-                               [:span {:style {:fontSize "90%"}} text]])]
-           {:columns [{:label (header-label "Namespace")
-                       :style (merge cell-style {:borderLeft "none"})}
-                      {:label (header-label "Name")
-                       :style cell-style
-                       :header-style {:borderLeft "none"}}
-                      {:label (header-label "Synopsis")
-                       :style (merge cell-style {:flexBasis "30ex"})
-                       :header-style {:borderLeft "none"}}]
-            :data (map (fn [m]
-                         [(m "namespace")
-                          (m "name")
-                          (m "synopsis")])
-                       (:methods props))})])])})
+         {:columns [{:header "Namespace" :starting-width 100}
+                    {:header "Name" :starting-width 100}
+                    {:header "Synopsis" :starting-width 300}]
+          :data (map (fn [m]
+                       [(m "namespace")
+                        (m "name")
+                        (m "synopsis")])
+                  (:methods props))}])])})
 
 
 (defn- contains-text [text fields]
