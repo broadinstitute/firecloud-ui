@@ -59,6 +59,11 @@
   [:div {:style {:textAlign "center" :color (:exception-red colors)}}
    "FireCloud service returned error: " (or message "(no message provided)")])
 
+(defn create-message-well [message]
+  [:div {:style {:textAlign "center" :backgroundColor (:background-gray colors)
+                 :padding "1em 0" :borderRadius 8}}
+   message])
+
 (defn center [props & children]
   [:div (deep-merge props {:style {:position "absolute" :top "50%" :left "50%"
                                          :transform "translate(-50%, -50%)"}})
