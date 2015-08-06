@@ -21,7 +21,8 @@
      {:color (:button-blue style/colors)})
    :render
    (fn [{:keys [props]}]
-     [:a {:style {:display "inline-block"
+     [:a {:title (:title-text props)
+          :style {:display "inline-block"
                   :backgroundColor (:color props)
                   :color "white" :fontWeight 500
                   :borderRadius 2 :padding "0.7em 1em"
