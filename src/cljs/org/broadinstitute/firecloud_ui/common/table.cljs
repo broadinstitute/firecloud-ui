@@ -1,45 +1,12 @@
 (ns org.broadinstitute.firecloud-ui.common.table
   (:require
-   [clojure.string]
-   [dmohs.react :as react]
-   [inflections.core :refer [pluralize]]
-   [org.broadinstitute.firecloud-ui.common :refer [clear-both]]
-   [org.broadinstitute.firecloud-ui.common.style :as style]
-   [org.broadinstitute.firecloud-ui.common.icons :as icons]
-   ))
-
-
-(react/defc DefaultCell
-  {:render
-   (fn [{:keys [props]}]
-     [:span {:style {:display "inline-block" :padding "1em"}} (:data props)])})
-
-
-(react/defc CellContainer
-  {:render
-   (fn [{:keys [props]}]
-     [:div {:style (:style props)}
-      (let [CellComponent (or (:component props) DefaultCell)]
-        [CellComponent {:data (:data props) :index (:index props)}])])})
-
-
-(react/defc Body
-  {:render
-   (fn [{:keys [props]}]
-     [:div {:style {:border (str "1px solid " (:line-gray style/colors))
-                    :borderRadius 4}}
-      (map-indexed (fn [i row]
-                     [:div {:style {:display "flex" :height "3.4em"
-                                    :borderTop (when-not (zero? i)
-                                                 (str "1px solid " (:line-gray style/colors)))}}
-                      (map-indexed
-                       (fn [i cell-data]
-                         [CellContainer {:index i
-                                         :component (get-in props [:columns i :component])
-                                         :style (get-in props [:columns i :style])
-                                         :data cell-data}])
-                       row)])
-                   (:data props))])})
+    clojure.string
+    [dmohs.react :as react]
+    [inflections.core :refer [pluralize]]
+    [org.broadinstitute.firecloud-ui.common :as common]
+    [org.broadinstitute.firecloud-ui.common.style :as style]
+    [org.broadinstitute.firecloud-ui.common.icons :as icons]
+    ))
 
 
 (react/defc Paginator
@@ -69,12 +36,12 @@
 
          (style/create-unselectable :div {:style {:float "left" :display "inline-block" :width "33.33%"
                                                   :padding "1.6em 0em" :verticalAlign "middle" :textAlign "center"}}
-          [:div {:style {:display "inline-block" :padding "0.55em 0.9em"
-                         :color (if allow-prev (:button-blue style/colors) (:border-gray style/colors))
-                         :cursor (when allow-prev "pointer")}
-                 :onClick (when allow-prev #(swap! state assoc :current-page (- current-page 1)))}
-           (icons/font-icon {:style {:fontSize "70%"}} :angle-left)
-           [:span {:style {:paddingLeft "1em"}} "Prev"]]
+           [:div {:style {:display "inline-block" :padding "0.55em 0.9em"
+                          :color (if allow-prev (:button-blue style/colors) (:border-gray style/colors))
+                          :cursor (when allow-prev "pointer")}
+                  :onClick (when allow-prev #(swap! state assoc :current-page (- current-page 1)))}
+            (icons/font-icon {:style {:fontSize "70%"}} :angle-left)
+            [:span {:style {:paddingLeft "1em"}} "Prev"]]
 
            [:span {}
             (map (fn [n]
@@ -88,12 +55,12 @@
                       n]))
               (range first-page-box (+ 1 last-page-box)))]
 
-          [:div {:style {:display "inline-block" :padding "0.55em 0.9em"
-                         :color (if allow-next (:button-blue style/colors) (:border-gray style/colors))
-                         :cursor (when allow-next "pointer")}
-                 :onClick (when allow-next #(swap! state assoc :current-page (+ current-page 1)))}
-           [:span {:style {:paddingRight "1em"}} "Next"]
-           (icons/font-icon {:style {:fontSize "70%"}} :angle-right)])
+           [:div {:style {:display "inline-block" :padding "0.55em 0.9em"
+                          :color (if allow-next (:button-blue style/colors) (:border-gray style/colors))
+                          :cursor (when allow-next "pointer")}
+                  :onClick (when allow-next #(swap! state assoc :current-page (+ current-page 1)))}
+            [:span {:style {:paddingRight "1em"}} "Next"]
+            (icons/font-icon {:style {:fontSize "70%"}} :angle-right)])
 
          [:div {:style {:float "left" :display "inline-block" :width "33.33%"
                         :padding "2.15em 0em" :textAlign "right"}}
@@ -104,55 +71,108 @@
                                             :current-page 1)}
             10 25 100 500)
           "rows per page"]
+         (common/clear-both)]]))})
 
-         (clear-both)]]))})
+
+(defn- render-cell [width content cell-style cell-padding-left content-container-style onResizeMouseDown onSortClick sortOrder]
+  [:div {:style (merge {:float "left" :position "relative" :width width :minWidth 10}
+                       cell-style)}
+   (when onResizeMouseDown
+     [:div {:style {:position "absolute" :width 20 :top 0 :bottom 0 :left (- width 10) :zIndex 1
+                    :cursor "ew-resize"}
+            :onMouseDown onResizeMouseDown}])
+   (when onSortClick
+     [:div {:style {:position "absolute" :top 0 :bottom 0 :left 0 :width (if onResizeMouseDown (- width 10) width)
+                    :cursor "pointer"}
+            :onClick onSortClick}])
+   (when sortOrder
+     [:div {:style {:position "absolute" :top "50%" :right 0 :width 16 :transform "translateY(-50%)"}}
+      (if (= :asc sortOrder) "↑" "↓")])
+   [:div {:style (merge {:whiteSpace "nowrap" :overflow "hidden" :textOverflow "ellipsis"
+                         :width (str "calc(" (- width (if sortOrder 16 0)) "px - " cell-padding-left ")")}
+                   content-container-style)}
+    content]])
+
+
+(defn- render-header-cell [props index width content onResizeMouseDown onSortClick sortOrder]
+  (render-cell
+    width
+    content
+    (when (and (pos? index) onResizeMouseDown) {:borderLeft "1px solid #777777" :marginLeft -1})
+    (or (:cell-padding-left props) 0)
+    (merge
+      {:padding (str "0.8em 0 0.8em " (or (:cell-padding-left props) 0))}
+      (:header-style props))
+    onResizeMouseDown
+    onSortClick
+    sortOrder))
+
+
+(defn- render-body-cell [props width content]
+  (render-cell
+    width
+    content
+    nil
+    (or (:cell-padding-left props) 0)
+    (merge
+      {:padding (str "0.6em 0 0.6em " (or (:cell-padding-left props) 0))}
+      (:cell-content-style props))
+    nil
+    nil
+    nil))
+
+
+(react/defc Body
+  {:render
+   (fn [{:keys [props]}]
+     [:div {:style (merge {:fontSize "80%" :fontWeight 500} (:body-style props))}
+      (map-indexed
+        (fn [row-index row]
+          (let [row-style (:row-style props)
+                row-style (merge
+                            row-style
+                            (if (even? row-index)
+                              (merge
+                                {:backgroundColor (:background-gray style/colors)}
+                                (:even-row-style props))
+                              (:odd-row-style props)))]
+            [:div {:style row-style}
+             (map-indexed
+               (fn [col-index col]
+                 (let [render-content (or (:content-renderer col) (fn [i data] data))]
+                   (render-body-cell
+                     props
+                     (nth (:column-widths props) col-index)
+                     (render-content row-index (nth row col-index)))))
+               (:columns props))
+             (common/clear-both)]))
+        (:data props))])})
 
 
 (react/defc Table
-  {:get-initial-state
+  {:get-default-props
    (fn []
-     {:rows-per-page 10
-      :current-page 1})
-   :render
-   (fn [{:keys [state props]}]
-     (let [paginator-above (= :above (:paginator props))
-           paginator-below (= :below (get props :paginator :below))
-           paginator [Paginator {:num-rows (count (:data props)) :parent-state state}]
-           paginator-space (or (:paginator-space props) 24)]
-       [:div {}
-        (when paginator-above [:div {:style {:paddingBottom paginator-space}} paginator])
-        [:div {:style {:color (:text-light style/colors)
-                       :paddingBottom "1em" :display "flex"}}
-         (map (fn [column]
-                [:div {:style (merge (:style column) (:header-style column))}
-                 (:label column)])
-           (:columns props))]
-        [Body {:columns (:columns props)
-               :data (take (:rows-per-page @state)
-                       (drop (* (- (:current-page @state) 1) (:rows-per-page @state))
-                         (:data props)))}]
-        (when paginator-below [:div {:style {:paddingTop paginator-space}} paginator])]))
-   :component-will-receive-props
-   (fn [{:keys [state]}]
-     (swap! state assoc :current-page 1))})
-
-(react/defc AdvancedTable
-  {:get-initial-state
+     {:cell-padding-left "16px"
+      :paginator :below
+      :paginator-space 24})
+   :get-initial-state
    (fn [{:keys [props]}]
      {:rows-per-page 10
       :current-page 1
-      :column-widths (mapv #(:starting-width %) (:columns props))
+      :column-widths (mapv #(or (:starting-width %) 100) (:columns props))
       :dragging? false})
    :render
    (fn [{:keys [state props]}]
      (let [paginator-above (= :above (:paginator props))
-           paginator-below (= :below (get props :paginator :below))
+           paginator-below (= :below (:paginator props))
            paginator [Paginator {:num-rows (count (:data props)) :parent-state state}]
-           paginator-space (or (:paginator-space props) 24)]
+           raw-data (:data props)
+           sorted-data (if-let [keyfn (:key-fn @state)] (sort-by keyfn raw-data) raw-data)
+           ordered-data (if (= :desc (:sort-order @state)) (reverse sorted-data) sorted-data)]
        [:div {}
-        (when paginator-above [:div {:style {:paddingBottom paginator-space}} paginator])
+        (when paginator-above [:div {:style {:paddingBottom (:paginator-space props)}} paginator])
         [:div {:style {:overflowX "auto"}}
-         [:div {:style {:display "inline-block" :position "relative"
+         [:div {:style {:position "relative"
                         :minWidth (reduce + (:column-widths @state))
                         :cursor (when (:dragging? @state) "ew-resize")}
                 :onMouseMove (fn [e]
@@ -167,33 +187,37 @@
                                        assoc (:drag-column @state) (+ current-width drag-amount))
                                      (swap! state assoc :mouse-x new-mouse-x)))))
                 :onMouseUp #(swap! state assoc :dragging? false)}
-          (style/create-unselectable :div {:style {:whiteSpace "nowrap" :overflow "hidden" :textOverflow "clip"}}
-            [:div {}
-             (map-indexed
-               (fn [col-num column]
-                 (let [width (nth (:column-widths @state) col-num)]
-                   ;; TODO - make min/max width available as properties, default to min of 10
-                   [:div {:style {:float "left" :position "relative" :width width :minWidth 10}}
-                    (when (get column :resizable? true)
-                      [:div {:style {:position "absolute" :width 20 :top 0 :bottom 0 :left (- width 10) :zIndex 1
-                                     :cursor "ew-resize"}
-                             :onMouseDown (fn [e] (swap! state assoc
-                                                    :dragging? true :mouse-x (.-clientX e) :drag-column col-num))}])
-                    (:header-component column)]))
-               (:columns props))])
-          (clear-both)
-
-          (map-indexed
-            (fn [row-num row]
-              [:div ((:row-props props) row-num row)
-               (map-indexed (fn [col-num col]
-                              [:div {:style {:width (nth (:column-widths @state) col-num) :float "left"
-                                             :whiteSpace "nowrap" :overflow "hidden" :textOverflow "ellipsis"}}
-                               ((:cell-renderer col) row-num row)])
-                 (:columns props))
-               (clear-both)])
-            (take (:rows-per-page @state)
-              (drop (* (- (:current-page @state) 1) (:rows-per-page @state))
-                (:data props))))]]
-
-        (when paginator-below [:div {:style {:paddingTop paginator-space}} paginator])]))})
+          [:div {:style (merge
+                          {:fontWeight 500 :fontSize "80%"
+                           :color "#fff" :backgroundColor (:header-darkgray style/colors)}
+                          (:header-row-style props))}
+           (map-indexed
+             (fn [i column]
+               (let [width (nth (:column-widths @state) i)]
+                 (render-header-cell
+                   props
+                   i
+                   width
+                   (:header column)
+                   (when (get column :resizable? (:resizable-columns? props))
+                     (fn [e] (swap! state assoc
+                               :dragging? true :mouse-x (.-clientX e) :drag-column i)))
+                   (when-let [sorter (:sort-by column)]
+                     #(if (= i (:sort-column @state))
+                       (case (:sort-order @state)
+                         :asc (swap! state assoc :sort-order :desc)
+                         :desc (swap! state dissoc :sort-column :sort-order :key-fn)
+                         :else (assert false "bad state"))
+                       (swap! state assoc :sort-column i :sort-order :asc
+                         :key-fn (if (= :value sorter)
+                                   (fn [row] (nth row i))
+                                   (fn [row] (sorter (nth row i)))))))
+                   (when (= i (:sort-column @state)) (:sort-order @state)))))
+             (:columns props))
+           (common/clear-both)]
+          [Body (assoc props
+                  :column-widths (:column-widths @state)
+                  :data (take (:rows-per-page @state)
+                          (drop (* (- (:current-page @state) 1) (:rows-per-page @state))
+                            ordered-data)))]]]
+        (when paginator-below [:div {:style {:paddingTop (:paginator-space props)}} paginator])]))})
