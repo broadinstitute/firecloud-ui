@@ -34,6 +34,7 @@
 
 
 (def use-live-data? true)
+(when-not use-live-data? (assert goog.DEBUG "Mock data in use but DEBUG is false."))
 
 
 (defn ajax [arg-map]
@@ -43,8 +44,7 @@
         headers (:headers arg-map)
         data (:data arg-map)
         with-credentials? (:with-credentials? arg-map)
-        canned-response-params (when (and goog.DEBUG (not use-live-data?))
-                                 (:canned-response arg-map))]
+        canned-response-params (when-not use-live-data? (:canned-response arg-map))]
     (assert url (str "Missing url parameter: " arg-map))
     (assert on-done (str "Missing on-done callback: " arg-map))
     (let [xhr (if-not canned-response-params
