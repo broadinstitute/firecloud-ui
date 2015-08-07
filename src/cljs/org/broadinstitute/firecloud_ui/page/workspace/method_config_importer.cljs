@@ -53,8 +53,7 @@
    (fn [{:keys [state props]}]
      [:div {}
       [comps/ModalDialog
-       {:height 250
-        :width 600
+       {:width 600
         :content [:div {}
                   [:div {:style {:backgroundColor "#fff"
                                  :borderBottom (str "1px solid " (:line-gray style/colors))
@@ -62,21 +61,24 @@
                                  :fontSize "137%" :fontWeight 400 :lineHeight 1}}
                    "Import a Method Configuration"]
                   [:div {:style {:padding "22px 48px 40px" :backgroundColor (:background-gray style/colors)}}
-                   (str "Selected Method Configuration Name : " (:selected-mc-name @state))
-                   [:br]
-                   (str "Selected Method Configuration Namespace : " (:selected-mc-namespace @state))
-                   [:hr]
                    "Destination Name : "
-                   (style/create-text-field {:style {:ref "destinationName"}})
+                   (style/create-text-field {:id "dest_name_id" :style {:ref "destinationName"}})
                    [:br]
                    "Destination Namespace : "
-                   (style/create-text-field {:style {:ref "destinationNamespace"}})
+                   (style/create-text-field {:id "dest_namespace_id" :style {:ref "destinationNamespace"}})
                    [:br]
                    [comps/Button
-                    {:icon :plus
-                     :onClick (fn [] (swap! state assoc :show-import-mc-modal? false))}]]]
-        :show-when (:show-import-mc-modal? @state)
-        :dismiss-self (fn [] (swap! state assoc :show-import-mc-modal? false))}]
+                    {:title-text "Import configuration"
+                     :icon :plus
+                     :onClick (fn []
+                                (utils/rlog "this is where an AJAX call must be made!")
+                                (swap! state assoc :show-import-mc-modal? false))}]
+                   [comps/Button
+                    {:title-text "cancel import"
+                     :icon :x
+                     :onClick (fn []
+                                (swap! state assoc :show-import-mc-modal? false))}]]]
+        :show-when (:show-import-mc-modal? @state)}]
       (cond
         (:loaded-import-confs? @state)
         (if (zero? (count (:method-confs @state)))
@@ -93,11 +95,20 @@
                  cell (fn [children] [:span {:style {:paddingLeft 16}} children])]
              {:columns [{:header-component (header "Name") :starting-width 200
                          :cell-renderer (fn [row-num conf]
-                                          (cell [:a {:onClick (fn []
-                                                                (swap! state assoc
-                                                                  :selected-mc-name (conf "name")
-                                                                  :selected-mc-namespace (conf "namespace")
-                                                                  :show-import-mc-modal? true))
+                                          (cell
+                                            [:a
+                                             {:onClick
+                                              (fn []
+                                                (swap! state assoc
+                                                  :selected-conf conf
+                                                  :show-import-mc-modal? true)
+                                                (let [dest_name_elem  (.getElementById js/document (name "dest_name_id"))
+                                                      method_config_prepopname ((:selected-conf @state) "name")
+                                                      dest_namespace_elem (.getElementById js/document
+                                                                            (name "dest_namespace_id"))
+                                                      method_config_ns_prepopname ((:selected-conf  @state) "namespace")]
+                                                  (set! (.-value dest_name_elem) method_config_prepopname)
+                                                  (set! (.-value  dest_namespace_elem)  method_config_ns_prepopname)))
                                                      :href "javascript:;"
                                                      :style {:color
                                                               (:button-blue style/colors) :textDecoration "none"}}
@@ -135,7 +146,6 @@
                                     :backgroundColor (if (even? row-num)
                                                        (:background-gray style/colors)
                                                        "#fff")}})})])
-
         (:error-message @state) [:div {:style {:color "red"}}
                                  "FireCloud service returned error: " (:error-message @state)]
         :else [comps/Spinner {:text "Loading configurations for import..."}])])})
