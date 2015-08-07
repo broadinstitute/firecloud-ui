@@ -2,7 +2,7 @@
   (:require
     [dmohs.react :as react]
     [clojure.string :refer [join trim blank?]]
-    [org.broadinstitute.firecloud-ui.common :refer [clear-both]]
+    [org.broadinstitute.firecloud-ui.common :as common :refer [clear-both]]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
     [org.broadinstitute.firecloud-ui.common.icons :as icons]
     [org.broadinstitute.firecloud-ui.common.style :as style]
@@ -64,34 +64,37 @@
    (clear-both)])
 
 (defn- render-side-bar [state refs config editing?]
-  (style/create-unselectable :div {}
-    [:div {:style {:float "left" :display "inline-block" :width 290 :marginRight 40
-                   :fontSize "106%" :lineHeight 1 :textAlign "center" :cursor "pointer"}}
+  [:div {:style {:width 290 :float "left"}}
+   [:div {:ref "sidebar"}]
+   (style/create-unselectable :div {:style {:position (when-not (:sidebar-visible? @state) "fixed")
+                                            :top (when-not (:sidebar-visible? @state) 4)
+                                            :width 290}}
+     [:div {:style {:fontSize "106%" :lineHeight 1 :textAlign "center"}}
 
-     [:div {:style {:display (when editing? "none") :padding "0.7em 0em"
-                    :backgroundColor "transparent" :color (:button-blue style/colors)
-                    :border (str "1px solid " (:line-gray style/colors))}
-            :onClick #(swap! state assoc :editing? true :prereqs-list (config "prerequisites"))}
-      [:span {:style {:display "inline-block" :verticalAlign "middle"}}
-       (icons/font-icon {:style {:fontSize "135%"}} :pencil)]
-      [:span {:style {:marginLeft "1em"}} "Edit this page"]]
+      [:div {:style {:display (when editing? "none") :padding "0.7em 0em" :cursor "pointer"
+                     :backgroundColor "transparent" :color (:button-blue style/colors)
+                     :border (str "1px solid " (:line-gray style/colors))}
+             :onClick #(swap! state assoc :editing? true :prereqs-list (config "prerequisites"))}
+       [:span {:style {:display "inline-block" :verticalAlign "middle"}}
+        (icons/font-icon {:style {:fontSize "135%"}} :pencil)]
+       [:span {:style {:marginLeft "1em"}} "Edit this page"]]
 
-     [:div {:style {:display (when-not editing? "none") :padding "0.7em 0em"
-                    :backgroundColor (:success-green style/colors) :color "#fff" :borderRadius 4}
-            :onClick #(do (commit config state refs) (stop-editing state refs))}
-      [:span {:style {:display "inline-block" :verticalAlign "middle"}}
-       (icons/font-icon {:style {:fontSize "135%"}} :status-done)]
-      [:span {:style {:marginLeft "1em"}} "Save"]]
+      [:div {:style {:display (when-not editing? "none") :padding "0.7em 0em" :cursor "pointer"
+                     :backgroundColor (:success-green style/colors) :color "#fff" :borderRadius 4}
+             :onClick #(do (commit config state refs) (stop-editing state refs))}
+       [:span {:style {:display "inline-block" :verticalAlign "middle"}}
+        (icons/font-icon {:style {:fontSize "135%"}} :status-done)]
+       [:span {:style {:marginLeft "1em"}} "Save"]]
 
-     [:div {:style {:display (when-not editing? "none") :padding "0.7em 0em" :marginTop "0.5em"
-                    :backgroundColor (:exception-red style/colors) :color "#fff" :borderRadius 4}
-            :onClick #(stop-editing state refs)}
-      [:span {:style {:display "inline-block" :verticalAlign "middle"}}
-       (icons/font-icon {:style {:fontSize "135%"}} :x)]
-      [:span {:style {:marginLeft "1em"}} "Cancel Editing"]]]))
+      [:div {:style {:display (when-not editing? "none") :padding "0.7em 0em" :marginTop "0.5em" :cursor "pointer"
+                     :backgroundColor (:exception-red style/colors) :color "#fff" :borderRadius 4}
+             :onClick #(stop-editing state refs)}
+       [:span {:style {:display "inline-block" :verticalAlign "middle"}}
+        (icons/font-icon {:style {:fontSize "135%"}} :x)]
+       [:span {:style {:marginLeft "1em"}} "Cancel Editing"]]])])
 
 (defn- render-main-display [state refs config editing?]
-  [:div {:style {:float "left" :display "inline-block"}}
+  [:div {:style {:marginLeft 330}}
    (create-section-header "Method Configuration Name")
    (create-section
      [:div {:style {:display (when editing? "none") :padding "0.5em 0 1em 0"}}
@@ -168,7 +171,18 @@
   {:get-initial-state
    (fn [{:keys [props]}]
      {:config (:config props)
-      :editing? false})
+      :editing? false
+      :sidebar-visible? true})
    :render
    (fn [{:keys [state refs]}]
-     (render-display state refs))})
+     (render-display state refs))
+   :component-did-mount
+   (fn [{:keys [state refs this]}]
+     (set! (.-onScrollHandler this)
+       (fn [] (let [visible (common/is-in-view (.getDOMNode (@refs "sidebar")))]
+                (when-not (= visible (:sidebar-visible? @state))
+                  (swap! state assoc :sidebar-visible? visible)))))
+     (.addEventListener js/window "scroll" (.-onScrollHandler this)))
+   :component-will-unmount
+   (fn [{:keys [this]}]
+     (.removeEventListener js/window "scroll" (.-onScrollHandler this)))})
