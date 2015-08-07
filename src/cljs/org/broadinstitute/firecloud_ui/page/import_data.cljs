@@ -3,7 +3,6 @@
     [clojure.string]
     [dmohs.react :as react]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
-    [org.broadinstitute.firecloud-ui.common.table :as table]
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.utils :as utils]
     ))

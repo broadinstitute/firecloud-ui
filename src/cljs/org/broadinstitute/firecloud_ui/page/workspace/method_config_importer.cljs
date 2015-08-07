@@ -6,7 +6,7 @@
     [org.broadinstitute.firecloud-ui.common :as common]
     [org.broadinstitute.firecloud-ui.common.icons :as icons]
     [org.broadinstitute.firecloud-ui.common.style :as style]
-    [org.broadinstitute.firecloud-ui.common.table :as table]
+    [org.broadinstitute.firecloud-ui.common.table-v2 :as table]
     [org.broadinstitute.firecloud-ui.common.components :as comps]))
 
 
@@ -80,61 +80,45 @@
       (cond
         (:loaded-import-confs? @state)
         (if (zero? (count (:method-confs @state)))
-          [:div {:style {:textAlign "center" :backgroundColor (:background-gray style/colors)
-                         :padding "1em 0" :margin "0 4em" :borderRadius 8}}
-           "There are no method configurations to display for import!"]
-          [table/AdvancedTable
-           (let [header (fn [children] [:div {:style {:fontWeight 600 :fontSize 13
-                                                      :padding "14px 16px"
-                                                      :borderLeft "1px solid #777777"
-                                                      :color "#fff" :backgroundColor
-                                                     (:header-darkgray style/colors)}}
-                                        children])
-                 cell (fn [children] [:span {:style {:paddingLeft 16}} children])]
-             {:columns [{:header-component (header "Name") :starting-width 200
-                         :cell-renderer (fn [row-num conf]
-                                          (cell [:a {:onClick (fn []
-                                                                (swap! state assoc
-                                                                  :selected-mc-name (conf "name")
-                                                                  :selected-mc-namespace (conf "namespace")
-                                                                  :show-import-mc-modal? true))
-                                                     :href "javascript:;"
-                                                     :style {:color
-                                                              (:button-blue style/colors) :textDecoration "none"}}
-                                                 (conf "name")]))}
-                        {:header-component (header "Namespace") :starting-width 200
-                         :cell-renderer (fn [row-num conf] (cell (conf "namespace")))}
-                        {:header-component (header "Type") :starting-width 100
-                         :cell-renderer (fn [row-num conf] (cell (conf "rootEntityType")))}
-                        {:header-component (header "Workspace Name") :starting-width 160
-                         :cell-renderer (fn [row-num conf] (cell (str ((conf "workspaceName") "namespace") ":"
-                                                                   ((conf "workspaceName") "name"))))}
-                        {:header-component (header "Method") :starting-width 210
-                         :cell-renderer (fn [row-num conf]
-                                          (cell (str
-                                                  ((conf "methodStoreMethod") "methodNamespace") ":"
-                                                  ((conf "methodStoreMethod") "methodName") ":"
-                                                  ((conf "methodStoreMethod") "methodVersion"))))}
-                        {:header-component (header "Config") :starting-width 290
-                         :cell-renderer (fn [row-num conf]
-                                          (cell (str ((conf "methodStoreConfig") "methodConfigNamespace") ":"
-                                                     ((conf "methodStoreConfig") "methodConfigName") ":"
-                                                      ((conf "methodStoreConfig") "methodConfigVersion"))))}
-                        {:header-component (header "Inputs") :starting-width 200
-                         :cell-renderer (fn [row-num conf] (cell (utils/map-to-string (conf "inputs"))))}
-                        {:header-component (header "Outputs") :starting-width 200
-                         :cell-renderer (fn [row-num conf]
-                                          (cell (utils/map-to-string (conf "outputs"))))}
-                        {:header-component (header "Prerequisites") :starting-width 200
-                         :cell-renderer (fn [row-num conf]
-                                          (clojure.string/join "," (conf "prerequisites")))}]
-              :data (:method-confs @state)
-              :row-props (fn [row-num conf]
-                           {:style {:fontSize "80%" :fontWeight 500
-                                    :paddingTop 10 :paddingBottom 7
-                                    :backgroundColor (if (even? row-num)
-                                                       (:background-gray style/colors)
-                                                       "#fff")}})})])
+          (style/create-message-well "There are no method configurations to display for import!")
+          [table/Table
+           {:columns [{:header "Name" :starting-width 200
+                       :content-renderer
+                       (fn [row-index conf]
+                         [:a {:onClick (fn []
+                                         (swap! state assoc
+                                           :selected-mc-name (conf "name")
+                                           :selected-mc-namespace (conf "namespace")
+                                           :show-import-mc-modal? true))
+                              :href "javascript:;"
+                              :style {:color
+                                      (:button-blue style/colors) :textDecoration "none"}}
+                          (conf "name")])}
+                      {:header "Namespace" :starting-width 100}
+                      {:header "Type" :starting-width 100}
+                      {:header "Workspace Name" :starting-width 160}
+                      {:header "Method" :starting-width 210}
+                      {:header "Config" :starting-width 290}
+                      {:header "Inputs" :starting-width 200}
+                      {:header "Outputs" :starting-width 200}
+                      {:header "Prerequisites" :starting-width 200}]
+            :data (map
+                    (fn [config]
+                      [config
+                       (config "namespace")
+                       (config "rootEntityType")
+                       (clojure.string/join ":"
+                         (map #(get-in config ["workspaceName" %]) ["namespace" "name"]))
+                       (clojure.string/join ":"
+                         (map #(get-in config ["methodStoreMethod" %])
+                           ["methodNamespace" "methodName" "methodVersion"]))
+                       (clojure.string/join ":"
+                         (map #(get-in config ["methodStoreConfig" %])
+                           ["methodConfigNamespace" "methodConfigName" "methodConfigVersion"]))
+                       (utils/map-to-string (config "inputs"))
+                       (utils/map-to-string (config "outputs"))
+                       (clojure.string/join "," (config "prerequisites"))])
+                    (:method-confs @state))}])
 
         (:error-message @state) [:div {:style {:color "red"}}
                                  "FireCloud service returned error: " (:error-message @state)]
