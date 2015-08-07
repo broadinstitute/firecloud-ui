@@ -74,27 +74,38 @@
          (common/clear-both)]]))})
 
 
-(defn- render-cell [width content cell-style content-container-style onResizeMouseDown]
+(defn- render-cell [width content cell-style cell-padding-left content-container-style onResizeMouseDown onSortClick sortOrder]
   [:div {:style (merge {:float "left" :position "relative" :width width :minWidth 10}
                        cell-style)}
    (when onResizeMouseDown
      [:div {:style {:position "absolute" :width 20 :top 0 :bottom 0 :left (- width 10) :zIndex 1
                     :cursor "ew-resize"}
             :onMouseDown onResizeMouseDown}])
-   [:div {:style (merge {:whiteSpace "nowrap" :overflow "hidden" :textOverflow "ellipsis"}
+   (when onSortClick
+     [:div {:style {:position "absolute" :top 0 :bottom 0 :left 0 :width (if onResizeMouseDown (- width 10) width)
+                    :cursor "pointer"}
+            :onClick onSortClick}])
+   (when sortOrder
+     [:div {:style {:position "absolute" :top "50%" :right 0 :width 16 :transform "translateY(-50%)"}}
+      (if (= :asc sortOrder) "↑" "↓")])
+   [:div {:style (merge {:whiteSpace "nowrap" :overflow "hidden" :textOverflow "ellipsis"
+                         :width (str "calc(" (- width (if sortOrder 16 0)) "px - " cell-padding-left ")")}
                    content-container-style)}
     content]])
 
 
-(defn- render-header-cell [props index width content onResizeMouseDown]
+(defn- render-header-cell [props index width content onResizeMouseDown onSortClick sortOrder]
   (render-cell
     width
     content
     (when (and (pos? index) onResizeMouseDown) {:borderLeft "1px solid #777777" :marginLeft -1})
+    (or (:cell-padding-left props) 0)
     (merge
-      {:padding "0.8em 0 0.8em 16px"}
+      {:padding (str "0.8em 0 0.8em " (or (:cell-padding-left props) 0))}
       (:header-style props))
-    onResizeMouseDown))
+    onResizeMouseDown
+    onSortClick
+    sortOrder))
 
 
 (defn- render-body-cell [props width content]
@@ -102,9 +113,12 @@
     width
     content
     nil
+    (or (:cell-padding-left props) 0)
     (merge
-      {:padding "0.6em 0 0.6em 16px"}
+      {:padding (str "0.6em 0 0.6em " (or (:cell-padding-left props) 0))}
       (:cell-content-style props))
+    nil
+    nil
     nil))
 
 
@@ -136,7 +150,12 @@
 
 
 (react/defc Table
-  {:get-initial-state
+  {:get-default-props
+   (fn []
+     {:cell-padding-left "16px"
+      :paginator :below
+      :paginator-space 24})
+   :get-initial-state
    (fn [{:keys [props]}]
      {:rows-per-page 10
       :current-page 1
@@ -145,11 +164,13 @@
    :render
    (fn [{:keys [state props]}]
      (let [paginator-above (= :above (:paginator props))
-           paginator-below (= :below (get props :paginator :below))
+           paginator-below (= :below (:paginator props))
            paginator [Paginator {:num-rows (count (:data props)) :parent-state state}]
-           paginator-space (or (:paginator-space props) 24)]
+           raw-data (:data props)
+           sorted-data (if-let [keyfn (:key-fn @state)] (sort-by keyfn raw-data) raw-data)
+           ordered-data (if (= :desc (:sort-order @state)) (reverse sorted-data) sorted-data)]
        [:div {}
-        (when paginator-above [:div {:style {:paddingBottom paginator-space}} paginator])
+        (when paginator-above [:div {:style {:paddingBottom (:paginator-space props)}} paginator])
         [:div {:style {:overflowX "auto"}}
          [:div {:style {:position "relative"
                         :minWidth (reduce + (:column-widths @state))
@@ -180,12 +201,23 @@
                    (:header column)
                    (when (get column :resizable? (:resizable-columns? props))
                      (fn [e] (swap! state assoc
-                               :dragging? true :mouse-x (.-clientX e) :drag-column i))))))
+                               :dragging? true :mouse-x (.-clientX e) :drag-column i)))
+                   (when-let [sorter (:sort-by column)]
+                     #(if (= i (:sort-column @state))
+                       (case (:sort-order @state)
+                         :asc (swap! state assoc :sort-order :desc)
+                         :desc (swap! state dissoc :sort-column :sort-order :key-fn)
+                         :else (assert false "bad state"))
+                       (swap! state assoc :sort-column i :sort-order :asc
+                         :key-fn (if (= :value sorter)
+                                   (fn [row] (nth row i))
+                                   (fn [row] (sorter (nth row i)))))))
+                   (when (= i (:sort-column @state)) (:sort-order @state)))))
              (:columns props))
            (common/clear-both)]
           [Body (assoc props
                   :column-widths (:column-widths @state)
                   :data (take (:rows-per-page @state)
                           (drop (* (- (:current-page @state) 1) (:rows-per-page @state))
-                            (:data props))))]]]
-        (when paginator-below [:div {:style {:paddingTop paginator-space}} paginator])]))})
+                            ordered-data)))]]]
+        (when paginator-below [:div {:style {:paddingTop (:paginator-space props)}} paginator])]))})
