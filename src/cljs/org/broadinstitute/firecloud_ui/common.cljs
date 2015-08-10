@@ -20,3 +20,10 @@
 (defn scroll-to [x y] (.scrollTo js/window x y))
 
 (defn scroll-to-top [] (scroll-to 0 0))
+
+(defn is-in-view [elem]
+  (let [doc-view-top (.-scrollY js/window)
+        doc-view-bottom (+ doc-view-top (.-innerHeight js/window))
+        elem-top (.-offsetTop elem)
+        elem-bottom (+ elem-top (.-offsetHeight elem))]
+    (and (< doc-view-top elem-top) (> doc-view-bottom elem-bottom))))
