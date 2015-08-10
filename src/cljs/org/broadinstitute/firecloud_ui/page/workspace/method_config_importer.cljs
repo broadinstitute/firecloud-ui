@@ -2,12 +2,51 @@
   (:require
     [dmohs.react :as react]
     clojure.string
-    [org.broadinstitute.firecloud-ui.utils :as utils]
+    [org.broadinstitute.firecloud-ui.utils :as utils :refer [rlog jslog cljslog]]
     [org.broadinstitute.firecloud-ui.common :as common]
     [org.broadinstitute.firecloud-ui.common.icons :as icons]
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.common.table :as table]
     [org.broadinstitute.firecloud-ui.common.components :as comps]))
+
+
+
+(defn create-import-mc-url-path [workspaceNamespace workspaceName]
+  (str "/" workspaceNamespace "/"  workspaceName  "/methodconfigs/copyFromMethodRepo"))
+
+
+(defn create-import-mc-url-post-data
+  [selected-conf
+   selected-conf-dest-name
+   selected-conf-dest-ns
+   dest-workspace-name
+   dest-workspace-namespace]
+  (let [method-store-conf-conf-obj (selected-conf "methodStoreConfig")
+        method-store-conf-conf-obj-name (method-store-conf-conf-obj "methodConfigName" )
+        method-store-conf-conf-obj-namespace (method-store-conf-conf-obj "methodConfigNamespace")
+        method-store-conf-conf-obj-version (method-store-conf-conf-obj "methodConfigVersion" )
+        method-store-method-conf-obj (selected-conf "methodStoreMethod" )
+        method-store-method-conf-obj-name (method-store-method-conf-obj "methodName" )
+        method-store-method-conf-obj-namespace (method-store-method-conf-obj "methodNamespace")
+        method-store-method-conf-obj-version (method-store-method-conf-obj "methodVersion")
+        methodRepoNamespace method-store-method-conf-obj-namespace
+        methodRepoName method-store-method-conf-obj-name
+        methodRepoSnapshotId method-store-method-conf-obj-version
+        destination-map
+        {"name" selected-conf-dest-name
+         "namespace" selected-conf-dest-ns
+         "workspaceName"
+         {"name" dest-workspace-namespace
+          "namespace" dest-workspace-name
+          }
+         }
+        param-map {
+                   "methodRepoNamespace" methodRepoNamespace
+                   "methodRepoName" methodRepoName
+                   "methodRepoSnapshotId" methodRepoSnapshotId
+                   "destination" destination-map
+                   }]
+    param-map))
 
 
 (defn- create-mock-methodconfs-import []
@@ -16,14 +55,14 @@
       {:name (str "Configuration " (inc i))
        :namespace (rand-nth ["Broad" "nci" "public"])
        :rootEntityType "Task"
-       :workspaceName {:namespace (str "ws_ns_" (inc i))
-                       :name (str "ws_n_" (inc i))}
-       :methodStoreMethod {:methodNamespace (str "ms_ns_" (inc i))
-                           :methodName (str "ms_n_" (inc i))
-                           :methodVersion (str "ms_v_" (inc i))}
-       :methodStoreConfig {:methodConfigNamespace (str "msc_ns_" (inc i))
-                           :methodConfigName (str "msc_n_" (inc i))
-                           :methodConfigVersion (str "msc_v_" (inc i))}
+       :workspaceName {:namespace (str "ws-ns-" (inc i))
+                       :name (str "ws-n-" (inc i))}
+       :methodStoreMethod {:methodNamespace (str "ms-ns-" (inc i))
+                           :methodName (str "ms-n-" (inc i))
+                           :methodVersion (str "ms-v-" (inc i))}
+       :methodStoreConfig {:methodConfigNamespace (str "msc-ns-" (inc i))
+                           :methodConfigName (str "msc-n-" (inc i))
+                           :methodConfigVersion (str "msc-v-" (inc i))}
        :inputs {"Input 1" "[some value]"
                 "Input 2" "[some value]"}
        :outputs {"Output 1" "[some value]"
@@ -32,37 +71,90 @@
     (range (rand-int 50))))
 
 
+
+(defn render-import-modal [state props refs]
+  [comps/ModalDialog
+   {:width 600
+    :content
+    [:div {}
+     [:div {:style {:backgroundColor "#fff"
+                    :borderBottom (str "1px solid " (:line-gray style/colors))
+                    :padding "20px 48px 18px"
+                    :fontSize "137%" :fontWeight 400 :lineHeight 1}}
+      "Import a Method Configuration"]
+     [:div {:style {:padding "22px 48px 40px"
+                    :backgroundColor (:background-gray style/colors)}}
+      "Destination Name : "
+      (style/create-text-field
+        {:defaultValue (get-in @state [:selected-conf "name"]) :ref "destinationName"})
+      [:br]
+      "Destination Namespace : "
+      (style/create-text-field
+        {:defaultValue (get-in @state [:selected-conf "namespace"])
+         :ref "destinationNamespace"})
+      [:br]
+      [comps/Button
+       {:title-text "Import configuration"
+        :icon :plus
+        :onClick
+        (fn []
+          (let [workspace (:workspace props)
+                dest-name-value (-> (@refs "destinationName") .getDOMNode .-value)
+                dest-namespace-value (-> (@refs "destinationNamespace") .getDOMNode .-value)
+                dest-workspace-name (get workspace "name")
+                dest-workspace-namespace (get workspace "namespace")
+                methodRepoQuery (create-import-mc-url-post-data
+                                  (:selected-conf @state)
+                                  dest-name-value
+                                  dest-namespace-value
+                                  dest-workspace-name
+                                  dest-workspace-namespace)
+                url-method :post
+                url-path (create-import-mc-url-path
+                           dest-workspace-namespace
+                           dest-workspace-name)
+                url-data (utils/->json-string methodRepoQuery)
+                url-canned-response {:status 201
+                                     :delay-ms (rand-int 2000)}
+                url-on-done-func (fn [{:keys [success? xhr]}]
+                                   (if success?
+                                     (utils/rlog "success in import!
+                                                           Here, perhaps trigger re-render
+                                                           of the MCs in the current
+                                                           workspace?")
+                                     (let [
+                                           returned-err-msg
+                                           {:message (.-statusText xhr)}]
+                                       (js/alert
+                                         (str "Error in Method Configuration Import : "
+                                           returned-err-msg)))))]
+            (swap! state assoc :show-import-mc-modal? false)
+            (utils/ajax-orch
+              url-path
+              {:url url-path
+               :method url-method
+               :data url-data
+               :canned-response url-canned-response
+               :on-done url-on-done-func})))}]
+      [comps/Button
+       {:title-text "cancel import"
+        :icon :x
+        :onClick (fn []
+                   (swap! state assoc :show-import-mc-modal? false))}]]]
+    :show-when true}]
+  )
+
+
+
+
+
 (react/defc ImportWorkspaceMethodsConfigurationsList
   {:render
-   (fn [{:keys [state props]}]
+   (fn [{:keys [state props refs]}]
      [:div {}
-      [comps/ModalDialog
-       {:width 600
-        :content [:div {}
-                  [:div {:style {:backgroundColor "#fff"
-                                 :borderBottom (str "1px solid " (:line-gray style/colors))
-                                 :padding "20px 48px 18px"
-                                 :fontSize "137%" :fontWeight 400 :lineHeight 1}}
-                   "Import a Method Configuration"]
-                  [:div {:style {:padding "22px 48px 40px" :backgroundColor (:background-gray style/colors)}}
-                   "Destination Name : "
-                   (style/create-text-field {:id "dest_name_id" :style {:ref "destinationName"}})
-                   [:br]
-                   "Destination Namespace : "
-                   (style/create-text-field {:id "dest_namespace_id" :style {:ref "destinationNamespace"}})
-                   [:br]
-                   [comps/Button
-                    {:title-text "Import configuration"
-                     :icon :plus
-                     :onClick (fn []
-                                (utils/rlog "this is where an AJAX call must be made!")
-                                (swap! state assoc :show-import-mc-modal? false))}]
-                   [comps/Button
-                    {:title-text "cancel import"
-                     :icon :x
-                     :onClick (fn []
-                                (swap! state assoc :show-import-mc-modal? false))}]]]
-        :show-when (:show-import-mc-modal? @state)}]
+      (when (:show-import-mc-modal? @state)
+        (render-import-modal state props refs)
+        )
       (cond
         (:loaded-import-confs? @state)
         (if (zero? (count (:method-confs @state)))
@@ -74,19 +166,9 @@
                          [:a
                           {:onClick
                            (fn []
-                             (swap! state assoc
-                               :selected-conf conf
-                               :show-import-mc-modal? true)
-                             (let [dest_name_elem (.getElementById js/document (name "dest_name_id"))
-                                   method_config_prepopname ((:selected-conf @state) "name")
-                                   dest_namespace_elem (.getElementById js/document
-                                                         (name "dest_namespace_id"))
-                                   method_config_ns_prepopname ((:selected-conf @state) "namespace")]
-                               (set! (.-value dest_name_elem) method_config_prepopname)
-                               (set! (.-value dest_namespace_elem) method_config_ns_prepopname)))
+                             (swap! state assoc :selected-conf conf :show-import-mc-modal? true))
                            :href "javascript:;"
-                           :style {:color
-                                   (:button-blue style/colors) :textDecoration "none"}}
+                           :style {:color (:button-blue style/colors) :textDecoration "none"}}
                           (conf "name")])}
                       {:header "Namespace" :starting-width 200}
                       {:header "Type" :starting-width 100}
