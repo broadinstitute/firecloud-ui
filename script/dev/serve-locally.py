@@ -32,11 +32,32 @@ class Handler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         self.is_proxied = False
         return SimpleHTTPServer.SimpleHTTPRequestHandler.__init__(self, *args, **kwargs)
 
+    def do_CONNECT(self):
+        return self._handle_request('CONNECT')
+
+    def do_DELETE(self):
+        return self._handle_request('DELETE')
+
+    def do_HEAD(self):
+        return self._handle_request('HEAD')
+
     def do_GET(self):
         return self._handle_request('GET')
 
+    def do_OPTIONS(self):
+        return self._handle_request('OPTIONS')
+
+    def do_PATCH(self):
+        return self._handle_request('PATCH')
+
     def do_POST(self):
         return self._handle_request('POST')
+
+    def do_PUT(self):
+        return self._handle_request('PUT')
+
+    def do_TRACE(self):
+        return self._handle_request('TRACE')
 
     def send_header(self, *args, **kwargs):
         if not self.is_proxied:
