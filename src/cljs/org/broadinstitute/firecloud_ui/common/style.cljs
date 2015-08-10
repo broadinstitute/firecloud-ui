@@ -51,7 +51,7 @@
 (defn create-text-area [props]
   [:textarea (deep-merge {:style input-text-style} props)])
 
-(defn create-select [props & options]
+(defn create-select [props options]
   [:select (deep-merge {:style select-style} props)
    (map (fn [opt] [:option {} opt]) options)])
 

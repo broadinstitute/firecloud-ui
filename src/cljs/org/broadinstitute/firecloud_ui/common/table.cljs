@@ -77,7 +77,7 @@
                                 :onChange #(swap! state assoc
                                             :rows-per-page (-> (@refs "numRows") .getDOMNode .-value)
                                             :current-page 1)}
-            10 25 100 500)
+            [10 25 100 500])
           "rows per page"]
          (common/clear-both)]]))
    :component-did-update

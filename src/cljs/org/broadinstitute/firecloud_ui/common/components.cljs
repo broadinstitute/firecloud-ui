@@ -25,7 +25,7 @@
           :style {:display "inline-block"
                   :backgroundColor (:color props)
                   :color "white" :fontWeight 500
-                  :borderRadius 2 :padding "0.7em 1em"
+                  :borderRadius 2 :padding (if (:icon props) "0.7em" "0.7em 1em")
                   :fontFamily (when (:icon props) "fontIcons")
                   :fontSize (when (:icon props) "80%")
                   :textDecoration "none"}
@@ -116,19 +116,31 @@
 (react/defc ModalDialog
   {:render
    (fn [{:keys [props]}]
-     (let [content (:content props)]
-       (assert (react/valid-element? content)
-         (subs (str "Not a react element: " content) 0 200))
+     (when (:show-when props)
+       (let [content (:content props)]
+         (assert (react/valid-element? content)
+           (subs (str "Not a react element: " content) 0 200))
+         [:div {:style {:backgroundColor "rgba(82, 129, 197, 0.4)"
+                        :overflowX "hidden" :overflowY "scroll"
+                        :position "fixed" :zIndex 9999
+                        :top 0 :right 0 :bottom 0 :left 0}
+                :onKeyDown (common/create-key-handler [:esc] #((:dismiss-self props)))}
+          [:div {:style {:transform "translate(-50%, 0px)"
+                         :position "relative" :marginBottom 60
+                         :top 60 :left "50%" :width (:width props)}}
+         content]])))})
+
+
+(react/defc Blocker
+  {:render
+   (fn [{:keys [props]}]
+     (when (:banner props)
        [:div {:style {:backgroundColor "rgba(82, 129, 197, 0.4)"
-                      :display (when-not (:show-when props) "none")
-                      :overflowX "hidden" :overflowY "scroll"
-                      :position "fixed" :zIndex 9999
-                      :top 0 :right 0 :bottom 0 :left 0}
-              :onKeyDown (common/create-key-handler [:esc] #((:dismiss-self props)))}
-        [:div {:style {:transform "translate(-50%, 0px)"
-                       :position "relative" :marginBottom 60
-                       :top 60 :left "50%" :width (:width props)}}
-         content]]))})
+                      :position "fixed" :top 0 :bottom 0 :right 0 :left 0 :zIndex 9999}}
+        [:div {:style {:position "absolute" :top "50%" :left "50%"
+                       :transform "translate(-50%, -50%)"
+                       :backgroundColor "#fff" :padding "2em"}}
+         [Spinner {:text (:banner props)}]]]))})
 
 
 (react/defc CompleteIcon
