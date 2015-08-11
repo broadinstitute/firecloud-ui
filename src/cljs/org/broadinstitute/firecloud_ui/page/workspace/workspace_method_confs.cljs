@@ -9,6 +9,7 @@
     [org.broadinstitute.firecloud-ui.common.table :as table]
     [org.broadinstitute.firecloud-ui.page.workspace.method-config-importer :as importmc]
     [org.broadinstitute.firecloud-ui.page.workspace.method-config-editor :refer [MethodConfigEditor]]
+    [org.broadinstitute.firecloud-ui.paths :refer [list-method-configs-path]]
     [org.broadinstitute.firecloud-ui.utils :as utils :refer [rlog jslog cljslog]]
     ))
 
@@ -96,7 +97,7 @@
 (defn- load-workspaces [state props]
   (swap! state assoc :method-confs-loaded? false)
   (utils/ajax-orch
-    (str "/workspaces/" (get-in props [:workspace "namespace"]) "/" (get-in props [:workspace "name"]) "/methodconfigs")
+    (list-method-configs-path (:workspace props))
     {:on-done (fn [{:keys [success? xhr]}]
                 (if success?
                   (swap! state assoc :method-confs-loaded? true

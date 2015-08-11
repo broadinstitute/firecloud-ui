@@ -4,6 +4,7 @@
     [org.broadinstitute.firecloud-ui.common.components :as comps]
     [org.broadinstitute.firecloud-ui.common.table :as table]
     [org.broadinstitute.firecloud-ui.common.style :as style]
+    [org.broadinstitute.firecloud-ui.paths :refer [list-all-entities-path]]
     [org.broadinstitute.firecloud-ui.utils :as utils]))
 
 
@@ -61,8 +62,7 @@
    :component-did-mount
    (fn [{:keys [state props]}]
      (utils/ajax-orch
-       (str "/workspaces/" (get-in props [:workspace "namespace"])
-         "/" (get-in props [:workspace "name"]) "/entities/sample")
+       (list-all-entities-path (:workspace props) "sample")
        {:on-done (fn [{:keys [success? xhr]}]
                    (if success?
                      (swap! state assoc

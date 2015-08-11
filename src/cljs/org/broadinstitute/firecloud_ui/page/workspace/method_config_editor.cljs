@@ -6,6 +6,7 @@
     [org.broadinstitute.firecloud-ui.common.components :as comps]
     [org.broadinstitute.firecloud-ui.common.icons :as icons]
     [org.broadinstitute.firecloud-ui.common.style :as style]
+    [org.broadinstitute.firecloud-ui.paths :refer [update-method-config-path]]
     [org.broadinstitute.firecloud-ui.utils :as utils]
     ))
 
@@ -64,8 +65,7 @@
                    "prerequisites" prereqs)]
     (swap! state assoc :updating? true)
     (utils/ajax-orch
-      (str "/workspaces/" (workspace "namespace") "/" (workspace "name") "/method_configs/"
-        (config "namespace") "/" (config "name"))
+      (update-method-config-path workspace config)
       {:method :PUT
        :data (utils/->json-string (rebreak-config new-conf))
        :headers {"Content-Type" "application/json"} ;; TODO - make endpoint take text/plain
