@@ -20,11 +20,11 @@
 
 (defn- capture-prerequisites [state refs]
   (vec (map
-         (fn [i] (-> (@refs (str "pre_" i)) .getDOMNode .-value))
+         #(-> (@refs (str "pre_" %)) .getDOMNode .-value)
          (range (count (:prereqs-list @state))))))
 
 (defn- filter-empty [list]
-  (vec (filter #(not (blank? %)) (map #(trim %) list))))
+  (vec (remove blank? (map trim list))))
 
 
 (defn- create-section-header [text]
@@ -36,17 +36,45 @@
 (defn- stop-editing [state refs]
   (swap! state assoc :editing? false :prereqs-list (filter-empty (capture-prerequisites state refs))))
 
-(defn- commit [config state refs]
-  (let [name (-> (@refs "confname") .getDOMNode .-value)
-        inputs (zipmap
-                 (keys (config "inputs"))
-                 (map (fn [key] (-> (@refs (str "in_" key)) .getDOMNode .-value)) (keys (config "inputs"))))
-        outputs (zipmap
-                  (keys (config "outputs"))
-                  (map (fn [key] (-> (@refs (str "out_" key)) .getDOMNode .-value)) (keys (config "outputs"))))
-        prereqs (filter-empty (capture-prerequisites state refs))]
-    (js/console.log (str "TODO: make ajax call to set name = " name "\ninputs = " (utils/->json-string inputs)
-                      "\noutputs = " (utils/->json-string outputs) "\nprereqs = " (join ", " prereqs)))))
+(defn- update-config [state props new-config]
+  (swap! state assoc :config new-config)
+  ((:onCommit props) new-config))
+
+;; Rawls is screwed up right now: Prerequisites should simply be a list of strings, not a map.
+;; In addition, on this endpoint, the methodStore[Config|Method] has been renamed to methodRepo[Config|Method]
+;; Delete this when the backend is fixed
+(defn- rebreak-config [config]
+  (if utils/use-live-data?
+    (dissoc (assoc config "prerequisites" (zipmap (repeat "unused") (config "prerequisites"))
+                  "methodRepoConfig" (config "methodStoreConfig")
+                  "methodRepoMethod" (config "methodStoreMethod"))
+      "methodStoreConfig" "methodStoreMethod")
+    config))
+
+(defn- commit [state refs config props]
+  (let [workspace (:workspace props)
+        name (-> (@refs "confname") .getDOMNode .-value)
+        inputs (into {} (map (juxt identity #(-> (@refs (str "in_" %)) .getDOMNode .-value)) (keys (config "inputs"))))
+        outputs (into {} (map (juxt identity #(-> (@refs (str "out_" %)) .getDOMNode .-value)) (keys (config "outputs"))))
+        prereqs (filter-empty (capture-prerequisites state refs))
+        new-conf (assoc config
+                   "name" name
+                   "inputs" inputs
+                   "outputs" outputs
+                   "prerequisites" prereqs)]
+    (swap! state assoc :updating? true)
+    (utils/ajax-orch
+      (str "/workspaces/" (workspace "namespace") "/" (workspace "name") "/method_configs/"
+        (config "namespace") "/" (config "name"))
+      {:method :PUT
+       :data (utils/->json-string (rebreak-config new-conf))
+       :headers {"Content-Type" "application/json"} ;; TODO - make endpoint take text/plain
+       :on-done (fn [{:keys [success? xhr]}]
+                  (swap! state assoc :updating? false)
+                  (if success?
+                    (update-config state props new-conf)
+                    (js/alert (str "Exception:\n" (.-statusText xhr)))))
+       :canned-response {:status 200 :delay-ms (rand-int 2000)}})))
 
 (defn- render-top-bar [config]
   [:div {:style {:backgroundColor (:background-gray style/colors)
@@ -63,7 +91,7 @@
     [:span {} (get-in config ["methodStoreMethod" "methodVersion"])]]
    (clear-both)])
 
-(defn- render-side-bar [state refs config editing?]
+(defn- render-side-bar [state refs config editing? props]
   [:div {:style {:width 290 :float "left"}}
    [:div {:ref "sidebar"}]
    (style/create-unselectable :div {:style {:position (when-not (:sidebar-visible? @state) "fixed")
@@ -81,7 +109,7 @@
 
       [:div {:style {:display (when-not editing? "none") :padding "0.7em 0em" :cursor "pointer"
                      :backgroundColor (:success-green style/colors) :color "#fff" :borderRadius 4}
-             :onClick #(do (commit config state refs) (stop-editing state refs))}
+             :onClick #(do (commit state refs config props) (stop-editing state refs))}
        [:span {:style {:display "inline-block" :verticalAlign "middle"}}
         (icons/font-icon {:style {:fontSize "135%"}} :status-done)]
        [:span {:style {:marginLeft "1em"}} "Save"]]
@@ -157,15 +185,25 @@
                       :onClick #(let [list (capture-prerequisites state refs)]
                                  (swap! state assoc :prereqs-list (conj list "")))}]]])])
 
-(defn- render-display [state refs]
-  (let [config (:config @state)
-        editing? (:editing? @state)]
-    [:div {:style {:padding "0em 2em"}}
-     (render-top-bar config)
-     [:div {:style {:padding "1em 0em"}}
-      (render-side-bar state refs config editing?)
-      (render-main-display state refs config editing?)
-      (clear-both)]]))
+(defn- render-updating-overlay [state]
+  [:div {:style {:position "fixed" :top 0 :bottom 0 :right 0 :left 0
+                 :backgroundColor "rgba(127, 127, 127, 0.5)"
+                 :zIndex 9999
+                 :display (when-not (:updating? @state) "none")}}
+   [:div {:style {:position "absolute" :top "50%" :left "50%"
+                  :transform "translate(-50%, -50%)"
+                  :backgroundColor "#fff" :padding "2em"}}
+    [comps/Spinner {:text "Updating..."}]]])
+
+(defn- render-display [state refs config editing? props]
+  [:div {}
+   (render-updating-overlay state)
+   [:div {:style {:padding "0em 2em"}}
+    (render-top-bar config)
+    [:div {:style {:padding "1em 0em"}}
+     (render-side-bar state refs config editing? props)
+     (render-main-display state refs config editing?)
+     (clear-both)]]])
 
 (react/defc MethodConfigEditor
   {:get-initial-state
@@ -174,8 +212,8 @@
       :editing? false
       :sidebar-visible? true})
    :render
-   (fn [{:keys [state refs]}]
-     (render-display state refs))
+   (fn [{:keys [state refs props]}]
+     (render-display state refs (:config @state) (:editing? @state) props))
    :component-did-mount
    (fn [{:keys [state refs this]}]
      (set! (.-onScrollHandler this)
