@@ -67,7 +67,6 @@
            {:header "Inputs" :starting-width 200}
            {:header "Outputs" :starting-width 200}
            {:header "Prerequisites" :starting-width 200}]
-          :resizable-columns? true
           :data (map
                   (fn [config]
                     [config
