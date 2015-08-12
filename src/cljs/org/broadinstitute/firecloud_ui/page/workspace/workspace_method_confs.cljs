@@ -28,6 +28,8 @@
        :methodStoreConfig {:methodConfigNamespace (str "msc_ns_" (inc i))
                            :methodConfigName (str "msc_n_" (inc i))
                            :methodConfigVersion (str "msc_v_" (inc i))}
+       ;; Real data doesn't have the following fields, but for mock data we carry the same
+       ;; objects around, so initialize them here for convenience
        :inputs {"Input 1" "[some value]"
                 "Input 2" "[some value]"}
        :outputs {"Output 1" "[some value]"
@@ -38,7 +40,7 @@
 
 (react/defc WorkspaceMethodsConfigurationsList
   {:render
-   (fn [{:keys [props refs state]}]
+   (fn [{:keys [props state]}]
      [:div {}
       (importmc/render-import-overlay state (:workspace props) )
       [:div {:style {:float "right" :padding "0 2em 1em 0"}}
@@ -61,13 +63,10 @@
                               (swap! (:parent-state props) assoc :selected-method-config config :selected-index row-index))}
                (config "name")])}
            {:header "Namespace" :starting-width 200 :sort-by :value}
-           {:header "Type" :starting-width 100 :sort-by :value}
-           {:header "Workspace Name" :starting-width 160}
-           {:header "Method" :starting-width 210}
-           {:header "Config" :starting-width 290}
-           {:header "Inputs" :starting-width 200}
-           {:header "Outputs" :starting-width 200}
-           {:header "Prerequisites" :starting-width 200}]
+           {:header "Root Entity Type" :starting-width 140 :sort-by :value}
+           {:header "Workspace" :starting-width 200}
+           {:header "Method Store Method" :starting-width 300}
+           {:header "Method Store Configuration" :starting-width 300}]
           :data (map
                   (fn [config]
                     [config
@@ -80,19 +79,9 @@
                              ["methodNamespace" "methodName" "methodVersion"]))
                      (clojure.string/join
                        ":" (map #(get-in config ["methodStoreConfig" %])
-                             ["methodConfigNamespace" "methodConfigName" "methodConfigVersion"]))
-                     (utils/map-to-string (config "inputs"))
-                     (utils/map-to-string (config "outputs"))
-                     (clojure.string/join ", " (config "prerequisites"))])
+                             ["methodConfigNamespace" "methodConfigName" "methodConfigVersion"]))])
                   (:method-confs props))}])])})
 
-
-;; Rawls is screwed up right now: Prerequisites should simply be a list of strings, not a map.
-;; Delete this when the backend is fixed
-(defn- fix-configs [configs]
-  (if utils/use-live-data?
-    (mapv (fn [conf] (assoc conf "prerequisites" (vals (conf "prerequisites")))) configs)
-    configs))
 
 (defn- load-workspaces [state props]
   (swap! state assoc :method-confs-loaded? false)
@@ -101,7 +90,7 @@
     {:on-done (fn [{:keys [success? xhr]}]
                 (if success?
                   (swap! state assoc :method-confs-loaded? true
-                    :method-confs (fix-configs (vec (utils/parse-json-string (.-responseText xhr)))))
+                    :method-confs (vec (utils/parse-json-string (.-responseText xhr))))
                   (swap! state assoc :error-message (.-statusText xhr))))
      :canned-response {:responseText (utils/->json-string (create-mock-methodconfs))
                        :status 200
