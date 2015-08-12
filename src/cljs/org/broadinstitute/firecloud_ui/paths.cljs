@@ -7,6 +7,10 @@
 (defn list-method-configs-path [workspace]
   (str "/workspaces/" (workspace "namespace") "/" (workspace "name") "/methodconfigs"))
 
+(defn get-method-config-path [workspace config]
+  (str "/workspaces/" (workspace "namespace") "/" (workspace "name")
+    "/method_configs/" (config "namespace") "/" (config "name")))
+
 (defn list-all-entity-types-path [workspace]
   (str "/workspaces/" (workspace "namespace") "/" (workspace "name") "/entities"))
 

@@ -6,7 +6,7 @@
     [org.broadinstitute.firecloud-ui.common.components :as comps]
     [org.broadinstitute.firecloud-ui.common.icons :as icons]
     [org.broadinstitute.firecloud-ui.common.style :as style]
-    [org.broadinstitute.firecloud-ui.paths :refer [update-method-config-path]]
+    [org.broadinstitute.firecloud-ui.paths :refer [get-method-config-path update-method-config-path]]
     [org.broadinstitute.firecloud-ui.utils :as utils]
     ))
 
@@ -38,18 +38,14 @@
   (swap! state assoc :editing? false :prereqs-list (filter-empty (capture-prerequisites state refs))))
 
 (defn- update-config [state props new-config]
-  (swap! state assoc :config new-config)
+  (swap! state assoc :loaded-config new-config)
   ((:onCommit props) new-config))
 
 ;; Rawls is screwed up right now: Prerequisites should simply be a list of strings, not a map.
-;; In addition, on this endpoint, the methodStore[Config|Method] has been renamed to methodRepo[Config|Method]
 ;; Delete this when the backend is fixed
-(defn- rebreak-config [config]
+(defn- prepare-config [config]
   (if utils/use-live-data?
-    (dissoc (assoc config "prerequisites" (zipmap (repeat "unused") (config "prerequisites"))
-                  "methodRepoConfig" (config "methodStoreConfig")
-                  "methodRepoMethod" (config "methodStoreMethod"))
-      "methodStoreConfig" "methodStoreMethod")
+    (assoc config "prerequisites" (zipmap (repeat "unused") (config "prerequisites")))
     config))
 
 (defn- commit [state refs config props]
@@ -64,17 +60,18 @@
                    "outputs" outputs
                    "prerequisites" prereqs)]
     (swap! state assoc :updating? true)
-    (utils/ajax-orch
-      (update-method-config-path workspace config)
-      {:method :PUT
-       :data (utils/->json-string (rebreak-config new-conf))
-       :headers {"Content-Type" "application/json"} ;; TODO - make endpoint take text/plain
-       :on-done (fn [{:keys [success? xhr]}]
-                  (swap! state assoc :updating? false)
-                  (if success?
-                    (update-config state props new-conf)
-                    (js/alert (str "Exception:\n" (.-statusText xhr)))))
-       :canned-response {:status 200 :delay-ms (rand-int 2000)}})))
+    (let [prepared-conf (prepare-config new-conf)]
+      (utils/ajax-orch
+        (update-method-config-path workspace config)
+        {:method :PUT
+         :data (utils/->json-string prepared-conf)
+         :headers {"Content-Type" "application/json"} ;; TODO - make endpoint take text/plain
+         :on-done (fn [{:keys [success? xhr]}]
+                    (swap! state assoc :updating? false)
+                    (if success?
+                      (update-config state props prepared-conf)
+                      (js/alert (str "Exception:\n" (.-statusText xhr)))))
+         :canned-response {:status 200 :delay-ms (rand-int 2000)}}))))
 
 (defn- render-top-bar [config]
   [:div {:style {:backgroundColor (:background-gray style/colors)
@@ -82,13 +79,13 @@
                  :padding "1em"}}
    [:div {:style {:float "left" :width "33.33%" :textAlign "left"}}
     [:span {:style {:fontWeight 500 :padding "0 0.5em"}} "Method Namespace:"]
-    [:span {} (get-in config ["methodStoreMethod" "methodNamespace"])]]
+    [:span {} (get-in config ["methodRepoMethod" "methodNamespace"])]]
    [:div {:style {:float "left" :width "33.33%" :textAlign "center"}}
     [:span {:style {:fontWeight 500 :padding "0 0.5em"}} "Method Name:"]
-    [:span {} (get-in config ["methodStoreMethod" "methodName"])]]
+    [:span {} (get-in config ["methodRepoMethod" "methodName"])]]
    [:div {:style {:float "left" :width "33.33%" :textAlign "right"}}
     [:span {:style {:fontWeight 500 :padding "0 0.5em"}} "Method Version:"]
-    [:span {} (get-in config ["methodStoreMethod" "methodVersion"])]]
+    [:span {} (get-in config ["methodRepoMethod" "methodVersion"])]]
    (clear-both)])
 
 (defn- render-side-bar [state refs config editing? props]
@@ -205,17 +202,30 @@
      (render-main-display state refs config editing?)
      (clear-both)]]])
 
+(defn- build-mock-config [conf]
+  (assoc conf "methodRepoMethod" (conf "methodStoreMethod")
+              "methodRepoConfig" (conf "methodStoreConfig")))
+
 (react/defc MethodConfigEditor
   {:get-initial-state
    (fn [{:keys [props]}]
-     {:config (:config props)
-      :editing? false
+     {:editing? false
       :sidebar-visible? true})
    :render
    (fn [{:keys [state refs props]}]
-     (render-display state refs (:config @state) (:editing? @state) props))
+     (cond (:loaded-config @state) (render-display state refs (:loaded-config @state) (:editing? @state) props)
+           (:error @state) (style/create-server-error-message (:error @state))
+           :else [comps/Spinner {:text "Loading Method Configuration..."}]))
    :component-did-mount
-   (fn [{:keys [state refs this]}]
+   (fn [{:keys [state props refs this]}]
+     (utils/ajax-orch
+       (get-method-config-path (:workspace props) (:config props))
+       {:on-done (fn [{:keys [success? xhr]}]
+                   (if success?
+                     (swap! state assoc :loaded-config (utils/parse-json-string (.-responseText xhr)))
+                     (swap! state assoc :error (.-statusText xhr))))
+        :canned-response {:responseText (utils/->json-string (build-mock-config (:config props)))
+                          :status 200 :delay-ms (rand-int 2000)}})
      (set! (.-onScrollHandler this)
        (fn [] (let [visible (common/is-in-view (.getDOMNode (@refs "sidebar")))]
                 (when-not (= visible (:sidebar-visible? @state))
