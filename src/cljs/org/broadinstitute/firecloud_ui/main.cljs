@@ -80,7 +80,7 @@
 ;; Content to display when logged in via Google
 (react/defc LoggedIn
   {:render
-   (fn [{:keys [props state]}]
+   (fn [{:keys [props]}]
      (let [nav-context (nav/parse-segment (:nav-context props))
            page (keyword (:segment nav-context))]
        (when-not (contains? (set (map :key top-nav-bar-items)) page)
@@ -105,7 +105,12 @@
         (let [item (first (filter #(= (% :key) page) top-nav-bar-items))]
           (if item
             [(item :component) {:nav-context nav-context}]
-            [:div {} "Page not found."]))]))})
+            [:div {} "Page not found."]))
+        [:div {:style {:margin "1em 1em -1em 0" :fontSize "smaller" :textAlign "right"}}
+         [:a {:href "https://rawls-dev.broadinstitute.org/authentication/register"
+              :target "_blank"
+              :style {:color "red"}}
+          "Force workspace service authentication"]]]))})
 
 ;; Content to display when logged out
 (react/defc LoggedOut
