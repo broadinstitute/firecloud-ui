@@ -177,9 +177,7 @@
         :else [comps/Spinner {:text "Loading configurations for import..."}])])
    :component-did-mount
    (fn [{:keys [state props]}]
-     (utils/ajax-orch
-       (str "/workspaces/" (:selected-workspace-namespace props)
-         "/" (:selected-workspace props) "/methodconfigs")
+     (utils/ajax-orch (str "/configurations")
        {:on-done (fn [{:keys [success? xhr]}]
                    (if success?
                      (do
