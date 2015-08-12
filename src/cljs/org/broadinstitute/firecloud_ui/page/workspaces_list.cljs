@@ -63,6 +63,7 @@
               :header-row-style {:fontWeight nil :fontSize "90%"
                                  :color (:text-light style/colors) :backgroundColor nil}
               :header-style {:padding "0 0 1em 14px" :overflow nil}
+              :resizable-columns? false
               :body-style {:fontSize nil :fontWeight nil
                            :borderLeft border-style :borderRight border-style
                            :borderBottom border-style :borderRadius 4}

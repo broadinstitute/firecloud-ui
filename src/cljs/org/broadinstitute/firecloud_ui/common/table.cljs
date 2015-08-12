@@ -98,7 +98,7 @@
   (render-cell
     width
     content
-    (when (and (pos? index) onResizeMouseDown) {:borderLeft "1px solid #777777" :marginLeft -1})
+    (when onResizeMouseDown {:borderRight "1px solid #777777" :marginRight -1})
     (or (:cell-padding-left props) 0)
     (merge
       {:padding (str "0.8em 0 0.8em " (or (:cell-padding-left props) 0))}
@@ -154,7 +154,8 @@
    (fn []
      {:cell-padding-left "16px"
       :paginator :below
-      :paginator-space 24})
+      :paginator-space 24
+      :resizable-columns? true})
    :get-initial-state
    (fn [{:keys [props]}]
      {:rows-per-page 10
