@@ -9,14 +9,20 @@
     ))
 
 
+(def ^:private initial-rows-per-page 10)
+
+
 (react/defc Paginator
-  {:get-initial-state
-   (fn [] {:rows-per-page 10
-           :current-page 1})
+  {:get-current-slice
+   (fn [{:keys [state]}]
+     [(:current-page @state) (:rows-per-page @state)])
+   :get-initial-state
+   (fn []
+     {:rows-per-page initial-rows-per-page
+      :current-page 1})
    :render
-   (fn [{:keys [props refs]}]
-     (let [state (:parent-state props)
-           rows-per-page (:rows-per-page @state)
+   (fn [{:keys [props state refs]}]
+     (let [rows-per-page (:rows-per-page @state)
            current-page (:current-page @state)
            num-total (:num-rows props)
            num-pages (js/Math.ceil (/ num-total rows-per-page))
@@ -71,7 +77,10 @@
                                             :current-page 1)}
             10 25 100 500)
           "rows per page"]
-         (common/clear-both)]]))})
+         (common/clear-both)]]))
+   :component-did-update
+   (fn [{:keys [props]}]
+     ((:onChange props)))})
 
 
 (defn- render-cell [width content cell-style cell-padding-left content-container-style onResizeMouseDown onSortClick sortOrder]
@@ -123,8 +132,14 @@
 
 
 (react/defc Body
-  {:render
+  {:set-rows
+   (fn [{:keys [state]} rows]
+     (swap! state assoc :rows rows))
+   :get-initial-state
    (fn [{:keys [props]}]
+     {:rows (:initial-rows props)})
+   :render
+   (fn [{:keys [props state]}]
      [:div {:style (merge {:fontSize "80%" :fontWeight 500} (:body-style props))}
       (map-indexed
         (fn [row-index row]
@@ -146,7 +161,7 @@
                      (render-content row-index (nth row col-index)))))
                (:columns props))
              (common/clear-both)]))
-        (:data props))])})
+        (:rows @state))])})
 
 
 (react/defc Table
@@ -158,18 +173,15 @@
       :resizable-columns? true})
    :get-initial-state
    (fn [{:keys [props]}]
-     {:rows-per-page 10
-      :current-page 1
-      :column-widths (mapv #(or (:starting-width %) 100) (:columns props))
+     {:column-widths (mapv #(or (:starting-width %) 100) (:columns props))
       :dragging? false})
    :render
-   (fn [{:keys [state props]}]
+   (fn [{:keys [this state props]}]
      (let [paginator-above (= :above (:paginator props))
            paginator-below (= :below (:paginator props))
-           paginator [Paginator {:num-rows (count (:data props)) :parent-state state}]
-           raw-data (:data props)
-           sorted-data (if-let [keyfn (:key-fn @state)] (sort-by keyfn raw-data) raw-data)
-           ordered-data (if (= :desc (:sort-order @state)) (reverse sorted-data) sorted-data)]
+           paginator [Paginator {:ref "paginator"
+                                 :num-rows (count (:data props))
+                                 :onChange #(react/call :handle-pagination-change this)}]]
        [:div {}
         (when paginator-above [:div {:style {:paddingBottom (:paginator-space props)}} paginator])
         [:div {:style {:overflowX "auto"}}
@@ -217,8 +229,20 @@
              (:columns props))
            (common/clear-both)]
           [Body (assoc props
+                  :ref "body"
+                  :columns (:columns props)
                   :column-widths (:column-widths @state)
-                  :data (take (:rows-per-page @state)
-                          (drop (* (- (:current-page @state) 1) (:rows-per-page @state))
-                            ordered-data)))]]]
-        (when paginator-below [:div {:style {:paddingTop (:paginator-space props)}} paginator])]))})
+                  :initial-rows (react/call :get-sliced-data this true))]]]
+        (when paginator-below [:div {:style {:paddingTop (:paginator-space props)}} paginator])]))
+   :get-sliced-data
+   (fn [{:keys [props state refs]} & [initial-render?]]
+     (let [[n c] (if initial-render?
+                   [1 initial-rows-per-page]
+                   (react/call :get-current-slice (@refs "paginator")))
+           raw-data (:data props)
+           sorted-data (if-let [keyfn (:key-fn @state)] (sort-by keyfn raw-data) raw-data)
+           ordered-data (if (= :desc (:sort-order @state)) (reverse sorted-data) sorted-data)]
+       (take c (drop (* (dec n) c) ordered-data))))
+   :handle-pagination-change
+   (fn [{:keys [this refs]}]
+     (react/call :set-rows (@refs "body") (react/call :get-sliced-data this)))})
