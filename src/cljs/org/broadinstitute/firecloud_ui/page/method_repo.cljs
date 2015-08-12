@@ -6,6 +6,7 @@
    [org.broadinstitute.firecloud-ui.common.components :as comps]
    [org.broadinstitute.firecloud-ui.common.style :as style]
    [org.broadinstitute.firecloud-ui.common.table :as table]
+   [org.broadinstitute.firecloud-ui.paths :refer [get-methods-path]]
    [org.broadinstitute.firecloud-ui.utils :as utils :refer [rlog jslog cljslog]]
    ))
 
@@ -69,7 +70,7 @@
    :component-did-mount
    (fn [{:keys [state]}]
      (utils/ajax-orch
-       "/methods"
+       (get-methods-path)
        {:on-done (fn [{:keys [success? xhr]}]
                    (if success?
                      (let [methods (utils/parse-json-string (.-responseText xhr))]

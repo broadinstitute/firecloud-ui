@@ -11,6 +11,7 @@
    [org.broadinstitute.firecloud-ui.page.workspace.workspace-summary :refer [render-workspace-summary]]
    [org.broadinstitute.firecloud-ui.page.workspace.workspace-data :refer [render-workspace-data]]
    [org.broadinstitute.firecloud-ui.page.workspace.workspace-method-confs :refer [render-workspace-method-confs]]
+   [org.broadinstitute.firecloud-ui.paths :refer [list-workspaces-path create-workspace-path]]
    [org.broadinstitute.firecloud-ui.utils :as utils :refer [parse-json-string]]
    ))
 
@@ -128,7 +129,7 @@
                       (clear-overlay state refs)
                       (when-not (or (nil? n) (empty? n))
                         (utils/ajax-orch
-                          "/workspaces"
+                          (create-workspace-path)
                           {:method :post
                            :data (utils/->json-string {:name n})
                            :on-done (fn [{:keys [xhr]}]
@@ -238,7 +239,7 @@
    :component-did-mount
    (fn [{:keys [state]}]
      (utils/ajax-orch
-       "/workspaces"
+       (list-workspaces-path)
        {:on-done (fn [{:keys [success? xhr]}]
                    (if success?
                      (let [workspaces (utils/parse-json-string (.-responseText xhr))]
