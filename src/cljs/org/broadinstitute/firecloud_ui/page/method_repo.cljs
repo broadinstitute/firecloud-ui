@@ -46,25 +46,15 @@
 
 (react/defc Page
   {:render
-   (fn [{:keys [state refs]}]
+   (fn [{:keys [state]}]
      [:div {:style {:padding "1em"}}
       [:h2 {} "Method Repository"]
       [:div {}
        (cond
-         (:methods-loaded? @state) [:div {}
-                                    (let [apply-filter #(swap! state assoc
-                                                          :filter-text
-                                                          (.-value (.getDOMNode (@refs "input"))))]
-                                      [:div {:style {:paddingBottom "1em" :paddingLeft "4em"}}
-                                       (style/create-text-field {:ref "input" :placeholder "Filter"
-                                                                 :onKeyDown (common/create-key-handler
-                                                                              [:enter] apply-filter)})
-                                       [:span {:style {:paddingLeft "1em"}}]
-                                       [comps/Button {:icon :search :onClick apply-filter}]])
-                                    [MethodsList {:methods (filter-methods
-                                                             (:methods @state)
-                                                             ["namespace" "name" "synopsis"]
-                                                             (or (:filter-text @state) ""))}]]
+         (:methods-loaded? @state) [MethodsList {:methods (filter-methods
+                                                            (:methods @state)
+                                                            ["namespace" "name" "synopsis"]
+                                                            (or (:filter-text @state) ""))}]
          (:error @state) (style/create-server-error-message (get-in @state [:error :message]))
          :else [comps/Spinner {:text "Loading methods..."}])]])
    :component-did-mount

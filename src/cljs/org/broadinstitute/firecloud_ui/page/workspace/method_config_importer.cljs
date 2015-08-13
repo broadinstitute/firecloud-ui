@@ -128,7 +128,7 @@
         (if (zero? (count (:method-confs @state)))
           (style/create-message-well "There are no method configurations to display for import!")
           [table/Table
-           {:columns [{:header "Name" :starting-width 200
+           {:columns [{:header "Name" :starting-width 200 :filter-by #(% "name")
                        :content-renderer
                        (fn [row-index conf]
                          [:a

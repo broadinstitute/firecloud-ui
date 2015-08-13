@@ -1,6 +1,6 @@
 (ns org.broadinstitute.firecloud-ui.utils
   (:require
-    [clojure.string :refer [join]]
+    [clojure.string :refer [join lower-case]]
     ))
 
 
@@ -24,6 +24,10 @@
 (defn str-index-of
   ([s what] (.indexOf s what))
   ([s what start-index] (.indexOf s what start-index)))
+
+
+(defn contains-ignore-case [s what]
+  (<= 0 (str-index-of (lower-case s) (lower-case what))))
 
 
 (defn call-external-object-method

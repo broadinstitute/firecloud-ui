@@ -1,11 +1,13 @@
 (ns org.broadinstitute.firecloud-ui.common.table
   (:require
-    clojure.string
+    [clojure.string :refer [trim]]
     [dmohs.react :as react]
     [inflections.core :refer [pluralize]]
     [org.broadinstitute.firecloud-ui.common :as common]
+    [org.broadinstitute.firecloud-ui.common.components :as comps]
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.common.icons :as icons]
+    [org.broadinstitute.firecloud-ui.utils :as utils]
     ))
 
 
@@ -31,8 +33,8 @@
            last-page-box (min num-pages (+ current-page 4))
            allow-prev (> current-page 1)
            allow-next (< current-page num-pages)
-           left-num (+ 1 (* (- current-page 1) rows-per-page))
-           right-num (min num-total (* current-page rows-per-page))]
+           right-num (min num-total (* current-page rows-per-page))
+           left-num (if (zero? right-num) 0 (inc (* (dec current-page) rows-per-page)))]
        [:div {:style {:border "1px solid #ebebeb" :boxShadow "-3px -6px 23px -7px #ebebeb inset"}}
         [:div {:style {:display "block" :fontSize 13 :lineHeight 1.5
                        :padding "0px 48px" :verticalAlign "middle"}}
@@ -45,7 +47,7 @@
            [:div {:style {:display "inline-block" :padding "0.55em 0.9em"
                           :color (if allow-prev (:button-blue style/colors) (:border-gray style/colors))
                           :cursor (when allow-prev "pointer")}
-                  :onClick (when allow-prev #(swap! state assoc :current-page (- current-page 1)))}
+                  :onClick (when allow-prev #(swap! state update-in [:current-page] dec))}
             (icons/font-icon {:style {:fontSize "70%"}} :angle-left)
             [:span {:style {:paddingLeft "1em"}} "Prev"]]
 
@@ -64,7 +66,7 @@
            [:div {:style {:display "inline-block" :padding "0.55em 0.9em"
                           :color (if allow-next (:button-blue style/colors) (:border-gray style/colors))
                           :cursor (when allow-next "pointer")}
-                  :onClick (when allow-next #(swap! state assoc :current-page (+ current-page 1)))}
+                  :onClick (when allow-next #(swap! state update-in [:current-page] inc))}
             [:span {:style {:paddingRight "1em"}} "Next"]
             (icons/font-icon {:style {:fontSize "70%"}} :angle-right)])
 
@@ -170,19 +172,30 @@
      {:cell-padding-left "16px"
       :paginator :below
       :paginator-space 24
-      :resizable-columns? true})
+      :resizable-columns? true
+      :filterable? true})
    :get-initial-state
    (fn [{:keys [props]}]
      {:column-widths (mapv #(or (:starting-width %) 100) (:columns props))
-      :dragging? false})
+      :dragging? false
+      :filtered-data (:data props)})
    :render
-   (fn [{:keys [this state props]}]
+   (fn [{:keys [this state refs props]}]
      (let [paginator-above (= :above (:paginator props))
            paginator-below (= :below (:paginator props))
            paginator [Paginator {:ref "paginator"
-                                 :num-rows (count (:data props))
+                                 :num-rows (count (:filtered-data @state))
                                  :onChange #(react/call :handle-pagination-change this)}]]
        [:div {}
+        (when (:filterable? props)
+          (let [apply-filter #(swap! state assoc :filtered-data
+                               (react/call :filter-data this (-> (@refs "filter-field") .getDOMNode .-value trim)))]
+            [:div {:style {:padding "0 0 1em 1em"}}
+             (style/create-text-field {:ref "filter-field" :placeholder "Filter"
+                                       :onKeyDown (common/create-key-handler
+                                                    [:enter] apply-filter)})
+             [:span {:style {:paddingLeft "1em"}}]
+             [comps/Button {:icon :search :onClick apply-filter}]]))
         (when paginator-above [:div {:style {:paddingBottom (:paginator-space props)}} paginator])
         [:div {:style {:overflowX "auto"}}
          [:div {:style {:position "relative"
@@ -235,14 +248,30 @@
                   :initial-rows (react/call :get-sliced-data this true))]]]
         (when paginator-below [:div {:style {:paddingTop (:paginator-space props)}} paginator])]))
    :get-sliced-data
-   (fn [{:keys [props state refs]} & [initial-render?]]
+   (fn [{:keys [state refs]} & [initial-render?]]
      (let [[n c] (if initial-render?
                    [1 initial-rows-per-page]
                    (react/call :get-current-slice (@refs "paginator")))
-           raw-data (:data props)
-           sorted-data (if-let [keyfn (:key-fn @state)] (sort-by keyfn raw-data) raw-data)
+           filtered-data (:filtered-data @state)
+           sorted-data (if-let [keyfn (:key-fn @state)] (sort-by keyfn filtered-data) filtered-data)
            ordered-data (if (= :desc (:sort-order @state)) (reverse sorted-data) sorted-data)]
        (take c (drop (* (dec n) c) ordered-data))))
+   :filter-data
+   (fn [{:keys [props]} & [filter-text]]
+     (if (empty? filter-text)
+       (:data props)
+       (filter
+         (fn [row]
+           (some identity
+             (map-indexed
+               (fn [i column]
+                 (if-let [f (:filter-by column)]
+                   (if (= f :none)
+                     false
+                     (utils/contains-ignore-case (f (nth row i)) filter-text))
+                   (utils/contains-ignore-case (str (nth row i)) filter-text)))
+               (:columns props))))
+         (:data props))))
    :handle-pagination-change
    (fn [{:keys [this refs]}]
      (react/call :set-rows (@refs "body") (react/call :get-sliced-data this)))})

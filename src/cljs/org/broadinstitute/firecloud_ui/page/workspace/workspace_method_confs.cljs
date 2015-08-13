@@ -54,6 +54,7 @@
         [table/Table
          {:columns
           [{:header "Name" :starting-width 200 :sort-by #(% "name")
+            :filter-by #(% "name")
             :content-renderer
             (fn [row-index config]
               [:a {:href "javascript:;"
