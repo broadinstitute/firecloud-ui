@@ -2,6 +2,9 @@
 
 (defn list-workspaces-path [] "/workspaces")
 
+(defn workspace-details-path [workspace-id]
+  (str "/workspaces/" (:namespace workspace-id) "/" (:name workspace-id)))
+
 (defn create-workspace-path [] "/workspaces")
 
 (defn list-method-configs-path [workspace]
