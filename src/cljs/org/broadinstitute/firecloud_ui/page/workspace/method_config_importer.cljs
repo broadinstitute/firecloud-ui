@@ -40,21 +40,12 @@
   (map
     (fn [i]
       {:name (str "Configuration " (inc i))
-       :namespace (rand-nth ["Broad" "nci" "public"])
-       :rootEntityType "Task"
-       :workspaceName {:namespace (str "ws-ns-" (inc i))
-                       :name (str "ws-n-" (inc i))}
-       :methodStoreMethod {:methodNamespace (str "ms-ns-" (inc i))
-                           :methodName (str "ms-n-" (inc i))
-                           :methodVersion (str "ms-v-" (inc i))}
-       :methodStoreConfig {:methodConfigNamespace (str "msc-ns-" (inc i))
-                           :methodConfigName (str "msc-n-" (inc i))
-                           :methodConfigVersion (str "msc-v-" (inc i))}
-       :inputs {"Input 1" "[some value]"
-                "Input 2" "[some value]"}
-       :outputs {"Output 1" "[some value]"
-                 "Output 2" "[some value]"}
-       :prerequisites ["Predicate 1" "Predicate 2"]})
+       :url (str "http://agora-ci.broadinstitute.org/configurations/joel_test/jt_test_config/1")
+       :namespace (rand-nth ["Broad" "nci" "public" "ISB"])
+       :snapshotId (rand-nth (range 100))
+       :synopsis (str (rand-nth ["variant caller synopsis","gene analyzer synopsis","mutect synopsis"]) " " (inc i))
+       :createDate (str "20"(inc i) "-06-10T16:54:26Z")
+       :owner (rand-nth ["thibault@broadinstitute.org" "esalinas@broadinstitute.org"  ])})
     (range (rand-int 50))))
 
 
@@ -148,29 +139,18 @@
                            :style {:color (:button-blue style/colors) :textDecoration "none"}}
                           (conf "name")])}
                       {:header "Namespace" :starting-width 200}
-                      {:header "Type" :starting-width 100}
-                      {:header "Workspace Name" :starting-width 160}
-                      {:header "Method" :starting-width 210}
-                      {:header "Config" :starting-width 290}
-                      {:header "Inputs" :starting-width 200}
-                      {:header "Outputs" :starting-width 200}
-                      {:header "Prerequisites" :starting-width 200}]
+                      {:header "Snapshot Id" :starting-width 100}
+                      {:header "Synopsis" :starting-width 160}
+                      {:header "Create Date" :starting-width 210}
+                      {:header "Owner" :starting-width 290}]
             :data (map
                     (fn [config]
                       [config
                        (config "namespace")
-                       (config "rootEntityType")
-                       (clojure.string/join ":"
-                         (map #(get-in config ["workspaceName" %]) ["namespace" "name"]))
-                       (clojure.string/join ":"
-                         (map #(get-in config ["methodStoreMethod" %])
-                           ["methodNamespace" "methodName" "methodVersion"]))
-                       (clojure.string/join ":"
-                         (map #(get-in config ["methodStoreConfig" %])
-                           ["methodConfigNamespace" "methodConfigName" "methodConfigVersion"]))
-                       (utils/map-to-string (config "inputs"))
-                       (utils/map-to-string (config "outputs"))
-                       (clojure.string/join "," (config "prerequisites"))])
+                       (config "snapshotId")
+                       (config "synopsis")
+                       (config "createDate")
+                       (config "owner")])
                     (:method-confs @state))}])
         (:error-message @state) [:div {:style {:color "red"}}
                                  "FireCloud service returned error: " (:error-message @state)]
