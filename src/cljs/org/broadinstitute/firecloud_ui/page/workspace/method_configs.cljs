@@ -34,7 +34,8 @@
                 "Input 2" "[some value]"}
        :outputs {"Output 1" "[some value]"
                  "Output 2" "[some value]"}
-       :prerequisites ["Predicate 1" "Predicate 2"]})
+       :prerequisites {"unused 1" "Predicate 1"
+                       "unused 2" "Predicate 2"}})
     (range (rand-int 50))))
 
 
