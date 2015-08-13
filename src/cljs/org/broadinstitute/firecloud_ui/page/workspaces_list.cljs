@@ -74,14 +74,17 @@
               :columns
               [{:header [:div {:style {:marginLeft -6}} "Status"] :starting-width 60
                 :content-renderer (fn [row-index data]
-                                    [StatusCell {:data data}])}
+                                    [StatusCell {:data data}])
+                :filter-by :status}
                {:header "Workspace" :starting-width 250
                 :content-renderer (fn [row-index data]
-                                    [WorkspaceCell {:data data}])}
+                                    [WorkspaceCell {:data data}])
+                :filter-by :name}
                {:header "Description" :starting-width 400
                 :content-renderer (fn [row-index data]
                                     [:div {:style {:padding "1.1em 0 0 14px"}}
-                                     "No data available."])}]
+                                     "No data available."])
+                :filter-by :none}]
               :data (map (fn [workspace]
                            [{:status (workspace "status")
                              :onClick #((:onWorkspaceSelected props) workspace)}
