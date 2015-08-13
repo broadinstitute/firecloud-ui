@@ -1,6 +1,6 @@
 (ns org.broadinstitute.firecloud-ui.page.workspaces-list
   (:require
-   [clojure.string]
+   clojure.string
    [dmohs.react :as react]
    [org.broadinstitute.firecloud-ui.common :as common]
    [org.broadinstitute.firecloud-ui.common.components :as comps]
@@ -11,7 +11,7 @@
    [org.broadinstitute.firecloud-ui.page.workspace.workspace-summary :refer [render-workspace-summary]]
    [org.broadinstitute.firecloud-ui.page.workspace.workspace-data :refer [render-workspace-data]]
    [org.broadinstitute.firecloud-ui.page.workspace.workspace-method-confs :refer [render-workspace-method-confs]]
-   [org.broadinstitute.firecloud-ui.paths :refer [list-workspaces-path create-workspace-path]]
+   [org.broadinstitute.firecloud-ui.paths :as paths]
    [org.broadinstitute.firecloud-ui.utils :as utils :refer [parse-json-string]]
    ))
 
@@ -95,67 +95,108 @@
   (common/clear! refs "wsName" "wsDesc" "shareWith")
   (swap! state assoc :overlay-shown? false))
 
-(defn- render-modal [state refs]
-  (react/create-element [:div {}
-   [:div {:style {:backgroundColor "#fff"
-                  :borderBottom (str "1px solid " (:line-gray style/colors))
-                  :padding "20px 48px 18px"
-                  :fontSize "137%" :fontWeight 400 :lineHeight 1}}
-    "Create New Workspace"]
-   [:div {:style {:padding "22px 48px 40px" :backgroundColor (:background-gray style/colors)}}
-    (style/create-form-label "Name Your Workspace")
-    (style/create-text-field {:style {:width "100%"} :ref "wsName"})
-    (style/create-form-label "Workspace Description")
-    (style/create-text-area  {:style {:width "100%"} :rows 10 :ref "wsDesc"})
-    (style/create-form-label "Research Purpose")
-    (style/create-select {}  "Option 1" "Option 2" "Option 3")
-    (style/create-form-label "Billing Contact")
-    (style/create-select {}  "Option 1" "Option 2" "Option 3")
-    (style/create-form-label "Share With (optional)")
-    (style/create-text-field {:style {:width "100%"} :ref "shareWith"})
-    (style/create-hint "Separate multiple emails with commas")
-    [:div {:style {:marginTop 40 :textAlign "center"}}
-     [:a {:style {:marginRight 27 :marginTop 2 :padding "0.5em"
-                  :display "inline-block"
-                  :fontSize "106%" :fontWeight 500 :textDecoration "none"
-                  :color (:button-blue style/colors)}
-          :href "javascript:;"
-          :onClick #(clear-overlay state refs)
-          :onKeyDown (common/create-key-handler [:space :enter] #(clear-overlay state refs))}
-      "Cancel"]
-     [comps/Button {:text "Create Workspace"
-                    :onClick
-                    #(let [n (.-value (.getDOMNode (@refs "wsName")))]
-                      (clear-overlay state refs)
-                      (when-not (or (nil? n) (empty? n))
-                        (utils/ajax-orch
-                          (create-workspace-path)
-                          {:method :post
-                           :data (utils/->json-string {:name n})
-                           :on-done (fn [{:keys [xhr]}]
-                                      (swap! state update-in [:workspaces] conj
-                                        (utils/parse-json-string (.-responseText xhr))))
-                           :canned-response
-                           {:responseText (utils/->json-string
-                                            {:namespace "test"
-                                             :name n
-                                             :status (rand-nth ["Complete" "Running" "Exception"])
-                                             :createdBy n
-                                             :createdDate (.toISOString (js/Date.))})
-                            :delay-ms (rand-int 2000)}})))}]]]]))
+(defn- render-modal [state refs nav-context]
+  (react/create-element
+    [:div {}
+     [:div {:style {:backgroundColor "#fff"
+                    :borderBottom (str "1px solid " (:line-gray style/colors))
+                    :padding "20px 48px 18px"
+                    :fontSize "137%" :fontWeight 400 :lineHeight 1}}
+      "Create New Workspace"]
+     [:div {:style {:padding "22px 48px 40px" :backgroundColor (:background-gray style/colors)}}
+      (style/create-form-label "Workspace Namespace")
+      (style/create-text-field {:style {:width "100%"} :ref "wsNamespace"
+                                :defaultValue "broad-dsde-dev"})
+      (style/create-form-label "Workspace Name")
+      (style/create-text-field {:style {:width "100%"} :ref "wsName"})
+      (style/create-form-label "Workspace Description")
+      (style/create-text-area  {:style {:width "100%"} :rows 10 :ref "wsDesc"})
+      (style/create-form-label "Research Purpose")
+      (style/create-select {}  "Option 1" "Option 2" "Option 3")
+      (style/create-form-label "Billing Contact")
+      (style/create-select {}  "Option 1" "Option 2" "Option 3")
+      (style/create-form-label "Share With (optional)")
+      (style/create-text-field {:style {:width "100%"} :ref "shareWith"})
+      (style/create-hint "Separate multiple emails with commas")
+      [:div {:style {:marginTop 40 :textAlign "center"}}
+       [:a {:style {:marginRight 27 :marginTop 2 :padding "0.5em"
+                    :display "inline-block"
+                    :fontSize "106%" :fontWeight 500 :textDecoration "none"
+                    :color (:button-blue style/colors)}
+            :href "javascript:;"
+            :onClick #(clear-overlay state refs)
+            :onKeyDown (common/create-key-handler [:space :enter] #(clear-overlay state refs))}
+        "Cancel"]
+       [comps/Button {:text "Create Workspace"
+                      :onClick
+                      #(let [ns (-> (@refs "wsNamespace") .getDOMNode .-value clojure.string/trim)
+                             n (-> (@refs "wsName") .getDOMNode .-value clojure.string/trim)]
+                        (when-not (or (empty? ns) (empty? n))
+                          (utils/ajax-orch
+                            (paths/create-workspace-path)
+                            {:method :post
+                             :data (utils/->json-string {:namespace ns :name n})
+                             :on-done (fn [{:keys [success?]}]
+                                        (if success?
+                                          (do (clear-overlay state refs)
+                                              (nav/navigate nav-context (str ns ":" n)))
+                                          (js/alert "Workspace creation failed.")))
+                             :canned-response
+                             {:responseText (utils/->json-string
+                                              {:namespace ns
+                                               :name n
+                                               :status (rand-nth ["Complete" "Running" "Exception"])
+                                               :createdBy n
+                                               :createdDate (.toISOString (js/Date.))})
+                              :delay-ms (rand-int 2000)}})))}]]]]))
 
 
-(defn- render-selected-workspace [workspace entities]
-  [:div {}
-   (if workspace
-     [comps/TabBar {:key "selected"
-                    :items [{:text "Summary" :component (render-workspace-summary workspace)}
-                            {:text "Data" :component (render-workspace-data workspace entities)}
-                            {:text "Method Configurations" :component (render-workspace-method-confs workspace)}
-                            {:text "Monitor"}
-                            {:text "Files"}]}]
-     [:div {:style {:textAlign "center" :color (:exception-red style/colors)}}
-      "Workspace not found."])])
+(react/defc WorkspaceDetails
+  {:render
+   (fn [{:keys [state]}]
+     [:div {}
+      (cond
+        (nil? (:server-response @state))
+        [comps/Spinner {:text "Loading workspace..."}]
+        (get-in @state [:server-response :error-message])
+        [:div {:style {:textAlign "center" :color (:exception-red style/colors)}}
+         (get-in @state [:server-response :error-message])]
+        :else
+        (let [ws (get-in @state [:server-response :workspace])]
+          [comps/TabBar {:key "selected"
+                         :items [{:text "Summary" :component (render-workspace-summary ws)}
+                                 {:text "Data" :component (render-workspace-data ws)}
+                                 {:text "Method Configurations"
+                                  :component (render-workspace-method-confs ws)}
+                                 {:text "Monitor"}
+                                 {:text "Files"}]}]))])
+   :load-workspace
+   (fn [{:keys [props state]}]
+     (utils/ajax-orch
+       (paths/workspace-details-path (:workspace-id props))
+       {:on-done (fn [{:keys [success? xhr]}]
+                   (let [response (utils/parse-json-string (.-responseText xhr))]
+                     (swap! state assoc :server-response
+                       (if success?
+                         {:workspace (merge {"status" "Complete"} ;; TODO Remove.
+                                       response)}
+                         {:error-message (response "message")}))))
+        :canned-response {:responseText (utils/->json-string
+                                          (merge
+                                            (:workspace-id props)
+                                            {:status "Complete"
+                                             :createdBy "Nobody"}))
+                          :status 200}}))
+   :component-did-mount
+   (fn [{:keys [this]}]
+     (react/call :load-workspace this))
+   :component-did-update
+   (fn [{:keys [this state]}]
+     (when-not (:server-response @state)
+       (react/call :load-workspace this)))
+   :component-will-receive-props
+   (fn [{:keys [state]}]
+     (swap! state assoc :server-response nil))})
 
 
 (defn- render-workspaces-list [state nav-context]
@@ -202,52 +243,67 @@
   (map #(assoc % "status" "Complete") workspaces))
 
 
-(defn- get-workspace-from-nav-segment [workspaces segment]
-  (when (and workspaces (not (clojure.string/blank? segment)))
+(defn- get-workspace-id-from-nav-segment [segment]
+  (when-not (clojure.string/blank? segment)
     (let [[ns n] (clojure.string/split segment #":")]
-      [ns n (first (filter
-                    (fn [ws] (and (= (ws "namespace") ns) (= (ws "name") n)))
-                    workspaces))])))
+      {:namespace ns :name n})))
 
 
 (react/defc Page
   {:get-initial-state
    (fn [] {:active-filter :all})
    :render
-   (fn [{:keys [props state refs]}]
+   (fn [{:keys [this props state refs]}]
      (let [nav-context (nav/parse-segment (:nav-context props))
-           [selected-ws-ns selected-ws-name selected-ws]
-           (get-workspace-from-nav-segment (:workspaces @state) (:segment nav-context))]
+           selected-ws-id (react/call :get-workspace-id this)]
        [:div {}
         [comps/ModalDialog
          {:show-when (:overlay-shown? @state)
           :dismiss-self #(clear-overlay state refs)
           :width 500
-          :content (render-modal state refs)}]
+          :content (render-modal state refs nav-context)}]
         [:div {:style {:padding "2em"}}
-         [:div {:style {:float "right" :display (when (or (not (:workspaces-loaded? @state))
-                                                          selected-ws-name) "none")}}
+         [:div {:style {:float "right" :display (when (or
+                                                        (not (:workspaces-loaded? @state))
+                                                        (:name selected-ws-id)) "none")}}
           [comps/Button
            {:text "Create New Workspace" :style :add
             :onClick #(swap! state assoc :overlay-shown? true)}]]
-         [:span {:style {:fontSize "180%"}} (if selected-ws-name selected-ws-name "Workspaces")]]
+         [:span {:style {:fontSize "180%"}}
+          (if selected-ws-id (:name selected-ws-id) "Workspaces")]]
         (cond
-          selected-ws-name (render-selected-workspace selected-ws (:entities @state))
+          selected-ws-id [WorkspaceDetails {:workspace-id selected-ws-id}]
           (:workspaces-loaded? @state) (render-workspaces-list state nav-context)
           (:error @state) (style/create-server-error-message (get-in @state [:error :message]))
           :else [comps/Spinner {:text "Loading workspaces..."}])]))
-   :component-did-mount
+   :get-workspace-id
+   (fn [{:keys [props]}]
+     (get-workspace-id-from-nav-segment (:segment (nav/parse-segment (:nav-context props)))))
+   :load-workspaces
    (fn [{:keys [state]}]
      (utils/ajax-orch
-       (list-workspaces-path)
+       (paths/list-workspaces-path)
        {:on-done (fn [{:keys [success? xhr]}]
                    (if success?
                      (let [workspaces (utils/parse-json-string (.-responseText xhr))]
                        (swap! state assoc :workspaces-loaded? true
-                                          :workspaces (if utils/use-live-data?
-                                                        (mock-live-data workspaces)
-                                                        workspaces)))
+                         :workspaces (if utils/use-live-data?
+                                       (mock-live-data workspaces)
+                                       workspaces)))
                      (swap! state assoc
-                            :error {:message (.-statusText xhr)})))
+                       :error {:message (.-statusText xhr)})))
         :canned-response {:responseText (utils/->json-string (create-mock-workspaces))
-                          :status 200 :delay-ms (rand-int 2000)}}))})
+                          :status 200 :delay-ms (rand-int 2000)}}))
+   :component-did-mount
+   (fn [{:keys [this]}]
+     (when (nil? (react/call :get-workspace-id this))
+       (react/call :load-workspaces this)))
+   :component-did-update
+   (fn [{:keys [this state]}]
+     (when (and
+             (nil? (react/call :get-workspace-id this))
+             (not (or (:workspaces-loaded? @state) (:error @state))))
+       (react/call :load-workspaces this)))
+   :component-will-receive-props
+   (fn [{:keys [state]}]
+     (swap! state assoc :workspaces-loaded? false :error nil))})

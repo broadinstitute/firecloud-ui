@@ -73,5 +73,5 @@
                           :status 200
                           :delay-ms (rand-int 2000)}}))})
 
-(defn render-workspace-data [workspace entities]
-  [WorkspaceData {:workspace workspace :entities entities}])
+(defn render-workspace-data [workspace]
+  [WorkspaceData {:workspace workspace}])
