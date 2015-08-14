@@ -38,41 +38,47 @@
 (defn- stop-editing [state refs]
   (swap! state assoc :editing? false :prereqs-list (filter-empty (capture-prerequisites state refs))))
 
-(defn- update-config [state props new-config]
-  (swap! state assoc :loaded-config new-config)
+(defn- complete [state props new-config]
+  (swap! state assoc :loaded-config new-config :blocker nil)
   ((:onCommit props) new-config))
 
 ;; Rawls is screwed up right now: Prerequisites should simply be a list of strings, not a map.
 ;; Delete this when the backend is fixed
-(defn- prepare-config [config]
-  (if utils/use-live-data?
-    (assoc config "prerequisites" (zipmap (repeat "unused") (config "prerequisites")))
-    config))
+(defn- fix-prereqs [prereqs]
+  (zipmap (map #(str "unused" %) (range)) prereqs))
 
 (defn- commit [state refs config props]
   (let [workspace (:workspace props)
         name (-> (@refs "confname") .getDOMNode .-value)
         inputs (into {} (map (juxt identity #(-> (@refs (str "in_" %)) .getDOMNode .-value)) (keys (config "inputs"))))
         outputs (into {} (map (juxt identity #(-> (@refs (str "out_" %)) .getDOMNode .-value)) (keys (config "outputs"))))
-        prereqs (filter-empty (capture-prerequisites state refs))
+        prereqs (fix-prereqs (filter-empty (capture-prerequisites state refs)))
         new-conf (assoc config
                    "name" name
                    "inputs" inputs
                    "outputs" outputs
                    "prerequisites" prereqs)]
     (swap! state assoc :blocker "Updating...")
-    (let [prepared-conf (prepare-config new-conf)]
-      (utils/ajax-orch
-        (paths/update-method-config-path workspace config)
-        {:method :PUT
-         :data (utils/->json-string prepared-conf)
-         :headers {"Content-Type" "application/json"} ;; TODO - make endpoint take text/plain
-         :on-done (fn [{:keys [success? xhr]}]
-                    (swap! state assoc :blocker nil)
-                    (if success?
-                      (update-config state props prepared-conf)
-                      (js/alert (str "Exception:\n" (.-statusText xhr)))))
-         :canned-response {:status 200 :delay-ms (rand-int 2000)}}))))
+    (utils/ajax-orch
+      (paths/update-method-config-path workspace config)
+      {:method :PUT
+       :data (utils/->json-string new-conf)
+       :headers {"Content-Type" "application/json"} ;; TODO - make endpoint take text/plain
+       :on-done (fn [{:keys [success? xhr]}]
+                  (if-not success?
+                    (js/alert (str "Exception:\n" (.-statusText xhr)))
+                    (if (= name (config "name"))
+                      (complete state props new-conf)
+                      (utils/ajax-orch
+                        (paths/rename-method-config-path workspace config)
+                        {:method :post
+                         :data (utils/->json-string (select-keys new-conf ["name" "namespace" "workspaceName"]))
+                         :headers {"Content-Type" "application/json"} ;; TODO - make unified call in orchestration
+                         :on-done (fn [{:keys [success? xhr]}]
+                                    (if success?
+                                      (complete state props new-conf)
+                                      (js/alert (str "Exception:\n" (.-statusText xhr)))))}))))
+       :canned-response {:status 200 :delay-ms (rand-int 2000)}})))
 
 (defn- render-top-bar [config]
   [:div {:style {:backgroundColor (:background-gray style/colors)
@@ -100,7 +106,7 @@
       [:div {:style {:display (when editing? "none") :padding "0.7em 0" :cursor "pointer"
                      :backgroundColor "transparent" :color (:button-blue style/colors)
                      :border (str "1px solid " (:line-gray style/colors))}
-             :onClick #(swap! state assoc :editing? true :prereqs-list (config "prerequisites"))}
+             :onClick #(swap! state assoc :editing? true :prereqs-list (vals (config "prerequisites")))}
        [:span {:style {:display "inline-block" :verticalAlign "middle"}}
         (icons/font-icon {:style {:fontSize "135%"}} :pencil)]
        [:span {:style {:marginLeft "1em"}} "Edit this page"]]
@@ -248,7 +254,7 @@
              [:div {:style {:float "left" :display (when editing? "none") :padding "0.5em 0" :marginBottom "0.5em"}}
               p]
              (clear-both)])
-          (config "prerequisites")))
+          (vals (config "prerequisites"))))
       [:div {:style {:display (when-not editing? "none")}}
        [comps/Button {:style :add :text "Add new"
                       :onClick #(let [list (capture-prerequisites state refs)]
