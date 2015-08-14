@@ -13,6 +13,12 @@
 
 (def ^:private initial-rows-per-page 10)
 
+(defn- create-page-range [current-page total-pages]
+  (cond
+    (<= total-pages 5) (range 1 (inc total-pages))
+    (<= current-page 3) (range 1 6)
+    (>= current-page (- total-pages 2)) (range (- total-pages 4) (inc total-pages))
+    :else (range (- current-page 2) (+ current-page 3))))
 
 (react/defc Paginator
   {:get-current-slice
@@ -28,16 +34,14 @@
            current-page (:current-page @state)
            num-total (:num-rows props)
            num-pages (js/Math.ceil (/ num-total rows-per-page))
-           num-onClick (fn [n] (fn [e] (swap! state assoc :current-page n)))
-           first-page-box (max 1 (- current-page 4))
-           last-page-box (min num-pages (+ current-page 4))
+           num-onClick (fn [n] #(swap! state assoc :current-page n))
+           page-range (create-page-range current-page num-pages)
            allow-prev (> current-page 1)
            allow-next (< current-page num-pages)
            right-num (min num-total (* current-page rows-per-page))
            left-num (if (zero? right-num) 0 (inc (* (dec current-page) rows-per-page)))]
        [:div {:style {:border "1px solid #ebebeb" :boxShadow "-3px -6px 23px -7px #ebebeb inset"}}
-        [:div {:style {:display "block" :fontSize 13 :lineHeight 1.5
-                       :padding "0px 48px" :verticalAlign "middle"}}
+        [:div {:style {:fontSize 13 :lineHeight 1.5 :padding "0px 48px" :verticalAlign "middle"}}
 
          [:div {:style {:float "left" :display "inline-block" :width "33.33%" :padding "2.15em 0em" :verticalAlign "middle"}}
           [:b {} (str left-num " - " right-num)] (str " of " (pluralize num-total " result"))]
@@ -61,7 +65,7 @@
                                     :cursor (when-not selected? "pointer")}
                             :onClick (when-not selected? (num-onClick n))}
                       n]))
-              (range first-page-box (+ 1 last-page-box)))]
+              page-range)]
 
            [:div {:style {:display "inline-block" :padding "0.55em 0.9em"
                           :color (if allow-next (:button-blue style/colors) (:border-gray style/colors))
@@ -90,7 +94,7 @@
                        cell-style)}
    (when onResizeMouseDown
      [:div {:style {:position "absolute" :width 20 :top 0 :bottom 0 :left (- width 10) :zIndex 1
-                    :cursor "ew-resize"}
+                    :cursor "col-resize"}
             :onMouseDown onResizeMouseDown}])
    (when onSortClick
      [:div {:style {:position "absolute" :top 0 :bottom 0 :left 0 :width (if onResizeMouseDown (- width 10) width)
@@ -201,7 +205,7 @@
         [:div {:style {:overflowX "auto"}}
          [:div {:style {:position "relative"
                         :minWidth (reduce + (:column-widths @state))
-                        :cursor (when (:dragging? @state) "ew-resize")}
+                        :cursor (when (:dragging? @state) "col-resize")}
                 :onMouseMove (fn [e]
                                (when (:dragging? @state)
                                  (let [widths (:column-widths @state)
