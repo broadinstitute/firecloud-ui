@@ -1,24 +1,60 @@
-# firecloud-ui 
+# firecloud-ui
 
 FireCloud user interface for web browsers.
 
+https://firecloud-ci.broadinstitute.org/
+
 ## Getting Started
 
+[ClojureScript](https://github.com/clojure/clojurescript) is used for the UI.
 We use the Leiningen build tool. To install, follow the installation instructions on the [Leiningen web site](http://leiningen.org/).
+The code incorporates usage of [react-cljs](https://github.com/dmohs/react-cljs) which is 
+a ClojureScript wrapper for [React](https://facebook.github.io/react/).
 
 ## Building
 
-Run the Leiningen task to build the project's ClojureScript files into JavaScript:
+Build once:
 ```
-lein cljsbuild once
+./script/dev/build-once.sh
 ```
+
+Watch files and rebuild whenever a file is saved:
+```
+./script/dev/start-auto-build.sh
+```
+
+Watch files, rebuild, and reload changes into the running browser window:
+```
+./script/dev/start-hot-reloader.sh
+```
+
+[figwheel](https://github.com/bhauman/lein-figwheel) is used to accomplish this. [This video](https://www.youtube.com/watch?v=j-kj2qwJa_E) gives some insight into the productivity gains available when using this technology (up to about 15:00 is all that is necessary).
+
+This can take around 20 seconds to completely start. When ready, it will display the following message:
+```
+Prompt will show when figwheel connects to your application
+```
+
+To connect, reload the browser window (see the Running section below).
 
 ## Running
 
-Open `src/static/index.html` in any browser.
+Start a static file server:
+```
+./script/dev/serve-locally.py
+```
 
-Alternatively, run `python -m SimpleHTTPServer` from the project root and point your browser to
-[http://127.0.0.1:8000/src/static/](http://127.0.0.1:8000/src/static/) 
+This will serve files at http://localhost:8000/. However, Google Sign-In expects an origin of
+http://local.broadinstitute.org:8000/. To make your local instance available at this URL, add the following to
+/etc/hosts:
+```
+127.0.0.1 local.broadinstitute.org
+```
+
+By default, this script proxies the `/api` path to the production orchestration server. To have it proxy to a locally-running instance, call it like so:
+```
+./script/dev/serve-locally.py local
+```
 
 ## Testing
 
@@ -27,19 +63,11 @@ Run the Leiningen task to run tests:
 lein test
 ```
 
-## Development Workflow
+## Create a Release
 
-To speed development, Leiningen will rebuild the project whenever the ClojureScript files are changed:
+Build in release mode and remove unnecessary build artifacts:
 ```
-lein cljsbuild auto
+./script/release/build-release.sh
 ```
 
-In Intellij, you can set up a new run task to call the above command with a single button click in the IDE:
-
-* Name: `cljsbuild`
-* Script: `/usr/local/Cellar/leiningen/2.5.1/bin/lein` or wherever lein is installed on your system
-* Program Arguments: `cljsbuild once`
-* Working Directory: `your project directory`
-
-
-*To be continued...*
+At this point, the `target` directory represents the root directory that should be served from a static web server.
