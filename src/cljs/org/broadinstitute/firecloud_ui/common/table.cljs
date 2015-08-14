@@ -252,15 +252,15 @@
        (:data props)
        (filter
          (fn [row]
-           (some identity
-             (map-indexed
-               (fn [i column]
-                 (if-let [f (:filter-by column)]
-                   (if (= f :none)
-                     false
-                     (utils/contains-ignore-case (f (nth row i)) filter-text))
-                   (utils/contains-ignore-case (str (nth row i)) filter-text)))
-               (:columns props))))
+           (utils/matches-filter-text
+             (apply str
+               (map-indexed
+                 (fn [i column]
+                   (if-let [f (:filter-by column)]
+                     (if (= f :none) "" (f (nth row i)))
+                     (str (nth row i))))
+                 (:columns props)))
+             filter-text))
          (:data props))))
    :handle-pagination-change
    (fn [{:keys [this refs]}]

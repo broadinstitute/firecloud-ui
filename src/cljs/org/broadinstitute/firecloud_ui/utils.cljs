@@ -1,6 +1,6 @@
 (ns org.broadinstitute.firecloud-ui.utils
   (:require
-    [clojure.string :refer [join lower-case]]
+    [clojure.string :refer [join lower-case split]]
     ))
 
 
@@ -26,8 +26,17 @@
   ([s what start-index] (.indexOf s what start-index)))
 
 
+(defn contains [s what]
+  (<= 0 (str-index-of s what)))
+
+
 (defn contains-ignore-case [s what]
-  (<= 0 (str-index-of (lower-case s) (lower-case what))))
+  (contains (lower-case s) (lower-case what)))
+
+
+(defn matches-filter-text [source filter-text]
+  (let [lc-source (lower-case source)]
+    (every? (fn [word] (contains lc-source word)) (split (lower-case filter-text) #" "))))
 
 
 (defn call-external-object-method
