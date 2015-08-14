@@ -143,7 +143,7 @@
                                           (swap! state assoc :blocker nil)
                                           (if success?
                                             (swap! state assoc :submitting? true
-                                              :entity-types (cons "Select Entity Type..." (utils/parse-json-string (.-responseText xhr))))
+                                              :entity-types (cons "Select..." (utils/parse-json-string (.-responseText xhr))))
                                             (js/alert (str "Error: " (.-statusText xhr)))))
                                :canned-response {:responseText (utils/->json-string ["Sample" "Participant"])
                                                  :status 200 :delay-ms (rand-int 2000)}})))}
@@ -165,11 +165,11 @@
        [:div {:style {:position "absolute" :top 4 :right 4}}
         [comps/Button {:icon :x :onClick #(swap! state assoc :submitting? false)}]]
        [:div {:style {:padding "22px 48px 40px" :backgroundColor (:background-gray style/colors)}}
-        (style/create-form-label "Filter by Entity Type")
+        (style/create-form-label "Select Entity Type")
         (style/create-select
           {:style {:width "50%" :minWidth 50 :maxWidth 200} :ref "filter"
            :onChange #(let [value (-> (@refs "filter") .getDOMNode .-value)]
-                       (when-not (= value "Select Entity Type...")
+                       (when-not (= value "Select...")
                          (utils/ajax-orch
                            (paths/list-all-entities-path workspace value)
                            {:on-done
@@ -186,15 +186,19 @@
         (style/create-form-label "Select Entity")
         (if (zero? (count (:entities @state)))
           (style/create-message-well "No entities to display.")
-          [table/Table
-           {:columns [{:header "Entity Type" :starting-width 100}
-                      {:header "Entity Name" :starting-width 100}
-                      {:header "Attributes" :starting-width 400}]
-            :data (map (fn [m]
-                         [(m "entityType")
-                          (m "name")
-                          (m "attributes")])
-                    (:entities @state))}])]])}])
+          [:div {:style {:backgroundColor "#fff" :border (str "1px solid " (:line-gray style/colors))
+                         :padding "1em" :marginBottom "0.5em"}}
+           [table/Table
+            {:columns [{:header "Entity Type" :starting-width 100}
+                       {:header "Entity Name" :starting-width 100}
+                       {:header "Attributes" :starting-width 400}]
+             :data (map (fn [m]
+                          [(m "entityType")
+                           (m "name")
+                           (m "attributes")])
+                     (:entities @state))}]])
+        (style/create-form-label "Define Expression")
+        (style/create-text-field {})]])}])
 
 (defn- render-main-display [state refs config editing?]
   [:div {:style {:marginLeft 330}}
