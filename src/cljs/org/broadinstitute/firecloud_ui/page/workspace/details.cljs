@@ -46,7 +46,8 @@
                                             (:workspace-id props)
                                             {:status "Complete"
                                              :createdBy "Nobody"}))
-                          :status 200}}))
+                          :status 200
+                          :delay-ms (rand-int 1000)}}))
    :component-did-mount
    (fn [{:keys [this]}]
      (react/call :load-workspace this))
