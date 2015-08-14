@@ -1,19 +1,16 @@
 (ns org.broadinstitute.firecloud-ui.page.workspaces-list
   (:require
-   clojure.string
-   [dmohs.react :as react]
-   [org.broadinstitute.firecloud-ui.common :as common]
-   [org.broadinstitute.firecloud-ui.common.components :as comps]
-   [org.broadinstitute.firecloud-ui.common.icons :as icons]
-   [org.broadinstitute.firecloud-ui.common.style :as style]
-   [org.broadinstitute.firecloud-ui.common.table :as table]
-   [org.broadinstitute.firecloud-ui.nav :as nav]
-   [org.broadinstitute.firecloud-ui.page.workspace.workspace-summary :refer [render-workspace-summary]]
-   [org.broadinstitute.firecloud-ui.page.workspace.workspace-data :refer [render-workspace-data]]
-   [org.broadinstitute.firecloud-ui.page.workspace.method-configs :refer [render-method-configs]]
-   [org.broadinstitute.firecloud-ui.paths :as paths]
-   [org.broadinstitute.firecloud-ui.utils :as utils :refer [parse-json-string]]
-   ))
+    clojure.string
+    [dmohs.react :as react]
+    [org.broadinstitute.firecloud-ui.common :as common]
+    [org.broadinstitute.firecloud-ui.common.components :as comps]
+    [org.broadinstitute.firecloud-ui.common.style :as style]
+    [org.broadinstitute.firecloud-ui.common.table :as table]
+    [org.broadinstitute.firecloud-ui.nav :as nav]
+    [org.broadinstitute.firecloud-ui.page.workspace.details :refer [render-workspace-details]]
+    [org.broadinstitute.firecloud-ui.paths :as paths]
+    [org.broadinstitute.firecloud-ui.utils :as utils :refer [parse-json-string]]
+    ))
 
 
 (react/defc StatusCell
@@ -154,55 +151,6 @@
                               :delay-ms (rand-int 2000)}})))}]]]]))
 
 
-(react/defc WorkspaceDetails
-  {:render
-   (fn [{:keys [state]}]
-     [:div {}
-      (cond
-        (nil? (:server-response @state))
-        [comps/Spinner {:text "Loading workspace..."}]
-        (get-in @state [:server-response :error-message])
-        [:div {:style {:textAlign "center" :color (:exception-red style/colors)}}
-         (get-in @state [:server-response :error-message])]
-        :else
-        (let [ws (get-in @state [:server-response :workspace])]
-          [comps/TabBar {:key "selected"
-                         :items [{:text "Summary" :component (render-workspace-summary ws)}
-                                 {:text "Data" :component (render-workspace-data ws)}
-                                 {:text "Method Configurations"
-                                  :component (render-method-configs ws)}
-                                 {:text "Monitor"}
-                                 {:text "Files"}]}]))])
-   :load-workspace
-   (fn [{:keys [props state]}]
-     (utils/ajax-orch
-       (paths/workspace-details-path (:workspace-id props))
-       {:on-done (fn [{:keys [success? xhr]}]
-                   (let [response (utils/parse-json-string (.-responseText xhr))]
-                     (swap! state assoc :server-response
-                       (if success?
-                         {:workspace (merge {"status" "Complete"} ;; TODO Remove.
-                                       response)}
-                         {:error-message (response "message")}))))
-        :canned-response {:responseText (utils/->json-string
-                                          (merge
-                                            (:workspace-id props)
-                                            {:status "Complete"
-                                             :createdBy "Nobody"}))
-                          :status 200}}))
-   :component-did-mount
-   (fn [{:keys [this]}]
-     (react/call :load-workspace this))
-   :component-did-update
-   (fn [{:keys [this state]}]
-     (when-not (:server-response @state)
-       (react/call :load-workspace this)))
-   :component-will-receive-props
-   (fn [{:keys [props next-props state]}]
-     (when-not (apply = (map :workspace-id [props next-props]))
-       (swap! state assoc :server-response nil)))})
-
-
 (defn- render-workspaces-list [state nav-context]
   (let [build-button (fn [name filter]
                        {:text (str name " (" (count (filter-workspaces filter (:workspaces @state))) ")")
@@ -276,7 +224,7 @@
          [:span {:style {:fontSize "180%"}}
           (if selected-ws-id (:name selected-ws-id) "Workspaces")]]
         (cond
-          selected-ws-id [WorkspaceDetails {:workspace-id selected-ws-id}]
+          selected-ws-id (render-workspace-details selected-ws-id)
           (:workspaces-loaded? @state) (render-workspaces-list state nav-context)
           (:error @state) (style/create-server-error-message (get-in @state [:error :message]))
           :else [comps/Spinner {:text "Loading workspaces..."}])]))
