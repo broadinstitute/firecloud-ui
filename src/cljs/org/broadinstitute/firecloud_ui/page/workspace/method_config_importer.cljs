@@ -15,26 +15,16 @@
 
 
 (defn create-post-data
-  [selected-conf
-   selected-conf-dest-name
-   selected-conf-dest-ns
-   dest-workspace-name
-   dest-workspace-namespace]
-  (let [destination-map
-        {"name" selected-conf-dest-name
-        "namespace" selected-conf-dest-ns
-        "workspaceName"
-        {"name" dest-workspace-namespace
-        "namespace" dest-workspace-name}}
-        param-map {"methodRepoNamespace" (get-in selected-conf
-                                           ["methodStoreMethod" "methodNamespace"])
-                   "methodRepoName" (get-in selected-conf
-                                      ["methodStoreMethod" "methodName"])
-                   "methodRepoSnapshotId" (get-in selected-conf
-                                            ["methodStoreMethod" "methodVersion"])
-                   "destination" destination-map}]
-    param-map))
-
+  [selected-conf-name
+   selected-conf-ns
+   selected-conf-snapId
+   dest-name
+   dest-namespace]
+  {"configurationNamespace" selected-conf-ns
+   "configurationName" selected-conf-name
+   "configurationSnapshotId" selected-conf-snapId
+   "destinationNamespace" dest-namespace
+   "destinationName" dest-name})
 
 (defn- create-mock-methodconfs-import []
   (map
@@ -49,71 +39,78 @@
     (range (rand-int 50))))
 
 
+(react/defc ModalImportOptionsAndButton
+  {:render (fn [{:keys [state props refs]}]
+             (let [selected-conf-name (get  props :init-Name)
+                   selected-conf-namespace (get props :init-Namespace)
+                   selected-conf-snapshotId (get props :init-SnapshotId)
+                   workspace (:workspace props)
+                   dest-workspace-name (get workspace "name")
+                   dest-workspace-namespace (get workspace "namespace")]
+               [:div {:style {:backgroundColor (:background-gray style/colors)}}
+                [:div {}
+                 "Destination Name : "
+                 (style/create-text-field {:defaultValue selected-conf-name :ref "destinationName"})]
+                "Destination Namespace : "
+                (style/create-text-field
+                  {:defaultValue selected-conf-namespace
+                   :ref "destinationNamespace"})
+                [:br]
+                [comps/Button
+                 {:title-text "import selected"
+                  :icon :plus
+                  :onClick (fn []
+                             (swap! (get props :parental-state) assoc :show-import-mc-modal? false)
+                             (let [dest-conf-name (.-value (.getDOMNode (@refs "destinationName")))
+                                   dest-conf-namespace (.-value (.getDOMNode (@refs "destinationNamespace")))
+                                   post-data (create-post-data
+                                               selected-conf-name
+                                               selected-conf-namespace
+                                               selected-conf-snapshotId
+                                               dest-conf-name
+                                               dest-conf-namespace)]
+                               (utils/ajax-orch
+                                 (str "/" dest-workspace-namespace "/"
+                                   dest-workspace-name
+                                   "/method_configs/copyFromMethodRepo")
+                                 {:canned-response {:responseText
+                                                      (utils/->json-string (create-mock-methodconfs-import))
+                                                    :status 200
+                                                    :delay-ms (rand-int 2000)}
+                                  :method :post
+                                  :data (utils/->json-string post-data)
+                                  :on-done (fn [{:keys [success? xhr]}]
+                                             (if success?
+                                               (utils/rlog "SUCCESS in import ! trigger re-render of workspace MC list here?")
+                                               (js/alert (str "Error in import : "  (.-statusText xhr)))))})))}]]))})
+
+
 (defn render-import-modal [state props refs]
   [comps/ModalDialog
-   {:width 600
+   {:width 750
     :content (react/create-element
                [:div {}
                 [:div {:style {:backgroundColor "#fff"
                                :borderBottom (str "1px solid " (:line-gray style/colors))
                                :padding "20px 48px 18px"
                                :fontSize "137%" :fontWeight 400 :lineHeight 1}}
-                 "Import a Method Configuration"]
+                 "Import a Method Configuration"
+                 [:hr]
+                 (get-in @state [:selected-conf "name"])[:br]
+                 (get-in @state [:selected-conf "namespace"]) [:br]
+                 (get-in @state [:selected-conf "snapshotId"])
+                 [:div {:style {:position "absolute" :right 2 :top 2}}
+                  [:div {:style {:backgroundColor (:button-blue style/colors) :color "#fff"
+                                 :padding "0.5em" :cursor "pointer"}
+                         :onClick (fn [] (swap! state assoc :show-import-mc-modal? false))}
+                   (icons/font-icon {:style {:fontSize "60%"}} :x)]]]
                 [:div {:style {:padding "22px 48px 40px"
                                :backgroundColor (:background-gray style/colors)}}
-                 "Destination Name : "
-                 (style/create-text-field
-                   {:defaultValue (get-in @state [:selected-conf "name"])
-                    :ref "destinationName"})
-                 [:br]
-                 "Destination Namespace : "
-                 (style/create-text-field
-                   {:defaultValue (get-in @state [:selected-conf "namespace"])
-                    :ref "destinationNamespace"})
-                 [:br]
-                 [comps/Button
-                  {:title-text "Import configuration"
-                   :icon :plus
-                   :onClick
-                   (fn []
-                     (let [workspace (:workspace props)
-                           dest-name-value (.-value
-                                             (.getDOMNode (@refs "destinationName")))
-                           dest-namespace-value (.-value (.getDOMNode
-                                                           (@refs "destinationNamespace")))
-                           dest-workspace-name (get workspace "name")
-                           dest-workspace-namespace (get workspace "namespace")
-                           methodRepoQuery (create-post-data
-                                             (:selected-conf @state)
-                                             dest-name-value
-                                             dest-namespace-value
-                                             dest-workspace-name
-                                             dest-workspace-namespace)]
-                       (swap! state assoc :show-import-mc-modal? false)
-                       (utils/ajax-orch
-                         (create-path
-                           dest-workspace-namespace
-                           dest-workspace-name)
-                         {:method :post
-                          :data (utils/->json-string methodRepoQuery)
-                          :canned-response {:status 201
-                                            :delay-ms (rand-int 2000)}
-                          :on-done (fn [{:keys [success? xhr]}]
-                                     (if success?
-                                       (utils/rlog  (str "success in import! "
-                                                      "Here, perhaps trigger re-render "
-                                                      "of the MCs in the current "
-                                                      "workspace?"))
-                                       (let [returned-err-msg
-                                             {:message (.-statusText xhr)}]
-                                         (js/alert
-                                           (str "Error in Method Configuration Import : "
-                                             returned-err-msg)))))})))}]
-                 [comps/Button
-                  {:title-text "cancel import"
-                   :icon :x
-                   :onClick (fn []
-                              (swap! state assoc :show-import-mc-modal? false))}]]])
+                 [ModalImportOptionsAndButton {:init-Name (get-in @state [:selected-conf "name"])
+                                               :init-Namespace (get-in @state [:selected-conf "namespace"])
+                                               :init-SnapshotId (get-in @state [:selected-conf "snapshotId"])
+                                               :parental-state state
+                                               :workspace (get props :workspace)}]]])
     :show-when true}])
 
 
