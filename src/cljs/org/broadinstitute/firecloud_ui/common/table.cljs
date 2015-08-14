@@ -189,7 +189,8 @@
        [:div {}
         (when (:filterable? props)
           (let [apply-filter #(swap! state assoc :filtered-data
-                               (react/call :filter-data this (-> (@refs "filter-field") .getDOMNode .-value trim)))]
+                               (react/call :filter-data this props
+                                 (-> (@refs "filter-field") .getDOMNode .-value trim)))]
             [:div {:style {:padding "0 0 1em 1em"}}
              (style/create-text-field {:ref "filter-field" :placeholder "Filter"
                                        :onKeyDown (common/create-key-handler
@@ -233,7 +234,7 @@
                        (case (:sort-order @state)
                          :asc (swap! state assoc :sort-order :desc)
                          :desc (swap! state dissoc :sort-column :sort-order :key-fn)
-                         :else (assert false "bad state"))
+                         (assert false "bad state"))
                        (swap! state assoc :sort-column i :sort-order :asc
                          :key-fn (if (= :value sorter)
                                    (fn [row] (nth row i))
@@ -257,7 +258,7 @@
            ordered-data (if (= :desc (:sort-order @state)) (reverse sorted-data) sorted-data)]
        (take c (drop (* (dec n) c) ordered-data))))
    :filter-data
-   (fn [{:keys [props]} & [filter-text]]
+   (fn [{:keys []} & [props filter-text]]
      (if (empty? filter-text)
        (:data props)
        (filter
@@ -274,4 +275,8 @@
          (:data props))))
    :handle-pagination-change
    (fn [{:keys [this refs]}]
-     (react/call :set-rows (@refs "body") (react/call :get-sliced-data this)))})
+     (react/call :set-rows (@refs "body") (react/call :get-sliced-data this)))
+   :component-will-receive-props
+   (fn [{:keys [this state next-props refs]}]
+     (swap! state assoc :filtered-data
+       (react/call :filter-data this next-props (-> (@refs "filter-field") .getDOMNode .-value trim))))})
