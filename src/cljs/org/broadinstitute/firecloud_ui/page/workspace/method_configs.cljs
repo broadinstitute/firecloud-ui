@@ -1,4 +1,4 @@
-(ns org.broadinstitute.firecloud-ui.page.workspace.workspace-method-confs
+(ns org.broadinstitute.firecloud-ui.page.workspace.method-configs
   (:require
     [dmohs.react :as react]
     clojure.string
@@ -124,5 +124,5 @@
    (fn [{:keys [state]}]
      (swap! state dissoc :selected-method-config :selected-index))})
 
-(defn render-workspace-method-confs [workspace]
+(defn render-method-configs [workspace]
   [WorkspaceMethodConfigurations {:workspace workspace}])

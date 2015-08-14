@@ -48,11 +48,7 @@
     :component workspaces/Page}
    {:key :methods
     :name "Method Repository"
-    :component method-repo/Page}
-   {:key :import-data
-    :name "Import Data"
-    :component import-data/Page}
-   ])
+    :component method-repo/Page}])
 
 
 (react/defc TopNavBarLink
