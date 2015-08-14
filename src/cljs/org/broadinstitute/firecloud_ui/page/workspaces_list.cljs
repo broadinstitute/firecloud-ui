@@ -10,7 +10,7 @@
    [org.broadinstitute.firecloud-ui.nav :as nav]
    [org.broadinstitute.firecloud-ui.page.workspace.workspace-summary :refer [render-workspace-summary]]
    [org.broadinstitute.firecloud-ui.page.workspace.workspace-data :refer [render-workspace-data]]
-   [org.broadinstitute.firecloud-ui.page.workspace.workspace-method-confs :refer [render-workspace-method-confs]]
+   [org.broadinstitute.firecloud-ui.page.workspace.method-configs :refer [render-method-configs]]
    [org.broadinstitute.firecloud-ui.paths :as paths]
    [org.broadinstitute.firecloud-ui.utils :as utils :refer [parse-json-string]]
    ))
@@ -170,7 +170,7 @@
                          :items [{:text "Summary" :component (render-workspace-summary ws)}
                                  {:text "Data" :component (render-workspace-data ws)}
                                  {:text "Method Configurations"
-                                  :component (render-workspace-method-confs ws)}
+                                  :component (render-method-configs ws)}
                                  {:text "Monitor"}
                                  {:text "Files"}]}]))])
    :load-workspace
@@ -198,8 +198,9 @@
      (when-not (:server-response @state)
        (react/call :load-workspace this)))
    :component-will-receive-props
-   (fn [{:keys [state]}]
-     (swap! state assoc :server-response nil))})
+   (fn [{:keys [props next-props state]}]
+     (when-not (apply = (map :workspace-id [props next-props]))
+       (swap! state assoc :server-response nil)))})
 
 
 (defn- render-workspaces-list [state nav-context]

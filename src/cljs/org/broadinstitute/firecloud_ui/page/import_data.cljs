@@ -30,20 +30,19 @@
 
 
 (react/defc Page
-  {:render
-   (fn [{:keys [state refs]}]
-     [:div {:style {:padding "22px 48px 40px"}}
+  {:did-load-data?
+   (fn [{:keys [state]}]
+     (:entities-loaded? @state))
+   :render
+   (fn [{:keys [props state refs]}]
+     [:div {:style {:marginTop "1em"}}
       [:div {:style {:boxSizing "inherit" }}
-       (style/create-form-label "Workspace Namespace")
-       (style/create-text-field {:style {:width "33%"} :name "workspaceNamespace" :ref "workspaceNamespace"})
-       (style/create-form-label "Workspace Name")
-       (style/create-text-field {:style {:width "33%"} :name "workspaceName" :ref "workspaceName"})[:br]
        [:input {:type "file" :name "entities" :ref "entities"}]
        [comps/Button {:text "Upload"
                       :onClick (fn [e] (submit-entities
                                          state
-                                         (-> (@refs "workspaceName") .getDOMNode .-value)
-                                         (-> (@refs "workspaceNamespace") .getDOMNode .-value)
+                                         (get-in props [:workspace-id :name])
+                                         (get-in props [:workspace-id :namespace])
                                          (-> (@refs "entities") .getDOMNode .-files (aget 0))))}]]
 
       (if (:entities-loaded? @state)
