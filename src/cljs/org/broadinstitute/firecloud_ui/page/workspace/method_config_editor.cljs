@@ -6,7 +6,8 @@
     [org.broadinstitute.firecloud-ui.common.components :as comps]
     [org.broadinstitute.firecloud-ui.common.icons :as icons]
     [org.broadinstitute.firecloud-ui.common.style :as style]
-    [org.broadinstitute.firecloud-ui.paths :refer [get-method-config-path update-method-config-path]]
+    [org.broadinstitute.firecloud-ui.paths :as paths]
+    [org.broadinstitute.firecloud-ui.common.table :as table]
     [org.broadinstitute.firecloud-ui.utils :as utils]
     ))
 
@@ -59,15 +60,15 @@
                    "inputs" inputs
                    "outputs" outputs
                    "prerequisites" prereqs)]
-    (swap! state assoc :updating? true)
+    (swap! state assoc :blocker "Updating...")
     (let [prepared-conf (prepare-config new-conf)]
       (utils/ajax-orch
-        (update-method-config-path workspace config)
+        (paths/update-method-config-path workspace config)
         {:method :PUT
          :data (utils/->json-string prepared-conf)
          :headers {"Content-Type" "application/json"} ;; TODO - make endpoint take text/plain
          :on-done (fn [{:keys [success? xhr]}]
-                    (swap! state assoc :updating? false)
+                    (swap! state assoc :blocker nil)
                     (if success?
                       (update-config state props prepared-conf)
                       (js/alert (str "Exception:\n" (.-statusText xhr)))))
@@ -96,7 +97,7 @@
                                             :width 290}}
      [:div {:style {:fontSize "106%" :lineHeight 1 :textAlign "center"}}
 
-      [:div {:style {:display (when editing? "none") :padding "0.7em 0em" :cursor "pointer"
+      [:div {:style {:display (when editing? "none") :padding "0.7em 0" :cursor "pointer"
                      :backgroundColor "transparent" :color (:button-blue style/colors)
                      :border (str "1px solid " (:line-gray style/colors))}
              :onClick #(swap! state assoc :editing? true :prereqs-list (config "prerequisites"))}
@@ -104,19 +105,90 @@
         (icons/font-icon {:style {:fontSize "135%"}} :pencil)]
        [:span {:style {:marginLeft "1em"}} "Edit this page"]]
 
-      [:div {:style {:display (when-not editing? "none") :padding "0.7em 0em" :cursor "pointer"
+      [:div {:style {:display (when-not editing? "none") :padding "0.7em 0" :cursor "pointer"
                      :backgroundColor (:success-green style/colors) :color "#fff" :borderRadius 4}
              :onClick #(do (commit state refs config props) (stop-editing state refs))}
        [:span {:style {:display "inline-block" :verticalAlign "middle"}}
         (icons/font-icon {:style {:fontSize "135%"}} :status-done)]
        [:span {:style {:marginLeft "1em"}} "Save"]]
 
-      [:div {:style {:display (when-not editing? "none") :padding "0.7em 0em" :marginTop "0.5em" :cursor "pointer"
+      [:div {:style {:display (when-not editing? "none") :padding "0.7em 0" :marginTop "0.5em" :cursor "pointer"
                      :backgroundColor (:exception-red style/colors) :color "#fff" :borderRadius 4}
              :onClick #(stop-editing state refs)}
        [:span {:style {:display "inline-block" :verticalAlign "middle"}}
         (icons/font-icon {:style {:fontSize "135%"}} :x)]
        [:span {:style {:marginLeft "1em"}} "Cancel Editing"]]])])
+
+(defn- render-launch-analysis [state workspace editing?]
+  [:div {:style {:width 200 :float "right" :display (when editing? "none")}}
+   (style/create-unselectable :div {:style {:position (when-not (:sidebar-visible? @state) "fixed")
+                                            :top (when-not (:sidebar-visible? @state) 4)
+                                            :width 200}}
+     [:div {:style {:fontSize "106%" :lineHeight 1 :textAlign "center"}}
+      [:div {:style {:padding "0.7em 0" :cursor "pointer"
+                     :backgroundColor (:button-blue style/colors) :color "#fff" :borderRadius 4
+                     :border (str "1px solid " (:line-gray style/colors))}
+             :onClick #(if (:entity-types @state)
+                        (swap! state assoc :submitting? true)
+                        (do (swap! state assoc :blocker "Loading Entities...")
+                            (utils/ajax-orch
+                              (paths/list-all-entity-types-path workspace)
+                              {:on-done (fn [{:keys [success? xhr]}]
+                                          (swap! state assoc :blocker nil)
+                                          (if success?
+                                            (swap! state assoc :submitting? true
+                                              :entity-types (cons "Select Entity Type..." (utils/parse-json-string (.-responseText xhr))))
+                                            (js/alert (str "Error: " (.-statusText xhr)))))
+                               :canned-response {:responseText (utils/->json-string ["Sample" "Participant"])
+                                                 :status 200 :delay-ms (rand-int 2000)}})))}
+       "Launch Analysis"]])])
+
+(defn- render-launch-overlay [state refs workspace config]
+  [comps/ModalDialog
+   {:show-when (:submitting? @state)
+    :dismiss-self #(swap! state assoc :submitting? false)
+    :width "80%"
+    :content
+    (react/create-element
+      [:div {}
+       [:div {:style {:backgroundColor "#fff"
+                      :borderBottom (str "1px solid " (:line-gray style/colors))
+                      :padding "20px 48px 18px"
+                      :fontSize "137%" :fontWeight 400 :lineHeight 1}}
+        "Select Entity"]
+       [:div {:style {:position "absolute" :top 4 :right 4}}
+        [comps/Button {:icon :x :onClick #(swap! state assoc :submitting? false)}]]
+       [:div {:style {:padding "22px 48px 40px" :backgroundColor (:background-gray style/colors)}}
+        (style/create-form-label "Filter by Entity Type")
+        (style/create-select
+          {:style {:width "50%" :minWidth 50 :maxWidth 200} :ref "filter"
+           :onChange #(let [value (-> (@refs "filter") .getDOMNode .-value)]
+                       (when-not (= value "Select Entity Type...")
+                         (utils/ajax-orch
+                           (paths/list-all-entities-path workspace value)
+                           {:on-done
+                            (fn [{:keys [success? xhr]}]
+                              (if success?
+                                (swap! state assoc :entities (utils/parse-json-string (.-responseText xhr)))
+                                (utils/rlog "Error: " (.-responseText xhr))))
+                            :canned-response {:responseText (utils/->json-string
+                                                              [{"entityType" value
+                                                               "name" "A mock entity"
+                                                               "attributes" {}}])
+                                              :status 200 :delay-ms (rand-int 1000)}})))}
+          (:entity-types @state))
+        (style/create-form-label "Select Entity")
+        (if (zero? (count (:entities @state)))
+          (style/create-message-well "No entities to display.")
+          [table/Table
+           {:columns [{:header "Entity Type" :starting-width 100}
+                      {:header "Entity Name" :starting-width 100}
+                      {:header "Attributes" :starting-width 400}]
+            :data (map (fn [m]
+                         [(m "entityType")
+                          (m "name")
+                          (m "attributes")])
+                    (:entities @state))}])]])}])
 
 (defn- render-main-display [state refs config editing?]
   [:div {:style {:marginLeft 330}}
@@ -182,23 +254,15 @@
                       :onClick #(let [list (capture-prerequisites state refs)]
                                  (swap! state assoc :prereqs-list (conj list "")))}]]])])
 
-(defn- render-updating-overlay [state]
-  [:div {:style {:position "fixed" :top 0 :bottom 0 :right 0 :left 0
-                 :backgroundColor "rgba(127, 127, 127, 0.5)"
-                 :zIndex 9999
-                 :display (when-not (:updating? @state) "none")}}
-   [:div {:style {:position "absolute" :top "50%" :left "50%"
-                  :transform "translate(-50%, -50%)"
-                  :backgroundColor "#fff" :padding "2em"}}
-    [comps/Spinner {:text "Updating..."}]]])
-
 (defn- render-display [state refs config editing? props]
   [:div {}
-   (render-updating-overlay state)
+   [comps/Blocker {:banner (:blocker @state)}]
+   (render-launch-overlay state refs (:workspace props) config)
    [:div {:style {:padding "0em 2em"}}
     (render-top-bar config)
     [:div {:style {:padding "1em 0em"}}
      (render-side-bar state refs config editing? props)
+     (render-launch-analysis state (:workspace props) editing?)
      (render-main-display state refs config editing?)
      (clear-both)]]])
 
@@ -219,7 +283,7 @@
    :component-did-mount
    (fn [{:keys [state props refs this]}]
      (utils/ajax-orch
-       (get-method-config-path (:workspace props) (:config props))
+       (paths/get-method-config-path (:workspace props) (:config props))
        {:on-done (fn [{:keys [success? xhr]}]
                    (if success?
                      (swap! state assoc :loaded-config (utils/parse-json-string (.-responseText xhr)))
