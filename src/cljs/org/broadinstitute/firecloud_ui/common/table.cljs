@@ -89,13 +89,14 @@
      ((:onChange props)))})
 
 
-(defn- render-cell [{:keys [width onResizeMouseDown onSortClick sortOrder] :as props}]
+(defn- render-cell [{:keys [width onResizeMouseDown onResizeDoubleClick onSortClick sortOrder] :as props}]
   [:div {:style (merge {:float "left" :position "relative" :width width :minWidth 10}
                   (:cell-style props))}
    (when (:onResizeMouseDown props)
      [:div {:style {:position "absolute" :width 20 :top 0 :bottom 0 :left (- width 10) :zIndex 1
                     :cursor "col-resize"}
-            :onMouseDown onResizeMouseDown}])
+            :onMouseDown onResizeMouseDown
+            :onDoubleClick onResizeDoubleClick}])
    (when onSortClick
      [:div {:style {:position "absolute" :top 0 :bottom 0 :left 0 :width (if onResizeMouseDown (- width 10) width)
                     :cursor "pointer"}
@@ -110,37 +111,39 @@
 
 
 (defn- render-header [state props]
-[:div {:style (merge
-                {:fontWeight 500 :fontSize "80%"
-                 :color "#fff" :backgroundColor (:header-darkgray style/colors)}
-                (:header-row-style props))}
- (map-indexed
-   (fn [i column]
-     (let [onResizeMouseDown (when (get column :resizable? (:resizable-columns? props))
-                               (fn [e] (swap! state assoc
-                                         :dragging? true :mouse-x (.-clientX e) :drag-column i)))]
-       (render-cell
-         {:width (nth (:column-widths @state) i)
-          :content (:header column)
-          :cell-style (when onResizeMouseDown {:borderRight "1px solid #777777" :marginRight -1})
-          :cell-padding-left (or (:cell-padding-left props) 0)
-          :content-container-style (merge
-                                     {:padding (str "0.8em 0 0.8em " (or (:cell-padding-left props) 0))}
-                                     (:header-style props))
-          :onResizeMouseDown onResizeMouseDown
-          :onSortClick (when-let [sorter (:sort-by column)]
-                         #(if (= i (:sort-column @state))
-                           (case (:sort-order @state)
-                             :asc (swap! state assoc :sort-order :desc)
-                             :desc (swap! state dissoc :sort-column :sort-order :key-fn)
-                             (assert false "bad state"))
-                           (swap! state assoc :sort-column i :sort-order :asc
-                             :key-fn (if (= :value sorter)
-                                       (fn [row] (nth row i))
-                                       (fn [row] (sorter (nth row i)))))))
-          :sortOrder (when (= i (:sort-column @state)) (:sort-order @state))})))
-   (:columns props))
- (common/clear-both)])
+  [:div {:style (merge
+                  {:fontWeight 500 :fontSize "80%"
+                   :color "#fff" :backgroundColor (:header-darkgray style/colors)}
+                  (:header-row-style props))}
+   (map-indexed
+     (fn [i column]
+       (let [onResizeMouseDown (when (get column :resizable? (:resizable-columns? props))
+                                 (fn [e] (swap! state assoc
+                                           :dragging? true :mouse-x (.-clientX e) :drag-column i)))]
+         (render-cell
+           {:width (nth (:column-widths @state) i)
+            :content (:header column)
+            :cell-style (when onResizeMouseDown {:borderRight "1px solid #777777" :marginRight -1})
+            :cell-padding-left (or (:cell-padding-left props) 0)
+            :content-container-style (merge
+                                       {:padding (str "0.8em 0 0.8em " (or (:cell-padding-left props) 0))}
+                                       (:header-style props))
+            :onResizeMouseDown onResizeMouseDown
+            :onResizeDoubleClick #(swap! state update-in [:column-widths]
+                                     assoc i (get-in props [:columns i :starting-width]))
+            :onSortClick (when-let [sorter (:sort-by column)]
+                           #(if (= i (:sort-column @state))
+                             (case (:sort-order @state)
+                               :asc (swap! state assoc :sort-order :desc)
+                               :desc (swap! state dissoc :sort-column :sort-order :key-fn)
+                               (assert false "bad state"))
+                             (swap! state assoc :sort-column i :sort-order :asc
+                               :key-fn (if (= :value sorter)
+                                         (fn [row] (nth row i))
+                                         (fn [row] (sorter (nth row i)))))))
+            :sortOrder (when (= i (:sort-column @state)) (:sort-order @state))})))
+     (:columns props))
+   (common/clear-both)])
 
 
 (react/defc Body
