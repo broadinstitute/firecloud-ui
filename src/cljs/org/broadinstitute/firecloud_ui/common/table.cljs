@@ -13,6 +13,12 @@
 
 (def ^:private initial-rows-per-page 10)
 
+(defn- create-page-range [current-page total-pages]
+  (cond
+    (<= total-pages 5) (range 1 (inc total-pages))
+    (<= current-page 3) (range 1 6)
+    (>= current-page (- total-pages 2)) (range (- total-pages 4) (inc total-pages))
+    :else (range (- current-page 2) (+ current-page 3))))
 
 (react/defc Paginator
   {:get-current-slice
@@ -28,16 +34,14 @@
            current-page (:current-page @state)
            num-total (:num-rows props)
            num-pages (js/Math.ceil (/ num-total rows-per-page))
-           num-onClick (fn [n] (fn [e] (swap! state assoc :current-page n)))
-           first-page-box (max 1 (- current-page 4))
-           last-page-box (min num-pages (+ current-page 4))
+           num-onClick (fn [n] #(swap! state assoc :current-page n))
+           page-range (create-page-range current-page num-pages)
            allow-prev (> current-page 1)
            allow-next (< current-page num-pages)
            right-num (min num-total (* current-page rows-per-page))
            left-num (if (zero? right-num) 0 (inc (* (dec current-page) rows-per-page)))]
        [:div {:style {:border "1px solid #ebebeb" :boxShadow "-3px -6px 23px -7px #ebebeb inset"}}
-        [:div {:style {:display "block" :fontSize 13 :lineHeight 1.5
-                       :padding "0px 48px" :verticalAlign "middle"}}
+        [:div {:style {:fontSize 13 :lineHeight 1.5 :padding "0px 48px" :verticalAlign "middle"}}
 
          [:div {:style {:float "left" :display "inline-block" :width "33.33%" :padding "2.15em 0em" :verticalAlign "middle"}}
           [:b {} (str left-num " - " right-num)] (str " of " (pluralize num-total " result"))]
@@ -61,7 +65,7 @@
                                     :cursor (when-not selected? "pointer")}
                             :onClick (when-not selected? (num-onClick n))}
                       n]))
-              (range first-page-box (+ 1 last-page-box)))]
+              page-range)]
 
            [:div {:style {:display "inline-block" :padding "0.55em 0.9em"
                           :color (if allow-next (:button-blue style/colors) (:border-gray style/colors))
@@ -85,13 +89,14 @@
      ((:onChange props)))})
 
 
-(defn- render-cell [width content cell-style cell-padding-left content-container-style onResizeMouseDown onSortClick sortOrder]
+(defn- render-cell [{:keys [width onResizeMouseDown onResizeDoubleClick onSortClick sortOrder] :as props}]
   [:div {:style (merge {:float "left" :position "relative" :width width :minWidth 10}
-                       cell-style)}
-   (when onResizeMouseDown
+                  (:cell-style props))}
+   (when (:onResizeMouseDown props)
      [:div {:style {:position "absolute" :width 20 :top 0 :bottom 0 :left (- width 10) :zIndex 1
-                    :cursor "ew-resize"}
-            :onMouseDown onResizeMouseDown}])
+                    :cursor "col-resize"}
+            :onMouseDown onResizeMouseDown
+            :onDoubleClick onResizeDoubleClick}])
    (when onSortClick
      [:div {:style {:position "absolute" :top 0 :bottom 0 :left 0 :width (if onResizeMouseDown (- width 10) width)
                     :cursor "pointer"}
@@ -100,37 +105,45 @@
      [:div {:style {:position "absolute" :top "50%" :right 0 :width 16 :transform "translateY(-50%)"}}
       (if (= :asc sortOrder) "↑" "↓")])
    [:div {:style (merge {:whiteSpace "nowrap" :overflow "hidden" :textOverflow "ellipsis"
-                         :width (str "calc(" (- width (if sortOrder 16 0)) "px - " cell-padding-left ")")}
-                   content-container-style)}
-    content]])
+                         :width (str "calc(" (- width (if sortOrder 16 0)) "px - " (:cell-padding-left props) ")")}
+                   (:content-container-style props))}
+    (:content props)]])
 
 
-(defn- render-header-cell [props index width content onResizeMouseDown onSortClick sortOrder]
-  (render-cell
-    width
-    content
-    (when onResizeMouseDown {:borderRight "1px solid #777777" :marginRight -1})
-    (or (:cell-padding-left props) 0)
-    (merge
-      {:padding (str "0.8em 0 0.8em " (or (:cell-padding-left props) 0))}
-      (:header-style props))
-    onResizeMouseDown
-    onSortClick
-    sortOrder))
-
-
-(defn- render-body-cell [props width content]
-  (render-cell
-    width
-    content
-    nil
-    (or (:cell-padding-left props) 0)
-    (merge
-      {:padding (str "0.6em 0 0.6em " (or (:cell-padding-left props) 0))}
-      (:cell-content-style props))
-    nil
-    nil
-    nil))
+(defn- render-header [state props]
+  [:div {:style (merge
+                  {:fontWeight 500 :fontSize "80%"
+                   :color "#fff" :backgroundColor (:header-darkgray style/colors)}
+                  (:header-row-style props))}
+   (map-indexed
+     (fn [i column]
+       (let [onResizeMouseDown (when (get column :resizable? (:resizable-columns? props))
+                                 (fn [e] (swap! state assoc
+                                           :dragging? true :mouse-x (.-clientX e) :drag-column i)))]
+         (render-cell
+           {:width (nth (:column-widths @state) i)
+            :content (:header column)
+            :cell-style (when onResizeMouseDown {:borderRight "1px solid #777777" :marginRight -1})
+            :cell-padding-left (or (:cell-padding-left props) 0)
+            :content-container-style (merge
+                                       {:padding (str "0.8em 0 0.8em " (or (:cell-padding-left props) 0))}
+                                       (:header-style props))
+            :onResizeMouseDown onResizeMouseDown
+            :onResizeDoubleClick #(swap! state update-in [:column-widths]
+                                     assoc i (get-in props [:columns i :starting-width]))
+            :onSortClick (when-let [sorter (:sort-by column)]
+                           #(if (= i (:sort-column @state))
+                             (case (:sort-order @state)
+                               :asc (swap! state assoc :sort-order :desc)
+                               :desc (swap! state dissoc :sort-column :sort-order :key-fn)
+                               (assert false "bad state"))
+                             (swap! state assoc :sort-column i :sort-order :asc
+                               :key-fn (if (= :value sorter)
+                                         (fn [row] (nth row i))
+                                         (fn [row] (sorter (nth row i)))))))
+            :sortOrder (when (= i (:sort-column @state)) (:sort-order @state))})))
+     (:columns props))
+   (common/clear-both)])
 
 
 (react/defc Body
@@ -157,10 +170,13 @@
              (map-indexed
                (fn [col-index col]
                  (let [render-content (or (:content-renderer col) (fn [i data] data))]
-                   (render-body-cell
-                     props
-                     (nth (:column-widths props) col-index)
-                     (render-content row-index (nth row col-index)))))
+                   (render-cell
+                     {:width (nth (:column-widths props) col-index)
+                      :content (render-content row-index (nth row col-index))
+                      :cell-padding-left (or (:cell-padding-left props) 0)
+                      :content-container-style (merge
+                                                 {:padding (str "0.6em 0 0.6em " (or (:cell-padding-left props) 0))}
+                                                 (:cell-content-style props))})))
                (:columns props))
              (common/clear-both)]))
         (:rows @state))])})
@@ -201,7 +217,7 @@
         [:div {:style {:overflowX "auto"}}
          [:div {:style {:position "relative"
                         :minWidth (reduce + (:column-widths @state))
-                        :cursor (when (:dragging? @state) "ew-resize")}
+                        :cursor (when (:dragging? @state) "col-resize")}
                 :onMouseMove (fn [e]
                                (when (:dragging? @state)
                                  (let [widths (:column-widths @state)
@@ -214,34 +230,7 @@
                                        assoc (:drag-column @state) (+ current-width drag-amount))
                                      (swap! state assoc :mouse-x new-mouse-x)))))
                 :onMouseUp #(swap! state assoc :dragging? false)}
-          [:div {:style (merge
-                          {:fontWeight 500 :fontSize "80%"
-                           :color "#fff" :backgroundColor (:header-darkgray style/colors)}
-                          (:header-row-style props))}
-           (map-indexed
-             (fn [i column]
-               (let [width (nth (:column-widths @state) i)]
-                 (render-header-cell
-                   props
-                   i
-                   width
-                   (:header column)
-                   (when (get column :resizable? (:resizable-columns? props))
-                     (fn [e] (swap! state assoc
-                               :dragging? true :mouse-x (.-clientX e) :drag-column i)))
-                   (when-let [sorter (:sort-by column)]
-                     #(if (= i (:sort-column @state))
-                       (case (:sort-order @state)
-                         :asc (swap! state assoc :sort-order :desc)
-                         :desc (swap! state dissoc :sort-column :sort-order :key-fn)
-                         (assert false "bad state"))
-                       (swap! state assoc :sort-column i :sort-order :asc
-                         :key-fn (if (= :value sorter)
-                                   (fn [row] (nth row i))
-                                   (fn [row] (sorter (nth row i)))))))
-                   (when (= i (:sort-column @state)) (:sort-order @state)))))
-             (:columns props))
-           (common/clear-both)]
+          (render-header state props)
           [Body (assoc props
                   :ref "body"
                   :columns (:columns props)
@@ -263,15 +252,15 @@
        (:data props)
        (filter
          (fn [row]
-           (some identity
-             (map-indexed
-               (fn [i column]
-                 (if-let [f (:filter-by column)]
-                   (if (= f :none)
-                     false
-                     (utils/contains-ignore-case (f (nth row i)) filter-text))
-                   (utils/contains-ignore-case (str (nth row i)) filter-text)))
-               (:columns props))))
+           (utils/matches-filter-text
+             (apply str
+               (map-indexed
+                 (fn [i column]
+                   (if-let [f (:filter-by column)]
+                     (if (= f :none) "" (f (nth row i)))
+                     (str (nth row i))))
+                 (:columns props)))
+             filter-text))
          (:data props))))
    :handle-pagination-change
    (fn [{:keys [this refs]}]
