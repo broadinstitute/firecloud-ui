@@ -204,7 +204,7 @@
                      (merge {:success? success?}
                        (if success?
                          ;; TODO(dmohs): Remove when Rawls returns workspace statuses.
-                         {:workspaces (map #(merge {"status" "Completed"} %)
+                         {:workspaces (map #(merge {"status" "Complete"} %)
                                         (utils/parse-json-string (.-responseText xhr)))}
                          {:error-message (.-statusText xhr)}))))
         :canned-response {:responseText (utils/->json-string (create-mock-workspaces))
