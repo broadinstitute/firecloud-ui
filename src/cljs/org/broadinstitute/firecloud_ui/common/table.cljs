@@ -32,19 +32,20 @@
    (fn [{:keys [props state refs]}]
      (let [rows-per-page (:rows-per-page @state)
            current-page (:current-page @state)
-           num-total (:num-rows props)
-           num-pages (js/Math.ceil (/ num-total rows-per-page))
-           num-onClick (fn [n] #(swap! state assoc :current-page n))
-           page-range (create-page-range current-page num-pages)
+           num-rows-visible (:num-rows-visible props)
+           num-pages (js/Math.ceil (/ num-rows-visible rows-per-page))
            allow-prev (> current-page 1)
            allow-next (< current-page num-pages)
-           right-num (min num-total (* current-page rows-per-page))
+           right-num (min num-rows-visible (* current-page rows-per-page))
            left-num (if (zero? right-num) 0 (inc (* (dec current-page) rows-per-page)))]
        [:div {:style {:border "1px solid #ebebeb" :boxShadow "-3px -6px 23px -7px #ebebeb inset"}}
         [:div {:style {:fontSize 13 :lineHeight 1.5 :padding "0px 48px" :verticalAlign "middle"}}
 
-         [:div {:style {:float "left" :display "inline-block" :width "33.33%" :padding "2.15em 0em" :verticalAlign "middle"}}
-          [:b {} (str left-num " - " right-num)] (str " of " (pluralize num-total " result"))]
+         [:div {:style {:float "left" :display "inline-block" :width "33.33%" :padding "2.15em 0em"
+                        :verticalAlign "middle"}}
+          [:b {} (str left-num " - " right-num)] (str " of " (pluralize num-rows-visible " result")
+                                                   (when-not (= num-rows-visible (:num-total-rows props))
+                                                     (str " (filtered from " (:num-total-rows props) " total)")))]
 
          (style/create-unselectable :div {:style {:float "left" :display "inline-block" :width "33.33%"
                                                   :padding "1.6em 0em" :verticalAlign "middle" :textAlign "center"}}
@@ -63,9 +64,9 @@
                                     :color (if selected? "white" (:button-blue style/colors))
                                     :borderRadius (when selected? "100%")
                                     :cursor (when-not selected? "pointer")}
-                            :onClick (when-not selected? (num-onClick n))}
+                            :onClick (when-not selected? #(swap! state assoc :current-page n))}
                       n]))
-              page-range)]
+              (create-page-range current-page num-pages))]
 
            [:div {:style {:display "inline-block" :padding "0.55em 0.9em"
                           :color (if allow-next (:button-blue style/colors) (:border-gray style/colors))
@@ -182,6 +183,31 @@
         (:rows @state))])})
 
 
+(react/defc Filterer
+  {:get-initial-state
+   (fn [] {:initial true :synced true})
+   :render
+   (fn [{:keys [state this]}]
+     [:span {}
+      (style/create-text-field {:ref "filter-field" :placeholder "Filter"
+                                :style {:backgroundColor (if (:synced @state) "#fff" (:tag-background style/colors))}
+                                :onKeyDown (common/create-key-handler
+                                             [:enter] #(react/call :apply-filter this))
+                                :onChange #(swap! state assoc :initial false :synced false)})
+      [:span {:style {:paddingLeft "1em"}}]
+      [comps/Button {:icon :search :onClick #(react/call :apply-filter this)}]])
+   :make-desynced
+   (fn [{:keys [state]}]
+     (when-not (:initial @state)
+       (swap! state assoc :synced false)))
+   :apply-filter
+   (fn [{:keys [state props refs]}]
+     (swap! state assoc :synced true)
+     (let [text (-> (@refs "filter-field") .getDOMNode .-value trim)]
+       (when (empty? text) (swap! state assoc :initial true))
+       ((:onFilter props) text)))})
+
+
 (react/defc Table
   {:get-default-props
    (fn []
@@ -200,19 +226,13 @@
      (let [paginator-above (= :above (:paginator props))
            paginator-below (= :below (:paginator props))
            paginator [Paginator {:ref "paginator"
-                                 :num-rows (count (:filtered-data @state))
+                                 :num-rows-visible (count (:filtered-data @state))
+                                 :num-total-rows (count (:data props))
                                  :onChange #(react/call :handle-pagination-change this)}]]
        [:div {}
         (when (:filterable? props)
-          (let [apply-filter #(swap! state assoc :filtered-data
-                               (react/call :filter-data this props
-                                 (-> (@refs "filter-field") .getDOMNode .-value trim)))]
-            [:div {:style {:padding "0 0 1em 1em"}}
-             (style/create-text-field {:ref "filter-field" :placeholder "Filter"
-                                       :onKeyDown (common/create-key-handler
-                                                    [:enter] apply-filter)})
-             [:span {:style {:paddingLeft "1em"}}]
-             [comps/Button {:icon :search :onClick apply-filter}]]))
+          [:div {:style {:padding "0 0 1em 1em"}}
+           [Filterer {:ref "filterer" :onFilter (fn [text] (react/call :filter-data this text))}]])
         (when paginator-above [:div {:style {:paddingBottom (:paginator-space props)}} paginator])
         [:div {:style {:overflowX "auto"}}
          [:div {:style {:position "relative"
@@ -220,14 +240,13 @@
                         :cursor (when (:dragging? @state) "col-resize")}
                 :onMouseMove (fn [e]
                                (when (:dragging? @state)
-                                 (let [widths (:column-widths @state)
-                                       current-width (nth widths (:drag-column @state))
+                                 (let [current-width (nth (:column-widths @state) (:drag-column @state))
                                        new-mouse-x (.-clientX e)
                                        drag-amount (- new-mouse-x (:mouse-x @state))
                                        new-width (+ current-width drag-amount)]
-                                   (when (>= new-width 10)
+                                   (when (and (>= new-width 10) (not (zero? drag-amount)))
                                      (swap! state update-in [:column-widths]
-                                       assoc (:drag-column @state) (+ current-width drag-amount))
+                                       assoc (:drag-column @state) new-width)
                                      (swap! state assoc :mouse-x new-mouse-x)))))
                 :onMouseUp #(swap! state assoc :dragging? false)}
           (render-header state props)
@@ -247,25 +266,25 @@
            ordered-data (if (= :desc (:sort-order @state)) (reverse sorted-data) sorted-data)]
        (take c (drop (* (dec n) c) ordered-data))))
    :filter-data
-   (fn [{:keys []} & [props filter-text]]
-     (if (empty? filter-text)
-       (:data props)
-       (filter
-         (fn [row]
-           (utils/matches-filter-text
-             (apply str
-               (map-indexed
-                 (fn [i column]
-                   (if-let [f (:filter-by column)]
-                     (if (= f :none) "" (f (nth row i)))
-                     (str (nth row i))))
-                 (:columns props)))
-             filter-text))
-         (:data props))))
+   (fn [{:keys [state props]} & [filter-text]]
+     (let [filtered-data
+           (if (empty? filter-text)
+             (:data props)
+             (filter (fn [row]
+                       (utils/matches-filter-text
+                         (apply str (map-indexed
+                                      (fn [i column]
+                                        (if-let [f (:filter-by column)]
+                                          (if (= f :none) "" (f (nth row i)))
+                                          (str (nth row i))))
+                                      (:columns props)))
+                         filter-text))
+               (:data props)))]
+       (swap! state assoc :filtered-data filtered-data)))
    :handle-pagination-change
    (fn [{:keys [this refs]}]
      (react/call :set-rows (@refs "body") (react/call :get-sliced-data this)))
    :component-will-receive-props
-   (fn [{:keys [this state next-props refs]}]
-     (swap! state assoc :filtered-data
-       (react/call :filter-data this next-props (-> (@refs "filter-field") .getDOMNode .-value trim))))})
+   (fn [{:keys [state next-props refs]}]
+     (swap! state assoc :filtered-data (:data next-props))
+     (react/call :make-desynced (@refs "filterer")))})
