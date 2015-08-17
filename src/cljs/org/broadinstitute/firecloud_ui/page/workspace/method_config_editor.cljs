@@ -77,7 +77,8 @@
                          :on-done (fn [{:keys [success? xhr]}]
                                     (if success?
                                       (complete state props new-conf)
-                                      (js/alert (str "Exception:\n" (.-statusText xhr)))))}))))
+                                      (js/alert (str "Exception:\n" (.-statusText xhr)))))
+                         :canned-response {:status 200 :delay-ms (rand-int 2000)}}))))
        :canned-response {:status 200 :delay-ms (rand-int 2000)}})))
 
 (defn- render-top-bar [config]
