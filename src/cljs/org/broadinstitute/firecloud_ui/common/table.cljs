@@ -182,6 +182,31 @@
         (:rows @state))])})
 
 
+(react/defc Filterer
+  {:get-initial-state
+   (fn [] {:initial true :synced true})
+   :render
+   (fn [{:keys [state this]}]
+     [:span {}
+      (style/create-text-field {:ref "filter-field" :placeholder "Filter"
+                                :style {:backgroundColor (if (:synced @state) "#fff" (:background-gray style/colors))}
+                                :onKeyDown (common/create-key-handler
+                                             [:enter] #(react/call :apply-filter this))
+                                :onChange #(swap! state assoc :initial false :synced false)})
+      [:span {:style {:paddingLeft "1em"}}]
+      [comps/Button {:icon :search :onClick #(react/call :apply-filter this)}]])
+   :make-desynced
+   (fn [{:keys [state]}]
+     (when-not (:initial @state)
+       (swap! state assoc :synced false)))
+   :apply-filter
+   (fn [{:keys [state props refs]}]
+     (swap! state assoc :synced true)
+     (let [text (-> (@refs "filter-field") .getDOMNode .-value trim)]
+       (when (empty? text) (swap! state assoc :initial true))
+       ((:onFilter props) text)))})
+
+
 (react/defc Table
   {:get-default-props
    (fn []
@@ -204,15 +229,8 @@
                                  :onChange #(react/call :handle-pagination-change this)}]]
        [:div {}
         (when (:filterable? props)
-          (let [apply-filter #(swap! state assoc :filtered-data
-                               (react/call :filter-data this props
-                                 (-> (@refs "filter-field") .getDOMNode .-value trim)))]
-            [:div {:style {:padding "0 0 1em 1em"}}
-             (style/create-text-field {:ref "filter-field" :placeholder "Filter"
-                                       :onKeyDown (common/create-key-handler
-                                                    [:enter] apply-filter)})
-             [:span {:style {:paddingLeft "1em"}}]
-             [comps/Button {:icon :search :onClick apply-filter}]]))
+          [:div {:style {:padding "0 0 1em 1em"}}
+           [Filterer {:ref "filterer" :onFilter (fn [text] (react/call :filter-data this text))}]])
         (when paginator-above [:div {:style {:paddingBottom (:paginator-space props)}} paginator])
         [:div {:style {:overflowX "auto"}}
          [:div {:style {:position "relative"
@@ -247,25 +265,25 @@
            ordered-data (if (= :desc (:sort-order @state)) (reverse sorted-data) sorted-data)]
        (take c (drop (* (dec n) c) ordered-data))))
    :filter-data
-   (fn [{:keys []} & [props filter-text]]
-     (if (empty? filter-text)
-       (:data props)
-       (filter
-         (fn [row]
-           (utils/matches-filter-text
-             (apply str
-               (map-indexed
-                 (fn [i column]
-                   (if-let [f (:filter-by column)]
-                     (if (= f :none) "" (f (nth row i)))
-                     (str (nth row i))))
-                 (:columns props)))
-             filter-text))
-         (:data props))))
+   (fn [{:keys [state props]} & [filter-text]]
+     (let [filtered-data
+           (if (empty? filter-text)
+             (:data props)
+             (filter (fn [row]
+                       (utils/matches-filter-text
+                         (apply str (map-indexed
+                                      (fn [i column]
+                                        (if-let [f (:filter-by column)]
+                                          (if (= f :none) "" (f (nth row i)))
+                                          (str (nth row i))))
+                                      (:columns props)))
+                         filter-text))
+               (:data props)))]
+       (swap! state assoc :filtered-data filtered-data)))
    :handle-pagination-change
    (fn [{:keys [this refs]}]
      (react/call :set-rows (@refs "body") (react/call :get-sliced-data this)))
    :component-will-receive-props
-   (fn [{:keys [this state next-props refs]}]
-     (swap! state assoc :filtered-data
-       (react/call :filter-data this next-props (-> (@refs "filter-field") .getDOMNode .-value trim))))})
+   (fn [{:keys [state next-props refs]}]
+     (swap! state assoc :filtered-data (:data next-props))
+     (react/call :make-desynced (@refs "filterer")))})
