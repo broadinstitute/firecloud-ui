@@ -36,7 +36,7 @@
 
 (defn matches-filter-text [source filter-text]
   (let [lc-source (lower-case source)]
-    (every? (fn [word] (contains lc-source word)) (split (lower-case filter-text) #" "))))
+    (every? (fn [word] (contains lc-source word)) (split (lower-case filter-text) #"\s+"))))
 
 
 (defn call-external-object-method
