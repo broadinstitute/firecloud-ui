@@ -23,7 +23,7 @@
    dest-namespace]
   {"configurationNamespace" selected-conf-ns
    "configurationName" selected-conf-name
-   "configurationSnapshotId" selected-conf-snapId
+   "configurationSnapshotId" (str selected-conf-snapId)
    "destinationNamespace" dest-namespace
    "destinationName" dest-name})
 
