@@ -163,18 +163,16 @@
           {:style {:width "50%" :minWidth 50 :maxWidth 200} :ref "filter"
            :onChange #(let [value (-> (@refs "filter") .getDOMNode .-value)]
                        (when-not (= value "Select...")
-                         (utils/ajax-orch
+                         (utils/call-ajax-orch
                            (paths/list-all-entities-path workspace value)
-                           {:on-done
-                            (fn [{:keys [success? xhr]}]
-                              (if success?
-                                (swap! state assoc :entities (utils/parse-json-string (.-responseText xhr)))
-                                (utils/rlog "Error: " (.-responseText xhr))))
-                            :canned-response {:responseText (utils/->json-string
-                                                              [{"entityType" value
-                                                               "name" "A mock entity"
-                                                               "attributes" {}}])
-                                              :status 200 :delay-ms (rand-int 1000)}})))}
+                           {:on-success (fn [{:keys [parsed-response]}]
+                                          (swap! state assoc :entities parsed-response
+                                            :selected-entity (first parsed-response)))
+                            :on-failure (fn [{:keys [status-text]}]
+                                          (utils/rlog "Error: " status-text))
+                            :mock-data [{"entityType" value
+                                         "name" "A mock entity"
+                                         "attributes" {}}]})))}
           (:entity-types @state))
         (style/create-form-label "Select Entity")
         (if (zero? (count (:entities @state)))
@@ -182,11 +180,17 @@
           [:div {:style {:backgroundColor "#fff" :border (str "1px solid " (:line-gray style/colors))
                          :padding "1em" :marginBottom "0.5em"}}
            [table/Table
-            {:columns [{:header "Entity Type" :starting-width 100}
+            {:columns [{:header "" :starting-width 40 :resizable? false
+                        :content-renderer (fn [row-index data]
+                                            [:input {:type "radio"
+                                                     :checked (identical? data (:selected-entity @state))
+                                                     :onChange #(swap! state assoc :selected-entity data)}])}
+                       {:header "Entity Type" :starting-width 100}
                        {:header "Entity Name" :starting-width 100}
                        {:header "Attributes" :starting-width 400}]
              :data (map (fn [m]
-                          [(m "entityType")
+                          [m
+                           (m "entityType")
                            (m "name")
                            (m "attributes")])
                      (:entities @state))}]])
