@@ -98,12 +98,12 @@
                  [:hr]
                  (get-in @state [:selected-conf "name"])[:br]
                  (get-in @state [:selected-conf "namespace"]) [:br]
-                 (get-in @state [:selected-conf "snapshotId"])
+                 (get-in @state [:selected-conf "snapshotId"])]
                  [:div {:style {:position "absolute" :right 2 :top 2}}
                   [:div {:style {:backgroundColor (:button-blue style/colors) :color "#fff"
                                  :padding "0.5em" :cursor "pointer"}
                          :onClick (fn [] (swap! state assoc :show-import-mc-modal? false))}
-                   (icons/font-icon {:style {:fontSize "60%"}} :x)]]]
+                   (icons/font-icon {:style {:fontSize "60%"}} :x)]]
                 [:div {:style {:padding "22px 48px 40px"
                                :backgroundColor (:background-gray style/colors)}}
                  [ModalImportOptionsAndButton {:init-Name (get-in @state [:selected-conf "name"])
