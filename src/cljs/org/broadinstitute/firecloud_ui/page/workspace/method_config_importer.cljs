@@ -73,7 +73,8 @@
                                    copy_URL (paths/copy-method-config-to-workspace-path workspace)]
                                (utils/ajax-orch
                                  copy_URL
-                                 {:canned-response {:responseText
+                                 {:headers {"Content-Type" "application/json"}
+                                  :canned-response {:responseText
                                                       (utils/->json-string (create-mock-methodconfs-import))
                                                     :status 200
                                                     :delay-ms (rand-int 2000)}
