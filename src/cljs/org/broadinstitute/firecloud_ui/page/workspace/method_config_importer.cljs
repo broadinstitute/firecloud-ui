@@ -153,19 +153,13 @@
                                  "FireCloud service returned error: " (:error-message @state)]
         :else [comps/Spinner {:text "Loading configurations for import..."}])])
    :component-did-mount
-   (fn [{:keys [state props]}]
-     (utils/ajax-orch (str "/configurations")
-       {:on-done (fn [{:keys [success? xhr]}]
-                   (if success?
-                     (do
-                       (swap! state assoc
-                         :loaded-import-confs? true
-                         :method-confs (utils/parse-json-string (.-responseText xhr)))
-                       )
-                     (swap! state assoc :error-message (.-statusText xhr))))
-        :canned-response {:responseText (utils/->json-string (create-mock-methodconfs-import))
-                          :status 200
-                          :delay-ms (rand-int 2000)}}))})
+   (fn [{:keys [state]}]
+     (utils/call-ajax-orch "/configurations"
+       {:on-success (fn [{:keys [parsed-response]}]
+                      (swap! state assoc :loaded-import-confs? true :method-confs parsed-response))
+        :on-failure (fn [{:keys [status-text]}]
+                      (swap! state assoc :error-message status-text))
+        :mock-data (create-mock-methodconfs-import)}))})
 
 
 (def modal-import-background

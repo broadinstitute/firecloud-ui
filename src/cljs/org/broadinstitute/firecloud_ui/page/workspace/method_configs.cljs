@@ -85,22 +85,9 @@
                   (:method-confs props))}])])})
 
 
-(defn- load-workspaces [state props]
-  (swap! state assoc :method-confs-loaded? false)
-  (utils/ajax-orch
-    (list-method-configs-path (:workspace props))
-    {:on-done (fn [{:keys [success? xhr]}]
-                (if success?
-                  (swap! state assoc :method-confs-loaded? true
-                    :method-confs (vec (utils/parse-json-string (.-responseText xhr))))
-                  (swap! state assoc :error-message (.-statusText xhr))))
-     :canned-response {:responseText (utils/->json-string (create-mock-methodconfs))
-                       :status 200
-                       :delay-ms (rand-int 2000)}}))
-
 (react/defc WorkspaceMethodConfigurations
   {:render
-   (fn [{:keys [state props]}]
+   (fn [{:keys [state props this]}]
      [:div {:style {:padding "1em 0"}}
       [:div {}
        (cond
@@ -109,7 +96,7 @@
                               :config (:selected-method-config @state)
                               :onCommit (fn [new-conf]
                                           (if utils/use-live-data?
-                                            (load-workspaces state props)
+                                            (react/call :load-method-configs this)
                                             (swap! state update-in [:method-confs]
                                               assoc (:selected-index @state) new-conf)))}]
          (:method-confs-loaded? @state) [WorkspaceMethodsConfigurationsList {:workspace (:workspace props)
@@ -118,9 +105,18 @@
          (:error-message @state) [:div {:style {:color "red"}}
                                   "FireCloud service returned error: " (:error-message @state)]
          :else [comps/Spinner {:text "Loading configurations..."}])]])
-   :component-did-mount
+   :load-method-configs
    (fn [{:keys [state props]}]
-     (load-workspaces state props))
+     (swap! state assoc :method-confs-loaded? false)
+     (utils/call-ajax-orch (list-method-configs-path (:workspace props))
+       {:on-success (fn [{:keys [parsed-response]}]
+                      (swap! state assoc :method-confs-loaded? true :method-confs (vec parsed-response)))
+        :on-failure (fn [{:keys [status-text]}]
+                      (swap! state assoc :error-message status-text))
+        :mock-data (create-mock-methodconfs)}))
+   :component-did-mount
+   (fn [{:keys [this]}]
+     (react/call :load-method-configs this))
    :component-will-receive-props
    (fn [{:keys [state]}]
      (swap! state dissoc :selected-method-config :selected-index))})

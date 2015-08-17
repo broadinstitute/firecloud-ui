@@ -67,10 +67,10 @@
                     (aset xhr (name k) v))
                   xhr))
           call-on-done (fn []
-                         ((:on-done arg-map) {:xhr xhr
-                                              :status-code (.-status xhr)
-                                              :success? (and (>= (.-status xhr) 200)
-                                                             (< (.-status xhr) 300))}))]
+                         (on-done {:xhr xhr
+                                   :status-code (.-status xhr)
+                                   :success? (and (>= (.-status xhr) 200)
+                                               (< (.-status xhr) 300))}))]
       (when with-credentials?
         (set! (.-withCredentials xhr) true))
       (if canned-response-params
@@ -98,6 +98,17 @@
 
 (defn parse-json-string [x]
   (js->clj (js/JSON.parse x)))
+
+
+(defn call-ajax-orch [path arg-map]
+  (ajax-orch path (assoc arg-map
+                    :on-done (fn [{:keys [success? xhr] :as map}]
+                               (if success?
+                                 ((:on-success arg-map) (merge map {:parsed-response (parse-json-string (.-responseText xhr))}))
+                                 ((:on-failure arg-map) (merge map {:status-text (.-statusText xhr)}))))
+                    :canned-response {:status 200 :delay-ms (rand-int 2000)
+                                      :responseText (if-let [mock-data (:mock-data arg-map)]
+                                                      (->json-string mock-data))})))
 
 
 (defn deep-merge [& maps]
