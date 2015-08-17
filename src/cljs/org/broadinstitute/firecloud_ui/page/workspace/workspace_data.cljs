@@ -87,17 +87,13 @@
        (react/call :load-entities this)))
    :load-entities
    (fn [{:keys [state props]}]
-     (utils/ajax-orch
+     (utils/call-ajax-orch
        (list-all-entities-path (:workspace props) "sample")
-       {:on-done (fn [{:keys [success? xhr]}]
-                   (if success?
-                     (swap! state assoc
-                       :entities-loaded? true
-                       :entities (utils/parse-json-string (.-responseText xhr)))
-                     (swap! state assoc :error {:message (.-statusText xhr)})))
-        :canned-response {:responseText (utils/->json-string (create-mock-entities))
-                          :status 200
-                          :delay-ms (rand-int 2000)}}))})
+       {:on-success (fn [{:keys [parsed-response]}]
+                      (swap! state assoc :entities-loaded? true :entities parsed-response))
+        :on-failure (fn [{:keys [status-text]}]
+                      (swap! state assoc :error {:message status-text}))
+        :mock-data (create-mock-entities)}))})
 
 (defn render-workspace-data [workspace]
   [WorkspaceData {:workspace workspace}])

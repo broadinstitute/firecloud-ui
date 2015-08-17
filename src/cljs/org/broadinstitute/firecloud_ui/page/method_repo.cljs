@@ -59,15 +59,11 @@
          :else [comps/Spinner {:text "Loading methods..."}])]])
    :component-did-mount
    (fn [{:keys [state]}]
-     (utils/ajax-orch
+     (utils/call-ajax-orch
        (get-methods-path)
-       {:on-done (fn [{:keys [success? xhr]}]
-                   (if success?
-                     (let [methods (utils/parse-json-string (.-responseText xhr))]
-                       (swap! state assoc :methods-loaded? true :methods methods))
-                     (swap! state assoc
-                            :error {:message (.-statusText xhr)})))
-        :canned-response {:responseText (utils/->json-string (create-mock-methods))
-                          :status 200
-                          :delay-ms (rand-int 2000)}}))})
+       {:on-success (fn [{:keys [parsed-response]}]
+                      (swap! state assoc :methods-loaded? true :methods parsed-response))
+        :on-failure (fn [{:keys [status-text]}]
+                      (swap! state assoc :error {:message status-text}))
+        :mock-data (create-mock-methods)}))})
 

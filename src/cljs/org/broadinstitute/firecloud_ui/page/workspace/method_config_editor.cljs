@@ -59,27 +59,19 @@
                    "outputs" outputs
                    "prerequisites" prereqs)]
     (swap! state assoc :blocker "Updating...")
-    (utils/ajax-orch
-      (paths/update-method-config-path workspace config)
+    (utils/call-ajax-orch (paths/update-method-config-path workspace config)
       {:method :PUT
        :data (utils/->json-string new-conf)
        :headers {"Content-Type" "application/json"} ;; TODO - make endpoint take text/plain
-       :on-done (fn [{:keys [success? xhr]}]
-                  (if-not success?
-                    (js/alert (str "Exception:\n" (.-statusText xhr)))
-                    (if (= name (config "name"))
-                      (complete state props new-conf)
-                      (utils/ajax-orch
-                        (paths/rename-method-config-path workspace config)
-                        {:method :post
-                         :data (utils/->json-string (select-keys new-conf ["name" "namespace" "workspaceName"]))
-                         :headers {"Content-Type" "application/json"} ;; TODO - make unified call in orchestration
-                         :on-done (fn [{:keys [success? xhr]}]
-                                    (if success?
-                                      (complete state props new-conf)
-                                      (js/alert (str "Exception:\n" (.-statusText xhr)))))
-                         :canned-response {:status 200 :delay-ms (rand-int 2000)}}))))
-       :canned-response {:status 200 :delay-ms (rand-int 2000)}})))
+       :on-success #(if (= name (config "name"))
+                     (complete state props new-conf)
+                     (utils/call-ajax-orch (paths/rename-method-config-path workspace config)
+                       {:method :post
+                        :data (utils/->json-string (select-keys new-conf ["name" "namespace" "workspaceName"]))
+                        :headers {"Content-Type" "application/json"} ;; TODO - make unified call in orchestration
+                        :on-success (fn [] (complete state props new-conf))
+                        :on-failure (fn [{:keys [status-text]}] (js/alert (str "Exception:\n" status-text)))}))
+       :on-failure (fn [{:keys [status-text]}] (js/alert (str "Exception:\n" status-text)))})))
 
 (defn- render-top-bar [config]
   [:div {:style {:backgroundColor (:background-gray style/colors)

@@ -197,18 +197,15 @@
                                    {:text "Read-Only" :component content}]}]]))))
    :component-did-mount
    (fn [{:keys [state]}]
-     (utils/ajax-orch
+     (utils/call-ajax-orch
        (paths/list-workspaces-path)
-       {:on-done (fn [{:keys [success? xhr]}]
-                   (swap! state assoc :server-response
-                     (merge {:success? success?}
-                       (if success?
-                         ;; TODO(dmohs): Remove when Rawls returns workspace statuses.
-                         {:workspaces (map #(merge {"status" "Complete"} %)
-                                        (utils/parse-json-string (.-responseText xhr)))}
-                         {:error-message (.-statusText xhr)}))))
-        :canned-response {:responseText (utils/->json-string (create-mock-workspaces))
-                          :status 200 :delay-ms (rand-int 2000)}}))})
+       {:on-success (fn [{:keys [parsed-response]}]
+                      (swap! state assoc :server-response
+                        {:success? true :workspaces (map #(merge {"status" "Complete"} %) parsed-response)}))
+        :on-failure (fn [{:keys [status-text]}]
+                      (swap! state assoc :server-response
+                        {:success? false :error-message status-text}))
+        :mock-data (create-mock-workspaces)}))})
 
 
 (defn- render-workspaces-list [nav-context]

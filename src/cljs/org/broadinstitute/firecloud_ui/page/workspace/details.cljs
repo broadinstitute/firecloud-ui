@@ -32,22 +32,14 @@
                                  {:text "Files"}]}]))])
    :load-workspace
    (fn [{:keys [props state]}]
-     (utils/ajax-orch
+     (utils/call-ajax-orch
        (paths/workspace-details-path (:workspace-id props))
-       {:on-done (fn [{:keys [success? xhr]}]
-                   (let [response (utils/parse-json-string (.-responseText xhr))]
-                     (swap! state assoc :server-response
-                       (if success?
-                         {:workspace (merge {"status" "Complete"} ;; TODO Remove.
-                                       response)}
-                         {:error-message (response "message")}))))
-        :canned-response {:responseText (utils/->json-string
-                                          (merge
-                                            (:workspace-id props)
-                                            {:status "Complete"
-                                             :createdBy "Nobody"}))
-                          :status 200
-                          :delay-ms (rand-int 1000)}}))
+       {:on-success (fn [{:keys [parsed-response]}]
+                      (swap! state assoc :server-response {:workspace (merge {"status" "Complete"} ;; TODO Remove.
+                                                                        parsed-response)}))
+        :on-failure (fn [{:keys [status-text]}]
+                      (swap! state assoc :server-response {:error-message status-text}))
+        :mock-data (merge (:workspace-id props) {:status "Complete" :createdBy "Nobody"})}))
    :component-did-mount
    (fn [{:keys [this]}]
      (react/call :load-workspace this))
