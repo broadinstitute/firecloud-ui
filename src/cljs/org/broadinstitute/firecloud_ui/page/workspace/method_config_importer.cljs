@@ -7,6 +7,7 @@
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.common.table :as table]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
+    [org.broadinstitute.firecloud-ui.paths :as paths]
     [org.broadinstitute.firecloud-ui.utils :as utils]))
 
 
@@ -68,11 +69,10 @@
                                                selected-conf-namespace
                                                selected-conf-snapshotId
                                                dest-conf-name
-                                               dest-conf-namespace)]
+                                               dest-conf-namespace)
+                                   copy_URL (paths/copy-method-config-to-workspace-path workspace)]
                                (utils/ajax-orch
-                                 (str "/" dest-workspace-namespace "/"
-                                   dest-workspace-name
-                                   "/method_configs/copyFromMethodRepo")
+                                 copy_URL
                                  {:canned-response {:responseText
                                                       (utils/->json-string (create-mock-methodconfs-import))
                                                     :status 200
