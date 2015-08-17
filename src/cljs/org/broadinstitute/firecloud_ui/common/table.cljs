@@ -116,13 +116,14 @@
                   {:fontWeight 500 :fontSize "80%"
                    :color "#fff" :backgroundColor (:header-darkgray style/colors)}
                   (:header-row-style props))}
-   (map-indexed
-     (fn [i column]
-       (let [onResizeMouseDown (when (get column :resizable? (:resizable-columns? props))
+   (map
+     (fn [column]
+       (let [i (:index column)
+             onResizeMouseDown (when (get column :resizable? (:resizable-columns? props))
                                  (fn [e] (swap! state assoc
                                            :dragging? true :mouse-x (.-clientX e) :drag-column i)))]
          (render-cell
-           {:width (nth (:column-widths @state) i)
+           {:width (:width column)
             :content (:header column)
             :cell-style (when onResizeMouseDown {:borderRight "1px solid #777777" :marginRight -1})
             :cell-padding-left (or (:cell-padding-left props) 0)
@@ -130,8 +131,8 @@
                                        {:padding (str "0.8em 0 0.8em " (or (:cell-padding-left props) 0))}
                                        (:header-style props))
             :onResizeMouseDown onResizeMouseDown
-            :onResizeDoubleClick #(swap! state update-in [:column-widths]
-                                     assoc i (get-in props [:columns i :starting-width]))
+            :onResizeDoubleClick #(swap! state update-in [:ordered-columns i]
+                                     assoc :width (:starting-width column))
             :onSortClick (when-let [sorter (:sort-by column)]
                            #(if (= i (:sort-column @state))
                              (case (:sort-order @state)
@@ -143,7 +144,7 @@
                                          (fn [row] (nth row i))
                                          (fn [row] (sorter (nth row i)))))))
             :sortOrder (when (= i (:sort-column @state)) (:sort-order @state))})))
-     (:columns props))
+     (filter :showing? (:ordered-columns @state)))
    (common/clear-both)])
 
 
@@ -174,12 +175,12 @@
                                 (:even-row-style props))
                               (:odd-row-style props)))]
             [:div {:style row-style}
-             (map-indexed
-               (fn [col-index col]
+             (map
+               (fn [col]
                  (let [render-content (or (:content-renderer col) (fn [i data] (default-render data)))]
                    (render-cell
-                     {:width (nth (:column-widths props) col-index)
-                      :content (render-content row-index (nth row col-index))
+                     {:width (:width col)
+                      :content (render-content row-index (nth row (:index col)))
                       :cell-padding-left (or (:cell-padding-left props) 0)
                       :content-container-style (merge
                                                  {:padding (str "0.6em 0 0.6em " (or (:cell-padding-left props) 0))}
@@ -194,7 +195,7 @@
    (fn [] {:initial true :synced true})
    :render
    (fn [{:keys [state this]}]
-     [:span {}
+     [:div {}
       (style/create-text-field {:ref "filter-field" :placeholder "Filter"
                                 :style {:backgroundColor (if (:synced @state) "#fff" (:tag-background style/colors))}
                                 :onKeyDown (common/create-key-handler
@@ -214,6 +215,30 @@
        ((:onFilter props) text)))})
 
 
+(react/defc ColumnEditor
+  {:render
+   (fn [{:keys [props]}]
+     [:div {:style {:backgroundColor "#fff" :border (str "2px solid " (:line-gray style/colors))
+                    :padding "1em" :lineHeight "1.5em"}}
+      [:div {} "Show:"]
+      (let [style {:padding "4px 8px" :marginRight 5 :borderRadius 5 :cursor "pointer"
+                   :backgroundColor (:button-blue style/colors) :color "#fff"}
+            submit (fn [b] #((:submit props) (mapv (fn [col] (assoc col :showing? b)) (:columns props))))]
+        [:div {:style {:padding "0.5em 0"}}
+         [:span {:style style :onClick (submit true)} "All"]
+         [:span {:style style :onClick (submit false)} "None"]])
+      (map-indexed
+        (fn [i column]
+          (when (get column :reorderable? true)
+            [:div {}
+             (let [showing? (:showing? column)]
+               [:input {:type "checkbox"
+                        :checked showing?
+                        :onChange #((:submit props) (update-in (:columns props) [i] assoc :showing? (not showing?)))}])
+             [:span {:style {:paddingLeft "0.5em"}} (:header column)]]))
+        (:columns props))])})
+
+
 (react/defc Table
   {:get-default-props
    (fn []
@@ -221,14 +246,19 @@
       :paginator :below
       :paginator-space 24
       :resizable-columns? true
+      :reorderable-columns? true
       :filterable? true})
    :get-initial-state
    (fn [{:keys [props]}]
-     {:column-widths (mapv #(or (:starting-width %) 100) (:columns props))
+     {:ordered-columns (vec (map-indexed
+                              (fn [index col] (assoc col :index index :showing? true
+                                                         :width (or (:starting-width col) 100)
+                                                         :starting-width (or (:starting-width col) 100)))
+                              (:columns props)))
       :dragging? false
       :filtered-data (:data props)})
    :render
-   (fn [{:keys [this state refs props]}]
+   (fn [{:keys [this state props]}]
      (let [paginator-above (= :above (:paginator props))
            paginator-below (= :below (:paginator props))
            paginator [Paginator {:ref "paginator"
@@ -236,30 +266,44 @@
                                  :num-total-rows (count (:data props))
                                  :onChange #(react/call :handle-pagination-change this)}]]
        [:div {}
-        (when (:filterable? props)
+        (when (:reorderable-columns? props)
+          [comps/AnchoredDialog {:show-when (:reordering-columns @state)
+                                 :anchor-left (:anchor-left @state)
+                                 :anchor-top (:anchor-top @state)
+                                 :dismiss-self #(swap! state assoc :reordering-columns false)
+                                 :content (react/create-element ColumnEditor
+                                            {:columns (:ordered-columns @state)
+                                             :submit (fn [new-order] (swap! state assoc :ordered-columns new-order))})}])
+        (when (or (:filterable? props) (:reorderable-columns? props))
           [:div {:style {:padding "0 0 1em 1em"}}
-           [Filterer {:ref "filterer" :onFilter (fn [text] (react/call :filter-data this text))}]])
+           (when (:filterable? props)
+             [:div {:style {:float "left" :marginRight "1em"}}
+              [Filterer {:ref "filterer" :onFilter (fn [text] (react/call :filter-data this text))}]])
+           (when (:reorderable-columns? props)
+             [:div {:style {:float "left"}}
+              [comps/Button {:icon :gear :title-text "Select Columns..." :ref "col-edit-button"
+                             :onClick #(swap! state assoc :reordering-columns true)}]])
+           (common/clear-both)])
         (when paginator-above [:div {:style {:paddingBottom (:paginator-space props)}} paginator])
         [:div {:style {:overflowX "auto"}}
          [:div {:style {:position "relative"
-                        :minWidth (reduce + (:column-widths @state))
+                        :minWidth (reduce + (map :width (filter :showing? (:ordered-columns @state))))
                         :cursor (when (:dragging? @state) "col-resize")}
                 :onMouseMove (fn [e]
                                (when (:dragging? @state)
-                                 (let [current-width (nth (:column-widths @state) (:drag-column @state))
+                                 (let [current-width (:width (nth (:ordered-columns @state) (:drag-column @state)))
                                        new-mouse-x (.-clientX e)
                                        drag-amount (- new-mouse-x (:mouse-x @state))
                                        new-width (+ current-width drag-amount)]
                                    (when (and (>= new-width 10) (not (zero? drag-amount)))
-                                     (swap! state update-in [:column-widths]
-                                       assoc (:drag-column @state) new-width)
+                                     (swap! state update-in [:ordered-columns (:drag-column @state)]
+                                       assoc :width new-width)
                                      (swap! state assoc :mouse-x new-mouse-x)))))
                 :onMouseUp #(swap! state assoc :dragging? false)}
           (render-header state props)
           [Body (assoc props
                   :ref "body"
-                  :columns (:columns props)
-                  :column-widths (:column-widths @state)
+                  :columns (filter :showing? (:ordered-columns @state))
                   :initial-rows (react/call :get-sliced-data this true))]]]
         (when paginator-below [:div {:style {:paddingTop (:paginator-space props)}} paginator])]))
    :get-sliced-data
@@ -293,4 +337,17 @@
    :component-will-receive-props
    (fn [{:keys [state next-props refs]}]
      (swap! state assoc :filtered-data (:data next-props))
-     (react/call :make-desynced (@refs "filterer")))})
+     (react/call :make-desynced (@refs "filterer")))
+   :component-did-mount
+   (fn [{:keys [this state refs props]}]
+     (when (:reorderable-columns? props)
+       (let [capture-position
+             #(let [domnode (.getDOMNode (@refs "col-edit-button"))]
+               (swap! state assoc :anchor-top (- (.-offsetTop domnode) (.-scrollY js/window))
+                 :anchor-left (- (.-offsetLeft domnode) (.-scrollX js/window))))]
+         (set! (.-onScrollHandler this) capture-position)
+         (.addEventListener js/window "scroll" (.-onScrollHandler this))
+         (capture-position))))
+   :component-will-unmount
+   (fn [{:keys [this]}]
+     (.removeEventListener js/window "scroll" (.-onScrollHandler this)))})

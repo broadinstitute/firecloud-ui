@@ -3,7 +3,8 @@
     [dmohs.react :as react]
     [org.broadinstitute.firecloud-ui.common :as common]
     [org.broadinstitute.firecloud-ui.common.icons :as icons]
-    [org.broadinstitute.firecloud-ui.common.style :as style]))
+    [org.broadinstitute.firecloud-ui.common.style :as style]
+    ))
 
 
 (react/defc Spinner
@@ -111,6 +112,24 @@
            (:items props))
          [:div {:style {:clear "both"}}]]
         [:div {} (:component (nth (:items props) (:active-tab-index @state)))]])}))
+
+
+(react/defc AnchoredDialog
+  {:render
+   (fn [{:keys [props]}]
+     (when (:show-when props)
+       (let [content (:content props)]
+         (assert (react/valid-element? content)
+           (subs (str "Not a react element: " content) 0 200))
+         [:div {:style {:backgroundColor "rgba(210, 210, 210, 0.4)"
+                        :overflowX "hidden" :overflowY "scroll"
+                        :position "fixed" :zIndex 8888
+                        :top 0 :right 0 :bottom 0 :left 0}
+                :onKeyDown (common/create-key-handler [:esc] #((:dismiss-self props)))
+                :onClick #((:dismiss-self props))}
+          [:div {:style {:position "absolute" :top (:anchor-top props) :left (:anchor-left props)}
+                 :onClick (fn [e] (.stopPropagation e))}
+           content]])))})
 
 
 (react/defc ModalDialog
