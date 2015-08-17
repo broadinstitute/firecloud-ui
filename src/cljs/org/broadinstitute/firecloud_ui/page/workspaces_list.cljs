@@ -239,9 +239,7 @@
           :width 500
           :content (render-modal state refs nav-context)}]
         [:div {:style {:padding "2em"}}
-         [:div {:style {:float "right" :display (when (or
-                                                        (not (:workspaces-loaded? @state))
-                                                        (:name selected-ws-id)) "none")}}
+         [:div {:style {:float "right" :display (when (:name selected-ws-id) "none")}}
           [comps/Button
            {:text "Create New Workspace" :style :add
             :onClick #(swap! state assoc :overlay-shown? true)}]]
