@@ -1,6 +1,7 @@
 (ns org.broadinstitute.firecloud-ui.page.workspace.method-config-editor
   (:require
     [dmohs.react :as react]
+    [clojure.set :refer [union]]
     [clojure.string :refer [join trim blank?]]
     [org.broadinstitute.firecloud-ui.common :as common :refer [clear-both]]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
@@ -170,21 +171,25 @@
           (style/create-message-well "No entities to display.")
           [:div {:style {:backgroundColor "#fff" :border (str "1px solid " (:line-gray style/colors))
                          :padding "1em" :marginBottom "0.5em"}}
-           [table/Table
-            {:columns [{:header "" :starting-width 40 :resizable? false
-                        :content-renderer (fn [i data]
-                                            [:input {:type "radio"
-                                                     :checked (identical? data (:selected-entity @state))
-                                                     :onChange #(swap! state assoc :selected-entity data)}])}
-                       {:header "Entity Type" :starting-width 100}
-                       {:header "Entity Name" :starting-width 100}
-                       {:header "Attributes" :starting-width 400}]
-             :data (map (fn [m]
-                          [m
-                           (m "entityType")
-                           (m "name")
-                           (m "attributes")])
-                     (:entities @state))}]])
+           (let [attribute-keys (apply union (map (fn [e] (set (keys (e "attributes")))) (:entities @state)))]
+             [table/Table
+              {:key (get-id)
+               :columns (concat
+                          [{:header "" :starting-width 40 :resizable? false
+                            :content-renderer (fn [i data]
+                                                [:input {:type "radio"
+                                                         :checked (identical? data (:selected-entity @state))
+                                                         :onChange #(swap! state assoc :selected-entity data)}])}
+                           {:header "Entity Type" :starting-width 100 :sort-by :value}
+                           {:header "Entity Name" :starting-width 100 :sort-by :value}]
+                          (map (fn [k] {:header k :starting-width 100 :sort-by :value}) attribute-keys))
+               :data (map (fn [m]
+                            (concat
+                              [m
+                               (m "entityType")
+                               (m "name")]
+                              (map (fn [k] (get-in m ["attributes" k])) attribute-keys)))
+                       (:entities @state))}])])
         (style/create-form-label "Define Expression")
         (style/create-text-field {:ref "expressionname" :defaultValue "" :placeholder "leave blank for default"})]
        [:div {:style {:fontSize "106%" :lineHeight 1 :textAlign "center"}}

@@ -147,6 +147,12 @@
    (common/clear-both)])
 
 
+(defn- default-render [data]
+  (cond (map? data) (utils/map-to-string data)
+        (sequential? data) (clojure.string/join ", " data)
+        :else data))
+
+
 (react/defc Body
   {:set-rows
    (fn [{:keys [state]} rows]
@@ -170,7 +176,7 @@
             [:div {:style row-style}
              (map-indexed
                (fn [col-index col]
-                 (let [render-content (or (:content-renderer col) (fn [i data] data))]
+                 (let [render-content (or (:content-renderer col) (fn [i data] (default-render data)))]
                    (render-cell
                      {:width (nth (:column-widths props) col-index)
                       :content (render-content row-index (nth row col-index))
