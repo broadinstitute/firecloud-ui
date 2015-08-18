@@ -134,9 +134,13 @@
                             (utils/call-ajax-orch
                               (paths/get-entities-by-type-path workspace)
                               {:on-success (fn [{:keys [parsed-response]}]
-                                             (let [emap (group-by (fn [e] (e "entityType")) parsed-response)]
+                                             (let [emap (group-by (fn [e] (e "entityType")) parsed-response)
+                                                   first-entities (get emap (first (keys emap)))
+                                                   first-entity (first first-entities)]
                                                (swap! state assoc :blocker nil :submitting? true
-                                                 :entity-map emap :entities (get emap (first (keys emap))))))
+                                                 :entity-map emap
+                                                 :entities first-entities
+                                                 :selected-entity first-entity)))
                                :on-failure (fn [{:keys [status-text]}]
                                              (swap! state assoc :blocker nil)
                                              (js/alert (str "Error: " status-text)))
@@ -158,40 +162,53 @@
                       :fontSize "137%" :fontWeight 400 :lineHeight 1}}
         "Select Entity"]
        [:div {:style {:position "absolute" :top 4 :right 4}}
-        [comps/Button {:icon :x :onClick #(swap! state assoc :submitting? false)}]]
-       [:div {:ref "launchContainer" :style {:padding "22px 48px 40px" :backgroundColor (:background-gray style/colors)}}
-        (style/create-form-label "Select Entity Type")
-        (style/create-select
-          {:style {:width "50%" :minWidth 50 :maxWidth 200} :ref "filter"
-           :onChange #(let [value (-> (@refs "filter") .getDOMNode .-value)]
-                       (swap! state assoc :entities (get-in @state [:entity-map value])))}
-          (keys (:entity-map @state)))
-        (style/create-form-label "Select Entity")
-        (if (zero? (count (:entities @state)))
-          (style/create-message-well "No entities to display.")
-          [:div {:style {:backgroundColor "#fff" :border (str "1px solid " (:line-gray style/colors))
-                         :padding "1em" :marginBottom "0.5em"}}
-           (let [attribute-keys (apply union (map (fn [e] (set (keys (e "attributes")))) (:entities @state)))]
-             [table/Table
-              {:key (get-id)
-               :columns (concat
-                          [{:header "" :starting-width 40 :resizable? false
-                            :content-renderer (fn [i data]
-                                                [:input {:type "radio"
-                                                         :checked (identical? data (:selected-entity @state))
-                                                         :onChange #(swap! state assoc :selected-entity data)}])}
-                           {:header "Entity Type" :starting-width 100 :sort-by :value}
-                           {:header "Entity Name" :starting-width 100 :sort-by :value}]
-                          (map (fn [k] {:header k :starting-width 100 :sort-by :value}) attribute-keys))
-               :data (map (fn [m]
-                            (concat
-                              [m
-                               (m "entityType")
-                               (m "name")]
-                              (map (fn [k] (get-in m ["attributes" k])) attribute-keys)))
-                       (:entities @state))}])])
-        (style/create-form-label "Define Expression")
-        (style/create-text-field {:ref "expressionname" :defaultValue "" :placeholder "leave blank for default"})]
+        [comps/Button {:icon :x :onClick #(swap! state assoc :submitting? false
+                                           :launch-result nil :launch-exception nil)}]]
+       [:div {:style {:padding "22px 48px 40px" :backgroundColor (:background-gray style/colors)}}
+        (if (:launch-result @state)
+          [:div {}
+           (if (:launch-exception @state)
+             (icons/font-icon {:style {:fontSize "200%" :color (:exception-red style/colors)}}
+               :status-warning-triangle)
+             (icons/font-icon {:style {:fontSize "200%" :color (:success-green style/colors)}}
+                            :status-done))
+           (:launch-result @state)]
+          [:div {}
+           (style/create-form-label "Select Entity Type")
+           (style/create-select
+             {:style {:width "50%" :minWidth 50 :maxWidth 200} :ref "filter"
+              :onChange #(let [value (-> (@refs "filter") .getDOMNode .-value)
+                               entities (get-in @state [:entity-map value])]
+                          (swap! state assoc :entities entities :selected-entity (first entities)))}
+             (keys (:entity-map @state)))
+           (style/create-form-label "Select Entity")
+           (if (zero? (count (:entities @state)))
+             (style/create-message-well "No entities to display.")
+             [:div {:style {:backgroundColor "#fff" :border (str "1px solid " (:line-gray style/colors))
+                            :padding "1em" :marginBottom "0.5em"}}
+              (let [attribute-keys (apply union (map (fn [e] (set (keys (e "attributes")))) (:entities @state)))]
+                [table/Table
+                 {:key (get-id)
+                  :columns (concat
+                             [{:header "" :starting-width 40 :resizable? false
+                               :content-renderer (fn [i data]
+                                                   [:input {:type "radio"
+                                                            :checked (identical? data (:selected-entity @state))
+                                                            :onChange #(swap! state assoc :selected-entity data)}])}
+                              {:header "Entity Type" :starting-width 100 :sort-by :value}
+                              {:header "Entity Name" :starting-width 100 :sort-by :value}]
+                             (map (fn [k] {:header k :starting-width 100 :sort-by :value}) attribute-keys))
+                  :data (map (fn [m]
+                               (concat
+                                 [m
+                                  (m "entityType")
+                                  (m "name")]
+                                 (map (fn [k] (get-in m ["attributes" k])) attribute-keys)))
+                          (:entities @state))}])])
+           (style/create-form-label "Define Expression")
+           (style/create-text-field {:ref "expressionname" :defaultValue "" :placeholder "leave blank for default"})])]
+
+       (when-not (:launch-result @state)
        [:div {:style {:fontSize "106%" :lineHeight 1 :textAlign "center"}}
         [:div {:style {:padding "0.7em 0" :cursor "pointer"
                        :backgroundColor (:button-blue style/colors)
@@ -214,12 +231,10 @@
                                     :data (utils/->json-string payload)
                                     :headers{"Content-Type" "application/json"}
                                     :on-done (fn [{:keys [success? xhr]}]
-                                                 ;; TODO total hack below for UI ...
-                                                 (if success?
-                                                   (set! (-> (@refs "launchContainer") .getDOMNode .-innerHTML) (.-responseText xhr))
-                                                   (do
-                                                     (set! (-> (@refs "launchContainer") .getDOMNode .-style .-backgroundColor) (:exception-red style/colors))
-                                                     (set! (-> (@refs "launchContainer") .getDOMNode .-innerHTML) (.-responseText xhr)))))
+                                               ;; TODO total hack below for UI ...
+                                               (swap! state assoc :launch-result (.-responseText xhr))
+                                               (if-not success?
+                                                 (swap! state assoc :launch-exception true)))
                                     :canned-response {:responseText (utils/->json-string
                                                                       [{"workspaceName" {"namespace" "broad-dsde-dev",
                                                                                          "name" "alexb_test_submission"},
@@ -241,7 +256,7 @@
                                                                                             "entityName" "sample_01"},
                                                                         "submitter" "davidan@broadinstitute.org"}])
                                                       :status 200 :delay-ms (rand-int 1000)}})
-                                 ))} "Launch"]]
+                                 ))} "Launch"]])
        ])}])
 
 (defn- render-main-display [state refs config editing?]
