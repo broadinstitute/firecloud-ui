@@ -158,7 +158,7 @@
         "Select Entity"]
        [:div {:style {:position "absolute" :top 4 :right 4}}
         [comps/Button {:icon :x :onClick #(swap! state assoc :submitting? false)}]]
-       [:div {:style {:padding "22px 48px 40px" :backgroundColor (:background-gray style/colors)}}
+       [:div {:style {:ref "launchContainer" :padding "22px 48px 40px" :backgroundColor (:background-gray style/colors)}}
         (style/create-form-label "Select Entity Type")
         (style/create-select
           {:style {:width "50%" :minWidth 50 :maxWidth 200} :ref "filter"
@@ -186,7 +186,58 @@
                            (m "attributes")])
                      (:entities @state))}]])
         (style/create-form-label "Define Expression")
-        (style/create-text-field {})]])}])
+        (style/create-text-field {:ref "expressionname" :defaultValue "" :placeholder "leave blank for default"})]
+       [:div {:style {:fontSize "106%" :lineHeight 1 :textAlign "center"}}
+        [:div {:style {:padding "0.7em 0" :cursor "pointer"
+                       :backgroundColor (:button-blue style/colors)
+                       :color "#fff" :borderRadius 4
+                       :border (str "1px solid " (:line-gray style/colors))}
+
+               ;; TODO: what should we show in the UI after submitting?
+               ;; TODO: don't enable submit button until an entity has been selected
+               ;; TODO: diable submit button after submitting
+               :onClick (fn [e]
+                            (let [expression (clojure.string/trim (-> (@refs "expressionname") .getDOMNode .-value))
+                                  payload (merge {:methodConfigurationNamespace (config "namespace")
+                                                  :methodConfigurationName (config "name")
+                                                  :entityType ((:selected-entity @state) "entityType")
+                                                  :entityName ((:selected-entity @state) "name")}
+                                                 (when-not (blank? expression) {:expression expression}))]
+                                 (utils/ajax-orch
+                                   (paths/submit-method-path workspace)
+                                   {:method :post
+                                    :data (utils/->json-string payload)
+                                    :headers{"Content-Type" "application/json"}
+                                    :on-done (fn [{:keys [success? xhr]}]
+                                                 ;; TODO total hack below for UI ...
+                                                 (if success?
+                                                   (set! (-> (@refs "launchContainer") .getDOMNode .-innerHTML) (.-responseText xhr))
+                                                   (do
+                                                     (set! (-> (@refs "launchContainer") .getDOMNode .-style .-backgroundColor) (:exception-red style/colors))
+                                                     (set! (-> (@refs "launchContainer") .getDOMNode .-innerHTML) (.-responseText xhr)))))
+                                    :canned-response {:responseText (utils/->json-string
+                                                                      [{"workspaceName" {"namespace" "broad-dsde-dev",
+                                                                                         "name" "alexb_test_submission"},
+                                                                        "methodConfigurationNamespace" "my_test_configs",
+                                                                        "submissionDate" "2015-08-18T150715.393Z",
+                                                                        "methodConfigurationName" "test_config2",
+                                                                        "submissionId" "62363984-7b85-4f27-b9c6-7577561f1326",
+                                                                        "notstarted" [],
+                                                                        "workflows" [{"messages" [],
+                                                                                      "workspaceName" {"namespace" "broad-dsde-dev",
+                                                                                                       "name" "alexb_test_submission"},
+                                                                                      "statusLastChangedDate" "2015-08-18T150715.393Z",
+                                                                                      "workflowEntity" {"entityType" "sample",
+                                                                                                        "entityName" "sample_01"},
+                                                                                      "status" "Submitted",
+                                                                                      "workflowId" "70521329-88fe-4288-9325-2e6183e0a9dc"}],
+                                                                        "status" "Submitted",
+                                                                        "submissionEntity" {"entityType" "sample",
+                                                                                            "entityName" "sample_01"},
+                                                                        "submitter" "davidan@broadinstitute.org"}])
+                                                      :status 200 :delay-ms (rand-int 1000)}})
+                                 ))} "Launch"]]
+       ])}])
 
 (defn- render-main-display [state refs config editing?]
   [:div {:style {:marginLeft 330}}
