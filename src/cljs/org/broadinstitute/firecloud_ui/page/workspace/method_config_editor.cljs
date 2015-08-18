@@ -130,19 +130,20 @@
              :onClick #(if (:entity-types @state)
                         (swap! state assoc :submitting? true)
                         (do (swap! state assoc :blocker "Loading Entities...")
-                            (utils/ajax-orch
-                              (paths/list-all-entity-types-path workspace)
-                              {:on-done (fn [{:keys [success? xhr]}]
-                                          (swap! state assoc :blocker nil)
-                                          (if success?
-                                            (swap! state assoc :submitting? true
-                                              :entity-types (cons "Select..." (utils/parse-json-string (.-responseText xhr))))
-                                            (js/alert (str "Error: " (.-statusText xhr)))))
-                               :canned-response {:responseText (utils/->json-string ["Sample" "Participant"])
-                                                 :status 200 :delay-ms (rand-int 2000)}})))}
+                            (utils/call-ajax-orch
+                              (paths/get-entities-by-type-path workspace)
+                              {:on-success (fn [{:keys [parsed-response]}]
+                                             (let [emap (group-by (fn [e] (e "entityType")) parsed-response)]
+                                               (swap! state assoc :blocker nil :submitting? true
+                                                 :entity-map emap :entities (get emap (first (keys emap))))))
+                               :on-failure (fn [{:keys [status-text]}]
+                                             (swap! state assoc :blocker nil)
+                                             (js/alert (str "Error: " status-text)))
+                               :mock-data [{"name" "Mock Sample" "entityType" "Sample"}
+                                           {"name" "Mock Participant" "entityType" "Participant"}]})))}
        "Launch Analysis"]])])
 
-(defn- render-launch-overlay [state refs workspace config]
+(defn- render-launch-overlay [state refs]
   [comps/ModalDialog
    {:show-when (:submitting? @state)
     :dismiss-self #(swap! state assoc :submitting? false)
@@ -162,18 +163,8 @@
         (style/create-select
           {:style {:width "50%" :minWidth 50 :maxWidth 200} :ref "filter"
            :onChange #(let [value (-> (@refs "filter") .getDOMNode .-value)]
-                       (when-not (= value "Select...")
-                         (utils/call-ajax-orch
-                           (paths/list-all-entities-path workspace value)
-                           {:on-success (fn [{:keys [parsed-response]}]
-                                          (swap! state assoc :entities parsed-response
-                                            :selected-entity (first parsed-response)))
-                            :on-failure (fn [{:keys [status-text]}]
-                                          (utils/rlog "Error: " status-text))
-                            :mock-data [{"entityType" value
-                                         "name" "A mock entity"
-                                         "attributes" {}}]})))}
-          (:entity-types @state))
+                       (swap! state assoc :entities (get-in @state [:entity-map value])))}
+          (keys (:entity-map @state)))
         (style/create-form-label "Select Entity")
         (if (zero? (count (:entities @state)))
           (style/create-message-well "No entities to display.")
@@ -181,7 +172,7 @@
                          :padding "1em" :marginBottom "0.5em"}}
            [table/Table
             {:columns [{:header "" :starting-width 40 :resizable? false
-                        :content-renderer (fn [row-index data]
+                        :content-renderer (fn [i data]
                                             [:input {:type "radio"
                                                      :checked (identical? data (:selected-entity @state))
                                                      :onChange #(swap! state assoc :selected-entity data)}])}
@@ -264,7 +255,7 @@
 (defn- render-display [state refs config editing? props]
   [:div {}
    [comps/Blocker {:banner (:blocker @state)}]
-   (render-launch-overlay state refs (:workspace props) config)
+   (render-launch-overlay state refs)
    [:div {:style {:padding "0em 2em"}}
     (render-top-bar config)
     [:div {:style {:padding "1em 0em"}}
