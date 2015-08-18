@@ -167,9 +167,11 @@
        [:div {:style {:padding "22px 48px 40px" :backgroundColor (:background-gray style/colors)}}
         (if (:launch-result @state)
           [:div {}
-           (when (:launch-exception @state)
+           (if (:launch-exception @state)
              (icons/font-icon {:style {:fontSize "200%" :color (:exception-red style/colors)}}
-               :status-warning-triangle))
+               :status-warning-triangle)
+             (icons/font-icon {:style {:fontSize "200%" :color (:success-green style/colors)}}
+                            :status-done))
            (:launch-result @state)]
           [:div {}
            (style/create-form-label "Select Entity Type")
@@ -205,6 +207,8 @@
                           (:entities @state))}])])
            (style/create-form-label "Define Expression")
            (style/create-text-field {:ref "expressionname" :defaultValue "" :placeholder "leave blank for default"})])]
+
+       (when-not (:launch-result @state)
        [:div {:style {:fontSize "106%" :lineHeight 1 :textAlign "center"}}
         [:div {:style {:padding "0.7em 0" :cursor "pointer"
                        :backgroundColor (:button-blue style/colors)
@@ -252,7 +256,7 @@
                                                                                             "entityName" "sample_01"},
                                                                         "submitter" "davidan@broadinstitute.org"}])
                                                       :status 200 :delay-ms (rand-int 1000)}})
-                                 ))} "Launch"]]
+                                 ))} "Launch"]])
        ])}])
 
 (defn- render-main-display [state refs config editing?]
