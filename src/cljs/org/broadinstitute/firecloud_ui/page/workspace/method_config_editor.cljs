@@ -195,7 +195,41 @@
                            (m "attributes")])
                      (:entities @state))}]])
         (style/create-form-label "Define Expression")
-        (style/create-text-field {})]])}])
+        (style/create-text-field {:ref "expressionname" :defaultValue "this"})]
+
+       [:div {:style {:fontSize "106%" :lineHeight 1 :textAlign "center"}}
+        [:div {:style   {:padding         "0.7em 0" :cursor "pointer"
+                         :backgroundColor (:button-blue style/colors)
+                         :color "#fff" :borderRadius 4
+                         :border          (str "1px solid " (:line-gray style/colors))}
+
+               ;; TODO: what should we show in the UI after submitting?
+               ;; TODO: if no expression entered, do not send one in the ajax request
+               ;; TODO: disable/enable submit button based on the state of entity selection & expression value
+               ;; TODO: diable submit button after submitting
+               ;; TODO: better canned response
+               :onClick (fn [{:keys []}]
+                            (utils/ajax-orch
+                              (paths/submit-method-path workspace)
+                              {:method :post
+                               :data (utils/->json-string {:methodConfigurationNamespace (config "namespace")
+                                                           :methodConfigurationName      (config "name")
+                                                           :entityType                   ((:selected-entity @state) "entityType")
+                                                           :entityName                   ((:selected-entity @state) "name")
+                                                           :expression                   (-> (@refs "expressionname") .getDOMNode .-value)
+                                                           })
+                               :headers {"Content-Type" "application/json"}
+                               :on-done (fn [{:keys [success? xhr]}]
+                                            (if success?
+                                              (utils/rlog "Submission id: " ((utils/parse-json-string (.-responseText xhr)) "submissionId"))
+                                              (utils/rlog "Error: " (.-responseText xhr))))
+                               :canned-response {:responseText (utils/->json-string
+                                                                 [{"foo"        "fooValue"
+                                                                   "bar"        "barValue"
+                                                                   "attributes" {}}])
+                                                 :status 200 :delay-ms (rand-int 1000)}})
+                            )} "Launch"]]
+       ])}])
 
 (defn- render-main-display [state refs config editing?]
   [:div {:style {:marginLeft 330}}

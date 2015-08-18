@@ -32,3 +32,6 @@
   (str "/workspaces/" (workspace "namespace") "/" (workspace "name") "/method_configs/copyFromMethodRepo"))
 
 (defn get-methods-path [] "/methods")
+
+(defn submit-method-path [workspace]
+      (str "/workspaces/" (workspace "namespace") "/" (workspace "name") "/submissions"))
