@@ -172,7 +172,7 @@
                :status-warning-triangle)
              (icons/font-icon {:style {:fontSize "200%" :color (:success-green style/colors)}}
                             :status-done))
-           (:launch-result @state)]
+           [:pre {} (.stringify js/JSON (.parse js/JSON (:launch-result @state)) nil 2)]]
           [:div {}
            (style/create-form-label "Select Entity Type")
            (style/create-select
