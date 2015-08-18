@@ -39,92 +39,89 @@
     (range (rand-int 50))))
 
 
-(react/defc WorkspaceMethodsConfigurationsList
+(react/defc MethodConfigurationsList
   {:render
    (fn [{:keys [props state]}]
      [:div {}
-      (importmc/render-import-overlay state
-        (:workspace props)
-        (:on-import props))
+      (when (:show-import-overlay? @state)
+        (importmc/render-import-overlay
+         (:workspace props)
+         #(swap! state dissoc :show-import-overlay?)
+         #(swap! state dissoc :show-import-overlay? :server-response)))
       [:div {:style {:float "right" :padding "0 2em 1em 0"}}
        [comps/Button {:text "Import Configurations..."
-                      :onClick #(swap! state assoc :import-overlay-shown? true)}]]
+                      :onClick #(swap! state assoc :show-import-overlay? true)}]]
       (common/clear-both)
-      (if (zero? (count (:method-confs props)))
-        [:div {:style {:textAlign "center" :backgroundColor (:background-gray style/colors)
-                       :padding "1em 0" :margin "0 4em" :borderRadius 8}}
-         "There are no method configurations to display."]
-        [table/Table
-         {:columns
-          [{:header "Name" :starting-width 200 :sort-by #(% "name")
-            :filter-by #(% "name")
-            :content-renderer
-            (fn [row-index config]
-              [:a {:href "javascript:;"
-                   :style {:color (:button-blue style/colors) :textDecoration "none"}
-                   :onClick (fn [e]
-                              (common/scroll-to-top)
-                              (swap! (:parent-state props) assoc :selected-method-config config :selected-index row-index))}
-               (config "name")])}
-           {:header "Namespace" :starting-width 200 :sort-by :value}
-           {:header "Root Entity Type" :starting-width 140 :sort-by :value}
-           {:header "Workspace" :starting-width 200}
-           {:header "Method Store Method" :starting-width 300}
-           {:header "Method Store Configuration" :starting-width 300}]
-          :data (map
-                  (fn [config]
-                    [config
-                     (config "namespace")
-                     (config "rootEntityType")
-                     (clojure.string/join
+      (let [server-response (:server-response @state)
+            {:keys [configs error-message]} server-response]
+        (cond
+          (nil? server-response) [comps/Spinner {:text "Loading configurations..."}]
+          error-message (style/create-server-error-message error-message)
+          (zero? (count configs))
+          (style/create-message-well "There are no method configurations to display.")
+          :else
+          [table/Table
+           {:columns
+            [{:header "Name" :starting-width 200 :sort-by #(% "name")
+              :filter-by #(% "name")
+              :content-renderer
+              (fn [row-index config]
+                [:a {:href "javascript:;"
+                     :style {:color (:button-blue style/colors) :textDecoration "none"}
+                     :onClick (fn [e] ((:on-config-selected props) config))}
+                 (config "name")])}
+             {:header "Namespace" :starting-width 200 :sort-by :value}
+             {:header "Root Entity Type" :starting-width 140 :sort-by :value}
+             {:header "Workspace" :starting-width 200}
+             {:header "Method Store Method" :starting-width 300}
+             {:header "Method Store Configuration" :starting-width 300}]
+            :data (map
+                   (fn [config]
+                     [config
+                      (config "namespace")
+                      (config "rootEntityType")
+                      (clojure.string/join
                        ":" (map #(get-in config ["workspaceName" %]) ["namespace" "name"]))
-                     (clojure.string/join
+                      (clojure.string/join
                        ":" (map #(get-in config ["methodStoreMethod" %])
-                             ["methodNamespace" "methodName" "methodVersion"]))
-                     (clojure.string/join
+                                ["methodNamespace" "methodName" "methodVersion"]))
+                      (clojure.string/join
                        ":" (map #(get-in config ["methodStoreConfig" %])
-                             ["methodConfigNamespace" "methodConfigName" "methodConfigVersion"]))])
-                  (:method-confs props))}])])})
-
-
-(react/defc WorkspaceMethodConfigurations
-  {:render
-   (fn [{:keys [state props this]}]
-     [:div {:style {:padding "1em 0"}}
-      [:div {}
-       (cond
-         (:selected-method-config @state)
-         [MethodConfigEditor {:workspace (:workspace props)
-                              :config (:selected-method-config @state)
-                              :onCommit (fn [new-conf]
-                                          (if utils/use-live-data?
-                                            (react/call :load-method-configs this)
-                                            (swap! state update-in [:method-confs]
-                                              assoc (:selected-index @state) new-conf)))}]
-         (:method-confs-loaded? @state) [WorkspaceMethodsConfigurationsList
-                                          {:on-import
-                                             (fn [] (react/call :load-method-configs this))
-                                           :workspace (:workspace props)
-                                           :method-confs (:method-confs @state)
-                                           :parent-state state}]
-         (:error-message @state) [:div {:style {:color "red"}}
-                                  "FireCloud service returned error: " (:error-message @state)]
-         :else [comps/Spinner {:text "Loading configurations..."}])]])
-   :load-method-configs
-   (fn [{:keys [state props]}]
-     (swap! state assoc :method-confs-loaded? false)
-     (utils/call-ajax-orch (list-method-configs-path (:workspace props))
-       {:on-success (fn [{:keys [parsed-response]}]
-                      (swap! state assoc :method-confs-loaded? true :method-confs (vec parsed-response)))
-        :on-failure (fn [{:keys [status-text]}]
-                      (swap! state assoc :error-message status-text))
-        :mock-data (create-mock-methodconfs)}))
+                                ["methodConfigNamespace" "methodConfigName" "methodConfigVersion"]))])
+                   configs)}]))])
    :component-did-mount
    (fn [{:keys [this]}]
      (react/call :load-method-configs this))
+   :component-did-update
+   (fn [{:keys [this state]}]
+     (when (nil? (:server-response @state))
+       (react/call :load-method-configs this)))
+   :load-method-configs
+   (fn [{:keys [props state]}]
+     (utils/call-ajax-orch (list-method-configs-path (:workspace props))
+       {:on-success (fn [{:keys [parsed-response]}]
+                      (swap! state assoc :server-response {:configs (vec parsed-response)}))
+        :on-failure (fn [{:keys [status-text]}]
+                      (swap! state assoc :server-response {:error-message status-text}))
+        :mock-data (create-mock-methodconfs)}))})
+
+
+(react/defc Page
+  {:render
+   (fn [{:keys [this props state]}]
+     [:div {:style {:padding "1em 0"}}
+      (if (:selected-method-config @state)
+        [MethodConfigEditor {:workspace (:workspace props)
+                             :config (:selected-method-config @state)
+                             :onCommit (fn [] (swap! state dissoc :selected-method-config))}]
+        [MethodConfigurationsList
+         {:workspace (:workspace props)
+          :on-config-selected (fn [config]
+                                (swap! state assoc :selected-method-config config))}])])
    :component-will-receive-props
    (fn [{:keys [state]}]
-     (swap! state dissoc :selected-method-config :selected-index))})
+     (swap! state dissoc :selected-method-config))})
+
 
 (defn render-method-configs [workspace]
-  [WorkspaceMethodConfigurations {:workspace workspace}])
+  [Page {:workspace workspace}])

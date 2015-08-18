@@ -180,21 +180,19 @@
    :width "90%"})
 
 
-(defn render-import-overlay [state  workspace on-import]
-  (let [clear-import-overlay #(swap! state assoc :import-overlay-shown? false)]
-    (when (:import-overlay-shown? @state)
-      [:div {:style modal-import-background
-             :onKeyDown (common/create-key-handler [:esc] clear-import-overlay)}
-       [:div {:style modal-import-content}
-        [:div {:style {:position "absolute" :right 2 :top 2}}
-         [:div {:style {:backgroundColor (:button-blue style/colors) :color "#fff"
-                        :padding "0.5em" :cursor "pointer"}
-                :onClick #(swap! state assoc :import-overlay-shown? false)}
-          (icons/font-icon {:style {:fontSize "60%"}} :x)]]
-        [:div {:style {:backgroundColor "#fff"
-                       :borderBottom (str "1px solid " (:line-gray style/colors))
-                       :padding "20px 48px 18px"}}
-         [:div {:style {:fontSize 24 :align "center" :textAlign "center" :paddingBottom "0.5em"}}
-          "Select A Method Configuration For Import"]
-         [ImportWorkspaceMethodsConfigurationsList {:workspace workspace :on-import on-import}]
-         [:div {:style {:paddingTop "0.5em"}}]]]])))
+(defn render-import-overlay [workspace on-close on-import]
+  [:div {:style modal-import-background
+         :onKeyDown (common/create-key-handler [:esc] on-close)}
+   [:div {:style modal-import-content}
+    [:div {:style {:position "absolute" :right 2 :top 2}}
+     [:div {:style {:backgroundColor (:button-blue style/colors) :color "#fff"
+                    :padding "0.5em" :cursor "pointer"}
+            :onClick #(on-close)}
+      (icons/font-icon {:style {:fontSize "60%"}} :x)]]
+    [:div {:style {:backgroundColor "#fff"
+                   :borderBottom (str "1px solid " (:line-gray style/colors))
+                   :padding "20px 48px 18px"}}
+     [:div {:style {:fontSize 24 :align "center" :textAlign "center" :paddingBottom "0.5em"}}
+      "Select A Method Configuration For Import"]
+     [ImportWorkspaceMethodsConfigurationsList {:workspace workspace :on-import on-import}]
+     [:div {:style {:paddingTop "0.5em"}}]]]])
