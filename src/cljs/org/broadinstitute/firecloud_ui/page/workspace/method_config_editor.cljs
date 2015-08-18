@@ -143,7 +143,7 @@
                                            {"name" "Mock Participant" "entityType" "Participant"}]})))}
        "Launch Analysis"]])])
 
-(defn- render-launch-overlay [state refs]
+(defn- render-launch-overlay [state refs workspace config]
   [comps/ModalDialog
    {:show-when (:submitting? @state)
     :dismiss-self #(swap! state assoc :submitting? false)
@@ -158,7 +158,7 @@
         "Select Entity"]
        [:div {:style {:position "absolute" :top 4 :right 4}}
         [comps/Button {:icon :x :onClick #(swap! state assoc :submitting? false)}]]
-       [:div {:style {:ref "launchContainer" :padding "22px 48px 40px" :backgroundColor (:background-gray style/colors)}}
+       [:div {:ref "launchContainer" :style {:padding "22px 48px 40px" :backgroundColor (:background-gray style/colors)}}
         (style/create-form-label "Select Entity Type")
         (style/create-select
           {:style {:width "50%" :minWidth 50 :maxWidth 200} :ref "filter"
@@ -306,7 +306,7 @@
 (defn- render-display [state refs config editing? props]
   [:div {}
    [comps/Blocker {:banner (:blocker @state)}]
-   (render-launch-overlay state refs)
+   (render-launch-overlay state refs  (:workspace props) config)
    [:div {:style {:padding "0em 2em"}}
     (render-top-bar config)
     [:div {:style {:padding "1em 0em"}}
