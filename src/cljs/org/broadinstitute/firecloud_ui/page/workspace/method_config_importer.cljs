@@ -82,11 +82,11 @@
                                   :data (utils/->json-string post-data)
                                   :on-done (fn [{:keys [success? xhr]}]
                                              (if success?
-                                               (utils/rlog "SUCCESS in import ! trigger re-render of workspace MC list here?")
+                                               ((:on-import props))
                                                (js/alert (str "Error in import : "  (.-statusText xhr)))))})))}]]))})
 
 
-(defn render-import-modal [state props refs]
+(defn render-import-modal [state props refs on-import]
   [comps/ModalDialog
    {:width 750
     :content (react/create-element
@@ -110,6 +110,7 @@
                  [ModalImportOptionsAndButton {:init-Name (get-in @state [:selected-conf "name"])
                                                :init-Namespace (get-in @state [:selected-conf "namespace"])
                                                :init-SnapshotId (get-in @state [:selected-conf "snapshotId"])
+                                               :on-import on-import
                                                :parental-state state
                                                :workspace (get props :workspace)}]]])
     :show-when true}])
@@ -120,7 +121,7 @@
    (fn [{:keys [state props refs]}]
      [:div {}
       (when (:show-import-mc-modal? @state)
-        (render-import-modal state props refs))
+        (render-import-modal state props refs (:on-import props)))
       (cond
         (:loaded-import-confs? @state)
         (if (zero? (count (:method-confs @state)))
@@ -179,7 +180,7 @@
    :width "90%"})
 
 
-(defn render-import-overlay [state  workspace ]
+(defn render-import-overlay [state  workspace on-import]
   (let [clear-import-overlay #(swap! state assoc :import-overlay-shown? false)]
     (when (:import-overlay-shown? @state)
       [:div {:style modal-import-background
@@ -195,5 +196,5 @@
                        :padding "20px 48px 18px"}}
          [:div {:style {:fontSize 24 :align "center" :textAlign "center" :paddingBottom "0.5em"}}
           "Select A Method Configuration For Import"]
-         [ImportWorkspaceMethodsConfigurationsList {:workspace workspace}]
+         [ImportWorkspaceMethodsConfigurationsList {:workspace workspace :on-import on-import}]
          [:div {:style {:paddingTop "0.5em"}}]]]])))
