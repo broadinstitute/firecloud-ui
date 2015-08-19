@@ -39,9 +39,8 @@
 (defn- stop-editing [state refs]
   (swap! state assoc :editing? false :prereqs-list (filter-empty (capture-prerequisites state refs))))
 
-(defn- complete [state props new-config]
-  (swap! state assoc :loaded-config new-config :blocker nil)
-  ((:onCommit props) new-config))
+(defn- complete [state new-config]
+  (swap! state assoc :loaded-config new-config :blocker nil))
 
 ;; Rawls is screwed up right now: Prerequisites should simply be a list of strings, not a map.
 ;; Delete this when the backend is fixed
@@ -60,19 +59,25 @@
                    "outputs" outputs
                    "prerequisites" prereqs)]
     (swap! state assoc :blocker "Updating...")
-    (utils/call-ajax-orch (paths/update-method-config-path workspace config)
+    (utils/ajax-orch (paths/update-method-config-path workspace config)
       {:method :PUT
        :data (utils/->json-string new-conf)
        :headers {"Content-Type" "application/json"} ;; TODO - make endpoint take text/plain
-       :on-success #(if (= name (config "name"))
-                     (complete state props new-conf)
-                     (utils/call-ajax-orch (paths/rename-method-config-path workspace config)
-                       {:method :post
-                        :data (utils/->json-string (select-keys new-conf ["name" "namespace" "workspaceName"]))
-                        :headers {"Content-Type" "application/json"} ;; TODO - make unified call in orchestration
-                        :on-success (fn [] (complete state props new-conf))
-                        :on-failure (fn [{:keys [status-text]}] (js/alert (str "Exception:\n" status-text)))}))
-       :on-failure (fn [{:keys [status-text]}] (js/alert (str "Exception:\n" status-text)))})))
+       :on-done (fn [{:keys [success? xhr]}]
+                  (if-not success?
+                    (js/alert (str "Exception:\n" (.-statusText xhr)))
+                    (if (= name (config "name"))
+                      (complete state new-conf)
+                      (utils/ajax-orch (paths/rename-method-config-path workspace config)
+                        {:method :post
+                         :data (utils/->json-string (select-keys new-conf ["name" "namespace" "workspaceName"]))
+                         :headers {"Content-Type" "application/json"} ;; TODO - make unified call in orchestration
+                         :on-done (fn [{:keys [success? xhr]}]
+                                    (complete state new-conf)
+                                    (when-not success?
+                                      (js/alert (str "Exception:\n" (.-statusText xhr)))))
+                         :canned-response {:status 200 :delay-ms (rand-int 2000)}}))))
+       :canned-response {:status 200 :delay-ms (rand-int 2000)}})))
 
 (defn- render-top-bar [config]
   [:div {:style {:backgroundColor (:background-gray style/colors)
@@ -341,7 +346,7 @@
 
 (react/defc MethodConfigEditor
   {:get-initial-state
-   (fn [{:keys [props]}]
+   (fn []
      {:editing? false
       :sidebar-visible? true})
    :render

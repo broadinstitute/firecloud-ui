@@ -62,13 +62,12 @@
           :else
           [table/Table
            {:columns
-            [{:header "Name" :starting-width 200 :sort-by #(% "name")
-              :filter-by #(% "name")
+            [{:header "Name" :starting-width 200 :sort-by #(% "name") :filter-by #(% "name")
               :content-renderer
               (fn [row-index config]
                 [:a {:href "javascript:;"
                      :style {:color (:button-blue style/colors) :textDecoration "none"}
-                     :onClick (fn [e] ((:on-config-selected props) config))}
+                     :onClick #((:on-config-selected props) config)}
                  (config "name")])}
              {:header "Namespace" :starting-width 200 :sort-by :value}
              {:header "Root Entity Type" :starting-width 140 :sort-by :value}
@@ -108,12 +107,11 @@
 
 (react/defc Page
   {:render
-   (fn [{:keys [this props state]}]
+   (fn [{:keys [props state]}]
      [:div {:style {:padding "1em 0"}}
       (if (:selected-method-config @state)
         [MethodConfigEditor {:workspace (:workspace props)
-                             :config (:selected-method-config @state)
-                             :onCommit (fn [] (swap! state dissoc :selected-method-config))}]
+                             :config (:selected-method-config @state)}]
         [MethodConfigurationsList
          {:workspace (:workspace props)
           :on-config-selected (fn [config]
