@@ -74,9 +74,15 @@
       (when with-credentials?
         (set! (.-withCredentials xhr) true))
       (if canned-response-params
-        (if-let [delay-ms (:delay-ms canned-response-params)]
-          (js/setTimeout call-on-done delay-ms)
-          (call-on-done))
+        (do
+          (jslog "Mocking AJAX Request:"
+            (merge
+              {:method method :url url}
+              (when headers {:headers headers})
+              (when data {:data data})))
+          (if-let [delay-ms (:delay-ms canned-response-params)]
+            (js/setTimeout call-on-done delay-ms)
+            (call-on-done)))
         (do
           (.addEventListener xhr "loadend" call-on-done)
           (.open xhr method url)
