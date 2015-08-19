@@ -71,11 +71,15 @@ class Handler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
     def _forward_request(self, method):
         self.is_proxied = True
+        content_length = int(self.headers.get('Content-Length', 0))
+        request_body = self.rfile.read(content_length) if content_length > 0 else None
         try:
-            response = self._send_request(method)
+            response = self._send_request(method, request_body)
         except (httplib.CannotSendRequest, httplib.BadStatusLine):
             self._reconnect()
-            response = self._send_request(method)
+            response = self._send_request(method, request_body)
+        if request_body:
+            self.rfile.close()
         self.send_response(response.status)
         for h in response.msg.headers:
             self.wfile.write(h)
@@ -89,18 +93,15 @@ class Handler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         _connection.close()
         _connection.connect()
 
-    def _send_request(self, method):
+    def _send_request(self, method, body):
         headers = dict(self.headers)
         headers.update({'host': _connection.host}) # key must be lowercase
-        content_length = int(self.headers.get('Content-Length', 0))
         _connection.request(
             method,
             _forward_path + self.path[len(self.HANDLED_PATH):],
-            self.rfile.read(content_length) if content_length > 0 else None,
+            body,
             headers,
         )
-        if content_length > 0:
-            self.rfile.close()
         return _connection.getresponse()
 
 
