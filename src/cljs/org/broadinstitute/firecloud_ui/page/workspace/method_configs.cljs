@@ -10,8 +10,7 @@
     [org.broadinstitute.firecloud-ui.page.workspace.method-config-importer :as importmc]
     [org.broadinstitute.firecloud-ui.page.workspace.method-config-editor :refer [MethodConfigEditor]]
     [org.broadinstitute.firecloud-ui.paths :refer [list-method-configs-path]]
-    [org.broadinstitute.firecloud-ui.utils :as utils :refer [rlog jslog cljslog]]
-    ))
+    [org.broadinstitute.firecloud-ui.utils :as utils :refer [rlog jslog cljslog]]))
 
 
 (defn- create-mock-methodconfs []
@@ -49,7 +48,7 @@
          #(swap! state dissoc :show-import-overlay?)
          #(swap! state dissoc :show-import-overlay? :server-response)))
       [:div {:style {:float "right" :padding "0 2em 1em 0"}}
-       [comps/Button {:text "Import Configurations..."
+       [comps/Button {:text "Import Configuration ..."
                       :onClick #(swap! state assoc :show-import-overlay? true)}]]
       (common/clear-both)
       (let [server-response (:server-response @state)
