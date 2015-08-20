@@ -6,6 +6,7 @@
     [org.broadinstitute.firecloud-ui.page.workspace.workspace-summary :refer [render-workspace-summary]]
     [org.broadinstitute.firecloud-ui.page.workspace.workspace-data :refer [render-workspace-data]]
     [org.broadinstitute.firecloud-ui.page.workspace.method-configs :refer [render-method-configs]]
+    [org.broadinstitute.firecloud-ui.page.workspace.submissions :refer [render-submissions]]
     [org.broadinstitute.firecloud-ui.paths :as paths]
     [org.broadinstitute.firecloud-ui.utils :as utils]
     ))
@@ -28,7 +29,8 @@
                                  {:text "Data" :component (render-workspace-data ws)}
                                  {:text "Method Configurations"
                                   :component (render-method-configs ws)}
-                                 {:text "Monitor"}
+                                 {:text "Monitor"
+                                  :component (render-submissions ws)}
                                  {:text "Files"}]}]))])
    :load-workspace
    (fn [{:keys [props state]}]

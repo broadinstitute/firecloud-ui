@@ -38,3 +38,6 @@
 
 (defn submit-method-path [workspace]
       (str "/workspaces/" (workspace "namespace") "/" (workspace "name") "/submissions"))
+
+(defn list-submissions-path [workspace]
+  (submit-method-path workspace))
