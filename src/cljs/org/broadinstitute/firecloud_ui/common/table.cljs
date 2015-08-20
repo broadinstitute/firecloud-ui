@@ -141,7 +141,7 @@
                                (assert false "bad state"))
                              (swap! state assoc :sort-column i :sort-order :asc
                                :key-fn (if (= :value sorter)
-                                         (fn [row] (nth row i))
+                                         (fn [row] (str (nth row i)))
                                          (fn [row] (sorter (nth row i)))))))
             :sortOrder (when (= i (:sort-column @state)) (:sort-order @state))})))
      (filter :showing? (:ordered-columns @state)))
