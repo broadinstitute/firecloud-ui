@@ -6,7 +6,7 @@
   :dependencies
   [
    ;; React library and cljs bindings for React.
-   [dmohs/react "0.2.7"]
+   [dmohs/react "0.2.8"]
    [org.clojure/clojure "1.7.0"]
    [org.clojure/clojurescript "1.7.48"]
    [inflections "0.9.14"]
