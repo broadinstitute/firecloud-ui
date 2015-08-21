@@ -13,16 +13,16 @@
 (defn- create-mock-submissions-list [workspace]
   (map
     (fn [i]
-      {:workspaceName {:namespace (workspace "namespace")
-                       :name (workspace "name")}
+      {:workspaceName {:namespace (:namespace workspace)
+                       :name (:name workspace)}
        :methodConfigurationNamespace "my_test_configs"
        :submissionDate (str "2015-" (rand-nth (range 1 12)) "-"
                          (rand-nth (range 1 30)) "T19:08:53.027Z")
        :submissionId "46bfd579-b1d7-4f92-aab0-e44dd092b52a"
        :notstarted []
        :workflows [{:messages []
-                    :workspaceName {:namespace (workspace "namespace")
-                                    :name (workspace "name")}
+                    :workspaceName {:namespace (:namespace workspace)
+                                    :name (:name workspace)}
                     :statusLastChangedDate (str "2015-" (rand-nth (range 1 12))
                                              "-" (rand-nth (range 1 30))
                                              "T19:08:53.027Z")
@@ -41,8 +41,11 @@
 (defn- render-running-loaded-single-submission-summary [submission]
   [:div {:style {:border "1px solid black" :marginTop "1em" :position "relative"}}
    [:div {:style {:float "left" :marginLeft "1em" :padding "0.25em 0"}}
-    [:div {:style {:fontWeight 500 :fontSize "120%" :paddingBottom "0.25em"}} (:methodConfigurationName submission)]
-    [:div {} (str "Status: " (:status submission) " | Started At: " (:submissionDate submission))]
+    [:div {:style {:fontWeight 500 :fontSize "120%" :paddingBottom "0.25em"}}
+     (:methodConfigurationName submission)]
+    [:div {} (str "Status: " (:status submission)
+                  " | Started At: " (:submissionDate submission))
+                  " | By " (:submitter submission)]
     (let [submissionEntity (:submissionEntity submission)
           entityName (:entityName submissionEntity)
           entityType (:entityType submissionEntity)]
@@ -56,8 +59,6 @@
      {:color "Red"
       :text "Abort"
       :onClick #(utils/rlog "TODO : abort the submission here!")}]
-    ;[:input {:type "checkbox"}]
-    ;"I really mean it!"
     ]
    [:div {:style {:clear "both"}}]])
 

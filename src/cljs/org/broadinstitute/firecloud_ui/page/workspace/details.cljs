@@ -23,7 +23,7 @@
                              {:text "Method Configurations"
                               :component (method-configs-tab/render (:workspace-id props))}
                              {:text "Monitor"
-                              :component (render-submissions ws)}
+                              :component (render-submissions (:workspace-id props))}
                              {:text "Files"}]}]])})
 
 
