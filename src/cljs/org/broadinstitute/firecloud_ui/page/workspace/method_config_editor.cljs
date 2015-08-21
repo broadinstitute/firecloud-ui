@@ -39,7 +39,7 @@
   (zipmap (map #(str "unused" %) (range)) prereqs))
 
 (defn- commit [state refs config props]
-  (let [workspace (:workspace props)
+  (let [workspace-id (:workspace-id props)
         name (-> (@refs "confname") .getDOMNode .-value)
         inputs (into {} (map (juxt identity #(-> (@refs (str "in_" %)) .getDOMNode .-value)) (keys (config "inputs"))))
         outputs (into {} (map (juxt identity #(-> (@refs (str "out_" %)) .getDOMNode .-value)) (keys (config "outputs"))))
@@ -50,7 +50,7 @@
                    "outputs" outputs
                    "prerequisites" prereqs)]
     (swap! state assoc :blocker "Updating...")
-    (utils/ajax-orch (paths/update-method-config-path workspace config)
+    (utils/ajax-orch (paths/update-method-config-path workspace-id config)
       {:method :PUT
        :data (utils/->json-string new-conf)
        :headers {"Content-Type" "application/json"} ;; TODO - make endpoint take text/plain
@@ -59,7 +59,7 @@
                     (js/alert (str "Exception:\n" (.-statusText xhr)))
                     (if (= name (config "name"))
                       (complete state new-conf)
-                      (utils/ajax-orch (paths/rename-method-config-path workspace config)
+                      (utils/ajax-orch (paths/rename-method-config-path workspace-id config)
                         {:method :post
                          :data (utils/->json-string (select-keys new-conf ["name" "namespace" "workspaceName"]))
                          :headers {"Content-Type" "application/json"} ;; TODO - make unified call in orchestration
@@ -115,7 +115,7 @@
         (icons/font-icon {:style {:fontSize "135%"}} :x)]
        [:span {:style {:marginLeft "1em"}} "Cancel Editing"]]])])
 
-(defn- render-launch-analysis [state workspace editing?]
+(defn- render-launch-analysis [state workspace-id editing?]
   [:div {:style {:width 200 :float "right" :display (when editing? "none")}}
    (style/create-unselectable :div {:style {:position (when-not (:sidebar-visible? @state) "fixed")
                                             :top (when-not (:sidebar-visible? @state) 4)
@@ -128,7 +128,7 @@
                         (swap! state assoc :submitting? true)
                         (do (swap! state assoc :blocker "Loading Entities...")
                             (utils/call-ajax-orch
-                              (paths/get-entities-by-type-path workspace)
+                              (paths/get-entities-by-type-path workspace-id)
                               {:on-success (fn [{:keys [parsed-response]}]
                                              (let [emap (group-by (fn [e] (e "entityType")) parsed-response)
                                                    first-entities (get emap (first (keys emap)))
@@ -212,12 +212,12 @@
 (defn- render-display [state refs config editing? props]
   [:div {}
    [comps/Blocker {:banner (:blocker @state)}]
-   (launch/render-launch-overlay state refs  (:workspace props) config)
+   (launch/render-launch-overlay state refs  (:workspace-id props) config)
    [:div {:style {:padding "0em 2em"}}
     (render-top-bar config)
     [:div {:style {:padding "1em 0em"}}
      (render-side-bar state refs config editing? props)
-     (render-launch-analysis state (:workspace props) editing?)
+     (render-launch-analysis state (:workspace-id props) editing?)
      (render-main-display state refs config editing?)
      (clear-both)]]])
 
@@ -238,7 +238,7 @@
    :component-did-mount
    (fn [{:keys [state props refs this]}]
      (utils/ajax-orch
-       (paths/get-method-config-path (:workspace props) (:config props))
+       (paths/get-method-config-path (:workspace-id props) (:config props))
        {:on-done (fn [{:keys [success? xhr]}]
                    (if success?
                      (swap! state assoc :loaded-config (utils/parse-json-string (.-responseText xhr)))
