@@ -166,9 +166,8 @@
      [:div {:style (merge {:fontSize "80%" :fontWeight 500} (:body-style props))}
       (map-indexed
         (fn [row-index row]
-          (let [row-style (:row-style props)
-                row-style (merge
-                            row-style
+          (let [row-style (merge
+                            (:row-style props)
                             (if (even? row-index)
                               (merge
                                 {:backgroundColor (:background-gray style/colors)}
@@ -230,12 +229,12 @@
       (map-indexed
         (fn [i column]
           (when (get column :reorderable? true)
-            [:div {}
-             (let [showing? (:showing? column)]
-               [:input {:type "checkbox"
-                        :checked showing?
-                        :onChange #((:submit props) (update-in (:columns props) [i] assoc :showing? (not showing?)))}])
-             [:span {:style {:paddingLeft "0.5em"}} (:header column)]]))
+            (let [showing? (:showing? column)]
+              [:div {}
+               [:label {:style {:cursor "pointer"}}
+                [:input {:type "checkbox" :checked showing?
+                         :onChange #((:submit props) (update-in (:columns props) [i] assoc :showing? (not showing?)))}]
+                [:span {:style {:paddingLeft "0.5em"}} (:header column)]]])))
         (:columns props))])})
 
 
@@ -258,7 +257,7 @@
       :dragging? false
       :filtered-data (:data props)})
    :render
-   (fn [{:keys [this state props]}]
+   (fn [{:keys [this state props refs]}]
      (let [paginator-above (= :above (:paginator props))
            paginator-below (= :below (:paginator props))
            paginator [Paginator {:ref "paginator"
@@ -266,14 +265,6 @@
                                  :num-total-rows (count (:data props))
                                  :onChange #(react/call :handle-pagination-change this)}]]
        [:div {}
-        (when (:reorderable-columns? props)
-          [comps/AnchoredDialog {:show-when (:reordering-columns @state)
-                                 :anchor-left (:anchor-left @state)
-                                 :anchor-top (:anchor-top @state)
-                                 :dismiss-self #(swap! state assoc :reordering-columns false)
-                                 :content (react/create-element ColumnEditor
-                                            {:columns (:ordered-columns @state)
-                                             :submit (fn [new-order] (swap! state assoc :ordered-columns new-order))})}])
         (when (or (:filterable? props) (:reorderable-columns? props))
           [:div {:style {:padding "0 0 1em 1em"}}
            (when (:filterable? props)
@@ -282,7 +273,14 @@
            (when (:reorderable-columns? props)
              [:div {:style {:float "left"}}
               [comps/Button {:icon :gear :title-text "Select Columns..." :ref "col-edit-button"
-                             :onClick #(swap! state assoc :reordering-columns true)}]])
+                             :onClick #(swap! state assoc :reordering-columns? true)}]
+              [comps/Dialog {:show-when (:reordering-columns? @state)
+                             :get-anchor-dom-node #(.getDOMNode (@refs "col-edit-button"))
+                             :blocking? false
+                             :dismiss-self #(swap! state assoc :reordering-columns? false)
+                             :content (react/create-element ColumnEditor
+                                        {:columns (:ordered-columns @state)
+                                         :submit #(swap! state assoc :ordered-columns %)})}]])
            (common/clear-both)])
         (when paginator-above [:div {:style {:paddingBottom (:paginator-space props)}} paginator])
         [:div {:style {:overflowX "auto"}}
@@ -337,17 +335,4 @@
    :component-will-receive-props
    (fn [{:keys [state next-props refs]}]
      (swap! state assoc :filtered-data (:data next-props))
-     (react/call :make-desynced (@refs "filterer")))
-   :component-did-mount
-   (fn [{:keys [this state refs props]}]
-     (when (:reorderable-columns? props)
-       (let [capture-position
-             #(let [domnode (.getDOMNode (@refs "col-edit-button"))]
-               (swap! state assoc :anchor-top (- (.-offsetTop domnode) (.-scrollY js/window))
-                 :anchor-left (- (.-offsetLeft domnode) (.-scrollX js/window))))]
-         (set! (.-onScrollHandler this) capture-position)
-         (.addEventListener js/window "scroll" (.-onScrollHandler this))
-         (capture-position))))
-   :component-will-unmount
-   (fn [{:keys [this]}]
-     (.removeEventListener js/window "scroll" (.-onScrollHandler this)))})
+     (react/call :make-desynced (@refs "filterer")))})
