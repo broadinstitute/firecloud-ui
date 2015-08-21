@@ -1,4 +1,4 @@
-(ns org.broadinstitute.firecloud-ui.page.workspace.workspace-data
+(ns org.broadinstitute.firecloud-ui.page.workspace.data-tab
   (:require
     [dmohs.react :as react]
     [clojure.set :refer [union]]
@@ -99,5 +99,5 @@
                       (swap! state assoc :error {:message status-text}))
         :mock-data (create-mock-entities)}))})
 
-(defn render-workspace-data [workspace]
+(defn render [workspace]
   [WorkspaceData {:workspace workspace}])

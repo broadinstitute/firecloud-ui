@@ -1,4 +1,4 @@
-(ns org.broadinstitute.firecloud-ui.page.workspace.workspace-summary
+(ns org.broadinstitute.firecloud-ui.page.workspace.summary-tab
   (:require
     [org.broadinstitute.firecloud-ui.common.components :as comps]
     [org.broadinstitute.firecloud-ui.common.icons :as icons]
@@ -21,7 +21,7 @@
     [:div {}
      (map (fn [tag] [:span {:style tagstyle} tag]) tags)]))
 
-(defn render-workspace-summary [workspace]
+(defn render [workspace]
   [:div {:style {:margin "45px 25px"}}
    [:div {:style {:float "left" :display "inline-block" :width 290 :marginRight 40}}
     ;; TODO - make the width of the float-left dynamic

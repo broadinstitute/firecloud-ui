@@ -1,4 +1,4 @@
-(ns org.broadinstitute.firecloud-ui.page.workspace.method-configs
+(ns org.broadinstitute.firecloud-ui.page.workspace.method-configs-tab
   (:require
     [dmohs.react :as react]
     clojure.string
@@ -120,5 +120,5 @@
      (swap! state dissoc :selected-method-config))})
 
 
-(defn render-method-configs [workspace]
+(defn render [workspace]
   [Page {:workspace workspace}])

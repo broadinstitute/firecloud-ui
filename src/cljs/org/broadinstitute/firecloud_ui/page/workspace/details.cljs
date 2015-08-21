@@ -3,9 +3,9 @@
     [dmohs.react :as react]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
     [org.broadinstitute.firecloud-ui.common.style :as style]
-    [org.broadinstitute.firecloud-ui.page.workspace.workspace-summary :refer [render-workspace-summary]]
-    [org.broadinstitute.firecloud-ui.page.workspace.workspace-data :refer [render-workspace-data]]
-    [org.broadinstitute.firecloud-ui.page.workspace.method-configs :refer [render-method-configs]]
+    [org.broadinstitute.firecloud-ui.page.workspace.summary-tab :as summary-tab]
+    [org.broadinstitute.firecloud-ui.page.workspace.data-tab :as data-tab]
+    [org.broadinstitute.firecloud-ui.page.workspace.method-configs-tab :as method-configs-tab]
     [org.broadinstitute.firecloud-ui.paths :as paths]
     [org.broadinstitute.firecloud-ui.utils :as utils]
     ))
@@ -24,10 +24,10 @@
         :else
         (let [ws (get-in @state [:server-response :workspace])]
           [comps/TabBar {:key "selected"
-                         :items [{:text "Summary" :component (render-workspace-summary ws)}
-                                 {:text "Data" :component (render-workspace-data ws)}
+                         :items [{:text "Summary" :component (summary-tab/render ws)}
+                                 {:text "Data" :component (data-tab/render ws)}
                                  {:text "Method Configurations"
-                                  :component (render-method-configs ws)}
+                                  :component (method-configs-tab/render ws)}
                                  {:text "Monitor"}
                                  {:text "Files"}]}]))])
    :load-workspace
