@@ -11,10 +11,6 @@
     [org.broadinstitute.firecloud-ui.utils :as utils]))
 
 
-(defn create-path [workspaceNamespace workspaceName]
-  (str "/" workspaceNamespace "/"  workspaceName  "/methodconfigs/copyFromMethodRepo"))
-
-
 (defn create-post-data
   [selected-conf-name
    selected-conf-ns
@@ -45,9 +41,9 @@
              (let [selected-conf-name (get  props :init-Name)
                    selected-conf-namespace (get props :init-Namespace)
                    selected-conf-snapshotId (get props :init-SnapshotId)
-                   workspace (:workspace props)
-                   dest-workspace-name (get workspace "name")
-                   dest-workspace-namespace (get workspace "namespace")]
+                   workspace-id (:workspace-id props)
+                   dest-workspace-name (:name workspace-id)
+                   dest-workspace-namespace (:namespace workspace-id)]
                [:div {:style {:backgroundColor (:background-gray style/colors)}}
                 [:div {}
                  "Destination Name : "
@@ -69,10 +65,9 @@
                                                selected-conf-namespace
                                                selected-conf-snapshotId
                                                dest-conf-name
-                                               dest-conf-namespace)
-                                   copy_URL (paths/copy-method-config-to-workspace-path workspace)]
+                                               dest-conf-namespace)]
                                (utils/ajax-orch
-                                 copy_URL
+                                 (paths/copy-method-config-to-workspace-path workspace-id)
                                  {:headers {"Content-Type" "application/json"}
                                   :canned-response {:responseText
                                                       (utils/->json-string (create-mock-methodconfs-import))
@@ -112,7 +107,7 @@
                                                :init-SnapshotId (get-in @state [:selected-conf "snapshotId"])
                                                :on-import on-import
                                                :parental-state state
-                                               :workspace (get props :workspace)}]]])
+                                               :workspace-id (:workspace-id props)}]]])
     :show-when true}])
 
 
@@ -180,7 +175,7 @@
    :width "90%"})
 
 
-(defn render-import-overlay [workspace on-close on-import]
+(defn render-import-overlay [workspace-id on-close on-import]
   [:div {:style modal-import-background
          :onKeyDown (common/create-key-handler [:esc] on-close)}
    [:div {:style modal-import-content}
@@ -194,5 +189,5 @@
                    :padding "20px 48px 18px"}}
      [:div {:style {:fontSize 24 :align "center" :textAlign "center" :paddingBottom "0.5em"}}
       "Select A Method Configuration For Import"]
-     [ImportWorkspaceMethodsConfigurationsList {:workspace workspace :on-import on-import}]
+     [ImportWorkspaceMethodsConfigurationsList {:workspace-id workspace-id :on-import on-import}]
      [:div {:style {:paddingTop "0.5em"}}]]]])

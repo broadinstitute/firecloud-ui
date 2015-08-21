@@ -12,7 +12,7 @@
     ))
 
 
-(defn render-launch-overlay [state refs workspace config]
+(defn render-launch-overlay [state refs workspace-id config]
   [comps/ModalDialog
    {:show-when (:submitting? @state)
     :dismiss-self #(swap! state assoc :submitting? false)
@@ -90,7 +90,7 @@
                                                   :entityName ((:selected-entity @state) "name")}
                                                  (when-not (clojure.string/blank? expression) {:expression expression}))]
                                  (utils/ajax-orch
-                                   (paths/submit-method-path workspace)
+                                   (paths/submit-method-path workspace-id)
                                    {:method :post
                                     :data (utils/->json-string payload)
                                     :headers{"Content-Type" "application/json"}

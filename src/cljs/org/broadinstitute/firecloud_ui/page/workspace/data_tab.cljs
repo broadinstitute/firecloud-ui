@@ -1,4 +1,4 @@
-(ns org.broadinstitute.firecloud-ui.page.workspace.workspace-data
+(ns org.broadinstitute.firecloud-ui.page.workspace.data-tab
   (:require
     [dmohs.react :as react]
     [clojure.set :refer [union]]
@@ -72,9 +72,7 @@
                           (when (react/call :did-load-data? (@refs "data-import"))
                             {:entities-loaded? false}))}
            "< Back to Data List"]]
-         [import-data/Page {:ref "data-import"
-                            :workspace-id {:namespace (get-in props [:workspace "namespace"])
-                                           :name (get-in props [:workspace "name"])}}]]
+         [import-data/Page {:ref "data-import" :workspace-id (:workspace-id props)}]]
         (:entities-loaded? @state) [EntitiesList {:entities (:entities @state)}]
         (:error @state) (style/create-server-error-message (get-in @state [:error :message]))
         :else [:div {:style {:textAlign "center"}} [comps/Spinner {:text "Loading entities..."}]])
@@ -92,12 +90,12 @@
    :load-entities
    (fn [{:keys [state props]}]
      (utils/call-ajax-orch
-       (list-all-entities-path (:workspace props) "sample")
+       (list-all-entities-path (:workspace-id props) "sample")
        {:on-success (fn [{:keys [parsed-response]}]
                       (swap! state assoc :entities-loaded? true :entities parsed-response))
         :on-failure (fn [{:keys [status-text]}]
                       (swap! state assoc :error {:message status-text}))
         :mock-data (create-mock-entities)}))})
 
-(defn render-workspace-data [workspace]
-  [WorkspaceData {:workspace workspace}])
+(defn render [workspace]
+  [WorkspaceData {:workspace-id workspace}])

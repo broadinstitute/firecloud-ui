@@ -1,4 +1,4 @@
-(ns org.broadinstitute.firecloud-ui.page.workspace.method-configs
+(ns org.broadinstitute.firecloud-ui.page.workspace.method-configs-tab
   (:require
     [dmohs.react :as react]
     clojure.string
@@ -9,7 +9,8 @@
     [org.broadinstitute.firecloud-ui.common.table :as table]
     [org.broadinstitute.firecloud-ui.page.workspace.method-config-importer :as importmc]
     [org.broadinstitute.firecloud-ui.page.workspace.method-config-editor :refer [MethodConfigEditor]]
-    [org.broadinstitute.firecloud-ui.paths :refer [list-method-configs-path]]
+    [org.broadinstitute.firecloud-ui.paths :as paths]
+    ;; TODO(dmohs): No need to refer these. Having utils available is enough.
     [org.broadinstitute.firecloud-ui.utils :as utils :refer [rlog jslog cljslog]]))
 
 
@@ -43,8 +44,7 @@
    (fn [{:keys [props state]}]
      [:div {}
       (when (:show-import-overlay? @state)
-        (importmc/render-import-overlay
-         (:workspace props)
+        (importmc/render-import-overlay (:workspace-id props)
          #(swap! state dissoc :show-import-overlay?)
          #(swap! state dissoc :show-import-overlay? :server-response)))
       [:div {:style {:float "right" :padding "0 2em 1em 0"}}
@@ -96,7 +96,7 @@
        (react/call :load-method-configs this)))
    :load-method-configs
    (fn [{:keys [props state]}]
-     (utils/call-ajax-orch (list-method-configs-path (:workspace props))
+     (utils/call-ajax-orch (paths/list-method-configs-path (:workspace-id props))
        {:on-success (fn [{:keys [parsed-response]}]
                       (swap! state assoc :server-response {:configs (vec parsed-response)}))
         :on-failure (fn [{:keys [status-text]}]
@@ -109,10 +109,10 @@
    (fn [{:keys [props state]}]
      [:div {:style {:padding "1em 0"}}
       (if (:selected-method-config @state)
-        [MethodConfigEditor {:workspace (:workspace props)
+        [MethodConfigEditor {:workspace-id (:workspace-id props)
                              :config (:selected-method-config @state)}]
         [MethodConfigurationsList
-         {:workspace (:workspace props)
+         {:workspace-id (:workspace-id props)
           :on-config-selected (fn [config]
                                 (swap! state assoc :selected-method-config config))}])])
    :component-will-receive-props
@@ -120,5 +120,5 @@
      (swap! state dissoc :selected-method-config))})
 
 
-(defn render-method-configs [workspace]
-  [Page {:workspace workspace}])
+(defn render [workspace-id]
+  [Page {:workspace-id workspace-id}])
