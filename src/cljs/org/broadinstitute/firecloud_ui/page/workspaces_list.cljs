@@ -1,102 +1,22 @@
 (ns org.broadinstitute.firecloud-ui.page.workspaces-list
   (:require
-   clojure.string
-   [dmohs.react :as react]
-   [org.broadinstitute.firecloud-ui.common :as common]
-   [org.broadinstitute.firecloud-ui.common.components :as comps]
-   [org.broadinstitute.firecloud-ui.common.icons :as icons]
-   [org.broadinstitute.firecloud-ui.common.style :as style]
-   [org.broadinstitute.firecloud-ui.common.table :as table]
-   [org.broadinstitute.firecloud-ui.nav :as nav]
-   [org.broadinstitute.firecloud-ui.page.workspace.workspace-summary :refer [render-workspace-summary]]
-   [org.broadinstitute.firecloud-ui.page.workspace.workspace-data :refer [render-workspace-data]]
-   [org.broadinstitute.firecloud-ui.page.workspace.method-configs :refer [render-method-configs]]
-   [org.broadinstitute.firecloud-ui.paths :as paths]
-   [org.broadinstitute.firecloud-ui.utils :as utils :refer [parse-json-string]]
-   ))
-
-
-(react/defc StatusCell
-  {:render
-   (fn [{:keys [props]}]
-     (let [status (get-in props [:data :status])]
-       [:div {:style {:backgroundColor (style/color-for-status status)
-                      :margin "2px 0 0 2px" :height "calc(100% - 4px)"
-                      :position "relative" :cursor "pointer"}
-              :onClick #((get-in props [:data :onClick]))}
-        [:div {:style {:backgroundColor "rgba(0,0,0,0.2)"
-                       :position "absolute" :top 0 :right 0 :bottom 0 :left 2}}]
-        (case status
-          "Complete"  [comps/CompleteIcon]
-          "Running"   [comps/RunningIcon]
-          "Exception" [comps/ExceptionIcon])]))})
-
-
-(react/defc WorkspaceCell
-  {:render
-   (fn [{:keys [props]}]
-     [:div {:style {:backgroundColor (style/color-for-status (get-in props [:data :status]))
-                    :marginTop 2 :height "calc(100% - 4px)"
-                    :color "white" :cursor "pointer"}
-            :onClick #((get-in props [:data :onClick]))}
-      [:div {:style {:padding "1em 0 0 1em" :fontWeight 600}}
-       (get-in props [:data :name])]])})
-
-
-(defn- filter-workspaces [f workspaces]
-  (case f
-    :all workspaces
-    :complete (filter (fn [ws] (= "Complete" (ws "status"))) workspaces)
-    :running (filter (fn [ws] (= "Running" (ws "status"))) workspaces)
-    :exception (filter (fn [ws] (= "Exception" (ws "status"))) workspaces)))
-
-
-(react/defc WorkspaceList
-  {:render
-   (fn [{:keys [props]}]
-     (let [filtered-workspaces (filter-workspaces (:filter props) (:workspaces props))]
-       [:div {:style {:padding "0 4em"}}
-        (if (zero? (count filtered-workspaces))
-          (style/create-message-well "No workspaces to display.")
-          (let [border-style (str "1px solid " (:line-gray style/colors))]
-            [table/Table
-             {:cell-padding-left nil
-              :header-row-style {:fontWeight nil :fontSize "90%"
-                                 :color (:text-light style/colors) :backgroundColor nil}
-              :header-style {:padding "0 0 1em 14px" :overflow nil}
-              :resizable-columns? false
-              :body-style {:fontSize nil :fontWeight nil
-                           :borderLeft border-style :borderRight border-style
-                           :borderBottom border-style :borderRadius 4}
-              :row-style {:height 56 :borderTop border-style}
-              :even-row-style {:backgroundColor nil}
-              :cell-content-style {:padding nil}
-              :columns
-              [{:header [:div {:style {:marginLeft -6}} "Status"] :starting-width 60
-                :content-renderer (fn [row-index data]
-                                    [StatusCell {:data data}])
-                :filter-by :status}
-               {:header "Workspace" :starting-width 250
-                :content-renderer (fn [row-index data]
-                                    [WorkspaceCell {:data data}])
-                :filter-by :name}
-               {:header "Description" :starting-width 400
-                :content-renderer (fn [row-index data]
-                                    [:div {:style {:padding "1.1em 0 0 14px"}}
-                                     "No data available."])
-                :filter-by :none}]
-              :data (map (fn [workspace]
-                           [{:status (workspace "status")
-                             :onClick #((:onWorkspaceSelected props) workspace)}
-                            {:name (workspace "name") :status (workspace "status")
-                             :onClick #((:onWorkspaceSelected props) workspace)}
-                            workspace])
-                      filtered-workspaces)}]))]))})
+    clojure.string
+    [dmohs.react :as react]
+    [org.broadinstitute.firecloud-ui.common :as common]
+    [org.broadinstitute.firecloud-ui.common.components :as comps]
+    [org.broadinstitute.firecloud-ui.common.style :as style]
+    [org.broadinstitute.firecloud-ui.common.table :as table]
+    [org.broadinstitute.firecloud-ui.nav :as nav]
+    [org.broadinstitute.firecloud-ui.page.workspace.details :refer [render-workspace-details]]
+    [org.broadinstitute.firecloud-ui.paths :as paths]
+    [org.broadinstitute.firecloud-ui.utils :as utils :refer [parse-json-string]]
+    ))
 
 
 (defn- clear-overlay [state refs]
   (common/clear! refs "wsName" "wsDesc" "shareWith")
   (swap! state assoc :overlay-shown? false))
+
 
 (defn- render-modal [state refs nav-context]
   (react/create-element
@@ -154,80 +74,77 @@
                               :delay-ms (rand-int 2000)}})))}]]]]))
 
 
-(react/defc WorkspaceDetails
+(react/defc StatusCell
   {:render
-   (fn [{:keys [state]}]
-     [:div {}
-      (cond
-        (nil? (:server-response @state))
-        [comps/Spinner {:text "Loading workspace..."}]
-        (get-in @state [:server-response :error-message])
-        [:div {:style {:textAlign "center" :color (:exception-red style/colors)}}
-         (get-in @state [:server-response :error-message])]
-        :else
-        (let [ws (get-in @state [:server-response :workspace])]
-          [comps/TabBar {:key "selected"
-                         :items [{:text "Summary" :component (render-workspace-summary ws)}
-                                 {:text "Data" :component (render-workspace-data ws)}
-                                 {:text "Method Configurations"
-                                  :component (render-method-configs ws)}
-                                 {:text "Monitor"}
-                                 {:text "Files"}]}]))])
-   :load-workspace
-   (fn [{:keys [props state]}]
-     (utils/ajax-orch
-       (paths/workspace-details-path (:workspace-id props))
-       {:on-done (fn [{:keys [success? xhr]}]
-                   (let [response (utils/parse-json-string (.-responseText xhr))]
-                     (swap! state assoc :server-response
-                       (if success?
-                         {:workspace (merge {"status" "Complete"} ;; TODO Remove.
-                                       response)}
-                         {:error-message (response "message")}))))
-        :canned-response {:responseText (utils/->json-string
-                                          (merge
-                                            (:workspace-id props)
-                                            {:status "Complete"
-                                             :createdBy "Nobody"}))
-                          :status 200}}))
-   :component-did-mount
-   (fn [{:keys [this]}]
-     (react/call :load-workspace this))
-   :component-did-update
-   (fn [{:keys [this state]}]
-     (when-not (:server-response @state)
-       (react/call :load-workspace this)))
-   :component-will-receive-props
-   (fn [{:keys [props next-props state]}]
-     (when-not (apply = (map :workspace-id [props next-props]))
-       (swap! state assoc :server-response nil)))})
+   (fn [{:keys [props]}]
+     (let [status (get-in props [:data :status])]
+       [:div {:style {:backgroundColor (style/color-for-status status)
+                      :margin "2px 0 0 2px" :height "calc(100% - 4px)"
+                      :position "relative" :cursor "pointer"}
+              :onClick #((get-in props [:data :onClick]))}
+        [:div {:style {:backgroundColor "rgba(0,0,0,0.2)"
+                       :position "absolute" :top 0 :right 0 :bottom 0 :left 2}}]
+        (case status
+          "Complete"  [comps/CompleteIcon]
+          "Running"   [comps/RunningIcon]
+          "Exception" [comps/ExceptionIcon])]))})
 
 
-(defn- render-workspaces-list [state nav-context]
-  (let [build-button (fn [name filter]
-                       {:text (str name " (" (count (filter-workspaces filter (:workspaces @state))) ")")
-                        :active? (= filter (:active-filter @state))
-                        :onClick #(swap! state assoc :active-filter filter)})
-        content [:div {}
-                 [:div {:style {:padding "2em 0" :textAlign "center"}}
-                  [comps/FilterButtons {:buttons [(build-button "All" :all)
-                                                  (build-button "Complete" :complete)
-                                                  (build-button "Running" :running)
-                                                  (build-button "Exception" :exception)]}]]
-                 [WorkspaceList
-                  {:ref "workspace-list"
-                   :workspaces (:workspaces @state)
-                   :filter (:active-filter @state)
-                   :onWorkspaceSelected
-                   (fn [workspace]
-                     (nav/navigate
-                      nav-context (str (workspace "namespace") ":" (workspace "name")))
-                     (common/scroll-to-top))}]]]
-    [:div {}
-     [comps/TabBar {:key "list"
-                    :items [{:text "Mine" :component content}
-                            {:text "Shared" :component content}
-                            {:text "Read-Only" :component content}]}]]))
+(react/defc WorkspaceCell
+  {:render
+   (fn [{:keys [props]}]
+     [:div {:style {:backgroundColor (style/color-for-status (get-in props [:data :status]))
+                    :marginTop 2 :height "calc(100% - 4px)"
+                    :color "white" :cursor "pointer"}
+            :onClick #((get-in props [:data :onClick]))}
+      [:div {:style {:padding "1em 0 0 1em" :fontWeight 600}}
+       (get-in props [:data :name])]])})
+
+
+(defn- filter-workspaces [f workspaces]
+  (case f
+    :all workspaces
+    :complete (filter (fn [ws] (= "Complete" (ws "status"))) workspaces)
+    :running (filter (fn [ws] (= "Running" (ws "status"))) workspaces)
+    :exception (filter (fn [ws] (= "Exception" (ws "status"))) workspaces)))
+
+
+(defn- render-table [props workspaces]
+  (let [border-style (str "1px solid " (:line-gray style/colors))]
+    (react/create-element
+      table/Table
+      {:cell-padding-left nil
+       :header-row-style {:fontWeight nil :fontSize "90%"
+                          :color (:text-light style/colors) :backgroundColor nil}
+       :header-style {:padding "0 0 1em 14px" :overflow nil}
+       :resizable-columns? false :reorderable-columns? false
+       :body-style {:fontSize nil :fontWeight nil
+                    :borderLeft border-style :borderRight border-style
+                    :borderBottom border-style :borderRadius 4}
+       :row-style {:height 56 :borderTop border-style}
+       :even-row-style {:backgroundColor nil}
+       :cell-content-style {:padding nil}
+       :columns
+       [{:header [:div {:style {:marginLeft -6}} "Status"] :starting-width 60
+         :content-renderer (fn [row-index data]
+                             [StatusCell {:data data}])
+         :filter-by :status}
+        {:header "Workspace" :starting-width 250
+         :content-renderer (fn [row-index data]
+                             [WorkspaceCell {:data data}])
+         :filter-by :name}
+        {:header "Description" :starting-width 400
+         :content-renderer (fn [row-index data]
+                             [:div {:style {:padding "1.1em 0 0 14px"}}
+                              "No data available."])
+         :filter-by :none}]
+       :data (map (fn [workspace]
+                    [{:status (workspace "status")
+                      :onClick #((:onWorkspaceSelected props) workspace)}
+                     {:name (workspace "name") :status (workspace "status")
+                      :onClick #((:onWorkspaceSelected props) workspace)}
+                     workspace])
+               workspaces)})))
 
 
 (defn- create-mock-workspaces []
@@ -243,8 +160,62 @@
     (range (rand-int 100))))
 
 
-(defn- mock-live-data [workspaces]
-  (map #(assoc % "status" "Complete") workspaces))
+(react/defc WorkspaceList
+  {:get-initial-state
+   (fn []
+     {:active-filter :all})
+   :render
+   (fn [{:keys [props state]}]
+     (let [server-response (:server-response @state)]
+       (cond
+         (nil? server-response) [comps/Spinner {:text "Loading workspaces..."}]
+         (not (:success? server-response))
+         (style/create-server-error-message (:error-message server-response))
+         :else
+         (let [workspaces (:workspaces server-response)
+               filtered-workspaces (filter-workspaces (:active-filter @state) workspaces)
+               build-button (fn [name filter]
+                              {:text (str name " ("
+                                       (count (filter-workspaces filter workspaces))
+                                       ")")
+                               :active? (= filter (:active-filter @state))
+                               :onClick #(swap! state assoc :active-filter filter)})
+               content [:div {}
+                        [:div {:style {:padding "2em 0" :textAlign "center"}}
+                         [comps/FilterButtons {:buttons [(build-button "All" :all)
+                                                         (build-button "Complete" :complete)
+                                                         (build-button "Running" :running)
+                                                         (build-button "Exception" :exception)]}]]
+                        (if (zero? (count filtered-workspaces))
+                          (style/create-message-well "No workspaces to display.")
+                          [:div {:style {:margin "0 2em"}}
+                           (render-table props filtered-workspaces)])]]
+           [:div {}
+            [comps/TabBar {:key "list"
+                           :items [{:text "Mine" :component content}
+                                   {:text "Shared" :component content}
+                                   {:text "Read-Only" :component content}]}]]))))
+   :component-did-mount
+   (fn [{:keys [state]}]
+     (utils/call-ajax-orch
+       (paths/list-workspaces-path)
+       {:on-success (fn [{:keys [parsed-response]}]
+                      (swap! state assoc :server-response
+                        {:success? true :workspaces (map #(merge {"status" "Complete"} %) parsed-response)}))
+        :on-failure (fn [{:keys [status-text]}]
+                      (swap! state assoc :server-response
+                        {:success? false :error-message status-text}))
+        :mock-data (create-mock-workspaces)}))})
+
+
+(defn- render-workspaces-list [nav-context]
+  (react/create-element
+    WorkspaceList
+    {:onWorkspaceSelected
+     (fn [workspace]
+       (nav/navigate
+         nav-context (str (workspace "namespace") ":" (workspace "name")))
+       (common/scroll-to-top))}))
 
 
 (defn- get-workspace-id-from-nav-segment [segment]
@@ -254,12 +225,10 @@
 
 
 (react/defc Page
-  {:get-initial-state
-   (fn [] {:active-filter :all})
-   :render
-   (fn [{:keys [this props state refs]}]
+  {:render
+   (fn [{:keys [props state refs]}]
      (let [nav-context (nav/parse-segment (:nav-context props))
-           selected-ws-id (react/call :get-workspace-id this)]
+           selected-ws-id (get-workspace-id-from-nav-segment (:segment nav-context))]
        [:div {}
         [comps/ModalDialog
          {:show-when (:overlay-shown? @state)
@@ -267,47 +236,12 @@
           :width 500
           :content (render-modal state refs nav-context)}]
         [:div {:style {:padding "2em"}}
-         [:div {:style {:float "right" :display (when (or
-                                                        (not (:workspaces-loaded? @state))
-                                                        (:name selected-ws-id)) "none")}}
+         [:div {:style {:float "right" :display (when (:name selected-ws-id) "none")}}
           [comps/Button
            {:text "Create New Workspace" :style :add
             :onClick #(swap! state assoc :overlay-shown? true)}]]
          [:span {:style {:fontSize "180%"}}
           (if selected-ws-id (:name selected-ws-id) "Workspaces")]]
-        (cond
-          selected-ws-id [WorkspaceDetails {:workspace-id selected-ws-id}]
-          (:workspaces-loaded? @state) (render-workspaces-list state nav-context)
-          (:error @state) (style/create-server-error-message (get-in @state [:error :message]))
-          :else [comps/Spinner {:text "Loading workspaces..."}])]))
-   :get-workspace-id
-   (fn [{:keys [props]}]
-     (get-workspace-id-from-nav-segment (:segment (nav/parse-segment (:nav-context props)))))
-   :load-workspaces
-   (fn [{:keys [state]}]
-     (utils/ajax-orch
-       (paths/list-workspaces-path)
-       {:on-done (fn [{:keys [success? xhr]}]
-                   (if success?
-                     (let [workspaces (utils/parse-json-string (.-responseText xhr))]
-                       (swap! state assoc :workspaces-loaded? true
-                         :workspaces (if utils/use-live-data?
-                                       (mock-live-data workspaces)
-                                       workspaces)))
-                     (swap! state assoc
-                       :error {:message (.-statusText xhr)})))
-        :canned-response {:responseText (utils/->json-string (create-mock-workspaces))
-                          :status 200 :delay-ms (rand-int 2000)}}))
-   :component-did-mount
-   (fn [{:keys [this]}]
-     (when (nil? (react/call :get-workspace-id this))
-       (react/call :load-workspaces this)))
-   :component-did-update
-   (fn [{:keys [this state]}]
-     (when (and
-             (nil? (react/call :get-workspace-id this))
-             (not (or (:workspaces-loaded? @state) (:error @state))))
-       (react/call :load-workspaces this)))
-   :component-will-receive-props
-   (fn [{:keys [state]}]
-     (swap! state assoc :workspaces-loaded? false :error nil))})
+        (if selected-ws-id
+          (render-workspace-details selected-ws-id)
+          (render-workspaces-list nav-context))]))})

@@ -6,12 +6,12 @@
   :dependencies
   [
    ;; React library and cljs bindings for React.
-   [dmohs/react "0.2.7"]
-   [org.clojure/clojure "1.6.0"]
-   [org.clojure/clojurescript "0.0-3211"]
+   [dmohs/react "0.2.8"]
+   [org.clojure/clojure "1.7.0"]
+   [org.clojure/clojurescript "1.7.48"]
    [inflections "0.9.14"]
    ]
-  :plugins [[lein-cljsbuild "1.0.5"] [lein-figwheel "0.3.1"]]
+  :plugins [[lein-cljsbuild "1.0.6"] [lein-figwheel "0.3.7"]]
   :hooks [leiningen.cljsbuild]
   :profiles {:dev {:cljsbuild
                    {:builds {:client {:compiler

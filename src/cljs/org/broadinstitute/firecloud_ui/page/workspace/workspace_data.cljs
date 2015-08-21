@@ -1,6 +1,7 @@
 (ns org.broadinstitute.firecloud-ui.page.workspace.workspace-data
   (:require
     [dmohs.react :as react]
+    [clojure.set :refer [union]]
     [org.broadinstitute.firecloud-ui.common :as common]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
     [org.broadinstitute.firecloud-ui.common.table :as table]
@@ -42,15 +43,18 @@
                                          (make-button "All" :all)]}]]
         (if (zero? (count filtered-entities))
           (style/create-message-well "No entities to display.")
-          [table/Table
-           {:columns [{:header "Entity Type" :starting-width 100}
-                      {:header "Entity Name" :starting-width 100}
-                      {:header "Attributes" :starting-width 400}]
-            :data (map (fn [m]
-                         [(m "entityType")
-                          (m "name")
-                          (m "attributes")])
-                    filtered-entities)}])]))})
+          (let [attribute-keys (apply union (map (fn [e] (set (keys (e "attributes")))) filtered-entities))]
+            [table/Table
+             {:columns (concat
+                         [{:header "Entity Type" :starting-width 100 :sort-by :value}
+                          {:header "Entity Name" :starting-width 120 :sort-by :value}]
+                         (map (fn [k] {:header k :starting-width 100 :sort-by :value}) attribute-keys))
+              :data (map (fn [m]
+                           (concat
+                             [(m "entityType")
+                              (m "name")]
+                             (map (fn [k] (get-in m ["attributes" k])) attribute-keys)))
+                      filtered-entities)}]))]))})
 
 
 (react/defc WorkspaceData
@@ -87,17 +91,13 @@
        (react/call :load-entities this)))
    :load-entities
    (fn [{:keys [state props]}]
-     (utils/ajax-orch
+     (utils/call-ajax-orch
        (list-all-entities-path (:workspace props) "sample")
-       {:on-done (fn [{:keys [success? xhr]}]
-                   (if success?
-                     (swap! state assoc
-                       :entities-loaded? true
-                       :entities (utils/parse-json-string (.-responseText xhr)))
-                     (swap! state assoc :error {:message (.-statusText xhr)})))
-        :canned-response {:responseText (utils/->json-string (create-mock-entities))
-                          :status 200
-                          :delay-ms (rand-int 2000)}}))})
+       {:on-success (fn [{:keys [parsed-response]}]
+                      (swap! state assoc :entities-loaded? true :entities parsed-response))
+        :on-failure (fn [{:keys [status-text]}]
+                      (swap! state assoc :error {:message status-text}))
+        :mock-data (create-mock-entities)}))})
 
 (defn render-workspace-data [workspace]
   [WorkspaceData {:workspace workspace}])

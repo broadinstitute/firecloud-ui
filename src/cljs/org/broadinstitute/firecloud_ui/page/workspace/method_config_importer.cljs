@@ -7,6 +7,7 @@
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.common.table :as table]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
+    [org.broadinstitute.firecloud-ui.paths :as paths]
     [org.broadinstitute.firecloud-ui.utils :as utils]))
 
 
@@ -15,26 +16,16 @@
 
 
 (defn create-post-data
-  [selected-conf
-   selected-conf-dest-name
-   selected-conf-dest-ns
-   dest-workspace-name
-   dest-workspace-namespace]
-  (let [destination-map
-        {"name" selected-conf-dest-name
-        "namespace" selected-conf-dest-ns
-        "workspaceName"
-        {"name" dest-workspace-namespace
-        "namespace" dest-workspace-name}}
-        param-map {"methodRepoNamespace" (get-in selected-conf
-                                           ["methodStoreMethod" "methodNamespace"])
-                   "methodRepoName" (get-in selected-conf
-                                      ["methodStoreMethod" "methodName"])
-                   "methodRepoSnapshotId" (get-in selected-conf
-                                            ["methodStoreMethod" "methodVersion"])
-                   "destination" destination-map}]
-    param-map))
-
+  [selected-conf-name
+   selected-conf-ns
+   selected-conf-snapId
+   dest-name
+   dest-namespace]
+  {"configurationNamespace" selected-conf-ns
+   "configurationName" selected-conf-name
+   "configurationSnapshotId" (str selected-conf-snapId)
+   "destinationNamespace" dest-namespace
+   "destinationName" dest-name})
 
 (defn- create-mock-methodconfs-import []
   (map
@@ -49,71 +40,79 @@
     (range (rand-int 50))))
 
 
-(defn render-import-modal [state props refs]
+(react/defc ModalImportOptionsAndButton
+  {:render (fn [{:keys [state props refs]}]
+             (let [selected-conf-name (get  props :init-Name)
+                   selected-conf-namespace (get props :init-Namespace)
+                   selected-conf-snapshotId (get props :init-SnapshotId)
+                   workspace (:workspace props)
+                   dest-workspace-name (get workspace "name")
+                   dest-workspace-namespace (get workspace "namespace")]
+               [:div {:style {:backgroundColor (:background-gray style/colors)}}
+                [:div {}
+                 "Destination Name : "
+                 (style/create-text-field {:defaultValue selected-conf-name :ref "destinationName"})]
+                "Destination Namespace : "
+                (style/create-text-field
+                  {:defaultValue selected-conf-namespace
+                   :ref "destinationNamespace"})
+                [:br]
+                [comps/Button
+                 {:title-text "import selected"
+                  :icon :plus
+                  :onClick (fn []
+                             (swap! (get props :parental-state) assoc :show-import-mc-modal? false)
+                             (let [dest-conf-name (.-value (.getDOMNode (@refs "destinationName")))
+                                   dest-conf-namespace (.-value (.getDOMNode (@refs "destinationNamespace")))
+                                   post-data (create-post-data
+                                               selected-conf-name
+                                               selected-conf-namespace
+                                               selected-conf-snapshotId
+                                               dest-conf-name
+                                               dest-conf-namespace)
+                                   copy_URL (paths/copy-method-config-to-workspace-path workspace)]
+                               (utils/ajax-orch
+                                 copy_URL
+                                 {:headers {"Content-Type" "application/json"}
+                                  :canned-response {:responseText
+                                                      (utils/->json-string (create-mock-methodconfs-import))
+                                                    :status 200
+                                                    :delay-ms (rand-int 2000)}
+                                  :method :post
+                                  :data (utils/->json-string post-data)
+                                  :on-done (fn [{:keys [success? xhr]}]
+                                             (if success?
+                                               ((:on-import props))
+                                               (js/alert (str "Error in import : "  (.-statusText xhr)))))})))}]]))})
+
+
+(defn render-import-modal [state props refs on-import]
   [comps/ModalDialog
-   {:width 600
+   {:width 750
     :content (react/create-element
                [:div {}
                 [:div {:style {:backgroundColor "#fff"
                                :borderBottom (str "1px solid " (:line-gray style/colors))
                                :padding "20px 48px 18px"
                                :fontSize "137%" :fontWeight 400 :lineHeight 1}}
-                 "Import a Method Configuration"]
+                 "Import a Method Configuration"
+                 [:hr]
+                 (get-in @state [:selected-conf "name"])[:br]
+                 (get-in @state [:selected-conf "namespace"]) [:br]
+                 (get-in @state [:selected-conf "snapshotId"])]
+                 [:div {:style {:position "absolute" :right 2 :top 2}}
+                  [:div {:style {:backgroundColor (:button-blue style/colors) :color "#fff"
+                                 :padding "0.5em" :cursor "pointer"}
+                         :onClick (fn [] (swap! state assoc :show-import-mc-modal? false))}
+                   (icons/font-icon {:style {:fontSize "60%"}} :x)]]
                 [:div {:style {:padding "22px 48px 40px"
                                :backgroundColor (:background-gray style/colors)}}
-                 "Destination Name : "
-                 (style/create-text-field
-                   {:defaultValue (get-in @state [:selected-conf "name"])
-                    :ref "destinationName"})
-                 [:br]
-                 "Destination Namespace : "
-                 (style/create-text-field
-                   {:defaultValue (get-in @state [:selected-conf "namespace"])
-                    :ref "destinationNamespace"})
-                 [:br]
-                 [comps/Button
-                  {:title-text "Import configuration"
-                   :icon :plus
-                   :onClick
-                   (fn []
-                     (let [workspace (:workspace props)
-                           dest-name-value (.-value
-                                             (.getDOMNode (@refs "destinationName")))
-                           dest-namespace-value (.-value (.getDOMNode
-                                                           (@refs "destinationNamespace")))
-                           dest-workspace-name (get workspace "name")
-                           dest-workspace-namespace (get workspace "namespace")
-                           methodRepoQuery (create-post-data
-                                             (:selected-conf @state)
-                                             dest-name-value
-                                             dest-namespace-value
-                                             dest-workspace-name
-                                             dest-workspace-namespace)]
-                       (swap! state assoc :show-import-mc-modal? false)
-                       (utils/ajax-orch
-                         (create-path
-                           dest-workspace-namespace
-                           dest-workspace-name)
-                         {:method :post
-                          :data (utils/->json-string methodRepoQuery)
-                          :canned-response {:status 201
-                                            :delay-ms (rand-int 2000)}
-                          :on-done (fn [{:keys [success? xhr]}]
-                                     (if success?
-                                       (utils/rlog  (str "success in import! "
-                                                      "Here, perhaps trigger re-render "
-                                                      "of the MCs in the current "
-                                                      "workspace?"))
-                                       (let [returned-err-msg
-                                             {:message (.-statusText xhr)}]
-                                         (js/alert
-                                           (str "Error in Method Configuration Import : "
-                                             returned-err-msg)))))})))}]
-                 [comps/Button
-                  {:title-text "cancel import"
-                   :icon :x
-                   :onClick (fn []
-                              (swap! state assoc :show-import-mc-modal? false))}]]])
+                 [ModalImportOptionsAndButton {:init-Name (get-in @state [:selected-conf "name"])
+                                               :init-Namespace (get-in @state [:selected-conf "namespace"])
+                                               :init-SnapshotId (get-in @state [:selected-conf "snapshotId"])
+                                               :on-import on-import
+                                               :parental-state state
+                                               :workspace (get props :workspace)}]]])
     :show-when true}])
 
 
@@ -122,7 +121,7 @@
    (fn [{:keys [state props refs]}]
      [:div {}
       (when (:show-import-mc-modal? @state)
-        (render-import-modal state props refs))
+        (render-import-modal state props refs (:on-import props)))
       (cond
         (:loaded-import-confs? @state)
         (if (zero? (count (:method-confs @state)))
@@ -156,19 +155,13 @@
                                  "FireCloud service returned error: " (:error-message @state)]
         :else [comps/Spinner {:text "Loading configurations for import..."}])])
    :component-did-mount
-   (fn [{:keys [state props]}]
-     (utils/ajax-orch (str "/configurations")
-       {:on-done (fn [{:keys [success? xhr]}]
-                   (if success?
-                     (do
-                       (swap! state assoc
-                         :loaded-import-confs? true
-                         :method-confs (utils/parse-json-string (.-responseText xhr)))
-                       )
-                     (swap! state assoc :error-message (.-statusText xhr))))
-        :canned-response {:responseText (utils/->json-string (create-mock-methodconfs-import))
-                          :status 200
-                          :delay-ms (rand-int 2000)}}))})
+   (fn [{:keys [state]}]
+     (utils/call-ajax-orch "/configurations"
+       {:on-success (fn [{:keys [parsed-response]}]
+                      (swap! state assoc :loaded-import-confs? true :method-confs parsed-response))
+        :on-failure (fn [{:keys [status-text]}]
+                      (swap! state assoc :error-message status-text))
+        :mock-data (create-mock-methodconfs-import)}))})
 
 
 (def modal-import-background
@@ -187,21 +180,19 @@
    :width "90%"})
 
 
-(defn render-import-overlay [state  workspace ]
-  (let [clear-import-overlay #(swap! state assoc :import-overlay-shown? false)]
-    (when (:import-overlay-shown? @state)
-      [:div {:style modal-import-background
-             :onKeyDown (common/create-key-handler [:esc] clear-import-overlay)}
-       [:div {:style modal-import-content}
-        [:div {:style {:position "absolute" :right 2 :top 2}}
-         [:div {:style {:backgroundColor (:button-blue style/colors) :color "#fff"
-                        :padding "0.5em" :cursor "pointer"}
-                :onClick #(swap! state assoc :import-overlay-shown? false)}
-          (icons/font-icon {:style {:fontSize "60%"}} :x)]]
-        [:div {:style {:backgroundColor "#fff"
-                       :borderBottom (str "1px solid " (:line-gray style/colors))
-                       :padding "20px 48px 18px"}}
-         [:div {:style {:fontSize 24 :align "center" :textAlign "center" :paddingBottom "0.5em"}}
-          "Select A Method Configuration For Import"]
-         [ImportWorkspaceMethodsConfigurationsList {:workspace workspace}]
-         [:div {:style {:paddingTop "0.5em"}}]]]])))
+(defn render-import-overlay [workspace on-close on-import]
+  [:div {:style modal-import-background
+         :onKeyDown (common/create-key-handler [:esc] on-close)}
+   [:div {:style modal-import-content}
+    [:div {:style {:position "absolute" :right 2 :top 2}}
+     [:div {:style {:backgroundColor (:button-blue style/colors) :color "#fff"
+                    :padding "0.5em" :cursor "pointer"}
+            :onClick #(on-close)}
+      (icons/font-icon {:style {:fontSize "60%"}} :x)]]
+    [:div {:style {:backgroundColor "#fff"
+                   :borderBottom (str "1px solid " (:line-gray style/colors))
+                   :padding "20px 48px 18px"}}
+     [:div {:style {:fontSize 24 :align "center" :textAlign "center" :paddingBottom "0.5em"}}
+      "Select A Method Configuration For Import"]
+     [ImportWorkspaceMethodsConfigurationsList {:workspace workspace :on-import on-import}]
+     [:div {:style {:paddingTop "0.5em"}}]]]])

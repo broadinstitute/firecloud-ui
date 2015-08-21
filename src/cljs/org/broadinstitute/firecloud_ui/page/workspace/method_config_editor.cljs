@@ -1,23 +1,15 @@
 (ns org.broadinstitute.firecloud-ui.page.workspace.method-config-editor
   (:require
     [dmohs.react :as react]
-    [clojure.string :refer [join trim blank?]]
+    [clojure.string :refer [trim blank?]]
     [org.broadinstitute.firecloud-ui.common :as common :refer [clear-both]]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
     [org.broadinstitute.firecloud-ui.common.icons :as icons]
     [org.broadinstitute.firecloud-ui.common.style :as style]
+    [org.broadinstitute.firecloud-ui.page.workspace.launch-analysis :as launch]
     [org.broadinstitute.firecloud-ui.paths :as paths]
-    [org.broadinstitute.firecloud-ui.common.table :as table]
     [org.broadinstitute.firecloud-ui.utils :as utils]
     ))
-
-;; This is a unique id for the prerequisite text fields.  Without this, React can't tell them apart
-;; and mishandles deleting of prerequisites from the middle.
-(defonce uid (atom 0))
-(defn- get-id []
-  (let [result @uid]
-    (swap! uid inc)
-    result))
 
 
 (defn- capture-prerequisites [state refs]
@@ -38,41 +30,45 @@
 (defn- stop-editing [state refs]
   (swap! state assoc :editing? false :prereqs-list (filter-empty (capture-prerequisites state refs))))
 
-(defn- update-config [state props new-config]
-  (swap! state assoc :loaded-config new-config)
-  ((:onCommit props) new-config))
+(defn- complete [state new-config]
+  (swap! state assoc :loaded-config new-config :blocker nil))
 
 ;; Rawls is screwed up right now: Prerequisites should simply be a list of strings, not a map.
 ;; Delete this when the backend is fixed
-(defn- prepare-config [config]
-  (if utils/use-live-data?
-    (assoc config "prerequisites" (zipmap (repeat "unused") (config "prerequisites")))
-    config))
+(defn- fix-prereqs [prereqs]
+  (zipmap (map #(str "unused" %) (range)) prereqs))
 
 (defn- commit [state refs config props]
   (let [workspace (:workspace props)
         name (-> (@refs "confname") .getDOMNode .-value)
         inputs (into {} (map (juxt identity #(-> (@refs (str "in_" %)) .getDOMNode .-value)) (keys (config "inputs"))))
         outputs (into {} (map (juxt identity #(-> (@refs (str "out_" %)) .getDOMNode .-value)) (keys (config "outputs"))))
-        prereqs (filter-empty (capture-prerequisites state refs))
+        prereqs (fix-prereqs (filter-empty (capture-prerequisites state refs)))
         new-conf (assoc config
                    "name" name
                    "inputs" inputs
                    "outputs" outputs
                    "prerequisites" prereqs)]
     (swap! state assoc :blocker "Updating...")
-    (let [prepared-conf (prepare-config new-conf)]
-      (utils/ajax-orch
-        (paths/update-method-config-path workspace config)
-        {:method :PUT
-         :data (utils/->json-string prepared-conf)
-         :headers {"Content-Type" "application/json"} ;; TODO - make endpoint take text/plain
-         :on-done (fn [{:keys [success? xhr]}]
-                    (swap! state assoc :blocker nil)
-                    (if success?
-                      (update-config state props prepared-conf)
-                      (js/alert (str "Exception:\n" (.-statusText xhr)))))
-         :canned-response {:status 200 :delay-ms (rand-int 2000)}}))))
+    (utils/ajax-orch (paths/update-method-config-path workspace config)
+      {:method :PUT
+       :data (utils/->json-string new-conf)
+       :headers {"Content-Type" "application/json"} ;; TODO - make endpoint take text/plain
+       :on-done (fn [{:keys [success? xhr]}]
+                  (if-not success?
+                    (js/alert (str "Exception:\n" (.-statusText xhr)))
+                    (if (= name (config "name"))
+                      (complete state new-conf)
+                      (utils/ajax-orch (paths/rename-method-config-path workspace config)
+                        {:method :post
+                         :data (utils/->json-string (select-keys new-conf ["name" "namespace" "workspaceName"]))
+                         :headers {"Content-Type" "application/json"} ;; TODO - make unified call in orchestration
+                         :on-done (fn [{:keys [success? xhr]}]
+                                    (complete state new-conf)
+                                    (when-not success?
+                                      (js/alert (str "Exception:\n" (.-statusText xhr)))))
+                         :canned-response {:status 200 :delay-ms (rand-int 2000)}}))))
+       :canned-response {:status 200 :delay-ms (rand-int 2000)}})))
 
 (defn- render-top-bar [config]
   [:div {:style {:backgroundColor (:background-gray style/colors)
@@ -100,7 +96,7 @@
       [:div {:style {:display (when editing? "none") :padding "0.7em 0" :cursor "pointer"
                      :backgroundColor "transparent" :color (:button-blue style/colors)
                      :border (str "1px solid " (:line-gray style/colors))}
-             :onClick #(swap! state assoc :editing? true :prereqs-list (config "prerequisites"))}
+             :onClick #(swap! state assoc :editing? true :prereqs-list (vals (config "prerequisites")))}
        [:span {:style {:display "inline-block" :verticalAlign "middle"}}
         (icons/font-icon {:style {:fontSize "135%"}} :pencil)]
        [:span {:style {:marginLeft "1em"}} "Edit this page"]]
@@ -131,64 +127,23 @@
              :onClick #(if (:entity-types @state)
                         (swap! state assoc :submitting? true)
                         (do (swap! state assoc :blocker "Loading Entities...")
-                            (utils/ajax-orch
-                              (paths/list-all-entity-types-path workspace)
-                              {:on-done (fn [{:keys [success? xhr]}]
-                                          (swap! state assoc :blocker nil)
-                                          (if success?
-                                            (swap! state assoc :submitting? true
-                                              :entity-types (cons "Select Entity Type..." (utils/parse-json-string (.-responseText xhr))))
-                                            (js/alert (str "Error: " (.-statusText xhr)))))
-                               :canned-response {:responseText (utils/->json-string ["Sample" "Participant"])
-                                                 :status 200 :delay-ms (rand-int 2000)}})))}
+                            (utils/call-ajax-orch
+                              (paths/get-entities-by-type-path workspace)
+                              {:on-success (fn [{:keys [parsed-response]}]
+                                             (let [emap (group-by (fn [e] (e "entityType")) parsed-response)
+                                                   first-entities (get emap (first (keys emap)))
+                                                   first-entity (first first-entities)]
+                                               (swap! state assoc :blocker nil :submitting? true
+                                                 :entity-map emap
+                                                 :entities first-entities
+                                                 :selected-entity first-entity)))
+                               :on-failure (fn [{:keys [status-text]}]
+                                             (swap! state assoc :blocker nil)
+                                             (js/alert (str "Error: " status-text)))
+                               :mock-data [{"name" "Mock Sample" "entityType" "Sample"}
+                                           {"name" "Mock Participant" "entityType" "Participant"}]})))}
        "Launch Analysis"]])])
 
-(defn- render-launch-overlay [state refs workspace config]
-  [comps/ModalDialog
-   {:show-when (:submitting? @state)
-    :dismiss-self #(swap! state assoc :submitting? false)
-    :width "80%"
-    :content
-    (react/create-element
-      [:div {}
-       [:div {:style {:backgroundColor "#fff"
-                      :borderBottom (str "1px solid " (:line-gray style/colors))
-                      :padding "20px 48px 18px"
-                      :fontSize "137%" :fontWeight 400 :lineHeight 1}}
-        "Select Entity"]
-       [:div {:style {:position "absolute" :top 4 :right 4}}
-        [comps/Button {:icon :x :onClick #(swap! state assoc :submitting? false)}]]
-       [:div {:style {:padding "22px 48px 40px" :backgroundColor (:background-gray style/colors)}}
-        (style/create-form-label "Filter by Entity Type")
-        (style/create-select
-          {:style {:width "50%" :minWidth 50 :maxWidth 200} :ref "filter"
-           :onChange #(let [value (-> (@refs "filter") .getDOMNode .-value)]
-                       (when-not (= value "Select Entity Type...")
-                         (utils/ajax-orch
-                           (paths/list-all-entities-path workspace value)
-                           {:on-done
-                            (fn [{:keys [success? xhr]}]
-                              (if success?
-                                (swap! state assoc :entities (utils/parse-json-string (.-responseText xhr)))
-                                (utils/rlog "Error: " (.-responseText xhr))))
-                            :canned-response {:responseText (utils/->json-string
-                                                              [{"entityType" value
-                                                               "name" "A mock entity"
-                                                               "attributes" {}}])
-                                              :status 200 :delay-ms (rand-int 1000)}})))}
-          (:entity-types @state))
-        (style/create-form-label "Select Entity")
-        (if (zero? (count (:entities @state)))
-          (style/create-message-well "No entities to display.")
-          [table/Table
-           {:columns [{:header "Entity Type" :starting-width 100}
-                      {:header "Entity Name" :starting-width 100}
-                      {:header "Attributes" :starting-width 400}]
-            :data (map (fn [m]
-                         [(m "entityType")
-                          (m "name")
-                          (m "attributes")])
-                    (:entities @state))}])]])}])
 
 (defn- render-main-display [state refs config editing?]
   [:div {:style {:marginLeft 330}}
@@ -234,7 +189,7 @@
           (fn [i p]
             [:div {}
              [:div {:style {:float "left"}}
-              (style/create-text-field {:ref (str "pre_" i) :defaultValue p :key (get-id)})
+              (style/create-text-field {:ref (str "pre_" i) :defaultValue p :key (name (gensym))})
               (icons/font-icon {:style {:paddingLeft "0.5em" :padding "1em 0.7em" :color "red" :cursor "pointer"}
                                 :onClick #(let [l (capture-prerequisites state refs)
                                                 new-l (vec (concat (subvec l 0 i) (subvec l (inc i))))]
@@ -248,7 +203,7 @@
              [:div {:style {:float "left" :display (when editing? "none") :padding "0.5em 0" :marginBottom "0.5em"}}
               p]
              (clear-both)])
-          (config "prerequisites")))
+          (vals (config "prerequisites"))))
       [:div {:style {:display (when-not editing? "none")}}
        [comps/Button {:style :add :text "Add new"
                       :onClick #(let [list (capture-prerequisites state refs)]
@@ -257,7 +212,7 @@
 (defn- render-display [state refs config editing? props]
   [:div {}
    [comps/Blocker {:banner (:blocker @state)}]
-   (render-launch-overlay state refs (:workspace props) config)
+   (launch/render-launch-overlay state refs  (:workspace props) config)
    [:div {:style {:padding "0em 2em"}}
     (render-top-bar config)
     [:div {:style {:padding "1em 0em"}}
@@ -272,7 +227,7 @@
 
 (react/defc MethodConfigEditor
   {:get-initial-state
-   (fn [{:keys [props]}]
+   (fn []
      {:editing? false
       :sidebar-visible? true})
    :render

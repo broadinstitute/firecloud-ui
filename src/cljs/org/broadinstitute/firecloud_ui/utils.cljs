@@ -1,6 +1,6 @@
 (ns org.broadinstitute.firecloud-ui.utils
   (:require
-    [clojure.string :refer [join lower-case]]
+    [clojure.string :refer [join lower-case split]]
     ))
 
 
@@ -26,8 +26,17 @@
   ([s what start-index] (.indexOf s what start-index)))
 
 
+(defn contains [s what]
+  (<= 0 (str-index-of s what)))
+
+
 (defn contains-ignore-case [s what]
-  (<= 0 (str-index-of (lower-case s) (lower-case what))))
+  (contains (lower-case s) (lower-case what)))
+
+
+(defn matches-filter-text [source filter-text]
+  (let [lc-source (lower-case source)]
+    (every? (fn [word] (contains lc-source word)) (split (lower-case filter-text) #"\s+"))))
 
 
 (defn call-external-object-method
@@ -58,16 +67,22 @@
                     (aset xhr (name k) v))
                   xhr))
           call-on-done (fn []
-                         ((:on-done arg-map) {:xhr xhr
-                                              :status-code (.-status xhr)
-                                              :success? (and (>= (.-status xhr) 200)
-                                                             (< (.-status xhr) 300))}))]
+                         (on-done {:xhr xhr
+                                   :status-code (.-status xhr)
+                                   :success? (and (>= (.-status xhr) 200)
+                                               (< (.-status xhr) 300))}))]
       (when with-credentials?
         (set! (.-withCredentials xhr) true))
       (if canned-response-params
-        (if-let [delay-ms (:delay-ms canned-response-params)]
-          (js/setTimeout call-on-done delay-ms)
-          (call-on-done))
+        (do
+          (jslog "Mocking AJAX Request:"
+            (merge
+              {:method method :url url}
+              (when headers {:headers headers})
+              (when data {:data data})))
+          (if-let [delay-ms (:delay-ms canned-response-params)]
+            (js/setTimeout call-on-done delay-ms)
+            (call-on-done)))
         (do
           (.addEventListener xhr "loadend" call-on-done)
           (.open xhr method url)
@@ -89,6 +104,17 @@
 
 (defn parse-json-string [x]
   (js->clj (js/JSON.parse x)))
+
+
+(defn call-ajax-orch [path arg-map]
+  (ajax-orch path (assoc arg-map
+                    :on-done (fn [{:keys [success? xhr] :as map}]
+                               (if success?
+                                 ((:on-success arg-map) (merge map {:parsed-response (parse-json-string (.-responseText xhr))}))
+                                 ((:on-failure arg-map) (merge map {:status-text (.-statusText xhr)}))))
+                    :canned-response {:status 200 :delay-ms (rand-int 2000)
+                                      :responseText (if-let [mock-data (:mock-data arg-map)]
+                                                      (->json-string mock-data))})))
 
 
 (defn deep-merge [& maps]
