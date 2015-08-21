@@ -54,7 +54,7 @@
                 [table/Table
                  {:key (name (gensym))
                   :columns (concat
-                             [{:header "" :starting-width 40 :resizable? false
+                             [{:header "" :starting-width 40 :resizable? false :reorderable? false
                                :content-renderer (fn [i data]
                                                    [:input {:type "radio"
                                                             :checked (identical? data (:selected-entity @state))
