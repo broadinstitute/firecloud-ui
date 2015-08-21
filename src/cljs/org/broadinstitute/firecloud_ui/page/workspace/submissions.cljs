@@ -7,7 +7,7 @@
     [org.broadinstitute.firecloud-ui.utils :as utils]))
 
 (defn submission-running? [submission]
-  (= "Running" (:status submission))
+  (= "Running" (:status submission)))
 
 
 (defn- create-mock-submissions-list [workspace]
@@ -44,10 +44,10 @@
     [:div {}
     [:div {:style {:float "left" :width "50%" :height "15%"}}
      [:div {:style {:marginLeft "1em"} }
-      ( :methodConfigurationName submission)
+      (:methodConfigurationName submission)
       [:br]
       (str "Status : "
-        ( :status submission) " ; Started At : " ( :submissionDate submission))
+        (:status submission) " ; Started At : " (:submissionDate submission))
       [:br]
       (let [submissionEntity (:submissionEntity submission)
             entityName (:entityName submissionEntity)
