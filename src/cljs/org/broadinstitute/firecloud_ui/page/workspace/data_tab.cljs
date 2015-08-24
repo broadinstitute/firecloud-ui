@@ -7,54 +7,48 @@
     [org.broadinstitute.firecloud-ui.common.table :as table]
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.page.import-data :as import-data]
-    [org.broadinstitute.firecloud-ui.paths :refer [list-all-entities-path]]
+    [org.broadinstitute.firecloud-ui.paths :refer [get-entities-by-type-path]]
     [org.broadinstitute.firecloud-ui.utils :as utils]))
 
-
-(defn- filter-entities [entities active-filter]
-  (case active-filter
-    :sample (filter (fn [entity] (= "sample" (entity "entityType"))) entities)
-    :aliquot (filter (fn [entity] (= "aliquot" (entity "entityType"))) entities)
-    entities))
 
 (defn- create-mock-entities []
   (map
     (fn [i]
       {:entityType (rand-nth ["sample" "participant"])
        :name (str "entity" (inc i))
-       :attributes (str "entity" (inc i) " has no attributes")})
+       :attributes {}})
     (range (rand-int 20))))
 
 (react/defc EntitiesList
   {:get-initial-state
-   (fn []
-     {:active-filter :sample})
+   (fn [{:keys [props]}]
+     {:entities (get (:entity-map props) (first (keys (:entity-map props))))})
    :render
-   (fn [{:keys [props state]}]
-     (let [filtered-entities (filter-entities (:entities props) (:active-filter @state))
-           make-button (fn [name filter]
-                         {:text name
-                          :active? (= filter (:active-filter @state))
-                          :onClick #(swap! state assoc :active-filter filter)})]
-       [:div {}
-        [:div {:style {:margin "2em 0" :textAlign "center"}}
-         [comps/FilterButtons {:buttons [(make-button "Sample" :sample)
-                                         (make-button "Aliquot" :aliquot)
-                                         (make-button "All" :all)]}]]
-        (if (zero? (count filtered-entities))
-          (style/create-message-well "No entities to display.")
-          (let [attribute-keys (apply union (map (fn [e] (set (keys (e "attributes")))) filtered-entities))]
-            [table/Table
-             {:columns (concat
-                         [{:header "Entity Type" :starting-width 100 :sort-by :value}
-                          {:header "Entity Name" :starting-width 120 :sort-by :value}]
-                         (map (fn [k] {:header k :starting-width 100 :sort-by :value}) attribute-keys))
-              :data (map (fn [m]
-                           (concat
-                             [(m "entityType")
-                              (m "name")]
-                             (map (fn [k] (get-in m ["attributes" k])) attribute-keys)))
-                      filtered-entities)}]))]))})
+   (fn [{:keys [props state refs]}]
+     [:div {}
+      [:div {:style {:padding "0 0 0.5em 1em"}}
+       (style/create-form-label "Select Entity Type")
+       (style/create-select
+         {:style {:width "50%" :minWidth 50 :maxWidth 200} :ref "filter"
+          :onChange #(let [value (-> (@refs "filter") .getDOMNode .-value)
+                           entities (get-in props [:entity-map value])]
+                      (swap! state assoc :entities entities :entity-type value))}
+         (keys (:entity-map props)))]
+      (if (zero? (count (:entities @state)))
+        (style/create-message-well "No entities to display.")
+        (let [attribute-keys (apply union (map (fn [e] (set (keys (e "attributes")))) (:entities @state)))]
+          [table/Table
+           {:key (:entity-type @state)
+            :columns (concat
+                       [{:header "Entity Type" :starting-width 100 :sort-by :value}
+                        {:header "Entity Name" :starting-width 100 :sort-by :value}]
+                       (map (fn [k] {:header k :starting-width 100 :sort-by :value}) attribute-keys))
+            :data (map (fn [m]
+                         (concat
+                           [(m "entityType")
+                            (m "name")]
+                           (map (fn [k] (get-in m ["attributes" k])) attribute-keys)))
+                    (:entities @state))}]))])})
 
 
 (react/defc WorkspaceData
@@ -70,11 +64,11 @@
                :onClick #(swap! state merge
                           {:show-import? false}
                           (when (react/call :did-load-data? (@refs "data-import"))
-                            {:entities-loaded? false}))}
+                            {:entity-map false}))}
            "< Back to Data List"]]
          [import-data/Page {:ref "data-import" :workspace-id (:workspace-id props)}]]
-        (:entities-loaded? @state) [EntitiesList {:entities (:entities @state)}]
-        (:error @state) (style/create-server-error-message (get-in @state [:error :message]))
+        (:entity-map @state) [EntitiesList {:entity-map (:entity-map @state)}]
+        (:error @state) (style/create-server-error-message (:error @state))
         :else [:div {:style {:textAlign "center"}} [comps/Spinner {:text "Loading entities..."}]])
       (when-not (:show-import? @state)
         [:div {:style {:margin "1em 0 0 1em"}}
@@ -85,16 +79,16 @@
      (react/call :load-entities this))
    :component-did-update
    (fn [{:keys [this state]}]
-     (when-not (or (:entities-loaded? @state) (:error @state))
+     (when-not (or (:entity-map @state) (:error @state))
        (react/call :load-entities this)))
    :load-entities
    (fn [{:keys [state props]}]
      (utils/call-ajax-orch
-       (list-all-entities-path (:workspace-id props) "sample")
+       (get-entities-by-type-path (:workspace-id props))
        {:on-success (fn [{:keys [parsed-response]}]
-                      (swap! state assoc :entities-loaded? true :entities parsed-response))
+                      (swap! state assoc :entity-map (group-by #(% "entityType") parsed-response)))
         :on-failure (fn [{:keys [status-text]}]
-                      (swap! state assoc :error {:message status-text}))
+                      (swap! state assoc :error status-text))
         :mock-data (create-mock-entities)}))})
 
 (defn render [workspace]
