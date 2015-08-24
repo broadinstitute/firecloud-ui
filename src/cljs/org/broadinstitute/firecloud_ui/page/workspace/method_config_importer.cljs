@@ -57,7 +57,6 @@
                  {:title-text "import selected"
                   :icon :plus
                   :onClick (fn []
-                             (swap! (get props :parental-state) assoc :show-import-mc-modal? false)
                              (let [dest-conf-name (.-value (.getDOMNode (@refs "destinationName")))
                                    dest-conf-namespace (.-value (.getDOMNode (@refs "destinationNamespace")))
                                    post-data (create-post-data
@@ -81,7 +80,7 @@
                                                (js/alert (str "Error in import : "  (.-statusText xhr)))))})))}]]))})
 
 
-(defn render-import-modal [state props refs on-import]
+(defn render-import-modal [config props refs on-close on-import]
   [comps/ModalDialog
    {:width 750
     :content (react/create-element
@@ -92,23 +91,21 @@
                                :fontSize "137%" :fontWeight 400 :lineHeight 1}}
                  "Import a Method Configuration"
                  [:hr]
-                 (get-in @state [:selected-conf "name"])[:br]
-                 (get-in @state [:selected-conf "namespace"]) [:br]
-                 (get-in @state [:selected-conf "snapshotId"])]
+                 (config "name") [:br]
+                 (config "namespace") [:br]
+                 (config "snapshotId")]
                  [:div {:style {:position "absolute" :right 2 :top 2}}
                   [:div {:style {:backgroundColor (:button-blue style/colors) :color "#fff"
                                  :padding "0.5em" :cursor "pointer"}
-                         :onClick (fn [] (swap! state assoc :show-import-mc-modal? false))}
+                         :onClick on-close}
                    (icons/font-icon {:style {:fontSize "60%"}} :x)]]
                 [:div {:style {:padding "22px 48px 40px"
                                :backgroundColor (:background-gray style/colors)}}
-                 [ModalImportOptionsAndButton {:init-Name (get-in @state [:selected-conf "name"])
-                                               :init-Namespace (get-in @state [:selected-conf "namespace"])
-                                               :init-SnapshotId (get-in @state [:selected-conf "snapshotId"])
+                 [ModalImportOptionsAndButton {:init-Name (config "name")
+                                               :init-Namespace (config "namespace")
+                                               :init-SnapshotId (config "snapshotId")
                                                :on-import on-import
-                                               :parental-state state
-                                               :workspace-id (:workspace-id props)}]]])
-    :show-when true}])
+                                               :workspace-id (:workspace-id props)}]]])}])
 
 
 (react/defc ImportWorkspaceMethodsConfigurationsList
@@ -116,7 +113,11 @@
    (fn [{:keys [state props refs]}]
      [:div {}
       (when (:show-import-mc-modal? @state)
-        (render-import-modal state props refs (:on-import props)))
+        (render-import-modal (:selected-conf @state) props refs
+                             #(swap! state dissoc :show-import-mc-modal?)
+                             (fn [& args]
+                               (swap! state dissoc :show-import-mc-modal?)
+                               (apply (:on-import props) args))))
       (cond
         (:loaded-import-confs? @state)
         (if (zero? (count (:method-confs @state)))
@@ -189,5 +190,7 @@
                    :padding "20px 48px 18px"}}
      [:div {:style {:fontSize 24 :align "center" :textAlign "center" :paddingBottom "0.5em"}}
       "Select A Method Configuration For Import"]
-     [ImportWorkspaceMethodsConfigurationsList {:workspace-id workspace-id :on-import on-import}]
+     [ImportWorkspaceMethodsConfigurationsList {:workspace-id workspace-id
+                                                :on-close on-close
+                                                :on-import on-import}]
      [:div {:style {:paddingTop "0.5em"}}]]]])
