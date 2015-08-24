@@ -24,15 +24,20 @@
   {:get-current-slice
    (fn [{:keys [state]}]
      [(:current-page @state) (:rows-per-page @state)])
+   :set-num-rows-visible
+   (fn [{:keys [state]} n]
+     (when (not= n (:num-rows-visible @state))
+       (swap! state assoc :num-rows-visible n :current-page 1)))
    :get-initial-state
-   (fn []
+   (fn [{:keys [props]}]
      {:rows-per-page initial-rows-per-page
-      :current-page 1})
+      :current-page 1
+      :num-rows-visible (:num-total-rows props)})
    :render
    (fn [{:keys [props state refs]}]
      (let [rows-per-page (:rows-per-page @state)
            current-page (:current-page @state)
-           num-rows-visible (:num-rows-visible props)
+           num-rows-visible (:num-rows-visible @state)
            num-pages (js/Math.ceil (/ num-rows-visible rows-per-page))
            allow-prev (> current-page 1)
            allow-next (< current-page num-pages)
@@ -43,19 +48,21 @@
 
          [:div {:style {:float "left" :display "inline-block" :width "33.33%" :padding "2.15em 0em"
                         :verticalAlign "middle"}}
-          [:b {} (str left-num " - " right-num)] (str " of " (pluralize num-rows-visible " result")
-                                                   (when-not (= num-rows-visible (:num-total-rows props))
-                                                     (str " (filtered from " (:num-total-rows props) " total)")))]
-
-         (style/create-unselectable :div {:style {:float "left" :display "inline-block" :width "33.33%"
-                                                  :padding "1.6em 0em" :verticalAlign "middle" :textAlign "center"}}
+          [:b {} (str left-num " - " right-num)]
+          (str " of " (pluralize num-rows-visible " result")
+               (when-not (= num-rows-visible (:num-total-rows props))
+                 (str " (filtered from " (:num-total-rows props) " total)")))]
+         (style/create-unselectable
+          :div {:style {:float "left" :display "inline-block" :width "33.33%"
+                        :padding "1.6em 0em" :verticalAlign "middle" :textAlign "center"}}
            [:div {:style {:display "inline-block" :padding "0.55em 0.9em"
-                          :color (if allow-prev (:button-blue style/colors) (:border-gray style/colors))
+                          :color (if allow-prev
+                                   (:button-blue style/colors)
+                                   (:border-gray style/colors))
                           :cursor (when allow-prev "pointer")}
                   :onClick (when allow-prev #(swap! state update-in [:current-page] dec))}
             (icons/font-icon {:style {:fontSize "70%"}} :angle-left)
             [:span {:style {:paddingLeft "1em"}} "Prev"]]
-
            [:span {}
             (map (fn [n]
                    (let [selected? (= n current-page)]
@@ -67,27 +74,31 @@
                             :onClick (when-not selected? #(swap! state assoc :current-page n))}
                       n]))
               (create-page-range current-page num-pages))]
-
            [:div {:style {:display "inline-block" :padding "0.55em 0.9em"
-                          :color (if allow-next (:button-blue style/colors) (:border-gray style/colors))
+                          :color (if allow-next
+                                   (:button-blue style/colors)
+                                   (:border-gray style/colors))
                           :cursor (when allow-next "pointer")}
                   :onClick (when allow-next #(swap! state update-in [:current-page] inc))}
             [:span {:style {:paddingRight "1em"}} "Next"]
             (icons/font-icon {:style {:fontSize "70%"}} :angle-right)])
-
          [:div {:style {:float "left" :display "inline-block" :width "33.33%"
                         :padding "2.15em 0em" :textAlign "right"}}
           "Display"
-          (style/create-select {:style {:width 60 :margin "0em 1em"} :ref "numRows"
-                                :onChange #(swap! state assoc
-                                            :rows-per-page (-> (@refs "numRows") .getDOMNode .-value)
-                                            :current-page 1)}
+          (style/create-select
+           {:style {:width 60 :margin "0em 1em"} :ref "numRows"
+            :onChange #(swap! state assoc
+                              :rows-per-page (js/parseInt
+                                              (-> (@refs "numRows") .getDOMNode .-value))
+                              :current-page 1)}
             [10 25 100 500])
           "rows per page"]
          (common/clear-both)]]))
    :component-did-update
-   (fn [{:keys [props]}]
-     ((:onChange props)))})
+   (fn [{:keys [props state prev-state]}]
+     (when-not (and (apply = (map :rows-per-page [prev-state @state]))
+                    (apply = (map :current-page [prev-state @state])))
+       ((:onChange props))))})
 
 
 (defn- render-cell [{:keys [width onResizeMouseDown onSortClick sortOrder] :as props}]
@@ -192,7 +203,10 @@
 
 
 (react/defc Filterer
-  {:get-initial-state
+  {:get-filter-text
+   (fn [{:keys [refs]}]
+     (-> (@refs "filter-field") .getDOMNode .-value trim))
+   :get-initial-state
    (fn [] {:initial true :synced true})
    :render
    (fn [{:keys [state this]}]
@@ -210,9 +224,9 @@
      (when-not (:initial @state)
        (swap! state assoc :synced false)))
    :apply-filter
-   (fn [{:keys [state props refs]}]
+   (fn [{:keys [this state props refs]}]
      (swap! state assoc :synced true)
-     (let [text (-> (@refs "filter-field") .getDOMNode .-value trim)]
+     (let [text (react/call :get-filter-text this)]
        (when (empty? text) (swap! state assoc :initial true))
        ((:onFilter props) text)))})
 
@@ -272,6 +286,21 @@
                :style {:borderTop (when (= i (:drop-index @state)) "1px solid gray")}}])])})
 
 
+(defn- filter-data [data columns filter-text]
+  (if (empty? filter-text)
+    data
+    (filter (fn [row]
+              (utils/matches-filter-text
+               (apply str (map-indexed
+                           (fn [i column]
+                             (if-let [f (:filter-by column)]
+                               (if (= f :none) "" (f (nth row i)))
+                               (str (nth row i))))
+                           columns))
+               filter-text))
+            data)))
+
+
 (react/defc Table
   {:get-default-props
    (fn []
@@ -284,26 +313,26 @@
    :get-initial-state
    (fn [{:keys [props]}]
      {:ordered-columns (vec (map-indexed
-                              (fn [index col] (assoc col :index index :showing? true
-                                                         :width (or (:starting-width col) 100)
-                                                         :starting-width (or (:starting-width col) 100)))
-                              (:columns props)))
-      :dragging? false
-      :filtered-data (:data props)})
+                             (fn [index col]
+                               (assoc col
+                                      :index index :showing? true
+                                      :width (or (:starting-width col) 100)
+                                      :starting-width (or (:starting-width col) 100)))
+                             (:columns props)))
+      :dragging? false})
    :render
    (fn [{:keys [this state props refs]}]
      (let [paginator-above (= :above (:paginator props))
            paginator-below (= :below (:paginator props))
            paginator [Paginator {:ref "paginator"
-                                 :num-rows-visible (count (:filtered-data @state))
                                  :num-total-rows (count (:data props))
-                                 :onChange #(react/call :handle-pagination-change this)}]]
+                                 :onChange #(react/call :set-body-rows this)}]]
        [:div {}
         (when (or (:filterable? props) (:reorderable-columns? props))
           [:div {:style {:padding "0 0 1em 1em"}}
            (when (:filterable? props)
              [:div {:style {:float "left" :marginRight "1em"}}
-              [Filterer {:ref "filterer" :onFilter (fn [text] (react/call :filter-data this text))}]])
+              [Filterer {:ref "filterer" :onFilter #(react/call :set-body-rows this)}]])
            (when (:reorderable-columns? props)
              [:div {:style {:float "left"}}
               [comps/Button {:icon :gear :title-text "Select Columns..." :ref "col-edit-button"
@@ -319,45 +348,34 @@
         (when paginator-above [:div {:style {:paddingBottom (:paginator-space props)}} paginator])
         [:div {:style {:overflowX "auto"}}
          [:div {:style {:position "relative"
-                        :minWidth (reduce + (map :width (filter :showing? (:ordered-columns @state))))
+                        :minWidth (reduce
+                                   + (map :width (filter :showing? (:ordered-columns @state))))
                         :cursor (when (:dragging? @state) "col-resize")}}
           (render-header state props)
           [Body (assoc props
                   :ref "body"
                   :columns (filter :showing? (:ordered-columns @state))
-                  :initial-rows (react/call :get-sliced-data this true))]]]
+                  :initial-rows (react/call :get-body-rows this (:data props) true))]]]
         (when paginator-below [:div {:style {:paddingTop (:paginator-space props)}} paginator])]))
-   :get-sliced-data
-   (fn [{:keys [state refs]} & [initial-render?]]
+   :get-filtered-data
+   (fn [{:keys [props state refs]}]
+     (filter-data (:data props) (:columns props)
+                  (react/call :get-filter-text (@refs "filterer"))))
+   :get-body-rows
+   (fn [{:keys [props state refs]} filtered-data & [initial-render?]]
      (let [[n c] (if initial-render?
                    [1 initial-rows-per-page]
                    (react/call :get-current-slice (@refs "paginator")))
-           filtered-data (:filtered-data @state)
            sorted-data (if-let [keyfn (:key-fn @state)] (sort-by keyfn filtered-data) filtered-data)
            ordered-data (if (= :desc (:sort-order @state)) (reverse sorted-data) sorted-data)]
        (take c (drop (* (dec n) c) ordered-data))))
-   :filter-data
-   (fn [{:keys [state props]} & [filter-text]]
-     (let [filtered-data
-           (if (empty? filter-text)
-             (:data props)
-             (filter (fn [row]
-                       (utils/matches-filter-text
-                         (apply str (map-indexed
-                                      (fn [i column]
-                                        (if-let [f (:filter-by column)]
-                                          (if (= f :none) "" (f (nth row i)))
-                                          (str (nth row i))))
-                                      (:columns props)))
-                         filter-text))
-               (:data props)))]
-       (swap! state assoc :filtered-data filtered-data)))
-   :handle-pagination-change
+   :set-body-rows
    (fn [{:keys [this refs]}]
-     (react/call :set-rows (@refs "body") (react/call :get-sliced-data this)))
+     (let [rows (react/call :get-filtered-data this)]
+       (react/call :set-rows (@refs "body") (react/call :get-body-rows this rows))
+       (react/call :set-num-rows-visible (@refs "paginator") (count rows))))
    :component-will-receive-props
    (fn [{:keys [state next-props refs]}]
-     (swap! state assoc :filtered-data (:data next-props))
      (react/call :make-desynced (@refs "filterer")))
    :component-did-mount
    (fn [{:keys [this state]}]
