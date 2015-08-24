@@ -14,6 +14,10 @@
 (defn- logo []
   [:img {:src "assets/broad_logo.png" :style {:height 36}}])
 
+; Temporary replacement for the Broad Logo.
+(defn- text-logo []
+  [:div {:style {:fontSize "32px" :color (:button-blue style/colors) :fontWeight "bold"}} "FireCloud"])
+
 (defn- footer []
   (let [thisyear (.getFullYear (js/Date.))
         startyear 2015
@@ -93,7 +97,7 @@
                (utils/call-external-object-method :getBasicProfile)
                (utils/call-external-object-method :getName))]
           [:a {:href "javascript:;" :onClick (fn [e] (session/log-out))} "Log-Out"]]
-         (logo)
+         (text-logo)
          [:div {}
           [TopNavBar {:selected-item page
                       :on-nav (fn [item] (nav/navigate (:nav-context props) (name item)))}]]]
@@ -114,7 +118,7 @@
    (fn []
      [:div {}
       [:div {:style {:padding "50px 25px"}}
-       [:div {:style {:marginBottom "2em"}} (logo)]
+       [:div {:style {:marginBottom "2em"}} (text-logo)]
        [:div {:className "g-signin2" :data-onsuccess "onSignIn" :data-theme "dark"}]
        [:div {:style {:paddingTop "25px" :fontSize ".75em"}}
         [:p {:style {:fontWeight "bold"}} "Warning"]
