@@ -119,9 +119,11 @@
    (map
      (fn [column]
        (let [i (:index column)
-             onResizeMouseDown (when (get column :resizable? (:resizable-columns? props))
-                                 (fn [e] (swap! state assoc
-                                           :dragging? true :mouse-x (.-clientX e) :drag-column i)))]
+             onResizeMouseDown
+             (when (get column :resizable? (:resizable-columns? props))
+               (fn [e]
+                 (swap! state assoc :dragging? true :mouse-x (.-clientX e) :drag-column i
+                   :saved-user-select-state (common/disable-text-selection))))]
          (render-cell
            {:width (:width column)
             :content (:header column)
@@ -286,18 +288,7 @@
         [:div {:style {:overflowX "auto"}}
          [:div {:style {:position "relative"
                         :minWidth (reduce + (map :width (filter :showing? (:ordered-columns @state))))
-                        :cursor (when (:dragging? @state) "col-resize")}
-                :onMouseMove (fn [e]
-                               (when (:dragging? @state)
-                                 (let [current-width (:width (nth (:ordered-columns @state) (:drag-column @state)))
-                                       new-mouse-x (.-clientX e)
-                                       drag-amount (- new-mouse-x (:mouse-x @state))
-                                       new-width (+ current-width drag-amount)]
-                                   (when (and (>= new-width 10) (not (zero? drag-amount)))
-                                     (swap! state update-in [:ordered-columns (:drag-column @state)]
-                                       assoc :width new-width)
-                                     (swap! state assoc :mouse-x new-mouse-x)))))
-                :onMouseUp #(swap! state assoc :dragging? false)}
+                        :cursor (when (:dragging? @state) "col-resize")}}
           (render-header state props)
           [Body (assoc props
                   :ref "body"
@@ -335,4 +326,29 @@
    :component-will-receive-props
    (fn [{:keys [state next-props refs]}]
      (swap! state assoc :filtered-data (:data next-props))
-     (react/call :make-desynced (@refs "filterer")))})
+     (react/call :make-desynced (@refs "filterer")))
+   :component-did-mount
+   (fn [{:keys [this state]}]
+     (set! (.-onMouseMoveHandler this)
+       (fn [e]
+         (when (:dragging? @state)
+           (let [current-width (:width (nth (:ordered-columns @state) (:drag-column @state)))
+                 new-mouse-x (.-clientX e)
+                 drag-amount (- new-mouse-x (:mouse-x @state))
+                 new-width (+ current-width drag-amount)]
+             (when (and (>= new-width 10) (not (zero? drag-amount)))
+               ;; Update in a single step like this to avoid multiple re-renders
+               (let [new-state (assoc @state :mouse-x new-mouse-x)
+                     new-state (update-in new-state [:ordered-columns (:drag-column @state)]
+                                 assoc :width new-width)]
+                 (reset! state new-state)))))))
+     (.addEventListener js/window "mousemove" (.-onMouseMoveHandler this))
+     (set! (.-onMouseUpHandler this)
+       #(when (:dragging? @state)
+         (common/restore-text-selection (:saved-user-select-state @state))
+         (swap! state assoc :dragging? false)))
+     (.addEventListener js/window "mouseup" (.-onMouseUpHandler this)))
+   :component-will-unmount
+   (fn [{:keys [this]}]
+     (.removeEventListener js/window "mousemove" (.-onMouseMoveHandler this))
+     (.removeEventListener js/window "mouseup" (.-onMouseUpHandler this)))})

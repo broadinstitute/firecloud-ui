@@ -27,3 +27,17 @@
         elem-top (.-offsetTop elem)
         elem-bottom (+ elem-top (.-offsetHeight elem))]
     (and (< doc-view-top elem-top) (> doc-view-bottom elem-bottom))))
+
+
+(def ^:private user-select-keys ["userSelect" "webkitTouchCallout" "webkitUserSelect"
+                                 "mozUserSelect" "khtmlUserSelect" "msUserSelect"])
+
+(defn disable-text-selection []
+  (let [state (into {} (map (juxt identity #(aget (-> js/document .-body .-style) %)) user-select-keys))]
+    (doseq [k user-select-keys]
+      (aset (-> js/document .-body .-style) k "none"))
+    state))
+
+(defn restore-text-selection [state]
+  (doseq [k user-select-keys]
+    (aset (-> js/document .-body .-style) k (state k))))
