@@ -39,6 +39,9 @@
     (range (rand-int 50))))
 
 
+
+
+
 (react/defc MethodConfigurationsList
   {:render
    (fn [{:keys [props state]}]
@@ -54,7 +57,32 @@
       (let [server-response (:server-response @state)
             {:keys [configs error-message]} server-response]
         (cond
-          (nil? server-response) [comps/Spinner {:text "Loading configurations..."}]
+          (nil? server-response) [comps/Spinner {:text
+                                                 (if (:mc-for-deletion @state)
+                                                   (let [rm_url
+                                                         (paths/rm-method-configuration-path
+                                                           (:workspace-id props)
+                                                           (:mc-for-deletion @state))
+                                                         url-map {:method "DELETE"
+                                                                  :on-done (fn [{:keys [success? xhr]}]
+                                                                             (if success?
+                                                                               ;((:on-import props))
+                                                                               (swap! state assoc
+                                                                                 :server-response
+                                                                                 nil
+                                                                                 :mc-for-deletion
+                                                                                 nil
+                                                                                 )
+                                                                               (swap! state assoc
+                                                                                 :server-response
+                                                                                 (.-statusText xhr)
+                                                                                 :mc-for-deletion
+                                                                                 nil)
+                                                                               ))}]
+                                                     (do
+                                                       (utils/ajax-orch rm_url url-map)
+                                                       (str "Deleting configuration...")))
+                                                   "Loading configurations...")}]
           error-message (style/create-server-error-message error-message)
           (zero? (count configs))
           (style/create-message-well "There are no method configurations to display.")
@@ -64,10 +92,20 @@
             [{:header "Name" :starting-width 200 :sort-by #(% "name") :filter-by #(% "name")
               :content-renderer
               (fn [row-index config]
+                [:div {}
                 [:a {:href "javascript:;"
                      :style {:color (:button-blue style/colors) :textDecoration "none"}
                      :onClick #((:on-config-selected props) config)}
-                 (config "name")])}
+                 (config "name")]
+                [:a {:href "javascript:;" :style {:color (:exception-red style/colors)
+                                                  :float "right" :align "right"}
+                     :onClick (fn [e]
+                                (let [confirm_status (js/confirm "Are you sure?")]
+                                  (if confirm_status
+                                    (swap! state assoc :server-response nil
+                                      :mc-for-deletion config)
+                                    nil)))}
+                 (icons/font-icon {:style {:fontSize "135%"}} :trash-can)]])}
              {:header "Namespace" :starting-width 200 :sort-by :value}
              {:header "Root Entity Type" :starting-width 140 :sort-by :value}
              {:header "Workspace" :starting-width 200}
@@ -92,7 +130,8 @@
      (react/call :load-method-configs this))
    :component-did-update
    (fn [{:keys [this state]}]
-     (when (nil? (:server-response @state))
+     (when (and
+             (nil? (:server-response @state)) (nil? (:mc-for-deletion @state))  )
        (react/call :load-method-configs this)))
    :load-method-configs
    (fn [{:keys [props state]}]
