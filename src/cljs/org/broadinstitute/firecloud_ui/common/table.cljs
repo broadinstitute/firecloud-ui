@@ -122,7 +122,7 @@
     (:content props)]])
 
 
-(defn- render-header [state props]
+(defn- render-header [state props this]
   [:div {:style (merge
                   {:fontWeight 500 :fontSize "80%"
                    :color "#fff" :backgroundColor (:header-darkgray style/colors)}
@@ -147,15 +147,17 @@
             :onResizeDoubleClick #(swap! state update-in [:ordered-columns display-index]
                                      assoc :width (:starting-width column))
             :onSortClick (when-let [sorter (:sort-by column)]
-                           #(if (= i (:sort-column @state))
-                             (case (:sort-order @state)
-                               :asc (swap! state assoc :sort-order :desc)
-                               :desc (swap! state dissoc :sort-column :sort-order :key-fn)
-                               (assert false "bad state"))
-                             (swap! state assoc :sort-column i :sort-order :asc
-                               :key-fn (if (= :value sorter)
-                                         (fn [row] (str (nth row i)))
-                                         (fn [row] (sorter (nth row i)))))))
+                           (fn [e]
+                             (if (= i (:sort-column @state))
+                               (case (:sort-order @state)
+                                 :asc (swap! state assoc :sort-order :desc)
+                                 :desc (swap! state dissoc :sort-column :sort-order :key-fn)
+                                 (assert false "bad state"))
+                               (swap! state assoc :sort-column i :sort-order :asc
+                                 :key-fn (if (= :value sorter)
+                                           (fn [row] (str (nth row i)))
+                                           (fn [row] (sorter (nth row i))))))
+                             (react/call :set-body-rows this)))
             :sortOrder (when (= i (:sort-column @state)) (:sort-order @state))})))
      (filter :showing? (:ordered-columns @state)))
    (common/clear-both)])
@@ -224,7 +226,7 @@
      (when-not (:initial @state)
        (swap! state assoc :synced false)))
    :apply-filter
-   (fn [{:keys [this state props refs]}]
+   (fn [{:keys [this state props]}]
      (swap! state assoc :synced true)
      (let [text (react/call :get-filter-text this)]
        (when (empty? text) (swap! state assoc :initial true))
@@ -355,18 +357,18 @@
                         :minWidth (reduce
                                    + (map :width (filter :showing? (:ordered-columns @state))))
                         :cursor (when (:dragging? @state) "col-resize")}}
-          (render-header state props)
+          (render-header state props this)
           [Body (assoc props
                   :ref "body"
                   :columns (filter :showing? (:ordered-columns @state))
                   :initial-rows (react/call :get-body-rows this (:data props) true))]]]
         (when paginator-below [:div {:style {:paddingTop (:paginator-space props)}} paginator])]))
    :get-filtered-data
-   (fn [{:keys [props state refs]}]
+   (fn [{:keys [props refs]}]
      (filter-data (:data props) (:columns props)
                   (react/call :get-filter-text (@refs "filterer"))))
    :get-body-rows
-   (fn [{:keys [props state refs]} filtered-data & [initial-render?]]
+   (fn [{:keys [state refs]} filtered-data & [initial-render?]]
      (let [[n c] (if initial-render?
                    [1 initial-rows-per-page]
                    (react/call :get-current-slice (@refs "paginator")))
@@ -379,7 +381,7 @@
        (react/call :set-rows (@refs "body") (react/call :get-body-rows this rows))
        (react/call :set-num-rows-visible (@refs "paginator") (count rows))))
    :component-will-receive-props
-   (fn [{:keys [props next-props state refs]}]
+   (fn [{:keys [props state refs]}]
      (swap! state assoc :ordered-columns (create-ordered-columns (:columns props)))
      (react/call :make-desynced (@refs "filterer")))
    :component-did-mount

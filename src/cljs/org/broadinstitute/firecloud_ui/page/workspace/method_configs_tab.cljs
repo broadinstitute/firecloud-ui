@@ -20,8 +20,6 @@
       {:name (str "Configuration " (inc i))
        :namespace (rand-nth ["Broad" "nci" "public"])
        :rootEntityType "Task"
-       :workspaceName {:namespace (str "ws_ns_" (inc i))
-                       :name (str "ws_n_" (inc i))}
        :methodStoreMethod {:methodNamespace (str "ms_ns_" (inc i))
                            :methodName (str "ms_n_" (inc i))
                            :methodVersion (str "ms_v_" (inc i))}
@@ -37,6 +35,16 @@
        :prerequisites {"unused 1" "Predicate 1"
                        "unused 2" "Predicate 2"}})
     (range (rand-int 50))))
+
+
+(defn- render-map [m keys labels]
+  [:div {}
+   (map-indexed
+     (fn [i k]
+       [:div {}
+        [:span {:style {:fontWeight 200}} (str (labels i) ": ")]
+        [:span {:style {:fontweight 500}} (get m k)]])
+     keys)])
 
 
 (react/defc MethodConfigurationsList
@@ -61,7 +69,7 @@
           :else
           [table/Table
            {:columns
-            [{:header "Name" :starting-width 200 :sort-by #(% "name") :filter-by #(% "name")
+            [{:header "Name" :starting-width 240 :sort-by #(% "name") :filter-by #(% "name")
               :content-renderer
               (fn [row-index config]
                 [:a {:href "javascript:;"
@@ -70,22 +78,27 @@
                  (config "name")])}
              {:header "Namespace" :starting-width 200 :sort-by :value}
              {:header "Root Entity Type" :starting-width 140 :sort-by :value}
-             {:header "Workspace" :starting-width 200}
-             {:header "Method Store Method" :starting-width 300}
-             {:header "Method Store Configuration" :starting-width 300}]
+             {:header "Method Store Method" :starting-width 300
+              :filter-by #(str (% "methodNamespace") (% "methodName") (% "methodVersion"))
+              :content-renderer
+              (fn [row-index msm]
+                (render-map msm
+                  ["methodNamespace" "methodName" "methodVersion"]
+                  ["Namespace" "Name" "Version"]))}
+             {:header "Method Store Configuration" :starting-width 300
+              :filter-by #(str (% "methodConfigNamespace") (% "methodConfigName") (% "methodConfigVersion"))
+              :content-renderer
+              (fn [row-index msc]
+                (render-map msc
+                  ["methodConfigNamespace" "methodConfigName" "methodConfigVersion"]
+                  ["Namespace" "Name" "Version"]))}]
             :data (map
                    (fn [config]
                      [config
                       (config "namespace")
                       (config "rootEntityType")
-                      (clojure.string/join
-                       ":" (map #(get-in config ["workspaceName" %]) ["namespace" "name"]))
-                      (clojure.string/join
-                       ":" (map #(get-in config ["methodStoreMethod" %])
-                                ["methodNamespace" "methodName" "methodVersion"]))
-                      (clojure.string/join
-                       ":" (map #(get-in config ["methodStoreConfig" %])
-                                ["methodConfigNamespace" "methodConfigName" "methodConfigVersion"]))])
+                      (config "methodStoreMethod")
+                      (config "methodStoreConfig")])
                    configs)}]))])
    :component-did-mount
    (fn [{:keys [this]}]
