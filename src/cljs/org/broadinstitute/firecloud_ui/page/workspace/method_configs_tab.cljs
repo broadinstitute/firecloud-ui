@@ -109,7 +109,9 @@
    (fn [{:keys [props state]}]
      [:div {:style {:padding "1em 0"}}
       (if (:selected-method-config @state)
-        [MethodConfigEditor {:workspace-id (:workspace-id props)
+        [MethodConfigEditor {:on-rm (fn []
+                                      (swap! state dissoc :selected-method-config))
+                             :workspace-id (:workspace-id props)
                              :config (:selected-method-config @state)}]
         [MethodConfigurationsList
          {:workspace-id (:workspace-id props)
