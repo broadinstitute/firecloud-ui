@@ -90,14 +90,14 @@
      ((:onChange props)))})
 
 
-(defn- render-cell [{:keys [width onResizeMouseDown onResizeDoubleClick onSortClick sortOrder] :as props}]
+(defn- render-cell [{:keys [width onResizeMouseDown onSortClick sortOrder] :as props}]
   [:div {:style (merge {:float "left" :position "relative" :width width :minWidth 10}
                   (:cell-style props))}
    (when (:onResizeMouseDown props)
      [:div {:style {:position "absolute" :width 20 :top 0 :bottom 0 :left (- width 10) :zIndex 1
                     :cursor "col-resize"}
             :onMouseDown onResizeMouseDown
-            :onDoubleClick onResizeDoubleClick}])
+            :onDoubleClick (:onResizeDoubleClick props)}])
    (when onSortClick
      [:div {:style {:position "absolute" :top 0 :bottom 0 :left 0 :width (if onResizeMouseDown (- width 10) width)
                     :cursor "pointer"}
@@ -116,13 +116,13 @@
                   {:fontWeight 500 :fontSize "80%"
                    :color "#fff" :backgroundColor (:header-darkgray style/colors)}
                   (:header-row-style props))}
-   (map
-     (fn [column]
+   (map-indexed
+     (fn [display-index column]
        (let [i (:index column)
              onResizeMouseDown
              (when (get column :resizable? (:resizable-columns? props))
                (fn [e]
-                 (swap! state assoc :dragging? true :mouse-x (.-clientX e) :drag-column i
+                 (swap! state assoc :dragging? true :mouse-x (.-clientX e) :drag-column display-index
                    :saved-user-select-state (common/disable-text-selection))))]
          (render-cell
            {:width (:width column)
@@ -133,7 +133,7 @@
                                        {:padding (str "0.8em 0 0.8em " (or (:cell-padding-left props) 0))}
                                        (:header-style props))
             :onResizeMouseDown onResizeMouseDown
-            :onResizeDoubleClick #(swap! state update-in [:ordered-columns i]
+            :onResizeDoubleClick #(swap! state update-in [:ordered-columns display-index]
                                      assoc :width (:starting-width column))
             :onSortClick (when-let [sorter (:sort-by column)]
                            #(if (= i (:sort-column @state))
@@ -197,11 +197,12 @@
    :render
    (fn [{:keys [state this]}]
      [:div {}
-      (style/create-text-field {:ref "filter-field" :placeholder "Filter"
-                                :style {:backgroundColor (if (:synced @state) "#fff" (:tag-background style/colors))}
-                                :onKeyDown (common/create-key-handler
-                                             [:enter] #(react/call :apply-filter this))
-                                :onChange #(swap! state assoc :initial false :synced false)})
+      (style/create-text-field
+        {:ref "filter-field" :placeholder "Filter"
+         :style {:backgroundColor (if (:synced @state) "#fff" (:tag-background style/colors))}
+         :onKeyDown (common/create-key-handler
+                      [:enter] #(react/call :apply-filter this))
+         :onChange #(swap! state assoc :initial false :synced false)})
       [:span {:style {:paddingLeft "1em"}}]
       [comps/Button {:icon :search :onClick #(react/call :apply-filter this)}]])
    :make-desynced
@@ -218,13 +219,34 @@
 
 (react/defc ColumnEditor
   {:render
-   (fn [{:keys [props]}]
+   (fn [{:keys [props state refs]}]
      [:div {:style {:backgroundColor "#fff" :border (str "2px solid " (:line-gray style/colors))
-                    :padding "1em" :lineHeight "1.5em"}}
-      [:div {} "Show:"]
-      (let [style {:padding "4px 8px" :marginRight 5 :borderRadius 5 :cursor "pointer"
+                    :padding "1em" :lineHeight "1.5em" :cursor (when (:drag-active @state) "ns-resize")}
+            :onMouseMove (when (:drag-index @state)
+                           (fn [e]
+                             (let [x (.-clientX e)
+                                   y (.-clientY e)
+                                   dist (utils/distance (:start-x @state) (:start-y @state) x y)
+                                   div-locs (map
+                                              (fn [i] {:index i :y
+                                                       (-> (@refs (str "div" i))
+                                                         .getDOMNode .getBoundingClientRect .-top)})
+                                              (range (inc (count (:columns props)))))
+                                   closest-div (apply min-key #(js/Math.abs (- y (:y %))) div-locs)]
+                               (when (not= (:index closest-div) (:drop-index @state))
+                                 (swap! state assoc :drop-index (:index closest-div)))
+                               (when (and (not (:drag-active @state)) (> dist 5.0))
+                                 (swap! state assoc :drag-active true)))))
+            :onMouseUp (when (:drag-index @state)
+                         (fn [e]
+                           ((:submit props)
+                             (utils/move (:columns props) (:drag-index @state) (:drop-index @state)))
+                           (swap! state dissoc :drag-index :drag-active :drop-index)))}
+      "Show:"
+      (let [style {:padding "4px 8px" :marginRight 5 :borderRadius 5
+                   :cursor (when-not (:drag-active @state) "pointer")
                    :backgroundColor (:button-blue style/colors) :color "#fff"}
-            submit (fn [b] #((:submit props) (mapv (fn [col] (assoc col :showing? b)) (:columns props))))]
+            submit (fn [b] (fn [] ((:submit props) (mapv #(assoc % :showing? b) (:columns props)))))]
         [:div {:style {:padding "0.5em 0"}}
          [:span {:style style :onClick (submit true)} "All"]
          [:span {:style style :onClick (submit false)} "None"]])
@@ -232,12 +254,22 @@
         (fn [i column]
           (when (get column :reorderable? true)
             (let [showing? (:showing? column)]
-              [:div {}
-               [:label {:style {:cursor "pointer"}}
+              [:div {:ref (str "div" i)
+                     :style {:borderTop (when (= i (:drop-index @state)) "1px solid gray")}}
+               [:img {:src "assets/drag_temp.png"
+                      :style {:height 16 :verticalAlign "middle" :marginRight "1ex" :cursor "ns-resize"}
+                      :draggable false
+                      :onMouseDown (fn [e] (swap! state assoc :drag-index i
+                                             :start-x (.-clientX e) :start-y (.-clientY e)))}]
+               [:label {:style {:cursor (when-not (:drag-active @state) "pointer")}}
                 [:input {:type "checkbox" :checked showing?
-                         :onChange #((:submit props) (update-in (:columns props) [i] assoc :showing? (not showing?)))}]
+                         :onChange #((:submit props)
+                                     (update-in (:columns props) [i] assoc :showing? (not showing?)))}]
                 [:span {:style {:paddingLeft "0.5em"}} (:header column)]]])))
-        (:columns props))])})
+        (:columns props))
+      (let [i (count (:columns props))]
+        [:div {:ref (str "div" i)
+               :style {:borderTop (when (= i (:drop-index @state)) "1px solid gray")}}])])})
 
 
 (react/defc Table

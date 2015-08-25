@@ -134,5 +134,22 @@
     form-data))
 
 
-(defn- map-to-string [m]
+(defn map-to-string [m]
   (join ", " (map (fn [k] (str k "→" (get m k))) (keys m))))
+
+
+(defn distance [x1 y1 x2 y2]
+  (let [dx (- x1 x2)
+        dy (- y1 y2)]
+    (js/Math.sqrt (+ (* dx dx) (* dy dy)))))
+
+
+(defn insert [vec i elem]
+  (apply conj (subvec vec 0 i) elem (subvec vec i)))
+
+(defn delete [vec i]
+  (apply conj (subvec vec 0 i) (subvec vec (inc i))))
+
+(defn move [vec start end]
+  (let [elem (nth vec start)]
+    (insert (delete vec start) (if (> end start) (dec end) end) elem)))
