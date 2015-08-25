@@ -4,6 +4,7 @@
     [org.broadinstitute.firecloud-ui.common :as common]
     [org.broadinstitute.firecloud-ui.common.icons :as icons]
     [org.broadinstitute.firecloud-ui.common.style :as style]
+    [org.broadinstitute.firecloud-ui.utils :as utils]
     ))
 
 
@@ -147,19 +148,24 @@
 (react/defc ModalDialog
   {:render
    (fn [{:keys [props]}]
-     (when (:show-when props)
-       (let [content (:content props)]
-         (assert (react/valid-element? content)
-           (subs (str "Not a react element: " content) 0 200))
-         [:div {:style {:backgroundColor "rgba(82, 129, 197, 0.4)"
-                        :overflowX "hidden" :overflowY "scroll"
-                        :position "fixed" :zIndex 9999
-                        :top 0 :right 0 :bottom 0 :left 0}
-                :onKeyDown (common/create-key-handler [:esc] #((:dismiss-self props)))}
-          [:div {:style {:transform "translate(-50%, 0px)"
-                         :position "relative" :marginBottom 60
-                         :top 60 :left "50%" :width (:width props)}}
-         content]])))})
+     (let [content (:content props)]
+       (assert (react/valid-element? content)
+               (subs (str "Not a react element: " content) 0 200))
+       [:div {:style {:backgroundColor "rgba(82, 129, 197, 0.4)"
+                      :overflowX "hidden" :overflowY "scroll"
+                      :position "fixed" :zIndex 9999
+                      :top 0 :right 0 :bottom 0 :left 0}
+              :onKeyDown (common/create-key-handler [:esc] #((:dismiss-self props)))}
+        [:div {:style {:transform "translate(-50%, 0px)"
+                       :position "relative" :marginBottom 60
+                       :top 60 :left "50%" :width (:width props)}}
+         content]]))
+   :component-did-mount
+   (fn []
+     (set! (-> js/document .-body .-style .-overflow) "hidden"))
+   :component-will-unmount
+   (fn []
+     (set! (-> js/document .-body .-style .-overflow) nil))})
 
 
 (react/defc Dialog
