@@ -106,11 +106,15 @@
           (if item
             [(item :component) {:nav-context nav-context}]
             [:div {} "Page not found."]))
-        [:div {:style {:margin "1em 1em -1em 0" :fontSize "smaller" :textAlign "right"}}
-         [:a {:href "https://rawls-dev.broadinstitute.org/authentication/register"
-              :target "_blank"
-              :style {:color "red"}}
-          "Force workspace service authentication"]]]))})
+        (let [currenthost (.-hostname (.-location js/window))]
+             (let [rawlsTarget (if (not= -1 (.indexOf currenthost "dsde-staging"))
+                   "https://rawls.dsde-staging.broadinstitute.org/authentication/register"
+                   "https://rawls-dev.broadinstitute.org/authentication/register")]
+          [:div {:style {:margin "1em 1em -1em 0" :fontSize "smaller" :textAlign "right"}}
+           [:a {:href rawlsTarget
+                :target "_blank"
+                :style {:color "red"}}
+            "Force workspace service authentication"]]))]))})
 
 ;; Content to display when logged out
 (react/defc LoggedOut
