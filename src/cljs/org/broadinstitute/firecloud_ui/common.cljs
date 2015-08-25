@@ -5,11 +5,13 @@
   {:backspace 8 :tab 9 :enter 13 :shift 16 :ctrl 17 :alt 18 :capslock 20 :esc 27 :space 32
    :pgup 33 :pgdown 34 :end 35 :home 67 :left 37 :up 38 :right 39 :down 40 :insert 45 :del 46})
 
-(defn create-key-handler [keys func]
-  (fn [e]
-    (let [keycode (.-keyCode e)]
-      (when (some #(= keycode (% keymap)) keys)
-        (func e)))))
+(defn create-key-handler
+  ([keys func] (create-key-handler keys (fn [e] true) func))
+  ([keys modifier func] (fn [e]
+                          (when (modifier e)
+                            (let [keycode (.-keyCode e)]
+                              (when (some #(= keycode (% keymap)) keys)
+                                (func e)))))))
 
 (defn clear! [refs & ids]
   (doseq [id ids]
@@ -41,3 +43,8 @@
 (defn restore-text-selection [state]
   (doseq [k user-select-keys]
     (aset (-> js/document .-body .-style) k (state k))))
+
+(defn focus-and-select [dom-node]
+  (.focus dom-node)
+  (when (= "text" (.-type dom-node))
+    (.select dom-node)))
