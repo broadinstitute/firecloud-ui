@@ -6,9 +6,6 @@
     [org.broadinstitute.firecloud-ui.paths :as paths]
     [org.broadinstitute.firecloud-ui.utils :as utils]))
 
-(defn- submission-running? [submission]
-  (= "Running" (:status submission)))
-
 
 (defn- create-mock-submissions-list [workspace]
   (map
@@ -42,19 +39,19 @@
   [:div {:style {:border "1px solid black" :marginTop "1em" :position "relative"}}
    [:div {:style {:float "left" :marginLeft "1em" :padding "0.25em 0"}}
     [:div {:style {:fontWeight 500 :fontSize "120%" :paddingBottom "0.25em"}}
-     (:methodConfigurationName submission)]
-    [:div {} (str "Status: " (:status submission)
-                  " | Started At: " (:submissionDate submission))
-                  " | By " (:submitter submission)]
-    (let [submissionEntity (:submissionEntity submission)
-          entityName (:entityName submissionEntity)
-          entityType (:entityType submissionEntity)]
+     (submission "methodConfigurationName ")]
+    [:div {} (str "Status: " (submission "status")
+                  " | Started At: " (submission "submissionDate"))
+                  " | By " (submission "submitter")]
+    (let [submissionEntity (submission "submissionEntity")
+          entityName (submissionEntity "entityName")
+          entityType (submissionEntity "entityType")]
       [:div {} (str "Entities: " entityType "/" entityName)])]
    [:div {:style {:float "right"}}
-    ;[comps/Button
-    ; {:color "#BBB"
-    ;  :text "Details..."
-    ;  :onClick #(js/alert "take me to the details please")}]
+    [comps/Button
+     {:color (style/colors :border-gray)
+      :text "Details..."
+      :onClick #(utils/rlog "TODO : take me to the details please")}]
     [comps/Button
      {:color "Red"
       :text "Abort"
@@ -64,15 +61,13 @@
 
 
 (defn- render-loaded-submissions [submissions]
-  (let [count-total (count submissions)
-        running-submissions (filter submission-running? submissions)
-        count-running (count running-submissions)]
+  (let [count-total (count submissions)]
     [:div {:style {:padding "1em"}}
-     [:div {} (str "Monitor Running Methods")]
-     (if (= count-running 0)
+     [:div {} (str "Monitor Submissions")]
+     (if (= count-total 0)
        [:div {:style {:paddingTop "1em"}}
-        [:em {} (str "There are no submissions (of total " count-total ") running")]]
-       (map render-running-loaded-single-submission-summary running-submissions))]))
+        [:em {} (str "There are no submissions.")]]
+       (map render-running-loaded-single-submission-summary submissions))]))
 
 
 (react/defc SubmissionsList
@@ -88,7 +83,7 @@
            on-done (fn [{:keys [success? xhr]}]
                      (if success?
                        (swap! state assoc :submissions
-                         (create-mock-submissions-list (:workspace props)))
+                         (utils/parse-json-string (.-responseText xhr) ))
                        (swap! state assoc :error (.-responseText xhr))))]
        (utils/ajax-orch url
          {:canned-response canned-response
