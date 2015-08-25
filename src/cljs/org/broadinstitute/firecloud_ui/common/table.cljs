@@ -301,6 +301,16 @@
             data)))
 
 
+(defn- create-ordered-columns [columns]
+  (vec (map-indexed
+        (fn [index col]
+          (assoc col
+                 :index index :showing? true
+                 :width (or (:starting-width col) 100)
+                 :starting-width (or (:starting-width col) 100)))
+        columns)))
+
+
 (react/defc Table
   {:get-default-props
    (fn []
@@ -312,13 +322,7 @@
       :filterable? true})
    :get-initial-state
    (fn [{:keys [props]}]
-     {:ordered-columns (vec (map-indexed
-                             (fn [index col]
-                               (assoc col
-                                      :index index :showing? true
-                                      :width (or (:starting-width col) 100)
-                                      :starting-width (or (:starting-width col) 100)))
-                             (:columns props)))
+     {:ordered-columns (create-ordered-columns (:columns props))
       :dragging? false})
    :render
    (fn [{:keys [this state props refs]}]
@@ -375,7 +379,8 @@
        (react/call :set-rows (@refs "body") (react/call :get-body-rows this rows))
        (react/call :set-num-rows-visible (@refs "paginator") (count rows))))
    :component-will-receive-props
-   (fn [{:keys [state next-props refs]}]
+   (fn [{:keys [props next-props state refs]}]
+     (swap! state assoc :ordered-columns (create-ordered-columns (:columns props)))
      (react/call :make-desynced (@refs "filterer")))
    :component-did-mount
    (fn [{:keys [this state]}]
