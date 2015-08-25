@@ -341,13 +341,14 @@
              [:div {:style {:float "left"}}
               [comps/Button {:icon :gear :title-text "Select Columns..." :ref "col-edit-button"
                              :onClick #(swap! state assoc :reordering-columns? true)}]
-              [comps/Dialog {:show-when (:reordering-columns? @state)
-                             :get-anchor-dom-node #(.getDOMNode (@refs "col-edit-button"))
-                             :blocking? false
-                             :dismiss-self #(swap! state assoc :reordering-columns? false)
-                             :content (react/create-element ColumnEditor
-                                        {:columns (:ordered-columns @state)
-                                         :submit #(swap! state assoc :ordered-columns %)})}]])
+              (when (:reordering-columns? @state)
+                [comps/Dialog {:get-anchor-dom-node #(.getDOMNode (@refs "col-edit-button"))
+                               :blocking? false
+                               :dismiss-self #(swap! state assoc :reordering-columns? false)
+                               :content (react/create-element
+                                         ColumnEditor
+                                         {:columns (:ordered-columns @state)
+                                          :submit #(swap! state assoc :ordered-columns %)})}])])
            (common/clear-both)])
         (when paginator-above [:div {:style {:paddingBottom (:paginator-space props)}} paginator])
         [:div {:style {:overflowX "auto"}}

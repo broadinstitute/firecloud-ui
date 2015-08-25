@@ -14,8 +14,9 @@
 
 (defn render-launch-overlay [state refs workspace-id config]
   (when (:submitting? @state)
-    [comps/ModalDialog
+    [comps/Dialog
      {:width "80%"
+      :dismiss-self #(swap! state dissoc :submitting?)
       :content
       (react/create-element
        [:div {}

@@ -115,98 +115,44 @@
         [:div {} (:component (nth (:items props) (:active-tab-index @state)))]])}))
 
 
-(react/defc AnchoredDialog
-  {:render
-   (fn [{:keys [state props]}]
-     (when (:show-when props)
-       (let [content (:content props)]
-         (assert (react/valid-element? content)
-           (subs (str "Not a react element: " content) 0 200))
-         [:div {:style {:backgroundColor "rgba(210, 210, 210, 0.4)"
-                        :overflowX "hidden" :overflowY "scroll"
-                        :position "fixed" :zIndex 8888
-                        :top 0 :right 0 :bottom 0 :left 0}
-                :onKeyDown (common/create-key-handler [:esc] #((:dismiss-self props)))
-                :onClick #((:dismiss-self props))}
-          [:div {:style {:position "absolute" :top (:anchor-top @state) :left (:anchor-left @state)}
-                 :onClick (fn [e] (.stopPropagation e))}
-           content]])))
-   :component-did-mount
-   (fn [{:keys [this state props]}]
-     (let [domnode ((:get-anchor-dom-node props))
-           capture-position
-           #(swap! state assoc :anchor-top (- (.-offsetTop domnode) (.-scrollY js/window))
-             :anchor-left (- (.-offsetLeft domnode) (.-scrollX js/window)))]
-       (set! (.-onScrollHandler this) capture-position)
-       (.addEventListener js/window "scroll" (.-onScrollHandler this))
-       (capture-position)))
-   :component-will-unmount
-   (fn [{:keys [this]}]
-     (.removeEventListener js/window "scroll" (.-onScrollHandler this)))})
-
-
-(react/defc ModalDialog
-  {:render
-   (fn [{:keys [props]}]
-     (let [content (:content props)]
-       (assert (react/valid-element? content)
-               (subs (str "Not a react element: " content) 0 200))
-       [:div {:style {:backgroundColor "rgba(82, 129, 197, 0.4)"
-                      :overflowX "hidden" :overflowY "scroll"
-                      :position "fixed" :zIndex 9999
-                      :top 0 :right 0 :bottom 0 :left 0}
-              :onKeyDown (common/create-key-handler [:esc] #((:dismiss-self props)))}
-        [:div {:style {:transform "translate(-50%, 0px)"
-                       :position "relative" :marginBottom 60
-                       :top 60 :left "50%" :width (:width props)}}
-         content]]))
-   :component-did-mount
-   (fn []
-     (set! (-> js/document .-body .-style .-overflow) "hidden"))
-   :component-will-unmount
-   (fn []
-     (set! (-> js/document .-body .-style .-overflow) nil))})
-
-
 (react/defc Dialog
   {:get-default-props
    (fn []
      {:blocking? true})
    :render
-   (fn [{:keys [state props]}]
-     (when (:show-when props)
-       (let [content (:content props)]
-         (assert (react/valid-element? content)
-           (subs (str "Not a react element: " content) 0 200))
+   (fn [{:keys [props state]}]
+     (let [content (:content props)
+           anchored? (not (nil? (:get-anchor-dom-node props)))]
+       (assert (react/valid-element? content)
+               (subs (str "Not a react element: " content) 0 200))
+       (when (or (not anchored?) (:position @state))
          [:div {:style {:backgroundColor (if (:blocking? props)
-                                           "rgba(82, 129, 197, 0.4)"
+                                           "rgba(110, 110, 110, 0.4)"
                                            "rgba(210, 210, 210, 0.4)")
-                        :overflowX "hidden" :overflowY "scroll"
-                        :position "fixed" :zIndex 9999
-                        :top 0 :right 0 :bottom 0 :left 0}
+                        :position "absolute" :zIndex 9999
+                        :top 0 :left 0 :right 0 :height (.. js/document -body -offsetHeight)}
                 :onKeyDown (common/create-key-handler [:esc] #((:dismiss-self props)))
                 :onClick (when-not (:blocking? props) #((:dismiss-self props)))}
-          [:div {:style (if (:get-anchor-dom-node props)
-                          {:position "absolute" :top (:anchor-top @state) :left (:anchor-left @state)}
+          [:div {:style (if anchored?
+                          {:position "absolute"
+                           :top (get-in @state [:position :top])
+                           :left (get-in @state [:position :left])}
                           {:transform "translate(-50%, 0px)"
                            :position "relative" :marginBottom 60
                            :top 60 :left "50%" :width (:width props)})
-                 :onClick (when-not (:blocking? props) (fn [e] (.stopPropagation e)))}
+                 :onClick (when-not (:blocking? props) #(.stopPropagation %))}
            content]])))
    :component-did-mount
-   (fn [{:keys [this state props]}]
-     (when (:get-anchor-dom-node props)
-       (let [domnode ((:get-anchor-dom-node props))
-             capture-position
-             #(swap! state assoc :anchor-top (- (.-offsetTop domnode) (.-scrollY js/window))
-               :anchor-left (- (.-offsetLeft domnode) (.-scrollX js/window)))]
-         (set! (.-onScrollHandler this) capture-position)
-         (.addEventListener js/window "scroll" (.-onScrollHandler this))
-         (capture-position))))
+   (fn [{:keys [this props state]}]
+     (when-let [get-dom-node (:get-anchor-dom-node props)]
+       (swap! state assoc :position {:top (.. (get-dom-node) -offsetTop)
+                                     :left (.. (get-dom-node) -offsetLeft)}))
+     (set! (.-onKeyDownHandler this)
+           (common/create-key-handler [:esc] #((:dismiss-self props))))
+     (.addEventListener js/window "keydown" (.-onKeyDownHandler this)))
    :component-will-unmount
-   (fn [{:keys [this props]}]
-     (when (:get-anchor-dom-node props)
-       (.removeEventListener js/window "scroll" (.-onScrollHandler this))))})
+   (fn [{:keys [this]}]
+     (.removeEventListener js/window "keydown" (.-onKeyDownHandler this)))})
 
 
 (react/defc Blocker
