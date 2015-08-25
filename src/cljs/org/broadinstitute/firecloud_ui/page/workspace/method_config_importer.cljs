@@ -123,7 +123,7 @@
         (if (zero? (count (:method-confs @state)))
           (style/create-message-well "There are no method configurations to display for import!")
           [table/Table
-           {:columns [{:header "Name" :starting-width 200 :filter-by #(% "name")
+           {:columns [{:header "Name" :starting-width 200 :filter-by #(% "name") :sort-by #(% "name")
                        :content-renderer
                        (fn [row-index conf]
                          [:a
@@ -133,11 +133,11 @@
                            :href "javascript:;"
                            :style {:color (:button-blue style/colors) :textDecoration "none"}}
                           (conf "name")])}
-                      {:header "Namespace" :starting-width 200}
-                      {:header "Snapshot Id" :starting-width 100}
-                      {:header "Synopsis" :starting-width 160}
-                      {:header "Create Date" :starting-width 210}
-                      {:header "Owner" :starting-width 290}]
+                      {:header "Namespace" :starting-width 200 :sort-by :value}
+                      {:header "Snapshot Id" :starting-width 100 :sort-by :value}
+                      {:header "Synopsis" :starting-width 160 :sort-by :value}
+                      {:header "Create Date" :starting-width 210 :sort-by :value}
+                      {:header "Owner" :starting-width 290 :sort-by :value}]
             :data (map
                     (fn [config]
                       [config

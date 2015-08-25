@@ -128,7 +128,7 @@
        [{:header [:div {:style {:marginLeft -6}} "Status"] :starting-width 60
          :content-renderer (fn [row-index data]
                              [StatusCell {:data data}])
-         :filter-by :status}
+         :filter-by :none}
         {:header "Workspace" :starting-width 250
          :content-renderer (fn [row-index data]
                              [WorkspaceCell {:data data}])
