@@ -81,8 +81,9 @@
 
 
 (defn render-import-modal [config props refs on-close on-import]
-  [comps/ModalDialog
+  [comps/Dialog
    {:width 750
+    :dismiss-self on-close
     :content (react/create-element
                [:div {}
                 [:div {:style {:backgroundColor "#fff"

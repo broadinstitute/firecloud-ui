@@ -231,8 +231,9 @@
            selected-ws-id (get-workspace-id-from-nav-segment (:segment nav-context))]
        [:div {}
         (when (:overlay-shown? @state)
-          [comps/ModalDialog
+          [comps/Dialog
            {:width 500
+            :dismiss-self #(swap! state dissoc :overlay-shown?)
             :content (render-modal state refs nav-context)}])
         [:div {:style {:padding "2em"}}
          [:div {:style {:float "right" :display (when (:name selected-ws-id) "none")}}
