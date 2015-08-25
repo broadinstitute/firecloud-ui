@@ -41,3 +41,6 @@
 
 (defn list-submissions-path [workspace]
   (submit-method-path workspace))
+
+(defn rm-method-configuration-path [workspace-id config]
+  (update-method-config-path workspace-id config))

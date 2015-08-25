@@ -85,6 +85,37 @@
     [:span {} (get-in config ["methodRepoMethod" "methodVersion"])]]
    (clear-both)])
 
+(react/defc DeleteButton
+  {:rm-mc (fn [{:keys [props state]}]
+            (let [url (paths/rm-method-configuration-path (:workspace-id props) (:config props))
+                  canned-response {:status 200
+                                   :delay-ms (rand-int 2000)}
+                  on-done (fn [{:keys [success? xhr]}]
+                            (swap! state assoc :deleting? false)
+                            (utils/rlog "in on-done for delete")
+                            (if success?
+                              ((:on-rm props))
+                              (js/alert (str "Error in deletion : " (.-statusText xhr)))))
+                  arg-map {:on-done on-done :method "DELETE" :canned-response canned-response}]
+              (utils/ajax-orch url arg-map)))
+   :render (fn [{:keys [this state]}]
+             (if (:deleting? @state)
+               [comps/Blocker
+                {:banner (str "Deleting...")}]
+               [:div {:style {:marginTop "1em"
+                              :padding "0.7em 0" :cursor "pointer"
+                              :backgroundColor "transparent" :color (:exception-red style/colors)
+                              :border (str "1px solid " (:line-gray style/colors))}
+                      :onClick (fn []
+                                 (let [confirmed? (js/confirm "Are you sure?")]
+                                   (when confirmed?
+                                     (do (swap! state assoc :deleting? true)
+                                         (react/call :rm-mc this)))))}
+                [:span {:style {:display "inline-block" :verticalAlign "middle"}}
+                 (icons/font-icon {:style {:fontSize "135%"}} :trash-can)]
+                [:span {:style {:marginLeft "1em"}} "Delete"]]))})
+
+
 (defn- render-side-bar [state refs config editing? props]
   [:div {:style {:width 290 :float "left"}}
    [:div {:ref "sidebar"}]
@@ -100,6 +131,11 @@
        [:span {:style {:display "inline-block" :verticalAlign "middle"}}
         (icons/font-icon {:style {:fontSize "135%"}} :pencil)]
        [:span {:style {:marginLeft "1em"}} "Edit this page"]]
+
+      [DeleteButton
+       {:workspace-id (:workspace-id props)
+        :on-rm (:on-rm props)
+        :config config}]
 
       [:div {:style {:display (when-not editing? "none") :padding "0.7em 0" :cursor "pointer"
                      :backgroundColor (:success-green style/colors) :color "#fff" :borderRadius 4}
