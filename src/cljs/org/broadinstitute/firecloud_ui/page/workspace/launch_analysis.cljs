@@ -90,7 +90,7 @@
                                                    :entityName ((:selected-entity @state) "name")}
                                                   (when-not (clojure.string/blank? expression) {:expression expression}))]
                                (utils/ajax-orch
-                                (paths/submit-method-path workspace-id)
+                                (paths/submission-create workspace-id)
                                 {:method :post
                                  :data (utils/->json-string payload)
                                  :headers{"Content-Type" "application/json"}
