@@ -157,3 +157,6 @@
 (defn move [vec start end]
   (let [elem (nth vec start)]
     (insert (delete vec start) (if (> end start) (dec end) end) elem)))
+
+(defn rand-subset [items]
+  (take (rand-int (count items)) (shuffle items)))

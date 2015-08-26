@@ -189,15 +189,15 @@
       :size 24})
    :render
    (fn [{:keys [props]}]
-     (let [hamburger-width (int (+ (:size props) 2))
-           hamburger-height (int (/ hamburger-width 6))
+     (let [hamburger-height (int (/ (:size props) 6))
            spacer-height (int (/ (- (:size props) 4 (* 3 hamburger-height)) 2))
            hamburger (fn [color] [:div {:style {:height hamburger-height
-                                                :width hamburger-width
+                                                :width (:size props)
                                                 :borderRadius hamburger-height
                                                 :backgroundColor color}}])
            spacer [:div {:style {:height spacer-height}}]]
-       [:span {:style {:display "inline-block" :position "relative" :verticalAlign :middle}}
+       [:span {:style {:display "inline-block" :position "relative" :verticalAlign "middle"
+                       :height (:size props) :width (:size props)}}
         (style/center {}
           [:div {}
            (hamburger "white")
@@ -212,6 +212,7 @@
      {:size 24})
    :render
    (fn [{:keys [props]}]
-     [:span {:style {:display "inline-block" :position "relative" :verticalAlign "middle"}}
+     [:span {:style {:display "inline-block" :position "relative" :verticalAlign "middle"
+                     :height (:size props) :width (:size props)}}
       (style/center {}
         (icons/font-icon {:style {:color "#fff" :fontSize (:size props)}} :status-warning))])})

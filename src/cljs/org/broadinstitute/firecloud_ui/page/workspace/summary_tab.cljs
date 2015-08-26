@@ -9,14 +9,6 @@
     ))
 
 
-(defn- create-section-header [text]
-  [:div {:style {:fontSize "125%" :fontWeight 500}} text])
-
-(defn- create-paragraph [& children]
-  [:div {:style {:margin "17px 0 0.33333em 0" :paddingBottom "2.5em"
-                 :fontSize "90%" :lineHeight 1.5}}
-   children])
-
 (defn- render-tags [tags]
   (let [tagstyle {:marginRight 13 :borderRadius 2 :padding "5px 13px"
                   :backgroundColor (:tag-background style/colors)
@@ -55,21 +47,21 @@
              (icons/font-icon {:style {:verticalAlign "middle" :fontSize "135%"}} :pencil)
              [:span {:style {:verticalAlign "middle" :marginLeft "1em"}} "Edit this page"]]]
            [:div {:style {:display "inline-block"}}
-            (create-section-header "Workspace Owner")
-            (create-paragraph
+            (style/create-section-header "Workspace Owner")
+            (style/create-paragraph
              [:strong {} (ws "createdBy")]
              " ("
              [:a {:href "#" :style {:color (:button-blue style/colors) :textDecoration "none"}}
               "shared with -1 people"]
              ")")
-            (create-section-header "Description")
-            (create-paragraph [:em {} "Description info not available yet"])
-            (create-section-header "Tags")
-            (create-paragraph (render-tags ["Fake" "Tag" "Placeholders"]))
-            (create-section-header "Research Purpose")
-            (create-paragraph [:em {} "Research purpose not available yet"])
-            (create-section-header "Billing Account")
-            (create-paragraph [:em {} "Billing account not available yet"])]
+            (style/create-section-header "Description")
+            (style/create-paragraph [:em {} "Description info not available yet"])
+            (style/create-section-header "Tags")
+            (style/create-paragraph (render-tags ["Fake" "Tag" "Placeholders"]))
+            (style/create-section-header "Research Purpose")
+            (style/create-paragraph [:em {} "Research purpose not available yet"])
+            (style/create-section-header "Billing Account")
+            (style/create-paragraph [:em {} "Billing account not available yet"])]
            [:div {:style {:clear "both"}}]])))
    :load-workspace
    (fn [{:keys [props state]}]

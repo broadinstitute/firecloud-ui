@@ -23,6 +23,15 @@
     "Exception" (:exception-red colors)))
 
 
+(defn create-section-header [text]
+  [:div {:style {:fontSize "125%" :fontWeight 500}} text])
+
+(defn create-paragraph [& children]
+  [:div {:style {:margin "17px 0 0.33333em 0" :paddingBottom "2.5em"
+                 :fontSize "90%" :lineHeight 1.5}}
+   children])
+
+
 (def ^:private input-text-style
   {:backgroundColor "#fff"
    :border (str "1px solid " (:border-gray colors)) :borderRadius 3
@@ -66,7 +75,7 @@
 
 (defn center [props & children]
   [:div (deep-merge props {:style {:position "absolute" :top "50%" :left "50%"
-                                         :transform "translate(-50%, -50%)"}})
+                                   :transform "translate(-50%, -50%)"}})
    children])
 
 (defn create-unselectable [type props & children]

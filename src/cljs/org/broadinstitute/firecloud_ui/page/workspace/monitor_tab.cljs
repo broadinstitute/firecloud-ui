@@ -4,37 +4,10 @@
     [org.broadinstitute.firecloud-ui.common.components :as comps]
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.common.table :as table]
+    [org.broadinstitute.firecloud-ui.page.workspace.submission-details :as submission-details]
     [org.broadinstitute.firecloud-ui.paths :as paths]
-    [org.broadinstitute.firecloud-ui.utils :as utils]))
-
-
-(defn- create-mock-submission-details [submission-id]
-  {})
-
-
-(react/defc SubmissionDetails
-  {:render
-   (fn [{:keys [props state]}]
-     (let [server-response (:server-response @state)
-           {:keys [submissions error-message]} server-response]
-       (cond
-         (nil? server-response)
-         [:div {:style {:textAlign "center"}} [comps/Spinner {:text "Loading analysis details..."}]]
-         error-message (style/create-server-error-message error-message)
-         :else
-         [:div {} "id: " (:submission-id props)])))
-   :component-did-mount
-   (fn [{:keys [props state]}]
-     (let [url (paths/submission-details (:workspace-id props) (:submission-id props))
-           on-done (fn [{:keys [success? status-text get-parsed-response]}]
-                     (swap! state assoc :server-response (if success?
-                                                           {:submissions (get-parsed-response)}
-                                                           {:error-message status-text})))
-           canned-response {:responseText (utils/->json-string
-                                           (create-mock-submission-details (:submission-id props)))
-                            :status 200
-                            :delay-ms (rand-int 2000)}]
-       (utils/ajax-orch url {:on-done on-done :canned-response canned-response})))})
+    [org.broadinstitute.firecloud-ui.utils :as utils]
+    ))
 
 
 (defn- create-mock-submissions-list [workspace-id]
@@ -42,21 +15,19 @@
     (fn [i]
       {:workspaceName workspace-id
        :methodConfigurationNamespace "my_test_configs"
-       :submissionDate (str "2015-" (rand-nth (range 1 12)) "-"
-                         (rand-nth (range 1 30)) "T19:08:53.027Z")
+       :submissionDate (str "2015-" (inc (rand-int 12)) "-" (inc (rand-int 30)) "T19:08:53.027Z")
        :submissionId "46bfd579-b1d7-4f92-aab0-e44dd092b52a"
        :notstarted []
        :workflows [{:messages []
                     :workspaceName workspace-id
-                    :statusLastChangedDate (str "2015-" (rand-nth (range 1 12))
-                                             "-" (rand-nth (range 1 30))
+                    :statusLastChangedDate (str "2015-" (inc (rand-int 12)) "-" (inc (rand-int 30))
                                              "T19:08:53.027Z")
                     :workflowEntity {:entityType "sample"
                                      :entityName "sample_01"}
                     :status "Succeeded"
                     :workflowId "97adf170-ee40-40a5-9539-76b72802e124"}]
        :methodConfigurationName (str "test_config" (inc i))
-       :status (rand-nth ["Running" "Failed" "Completed" "Queued"])
+       :status (rand-nth ["Submitted" "Done"])
        :submissionEntity {:entityType "sample"
                           :entityName (str "sample_" (inc i))}
        :submitter "abaumann@broadinstitute.org"})
@@ -121,8 +92,8 @@
    (fn [{:keys [props state]}]
      [:div {:style {:margin "2em"}}
       (if (:selected-submission @state)
-        [SubmissionDetails {:workspace-id (:workspace-id props)
-                            :submission-id (get-in @state [:selected-submission "submissionId"])}]
+        [submission-details/Page {:workspace-id (:workspace-id props)
+                                  :submission-id (get-in @state [:selected-submission "submissionId"])}]
         [SubmissionsList {:workspace-id (:workspace-id props)
                           :on-submission-clicked #(swap! state assoc :selected-submission %)}])])
    :component-will-receive-props
