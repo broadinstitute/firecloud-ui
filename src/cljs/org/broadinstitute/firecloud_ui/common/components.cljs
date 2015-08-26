@@ -174,11 +174,13 @@
       :size 24})
    :render
    (fn [{:keys [props]}]
-     (style/center {:style {:width (int (* 1.27 (:size props)))
-                            :height (int (* 1.27 (:size props)))
-                            :backgroundColor "fff" :borderRadius "100%"}}
-       (style/center {}
-         (icons/font-icon {:style {:color (:color props) :fontSize (int (* 0.5 (:size props)))}} :status-done))))})
+     [:span {:style {:display "inline-block" :position "relative" :verticalAlign "middle"
+                     :width (int (* 1.27 (:size props)))
+                     :height (int (* 1.27 (:size props)))
+                     :backgroundColor "fff" :borderRadius "100%"}}
+      (style/center {}
+        (icons/font-icon {:style {:color (:color props) :fontSize (int (* 0.5 (:size props)))}}
+          :status-done))])})
 
 (react/defc RunningIcon
   {:get-default-props
@@ -195,13 +197,14 @@
                                                 :borderRadius hamburger-height
                                                 :backgroundColor color}}])
            spacer [:div {:style {:height spacer-height}}]]
-       (style/center {}
-         [:div {}
-          (hamburger "white")
-          spacer
-          (hamburger (:color props))
-          spacer
-          (hamburger (:color props))])))})
+       [:span {:style {:display "inline-block" :position "relative" :verticalAlign :middle}}
+        (style/center {}
+          [:div {}
+           (hamburger "white")
+           spacer
+           (hamburger (:color props))
+           spacer
+           (hamburger (:color props))])]))})
 
 (react/defc ExceptionIcon
   {:get-default-props
@@ -209,5 +212,6 @@
      {:size 24})
    :render
    (fn [{:keys [props]}]
-     (style/center {}
-      (icons/font-icon {:style {:color "#fff" :fontSize (:size props)}} :status-warning)))})
+     [:span {:style {:display "inline-block" :position "relative" :verticalAlign "middle"}}
+      (style/center {}
+        (icons/font-icon {:style {:color "#fff" :fontSize (:size props)}} :status-warning))])})

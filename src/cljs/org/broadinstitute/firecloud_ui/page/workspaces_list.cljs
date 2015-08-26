@@ -84,10 +84,11 @@
               :onClick #((get-in props [:data :onClick]))}
         [:div {:style {:backgroundColor "rgba(0,0,0,0.2)"
                        :position "absolute" :top 0 :right 0 :bottom 0 :left 2}}]
-        (case status
-          "Complete"  [comps/CompleteIcon]
-          "Running"   [comps/RunningIcon]
-          "Exception" [comps/ExceptionIcon])]))})
+        (style/center {}
+          (case status
+            "Complete"  [comps/CompleteIcon]
+            "Running"   [comps/RunningIcon]
+            "Exception" [comps/ExceptionIcon]))]))})
 
 
 (react/defc WorkspaceCell

@@ -37,28 +37,23 @@
         :else
         (let [ws (get-in @state [:server-response :workspace])]
           [:div {:style {:margin "45px 25px"}}
-           [:div {:style {:float "left" :display "inline-block" :width 290 :marginRight 40}}
+           [:div {:style {:float "left" :width 290 :marginRight 40}}
             ;; TODO - make the width of the float-left dynamic
-            [:div {:style {:borderRadius 5 :padding 25 :textAlign "center"
+            [:div {:style {:borderRadius 5 :padding 20 :textAlign "center"
                            :color "#fff"
                            :backgroundColor (style/color-for-status (ws "status"))
                            :fontSize "125%" :fontWeight 400}}
-             [:span {:style {:display "inline-block" :marginRight 14 :marginTop -4
-                             :verticalAlign "middle" :position "relative"}}
-              (case (ws "status")
-                "Complete" [comps/CompleteIcon {:size 36}]
-                "Running" [comps/RunningIcon {:size 36}]
-                "Exception" [comps/ExceptionIcon {:size 36}])]
+             (case (ws "status")
+               "Complete" [comps/CompleteIcon {:size 36}]
+               "Running" [comps/RunningIcon {:size 36}]
+               "Exception" [comps/ExceptionIcon {:size 36}])
              [:span {:style {:marginLeft "1.5ex"}} (ws "status")]]
-            [:div {:style {:marginTop 27}}
-             [:div {:style {:backgroundColor "transparent" :color (:button-blue style/colors)
-                            :border (str "1px solid " (:line-gray style/colors))
-                            :fontSize "106%" :lineHeight 1 :position "relative"
-                            :padding "0.7em 0em"
-                            :textAlign "center" :cursor "pointer"}}
-              [:span {:style {:display "inline-block" :verticalAlign "middle"}}
-               (icons/font-icon {:style {:fontSize "135%"}} :pencil)]
-              [:span {:style {:marginLeft "1em"}} "Edit this page"]]]]
+            [:div {:style {:backgroundColor "transparent" :color (:button-blue style/colors)
+                           :border (str "1px solid " (:line-gray style/colors))
+                           :fontSize "106%" :padding "0.7em 0em" :marginTop 27
+                           :cursor "pointer" :textAlign "center"}}
+             (icons/font-icon {:style {:verticalAlign "middle" :fontSize "135%"}} :pencil)
+             [:span {:style {:verticalAlign "middle" :marginLeft "1em"}} "Edit this page"]]]
            [:div {:style {:display "inline-block"}}
             (create-section-header "Workspace Owner")
             (create-paragraph
