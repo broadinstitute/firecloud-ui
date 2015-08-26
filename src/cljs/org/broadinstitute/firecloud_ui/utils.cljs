@@ -46,6 +46,14 @@
   (apply (.bind (aget obj (name method-name)) obj) args))
 
 
+(defn ->json-string [x]
+  (js/JSON.stringify (clj->js x)))
+
+
+(defn parse-json-string [x]
+  (js->clj (js/JSON.parse x)))
+
+
 (def use-live-data? true)
 (when-not use-live-data? (assert goog.DEBUG "Mock data in use but DEBUG is false."))
 
@@ -67,10 +75,14 @@
                     (aset xhr (name k) v))
                   xhr))
           call-on-done (fn []
-                         (on-done {:xhr xhr
-                                   :status-code (.-status xhr)
-                                   :success? (and (>= (.-status xhr) 200)
-                                               (< (.-status xhr) 300))}))]
+                         (let [status-code (.-status xhr)
+                               get-parsed-response #(parse-json-string (.-responseText xhr))]
+                           (on-done {:xhr xhr
+                                     :status-code status-code
+                                     :success? (and (>= status-code 200)
+                                                    (< status-code 300))
+                                     :status-text (.-statusText xhr)
+                                     :get-parsed-response get-parsed-response})))]
       (when with-credentials?
         (set! (.-withCredentials xhr) true))
       (if canned-response-params
@@ -96,14 +108,6 @@
 (defn ajax-orch [path arg-map]
   (assert (= (subs path 0 1) "/") (str "Path must start with '/': " path))
   (ajax (assoc arg-map :url (str "/api" path))))
-
-
-(defn ->json-string [x]
-  (js/JSON.stringify (clj->js x)))
-
-
-(defn parse-json-string [x]
-  (js->clj (js/JSON.parse x)))
 
 
 (defn call-ajax-orch [path arg-map]

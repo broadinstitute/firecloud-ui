@@ -36,11 +36,14 @@
 
 (defn get-methods-path [] "/methods")
 
-(defn submit-method-path [workspace-id]
+(defn submissions-list [workspace-id]
       (str "/workspaces/" (ws-path workspace-id) "/submissions"))
 
-(defn list-submissions-path [workspace]
-  (submit-method-path workspace))
+(defn submission-create [workspace-id]
+  (submissions-list workspace-id))
+
+(defn submission-details [workspace-id submission-id]
+  (str (submissions-list workspace-id) "/" submission-id))
 
 (defn rm-method-configuration-path [workspace-id config]
   (update-method-config-path workspace-id config))
