@@ -14,17 +14,17 @@
 
 (react/defc WorkspaceDetails
   {:render
-   (fn [{:keys [props]}]
+   (fn [{:keys [props refs]}]
      [:div {}
-      [comps/TabBar {:key "selected"
-                     :items [{:text "Summary"
-                              :component (summary-tab/render (:workspace-id props))}
-                             {:text "Data" :component (data-tab/render (:workspace-id props))}
-                             {:text "Method Configurations"
-                              :component (method-configs-tab/render (:workspace-id props))}
-                             {:text "Monitor"
-                              :component (monitor-tab/render (:workspace-id props))}
-                             {:text "Files"}]}]])})
+      [comps/TabBar {:ref "tab-bar"
+                     :items
+                     [{:text "Summary"
+                       :render #(summary-tab/render (:workspace-id props))}
+                      {:text "Data" :render #(data-tab/render (:workspace-id props))}
+                      {:text "Method Configurations"
+                       :render #(method-configs-tab/render (:workspace-id props))}
+                      {:text "Monitor" :render #(monitor-tab/render (:workspace-id props))}
+                      {:text "Files" :render (fn [] [:div {} "Not yet implemented."])}]}]])})
 
 
 (defn render-workspace-details [workspace-id]

@@ -65,7 +65,7 @@
                                    :active? (:active? button)
                                    :onClick (:onClick button)}])
           (:buttons props))
-        [:div {:style {:clear "both"}}]])}))
+        (common/clear-both)])}))
 
 
 (react/defc TabBar
@@ -93,11 +93,15 @@
                   (when (:active? props)
                     [:div {:style {:position "absolute" :bottom -1 :left 0 :width "100%" :height 2
                                    :backgroundColor "white"}}])])})]
-    {:get-initial-state
+    {:set-active-tab
+     (fn [{:keys [this state]} index & render-args]
+       (set! (.-renderArgs this) render-args)
+       (swap! state assoc :active-tab-index index))
+     :get-initial-state
      (fn []
        {:active-tab-index 0})
      :render
-     (fn [{:keys [props state]}]
+     (fn [{:keys [this props state]}]
        [:div {}
         [:div {:style {:backgroundColor (:background-gray style/colors)
                        :borderTop (str "1px solid " (:line-gray style/colors))
@@ -111,8 +115,10 @@
                               (swap! state assoc :active-tab-index i)
                               (when-let [f (:onTabSelected tab)] (f e)))}])
            (:items props))
-         [:div {:style {:clear "both"}}]]
-        [:div {} (:component (nth (:items props) (:active-tab-index @state)))]])}))
+         (common/clear-both)]
+        (let [active-item (nth (:items props) (:active-tab-index @state))
+              render (:render active-item)]
+          [:div {} (apply render (.-renderArgs this))])])}))
 
 
 (react/defc Dialog
