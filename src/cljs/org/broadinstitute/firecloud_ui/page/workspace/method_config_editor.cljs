@@ -124,32 +124,36 @@
                                             :width 290}}
      [:div {:style {:fontSize "106%" :lineHeight 1 :textAlign "center"}}
 
-      [:div {:style {:display (when editing? "none") :padding "0.7em 0" :cursor "pointer"
-                     :backgroundColor "transparent" :color (:button-blue style/colors)
-                     :border (str "1px solid " (:line-gray style/colors))}
-             :onClick #(swap! state assoc :editing? true :prereqs-list (vals (config "prerequisites")))}
-       [:span {:style {:display "inline-block" :verticalAlign "middle"}}
-        (icons/font-icon {:style {:fontSize "135%"}} :pencil)]
-       [:span {:style {:marginLeft "1em"}} "Edit this page"]]
+      (when-not editing?
+        [:div {:style {:padding "0.7em 0" :cursor "pointer"
+                       :backgroundColor "transparent" :color (:button-blue style/colors)
+                       :border (str "1px solid " (:line-gray style/colors))}
+               :onClick #(swap! state assoc :editing? true :prereqs-list (vals (config "prerequisites")))}
+         [:span {:style {:display "inline-block" :verticalAlign "middle"}}
+          (icons/font-icon {:style {:fontSize "135%"}} :pencil)]
+         [:span {:style {:marginLeft "1em"}} "Edit this page"]])
 
-      [DeleteButton
-       {:workspace-id (:workspace-id props)
-        :on-rm (:on-rm props)
-        :config config}]
+      (when-not editing?
+        [DeleteButton
+         {:workspace-id (:workspace-id props)
+          :on-rm (:on-rm props)
+          :config config}])
 
-      [:div {:style {:display (when-not editing? "none") :padding "0.7em 0" :cursor "pointer"
-                     :backgroundColor (:success-green style/colors) :color "#fff" :borderRadius 4}
-             :onClick #(do (commit state refs config props) (stop-editing state refs))}
-       [:span {:style {:display "inline-block" :verticalAlign "middle"}}
-        (icons/font-icon {:style {:fontSize "135%"}} :status-done)]
-       [:span {:style {:marginLeft "1em"}} "Save"]]
+      (when editing?
+        [:div {:style {:padding "0.7em 0" :cursor "pointer"
+                       :backgroundColor (:success-green style/colors) :color "#fff" :borderRadius 4}
+               :onClick #(do (commit state refs config props) (stop-editing state refs))}
+         [:span {:style {:display "inline-block" :verticalAlign "middle"}}
+          (icons/font-icon {:style {:fontSize "135%"}} :status-done)]
+         [:span {:style {:marginLeft "1em"}} "Save"]])
 
-      [:div {:style {:display (when-not editing? "none") :padding "0.7em 0" :marginTop "0.5em" :cursor "pointer"
-                     :backgroundColor (:exception-red style/colors) :color "#fff" :borderRadius 4}
-             :onClick #(stop-editing state refs)}
-       [:span {:style {:display "inline-block" :verticalAlign "middle"}}
-        (icons/font-icon {:style {:fontSize "135%"}} :x)]
-       [:span {:style {:marginLeft "1em"}} "Cancel Editing"]]])])
+      (when editing?
+        [:div {:style {:padding "0.7em 0" :marginTop "0.5em" :cursor "pointer"
+                       :backgroundColor (:exception-red style/colors) :color "#fff" :borderRadius 4}
+               :onClick #(stop-editing state refs)}
+         [:span {:style {:display "inline-block" :verticalAlign "middle"}}
+          (icons/font-icon {:style {:fontSize "135%"}} :x)]
+         [:span {:style {:marginLeft "1em"}} "Cancel Editing"]])])])
 
 (defn- render-launch-analysis [state workspace-id editing?]
   [:div {:style {:width 200 :float "right" :display (when editing? "none")}}
