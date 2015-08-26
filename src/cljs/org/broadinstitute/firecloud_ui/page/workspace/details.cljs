@@ -22,8 +22,11 @@
                        :render #(summary-tab/render (:workspace-id props))}
                       {:text "Data" :render #(data-tab/render (:workspace-id props))}
                       {:text "Method Configurations"
-                       :render #(method-configs-tab/render (:workspace-id props))}
-                      {:text "Monitor" :render #(monitor-tab/render (:workspace-id props))}
+                       :render (fn []
+                                 (method-configs-tab/render
+                                  (:workspace-id props)
+                                  #(react/call :set-active-tab (@refs "tab-bar") 3 %)))}
+                      {:text "Monitor" :render #(monitor-tab/render (:workspace-id props) %)}
                       {:text "Files" :render (fn [] [:div {} "Not yet implemented."])}]}]])})
 
 
