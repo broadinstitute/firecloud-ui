@@ -52,9 +52,13 @@
    (fn [{:keys [props state]}]
      [:div {}
       (when (:show-import-overlay? @state)
-        (importmc/render-import-overlay (:workspace-id props)
-         #(swap! state dissoc :show-import-overlay?)
-         #(swap! state dissoc :show-import-overlay? :server-response)))
+        [comps/Dialog
+         {:blocker? true
+          :width "80%"
+          :dismiss-self #(swap! state dissoc :show-import-overlay?)
+          :content (importmc/render-import-overlay (:workspace-id props)
+                     #(swap! state dissoc :show-import-overlay?)
+                     #(swap! state dissoc :show-import-overlay? :server-response))}])
       [:div {:style {:float "right" :padding "0 2em 1em 0"}}
        [comps/Button {:text "Import Configuration ..."
                       :onClick #(swap! state assoc :show-import-overlay? true)}]]
