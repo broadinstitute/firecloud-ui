@@ -20,7 +20,7 @@
 (defn list-all-entities-path [workspace-id entity-type]
   (str "/workspaces/" (ws-path workspace-id) "/entities/" entity-type))
 
-(defn get-entities-by-type-path [workspace-id]
+(defn get-entities-by-type [workspace-id]
   (str "/workspaces/" (ws-path workspace-id) "/entities_with_type"))
 
 (defn update-method-config-path [workspace-id config]
