@@ -226,7 +226,8 @@
      (when-not editing?
        [:div {:style {:width 200 :float "right"}}
         (launch/render-button (:workspace-id props)
-                              {:namespace (config "namespace") :name (config "name")})])
+                              {:namespace (config "namespace") :name (config "name")}
+                              (:on-submission-success props))])
      (render-main-display state refs config editing?)
      (clear-both)]]])
 

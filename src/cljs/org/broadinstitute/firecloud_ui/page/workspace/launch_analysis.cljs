@@ -12,7 +12,7 @@
     ))
 
 
-(defn- render-launch-button [state refs entity workspace-id config]
+(defn- render-launch-button [state refs entity workspace-id config on-success]
   (when-not (:launch-result @state)
           [:div {:style {:fontSize "106%" :lineHeight 1 :textAlign "center"}}
            [:div {:style {:padding "0.7em 0" :cursor "pointer"
@@ -35,11 +35,12 @@
                                 {:method :post
                                  :data (utils/->json-string payload)
                                  :headers{"Content-Type" "application/json"}
-                                 :on-done (fn [{:keys [success? xhr]}]
+                                 :on-done (fn [{:keys [success? get-parsed-response xhr]}]
                                             ;; TODO total hack below for UI ...
                                             (swap! state assoc :launch-result (.-responseText xhr))
                                             (if-not success?
-                                              (swap! state assoc :launch-exception true)))
+                                              (swap! state assoc :launch-exception true)
+                                              (on-success (get-in (get-parsed-response) [0 "submissionId"]))))
                                  :canned-response {:responseText (utils/->json-string
                                                                   [{"workspaceName" {"namespace" "broad-dsde-dev",
                                                                                      "name" "alexb_test_submission"},
@@ -64,7 +65,7 @@
                                ))} "Launch"]]))
 
 
-(defn render-launch-overlay [entities state refs workspace-id config]
+(defn render-launch-overlay [entities state refs workspace-id config on-success]
   (let [entity-map (group-by #(% "entityType") entities)
         filter (or (:filter @state) "Sample")
         filtered-entities (entity-map filter)
@@ -109,7 +110,7 @@
                         filtered-entities)}])]
         (style/create-form-label "Define Expression")
         (style/create-text-field {:ref "expressionname" :placeholder "leave blank for default"})
-        (render-launch-button state refs selected-entity workspace-id config)])]))
+        (render-launch-button state refs selected-entity workspace-id config on-success)])]))
 
 
 (react/defc Page
@@ -130,11 +131,12 @@
            [:div {:style {:textAlign "center"}}
             [comps/Spinner {:text "Loading data..."}]]
            error-message (style/create-server-error-message error-message)
-           (zero? (count (utils/jslog @state)))
+           (zero? (count @state))
            (style/create-message-well "No data found.")
            :else
            [:div {:style {:marginTop "-1em"}}
-            (render-launch-overlay entities state refs (:workspace-id props) (:config-id props))]))]])
+            (render-launch-overlay
+             entities state refs (:workspace-id props) (:config-id props) (:on-success props))]))]])
    :component-did-mount
    (fn [{:keys [props state]}]
      (utils/ajax-orch
@@ -162,11 +164,12 @@
                        :content (react/create-element
                                  Page
                                  (merge
-                                  (select-keys props [:workspace-id :config-id])
+                                  (select-keys props [:workspace-id :config-id :on-success])
                                   {:on-cancel #(swap! state dissoc :display-modal?)}))}])
       [comps/Button {:text "Launch Analysis..."
                      :onClick #(swap! state assoc :display-modal? true)}]])})
 
 
-(defn render-button [workspace-id config-id]
-  (react/create-element LaunchButton {:workspace-id workspace-id :config-id config-id}))
+(defn render-button [workspace-id config-id on-success]
+  (react/create-element
+   LaunchButton {:workspace-id workspace-id :config-id config-id :on-success on-success}))
