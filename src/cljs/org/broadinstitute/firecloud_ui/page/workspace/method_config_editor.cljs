@@ -111,9 +111,8 @@
                                    (when confirmed?
                                      (do (swap! state assoc :deleting? true)
                                          (react/call :rm-mc this)))))}
-                [:span {:style {:display "inline-block" :verticalAlign "middle"}}
-                 (icons/font-icon {:style {:fontSize "135%"}} :trash-can)]
-                [:span {:style {:marginLeft "1em"}} "Delete"]]))})
+                (icons/font-icon {:style {:verticalAlign "middle" :fontSize "135%"}} :trash-can)
+                [:span {:style {:verticalAlign "middle" :marginLeft "1em"}} "Delete"]]))})
 
 
 (defn- render-side-bar [state refs config editing? props]
@@ -129,9 +128,8 @@
                        :backgroundColor "transparent" :color (:button-blue style/colors)
                        :border (str "1px solid " (:line-gray style/colors))}
                :onClick #(swap! state assoc :editing? true :prereqs-list (vals (config "prerequisites")))}
-         [:span {:style {:display "inline-block" :verticalAlign "middle"}}
-          (icons/font-icon {:style {:fontSize "135%"}} :pencil)]
-         [:span {:style {:marginLeft "1em"}} "Edit this page"]])
+         (icons/font-icon {:style {:verticalAlign "middle" :fontSize "135%"}} :pencil)
+         [:span {:style {:verticalAlign "middle" :marginLeft "1em"}} "Edit this page"]])
 
       (when-not editing?
         [DeleteButton
@@ -143,17 +141,15 @@
         [:div {:style {:padding "0.7em 0" :cursor "pointer"
                        :backgroundColor (:success-green style/colors) :color "#fff" :borderRadius 4}
                :onClick #(do (commit state refs config props) (stop-editing state refs))}
-         [:span {:style {:display "inline-block" :verticalAlign "middle"}}
-          (icons/font-icon {:style {:fontSize "135%"}} :status-done)]
-         [:span {:style {:marginLeft "1em"}} "Save"]])
+         (icons/font-icon {:style {:verticalAlign "middle" :fontSize "135%"}} :status-done)
+         [:span {:style {:verticalAlign "middle" :marginLeft "1em"}} "Save"]])
 
       (when editing?
         [:div {:style {:padding "0.7em 0" :marginTop "0.5em" :cursor "pointer"
                        :backgroundColor (:exception-red style/colors) :color "#fff" :borderRadius 4}
                :onClick #(stop-editing state refs)}
-         [:span {:style {:display "inline-block" :verticalAlign "middle"}}
-          (icons/font-icon {:style {:fontSize "135%"}} :x)]
-         [:span {:style {:marginLeft "1em"}} "Cancel Editing"]])])])
+         (icons/font-icon {:style {:verticalAlign "middle" :fontSize "135%"}} :x)
+         [:span {:style {:verticalAlign "middle" :marginLeft "1em"}} "Cancel Editing"]])])])
 
 (defn- render-launch-analysis [state workspace-id editing?]
   [:div {:style {:width 200 :float "right" :display (when editing? "none")}}
