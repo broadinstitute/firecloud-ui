@@ -45,5 +45,8 @@
 (defn submission-details [workspace-id submission-id]
   (str (submissions-list workspace-id) "/" submission-id))
 
+(defn get-abort-submission-path [workspace-id submission-id]
+  (submission-details workspace-id submission-id))
+
 (defn rm-method-configuration-path [workspace-id config]
   (update-method-config-path workspace-id config))
