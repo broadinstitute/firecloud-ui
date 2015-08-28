@@ -10,6 +10,7 @@
    [org.clojure/clojure "1.7.0"]
    [org.clojure/clojurescript "1.7.48"]
    [inflections "0.9.14"]
+   [cljsjs/moment "2.9.0-3"]
    ]
   :plugins [[lein-cljsbuild "1.0.6"] [lein-figwheel "0.3.7"]]
   :hooks [leiningen.cljsbuild]

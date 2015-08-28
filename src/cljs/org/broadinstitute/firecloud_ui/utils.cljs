@@ -160,3 +160,6 @@
 
 (defn rand-subset [items]
   (take (rand-int (count items)) (shuffle items)))
+
+(defn rand-recent-time []
+  (.format (.subtract (js/moment (js/Date.)) (rand-int 100000) "seconds")))
