@@ -180,22 +180,17 @@
                                        (count (filter-workspaces filter workspaces))
                                        ")")
                                :active? (= filter (:active-filter @state))
-                               :onClick #(swap! state assoc :active-filter filter)})
-               content [:div {}
-                        [:div {:style {:padding "2em 0" :textAlign "center"}}
-                         [comps/FilterButtons {:buttons [(build-button "All" :all)
-                                                         (build-button "Complete" :complete)
-                                                         (build-button "Running" :running)
-                                                         (build-button "Exception" :exception)]}]]
-                        (if (zero? (count filtered-workspaces))
-                          (style/create-message-well "No workspaces to display.")
-                          [:div {:style {:margin "0 2em"}}
-                           (render-table props filtered-workspaces)])]]
+                               :onClick #(swap! state assoc :active-filter filter)})]
            [:div {}
-            [comps/TabBar {:key "list"
-                           :items [{:text "Mine" :component content}
-                                   {:text "Shared" :component content}
-                                   {:text "Read-Only" :component content}]}]]))))
+            [:div {:style {:marginBottom "2em" :textAlign "center"}}
+             [comps/FilterButtons {:buttons [(build-button "All" :all)
+                                             (build-button "Complete" :complete)
+                                             (build-button "Running" :running)
+                                             (build-button "Exception" :exception)]}]]
+            (if (zero? (count filtered-workspaces))
+              (style/create-message-well "No workspaces to display.")
+              [:div {:style {:margin "0 2em"}}
+               (render-table props filtered-workspaces)])]))))
    :component-did-mount
    (fn [{:keys [state]}]
      (utils/call-ajax-orch

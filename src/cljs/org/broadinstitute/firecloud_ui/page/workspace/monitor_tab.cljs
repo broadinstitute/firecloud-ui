@@ -42,7 +42,7 @@
       :content-renderer (fn [row-index submission]
                           [:a {:href "javascript:;"
                                :style {:color (:button-blue style/colors) :textDecoration "none"}
-                               :onClick #(on-submission-clicked submission)}
+                               :onClick #(on-submission-clicked (submission "submissionId"))}
                            (submission "submissionDate")])}
      {:header "Status" :sort-by :value}
      {:header "Method Configuration" :starting-width 220 :sort-by :value}
@@ -88,18 +88,20 @@
 
 
 (react/defc Page
-  {:render
+  {:get-initial-state
+   (fn [{:keys [props]}]
+     {:selected-submission-id (:initial-submission-id props)})
+   :render
    (fn [{:keys [props state]}]
      [:div {:style {:margin "2em"}}
-      (if (:selected-submission @state)
-        [submission-details/Page {:workspace-id (:workspace-id props)
-                                  :submission-id (get-in @state [:selected-submission "submissionId"])}]
+      (if-let [sid (:selected-submission-id @state)]
+        [submission-details/Page {:workspace-id (:workspace-id props) :submission-id sid}]
         [SubmissionsList {:workspace-id (:workspace-id props)
-                          :on-submission-clicked #(swap! state assoc :selected-submission %)}])])
+                          :on-submission-clicked #(swap! state assoc :selected-submission-id %)}])])
    :component-will-receive-props
    (fn [{:keys [state]}]
-     (swap! state dissoc :selected-submission))})
+     (swap! state dissoc :selected-submission-id))})
 
 
-(defn render [workspace-id]
-  [Page {:workspace-id workspace-id}])
+(defn render [workspace-id & [submission-id]]
+  [Page {:workspace-id workspace-id :initial-submission-id submission-id}])

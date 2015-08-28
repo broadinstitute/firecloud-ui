@@ -151,35 +151,6 @@
          (icons/font-icon {:style {:verticalAlign "middle" :fontSize "135%"}} :x)
          [:span {:style {:verticalAlign "middle" :marginLeft "1em"}} "Cancel Editing"]])])])
 
-(defn- render-launch-analysis [state workspace-id editing?]
-  [:div {:style {:width 200 :float "right" :display (when editing? "none")}}
-   (style/create-unselectable :div {:style {:position (when-not (:sidebar-visible? @state) "fixed")
-                                            :top (when-not (:sidebar-visible? @state) 4)
-                                            :width 200}}
-     [:div {:style {:fontSize "106%" :lineHeight 1 :textAlign "center"}}
-      [:div {:style {:padding "0.7em 0" :cursor "pointer"
-                     :backgroundColor (:button-blue style/colors) :color "#fff" :borderRadius 4
-                     :border (str "1px solid " (:line-gray style/colors))}
-             :onClick #(if (:entity-types @state)
-                        (swap! state assoc :submitting? true)
-                        (do (swap! state assoc :blocker "Loading Entities...")
-                            (utils/call-ajax-orch
-                              (paths/get-entities-by-type-path workspace-id)
-                              {:on-success (fn [{:keys [parsed-response]}]
-                                             (let [emap (group-by (fn [e] (e "entityType")) parsed-response)
-                                                   first-entities (get emap (first (keys emap)))
-                                                   first-entity (first first-entities)]
-                                               (swap! state assoc :blocker nil :submitting? true
-                                                 :entity-map emap
-                                                 :entities first-entities
-                                                 :selected-entity first-entity)))
-                               :on-failure (fn [{:keys [status-text]}]
-                                             (swap! state assoc :blocker nil)
-                                             (js/alert (str "Error: " status-text)))
-                               :mock-data [{"name" "Mock Sample" "entityType" "Sample"}
-                                           {"name" "Mock Participant" "entityType" "Participant"}]})))}
-       "Launch Analysis"]])])
-
 
 (defn- render-main-display [state refs config editing?]
   [:div {:style {:marginLeft 330}}
@@ -248,12 +219,15 @@
 (defn- render-display [state refs config editing? props]
   [:div {}
    [comps/Blocker {:banner (:blocker @state)}]
-   (launch/render-launch-overlay state refs  (:workspace-id props) config)
    [:div {:style {:padding "0em 2em"}}
     (render-top-bar config)
     [:div {:style {:padding "1em 0em"}}
      (render-side-bar state refs config editing? props)
-     (render-launch-analysis state (:workspace-id props) editing?)
+     (when-not editing?
+       [:div {:style {:width 200 :float "right"}}
+        (launch/render-button (:workspace-id props)
+                              {:namespace (config "namespace") :name (config "name")}
+                              (:on-submission-success props))])
      (render-main-display state refs config editing?)
      (clear-both)]]])
 
@@ -268,17 +242,18 @@
       :sidebar-visible? true})
    :render
    (fn [{:keys [state refs props]}]
-     (cond (:loaded-config @state) (render-display state refs (:loaded-config @state) (:editing? @state) props)
+     (cond (:loaded-config @state)
+           (render-display state refs (:loaded-config @state) (:editing? @state) props)
            (:error @state) (style/create-server-error-message (:error @state))
            :else [comps/Spinner {:text "Loading Method Configuration..."}]))
    :component-did-mount
    (fn [{:keys [state props refs this]}]
      (utils/ajax-orch
        (paths/get-method-config-path (:workspace-id props) (:config props))
-       {:on-done (fn [{:keys [success? xhr]}]
+       {:on-done (fn [{:keys [success? get-parsed-response status-text]}]
                    (if success?
-                     (swap! state assoc :loaded-config (utils/parse-json-string (.-responseText xhr)))
-                     (swap! state assoc :error (.-statusText xhr))))
+                     (swap! state assoc :loaded-config (get-parsed-response))
+                     (swap! state assoc :error status-text)))
         :canned-response {:responseText (utils/->json-string (build-mock-config (:config props)))
                           :status 200 :delay-ms (rand-int 2000)}})
      (set! (.-onScrollHandler this)

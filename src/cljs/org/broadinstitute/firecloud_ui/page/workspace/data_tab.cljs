@@ -7,7 +7,7 @@
     [org.broadinstitute.firecloud-ui.common.table :as table]
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.page.import-data :as import-data]
-    [org.broadinstitute.firecloud-ui.paths :refer [get-entities-by-type-path]]
+    [org.broadinstitute.firecloud-ui.paths :as paths]
     [org.broadinstitute.firecloud-ui.utils :as utils]))
 
 
@@ -84,7 +84,7 @@
    :load-entities
    (fn [{:keys [state props]}]
      (utils/call-ajax-orch
-       (get-entities-by-type-path (:workspace-id props))
+       (paths/get-entities-by-type (:workspace-id props))
        {:on-success (fn [{:keys [parsed-response]}]
                       (swap! state assoc :entity-map (group-by #(% "entityType") parsed-response)))
         :on-failure (fn [{:keys [status-text]}]
