@@ -77,7 +77,7 @@
                       :data (utils/->json-string post-data)
                       :on-done (fn [{:keys [success? xhr]}]
                                  (if success?
-                                   (on-import)
+                                   (on-import {"name" dest-conf-name "namespace" dest-conf-namespace})
                                    (js/alert (str "Import Error: " (.-responseText xhr)))))})))}]))
 
 

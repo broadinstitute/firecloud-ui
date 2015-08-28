@@ -58,7 +58,7 @@
           :dismiss-self #(swap! state dissoc :show-import-overlay?)
           :content (importmc/render-import-overlay (:workspace-id props)
                      #(swap! state dissoc :show-import-overlay?)
-                     #(swap! state dissoc :show-import-overlay? :server-response))}])
+                     (:on-config-imported props))}])
       [:div {:style {:float "right" :padding "0 2em 1em 0"}}
        [comps/Button {:text "Import Configuration ..."
                       :onClick #(swap! state assoc :show-import-overlay? true)}]]
@@ -132,7 +132,10 @@
                              :config (:selected-method-config @state)}]
         [MethodConfigurationsList
          {:workspace-id (:workspace-id props)
+          ;TODO: For both callbacks - rename config to config-id and follow the workspace-id pattern
           :on-config-selected (fn [config]
+                                (swap! state assoc :selected-method-config config))
+          :on-config-imported (fn [config]
                                 (swap! state assoc :selected-method-config config))}])])
    :component-will-receive-props
    (fn [{:keys [state]}]
