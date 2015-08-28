@@ -3,6 +3,7 @@
 import httplib
 import os
 import SimpleHTTPServer
+import socket
 import SocketServer
 import sys
 
@@ -75,7 +76,7 @@ class Handler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         request_body = self.rfile.read(content_length) if content_length > 0 else None
         try:
             response = self._send_request(method, request_body)
-        except (httplib.CannotSendRequest, httplib.BadStatusLine):
+        except (httplib.CannotSendRequest, httplib.BadStatusLine, socket.error):
             self._reconnect()
             response = self._send_request(method, request_body)
         if request_body:
