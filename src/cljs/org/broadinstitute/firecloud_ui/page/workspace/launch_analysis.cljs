@@ -12,7 +12,7 @@
     ))
 
 
-(defn- render-launch-button [state refs entity workspace-id config on-success]
+(defn- render-launch-button [state refs entity workspace-id config-id on-success]
   (when-not (:launch-result @state)
           [:div {:style {:fontSize "106%" :lineHeight 1 :textAlign "center"}}
            [:div {:style {:padding "0.7em 0" :cursor "pointer"
@@ -25,8 +25,8 @@
                   ;; TODO: diable submit button after submitting
                   :onClick (fn [e]
                              (let [expression (clojure.string/trim (-> (@refs "expressionname") .getDOMNode .-value))
-                                   payload (merge {:methodConfigurationNamespace (config "namespace")
-                                                   :methodConfigurationName (config "name")
+                                   payload (merge {:methodConfigurationNamespace (:namespace config-id)
+                                                   :methodConfigurationName (:name config-id)
                                                    :entityType (entity "entityType")
                                                    :entityName (entity "name")}
                                                   (when-not (clojure.string/blank? expression) {:expression expression}))]
@@ -65,7 +65,7 @@
                                ))} "Launch"]]))
 
 
-(defn render-launch-overlay [entities state refs workspace-id config on-success]
+(defn render-launch-overlay [entities state refs workspace-id config-id on-success]
   (let [entity-map (group-by #(% "entityType") entities)
         filter (or (:filter @state) "Sample")
         filtered-entities (entity-map filter)
@@ -110,7 +110,7 @@
                         filtered-entities)}])]
         (style/create-form-label "Define Expression")
         (style/create-text-field {:ref "expressionname" :placeholder "leave blank for default"})
-        (render-launch-button state refs selected-entity workspace-id config on-success)])]))
+        (render-launch-button state refs selected-entity workspace-id config-id on-success)])]))
 
 
 (react/defc Page
