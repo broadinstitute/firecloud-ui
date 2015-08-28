@@ -1,6 +1,7 @@
 (ns org.broadinstitute.firecloud-ui.page.workspace.submission-details
   (:require
     [dmohs.react :as react]
+    cljsjs.moment
     [org.broadinstitute.firecloud-ui.common.components :as comps]
     [org.broadinstitute.firecloud-ui.common.icons :as icons]
     [org.broadinstitute.firecloud-ui.common.style :as style]
@@ -11,7 +12,7 @@
 
 (defn- create-mock-submission-details [submission-id]
   {"submissionId" submission-id
-   "submissionDate" (str "2015-" (inc (rand-int 12)) "-" (inc (rand-int 30)) "T19:08:53.027Z")
+   "submissionDate" (utils/rand-recent-time)
    "submitter" "test@test.gov"
    "methodConfigurationNamespace" "broad-dsde-dev"
    "methodConfigurationName" "some method conf"
@@ -20,8 +21,7 @@
    "workflows" (map (fn [i]
                       {"messages" []
                        "workspaceName" "foo"
-                       "statusLastChangedDate" (str "2015-" (inc (rand-int 12)) "-" (inc (rand-int 30))
-                                                 "T19:08:53.027Z")
+                       "statusLastChangedDate" (utils/rand-recent-time)
                        "workflowEntity" {"entityType" "sample"
                                          "entityName" (str "sample_" i)}
                        "status" (rand-nth ["Succeeded" "Submitted" "Running" "Failed" "Aborted" "Unknown"])
@@ -75,7 +75,11 @@
           {:columns [{:header "Data Entity" :starting-width 200 :sort-by :value
                       :filter-by (fn [entity]
                                    (str (entity "entityType") " " (entity "entityName")))}
-                     {:header "Last Changed" :starting-width 200 :sort-by :value}
+                     {:header "Last Changed" :starting-width 280 :sort-by :value
+                      :content-renderer (fn [row-index date]
+                                          (let [m (js/moment date)]
+                                            (str (.format m "L [at] LTS") " ("
+                                                 (.fromNow m) ")")))}
                      {:header "Status" :starting-width 120 :sort-by :value
                       :content-renderer (fn [row-index status]
                                           [:div {}
@@ -168,7 +172,8 @@
            (style/create-section-header "Submitted by")
            (style/create-paragraph
              [:div {} (submission "submitter")]
-             [:div {} (submission "submissionDate")])
+             (let [m (js/moment (submission "submissionDate"))]
+               [:div {} (.format m "LLL") " (" (.fromNow m) ")"]))
            (style/create-section-header "Submission ID")
            (style/create-paragraph (submission "submissionId"))]
           [:div {:style {:clear "both" :paddingBottom "0.5em"}} "Workflows:"]

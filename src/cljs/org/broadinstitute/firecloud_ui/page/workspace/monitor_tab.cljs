@@ -1,6 +1,7 @@
 (ns org.broadinstitute.firecloud-ui.page.workspace.monitor-tab
   (:require
     [dmohs.react :as react]
+    cljsjs.moment
     [org.broadinstitute.firecloud-ui.common.components :as comps]
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.common.table :as table]
@@ -15,13 +16,12 @@
     (fn [i]
       {:workspaceName workspace-id
        :methodConfigurationNamespace "my_test_configs"
-       :submissionDate (str "2015-" (inc (rand-int 12)) "-" (inc (rand-int 30)) "T19:08:53.027Z")
+       :submissionDate (utils/rand-recent-time)
        :submissionId "46bfd579-b1d7-4f92-aab0-e44dd092b52a"
        :notstarted []
        :workflows [{:messages []
                     :workspaceName workspace-id
-                    :statusLastChangedDate (str "2015-" (inc (rand-int 12)) "-" (inc (rand-int 30))
-                                             "T19:08:53.027Z")
+                    :statusLastChangedDate (utils/rand-recent-time)
                     :workflowEntity {:entityType "sample"
                                      :entityName "sample_01"}
                     :status "Succeeded"
@@ -43,7 +43,7 @@
                           [:a {:href "javascript:;"
                                :style {:color (:button-blue style/colors) :textDecoration "none"}
                                :onClick #(on-submission-clicked (submission "submissionId"))}
-                           (submission "submissionDate")])}
+                           (.format (js/moment (submission "submissionDate")) "LLL")])}
      {:header "Status" :sort-by :value}
      {:header "Method Configuration" :starting-width 220 :sort-by :value}
      {:header "Data Entity" :starting-width 220 :sort-by :value}]
