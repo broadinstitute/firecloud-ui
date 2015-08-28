@@ -34,21 +34,20 @@
                            entities (get-in props [:entity-map value])]
                       (swap! state assoc :entities entities :entity-type value))}
          (keys (:entity-map props)))]
-      (if (zero? (count (:entities @state)))
-        (style/create-message-well "No entities to display.")
-        (let [attribute-keys (apply union (map (fn [e] (set (keys (e "attributes")))) (:entities @state)))]
-          [table/Table
-           {:key (:entity-type @state)
-            :columns (concat
-                       [{:header "Entity Type" :starting-width 100 :sort-by :value}
-                        {:header "Entity Name" :starting-width 100 :sort-by :value}]
-                       (map (fn [k] {:header k :starting-width 100 :sort-by :value}) attribute-keys))
-            :data (map (fn [m]
-                         (concat
-                           [(m "entityType")
-                            (m "name")]
-                           (map (fn [k] (get-in m ["attributes" k])) attribute-keys)))
-                    (:entities @state))}]))])})
+      (let [attribute-keys (apply union (map (fn [e] (set (keys (e "attributes")))) (:entities @state)))]
+        [table/Table
+         {:key (:entity-type @state)
+          :empty-message "There are no entities to display."
+          :columns (concat
+                     [{:header "Entity Type" :starting-width 100 :sort-by :value}
+                      {:header "Entity Name" :starting-width 100 :sort-by :value}]
+                     (map (fn [k] {:header k :starting-width 100 :sort-by :value}) attribute-keys))
+          :data (map (fn [m]
+                       (concat
+                         [(m "entityType")
+                          (m "name")]
+                         (map (fn [k] (get-in m ["attributes" k])) attribute-keys)))
+                  (:entities @state))}])])})
 
 
 (react/defc WorkspaceData

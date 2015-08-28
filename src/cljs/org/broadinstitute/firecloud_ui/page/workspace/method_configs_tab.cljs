@@ -68,11 +68,10 @@
         (cond
           (nil? server-response) [comps/Spinner {:text "Loading configurations..."}]
           error-message (style/create-server-error-message error-message)
-          (zero? (count configs))
-          (style/create-message-well "There are no method configurations to display.")
           :else
           [table/Table
-           {:columns
+           {:empty-message "There are no method configurations to display."
+            :columns
             [{:header "Name" :starting-width 240 :sort-by #(% "name") :filter-by #(% "name")
               :content-renderer
               (fn [row-index config]
