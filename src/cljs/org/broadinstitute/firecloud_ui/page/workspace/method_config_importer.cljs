@@ -117,7 +117,8 @@
        [:div {}
         (create-formatted-header "Select A Method Configuration For Import")
         [table/Table
-         {:columns [{:header "Name" :starting-width 200 :filter-by #(% "name") :sort-by #(% "name")
+         {:empty-message "There are no method configurations available"
+          :columns [{:header "Name" :starting-width 200 :filter-by #(% "name") :sort-by #(% "name")
                      :content-renderer
                      (fn [row-index conf]
                        [:a
@@ -153,16 +154,13 @@
                                                                   :on-import (fn [& args]
                                                                                (swap! state dissoc :show-import-mc-modal?)
                                                                                (apply (:on-import props) args))}]
-        (:loaded-import-confs? @state) (if (zero? (count (:method-configs @state)))
-                                         (style/create-message-well "There are no method configurations to display for import!")
-                                         [ConfigurationsTable {:method-configs (:method-configs @state)
-                                                               :on-config-selected (fn [config]
-                                                                                     (swap! state assoc
-                                                                                       :selected-method-config config
-                                                                                       :show-import-mc-modal? true
-                                                                                       :loaded-import-confs? false))}])
-        (:error-message @state) [:div {:style {:color "red"}}
-                                 "FireCloud service returned error: " (:error-message @state)]
+        (:loaded-import-confs? @state) [ConfigurationsTable {:method-configs (:method-configs @state)
+                                                             :on-config-selected (fn [config]
+                                                                                   (swap! state assoc
+                                                                                     :selected-method-config config
+                                                                                     :show-import-mc-modal? true
+                                                                                     :loaded-import-confs? false))}]
+        (:error-message @state) (style/create-server-error-message (:error-message @state))
         :else [comps/Spinner {:text "Loading configurations for import..."}])])
    :component-did-mount
    (fn [{:keys [state]}]

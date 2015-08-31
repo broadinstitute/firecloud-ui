@@ -68,62 +68,58 @@
 (react/defc WorkflowsTable
   {:render
    (fn [{:keys [props]}]
-     (let [workflows (:workflows props)]
-       (if (zero? (count workflows))
-         (style/create-message-well "No Workflows")
-         [table/Table
-          {:columns [{:header "Data Entity" :starting-width 200 :sort-by :value
-                      :filter-by (fn [entity]
-                                   (str (entity "entityType") " " (entity "entityName")))}
-                     {:header "Last Changed" :starting-width 280 :sort-by :value
-                      :content-renderer (fn [row-index date]
-                                          (let [m (js/moment date)]
-                                            (str (.format m "L [at] LTS") " ("
-                                                 (.fromNow m) ")")))}
-                     {:header "Status" :starting-width 120 :sort-by :value
-                      :content-renderer (fn [row-index status]
-                                          [:div {}
-                                           (icon-for-wf-status status)
-                                           status])}
-                     {:header "Messages" :starting-width 300 :sort-by count
-                      :content-renderer (fn [row-index message-list]
-                                          [:div {}
-                                           (map (fn [message]
-                                                  [:div {} message])
-                                             message-list)])}
-                     {:header "Workflow ID" :starting-width 300 :sort-by :value}]
-           :data (map (fn [row]
-                        [(str (get-in row ["workflowEntity" "entityName"]) " ("
-                              (get-in row ["workflowEntity" "entityType"]) ")")
-                         (row "statusLastChangedDate")
-                         (row "status")
-                         (row "messages")
-                         (row "workflowId")])
-                   workflows)}])))})
+     [table/Table
+      {:empty-message "No Workflows"
+       :columns [{:header "Data Entity" :starting-width 200 :sort-by :value
+                  :filter-by (fn [entity]
+                               (str (entity "entityType") " " (entity "entityName")))}
+                 {:header "Last Changed" :starting-width 280 :sort-by :value
+                  :content-renderer (fn [row-index date]
+                                      (let [m (js/moment date)]
+                                        (str (.format m "L [at] LTS") " ("
+                                          (.fromNow m) ")")))}
+                 {:header "Status" :starting-width 120 :sort-by :value
+                  :content-renderer (fn [row-index status]
+                                      [:div {}
+                                       (icon-for-wf-status status)
+                                       status])}
+                 {:header "Messages" :starting-width 300 :sort-by count
+                  :content-renderer (fn [row-index message-list]
+                                      [:div {}
+                                       (map (fn [message]
+                                              [:div {} message])
+                                         message-list)])}
+                 {:header "Workflow ID" :starting-width 300 :sort-by :value}]
+       :data (map (fn [row]
+                    [(str (get-in row ["workflowEntity" "entityName"]) " ("
+                       (get-in row ["workflowEntity" "entityType"]) ")")
+                     (row "statusLastChangedDate")
+                     (row "status")
+                     (row "messages")
+                     (row "workflowId")])
+               (:workflows props))}])})
 
 
 (react/defc WorkflowFailuresTable
   {:render
    (fn [{:keys [props]}]
-     (let [workflows (:workflows props)]
-       (if (zero? (count workflows))
-         (style/create-message-well "No Workflows")
-         [table/Table
-          {:columns [{:header "Data Entity" :starting-width 200 :sort-by :value
-                      :filter-by (fn [entity]
-                                   (str (:type entity) " " (:name entity)))
-                      :content-renderer (fn [i entity]
-                                          (str (:name entity) " (" (:type entity) ")"))}
-                     {:header "Errors" :starting-width 500 :sort-by count
-                      :content-renderer (fn [i error-list]
-                                          [:div {}
-                                           (map (fn [error]
-                                                  [:div {} error])
-                                             error-list)])}]
-           :data (map (fn [row]
-                        [{:type (row "entityType") :name (row "entityName")}
-                         (row "errors")])
-                   (:workflows props))}])))})
+     [table/Table
+      {:empty-message "No Workflows"
+       :columns [{:header "Data Entity" :starting-width 200 :sort-by :value
+                  :filter-by (fn [entity]
+                               (str (:type entity) " " (:name entity)))
+                  :content-renderer (fn [i entity]
+                                      (str (:name entity) " (" (:type entity) ")"))}
+                 {:header "Errors" :starting-width 500 :sort-by count
+                  :content-renderer (fn [i error-list]
+                                      [:div {}
+                                       (map (fn [error]
+                                              [:div {} error])
+                                         error-list)])}]
+       :data (map (fn [row]
+                    [{:type (row "entityType") :name (row "entityName")}
+                     (row "errors")])
+               (:workflows props))}])})
 
 
 (react/defc Page

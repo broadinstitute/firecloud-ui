@@ -12,17 +12,16 @@
 (react/defc MethodsList
   {:render
    (fn [{:keys [props]}]
-     (if (zero? (count (:methods props)))
-       (style/create-message-well "No methods to display.")
-       [table/Table
-        {:columns [{:header "Namespace" :starting-width 150 :sort-by :value}
-                   {:header "Name" :starting-width 150 :sort-by :value}
-                   {:header "Synopsis" :starting-width 500 :sort-by :value}]
-         :data (map (fn [m]
-                      [(m "namespace")
-                       (m "name")
-                       (m "synopsis")])
-                 (:methods props))}]))})
+     [table/Table
+      {:empty-message "No methods to display."
+       :columns [{:header "Namespace" :starting-width 150 :sort-by :value}
+                 {:header "Name" :starting-width 150 :sort-by :value}
+                 {:header "Synopsis" :starting-width 500 :sort-by :value}]
+       :data (map (fn [m]
+                    [(m "namespace")
+                     (m "name")
+                     (m "synopsis")])
+               (:methods props))}])})
 
 
 (defn- create-mock-methods []

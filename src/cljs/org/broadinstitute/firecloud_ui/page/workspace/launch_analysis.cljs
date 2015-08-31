@@ -92,6 +92,7 @@
          (let [attribute-keys (apply union (map (fn [e] (set (keys (e "attributes")))) filtered-entities))]
            [table/Table
             {:key filter
+             :empty-message "No entities available."
              :columns (concat
                        [{:header "" :starting-width 40 :resizable? false :reorderable? false
                          :content-renderer (fn [i data]

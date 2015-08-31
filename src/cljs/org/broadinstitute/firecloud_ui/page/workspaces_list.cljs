@@ -114,7 +114,8 @@
   (let [border-style (str "1px solid " (:line-gray style/colors))]
     (react/create-element
       table/Table
-      {:cell-padding-left nil
+      {:empty-message "No workspaces to display."
+       :cell-padding-left nil
        :header-row-style {:fontWeight nil :fontSize "90%"
                           :color (:text-light style/colors) :backgroundColor nil}
        :header-style {:padding "0 0 1em 14px" :overflow nil}
@@ -187,10 +188,8 @@
                                              (build-button "Complete" :complete)
                                              (build-button "Running" :running)
                                              (build-button "Exception" :exception)]}]]
-            (if (zero? (count filtered-workspaces))
-              (style/create-message-well "No workspaces to display.")
-              [:div {:style {:margin "0 2em"}}
-               (render-table props filtered-workspaces)])]))))
+            [:div {:style {:margin "0 2em"}}
+             (render-table props filtered-workspaces)]]))))
    :component-did-mount
    (fn [{:keys [state]}]
      (utils/call-ajax-orch

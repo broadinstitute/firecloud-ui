@@ -36,7 +36,8 @@
 
 (defn- render-submissions-table [submissions on-submission-clicked]
   [table/Table
-   {:columns
+   {:empty-message "There are no analyses to display."
+    :columns
     [{:header "Date" :starting-width 200
       :sort-by #(% "submissionDate") :filter-by #(% "submissionDate")
       :content-renderer (fn [row-index submission]
@@ -65,8 +66,6 @@
          (nil? server-response)
          [:div {:style {:textAlign "center"}} [comps/Spinner {:text "Loading analyses..."}]]
          error-message (style/create-server-error-message error-message)
-         (zero? (count submissions))
-         (style/create-message-well "There are no analyses to display.")
          :else
          [:div {:style {:margin "0 -2em"}}
           (render-submissions-table submissions (:on-submission-clicked props))])))
