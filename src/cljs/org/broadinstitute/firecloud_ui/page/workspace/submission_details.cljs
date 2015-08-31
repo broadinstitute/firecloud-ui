@@ -122,9 +122,38 @@
                (:workflows props))}])})
 
 
+(react/defc AbortButton
+  {:render (fn [{:keys [state this]}]
+             (if (:aborting-submission? @state)
+               [comps/Blocker {:banner "Aborting submission ..."}]
+               [:div {:style {:padding "0.7em 0" :marginTop "0.5em" :color "#fff" :cursor "pointer"
+                              :backgroundColor (:exception-red style/colors) :borderRadius 5}
+                      :onClick #(when (js/confirm "Are you sure?")
+                                 (react/call :abort-submission this))}
+                (icons/font-icon {:style {:fontSize "160%" :marginRight 14 :verticalAlign "middle"}}
+                  :status-warning-triangle)
+                [:span {:style {:fontSize "125%" :verticalAlign "middle"}} "Abort"]]))
+   :abort-submission (fn [{:keys [props state]}]
+                       (swap! state assoc :aborting-submission? true)
+                       (let [path (paths/get-abort-submission-path
+                                    (:workspace-id props)
+                                    (:submission-id props))
+                             canned-response {:status 200 :delay-ms (rand-int 2000)}
+                             on-done (fn [{:keys [success? status-text]}]
+                                       (swap! state assoc :aborting-submission? false)
+                                       (if success?
+                                         ((:on-abort props))
+                                         (js/alert (str "Error in aborting the job : " status-text))))]
+                         (utils/ajax-orch path
+                           {:headers {"Content-Type" "application/json"}
+                            :method "DELETE"
+                            :canned-response canned-response
+                            :on-done on-done})))})
+
+
 (react/defc Page
   {:render
-   (fn [{:keys [state]}]
+   (fn [{:keys [state props this]}]
      (let [server-response (:server-response @state)
            {:keys [submission error-message]} server-response]
        (cond
@@ -141,12 +170,12 @@
                             :verticalAlign "middle"}}
              (submission "status")]]
            (when (= "Submitted" (submission "status"))
-             [:div {:style {:padding "0.7em 0" :marginTop "0.5em" :color "#fff" :cursor "pointer"
-                            :backgroundColor (:exception-red style/colors) :borderRadius 5}
-                    :onClick #(js/console.log "Insert abort logic here")}
-              (icons/font-icon {:style {:fontSize "160%" :marginRight 14 :verticalAlign "middle"}}
-                :status-warning-triangle)
-              [:span {:style {:fontSize "125%" :verticalAlign "middle"}} "Abort"]])]
+             [AbortButton
+              {:on-abort (fn []
+                          (swap! state assoc :server-response nil)
+                          (react/call :load-details this))
+               :workspace-id (:workspace-id props)
+               :submission-id (submission "submissionId")}])]
           [:div {:style {:float "left"}}
            (style/create-section-header "Method Configuration")
            (style/create-paragraph
@@ -176,7 +205,7 @@
           [WorkflowsTable {:workflows (submission "workflows")}]
           [:div {:style {:padding "3em 0 0.5em 0"}} "Failed to Start:"]
           [WorkflowFailuresTable {:workflows (submission "notstarted")}]])))
-   :component-did-mount
+   :load-details
    (fn [{:keys [props state]}]
      (let [url (paths/submission-details (:workspace-id props) (:submission-id props))
            on-done (fn [{:keys [success? status-text get-parsed-response]}]
@@ -187,4 +216,5 @@
                                             (create-mock-submission-details (:submission-id props)))
                             :status 200
                             :delay-ms (rand-int 2000)}]
-       (utils/ajax-orch url {:on-done on-done :canned-response canned-response})))})
+       (utils/ajax-orch url {:on-done on-done :canned-response canned-response})))
+   :component-did-mount (fn [{:keys [this]}] (react/call :load-details this))})
