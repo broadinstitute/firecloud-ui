@@ -224,7 +224,7 @@
     [:div {:style {:padding "1em 0em"}}
      (render-side-bar state refs config editing? props)
      (when-not editing?
-       [:div {:style {:width 200 :float "right"}}
+       [:div {:style {:float "right"}}
         (launch/render-button (:workspace-id props)
                               {:namespace (config "namespace") :name (config "name")}
                               (:on-submission-success props))])

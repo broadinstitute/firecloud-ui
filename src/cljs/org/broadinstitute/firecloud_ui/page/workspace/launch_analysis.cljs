@@ -12,60 +12,96 @@
     ))
 
 
-(defn- render-launch-button [state refs entity workspace-id config-id on-success]
-  (when-not (:launch-result @state)
-          [:div {:style {:fontSize "106%" :lineHeight 1 :textAlign "center"}}
-           [:div {:style {:padding "0.7em 0" :cursor "pointer"
-                          :backgroundColor (:button-blue style/colors)
-                          :color "#fff" :borderRadius 4
-                          :border (str "1px solid " (:line-gray style/colors))}
-
-                  ;; TODO: what should we show in the UI after submitting?
-                  ;; TODO: don't enable submit button until an entity has been selected
-                  ;; TODO: diable submit button after submitting
-                  :onClick (fn [e]
-                             (let [expression (clojure.string/trim (-> (@refs "expressionname") .getDOMNode .-value))
-                                   payload (merge {:methodConfigurationNamespace (:namespace config-id)
-                                                   :methodConfigurationName (:name config-id)
-                                                   :entityType (entity "entityType")
-                                                   :entityName (entity "name")}
-                                                  (when-not (clojure.string/blank? expression) {:expression expression}))]
-                               (utils/ajax-orch
-                                (paths/submission-create workspace-id)
-                                {:method :post
-                                 :data (utils/->json-string payload)
-                                 :headers{"Content-Type" "application/json"}
-                                 :on-done (fn [{:keys [success? get-parsed-response xhr]}]
-                                            ;; TODO total hack below for UI ...
-                                            (swap! state assoc :launch-result (.-responseText xhr))
-                                            (if-not success?
-                                              (swap! state assoc :launch-exception true)
-                                              (on-success (get-in (get-parsed-response) [0 "submissionId"]))))
-                                 :canned-response {:responseText (utils/->json-string
-                                                                  [{"workspaceName" {"namespace" "broad-dsde-dev",
-                                                                                     "name" "alexb_test_submission"},
-                                                                    "methodConfigurationNamespace" "my_test_configs",
-                                                                    "submissionDate" "2015-08-18T150715.393Z",
-                                                                    "methodConfigurationName" "test_config2",
-                                                                    "submissionId" "62363984-7b85-4f27-b9c6-7577561f1326",
-                                                                    "notstarted" [],
-                                                                    "workflows" [{"messages" [],
-                                                                                  "workspaceName" {"namespace" "broad-dsde-dev",
-                                                                                                   "name" "alexb_test_submission"},
-                                                                                  "statusLastChangedDate" "2015-08-18T150715.393Z",
-                                                                                  "workflowEntity" {"entityType" "sample",
-                                                                                                    "entityName" "sample_01"},
-                                                                                  "status" "Submitted",
-                                                                                  "workflowId" "70521329-88fe-4288-9325-2e6183e0a9dc"}],
-                                                                    "status" "Submitted",
-                                                                    "submissionEntity" {"entityType" "sample",
-                                                                                        "entityName" "sample_01"},
-                                                                    "submitter" "davidan@broadinstitute.org"}])
-                                                   :status 200 :delay-ms (rand-int 1000)}})
-                               ))} "Launch"]]))
+(defn- create-mock-launch-response []
+  [{"workspaceName" {"namespace" "broad-dsde-dev",
+                     "name" "alexb_test_submission"},
+    "methodConfigurationNamespace" "my_test_configs",
+    "submissionDate" "2015-08-18T150715.393Z",
+    "methodConfigurationName" "test_config2",
+    "submissionId" "62363984-7b85-4f27-b9c6-7577561f1326",
+    "notstarted" [],
+    "workflows" [{"messages" [],
+                  "workspaceName" {"namespace" "broad-dsde-dev",
+                                   "name" "alexb_test_submission"},
+                  "statusLastChangedDate" "2015-08-18T150715.393Z",
+                  "workflowEntity" {"entityType" "sample",
+                                    "entityName" "sample_01"},
+                  "status" "Submitted",
+                  "workflowId" "70521329-88fe-4288-9325-2e6183e0a9dc"}],
+    "status" "Submitted",
+    "submissionEntity" {"entityType" "sample",
+                        "entityName" "sample_01"},
+    "submitter" "davidan@broadinstitute.org"}])
 
 
-(defn render-launch-overlay [entities state refs workspace-id config-id on-success]
+(defn- entity->id [entity]
+  {:type (entity "entityType") :name (entity "name")})
+
+
+(react/defc LaunchButton
+  {:render
+   (fn [{:keys [this state]}]
+     [:div {:style {:fontSize "106%" :lineHeight 1 :textAlign "center"}}
+      [:div {:style {:padding "0.7em 0" :cursor "pointer"
+                     :backgroundColor (:button-blue style/colors)
+                     :color "#fff" :borderRadius 4
+                     :border (str "1px solid " (:line-gray style/colors))}
+             :onClick #(react/call :handle-click this %)}
+       "Launch"]
+      (when (:launching? @state)
+        [comps/Blocker {:banner "Launching analysis..."}])])
+   :handle-click
+   (fn [{:keys [props state refs]} e]
+     (if-let [entity-id (:entity-id props)]
+       (let [workspace-id (:workspace-id props)
+             config-id (:config-id props)
+             expression (:expression props)
+             payload (merge {:methodConfigurationNamespace (:namespace config-id)
+                             :methodConfigurationName (:name config-id)
+                             :entityType (:type entity-id)
+                             :entityName (:name entity-id)}
+                            (when-not (clojure.string/blank? expression) {:expression expression}))
+             on-success (:on-success props)]
+         (swap! state assoc :launching? true)
+         (utils/ajax-orch
+          (paths/submission-create workspace-id)
+          {:method :post
+           :data (utils/->json-string payload)
+           :headers {"Content-Type" "application/json"}
+           :on-done (fn [{:keys [success? get-parsed-response status-text]}]
+                      (swap! state dissoc :launching?)
+                      (if success?
+                        (on-success (get-in (get-parsed-response) [0 "submissionId"]))
+                        (js/alert (str "Launch failed: " status-text))))
+           :canned-response {:responseText (utils/->json-string (create-mock-launch-response))
+                             :status 200 :delay-ms (rand-int 2000)}}))
+       (js/alert "Please select an entity.")))})
+
+
+(defn- render-table [entities filter selected-entity on-entity-selected]
+  (let [attribute-keys (apply union (map (fn [e] (set (keys (e "attributes")))) entities))]
+    [table/Table
+     {:key filter
+      :empty-message "No entities available."
+      :columns (concat
+                [{:header "" :starting-width 40 :resizable? false :reorderable? false
+                  :content-renderer (fn [i data]
+                                      [:input {:type "radio"
+                                               :checked (identical? data selected-entity)
+                                               :onChange #(on-entity-selected data)}])}
+                 {:header "Entity Type" :starting-width 100 :sort-by :value}
+                 {:header "Entity Name" :starting-width 100 :sort-by :value}]
+                (map (fn [k] {:header k :starting-width 100 :sort-by :value}) attribute-keys))
+      :data (map (fn [m]
+                   (concat
+                    [m
+                     (m "entityType")
+                     (m "name")]
+                    (map (fn [k] (get-in m ["attributes" k])) attribute-keys)))
+                 entities)}]))
+
+
+(defn render-form [entities state refs workspace-id config-id on-success]
   (let [entity-map (group-by #(% "entityType") entities)
         filter (or (:filter @state) "Sample")
         filtered-entities (entity-map filter)
@@ -89,29 +125,17 @@
         (style/create-form-label "Select Entity")
         [:div {:style {:backgroundColor "#fff" :border (str "1px solid " (:line-gray style/colors))
                        :padding "1em" :marginBottom "0.5em"}}
-         (let [attribute-keys (apply union (map (fn [e] (set (keys (e "attributes")))) filtered-entities))]
-           [table/Table
-            {:key filter
-             :empty-message "No entities available."
-             :columns (concat
-                       [{:header "" :starting-width 40 :resizable? false :reorderable? false
-                         :content-renderer (fn [i data]
-                                             [:input {:type "radio"
-                                                      :checked (identical? data selected-entity)
-                                                      :onChange #(swap! state assoc :selected-entity data)}])}
-                        {:header "Entity Type" :starting-width 100 :sort-by :value}
-                        {:header "Entity Name" :starting-width 100 :sort-by :value}]
-                       (map (fn [k] {:header k :starting-width 100 :sort-by :value}) attribute-keys))
-             :data (map (fn [m]
-                          (concat
-                           [m
-                            (m "entityType")
-                            (m "name")]
-                           (map (fn [k] (get-in m ["attributes" k])) attribute-keys)))
-                        filtered-entities)}])]
+         (render-table filtered-entities filter selected-entity
+                       #(swap! state assoc :selected-entity %))]
         (style/create-form-label "Define Expression")
-        (style/create-text-field {:ref "expressionname" :placeholder "leave blank for default"})
-        (render-launch-button state refs selected-entity workspace-id config-id on-success)])]))
+        (style/create-text-field {:placeholder "leave blank for default"
+                                  :value (:expression @state)
+                                  :onChange
+                                  #(swap! state assoc :expression (-> % .-target .-value))})
+        [LaunchButton {:workspace-id workspace-id :config-id config-id
+                       :entity-id (when selected-entity (entity->id selected-entity))
+                       :expression (:expression @state)
+                       :on-success on-success}]])]))
 
 
 (react/defc Page
@@ -136,7 +160,7 @@
            (style/create-message-well "No data found.")
            :else
            [:div {:style {:marginTop "-1em"}}
-            (render-launch-overlay
+            (render-form
              entities state refs (:workspace-id props) (:config-id props) (:on-success props))]))]])
    :component-did-mount
    (fn [{:keys [props state]}]
@@ -155,7 +179,7 @@
         :delay-ms 2000}}))})
 
 
-(react/defc LaunchButton
+(react/defc ShowLaunchModalButton
   {:render
    (fn [{:keys [props state]}]
      [:span {}
@@ -173,4 +197,4 @@
 
 (defn render-button [workspace-id config-id on-success]
   (react/create-element
-   LaunchButton {:workspace-id workspace-id :config-id config-id :on-success on-success}))
+   ShowLaunchModalButton {:workspace-id workspace-id :config-id config-id :on-success on-success}))
