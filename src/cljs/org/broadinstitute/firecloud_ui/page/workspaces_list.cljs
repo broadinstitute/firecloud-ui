@@ -110,43 +110,43 @@
     :exception (filter (fn [ws] (= "Exception" (ws "status"))) workspaces)))
 
 
-(defn- render-table [props workspaces]
+(defn- render-table [props workspaces key]
   (let [border-style (str "1px solid " (:line-gray style/colors))]
-    (react/create-element
-      table/Table
-      {:empty-message "No workspaces to display."
-       :cell-padding-left nil
-       :header-row-style {:fontWeight nil :fontSize "90%"
-                          :color (:text-light style/colors) :backgroundColor nil}
-       :header-style {:padding "0 0 1em 14px" :overflow nil}
-       :resizable-columns? false :reorderable-columns? false
-       :body-style {:fontSize nil :fontWeight nil
-                    :borderLeft border-style :borderRight border-style
-                    :borderBottom border-style :borderRadius 4}
-       :row-style {:height 56 :borderTop border-style}
-       :even-row-style {:backgroundColor nil}
-       :cell-content-style {:padding nil}
-       :columns
-       [{:header [:div {:style {:marginLeft -6}} "Status"] :starting-width 60
-         :content-renderer (fn [row-index data]
-                             [StatusCell {:data data}])
-         :filter-by :none}
-        {:header "Workspace" :starting-width 250
-         :content-renderer (fn [row-index data]
-                             [WorkspaceCell {:data data}])
-         :filter-by :name}
-        {:header "Description" :starting-width 400
-         :content-renderer (fn [row-index data]
-                             [:div {:style {:padding "1.1em 0 0 14px"}}
-                              "No data available."])
-         :filter-by :none}]
-       :data (map (fn [workspace]
-                    [{:status (workspace "status")
-                      :onClick #((:onWorkspaceSelected props) workspace)}
-                     {:name (workspace "name") :status (workspace "status")
-                      :onClick #((:onWorkspaceSelected props) workspace)}
-                     workspace])
-               workspaces)})))
+    [table/Table
+     {:key key
+      :empty-message "No workspaces to display."
+      :cell-padding-left nil
+      :header-row-style {:fontWeight nil :fontSize "90%"
+                         :color (:text-light style/colors) :backgroundColor nil}
+      :header-style {:padding "0 0 1em 14px" :overflow nil}
+      :resizable-columns? false :reorderable-columns? false
+      :body-style {:fontSize nil :fontWeight nil
+                   :borderLeft border-style :borderRight border-style
+                   :borderBottom border-style :borderRadius 4}
+      :row-style {:height 56 :borderTop border-style}
+      :even-row-style {:backgroundColor nil}
+      :cell-content-style {:padding nil}
+      :columns
+      [{:header [:div {:style {:marginLeft -6}} "Status"] :starting-width 60
+        :content-renderer (fn [row-index data]
+                            [StatusCell {:data data}])
+        :filter-by :none}
+       {:header "Workspace" :starting-width 250
+        :content-renderer (fn [row-index data]
+                            [WorkspaceCell {:data data}])
+        :filter-by :name}
+       {:header "Description" :starting-width 400
+        :content-renderer (fn [row-index data]
+                            [:div {:style {:padding "1.1em 0 0 14px"}}
+                             "No data available."])
+        :filter-by :none}]
+      :data (map (fn [workspace]
+                   [{:status (workspace "status")
+                     :onClick #((:onWorkspaceSelected props) workspace)}
+                    {:name (workspace "name") :status (workspace "status")
+                     :onClick #((:onWorkspaceSelected props) workspace)}
+                    workspace])
+              workspaces)}]))
 
 
 (defn- create-mock-workspaces []
@@ -189,7 +189,7 @@
                                              (build-button "Running" :running)
                                              (build-button "Exception" :exception)]}]]
             [:div {:style {:margin "0 2em"}}
-             (render-table props filtered-workspaces)]]))))
+             (render-table props filtered-workspaces (:active-filter @state))]]))))
    :component-did-mount
    (fn [{:keys [state]}]
      (utils/call-ajax-orch
