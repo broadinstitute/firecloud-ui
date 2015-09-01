@@ -257,9 +257,11 @@
         :canned-response {:responseText (utils/->json-string (build-mock-config (:config props)))
                           :status 200 :delay-ms (rand-int 2000)}})
      (set! (.-onScrollHandler this)
-       (fn [] (let [visible (common/is-in-view (.getDOMNode (@refs "sidebar")))]
-                (when-not (= visible (:sidebar-visible? @state))
-                  (swap! state assoc :sidebar-visible? visible)))))
+           (fn []
+             (when-let [sidebar (@refs "sidebar")]
+               (let [visible (common/is-in-view (.getDOMNode sidebar))]
+                 (when-not (= visible (:sidebar-visible? @state))
+                   (swap! state assoc :sidebar-visible? visible))))))
      (.addEventListener js/window "scroll" (.-onScrollHandler this)))
    :component-will-unmount
    (fn [{:keys [this]}]
