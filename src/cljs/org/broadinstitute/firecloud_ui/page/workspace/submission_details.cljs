@@ -71,7 +71,11 @@
      [table/Table
       {:empty-message "No Workflows"
        :columns [{:header "Data Entity" :starting-width 200 :sort-by :value}
-                 {:header "Last Changed" :starting-width 280 :sort-by :value}
+                 {:header "Last Changed" :starting-width 280 :sort-by :value
+                  :content-renderer (fn [row-index date]
+                                      (let [m (js/moment date)]
+                                        (str (.format m "L [at] LTS") " ("
+                                          (.fromNow m) ")")))}
                  {:header "Status" :starting-width 120 :sort-by :value
                   :content-renderer (fn [row-index status]
                                       [:div {}
@@ -87,8 +91,7 @@
        :data (map (fn [row]
                     [(str (get-in row ["workflowEntity" "entityName"]) " ("
                        (get-in row ["workflowEntity" "entityType"]) ")")
-                     (let [m (js/moment (row "statusLastChangedDate"))]
-                       (str (.format m "L [at] LTS") " (" (.fromNow m) ")"))
+                     (row "statusLastChangedDate")
                      (row "status")
                      (row "messages")
                      (row "workflowId")])
