@@ -96,7 +96,9 @@ class Handler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
     def _send_request(self, method, body):
         headers = dict(self.headers)
-        headers.update({'host': _connection.host}) # key must be lowercase
+        if 'host' in self.headers:
+            headers.update({'X-Forwarded-Host': self.headers['host']})
+        headers.update({'host': self._get_host()}) # key must be lowercase
         _connection.request(
             method,
             _forward_path + self.path[len(self.HANDLED_PATH):],
@@ -104,6 +106,12 @@ class Handler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             headers,
         )
         return _connection.getresponse()
+
+    def _get_host(self):
+        if _connection.port == _connection.default_port:
+            return _connection.host
+        else:
+            return _connection.host + ':' + str(_connection.port)
 
 
 os.chdir(BUILD_DIR)
