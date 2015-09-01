@@ -221,10 +221,6 @@
          :onChange #(swap! state assoc :initial false :synced false)})
       [:span {:style {:paddingLeft "1em"}}]
       [comps/Button {:icon :search :onClick #(react/call :apply-filter this)}]])
-   :make-desynced
-   (fn [{:keys [state]}]
-     (when-not (:initial @state)
-       (swap! state assoc :synced false)))
    :apply-filter
    (fn [{:keys [this state props]}]
      (swap! state assoc :synced true)
@@ -384,10 +380,6 @@
      (let [rows (react/call :get-filtered-data this)]
        (react/call :set-rows (@refs "body") (react/call :get-body-rows this rows))
        (react/call :set-num-rows-visible (@refs "paginator") (count rows))))
-   :component-will-receive-props
-   (fn [{:keys [props state refs]}]
-     (swap! state assoc :ordered-columns (create-ordered-columns (:columns props)))
-     (react/call :make-desynced (@refs "filterer")))
    :component-did-mount
    (fn [{:keys [this state]}]
      (set! (.-onMouseMoveHandler this)

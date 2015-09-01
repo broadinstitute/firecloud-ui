@@ -70,9 +70,7 @@
    (fn [{:keys [props]}]
      [table/Table
       {:empty-message "No Workflows"
-       :columns [{:header "Data Entity" :starting-width 200 :sort-by :value
-                  :filter-by (fn [entity]
-                               (str (entity "entityType") " " (entity "entityName")))}
+       :columns [{:header "Data Entity" :starting-width 200 :sort-by :value}
                  {:header "Last Changed" :starting-width 280 :sort-by :value
                   :content-renderer (fn [row-index date]
                                       (let [m (js/moment date)]
