@@ -221,10 +221,6 @@
          :onChange #(swap! state assoc :initial false :synced false)})
       [:span {:style {:paddingLeft "1em"}}]
       [comps/Button {:icon :search :onClick #(react/call :apply-filter this)}]])
-   :make-desynced
-   (fn [{:keys [state]}]
-     (when-not (:initial @state)
-       (swap! state assoc :synced false)))
    :apply-filter
    (fn [{:keys [this state props]}]
      (swap! state assoc :synced true)
