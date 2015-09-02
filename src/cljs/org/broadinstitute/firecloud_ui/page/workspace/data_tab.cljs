@@ -2,22 +2,13 @@
   (:require
     [dmohs.react :as react]
     [clojure.set :refer [union]]
-    [org.broadinstitute.firecloud-ui.common :as common]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
     [org.broadinstitute.firecloud-ui.common.table :as table]
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.page.import-data :as import-data]
-    [org.broadinstitute.firecloud-ui.paths :as paths]
+    [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
     [org.broadinstitute.firecloud-ui.utils :as utils]))
 
-
-(defn- create-mock-entities []
-  (map
-    (fn [i]
-      {:entityType (rand-nth ["sample" "participant"])
-       :name (str "entity" (inc i))
-       :attributes {}})
-    (range (rand-int 20))))
 
 (react/defc EntitiesList
   {:get-initial-state
@@ -83,12 +74,11 @@
    :load-entities
    (fn [{:keys [state props]}]
      (utils/call-ajax-orch
-       (paths/get-entities-by-type (:workspace-id props))
-       {:on-success (fn [{:keys [parsed-response]}]
-                      (swap! state assoc :entity-map (group-by #(% "entityType") parsed-response)))
-        :on-failure (fn [{:keys [status-text]}]
-                      (swap! state assoc :error status-text))
-        :mock-data (create-mock-entities)}))})
+       {:endpoint (endpoints/get-entities-by-type (:workspace-id props))
+        :on-done (fn [{:keys [success? get-parsed-response status-text]}]
+                   (if success?
+                     (swap! state assoc :entity-map (group-by #(% "entityType") (get-parsed-response)))
+                     (swap! state assoc :error status-text)))}))})
 
 (defn render [workspace]
   [WorkspaceData {:workspace-id workspace}])

@@ -7,31 +7,9 @@
     [org.broadinstitute.firecloud-ui.common.icons :as icons]
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.common.table :as table]
-    [org.broadinstitute.firecloud-ui.paths :as paths]
+    [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
     [org.broadinstitute.firecloud-ui.utils :as utils]
     ))
-
-
-(defn- create-mock-launch-response []
-  [{"workspaceName" {"namespace" "broad-dsde-dev",
-                     "name" "alexb_test_submission"},
-    "methodConfigurationNamespace" "my_test_configs",
-    "submissionDate" "2015-08-18T150715.393Z",
-    "methodConfigurationName" "test_config2",
-    "submissionId" "62363984-7b85-4f27-b9c6-7577561f1326",
-    "notstarted" [],
-    "workflows" [{"messages" [],
-                  "workspaceName" {"namespace" "broad-dsde-dev",
-                                   "name" "alexb_test_submission"},
-                  "statusLastChangedDate" "2015-08-18T150715.393Z",
-                  "workflowEntity" {"entityType" "sample",
-                                    "entityName" "sample_01"},
-                  "status" "Submitted",
-                  "workflowId" "70521329-88fe-4288-9325-2e6183e0a9dc"}],
-    "status" "Submitted",
-    "submissionEntity" {"entityType" "sample",
-                        "entityName" "sample_01"},
-    "submitter" "davidan@broadinstitute.org"}])
 
 
 (defn- entity->id [entity]
@@ -46,15 +24,14 @@
                      :backgroundColor (:button-blue style/colors)
                      :color "#fff" :borderRadius 4
                      :border (str "1px solid " (:line-gray style/colors))}
-             :onClick #(react/call :handle-click this %)}
+             :onClick #(react/call :handle-click this)}
        "Launch"]
       (when (:launching? @state)
         [comps/Blocker {:banner "Launching analysis..."}])])
    :handle-click
-   (fn [{:keys [props state refs]} e]
+   (fn [{:keys [props state]}]
      (if-let [entity-id (:entity-id props)]
-       (let [workspace-id (:workspace-id props)
-             config-id (:config-id props)
+       (let [config-id (:config-id props)
              expression (:expression props)
              payload (merge {:methodConfigurationNamespace (:namespace config-id)
                              :methodConfigurationName (:name config-id)
@@ -63,18 +40,15 @@
                             (when-not (clojure.string/blank? expression) {:expression expression}))
              on-success (:on-success props)]
          (swap! state assoc :launching? true)
-         (utils/ajax-orch
-          (paths/submission-create workspace-id)
-          {:method :post
-           :data (utils/->json-string payload)
-           :headers {"Content-Type" "application/json"}
-           :on-done (fn [{:keys [success? get-parsed-response status-text]}]
-                      (swap! state dissoc :launching?)
-                      (if success?
-                        (on-success (get-in (get-parsed-response) [0 "submissionId"]))
-                        (js/alert (str "Launch failed: " status-text))))
-           :canned-response {:responseText (utils/->json-string (create-mock-launch-response))
-                             :status 200 :delay-ms (rand-int 2000)}}))
+         (utils/call-ajax-orch
+           {:endpoint (endpoints/create-submission (:workspace-id props))
+            :payload payload
+            :headers {"Content-Type" "application/json"}
+            :on-done (fn [{:keys [success? get-parsed-response status-text]}]
+                       (swap! state dissoc :launching?)
+                       (if success?
+                         (on-success (get-in (get-parsed-response) [0 "submissionId"]))
+                         (js/alert (str "Launch failed: " status-text))))}))
        (js/alert "Please select an entity.")))})
 
 
@@ -164,19 +138,13 @@
              entities state refs (:workspace-id props) (:config-id props) (:on-success props))]))]])
    :component-did-mount
    (fn [{:keys [props state]}]
-     (utils/ajax-orch
-      (paths/get-entities-by-type (:workspace-id props))
-      {:on-done (fn [{:keys [success? status-text get-parsed-response]}]
-                  (swap! state assoc
-                         :server-response (if success?
-                                            {:entities (get-parsed-response)}
-                                            {:error-message status-text})))
-       :canned-response
-       {:status 200
-        :responseText (utils/->json-string
-                       [{:name "Mock Sample" :entityType "Sample"}
-                        {:name "Mock Participant" :entityType "Participant"}])
-        :delay-ms 2000}}))})
+     (utils/call-ajax-orch
+       {:endpoint (endpoints/get-entities-by-type (:workspace-id props))
+        :on-done (fn [{:keys [success? status-text get-parsed-response]}]
+                   (swap! state assoc
+                     :server-response (if success?
+                                        {:entities (get-parsed-response)}
+                                        {:error-message status-text})))}))})
 
 
 (react/defc ShowLaunchModalButton

@@ -2,9 +2,9 @@
   (:require
     [dmohs.react :as react]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
+    [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
     [org.broadinstitute.firecloud-ui.common.icons :as icons]
     [org.broadinstitute.firecloud-ui.common.style :as style]
-    [org.broadinstitute.firecloud-ui.paths :as paths]
     [org.broadinstitute.firecloud-ui.utils :as utils]
     ))
 
@@ -56,36 +56,34 @@
              [:a {:href "#" :style {:color (:button-blue style/colors) :textDecoration "none"}}
               "shared with -1 people"]
              ")")
-            (style/create-section-header "Description")
-            (style/create-paragraph [:em {} "Description info not available yet"])
-            (style/create-section-header "Tags")
-            (style/create-paragraph (render-tags ["Fake" "Tag" "Placeholders"]))
-            (style/create-section-header "Research Purpose")
-            (style/create-paragraph [:em {} "Research purpose not available yet"])
-            (style/create-section-header "Billing Account")
-            (style/create-paragraph [:em {} "Billing account not available yet"])]
-           [:div {:style {:clear "both"}}]])))
+           (style/create-section-header "Description")
+           (style/create-paragraph [:em {} "Description info not available yet"])
+           (style/create-section-header "Tags")
+           (style/create-paragraph (render-tags ["Fake" "Tag" "Placeholders"]))
+           (style/create-section-header "Research Purpose")
+           (style/create-paragraph [:em {} "Research purpose not available yet"])
+           (style/create-section-header "Billing Account")
+           (style/create-paragraph [:em {} "Billing account not available yet"])]
+          [:div {:style {:clear "both"}}]])))
    :load-workspace
    (fn [{:keys [props state]}]
      (utils/call-ajax-orch
-      (paths/workspace-details-path (:workspace-id props))
-      {:on-success
-       (fn [{:keys [parsed-response]}]
-         (swap! state assoc
-                :server-response {:workspace (merge {"status" "Complete"} ;; TODO Remove.
-                                                    parsed-response)}))
-       :on-failure (fn [{:keys [status-text]}]
-                     (swap! state assoc :server-response {:error-message status-text}))
-       :mock-data (merge (:workspace-id props) {:status "Complete" :createdBy "Nobody"})}))
+       {:endpoint (endpoints/get-workspace (:workspace-id props))
+        :on-done (fn [{:keys [success? get-parsed-response status-text]}]
+                   (if success?
+                     (swap! state assoc
+                       :server-response {:workspace (merge {"status" "Complete"} ;; TODO Remove.
+                                                      (get-parsed-response))})
+                     (swap! state assoc :server-response {:error-message status-text})))}))
    :component-did-mount
-   (fn [{:keys [this state]}]
+   (fn [{:keys [this]}]
      (react/call :load-workspace this))
    :component-did-update
    (fn [{:keys [this state]}]
      (when (nil? (:server-response @state))
        (react/call :load-workspace this)))
    :component-will-receive-props
-   (fn [{:keys [this props next-props state]}]
+   (fn [{:keys [props next-props state]}]
      (utils/cljslog props next-props)
      (when-not (apply = (map :workspace-id [props next-props]))
        (swap! state assoc :server-response nil)))})

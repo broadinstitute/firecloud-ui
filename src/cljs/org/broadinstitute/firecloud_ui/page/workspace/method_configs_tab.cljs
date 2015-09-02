@@ -7,34 +7,11 @@
     [org.broadinstitute.firecloud-ui.common.icons :as icons]
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.common.table :as table]
+    [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
     [org.broadinstitute.firecloud-ui.page.workspace.method-config-importer :as importmc]
     [org.broadinstitute.firecloud-ui.page.workspace.method-config-editor :refer [MethodConfigEditor]]
-    [org.broadinstitute.firecloud-ui.paths :as paths]
     ;; TODO(dmohs): No need to refer these. Having utils available is enough.
     [org.broadinstitute.firecloud-ui.utils :as utils :refer [rlog jslog cljslog]]))
-
-
-(defn- create-mock-methodconfs []
-  (map
-    (fn [i]
-      {:name (str "Configuration " (inc i))
-       :namespace (rand-nth ["Broad" "nci" "public"])
-       :rootEntityType "Task"
-       :methodStoreMethod {:methodNamespace (str "ms_ns_" (inc i))
-                           :methodName (str "ms_n_" (inc i))
-                           :methodVersion (str "ms_v_" (inc i))}
-       :methodStoreConfig {:methodConfigNamespace (str "msc_ns_" (inc i))
-                           :methodConfigName (str "msc_n_" (inc i))
-                           :methodConfigVersion (str "msc_v_" (inc i))}
-       ;; Real data doesn't have the following fields, but for mock data we carry the same
-       ;; objects around, so initialize them here for convenience
-       :inputs {"Input 1" "[some value]"
-                "Input 2" "[some value]"}
-       :outputs {"Output 1" "[some value]"
-                 "Output 2" "[some value]"}
-       :prerequisites {"unused 1" "Predicate 1"
-                       "unused 2" "Predicate 2"}})
-    (range (rand-int 50))))
 
 
 (defn- render-map [m keys labels]
@@ -96,13 +73,13 @@
                   ["methodConfigNamespace" "methodConfigName" "methodConfigVersion"]
                   ["Namespace" "Name" "Version"]))}]
             :data (map
-                   (fn [config]
-                     [config
-                      (config "namespace")
-                      (config "rootEntityType")
-                      (config "methodStoreMethod")
-                      (config "methodStoreConfig")])
-                   configs)}]))])
+                    (fn [config]
+                      [config
+                       (config "namespace")
+                       (config "rootEntityType")
+                       (config "methodStoreMethod")
+                       (config "methodStoreConfig")])
+                    configs)}]))])
    :component-did-mount
    (fn [{:keys [this]}]
      (react/call :load-method-configs this))
@@ -112,12 +89,12 @@
        (react/call :load-method-configs this)))
    :load-method-configs
    (fn [{:keys [props state]}]
-     (utils/call-ajax-orch (paths/list-method-configs-path (:workspace-id props))
-       {:on-success (fn [{:keys [parsed-response]}]
-                      (swap! state assoc :server-response {:configs (vec parsed-response)}))
-        :on-failure (fn [{:keys [status-text]}]
-                      (swap! state assoc :server-response {:error-message status-text}))
-        :mock-data (create-mock-methodconfs)}))})
+     (utils/call-ajax-orch
+       {:endpoint (endpoints/list-workspace-method-configs (:workspace-id props))
+        :on-done (fn [{:keys [success? get-parsed-response status-text]}]
+                   (if success?
+                     (swap! state assoc :server-response {:configs (vec (get-parsed-response))})
+                     (swap! state assoc :server-response {:error-message status-text})))}))})
 
 
 (react/defc Page

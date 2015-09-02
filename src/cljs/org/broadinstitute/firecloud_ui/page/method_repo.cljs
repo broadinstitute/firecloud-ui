@@ -4,7 +4,7 @@
    [org.broadinstitute.firecloud-ui.common.components :as comps]
    [org.broadinstitute.firecloud-ui.common.style :as style]
    [org.broadinstitute.firecloud-ui.common.table :as table]
-   [org.broadinstitute.firecloud-ui.paths :refer [get-methods-path]]
+   [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
    [org.broadinstitute.firecloud-ui.page.workspace.method-config-importer :as importmc]
    [org.broadinstitute.firecloud-ui.utils :as utils]
    ))
@@ -42,15 +42,6 @@
                (:methods props))}]))})
 
 
-(defn- create-mock-methods []
-  (map
-    (fn [i]
-      {:namespace (rand-nth ["broad" "public" "nci"])
-       :name (str "Method " (inc i))
-       :synopsis (str "This is method " (inc i))})
-    (range (rand-int 100))))
-
-
 (react/defc Page
   {:render
    (fn [{:keys [state]}]
@@ -63,10 +54,9 @@
    :component-did-mount
    (fn [{:keys [state]}]
      (utils/call-ajax-orch
-       (get-methods-path)
-       {:on-success (fn [{:keys [parsed-response]}]
-                      (swap! state assoc :methods parsed-response))
-        :on-failure (fn [{:keys [status-text]}]
-                      (swap! state assoc :error {:message status-text}))
-        :mock-data (create-mock-methods)}))})
+       {:endpoint endpoints/list-methods
+        :on-done (fn [{:keys [success? get-parsed-response status-text]}]
+                   (if success?
+                     (swap! state assoc :methods (get-parsed-response))
+                     (swap! state assoc :error {:message status-text})))}))})
 

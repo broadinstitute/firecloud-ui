@@ -153,15 +153,14 @@
                            (:headers arg-map))))))
 
 
-(defn call-ajax-orch [path arg-map]
-  (ajax-orch path (assoc arg-map
-                    :on-done (fn [{:keys [success? xhr] :as map}]
-                               (if success?
-                                 ((:on-success arg-map) (merge map {:parsed-response (parse-json-string (.-responseText xhr))}))
-                                 ((:on-failure arg-map) (merge map {:status-text (.-statusText xhr)}))))
-                    :canned-response {:status 200 :delay-ms (rand-int 2000)
-                                      :responseText (if-let [mock-data (:mock-data arg-map)]
-                                                      (->json-string mock-data))})))
+(defn call-ajax-orch [{:keys [endpoint] :as arg-map}]
+  (ajax-orch (:path endpoint)
+    (assoc arg-map
+      :method (:method endpoint)
+      :data (if-let [payload (:payload arg-map)] (->json-string payload))
+      :canned-response {:status 200 :delay-ms (rand-int 2000)
+                        :responseText (if-let [mock-data (:mock-data endpoint)]
+                                        (->json-string mock-data))})))
 
 
 (defn deep-merge [& maps]

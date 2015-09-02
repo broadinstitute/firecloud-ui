@@ -4,11 +4,11 @@
     [dmohs.react :as react]
     [org.broadinstitute.firecloud-ui.common :as common]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
+    [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.common.table :as table]
     [org.broadinstitute.firecloud-ui.nav :as nav]
     [org.broadinstitute.firecloud-ui.page.workspace.details :refer [render-workspace-details]]
-    [org.broadinstitute.firecloud-ui.paths :as paths]
     [org.broadinstitute.firecloud-ui.utils :as utils :refer [parse-json-string]]
     ))
 
@@ -58,26 +58,15 @@
                              n (-> (@refs "wsName") .getDOMNode .-value clojure.string/trim)]
                         (when-not (or (empty? ns) (empty? n))
                           (swap! state assoc :creating-wf true)
-                          (utils/ajax-orch
-                            (paths/create-workspace-path)
-                            {:method :post
-                             :data (utils/->json-string {:namespace ns :name n :attributes {}})
+                          (utils/call-ajax-orch
+                            {:endpoint (endpoints/create-workspace ns n)
+                             :payload {:namespace ns :name n :attributes {}}
                              :on-done (fn [{:keys [success?]}]
                                         (swap! state dissoc :creating-wf)
                                         (if success?
                                           (do (clear-overlay state refs)
                                               (nav/navigate nav-context (str ns ":" n)))
-                                          (js/alert "Workspace creation failed.")))
-                             :canned-response
-                             {:status 200
-                              :responseText (utils/->json-string
-                                              {:namespace ns
-                                               :name n
-                                               :createdBy n
-                                               :createdDate (.toISOString (js/Date.))
-                                               :bucketName n
-                                               :attributes {}})
-                              :delay-ms (rand-int 2000)}})))}]]]]))
+                                          (js/alert "Workspace creation failed")))})))}]]]]))
 
 
 (react/defc StatusCell
@@ -155,30 +144,11 @@
               workspaces)}]))
 
 
-(defn- create-mock-workspaces []
-  (map
-    (fn [i]
-      (let [ns (rand-nth ["broad" "public" "nci"])
-            status (rand-nth ["Complete" "Running" "Exception"])]
-        {:accessLevel "OWNER"
-         :workspace {:namespace ns
-                     :name (str "Workspace " (inc i))
-                     :status status
-                     :createdBy ns
-                     :createdDate (.toISOString (js/Date.))}
-         :workspaceSubmissionStats {:runningSubmissionsCount (rand-int 2)
-                                    :lastSuccessDate (rand-nth [nil (utils/rand-recent-time)])
-                                    :lastFailureDate (rand-nth [nil (utils/rand-recent-time)])}
-         :owners ["test@broadinstitute.org"]}))
-    (range (rand-int 100))))
-
-
 (defn- compute-status [workspace]
   (let [count (get-in workspace ["workspaceSubmissionStats" "runningSubmissionsCount"])]
     (cond (not (nil? (get-in workspace ["workspaceSubmissionStats" "lastFailureDate"]))) "Exception"
           (zero? count) "Complete"
           :else "Running")))
-
 
 (react/defc WorkspaceList
   {:get-initial-state
@@ -211,19 +181,17 @@
    :component-did-mount
    (fn [{:keys [state]}]
      (utils/call-ajax-orch
-       (paths/list-workspaces-path)
-       {:on-success (fn [{:keys [parsed-response]}]
-                      (swap! state assoc :server-response
-                        {:success? true
-                         :workspaces
-                         (map
-                           (fn [ws]
-                             (assoc ws :status (compute-status ws)))
-                           parsed-response)}))
-        :on-failure (fn [{:keys [status-text]}]
-                      (swap! state assoc :server-response
-                        {:success? false :error-message status-text}))
-        :mock-data (create-mock-workspaces)}))})
+       {:endpoint endpoints/list-workspaces
+        :on-done (fn [{:keys [success? status-text get-parsed-response]}]
+                   (if success?
+                     (swap! state assoc :server-response
+                       {:success? true :workspaces
+                        (map
+                          (fn [ws]
+                            (assoc ws :status (compute-status ws)))
+                          (get-parsed-response))})
+                     (swap! state assoc :server-response
+                       {:success? false :error-message status-text})))}))})
 
 
 (defn- render-workspaces-list [nav-context]
