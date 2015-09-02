@@ -50,7 +50,7 @@
             :onClick #(clear-overlay state refs)
             :onKeyDown (common/create-key-handler [:space :enter] #(clear-overlay state refs))}
         "Cancel"]
-       [comps/Button {:text "Create Workspace"
+       [comps/Button {:text "Create Workspace" :ref "createButton"
                       :onClick
                       #(let [ns (-> (@refs "wsNamespace") .getDOMNode .-value clojure.string/trim)
                              n (-> (@refs "wsName") .getDOMNode .-value clojure.string/trim)]
@@ -229,7 +229,9 @@
           [comps/Dialog
            {:width 500
             :dismiss-self #(swap! state dissoc :overlay-shown?)
-            :content (render-modal state refs nav-context)}])
+            :content (render-modal state refs nav-context)
+            :get-first-element-dom-node #(.getDOMNode (@refs "wsNamespace"))
+            :get-last-element-dom-node #(.getDOMNode (@refs "createButton"))}])
         [:div {:style {:padding "2em"}}
          [:div {:style {:float "right" :display (when (:name selected-ws-id) "none")}}
           [comps/Button

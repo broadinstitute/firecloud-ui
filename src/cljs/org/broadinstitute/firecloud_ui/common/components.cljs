@@ -124,7 +124,8 @@
 (react/defc Dialog
   {:get-default-props
    (fn []
-     {:blocking? true})
+     {:blocking? true
+      :cycle-focus? false})
    :render
    (fn [{:keys [props state]}]
      (let [content (:content props)
@@ -153,6 +154,17 @@
      (when-let [get-dom-node (:get-anchor-dom-node props)]
        (swap! state assoc :position {:top (.. (get-dom-node) -offsetTop)
                                      :left (.. (get-dom-node) -offsetLeft)}))
+     (when-let [get-first (:get-first-element-dom-node props)]
+       (common/focus-and-select (get-first))
+       (when-let [get-last (:get-last-element-dom-node props)]
+         (.addEventListener (get-first) "keydown" (common/create-key-handler [:tab] #(.-shiftKey %)
+                                                    (fn [e] (.preventDefault e)
+                                                      (when (:cycle-focus? props)
+                                                        (.focus (get-last))))))
+         (.addEventListener (get-last) "keydown" (common/create-key-handler [:tab] #(not (.-shiftKey %))
+                                                   (fn [e] (.preventDefault e)
+                                                     (when (:cycle-focus? props)
+                                                       (.focus (get-first))))))))
      (set! (.-onKeyDownHandler this)
            (common/create-key-handler [:esc] #((:dismiss-self props))))
      (.addEventListener js/window "keydown" (.-onKeyDownHandler this)))
