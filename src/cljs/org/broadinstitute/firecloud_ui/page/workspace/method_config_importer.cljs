@@ -104,8 +104,10 @@
                      "Destination Namespace"
                      (style/create-text-field {:defaultValue selected-conf-namespace :ref "destinationNamespace"})}]
           (create-formatted-label-textfield k v))
-        (render-import-button props refs)]))})
-
+        (render-import-button props refs)
+        [:span {:style {:marginLeft "0.5em"}}
+         [comps/Button {:text "Back"
+                        :onClick #((:on-back props))}]]]))})
 
 (react/defc ConfigurationsTable
   {:render
@@ -151,6 +153,11 @@
       (cond
         (:show-import-mc-modal? @state) [ConfigurationImportForm {:selected-method-config (:selected-method-config @state)
                                                                   :workspace-id (:workspace-id props)
+                                                                  :on-back
+                                                                  (fn []
+                                                                    (swap! state dissoc
+                                                                      :show-import-mc-modal?
+                                                                      :selected-method-config))
                                                                   :on-import (fn [& args]
                                                                                (swap! state dissoc :show-import-mc-modal?)
                                                                                (apply (:on-import props) args))}]
@@ -158,8 +165,7 @@
                                                              :on-config-selected (fn [config]
                                                                                    (swap! state assoc
                                                                                      :selected-method-config config
-                                                                                     :show-import-mc-modal? true
-                                                                                     :loaded-import-confs? false))}]
+                                                                                     :show-import-mc-modal? true))}]
         (:error-message @state) (style/create-server-error-message (:error-message @state))
         :else [comps/Spinner {:text "Loading configurations for import..."}])])
    :component-did-mount
