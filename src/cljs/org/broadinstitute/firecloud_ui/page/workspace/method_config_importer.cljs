@@ -104,7 +104,11 @@
                      "Destination Namespace"
                      (style/create-text-field {:defaultValue selected-conf-namespace :ref "destinationNamespace"})}]
           (create-formatted-label-textfield k v))
-        (render-import-button props refs)]))})
+        (render-import-button props refs)
+        [:span {:style {:marginLeft "0.5em"}}
+         [comps/Button
+          {:text "Back"
+           :onClick #((:on-back props))}]]]))})
 
 
 (react/defc ConfigurationsTable
@@ -149,24 +153,32 @@
    (fn [{:keys [state props]}]
      [:div {}
       (cond
-        (:show-import-mc-modal? @state) [ConfigurationImportForm {:selected-method-config (:selected-method-config @state)
-                                                                  :workspace-id (:workspace-id props)
-                                                                  :on-import (fn [& args]
-                                                                               (swap! state dissoc :show-import-mc-modal?)
-                                                                               (apply (:on-import props) args))}]
-        (:loaded-import-confs? @state) [ConfigurationsTable {:method-configs (:method-configs @state)
-                                                             :on-config-selected (fn [config]
-                                                                                   (swap! state assoc
-                                                                                     :selected-method-config config
-                                                                                     :show-import-mc-modal? true
-                                                                                     :loaded-import-confs? false))}]
+        (:show-import-mc-modal? @state)
+        [ConfigurationImportForm {:selected-method-config (:selected-method-config @state)
+                                  :workspace-id (:workspace-id props)
+                                  :on-back (fn []
+                                             (swap! state dissoc :show-import-mc-modal?
+                                               :selected-method-config)
+                                             (swap! state assoc :loaded-import-confs? true))
+                                          :on-import (fn [& args]
+                                                       (swap! state dissoc :show-import-mc-modal?)
+                                                       (apply (:on-import props) args))}]
+        (:loaded-import-confs? @state)
+        [ConfigurationsTable {:method-configs (:method-configs @state)
+                              :on-config-selected (fn [config]
+                                                    (swap! state assoc
+                                                      :selected-method-config config
+                                                      :show-import-mc-modal? true
+                                                      :loaded-import-confs? false))}]
         (:error-message @state) (style/create-server-error-message (:error-message @state))
         :else [comps/Spinner {:text "Loading configurations for import..."}])])
    :component-did-mount
    (fn [{:keys [state]}]
      (utils/call-ajax-orch "/configurations"
        {:on-success (fn [{:keys [parsed-response]}]
-                      (swap! state assoc :loaded-import-confs? true :method-configs parsed-response))
+                      (swap! state assoc
+                        :loaded-import-confs? true
+                        :method-configs parsed-response))
         :on-failure (fn [{:keys [status-text]}]
                       (swap! state assoc :error-message status-text))
         :mock-data (create-mock-methodconfs-import)}))})
@@ -175,10 +187,12 @@
   (react/create-element
     [:div {}
      [:div {:style {:position "absolute" :right 2 :top 2}}
-      [:div {:style {:backgroundColor (:button-blue style/colors) :color "#fff" :padding "0.5em" :cursor "pointer"}
+      [:div {:style {:backgroundColor (:button-blue style/colors) :color "#fff"
+                     :padding "0.5em" :cursor "pointer"}
              :onClick #(on-close)}
        (icons/font-icon {:style {:fontSize "60%"}} :x)]]
-     [:div {:style {:backgroundColor "#fff" :borderBottom (str "1px solid " (:line-gray style/colors))
+     [:div {:style {:backgroundColor "#fff"
+                    :borderBottom (str "1px solid " (:line-gray style/colors))
                     :padding "20px 48px 18px"}}
       [ModalPage {:workspace-id workspace-id :on-close on-close :on-import on-import}]
       [:div {:style {:paddingTop "0.5em"}}]]]))
