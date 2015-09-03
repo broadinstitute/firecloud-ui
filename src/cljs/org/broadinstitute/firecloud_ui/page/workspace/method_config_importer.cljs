@@ -28,6 +28,9 @@
     (fn [i]
       {:name (str "Configuration " (inc i))
        :url (str "http://agora-ci.broadinstitute.org/configurations/joel_test/jt_test_config/1")
+       :method {:methodNamespace "AMethodsNameSpace"
+                :methodName (str "Method " (mod (inc i) 3))
+                :methodVersion (str "Method " (mod (inc i) 2))}
        :namespace (rand-nth ["Broad" "nci" "public" "ISB"])
        :snapshotId (rand-nth (range 100))
        :synopsis (str (rand-nth ["variant caller synopsis", "gene analyzer synopsis", "mutect synopsis"]) " " (inc i))
@@ -111,13 +114,21 @@
 
 (react/defc ConfigurationsTable
   {:render
-   (fn [{:keys [props]}]
+   (fn [{:keys [props refs]}]
      (let [on-config-selected (:on-config-selected props)
            method-configs (:method-configs props)]
        (assert on-config-selected (str "Missing an on-selected-config handler: " props))
        (assert method-configs (str "Missing a list of method configs: " props))
        [:div {}
         (create-formatted-header "Select A Method Configuration For Import")
+        [:div {}
+         "Select a Method to Filter by Here :"
+         [:span {}
+          (style/create-select {:ref "MethodSelectRef"
+                                :onChange
+                                (fn []
+                                  (let [value (-> (@refs "MethodSelectRef") .getDOMNode .-value)]
+                                    ((:on-method-selected props) value)))}(:method-list props))]]
         [table/Table
          {:empty-message "There are no method configurations available"
           :columns [{:header "Name" :starting-width 200 :filter-by #(% "name") :sort-by #(% "name")
@@ -162,6 +173,12 @@
                                                                                (swap! state dissoc :show-import-mc-modal?)
                                                                                (apply (:on-import props) args))}]
         (:loaded-import-confs? @state) [ConfigurationsTable {:method-configs (:method-configs @state)
+                                                             :method-list ["Any" "One Method" "Another Method"]
+                                                             ;TODO set :method-list dynamically from :method-configs
+                                                             :on-method-selected (fn [m]
+                                                                                   (utils/rlog "Method '"m"' is selected"))
+                                                                                   ;TODO: set the method as m and
+                                                                                   ;trigger rerender of the table with MC only for that method
                                                              :on-config-selected (fn [config]
                                                                                    (swap! state assoc
                                                                                      :selected-method-config config
