@@ -106,12 +106,9 @@
           :columns [{:header "Name" :starting-width 200 :filter-by #(% "name") :sort-by #(% "name")
                      :content-renderer
                      (fn [row-index conf]
-                       [:a
-                        {:onClick
-                         (fn []
-                           (on-config-selected conf))
-                         :href "javascript:;"
-                         :style {:color (:button-blue style/colors) :textDecoration "none"}}
+                       [:a {:href "javascript:;"
+                            :onClick #(on-config-selected conf)
+                            :style {:color (:button-blue style/colors) :textDecoration "none"}}
                         (conf "name")])}
                     {:header "Namespace" :starting-width 200 :sort-by :value}
                     {:header "Snapshot Id" :starting-width 100 :sort-by :value}
