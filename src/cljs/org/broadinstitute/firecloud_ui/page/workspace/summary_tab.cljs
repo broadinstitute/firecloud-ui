@@ -27,19 +27,21 @@
         (get-in @state [:server-response :error-message])
         (style/create-server-error-message (get-in @state [:server-response :error-message]))
         :else
-        (let [ws (get-in @state [:server-response :workspace])]
+        (let [ws (get-in @state [:server-response :workspace])
+              status (ws "status")]
           [:div {:style {:margin "45px 25px"}}
            [:div {:style {:float "left" :width 290 :marginRight 40}}
             ;; TODO - make the width of the float-left dynamic
             [:div {:style {:borderRadius 5 :padding 20 :textAlign "center"
                            :color "#fff"
-                           :backgroundColor (style/color-for-status (ws "status"))
+                           :backgroundColor (style/color-for-status status)
                            :fontSize "125%" :fontWeight 400}}
-             (case (ws "status")
+             (case status
                "Complete" [comps/CompleteIcon {:size 36}]
                "Running" [comps/RunningIcon {:size 36}]
                "Exception" [comps/ExceptionIcon {:size 36}])
-             [:span {:style {:marginLeft "1.5ex"}} (ws "status")]]
+             [:span {:style {:marginLeft "1.5ex"}}
+              (clojure.string/capitalize (name status))]]
             [:div {:style {:backgroundColor "transparent" :color (:button-blue style/colors)
                            :border (str "1px solid " (:line-gray style/colors))
                            :fontSize "106%" :padding "0.7em 0em" :marginTop 27

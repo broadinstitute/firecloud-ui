@@ -50,27 +50,33 @@
             :onClick #(clear-overlay state refs)
             :onKeyDown (common/create-key-handler [:space :enter] #(clear-overlay state refs))}
         "Cancel"]
+       (when (:creating-wf @state)
+         [comps/Blocker {:banner "Creating Workflow..."}])
        [comps/Button {:text "Create Workspace" :ref "createButton"
                       :onClick
                       #(let [ns (-> (@refs "wsNamespace") .getDOMNode .-value clojure.string/trim)
                              n (-> (@refs "wsName") .getDOMNode .-value clojure.string/trim)]
                         (when-not (or (empty? ns) (empty? n))
+                          (swap! state assoc :creating-wf true)
                           (utils/ajax-orch
                             (paths/create-workspace-path)
                             {:method :post
-                             :data (utils/->json-string {:namespace ns :name n})
+                             :data (utils/->json-string {:namespace ns :name n :attributes {}})
                              :on-done (fn [{:keys [success?]}]
+                                        (swap! state dissoc :creating-wf)
                                         (if success?
                                           (do (clear-overlay state refs)
                                               (nav/navigate nav-context (str ns ":" n)))
                                           (js/alert "Workspace creation failed.")))
                              :canned-response
-                             {:responseText (utils/->json-string
+                             {:status 200
+                              :responseText (utils/->json-string
                                               {:namespace ns
                                                :name n
-                                               :status (rand-nth ["Complete" "Running" "Exception"])
                                                :createdBy n
-                                               :createdDate (.toISOString (js/Date.))})
+                                               :createdDate (.toISOString (js/Date.))
+                                               :bucketName n
+                                               :attributes {}})
                               :delay-ms (rand-int 2000)}})))}]]]]))
 
 
@@ -105,9 +111,9 @@
 (defn- filter-workspaces [f workspaces]
   (case f
     :all workspaces
-    :complete (filter (fn [ws] (= "Complete" (ws "status"))) workspaces)
-    :running (filter (fn [ws] (= "Running" (ws "status"))) workspaces)
-    :exception (filter (fn [ws] (= "Exception" (ws "status"))) workspaces)))
+    :complete (filter (fn [ws] (= "Complete" (:status ws))) workspaces)
+    :running (filter (fn [ws] (= "Running" (:status ws))) workspaces)
+    :exception (filter (fn [ws] (= "Exception" (:status ws))) workspaces)))
 
 
 (defn- render-table [props workspaces key]
@@ -140,12 +146,12 @@
                             [:div {:style {:padding "1.1em 0 0 14px"}}
                              "No data available."])
         :filter-by :none}]
-      :data (map (fn [workspace]
-                   [{:status (workspace "status")
-                     :onClick #((:onWorkspaceSelected props) workspace)}
-                    {:name (workspace "name") :status (workspace "status")
-                     :onClick #((:onWorkspaceSelected props) workspace)}
-                    workspace])
+      :data (map (fn [ws]
+                   [{:status (:status ws)
+                     :onClick #((:onWorkspaceSelected props) (ws "workspace"))}
+                    {:name (get-in ws ["workspace" "name"]) :status (:status ws)
+                     :onClick #((:onWorkspaceSelected props) (ws "workspace"))}
+                    ws])
               workspaces)}]))
 
 
@@ -154,12 +160,24 @@
     (fn [i]
       (let [ns (rand-nth ["broad" "public" "nci"])
             status (rand-nth ["Complete" "Running" "Exception"])]
-        {:namespace ns
-         :name (str "Workspace " (inc i))
-         :status status
-         :createdBy ns
-         :createdDate (.toISOString (js/Date.))}))
+        {:accessLevel "OWNER"
+         :workspace {:namespace ns
+                     :name (str "Workspace " (inc i))
+                     :status status
+                     :createdBy ns
+                     :createdDate (.toISOString (js/Date.))}
+         :workspaceSubmissionStats {:runningSubmissionsCount (rand-int 2)
+                                    :lastSuccessDate (rand-nth [nil (utils/rand-recent-time)])
+                                    :lastFailureDate (rand-nth [nil (utils/rand-recent-time)])}
+         :owners ["test@broadinstitute.org"]}))
     (range (rand-int 100))))
+
+
+(defn- compute-status [workspace]
+  (let [count (get-in workspace ["workspaceSubmissionStats" "runningSubmissionsCount"])]
+    (cond (not (nil? (get-in workspace ["workspaceSubmissionStats" "lastFailureDate"]))) "Exception"
+          (zero? count) "Complete"
+          :else "Running")))
 
 
 (react/defc WorkspaceList
@@ -196,7 +214,12 @@
        (paths/list-workspaces-path)
        {:on-success (fn [{:keys [parsed-response]}]
                       (swap! state assoc :server-response
-                        {:success? true :workspaces (map #(merge {"status" "Complete"} %) parsed-response)}))
+                        {:success? true
+                         :workspaces
+                         (map
+                           (fn [ws]
+                             (assoc ws :status (compute-status ws)))
+                           parsed-response)}))
         :on-failure (fn [{:keys [status-text]}]
                       (swap! state assoc :server-response
                         {:success? false :error-message status-text}))

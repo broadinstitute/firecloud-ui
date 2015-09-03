@@ -11,7 +11,7 @@
 (react/defc Spinner
   {:render
    (fn [{:keys [props]}]
-     [:span {:style {:margin "1em"}}
+     [:span {:style {:margin "1em" :whiteSpace "nowrap"}}
       [:img {:src "assets/spinner.gif"
              :style {:height "1.5em" :verticalAlign "middle" :marginRight "1ex"}}]
       (:text props)])})
