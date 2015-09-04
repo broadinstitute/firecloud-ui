@@ -6,7 +6,6 @@
    [org.broadinstitute.firecloud-ui.page.method-repo :as method-repo]
    [org.broadinstitute.firecloud-ui.page.import-data :as import-data]
    [org.broadinstitute.firecloud-ui.page.workspaces-list :as workspaces]
-   [org.broadinstitute.firecloud-ui.session :as session]
    [org.broadinstitute.firecloud-ui.utils :as utils :refer [rlog jslog cljslog]]
    ))
 
@@ -77,7 +76,7 @@
                                       :onClick (fn [e] ((:on-nav props) (item :key)))}])
             top-nav-bar-items)])})
 
-;; Content to display when logged in via Google
+
 (react/defc LoggedIn
   {:render
    (fn [{:keys [props]}]
@@ -86,17 +85,13 @@
        (when-not (contains? (set (map :key top-nav-bar-items)) page)
          (nav/navigate (:nav-context props) "workspaces"))
        [:div {}
-
-        ;; Leave the Google button on the page to avoid possible errors.
-        ;; TODO: figure out a better way to avoid the errors.
-        [:div {:className "g-signin2" :data-onsuccess "onSignIn" :style {:display "none"}}]
         [:div {:style {:padding "1em" :borderBottom (str "1px solid " (:line-gray style/colors))}}
          [:div {:style {:float "right" :fontSize "70%"}}
           [:span {:style {:marginRight "1ex" :color (:link-blue style/colors)}}
-           (-> (session/get-current-user)
+           (-> (utils/get-current-user)
                (utils/call-external-object-method :getBasicProfile)
                (utils/call-external-object-method :getName))]
-          [:a {:href "javascript:;" :onClick (fn [e] (session/log-out))} "Log-Out"]]
+          [:a {:href "javascript:;" :onClick (fn [e] (utils/log-out))} "Log-Out"]]
          (text-logo)
          [:div {}
           [TopNavBar {:selected-item page
@@ -105,40 +100,36 @@
         (let [item (first (filter #(= (% :key) page) top-nav-bar-items))]
           (if item
             [(item :component) {:nav-context nav-context}]
-            [:div {} "Page not found."]))
-        (let [currenthost (.-hostname (.-location js/window))]
-             (let [rawlsTarget (if (not= -1 (.indexOf currenthost "dsde-staging"))
-                   "https://rawls.dsde-staging.broadinstitute.org/authentication/register"
-                   "https://rawls-dev.broadinstitute.org/authentication/register")]
-          [:div {:style {:margin "1em 1em -1em 0" :fontSize "smaller" :textAlign "right"}}
-           [:a {:href rawlsTarget
-                :target "_blank"
-                :style {:color "red"}}
-            "Force workspace service authentication"]]))]))})
+            [:div {} "Page not found."]))]))})
 
-;; Content to display when logged out
+
 (react/defc LoggedOut
   {:render
-   (fn []
-     [:div {}
+   (fn [{:keys [props]}]
+     [:div {:style {:display (when (:hidden? props) "none")}}
       [:div {:style {:padding "50px 25px"}}
        [:div {:style {:marginBottom "2em"}} (text-logo)]
        [:div {:className "g-signin2" :data-onsuccess "onSignIn" :data-theme "dark"}]
        [:div {:style {:paddingTop "25px" :fontSize ".75em"}}
         [:p {:style {:fontWeight "bold"}} "Warning"]
-        [:p {} "This is a U.S. Government computer system, which may be accessed and used only for authorized Government
-          business by authorized personnel. Unauthorized access or use of this computer system may subject violators to
-          criminal, civil, and/or administrative action."]
-        [:p {} "All information on this computer system may be intercepted, recorded, read, copied, and disclosed by and
-          to authorized personnel for official purposes, including criminal investigations. Such information includes
-          sensitive data encrypted to comply with confidentiality and privacy requirements. Access or use of this computer
-          system by any person, whether authorized or unauthorized, constitutes consent to these terms. There is no right
-          of privacy in this system."]]]])})
+        [:p {}
+         "This is a U.S. Government computer system, which may be accessed and used only for"
+         " authorized Government business by authorized personnel. Unauthorized access or use of"
+         " this computer system may subject violators to criminal, civil, and/or administrative"
+         " action."]
+        [:p {}
+         "All information on this computer system may be intercepted, recorded, read, copied, and"
+         " disclosed by and to authorized personnel for official purposes, including criminal"
+         " investigations. Such information includes sensitive data encrypted to comply with"
+         " confidentiality and privacy requirements. Access or use of this computer system by any"
+         " person, whether authorized or unauthorized, constitutes consent to these terms. There"
+         " is no right of privacy in this system."]]]])})
+
 
 (react/defc App
   {:handleSignIn ; called from index.html on successful Google sign-in
    (fn [{:keys [state]} google-user]
-     (session/set-current-user google-user)
+     (utils/set-current-user google-user)
      (swap! state assoc :is-logged-in? true))
    :handle-hash-change
    (fn [{:keys [state]}]
@@ -149,14 +140,17 @@
    :render
    (fn [{:keys [state]}]
      [:div {}
-      (cond
-        (:is-logged-in? @state) [LoggedIn {:nav-context (:root-nav-context @state)}]
-        :else [LoggedOut])
+      (when (:is-logged-in? @state) [LoggedIn {:nav-context (:root-nav-context @state)}])
+      ;; This has to be hidden rather than simply omitted. After a successful login, Google
+      ;; attempts to find the sign-in button and manipulate it, which throws an error if it is
+      ;; not present on the page.
+      [LoggedOut {:hidden? (:is-logged-in? @state)}] 
       (footer)])
    :component-did-mount
    (fn [{:keys [this state]}]
-     (session/on-log-out (fn [] (swap! state assoc :is-logged-in? false)))
+     (utils/on-log-out (fn [] (swap! state assoc :is-logged-in? false)))
      (.addEventListener js/window "hashchange" (partial react/call :handle-hash-change this)))})
+
 
 (defn- render-without-init [element]
   (react/render (react/create-element App) element nil goog.DEBUG))
