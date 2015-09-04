@@ -11,42 +11,30 @@
     [org.broadinstitute.firecloud-ui.utils :as utils]
     ))
 
-(defn create-post-data
-  [selected-conf-name
-   selected-conf-ns
-   selected-conf-snapId
-   dest-name
-   dest-namespace]
-  {"configurationNamespace" selected-conf-ns
-   "configurationName" selected-conf-name
-   "configurationSnapshotId" (str selected-conf-snapId)
-   "destinationNamespace" dest-namespace
-   "destinationName" dest-name})
-
 (defn- create-mock-methodconfs-import []
   (map
     (fn [i]
       {:name (str "Configuration " (inc i))
        :url (str "http://agora-ci.broadinstitute.org/configurations/joel_test/jt_test_config/1")
        :namespace (rand-nth ["Broad" "nci" "public" "ISB"])
-       :snapshotId (rand-nth (range 100))
+       :snapshotId (rand-int 100)
        :synopsis (str (rand-nth ["variant caller synopsis", "gene analyzer synopsis", "mutect synopsis"]) " " (inc i))
-       :createDate (str "20" (inc i) "-06-10T16:54:26Z")
+       :createDate (utils/rand-recent-time)
        :owner (rand-nth ["thibault@broadinstitute.org" "esalinas@broadinstitute.org"])})
     (range (rand-int 50))))
 
 (defn- create-formatted-label-text [label text]
-  [:div {:style {:padding "10px 0 10px 0"}}
-   [:div {:style {:float "left" :width "180px"}} label ": "] [:div {} text]])
+  [:div {:style {:padding "10px 0"}}
+   [:div {:style {:float "left" :width "180px"}} label ": "]
+   text])
 
 (defn- create-formatted-label-textfield [label textfield]
   [:div {}
-   [:div {:style {:float "left" :width "180px" :paddingTop "10px"}} label ": "] [:div {} textfield]])
+   [:div {:style {:float "left" :width "180px" :paddingTop "10px"}} label ": "]
+   textfield])
 
 (defn- create-formatted-header [text]
-  [:div {}
-   [:div {:style {:fontSize 24 :align "center" :textAlign "center" :paddingBottom "0.5em"}} text]
-   [:hr]])
+  [:div {:style {:fontSize 24 :align "center" :textAlign "center" :paddingBottom "0.5em"}} text])
 
 (defn- render-import-button [props refs]
   (let [selected-config (:selected-method-config props)
@@ -57,28 +45,24 @@
         on-import (:on-import props)]
     [comps/Button
      {:text "Import"
-      :onClick (fn []
-                 (let [dest-conf-name (-> (@refs "destinationName") .getDOMNode .-value)
-                       dest-conf-namespace (-> (@refs "destinationNamespace") .getDOMNode .-value)
-                       post-data (create-post-data
-                                   selected-conf-name
-                                   selected-conf-namespace
-                                   selected-conf-snapshot-id
-                                   dest-conf-name
-                                   dest-conf-namespace)]
-                   (utils/ajax-orch
-                     (paths/copy-method-config-to-workspace-path workspace-id)
-                     {:headers {"Content-Type" "application/json"}
-                      :canned-response {:responseText
-                                        (utils/->json-string (create-mock-methodconfs-import))
-                                        :status 200
-                                        :delay-ms (rand-int 2000)}
-                      :method :post
-                      :data (utils/->json-string post-data)
-                      :on-done (fn [{:keys [success? xhr]}]
-                                 (if success?
-                                   (on-import {"name" dest-conf-name "namespace" dest-conf-namespace})
-                                   (js/alert (str "Import Error: " (.-responseText xhr)))))})))}]))
+      :onClick #(let [dest-name (-> (@refs "destinationName") .getDOMNode .-value)
+                      dest-namespace (-> (@refs "destinationNamespace") .getDOMNode .-value)
+                      post-data {"configurationNamespace" selected-conf-namespace
+                                 "configurationName" selected-conf-name
+                                 "configurationSnapshotId" (str selected-conf-snapshot-id)
+                                 "destinationNamespace" dest-namespace
+                                 "destinationName" dest-name}]
+                 (utils/ajax-orch
+                   (paths/copy-method-config-to-workspace-path workspace-id)
+                   {:headers {"Content-Type" "application/json"}
+                    :method :post
+                    :data (utils/->json-string post-data)
+                    :on-done (fn [{:keys [success? xhr]}]
+                               (if success?
+                                 (on-import {"name" dest-name "namespace" dest-namespace})
+                                 (js/alert (str "Import Error: " (.-responseText xhr)))))
+                    :canned-response {:responseText (utils/->json-string (create-mock-methodconfs-import))
+                                      :status 200 :delay-ms (rand-int 2000)}}))}]))
 
 
 (react/defc ConfigurationImportForm
@@ -97,8 +81,8 @@
         (create-formatted-header "Import Method Configuration")
         (for [[k v] {"Name" selected-conf-name
                      "Namespace" selected-conf-namespace
-                     "Snapshot Id" selected-conf-snapshot-id
-                     }] (create-formatted-label-text k v))
+                     "Snapshot Id" selected-conf-snapshot-id}]
+          (create-formatted-label-text k v))
         (for [[k v] {"Destination Name"
                      (style/create-text-field {:defaultValue selected-conf-name :ref "destinationName"})
                      "Destination Namespace"
@@ -106,8 +90,7 @@
           (create-formatted-label-textfield k v))
         (render-import-button props refs)
         [:span {:style {:marginLeft "0.5em"}}
-         [comps/Button {:text "Back"
-                        :onClick #((:on-back props))}]]]))})
+         [comps/Button {:text "Back" :onClick #((:on-back props))}]]]))})
 
 (react/defc ConfigurationsTable
   {:render
@@ -123,12 +106,9 @@
           :columns [{:header "Name" :starting-width 200 :filter-by #(% "name") :sort-by #(% "name")
                      :content-renderer
                      (fn [row-index conf]
-                       [:a
-                        {:onClick
-                         (fn []
-                           (on-config-selected conf))
-                         :href "javascript:;"
-                         :style {:color (:button-blue style/colors) :textDecoration "none"}}
+                       [:a {:href "javascript:;"
+                            :onClick #(on-config-selected conf)
+                            :style {:color (:button-blue style/colors) :textDecoration "none"}}
                         (conf "name")])}
                     {:header "Namespace" :starting-width 200 :sort-by :value}
                     {:header "Snapshot Id" :starting-width 100 :sort-by :value}
@@ -151,28 +131,21 @@
    (fn [{:keys [state props]}]
      [:div {}
       (cond
-        (:show-import-mc-modal? @state) [ConfigurationImportForm {:selected-method-config (:selected-method-config @state)
-                                                                  :workspace-id (:workspace-id props)
-                                                                  :on-back
-                                                                  (fn []
-                                                                    (swap! state dissoc
-                                                                      :show-import-mc-modal?
-                                                                      :selected-method-config))
-                                                                  :on-import (fn [& args]
-                                                                               (swap! state dissoc :show-import-mc-modal?)
-                                                                               (apply (:on-import props) args))}]
-        (:loaded-import-confs? @state) [ConfigurationsTable {:method-configs (:method-configs @state)
-                                                             :on-config-selected (fn [config]
-                                                                                   (swap! state assoc
-                                                                                     :selected-method-config config
-                                                                                     :show-import-mc-modal? true))}]
+        (:selected-method-config @state)
+        [ConfigurationImportForm {:selected-method-config (:selected-method-config @state)
+                                  :workspace-id (:workspace-id props)
+                                  :on-back #(swap! state dissoc :selected-method-config)
+                                  :on-import #((:on-import props) %)}]
+        (:method-configs @state)
+        [ConfigurationsTable {:method-configs (:method-configs @state)
+                              :on-config-selected #(swap! state assoc :selected-method-config %)}]
         (:error-message @state) (style/create-server-error-message (:error-message @state))
         :else [comps/Spinner {:text "Loading configurations for import..."}])])
    :component-did-mount
    (fn [{:keys [state]}]
      (utils/call-ajax-orch "/configurations"
        {:on-success (fn [{:keys [parsed-response]}]
-                      (swap! state assoc :loaded-import-confs? true :method-configs parsed-response))
+                      (swap! state assoc :method-configs parsed-response))
         :on-failure (fn [{:keys [status-text]}]
                       (swap! state assoc :error-message status-text))
         :mock-data (create-mock-methodconfs-import)}))})
@@ -181,9 +154,7 @@
   (react/create-element
     [:div {}
      [:div {:style {:position "absolute" :right 2 :top 2}}
-      [:div {:style {:backgroundColor (:button-blue style/colors) :color "#fff" :padding "0.5em" :cursor "pointer"}
-             :onClick #(on-close)}
-       (icons/font-icon {:style {:fontSize "60%"}} :x)]]
+      [comps/Button {:icon :x :onClick #(on-close)}]]
      [:div {:style {:backgroundColor "#fff" :borderBottom (str "1px solid " (:line-gray style/colors))
                     :padding "20px 48px 18px"}}
       [ModalPage {:workspace-id workspace-id :on-close on-close :on-import on-import}]
