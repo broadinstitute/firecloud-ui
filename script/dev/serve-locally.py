@@ -20,7 +20,7 @@ if len(sys.argv) > 1:
     _connection = httplib.HTTPConnection('local.broadinstitute.org', 8080)
 else:
     _forward_path = '/api'
-    _connection = httplib.HTTPSConnection('firecloud-ci.broadinstitute.org')
+    _connection = httplib.HTTPSConnection('firecloud.dsde-dev.broadinstitute.org')
 
 
 class Handler(SimpleHTTPServer.SimpleHTTPRequestHandler):

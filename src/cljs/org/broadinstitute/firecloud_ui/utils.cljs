@@ -54,6 +54,43 @@
   (js->clj (js/JSON.parse x)))
 
 
+;;
+;; TODO(dmohs): Move this stuff back into session namespace.
+;;
+
+
+(defonce current-user (atom nil))
+
+
+(defonce on-log-out-atom (atom nil))
+
+
+(defn get-current-user []
+  @current-user)
+
+
+(defn set-current-user [user]
+  (reset! current-user user))
+
+
+(defn log-out []
+  (-> js/gapi
+    (aget "auth2")
+    (call-external-object-method :getAuthInstance)
+    (call-external-object-method :signOut)
+    (call-external-object-method
+      :then (fn [] (reset! current-user nil) (@on-log-out-atom) (.reload (.-location js/window))))))
+
+
+(defn on-log-out [callback]
+  (reset! on-log-out-atom callback))
+
+
+;;
+;; TODO(dmohs): Move this stuff into separate namespace (endpoints?)
+;;
+
+
 (def use-live-data? true)
 (when-not use-live-data? (assert goog.DEBUG "Mock data in use but DEBUG is false."))
 
@@ -107,7 +144,13 @@
 
 (defn ajax-orch [path arg-map]
   (assert (= (subs path 0 1) "/") (str "Path must start with '/': " path))
-  (ajax (assoc arg-map :url (str "/api" path))))
+  (let [access-token (-> (get-current-user)
+                         (call-external-object-method :getAuthResponse)
+                         (aget "access_token"))]
+    (ajax (assoc
+           arg-map :url (str "/api" path)
+           :headers (merge {"Authorization" (str "Bearer " access-token)}
+                           (:headers arg-map))))))
 
 
 (defn call-ajax-orch [path arg-map]
