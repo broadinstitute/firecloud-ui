@@ -144,7 +144,7 @@
               workspaces)}]))
 
 
-(defn- compute-status [workspace]
+(defn compute-status [workspace]
   (let [count (get-in workspace ["workspaceSubmissionStats" "runningSubmissionsCount"])]
     (cond (not (nil? (get-in workspace ["workspaceSubmissionStats" "lastFailureDate"]))) "Exception"
           (zero? count) "Complete"

@@ -39,7 +39,17 @@
 (defn get-workspace [workspace-id]
   {:path (str "/workspaces/" (ws-path workspace-id))
    :method :get
-   :mock-data (merge workspace-id {:status "Complete" :createdBy "Nobody"})})
+   :mock-data
+   {:accessLevel "OWNER"
+    :workspace {:namespace (:namespace workspace-id)
+                :name (:name workspace-id)
+                :status (rand-nth ["Complete" "Running" "Exception"])
+                :createdBy (:namespace workspace-id)
+                :createdDate (.toISOString (js/Date.))}
+    :workspaceSubmissionStats {:runningSubmissionsCount (rand-int 2)
+                               :lastSuccessDate (rand-nth [nil (utils/rand-recent-time)])
+                               :lastFailureDate (rand-nth [nil (utils/rand-recent-time)])}
+    :owners ["test@broadinstitute.org"]}})
 
 
 (defn list-workspace-method-configs [workspace-id]
