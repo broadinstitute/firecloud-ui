@@ -76,21 +76,29 @@
            on-import (:on-import props)]
        (assert selected-config (str "Missing a selected configuration: " props))
        (assert on-import (str "Missing on-import handler: " props))
-       (assert workspace-id (str "Missing workspace-id: " props))
        [:div {}
-        (create-formatted-header "Import Method Configuration")
+        [:div {:style {:position "absolute" :left 2 :top 2}}
+         [comps/Button {:icon :angle-left
+                        :onClick #((:on-back props))}]]
+        (create-formatted-header
+          (if (:workspace-id props)
+            "Import Method Configuration"
+            "Browse Method Configuration"))
         (for [[k v] {"Name" selected-conf-name
                      "Namespace" selected-conf-namespace
                      "Snapshot Id" selected-conf-snapshot-id}]
           (create-formatted-label-text k v))
-        (for [[k v] {"Destination Name"
-                     (style/create-text-field {:defaultValue selected-conf-name :ref "destinationName"})
-                     "Destination Namespace"
-                     (style/create-text-field {:defaultValue selected-conf-namespace :ref "destinationNamespace"})}]
-          (create-formatted-label-textfield k v))
-        (render-import-button props refs)
-        [:span {:style {:marginLeft "0.5em"}}
-         [comps/Button {:text "Back" :onClick #((:on-back props))}]]]))})
+        (when (:workspace-id props)
+          [:div {}
+           (for [[k v] {"Destination Name"
+                        (style/create-text-field {:defaultValue selected-conf-name
+                                                  :ref "destinationName"})
+                        "Destination Namespace"
+                        (style/create-text-field {:defaultValue selected-conf-namespace
+                                                  :ref "destinationNamespace"})}]
+             (create-formatted-label-textfield k v))
+           (render-import-button props refs)])
+        [:span {:style {:marginLeft (when (:workspace-id props) "0.5em")}}]]))})
 
 (react/defc ConfigurationsTable
   {:render
@@ -100,7 +108,10 @@
        (assert on-config-selected (str "Missing an on-selected-config handler: " props))
        (assert method-configs (str "Missing a list of method configs: " props))
        [:div {}
-        (create-formatted-header "Select A Method Configuration For Import")
+        (create-formatted-header
+          (if (:selected-method props)
+            (str "Browse Method Configurations for " (:selected-method props))
+            "Select A Method Configuration For Import"))
         [table/Table
          {:empty-message "There are no method configurations available"
           :columns [{:header "Name" :starting-width 200 :filter-by #(% "name") :sort-by #(% "name")
@@ -137,10 +148,14 @@
                                   :on-back #(swap! state dissoc :selected-method-config)
                                   :on-import #((:on-import props) %)}]
         (:method-configs @state)
-        [ConfigurationsTable {:method-configs (:method-configs @state)
+        [ConfigurationsTable {:selected-method (:selected-method props)
+                              :method-configs (:method-configs @state)
                               :on-config-selected #(swap! state assoc :selected-method-config %)}]
         (:error-message @state) (style/create-server-error-message (:error-message @state))
-        :else [comps/Spinner {:text "Loading configurations for import..."}])])
+        :else [comps/Spinner {:text
+                              (if (:selected-method props)
+                                (str "Loading configurations for " (:selected-method props))
+                                "Loading configurations for import...")}])])
    :component-did-mount
    (fn [{:keys [state]}]
      (utils/call-ajax-orch "/configurations"
@@ -150,12 +165,15 @@
                       (swap! state assoc :error-message status-text))
         :mock-data (create-mock-methodconfs-import)}))})
 
-(defn render-import-overlay [workspace-id on-close on-import]
+(defn render-import-overlay [workspace-id on-close on-import selected-method]
   (react/create-element
     [:div {}
      [:div {:style {:position "absolute" :right 2 :top 2}}
       [comps/Button {:icon :x :onClick #(on-close)}]]
      [:div {:style {:backgroundColor "#fff" :borderBottom (str "1px solid " (:line-gray style/colors))
                     :padding "20px 48px 18px"}}
-      [ModalPage {:workspace-id workspace-id :on-close on-close :on-import on-import}]
+      [ModalPage {:workspace-id workspace-id
+                  :on-close on-close
+                  :on-import on-import
+                  :selected-method selected-method}]
       [:div {:style {:paddingTop "0.5em"}}]]]))
