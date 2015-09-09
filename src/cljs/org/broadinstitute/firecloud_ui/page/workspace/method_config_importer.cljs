@@ -6,7 +6,6 @@
     [org.broadinstitute.firecloud-ui.common.table :as table]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
-    [org.broadinstitute.firecloud-ui.utils :as utils]
     ))
 
 (defn- create-formatted-label-text [label text]
@@ -33,7 +32,7 @@
      {:text "Import"
       :onClick #(let [dest-conf-name (-> (@refs "destinationName") .getDOMNode .-value)
                       dest-conf-namespace (-> (@refs "destinationNamespace") .getDOMNode .-value)]
-                 (utils/call-ajax-orch
+                 (endpoints/call-ajax-orch
                    {:endpoint (endpoints/copy-method-config-to-workspace workspace-id)
                     :payload {"configurationNamespace" selected-conf-namespace
                               "configurationName" selected-conf-name
@@ -139,7 +138,7 @@
                                 "Loading configurations for import...")}])])
    :component-did-mount
    (fn [{:keys [state]}]
-     (utils/call-ajax-orch
+     (endpoints/call-ajax-orch
        {:endpoint endpoints/list-configurations
         :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                    (if success?

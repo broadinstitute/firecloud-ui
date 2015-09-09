@@ -7,7 +7,6 @@
     [org.broadinstitute.firecloud-ui.common.table :as table]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
     [org.broadinstitute.firecloud-ui.page.workspace.submission-details :as submission-details]
-    [org.broadinstitute.firecloud-ui.utils :as utils]
     ))
 
 
@@ -51,7 +50,7 @@
       (react/call :load-submissions this))
    :load-submissions
    (fn [{:keys [props state]}]
-     (utils/call-ajax-orch
+     (endpoints/call-ajax-orch
        {:endpoint (endpoints/list-submissions (:workspace-id props))
         :on-done (fn [{:keys [success? status-text get-parsed-response]}]
                    (swap! state assoc :server-response (if success?

@@ -74,7 +74,7 @@
           [:div {:style {:clear "both"}}]])))
    :load-workspace
    (fn [{:keys [props state]}]
-     (utils/call-ajax-orch
+     (endpoints/call-ajax-orch
        {:endpoint (endpoints/get-workspace (:workspace-id props))
         :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                    (swap! state assoc :server-response

@@ -9,7 +9,6 @@
     [org.broadinstitute.firecloud-ui.common.table :as table]
     [org.broadinstitute.firecloud-ui.nav :as nav]
     [org.broadinstitute.firecloud-ui.page.workspace.details :refer [render-workspace-details]]
-    [org.broadinstitute.firecloud-ui.utils :as utils :refer [parse-json-string]]
     ))
 
 
@@ -58,7 +57,7 @@
                              n (-> (@refs "wsName") .getDOMNode .-value clojure.string/trim)]
                         (when-not (or (empty? ns) (empty? n))
                           (swap! state assoc :creating-wf true)
-                          (utils/call-ajax-orch
+                          (endpoints/call-ajax-orch
                             {:endpoint (endpoints/create-workspace ns n)
                              :payload {:namespace ns :name n :attributes {}}
                              :on-done (fn [{:keys [success?]}]
@@ -180,7 +179,7 @@
              (render-table props filtered-workspaces (:active-filter @state))]]))))
    :component-did-mount
    (fn [{:keys [state]}]
-     (utils/call-ajax-orch
+     (endpoints/call-ajax-orch
        {:endpoint endpoints/list-workspaces
         :on-done (fn [{:keys [success? status-text get-parsed-response]}]
                    (if success?

@@ -10,7 +10,7 @@
 
 (defn- submit-entities [state workspace-id entityFile]
   (swap! state assoc :message "")
-  (utils/call-ajax-orch
+  (endpoints/call-ajax-orch
     {:endpoint (endpoints/import-entities workspace-id)
      :payload (utils/generate-form-data {:entities entityFile})
      :encType "multipart/form-data"

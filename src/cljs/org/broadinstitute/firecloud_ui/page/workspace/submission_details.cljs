@@ -7,7 +7,6 @@
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.common.table :as table]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
-    [org.broadinstitute.firecloud-ui.utils :as utils]
     ))
 
 
@@ -109,7 +108,7 @@
                 [:span {:style {:fontSize "125%" :verticalAlign "middle"}} "Abort"]]))
    :abort-submission (fn [{:keys [props state]}]
                        (swap! state assoc :aborting-submission? true)
-                       (utils/call-ajax-orch
+                       (endpoints/call-ajax-orch
                          {:endpoint (endpoints/abort-submission (:workspace-id props) (:submission-id props))
                           :headers {"Content-Type" "application/json"}
                           :on-done (fn [{:keys [success? status-text]}]
@@ -175,7 +174,7 @@
           [WorkflowFailuresTable {:workflows (submission "notstarted")}]])))
    :load-details
    (fn [{:keys [props state]}]
-     (utils/call-ajax-orch
+     (endpoints/call-ajax-orch
        {:endpoint (endpoints/get-submission (:workspace-id props) (:submission-id props))
         :on-done (fn [{:keys [success? status-text get-parsed-response]}]
                    (swap! state assoc :server-response (if success?

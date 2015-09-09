@@ -3,6 +3,17 @@
     [org.broadinstitute.firecloud-ui.utils :as utils]
     ))
 
+
+(defn call-ajax-orch [{:keys [endpoint] :as arg-map}]
+  (utils/ajax-orch (:path endpoint)
+    (assoc arg-map
+      :method (:method endpoint)
+      :data (if-let [payload (:payload arg-map)] (utils/->json-string payload))
+      :canned-response {:status 200 :delay-ms (rand-int 2000)
+                        :responseText (if-let [mock-data (:mock-data endpoint)]
+                                        (utils/->json-string mock-data))})))
+
+
 (defn- ws-path [workspace-id]
   (str (:namespace workspace-id) "/" (:name workspace-id)))
 

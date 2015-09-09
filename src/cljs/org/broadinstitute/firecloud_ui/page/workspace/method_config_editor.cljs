@@ -8,7 +8,6 @@
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
     [org.broadinstitute.firecloud-ui.page.workspace.launch-analysis :as launch]
-    [org.broadinstitute.firecloud-ui.utils :as utils]
     ))
 
 
@@ -50,7 +49,7 @@
                    "outputs" outputs
                    "prerequisites" prereqs)]
     (swap! state assoc :blocker "Updating...")
-    (utils/call-ajax-orch
+    (endpoints/call-ajax-orch
       {:endpoint (endpoints/update-workspace-method-config workspace-id config)
        :payload new-conf
        :headers {"Content-Type" "application/json"} ;; TODO - make endpoint take text/plain
@@ -59,7 +58,7 @@
                     (js/alert (str "Exception:\n" (.-statusText xhr)))
                     (if (= name (config "name"))
                       (complete state new-conf)
-                      (utils/call-ajax-orch ;; TODO - make unified call in orchestration
+                      (endpoints/call-ajax-orch ;; TODO - make unified call in orchestration
                         {:endpoint (endpoints/rename-workspace-method-config workspace-id config)
                          :payload (select-keys new-conf ["name" "namespace" "workspaceName"])
                          :headers {"Content-Type" "application/json"}
@@ -85,7 +84,7 @@
 
 (react/defc DeleteButton
   {:rm-mc (fn [{:keys [props state]}]
-            (utils/call-ajax-orch
+            (endpoints/call-ajax-orch
               {:endpoint (endpoints/delete-workspace-method-config (:workspace-id props) (:config props))
                :on-done (fn [{:keys [success? xhr]}]
                           (swap! state assoc :deleting? false)
@@ -238,7 +237,7 @@
            :else [comps/Spinner {:text "Loading Method Configuration..."}]))
    :component-did-mount
    (fn [{:keys [state props refs this]}]
-     (utils/call-ajax-orch
+     (endpoints/call-ajax-orch
        {:endpoint (endpoints/get-workspace-method-config (:workspace-id props) (:config props))
         :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                    (if success?

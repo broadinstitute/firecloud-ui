@@ -6,7 +6,6 @@
    [org.broadinstitute.firecloud-ui.common.table :as table]
    [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
    [org.broadinstitute.firecloud-ui.page.workspace.method-config-importer :as importmc]
-   [org.broadinstitute.firecloud-ui.utils :as utils]
    ))
 
 
@@ -53,7 +52,7 @@
         :else [comps/Spinner {:text "Loading methods..."}])])
    :component-did-mount
    (fn [{:keys [state]}]
-     (utils/call-ajax-orch
+     (endpoints/call-ajax-orch
        {:endpoint endpoints/list-methods
         :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                    (if success?

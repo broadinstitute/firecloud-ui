@@ -10,8 +10,7 @@
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
     [org.broadinstitute.firecloud-ui.page.workspace.method-config-importer :as importmc]
     [org.broadinstitute.firecloud-ui.page.workspace.method-config-editor :refer [MethodConfigEditor]]
-    ;; TODO(dmohs): No need to refer these. Having utils available is enough.
-    [org.broadinstitute.firecloud-ui.utils :as utils :refer [rlog jslog cljslog]]))
+    ))
 
 
 (defn- render-map [m keys labels]
@@ -89,7 +88,7 @@
        (react/call :load-method-configs this)))
    :load-method-configs
    (fn [{:keys [props state]}]
-     (utils/call-ajax-orch
+     (endpoints/call-ajax-orch
        {:endpoint (endpoints/list-workspace-method-configs (:workspace-id props))
         :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                    (if success?

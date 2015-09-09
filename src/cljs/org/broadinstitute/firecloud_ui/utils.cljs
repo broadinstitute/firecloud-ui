@@ -153,16 +153,6 @@
                            (:headers arg-map))))))
 
 
-(defn call-ajax-orch [{:keys [endpoint] :as arg-map}]
-  (ajax-orch (:path endpoint)
-    (assoc arg-map
-      :method (:method endpoint)
-      :data (if-let [payload (:payload arg-map)] (->json-string payload))
-      :canned-response {:status 200 :delay-ms (rand-int 2000)
-                        :responseText (if-let [mock-data (:mock-data endpoint)]
-                                        (->json-string mock-data))})))
-
-
 (defn deep-merge [& maps]
   (doseq [x maps] (assert (or (nil? x) (map? x)) (str "not a map: " x)))
   (apply

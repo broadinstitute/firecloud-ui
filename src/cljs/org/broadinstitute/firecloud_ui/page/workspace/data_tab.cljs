@@ -7,7 +7,7 @@
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.page.import-data :as import-data]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
-    [org.broadinstitute.firecloud-ui.utils :as utils]))
+    ))
 
 
 (react/defc EntitiesList
@@ -73,7 +73,7 @@
        (react/call :load-entities this)))
    :load-entities
    (fn [{:keys [state props]}]
-     (utils/call-ajax-orch
+     (endpoints/call-ajax-orch
        {:endpoint (endpoints/get-entities-by-type (:workspace-id props))
         :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                    (if success?

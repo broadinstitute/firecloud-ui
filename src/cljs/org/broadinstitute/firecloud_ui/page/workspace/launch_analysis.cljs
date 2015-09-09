@@ -8,7 +8,6 @@
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.common.table :as table]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
-    [org.broadinstitute.firecloud-ui.utils :as utils]
     ))
 
 
@@ -40,7 +39,7 @@
                             (when-not (clojure.string/blank? expression) {:expression expression}))
              on-success (:on-success props)]
          (swap! state assoc :launching? true)
-         (utils/call-ajax-orch
+         (endpoints/call-ajax-orch
            {:endpoint (endpoints/create-submission (:workspace-id props))
             :payload payload
             :headers {"Content-Type" "application/json"}
@@ -138,7 +137,7 @@
              entities state refs (:workspace-id props) (:config-id props) (:on-success props))]))]])
    :component-did-mount
    (fn [{:keys [props state]}]
-     (utils/call-ajax-orch
+     (endpoints/call-ajax-orch
        {:endpoint (endpoints/get-entities-by-type (:workspace-id props))
         :on-done (fn [{:keys [success? status-text get-parsed-response]}]
                    (swap! state assoc
