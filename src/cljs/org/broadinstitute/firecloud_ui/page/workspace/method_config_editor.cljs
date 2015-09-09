@@ -6,9 +6,8 @@
     [org.broadinstitute.firecloud-ui.common.components :as comps]
     [org.broadinstitute.firecloud-ui.common.icons :as icons]
     [org.broadinstitute.firecloud-ui.common.style :as style]
+    [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
     [org.broadinstitute.firecloud-ui.page.workspace.launch-analysis :as launch]
-    [org.broadinstitute.firecloud-ui.paths :as paths]
-    [org.broadinstitute.firecloud-ui.utils :as utils]
     ))
 
 
@@ -50,25 +49,23 @@
                    "outputs" outputs
                    "prerequisites" prereqs)]
     (swap! state assoc :blocker "Updating...")
-    (utils/ajax-orch (paths/update-method-config-path workspace-id config)
-      {:method :PUT
-       :data (utils/->json-string new-conf)
+    (endpoints/call-ajax-orch
+      {:endpoint (endpoints/update-workspace-method-config workspace-id config)
+       :payload new-conf
        :headers {"Content-Type" "application/json"} ;; TODO - make endpoint take text/plain
        :on-done (fn [{:keys [success? xhr]}]
                   (if-not success?
                     (js/alert (str "Exception:\n" (.-statusText xhr)))
                     (if (= name (config "name"))
                       (complete state new-conf)
-                      (utils/ajax-orch (paths/rename-method-config-path workspace-id config)
-                        {:method :post
-                         :data (utils/->json-string (select-keys new-conf ["name" "namespace" "workspaceName"]))
-                         :headers {"Content-Type" "application/json"} ;; TODO - make unified call in orchestration
+                      (endpoints/call-ajax-orch ;; TODO - make unified call in orchestration
+                        {:endpoint (endpoints/rename-workspace-method-config workspace-id config)
+                         :payload (select-keys new-conf ["name" "namespace" "workspaceName"])
+                         :headers {"Content-Type" "application/json"}
                          :on-done (fn [{:keys [success? xhr]}]
                                     (complete state new-conf)
                                     (when-not success?
-                                      (js/alert (str "Exception:\n" (.-statusText xhr)))))
-                         :canned-response {:status 200 :delay-ms (rand-int 2000)}}))))
-       :canned-response {:status 200 :delay-ms (rand-int 2000)}})))
+                                      (js/alert (str "Exception:\n" (.-statusText xhr)))))}))))})))
 
 (defn- render-top-bar [config]
   [:div {:style {:backgroundColor (:background-gray style/colors)
@@ -87,17 +84,13 @@
 
 (react/defc DeleteButton
   {:rm-mc (fn [{:keys [props state]}]
-            (let [url (paths/rm-method-configuration-path (:workspace-id props) (:config props))
-                  canned-response {:status 200
-                                   :delay-ms (rand-int 2000)}
-                  on-done (fn [{:keys [success? xhr]}]
-                            (swap! state assoc :deleting? false)
-                            (utils/rlog "in on-done for delete")
-                            (if success?
-                              ((:on-rm props))
-                              (js/alert (str "Error in deletion : " (.-statusText xhr)))))
-                  arg-map {:on-done on-done :method "DELETE" :canned-response canned-response}]
-              (utils/ajax-orch url arg-map)))
+            (endpoints/call-ajax-orch
+              {:endpoint (endpoints/delete-workspace-method-config (:workspace-id props) (:config props))
+               :on-done (fn [{:keys [success? xhr]}]
+                          (swap! state assoc :deleting? false)
+                          (if success?
+                            ((:on-rm props))
+                            (js/alert (str "Error during deletion: " (.-statusText xhr)))))}))
    :render (fn [{:keys [this state]}]
              (if (:deleting? @state)
                [comps/Blocker
@@ -231,10 +224,6 @@
      (render-main-display state refs config editing?)
      (clear-both)]]])
 
-(defn- build-mock-config [conf]
-  (assoc conf "methodRepoMethod" (conf "methodStoreMethod")
-              "methodRepoConfig" (conf "methodStoreConfig")))
-
 (react/defc MethodConfigEditor
   {:get-initial-state
    (fn []
@@ -248,14 +237,12 @@
            :else [comps/Spinner {:text "Loading Method Configuration..."}]))
    :component-did-mount
    (fn [{:keys [state props refs this]}]
-     (utils/ajax-orch
-       (paths/get-method-config-path (:workspace-id props) (:config props))
-       {:on-done (fn [{:keys [success? get-parsed-response status-text]}]
+     (endpoints/call-ajax-orch
+       {:endpoint (endpoints/get-workspace-method-config (:workspace-id props) (:config props))
+        :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                    (if success?
                      (swap! state assoc :loaded-config (get-parsed-response))
-                     (swap! state assoc :error status-text)))
-        :canned-response {:responseText (utils/->json-string (build-mock-config (:config props)))
-                          :status 200 :delay-ms (rand-int 2000)}})
+                     (swap! state assoc :error status-text)))})
      (set! (.-onScrollHandler this)
            (fn []
              (when-let [sidebar (@refs "sidebar")]

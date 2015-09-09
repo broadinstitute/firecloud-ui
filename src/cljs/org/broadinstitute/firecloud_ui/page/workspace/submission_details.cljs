@@ -6,34 +6,9 @@
     [org.broadinstitute.firecloud-ui.common.icons :as icons]
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.common.table :as table]
-    [org.broadinstitute.firecloud-ui.paths :as paths]
-    [org.broadinstitute.firecloud-ui.utils :as utils]
+    [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
     ))
 
-(defn- create-mock-submission-details [submission-id]
-  {"submissionId" submission-id
-   "submissionDate" (utils/rand-recent-time)
-   "submitter" "test@test.gov"
-   "methodConfigurationNamespace" "broad-dsde-dev"
-   "methodConfigurationName" "some method conf"
-   "submissionEntity" {"entityType" (rand-nth ["sample" "participant"])
-                       "entityName" "foo"}
-   "workflows" (map (fn [i]
-                      {"messages" []
-                       "workspaceName" "foo"
-                       "statusLastChangedDate" (utils/rand-recent-time)
-                       "workflowEntity" {"entityType" "sample"
-                                         "entityName" (str "sample_" i)}
-                       "status" (rand-nth ["Succeeded" "Submitted" "Running" "Failed" "Aborted" "Unknown"])
-                       "workflowId" "97adf170-ee40-40a5-9539-76b72802e124"})
-                 (range (rand-int 10)))
-   "notstarted" (map (fn [i]
-                       {"entityType" (rand-nth ["Sample" "Participant"])
-                        "entityName" (str "entity " i)
-                        "errors" (utils/rand-subset ["Prerequisites not met" "Server error"
-                                                     "I didn't feel like it" "Syntax error"])})
-                  (range (rand-int 5)))
-   "status" (rand-nth ["Submitted" "Done"])})
 
 (defn- all-success? [submission]
   (every? #(= "Succeeded" (% "status")) (submission "workflows")))
@@ -133,20 +108,14 @@
                 [:span {:style {:fontSize "125%" :verticalAlign "middle"}} "Abort"]]))
    :abort-submission (fn [{:keys [props state]}]
                        (swap! state assoc :aborting-submission? true)
-                       (let [path (paths/get-abort-submission-path
-                                    (:workspace-id props)
-                                    (:submission-id props))
-                             canned-response {:status 200 :delay-ms (rand-int 2000)}
-                             on-done (fn [{:keys [success? status-text]}]
-                                       (swap! state assoc :aborting-submission? false)
-                                       (if success?
-                                         ((:on-abort props))
-                                         (js/alert (str "Error in aborting the job : " status-text))))]
-                         (utils/ajax-orch path
-                           {:headers {"Content-Type" "application/json"}
-                            :method "DELETE"
-                            :canned-response canned-response
-                            :on-done on-done})))})
+                       (endpoints/call-ajax-orch
+                         {:endpoint (endpoints/abort-submission (:workspace-id props) (:submission-id props))
+                          :headers {"Content-Type" "application/json"}
+                          :on-done (fn [{:keys [success? status-text]}]
+                                     (swap! state assoc :aborting-submission? false)
+                                     (if success?
+                                       ((:on-abort props))
+                                       (js/alert (str "Error in aborting the job : " status-text))))}))})
 
 
 (react/defc Page
@@ -205,14 +174,10 @@
           [WorkflowFailuresTable {:workflows (submission "notstarted")}]])))
    :load-details
    (fn [{:keys [props state]}]
-     (let [url (paths/submission-details (:workspace-id props) (:submission-id props))
-           on-done (fn [{:keys [success? status-text get-parsed-response]}]
-                     (swap! state assoc :server-response (if success?
-                                                           {:submission (get-parsed-response)}
-                                                           {:error-message status-text})))
-           canned-response {:responseText (utils/->json-string
-                                            (create-mock-submission-details (:submission-id props)))
-                            :status 200
-                            :delay-ms (rand-int 2000)}]
-       (utils/ajax-orch url {:on-done on-done :canned-response canned-response})))
+     (endpoints/call-ajax-orch
+       {:endpoint (endpoints/get-submission (:workspace-id props) (:submission-id props))
+        :on-done (fn [{:keys [success? status-text get-parsed-response]}]
+                   (swap! state assoc :server-response (if success?
+                                                         {:submission (get-parsed-response)}
+                                                         {:error-message status-text})))}))
    :component-did-mount (fn [{:keys [this]}] (react/call :load-details this))})

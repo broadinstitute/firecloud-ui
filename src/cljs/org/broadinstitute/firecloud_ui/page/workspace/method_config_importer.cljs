@@ -2,26 +2,11 @@
   (:require
     [dmohs.react :as react]
     clojure.string
-    [org.broadinstitute.firecloud-ui.common :as common]
-    [org.broadinstitute.firecloud-ui.common.icons :as icons]
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.common.table :as table]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
-    [org.broadinstitute.firecloud-ui.paths :as paths]
-    [org.broadinstitute.firecloud-ui.utils :as utils]
+    [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
     ))
-
-(defn- create-mock-methodconfs-import []
-  (map
-    (fn [i]
-      {:name (str "Configuration " (inc i))
-       :url (str "http://agora-ci.broadinstitute.org/configurations/joel_test/jt_test_config/1")
-       :namespace (rand-nth ["Broad" "nci" "public" "ISB"])
-       :snapshotId (rand-int 100)
-       :synopsis (str (rand-nth ["variant caller synopsis", "gene analyzer synopsis", "mutect synopsis"]) " " (inc i))
-       :createDate (utils/rand-recent-time)
-       :owner (rand-nth ["thibault@broadinstitute.org" "esalinas@broadinstitute.org"])})
-    (range (rand-int 50))))
 
 (defn- create-formatted-label-text [label text]
   [:div {:style {:padding "10px 0"}}
@@ -45,24 +30,19 @@
         on-import (:on-import props)]
     [comps/Button
      {:text "Import"
-      :onClick #(let [dest-name (-> (@refs "destinationName") .getDOMNode .-value)
-                      dest-namespace (-> (@refs "destinationNamespace") .getDOMNode .-value)
-                      post-data {"configurationNamespace" selected-conf-namespace
-                                 "configurationName" selected-conf-name
-                                 "configurationSnapshotId" (str selected-conf-snapshot-id)
-                                 "destinationNamespace" dest-namespace
-                                 "destinationName" dest-name}]
-                 (utils/ajax-orch
-                   (paths/copy-method-config-to-workspace-path workspace-id)
-                   {:headers {"Content-Type" "application/json"}
-                    :method :post
-                    :data (utils/->json-string post-data)
+      :onClick #(let [dest-conf-name (-> (@refs "destinationName") .getDOMNode .-value)
+                      dest-conf-namespace (-> (@refs "destinationNamespace") .getDOMNode .-value)]
+                 (endpoints/call-ajax-orch
+                   {:endpoint (endpoints/copy-method-config-to-workspace workspace-id)
+                    :payload {"configurationNamespace" selected-conf-namespace
+                              "configurationName" selected-conf-name
+                              "configurationSnapshotId" (str selected-conf-snapshot-id)
+                              "destinationNamespace" dest-conf-namespace
+                              "destinationName" dest-conf-name}
                     :on-done (fn [{:keys [success? xhr]}]
                                (if success?
-                                 (on-import {"name" dest-name "namespace" dest-namespace})
-                                 (js/alert (str "Import Error: " (.-responseText xhr)))))
-                    :canned-response {:responseText (utils/->json-string (create-mock-methodconfs-import))
-                                      :status 200 :delay-ms (rand-int 2000)}}))}]))
+                                 (on-import {"name" dest-conf-name "namespace" dest-conf-namespace})
+                                 (js/alert (str "Import Error: " (.-responseText xhr)))))}))}]))
 
 
 (react/defc ConfigurationImportForm
@@ -158,12 +138,12 @@
                                 "Loading configurations for import...")}])])
    :component-did-mount
    (fn [{:keys [state]}]
-     (utils/call-ajax-orch "/configurations"
-       {:on-success (fn [{:keys [parsed-response]}]
-                      (swap! state assoc :method-configs parsed-response))
-        :on-failure (fn [{:keys [status-text]}]
-                      (swap! state assoc :error-message status-text))
-        :mock-data (create-mock-methodconfs-import)}))})
+     (endpoints/call-ajax-orch
+       {:endpoint endpoints/list-configurations
+        :on-done (fn [{:keys [success? get-parsed-response status-text]}]
+                   (if success?
+                     (swap! state assoc :method-configs (get-parsed-response))
+                     (swap! state assoc :error-message status-text)))}))})
 
 (defn render-import-overlay [workspace-id on-close on-import selected-method]
   (react/create-element
