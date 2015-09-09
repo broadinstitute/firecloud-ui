@@ -21,7 +21,7 @@
 (defn- create-formatted-header [text]
   [:div {:style {:fontSize 24 :align "center" :textAlign "center" :paddingBottom "0.5em"}} text])
 
-(defn- render-import-button [props refs]
+(defn- render-import-button [props refs state]
   (let [selected-config (:selected-method-config props)
         selected-conf-name (selected-config "name")
         selected-conf-namespace (selected-config "namespace")
@@ -30,24 +30,27 @@
         on-import (:on-import props)]
     [comps/Button
      {:text "Import"
-      :onClick #(let [dest-conf-name (-> (@refs "destinationName") .getDOMNode .-value)
-                      dest-conf-namespace (-> (@refs "destinationNamespace") .getDOMNode .-value)]
-                 (endpoints/call-ajax-orch
-                   {:endpoint (endpoints/copy-method-config-to-workspace workspace-id)
-                    :payload {"configurationNamespace" selected-conf-namespace
-                              "configurationName" selected-conf-name
-                              "configurationSnapshotId" (str selected-conf-snapshot-id)
-                              "destinationNamespace" dest-conf-namespace
-                              "destinationName" dest-conf-name}
-                    :on-done (fn [{:keys [success? xhr]}]
-                               (if success?
-                                 (on-import {"name" dest-conf-name "namespace" dest-conf-namespace})
-                                 (js/alert (str "Import Error: " (.-responseText xhr)))))}))}]))
+      :onClick (fn []
+                 (let [dest-conf-name (-> (@refs "destinationName") .getDOMNode .-value)
+                       dest-conf-namespace (-> (@refs "destinationNamespace") .getDOMNode .-value)]
+                   (swap! state assoc :importing? true)
+                   (endpoints/call-ajax-orch
+                     {:endpoint (endpoints/copy-method-config-to-workspace workspace-id)
+                      :payload {"configurationNamespace" selected-conf-namespace
+                                "configurationName" selected-conf-name
+                                "configurationSnapshotId" (str selected-conf-snapshot-id)
+                                "destinationNamespace" dest-conf-namespace
+                                "destinationName" dest-conf-name}
+                      :on-done (fn [{:keys [success? xhr]}]
+                                 (swap! state assoc :importing? false)
+                                 (if success?
+                                   (on-import {"name" dest-conf-name "namespace" dest-conf-namespace})
+                                   (js/alert (str "Import Error: " (.-responseText xhr)))))})))}]))
 
 
 (react/defc ConfigurationImportForm
   {:render
-   (fn [{:keys [props refs]}]
+   (fn [{:keys [props refs state]}]
      (let [selected-config (:selected-method-config props)
            selected-conf-name (selected-config "name")
            selected-conf-namespace (selected-config "namespace")
@@ -77,8 +80,10 @@
                         (style/create-text-field {:defaultValue selected-conf-namespace
                                                   :ref "destinationNamespace"})}]
              (create-formatted-label-textfield k v))
-           (render-import-button props refs)])
-        [:span {:style {:marginLeft (when (:workspace-id props) "0.5em")}}]]))})
+           (render-import-button props refs state)])
+        [:span {:style {:marginLeft (when (:workspace-id props) "0.5em")}}]
+        (when (:importing? @state)
+          [comps/Blocker {:banner "Importing..."}])]))})
 
 (react/defc ConfigurationsTable
   {:render
