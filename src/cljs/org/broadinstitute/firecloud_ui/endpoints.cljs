@@ -119,6 +119,17 @@
    [{:entityName "foo" :entityType "bar" :succeeded false :message "ohno"}
     {:entityName "bar" :entityType "baz" :succeeded true :message "hooray"}]})
 
+(defn list-entitites [workspace-id entity-type]
+  {:path (str "/workspaces/" (ws-path workspace-id) "/entities/" entity-type)
+   :method :get
+   :mock-data
+   (map
+     (fn [i]
+       {:entityType entity-type
+        :name (str "entity" (inc i))
+        :attributes {}})
+     (range (rand-int 20)))})
+
 (defn get-entities-by-type [workspace-id]
   {:path (str "/workspaces/" (ws-path workspace-id) "/entities_with_type")
    :method :get
