@@ -143,12 +143,6 @@
               workspaces)}]))
 
 
-(defn compute-status [workspace]
-  (let [count (get-in workspace ["workspaceSubmissionStats" "runningSubmissionsCount"])]
-    (cond (not (nil? (get-in workspace ["workspaceSubmissionStats" "lastFailureDate"]))) "Exception"
-          (zero? count) "Complete"
-          :else "Running")))
-
 (react/defc WorkspaceList
   {:get-initial-state
    (fn []
@@ -187,7 +181,7 @@
                        {:success? true :workspaces
                         (map
                           (fn [ws]
-                            (assoc ws :status (compute-status ws)))
+                            (assoc ws :status (common/compute-status ws)))
                           (get-parsed-response))})
                      (swap! state assoc :server-response
                        {:success? false :error-message status-text})))}))})

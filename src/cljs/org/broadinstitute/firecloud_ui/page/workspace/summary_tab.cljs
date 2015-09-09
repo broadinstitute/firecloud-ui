@@ -1,11 +1,11 @@
 (ns org.broadinstitute.firecloud-ui.page.workspace.summary-tab
   (:require
     [dmohs.react :as react]
+    [org.broadinstitute.firecloud-ui.common :as common]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
-    [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
     [org.broadinstitute.firecloud-ui.common.icons :as icons]
     [org.broadinstitute.firecloud-ui.common.style :as style]
-    [org.broadinstitute.firecloud-ui.page.workspaces-list :as ws-list]
+    [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
     [org.broadinstitute.firecloud-ui.utils :as utils]
     ))
 
@@ -29,7 +29,7 @@
        (style/create-server-error-message (get-in @state [:server-response :error-message]))
        :else
        (let [ws (get-in @state [:server-response :workspace])
-             status (ws-list/compute-status ws)]
+             status (common/compute-status ws)]
          [:div {:style {:margin "45px 25px"}}
           [:div {:style {:float "left" :width 290 :marginRight 40}}
            ;; TODO - make the width of the float-left dynamic
