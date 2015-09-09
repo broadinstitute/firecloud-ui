@@ -47,7 +47,7 @@
         (react/create-class
           {:render
            (fn [{:keys [props]}]
-             [:div {:style {:float "left"
+             [:div {:style {:float "left" :textAlign "center"
                             :backgroundColor (if (:active? props)
                                                (:button-blue style/colors)
                                                (:background-gray style/colors))
@@ -61,9 +61,7 @@
     {:render
      (fn [{:keys [props]}]
        [:div {:style {:display "inline-block" :marginLeft "-1em"}}
-        (map (fn [button] [Button {:text (:text button)
-                                   :active? (:active? button)
-                                   :onClick (:onClick button)}])
+        (map (fn [button] [Button button])
           (:buttons props))
         (common/clear-both)])}))
 
