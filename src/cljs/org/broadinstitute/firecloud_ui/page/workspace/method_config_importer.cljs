@@ -36,6 +36,7 @@
                    (swap! state assoc :importing? true)
                    (endpoints/call-ajax-orch
                      {:endpoint (endpoints/copy-method-config-to-workspace workspace-id)
+                      :headers {"Content-Type" "application/json"}
                       :payload {"configurationNamespace" selected-conf-namespace
                                 "configurationName" selected-conf-name
                                 "configurationSnapshotId" (str selected-conf-snapshot-id)
