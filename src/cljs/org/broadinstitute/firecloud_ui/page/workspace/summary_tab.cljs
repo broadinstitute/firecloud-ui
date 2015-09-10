@@ -49,18 +49,24 @@
               (common/clear-both)]
              (map-indexed
                (fn [i acl-entry]
-                 [:div {:key (name (gensym))}
-                  (style/create-text-field {:ref (str "acl-key" i)
-                                            :style {:float "left" :width column-width}
-                                            :defaultValue (:userId acl-entry)})
-                  (style/create-select {:ref (str "acl-value" i)
-                                        :style {:float "right" :width column-width :height 33}
-                                        :defaultValue (:accessLevel acl-entry)}
+                 [:div {}
+                  (style/create-text-field
+                    {:ref (str "acl-key" i)
+                     :style {:float "left" :width column-width
+                             :backgroundColor (when (< i (:count-orig @state)) (:background-gray style/colors))}
+                     :disabled (< i (:count-orig @state))
+                     :defaultValue (:userId acl-entry)})
+                  (style/create-select
+                    {:ref (str "acl-value" i)
+                     :style {:float "right" :width column-width :height 33}
+                     :defaultValue (:accessLevel acl-entry)}
                     access-levels)
                   (common/clear-both)])
                (:acl-vec @state))
              [comps/Button {:text "Add new" :style :add
-                            :onClick #(swap! state update-in [:acl-vec] conj {:userId "" :accessLevel "READER"})}]
+                            :onClick #(do
+                                       (react/call :capture-ui-state this)
+                                       (swap! state update-in [:acl-vec] conj {:userId "" :accessLevel "READER"}))}]
              [:div {:style {:textAlign "center" :marginTop "1em"}}
               [:a {:href "javascript:;"
                    :style {:textDecoration "none" :color (:button-blue style/colors) :marginRight "1.5em"}
@@ -72,7 +78,7 @@
                                         (react/call :persist-acl this))}]]]
 
             (:error @state) (style/create-server-error-message (:error @state))
-            :else [comps/Spinner {:text "Loading ACL..."}])])}])
+            :else [comps/Spinner {:text "Loading Permissions..."}])])}])
    :capture-ui-state
    (fn [{:keys [state refs]}]
      (swap! state assoc :acl-vec
@@ -87,19 +93,20 @@
      (endpoints/call-ajax-orch
        {:endpoint (endpoints/update-workspace-acl (:workspace-id props))
         :headers {"Content-Type" "application/json"}
-        :payload (:acl-vec @state)
+        :payload (filter #(not (empty? (:userId %))) (:acl-vec @state))
         :on-done (fn [{:keys [success? status-text]}]
                    (swap! state dissoc :saving?)
                    (if success?
                      ((:dismiss-self props))
-                     (js/alert "Error saving ACL: " status-text)))}))
+                     (js/alert "Error saving permissions: " status-text)))}))
    :component-did-mount
    (fn [{:keys [props state]}]
      (endpoints/call-ajax-orch
        {:endpoint (endpoints/get-workspace-acl (:workspace-id props))
         :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                    (if success?
-                     (swap! state assoc :acl-vec (build-acl-vec ((get-parsed-response) "acl")))
+                     (let [acl-vec (build-acl-vec ((get-parsed-response) "acl"))]
+                       (swap! state assoc :acl-vec acl-vec :count-orig (count acl-vec)))
                      (swap! state assoc :error status-text)))}))})
 
 (react/defc Summary
