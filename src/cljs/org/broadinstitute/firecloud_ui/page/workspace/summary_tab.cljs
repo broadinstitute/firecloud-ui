@@ -55,6 +55,7 @@
                      :style {:float "left" :width column-width
                              :backgroundColor (when (< i (:count-orig @state)) (:background-gray style/colors))}
                      :disabled (< i (:count-orig @state))
+                     :spellCheck false
                      :defaultValue (:userId acl-entry)})
                   (style/create-select
                     {:ref (str "acl-value" i)
