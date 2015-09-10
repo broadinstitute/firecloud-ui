@@ -1,0 +1,26 @@
+service:
+  image: broadinstitute/firecloud-orchestration:latest
+  ports:
+    - "8080:8080"
+  volumes:
+    - /etc/localtime:/etc/localtime:ro
+    - /etc/firecloud-orchestration.conf:/usr/firecloud-orchestration/application.conf
+app:
+  image: broadinstitute/firecloud-ui:latest
+  ports:
+    - "80:80"
+  volumes:
+    - /etc/localtime:/etc/localtime:ro
+  links:
+    - service
+  ports:
+    - "80:80"
+    - "443:443"
+  volumes:
+    - /etc/localtime:/etc/localtime:ro
+    - /etc/server.crt:/etc/ssl/certs/server.crt:ro
+    - /etc/server.key:/etc/ssl/private/server.key:ro
+    - /etc/ca-bundle.crt:/etc/ssl/certs/ca-bundle.crt:ro
+  environment:
+    ORCH_URL_ROOT: http://service:8080
+    GOOGLE_CLIENT_ID: 806222273987-2ntvt4hnfsikqmhhc18l64vheh4cj34q.apps.googleusercontent.com

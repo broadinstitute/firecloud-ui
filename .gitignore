@@ -1,4 +1,5 @@
 *.log
+env.sh
 
 # npm/bower specific
 node_modules/

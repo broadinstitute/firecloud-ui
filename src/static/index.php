@@ -5,7 +5,11 @@
     <meta http-equiv="Content-type" content="text/html;charset=utf-8">
     <meta name="viewport" content="initial-scale=1,width=device-width">
     <meta name="google-signin-scope" content="profile email">
-    <meta name="google-signin-client_id" content="806222273987-2ntvt4hnfsikqmhhc18l64vheh4cj34q.apps.googleusercontent.com">
+    <?php if (!getenv('GOOGLE_CLIENT_ID')) {
+          fwrite(STDERR, "Missing ENV var GOOGLE_CLIENT_ID\n");
+          exit(1);
+    } ?>
+    <meta name="google-signin-client_id" content="<?php echo getenv('GOOGLE_CLIENT_ID') ?>">
     <title>FireCloud | Broad Institute</title>
     <link href='//fonts.googleapis.com/css?family=Roboto:400,500,700' rel='stylesheet' type='text/css'>
     <style>

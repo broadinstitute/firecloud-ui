@@ -21,7 +21,8 @@
                                        :source-map-timestamp true}
                                       :figwheel
                                       {:on-jsload ~(str root-ns
-                                                        ".firecloud-ui.main/dev-reload")}}}}}
+                                                        ".firecloud-ui.main/dev-reload")
+                                       :websocket-url "ws://dhost:3449/figwheel-ws"}}}}}
              :release {:cljsbuild
                        {:builds {:client {:compiler
                                           {:optimizations :advanced
