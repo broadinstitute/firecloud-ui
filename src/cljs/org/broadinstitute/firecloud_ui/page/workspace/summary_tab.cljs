@@ -1,6 +1,6 @@
 (ns org.broadinstitute.firecloud-ui.page.workspace.summary-tab
   (:require
-    [clojure.string :refer [trim]]
+    [clojure.string :refer [trim capitalize]]
     [dmohs.react :as react]
     [org.broadinstitute.firecloud-ui.common :as common]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
@@ -112,7 +112,7 @@
 
 (react/defc Summary
   {:render
-   (fn [{:keys [state props]}]
+   (fn [{:keys [state props this]}]
      (cond
        (nil? (:server-response @state))
        [comps/Spinner {:text "Loading workspace..."}]
@@ -120,34 +120,36 @@
        (style/create-server-error-message (get-in @state [:server-response :error-message]))
        :else
        (let [ws (get-in @state [:server-response :workspace])
+             owner? (= "OWNER" (ws "accessLevel"))
              status (common/compute-status ws)]
          [:div {:style {:margin "45px 25px"}}
+          (when (:deleting? @state)
+            [comps/Blocker {:banner "Deleting..."}])
           (when (:editing-acl? @state)
             [AclEditor {:workspace-id (:workspace-id props)
                         :dismiss-self #(swap! state dissoc :editing-acl?)}])
           [:div {:style {:float "left" :width 290 :marginRight 40}}
            ;; TODO - make the width of the float-left dynamic
-           [:div {:style {:borderRadius 5 :padding 20 :textAlign "center"
-                          :color "#fff"
-                          :backgroundColor (style/color-for-status status)
-                          :fontSize "125%" :fontWeight 400}}
-            (case status
-              "Complete" [comps/CompleteIcon {:size 36}]
-              "Running" [comps/RunningIcon {:size 36}]
-              "Exception" [comps/ExceptionIcon {:size 36}])
-            [:span {:style {:marginLeft "1.5ex"}}
-             (clojure.string/capitalize (name status))]]
-           [:div {:style {:backgroundColor "transparent" :color (:button-blue style/colors)
-                          :border (str "1px solid " (:line-gray style/colors))
-                          :fontSize "106%" :padding "0.7em 0em" :marginTop 27
-                          :cursor "pointer" :textAlign "center"}}
-            (icons/font-icon {:style {:verticalAlign "middle" :fontSize "135%"}} :pencil)
-            [:span {:style {:verticalAlign "middle" :marginLeft "1em"}} "Edit this page"]]]
+           [comps/StatusLabel {:text (capitalize (name status))
+                               :icon (case status
+                                       "Complete" [comps/CompleteIcon {:size 36}]
+                                       "Running" [comps/RunningIcon {:size 36}]
+                                       "Exception" [comps/ExceptionIcon {:size 36}])
+                               :color (style/color-for-status status)}]
+           [comps/SidebarButton {:style :light :margin :top :color :button-blue
+                                 :text "Edit this page" :icon :pencil
+                                 :onClick #(utils/rlog "TODO: implement edit")}]
+           (when owner?
+             [comps/SidebarButton {:style :light :margin :top :color :exception-red
+                                   :text "Delete" :icon :trash-can
+                                   :onClick #(when (js/confirm "Are you sure?")
+                                              (swap! state assoc :deleting? true)
+                                              (react/call :delete this))}])]
           [:div {:style {:display "inline-block"}}
            (style/create-section-header "Workspace Owner")
            (style/create-paragraph
              [:div {} [:strong {} (clojure.string/join ", " (ws "owners"))]
-              (when (= "OWNER" (ws "accessLevel"))
+              (when owner?
                 [:span {}
                  " ("
                  [:a {:href "javascript:;"
@@ -172,6 +174,15 @@
                    (swap! state assoc :server-response
                      (if success? {:workspace (get-parsed-response)}
                                   {:error-message status-text})))}))
+   :delete
+   (fn [{:keys [props state]}]
+     (endpoints/call-ajax-orch
+       {:endpoint (endpoints/delete-workspace (:workspace-id props))
+        :on-done (fn [{:keys [success? status-text]}]
+                   (swap! state dissoc :deleting?)
+                   (if success?
+                     ((:on-delete props))
+                     (js/alert (str "Error on delete: " status-text))))}))
    :component-did-mount
    (fn [{:keys [this]}]
      (react/call :load-workspace this))
@@ -186,5 +197,5 @@
        (swap! state assoc :server-response nil)))})
 
 
-(defn render [workspace-id]
-  (react/create-element Summary {:workspace-id workspace-id}))
+(defn render [workspace-id on-delete]
+  (react/create-element Summary {:workspace-id workspace-id :on-delete on-delete}))

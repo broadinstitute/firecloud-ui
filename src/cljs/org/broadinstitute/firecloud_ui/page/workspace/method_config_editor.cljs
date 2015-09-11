@@ -87,25 +87,18 @@
             (endpoints/call-ajax-orch
               {:endpoint (endpoints/delete-workspace-method-config (:workspace-id props) (:config props))
                :on-done (fn [{:keys [success? xhr]}]
-                          (swap! state assoc :deleting? false)
+                          (swap! state dissoc :deleting?)
                           (if success?
                             ((:on-rm props))
                             (js/alert (str "Error during deletion: " (.-statusText xhr)))))}))
    :render (fn [{:keys [this state]}]
-             (if (:deleting? @state)
-               [comps/Blocker
-                {:banner (str "Deleting...")}]
-               [:div {:style {:marginTop "1em"
-                              :padding "0.7em 0" :cursor "pointer"
-                              :backgroundColor "transparent" :color (:exception-red style/colors)
-                              :border (str "1px solid " (:line-gray style/colors))}
-                      :onClick (fn []
-                                 (let [confirmed? (js/confirm "Are you sure?")]
-                                   (when confirmed?
-                                     (do (swap! state assoc :deleting? true)
-                                         (react/call :rm-mc this)))))}
-                (icons/font-icon {:style {:verticalAlign "middle" :fontSize "135%"}} :trash-can)
-                [:span {:style {:verticalAlign "middle" :marginLeft "1em"}} "Delete"]]))})
+             (when (:deleting? @state)
+               [comps/Blocker {:banner (str "Deleting...")}])
+             [comps/SidebarButton {:style :light :color :exception-red :margin :top
+                                   :text "Delete" :icon :trash-can
+                                   :onClick #(when (js/confirm "Are you sure?")
+                                              (swap! state assoc :deleting? true)
+                                              (react/call :rm-mc this))}])})
 
 
 (defn- render-side-bar [state refs config editing? props]
@@ -114,35 +107,25 @@
    (style/create-unselectable :div {:style {:position (when-not (:sidebar-visible? @state) "fixed")
                                             :top (when-not (:sidebar-visible? @state) 4)
                                             :width 290}}
-     [:div {:style {:fontSize "106%" :lineHeight 1 :textAlign "center"}}
-
+     [:div {:style {:lineHeight 1}}
       (when-not editing?
-        [:div {:style {:padding "0.7em 0" :cursor "pointer"
-                       :backgroundColor "transparent" :color (:button-blue style/colors)
-                       :border (str "1px solid " (:line-gray style/colors))}
-               :onClick #(swap! state assoc :editing? true :prereqs-list (vals (config "prerequisites")))}
-         (icons/font-icon {:style {:verticalAlign "middle" :fontSize "135%"}} :pencil)
-         [:span {:style {:verticalAlign "middle" :marginLeft "1em"}} "Edit this page"]])
-
+        [comps/SidebarButton {:style :light :color :button-blue
+                              :text "Edit this page" :icon :pencil
+                              :onClick #(swap! state assoc :editing? true
+                                         :prereqs-list (vals (config "prerequisites")))}])
       (when-not editing?
         [DeleteButton
          {:workspace-id (:workspace-id props)
           :on-rm (:on-rm props)
           :config config}])
-
       (when editing?
-        [:div {:style {:padding "0.7em 0" :cursor "pointer"
-                       :backgroundColor (:success-green style/colors) :color "#fff" :borderRadius 4}
-               :onClick #(do (commit state refs config props) (stop-editing state refs))}
-         (icons/font-icon {:style {:verticalAlign "middle" :fontSize "135%"}} :status-done)
-         [:span {:style {:verticalAlign "middle" :marginLeft "1em"}} "Save"]])
-
+        [comps/SidebarButton {:color :success-green
+                              :text "Save" :icon :status-done
+                              :onClick #(do (commit state refs config props) (stop-editing state refs))}])
       (when editing?
-        [:div {:style {:padding "0.7em 0" :marginTop "0.5em" :cursor "pointer"
-                       :backgroundColor (:exception-red style/colors) :color "#fff" :borderRadius 4}
-               :onClick #(stop-editing state refs)}
-         (icons/font-icon {:style {:verticalAlign "middle" :fontSize "135%"}} :x)
-         [:span {:style {:verticalAlign "middle" :marginLeft "1em"}} "Cancel Editing"]])])])
+        [comps/SidebarButton {:color :exception-red :margin :top
+                              :text "Cancel Editing" :icon :x
+                              :onClick #(stop-editing state refs)}])])])
 
 
 (defn- render-main-display [state refs config editing?]

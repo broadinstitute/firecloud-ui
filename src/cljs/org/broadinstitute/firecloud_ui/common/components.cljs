@@ -232,3 +232,36 @@
                      :height (:size props) :width (:size props)}}
       (style/center {}
         (icons/font-icon {:style {:color "#fff" :fontSize (:size props)}} :status-warning))])})
+
+(react/defc StatusLabel
+  {:render
+   (fn [{:keys [props]}]
+     [:div {:style {:background (:color props) :color "#fff"
+                    :padding 20 :borderRadius 5 :textAlign "center"}}
+      (:icon props)
+      [:span {:style {:marginLeft "1.5ex" :fontSize "125%" :fontWeight 400
+                      :verticalAlign "middle"}}
+       (:text props)]])})
+
+(react/defc SidebarButton
+  {:get-default-props
+   (fn []
+     {:style :heavy})
+   :render
+   (fn [{:keys [props]}]
+     (let [heavy? (= :heavy (:style props))
+           margin (:margin props)
+           color (if-not (keyword? (:color props))
+                   (:color props)
+                   (get style/colors (:color props)))]
+       [:div {:style {:fontSize "106%"
+                      :marginTop (when (= margin :top) "1em")
+                      :marginBottom (when (= margin :bottom) "1em")
+                      :padding "0.7em 0" :cursor "pointer" :textAlign "center"
+                      :backgroundColor (if heavy? color "transparent")
+                      :color (if heavy? "#fff" color)
+                      :border (when-not heavy? (str "1px solid " (:line-gray style/colors)))
+                      :borderRadius (when heavy? 4)}
+              :onClick (:onClick props)}
+        (icons/font-icon {:style {:verticalAlign "middle" :fontSize "135%"}} (:icon props))
+        [:span {:style {:verticalAlign "middle" :marginLeft "1em"}} (:text props)]]))})
