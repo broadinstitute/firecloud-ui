@@ -11,7 +11,8 @@
 
 
 (defn- all-success? [submission]
-  (every? #(= "Succeeded" (% "status")) (submission "workflows")))
+  (and (every? #(= "Succeeded" (% "status")) (submission "workflows"))
+       (zero? (count (submission "notstarted")))))
 
 (defn- color-for-submission [submission]
   (cond (= "Submitted" (submission "status")) (:running-blue style/colors)
@@ -39,38 +40,60 @@
                         :verticalAlign "middle" :marginTop -4 :marginRight 4}}
          (style/center {} [comps/ExceptionIcon {:size 12}])]))
 
+(defn- filter-workflows [f wfs]
+  (filter (fn [wf]
+            (case f
+              :all true
+              :succeeded (= "Succeeded" (wf "status"))
+              :running (contains? #{"Running" "Submitted"} (wf "status"))
+              (contains? #{"Failed" "Aborted" "Unknown"} (wf "status"))))
+    wfs))
 
 (react/defc WorkflowsTable
-  {:render
-   (fn [{:keys [props]}]
-     [table/Table
-      {:empty-message "No Workflows"
-       :columns [{:header "Data Entity" :starting-width 200 :sort-by :value}
-                 {:header "Last Changed" :starting-width 280 :sort-by :value
-                  :content-renderer (fn [row-index date]
-                                      (let [m (js/moment date)]
-                                        (str (.format m "L [at] LTS") " ("
-                                          (.fromNow m) ")")))}
-                 {:header "Status" :starting-width 120 :sort-by :value
-                  :content-renderer (fn [row-index status]
-                                      [:div {}
-                                       (icon-for-wf-status status)
-                                       status])}
-                 {:header "Messages" :starting-width 300 :sort-by count
-                  :content-renderer (fn [row-index message-list]
-                                      [:div {}
-                                       (map (fn [message]
-                                              [:div {} message])
-                                         message-list)])}
-                 {:header "Workflow ID" :starting-width 300 :sort-by :value}]
-       :data (map (fn [row]
-                    [(str (get-in row ["workflowEntity" "entityName"]) " ("
-                       (get-in row ["workflowEntity" "entityType"]) ")")
-                     (row "statusLastChangedDate")
-                     (row "status")
-                     (row "messages")
-                     (row "workflowId")])
-               (:workflows props))}])})
+  {:get-initial-state
+   (fn []
+     {:active-filter :all})
+   :render
+   (fn [{:keys [props state]}]
+     [:div {}
+      (let [make-button (fn [name f]
+                          {:text (str name " (" (count (filter-workflows f (:workflows props))) ")")
+                           :active? (= f (:active-filter @state))
+                           :onClick #(swap! state assoc :active-filter f)})]
+        [:div {:style {:marginBottom "1em" :textAlign "center"}}
+         [comps/FilterButtons {:buttons [(make-button "All" :all)
+                                         (make-button "Succeeded" :succeeded)
+                                         (make-button "Running" :running)
+                                         (make-button "Failed" :failed)]}]])
+      [table/Table
+       {:key (:active-filter @state)
+        :empty-message "No Workflows"
+        :columns [{:header "Data Entity" :starting-width 200 :sort-by :value}
+                  {:header "Last Changed" :starting-width 280 :sort-by :value
+                   :content-renderer (fn [row-index date]
+                                       (let [m (js/moment date)]
+                                         (str (.format m "L [at] LTS") " ("
+                                           (.fromNow m) ")")))}
+                  {:header "Status" :starting-width 120 :sort-by :value
+                   :content-renderer (fn [row-index status]
+                                       [:div {}
+                                        (icon-for-wf-status status)
+                                        status])}
+                  {:header "Messages" :starting-width 300 :sort-by count
+                   :content-renderer (fn [row-index message-list]
+                                       [:div {}
+                                        (map (fn [message]
+                                               [:div {} message])
+                                          message-list)])}
+                  {:header "Workflow ID" :starting-width 300 :sort-by :value}]
+        :data (map (fn [row]
+                     [(str (get-in row ["workflowEntity" "entityName"]) " ("
+                        (get-in row ["workflowEntity" "entityType"]) ")")
+                      (row "statusLastChangedDate")
+                      (row "status")
+                      (row "messages")
+                      (row "workflowId")])
+                (filter-workflows (:active-filter @state) (:workflows props)))}]])})
 
 
 (react/defc WorkflowFailuresTable
