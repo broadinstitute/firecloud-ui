@@ -50,7 +50,7 @@
             :onKeyDown (common/create-key-handler [:space :enter] #(clear-overlay state refs))}
         "Cancel"]
        (when (:creating-wf @state)
-         [comps/Blocker {:banner "Creating Workflow..."}])
+         [comps/Blocker {:banner "Creating Workspace..."}])
        [comps/Button {:text "Create Workspace" :ref "createButton"
                       :onClick
                       #(let [ns (-> (@refs "wsNamespace") .getDOMNode .-value clojure.string/trim)
