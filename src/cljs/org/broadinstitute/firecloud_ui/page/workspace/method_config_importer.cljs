@@ -4,6 +4,7 @@
     clojure.string
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.common.table :as table]
+    [org.broadinstitute.firecloud-ui.common :as common :refer [clear-both]]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
     ))
@@ -15,7 +16,7 @@
 
 (defn- create-formatted-label-textfield [label textfield]
   [:div {}
-   [:div {:style {:float "left" :width "180px" :paddingTop "10px"}} label ": "]
+   [:div {:style {:float "left" :width "34ex" :paddingTop "10px"}} label ": "]
    textfield])
 
 (defn- create-formatted-header [text]
@@ -26,27 +27,42 @@
         selected-conf-name (selected-config "name")
         selected-conf-namespace (selected-config "namespace")
         selected-conf-snapshot-id (selected-config "snapshotId")
-        workspace-id (:workspace-id props)
         on-import (:on-import props)]
     [comps/Button
-     {:text "Import"
+     {:text (if (nil? (:workspace-id props)) "Export" "Import")
       :onClick (fn []
-                 (let [dest-conf-name (-> (@refs "destinationName") .getDOMNode .-value)
-                       dest-conf-namespace (-> (@refs "destinationNamespace") .getDOMNode .-value)]
-                   (swap! state assoc :importing? true)
-                   (endpoints/call-ajax-orch
-                     {:endpoint (endpoints/copy-method-config-to-workspace workspace-id)
-                      :headers {"Content-Type" "application/json"}
-                      :payload {"configurationNamespace" selected-conf-namespace
-                                "configurationName" selected-conf-name
-                                "configurationSnapshotId" (str selected-conf-snapshot-id)
-                                "destinationNamespace" dest-conf-namespace
-                                "destinationName" dest-conf-name}
-                      :on-done (fn [{:keys [success? xhr]}]
-                                 (swap! state assoc :importing? false)
-                                 (if success?
-                                   (on-import {"name" dest-conf-name "namespace" dest-conf-namespace})
-                                   (js/alert (str "Import Error: " (.-responseText xhr)))))})))}]))
+                 (let [workspace-id
+                       (if (nil? (:workspace-id props))
+                         {:namespace (-> (@refs "destinationWSNamespace") .getDOMNode .-value)
+                          :name (-> (@refs "destinationWSName") .getDOMNode .-value)}
+                         (:workspace-id props))
+                       dest-conf-name (-> (@refs "destinationName") .getDOMNode .-value)
+                       dest-conf-namespace (-> (@refs "destinationNamespace") .getDOMNode .-value)
+                       dest-ws-n-len  (.-length (:name workspace-id))
+                       dest-ws-ns-len (.-length (:namespace workspace-id))
+                       n-basic-valid (if (>= dest-ws-n-len 1) true false)
+                       ns-basic-valid (if (>= dest-ws-ns-len 1) true false)]
+                   (if-not n-basic-valid
+                     (js/alert "Required: a valid destination workspace name")
+                     (if-not ns-basic-valid
+                       (js/alert "Required: a valid destination workspace namespace")
+                       (do
+                         (swap! state assoc :importing? true)
+                         (endpoints/call-ajax-orch
+                           {:endpoint (endpoints/copy-method-config-to-workspace workspace-id)
+                            :headers {"Content-Type" "application/json"}
+                            :payload {"configurationNamespace" selected-conf-namespace
+                                      "configurationName" selected-conf-name
+                                      "configurationSnapshotId" (str selected-conf-snapshot-id)
+                                      "destinationNamespace" dest-conf-namespace
+                                      "destinationName" dest-conf-name}
+                            :on-done (fn [{:keys [success? xhr]}]
+                                       (swap! state assoc :importing? false)
+                                       (if success?
+                                         (on-import {"name" dest-conf-name
+                                                     "namespace" dest-conf-namespace})
+                                         (js/alert (str "Import Error: "
+                                                     (.-responseText xhr)))))}))))))}]))
 
 
 (react/defc ConfigurationImportForm
@@ -67,24 +83,26 @@
         (create-formatted-header
           (if (:workspace-id props)
             "Import Method Configuration"
-            "Browse Method Configuration"))
+            "Export Method Configuration To Workspace"))
         (for [[k v] {"Name" selected-conf-name
                      "Namespace" selected-conf-namespace
                      "Snapshot Id" selected-conf-snapshot-id}]
           (create-formatted-label-text k v))
-        (when (:workspace-id props)
+        (create-formatted-label-textfield "Destination Name"
+          (style/create-text-field {:defaultValue selected-conf-name :ref "destinationName"}))
+        (create-formatted-label-textfield "Destination Namespace"
+          (style/create-text-field {:defaultValue selected-conf-namespace
+                                    :ref "destinationNamespace"}))
+        (when-not (:workspace-id props)
           [:div {}
-           (for [[k v] {"Destination Name"
-                        (style/create-text-field {:defaultValue selected-conf-name
-                                                  :ref "destinationName"})
-                        "Destination Namespace"
-                        (style/create-text-field {:defaultValue selected-conf-namespace
-                                                  :ref "destinationNamespace"})}]
-             (create-formatted-label-textfield k v))
-           (render-import-button props refs state)])
-        [:span {:style {:marginLeft (when (:workspace-id props) "0.5em")}}]
+           (create-formatted-label-textfield "Destination Workspace Name"
+             (style/create-text-field {:defaultValue "" :ref "destinationWSName"}))
+           (create-formatted-label-textfield "Destination Workspace Namespace"
+             (style/create-text-field {:defaultValue "" :ref "destinationWSNamespace"}))])
+        (render-import-button props refs state)
         (when (:importing? @state)
-          [comps/Blocker {:banner "Importing..."}])]))})
+          [comps/Blocker {:banner (if (:workspace-id props)
+                                    "Importing..." "Exporting...")}])]))})
 
 (react/defc ConfigurationsTable
   {:render

@@ -20,7 +20,7 @@
          :content  (importmc/render-import-overlay
                      nil ; nil workspace because entrypoint is  from method repo
                      #(swap! state dissoc :show-import-overlay?) ; on-close
-                     nil ; on-import nil because entry from method re
+                     #(swap! state dissoc :show-import-overlay?) ; on-import because entry from method repo
                      (:selected-method @state))}]
      [table/Table
       {:empty-message "No methods to display."
