@@ -1,5 +1,6 @@
 (ns org.broadinstitute.firecloud-ui.page.workspace.summary-tab
   (:require
+    [clojure.string :refer [trim]]
     [dmohs.react :as react]
     [org.broadinstitute.firecloud-ui.common :as common]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
@@ -18,10 +19,100 @@
     [:div {}
      (map (fn [tag] [:span {:style tagstyle} tag]) tags)]))
 
+(def ^:private access-levels
+  ["OWNER" "WRITER" "READER" "NO ACCESS"])
+
+(def ^:private column-width "calc(50% - 4px)")
+
+(defn- build-acl-vec [acl-map]
+  (mapv
+    (fn [k] {:userId k :accessLevel (acl-map k)})
+    (keys acl-map)))
+
+(react/defc AclEditor
+  {:render
+   (fn [{:keys [props state this]}]
+     [comps/Dialog
+      {:width "50%"
+       :dismiss-self (:dismiss-self props)
+       :content
+       (react/create-element
+         [:div {:style {:background "#fff" :padding "2em"}}
+          (cond
+            (:acl-vec @state)
+            [:div {}
+             (when (:saving? @state)
+               [comps/Blocker {:banner "Updating..."}])
+             [:div {:style {:paddingBottom "0.5em" :fontSize "90%"}}
+              [:div {:style {:float "left" :width column-width}} "User or Group ID"]
+              [:div {:style {:float "right" :width column-width}} "Access Level"]
+              (common/clear-both)]
+             (map-indexed
+               (fn [i acl-entry]
+                 [:div {}
+                  (style/create-text-field
+                    {:ref (str "acl-key" i)
+                     :style {:float "left" :width column-width
+                             :backgroundColor (when (< i (:count-orig @state)) (:background-gray style/colors))}
+                     :disabled (< i (:count-orig @state))
+                     :spellCheck false
+                     :defaultValue (:userId acl-entry)})
+                  (style/create-select
+                    {:ref (str "acl-value" i)
+                     :style {:float "right" :width column-width :height 33}
+                     :defaultValue (:accessLevel acl-entry)}
+                    access-levels)
+                  (common/clear-both)])
+               (:acl-vec @state))
+             [comps/Button {:text "Add new" :style :add
+                            :onClick #(do
+                                       (react/call :capture-ui-state this)
+                                       (swap! state update-in [:acl-vec] conj {:userId "" :accessLevel "READER"}))}]
+             [:div {:style {:textAlign "center" :marginTop "1em"}}
+              [:a {:href "javascript:;"
+                   :style {:textDecoration "none" :color (:button-blue style/colors) :marginRight "1.5em"}
+                   :onClick #((:dismiss-self props))}
+               "Cancel"]
+              [comps/Button {:text "Save"
+                             :onClick #(do
+                                        (react/call :capture-ui-state this)
+                                        (react/call :persist-acl this))}]]]
+
+            (:error @state) (style/create-server-error-message (:error @state))
+            :else [comps/Spinner {:text "Loading Permissions..."}])])}])
+   :capture-ui-state
+   (fn [{:keys [state refs]}]
+     (swap! state assoc :acl-vec
+       (mapv
+         (fn [i]
+           {:userId (-> (@refs (str "acl-key" i)) .getDOMNode .-value trim)
+            :accessLevel (-> (@refs (str "acl-value" i)) .getDOMNode .-value)})
+         (range (count (:acl-vec @state))))))
+   :persist-acl
+   (fn [{:keys [props state]}]
+     (swap! state assoc :saving? true)
+     (endpoints/call-ajax-orch
+       {:endpoint (endpoints/update-workspace-acl (:workspace-id props))
+        :headers {"Content-Type" "application/json"}
+        :payload (filter #(not (empty? (:userId %))) (:acl-vec @state))
+        :on-done (fn [{:keys [success? status-text]}]
+                   (swap! state dissoc :saving?)
+                   (if success?
+                     ((:dismiss-self props))
+                     (js/alert "Error saving permissions: " status-text)))}))
+   :component-did-mount
+   (fn [{:keys [props state]}]
+     (endpoints/call-ajax-orch
+       {:endpoint (endpoints/get-workspace-acl (:workspace-id props))
+        :on-done (fn [{:keys [success? get-parsed-response status-text]}]
+                   (if success?
+                     (let [acl-vec (build-acl-vec ((get-parsed-response) "acl"))]
+                       (swap! state assoc :acl-vec acl-vec :count-orig (count acl-vec)))
+                     (swap! state assoc :error status-text)))}))})
 
 (react/defc Summary
   {:render
-   (fn [{:keys [state]}]
+   (fn [{:keys [state props]}]
      (cond
        (nil? (:server-response @state))
        [comps/Spinner {:text "Loading workspace..."}]
@@ -31,6 +122,9 @@
        (let [ws (get-in @state [:server-response :workspace])
              status (common/compute-status ws)]
          [:div {:style {:margin "45px 25px"}}
+          (when (:editing-acl? @state)
+            [AclEditor {:workspace-id (:workspace-id props)
+                        :dismiss-self #(swap! state dissoc :editing-acl?)}])
           [:div {:style {:float "left" :width 290 :marginRight 40}}
            ;; TODO - make the width of the float-left dynamic
            [:div {:style {:borderRadius 5 :padding 20 :textAlign "center"
@@ -52,17 +146,15 @@
           [:div {:style {:display "inline-block"}}
            (style/create-section-header "Workspace Owner")
            (style/create-paragraph
-             (let [createdBy (get-in ws ["workspace" "createdBy"])]
-               [:div {} [:strong {} createdBy]
-                (let [shared (disj (set (ws "owners")) createdBy)
-                      num (count shared)]
-                  [:span {}
-                   " ("
-                   [:a {:href "javascript:;"
-                        ;; TODO - edit ACL on click
-                        :style {:color (:button-blue style/colors) :textDecoration "none"}}
-                    (if (zero? num) "share" (str "shared with " num " people"))]
-                   ")"])]))
+             [:div {} [:strong {} (clojure.string/join ", " (ws "owners"))]
+              (when (= "OWNER" (ws "accessLevel"))
+                [:span {}
+                 " ("
+                 [:a {:href "javascript:;"
+                      :style {:color (:button-blue style/colors) :textDecoration "none"}
+                      :onClick #(swap! state assoc :editing-acl? true)}
+                  "Edit sharing"]
+                 ")"])])
            (style/create-section-header "Description")
            (style/create-paragraph [:em {} "Description info not available yet"])
            (style/create-section-header "Tags")
