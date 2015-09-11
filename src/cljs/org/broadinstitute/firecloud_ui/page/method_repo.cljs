@@ -5,6 +5,7 @@
    [org.broadinstitute.firecloud-ui.common.style :as style]
    [org.broadinstitute.firecloud-ui.common.table :as table]
    [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
+   [org.broadinstitute.firecloud-ui.utils :as utils]
    [org.broadinstitute.firecloud-ui.page.workspace.method-config-importer :as importmc]
    ))
 
@@ -56,6 +57,13 @@
        {:endpoint endpoints/list-methods
         :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                    (if success?
-                     (swap! state assoc :methods (get-parsed-response))
+                     (let [parsed-response-text (get-parsed-response)
+                           code-value (parsed-response-text "code")
+                           message-value (parsed-response-text "message")
+                           message-value (when (nil? message-value) "Unknown error!")
+                           ]
+                       (if (or (= code-value 500) (= code-value "500") (>= code-value 400))
+                         (swap! state assoc :error message-value)
+                         (swap! state assoc :methods parsed-response-text)))
                      (swap! state assoc :error {:message status-text})))}))})
 
