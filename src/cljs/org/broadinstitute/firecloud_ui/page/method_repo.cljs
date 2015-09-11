@@ -56,6 +56,12 @@
        {:endpoint endpoints/list-methods
         :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                    (if success?
-                     (swap! state assoc :methods (get-parsed-response))
+                     (let [parsed-response-text (get-parsed-response)
+                           code-value (if (map? parsed-response-text) (parsed-response-text "code") nil)
+                           message-value (if (map? parsed-response-text) (parsed-response-text "message") nil)
+                           message-value (when (nil? message-value) "Unknown error!")]
+                       (if (or (= code-value 500) (= code-value "500") (>= code-value 400))
+                         (swap! state assoc :error message-value)
+                         (swap! state assoc :methods parsed-response-text)))
                      (swap! state assoc :error {:message status-text})))}))})
 
