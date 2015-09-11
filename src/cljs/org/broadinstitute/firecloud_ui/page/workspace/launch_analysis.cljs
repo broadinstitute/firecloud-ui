@@ -51,34 +51,28 @@
        (js/alert "Please select an entity.")))})
 
 
-(defn- render-table [entities filter selected-entity on-entity-selected]
+(defn- render-table [entities selected-entity on-entity-selected]
   (let [attribute-keys (apply union (map (fn [e] (set (keys (e "attributes")))) entities))]
     [table/Table
-     {:key filter
-      :empty-message "No entities available."
+     {:empty-message "No entities available."
       :columns (concat
                 [{:header "" :starting-width 40 :resizable? false :reorderable? false
                   :content-renderer (fn [i data]
                                       [:input {:type "radio"
                                                :checked (identical? data selected-entity)
                                                :onChange #(on-entity-selected data)}])}
-                 {:header "Entity Type" :starting-width 100 :sort-by :value}
                  {:header "Entity Name" :starting-width 100 :sort-by :value}]
                 (map (fn [k] {:header k :starting-width 100 :sort-by :value}) attribute-keys))
       :data (map (fn [m]
                    (concat
                     [m
-                     (m "entityType")
                      (m "name")]
                     (map (fn [k] (get-in m ["attributes" k])) attribute-keys)))
                  entities)}]))
 
 
-(defn render-form [entities state refs workspace-id config-id on-success]
-  (let [entity-map (group-by #(% "entityType") entities)
-        filter (or (:filter @state) "Sample")
-        filtered-entities (entity-map filter)
-        selected-entity (or (:selected-entity @state) (first filtered-entities))]
+(defn render-form [entities state workspace-id config-id on-success]
+  (let [selected-entity (or (:selected-entity @state) (first entities))]
     [:div {:style {:padding "22px 48px 40px" :backgroundColor (:background-gray style/colors)}}
      (if (:launch-result @state)
        [:div {}
@@ -89,16 +83,10 @@
                            :status-done))
         [:pre {} (.stringify js/JSON (.parse js/JSON (:launch-result @state)) nil 2)]]
        [:div {}
-        (style/create-form-label "Select Entity Type")
-        (style/create-select
-         {:style {:width "50%" :minWidth 50 :maxWidth 200} :ref "filter"
-          :onChange #(let [value (-> (@refs "filter") .getDOMNode .-value)]
-                       (swap! state assoc :filter value))}
-         (keys entity-map))
         (style/create-form-label "Select Entity")
         [:div {:style {:backgroundColor "#fff" :border (str "1px solid " (:line-gray style/colors))
                        :padding "1em" :marginBottom "0.5em"}}
-         (render-table filtered-entities filter selected-entity
+         (render-table entities selected-entity
                        #(swap! state assoc :selected-entity %))]
         (style/create-form-label "Define Expression")
         (style/create-text-field {:placeholder "leave blank for default"
@@ -113,7 +101,7 @@
 
 (react/defc Page
   {:render
-   (fn [{:keys [props state refs]}]
+   (fn [{:keys [props state]}]
      [:div {:style {:backgroundColor "white"}}
       [:div {:style {:borderBottom (str "1px solid " (:line-gray style/colors))
                      :padding "20px 48px 18px"
@@ -134,11 +122,11 @@
            :else
            [:div {:style {:marginTop "-1em"}}
             (render-form
-             entities state refs (:workspace-id props) (:config-id props) (:on-success props))]))]])
+             entities state (:workspace-id props) (:config-id props) (:on-success props))]))]])
    :component-did-mount
    (fn [{:keys [props state]}]
      (endpoints/call-ajax-orch
-       {:endpoint (endpoints/get-entities-by-type (:workspace-id props))
+       {:endpoint (endpoints/list-entitites (:workspace-id props) (:root-entity-type props))
         :on-done (fn [{:keys [success? status-text get-parsed-response]}]
                    (swap! state assoc
                      :server-response (if success?
@@ -156,12 +144,15 @@
                        :content (react/create-element
                                  Page
                                  (merge
-                                  (select-keys props [:workspace-id :config-id :on-success])
+                                  (select-keys props [:workspace-id :config-id :root-entity-type :on-success])
                                   {:on-cancel #(swap! state dissoc :display-modal?)}))}])
       [comps/Button {:text "Launch Analysis..."
                      :onClick #(swap! state assoc :display-modal? true)}]])})
 
 
-(defn render-button [workspace-id config-id on-success]
+(defn render-button [workspace-id config-id root-entity-type on-success]
   (react/create-element
-   ShowLaunchModalButton {:workspace-id workspace-id :config-id config-id :on-success on-success}))
+   ShowLaunchModalButton {:workspace-id workspace-id
+                          :config-id config-id
+                          :root-entity-type root-entity-type
+                          :on-success on-success}))

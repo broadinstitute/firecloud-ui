@@ -220,6 +220,7 @@
        [:div {:style {:float "right"}}
         (launch/render-button (:workspace-id props)
                               {:namespace (config "namespace") :name (config "name")}
+                              (config "rootEntityType")
                               (:on-submission-success props))])
      (render-main-display state refs config editing?)
      (clear-both)]]])
