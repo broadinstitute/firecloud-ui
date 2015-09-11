@@ -12,7 +12,7 @@
   (swap! state assoc :message "")
   (endpoints/call-ajax-orch
     {:endpoint (endpoints/import-entities workspace-id)
-     :payload (utils/generate-form-data {:entities entityFile})
+     :payload (utils/generate-form-data {:entities entityFile}) :encode-as :none
      :encType "multipart/form-data"
      :on-done (fn [{:keys [xhr]}]
                 (swap! state assoc :entities-loaded? true :message (.-responseText xhr)))}))

@@ -6,12 +6,19 @@
 
 (defn call-ajax-orch [{:keys [endpoint] :as arg-map}]
   (utils/ajax-orch (:path endpoint)
-    (assoc arg-map
-      :method (:method endpoint)
-      :data (if-let [payload (:payload arg-map)] (utils/->json-string payload))
-      :canned-response {:status 200 :delay-ms (rand-int 2000)
-                        :responseText (if-let [mock-data (:mock-data endpoint)]
-                                        (utils/->json-string mock-data))})))
+    (dissoc
+      (assoc arg-map
+        :method (:method endpoint)
+        :data (if-let [payload (:payload arg-map)]
+                (case (:encode-as arg-map)
+                  nil (utils/->json-string payload)
+                  :json (utils/->json-string payload)
+                  :none payload
+                  (assert false (str "unknown encoding flag: " (name (:encode-as arg-map))))))
+        :canned-response {:status 200 :delay-ms (rand-int 2000)
+                          :responseText (if-let [mock-data (:mock-data endpoint)]
+                                          (utils/->json-string mock-data))})
+      :endpoint :encode-as)))
 
 
 (defn- ws-path [workspace-id]
