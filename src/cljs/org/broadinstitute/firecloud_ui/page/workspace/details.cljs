@@ -16,7 +16,7 @@
       [comps/TabBar {:ref "tab-bar"
                      :items
                      [{:text "Summary"
-                       :render #(summary-tab/render (:workspace-id props))}
+                       :render #(summary-tab/render (:workspace-id props) (:on-delete props))}
                       {:text "Data" :render #(data-tab/render (:workspace-id props))}
                       {:text "Method Configurations"
                        :render (fn []
@@ -27,5 +27,5 @@
                       {:text "Files" :render (fn [] [:div {} "Not yet implemented."])}]}]])})
 
 
-(defn render-workspace-details [workspace-id]
-  (react/create-element WorkspaceDetails {:workspace-id workspace-id}))
+(defn render-workspace-details [workspace-id on-delete]
+  (react/create-element WorkspaceDetails {:workspace-id workspace-id :on-delete on-delete}))

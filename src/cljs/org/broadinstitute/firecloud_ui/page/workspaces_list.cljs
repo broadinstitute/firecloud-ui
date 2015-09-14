@@ -9,6 +9,7 @@
     [org.broadinstitute.firecloud-ui.common.table :as table]
     [org.broadinstitute.firecloud-ui.nav :as nav]
     [org.broadinstitute.firecloud-ui.page.workspace.details :refer [render-workspace-details]]
+    [org.broadinstitute.firecloud-ui.utils :as utils]
     ))
 
 
@@ -224,5 +225,6 @@
          [:span {:style {:fontSize "180%"}}
           (if selected-ws-id (:name selected-ws-id) "Workspaces")]]
         (if selected-ws-id
-          (render-workspace-details selected-ws-id)
+          ;; TODO: add 'back' function to nav
+          (render-workspace-details selected-ws-id #(set! (-> js/window .-location .-hash) "workspaces"))
           (render-workspaces-list nav-context))]))})

@@ -67,15 +67,17 @@
                                :lastFailureDate (rand-nth [nil (utils/rand-recent-time)])}
     :owners ["test@broadinstitute.org"]}})
 
+(defn delete-workspace [workspace-id]
+  {:path (str "/workspaces/" (ws-path workspace-id))
+   :method :delete})
+
 (defn get-workspace-acl [workspace-id]
   {:path (str "/workspaces/" (ws-path workspace-id) "/acl")
    :method :get
    :mock-data
-   (map
-     (fn [i]
-       {:userId (str "user" i "@broadinstitute.org")
-        :accessLevel (rand-nth ["OWNER" "WRITER" "READER" "NO ACCESS" "UNKNOWN USER"])})
-     (range (rand-int 5)))})
+   {:acl (into {} (map (fn [i] [(str "user" i "@broadinstitute.org")
+                                (rand-nth ["OWNER" "WRITER" "READER" "NO ACCESS" "UNKNOWN USER"])])
+                    (range (inc (rand-int 5)))))}})
 
 (defn update-workspace-acl [workspace-id]
   {:path (str "/workspaces/" (ws-path workspace-id) "/acl")

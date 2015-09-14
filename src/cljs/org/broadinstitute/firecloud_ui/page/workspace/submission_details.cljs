@@ -120,22 +120,19 @@
 
 (react/defc AbortButton
   {:render (fn [{:keys [state this]}]
-             (if (:aborting-submission? @state)
-               [comps/Blocker {:banner "Aborting submission ..."}]
-               [:div {:style {:padding "0.7em 0" :marginTop "0.5em" :color "#fff" :cursor "pointer"
-                              :backgroundColor (:exception-red style/colors) :borderRadius 5}
-                      :onClick #(when (js/confirm "Are you sure?")
-                                 (react/call :abort-submission this))}
-                (icons/font-icon {:style {:fontSize "160%" :marginRight 14 :verticalAlign "middle"}}
-                  :status-warning-triangle)
-                [:span {:style {:fontSize "125%" :verticalAlign "middle"}} "Abort"]]))
+             (when (:aborting-submission? @state)
+               [comps/Blocker {:banner "Aborting submission ..."}])
+             [comps/SidebarButton {:color :exception-red :margin :top
+                                   :text "Abort" :icon :status-warning-triangle
+                                   :onClick #(when (js/confirm "Are you sure?")
+                                              (react/call :abort-submission this))}])
    :abort-submission (fn [{:keys [props state]}]
                        (swap! state assoc :aborting-submission? true)
                        (endpoints/call-ajax-orch
                          {:endpoint (endpoints/abort-submission (:workspace-id props) (:submission-id props))
                           :headers {"Content-Type" "application/json"}
                           :on-done (fn [{:keys [success? status-text]}]
-                                     (swap! state assoc :aborting-submission? false)
+                                     (swap! state dissoc :aborting-submission?)
                                      (if success?
                                        ((:on-abort props))
                                        (js/alert (str "Error in aborting the job : " status-text))))}))})
@@ -152,13 +149,10 @@
          error-message (style/create-server-error-message error-message)
          :else
          [:div {}
-          [:div {:style {:float "left" :width 290 :marginRight 40 :textAlign "center"}}
-           [:div {:style {:background (color-for-submission submission) :color "#fff"
-                          :padding 20 :borderRadius 5}}
-            (icon-for-submission submission)
-            [:span {:style {:marginLeft "1.5ex" :fontSize "125%" :fontWeight 400
-                            :verticalAlign "middle"}}
-             (submission "status")]]
+          [:div {:style {:float "left" :width 290 :marginRight 40}}
+           [comps/StatusLabel {:text (submission "status")
+                               :color (color-for-submission submission)
+                               :icon (icon-for-submission submission)}]
            (when (= "Submitted" (submission "status"))
              [AbortButton
               {:on-abort (fn []
