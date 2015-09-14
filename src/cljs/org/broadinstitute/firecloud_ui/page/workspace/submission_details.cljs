@@ -7,6 +7,7 @@
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.common.table :as table]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
+    [org.broadinstitute.firecloud-ui.utils :as utils]
     ))
 
 
@@ -98,7 +99,14 @@
 
 (react/defc WorkflowFailuresTable
   {:render
-   (fn [{:keys [props]}]
+   (fn [{:keys [props state]}]
+     [:div {}
+     (when (:tempx @state)
+       [comps/Blocker
+        {
+         :banner "TESTING"
+         }
+        ])
      [table/Table
       {:empty-message "No Workflows"
        :columns [{:header "Data Entity" :starting-width 200 :sort-by :value
@@ -110,12 +118,22 @@
                   :content-renderer (fn [i error-list]
                                       [:div {}
                                        (map (fn [error]
-                                              [:div {} error])
+                                              [:div {}
+                                               [:a {:href "javascript:;"
+                                                    :onClick (fn []
+                                                               (utils/rlog "in onclick for href...")
+                                                               (swap! state assoc :tempx true)
+                                                               )
+                                                    }
+                                               error]
+                                               ])
                                          error-list)])}]
        :data (map (fn [row]
                     [{:type (row "entityType") :name (row "entityName")}
                      (row "errors")])
-               (:workflows props))}])})
+               (:workflows props))}]]
+
+     )})
 
 
 (react/defc AbortButton

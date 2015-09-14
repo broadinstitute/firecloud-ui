@@ -91,7 +91,7 @@
 ;;
 
 
-(def use-live-data? true)
+(def use-live-data? false)
 (when-not use-live-data? (assert goog.DEBUG "Mock data in use but DEBUG is false."))
 
 

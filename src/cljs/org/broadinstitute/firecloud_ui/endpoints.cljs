@@ -218,13 +218,13 @@
                                         :entityName (str "sample_" i)}
                        :status (rand-nth ["Succeeded" "Submitted" "Running" "Failed" "Aborted" "Unknown"])
                        :workflowId "97adf170-ee40-40a5-9539-76b72802e124"})
-                 (range (rand-int 10)))
+                 (range (rand-int 500)))
     :notstarted (map (fn [i]
                        {:entityType (rand-nth ["Sample" "Participant"])
                         :entityName (str "entity " i)
                         :errors (utils/rand-subset ["Prerequisites not met" "Server error"
                                                     "I didn't feel like it" "Syntax error"])})
-                  (range (rand-int 5)))
+                  (range (rand-int 500)))
     :status (rand-nth ["Submitted" "Done"])}})
 
 (defn abort-submission [workspace-id submission-id]
