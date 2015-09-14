@@ -74,7 +74,7 @@
                  entities)}]))
 
 
-(defn render-form [entities state refs workspace-id config-id on-success]
+(defn render-form [entities state refs props]
   (let [entity-map (group-by #(% "entityType") entities)
         filter (or (:filter @state) "Sample")
         filtered-entities (entity-map filter)
@@ -92,6 +92,7 @@
         (style/create-form-label "Select Entity Type")
         (style/create-select
          {:style {:width "50%" :minWidth 50 :maxWidth 200} :ref "filter"
+          :defaultValue (:root-entity-type props)
           :onChange #(let [value (-> (@refs "filter") .getDOMNode .-value)]
                        (swap! state assoc :filter value))}
          (keys entity-map))
@@ -103,12 +104,9 @@
         (style/create-form-label "Define Expression")
         (style/create-text-field {:placeholder "leave blank for default"
                                   :value (:expression @state)
-                                  :onChange
-                                  #(swap! state assoc :expression (-> % .-target .-value))})
-        [LaunchButton {:workspace-id workspace-id :config-id config-id
-                       :entity-id (when selected-entity (entity->id selected-entity))
-                       :expression (:expression @state)
-                       :on-success on-success}]])]))
+                                  :onChange #(swap! state assoc :expression (-> % .-target .-value))})
+        [LaunchButton (merge props {:entity-id (when selected-entity (entity->id selected-entity))
+                                    :expression (:expression @state)})]])]))
 
 
 (react/defc Page
@@ -133,8 +131,7 @@
            (style/create-message-well "No data found.")
            :else
            [:div {:style {:marginTop "-1em"}}
-            (render-form
-             entities state refs (:workspace-id props) (:config-id props) (:on-success props))]))]])
+            (render-form entities state refs props)]))]])
    :component-did-mount
    (fn [{:keys [props state]}]
      (endpoints/call-ajax-orch
@@ -155,13 +152,11 @@
                        :dismiss-self #(swap! state dissoc :display-modal?)
                        :content (react/create-element
                                  Page
-                                 (merge
-                                  (select-keys props [:workspace-id :config-id :on-success])
+                                 (merge props
                                   {:on-cancel #(swap! state dissoc :display-modal?)}))}])
       [comps/Button {:text "Launch Analysis..."
                      :onClick #(swap! state assoc :display-modal? true)}]])})
 
 
-(defn render-button [workspace-id config-id on-success]
-  (react/create-element
-   ShowLaunchModalButton {:workspace-id workspace-id :config-id config-id :on-success on-success}))
+(defn render-button [props]
+  (react/create-element ShowLaunchModalButton props))

@@ -218,9 +218,10 @@
      (render-side-bar state refs config editing? props)
      (when-not editing?
        [:div {:style {:float "right"}}
-        (launch/render-button (:workspace-id props)
-                              {:namespace (config "namespace") :name (config "name")}
-                              (:on-submission-success props))])
+        (launch/render-button {:workspace-id (:workspace-id props)
+                               :config-id {:namespace (config "namespace") :name (config "name")}
+                               :root-entity-type (config "rootEntityType")
+                               :on-success (:on-submission-success props)})])
      (render-main-display state refs config editing?)
      (clear-both)]]])
 
