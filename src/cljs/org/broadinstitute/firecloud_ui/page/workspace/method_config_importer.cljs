@@ -9,14 +9,17 @@
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
     ))
 
+(defn- setrefcolor [refname refs color]
+  (set! (-> (@refs refname) .getDOMNode .-style .-color) color))
+
 (defn- create-formatted-label-text [label text]
   [:div {:style {:padding "10px 0"}}
    [:div {:style {:float "left" :width "180px"}} label ": "]
    text])
 
-(defn- create-formatted-label-textfield [label textfield]
+(defn- create-formatted-label-textfield [label textfield labelref ]
   [:div {}
-   [:div {:style {:float "left" :width "34ex" :paddingTop "10px"}} label ": "]
+   [:div {:ref labelref :style {  :float "left" :width "34ex" :paddingTop "10px"}} label ": "]
    textfield])
 
 (defn- create-formatted-header [text]
@@ -38,14 +41,12 @@
                          (:workspace-id props))
                        dest-conf-name (-> (@refs "destinationName") .getDOMNode .-value)
                        dest-conf-namespace (-> (@refs "destinationNamespace") .getDOMNode .-value)
-                       dest-ws-n-len  (.-length (:name workspace-id))
-                       dest-ws-ns-len (.-length (:namespace workspace-id))
-                       n-basic-valid (if (>= dest-ws-n-len 1) true false)
-                       ns-basic-valid (if (>= dest-ws-ns-len 1) true false)]
+                       n-basic-valid (if (zero? (count (:name workspace-id))) false true)
+                       ns-basic-valid (if (zero? (count (:namespace workspace-id))) false true)]
                    (if-not n-basic-valid
-                     (js/alert "Required: a valid destination workspace name")
+                     (setrefcolor "wnref" refs "red")
                      (if-not ns-basic-valid
-                       (js/alert "Required: a valid destination workspace namespace")
+                       (setrefcolor "wnsref" refs "red")
                        (do
                          (swap! state assoc :importing? true)
                          (endpoints/call-ajax-orch
@@ -84,21 +85,28 @@
           (if (:workspace-id props)
             "Import Method Configuration"
             "Export Method Configuration To Workspace"))
-        (for [[k v] {"Name" selected-conf-name
-                     "Namespace" selected-conf-namespace
-                     "Snapshot Id" selected-conf-snapshot-id}]
-          (create-formatted-label-text k v))
-        (create-formatted-label-textfield "Destination Name"
-          (style/create-text-field {:defaultValue selected-conf-name :ref "destinationName"}))
-        (create-formatted-label-textfield "Destination Namespace"
-          (style/create-text-field {:defaultValue selected-conf-namespace
-                                    :ref "destinationNamespace"}))
-        (when-not (:workspace-id props)
-          [:div {}
-           (create-formatted-label-textfield "Destination Workspace Name"
-             (style/create-text-field {:defaultValue "" :ref "destinationWSName"}))
-           (create-formatted-label-textfield "Destination Workspace Namespace"
-             (style/create-text-field {:defaultValue "" :ref "destinationWSNamespace"}))])
+        [:div {:style {:float "left"}}
+         (for [[k v] {"Name" selected-conf-name
+                      "Namespace" selected-conf-namespace
+                      "Snapshot Id" selected-conf-snapshot-id}]
+           (create-formatted-label-text k v ))]
+        [:div {:style {:float "right"}}
+         (create-formatted-label-textfield "Destination Name"
+           (style/create-text-field {:defaultValue selected-conf-name
+                                     :ref "destinationName"})"cnref")
+         (create-formatted-label-textfield "Destination Namespace"
+           (style/create-text-field {:onChange #(setrefcolor "wnref" refs "black")
+                                     :defaultValue selected-conf-namespace
+                                     :ref "destinationNamespace"})"cnsref")
+         (when-not (:workspace-id props)
+           [:div {}
+            (create-formatted-label-textfield "Destination Workspace Name"
+              (style/create-text-field {:onChange #(setrefcolor "wnref" refs "black")
+                                        :defaultValue ""
+                                        :ref "destinationWSName"})"wnref")
+            (create-formatted-label-textfield "Destination Workspace Namespace"
+              (style/create-text-field {:defaultValue "" :ref "destinationWSNamespace"})"wnsref")])]
+        (clear-both)
         (render-import-button props refs state)
         (when (:importing? @state)
           [comps/Blocker {:banner (if (:workspace-id props)
