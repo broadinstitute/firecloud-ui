@@ -2,14 +2,24 @@
 
 FireCloud user interface for web browsers.
 
-https://firecloud-ci.broadinstitute.org/
+https://firecloud.dsde-dev.broadinstitute.org/
+
+https://firecloud.dsde-staging.broadinstitute.org/
 
 ## Getting Started
 
+This project runs in a Docker container. Docker is available here:
+
+https://www.docker.com/
+
 [ClojureScript](https://github.com/clojure/clojurescript) is used for the UI.
-We use the Leiningen build tool. To install, follow the installation instructions on the [Leiningen web site](http://leiningen.org/).
+We use the [Leiningen](http://leiningen.org/) build tool.
 The code incorporates usage of [react-cljs](https://github.com/dmohs/react-cljs) which is 
 a ClojureScript wrapper for [React](https://facebook.github.io/react/).
+
+For authentication, you will need to create a Google web application client ID from here:
+
+https://console.developers.google.com/
 
 ## Building
 
@@ -39,21 +49,11 @@ To connect, reload the browser window (see the Running section below).
 
 ## Running
 
-Start a static file server:
+Start the static file server and proxy to the service API:
 ```
-./script/dev/serve-locally.py
-```
-
-This will serve files at http://localhost:8000/. However, Google Sign-In expects an origin of
-http://local.broadinstitute.org:8000/. To make your local instance available at this URL, add the following to
-/etc/hosts:
-```
-127.0.0.1 local.broadinstitute.org
-```
-
-By default, this script proxies the `/api` path to the production orchestration server. To have it proxy to a locally-running instance, call it like so:
-```
-./script/dev/serve-locally.py local
+GOOGLE_CLIENT_ID=replace-me \
+ORCH_URL_ROOT=http://replace-me \
+  ./script/dev/start-server.sh
 ```
 
 ## Testing
@@ -63,11 +63,16 @@ Run the Leiningen task to run tests:
 lein test
 ```
 
-## Create a Release
+## Production Deployment
 
-Build in release mode and remove unnecessary build artifacts:
+Build the docker container:
 ```
-./script/release/build-release.sh
+docker build -t firecloud-ui .
 ```
 
-At this point, the `target` directory represents the root directory that should be served from a static web server.
+Run the container:
+```
+docker run --name firecloud-ui -p 80:80 -p 443:443 \
+  -e GOOGLE_CLIENT_ID='replace-me' -e ORCH_URL_ROOT='http://replace-me' \
+  firecloud-ui
+```

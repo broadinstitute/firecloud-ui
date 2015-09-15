@@ -1,8 +1,11 @@
 FROM broadinstitute/openidc-baseimage
 
+# How to install OpenJDK 8 from:
+# http://ubuntuhandbook.org/index.php/2015/01/install-openjdk-8-ubuntu-14-04-12-04-lts/
 RUN add-apt-repository ppa:openjdk-r/ppa
-RUN apt-get update
-RUN apt-get install -qy openjdk-8-jdk php5-cli curl rlfe
+
+RUN apt-get update --fix-missing
+RUN apt-get install -qy openjdk-8-jdk php5-cli rlfe
 
 # Standard apt-get cleanup.
 RUN apt-get -yq autoremove && \
@@ -29,11 +32,11 @@ COPY script/common script/common
 COPY script/release/build-once.sh script/release/build-once.sh
 COPY script/release/build-release.sh script/release/build-release.sh
 
-ENV GOOGLE_CLIENT_ID=806222273987-2ntvt4hnfsikqmhhc18l64vheh4cj34q.apps.googleusercontent.com
+ENV GOOGLE_CLIENT_ID=not-valid
 RUN ./script/release/build-release.sh
 
-COPY script/release/apache-site.conf /etc/apache2/sites-available/site.conf
-COPY script/release/run-apache.sh /etc/service/apache2/run
+COPY src/docker/apache-site.conf /etc/apache2/sites-available/site.conf
+COPY src/docker/run-apache.sh /etc/service/apache2/run
 
 # openidc-baseimage requires this unused variable.
 ENV CALLBACK_URI=http://example.com/
@@ -41,8 +44,8 @@ ENV CALLBACK_URI=http://example.com/
 ENV HTTPD_PORT=80 SSL_HTTPD_PORT=443
 ENV SERVER_ADMIN=devops@broadinstitute.org
 ENV LOG_LEVEL=warn
-ENV SERVER_NAME=docker-machine
-ENV ORCH_URL_ROOT=https://orch
+ENV SERVER_NAME=dhost
+ENV ORCH_URL_ROOT=http://orch:8080
 
 # Override in development since figwheel does not support secure websockets.
 ENV HTTPS_ONLY=true
