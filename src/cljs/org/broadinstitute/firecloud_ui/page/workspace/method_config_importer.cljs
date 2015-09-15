@@ -41,10 +41,8 @@
                          (:workspace-id props))
                        dest-conf-name (-> (@refs "destinationName") .getDOMNode .-value)
                        dest-conf-namespace (-> (@refs "destinationNamespace") .getDOMNode .-value)
-                       dest-ws-n-len  (.-length (:name workspace-id))
-                       dest-ws-ns-len (.-length (:namespace workspace-id))
-                       n-basic-valid (if (>= dest-ws-n-len 1) true false)
-                       ns-basic-valid (if (>= dest-ws-ns-len 1) true false)]
+                       n-basic-valid (if (zero? (count (:name workspace-id))) false true)
+                       ns-basic-valid (if (zero? (count (:namespace workspace-id))) false true)]
                    (if-not n-basic-valid
                      (setrefcolor "wnref" refs "red")
                      (if-not ns-basic-valid
