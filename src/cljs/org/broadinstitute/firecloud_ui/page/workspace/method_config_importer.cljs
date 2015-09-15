@@ -9,13 +9,8 @@
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
     ))
 
-(defn- tempred [refname refs timeout]
-  (let [prevcolor (-> (@refs refname) .getDOMNode .-style .-color)]
-    (set! (-> (@refs refname) .getDOMNode .-style .-color) "red" )
-    (js/setTimeout
-      (fn []
-        (set! (-> (@refs refname) .getDOMNode .-style .-color) prevcolor))
-      timeout)))
+(defn- setrefcolor [refname refs color]
+  (set! (-> (@refs refname) .getDOMNode .-style .-color) color))
 
 (defn- create-formatted-label-text [label text]
   [:div {:style {:padding "10px 0"}}
@@ -51,9 +46,9 @@
                        n-basic-valid (if (>= dest-ws-n-len 1) true false)
                        ns-basic-valid (if (>= dest-ws-ns-len 1) true false)]
                    (if-not n-basic-valid
-                     (tempred "wnref" refs 1000)
+                     (setrefcolor "wnref" refs "red")
                      (if-not ns-basic-valid
-                       (tempred "wnsref" refs 1000)
+                       (setrefcolor "wnsref" refs "red")
                        (do
                          (swap! state assoc :importing? true)
                          (endpoints/call-ajax-orch
@@ -102,12 +97,15 @@
            (style/create-text-field {:defaultValue selected-conf-name
                                      :ref "destinationName"})"cnref")
          (create-formatted-label-textfield "Destination Namespace"
-           (style/create-text-field {:defaultValue selected-conf-namespace
+           (style/create-text-field {:onChange #(setrefcolor "wnref" refs "black")
+                                     :defaultValue selected-conf-namespace
                                      :ref "destinationNamespace"})"cnsref")
          (when-not (:workspace-id props)
            [:div {}
             (create-formatted-label-textfield "Destination Workspace Name"
-              (style/create-text-field {:defaultValue "" :ref "destinationWSName"})"wnref")
+              (style/create-text-field {:onChange #(setrefcolor "wnref" refs "black")
+                                        :defaultValue ""
+                                        :ref "destinationWSName"})"wnref")
             (create-formatted-label-textfield "Destination Workspace Namespace"
               (style/create-text-field {:defaultValue "" :ref "destinationWSNamespace"})"wnsref")])]
         (clear-both)
