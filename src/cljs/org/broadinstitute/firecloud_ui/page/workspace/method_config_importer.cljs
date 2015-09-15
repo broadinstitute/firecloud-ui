@@ -54,7 +54,7 @@
                             :headers {"Content-Type" "application/json"}
                             :payload {"configurationNamespace" selected-conf-namespace
                                       "configurationName" selected-conf-name
-                                      "configurationSnapshotId" (str selected-conf-snapshot-id)
+                                      "configurationSnapshotId" selected-conf-snapshot-id
                                       "destinationNamespace" dest-conf-namespace
                                       "destinationName" dest-conf-name}
                             :on-done (fn [{:keys [success? xhr]}]
