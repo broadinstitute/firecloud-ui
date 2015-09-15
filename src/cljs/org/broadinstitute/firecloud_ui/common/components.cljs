@@ -139,10 +139,10 @@
                 :onKeyDown (common/create-key-handler [:esc] #((:dismiss-self props)))
                 :onClick (when-not (:blocking? props) #((:dismiss-self props)))}
           [:div {:style (if anchored?
-                          {:position "absolute"
+                          {:position "absolute" :backgroundColor "#fff"
                            :top (get-in @state [:position :top])
                            :left (get-in @state [:position :left])}
-                          {:transform "translate(-50%, 0px)"
+                          {:transform "translate(-50%, 0px)" :backgroundColor "#fff"
                            :position "relative" :marginBottom 60
                            :top 60 :left "50%" :width (:width props)})
                  :onClick (when-not (:blocking? props) #(.stopPropagation %))}

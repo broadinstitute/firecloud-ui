@@ -1,7 +1,6 @@
 (ns org.broadinstitute.firecloud-ui.page.workspace.submission-details
   (:require
     [dmohs.react :as react]
-    cljsjs.moment
     [org.broadinstitute.firecloud-ui.common.components :as comps]
     [org.broadinstitute.firecloud-ui.common.icons :as icons]
     [org.broadinstitute.firecloud-ui.common.style :as style]

@@ -4,11 +4,10 @@
     clojure.string
     [org.broadinstitute.firecloud-ui.common :as common]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
-    [org.broadinstitute.firecloud-ui.common.icons :as icons]
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.common.table :as table]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
-    [org.broadinstitute.firecloud-ui.page.workspace.method-config-importer :as importmc]
+    [org.broadinstitute.firecloud-ui.page.method-config-importer :refer [MethodConfigImporter]]
     [org.broadinstitute.firecloud-ui.page.workspace.method-config-editor :refer [MethodConfigEditor]]
     ))
 
@@ -32,9 +31,15 @@
          {:blocker? true
           :width "80%"
           :dismiss-self #(swap! state dissoc :show-import-overlay?)
-          :content (importmc/render-import-overlay (:workspace-id props)
-                     #(swap! state dissoc :show-import-overlay?)
-                     (:on-config-imported props) nil nil)}])
+          :content (react/create-element
+                     [:div {:style {:padding "1em"}}
+                      [:div {:style {:position "absolute" :top 4 :right 4}}
+                       [comps/Button {:icon :x
+                                      :onClick #(swap! state dissoc :show-import-overlay?)}]]
+                      [MethodConfigImporter {:workspace-id (:workspace-id props)
+                                             :after-import (fn [config]
+                                                             (swap! state dissoc :show-import-overlay?)
+                                                             ((:on-config-imported props) config))}]])}])
       [:div {:style {:float "right" :padding "0 2em 1em 0"}}
        [comps/Button {:text "Import Configuration ..."
                       :onClick #(swap! state assoc :show-import-overlay? true)}]]
@@ -74,8 +79,8 @@
                       [config
                        (config "namespace")
                        (config "rootEntityType")
-                       (config "methodStoreMethod")
-                       (config "methodStoreConfig")])
+                       (config "methodRepoMethod")
+                       (config "methodRepoConfig")])
                     configs)}]))])
    :component-did-mount
    (fn [{:keys [this]}]
