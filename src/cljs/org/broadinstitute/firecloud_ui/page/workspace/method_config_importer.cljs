@@ -84,21 +84,25 @@
           (if (:workspace-id props)
             "Import Method Configuration"
             "Export Method Configuration To Workspace"))
-        (for [[k v] {"Name" selected-conf-name
-                     "Namespace" selected-conf-namespace
-                     "Snapshot Id" selected-conf-snapshot-id}]
-          (create-formatted-label-text k v))
-        (create-formatted-label-textfield "Destination Name"
-          (style/create-text-field {:defaultValue selected-conf-name :ref "destinationName"}))
-        (create-formatted-label-textfield "Destination Namespace"
-          (style/create-text-field {:defaultValue selected-conf-namespace
-                                    :ref "destinationNamespace"}))
-        (when-not (:workspace-id props)
-          [:div {}
-           (create-formatted-label-textfield "Destination Workspace Name"
-             (style/create-text-field {:defaultValue "" :ref "destinationWSName"}))
-           (create-formatted-label-textfield "Destination Workspace Namespace"
-             (style/create-text-field {:defaultValue "" :ref "destinationWSNamespace"}))])
+        [:div {:style {:float "left"}}
+         (for [[k v] {"Name" selected-conf-name
+                      "Namespace" selected-conf-namespace
+                      "Snapshot Id" selected-conf-snapshot-id}]
+           (create-formatted-label-text k v))]
+        [:div {:style {:float "right"}}
+         (create-formatted-label-textfield "Destination Name"
+           (style/create-text-field {:defaultValue selected-conf-name
+                                     :ref "destinationName"}) )
+         (create-formatted-label-textfield "Destination Namespace"
+           (style/create-text-field {:defaultValue selected-conf-namespace
+                                     :ref "destinationNamespace"}) )
+         (when-not (:workspace-id props)
+           [:div {}
+            (create-formatted-label-textfield "Destination Workspace Name"
+              (style/create-text-field {:defaultValue "" :ref "destinationWSName"}) )
+            (create-formatted-label-textfield "Destination Workspace Namespace"
+              (style/create-text-field {:defaultValue "" :ref "destinationWSNamespace"}))])]
+        (clear-both)
         (render-import-button props refs state)
         (when (:importing? @state)
           [comps/Blocker {:banner (if (:workspace-id props)
