@@ -1,5 +1,5 @@
 <html>
-  <?php $is_release_build = count($argv) > 1 && $argv[1] == 'release'; ?>
+  <?php $is_minimized_build = getenv('BUILD_TYPE') == 'minimized'; ?>
   <head profile="http://www.w3.org/2005/10/profile">
     <meta charset="utf-8">
     <meta http-equiv="Content-type" content="text/html;charset=utf-8">
@@ -40,14 +40,14 @@
       ga('create', 'UA-64736463-1', 'auto');
       ga('send', 'pageview');
     </script>
-    <?php if (!$is_release_build) { ?>
+    <?php if (!$is_minimized_build) { ?>
       <script src="build/goog/base.js"></script>
     <?php } ?>
   </head>
   <body>
     <div id="contentRoot"></div>
     <script src="compiled.js"></script>
-    <?php if (!$is_release_build) { ?>
+    <?php if (!$is_minimized_build) { ?>
       <script>goog.require('org.broadinstitute.firecloud_ui.main');</script>
     <?php } ?>
     <script>

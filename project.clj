@@ -1,5 +1,7 @@
 (def root-ns "org.broadinstitute")
 (def build-dir-relative "target")
+(def server-name (or (System/getenv "SERVER_NAME")
+                     (throw (Exception. "SERVER_NAME is not defined"))))
 
 
 (defproject org.broadinstitute/firecloud-ui "0.0.1"
@@ -22,12 +24,13 @@
                                       :figwheel
                                       {:on-jsload ~(str root-ns
                                                         ".firecloud-ui.main/dev-reload")
-                                       :websocket-url "ws://dhost:3449/figwheel-ws"}}}}}
-             :release {:cljsbuild
-                       {:builds {:client {:compiler
-                                          {:optimizations :advanced
-                                           :pretty-print false
-                                           :closure-defines {"goog.DEBUG" false}}}}}}}
+                                       :websocket-url ~(str "ws://" server-name
+                                                            ":3449/figwheel-ws")}}}}}
+             :minimized {:cljsbuild
+                         {:builds {:client {:compiler
+                                            {:optimizations :advanced
+                                             :pretty-print false
+                                             :closure-defines {"goog.DEBUG" false}}}}}}}
   :cljsbuild {:builds {:client {:source-paths ["src/cljs"]
                                 :compiler {:output-dir ~(str build-dir-relative "/build")
                                            :output-to ~(str build-dir-relative "/compiled.js")}}}})
