@@ -148,7 +148,7 @@
                          (call-external-object-method :getAuthResponse)
                          (aget "access_token"))]
     (ajax (assoc
-           arg-map :url (str "/api" path)
+           arg-map :url (str "/service/api" path)
            :headers (merge {"Authorization" (str "Bearer " access-token)}
                            (:headers arg-map))))))
 

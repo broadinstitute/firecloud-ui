@@ -1,10 +1,15 @@
 <html>
+  <?php $is_release_build = count($argv) > 1 && $argv[1] == 'release'; ?>
   <head profile="http://www.w3.org/2005/10/profile">
     <meta charset="utf-8">
     <meta http-equiv="Content-type" content="text/html;charset=utf-8">
     <meta name="viewport" content="initial-scale=1,width=device-width">
     <meta name="google-signin-scope" content="profile email">
-    <meta name="google-signin-client_id" content="806222273987-2ntvt4hnfsikqmhhc18l64vheh4cj34q.apps.googleusercontent.com">
+    <?php if (!getenv('GOOGLE_CLIENT_ID')) {
+          fwrite(STDERR, "Missing ENV var GOOGLE_CLIENT_ID\n");
+          exit(1);
+    } ?>
+    <meta name="google-signin-client_id" content="<?php echo getenv('GOOGLE_CLIENT_ID') ?>">
     <title>FireCloud | Broad Institute</title>
     <link href='//fonts.googleapis.com/css?family=Roboto:400,500,700' rel='stylesheet' type='text/css'>
     <style>
@@ -35,14 +40,14 @@
       ga('create', 'UA-64736463-1', 'auto');
       ga('send', 'pageview');
     </script>
-    <?php if ($argv[1] != 'release') { ?>
+    <?php if (!$is_release_build) { ?>
       <script src="build/goog/base.js"></script>
     <?php } ?>
   </head>
   <body>
     <div id="contentRoot"></div>
     <script src="compiled.js"></script>
-    <?php if ($argv[1] != 'release') { ?>
+    <?php if (!$is_release_build) { ?>
       <script>goog.require('org.broadinstitute.firecloud_ui.main');</script>
     <?php } ?>
     <script>

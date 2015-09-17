@@ -15,7 +15,8 @@
 
 ; Temporary replacement for the Broad Logo.
 (defn- text-logo []
-  [:div {:style {:fontSize "32px" :color (:button-blue style/colors) :fontWeight "bold"}} "FireCloud"])
+  [:div {:style {:fontSize "32px" :color (:button-blue style/colors) :fontWeight "bold"}}
+   "FireCloud"])
 
 (defn- footer []
   (let [thisyear (.getFullYear (js/Date.))
@@ -48,10 +49,10 @@
 (def top-nav-bar-items
   [{:key :workspaces
     :name "Workspaces"
-    :component workspaces/Page}
+    :render #(react/create-element workspaces/Page %)}
    {:key :methods
     :name "Method Repository"
-    :component method-repo/Page}])
+    :render #(react/create-element method-repo/Page %)}])
 
 
 (react/defc TopNavBarLink
@@ -99,7 +100,7 @@
 
         (let [item (first (filter #(= (% :key) page) top-nav-bar-items))]
           (if item
-            [(item :component) {:nav-context nav-context}]
+            ((item :render) {:nav-context nav-context})
             [:div {} "Page not found."]))]))})
 
 
