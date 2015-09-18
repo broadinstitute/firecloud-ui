@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="Content-type" content="text/html;charset=utf-8">
     <meta name="viewport" content="initial-scale=1,width=device-width">
-    <meta name="google-signin-scope" content="profile email">
+    <meta name="google-signin-scope" content="profile email https://www.googleapis.com/auth/devstorage.full_control https://www.googleapis.com/auth/compute">
     <?php if (!getenv('GOOGLE_CLIENT_ID')) {
           fwrite(STDERR, "Missing ENV var GOOGLE_CLIENT_ID\n");
           exit(1);
