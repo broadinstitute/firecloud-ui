@@ -44,6 +44,11 @@
              (when (:saving? @state)
                [comps/Blocker {:banner "Updating..."}])
              [:div {:style {:paddingBottom "0.5em" :fontSize "90%"}}
+              [:h4 {} (let [workspace-id (:workspace-id props)
+                            ws-name (:name workspace-id)
+                            ws-ns (:namespace workspace-id)]
+                        (str "Permisssions for "
+                          (clojure.string/join ":" [ws-ns ws-name])))]
               [:div {:style {:float "left" :width column-width}} "User or Group ID"]
               [:div {:style {:float "right" :width column-width}} "Access Level"]
               (common/clear-both)]
