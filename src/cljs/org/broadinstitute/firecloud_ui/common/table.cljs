@@ -354,6 +354,7 @@
           (when paginator-above [:div {:style {:paddingBottom (:paginator-space props)}} paginator])
           [:div {:style {:overflowX "auto"}}
            [:div {:style {:position "relative"
+                          :paddingBottom 10
                           :minWidth (reduce
                                       + (map :width (filter :showing? (:ordered-columns @state))))
                           :cursor (when (:dragging? @state) "col-resize")}}
