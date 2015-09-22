@@ -21,6 +21,10 @@ EXPOSE 80
 
 WORKDIR /app
 
+ENV SERVER_NAME=dhost
+ENV GOOGLE_CLIENT_ID=not-valid
+ENV BUILD_TYPE=minimized
+
 COPY project.clj project.clj
 # Tell lein that running as root is okay.
 ENV LEIN_ROOT=1
@@ -29,11 +33,7 @@ RUN lein deps
 # File copies are explicit to ensure rebuilds use as much cache as possible.
 COPY src src
 COPY script/common script/common
-COPY script/release/build-once.sh script/release/build-once.sh
-COPY script/release/build-release.sh script/release/build-release.sh
-
-ENV GOOGLE_CLIENT_ID=not-valid
-RUN ./script/release/build-release.sh
+RUN ./script/common/build.sh once
 
 COPY src/docker/apache-site.conf /etc/apache2/sites-available/site.conf
 COPY src/docker/run-apache.sh /etc/service/apache2/run
@@ -44,8 +44,16 @@ ENV CALLBACK_URI=http://example.com/
 ENV HTTPD_PORT=80 SSL_HTTPD_PORT=443
 ENV SERVER_ADMIN=devops@broadinstitute.org
 ENV LOG_LEVEL=warn
-ENV SERVER_NAME=dhost
 ENV ORCH_URL_ROOT=http://orch:8080
 
 # Override in development since figwheel does not support secure websockets.
 ENV HTTPS_ONLY=true
+
+# TODO(dmohs): openidc-baseimage warns about these undefined environment variables, though they are
+# not used in our site.conf.
+# - CLIENTID
+# - CLIENTSECRET
+# - OIDC_SCOPES
+# - OIDC_COOKIE
+# - CLIENTID
+# - CLIENTSECRET
