@@ -77,9 +77,10 @@
        (assert selected-config (str "Missing a selected configuration: " props))
        (assert on-import (str "Missing on-import handler: " props))
        [:div {}
-        [:div {:style {:position "absolute" :left 2 :top 2}}
-         [comps/Button {:icon :angle-left
-                        :onClick #((:on-back props))}]]
+        (when-not (nil? workspace-id)
+          [:div {:style {:position "absolute" :left 2 :top 2}}
+           [comps/Button {:icon :angle-left
+                          :onClick #((:on-back props))}]])
         (create-formatted-header
           (if (:workspace-id props)
             "Import Method Configuration"
@@ -161,15 +162,17 @@
                                 (str "Loading configurations for " (:selected-method props))
                                 "Loading configurations for import...")}])])
    :component-did-mount
-   (fn [{:keys [state]}]
+   (fn [{:keys [state props]}]
+     (if (:init-selected-config props)
+       (swap! state assoc :selected-method-config (:init-selected-config props))
      (endpoints/call-ajax-orch
        {:endpoint endpoints/list-configurations
         :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                    (if success?
                      (swap! state assoc :method-configs (get-parsed-response))
-                     (swap! state assoc :error-message status-text)))}))})
+                     (swap! state assoc :error-message status-text)))})))})
 
-(defn render-import-overlay [workspace-id on-close on-import selected-method]
+(defn render-import-overlay [workspace-id on-close on-import selected-method selected-config]
   (react/create-element
     [:div {}
      [:div {:style {:position "absolute" :right 2 :top 2}}
@@ -179,5 +182,6 @@
       [ModalPage {:workspace-id workspace-id
                   :on-close on-close
                   :on-import on-import
-                  :selected-method selected-method}]
+                  :selected-method selected-method
+                  :init-selected-config selected-config}]
       [:div {:style {:paddingTop "0.5em"}}]]]))

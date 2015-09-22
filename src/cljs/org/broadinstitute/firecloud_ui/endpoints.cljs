@@ -252,7 +252,15 @@
    :mock-data
    (map
      (fn [i]
-       {:name (str "Configuration " (inc i))
+       {:method
+        {"name" (rand-nth ["sleepMethod" "wakeMethod" "dreamMethod"])
+         "createDate" "2015-09-11T16:49:37Z"
+         "url" "http://agora.dsde-dev.broadinstitute.org/methods/broad-dsde-dev/sleepMethod/1"
+         "synopsis" "sleepy synopsis"
+         "entityType" "Workflow"
+         "snapshotId" (rand-int 10)
+         "namespace" "broad-dsde-dev"}
+        :name (str "Configuration " (inc i))
         :url (str "http://agora-ci.broadinstitute.org/configurations/joel_test/jt_test_config/1")
         :namespace (rand-nth ["Broad" "nci" "public" "ISB"])
         :snapshotId (rand-nth (range 100))
