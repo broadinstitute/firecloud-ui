@@ -208,25 +208,12 @@
   {:get-filter-text
    (fn [{:keys [refs]}]
      (-> (@refs "filter-field") .getDOMNode .-value trim))
-   :get-initial-state
-   (fn [] {:initial true :synced true})
    :render
-   (fn [{:keys [state this]}]
+   (fn [{:keys [this props]}]
      [:div {}
       (style/create-text-field
         {:ref "filter-field" :placeholder "Filter"
-         :style {:backgroundColor (if (:synced @state) "#fff" (:tag-background style/colors))}
-         :onKeyDown (common/create-key-handler
-                      [:enter] #(react/call :apply-filter this))
-         :onChange #(swap! state assoc :initial false :synced false)})
-      [:span {:style {:paddingLeft "1em"}}]
-      [comps/Button {:icon :search :onClick #(react/call :apply-filter this)}]])
-   :apply-filter
-   (fn [{:keys [this state props]}]
-     (swap! state assoc :synced true)
-     (let [text (react/call :get-filter-text this)]
-       (when (empty? text) (swap! state assoc :initial true))
-       ((:onFilter props) text)))})
+         :onChange #((:onFilter props) (react/call :get-filter-text this))})])})
 
 
 (react/defc ColumnEditor
