@@ -111,20 +111,19 @@
       [:div {:style {:padding "50px 25px"}}
        [:div {:style {:marginBottom "2em"}} (text-logo)]
        [:div {:className "g-signin2" :data-onsuccess "onSignIn" :data-theme "dark"}]
-       [:div {:style {:paddingTop "25px" :fontSize ".75em"}}
-        [:p {:style {:fontWeight "bold"}} "Warning"]
+       [:div {:style {:width "600px" :paddingTop "25px" :fontSize ".75em"}}
+        [:p {:style {:fontWeight "bold"}} "WARNING NOTICE"]
         [:p {}
-         "This is a U.S. Government computer system, which may be accessed and used only for"
-         " authorized Government business by authorized personnel. Unauthorized access or use of"
-         " this computer system may subject violators to criminal, civil, and/or administrative"
-         " action."]
+         "You are accessing a US Government web site which may contain information that must be protected under the US"
+         " Privacy Act or other sensitive information and is intended for Government authorized use only."]
         [:p {}
-         "All information on this computer system may be intercepted, recorded, read, copied, and"
-         " disclosed by and to authorized personnel for official purposes, including criminal"
-         " investigations. Such information includes sensitive data encrypted to comply with"
-         " confidentiality and privacy requirements. Access or use of this computer system by any"
-         " person, whether authorized or unauthorized, constitutes consent to these terms. There"
-         " is no right of privacy in this system."]]]])})
+         "Unauthorized attempts to upload information, change information, or use of this web site may result in"
+         " disciplinary action, civil, and/or criminal penalties. Unauthorized users of this website should have no"
+         " expectation of privacy regarding any communications or data processed by this website."]
+        [:p {}
+         "Anyone accessing this website expressly consents to monitoring of their actions and all communications or"
+         " data transiting or stored on related to this website and is advised that if such monitoring reveals possible"
+         " evidence of criminal activity, NIH may provide that evidence to law enforcement officials."]]]])})
 
 
 (react/defc App
