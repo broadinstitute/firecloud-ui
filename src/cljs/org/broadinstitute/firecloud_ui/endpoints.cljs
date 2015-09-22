@@ -35,7 +35,7 @@
                       :name (str "Workspace " (inc i))
                       :status status
                       :createdBy ns
-                      :createdDate (.toISOString (js/Date.))}
+                      :createdDate (utils/rand-recent-time)}
           :workspaceSubmissionStats {:runningSubmissionsCount (rand-int 2)
                                      :lastSuccessDate (rand-nth [nil (utils/rand-recent-time)])
                                      :lastFailureDate (rand-nth [nil (utils/rand-recent-time)])}
@@ -363,3 +363,12 @@
                               (str "configurations")))]
            (str "/" base "/" nmsp "/" name "/" sid "/permissions"))
    :method :post})
+
+
+(defn copy-entity-to-workspace [workspace-id]
+  {:path (str "/workspaces/" (ws-path workspace-id) "/entities/copy")
+   :method :post
+   :mock-data
+   {:sourceWorkspace {:namespace (:namespace workspace-id), :name (:name workspace-id)}
+    :entityType (rand-nth ["sample" "participant"])
+    :entityNames ["entity1"]}})
