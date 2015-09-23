@@ -70,17 +70,16 @@
         :empty-message "No Workflows"
         :columns [{:header "Data Entity" :starting-width 200 :sort-by :value}
                   {:header "Last Changed" :starting-width 280 :sort-by :value
-                   :content-renderer (fn [row-index date]
-                                       (let [m (js/moment date)]
-                                         (str (.format m "L [at] LTS") " ("
-                                           (.fromNow m) ")")))}
+                   :content-renderer #(let [m (js/moment %)]
+                                       (str (.format m "L [at] LTS") " ("
+                                         (.fromNow m) ")"))}
                   {:header "Status" :starting-width 120 :sort-by :value
-                   :content-renderer (fn [row-index status]
+                   :content-renderer (fn [status]
                                        [:div {}
                                         (icon-for-wf-status status)
                                         status])}
                   {:header "Messages" :starting-width 300 :sort-by count
-                   :content-renderer (fn [row-index message-list]
+                   :content-renderer (fn [message-list]
                                        [:div {}
                                         (map (fn [message]
                                                [:div {} message])
@@ -104,10 +103,10 @@
        :columns [{:header "Data Entity" :starting-width 200 :sort-by :value
                   :filter-by (fn [entity]
                                (str (:type entity) " " (:name entity)))
-                  :content-renderer (fn [i entity]
+                  :content-renderer (fn [entity]
                                       (str (:name entity) " (" (:type entity) ")"))}
                  {:header "Errors" :starting-width 500 :sort-by count
-                  :content-renderer (fn [i error-list]
+                  :content-renderer (fn [error-list]
                                       [:div {}
                                        (map (fn [error]
                                               [:div {} error])

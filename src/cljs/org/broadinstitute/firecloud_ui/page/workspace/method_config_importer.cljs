@@ -121,7 +121,7 @@
          {:empty-message "There are no method configurations available"
           :columns [{:header "Name" :starting-width 200 :filter-by #(% "name") :sort-by #(% "name")
                      :content-renderer
-                     (fn [row-index conf]
+                     (fn [conf]
                        [:a {:href "javascript:;"
                             :onClick #(on-config-selected conf)
                             :style {:color (:button-blue style/colors) :textDecoration "none"}}

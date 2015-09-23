@@ -50,7 +50,7 @@
             :columns
             [{:header "Name" :starting-width 240 :sort-by #(% "name") :filter-by #(% "name")
               :content-renderer
-              (fn [row-index config]
+              (fn [config]
                 [:a {:href "javascript:;"
                      :style {:color (:button-blue style/colors) :textDecoration "none"}
                      :onClick #((:on-config-selected props) config)}
@@ -60,17 +60,15 @@
              {:header "Method Store Method" :starting-width 300
               :filter-by #(str (% "methodNamespace") (% "methodName") (% "methodVersion"))
               :content-renderer
-              (fn [row-index msm]
-                (render-map msm
-                  ["methodNamespace" "methodName" "methodVersion"]
-                  ["Namespace" "Name" "Version"]))}
+              #(render-map %
+                ["methodNamespace" "methodName" "methodVersion"]
+                ["Namespace" "Name" "Version"])}
              {:header "Method Store Configuration" :starting-width 300
               :filter-by #(str (% "methodConfigNamespace") (% "methodConfigName") (% "methodConfigVersion"))
               :content-renderer
-              (fn [row-index msc]
-                (render-map msc
-                  ["methodConfigNamespace" "methodConfigName" "methodConfigVersion"]
-                  ["Namespace" "Name" "Version"]))}]
+              #(render-map %
+                ["methodConfigNamespace" "methodConfigName" "methodConfigVersion"]
+                ["Namespace" "Name" "Version"])}]
             :data (map
                     (fn [config]
                       [config

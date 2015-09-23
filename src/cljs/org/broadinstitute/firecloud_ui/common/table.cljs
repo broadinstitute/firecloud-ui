@@ -191,10 +191,10 @@
             [:div {:style row-style}
              (map
                (fn [col]
-                 (let [render-content (or (:content-renderer col) (fn [i data] (default-render data)))]
+                 (let [render-content (or (:content-renderer col) (fn [data] (default-render data)))]
                    (render-cell
                      {:width (:width col)
-                      :content (render-content row-index (nth row (:index col)))
+                      :content (render-content (nth row (:index col)))
                       :cell-padding-left (or (:cell-padding-left props) 0)
                       :content-container-style (merge
                                                  {:padding (str "0.6em 0 0.6em " (or (:cell-padding-left props) 0))}

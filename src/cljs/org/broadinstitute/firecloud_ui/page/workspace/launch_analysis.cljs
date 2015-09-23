@@ -58,7 +58,7 @@
       :empty-message "No entities available."
       :columns (concat
                 [{:header "" :starting-width 40 :resizable? false :reorderable? false
-                  :content-renderer (fn [i data]
+                  :content-renderer (fn [data]
                                       [:input {:type "radio"
                                                :checked (identical? data selected-entity)
                                                :onChange #(on-entity-selected data)}])}
