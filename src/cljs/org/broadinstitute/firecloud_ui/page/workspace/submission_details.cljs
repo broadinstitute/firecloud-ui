@@ -68,12 +68,12 @@
       [table/Table
        {:key (:active-filter @state)
         :empty-message "No Workflows"
-        :columns [{:header "Data Entity" :starting-width 200 :sort-by :value}
-                  {:header "Last Changed" :starting-width 280 :sort-by :value
+        :columns [{:header "Data Entity" :starting-width 200}
+                  {:header "Last Changed" :starting-width 280
                    :content-renderer #(let [m (js/moment %)]
                                        (str (.format m "L [at] LTS") " ("
                                          (.fromNow m) ")"))}
-                  {:header "Status" :starting-width 120 :sort-by :value
+                  {:header "Status" :starting-width 120
                    :content-renderer (fn [status]
                                        [:div {}
                                         (icon-for-wf-status status)
@@ -84,7 +84,7 @@
                                         (map (fn [message]
                                                [:div {} message])
                                           message-list)])}
-                  {:header "Workflow ID" :starting-width 300 :sort-by :value}]
+                  {:header "Workflow ID" :starting-width 300}]
         :data (map (fn [row]
                      [(str (get-in row ["workflowEntity" "entityName"]) " ("
                         (get-in row ["workflowEntity" "entityType"]) ")")
@@ -100,7 +100,7 @@
    (fn [{:keys [props]}]
      [table/Table
       {:empty-message "No Workflows"
-       :columns [{:header "Data Entity" :starting-width 200 :sort-by :value
+       :columns [{:header "Data Entity" :starting-width 200 :sort-by (juxt :type :name)
                   :filter-by (fn [entity]
                                (str (:type entity) " " (:name entity)))
                   :content-renderer (fn [entity]

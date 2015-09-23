@@ -21,9 +21,9 @@
                                :style {:color (:button-blue style/colors) :textDecoration "none"}
                                :onClick #(on-submission-clicked (submission "submissionId"))}
                            (.format (js/moment (submission "submissionDate")) "LLL")])}
-     {:header "Status" :sort-by :value}
-     {:header "Method Configuration" :starting-width 220 :sort-by :value}
-     {:header "Data Entity" :starting-width 220 :sort-by :value}]
+     {:header "Status"}
+     {:header "Method Configuration" :starting-width 220}
+     {:header "Data Entity" :starting-width 220}]
     :data (map (fn [x]
                  [x
                   (x "status")

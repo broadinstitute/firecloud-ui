@@ -30,9 +30,9 @@
          {:key (:entity-type @state)
           :empty-message "There are no entities to display."
           :columns (concat
-                     [{:header "Entity Type" :starting-width 100 :sort-by :value}
-                      {:header "Entity Name" :starting-width 100 :sort-by :value}]
-                     (map (fn [k] {:header k :starting-width 100 :sort-by :value}) attribute-keys))
+                     [{:header "Entity Type" :starting-width 100}
+                      {:header "Entity Name" :starting-width 100}]
+                     (map (fn [k] {:header k :starting-width 100}) attribute-keys))
           :data (map (fn [m]
                        (concat
                          [(m "entityType")

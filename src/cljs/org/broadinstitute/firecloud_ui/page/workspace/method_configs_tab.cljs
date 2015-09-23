@@ -55,15 +55,15 @@
                      :style {:color (:button-blue style/colors) :textDecoration "none"}
                      :onClick #((:on-config-selected props) config)}
                  (config "name")])}
-             {:header "Namespace" :starting-width 200 :sort-by :value}
-             {:header "Root Entity Type" :starting-width 140 :sort-by :value}
-             {:header "Method Store Method" :starting-width 300
+             {:header "Namespace" :starting-width 200}
+             {:header "Root Entity Type" :starting-width 140}
+             {:header "Method Store Method" :starting-width 300 :sort-by :none
               :filter-by #(str (% "methodNamespace") (% "methodName") (% "methodVersion"))
               :content-renderer
               #(render-map %
                 ["methodNamespace" "methodName" "methodVersion"]
                 ["Namespace" "Name" "Version"])}
-             {:header "Method Store Configuration" :starting-width 300
+             {:header "Method Store Configuration" :starting-width 300  :sort-by :none
               :filter-by #(str (% "methodConfigNamespace") (% "methodConfigName") (% "methodConfigVersion"))
               :content-renderer
               #(render-map %

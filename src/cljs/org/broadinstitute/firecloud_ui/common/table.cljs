@@ -146,7 +146,9 @@
             :onResizeMouseDown onResizeMouseDown
             :onResizeDoubleClick #(swap! state update-in [:ordered-columns display-index]
                                      assoc :width (:starting-width column))
-            :onSortClick (when-let [sorter (:sort-by column)]
+            :onSortClick (when (and (or (:sort-by column)
+                                        (:sortable-columns? props))
+                                    (not= :none (:sort-by column)))
                            (fn [e]
                              (if (= i (:sort-column @state))
                                (case (:sort-order @state)
@@ -154,9 +156,9 @@
                                  :desc (swap! state dissoc :sort-column :sort-order :key-fn)
                                  (assert false "bad state"))
                                (swap! state assoc :sort-column i :sort-order :asc
-                                 :key-fn (if (= :value sorter)
-                                           (fn [row] (str (nth row i)))
-                                           (fn [row] (sorter (nth row i))))))
+                                 :key-fn (if-let [sorter (:sort-by column)]
+                                           (fn [row] (sorter (nth row i)))
+                                           (fn [row] (nth row i)))))
                              (react/call :set-body-rows this)))
             :sortOrder (when (= i (:sort-column @state)) (:sort-order @state))})))
      (filter :showing? (:ordered-columns @state)))
@@ -317,6 +319,7 @@
       :paginator-space 24
       :resizable-columns? true
       :reorderable-columns? true
+      :sortable-columns? true
       :filterable? true
       :empty-message "There are no rows to display."})
    :get-initial-state
