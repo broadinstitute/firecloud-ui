@@ -4,7 +4,7 @@
    [org.broadinstitute.firecloud-ui.common.style :as style]
    [org.broadinstitute.firecloud-ui.nav :as nav]
    [org.broadinstitute.firecloud-ui.page.method-repo :as method-repo]
-   [org.broadinstitute.firecloud-ui.page.import-data :as import-data]
+   [org.broadinstitute.firecloud-ui.page.status :as status-page]
    [org.broadinstitute.firecloud-ui.page.workspaces-list :as workspaces]
    [org.broadinstitute.firecloud-ui.utils :as utils :refer [rlog jslog cljslog]]
    ))
@@ -17,6 +17,25 @@
 (defn- text-logo []
   [:div {:style {:fontSize "32px" :color (:button-blue style/colors) :fontWeight "bold"}}
    "FireCloud"])
+
+
+(react/defc PopUpFooterControl
+  {:render
+   (fn [{:keys [state]}]
+     [:div {:style {:minWidth 50 :minHeight 20}
+            :onMouseOver #(swap! state assoc :visible? true)
+            :onMouseOut #(swap! state dissoc :visible?)}
+      [:div {:style {:display (when-not (or (:visible? @state) (not @utils/use-live-data?)) "none")
+                     :padding 20 :paddingBottom 10 :margin -20 :marginBottom -10}}
+       [:div {}
+        "Fake data: "
+        [:a {:href "javascript:;"
+             :style {:textDecoration "none" :color (if @utils/use-live-data? "green" "red")}
+             :onClick #(do (swap! utils/use-live-data? not) (swap! state assoc :foo 1))}
+         (if @utils/use-live-data? "off" "on")]]
+       [:div {}
+        [:a {:href "#status" :style {:textDecoration "none"}} "Status Page"]]]])})
+
 
 (defn- footer []
   (let [thisyear (.getFullYear (js/Date.))
@@ -33,10 +52,10 @@
                       :onMouseOver #(swap! state assoc :hovering? true)
                       :onMouseOut  #(swap! state assoc :hovering? false)}
                   (:text props)])})]
-    [:div {:style {:backgroundColor (:background-gray style/colors)
-                   :borderTop (str "2px solid " (:line-gray style/colors))
-                   :margin "2em 0px 0px" :padding "1em 25px 5em 25px"
+    [:div {:style {:borderTop (str "2px solid " (:line-gray style/colors))
+                   :padding "1em 25px 2em 25px"
                    :color (:footer-text style/colors) :fontSize "90%"}}
+     [:div {:style {:float "right"}} [PopUpFooterControl]]
      [:div {:style {:display "block"}}
       (str "\u00A9 " yeartext " Broad Institute")
       spacer
@@ -84,7 +103,8 @@
    (fn [{:keys [props]}]
      (let [nav-context (nav/parse-segment (:nav-context props))
            page (keyword (:segment nav-context))]
-       (when-not (contains? (set (map :key top-nav-bar-items)) page)
+       (when-not (or (contains? (set (map :key top-nav-bar-items)) page)
+                     (= page :status))
          (nav/navigate (:nav-context props) "workspaces"))
        [:div {}
         [:div {:style {:padding "1em" :borderBottom (str "1px solid " (:line-gray style/colors))}}
@@ -95,14 +115,15 @@
                (utils/call-external-object-method :getName))]
           [:a {:href "javascript:;" :onClick (fn [e] (utils/log-out))} "Log-Out"]]
          (text-logo)
-         [:div {}
-          [TopNavBar {:selected-item page
-                      :on-nav (fn [item] (nav/navigate (:nav-context props) (name item)))}]]]
-
-        (let [item (first (filter #(= (% :key) page) top-nav-bar-items))]
-          (if item
-            ((item :render) {:nav-context nav-context})
-            [:div {} "Page not found."]))]))})
+         (if (= page :status)
+           (status-page/render)
+           [:div {}
+            [TopNavBar {:selected-item page
+                        :on-nav (fn [item] (nav/navigate (:nav-context props) (name item)))}]
+            (let [item (first (filter #(= (% :key) page) top-nav-bar-items))]
+              (if item
+                ((item :render) {:nav-context nav-context})
+                [:div {} "Page not found."]))])]]))})
 
 
 (react/defc LoggedOut
@@ -141,11 +162,12 @@
    :render
    (fn [{:keys [state]}]
      [:div {}
-      (when (:is-logged-in? @state) [LoggedIn {:nav-context (:root-nav-context @state)}])
-      ;; This has to be hidden rather than simply omitted. After a successful login, Google
-      ;; attempts to find the sign-in button and manipulate it, which throws an error if it is
-      ;; not present on the page.
-      [LoggedOut {:hidden? (:is-logged-in? @state)}] 
+      [:div {:style {:backgroundColor "white" :paddingBottom "2em"}}
+       (when (:is-logged-in? @state) [LoggedIn {:nav-context (:root-nav-context @state)}])
+        ;; This has to be hidden rather than simply omitted. After a successful login, Google
+        ;; attempts to find the sign-in button and manipulate it, which throws an error if it is
+        ;; not present on the page.
+       [LoggedOut {:hidden? (:is-logged-in? @state)}]]
       (footer)])
    :component-did-mount
    (fn [{:keys [this state]}]

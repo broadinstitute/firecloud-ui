@@ -54,6 +54,27 @@
   (js->clj (js/JSON.parse x)))
 
 
+(defn local-storage-write
+  ([k v] (local-storage-write k v false))
+  ([k v stringify?]
+   (assert (keyword? k))
+   (let [value (if stringify? (js/JSON.stringify v) v)]
+     (.setItem window.localStorage (subs (str k) 1) value))))
+
+
+(defn local-storage-read
+  ([k] (local-storage-read k false))
+  ([k parse?]
+   (assert (keyword? k))
+   (let [value (.getItem window.localStorage (subs (str k) 1))]
+     (if parse? (js/JSON.parse value) value))))
+
+
+(defn local-storage-remove [k]
+  (assert (keyword? k))
+  (.removeItem window.localStorage (subs (str k) 1)))
+
+
 ;;
 ;; TODO(dmohs): Move this stuff back into session namespace.
 ;;
@@ -86,13 +107,11 @@
   (reset! on-log-out-atom callback))
 
 
-;;
-;; TODO(dmohs): Move this stuff into separate namespace (endpoints?)
-;;
-
-
-(def use-live-data? true)
-(when-not use-live-data? (assert goog.DEBUG "Mock data in use but DEBUG is false."))
+(defonce use-live-data? (atom (or (local-storage-read ::use-live-data? true) false)))
+(add-watch
+ use-live-data? :save-to-local-storage
+ (fn [k r os ns]
+   (local-storage-write ::use-live-data? ns true)))
 
 
 (defn ajax [arg-map]
@@ -102,7 +121,7 @@
         headers (:headers arg-map)
         data (:data arg-map)
         with-credentials? (:with-credentials? arg-map)
-        canned-response-params (when-not use-live-data? (:canned-response arg-map))]
+        canned-response-params (when-not @use-live-data? (:canned-response arg-map))]
     (assert url (str "Missing url parameter: " arg-map))
     (assert on-done (str "Missing on-done callback: " arg-map))
     (let [xhr (if-not canned-response-params
