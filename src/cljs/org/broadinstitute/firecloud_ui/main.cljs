@@ -113,7 +113,9 @@
            (-> (utils/get-current-user)
                (utils/call-external-object-method :getBasicProfile)
                (utils/call-external-object-method :getName))]
-          [:a {:href "javascript:;" :onClick (fn [e] (utils/log-out))} "Log-Out"]]
+          ;; Sadly, reloading the page seems to be the only reliable way to log out.
+          [:a {:href "javascript:;" :onClick (fn [e] (-> js/window .-location (.reload)))}
+           "Log-Out"]]
          (text-logo)
          (if (= page :status)
            (status-page/render)
@@ -132,7 +134,7 @@
      [:div {:style {:display (when (:hidden? props) "none")}}
       [:div {:style {:padding "50px 25px"}}
        [:div {:style {:marginBottom "2em"}} (text-logo)]
-       [:div {:className "g-signin2" :data-onsuccess "onSignIn" :data-theme "dark"}]
+       [:div {:id "google-sign-in-button"}]
        [:div {:style {:width "600px" :paddingTop "25px" :fontSize ".75em"}}
         [:p {:style {:fontWeight "bold"}} "WARNING NOTICE"]
         [:p {}
@@ -148,11 +150,38 @@
          " evidence of criminal activity, NIH may provide that evidence to law enforcement officials."]]]])})
 
 
+(def google-sign-in-scopes
+  ["profile"
+   "email"
+   "https://www.googleapis.com/auth/devstorage.full_control"
+   "https://www.googleapis.com/auth/compute"])
+
+
 (react/defc App
-  {:handleSignIn ; called from index.html on successful Google sign-in
-   (fn [{:keys [state]} google-user]
-     (utils/set-current-user google-user)
-     (swap! state assoc :is-logged-in? true))
+  {:handleGapiDidLoad
+   (fn [{:keys [state]}]
+     (utils/call-external-object-method
+      js/gapi :load "auth2"
+      (fn []
+        (let [google-auth (-> js/gapi (aget "auth2")
+                              (utils/call-external-object-method
+                               :init
+                               (clj->js
+                                {:client_id (aget js/window "GOOGLE_CLIENT_ID")
+                                 :scope (clojure.string/join " " google-sign-in-scopes)})))]
+          (utils/call-external-object-method
+           (aget google-auth "isSignedIn")
+           :listen (fn [signed-in?]
+                     (swap! state assoc :signed-in? signed-in?))))))
+     (utils/call-external-object-method
+      js/gapi :load "signin2"
+      (fn []
+        (-> js/gapi (aget "signin2")
+            (utils/call-external-object-method
+             :render
+             "google-sign-in-button"
+             (clj->js
+              {:theme "dark"}))))))
    :handle-hash-change
    (fn [{:keys [state]}]
      (swap! state assoc :root-nav-context (nav/create-nav-context)))
@@ -163,15 +192,14 @@
    (fn [{:keys [state]}]
      [:div {}
       [:div {:style {:backgroundColor "white" :paddingBottom "2em"}}
-       (when (:is-logged-in? @state) [LoggedIn {:nav-context (:root-nav-context @state)}])
+       (when (:signed-in? @state) [LoggedIn {:nav-context (:root-nav-context @state)}])
         ;; This has to be hidden rather than simply omitted. After a successful login, Google
         ;; attempts to find the sign-in button and manipulate it, which throws an error if it is
         ;; not present on the page.
-       [LoggedOut {:hidden? (:is-logged-in? @state)}]]
+       [LoggedOut {:hidden? (:signed-in? @state)}]]
       (footer)])
    :component-did-mount
    (fn [{:keys [this state]}]
-     (utils/on-log-out (fn [] (swap! state assoc :is-logged-in? false)))
      (.addEventListener js/window "hashchange" (partial react/call :handle-hash-change this)))})
 
 
