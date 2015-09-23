@@ -49,6 +49,10 @@
               (contains? #{"Failed" "Aborted" "Unknown"} (wf "status"))))
     wfs))
 
+(defn- render-date [date]
+  (let [m (js/moment date)]
+    (str (.format m "L [at] LTS") " (" (.fromNow m) ")")))
+
 (react/defc WorkflowsTable
   {:get-initial-state
    (fn []
@@ -70,15 +74,13 @@
         :empty-message "No Workflows"
         :columns [{:header "Data Entity" :starting-width 200}
                   {:header "Last Changed" :starting-width 280
-                   :content-renderer #(let [m (js/moment %)]
-                                       (str (.format m "L [at] LTS") " ("
-                                         (.fromNow m) ")"))}
+                   :content-renderer render-date :filter-by render-date}
                   {:header "Status" :starting-width 120
                    :content-renderer (fn [status]
                                        [:div {}
                                         (icon-for-wf-status status)
                                         status])}
-                  {:header "Messages" :starting-width 300 :sort-by count
+                  {:header "Messages" :starting-width 300
                    :content-renderer (fn [message-list]
                                        [:div {}
                                         (map (fn [message]

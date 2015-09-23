@@ -311,6 +311,56 @@
         columns)))
 
 
+;; Table component with specifiable style and column behaviors.
+;;
+;; Properties:
+;;   :cell-padding-left (optional, default 16px)
+;;     A CSS padding-left value to apply to each cell
+;;   :paginator (optional, default :below)
+;;     Either :above or :below, determines where the paginator appears relative to the table
+;;   :paginator-space (optional, default 24)
+;;     A CSS padding value used to separate the table and paginator.
+;;   :resizable-columns? (optional, default true)
+;;     Fallback value for column resizing.
+;;   :reorderable-columns? (optional, default true)
+;;     Controls whether or not columns are reorderable.  When true, a reorder widget is presented
+;;   :sortable-columns? (optional, default true)
+;;     Fallback value for column sorting.
+;;   :filterable? (optional, default true)
+;;     Controls whether or not columns are filterable.  When true, a filter widget is presented
+;;   :empty-message (optional, default "There are no rows to display.")
+;;     A banner to display when the table is empty
+;;   :row-style (optional)
+;;     Style to apply to each row.  Properties overridden by :even-row-style and :odd-row-style.
+;;     When row styling is omitted, default properties create alternating white and gray backgrounds
+;;   :even-row-style (optional)
+;;     Style to apply to even-numbered rows.  Properties override :row-style
+;;   :odd-row-style (optional)
+;;     Style to apply to odd-numbered-rows.  Properties override :row-style
+;;   :header-row-style (optional)
+;;     Style to apply to the header row.  When omitted, style is a dark gray background with bold white text
+;;   :columns (REQUIRED)
+;;     A sequence of column maps.  The order given is used as the initial order.
+;;     Columns have the following properties:
+;;       :header (optional, default none)
+;;         The text to display.
+;;       :starting-width (optional, default 100)
+;;         The initial width, which may be resized
+;;       :content-renderer (optional)
+;;         A function from the column value to a displayable representation.  If omitted, a
+;;         default renderer is used which displays a reasonable string for most types
+;;       :resizable? (optional)
+;;         Controls if the column is resizable.  If absent, falls back to the table.
+;;       :filter-by (optional, defaults to 'str')
+;;         A function from the column value to a string to use for matching filter text.
+;;         Use ':filter-by :none' to disable filtering a specific column of an otherwise filterable table.
+;;       :sort-by (optional)
+;;         A function from the column value to a sortable type.  If present, the column is made
+;;         sortable.  If omitted, the :sortable-columns? top-level property is checked to see if
+;;         the column should be sortable, and if so, the column is sorted by the column type directly.
+;;         Use ':sort-by :none' to disable sorting a specific column of an otherwise sortable table.
+;;   :data (REQUIRED)
+;;     A sequence-of-sequences forming the data grid.
 (react/defc Table
   {:get-default-props
    (fn []
