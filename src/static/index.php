@@ -19,6 +19,7 @@
         -webkit-font-smoothing: antialiased;
         -moz-font-smoothing: antialiased;
         -o-font-smoothing: antialiased;
+        background-color: #f4f4f4;
       }
       @font-face {
         font-family: "fontIcons";
