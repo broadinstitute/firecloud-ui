@@ -260,13 +260,13 @@
          "entityType" "Workflow"
          "snapshotId" (rand-int 10)
          "namespace" "broad-dsde-dev"}
+        :entityType "Configuration"
         :name (str "Configuration " (inc i))
         :url (str "http://agora-ci.broadinstitute.org/configurations/joel_test/jt_test_config/1")
         :namespace (rand-nth ["Broad" "nci" "public" "ISB"])
         :snapshotId (rand-nth (range 100))
         :synopsis (str (rand-nth ["variant caller synopsis", "gene analyzer synopsis", "mutect synopsis"]) " " (inc i))
-        :createDate (str "20" (inc i) "-06-10T16:54:26Z")
-        :owner (rand-nth ["thibault@broadinstitute.org" "esalinas@broadinstitute.org"])})
+        :createDate (str "20" (inc i) "-06-10T16:54:26Z")})
      (range (rand-int 50)))})
 
 (defn copy-method-config-to-workspace [workspace-id]
