@@ -27,6 +27,7 @@
               {:render
                (fn [{:keys [props state]}]
                  [:a {:href (:href props)
+                      :target (:target props)
                       :style {:color (:footer-text style/colors)
                               :textDecoration (when-not (:hovering? @state) "none")}
                       :onMouseOver #(swap! state assoc :hovering? true)
@@ -39,11 +40,11 @@
      [:div {:style {:display "block"}}
       (str "\u00A9 " yeartext " Broad Institute")
       spacer
-      [Link {:href "#" :text "Privacy Policy"}]
+      [Link {:href "#" :text "Privacy Policy" :target "_self"}]
       spacer
-      [Link {:href "#" :text "Terms of Service"}]
+      [Link {:href "#" :text "Terms of Service" :target "_self"}]
       spacer
-      [Link {:href "#" :text "Support"}]]]))
+      [Link {:href "mailto:firecloud-help@broadinstitute.org?Subject=FireCloud%20Help" :text "Support" :target "_blank"}]]]))
 
 
 (def top-nav-bar-items
