@@ -2,5 +2,4 @@
 set -euo pipefail
 IFS=$'\n\t'
 
-./script/common/build.sh once
-
+exec docker exec -it firecloud-ui ./script/common/build.sh once
