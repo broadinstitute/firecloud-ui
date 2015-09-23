@@ -266,8 +266,7 @@
         :namespace (rand-nth ["Broad" "nci" "public" "ISB"])
         :snapshotId (rand-nth (range 100))
         :synopsis (str (rand-nth ["variant caller synopsis", "gene analyzer synopsis", "mutect synopsis"]) " " (inc i))
-        :createDate (str "20" (inc i) "-06-10T16:54:26Z")
-        :owner (rand-nth ["thibault@broadinstitute.org" "esalinas@broadinstitute.org"])})
+        :createDate (str "20" (inc i) "-06-10T16:54:26Z")})
      (range (rand-int 50)))})
 
 (defn copy-method-config-to-workspace [workspace-id]
