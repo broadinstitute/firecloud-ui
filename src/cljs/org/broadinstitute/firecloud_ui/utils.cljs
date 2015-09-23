@@ -107,7 +107,8 @@
   (reset! on-log-out-atom callback))
 
 
-(defonce use-live-data? (atom (or (local-storage-read ::use-live-data? true) false)))
+(defonce use-live-data? (atom (let [value (local-storage-read ::use-live-data? true)]
+                                (if (nil? value) true value))))
 (add-watch
  use-live-data? :save-to-local-storage
  (fn [k r os ns]
