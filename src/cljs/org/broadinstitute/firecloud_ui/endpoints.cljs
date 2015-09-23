@@ -260,6 +260,7 @@
          "entityType" "Workflow"
          "snapshotId" (rand-int 10)
          "namespace" "broad-dsde-dev"}
+        :entityType "Configuration"
         :name (str "Configuration " (inc i))
         :url (str "http://agora-ci.broadinstitute.org/configurations/joel_test/jt_test_config/1")
         :namespace (rand-nth ["Broad" "nci" "public" "ISB"])
