@@ -1,6 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 IFS=$'\n\t'
+set -x
 
 BUILD_TYPE=${BUILD_TYPE:-'dev'}
 if [ "$BUILD_TYPE" != 'dev' -a "$BUILD_TYPE" != 'minimized' ]; then
