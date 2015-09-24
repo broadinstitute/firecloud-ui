@@ -1,6 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 IFS=$'\n\t'
+set -x
 
 # Starts server for development.
 # - exposes Figwheel port (3449)
