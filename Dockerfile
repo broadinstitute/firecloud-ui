@@ -5,14 +5,18 @@ FROM broadinstitute/openidc-baseimage
 RUN add-apt-repository ppa:openjdk-r/ppa
 
 RUN apt-get update --fix-missing
-RUN apt-get install -qy openjdk-8-jdk php5-cli rlfe
+RUN apt-get install -y -qq --no-install-recommends \
+  libapache2-mod-shib2 \
+  openjdk-8-jdk \
+  php5-cli \
+  rlfe
 
 # Standard apt-get cleanup.
 RUN apt-get -yq autoremove && \
-    apt-get -yq clean && \
-    rm -rf /var/lib/apt/lists/* && \
-    rm -rf /tmp/* && \
-    rm -rf /var/tmp/*
+  apt-get -yq clean && \
+  rm -rf /var/lib/apt/lists/* && \
+  rm -rf /tmp/* && \
+  rm -rf /var/tmp/*
 
 RUN curl https://raw.githubusercontent.com/technomancy/leiningen/stable/bin/lein > /usr/bin/lein
 RUN chmod 755 /usr/bin/lein
@@ -40,6 +44,9 @@ COPY script/common script/common
 RUN ./script/common/build.sh once
 
 COPY src/docker/run-apache.sh /etc/service/apache2/run
+COPY src/docker/shibboleth2.xml /etc/shibboleth/shibboleth2.xml
+COPY script/release/run-shibboleth.sh /etc/service/shibboleth/run
+# Idp metadata available at https://this-host/Shibboleth.sso/Metadata
 
 # openidc-baseimage requires this unused variable.
 ENV CALLBACK_URI=http://example.com/

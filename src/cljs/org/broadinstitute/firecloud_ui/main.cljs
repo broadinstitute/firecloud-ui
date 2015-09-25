@@ -172,7 +172,16 @@
           (utils/call-external-object-method
            (aget google-auth "isSignedIn")
            :listen (fn [signed-in?]
-                     (swap! state assoc :signed-in? signed-in?))))))
+                     (swap! state assoc :signed-in? signed-in?)
+                     ;; Also set cookie for easy Swagger use.
+                     (let [expire-date (js/Date.)
+                           auth-response (utils/call-external-object-method
+                                          (utils/get-current-user) :getAuthResponse)]
+                       ;; Set expiration for one hour from now.
+                       (.setTime expire-date (+ (.getTime expire-date) (* 60 60 1000)))
+                       (set! js/document.cookie
+                             (str "access_token=" (aget auth-response "access_token")
+                                  "; expires=" (.toGMTString expire-date) "; path=/"))))))))
      (utils/call-external-object-method
       js/gapi :load "signin2"
       (fn []
