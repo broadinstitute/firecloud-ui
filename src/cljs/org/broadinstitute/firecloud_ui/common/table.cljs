@@ -234,7 +234,7 @@
 (react/defc ColumnEditor
   {:render
    (fn [{:keys [props state refs]}]
-     [:div {:style {:backgroundColor "#fff" :border (str "2px solid " (:line-gray style/colors))
+     [:div {:style {:border (str "2px solid " (:line-gray style/colors))
                     :padding "1em" :lineHeight "1.5em" :cursor (when (:drag-active @state) "ns-resize")}
             :onMouseMove (when (:drag-index @state)
                            (fn [e]

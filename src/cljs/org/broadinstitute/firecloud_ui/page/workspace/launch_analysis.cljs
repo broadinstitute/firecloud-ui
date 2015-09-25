@@ -113,7 +113,7 @@
 (react/defc Page
   {:render
    (fn [{:keys [props state refs]}]
-     [:div {:style {:backgroundColor "white"}}
+     [:div {}
       [:div {:style {:borderBottom (str "1px solid " (:line-gray style/colors))
                      :padding "20px 48px 18px"
                      :fontSize "137%" :fontWeight 400 :lineHeight 1}}

@@ -83,3 +83,9 @@
                              :WebkitTouchCallout "none" :WebkitUserSelect "none"
                              :KhtmlUserSelect "none" :MsUserSelect "none"}} props)
    children])
+
+(defn create-link [onClick & children]
+  [:a {:href "javascript:;"
+       :style {:textDecoration "none" :color (:button-blue colors)}
+       :onClick onClick}
+   children])

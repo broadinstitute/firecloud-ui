@@ -37,18 +37,16 @@
        :dismiss-self (:dismiss-self props)
        :content
        (react/create-element
-         [:div {:style {:background "#fff" :padding "2em"}}
+         [:div {:style {:padding "2em"}}
           (cond
             (:acl-vec @state)
             [:div {}
              (when (:saving? @state)
                [comps/Blocker {:banner "Updating..."}])
-             [:div {:style {:paddingBottom "0.5em" :fontSize "90%"}}
-              [:h4 {} (let [workspace-id (:workspace-id props)
-                            ws-name (:name workspace-id)
-                            ws-ns (:namespace workspace-id)]
-                        (str "Permisssions for "
-                          (clojure.string/join ":" [ws-ns ws-name])))]
+             [:div {:style {:fontWeight 500}}
+              (let [workspace-id (:workspace-id props)]
+                (str "Permissions for " (:namespace workspace-id) ":" (:name workspace-id)))]
+             [:div {:style {:padding "0.5em 0" :fontSize "90%"}}
               [:div {:style {:float "left" :width column-width}} "User or Group ID"]
               [:div {:style {:float "right" :width column-width}} "Access Level"]
               (common/clear-both)]

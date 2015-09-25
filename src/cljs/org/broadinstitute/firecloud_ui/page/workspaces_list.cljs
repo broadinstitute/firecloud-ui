@@ -20,8 +20,7 @@
 (defn- render-modal [state refs nav-context]
   (react/create-element
     [:div {}
-     [:div {:style {:backgroundColor "#fff"
-                    :borderBottom (str "1px solid " (:line-gray style/colors))
+     [:div {:style {:borderBottom (str "1px solid " (:line-gray style/colors))
                     :padding "20px 48px 18px"
                     :fontSize "137%" :fontWeight 400 :lineHeight 1}}
       "Create New Workspace"]

@@ -30,7 +30,7 @@
      (fn [i]
        (let [ns (rand-nth ["broad" "public" "nci"])
              status (rand-nth ["Complete" "Running" "Exception"])]
-         {:accessLevel "OWNER"
+         {:accessLevel (rand-nth ["OWNER" "WRITER" "READER"])
           :workspace {:namespace ns
                       :name (str "Workspace " (inc i))
                       :status status
@@ -39,7 +39,9 @@
           :workspaceSubmissionStats {:runningSubmissionsCount (rand-int 2)
                                      :lastSuccessDate (rand-nth [nil (utils/rand-recent-time)])
                                      :lastFailureDate (rand-nth [nil (utils/rand-recent-time)])}
-          :owners ["test@broadinstitute.org"]}))
+          :owners (utils/rand-subset ["test@broadinstitute.org"
+                                      "test2@broadinstitute.org"
+                                      "you@broadinstitute.org"])}))
      (range (rand-int 100)))})
 
 (defn create-workspace [namespace name]
@@ -76,7 +78,7 @@
    :method :get
    :mock-data
    {:acl (into {} (map (fn [i] [(str "user" i "@broadinstitute.org")
-                                (rand-nth ["OWNER" "WRITER" "READER" "NO ACCESS" "UNKNOWN USER"])])
+                                (rand-nth ["OWNER" "WRITER" "READER"])])
                     (range (inc (rand-int 5)))))}})
 
 (defn update-workspace-acl [workspace-id]
@@ -108,6 +110,10 @@
         :prerequisites {"unused 1" "Predicate 1"
                         "unused 2" "Predicate 2"}})
      (range (rand-int 50)))})
+
+(defn post-workspace-method-config [workspace-id]
+  {:path (str "/workspaces/" (ws-path workspace-id) "/methodconfigs")
+   :method :post})
 
 (defn get-workspace-method-config [workspace-id config]
   {:path (str "/workspaces/" (ws-path workspace-id)
@@ -241,7 +247,13 @@
      (fn [i]
        {:namespace (rand-nth ["broad" "public" "nci"])
         :name (str "Method " (inc i))
-        :synopsis (str "This is method " (inc i))})
+        :snapshotId (rand-int 100)
+        :synopsis (str (rand-nth ["variant caller synopsis", "gene analyzer synopsis", "mutect synopsis"]) " " (inc i))
+        :documentation (str "Documentation for method " (inc i))
+        :createDate (utils/rand-recent-time)
+        :url "http://agora.broadinstitute.org/methods/someurl"
+        :payload "task wc {File in_file command { cat ${in_file} | wc -l } output { Int count = read_int(stdout()) }}\n"
+        :entityType (rand-nth ["Task" "Workflow"])})
      (range (rand-int 100)))})
 
 
@@ -251,22 +263,46 @@
    :mock-data
    (map
      (fn [i]
-       {:method
-        {"name" (rand-nth ["sleepMethod" "wakeMethod" "dreamMethod"])
-         "createDate" "2015-09-11T16:49:37Z"
-         "url" "http://agora.dsde-dev.broadinstitute.org/methods/broad-dsde-dev/sleepMethod/1"
-         "synopsis" "sleepy synopsis"
-         "entityType" "Workflow"
-         "snapshotId" (rand-int 10)
-         "namespace" "broad-dsde-dev"}
-        :entityType "Configuration"
-        :name (str "Configuration " (inc i))
-        :url (str "http://agora-ci.broadinstitute.org/configurations/joel_test/jt_test_config/1")
+       {:method {:namespace (rand-nth ["broad" "public" "nci"])
+                 :name (str "Method " (rand-int 100))
+                 :snapshotId (rand-int 100)
+                 :synopsis (str (rand-nth ["variant caller synopsis", "gene analyzer synopsis", "mutect synopsis"]) " " (inc i))
+                 :documentation (str "Documentation for method " (inc i))
+                 :createDate (utils/rand-recent-time)
+                 :url "http://agora.broadinstitute.org/methods/someurl"
+                 :payload "task wc {File in_file command { cat ${in_file} | wc -l } output { Int count = read_int(stdout()) }}\n"
+                 :entityType (rand-nth ["Task" "Workflow"])}
         :namespace (rand-nth ["Broad" "nci" "public" "ISB"])
-        :snapshotId (rand-nth (range 100))
+        :name (str "Configuration " (inc i))
+        :snapshotId (rand-int 100)
         :synopsis (str (rand-nth ["variant caller synopsis", "gene analyzer synopsis", "mutect synopsis"]) " " (inc i))
-        :createDate (str "20" (inc i) "-06-10T16:54:26Z")})
+        :documentation (str "Documentation for config " (inc i))
+        :createDate (utils/rand-recent-time)
+        :payload "task wc {File in_file command { cat ${in_file} | wc -l } output { Int count = read_int(stdout()) }}\n"
+        :entityType "Task"})
      (range (rand-int 50)))})
+
+(defn get-configuration [namespace name snapshot-id]
+  {:path (str "/configurations/" namespace "/" name "/" snapshot-id)
+   :method :get
+   :mock-data
+   {:method {:namespace (rand-nth ["broad" "public" "nci"])
+             :name (str "Method " (rand-int 100))
+             :snapshotId (rand-int 100)
+             :synopsis (rand-nth ["variant caller synopsis", "gene analyzer synopsis", "mutect synopsis"])
+             :documentation (str "Documentation for method")
+             :createDate (utils/rand-recent-time)
+             :url "http://agora.broadinstitute.org/methods/someurl"
+             :payload "task wc {File in_file command { cat ${in_file} | wc -l } output { Int count = read_int(stdout()) }}\n"
+             :entityType (rand-nth ["Task" "Workflow"])}
+    :namespace namespace
+    :name name
+    :snapshotId snapshot-id
+    :synopsis (rand-nth ["variant caller synopsis", "gene analyzer synopsis", "mutect synopsis"])
+    :documentation (str "Documentation for config")
+    :createDate (utils/rand-recent-time)
+    :payload "task wc {File in_file command { cat ${in_file} | wc -l } output { Int count = read_int(stdout()) }}\n"
+    :entityType "Task"}})
 
 (defn copy-method-config-to-workspace [workspace-id]
   {:path (str "/workspaces/" (ws-path workspace-id) "/method_configs/copyFromMethodRepo")
@@ -284,3 +320,20 @@
       {:path (str "/workspaces/" (ws-path workspace-id)
                   "/method_configs/copyToMethodRepo")
        :method :post})
+
+(defn create-template [method]
+  {:path "/template"
+   :method :post
+   :mock-data
+   {:namespace (method "namespace")
+    :name (method "name")
+    :rootEntityType (method "rootEntityType")
+    :prerequisites {"unused" "Some prereq"}
+    :inputs {"input1" "val1"}
+    :outputs {"output1" "val2"}
+    :methodRepoConfig {:methodConfigNamespace (method "namespace")
+                       :methodConfigName (method "name")
+                       :methodConfigVersion 1}
+    :methodRepoMethod {:methodNamespace (method "namespace")
+                       :methodName (method "name")
+                       :methodVersion 1}}})

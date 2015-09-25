@@ -17,6 +17,12 @@
   (doseq [id ids]
     (set! (.-value (.getDOMNode (@refs id))) "")))
 
+(defn get-text [refs & ids]
+  (map
+    (fn [id]
+      (-> (@refs id) .getDOMNode .-value clojure.string/trim))
+    ids))
+
 (defn clear-both [] [:div {:style {:clear "both"}}])
 
 (defn scroll-to [x y] (.scrollTo js/window x y))
