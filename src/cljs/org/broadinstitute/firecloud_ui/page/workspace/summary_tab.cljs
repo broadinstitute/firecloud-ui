@@ -168,7 +168,7 @@
            (style/create-paragraph [:em {} "Research purpose not available yet"])
            (style/create-section-header "Billing Account")
            (style/create-paragraph [:em {} "Billing account not available yet"])]
-          [:div {:style {:clear "both"}}]])))
+          (common/clear-both)])))
    :load-workspace
    (fn [{:keys [props state]}]
      (endpoints/call-ajax-orch
