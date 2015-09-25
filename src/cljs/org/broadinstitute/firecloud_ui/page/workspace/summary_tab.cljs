@@ -155,10 +155,9 @@
               (when owner?
                 [:span {}
                  " ("
-                 [:a {:href "javascript:;"
-                      :style {:color (:button-blue style/colors) :textDecoration "none"}
-                      :onClick #(swap! state assoc :editing-acl? true)}
-                  "Edit sharing"]
+                 (style/create-link
+                   #(swap! state assoc :editing-acl? true)
+                   "Edit sharing")
                  ")"])])
            (style/create-section-header "Description")
            (style/create-paragraph [:em {} "Description info not available yet"])

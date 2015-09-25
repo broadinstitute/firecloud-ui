@@ -4,6 +4,7 @@
     [clojure.set :refer [union]]
     [org.broadinstitute.firecloud-ui.common :as common]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
+    [org.broadinstitute.firecloud-ui.common.icons :as icons]
     [org.broadinstitute.firecloud-ui.common.table :as table]
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.page.import-data :as import-data]
@@ -50,13 +51,13 @@
         (:show-import? @state)
         [:div {:style {:margin "1em 0 0 2em"}}
          [:div {}
-          [:a {:href "javascript:;"
-               :style {:textDecoration "none"}
-               :onClick #(swap! state merge
-                          {:show-import? false}
-                          (when (react/call :did-load-data? (@refs "data-import"))
-                            {:entity-map false}))}
-           "< Back to Data List"]]
+          (style/create-link
+            #(swap! state merge
+              {:show-import? false}
+              (when (react/call :did-load-data? (@refs "data-import"))
+                {:entity-map false}))
+            (icons/font-icon {:style {:fontSize "70%" :marginRight "0.5em"}} :angle-left)
+            "Back to Data List")]
          [import-data/Page {:ref "data-import" :workspace-id (:workspace-id props)}]]
         (:entity-map @state) [EntitiesList {:entity-map (:entity-map @state)}]
         (:error @state) (style/create-server-error-message (:error @state))
