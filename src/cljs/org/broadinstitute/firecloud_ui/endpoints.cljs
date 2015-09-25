@@ -132,7 +132,6 @@
            "/method_configs/" (config "namespace") "/" (config "name"))
    :method :delete})
 
-
 (defn import-entities [workspace-id]
   {:path (str "/workspaces/" (ws-path workspace-id) "/importEntities")
    :method :post
@@ -280,3 +279,8 @@
     :synopsis (rand-nth ["variant caller synopsis", "gene analyzer synopsis", "mutect synopsis"])
     :createDate (utils/rand-recent-time)
     :owner (rand-nth ["thibault@broadinstitute.org" "esalinas@broadinstitute.org"])}})
+
+(defn copy-method-config-to-repo [workspace-id config]
+      {:path (str "/workspaces/" (ws-path workspace-id)
+                  "/method_configs/copyToMethodRepo")
+       :method :post})
