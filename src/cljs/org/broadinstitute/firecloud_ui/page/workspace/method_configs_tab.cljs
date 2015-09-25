@@ -56,10 +56,9 @@
             [{:header "Name" :starting-width 240 :sort-by #(% "name") :filter-by #(% "name")
               :content-renderer
               (fn [config]
-                [:a {:href "javascript:;"
-                     :style {:color (:button-blue style/colors) :textDecoration "none"}
-                     :onClick #((:on-config-selected props) config)}
-                 (config "name")])}
+                (style/create-link
+                  #((:on-config-selected props) config)
+                  (config "name")))}
              {:header "Namespace" :starting-width 200}
              {:header "Root Entity Type" :starting-width 140}
              {:header "Method Store Method" :starting-width 300 :sort-by :none

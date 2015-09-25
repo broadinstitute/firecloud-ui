@@ -171,6 +171,28 @@
      (.removeEventListener js/window "keydown" (.-onKeyDownHandler this)))})
 
 
+(react/defc OKCancelForm
+  {:render
+   (fn [{:keys [props]}]
+     [:div {}
+      [:div {:style {:borderBottom (str "1px solid " (:line-gray style/colors))
+                     :padding "20px 48px 18px"
+                     :fontSize "137%" :fontWeight 400 :lineHeight 1}}
+       (:header props)]
+      [:div {:style {:padding "22px 48px 40px" :backgroundColor (:background-gray style/colors)}}
+       (:content props)
+       [:div {:style {:marginTop 40 :textAlign "center"}}
+        [:a {:style {:marginRight 27 :marginTop 2 :padding "0.5em"
+                     :display "inline-block"
+                     :fontSize "106%" :fontWeight 500 :textDecoration "none"
+                     :color (:button-blue style/colors)}
+             :href "javascript:;"
+             :onClick #((:dismiss-self props))
+             :onKeyDown (common/create-key-handler [:space :enter] #((:dismiss-self props)))}
+         "Cancel"]
+        (:ok-button props)]]])})
+
+
 (react/defc Blocker
   {:render
    (fn [{:keys [props]}]

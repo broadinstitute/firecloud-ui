@@ -12,59 +12,46 @@
     ))
 
 
-(defn- clear-overlay [state refs]
-  (common/clear! refs "wsName" "wsDesc" "shareWith")
-  (swap! state assoc :overlay-shown? false))
-
-
 (defn- render-modal [state refs nav-context]
   (react/create-element
-    [:div {}
-     [:div {:style {:borderBottom (str "1px solid " (:line-gray style/colors))
-                    :padding "20px 48px 18px"
-                    :fontSize "137%" :fontWeight 400 :lineHeight 1}}
-      "Create New Workspace"]
-     [:div {:style {:padding "22px 48px 40px" :backgroundColor (:background-gray style/colors)}}
-      (style/create-form-label "Workspace Namespace")
-      (style/create-text-field {:style {:width "100%"} :ref "wsNamespace"
-                                :defaultValue "broad-dsde-dev"})
-      (style/create-form-label "Workspace Name")
-      (style/create-text-field {:style {:width "100%"} :ref "wsName"})
-      (style/create-form-label "Workspace Description")
-      (style/create-text-area {:style {:width "100%"} :rows 10 :ref "wsDesc"})
-      (style/create-form-label "Research Purpose")
-      (style/create-select {} ["Option 1" "Option 2" "Option 3"])
-      (style/create-form-label "Billing Contact")
-      (style/create-select {} ["Option 1" "Option 2" "Option 3"])
-      (style/create-form-label "Share With (optional)")
-      (style/create-text-field {:style {:width "100%"} :ref "shareWith"})
-      (style/create-hint "Separate multiple emails with commas")
-      [:div {:style {:marginTop 40 :textAlign "center"}}
-       [:a {:style {:marginRight 27 :marginTop 2 :padding "0.5em"
-                    :display "inline-block"
-                    :fontSize "106%" :fontWeight 500 :textDecoration "none"
-                    :color (:button-blue style/colors)}
-            :href "javascript:;"
-            :onClick #(clear-overlay state refs)
-            :onKeyDown (common/create-key-handler [:space :enter] #(clear-overlay state refs))}
-        "Cancel"]
-       (when (:creating-wf @state)
-         [comps/Blocker {:banner "Creating Workspace..."}])
-       [comps/Button {:text "Create Workspace" :ref "createButton"
-                      :onClick
-                      #(let [ns (-> (@refs "wsNamespace") .getDOMNode .-value clojure.string/trim)
-                             n (-> (@refs "wsName") .getDOMNode .-value clojure.string/trim)]
-                        (when-not (or (empty? ns) (empty? n))
-                          (swap! state assoc :creating-wf true)
-                          (endpoints/call-ajax-orch
-                            {:endpoint (endpoints/create-workspace ns n)
-                             :payload {:namespace ns :name n :attributes {}}
-                             :on-done (fn [{:keys [success?]}]
-                                        (swap! state dissoc :creating-wf)
-                                        (if success?
-                                          (do (clear-overlay state refs)
-                                              (nav/navigate nav-context (str ns ":" n)))
-                                          (js/alert "Workspace creation failed")))})))}]]]]))
+    [comps/OKCancelForm
+     {:header "Create New Workspace"
+      :content
+      (react/create-element
+        [:div {}
+         (when (:creating-wf @state)
+           [comps/Blocker {:banner "Creating Workspace..."}])
+         (style/create-form-label "Workspace Namespace")
+         (style/create-text-field {:style {:width "100%"} :ref "wsNamespace"
+                                   :defaultValue "broad-dsde-dev"})
+         (style/create-form-label "Workspace Name")
+         (style/create-text-field {:style {:width "100%"} :ref "wsName"})
+         (style/create-form-label "Workspace Description")
+         (style/create-text-area {:style {:width "100%"} :rows 10 :ref "wsDesc"})
+         (style/create-form-label "Research Purpose")
+         (style/create-select {} ["Option 1" "Option 2" "Option 3"])
+         (style/create-form-label "Billing Contact")
+         (style/create-select {} ["Option 1" "Option 2" "Option 3"])
+         (style/create-form-label "Share With (optional)")
+         (style/create-text-field {:style {:width "100%"} :ref "shareWith"})
+         (style/create-hint "Separate multiple emails with commas")])
+      :dismiss-self #(swap! state dissoc :overlay-shown?)
+      :ok-button
+      (react/create-element
+        [comps/Button
+         {:text "Create Workspace" :ref "createButton"
+          :onClick #(let [[ns n] (common/get-text refs "wsNamespace" "wsName")]
+                     (when-not (or (empty? ns) (empty? n))
+                       (swap! state assoc :creating-wf true)
+                       (endpoints/call-ajax-orch
+                         {:endpoint (endpoints/create-workspace ns n)
+                          :payload {:namespace ns :name n :attributes {}}
+                          :on-done (fn [{:keys [success?]}]
+                                     (swap! state dissoc :creating-wf)
+                                     (if success?
+                                       (do (swap! state dissoc :overlay-shown?)
+                                           (nav/navigate nav-context (str ns ":" n)))
+                                       (js/alert "Workspace creation failed")))})))}])}]))
 
 
 (react/defc StatusCell

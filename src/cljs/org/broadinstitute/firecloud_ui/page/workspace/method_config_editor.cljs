@@ -2,7 +2,7 @@
   (:require
     [dmohs.react :as react]
     [clojure.string :refer [trim blank?]]
-    [org.broadinstitute.firecloud-ui.common :as common :refer [clear-both]]
+    [org.broadinstitute.firecloud-ui.common :as common :refer [clear-both get-text]]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
     [org.broadinstitute.firecloud-ui.common.icons :as icons]
     [org.broadinstitute.firecloud-ui.common.style :as style]
@@ -13,7 +13,7 @@
 
 (defn- capture-prerequisites [state refs]
   (vec (map
-         #(-> (@refs (str "pre_" %)) .getDOMNode .-value)
+         #(get-text refs (str "pre_" %))
          (range (count (:prereqs-list @state))))))
 
 (defn- filter-empty [list]
@@ -39,9 +39,9 @@
 
 (defn- commit [state refs config props]
   (let [workspace-id (:workspace-id props)
-        name (-> (@refs "confname") .getDOMNode .-value)
-        inputs (into {} (map (juxt identity #(-> (@refs (str "in_" %)) .getDOMNode .-value)) (keys (config "inputs"))))
-        outputs (into {} (map (juxt identity #(-> (@refs (str "out_" %)) .getDOMNode .-value)) (keys (config "outputs"))))
+        name (get-text refs "confname")
+        inputs (into {} (map (juxt identity #(get-text refs (str "in_" %))) (keys (config "inputs"))))
+        outputs (into {} (map (juxt identity #(get-text refs (str "out_" %))) (keys (config "outputs"))))
         prereqs (fix-prereqs (filter-empty (capture-prerequisites state refs)))
         new-conf (assoc config
                    "name" name
@@ -100,65 +100,56 @@
                                               (swap! state assoc :deleting? true)
                                               (react/call :rm-mc this))}])})
 
-(defn- clear-overlay [state refs]
-  (swap! state dissoc :publishing?))
-
 (defn- render-modal-publish [state refs props]
   (react/create-element
-    [:div {}
-     (when (:creating-wf @state)
-       [comps/Blocker {:banner "Publishing Method Configuration..."}])
-     [:div {:style {:backgroundColor "#fff"
-                    :borderBottom (str "1px solid " (:line-gray style/colors))
-                    :padding "20px 48px 18px"
-                    :fontSize "137%" :fontWeight 400 :lineHeight 1}}
-      "Publish Method Configuration"]
-     [:div {:style {:padding "22px 48px 40px" :backgroundColor (:background-gray style/colors)}}
-      (style/create-form-label "Method Configuration Namespace")
-      (style/create-text-field {:style {:width "100%"} :ref "mcNamespace"
-                                :defaultValue (get-in (:config props) ["namespace"])})
-      (style/create-form-label "Method Configuration Name")
-      (style/create-text-field {:style {:width "100%"} :ref "mcName"
-                                :defaultValue (get-in (:config props) ["name"])})
-      [:div {:style {:marginTop 40 :textAlign "center"}}
-       [:a {:style {:marginRight 27 :marginTop 2 :padding "0.5em"
-                    :display "inline-block"
-                    :fontSize "106%" :fontWeight 500 :textDecoration "none"
-                    :color (:button-blue style/colors)}
-            :href "javascript:;"
-            :onClick #(clear-overlay state refs)
-            :onKeyDown (common/create-key-handler [:space :enter] #(clear-overlay state refs))}
-        "Cancel"]
-       [comps/Button {:text "Publish" :ref "publishButton"
-                      :onClick
-                            #(let [ns (-> (@refs "mcNamespace") .getDOMNode .-value clojure.string/trim)
-                                   n (-> (@refs "mcName") .getDOMNode .-value clojure.string/trim)]
-                              (when-not (or (empty? ns) (empty? n))
-                                (swap! state assoc :creating-wf true)
-                                (endpoints/call-ajax-orch
-                                  {:endpoint (endpoints/copy-method-config-to-repo (:workspace-id props) (:config props))
-                                   :headers {"Content-Type" "application/json"}
-                                   :payload  {:configurationNamespace ns,
-                                              :configurationName n,
-                                              :sourceNamespace (get-in (:config props) ["namespace"]),
-                                              :sourceName (get-in (:config props) ["name"])}
-                                   :on-done  (fn [{:keys [success?]}]
-                                               (swap! state dissoc :creating-wf)
-                                               (if success?
-                                                 (do (clear-overlay state refs))
-                                                 (js/alert "Method Configuration Publish Failed.")))})))}]]]]))
+    [comps/OKCancelForm
+     {:header "Publish Method Configuration"
+      :content
+      (react/create-element
+        [:div {}
+         (when (:creating-wf @state)
+           [comps/Blocker {:banner "Publishing Method Configuration..."}])
+         (style/create-form-label "Method Configuration Namespace")
+         (style/create-text-field {:style {:width "100%"} :ref "mcNamespace"
+                                   :defaultValue (get-in (:config props) ["namespace"])})
+         (style/create-form-label "Method Configuration Name")
+         (style/create-text-field {:style {:width "100%"} :ref "mcName"
+                                   :defaultValue (get-in (:config props) ["name"])})])
+      :dismiss-self #(swap! state dissoc :publishing?)
+      :ok-button
+      (react/create-element
+        [comps/Button {:text "Publish" :ref "publishButton"
+                       :onClick
+                       #(let [[ns n] (common/get-text refs "mcNamespace" "mcName")]
+                         (when-not (or (empty? ns) (empty? n))
+                           (swap! state assoc :creating-wf true)
+                           (endpoints/call-ajax-orch
+                             {:endpoint (endpoints/copy-method-config-to-repo (:workspace-id props) (:config props))
+                              :headers {"Content-Type" "application/json"}
+                              :payload  {:configurationNamespace ns,
+                                         :configurationName n,
+                                         :sourceNamespace (get-in (:config props) ["namespace"]),
+                                         :sourceName (get-in (:config props) ["name"])}
+                              :on-done  (fn [{:keys [success?]}]
+                                          (swap! state dissoc :creating-wf)
+                                          (if success?
+                                            (swap! state dissoc :publishing?)
+                                            (js/alert "Method Configuration Publish Failed.")))})))}])}]))
 
 (react/defc PublishButton
-  {:render (fn [{:keys [props state refs]}]
-             [:div {}
-              (when (:publishing? @state)
-                [comps/Dialog
-                 {:width 500
-                  :dismiss-self #(swap! state dissoc :publishing?)
-                  :content (render-modal-publish state refs props)}])
-              [comps/SidebarButton {:style   :light :color :button-blue :margin :top
-                                    :text    "Publish" :icon :share
-                                    :onClick #(swap! state assoc :publishing? true)}]])})
+  {:render
+   (fn [{:keys [props state refs]}]
+     [:div {}
+      (when (:publishing? @state)
+        [comps/Dialog
+         {:width 500
+          :dismiss-self #(swap! state dissoc :publishing?)
+          :content (render-modal-publish state refs props)
+          :get-first-element-dom-node #(.getDOMNode (@refs "mcNamespace"))
+          :get-last-element-dom-node #(.getDOMNode (@refs "publishButton"))}])
+      [comps/SidebarButton {:style :light :color :button-blue :margin :top
+                            :text "Publish" :icon :share
+                            :onClick #(swap! state assoc :publishing? true)}]])})
 
 
 (defn- render-side-bar [state refs config editing? props]
@@ -180,10 +171,10 @@
           :config config}])
 
       (when-not editing?
-                [PublishButton
-                 {:workspace-id (:workspace-id props)
-                  :on-publish (:on-publish props)
-                  :config config}])
+        [PublishButton
+         {:workspace-id (:workspace-id props)
+          :on-publish (:on-publish props)
+          :config config}])
 
       (when editing?
         [comps/SidebarButton {:color :success-green

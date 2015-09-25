@@ -17,10 +17,9 @@
     [{:header "Date" :starting-width 200
       :sort-by #(% "submissionDate") :filter-by #(% "submissionDate")
       :content-renderer (fn [submission]
-                          [:a {:href "javascript:;"
-                               :style {:color (:button-blue style/colors) :textDecoration "none"}
-                               :onClick #(on-submission-clicked (submission "submissionId"))}
-                           (.format (js/moment (submission "submissionDate")) "LLL")])}
+                          (style/create-link
+                            #(on-submission-clicked (submission "submissionId"))
+                            (.format (js/moment (submission "submissionDate")) "LLL")))}
      {:header "Status"}
      {:header "Method Configuration" :starting-width 220}
      {:header "Data Entity" :starting-width 220}]
