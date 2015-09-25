@@ -337,3 +337,29 @@
     :methodRepoMethod {:methodNamespace (method "namespace")
                        :methodName (method "name")
                        :methodVersion 1}}})
+
+(defn get-agora-method-acl [ns n sid is-conf]
+  {:path (str "/" (if is-conf "configurations" "methods"  ) "/" ns "/" n "/" sid "/permissions"  )
+   :method :get
+   :mock-data
+   (map (fn [i] {(str "user" ) (str "user" i)
+                 (str "roles") (rand-nth
+                                 [["Read"]
+                                  ["Read" "Write" "Create" "Redact" "Manage"]
+                                  []])})
+     (range (inc (rand-int 5))))})
+
+
+(defn persist-agora-method-acl [ent]
+  {:path (let [ent-type (ent "entityType")
+               name (ent "name")
+               nmsp (ent "namespace")
+               sid (ent "snapshotId")
+               base (cond
+                      (= "Configuration" ent-type) "/configurations"
+                      (or (= "Task" ent-type) (= "Workflow" ent-type)) "methods"
+                      :else (do
+                              (utils/rlog "Error, unknown type : " ent-type)
+                              (str "configurations")))]
+           (str "/" base "/" nmsp "/" name "/" sid "/permissions"))
+   :method :post})
