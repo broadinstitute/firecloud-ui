@@ -1,15 +1,17 @@
 <html>
-  <?php $is_minimized_build = getenv('BUILD_TYPE') == 'minimized'; ?>
   <head profile="http://www.w3.org/2005/10/profile">
     <meta charset="utf-8">
     <meta http-equiv="Content-type" content="text/html;charset=utf-8">
     <meta name="viewport" content="initial-scale=1,width=device-width">
-    <meta name="google-signin-scope" content="profile email https://www.googleapis.com/auth/devstorage.full_control https://www.googleapis.com/auth/compute">
+
     <?php if (!getenv('GOOGLE_CLIENT_ID')) {
-          fwrite(STDERR, "Missing ENV var GOOGLE_CLIENT_ID\n");
-          exit(1);
+        fwrite(STDERR, "Missing ENV var GOOGLE_CLIENT_ID\n");
+        exit(1);
     } ?>
-    <meta name="google-signin-client_id" content="<?php echo getenv('GOOGLE_CLIENT_ID') ?>">
+    <?php $is_minimized_build = getenv('BUILD_TYPE') == 'minimized'; ?>
+    <script>
+      window.GOOGLE_CLIENT_ID = '<?php echo getenv('GOOGLE_CLIENT_ID') ?>';
+    </script>
     <title>FireCloud | Broad Institute</title>
     <link href='//fonts.googleapis.com/css?family=Roboto:400,500,700' rel='stylesheet' type='text/css'>
     <style>
@@ -31,7 +33,6 @@
       }
     </style>
     <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
-    <script src="https://apis.google.com/js/platform.js" async defer></script>
     <script>
       (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
       (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
@@ -53,9 +54,10 @@
     <?php } ?>
     <script>
       var app = org.broadinstitute.firecloud_ui.main.render(document.getElementById('contentRoot'));
-      function onSignIn(googleUser) {
-        app.handleSignIn(googleUser);
+      function handleGapiDidLoad() {
+        app.handleGapiDidLoad();
       }
     </script>
+    <script src="https://apis.google.com/js/platform.js?onload=handleGapiDidLoad" async defer></script>
   </body>
 </html>

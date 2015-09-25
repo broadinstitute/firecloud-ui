@@ -16,6 +16,10 @@ RUN apt-get -yq autoremove && \
 
 RUN curl https://raw.githubusercontent.com/technomancy/leiningen/stable/bin/lein > /usr/bin/lein
 RUN chmod 755 /usr/bin/lein
+# Tell lein that running as root is okay.
+ENV LEIN_ROOT=1
+# Actually install leiningen.
+RUN lein --version
 
 EXPOSE 80
 
@@ -26,16 +30,15 @@ ENV GOOGLE_CLIENT_ID=not-valid
 ENV BUILD_TYPE=minimized
 
 COPY project.clj project.clj
-# Tell lein that running as root is okay.
-ENV LEIN_ROOT=1
-RUN lein deps
+# Download deps and plugins.
+RUN lein cljsbuild once
 
 # File copies are explicit to ensure rebuilds use as much cache as possible.
-COPY src src
+COPY src/cljs src/cljs
+COPY src/static src/static
 COPY script/common script/common
 RUN ./script/common/build.sh once
 
-COPY src/docker/apache-site.conf /etc/apache2/sites-available/site.conf
 COPY src/docker/run-apache.sh /etc/service/apache2/run
 
 # openidc-baseimage requires this unused variable.

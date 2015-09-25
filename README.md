@@ -45,11 +45,6 @@ Set your client ID in your environment:
 export GOOGLE_CLIENT_ID='...'
 ```
 
-Optionally, override the FireCloud Orchestration URL (see default in start-server.sh):
-```
-export ORCH_URL_ROOT='http://orch:8080'
-```
-
 Start the server in docker:
 ```
 ./script/dev/start-server.sh
@@ -62,6 +57,11 @@ docker exec -it firecloud-ui ./script/dev/build-once.sh
 ```
 
 You should now be able to view the application at `http://dhost/` or `https://dhost/`.
+
+To run against a local instance of the orchestration server (running in docker), try:
+```
+ORCH_URL_ROOT='http://orch:8080' ./script/dev/start-server.sh
+```
 
 ## Build Options
 

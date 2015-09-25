@@ -1,8 +1,13 @@
 #!/bin/bash
 set -euo pipefail
 IFS=$'\n\t'
+set -x
 
 BUILD_TYPE=${BUILD_TYPE:-'dev'}
+if [ "$BUILD_TYPE" != 'dev' -a "$BUILD_TYPE" != 'minimized' ]; then
+  echo 'BUILD_TYPE must be one of "dev" or "minimized"';
+  exit 1;
+fi
 BUILD_PATTERN=${1:-}
 
 if [[ -z "$BUILD_PATTERN" ]]; then

@@ -75,39 +75,15 @@
   (.removeItem window.localStorage (subs (str k) 1)))
 
 
-;;
-;; TODO(dmohs): Move this stuff back into session namespace.
-;;
-
-
-(defonce current-user (atom nil))
-
-
-(defonce on-log-out-atom (atom nil))
-
-
 (defn get-current-user []
-  @current-user)
+  (-> js/gapi (aget "auth2")
+      (call-external-object-method :getAuthInstance)
+      (aget "currentUser")
+      (call-external-object-method :get)))
 
 
-(defn set-current-user [user]
-  (reset! current-user user))
-
-
-(defn log-out []
-  (-> js/gapi
-    (aget "auth2")
-    (call-external-object-method :getAuthInstance)
-    (call-external-object-method :signOut)
-    (call-external-object-method
-      :then (fn [] (reset! current-user nil) (@on-log-out-atom) (.reload (.-location js/window))))))
-
-
-(defn on-log-out [callback]
-  (reset! on-log-out-atom callback))
-
-
-(defonce use-live-data? (atom (or (local-storage-read ::use-live-data? true) false)))
+(defonce use-live-data? (atom (let [value (local-storage-read ::use-live-data? true)]
+                                (if (nil? value) true value))))
 (add-watch
  use-live-data? :save-to-local-storage
  (fn [k r os ns]

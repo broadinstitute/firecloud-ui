@@ -1,6 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 IFS=$'\n\t'
+set -x
 
 # Starts server for development.
 # - exposes Figwheel port (3449)
@@ -22,4 +23,5 @@ exec docker run --rm --name firecloud-ui -p 80:80 -p 443:443 \
   -e HTTPS_ONLY=false \
   -e BUILD_TYPE='' \
   -v "$PWD":/app \
+  "$@" \
   broadinstitute/firecloud-ui
