@@ -2,7 +2,7 @@
   (:require
     [dmohs.react :as react]
     [clojure.string :refer [trim blank?]]
-    [org.broadinstitute.firecloud-ui.common :as common :refer [clear-both]]
+    [org.broadinstitute.firecloud-ui.common :as common :refer [clear-both get-text]]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
     [org.broadinstitute.firecloud-ui.common.icons :as icons]
     [org.broadinstitute.firecloud-ui.common.style :as style]
@@ -13,7 +13,7 @@
 
 (defn- capture-prerequisites [state refs]
   (vec (map
-         #(-> (@refs (str "pre_" %)) .getDOMNode .-value)
+         #(get-text refs (str "pre_" %))
          (range (count (:prereqs-list @state))))))
 
 (defn- filter-empty [list]
@@ -39,9 +39,9 @@
 
 (defn- commit [state refs config props]
   (let [workspace-id (:workspace-id props)
-        name (-> (@refs "confname") .getDOMNode .-value)
-        inputs (into {} (map (juxt identity #(-> (@refs (str "in_" %)) .getDOMNode .-value)) (keys (config "inputs"))))
-        outputs (into {} (map (juxt identity #(-> (@refs (str "out_" %)) .getDOMNode .-value)) (keys (config "outputs"))))
+        name (get-text refs "confname")
+        inputs (into {} (map (juxt identity #(get-text refs (str "in_" %))) (keys (config "inputs"))))
+        outputs (into {} (map (juxt identity #(get-text refs (str "out_" %))) (keys (config "outputs"))))
         prereqs (fix-prereqs (filter-empty (capture-prerequisites state refs)))
         new-conf (assoc config
                    "name" name

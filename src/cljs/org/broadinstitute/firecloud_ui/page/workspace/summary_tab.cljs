@@ -88,8 +88,8 @@
      (swap! state assoc :acl-vec
        (mapv
          (fn [i]
-           {:userId (-> (@refs (str "acl-key" i)) .getDOMNode .-value trim)
-            :accessLevel (-> (@refs (str "acl-value" i)) .getDOMNode .-value)})
+           (let [[userId accessLevel] (common/get-text refs (str "acl-key" i) (str "acl-value" i))]
+             {:userId userId :accessLevel accessLevel}))
          (range (count (:acl-vec @state))))))
    :persist-acl
    (fn [{:keys [props state]}]

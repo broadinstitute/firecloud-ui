@@ -2,6 +2,7 @@
   (:require
     [dmohs.react :as react]
     [clojure.set :refer [union]]
+    [org.broadinstitute.firecloud-ui.common :as common]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
     [org.broadinstitute.firecloud-ui.common.table :as table]
     [org.broadinstitute.firecloud-ui.common.style :as style]
@@ -21,7 +22,7 @@
        (style/create-form-label "Select Entity Type")
        (style/create-select
          {:style {:width "50%" :minWidth 50 :maxWidth 200} :ref "filter"
-          :onChange #(let [value (-> (@refs "filter") .getDOMNode .-value)
+          :onChange #(let [value (common/get-text refs "filter")
                            entities (get-in props [:entity-map value])]
                       (swap! state assoc :entities entities :entity-type value))}
          (keys (:entity-map props)))]
