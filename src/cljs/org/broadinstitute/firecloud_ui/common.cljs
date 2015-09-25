@@ -31,6 +31,13 @@
 
 (defn scroll-to-top [] (scroll-to 0 0))
 
+(defn scroll-to-center [elem]
+  (let [elem-center-x (+ (.-offsetLeft elem) (/ (.-offsetWidth elem) 2))
+        elem-center-y (+ (.-offsetTop elem) (/ (.-offsetHeight elem) 2))]
+    (scroll-to
+      (- elem-center-x (/ (.-innerWidth js/window) 2))
+      (- elem-center-y (/ (.-innerHeight js/window) 2)))))
+
 (defn is-in-view [elem]
   (let [doc-view-top (.-scrollY js/window)
         doc-view-bottom (+ doc-view-top (.-innerHeight js/window))

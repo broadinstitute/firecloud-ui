@@ -277,6 +277,21 @@
         :entityType (rand-nth ["Task" "Workflow"])})
      (range (rand-int 100)))})
 
+;; I would have called it "get-method" but that's already defined in core
+(defn get-agora-method [namespace name snapshot-id]
+  {:path (str "/methods/" namespace "/" name "/" snapshot-id)
+   :method :get
+   :mock-data
+   {:namespace namespace
+    :name name
+    :snapshotId snapshot-id
+    :synopsis (rand-nth ["variant caller synopsis", "gene analyzer synopsis", "mutect synopsis"])
+    :documentation (str "Documentation for method")
+    :createDate (utils/rand-recent-time)
+    :url "http://agora.broadinstitute.org/methods/someurl"
+    :payload "task wc {File in_file command { cat ${in_file} | wc -l } output { Int count = read_int(stdout()) }}\n"
+    :entityType (rand-nth ["Task" "Workflow"])}})
+
 
 (def list-configurations
   {:path "/configurations"

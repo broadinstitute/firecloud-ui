@@ -9,97 +9,86 @@
     [org.broadinstitute.firecloud-ui.common.table :as table]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
     [org.broadinstitute.firecloud-ui.page.methods-configs-acl :as mca]
-    [org.broadinstitute.firecloud-ui.utils :as utils]
     ))
 
 
+(defn- create-import-form [state props this entity fields]
+  (let [{:keys [workspace-id on-back]} props
+        workspaces-list (:workspaces-list @state)]
+    [:div {}
+     (when (:importing? @state)
+       [comps/Blocker {:banner "Importing..."}])
+
+     [:div {:style {:paddingBottom "0.5em"}}
+      (style/create-link #(on-back)
+        (icons/font-icon {:style {:fontSize "70%" :marginRight "0.5em"}} :angle-left)
+        "Back to table")]
+
+     (let [config? (contains? entity "method")]
+       [:div {:style {:marginBottom "1em" :width 290}}
+        (when (:show-perms-overlay? @state)
+          [mca/AgoraPermsEditor
+           {:is-conf config?
+            :selected-entity entity
+            :dismiss-self #(swap! state dissoc :show-perms-overlay?)}])
+        [comps/SidebarButton {:style :light :margin :top :color :button-blue
+                              :text "Permissions..." :icon :gear
+                              :onClick #(swap! state assoc :show-perms-overlay? true)}]])
+
+     [comps/EntityDetails {:entity entity}]
+
+     [:div {:style {:fontSize "120%" :margin "1.5em 0 0.5em 0"}} "Save as:"]
+     (map
+       (fn [field]
+         [:div {:style {:float "left" :marginRight "0.5em"}}
+          (style/create-form-label (:label field))
+          (style/create-text-field {:defaultValue (entity (:key field))
+                                    :ref (:key field) :placeholder "Required"
+                                    :onChange #(swap! state dissoc :bad-input)})])
+       fields)
+     [:div {:ref "error" :style {:float "left"}}]
+     (when (:bad-input @state)
+       [:div {:style {:float "left" :padding "1.6em 0 0 1em"
+                      :fontWeight 500 :color (:exception-red style/colors)}}
+        "All fields required"])
+     (clear-both)
+
+     (when-not workspace-id
+       [:div {:style {:marginBottom "1em"}}
+        [:div {:style {:fontSize "120%" :margin "1em 0"}} "Destination:"]
+        [table/Table
+         {:empty-message "No workspaces available"
+          :columns [{:starting-width 35
+                     :resizable? false :reorderable? false :filter-by :none :sort-by :none
+                     :content-renderer
+                     (fn [ws]
+                       [:input {:type "radio"
+                                :checked (identical? ws (:selected-workspace @state))
+                                :onChange #(swap! state assoc :selected-workspace ws)}])}
+                    {:header "Namespace" :starting-width 150}
+                    {:header "Name" :starting-width 200}
+                    {:header "Owner(s)" :starting-width 300}]
+          :data (map
+                  (fn [ws]
+                    [ws
+                     (get-in ws ["workspace" "namespace"])
+                     (get-in ws ["workspace" "name"])
+                     (ws "owners")])
+                  workspaces-list)}]])
+     [:div {:style {:textAlign "center"}}
+      [comps/Button {:text (if workspace-id "Import" "Export")
+                     :onClick #(react/call :perform-copy this)}]]]))
+
+
 (react/defc ConfigImportForm
-  {:get-initial-state
-   (fn [{:keys [props]}]
-     {:selected-workspace (first (:workspaces-list props))})
-   :render
+  {:render
    (fn [{:keys [props state this]}]
      (cond
-       (:loaded-config @state)
-       (let [{:keys [workspace-id workspaces-list on-back]} props
-             config (:loaded-config @state)]
-         [:div {}
-          (when (:importing? @state)
-            [comps/Blocker {:banner "Importing..."}])
-          (style/create-link #(on-back)
-            (icons/font-icon {:style {:fontSize "70%" :marginRight "0.5em"}} :angle-left)
-            "Back to table")
-          [:div {:style {:marginTop "1em"}}
-           (style/create-section-header (str "Selected Configuration: "
-                                          (mca/get-ordered-name (:config props))))
-           [:div {:style {:width "20%"}}
-            (when (:show-perms-overlay? @state)
-              [mca/AgoraPermsEditor
-               {:is-conf true
-                :selected-entity (:config props)
-                :dismiss-self #(swap! state assoc :show-perms-overlay? nil)}])
-            [comps/SidebarButton {:width "10%"
-                                  :style :light :margin :top :color :button-blue
-                                  :text "Permissions..." :icon :gear
-                                  :onClick #(swap! state assoc :show-perms-overlay? true)}]]]
-          [:div {:style {:fontSize 24 :align "center" :textAlign "center" :paddingBottom "0.5em"}}
-           (if workspace-id "Import Method Configuration" "Export Method Configuration")]
-
-          [:div {:style {:backgroundColor (:background-gray style/colors)
-                         :borderRadius 8 :border (str "1px solid " (:line-gray style/colors))
-                         :padding "1em"}}
-           [:div {:style {:float "left" :width "33.33%" :textAlign "left"}}
-            [:span {:style {:fontWeight 500 :padding "0 0.5em"}} "Method Namespace:"]
-            [:span {} (get-in config ["method" "namespace"])]]
-           [:div {:style {:float "left" :width "33.33%" :textAlign "center"}}
-            [:span {:style {:fontWeight 500 :padding "0 0.5em"}} "Method Name:"]
-            [:span {} (get-in config ["method" "name"])]]
-           [:div {:style {:float "left" :width "33.33%" :textAlign "right"}}
-            [:span {:style {:fontWeight 500 :padding "0 0.5em"}} "Method Version:"]
-            [:span {} (get-in config ["method" "snapshotId"])]]
-           (clear-both)]
-
-          [:div {:style {:fontSize "120%" :margin "1.5em 0 0.5em 0"}} "Save as:"]
-          [:div {:style {:float "left"}}
-           (style/create-form-label "Configuration Namespace")
-           (style/create-text-field {:defaultValue (config "namespace") :ref "namespace" :placeholder "Required"
-                                     :onChange #(swap! state dissoc :bad-input)})]
-          [:div {:style {:float "left" :marginLeft "1em"}}
-           (style/create-form-label "Configuration Name")
-           (style/create-text-field {:defaultValue (config "name") :ref "name" :placeholder "Required"
-                                     :onChange #(swap! state dissoc :bad-input)})]
-          (when (:bad-input @state)
-            [:div {:style {:float "left" :padding "1.6em 0 0 1em"
-                           :fontWeight 500 :color (:exception-red style/colors)}}
-             "All fields required"])
-          (clear-both)
-
-          (when-not workspace-id
-            [:div {:style {:marginBottom "1em"}}
-             [:div {:style {:fontSize "120%" :margin "1.5em 0 1em 0"}} "Destination:"]
-             [table/Table
-              {:empty-message "No workspaces available"
-               :columns [{:starting-width 35
-                          :resizable? false :reorderable? false :filter-by :none :sort-by :none
-                          :content-renderer
-                          (fn [ws]
-                            [:input {:type "radio"
-                                     :checked (identical? ws (:selected-workspace @state))
-                                     :onChange #(swap! state assoc :selected-workspace ws)}])}
-                         {:header "Namespace" :starting-width 150}
-                         {:header "Name" :starting-width 200}
-                         {:header "Owner(s)" :starting-width 300}]
-               :data (map
-                       (fn [ws]
-                         [ws
-                          (get-in ws ["workspace" "namespace"])
-                          (get-in ws ["workspace" "name"])
-                          (ws "owners")])
-                       workspaces-list)}]])
-
-          [:div {:style {:textAlign "center"}}
-           [comps/Button {:text (if workspace-id "Import" "Export")
-                          :onClick #(react/call :perform-copy this)}]]])
+       (and (:loaded-config @state)
+         (or (:workspace-id props) (:workspaces-list @state)))
+       (create-import-form state props this (:loaded-config @state)
+         [{:label "Configuration Namespace" :key "namespace"}
+          {:label "Configuration Name" :key "name"}])
 
        (:error @state) (style/create-server-error-message (:error @state))
        :else [comps/Spinner {:text "Loading configuration details..."}]))
@@ -113,7 +102,7 @@
        ;; TODO - implement generalized validation
        (if (some empty? [namespace name])
          (do
-           (common/scroll-to-top)
+           (common/scroll-to-center (.getDOMNode (@refs "error")))
            (swap! state assoc :bad-input true))
          (do
            (swap! state assoc :importing? true)
@@ -136,6 +125,14 @@
                            (js/alert (str "Import error: " (.-responseText xhr)))))})))))
    :component-did-mount
    (fn [{:keys [props state]}]
+     (when-not (:workspace-id props)
+       (endpoints/call-ajax-orch
+         {:endpoint endpoints/list-workspaces
+          :on-done (fn [{:keys [success? get-parsed-response status-text]}]
+                     (if success?
+                       (let [ws-list (get-parsed-response)]
+                         (swap! state assoc :workspaces-list ws-list :selected-workspace (first ws-list)))
+                       (swap! state assoc :error status-text)))}))
      (endpoints/call-ajax-orch
        {:endpoint (endpoints/get-configuration
                     (get-in props [:config "namespace"])
@@ -149,95 +146,15 @@
 
 
 (react/defc MethodImportForm
-  {:get-initial-state
-   (fn [{:keys [props]}]
-     {:selected-workspace (first (:workspaces-list props))})
-   :render
+  {:render
    (fn [{:keys [props state this]}]
      (cond
-       (:template @state)
-       (let [{:keys [workspace-id workspaces-list on-back]} props
-             template (:template @state)]
-         [:div {}
-          (when (:importing? @state)
-            [comps/Blocker {:banner "Importing..."}])
-          (style/create-link #(on-back)
-            (icons/font-icon {:style {:fontSize "70%" :marginRight "0.5em"}} :angle-left)
-            "Back to table")
-          [:div {:style {:marginTop "1em"}}
-           (style/create-section-header (str "Selected Method : "
-                                          (mca/get-ordered-name (:method props))))
-           [:div {:style {:width "20%"}}
-            (when (:show-perms-overlay? @state)
-              [mca/AgoraPermsEditor
-               {:is-conf false
-                :selected-entity (:method props)
-                :dismiss-self #(swap! state assoc :show-perms-overlay? nil)}])
-            [comps/SidebarButton {:width "10%"
-                                  :style :light :margin :top :color :button-blue
-                                  :text "Permissions..." :icon :gear
-                                  :onClick #(swap! state assoc :show-perms-overlay? true)}]]]
-          [:div {:style {:fontSize 24 :align "center" :textAlign "center" :paddingBottom "0.5em"}}
-           (if workspace-id "Import Method Configuration" "Export Method Configuration")]
-          [:div {:style {:backgroundColor (:background-gray style/colors)
-                         :borderRadius 8 :border (str "1px solid " (:line-gray style/colors))
-                         :padding "1em"}}
-           [:div {:style {:float "left" :width "33.33%" :textAlign "left"}}
-            [:span {:style {:fontWeight 500 :padding "0 0.5em"}} "Method Namespace:"]
-            [:span {} (get-in template ["methodRepoMethod" "methodNamespace"])]]
-           [:div {:style {:float "left" :width "33.33%" :textAlign "center"}}
-            [:span {:style {:fontWeight 500 :padding "0 0.5em"}} "Method Name:"]
-            [:span {} (get-in template ["methodRepoMethod" "methodName"])]]
-           [:div {:style {:float "left" :width "33.33%" :textAlign "right"}}
-            [:span {:style {:fontWeight 500 :padding "0 0.5em"}} "Method Version:"]
-            [:span {} (get-in template ["methodRepoMethod" "methodVersion"])]]
-           (clear-both)]
-
-          [:div {:style {:fontSize "120%" :margin "1.5em 0 0.5em 0"}} "Save as:"]
-          [:div {:style {:float "left"}}
-           (style/create-form-label "Configuration Namespace")
-           (style/create-text-field {:ref "namespace" :placeholder "Required"
-                                     :onChange #(swap! state dissoc :bad-input)})]
-          [:div {:style {:float "left" :marginLeft "1em"}}
-           (style/create-form-label "Configuration Name")
-           (style/create-text-field {:ref "name" :placeholder "Required"
-                                     :onChange #(swap! state dissoc :bad-input)})]
-          [:div {:style {:float "left" :marginLeft "1em"}}
-           (style/create-form-label "Root Entity Type")
-           (style/create-text-field {:ref "rootEntityType" :placeholder "Required"
-                                     :onChange #(swap! state dissoc :bad-input)})]
-          (when (:bad-input @state)
-            [:div {:style {:float "left" :padding "1.6em 0 0 1em"
-                           :fontWeight 500 :color (:exception-red style/colors)}}
-             "All fields required"])
-          (clear-both)
-
-          (when-not workspace-id
-            [:div {:style {:marginBottom "1em"}}
-             [:div {:style {:fontSize "120%" :margin "1.5em 0 1em 0"}} "Destination:"]
-             [table/Table
-              {:empty-message "No workspaces available"
-               :columns [{:starting-width 35
-                          :resizable? false :reorderable? false :filter-by :none :sort-by :none
-                          :content-renderer
-                          (fn [ws]
-                            [:input {:type "radio"
-                                     :checked (identical? ws (:selected-workspace @state))
-                                     :onChange #(swap! state assoc :selected-workspace ws)}])}
-                         {:header "Namespace" :starting-width 150}
-                         {:header "Name" :starting-width 200}
-                         {:header "Owner(s)" :starting-width 300}]
-               :data (map
-                       (fn [ws]
-                         [ws
-                          (get-in ws ["workspace" "namespace"])
-                          (get-in ws ["workspace" "name"])
-                          (ws "owners")])
-                       workspaces-list)}]])
-
-          [:div {:style {:textAlign "center"}}
-           [comps/Button {:text (if workspace-id "Import" "Export")
-                          :onClick #(react/call :perform-copy this)}]]])
+       (and (:template @state) (:loaded-method @state)
+         (or (:workspace-id props) (:workspaces-list @state)))
+       (create-import-form state props this (:loaded-method @state)
+         [{:label "Configuration Namespace" :key "namespace"}
+          {:label "Configuration Name" :key "name"}
+          {:label "Root Entity Type" :key "rootEntityType"}])
 
        (:error @state) (style/create-server-error-message (:error @state))
        :else [comps/Spinner {:text "Creating template..."}]))
@@ -251,7 +168,7 @@
        ;; TODO - implement generalized validation
        (if (some empty? [namespace name rootEntityType])
          (do
-           (common/scroll-to-top)
+           (common/scroll-to-center (.getDOMNode (@refs "error")))
            (swap! state assoc :bad-input true))
          (do
            (swap! state assoc :importing? true)
@@ -273,6 +190,24 @@
                            (js/alert (str "Import error: " (.-responseText xhr)))))})))))
    :component-did-mount
    (fn [{:keys [props state]}]
+     (when-not (:workspace-id props)
+       (endpoints/call-ajax-orch
+         {:endpoint endpoints/list-workspaces
+          :on-done (fn [{:keys [success? get-parsed-response status-text]}]
+                     (if success?
+                       (let [ws-list (get-parsed-response)]
+                         (swap! state assoc :workspaces-list ws-list :selected-workspace (first ws-list)))
+                       (swap! state assoc :error status-text)))}))
+     (endpoints/call-ajax-orch
+       {:endpoint (endpoints/get-agora-method
+                    (get-in props [:method "namespace"])
+                    (get-in props [:method "name"])
+                    (get-in props [:method "snapshotId"]))
+        :headers {"Content-Type" "application/json"}
+        :on-done (fn [{:keys [success? get-parsed-response status-text]}]
+                   (if success?
+                     (swap! state assoc :loaded-method (get-parsed-response))
+                     (swap! state assoc :error status-text)))})
      (endpoints/call-ajax-orch
        {:endpoint (endpoints/create-template (:method props))
         :payload (assoc (:method props)
@@ -334,7 +269,7 @@
                                            (clojure.string/join " | " (get-ordered-id-fields method))))}]
           :data (map
                   (fn [item]
-                    [(:type item)
+                    [(item "entityType")
                      (item "namespace")
                      item
                      (item "snapshotId")
@@ -351,18 +286,15 @@
        (:selected-method @state)
        [MethodImportForm {:method (:selected-method @state)
                           :workspace-id (:workspace-id props)
-                          :workspaces-list (:workspaces-list @state)
                           :on-back #(swap! state dissoc :selected-method)
                           :after-import (:after-import props)}]
        (:selected-config @state)
        [ConfigImportForm {:config (:selected-config @state)
                           :workspace-id (:workspace-id props)
-                          :workspaces-list (:workspaces-list @state)
                           :on-back #(swap! state dissoc :selected-config)
                           :after-import (:after-import props)}]
 
-       (and (:configs-list @state) (:methods-list @state)
-         (or (:workspace-id props) (:workspaces-list @state)))
+       (and (:configs-list @state) (:methods-list @state))
        [Table {:configs (:configs-list @state)
                :methods (:methods-list @state)
                :on-config-selected #(swap! state assoc :selected-config %)
@@ -371,7 +303,7 @@
        (:error-message @state) (style/create-server-error-message (:error-message @state))
        :else [comps/Spinner {:text "Loading..."}]))
    :component-did-mount
-   (fn [{:keys [props state]}]
+   (fn [{:keys [state]}]
      (endpoints/call-ajax-orch
        {:endpoint endpoints/list-configurations
         :on-done (fn [{:keys [success? get-parsed-response status-text]}]
@@ -383,12 +315,4 @@
         :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                    (if success?
                      (swap! state assoc :methods-list (map #(assoc % :type "Method") (get-parsed-response)))
-                     (swap! state assoc :error-message status-text)))})
-     (when-not (:workspace-id props)
-       (endpoints/call-ajax-orch
-         {:endpoint endpoints/list-workspaces
-          :on-done (fn [{:keys [success? get-parsed-response status-text]}]
-                     (if success?
-                       (swap! state assoc :workspaces-list
-                         (filter #(contains? #{"OWNER" "WRITER"} (% "accessLevel")) (get-parsed-response)))
-                       (swap! state assoc :error-message status-text)))})))})
+                     (swap! state assoc :error-message status-text)))}))})
