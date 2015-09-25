@@ -121,16 +121,16 @@
          {:empty-message "There are no method configurations available"
           :columns [{:header "Name" :starting-width 200 :filter-by #(% "name") :sort-by #(% "name")
                      :content-renderer
-                     (fn [row-index conf]
+                     (fn [conf]
                        [:a {:href "javascript:;"
                             :onClick #(on-config-selected conf)
                             :style {:color (:button-blue style/colors) :textDecoration "none"}}
                         (conf "name")])}
-                    {:header "Namespace" :starting-width 200 :sort-by :value}
-                    {:header "Snapshot Id" :starting-width 100 :sort-by :value}
-                    {:header "Synopsis" :starting-width 160 :sort-by :value}
-                    {:header "Create Date" :starting-width 210 :sort-by :value}
-                    {:header "Owner" :starting-width 290 :sort-by :value}]
+                    {:header "Namespace" :starting-width 200}
+                    {:header "Snapshot Id" :starting-width 100}
+                    {:header "Synopsis" :starting-width 160}
+                    {:header "Create Date" :starting-width 210}
+                    {:header "Owner" :starting-width 290}]
           :data (map
                   (fn [config]
                     [config

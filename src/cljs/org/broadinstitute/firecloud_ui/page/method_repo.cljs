@@ -37,7 +37,7 @@
                   :sort-by  #(get-ordered-id-fields %)
                   :filter-by #(clojure.string/join ":" (get-ordered-id-fields %))
                   :content-renderer
-                  (fn [row method]
+                  (fn [method]
                     [:a {:style {:color (:button-blue style/colors) :textDecoration "none"}
                          :href "javascript:;"
                          :onClick (fn []
@@ -46,17 +46,14 @@
                                       :selected-config method
                                       :show-import-overlay? true))}
                      (clojure.string/join ":" (get-ordered-id-fields method))])}
-                 {:header "Method Synopsis"
-                  :content-renderer (fn [row method]
-                                      (get-in method ["method" "synopsis"]))
-                  :starting-width 150 :sort-by :value }
-                 {:header "Configuration Name" :starting-width 150 :sort-by :value}
-                 {:header "Namespace" :starting-width 150 :sort-by :value}
-                 {:header "Snapshot ID" :starting-width 150 :sort-by :value  }
-                 {:header "Synopsis" :starting-width 500 :sort-by :value}]
+                 {:header "Method Synopsis" :starting-width 150}
+                 {:header "Configuration Name" :starting-width 150}
+                 {:header "Namespace" :starting-width 150}
+                 {:header "Snapshot ID" :starting-width 150}
+                 {:header "Synopsis" :starting-width 400}]
        :data (map (fn [m]
                       [m
-                       m
+                       (get-in m ["method" "synopsis"])
                        (m "name")
                        (m "namespace")
                        (m "snapshotId")

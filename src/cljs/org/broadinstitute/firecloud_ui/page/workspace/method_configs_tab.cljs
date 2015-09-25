@@ -50,27 +50,25 @@
             :columns
             [{:header "Name" :starting-width 240 :sort-by #(% "name") :filter-by #(% "name")
               :content-renderer
-              (fn [row-index config]
+              (fn [config]
                 [:a {:href "javascript:;"
                      :style {:color (:button-blue style/colors) :textDecoration "none"}
                      :onClick #((:on-config-selected props) config)}
                  (config "name")])}
-             {:header "Namespace" :starting-width 200 :sort-by :value}
-             {:header "Root Entity Type" :starting-width 140 :sort-by :value}
-             {:header "Method Store Method" :starting-width 300
+             {:header "Namespace" :starting-width 200}
+             {:header "Root Entity Type" :starting-width 140}
+             {:header "Method Store Method" :starting-width 300 :sort-by :none
               :filter-by #(str (% "methodNamespace") (% "methodName") (% "methodVersion"))
               :content-renderer
-              (fn [row-index msm]
-                (render-map msm
-                  ["methodNamespace" "methodName" "methodVersion"]
-                  ["Namespace" "Name" "Version"]))}
-             {:header "Method Store Configuration" :starting-width 300
+              #(render-map %
+                ["methodNamespace" "methodName" "methodVersion"]
+                ["Namespace" "Name" "Version"])}
+             {:header "Method Store Configuration" :starting-width 300  :sort-by :none
               :filter-by #(str (% "methodConfigNamespace") (% "methodConfigName") (% "methodConfigVersion"))
               :content-renderer
-              (fn [row-index msc]
-                (render-map msc
-                  ["methodConfigNamespace" "methodConfigName" "methodConfigVersion"]
-                  ["Namespace" "Name" "Version"]))}]
+              #(render-map %
+                ["methodConfigNamespace" "methodConfigName" "methodConfigVersion"]
+                ["Namespace" "Name" "Version"])}]
             :data (map
                     (fn [config]
                       [config

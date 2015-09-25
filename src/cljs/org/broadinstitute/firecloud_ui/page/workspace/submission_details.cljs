@@ -49,6 +49,10 @@
               (contains? #{"Failed" "Aborted" "Unknown"} (wf "status"))))
     wfs))
 
+(defn- render-date [date]
+  (let [m (js/moment date)]
+    (str (.format m "L [at] LTS") " (" (.fromNow m) ")")))
+
 (react/defc WorkflowsTable
   {:get-initial-state
    (fn []
@@ -68,24 +72,21 @@
       [table/Table
        {:key (:active-filter @state)
         :empty-message "No Workflows"
-        :columns [{:header "Data Entity" :starting-width 200 :sort-by :value}
-                  {:header "Last Changed" :starting-width 280 :sort-by :value
-                   :content-renderer (fn [row-index date]
-                                       (let [m (js/moment date)]
-                                         (str (.format m "L [at] LTS") " ("
-                                           (.fromNow m) ")")))}
-                  {:header "Status" :starting-width 120 :sort-by :value
-                   :content-renderer (fn [row-index status]
+        :columns [{:header "Data Entity" :starting-width 200}
+                  {:header "Last Changed" :starting-width 280
+                   :content-renderer render-date :filter-by render-date}
+                  {:header "Status" :starting-width 120
+                   :content-renderer (fn [status]
                                        [:div {}
                                         (icon-for-wf-status status)
                                         status])}
-                  {:header "Messages" :starting-width 300 :sort-by count
-                   :content-renderer (fn [row-index message-list]
+                  {:header "Messages" :starting-width 300
+                   :content-renderer (fn [message-list]
                                        [:div {}
                                         (map (fn [message]
                                                [:div {} message])
                                           message-list)])}
-                  {:header "Workflow ID" :starting-width 300 :sort-by :value}]
+                  {:header "Workflow ID" :starting-width 300}]
         :data (map (fn [row]
                      [(str (get-in row ["workflowEntity" "entityName"]) " ("
                         (get-in row ["workflowEntity" "entityType"]) ")")
@@ -101,13 +102,13 @@
    (fn [{:keys [props]}]
      [table/Table
       {:empty-message "No Workflows"
-       :columns [{:header "Data Entity" :starting-width 200 :sort-by :value
+       :columns [{:header "Data Entity" :starting-width 200 :sort-by (juxt :type :name)
                   :filter-by (fn [entity]
                                (str (:type entity) " " (:name entity)))
-                  :content-renderer (fn [i entity]
+                  :content-renderer (fn [entity]
                                       (str (:name entity) " (" (:type entity) ")"))}
                  {:header "Errors" :starting-width 500 :sort-by count
-                  :content-renderer (fn [i error-list]
+                  :content-renderer (fn [error-list]
                                       [:div {}
                                        (map (fn [error]
                                               [:div {} error])

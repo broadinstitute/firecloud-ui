@@ -58,13 +58,14 @@
       :empty-message "No entities available."
       :columns (concat
                 [{:header "" :starting-width 40 :resizable? false :reorderable? false
-                  :content-renderer (fn [i data]
+                  :sort-by :none :filter-by :none
+                  :content-renderer (fn [data]
                                       [:input {:type "radio"
                                                :checked (identical? data selected-entity)
                                                :onChange #(on-entity-selected data)}])}
-                 {:header "Entity Type" :starting-width 100 :sort-by :value}
-                 {:header "Entity Name" :starting-width 100 :sort-by :value}]
-                (map (fn [k] {:header k :starting-width 100 :sort-by :value}) attribute-keys))
+                 {:header "Entity Type" :starting-width 100}
+                 {:header "Entity Name" :starting-width 100}]
+                (map (fn [k] {:header k :starting-width 100}) attribute-keys))
       :data (map (fn [m]
                    (concat
                     [m

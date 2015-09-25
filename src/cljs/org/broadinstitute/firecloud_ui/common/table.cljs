@@ -146,7 +146,9 @@
             :onResizeMouseDown onResizeMouseDown
             :onResizeDoubleClick #(swap! state update-in [:ordered-columns display-index]
                                      assoc :width (:starting-width column))
-            :onSortClick (when-let [sorter (:sort-by column)]
+            :onSortClick (when (and (or (:sort-by column)
+                                        (:sortable-columns? props))
+                                    (not= :none (:sort-by column)))
                            (fn [e]
                              (if (= i (:sort-column @state))
                                (case (:sort-order @state)
@@ -154,9 +156,9 @@
                                  :desc (swap! state dissoc :sort-column :sort-order :key-fn)
                                  (assert false "bad state"))
                                (swap! state assoc :sort-column i :sort-order :asc
-                                 :key-fn (if (= :value sorter)
-                                           (fn [row] (str (nth row i)))
-                                           (fn [row] (sorter (nth row i))))))
+                                 :key-fn (if-let [sorter (:sort-by column)]
+                                           (fn [row] (sorter (nth row i)))
+                                           (fn [row] (nth row i)))))
                              (react/call :set-body-rows this)))
             :sortOrder (when (= i (:sort-column @state)) (:sort-order @state))})))
      (filter :showing? (:ordered-columns @state)))
@@ -191,10 +193,10 @@
             [:div {:style row-style}
              (map
                (fn [col]
-                 (let [render-content (or (:content-renderer col) (fn [i data] (default-render data)))]
+                 (let [render-content (or (:content-renderer col) (fn [data] (default-render data)))]
                    (render-cell
                      {:width (:width col)
-                      :content (render-content row-index (nth row (:index col)))
+                      :content (render-content (nth row (:index col)))
                       :cell-padding-left (or (:cell-padding-left props) 0)
                       :content-container-style (merge
                                                  {:padding (str "0.6em 0 0.6em " (or (:cell-padding-left props) 0))}
@@ -309,6 +311,56 @@
         columns)))
 
 
+;; Table component with specifiable style and column behaviors.
+;;
+;; Properties:
+;;   :cell-padding-left (optional, default 16px)
+;;     A CSS padding-left value to apply to each cell
+;;   :paginator (optional, default :below)
+;;     Either :above or :below, determines where the paginator appears relative to the table
+;;   :paginator-space (optional, default 24)
+;;     A CSS padding value used to separate the table and paginator.
+;;   :resizable-columns? (optional, default true)
+;;     Fallback value for column resizing.
+;;   :reorderable-columns? (optional, default true)
+;;     Controls whether or not columns are reorderable.  When true, a reorder widget is presented
+;;   :sortable-columns? (optional, default true)
+;;     Fallback value for column sorting.
+;;   :filterable? (optional, default true)
+;;     Controls whether or not columns are filterable.  When true, a filter widget is presented
+;;   :empty-message (optional, default "There are no rows to display.")
+;;     A banner to display when the table is empty
+;;   :row-style (optional)
+;;     Style to apply to each row.  Properties overridden by :even-row-style and :odd-row-style.
+;;     When row styling is omitted, default properties create alternating white and gray backgrounds
+;;   :even-row-style (optional)
+;;     Style to apply to even-numbered rows.  Properties override :row-style
+;;   :odd-row-style (optional)
+;;     Style to apply to odd-numbered-rows.  Properties override :row-style
+;;   :header-row-style (optional)
+;;     Style to apply to the header row.  When omitted, style is a dark gray background with bold white text
+;;   :columns (REQUIRED)
+;;     A sequence of column maps.  The order given is used as the initial order.
+;;     Columns have the following properties:
+;;       :header (optional, default none)
+;;         The text to display.
+;;       :starting-width (optional, default 100)
+;;         The initial width, which may be resized
+;;       :content-renderer (optional)
+;;         A function from the column value to a displayable representation.  If omitted, a
+;;         default renderer is used which displays a reasonable string for most types
+;;       :resizable? (optional)
+;;         Controls if the column is resizable.  If absent, falls back to the table.
+;;       :filter-by (optional, defaults to 'str')
+;;         A function from the column value to a string to use for matching filter text.
+;;         Use ':filter-by :none' to disable filtering a specific column of an otherwise filterable table.
+;;       :sort-by (optional)
+;;         A function from the column value to a sortable type.  If present, the column is made
+;;         sortable.  If omitted, the :sortable-columns? top-level property is checked to see if
+;;         the column should be sortable, and if so, the column is sorted by the column type directly.
+;;         Use ':sort-by :none' to disable sorting a specific column of an otherwise sortable table.
+;;   :data (REQUIRED)
+;;     A sequence-of-sequences forming the data grid.
 (react/defc Table
   {:get-default-props
    (fn []
@@ -317,6 +369,7 @@
       :paginator-space 24
       :resizable-columns? true
       :reorderable-columns? true
+      :sortable-columns? true
       :filterable? true
       :empty-message "There are no rows to display."})
    :get-initial-state

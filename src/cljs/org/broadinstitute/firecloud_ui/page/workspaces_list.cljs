@@ -9,7 +9,6 @@
     [org.broadinstitute.firecloud-ui.common.table :as table]
     [org.broadinstitute.firecloud-ui.nav :as nav]
     [org.broadinstitute.firecloud-ui.page.workspace.details :refer [render-workspace-details]]
-    [org.broadinstitute.firecloud-ui.utils :as utils]
     ))
 
 
@@ -114,7 +113,7 @@
       :header-row-style {:fontWeight nil :fontSize "90%"
                          :color (:text-light style/colors) :backgroundColor nil}
       :header-style {:padding "0 0 1em 14px" :overflow nil}
-      :resizable-columns? false :reorderable-columns? false
+      :resizable-columns? false :reorderable-columns? false :sortable-columns? false
       :body-style {:fontSize nil :fontWeight nil
                    :borderLeft border-style :borderRight border-style
                    :borderBottom border-style :borderRadius 4}
@@ -123,15 +122,13 @@
       :cell-content-style {:padding nil}
       :columns
       [{:header [:div {:style {:marginLeft -6}} "Status"] :starting-width 60
-        :content-renderer (fn [row-index data]
-                            [StatusCell {:data data}])
+        :content-renderer (fn [data] [StatusCell {:data data}])
         :filter-by :none}
        {:header "Workspace" :starting-width 250
-        :content-renderer (fn [row-index data]
-                            [WorkspaceCell {:data data}])
+        :content-renderer (fn [data] [WorkspaceCell {:data data}])
         :filter-by :name}
        {:header "Description" :starting-width 400
-        :content-renderer (fn [row-index data]
+        :content-renderer (fn [data]
                             [:div {:style {:padding "1.1em 0 0 14px"}}
                              "No data available."])
         :filter-by :none}]
