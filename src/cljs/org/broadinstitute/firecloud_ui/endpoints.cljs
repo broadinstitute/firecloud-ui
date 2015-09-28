@@ -234,6 +234,27 @@
                   (range (rand-int 5)))
     :status (rand-nth ["Submitted" "Done"])}})
 
+(defn get-workflow-details [workspace-id submission-id workflow-id]
+  {:path (str "/workspaces/" (ws-path workspace-id) "/submissions/" submission-id
+              "/workflows/" workflow-id)
+   :method :get
+   :mock-data
+   {:calls {}
+    :outputs {}
+    :id "ea6a0b29-7770-4da7-8c45-5eea925d424c"
+    :inputs {"CancerExomePipeline_v2.M2.intervals" "gs://cancer-exome-pipeline-demo-data/panel_100_genes.interval_list"
+             "CancerExomePipeline_v2.M2.tumor_bam" "gs://cancer-exome-pipeline-demo-data/HCC1143_BL.100_gene_250bp_pad.bam"
+             "CancerExomePipeline_v2.M2.normal_bam" "gs://cancer-exome-pipeline-demo-data/HCC1143.100_gene_250bp_pad.bam"
+             "CancerExomePipeline_v2.M2.ref_fasta_dict" "gs://cancer-exome-pipeline-demo-data/Homo_sapiens_assembly19.dict"
+             "CancerExomePipeline_v2.M2.tumor_bai" "gs://cancer-exome-pipeline-demo-data/HCC1143_BL.100_gene_250bp_pad.bai"
+             "CancerExomePipeline_v2.M2.normal_bai" "gs://cancer-exome-pipeline-demo-data/HCC1143.100_gene_250bp_pad.bai"
+             "CancerExomePipeline_v2.M2.ref_fasta" "gs://cancer-exome-pipeline-demo-data/Homo_sapiens_assembly19.fasta"
+             "CancerExomePipeline_v2.M2.ref_fasta_fai" "gs://cancer-exome-pipeline-demo-data/Homo_sapiens_assembly19.fasta.fai"
+             "CancerExomePipeline_v2.M2.m2_output_vcf_name" "mutations.vcf"}
+    :submission "2015-09-28T15:55:42.000Z"
+    :status "Running"
+    :start "2015-09-28T15:55:42.000Z"}})
+
 (defn abort-submission [workspace-id submission-id]
   {:path (str "/workspaces/" (ws-path workspace-id) "/submissions/" submission-id)
    :method :delete})
