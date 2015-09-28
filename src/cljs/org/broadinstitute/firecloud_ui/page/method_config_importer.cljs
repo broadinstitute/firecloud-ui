@@ -8,6 +8,8 @@
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.common.table :as table]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
+    [org.broadinstitute.firecloud-ui.page.methods-configs-acl :as mca]
+    [org.broadinstitute.firecloud-ui.utils :as utils]
     ))
 
 
@@ -27,6 +29,19 @@
           (style/create-link #(on-back)
             (icons/font-icon {:style {:fontSize "70%" :marginRight "0.5em"}} :angle-left)
             "Back to table")
+          [:div {:style {:marginTop "1em"}}
+           (style/create-section-header (str "Selected Configuration: "
+                                          (mca/get-ordered-name (:config props))))
+           [:div {:style {:width "20%"}}
+            (when (:show-perms-overlay? @state)
+              [mca/AgoraPermsEditor
+               {:is-conf true
+                :selected-entity (:config props)
+                :dismiss-self #(swap! state assoc :show-perms-overlay? nil)}])
+            [comps/SidebarButton {:width "10%"
+                                  :style :light :margin :top :color :button-blue
+                                  :text "Permissions ..." :icon :gear
+                                  :onClick #(swap! state assoc :show-perms-overlay? true)}]]]
           [:div {:style {:fontSize 24 :align "center" :textAlign "center" :paddingBottom "0.5em"}}
            (if workspace-id "Import Method Configuration" "Export Method Configuration")]
 
@@ -149,9 +164,21 @@
           (style/create-link #(on-back)
             (icons/font-icon {:style {:fontSize "70%" :marginRight "0.5em"}} :angle-left)
             "Back to table")
+          [:div {:style {:marginTop "1em"}}
+           (style/create-section-header (str "Selected Method : "
+                                          (mca/get-ordered-name (:method props))))
+           [:div {:style {:width "20%"}}
+            (when (:show-perms-overlay? @state)
+              [mca/AgoraPermsEditor
+               {:is-conf false
+                :selected-entity (:method props)
+                :dismiss-self #(swap! state assoc :show-perms-overlay? nil)}])
+            [comps/SidebarButton {:width "10%"
+                                  :style :light :margin :top :color :button-blue
+                                  :text "Permissions ..." :icon :gear
+                                  :onClick #(swap! state assoc :show-perms-overlay? true)}]]]
           [:div {:style {:fontSize 24 :align "center" :textAlign "center" :paddingBottom "0.5em"}}
            (if workspace-id "Import Method Configuration" "Export Method Configuration")]
-
           [:div {:style {:backgroundColor (:background-gray style/colors)
                          :borderRadius 8 :border (str "1px solid " (:line-gray style/colors))
                          :padding "1em"}}
