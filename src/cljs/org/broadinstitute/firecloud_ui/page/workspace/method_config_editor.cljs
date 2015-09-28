@@ -47,7 +47,8 @@
                    "name" name
                    "inputs" inputs
                    "outputs" outputs
-                   "prerequisites" prereqs)]
+                   "prerequisites" prereqs
+                   "workspaceName" workspace-id)]
     (swap! state assoc :blocker "Updating...")
     (endpoints/call-ajax-orch
       {:endpoint (endpoints/update-workspace-method-config workspace-id config)
