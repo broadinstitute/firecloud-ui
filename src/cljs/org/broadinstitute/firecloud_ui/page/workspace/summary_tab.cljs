@@ -96,15 +96,18 @@
    :persist-acl
    (fn [{:keys [props state]}]
      (swap! state assoc :saving? true)
-     (endpoints/call-ajax-orch
-       {:endpoint (endpoints/update-workspace-acl (:workspace-id props))
-        :headers {"Content-Type" "application/json"}
-        :payload (filter #(not (empty? (:userId %))) (:acl-vec @state))
-        :on-done (fn [{:keys [success? status-text]}]
-                   (swap! state dissoc :saving?)
-                   (if success?
-                     ((:dismiss-self props))
-                     (js/alert "Error saving permissions: " status-text)))}))
+     (let [filtered-acl (filter #(not (empty? (:userId %))) (:acl-vec @state))]
+       (endpoints/call-ajax-orch
+         {:endpoint (endpoints/update-workspace-acl (:workspace-id props))
+          :headers {"Content-Type" "application/json"}
+          :payload filtered-acl
+          :on-done (fn [{:keys [success? status-text]}]
+                     (swap! state dissoc :saving?)
+                     (if success?
+                       (do
+                         ((:update-owners props) (map :userId (filter #(= "OWNER" (:accessLevel %)) filtered-acl)))
+                         ((:dismiss-self props)))
+                       (js/alert "Error saving permissions: " status-text)))})))
    :component-did-mount
    (fn [{:keys [props state]}]
      (endpoints/call-ajax-orch
@@ -132,7 +135,8 @@
             [comps/Blocker {:banner "Deleting..."}])
           (when (:editing-acl? @state)
             [AclEditor {:workspace-id (:workspace-id props)
-                        :dismiss-self #(swap! state dissoc :editing-acl?)}])
+                        :dismiss-self #(swap! state dissoc :editing-acl?)
+                        :update-owners #(swap! state update-in [:server-response :workspace] assoc "owners" %)}])
           [:div {:style {:float "left" :width 290 :marginRight 40}}
            ;; TODO - make the width of the float-left dynamic
            [comps/StatusLabel {:text (capitalize (name status))
@@ -150,10 +154,11 @@
                                    :onClick #(when (js/confirm "Are you sure?")
                                               (swap! state assoc :deleting? true)
                                               (react/call :delete this))}])]
-          [:div {:style {:display "inline-block"}}
+          [:div {:style {:margin-left 330}}
            (style/create-section-header "Workspace Owner")
            (style/create-paragraph
-             [:div {} [:strong {} (clojure.string/join ", " (ws "owners"))]
+             [:div {}
+              (interpose ", " (map #(style/render-email %) (ws "owners")))
               (when owner?
                 [:span {}
                  " ("
