@@ -17,6 +17,9 @@ LogLevel ${LOG_LEVEL}
   # Allow for proxying requests to HTTPS endpoints.
   SSLProxyEngine on
 
+  # Causes Shibboleth to play nice with other authentication schemes.
+  ShibCompatValidUser On
+
   --EXTRA_VHOST_HTTP--
 </VirtualHost>
 
