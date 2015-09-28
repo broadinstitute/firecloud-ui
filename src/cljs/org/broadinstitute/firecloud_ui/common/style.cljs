@@ -89,3 +89,10 @@
        :style {:textDecoration "none" :color (:button-blue colors)}
        :onClick onClick}
    children])
+
+(defn render-email [email]
+  (let [tokens (clojure.string/split email #"@")]
+    (assert (= 2 (count tokens)) "Not exactly 1 '@' in email address")
+    [:div {:style {:display "inline-block"}}
+     [:span {:style {:fontWeight 600}} (nth tokens 0)]
+     [:span {:style {:fontweight 300}} (str "@" (nth tokens 1))]]))
