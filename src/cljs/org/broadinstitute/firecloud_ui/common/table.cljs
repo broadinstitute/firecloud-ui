@@ -89,7 +89,7 @@
            {:style {:width 60 :margin "0em 1em"} :ref "numRows"
             :onChange #(swap! state assoc
                               :rows-per-page (js/parseInt
-                                              (-> (@refs "numRows") .getDOMNode .-value))
+                                               (-> (@refs "numRows") .getDOMNode .-value))
                               :current-page 1)}
             [10 25 100 500])
           "rows per page"]
@@ -209,7 +209,7 @@
 (react/defc Filterer
   {:get-filter-text
    (fn [{:keys [refs]}]
-     (-> (@refs "filter-field") .getDOMNode .-value trim))
+     (common/get-text refs "filter-field"))
    :get-initial-state
    (fn [] {:initial true :synced true})
    :render

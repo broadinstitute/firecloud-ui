@@ -29,6 +29,48 @@
     (fn [k] {:userId k :accessLevel (acl-map k)})
     (keys acl-map)))
 
+(defn- render-acl-content [props state this]
+  [comps/OKCancelForm
+   {:header
+    (let [workspace-id (:workspace-id props)]
+      (str "Permissions for " (:namespace workspace-id) ":" (:name workspace-id)))
+    :content
+    (react/create-element
+      [:div {}
+       (when (:saving? @state)
+         [comps/Blocker {:banner "Updating..."}])
+       [:div {:style {:padding "0.5em 0" :fontSize "90%"}}
+        [:div {:style {:float "left" :width column-width}} "User or Group ID"]
+        [:div {:style {:float "right" :width column-width}} "Access Level"]
+        (common/clear-both)]
+       (map-indexed
+         (fn [i acl-entry]
+           [:div {}
+            (style/create-text-field
+              {:ref (str "acl-key" i)
+               :style {:float "left" :width column-width :color "black"
+                       :backgroundColor (when (< i (:count-orig @state)) (:background-gray style/colors))}
+               :disabled (< i (:count-orig @state))
+               :spellCheck false
+               :defaultValue (:userId acl-entry)})
+            (style/create-select
+              {:ref (str "acl-value" i)
+               :style {:float "right" :width column-width :height 33}
+               :defaultValue (:accessLevel acl-entry)}
+              access-levels)
+            (common/clear-both)])
+         (:acl-vec @state))
+       [comps/Button {:text "Add new" :style :add
+                      :onClick #(do
+                                 (react/call :capture-ui-state this)
+                                 (swap! state update-in [:acl-vec] conj {:userId "" :accessLevel "READER"}))}]])
+    :dismiss-self (:dismiss-self props)
+    :ok-button
+    [comps/Button {:text "Save"
+                   :onClick #(do
+                              (react/call :capture-ui-state this)
+                              (react/call :persist-acl this))}]}])
+
 (react/defc AclEditor
   {:render
    (fn [{:keys [props state this]}]
@@ -37,59 +79,19 @@
        :dismiss-self (:dismiss-self props)
        :content
        (react/create-element
-         [:div {:style {:padding "2em"}}
-          (cond
-            (:acl-vec @state)
-            [:div {}
-             (when (:saving? @state)
-               [comps/Blocker {:banner "Updating..."}])
-             [:div {:style {:fontWeight 500}}
-              (let [workspace-id (:workspace-id props)]
-                (str "Permissions for " (:namespace workspace-id) ":" (:name workspace-id)))]
-             [:div {:style {:padding "0.5em 0" :fontSize "90%"}}
-              [:div {:style {:float "left" :width column-width}} "User or Group ID"]
-              [:div {:style {:float "right" :width column-width}} "Access Level"]
-              (common/clear-both)]
-             (map-indexed
-               (fn [i acl-entry]
-                 [:div {}
-                  (style/create-text-field
-                    {:ref (str "acl-key" i)
-                     :style {:float "left" :width column-width
-                             :backgroundColor (when (< i (:count-orig @state)) (:background-gray style/colors))}
-                     :disabled (< i (:count-orig @state))
-                     :spellCheck false
-                     :defaultValue (:userId acl-entry)})
-                  (style/create-select
-                    {:ref (str "acl-value" i)
-                     :style {:float "right" :width column-width :height 33}
-                     :defaultValue (:accessLevel acl-entry)}
-                    access-levels)
-                  (common/clear-both)])
-               (:acl-vec @state))
-             [comps/Button {:text "Add new" :style :add
-                            :onClick #(do
-                                       (react/call :capture-ui-state this)
-                                       (swap! state update-in [:acl-vec] conj {:userId "" :accessLevel "READER"}))}]
-             [:div {:style {:textAlign "center" :marginTop "1em"}}
-              [:a {:href "javascript:;"
-                   :style {:textDecoration "none" :color (:button-blue style/colors) :marginRight "1.5em"}
-                   :onClick #((:dismiss-self props))}
-               "Cancel"]
-              [comps/Button {:text "Save"
-                             :onClick #(do
-                                        (react/call :capture-ui-state this)
-                                        (react/call :persist-acl this))}]]]
-
-            (:error @state) (style/create-server-error-message (:error @state))
-            :else [comps/Spinner {:text "Loading Permissions..."}])])}])
+         (if (:acl-vec @state)
+           (render-acl-content props state this)
+           [:div {:style {:padding "2em"}}
+            (if (:error @state)
+              (style/create-server-error-message (:error @state))
+              [comps/Spinner {:text "Loading Permissions..."}])]))}])
    :capture-ui-state
    (fn [{:keys [state refs]}]
      (swap! state assoc :acl-vec
        (mapv
          (fn [i]
-           {:userId (-> (@refs (str "acl-key" i)) .getDOMNode .-value trim)
-            :accessLevel (-> (@refs (str "acl-value" i)) .getDOMNode .-value)})
+           (let [[userId accessLevel] (common/get-text refs (str "acl-key" i) (str "acl-value" i))]
+             {:userId userId :accessLevel accessLevel}))
          (range (count (:acl-vec @state))))))
    :persist-acl
    (fn [{:keys [props state]}]
@@ -155,10 +157,9 @@
               (when owner?
                 [:span {}
                  " ("
-                 [:a {:href "javascript:;"
-                      :style {:color (:button-blue style/colors) :textDecoration "none"}
-                      :onClick #(swap! state assoc :editing-acl? true)}
-                  "Edit sharing"]
+                 (style/create-link
+                   #(swap! state assoc :editing-acl? true)
+                   "Edit sharing")
                  ")"])])
            (style/create-section-header "Description")
            (style/create-paragraph [:em {} "Description info not available yet"])
@@ -168,7 +169,7 @@
            (style/create-paragraph [:em {} "Research purpose not available yet"])
            (style/create-section-header "Billing Account")
            (style/create-paragraph [:em {} "Billing account not available yet"])]
-          [:div {:style {:clear "both"}}]])))
+          (common/clear-both)])))
    :load-workspace
    (fn [{:keys [props state]}]
      (endpoints/call-ajax-orch

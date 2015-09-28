@@ -18,10 +18,12 @@
     (set! (.-value (.getDOMNode (@refs id))) "")))
 
 (defn get-text [refs & ids]
-  (map
-    (fn [id]
-      (-> (@refs id) .getDOMNode .-value clojure.string/trim))
-    ids))
+  (if (= 1 (count ids))
+    (-> (@refs (first ids)) .getDOMNode .-value clojure.string/trim)
+    (map
+      (fn [id]
+        (-> (@refs id) .getDOMNode .-value clojure.string/trim))
+      ids)))
 
 (defn clear-both [] [:div {:style {:clear "both"}}])
 
