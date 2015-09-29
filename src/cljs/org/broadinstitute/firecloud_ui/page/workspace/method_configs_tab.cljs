@@ -41,7 +41,7 @@
                                                              (swap! state dissoc :show-import-overlay?)
                                                              ((:on-config-imported props) config))}]])}])
       [:div {:style {:float "right" :padding "0 2em 1em 0"}}
-       [comps/Button {:text "Import Configuration ..."
+       [comps/Button {:text "Import Configuration..."
                       :onClick #(swap! state assoc :show-import-overlay? true)}]]
       (common/clear-both)
       (let [server-response (:server-response @state)

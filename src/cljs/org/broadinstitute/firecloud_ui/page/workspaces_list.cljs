@@ -203,7 +203,7 @@
         [:div {:style {:padding "2em"}}
          [:div {:style {:float "right" :display (when (:name selected-ws-id) "none")}}
           [comps/Button
-           {:text "Create New Workspace" :style :add
+           {:text "Create New Workspace..." :style :add
             :onClick #(swap! state assoc :overlay-shown? true)}]]
          [:span {:style {:fontSize "180%"}}
           (if selected-ws-id (:name selected-ws-id) "Workspaces")]]

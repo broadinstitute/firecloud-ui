@@ -40,7 +40,7 @@
                 :dismiss-self #(swap! state assoc :show-perms-overlay? nil)}])
             [comps/SidebarButton {:width "10%"
                                   :style :light :margin :top :color :button-blue
-                                  :text "Permissions ..." :icon :gear
+                                  :text "Permissions..." :icon :gear
                                   :onClick #(swap! state assoc :show-perms-overlay? true)}]]]
           [:div {:style {:fontSize 24 :align "center" :textAlign "center" :paddingBottom "0.5em"}}
            (if workspace-id "Import Method Configuration" "Export Method Configuration")]
@@ -86,7 +86,7 @@
                             [:input {:type "radio"
                                      :checked (identical? ws (:selected-workspace @state))
                                      :onChange #(swap! state assoc :selected-workspace ws)}])}
-                         {:header "Namespace" :starting-width 100}
+                         {:header "Namespace" :starting-width 150}
                          {:header "Name" :starting-width 200}
                          {:header "Owner(s)" :starting-width 300}]
                :data (map
@@ -175,7 +175,7 @@
                 :dismiss-self #(swap! state assoc :show-perms-overlay? nil)}])
             [comps/SidebarButton {:width "10%"
                                   :style :light :margin :top :color :button-blue
-                                  :text "Permissions ..." :icon :gear
+                                  :text "Permissions..." :icon :gear
                                   :onClick #(swap! state assoc :show-perms-overlay? true)}]]]
           [:div {:style {:fontSize 24 :align "center" :textAlign "center" :paddingBottom "0.5em"}}
            (if workspace-id "Import Method Configuration" "Export Method Configuration")]
@@ -224,7 +224,7 @@
                             [:input {:type "radio"
                                      :checked (identical? ws (:selected-workspace @state))
                                      :onChange #(swap! state assoc :selected-workspace ws)}])}
-                         {:header "Namespace" :starting-width 100}
+                         {:header "Namespace" :starting-width 150}
                          {:header "Name" :starting-width 200}
                          {:header "Owner(s)" :starting-width 300}]
                :data (map
