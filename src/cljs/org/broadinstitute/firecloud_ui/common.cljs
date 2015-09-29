@@ -27,7 +27,21 @@
 
 (defn clear-both [] [:div {:style {:clear "both"}}])
 
-(defn scroll-to [x y] (.scrollTo js/window x y))
+(defn- animate [steps-remaining x y step-x step-y period]
+  (if (zero? steps-remaining)
+    (.scrollTo js/window x y)
+    (js/setTimeout
+      #(do (.scrollBy js/window step-x step-y)
+           (animate (dec steps-remaining) x y step-x step-y period))
+      period)))
+
+(defn scroll-to [x y]
+  (let [duration 100
+        period 5
+        frames (/ duration period)
+        step-x (/ (- x (.-scrollX js/window)) frames)
+        step-y (/ (- y (.-scrollY js/window)) frames)]
+    (animate frames x y step-x step-y period)))
 
 (defn scroll-to-top [] (scroll-to 0 0))
 
