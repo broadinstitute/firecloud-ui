@@ -41,8 +41,8 @@
             (Set discoveryProtocol to "WAYF" for legacy Shibboleth WAYF support.)
             You can also override entityID on /Login query string, or in RequestMap/htaccess.
             -->
-            <SSO entityID="https://idp.testshib.org/idp/shibboleth"
-                 discoveryProtocol="SAMLDS" discoveryURL="https://ds.example.org/DS/WAYF">
+            <SSO entityID="https://citdecadssoweb.cit.nih.gov/SAML2/IDP"
+                 discoveryProtocol="SAMLDS" discoveryURL="http://citdecadssoweb.cit.nih.gov/saml2/idp/saml2-nih-itrustdev-idp.xml">
               SAML2 SAML1
             </SSO>
 
@@ -70,8 +70,10 @@
             helpLocation="/about.html"
             styleSheet="/shibboleth-sp/main.css"/>
         
-        <MetadataProvider type="XML" uri="http://www.testshib.org/metadata/testshib-providers.xml"
-             backingFilePath="testshib-two-idp-metadata.xml" reloadInterval="180000" />
+        <MetadataProvider
+            type="XML"
+            uri="http://citdecadssoweb.cit.nih.gov/saml2/idp/saml2-nih-itrustdev-idp.xml"
+            backingFilePath="saml2-nih-itrustdev-idp.xml" reloadInterval="180000" />
         <!-- Example of remotely supplied batch of signed metadata. -->
         <!--
         <MetadataProvider type="XML" uri="http://federation.org/federation-metadata.xml"

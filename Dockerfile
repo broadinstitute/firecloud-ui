@@ -2,21 +2,17 @@ FROM broadinstitute/openidc-baseimage
 
 # How to install OpenJDK 8 from:
 # http://ubuntuhandbook.org/index.php/2015/01/install-openjdk-8-ubuntu-14-04-12-04-lts/
-RUN add-apt-repository ppa:openjdk-r/ppa
 
-RUN apt-get update --fix-missing
-RUN apt-get install -y -qq --no-install-recommends \
-  libapache2-mod-shib2 \
-  openjdk-8-jdk \
-  php5-cli \
-  rlfe
-
-# Standard apt-get cleanup.
-RUN apt-get -yq autoremove && \
-  apt-get -yq clean && \
-  rm -rf /var/lib/apt/lists/* && \
-  rm -rf /tmp/* && \
-  rm -rf /var/tmp/*
+# Add repo, update, cleanup all in one command to minimize layer size.
+RUN \
+  add-apt-repository ppa:openjdk-r/ppa && apt-get update --fix-missing \
+  && apt-get install -y -qq --no-install-recommends \
+    libapache2-mod-shib2 \
+    openjdk-8-jdk \
+    php5-cli \
+    rlfe \
+  && apt-get -yq autoremove && apt-get -yq clean && rm -rf /var/lib/apt/lists/* \
+  && rm -rf /tmp/* && rm -rf /var/tmp/*
 
 RUN curl https://raw.githubusercontent.com/technomancy/leiningen/stable/bin/lein > /usr/bin/lein
 RUN chmod 755 /usr/bin/lein
@@ -24,8 +20,6 @@ RUN chmod 755 /usr/bin/lein
 ENV LEIN_ROOT=1
 # Actually install leiningen.
 RUN lein --version
-
-EXPOSE 80
 
 WORKDIR /app
 
@@ -45,11 +39,14 @@ RUN ./script/common/build.sh once
 
 COPY src/docker/run-apache.sh /etc/service/apache2/run
 COPY src/docker/shibboleth2.xml /etc/shibboleth/shibboleth2.xml
-COPY script/release/run-shibboleth.sh /etc/service/shibboleth/run
+COPY src/docker/run-shibboleth.sh /etc/service/shibboleth/run
 # Idp metadata available at https://this-host/Shibboleth.sso/Metadata
 
 # openidc-baseimage requires this unused variable.
 ENV CALLBACK_URI=http://example.com/
+
+EXPOSE 80
+EXPOSE 443
 
 ENV HTTPD_PORT=80 SSL_HTTPD_PORT=443
 ENV SERVER_ADMIN=devops@broadinstitute.org
