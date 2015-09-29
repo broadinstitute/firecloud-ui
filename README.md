@@ -67,17 +67,17 @@ ORCH_URL_ROOT='http://orch:8080' ./script/dev/start-server.sh
 
 Build once:
 ```
-docker exec -it firecloud-ui ./script/dev/build-once.sh
+./script/dev/build-once.sh
 ```
 
 Watch files and rebuild whenever a file is saved:
 ```
-docker exec -it firecloud-ui ./script/dev/start-auto-build.sh
+./script/dev/start-auto-build.sh
 ```
 
 Watch files, rebuild, and reload changes into the running browser window:
 ```
-docker exec -it firecloud-ui ./script/dev/start-hot-reloader.sh
+./script/dev/start-hot-reloader.sh
 ```
 
 For this build, you must be viewing the application via HTTP, not HTTPS. HTTPS is not supported by Figwheel.
