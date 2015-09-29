@@ -164,7 +164,7 @@
                  " ("
                  (style/create-link
                    #(swap! state assoc :editing-acl? true)
-                   "Edit sharing")
+                   "Edit sharing...")
                  ")"])])
            (style/create-section-header "Description")
            (style/create-paragraph [:em {} "Description info not available yet"])
