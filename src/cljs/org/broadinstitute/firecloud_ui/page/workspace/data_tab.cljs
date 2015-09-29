@@ -7,8 +7,9 @@
     [org.broadinstitute.firecloud-ui.common.icons :as icons]
     [org.broadinstitute.firecloud-ui.common.table :as table]
     [org.broadinstitute.firecloud-ui.common.style :as style]
-    [org.broadinstitute.firecloud-ui.page.import-data :as import-data]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
+    [org.broadinstitute.firecloud-ui.page.workspace.copy-data-workspaces :as copy-data-workspaces]
+    [org.broadinstitute.firecloud-ui.page.workspace.import-data :as import-data]
     ))
 
 
@@ -42,6 +43,16 @@
                          (map (fn [k] (get-in m ["attributes" k])) attribute-keys)))
                   (:entities @state))}])])})
 
+; TODO: Need a much better way to get back to the original state. This tri-state process is hacky and ugly.
+(defn- get-back-link [state refs]
+  [:div {:style {:margin "1em 0 0 1em"}}
+   (style/create-link
+     #(swap! state merge
+       {:show-import? false :show-copy? false}
+       (when (react/call :did-load-data? (@refs "data-import"))
+         {:entity-map false}))
+     (icons/font-icon {:style {:fontSize "70%" :marginRight "1em"}} :angle-left)
+     "Back to Data List")])
 
 (react/defc WorkspaceData
   {:render
@@ -49,23 +60,23 @@
      [:div {:style {:marginTop "1em"}}
       (cond
         (:show-import? @state)
-        [:div {:style {:margin "1em 0 0 2em"}}
-         [:div {}
-          (style/create-link
-            #(swap! state merge
-              {:show-import? false}
-              (when (react/call :did-load-data? (@refs "data-import"))
-                {:entity-map false}))
-            (icons/font-icon {:style {:fontSize "70%" :marginRight "0.5em"}} :angle-left)
-            "Back to Data List")]
+        [:div {}
+         (get-back-link state refs)
          [import-data/Page {:ref "data-import" :workspace-id (:workspace-id props)}]]
+        (:show-copy? @state)
+        [:div {}
+         (get-back-link state refs)
+         [copy-data-workspaces/Page {:ref "data-import" :workspace-id (:workspace-id props)}]]
         (:entity-map @state) [EntitiesList {:entity-map (:entity-map @state)}]
         (:error @state) (style/create-server-error-message (:error @state))
         :else [:div {:style {:textAlign "center"}} [comps/Spinner {:text "Loading entities..."}]])
-      (when-not (:show-import? @state)
+      (when-not (or (:show-import? @state) (:show-copy? @state))
         [:div {:style {:margin "1em 0 0 1em"}}
          [comps/Button {:text "Import Data..."
-                        :onClick #(swap! state assoc :show-import? true)}]])])
+                        :onClick #(swap! state assoc :show-import? true :show-copy? false)}]
+         [:span {:style {:margin ".5em"}} " "]
+         [comps/Button {:text "Copy Data..."
+                        :onClick #(swap! state assoc :show-import? false :show-copy? true)}]])])
    :component-did-mount
    (fn [{:keys [this]}]
      (react/call :load-entities this))
