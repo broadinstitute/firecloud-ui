@@ -1,10 +1,10 @@
 (ns org.broadinstitute.firecloud-ui.common.components
   (:require
+    [clojure.string :refer [blank?]]
     [dmohs.react :as react]
     [org.broadinstitute.firecloud-ui.common :as common]
     [org.broadinstitute.firecloud-ui.common.icons :as icons]
     [org.broadinstitute.firecloud-ui.common.style :as style]
-    [org.broadinstitute.firecloud-ui.utils :as utils]
     ))
 
 
@@ -287,3 +287,47 @@
               :onClick (:onClick props)}
         (icons/font-icon {:style {:verticalAlign "middle" :fontSize "135%"}} (:icon props))
         [:span {:style {:verticalAlign "middle" :marginLeft "1em"}} (:text props)]]))})
+
+(react/defc EntityDetails
+  {:render
+   (fn [{:keys [props state this]}]
+     (let [entity (:entity props)
+           make-field
+           (fn [entity key label & [render]]
+             [:div {}
+              [:span {:style {:fontWeight 500 :width 100 :display "inline-block" :paddingBottom "0.3em"}} label]
+              [:span {} ((or render identity) (entity key))]])
+           config? (contains? entity "method")]
+       [:div {:style {:backgroundColor (:background-gray style/colors)
+                      :borderRadius 8 :border (str "1px solid " (:line-gray style/colors))
+                      :padding "1em"}}
+        (react/call :render-details this make-field entity)
+        [:div {:style {:paddingTop "0.5em"}}
+         [:span {:style {:fontWeight 500 :marginRight "1em"}} (if config? "Referenced Method:" "Payload:")]
+         (style/create-link
+           #(swap! state assoc :payload-expanded (not (:payload-expanded @state)))
+           (if (:payload-expanded @state) "Collapse" "Expand"))]
+        (when (:payload-expanded @state)
+          (if config?
+            [:div {:style {:margin "0.5em 0 0 1em"}}
+             (react/call :render-details this make-field (entity "method"))
+             [:div {:style {:fontWeight 500 :marginTop "1em"}} "Payload:"]
+             [:pre {:style {:fontSize "90%"}} (get-in entity ["method" "payload"])]]
+            [:pre {:style {:fontSize "90%"}} (entity "payload")]))]))
+   :render-details
+   (fn [{:keys []} make-field entity]
+     [:div {}
+      [:div {:style {:float "left"}}
+       (make-field entity "namespace" "Namespace: ")
+       (make-field entity "name" "Name: ")
+       (make-field entity "snapshotId" "Snapshot ID: ")]
+      [:div {:style {:float "left" :marginLeft "5em"}}
+       (make-field entity "createDate" "Created: " #(-> % js/moment (.format "LLL")))
+       (make-field entity "entityType" "Entity Type: ")
+       (make-field entity "synopsis" "Synopsis: ")]
+      (common/clear-both)
+      [:div {:style {:fontWeight 500 :padding "0.5em 0 0.3em 0"}}
+       "Documentation:"]
+      (if (blank? (entity "documentation"))
+        [:div {:style {:fontStyle "italic" :fontSize "90%"}} "No documentation provided"]
+        [:div {:style {:fontSize "90%"}} (entity "documentation")])])})

@@ -69,6 +69,7 @@
      [comps/Dialog
       {:width "75%"
        :blocking? true
+       :dismiss-self (:dismiss-self props)
        :content (react/create-element
                   [:div {:style {:background "#fff" :padding "2em"}}
                    (cond
