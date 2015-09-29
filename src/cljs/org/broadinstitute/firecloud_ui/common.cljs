@@ -27,21 +27,28 @@
 
 (defn clear-both [] [:div {:style {:clear "both"}}])
 
-(defn- animate [steps-remaining x y step-x step-y period]
-  (if (zero? steps-remaining)
-    (.scrollTo js/window x y)
-    (js/setTimeout
-      #(do (.scrollBy js/window step-x step-y)
-           (animate (dec steps-remaining) x y step-x step-y period))
-      period)))
+;; Smooth step from https://en.wikipedia.org/wiki/Smoothstep
+(defn- smooth-step [start end point]
+  (let [x (/ (- point start) (- end start))]
+    (* x x (- 3 (* 2 x)))))
+
+(defn- smoother-step [start end point]
+  (let [x (/ (- point start) (- end start))]
+    (* x x x (+ (* x (- (* x 6) 15)) 10))))
+
+(defn- animate [start-time end-time start-x start-y end-x end-y]
+  (let [now (js/Date.now)]
+    (if (> now end-time)
+      (.scrollTo js/window end-x end-y)
+      (let [point (smooth-step start-time end-time (js/Date.now))]
+        (.scrollTo js/window
+          (+ start-x (* point (- end-x start-x)))
+          (+ start-y (* point (- end-y start-y))))
+        (js/setTimeout #(animate start-time end-time start-x start-y end-x end-y) 10)))))
 
 (defn scroll-to [x y]
-  (let [duration 100
-        period 5
-        frames (/ duration period)
-        step-x (/ (- x (.-scrollX js/window)) frames)
-        step-y (/ (- y (.-scrollY js/window)) frames)]
-    (animate frames x y step-x step-y period)))
+  (let [start-time (js/Date.now)]
+    (animate start-time (+ start-time 100) (.-scrollX js/window) (.-scrollY js/window) x y)))
 
 (defn scroll-to-top [] (scroll-to 0 0))
 
