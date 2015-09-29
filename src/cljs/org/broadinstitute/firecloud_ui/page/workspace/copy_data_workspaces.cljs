@@ -12,26 +12,24 @@
 
 (react/defc WorkspaceList
   {:render
-   (fn [{:keys [state props]}]
+   (fn [{:keys [props]}]
      [:div {:style {:margin "1em"}}
       [:h3 {} "Select a workspace from which to copy entities:"]
       (let [attribute-keys (apply union (map (fn [e] (set (keys (e "attributes")))) (:workspaces props)))]
         [table/Table
          {:empty-message "There are no workspaces to display."
           :columns (concat
-                     [{:header "Namespace" :starting-width 100 :sort-by :value}
-                      {:header "Name" :starting-width 150 :sort-by :value
+                     [{:header "Namespace" :starting-width 100}
+                      {:header "Name" :starting-width 150
                        :content-renderer
-                       (fn [row-index ws]
-                         [:a {:style {:color (:button-blue style/colors) :textDecoration "none"}
-                              :href "javascript:;"
-                              :onClick #((:onWorkspaceSelected props) ws)}
-                          (get-in ws ["workspace" "name"])])}
-                      {:header "Created By" :starting-width 100 :sort-by :value}
-                      {:header "Create Date" :starting-width 200 :sort-by :value
-                       :content-renderer (fn [index date] (.format (js/moment date) "LLL"))}
-                      {:header "Access Level" :starting-width 100 :sort-by :value}]
-                     (map (fn [k] {:header k :starting-width 100 :sort-by :value}) attribute-keys))
+                       (fn [ws]
+                         (style/create-link
+                           #((:onWorkspaceSelected props) ws)
+                           (get-in ws ["workspace" "name"])))}
+                      {:header "Created By" :starting-width 100}
+                      (table/date-column {})
+                      {:header "Access Level" :starting-width 100}]
+                     (map (fn [k] {:header k :starting-width 100}) attribute-keys))
           :data (map (fn [ws]
                        (concat
                          [(get-in ws ["workspace" "namespace"])

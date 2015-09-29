@@ -289,9 +289,6 @@
 (defn- get-ordered-id-fields [method]
   (mapv #(method %) ["namespace" "name" "snapshotId"]))
 
-(defn- format-date [date]
-  (-> date js/moment (.format "LLL")))
-
 (react/defc Table
   {:get-initial-state
    (fn []
@@ -328,8 +325,7 @@
                          (item "name")))}
                     {:header "Snapshot ID" :starting-width 100}
                     {:header "Synopsis" :starting-width 160}
-                    {:header "Created" :starting-width 210
-                     :filter-by #(format-date %) :content-renderer #(format-date %)}
+                    (table/date-column {:header "Created"})
                     {:header "Referenced Method" :starting-width 250
                      :filter-by #(clojure.string/join " " (get-ordered-id-fields %))
                      :sort-by #(get-ordered-id-fields %)

@@ -10,16 +10,19 @@
     ))
 
 
+(defn- render-date [submission]
+  (.format (js/moment (submission "submissionDate")) "LLL"))
+
 (defn- render-submissions-table [submissions on-submission-clicked]
   [table/Table
    {:empty-message "There are no analyses to display."
     :columns
     [{:header "Date" :starting-width 200
-      :sort-by #(% "submissionDate") :filter-by #(% "submissionDate")
+      :sort-by #(% "submissionDate") :filter-by #(render-date %)
       :content-renderer (fn [submission]
                           (style/create-link
                             #(on-submission-clicked (submission "submissionId"))
-                            (.format (js/moment (submission "submissionDate")) "LLL")))}
+                            (render-date submission)))}
      {:header "Status"}
      {:header "Method Configuration" :starting-width 220}
      {:header "Data Entity" :starting-width 220}]

@@ -367,8 +367,4 @@
 
 (defn copy-entity-to-workspace [workspace-id]
   {:path (str "/workspaces/" (ws-path workspace-id) "/entities/copy")
-   :method :post
-   :mock-data
-   {:sourceWorkspace {:namespace (:namespace workspace-id), :name (:name workspace-id)}
-    :entityType (rand-nth ["sample" "participant"])
-    :entityNames ["entity1"]}})
+   :method :post})

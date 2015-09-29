@@ -134,7 +134,7 @@
          [:div {:style {:backgroundColor (if (:blocking? props)
                                            "rgba(110, 110, 110, 0.4)"
                                            "rgba(210, 210, 210, 0.4)")
-                        :position "absolute" :zIndex 9999
+                        :position "absolute" :zIndex 8888
                         :top 0 :left 0 :right 0 :height (.. js/document -body -offsetHeight)}
                 :onKeyDown (common/create-key-handler [:esc] #((:dismiss-self props)))
                 :onClick (when-not (:blocking? props) #((:dismiss-self props)))}

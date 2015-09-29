@@ -154,7 +154,7 @@
                                    :onClick #(when (js/confirm "Are you sure?")
                                               (swap! state assoc :deleting? true)
                                               (react/call :delete this))}])]
-          [:div {:style {:margin-left 330}}
+          [:div {:style {:marginLeft 330}}
            (style/create-section-header "Workspace Owner")
            (style/create-paragraph
              [:div {}

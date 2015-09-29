@@ -46,12 +46,13 @@
 ; TODO: Need a much better way to get back to the original state. This tri-state process is hacky and ugly.
 (defn- get-back-link [state refs]
   [:div {:style {:margin "1em 0 0 1em"}}
-   [:a {:href "javascript:;"
-       :style {:textDecoration "none"}
-       :onClick #(swap! state merge
-                  {:show-import? false :show-copy? false}
-                  (when (react/call :did-load-data? (@refs "data-import"))
-                    {:entity-map false}))} "< Back to Data List"]])
+   (style/create-link
+     #(swap! state merge
+       {:show-import? false :show-copy? false}
+       (when (react/call :did-load-data? (@refs "data-import"))
+         {:entity-map false}))
+     (icons/font-icon {:style {:fontSize "70%" :marginRight "1em"}} :angle-left)
+     "Back to Data List")])
 
 (react/defc WorkspaceData
   {:render
