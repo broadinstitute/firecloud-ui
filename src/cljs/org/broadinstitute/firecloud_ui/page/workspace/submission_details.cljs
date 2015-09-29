@@ -1,11 +1,13 @@
 (ns org.broadinstitute.firecloud-ui.page.workspace.submission-details
   (:require
     [dmohs.react :as react]
+    [org.broadinstitute.firecloud-ui.common :as common]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
     [org.broadinstitute.firecloud-ui.common.icons :as icons]
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.common.table :as table]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
+    [org.broadinstitute.firecloud-ui.utils :as utils]
     ))
 
 
@@ -57,6 +59,20 @@
    (fn []
      {:active-filter :all})
    :render
+   (fn [{:keys [this props state]}]
+     (if (:selected-workflow @state)
+       (react/call :render-workflow-details this)
+       (react/call :render-table this)))
+   :component-did-update
+   (fn [{:keys [props prev-state state]}]
+     (when (and (nil? (:selected-workflow prev-state))
+                (:selected-workflow @state))
+       (endpoints/call-ajax-orch
+        {:endpoint
+         (endpoints/get-workflow-details
+          (:workspace-id props) (:submission-id props) (:id (:selected-workflow @state)))
+         :on-done #(swap! state update-in [:selected-workflow] assoc :server-response %)})))
+   :render-table
    (fn [{:keys [props state]}]
      [:div {}
       (let [make-button (fn [name f]
@@ -71,7 +87,14 @@
       [table/Table
        {:key (:active-filter @state)
         :empty-message "No Workflows"
-        :columns [{:header "Data Entity" :starting-width 200}
+        :columns [{:header "Data Entity" :starting-width 200
+                   :content-renderer
+                   (fn [x]
+                     (let [e (x "workflowEntity")
+                           n (str (e "entityName") " (" (e "entityType") ")")]
+                       (style/create-link
+                        #(swap! state assoc :selected-workflow {:id (x "workflowId") :name n})
+                        n)))}
                   {:header "Last Changed" :starting-width 280
                    :content-renderer render-date :filter-by render-date}
                   {:header "Status" :starting-width 120
@@ -87,13 +110,31 @@
                                           message-list)])}
                   {:header "Workflow ID" :starting-width 300}]
         :data (map (fn [row]
-                     [(str (get-in row ["workflowEntity" "entityName"]) " ("
-                        (get-in row ["workflowEntity" "entityType"]) ")")
+                     [row
                       (row "statusLastChangedDate")
                       (row "status")
                       (row "messages")
                       (row "workflowId")])
-                (filter-workflows (:active-filter @state) (:workflows props)))}]])})
+                   (filter-workflows (:active-filter @state) (:workflows props)))}]])
+   :render-workflow-details
+   (fn [{:keys [props state]}]
+     [:div {}
+      [:div {}
+       (style/create-link
+        #(swap! state dissoc :selected-workflow)
+        "Workflows")
+       (icons/font-icon {:style {:verticalAlign "middle" :margin "0 1ex 0 1ex"}} :angle-right)
+       [:b {} (:name (:selected-workflow @state))]]
+      [:div {:style {:marginTop "1em"}}
+       (let [server-response (:server-response (:selected-workflow @state))]
+         (cond
+           (nil? server-response)
+           [:div {} [comps/Spinner {:text "Loading workflow details..."}]]
+           (not (:success? server-response))
+           (style/create-server-error-message (:status-text server-response))
+           :else
+           [:div {:style {:fontSize "smaller" :whiteSpace "pre-wrap"}}
+            (.-responseText (:xhr server-response))]))]])})
 
 
 (react/defc WorkflowFailuresTable
@@ -185,9 +226,12 @@
                [:div {} (.format m "LLL") " (" (.fromNow m) ")"]))
            (style/create-section-header "Submission ID")
            (style/create-paragraph (submission "submissionId"))]
-          [:div {:style {:clear "both" :paddingBottom "0.5em"}} "Workflows:"]
-          [WorkflowsTable {:workflows (submission "workflows")}]
-          [:div {:style {:padding "3em 0 0.5em 0"}} "Failed to Start:"]
+          (common/clear-both)
+          [:h2 {:style {:paddingBottom "0.5em"}} "Workflows:"]
+          [WorkflowsTable {:workflows (submission "workflows")
+                           :workspace-id (:workspace-id props)
+                           :submission-id (submission "submissionId")}]
+          [:h2 {:style {:padding "3em 0 0.5em 0"}} "Failed to Start:"]
           [WorkflowFailuresTable {:workflows (submission "notstarted")}]])))
    :load-details
    (fn [{:keys [props state]}]
