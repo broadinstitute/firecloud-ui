@@ -27,16 +27,47 @@
 
 (defn clear-both [] [:div {:style {:clear "both"}}])
 
-(defn scroll-to [x y] (.scrollTo js/window x y))
+;; Smooth step from https://en.wikipedia.org/wiki/Smoothstep
+(defn- smooth-step [start end point]
+  (let [x (/ (- point start) (- end start))]
+    (* x x (- 3 (* 2 x)))))
 
-(defn scroll-to-top [] (scroll-to 0 0))
+(defn- smoother-step [start end point]
+  (let [x (/ (- point start) (- end start))]
+    (* x x x (+ (* x (- (* x 6) 15)) 10))))
 
-(defn scroll-to-center [elem]
-  (let [elem-center-x (+ (.-offsetLeft elem) (/ (.-offsetWidth elem) 2))
-        elem-center-y (+ (.-offsetTop elem) (/ (.-offsetHeight elem) 2))]
-    (scroll-to
-      (- elem-center-x (/ (.-innerWidth js/window) 2))
-      (- elem-center-y (/ (.-innerHeight js/window) 2)))))
+(defn- animate [start-time end-time start-x start-y end-x end-y]
+  (let [now (js/Date.now)]
+    (if (> now end-time)
+      (.scrollTo js/window end-x end-y)
+      (let [point (smooth-step start-time end-time (js/Date.now))]
+        (.scrollTo js/window
+          (+ start-x (* point (- end-x start-x)))
+          (+ start-y (* point (- end-y start-y))))
+        (js/setTimeout #(animate start-time end-time start-x start-y end-x end-y) 10)))))
+
+(defn scroll-to
+  ([x y] (.scrollTo js/window x y))
+  ([x y duration]
+   (assert (<= duration 400) "Duration too long (> 400ms)")
+   (if (zero? duration)
+     (scroll-to x y)
+     (let [start-time (js/Date.now)]
+       (animate start-time (+ start-time duration) (.-scrollX js/window) (.-scrollY js/window) x y)))))
+
+(defn scroll-to-top
+  ([] (scroll-to-top 0))
+  ([duration] (scroll-to 0 0 duration)))
+
+(defn scroll-to-center
+  ([elem] (scroll-to-center elem 0))
+  ([elem duration]
+   (let [elem-center-x (+ (.-offsetLeft elem) (/ (.-offsetWidth elem) 2))
+         elem-center-y (+ (.-offsetTop elem) (/ (.-offsetHeight elem) 2))]
+     (scroll-to
+       (- elem-center-x (/ (.-innerWidth js/window) 2))
+       (- elem-center-y (/ (.-innerHeight js/window) 2))
+       duration))))
 
 (defn is-in-view [elem]
   (let [doc-view-top (.-scrollY js/window)
