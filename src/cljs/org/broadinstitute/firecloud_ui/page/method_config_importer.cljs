@@ -102,7 +102,7 @@
        ;; TODO - implement generalized validation
        (if (some empty? [namespace name])
          (do
-           (common/scroll-to-center (.getDOMNode (@refs "error")))
+           (common/scroll-to-center (.getDOMNode (@refs "error")) 100)
            (swap! state assoc :bad-input true))
          (do
            (swap! state assoc :importing? true)
@@ -168,7 +168,7 @@
        ;; TODO - implement generalized validation
        (if (some empty? [namespace name rootEntityType])
          (do
-           (common/scroll-to-center (.getDOMNode (@refs "error")))
+           (common/scroll-to-center (.getDOMNode (@refs "error")) 100)
            (swap! state assoc :bad-input true))
          (do
            (swap! state assoc :importing? true)

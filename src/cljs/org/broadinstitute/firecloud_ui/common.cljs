@@ -46,18 +46,27 @@
           (+ start-y (* point (- end-y start-y))))
         (js/setTimeout #(animate start-time end-time start-x start-y end-x end-y) 10)))))
 
-(defn scroll-to [x y]
-  (let [start-time (js/Date.now)]
-    (animate start-time (+ start-time 100) (.-scrollX js/window) (.-scrollY js/window) x y)))
+(defn scroll-to
+  ([x y] (.scrollTo js/window x y))
+  ([x y duration]
+   (if (zero? duration)
+     (scroll-to x y)
+     (let [start-time (js/Date.now)]
+       (animate start-time (+ start-time duration) (.-scrollX js/window) (.-scrollY js/window) x y)))))
 
-(defn scroll-to-top [] (scroll-to 0 0))
+(defn scroll-to-top
+  ([] (scroll-to-top 0))
+  ([duration] (scroll-to 0 0 duration)))
 
-(defn scroll-to-center [elem]
-  (let [elem-center-x (+ (.-offsetLeft elem) (/ (.-offsetWidth elem) 2))
-        elem-center-y (+ (.-offsetTop elem) (/ (.-offsetHeight elem) 2))]
-    (scroll-to
-      (- elem-center-x (/ (.-innerWidth js/window) 2))
-      (- elem-center-y (/ (.-innerHeight js/window) 2)))))
+(defn scroll-to-center
+  ([elem] (scroll-to-center elem 0))
+  ([elem duration]
+   (let [elem-center-x (+ (.-offsetLeft elem) (/ (.-offsetWidth elem) 2))
+         elem-center-y (+ (.-offsetTop elem) (/ (.-offsetHeight elem) 2))]
+     (scroll-to
+       (- elem-center-x (/ (.-innerWidth js/window) 2))
+       (- elem-center-y (/ (.-innerHeight js/window) 2))
+       duration))))
 
 (defn is-in-view [elem]
   (let [doc-view-top (.-scrollY js/window)
