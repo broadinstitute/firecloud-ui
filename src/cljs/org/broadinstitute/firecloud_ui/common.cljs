@@ -49,6 +49,7 @@
 (defn scroll-to
   ([x y] (.scrollTo js/window x y))
   ([x y duration]
+   (assert (<= duration 400) "Duration too long (> 400ms)")
    (if (zero? duration)
      (scroll-to x y)
      (let [start-time (js/Date.now)]
