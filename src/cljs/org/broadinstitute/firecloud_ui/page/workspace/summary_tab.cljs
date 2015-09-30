@@ -71,6 +71,54 @@
                               (react/call :capture-ui-state this)
                               (react/call :persist-acl this))}]}])
 
+(defn- create-section [& children]
+  [:div {:style {:padding "1em 0 2em 0"}} children])
+
+(defn- reload-attributes [props state on-success]
+  (endpoints/call-ajax-orch
+    {:endpoint (endpoints/get-workspace (:workspace-id props))
+     :on-done  (fn [{:keys [success? get-parsed-response status-text]}]
+                 (if success?
+                   (let [response (get-parsed-response)
+                         ws (response "workspace")
+                         attrs-list (mapv (fn [[k v]] [k v]) (ws "attributes"))]
+                     (swap! state assoc :server-response
+                       {:attrs-list attrs-list} :loaded-attrs? true :saving? true)
+                     (on-success))
+                   (swap! state assoc :server-response {:error-message status-text})))}))
+
+(defn- add-update-attributes [props attrs on-success]
+  (let [workspace-id (:workspace-id props)
+        add-update-ops (for [pair attrs]
+                         {:op "AddUpdateAttribute"
+                          :attributeName (key pair)
+                          :addUpdateAttribute (val pair)})]
+    (endpoints/call-ajax-orch
+      {:endpoint (endpoints/update-workspace-attrs workspace-id)
+       :method :PATCH
+       :payload add-update-ops
+       :headers {"Content-Type" "application/json"}
+       :on-done (fn [{:keys [success? xhr]}]
+                  (if-not success?
+                    (js/alert (str "Exception:\n" (.-statusText xhr)))
+                    (on-success)))
+       :canned-response {:status 200 :delay-ms (rand-int 2000)}})))
+
+(defn- delete-attribute [props attr on-success]
+  (let [workspace-id (:workspace-id props)
+        delete-op [{:op "RemoveAttribute"
+                    :attributeName attr}]]
+    (endpoints/call-ajax-orch
+      {:endpoint (endpoints/update-workspace-attrs workspace-id)
+       :method :PATCH
+       :payload delete-op
+       :headers {"Content-Type" "application/json"}
+       :on-done (fn [{:keys [success? xhr]}]
+                  (if-not success?
+                    (js/alert (str "Exception:\n" (.-statusText xhr)))
+                    (on-success)))
+       :canned-response {:status 200 :delay-ms (rand-int 2000)}})))
+
 (react/defc AclEditor
   {:render
    (fn [{:keys [props state this]}]
@@ -118,8 +166,158 @@
                        (swap! state assoc :acl-vec acl-vec :count-orig (count acl-vec)))
                      (swap! state assoc :error status-text)))}))})
 
+(react/defc AttributeViewer
+  {:get-initial-state
+   (fn [{:keys [props]}]
+     {:editing? false :attrs-list (:attrs-list props)})
+   :render
+   (fn [{:keys [this props state]}]
+     (let [{:keys [ws writer? on-done attrs-list]} props]
+       [:div {:style {:margin "45px 25px"}}
+        (react/call :render-sidebar this)
+        [:div {:style {:display "inline-block"}}
+         [:div {:style {:display "inline-block"}}
+          (style/create-section-header "Workspace Attributes")
+          (create-section
+            (when (or (:saving? @state) (:deleting? @state))
+              [comps/Blocker {:banner "Updating..."}])
+            [:div {}
+             (map-indexed
+               (fn [i a]
+                 [:div {}
+                  [:div {:style {:float "left" :marginRight "0.5em"}}
+                   (style/create-text-field
+                     {:value (first a)
+                      :onChange #(swap! state update-in [:attrs-list i]
+                                  assoc 0 (-> % .-target .-value))
+                      :disabled (or (not (:editing? @state))
+                                  (contains? (:reserved-keys @state) i))
+                      :style (if (or (contains? (:reserved-keys @state) i)
+                                   (not (:editing? @state)))
+                               {:backgroundColor (:background-gray style/colors)}
+                               {:backgroundColor "#fff"})})]
+                  [:div {:style {:float "right"}}
+                   (style/create-text-field
+                     {:value (second a)
+                      :onChange #(swap! state update-in [:attrs-list i]
+                                  assoc 1 (-> % .-target .-value))
+                      :disabled (not (:editing? @state))
+                      :style (if-not (:editing? @state)
+                               {:backgroundColor (:background-gray style/colors)}
+                               {:backgroundColor "#fff"})})
+                   (icons/font-icon
+                     {:style {:paddingLeft "0.5em" :padding "1em 0.7em"
+                              :color "red" :cursor "pointer"
+                              :display (when-not (:editing? @state) "none")}
+                      :onClick (fn [e]
+                                 (if (contains? (:reserved-keys @state) i)
+                                   (do
+                                     (swap! state assoc :deleting? true)
+                                     (delete-attribute props (first a)
+                                       (fn [e] (swap! state #(-> %
+                                                       (assoc :deleting? false)
+                                                       (update-in [:reserved-keys] utils/delete i)
+                                                       (update-in [:attrs-list] utils/delete i))))))
+                                   (swap! state update-in [:attrs-list] utils/delete i)))}
+                     :x)]
+                  (common/clear-both)])
+               (:attrs-list @state))
+             ;TODO: new textfields should gain typing focus when adding new rows
+             [:div {:style {:display (when-not (:editing? @state) "none")}}
+              [comps/Button {:style :add :text "Add new"
+                             :onClick #(swap! state update-in [:attrs-list] conj ["" ""])}]]])
+          [:div {:style {:display
+                         (when (or (or (:editing? @state)
+                                     (not-empty (:attrs-list @state))) (:saving? @state)) "none")}}
+           (style/create-paragraph [:em {} "There are no attributes to display"])]]]
+        (common/clear-both)]))
+   :render-sidebar
+   (fn [{:keys [props state]}]
+     [:div {:style {:float "left" :width 290 :marginRight 40}}
+      (if-not (:editing? @state)
+        [:div {}
+         [comps/SidebarButton
+          {:style :light :margin :bottom :color :button-blue
+           :text "View summary" :icon :document
+           :onClick (:on-done props)}]
+         (when (:writer? props)
+           [comps/SidebarButton
+            {:style :light :color :button-blue
+             :text "Edit attributes" :icon :pencil
+             :onClick #(swap! state assoc
+                        :editing? true
+                        :reserved-keys (vec (range 0 (count (:attrs-list @state)))))}])]
+        [:div {:style {:fontSize "106%" :lineHeight 1 :textAlign "center"}}
+         [comps/SidebarButton
+          {:color :success-green
+           :text "Done" :icon :status-done
+           :onClick (fn [e]
+                      (swap! state assoc
+                        :attrs-list (filterv
+                                      (fn [pair] (not (clojure.string/blank? (clojure.string/trim (first pair)))))
+                                      (:attrs-list @state))
+                        :saving? true)
+                      ;; TODO: rawls will soon return attributes after update- use that intead of reload
+                      (add-update-attributes
+                        props (:attrs-list @state)
+                        (fn [e] (reload-attributes props state
+                                  #(swap! state assoc :editing? false :saving? false)))))}]])])})
+
+(defn- view-summary [state props ws status owner? this on-view-attributes]
+  [:div {:style {:margin "45px 25px"}}
+   (when (:deleting? @state)
+     [comps/Blocker {:banner "Deleting..."}])
+   (when (:editing-acl? @state)
+     [AclEditor {:workspace-id (:workspace-id props)
+                 :dismiss-self #(swap! state dissoc :editing-acl?)
+                 :update-owners #(swap! state update-in [:server-response :workspace] assoc "owners" %)}])
+   [:div {:style {:float "left" :width 290 :marginRight 40}}
+    ;; TODO - make the width of the float-left dynamic
+    [comps/StatusLabel {:text (capitalize (name status))
+                        :icon (case status
+                                "Complete" [comps/CompleteIcon {:size 36}]
+                                "Running" [comps/RunningIcon {:size 36}]
+                                "Exception" [comps/ExceptionIcon {:size 36}])
+                        :color (style/color-for-status status)}]
+    [comps/SidebarButton {:style :light :margin :top :color :button-blue
+                          :text "Edit this page" :icon :pencil
+                          :onClick #(utils/rlog "TODO: implement edit")}]
+    [comps/SidebarButton {:style :light :margin :top :color :button-blue
+                          :text "View attributes" :icon :document
+                          :onClick on-view-attributes}]
+    (when owner?
+      [comps/SidebarButton {:style :light :margin :top :color :exception-red
+                            :text "Delete" :icon :trash-can
+                            :onClick #(when (js/confirm "Are you sure?")
+                                       (swap! state assoc :deleting? true)
+                                       (react/call :delete this))}])]
+   [:div {:style {:marginLeft 330}}
+    (style/create-section-header "Workspace Owner")
+    (style/create-paragraph
+      [:div {}
+       (interpose ", " (map #(style/render-email %) (ws "owners")))
+       (when owner?
+         [:span {}
+          " ("
+          (style/create-link
+            #(swap! state assoc :editing-acl? true)
+            "Edit sharing...")
+          ")"])])
+    (style/create-section-header "Description")
+    (style/create-paragraph [:em {} "Description info not available yet"])
+    (style/create-section-header "Tags")
+    (style/create-paragraph (render-tags ["Fake" "Tag" "Placeholders"]))
+    (style/create-section-header "Research Purpose")
+    (style/create-paragraph [:em {} "Research purpose not available yet"])
+    (style/create-section-header "Billing Account")
+    (style/create-paragraph [:em {} "Billing account not available yet"])]
+   (common/clear-both)])
+
 (react/defc Summary
-  {:render
+  {:get-initial-state
+   (fn []
+     {:viewing-attributes? false})
+   :render
    (fn [{:keys [state props this]}]
      (cond
        (nil? (:server-response @state))
@@ -129,52 +327,14 @@
        :else
        (let [ws (get-in @state [:server-response :workspace])
              owner? (= "OWNER" (ws "accessLevel"))
+             writer? (or (= "WRITER" (ws "accessLevel")) owner?)
              status (common/compute-status ws)]
-         [:div {:style {:margin "45px 25px"}}
-          (when (:deleting? @state)
-            [comps/Blocker {:banner "Deleting..."}])
-          (when (:editing-acl? @state)
-            [AclEditor {:workspace-id (:workspace-id props)
-                        :dismiss-self #(swap! state dissoc :editing-acl?)
-                        :update-owners #(swap! state update-in [:server-response :workspace] assoc "owners" %)}])
-          [:div {:style {:float "left" :width 290 :marginRight 40}}
-           ;; TODO - make the width of the float-left dynamic
-           [comps/StatusLabel {:text (capitalize (name status))
-                               :icon (case status
-                                       "Complete" [comps/CompleteIcon {:size 36}]
-                                       "Running" [comps/RunningIcon {:size 36}]
-                                       "Exception" [comps/ExceptionIcon {:size 36}])
-                               :color (style/color-for-status status)}]
-           [comps/SidebarButton {:style :light :margin :top :color :button-blue
-                                 :text "Edit this page" :icon :pencil
-                                 :onClick #(utils/rlog "TODO: implement edit")}]
-           (when owner?
-             [comps/SidebarButton {:style :light :margin :top :color :exception-red
-                                   :text "Delete" :icon :trash-can
-                                   :onClick #(when (js/confirm "Are you sure?")
-                                              (swap! state assoc :deleting? true)
-                                              (react/call :delete this))}])]
-          [:div {:style {:marginLeft 330}}
-           (style/create-section-header "Workspace Owner")
-           (style/create-paragraph
-             [:div {}
-              (interpose ", " (map #(style/render-email %) (ws "owners")))
-              (when owner?
-                [:span {}
-                 " ("
-                 (style/create-link
-                   #(swap! state assoc :editing-acl? true)
-                   "Edit sharing...")
-                 ")"])])
-           (style/create-section-header "Description")
-           (style/create-paragraph [:em {} "Description info not available yet"])
-           (style/create-section-header "Tags")
-           (style/create-paragraph (render-tags ["Fake" "Tag" "Placeholders"]))
-           (style/create-section-header "Research Purpose")
-           (style/create-paragraph [:em {} "Research purpose not available yet"])
-           (style/create-section-header "Billing Account")
-           (style/create-paragraph [:em {} "Billing account not available yet"])]
-          (common/clear-both)])))
+         (if (:viewing-attributes? @state)
+           (let [ws-response ((get-in @state [:server-response :workspace]) "workspace")]
+             [AttributeViewer {:ws ws :writer? writer? :on-done #(swap! state dissoc :viewing-attributes?)
+                               :attrs-list (mapv (fn [[k v]] [k v]) (ws-response "attributes"))
+                               :workspace-id (:workspace-id props)}])
+           (view-summary state props ws status owner? this #(swap! state assoc :viewing-attributes? true))))))
    :load-workspace
    (fn [{:keys [props state]}]
      (endpoints/call-ajax-orch
