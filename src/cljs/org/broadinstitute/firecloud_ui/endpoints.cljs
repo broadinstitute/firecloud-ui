@@ -33,6 +33,9 @@
          {:accessLevel (rand-nth ["OWNER" "WRITER" "READER"])
           :workspace {:namespace ns
                       :name (str "Workspace " (inc i))
+                      :attributes {"Attribute1" "[some value]"
+                                   "Attribute2" "[some value]"
+                                   "Attribute3" "[some value]"}
                       :status status
                       :createdBy ns
                       :createdDate (utils/rand-recent-time)}
@@ -61,6 +64,9 @@
    {:accessLevel "OWNER"
     :workspace {:namespace (:namespace workspace-id)
                 :name (:name workspace-id)
+                :attributes {"Attribute1" "[some value]"
+                             "Attribute2" "[some value]"
+                             "Attribute3" "[some value]"}
                 :status (rand-nth ["Complete" "Running" "Exception"])
                 :createdBy (:namespace workspace-id)
                 :createdDate (.toISOString (js/Date.))}
@@ -137,6 +143,10 @@
   {:path (str "/workspaces/" (ws-path workspace-id)
            "/method_configs/" (config "namespace") "/" (config "name"))
    :method :delete})
+
+(defn update-workspace-attrs [workspace-id]
+  {:path (str "/workspaces/" (ws-path workspace-id) "/updateAttributes")
+   :method :patch})
 
 (defn import-entities [workspace-id]
   {:path (str "/workspaces/" (ws-path workspace-id) "/importEntities")
