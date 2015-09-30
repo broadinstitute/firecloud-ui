@@ -104,9 +104,6 @@
         :methodStoreMethod {:methodNamespace (str "ms_ns_" (inc i))
                             :methodName (str "ms_n_" (inc i))
                             :methodVersion (str "ms_v_" (inc i))}
-        :methodStoreConfig {:methodConfigNamespace (str "msc_ns_" (inc i))
-                            :methodConfigName (str "msc_n_" (inc i))
-                            :methodConfigVersion (str "msc_v_" (inc i))}
         ;; Real data doesn't have the following fields, but for mock data we carry the same
         ;; objects around, so initialize them here for convenience
         :inputs {"Input 1" "[some value]"
@@ -126,8 +123,7 @@
            "/method_configs/" (config "namespace") "/" (config "name"))
    :method :get
    :mock-data
-   (assoc config "methodRepoMethod" (config "methodStoreMethod")
-                 "methodRepoConfig" (config "methodStoreConfig"))})
+   (assoc config "methodRepoMethod" (config "methodStoreMethod"))})
 
 (defn update-workspace-method-config [workspace-id config]
   {:path (str "/workspaces/" (ws-path workspace-id)
@@ -377,9 +373,6 @@
     :prerequisites {"unused" "Some prereq"}
     :inputs {"input1" "val1"}
     :outputs {"output1" "val2"}
-    :methodRepoConfig {:methodConfigNamespace (method "namespace")
-                       :methodConfigName (method "name")
-                       :methodConfigVersion 1}
     :methodRepoMethod {:methodNamespace (method "namespace")
                        :methodName (method "name")
                        :methodVersion 1}}})
