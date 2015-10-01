@@ -91,6 +91,10 @@
   {:path (str "/workspaces/" (ws-path workspace-id) "/acl")
    :method :patch})
 
+(defn clone-workspace [workspace-id]
+  {:path (str "/workspaces/" (ws-path workspace-id) "/clone")
+   :method :post})
+
 
 (defn list-workspace-method-configs [workspace-id]
   {:path (str "/workspaces/" (ws-path workspace-id) "/methodconfigs")
