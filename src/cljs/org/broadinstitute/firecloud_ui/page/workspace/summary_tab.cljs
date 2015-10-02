@@ -280,11 +280,13 @@
                          (style/create-form-label "Namespace:")
                          (style/create-text-field {:ref "namespace"
                                                    :style {:width "100%"}
+                                                   :defaultValue (get-in props [:workspace-id :namespace])
                                                    :placeholder "Required"
                                                    :onChange #(swap! state dissoc :error)})
                          (style/create-form-label "Name:")
                          (style/create-text-field {:ref "name"
                                                    :style {:width "100%"}
+                                                   :defaultValue (get-in props [:workspace-id :name])
                                                    :placeholder "Required"
                                                    :onChange #(swap! state dissoc :error)})
                          (when (:error @state)
@@ -296,6 +298,9 @@
                                          :onClick #(react/call :do-clone this)}])}])
                     :get-first-element-dom-node #(.getDOMNode (@refs "namespace"))
                     :get-last-element-dom-node #(.getDOMNode (@refs "okButton"))}])
+   :component-did-mount
+   (fn []
+     (common/scroll-to-top 100))
    :do-clone
    (fn [{:keys [props refs state]}]
      (let [[namespace name] (common/get-text refs "namespace" "name")]
@@ -322,7 +327,6 @@
                  :dismiss-self #(swap! state dissoc :editing-acl?)
                  :update-owners #(swap! state update-in [:server-response :workspace] assoc "owners" %)}])
    (when (:cloning? @state)
-     (common/scroll-to-top 100)
      [WorkspaceCloner {:dismiss #(swap! state dissoc :cloning?)
                        :workspace-id (:workspace-id props)}])
    [:div {:style {:float "left" :width 290 :marginRight 40}}
