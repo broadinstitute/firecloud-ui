@@ -132,7 +132,27 @@
 (defn update-workspace-method-config [workspace-id config]
   {:path (str "/workspaces/" (ws-path workspace-id)
            "/method_configs/" (config "namespace") "/" (config "name"))
-   :method :put})
+   :method :put
+   :mock-data
+   {:methodConfiguration {:name (str (config "name"))
+                          :namespace (rand-nth ["Broad" "nci" "public"])
+                          :rootEntityType "Task"
+                          :methodRepoMethod {:methodNamespace (str (config "namespace"))
+                                             :methodName (str (config "name"))
+                                             :methodVersion (str "ms_v_1")}
+                          :methodStoreConfig {:methodConfigNamespace (str (config "namespace"))
+                                              :methodConfigName (str (config "name"))
+                                              :methodConfigVersion (str "msc_v_1")}
+                          ;; Real data doesn't have the following fields, but for mock data we carry the same
+                          ;; objects around, so initialize them here for convenience
+                          :inputs {"Input 1" "workspace.foo"
+                                   "Input 2" "workspace.baz"
+                                   "Input 3" "workspace.f00"}
+                          :outputs {"Output 1" "workspace.bla"
+                                    "Output 2" "workspace.bar"
+                                    "Output 3" "workspace.f0o"}
+                          :prerequisites {"unused 1" "Predicate 1"
+                                          "unused 2" "Predicate 2"}}}})
 
 (defn rename-workspace-method-config [workspace-id config]
   {:path (str "/workspaces/" (ws-path workspace-id)
@@ -143,6 +163,37 @@
   {:path (str "/workspaces/" (ws-path workspace-id)
            "/method_configs/" (config "namespace") "/" (config "name"))
    :method :delete})
+
+(defn get-validated-workspace-method-config [workspace-id config]
+  {:path (str "/workspaces/" (ws-path workspace-id)
+           "/method_configs/" (config "namespace") "/" (config "name") "/validate")
+   :method :get
+   :mock-data
+   {:methodConfiguration {:name (str (config "name"))
+                          :namespace (rand-nth ["Broad" "nci" "public"])
+                          :rootEntityType "Task"
+                          :methodRepoMethod {:methodNamespace (str (config "namespace"))
+                                             :methodName (str (config "name"))
+                                             :methodVersion (str "ms_v_1")}
+                          :methodStoreConfig {:methodConfigNamespace (str (config "namespace"))
+                                              :methodConfigName (str (config "name"))
+                                              :methodConfigVersion (str "msc_v_1")}
+                          ;; Real data doesn't have the following fields, but for mock data we carry the same
+                          ;; objects around, so initialize them here for convenience
+                          :inputs {"Input 1" "workspace.foo"
+                                   "Input 2" "workspace.baz"
+                                   "Input 3" "workspace.f00"}
+                          :outputs {"Output 1" "workspace.bla"
+                                    "Output 2" "workspace.bar"
+                                    "Output 3" "workspace.f0o"}
+                          :prerequisites {"unused 1" "Predicate 1"
+                                          "unused 2" "Predicate 2"}}
+    :invalidInputs (rand-nth [{"Input 1" "Failed at line 1, column 1: `workspace.' expected but `t' found"}
+                              {"Input 2" "Failed at line 1, column 1: `workspace.' expected but `t' found"}
+                              {"Input 3" "Failed at line 1, column 1: `workspace.' expected but `t' found"}])
+    :invalidOutputs (rand-nth [{"Output 1" "Failed at line 1, column 1: `workspace.' expected but `t' found"}
+                               {"Output 2" "Failed at line 1, column 1: `workspace.' expected but `t' found"}
+                               {"Output 3" "Failed at line 1, column 1: `workspace.' expected but `t' found"}])}})
 
 (defn update-workspace-attrs [workspace-id]
   {:path (str "/workspaces/" (ws-path workspace-id) "/updateAttributes")
