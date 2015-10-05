@@ -35,7 +35,15 @@
           :columns (concat
                      [{:header "Entity Type" :starting-width 100}
                       {:header "Entity Name" :starting-width 100}]
-                     (map (fn [k] {:header k :starting-width 100}) attribute-keys))
+                     (map (fn [k] {:header k :starting-width 100
+                                   :content-renderer
+                                   (fn [maybe-uri]
+                                     (if (string? maybe-uri)
+                                       (if-let [converted (common/gcs-uri->download-url maybe-uri)]
+                                         [:a {:href converted} maybe-uri]
+                                         maybe-uri)
+                                       maybe-uri))})
+                       attribute-keys))
           :data (map (fn [m]
                        (concat
                          [(m "entityType")
