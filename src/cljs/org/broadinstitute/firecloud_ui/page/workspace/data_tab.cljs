@@ -65,7 +65,15 @@
           :onChange #(let [value (common/get-text refs "filter")
                            entities (get-in props [:entity-map value])]
                       (swap! state assoc :entities entities :entity-type value))}
-         (keys (:entity-map props)))]
+         (keys (:entity-map props)))
+       (when-let [selected-entity-type (cond
+                                    (:entity-type @state) (:entity-type @state)
+                                    (:entity-map props) (first (keys (:entity-map props))))]
+         [:a {:style {:textDecoration "none" :marginLeft "1ex"}
+              :href (str "/service/api/workspaces/" (:namespace (:workspace-id props)) "/"
+                      (:name (:workspace-id props)) "/" selected-entity-type "/export")
+              :target "_blank"}
+          "Download '" selected-entity-type "' data"])]
       (let [attribute-keys (apply union (map (fn [e] (set (keys (e "attributes")))) (:entities @state)))]
         [table/Table
          {:key (:entity-type @state)
