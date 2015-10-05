@@ -1,6 +1,6 @@
 (ns org.broadinstitute.firecloud-ui.page.workspace.summary-tab
   (:require
-    [clojure.string :refer [trim capitalize]]
+    [clojure.string :refer [trim capitalize blank?]]
     [dmohs.react :as react]
     [org.broadinstitute.firecloud-ui.common :as common]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
@@ -263,6 +263,61 @@
                         (fn [e] (reload-attributes props state
                                   #(swap! state assoc :editing? false :saving? false)))))}]])])})
 
+(react/defc WorkspaceCloner
+  {:render
+   (fn [{:keys [props refs state this]}]
+     [comps/Dialog {:width 400 :dismiss-self (:dismiss props)
+                    :content
+                    (react/create-element
+                      [comps/OKCancelForm
+                       {:header "Clone Workspace to:"
+                        :dismiss-self (:dismiss props)
+                        :content
+                        (react/create-element
+                        [:div {}
+                         (when (:working? @state)
+                           [comps/Blocker {:banner "Cloning..."}])
+                         (style/create-form-label "Namespace:")
+                         (style/create-text-field {:ref "namespace"
+                                                   :style {:width "100%"}
+                                                   :defaultValue (get-in props [:workspace-id :namespace])
+                                                   :placeholder "Required"
+                                                   :onChange #(swap! state dissoc :error)})
+                         (style/create-form-label "Name:")
+                         (style/create-text-field {:ref "name"
+                                                   :style {:width "100%"}
+                                                   :defaultValue (get-in props [:workspace-id :name])
+                                                   :placeholder "Required"
+                                                   :onChange #(swap! state dissoc :error)})
+                         (when (:error @state)
+                           [:div {:style {:color (:exception-red style/colors)}}
+                            (:error @state)])])
+                        :ok-button
+                        (react/create-element
+                          [comps/Button {:text "OK" :ref "okButton"
+                                         :onClick #(react/call :do-clone this)}])}])
+                    :get-first-element-dom-node #(.getDOMNode (@refs "namespace"))
+                    :get-last-element-dom-node #(.getDOMNode (@refs "okButton"))}])
+   :component-did-mount
+   (fn []
+     (common/scroll-to-top 100))
+   :do-clone
+   (fn [{:keys [props refs state]}]
+     (let [[namespace name] (common/get-text refs "namespace" "name")]
+       (if (some blank? [namespace name])
+         (swap! state assoc :error "All fields required")
+         (do
+           (swap! state assoc :working? true)
+           (endpoints/call-ajax-orch
+             {:endpoint (endpoints/clone-workspace (:workspace-id props))
+              :payload {:namespace namespace :name name}
+              :headers {"Content-Type" "application/json"}
+              :on-done (fn [{:keys [success? status-text]}]
+                         (swap! state dissoc :working?)
+                         (if success?
+                           ((:dismiss props))
+                           (swap! state assoc :error status-text)))})))))})
+
 (defn- view-summary [state props ws status owner? this on-view-attributes]
   [:div {:style {:margin "45px 25px"}}
    (when (:deleting? @state)
@@ -271,6 +326,9 @@
      [AclEditor {:workspace-id (:workspace-id props)
                  :dismiss-self #(swap! state dissoc :editing-acl?)
                  :update-owners #(swap! state update-in [:server-response :workspace] assoc "owners" %)}])
+   (when (:cloning? @state)
+     [WorkspaceCloner {:dismiss #(swap! state dissoc :cloning?)
+                       :workspace-id (:workspace-id props)}])
    [:div {:style {:float "left" :width 290 :marginRight 40}}
     ;; TODO - make the width of the float-left dynamic
     [comps/StatusLabel {:text (capitalize (name status))
@@ -285,6 +343,9 @@
     [comps/SidebarButton {:style :light :margin :top :color :button-blue
                           :text "View attributes" :icon :document
                           :onClick on-view-attributes}]
+    [comps/SidebarButton {:style :light :margin :top :color :button-blue
+                          :text "Clone..." :icon :plus
+                          :onClick #(swap! state assoc :cloning? true)}]
     (when owner?
       [comps/SidebarButton {:style :light :margin :top :color :exception-red
                             :text "Delete" :icon :trash-can
