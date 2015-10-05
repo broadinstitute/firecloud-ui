@@ -66,20 +66,13 @@
               :content-renderer
               #(render-map %
                 ["methodNamespace" "methodName" "methodVersion"]
-                ["Namespace" "Name" "Version"])}
-             {:header "Method Store Configuration" :starting-width 300  :sort-by :none
-              :filter-by #(str (% "methodConfigNamespace") (% "methodConfigName") (% "methodConfigVersion"))
-              :content-renderer
-              #(render-map %
-                ["methodConfigNamespace" "methodConfigName" "methodConfigVersion"]
                 ["Namespace" "Name" "Version"])}]
             :data (map
                     (fn [config]
                       [config
                        (config "namespace")
                        (config "rootEntityType")
-                       (config "methodRepoMethod")
-                       (config "methodRepoConfig")])
+                       (config "methodRepoMethod")])
                     configs)}]))])
    :component-did-mount
    (fn [{:keys [this]}]

@@ -126,8 +126,7 @@
            "/method_configs/" (config "namespace") "/" (config "name"))
    :method :get
    :mock-data
-   (assoc config "methodRepoMethod" (config "methodStoreMethod")
-                 "methodRepoConfig" (config "methodStoreConfig"))})
+   (assoc config "methodRepoMethod" (config "methodStoreMethod"))})
 
 (defn update-workspace-method-config [workspace-id config]
   {:path (str "/workspaces/" (ws-path workspace-id)
@@ -377,9 +376,6 @@
     :prerequisites {"unused" "Some prereq"}
     :inputs {"input1" "val1"}
     :outputs {"output1" "val2"}
-    :methodRepoConfig {:methodConfigNamespace (method "namespace")
-                       :methodConfigName (method "name")
-                       :methodConfigVersion 1}
     :methodRepoMethod {:methodNamespace (method "namespace")
                        :methodName (method "name")
                        :methodVersion 1}}})
