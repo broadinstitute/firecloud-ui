@@ -19,14 +19,14 @@
         [table/Table
          {:empty-message "There are no workspaces to display."
           :columns (concat
-                     [{:header "Namespace" :starting-width 100}
+                     [{:header "Namespace" :starting-width 150}
                       {:header "Name" :starting-width 150
                        :content-renderer
                        (fn [ws]
                          (style/create-link
                            #((:onWorkspaceSelected props) ws)
                            (get-in ws ["workspace" "name"])))}
-                      {:header "Created By" :starting-width 100}
+                      {:header "Created By" :starting-width 200}
                       (table/date-column {})
                       {:header "Access Level" :starting-width 100}]
                      (map (fn [k] {:header k :starting-width 100}) attribute-keys))
@@ -40,6 +40,10 @@
                          (map (fn [k] (get-in ws ["attributes" k])) attribute-keys)))
                   (:workspaces props))}])])})
 
+(defn- remove-self [workspace-list workspace-id]
+  (filter #(not= workspace-id {:namespace (get-in % ["workspace" "namespace"])
+                               :name (get-in % ["workspace" "name"])}) workspace-list))
+
 (react/defc Page
   {:did-load-data? ; TODO: Fix this hack. It is necessary for the previous caller to know how to get back to it's original state. Ugh.
    (fn [{:keys [state]}]
@@ -50,17 +54,19 @@
        (:selected-from-workspace @state)
        [copy-data-entities/Page {:ref "data-import"
                                  :workspace-id (:workspace-id props)
-                                 :selected-from-workspace (:selected-from-workspace @state)}]
+                                 :selected-from-workspace (:selected-from-workspace @state)
+                                 :reload-data-tab (:reload-data-tab props)
+                                 :back #(swap! state dissoc :selected-from-workspace)}]
        (:workspaces @state) [WorkspaceList {:workspaces (:workspaces @state)
                                             :onWorkspaceSelected
                                             (fn [ws] (swap! state assoc :selected-from-workspace ws)) }]
        (:error-message @state) (style/create-server-error-message (:error-message @state))
        :else [:div {:style {:textAlign "center"}} [comps/Spinner {:text "Loading workspaces..."}]]))
      :component-did-mount
-     (fn [{:keys [state]}]
+     (fn [{:keys [state props]}]
        (endpoints/call-ajax-orch
          {:endpoint endpoints/list-workspaces
           :on-done (fn [{:keys [success? status-text get-parsed-response]}]
                      (if success?
-                       (swap! state assoc :workspaces (get-parsed-response))
+                       (swap! state assoc :workspaces (remove-self (get-parsed-response) (:workspace-id props)))
                        (swap! state assoc :error-message status-text)))}))})

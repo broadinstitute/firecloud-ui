@@ -13,10 +13,47 @@
     ))
 
 
+(react/defc DataImporter
+  {:render
+   (fn [{:keys [state props]}]
+     (let [choice? (or (:importing-from-file @state) (:copying-from-workspace @state))]
+       [:div {}
+        [:div {:style {:position "absolute" :top 2 :right 2}}
+         [comps/Button {:icon :x :onClick #((:dismiss props))}]]
+        (when choice?
+          [:div {:style {:padding "0.5em"}}
+           (style/create-link
+             #(swap! state dissoc :importing-from-file :copying-from-workspace)
+             (icons/font-icon {:style {:fontSize "70%" :marginRight "1em"}} :angle-left)
+             "Back")])
+        (when (:importing-from-file @state)
+          [:div {:style {:padding "1em"}}
+           [import-data/Page (select-keys props [:workspace-id :reload-data-tab])]])
+        (when (:copying-from-workspace @state)
+          [:div {:style {:padding "1em"}}
+           [copy-data-workspaces/Page (select-keys props [:workspace-id :reload-data-tab])]])
+        (when-not choice?
+          (let [style {:width 240 :margin "auto" :textAlign "center" :cursor "pointer"
+                       :backgroundColor (:button-blue style/colors)
+                       :color "#fff" :padding "1em" :borderRadius 8}]
+            [:div {:style {:padding "2em"}}
+             [:div {:onClick #(swap! state assoc :importing-from-file true) :style style}
+              "Import from file"]
+             [:div {:style {:height "1em"}}]
+             [:div {:onClick #(swap! state assoc :copying-from-workspace true)
+                    :style style}
+              "Copy from another workspace"]]))]))
+   :component-did-mount
+   (fn []
+     (common/scroll-to-top 100))})
+
+
 (react/defc EntitiesList
   {:get-initial-state
    (fn [{:keys [props]}]
-     {:entities (get (:entity-map props) (first (keys (:entity-map props))))})
+     {:entities (get (:entity-map props)
+                  (or (:initial-entity-type props)
+                      (first (keys (:entity-map props)))))})
    :render
    (fn [{:keys [props state refs]}]
      [:div {}
@@ -24,6 +61,7 @@
        (style/create-form-label "Select Entity Type")
        (style/create-select
          {:style {:width "50%" :minWidth 50 :maxWidth 200} :ref "filter"
+          :defaultValue (:initial-entity-type props)
           :onChange #(let [value (common/get-text refs "filter")
                            entities (get-in props [:entity-map value])]
                       (swap! state assoc :entities entities :entity-type value))}
@@ -43,54 +81,44 @@
                          (map (fn [k] (get-in m ["attributes" k])) attribute-keys)))
                   (:entities @state))}])])})
 
-; TODO: Need a much better way to get back to the original state. This tri-state process is hacky and ugly.
-(defn- get-back-link [state refs]
-  [:div {:style {:margin "1em 0 0 1em"}}
-   (style/create-link
-     #(swap! state merge
-       {:show-import? false :show-copy? false}
-       (when (react/call :did-load-data? (@refs "data-import"))
-         {:entity-map false}))
-     (icons/font-icon {:style {:fontSize "70%" :marginRight "1em"}} :angle-left)
-     "Back to Data List")])
 
 (react/defc WorkspaceData
   {:render
-   (fn [{:keys [props state refs]}]
+   (fn [{:keys [props state this]}]
      [:div {:style {:marginTop "1em"}}
+      (when (:show-import? @state)
+        [comps/Dialog {:dismiss-self #(swap! state dissoc :show-import?)
+                       :width "80%"
+                       :content
+                       (react/create-element
+                         [DataImporter {:dismiss #(swap! state dissoc :show-import?)
+                                        :workspace-id (:workspace-id props)
+                                        :reload-data-tab (fn [entity-type]
+                                                           (swap! state dissoc :entity-map)
+                                                           (react/call :load-entities this entity-type))}])}])
       (cond
-        (:show-import? @state)
+        (:entity-map @state)
         [:div {}
-         (get-back-link state refs)
-         [import-data/Page {:ref "data-import" :workspace-id (:workspace-id props)}]]
-        (:show-copy? @state)
-        [:div {}
-         (get-back-link state refs)
-         [copy-data-workspaces/Page {:ref "data-import" :workspace-id (:workspace-id props)}]]
-        (:entity-map @state) [EntitiesList {:entity-map (:entity-map @state)}]
+         [:div {:style {:float "right" :paddingRight "2em"}}
+          [comps/Button {:text "Import Data..."
+                         :onClick #(swap! state assoc :show-import? true)}]]
+         [EntitiesList {:entity-map (:entity-map @state)
+                        :workspace-id (:workspace-id props)
+                        :initial-entity-type (:initial-entity-type @state)}]]
         (:error @state) (style/create-server-error-message (:error @state))
-        :else [:div {:style {:textAlign "center"}} [comps/Spinner {:text "Loading entities..."}]])
-      (when-not (or (:show-import? @state) (:show-copy? @state))
-        [:div {:style {:margin "1em 0 0 1em"}}
-         [comps/Button {:text "Import Data..."
-                        :onClick #(swap! state assoc :show-import? true :show-copy? false)}]
-         [:span {:style {:margin ".5em"}} " "]
-         [comps/Button {:text "Copy Data..."
-                        :onClick #(swap! state assoc :show-import? false :show-copy? true)}]])])
+        :else [:div {:style {:textAlign "center"}} [comps/Spinner {:text "Loading entities..."}]])])
    :component-did-mount
    (fn [{:keys [this]}]
      (react/call :load-entities this))
-   :component-did-update
-   (fn [{:keys [this state]}]
-     (when-not (or (:entity-map @state) (:error @state))
-       (react/call :load-entities this)))
    :load-entities
-   (fn [{:keys [state props]}]
+   (fn [{:keys [state props]} & [entity-type]]
      (endpoints/call-ajax-orch
        {:endpoint (endpoints/get-entities-by-type (:workspace-id props))
         :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                    (if success?
-                     (swap! state assoc :entity-map (group-by #(% "entityType") (get-parsed-response)))
+                     (swap! state assoc
+                       :entity-map (group-by #(% "entityType") (get-parsed-response))
+                       :initial-entity-type entity-type)
                      (swap! state assoc :error status-text)))}))})
 
 (defn render [workspace]
