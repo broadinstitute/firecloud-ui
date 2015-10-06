@@ -87,7 +87,7 @@
                      (on-success))
                    (swap! state assoc :server-response {:error-message status-text})))}))
 
-(defn- add-update-attributes [props attrs on-success]
+(defn- add-update-attributes [props state attrs on-success]
   (let [workspace-id (:workspace-id props)
         add-update-ops (for [pair attrs]
                          {:op "AddUpdateAttribute"
@@ -100,7 +100,8 @@
        :headers {"Content-Type" "application/json"}
        :on-done (fn [{:keys [success? xhr]}]
                   (if-not success?
-                    (js/alert (str "Exception:\n" (.-statusText xhr)))
+                    (do (swap! state assoc :saving? false)
+                        (js/alert (str "Exception:\n" (.-statusText xhr))))
                     (on-success)))
        :canned-response {:status 200 :delay-ms (rand-int 2000)}})))
 
@@ -259,7 +260,7 @@
                         :saving? true)
                       ;; TODO: rawls will soon return attributes after update- use that intead of reload
                       (add-update-attributes
-                        props (:attrs-list @state)
+                        props state (:attrs-list @state)
                         (fn [e] (reload-attributes props state
                                   #(swap! state assoc :editing? false :saving? false)))))}]])])})
 
