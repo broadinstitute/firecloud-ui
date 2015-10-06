@@ -18,23 +18,14 @@
      {:header "Create New Workspace"
       :content
       (react/create-element
-        [:div {}
+        [:div {:style {:marginBottom -20}}
          (when (:creating-wf @state)
            [comps/Blocker {:banner "Creating Workspace..."}])
-         (style/create-form-label "Workspace Namespace")
+         (style/create-form-label "Google Project")
          (style/create-text-field {:style {:width "100%"} :ref "wsNamespace"
                                    :defaultValue "broad-dsde-dev"})
-         (style/create-form-label "Workspace Name")
-         (style/create-text-field {:style {:width "100%"} :ref "wsName"})
-         (style/create-form-label "Workspace Description")
-         (style/create-text-area {:style {:width "100%"} :rows 10 :ref "wsDesc"})
-         (style/create-form-label "Research Purpose")
-         (style/create-select {} ["Option 1" "Option 2" "Option 3"])
-         (style/create-form-label "Billing Contact")
-         (style/create-select {} ["Option 1" "Option 2" "Option 3"])
-         (style/create-form-label "Share With (optional)")
-         (style/create-text-field {:style {:width "100%"} :ref "shareWith"})
-         (style/create-hint "Separate multiple emails with commas")])
+         (style/create-form-label "Name")
+         (style/create-text-field {:style {:width "100%"} :ref "wsName"})])
       :dismiss-self #(swap! state dissoc :overlay-shown?)
       :ok-button
       (react/create-element

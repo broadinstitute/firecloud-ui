@@ -23,8 +23,7 @@
                                  (method-configs-tab/render
                                   (:workspace-id props)
                                   #(react/call :set-active-tab (@refs "tab-bar") 3 %)))}
-                      {:text "Monitor" :render #(monitor-tab/render (:workspace-id props) %)}
-                      {:text "Files" :render (fn [] [:div {} "Not yet implemented."])}]}]])})
+                      {:text "Monitor" :render #(monitor-tab/render (:workspace-id props) %)}]}]])})
 
 
 (defn render-workspace-details [workspace-id on-delete]
