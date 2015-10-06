@@ -7,7 +7,6 @@
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.common.table :as table]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
-    [org.broadinstitute.firecloud-ui.utils :as utils]
     ))
 
 
@@ -54,12 +53,88 @@
   (let [m (js/moment date)]
     (str (.format m "L [at] LTS") " (" (.fromNow m) ")")))
 
+(defn- create-field [label & contents]
+  [:div {:style {:paddingBottom "0.25em"}}
+   [:div {:style {:display "inline-block" :width 100}} (str label ":")]
+   contents])
+
+(react/defc IODetail
+  {:get-initial-state
+   (fn []
+     {:expanded false})
+   :render
+   (fn [{:keys [props state]}]
+     [:div {}
+      (create-field
+        (:label props)
+        (if (empty? (:data props))
+          "None"
+          (style/create-link
+            #(swap! state assoc :expanded (not (:expanded @state)))
+            (if (:expanded @state) "Hide" "Show"))))
+      (when (:expanded @state)
+        [:div {:style {:padding "0.25em 0 0.25em 1em"}}
+         (for [[k v] (:data props)]
+           [:div {} k [:span {:style {:margin "0 1em"}} "→"] v])])])})
+
+(react/defc CallDetail
+  {:get-initial-state
+   (fn []
+     {:expanded false})
+   :render
+   (fn [{:keys [props state]}]
+     [:div {:style {:marginTop "1em"}}
+      [:div {:style {:display "inline-block" :marginRight "1em"}} (:label props)]
+      (style/create-link
+        #(swap! state assoc :expanded (not (:expanded @state)))
+        (if (:expanded @state) "Hide" "Show"))
+      (when (:expanded @state)
+        (map-indexed
+          (fn [index data]
+            (org.broadinstitute.firecloud-ui.utils/jslog data)
+            [:div {:style {:padding "0.5em 0 0 0.5em"}}
+             [:div {:style {:paddingBottom "0.25em"}} (str "Call #" (inc index) ":")]
+             [:div {:style {:paddingLeft "0.5em"}}
+              (create-field "ID" (data "jobId"))
+              (let [status (data "executionStatus")]
+                (create-field "Status" (icon-for-wf-status status) status))
+              (create-field "Started" (render-date (data "start")))
+              (create-field "Ended" (render-date (data "end")))
+              (create-field "stdout" [:a {:href (common/gcs-uri->download-url (data "stdout"))
+                                          :target "_blank" :download "stdout"}
+                                      "Click to download"])
+              (create-field "stderr" [:a {:href (common/gcs-uri->download-url (data "stderr"))
+                                          :target "_blank" :download "stderr"}
+                                      "Click to download"])
+              [IODetail {:label "Inputs" :data (data "inputs")}]
+              [IODetail {:label "Outputs" :data (data "outputs")}]]])
+          (:data props)))])})
+
+(defn- render-workflow-detail [workflow]
+  [:div {:style {:padding "1em" :border (str "1px solid " (:line-gray style/colors)) :borderRadius 4
+                 :backgroundColor (:background-gray style/colors)}}
+   [:div {}
+    (create-field "Workflow ID" (workflow "id"))
+    (let [status (workflow "status")]
+      (create-field "Status" (icon-for-wf-status status) status))
+    (when (workflow "submission")
+      (create-field "Submitted" (render-date (workflow "submission"))))
+    (when (workflow "start")
+      (create-field "Started" (render-date (workflow "start"))))
+    (when (workflow "end")
+      (create-field "Ended" (render-date (workflow "end"))))
+    [IODetail {:label "Inputs" :data (workflow "inputs")}]
+    [IODetail {:label "Outputs" :data (workflow "outputs")}]]
+   [:div {:style {:marginTop "1em" :fontWeight 500}} "Calls:"]
+   (for [[call data] (workflow "calls")]
+     [CallDetail {:label call :data data}])])
+
 (react/defc WorkflowsTable
   {:get-initial-state
    (fn []
      {:active-filter :all})
    :render
-   (fn [{:keys [this props state]}]
+   (fn [{:keys [this state]}]
      (if (:selected-workflow @state)
        (react/call :render-workflow-details this)
        (react/call :render-table this)))
@@ -71,7 +146,10 @@
         {:endpoint
          (endpoints/get-workflow-details
           (:workspace-id props) (:submission-id props) (:id (:selected-workflow @state)))
-         :on-done #(swap! state update-in [:selected-workflow] assoc :server-response %)})))
+         :on-done (fn [{:keys [success? get-parsed-response status-text]}]
+                    (swap! state update-in [:selected-workflow]
+                      assoc :server-response {:success? success?
+                                              :response (if success? (get-parsed-response) status-text)}))})))
    :render-table
    (fn [{:keys [props state]}]
      [:div {}
@@ -117,7 +195,7 @@
                       (row "workflowId")])
                    (filter-workflows (:active-filter @state) (:workflows props)))}]])
    :render-workflow-details
-   (fn [{:keys [props state]}]
+   (fn [{:keys [state]}]
      [:div {}
       [:div {}
        (style/create-link
@@ -131,10 +209,9 @@
            (nil? server-response)
            [:div {} [comps/Spinner {:text "Loading workflow details..."}]]
            (not (:success? server-response))
-           (style/create-server-error-message (:status-text server-response))
+           (style/create-server-error-message (:response server-response))
            :else
-           [:div {:style {:fontSize "smaller" :whiteSpace "pre-wrap"}}
-            (.-responseText (:xhr server-response))]))]])})
+           (render-workflow-detail (:response server-response))))]])})
 
 
 (react/defc WorkflowFailuresTable
