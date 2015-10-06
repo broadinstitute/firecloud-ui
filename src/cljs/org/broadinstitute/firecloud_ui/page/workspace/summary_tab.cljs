@@ -337,10 +337,7 @@
                                 "Complete" [comps/CompleteIcon {:size 36}]
                                 "Running" [comps/RunningIcon {:size 36}]
                                 "Exception" [comps/ExceptionIcon {:size 36}])
-                        :color (style/color-for-status status)}]
-    [comps/SidebarButton {:style :light :margin :top :color :button-blue
-                          :text "Edit this page" :icon :pencil
-                          :onClick #(utils/rlog "TODO: implement edit")}]
+                        :color (style/color-for-status status)}] 
     [comps/SidebarButton {:style :light :margin :top :color :button-blue
                           :text "View attributes" :icon :document
                           :onClick on-view-attributes}]
@@ -364,15 +361,7 @@
           (style/create-link
             #(swap! state assoc :editing-acl? true)
             "Edit sharing...")
-          ")"])])
-    (style/create-section-header "Description")
-    (style/create-paragraph [:em {} "Description info not available yet"])
-    (style/create-section-header "Tags")
-    (style/create-paragraph (render-tags ["Fake" "Tag" "Placeholders"]))
-    (style/create-section-header "Research Purpose")
-    (style/create-paragraph [:em {} "Research purpose not available yet"])
-    (style/create-section-header "Billing Account")
-    (style/create-paragraph [:em {} "Billing account not available yet"])]
+          ")"])])]
    (common/clear-both)])
 
 (react/defc Summary

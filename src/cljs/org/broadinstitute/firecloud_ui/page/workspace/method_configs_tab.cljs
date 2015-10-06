@@ -59,9 +59,8 @@
                 (style/create-link
                   #((:on-config-selected props) config)
                   (config "name")))}
-             {:header "Namespace" :starting-width 200}
              {:header "Root Entity Type" :starting-width 140}
-             {:header "Method Store Method" :starting-width 300 :sort-by :none
+             {:header "Method" :starting-width 300 :sort-by :none
               :filter-by #(str (% "methodNamespace") (% "methodName") (% "methodVersion"))
               :content-renderer
               #(render-map %
@@ -70,7 +69,6 @@
             :data (map
                     (fn [config]
                       [config
-                       (config "namespace")
                        (config "rootEntityType")
                        (config "methodRepoMethod")])
                     configs)}]))])

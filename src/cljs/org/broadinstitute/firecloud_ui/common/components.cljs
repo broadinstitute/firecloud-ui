@@ -197,7 +197,7 @@
   {:render
    (fn [{:keys [props]}]
      (when (:banner props)
-       [:div {:style {:backgroundColor "rgba(82, 129, 197, 0.4)"
+       [:div {:style {:backgroundColor "rgba(210, 210, 210, 0.4)"
                       :position "fixed" :top 0 :bottom 0 :right 0 :left 0 :zIndex 9999}}
         [:div {:style {:position "absolute" :top "50%" :left "50%"
                        :transform "translate(-50%, -50%)"
