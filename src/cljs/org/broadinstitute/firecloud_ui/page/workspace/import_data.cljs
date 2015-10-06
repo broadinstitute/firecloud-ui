@@ -3,37 +3,66 @@
     [clojure.string]
     [dmohs.react :as react]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
+    [org.broadinstitute.firecloud-ui.common.icons :as icons]
+    [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
     [org.broadinstitute.firecloud-ui.utils :as utils]
     ))
 
 
-(defn- submit-entities [state workspace-id entityFile]
-  (swap! state assoc :message "")
-  (endpoints/call-ajax-orch
-    {:endpoint (endpoints/import-entities workspace-id)
-     :raw-data (utils/generate-form-data {:entities entityFile})
-     :encType "multipart/form-data"
-     :on-done (fn [{:keys [xhr]}]
-                (swap! state assoc :entities-loaded? true :message (.-responseText xhr)))}))
-
+(def ^:private preview-limit 4096)
 
 (react/defc Page
   {:did-load-data?
    (fn [{:keys [state]}]
      (:entities-loaded? @state))
    :render
-   (fn [{:keys [props state refs]}]
-     [:div {:style {:marginTop "1em"}}
-      [:div {:style {:boxSizing "inherit"}}
-       [:input {:type "file" :name "entities" :ref "entities"}]
-       [comps/Button {:text "Upload"
-                      :onClick #(submit-entities
-                                 state
-                                 (:workspace-id props)
-                                 (-> (@refs "entities") .getDOMNode .-files (aget 0)))}]]
+   (fn [{:keys [state refs this]}]
+     [:div {:style {:textAlign "center"}}
+      (when (:loading? @state)
+        [comps/Blocker {:banner "Uploading file..."}])
 
-      (if (:entities-loaded? @state)
-        [:div {:style {:paddingTop "22px"}}
-         [:div {:style {:fontSize "125%" :fontWeight 500}} "Import Results" [:br]
-          [:div {:style {:fontSize "75%" :fontWeight 100}} (:message @state)]]])])})
+      [:input {:type "file" :name "entities" :ref "entities"
+               :style {:display "none"}
+               :onChange (fn [e]
+                           (let [file (-> e .-target .-files (aget 0))
+                                 reader (js/FileReader.)]
+                             (when file
+                               (swap! state assoc :upload-result nil)
+                               (set! (.-onload reader)
+                                 #(swap! state assoc :file file :file-contents (.-result reader)))
+                               (.readAsText reader (.slice file 0 preview-limit)))))}]
+      [comps/Button {:text "Choose file..." :onClick #(-> (@refs "entities") .getDOMNode .click)}]
+      (when (:file-contents @state)
+        [:div {:style {:margin "0.5em 2em" :padding "0.5em" :border (str "1px solid " (:line-gray style/colors))}}
+         (str "Previewing '" (-> (:file @state) .-name) "':")
+         [:div {:style {:overflow "auto" :maxHeight 200
+                        :paddingBottom "0.5em" :textAlign "left"}}
+          [:pre {} (:file-contents @state)]
+          (when (> (.-size (:file @state)) preview-limit)
+            [:em {} "(file truncated for preview)"])]])
+      (when (and (:file @state) (not (:upload-result @state)))
+        [comps/Button {:text "Upload"
+                       :onClick #(react/call :do-upload this)}])
+      (if-let [result (:upload-result @state)]
+        (if (:success? result)
+          [:div {:style {:paddingTop "1em"}}
+           (icons/font-icon {:style {:fontSize "200%" :color (:success-green style/colors)}} :status-done)
+           [:span {:style {:margin "-0.5em 0 0 1em"}} "Success!"]]
+          [:div {:style {:paddingTop "1em"}}
+           (icons/font-icon {:style {:fontSize "200%" :color (:exception-red style/colors)}} :status-warning)
+           [:span {:style {:margin "-0.5em 0 0 1em"}} "Error: " (:error-message result)]]))])
+   :do-upload
+   (fn [{:keys [props state]}]
+     (swap! state assoc :loading? true)
+     (endpoints/call-ajax-orch
+       {:endpoint (endpoints/import-entities (:workspace-id props))
+        :raw-data (utils/generate-form-data {:entities (:file @state)})
+        :encType "multipart/form-data"
+        :on-done (fn [{:keys [success? xhr]}]
+                   (swap! state dissoc :loading? :file :file-contents)
+                   (if success?
+                     (do
+                       (swap! state assoc :upload-result {:success? true})
+                       ((:reload-data-tab props) (.-responseText xhr)))
+                     (swap! state assoc :upload-result {:success? false :error-message (.-responseText xhr)})))}))})
