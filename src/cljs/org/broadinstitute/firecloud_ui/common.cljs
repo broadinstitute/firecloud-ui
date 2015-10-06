@@ -101,3 +101,8 @@
     (cond (not (nil? (get-in workspace ["workspaceSubmissionStats" "lastFailureDate"]))) "Exception"
           (zero? count) "Complete"
           :else "Running")))
+
+(defn gcs-uri->download-url [gcs-uri]
+  (let [matcher (re-find #"gs://([^/]+)/(.+)" gcs-uri)]
+    (when (= 3 (count matcher)) ;; first match will be the whole thing
+      (str "https://console.developers.google.com/m/cloudstorage/b/" (matcher 1) "/o/" (matcher 2)))))
