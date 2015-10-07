@@ -11,11 +11,6 @@
     ))
 
 
-(defn- capture-prerequisites [state refs]
-  (vec (map
-         #(get-text refs (str "pre_" %))
-         (range (count (:prereqs-list @state))))))
-
 (defn- filter-empty [list]
   (vec (remove blank? (map trim list))))
 
@@ -27,46 +22,37 @@
   [:div {:style {:padding "1em 0 2em 0"}} children])
 
 (defn- stop-editing [state refs]
-  (swap! state assoc :editing? false :prereqs-list (filter-empty (capture-prerequisites state refs))))
-
-(defn- complete [state new-config]
-  (swap! state assoc :loaded-config new-config :blocker nil))
-
-;; Rawls is screwed up right now: Prerequisites should simply be a list of strings, not a map.
-;; Delete this when the backend is fixed
-(defn- fix-prereqs [prereqs]
-  (zipmap (map #(str "unused" %) (range)) prereqs))
+  (swap! state assoc :editing? false))
 
 (defn- commit [state refs config props]
   (let [workspace-id (:workspace-id props)
         name (get-text refs "confname")
         inputs (into {} (map (juxt identity #(get-text refs (str "in_" %))) (keys (config "inputs"))))
         outputs (into {} (map (juxt identity #(get-text refs (str "out_" %))) (keys (config "outputs"))))
-        prereqs (fix-prereqs (filter-empty (capture-prerequisites state refs)))
         new-conf (assoc config
                    "name" name
                    "inputs" inputs
                    "outputs" outputs
-                   "prerequisites" prereqs
                    "workspaceName" workspace-id)]
     (swap! state assoc :blocker "Updating...")
     (endpoints/call-ajax-orch
       {:endpoint (endpoints/update-workspace-method-config workspace-id config)
        :payload new-conf
        :headers {"Content-Type" "application/json"} ;; TODO - make endpoint take text/plain
-       :on-done (fn [{:keys [success? xhr]}]
+       :on-done (fn [{:keys [success? get-parsed-response xhr]}]
                   (if-not success?
                     (js/alert (str "Exception:\n" (.-statusText xhr)))
                     (if (= name (config "name"))
-                      (complete state new-conf)
-                      (endpoints/call-ajax-orch ;; TODO - make unified call in orchestration
-                        {:endpoint (endpoints/rename-workspace-method-config workspace-id config)
-                         :payload (select-keys new-conf ["name" "namespace" "workspaceName"])
-                         :headers {"Content-Type" "application/json"}
-                         :on-done (fn [{:keys [success? xhr]}]
-                                    (complete state new-conf)
-                                    (when-not success?
-                                      (js/alert (str "Exception:\n" (.-statusText xhr)))))}))))})))
+                      (swap! state assoc :loaded-config (get-parsed-response) :blocker nil)
+                      (do (swap! state assoc :loaded-config (get-parsed-response))
+                          (endpoints/call-ajax-orch ;; TODO - make unified call in orchestration
+                            {:endpoint (endpoints/rename-workspace-method-config workspace-id config)
+                             :payload (select-keys new-conf ["name" "namespace" "workspaceName"])
+                             :headers {"Content-Type" "application/json"}
+                             :on-done (fn [{:keys [success? xhr]}]
+                                        (swap! state assoc :blocker nil)
+                                        (when-not success?
+                                          (js/alert (str "Exception:\n" (.-statusText xhr)))))})))))})))
 
 (defn- render-top-bar [config]
   [:div {:style {:backgroundColor (:background-gray style/colors)
@@ -163,8 +149,7 @@
       (when-not editing?
         [comps/SidebarButton {:style :light :color :button-blue
                               :text "Edit this page" :icon :pencil
-                              :onClick #(swap! state assoc :editing? true
-                                         :prereqs-list (vals (config "prerequisites")))}])
+                              :onClick #(swap! state assoc :editing? true)}])
       (when-not editing?
         [DeleteButton
          {:workspace-id (:workspace-id props)
@@ -186,86 +171,73 @@
                               :text "Cancel Editing" :icon :x
                               :onClick #(stop-editing state refs)}])])])
 
+(defn- validation-status [invalid?]
+  (if invalid?
+    (icons/font-icon {:style {:paddingLeft "0.5em" :padding "1em 0.7em"
+                              :color (:exception-red style/colors) :cursor "pointer"}}
+      :x)
+    (icons/font-icon {:style {:paddingLeft "0.5em" :padding "1em 0.7em"
+                              :color (:success-green style/colors) :cursor "pointer"}}
+      :status-done)))
 
-(defn- render-main-display [state refs config editing?]
-  [:div {:style {:marginLeft 330}}
-   (create-section-header "Method Configuration Name")
-   (create-section
-     [:div {:style {:display (when editing? "none") :padding "0.5em 0 1em 0"}}
-      (config "name")]
-     [:div {:style {:display (when-not editing? "none")}}
-      (style/create-text-field {:ref "confname" :defaultValue (config "name")})])
-   (create-section-header "Inputs")
-   (create-section
-     [:div {}
-      (for [key (keys (config "inputs"))]
-        [:div {:style {:verticalAlign "middle"}}
-         [:div {:style {:float "left" :marginRight "1em" :padding "0.5em" :marginBottom "0.5em"
-                        :backgroundColor (:background-gray style/colors)
-                        :border (str "1px solid " (:line-gray style/colors)) :borderRadius 2}}
-          (str key ":")]
-         [:div {:style {:float "left" :display (when editing? "none") :padding "0.5em 0 1em 0"}}
-          (get (config "inputs") key)]
-         [:div {:style {:float "left" :display (when-not editing? "none")}}
-          (style/create-text-field {:ref (str "in_" key) :defaultValue (get (config "inputs") key)})]
-         (clear-both)])])
-   (create-section-header "Outputs")
-   (create-section
-     [:div {}
-      (for [key (keys (config "outputs"))]
-        [:div {:style {:verticalAlign "middle"}}
-         [:div {:style {:float "left" :marginRight "1em" :padding "0.5em" :marginBottom "0.5em"
-                        :backgroundColor (:background-gray style/colors)
-                        :border (str "1px solid " (:line-gray style/colors)) :borderRadius 2}}
-          (str key ":")]
-         [:div {:style {:float "left" :display (when editing? "none") :padding "0.5em 0 1em 0"}}
-          (get (config "outputs") key)]
-         [:div {:style {:float "left" :display (when-not editing? "none")}}
-          (style/create-text-field {:ref (str "out_" key) :defaultValue (get (config "outputs") key)})]
-         (clear-both)])])
-   (create-section-header "Prerequisites")
-   (create-section
-     [:div {}
-      (if editing?
-        (map-indexed
-          (fn [i p]
-            [:div {}
-             [:div {:style {:float "left"}}
-              (style/create-text-field {:ref (str "pre_" i) :defaultValue p :key (name (gensym))})
-              (icons/font-icon {:style {:paddingLeft "0.5em" :padding "1em 0.7em" :color "red" :cursor "pointer"}
-                                :onClick #(let [l (capture-prerequisites state refs)
-                                                new-l (vec (concat (subvec l 0 i) (subvec l (inc i))))]
-                                            (swap! state assoc :prereqs-list new-l))}
-                :x)]
-             (clear-both)])
-          (:prereqs-list @state))
-        (map
-          (fn [p]
-            [:div {}
-             [:div {:style {:float "left" :display (when editing? "none") :padding "0.5em 0" :marginBottom "0.5em"}}
-              p]
-             (clear-both)])
-          (vals (config "prerequisites"))))
-      [:div {:style {:display (when-not editing? "none")}}
-       [comps/Button {:style :add :text "Add new"
-                      :onClick #(let [list (capture-prerequisites state refs)]
-                                 (swap! state assoc :prereqs-list (conj list "")))}]]])])
+(defn- input-output-list [config value-type invalid-values editing?]
+  (create-section
+    [:div {}
+     (for [key (keys (config value-type))]
+       [:div {:style {:verticalAlign "middle"}}
+        [:div {:style {:float "left" :marginRight "1em" :padding "0.5em" :marginBottom "0.5em"
+                       :backgroundColor (:background-gray style/colors)
+                       :border (str "1px solid " (:line-gray style/colors)) :borderRadius 2}}
+         (str key ":")]
+        [:div {:style {:float "left" :display (when editing? "none") :padding "0.5em 0 1em 0"}}
+         (get (config value-type) key)
+         (validation-status (contains? invalid-values key))]
+        [:div {:style {:float "left" :display (when-not editing? "none")}}
+         (if (= value-type "inputs")
+           (style/create-text-field {:ref (str "in_" key)
+                                     :defaultValue (get (config value-type) key)})
+           (style/create-text-field {:ref (str "out_" key)
+                                     :defaultValue (get (config value-type) key)}))]
+        (clear-both)
+        [:div {:style {:marginRight "1em" :padding "0.5em" :marginBottom "0.5em"
+                       :backgroundColor (:exception-red style/colors)
+                       :display (if-not (contains? invalid-values key) "none")
+                       :width 450
+                       :border (str "1px solid " (:line-gray style/colors)) :borderRadius 2}}
+         (get invalid-values key)]])]))
 
-(defn- render-display [state refs config editing? props]
-  [:div {}
-   [comps/Blocker {:banner (:blocker @state)}]
-   [:div {:style {:padding "0em 2em"}}
-    (render-top-bar config)
-    [:div {:style {:padding "1em 0em"}}
-     (render-side-bar state refs config editing? props)
-     (when-not editing?
-       [:div {:style {:float "right"}}
-        (launch/render-button {:workspace-id (:workspace-id props)
-                               :config-id {:namespace (config "namespace") :name (config "name")}
-                               :root-entity-type (config "rootEntityType")
-                               :on-success (:on-submission-success props)})])
-     (render-main-display state refs config editing?)
-     (clear-both)]]])
+(defn- render-main-display [state refs wrapped-config editing?]
+  (let [config (get-in wrapped-config ["methodConfiguration"])
+        invalid-inputs (get-in wrapped-config ["invalidInputs"])
+        invalid-outputs (get-in wrapped-config ["invalidOutputs"])]
+    [:div {:style {:marginLeft 330}}
+     (create-section-header "Method Configuration Name")
+     (create-section
+       [:div {:style {:display (when editing? "none") :padding "0.5em 0 1em 0"}}
+        (config "name")]
+       [:div {:style {:display (when-not editing? "none")}}
+        (style/create-text-field {:ref "confname" :defaultValue (config "name")})])
+     (create-section-header "Inputs")
+     (input-output-list config "inputs" invalid-inputs editing?)
+     (create-section-header "Outputs")
+     (input-output-list config "outputs" invalid-outputs editing?)]))
+
+(defn- render-display [state refs wrapped-config editing? props]
+  (let [config (get-in wrapped-config ["methodConfiguration"])]
+    [:div {}
+     [comps/Blocker {:banner (:blocker @state)}]
+     [:div {:style {:padding "0em 2em"}}
+      (render-top-bar config)
+      [:div {:style {:padding "1em 0em"}}
+       (render-side-bar state refs config editing? props)
+       (when-not editing?
+         [:div {:style {:float "right"}}
+          (launch/render-button {:workspace-id (:workspace-id props)
+                                 :config-id {:namespace (config "namespace") :name (config "name")}
+                                 :root-entity-type (config "rootEntityType")
+                                 :on-success (:on-submission-success props)})])
+       (render-main-display state refs wrapped-config editing?)
+       (clear-both)]]]))
 
 (react/defc MethodConfigEditor
   {:get-initial-state
@@ -281,7 +253,7 @@
    :component-did-mount
    (fn [{:keys [state props refs this]}]
      (endpoints/call-ajax-orch
-       {:endpoint (endpoints/get-workspace-method-config (:workspace-id props) (:config props))
+       {:endpoint (endpoints/get-validated-workspace-method-config (:workspace-id props) (:config props))
         :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                    (if success?
                      (swap! state assoc :loaded-config (get-parsed-response))
