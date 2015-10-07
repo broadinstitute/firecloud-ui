@@ -103,12 +103,12 @@
                                         :workspace-id (:workspace-id props)
                                         :reload-data-tab (fn [entity-type]
                                                            (swap! state dissoc :entity-map)
-                                                           (react/call :load-entities this entity-type))}])}])
+                                                           (react/call :load this entity-type))}])}])
       (cond
-        (:entity-map @state)
+        (and (:entity-map @state) (contains? @state :locked?))
         [:div {}
          [:div {:style {:float "right" :paddingRight "2em"}}
-          [comps/Button {:text "Import Data..."
+          [comps/Button {:text "Import Data..." :disabled? (if (:locked? @state) "This workspace is locked")
                          :onClick #(swap! state assoc :show-import? true)}]]
          [EntitiesList {:entity-map (:entity-map @state)
                         :workspace-id (:workspace-id props)
@@ -117,9 +117,15 @@
         :else [:div {:style {:textAlign "center"}} [comps/Spinner {:text "Loading entities..."}]])])
    :component-did-mount
    (fn [{:keys [this]}]
-     (react/call :load-entities this))
-   :load-entities
+     (react/call :load this))
+   :load
    (fn [{:keys [state props]} & [entity-type]]
+     (endpoints/call-ajax-orch
+       {:endpoint (endpoints/get-workspace (:workspace-id props))
+        :on-done (fn [{:keys [success? get-parsed-response status-text]}]
+                   (if success?
+                     (swap! state assoc :locked? (get-in (get-parsed-response) ["workspace" "isLocked"]))
+                     (swap! state assoc :error status-text)))})
      (endpoints/call-ajax-orch
        {:endpoint (endpoints/get-entities-by-type (:workspace-id props))
         :on-done (fn [{:keys [success? get-parsed-response status-text]}]

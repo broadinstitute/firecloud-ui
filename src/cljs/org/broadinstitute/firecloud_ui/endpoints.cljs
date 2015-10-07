@@ -28,16 +28,17 @@
    :mock-data
    (map
      (fn [i]
-       (let [ns (rand-nth ["broad" "public" "nci"])
-             status (rand-nth ["Complete" "Running" "Exception"])]
+       (let [ns (rand-nth ["broad" "public" "nci"])]
          {:accessLevel (rand-nth ["OWNER" "WRITER" "READER"])
-          :workspace {:namespace ns
+          :workspace {:workspaceId "ce601ccd-f6d5-40ac-ad2b-89beca5c4053"
                       :name (str "Workspace " (inc i))
+                      :isLocked (> (rand) 0.8)
                       :attributes {"Attribute1" "[some value]"
                                    "Attribute2" "[some value]"
                                    "Attribute3" "[some value]"}
-                      :status status
-                      :createdBy ns
+                      :createdBy "somebody@broadinstitute.org"
+                      :bucketName "unavailable"
+                      :namespace ns
                       :createdDate (utils/rand-recent-time)}
           :workspaceSubmissionStats {:runningSubmissionsCount (rand-int 2)
                                      :lastSuccessDate (rand-nth [nil (utils/rand-recent-time)])
@@ -62,18 +63,22 @@
    :method :get
    :mock-data
    {:accessLevel "OWNER"
-    :workspace {:namespace (:namespace workspace-id)
+    :workspace {:workspaceId "ce601ccd-f6d5-40ac-ad2b-89beca5c4053"
                 :name (:name workspace-id)
+                :isLocked (> (rand) 0.8)
                 :attributes {"Attribute1" "[some value]"
                              "Attribute2" "[some value]"
                              "Attribute3" "[some value]"}
-                :status (rand-nth ["Complete" "Running" "Exception"])
-                :createdBy (:namespace workspace-id)
+                :createdBy "somebody@broadinstitute.org"
+                :bucketName "unavailable"
+                :namespace (:namespace workspace-id)
                 :createdDate (.toISOString (js/Date.))}
     :workspaceSubmissionStats {:runningSubmissionsCount (rand-int 2)
                                :lastSuccessDate (rand-nth [nil (utils/rand-recent-time)])
                                :lastFailureDate (rand-nth [nil (utils/rand-recent-time)])}
-    :owners ["test@broadinstitute.org"]}})
+    :owners (utils/rand-subset ["test@broadinstitute.org"
+                                "test2@broadinstitute.org"
+                                "you@broadinstitute.org"])}})
 
 (defn delete-workspace [workspace-id]
   {:path (str "/workspaces/" (ws-path workspace-id))
@@ -94,6 +99,10 @@
 (defn clone-workspace [workspace-id]
   {:path (str "/workspaces/" (ws-path workspace-id) "/clone")
    :method :post})
+
+(defn lock-or-unlock-workspace [workspace-id locked-now?]
+  {:path (str "/workspaces/" (ws-path workspace-id) (if locked-now? "/unlock" "/lock"))
+   :method :put})
 
 
 (defn list-workspace-method-configs [workspace-id]

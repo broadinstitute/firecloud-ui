@@ -98,6 +98,7 @@
                        (js/alert "Error saving permissions: " status-text)))})))
    :component-did-mount
    (fn [{:keys [props state]}]
+     (common/scroll-to-top 100)
      (endpoints/call-ajax-orch
        {:endpoint (endpoints/get-workspace-acl (:workspace-id props))
         :on-done (fn [{:keys [success? get-parsed-response status-text]}]

@@ -156,7 +156,7 @@
                                  Page
                                  (merge props
                                   {:on-cancel #(swap! state dissoc :display-modal?)}))}])
-      [comps/Button {:text "Launch Analysis..."
+      [comps/Button {:text "Launch Analysis..." :disabled? (when (:disabled? props) "The workspace is locked")
                      :onClick #(swap! state assoc :display-modal? true)}]])})
 
 
