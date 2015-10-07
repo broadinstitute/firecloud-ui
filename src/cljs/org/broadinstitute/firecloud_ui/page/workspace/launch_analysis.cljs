@@ -78,7 +78,7 @@
 
 (defn render-form [entities state refs props]
   (let [entity-map (group-by #(% "entityType") entities)
-        filter (or (:filter @state) "Sample")
+        filter (or (:filter @state) (:root-entity-type props) "Sample")
         filtered-entities (entity-map filter)
         selected-entity (or (:selected-entity @state) (first filtered-entities))]
     [:div {:style {:padding "22px 48px 40px" :backgroundColor (:background-gray style/colors)}}
@@ -94,7 +94,7 @@
         (style/create-form-label "Select Entity Type")
         (style/create-select
          {:style {:width "50%" :minWidth 50 :maxWidth 200} :ref "filter"
-          :defaultValue (:root-entity-type props)
+          :defaultValue (or (:root-entity-type props) "Sample")
           :onChange #(let [value (common/get-text refs "filter")]
                        (swap! state assoc :filter value))}
          (keys entity-map))
