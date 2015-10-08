@@ -366,6 +366,9 @@
 ;;         sortable.  If omitted, the :sortable-columns? top-level property is checked to see if
 ;;         the column should be sortable, and if so, the column is sorted by the column type directly.
 ;;         Use ':sort-by :none' to disable sorting a specific column of an otherwise sortable table.
+;;       :sort-initial (optional)
+;;         A flag to set the initial column to sort.  Value is either :asc or :desc.  If present on multiple
+;;         columns, the first one will be used.
 ;;   :data (REQUIRED)
 ;;     A sequence-of-sequences forming the data grid.
 (react/defc Table
@@ -381,8 +384,16 @@
       :empty-message "There are no rows to display."})
    :get-initial-state
    (fn [{:keys [props]}]
-     {:ordered-columns (create-ordered-columns (:columns props))
-      :dragging? false})
+     (let [ordered-columns (create-ordered-columns (:columns props))]
+       (merge
+         {:ordered-columns ordered-columns
+          :dragging? false}
+         (when-let [col (first (filter #(contains? % :sort-initial) ordered-columns))]
+           {:key-fn (if-let [sorter (:sort-by col)]
+                      (fn [row] (sorter (nth row (:index col))))
+                      (fn [row] (nth row (:index col))))
+            :sort-order (:sort-initial col)
+            :sort-column (:index col)}))))
    :render
    (fn [{:keys [this state props refs]}]
      (if (zero? (count (:data props)))

@@ -19,6 +19,7 @@
     :columns
     [{:header "Date" :starting-width 200
       :sort-by #(% "submissionDate") :filter-by #(render-date %)
+      :sort-initial :desc
       :content-renderer (fn [submission]
                           (style/create-link
                             #(on-submission-clicked (submission "submissionId"))
