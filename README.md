@@ -53,8 +53,10 @@ Start the server in docker:
 Build the code:
 
 ```
-docker exec -it firecloud-ui ./script/dev/build-once.sh
+./script/dev/build-once.sh
 ```
+
+(See below for additional build options.)
 
 You should now be able to view the application at `http://dhost/` or `https://dhost/`.
 
