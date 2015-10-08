@@ -101,7 +101,7 @@
       [{:header [:div {:style {:marginLeft -6}} "Status"] :starting-width 60
         :content-renderer (fn [data] [StatusCell {:data data}])
         :filter-by :none}
-       {:header "Workspace" :starting-width 250
+       {:header "Workspace" :starting-width 450
         :content-renderer (fn [data] [WorkspaceCell {:data data}])
         :filter-by :name}
        {:header "Description" :starting-width 400
@@ -112,7 +112,9 @@
       :data (map (fn [ws]
                    [{:status (:status ws)
                      :onClick #((:onWorkspaceSelected props) (ws "workspace"))}
-                    {:name (get-in ws ["workspace" "name"]) :status (:status ws)
+                    {:name (str (get-in ws ["workspace" "namespace"])
+                             "/" (get-in ws ["workspace" "name"]))
+                     :status (:status ws)
                      :onClick #((:onWorkspaceSelected props) (ws "workspace"))}
                     ws])
               workspaces)}]))
