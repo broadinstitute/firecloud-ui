@@ -40,47 +40,55 @@
                                              :after-import (fn [config]
                                                              (swap! state dissoc :show-import-overlay?)
                                                              ((:on-config-imported props) config))}]])}])
-      [:div {:style {:float "right" :padding "0 2em 1em 0"}}
-       [comps/Button {:text "Import Configuration..."
-                      :onClick #(swap! state assoc :show-import-overlay? true)}]]
-      (common/clear-both)
       (let [server-response (:server-response @state)
             {:keys [configs error-message]} server-response]
         (cond
-          (nil? server-response) [comps/Spinner {:text "Loading configurations..."}]
+          (or (nil? server-response) (not (contains? @state :locked?)))
+          [comps/Spinner {:text "Loading configurations..."}]
           error-message (style/create-server-error-message error-message)
           :else
-          [table/Table
-           {:empty-message "There are no method configurations to display."
-            :columns
-            [{:header "Name" :starting-width 240 :sort-by #(% "name") :filter-by #(% "name")
-              :content-renderer
-              (fn [config]
-                (style/create-link
-                  #((:on-config-selected props) config)
-                  (config "name")))}
-             {:header "Root Entity Type" :starting-width 140}
-             {:header "Method" :starting-width 300 :sort-by :none
-              :filter-by #(str (% "methodNamespace") (% "methodName") (% "methodVersion"))
-              :content-renderer
-              #(render-map %
-                ["methodNamespace" "methodName" "methodVersion"]
-                ["Namespace" "Name" "Version"])}]
-            :data (map
-                    (fn [config]
-                      [config
-                       (config "rootEntityType")
-                       (config "methodRepoMethod")])
-                    configs)}]))])
+          [:div {}
+           [:div {:style {:float "right" :padding "0 2em 1em 0"}}
+            [comps/Button {:text "Import Configuration..." :disabled? (when (:locked? @state) "The workspace is locked")
+                           :onClick #(swap! state assoc :show-import-overlay? true)}]]
+           (common/clear-both)
+           [table/Table
+            {:empty-message "There are no method configurations to display."
+             :columns
+             [{:header "Name" :starting-width 240 :sort-by #(% "name") :filter-by #(% "name")
+               :content-renderer
+               (fn [config]
+                 (style/create-link
+                   #((:on-config-selected props) config)
+                   (config "name")))}
+              {:header "Root Entity Type" :starting-width 140}
+              {:header "Method" :starting-width 300 :sort-by :none
+               :filter-by #(str (% "methodNamespace") (% "methodName") (% "methodVersion"))
+               :content-renderer
+               #(render-map %
+                 ["methodNamespace" "methodName" "methodVersion"]
+                 ["Namespace" "Name" "Version"])}]
+             :data (map
+                     (fn [config]
+                       [config
+                        (config "rootEntityType")
+                        (config "methodRepoMethod")])
+                     configs)}]]))])
    :component-did-mount
    (fn [{:keys [this]}]
-     (react/call :load-method-configs this))
+     (react/call :load this))
    :component-did-update
    (fn [{:keys [this state]}]
      (when (nil? (:server-response @state))
-       (react/call :load-method-configs this)))
-   :load-method-configs
+       (react/call :load this)))
+   :load
    (fn [{:keys [props state]}]
+     (endpoints/call-ajax-orch
+       {:endpoint (endpoints/get-workspace (:workspace-id props))
+        :on-done (fn [{:keys [success? get-parsed-response status-text]}]
+                   (if success?
+                     (swap! state assoc :locked? (get-in (get-parsed-response) ["workspace" "isLocked"]))
+                     (swap! state assoc :error status-text)))})
      (endpoints/call-ajax-orch
        {:endpoint (endpoints/list-workspace-method-configs (:workspace-id props))
         :on-done (fn [{:keys [success? get-parsed-response status-text]}]

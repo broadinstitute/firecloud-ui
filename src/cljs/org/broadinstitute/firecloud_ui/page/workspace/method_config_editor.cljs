@@ -21,7 +21,7 @@
 (defn- create-section [& children]
   [:div {:style {:padding "1em 0 2em 0"}} children])
 
-(defn- stop-editing [state refs]
+(defn- stop-editing [state]
   (swap! state assoc :editing? false))
 
 (defn- commit [state refs config props]
@@ -41,7 +41,8 @@
        :headers {"Content-Type" "application/json"} ;; TODO - make endpoint take text/plain
        :on-done (fn [{:keys [success? get-parsed-response xhr]}]
                   (if-not success?
-                    (js/alert (str "Exception:\n" (.-statusText xhr)))
+                    (do (js/alert (str "Exception:\n" (.-statusText xhr)))
+                        (swap! state dissoc :blocker))
                     (if (= name (config "name"))
                       (swap! state assoc :loaded-config (get-parsed-response) :blocker nil)
                       (do (swap! state assoc :loaded-config (get-parsed-response))
@@ -78,11 +79,12 @@
                           (if success?
                             ((:on-rm props))
                             (js/alert (str "Error during deletion: " (.-statusText xhr)))))}))
-   :render (fn [{:keys [this state]}]
+   :render (fn [{:keys [this state props]}]
              (when (:deleting? @state)
                [comps/Blocker {:banner (str "Deleting...")}])
              [comps/SidebarButton {:style :light :color :exception-red :margin :top
                                    :text "Delete" :icon :trash-can
+                                   :disabled? (:disabled? props)
                                    :onClick #(when (js/confirm "Are you sure?")
                                               (swap! state assoc :deleting? true)
                                               (react/call :rm-mc this))}])})
@@ -145,31 +147,34 @@
    (style/create-unselectable :div {:style {:position (when-not (:sidebar-visible? @state) "fixed")
                                             :top (when-not (:sidebar-visible? @state) 4)
                                             :width 290}}
-     [:div {:style {:lineHeight 1}}
-      (when-not editing?
-        [comps/SidebarButton {:style :light :color :button-blue
-                              :text "Edit this page" :icon :pencil
-                              :onClick #(swap! state assoc :editing? true)}])
-      (when-not editing?
-        [DeleteButton
-         {:workspace-id (:workspace-id props)
-          :on-rm (:on-rm props)
-          :config config}])
+     (let [locked? (:locked? @state)]
+       [:div {:style {:lineHeight 1}}
+        (when-not editing?
+          [comps/SidebarButton {:style :light :color :button-blue
+                                :text "Edit this page" :icon :pencil
+                                :disabled? (when locked? "The workspace is locked")
+                                :onClick #(swap! state assoc :editing? true)}])
+        (when-not editing?
+          [DeleteButton
+           {:workspace-id (:workspace-id props)
+            :disabled? (when locked? "The workspace is locked")
+            :on-rm (:on-rm props)
+            :config config}])
 
-      (when-not editing?
-        [PublishButton
-         {:workspace-id (:workspace-id props)
-          :on-publish (:on-publish props)
-          :config config}])
+        (when-not editing?
+          [PublishButton
+           {:workspace-id (:workspace-id props)
+            :on-publish (:on-publish props)
+            :config config}])
 
-      (when editing?
-        [comps/SidebarButton {:color :success-green
-                              :text "Save" :icon :status-done
-                              :onClick #(do (commit state refs config props) (stop-editing state refs))}])
-      (when editing?
-        [comps/SidebarButton {:color :exception-red :margin :top
-                              :text "Cancel Editing" :icon :x
-                              :onClick #(stop-editing state refs)}])])])
+        (when editing?
+          [comps/SidebarButton {:color :success-green
+                                :text "Save" :icon :status-done
+                                :onClick #(do (commit state refs config props) (stop-editing state))}])
+        (when editing?
+          [comps/SidebarButton {:color :exception-red :margin :top
+                                :text "Cancel Editing" :icon :x
+                                :onClick #(stop-editing state)}])]))])
 
 (defn- validation-status [invalid?]
   (if invalid?
@@ -206,7 +211,7 @@
                        :border (str "1px solid " (:line-gray style/colors)) :borderRadius 2}}
          (get invalid-values key)]])]))
 
-(defn- render-main-display [state refs wrapped-config editing?]
+(defn- render-main-display [wrapped-config editing?]
   (let [config (get-in wrapped-config ["methodConfiguration"])
         invalid-inputs (get-in wrapped-config ["invalidInputs"])
         invalid-outputs (get-in wrapped-config ["invalidOutputs"])]
@@ -235,8 +240,9 @@
           (launch/render-button {:workspace-id (:workspace-id props)
                                  :config-id {:namespace (config "namespace") :name (config "name")}
                                  :root-entity-type (config "rootEntityType")
+                                 :disabled? (:locked? @state)
                                  :on-success (:on-submission-success props)})])
-       (render-main-display state refs wrapped-config editing?)
+       (render-main-display wrapped-config editing?)
        (clear-both)]]]))
 
 (react/defc MethodConfigEditor
@@ -246,7 +252,7 @@
       :sidebar-visible? true})
    :render
    (fn [{:keys [state refs props]}]
-     (cond (:loaded-config @state)
+     (cond (and (:loaded-config @state) (contains? @state :locked?))
            (render-display state refs (:loaded-config @state) (:editing? @state) props)
            (:error @state) (style/create-server-error-message (:error @state))
            :else [comps/Spinner {:text "Loading Method Configuration..."}]))
@@ -257,6 +263,12 @@
         :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                    (if success?
                      (swap! state assoc :loaded-config (get-parsed-response))
+                     (swap! state assoc :error status-text)))})
+     (endpoints/call-ajax-orch
+       {:endpoint (endpoints/get-workspace (:workspace-id props))
+        :on-done (fn [{:keys [success? get-parsed-response status-text]}]
+                   (if success?
+                     (swap! state assoc :locked? (get-in (get-parsed-response) ["workspace" "isLocked"]))
                      (swap! state assoc :error status-text)))})
      (set! (.-onScrollHandler this)
            (fn []

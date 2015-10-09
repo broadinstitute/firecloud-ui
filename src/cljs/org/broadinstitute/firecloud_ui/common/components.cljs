@@ -23,23 +23,27 @@
      {:color (:button-blue style/colors)})
    :render
    (fn [{:keys [props]}]
-     [:a {:title (:title-text props)
-          :style {:display "inline-block"
-                  :backgroundColor (:color props)
-                  :color "white" :fontWeight 500
-                  :borderRadius 2 :padding (if (:icon props) "0.7em" "0.7em 1em")
-                  :fontFamily (when (:icon props) "fontIcons")
-                  :fontSize (when (:icon props) "80%")
-                  :textDecoration "none"}
-          :href "javascript:;"
-          :onClick (fn [e] ((:onClick props) e))
-          :onKeyDown (common/create-key-handler [:space :enter] (:onClick props))}
-      (or (:text props) (icons/icon-text (:icon props)))
-      (when (= (:style props) :add)
-        [:span {:style {:display "inline-block" :height "1em" :width "1em" :marginLeft "1em"
-                        :position "relative"}}
-         [:span {:style {:position "absolute" :top "-55%" :fontSize "200%" :fontWeight "normal"}}
-          "+"]])])})
+     (let [disabled? (:disabled? props)]
+       [:a {:style {:display "inline-block"
+                    :backgroundColor (:color props)
+                    :WebkitFilter (when disabled? "grayscale()")
+                    :cursor (when disabled? "default")
+                    :color "white" :fontWeight 500
+                    :borderRadius 2 :padding (if (:icon props) "0.7em" "0.7em 1em")
+                    :fontFamily (when (:icon props) "fontIcons")
+                    :fontSize (when (:icon props) "80%")
+                    :textDecoration "none"}
+            :href "javascript:;"
+            :onClick (if disabled?
+                       #(js/alert (if (string? disabled?) disabled? "This action is disabled"))
+                       (fn [e] ((:onClick props) e)))
+            :onKeyDown (when-not disabled? (common/create-key-handler [:space :enter] (:onClick props)))}
+        (or (:text props) (icons/icon-text (:icon props)))
+        (when (= (:style props) :add)
+          [:span {:style {:display "inline-block" :height "1em" :width "1em" :marginLeft "1em"
+                          :position "relative"}}
+           [:span {:style {:position "absolute" :top "-55%" :fontSize "200%" :fontWeight "normal"}}
+            "+"]])]))})
 
 
 (react/defc FilterButtons
@@ -272,19 +276,23 @@
    :render
    (fn [{:keys [props]}]
      (let [heavy? (= :heavy (:style props))
+           disabled? (:disabled? props)
            margin (:margin props)
-           color (if-not (keyword? (:color props))
-                   (:color props)
-                   (get style/colors (:color props)))]
+           color (cond (keyword? (:color props)) (get style/colors (:color props))
+                       :else (:color props))]
        [:div {:style {:fontSize "106%"
+                      :WebkitFilter (when disabled? "grayscale()")
                       :marginTop (when (= margin :top) "1em")
                       :marginBottom (when (= margin :bottom) "1em")
-                      :padding "0.7em 0" :cursor "pointer" :textAlign "center"
+                      :padding "0.7em 0" :textAlign "center"
+                      :cursor (if disabled? "default" "pointer")
                       :backgroundColor (if heavy? color "transparent")
                       :color (if heavy? "#fff" color)
                       :border (when-not heavy? (str "1px solid " (:line-gray style/colors)))
                       :borderRadius (when heavy? 4)}
-              :onClick (:onClick props)}
+              :onClick (if disabled?
+                         #(js/alert (if (string? disabled?) disabled? "This action is disabled"))
+                         (:onClick props))}
         (icons/font-icon {:style {:verticalAlign "middle" :fontSize "135%"}} (:icon props))
         [:span {:style {:verticalAlign "middle" :marginLeft "1em"}} (:text props)]]))})
 

@@ -24,49 +24,57 @@
 
 
 (defn- view-summary [state props ws status owner? this on-view-attributes]
-  [:div {:style {:margin "45px 25px"}}
-   (when (:deleting? @state)
-     [comps/Blocker {:banner "Deleting..."}])
-   (when (:editing-acl? @state)
-     [AclEditor {:workspace-id (:workspace-id props)
-                 :dismiss-self #(swap! state dissoc :editing-acl?)
-                 :update-owners #(swap! state update-in [:server-response :workspace] assoc "owners" %)}])
-   (when (:cloning? @state)
-     [WorkspaceCloner {:dismiss #(swap! state dissoc :cloning?)
-                       :workspace-id (:workspace-id props)}])
-   [:div {:style {:float "left" :width 290 :marginRight 40}}
-    ;; TODO - make the width of the float-left dynamic
-    [comps/StatusLabel {:text (capitalize (name status))
-                        :icon (case status
-                                "Complete" [comps/CompleteIcon {:size 36}]
-                                "Running" [comps/RunningIcon {:size 36}]
-                                "Exception" [comps/ExceptionIcon {:size 36}])
-                        :color (style/color-for-status status)}] 
-    [comps/SidebarButton {:style :light :margin :top :color :button-blue
-                          :text "View attributes" :icon :document
-                          :onClick on-view-attributes}]
-    [comps/SidebarButton {:style :light :margin :top :color :button-blue
-                          :text "Clone..." :icon :plus
-                          :onClick #(swap! state assoc :cloning? true)}]
-    (when owner?
-      [comps/SidebarButton {:style :light :margin :top :color :exception-red
-                            :text "Delete" :icon :trash-can
-                            :onClick #(when (js/confirm "Are you sure?")
-                                       (swap! state assoc :deleting? true)
-                                       (react/call :delete this))}])]
-   [:div {:style {:marginLeft 330}}
-    (style/create-section-header "Workspace Owner")
-    (style/create-paragraph
-      [:div {}
-       (interpose ", " (map #(style/render-email %) (ws "owners")))
-       (when owner?
-         [:span {}
-          " ("
-          (style/create-link
-            #(swap! state assoc :editing-acl? true)
-            "Edit sharing...")
-          ")"])])]
-   (common/clear-both)])
+  (let [locked? (get-in ws ["workspace" "isLocked"])]
+    [:div {:style {:margin "45px 25px"}}
+     (when (:deleting? @state)
+       [comps/Blocker {:banner "Deleting..."}])
+     (when (contains? @state :locking?)
+       [comps/Blocker {:banner (if (:locking? @state) "Unlocking..." "Locking...")}])
+     (when (:editing-acl? @state)
+       [AclEditor {:workspace-id (:workspace-id props)
+                   :dismiss-self #(swap! state dissoc :editing-acl?)
+                   :update-owners #(swap! state update-in [:server-response :workspace] assoc "owners" %)}])
+     (when (:cloning? @state)
+       [WorkspaceCloner {:dismiss #(swap! state dissoc :cloning?)
+                         :workspace-id (:workspace-id props)}])
+     [:div {:style {:float "left" :width 290 :marginRight 40}}
+      ;; TODO - make the width of the float-left dynamic
+      [comps/StatusLabel {:text (capitalize (name status))
+                          :icon (case status
+                                  "Complete" [comps/CompleteIcon {:size 36}]
+                                  "Running" [comps/RunningIcon {:size 36}]
+                                  "Exception" [comps/ExceptionIcon {:size 36}])
+                          :color (style/color-for-status status)}]
+      [comps/SidebarButton {:style :light :margin :top :color :button-blue
+                            :text "View attributes" :icon :document
+                            :onClick on-view-attributes}]
+      [comps/SidebarButton {:style :light :margin :top :color :button-blue
+                            :text "Clone..." :icon :plus
+                            :onClick #(swap! state assoc :cloning? true)}]
+      (when owner?
+        [comps/SidebarButton {:style :light :margin :top :color :button-blue
+                              :text (if locked? "Unlock" "Lock") :icon :locked
+                              :onClick #(react/call :lock-or-unlock this locked?)}])
+      (when owner?
+        [comps/SidebarButton {:style :light :margin :top :color :exception-red
+                              :text "Delete" :icon :trash-can
+                              :disabled? (if locked? "This workspace is locked")
+                              :onClick #(when (js/confirm "Are you sure?")
+                                         (swap! state assoc :deleting? true)
+                                         (react/call :delete this))}])]
+     [:div {:style {:marginLeft 330}}
+      (style/create-section-header "Workspace Owner")
+      (style/create-paragraph
+        [:div {}
+         (interpose ", " (map #(style/render-email %) (ws "owners")))
+         (when owner?
+           [:span {}
+            " ("
+            (style/create-link
+              #(swap! state assoc :editing-acl? true)
+              "Sharing...")
+            ")"])])]
+     (common/clear-both)]))
 
 (react/defc Summary
   {:get-initial-state
@@ -107,6 +115,17 @@
                    (if success?
                      ((:on-delete props))
                      (js/alert (str "Error on delete: " status-text))))}))
+   :lock-or-unlock
+   (fn [{:keys [props state]} locked-now?]
+     (swap! state assoc :locking? locked-now?)
+     (endpoints/call-ajax-orch
+       {:endpoint (endpoints/lock-or-unlock-workspace (:workspace-id props) locked-now?)
+        :on-done (fn [{:keys [success? status-text status-code]}]
+                   (when-not success?
+                     (if (and (= status-code 409) (not locked-now?))
+                       (js/alert "Could not lock workspace, one or more analyses are currently running")
+                       (js/alert (str "Error: " status-text))))
+                   (swap! state #(if success? (dissoc % :locking? :server-response) (dissoc % :locking?))))}))
    :component-did-mount
    (fn [{:keys [this]}]
      (react/call :load-workspace this))
