@@ -69,8 +69,7 @@
                        (style/create-link
                         #(swap! state assoc :selected-workflow {:id (x "workflowId") :name n})
                         n)))}
-                  {:header "Last Changed" :starting-width 280
-                   :content-renderer moncommon/render-date :filter-by moncommon/render-date}
+                  {:header "Last Changed" :starting-width 280 :as-text moncommon/render-date}
                   {:header "Status" :starting-width 120
                    :content-renderer (fn [status]
                                        [:div {}
@@ -91,7 +90,7 @@
                       (row "workflowId")])
                    (filter-workflows (:active-filter @state) (:workflows props)))}]])
    :render-workflow-details
-   (fn [{:keys [props state]}]
+   (fn [{:keys [state]}]
      [:div {}
       [:div {}
        (style/create-link

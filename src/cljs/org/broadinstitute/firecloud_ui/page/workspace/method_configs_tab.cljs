@@ -12,16 +12,6 @@
     ))
 
 
-(defn- render-map [m keys labels]
-  [:div {}
-   (map-indexed
-     (fn [i k]
-       [:div {}
-        [:span {:style {:fontWeight 200}} (str (labels i) ": ")]
-        [:span {:style {:fontweight 500}} (get m k)]])
-     keys)])
-
-
 (react/defc MethodConfigurationsList
   {:render
    (fn [{:keys [props state]}]
@@ -55,19 +45,23 @@
            [table/Table
             {:empty-message "There are no method configurations to display."
              :columns
-             [{:header "Name" :starting-width 240 :sort-by #(% "name") :filter-by #(% "name")
+             [{:header "Name" :starting-width 240 :as-text #(% "name") :sort-by :text
                :content-renderer
                (fn [config]
                  (style/create-link
                    #((:on-config-selected props) config)
                    (config "name")))}
               {:header "Root Entity Type" :starting-width 140}
-              {:header "Method" :starting-width 300 :sort-by :none
-               :filter-by #(str (% "methodNamespace") (% "methodName") (% "methodVersion"))
-               :content-renderer
-               #(render-map %
-                 ["methodNamespace" "methodName" "methodVersion"]
-                 ["Namespace" "Name" "Version"])}]
+              (let [to-list (fn [method] (mapv #(method %) ["methodNamespace" "methodName" "methodVersion"]))]
+                {:header "Method" :starting-width 800 :sort-by to-list
+                 :filter-by #(clojure.string/join " " (to-list %))
+                 :as-text #(clojure.string/join "/" (to-list %))
+                 :content-renderer
+                 (fn [method]
+                   [:div {}
+                    [:span {:style {:fontWeight 500}} (method "methodNamespace") "/" (method "methodName")]
+                    [:span {:style {:fontWeight 200 :marginLeft "2em"}} "Snapshot ID: "]
+                    [:span {:style {:fontWeight 500}} (method "methodVersion")]])})]
              :data (map
                      (fn [config]
                        [config

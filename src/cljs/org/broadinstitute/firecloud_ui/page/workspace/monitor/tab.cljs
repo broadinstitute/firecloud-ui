@@ -18,8 +18,8 @@
   [table/Table
    {:empty-message "There are no analyses to display."
     :columns
-    [{:header "Date" :starting-width 200
-      :sort-by #(% "submissionDate") :filter-by #(render-date %)
+    [{:header "Date" :starting-width 200 :as-text render-date
+      :sort-by #(% "submissionDate")
       :sort-initial :desc
       :content-renderer (fn [submission]
                           (style/create-link
