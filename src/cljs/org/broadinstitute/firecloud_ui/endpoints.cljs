@@ -309,9 +309,26 @@
               "/workflows/" workflow-id)
    :method :get
    :mock-data
-   {:calls {}
+   {:calls {"CancerExomePipeline_v2.M2" [{"executionStatus" "Failed"
+                                          "stdout" "gs://rawls-e7d5008e-bb56-4966-8580-be5004cb7a00/c4e8460c-a158-4498-ab64-b6c7c36498b2/CancerExomePipeline_v2/394d93f4-a150-45f2-b864-c35e97f9df6a/call-M2/job.stdout.txt"
+                                          "backendStatus" "Success"
+                                          "outputs" {}
+                                          "inputs" {"ref_fasta" "gs://cancer-exome-pipeline-demo-data/Homo_sapiens_assembly19.fasta"
+                                                    "tumor_bai" "gs://cancer-exome-pipeline-demo-data/HCC1143_BL.100_gene_250bp_pad.bai"
+                                                    "tumor_bam" "gs://cancer-exome-pipeline-demo-data/HCC1143_BL.100_gene_250bp_pad.bam"
+                                                    "intervals" "gs://cancer-exome-pipeline-demo-data/panel_100_genes.interval_list"
+                                                    "m2_output_vcf_name" "mutations.vcf"
+                                                    "ref_fasta_fai" "gs://cancer-exome-pipeline-demo-data/Homo_sapiens_assembly19.fasta.fai"
+                                                    "normal_bam" "gs://cancer-exome-pipeline-demo-data/HCC1143.100_gene_250bp_pad.bam"
+                                                    "normal_bai" "gs://cancer-exome-pipeline-demo-data/HCC1143.100_gene_250bp_pad.bai"
+                                                    "ref_fasta_dict" "gs://cancer-exome-pipeline-demo-data/Homo_sapiens_assembly19.dict"}
+                                          "jobId" "Some(operations/EM7aqseEKhix2bqUu638rPYBIMO73rS7FyoKcHJvZHVjdGlvbg)"
+                                          "backend" "JES"
+                                          "end" "2015-10-08T19:30:16.000Z"
+                                          "stderr" "gs://rawls-e7d5008e-bb56-4966-8580-be5004cb7a00/c4e8460c-a158-4498-ab64-b6c7c36498b2/CancerExomePipeline_v2/394d93f4-a150-45f2-b864-c35e97f9df6a/call-M2/job.stderr.txt"
+                                          "start" "2015-10-08T19:25:50.000Z"}]}
     :outputs {}
-    :id "ea6a0b29-7770-4da7-8c45-5eea925d424c"
+    :id workflow-id
     :inputs {"CancerExomePipeline_v2.M2.intervals" "gs://cancer-exome-pipeline-demo-data/panel_100_genes.interval_list"
              "CancerExomePipeline_v2.M2.tumor_bam" "gs://cancer-exome-pipeline-demo-data/HCC1143_BL.100_gene_250bp_pad.bam"
              "CancerExomePipeline_v2.M2.normal_bam" "gs://cancer-exome-pipeline-demo-data/HCC1143.100_gene_250bp_pad.bam"
@@ -321,9 +338,10 @@
              "CancerExomePipeline_v2.M2.ref_fasta" "gs://cancer-exome-pipeline-demo-data/Homo_sapiens_assembly19.fasta"
              "CancerExomePipeline_v2.M2.ref_fasta_fai" "gs://cancer-exome-pipeline-demo-data/Homo_sapiens_assembly19.fasta.fai"
              "CancerExomePipeline_v2.M2.m2_output_vcf_name" "mutations.vcf"}
-    :submission "2015-09-28T15:55:42.000Z"
-    :status "Running"
-    :start "2015-09-28T15:55:42.000Z"}})
+    :submission (utils/rand-recent-time)
+    :status (rand-nth ["Succeeded" "Submitted" "Running" "Failed" "Aborted" "Unknown"])
+    :start (utils/rand-recent-time)
+    :end (rand-nth [(utils/rand-recent-time) nil])}})
 
 (defn abort-submission [workspace-id submission-id]
   {:path (str "/workspaces/" (ws-path workspace-id) "/submissions/" submission-id)
