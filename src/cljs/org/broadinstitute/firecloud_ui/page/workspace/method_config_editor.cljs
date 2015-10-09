@@ -8,11 +8,14 @@
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
     [org.broadinstitute.firecloud-ui.page.workspace.launch-analysis :as launch]
+    [org.broadinstitute.firecloud-ui.utils :as utils]
     ))
 
 
 (defn- filter-empty [list]
   (vec (remove blank? (map trim list))))
+
+
 
 
 (defn- create-section-header [text]
@@ -55,20 +58,35 @@
                                         (when-not success?
                                           (js/alert (str "Exception:\n" (.-statusText xhr)))))})))))})))
 
+(react/defc MethodDetailsViewer
+  {:render
+   (fn [{:keys [state refs]}]
+     [:div {:style {:marginRight "20%"}}
+      (cond
+        (:loaded-method @state)
+        [:div {}
+         [comps/EntityDetails
+          {:entity (:loaded-method @state)}]]
+        (:error @state) (style/create-server-error-message (:error @state))
+        :else [:div {}[comps/Spinner {:text "Loading method details..."}]])])
+   :component-did-mount
+   (fn [{:keys [props state]}]
+     (endpoints/call-ajax-orch
+       {:endpoint (endpoints/get-agora-method
+                    (:namespace props)
+                    (:name props)
+                    (:snapshotId props))
+        :headers {"Content-Type" "application/json"}
+        :on-done (fn [{:keys [success? get-parsed-response status-text]}]
+                   (if success?
+                     (swap! state assoc :loaded-method (get-parsed-response))
+                     (swap! state assoc :error status-text)))}))})
+
 (defn- render-top-bar [config]
-  [:div {:style {:backgroundColor (:background-gray style/colors)
-                 :borderRadius 8 :border (str "1px solid " (:line-gray style/colors))
-                 :padding "1em"}}
-   [:div {:style {:float "left" :width "33.33%" :textAlign "left"}}
-    [:span {:style {:fontWeight 500 :padding "0 0.5em"}} "Method Namespace:"]
-    [:span {} (get-in config ["methodRepoMethod" "methodNamespace"])]]
-   [:div {:style {:float "left" :width "33.33%" :textAlign "center"}}
-    [:span {:style {:fontWeight 500 :padding "0 0.5em"}} "Method Name:"]
-    [:span {} (get-in config ["methodRepoMethod" "methodName"])]]
-   [:div {:style {:float "left" :width "33.33%" :textAlign "right"}}
-    [:span {:style {:fontWeight 500 :padding "0 0.5em"}} "Method Version:"]
-    [:span {} (get-in config ["methodRepoMethod" "methodVersion"])]]
-   (clear-both)])
+  [MethodDetailsViewer
+   {:name (get-in config ["methodRepoMethod" "methodName"])
+    :namespace (get-in config ["methodRepoMethod" "methodNamespace"])
+    :snapshotId (get-in config ["methodRepoMethod" "methodVersion"])}])
 
 (react/defc DeleteButton
   {:rm-mc (fn [{:keys [props state]}]
@@ -197,35 +215,42 @@
         [:div {:style {:float "left" :display (when editing? "none") :padding "0.5em 0 1em 0"}}
          (get (config value-type) key)
          (validation-status (contains? invalid-values key))]
-        [:div {:style {:float "left" :display (when-not editing? "none")}}
-         (if (= value-type "inputs")
-           (style/create-text-field {:ref (str "in_" key)
-                                     :defaultValue (get (config value-type) key)})
-           (style/create-text-field {:ref (str "out_" key)
-                                     :defaultValue (get (config value-type) key)}))]
-        (clear-both)
-        [:div {:style {:marginRight "1em" :padding "0.5em" :marginBottom "0.5em"
-                       :backgroundColor (:exception-red style/colors)
-                       :display (if-not (contains? invalid-values key) "none")
-                       :width 450
-                       :border (str "1px solid " (:line-gray style/colors)) :borderRadius 2}}
-         (get invalid-values key)]])]))
+        [:div {}
+         [:div {:style {:float "left" :display (when-not editing? "none")}}
+          (if (= value-type "inputs")
+            (style/create-text-field {:ref (str "in_" key)
+                                      :defaultValue (get (config value-type) key)})
+            (style/create-text-field {:ref (str "out_" key)
+                                      :defaultValue (get (config value-type) key)}))]
+         (clear-both)
+         [:div {:style {:marginRight "1em" :padding "0.5em" :marginBottom "0.5em"
+                        :backgroundColor (:exception-red style/colors)
+                        :display (if-not (contains? invalid-values key) "none")
+                        :width 450
+                        :border (str "1px solid " (:line-gray style/colors)) :borderRadius 2}}
+          (get invalid-values key)]]])]))
+
+
+
 
 (defn- render-main-display [wrapped-config editing?]
   (let [config (get-in wrapped-config ["methodConfiguration"])
         invalid-inputs (get-in wrapped-config ["invalidInputs"])
         invalid-outputs (get-in wrapped-config ["invalidOutputs"])]
-    [:div {:style {:marginLeft 330}}
-     (create-section-header "Method Configuration Name")
-     (create-section
-       [:div {:style {:display (when editing? "none") :padding "0.5em 0 1em 0"}}
-        (config "name")]
-       [:div {:style {:display (when-not editing? "none")}}
-        (style/create-text-field {:ref "confname" :defaultValue (config "name")})])
-     (create-section-header "Inputs")
-     (input-output-list config "inputs" invalid-inputs editing?)
-     (create-section-header "Outputs")
-     (input-output-list config "outputs" invalid-outputs editing?)]))
+    [:div {}
+     [:div {:style {:marginLeft 330}}
+
+      (create-section-header "Method Configuration Name")
+      (create-section
+        [:div {:style {:display (when editing? "none") :padding "0.5em 0 1em 0"}}
+         (config "name")]
+        [:div {:style {:display (when-not editing? "none")}}
+         (style/create-text-field {:ref "confname" :defaultValue (config "name")})])
+      (create-section-header "Inputs")
+      (input-output-list config "inputs" invalid-inputs editing?)
+      (create-section-header "Outputs")
+      (input-output-list config "outputs" invalid-outputs editing?)]]))
+
 
 (defn- render-display [state refs wrapped-config editing? props]
   (let [config (get-in wrapped-config ["methodConfiguration"])]
