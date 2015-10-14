@@ -114,9 +114,9 @@
        {:name (str "Configuration " (inc i))
         :namespace (rand-nth ["Broad" "nci" "public"])
         :rootEntityType "Task"
-        :methodStoreMethod {:methodNamespace (str "ms_ns_" (inc i))
-                            :methodName (str "ms_n_" (inc i))
-                            :methodVersion (str "ms_v_" (inc i))}
+        :methodRepoMethod {:methodNamespace (rand-nth ["Broad" "nci" "public"])
+                           :methodName (rand-nth ["foo" "bar" "baz"])
+                           :methodVersion (rand-int 50)}
         ;; Real data doesn't have the following fields, but for mock data we carry the same
         ;; objects around, so initialize them here for convenience
         :inputs {"Input 1" "[some value]"
@@ -234,7 +234,8 @@
    (map
      (fn [i]
        {:workspaceName workspace-id
-        :methodConfigurationNamespace "my_test_configs"
+        :methodConfigurationNamespace (rand-nth ["Broad" "nci" "public"])
+        :methodConfigurationName (str "test_config" (inc i))
         :submissionDate (utils/rand-recent-time)
         :submissionId "46bfd579-b1d7-4f92-aab0-e44dd092b52a"
         :notstarted []
@@ -245,7 +246,6 @@
                                       :entityName "sample_01"}
                      :status "Succeeded"
                      :workflowId "97adf170-ee40-40a5-9539-76b72802e124"}]
-        :methodConfigurationName (str "test_config" (inc i))
         :status (rand-nth ["Submitted" "Done"])
         :submissionEntity {:entityType "sample"
                            :entityName (str "sample_" (inc i))}

@@ -52,21 +52,18 @@
                    #((:on-config-selected props) config)
                    (config "name")))}
               {:header "Root Entity Type" :starting-width 140}
-              (let [to-list (fn [method] (mapv #(method %) ["methodNamespace" "methodName" "methodVersion"]))]
-                {:header "Method" :starting-width 800 :sort-by to-list
-                 :filter-by #(clojure.string/join " " (to-list %))
-                 :as-text #(clojure.string/join "/" (to-list %))
-                 :content-renderer
-                 (fn [method]
-                   [:div {}
-                    [:span {:style {:fontWeight 500}} (method "methodNamespace") "/" (method "methodName")]
-                    [:span {:style {:fontWeight 200 :marginLeft "2em"}} "Snapshot ID: "]
-                    [:span {:style {:fontWeight 500}} (method "methodVersion")]])})]
+              {:header "Method" :starting-width 800
+               :content-renderer
+               (fn [[namespace name snapshot-id]]
+                 [:div {}
+                  [:span {:style {:fontWeight 500}} namespace "/" name]
+                  [:span {:style {:fontWeight 200 :marginLeft "2em"}} "Snapshot ID: "]
+                  [:span {:style {:fontWeight 500}} snapshot-id]])}]
              :data (map
                      (fn [config]
                        [config
                         (config "rootEntityType")
-                        (config "methodRepoMethod")])
+                        (mapv #(get-in config ["methodRepoMethod" %]) ["methodNamespace" "methodName" "methodVersion"])])
                      configs)}]]))])
    :component-did-mount
    (fn [{:keys [this]}]

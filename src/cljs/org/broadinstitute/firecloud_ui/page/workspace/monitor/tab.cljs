@@ -26,12 +26,14 @@
                             #(on-submission-clicked (submission "submissionId"))
                             (render-date submission)))}
      {:header "Status"}
-     {:header "Method Configuration" :starting-width 220}
+     {:header "Method Configuration" :starting-width 220
+      :content-renderer (fn [[namespace name]]
+                          [:div {} namespace "/" name])}
      {:header "Data Entity" :starting-width 220}]
     :data (map (fn [x]
                  [x
                   (x "status")
-                  (str (x "methodConfigurationNamespace") ":" (x "methodConfigurationName"))
+                  [(x "methodConfigurationNamespace") (x "methodConfigurationName")]
                   (str (get-in x ["submissionEntity" "entityName"])
                        " (" (get-in x ["submissionEntity" "entityType"]) ")")])
                submissions)}])
