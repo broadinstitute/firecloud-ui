@@ -1,4 +1,4 @@
-(ns org.broadinstitute.firecloud-ui.page.workspace.submission-details
+(ns org.broadinstitute.firecloud-ui.page.workspace.monitor.submission-details
   (:require
     [dmohs.react :as react]
     [org.broadinstitute.firecloud-ui.common :as common]
@@ -6,6 +6,8 @@
     [org.broadinstitute.firecloud-ui.common.icons :as icons]
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.common.table :as table]
+    [org.broadinstitute.firecloud-ui.page.workspace.monitor.common :as moncommon]
+    [org.broadinstitute.firecloud-ui.page.workspace.monitor.workflow-details :as workflow-details]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
     ))
 
@@ -24,21 +26,6 @@
         (all-success? submission) [comps/CompleteIcon {:size 36}]
         :else [comps/ExceptionIcon {:size 36}]))
 
-(defn- icon-for-wf-status [status]
-  (cond (= "Succeeded" status)
-        (icons/font-icon {:style {:color (:success-green style/colors)
-                                  :fontSize 12 :marginRight 4}}
-          :status-done)
-        (or (= "Running" status) (= "Submitted" status))
-        [:span {:style {:backgroundColor (:running-blue style/colors) :position "relative"
-                        :width 16 :height 16 :display "inline-block" :borderRadius 3
-                        :verticalAlign "middle" :marginTop -4 :marginRight 4}}
-         (style/center {} [comps/RunningIcon {:size 12}])]
-        :else
-        [:span {:style {:backgroundColor (:exception-red style/colors) :position "relative"
-                        :width 16 :height 16 :display "inline-block" :borderRadius 3
-                        :verticalAlign "middle" :marginTop -4 :marginRight 4}}
-         (style/center {} [comps/ExceptionIcon {:size 12}])]))
 
 (defn- filter-workflows [f wfs]
   (filter (fn [wf]
@@ -49,85 +36,6 @@
               (contains? #{"Failed" "Aborted" "Unknown"} (wf "status"))))
     wfs))
 
-(defn- render-date [date]
-  (let [m (js/moment date)]
-    (str (.format m "L [at] LTS") " (" (.fromNow m) ")")))
-
-(defn- create-field [label & contents]
-  [:div {:style {:paddingBottom "0.25em"}}
-   [:div {:style {:display "inline-block" :width 100}} (str label ":")]
-   contents])
-
-(react/defc IODetail
-  {:get-initial-state
-   (fn []
-     {:expanded false})
-   :render
-   (fn [{:keys [props state]}]
-     [:div {}
-      (create-field
-        (:label props)
-        (if (empty? (:data props))
-          "None"
-          (style/create-link
-            #(swap! state assoc :expanded (not (:expanded @state)))
-            (if (:expanded @state) "Hide" "Show"))))
-      (when (:expanded @state)
-        [:div {:style {:padding "0.25em 0 0.25em 1em"}}
-         (for [[k v] (:data props)]
-           [:div {} k [:span {:style {:margin "0 1em"}} "→"] v])])])})
-
-(react/defc CallDetail
-  {:get-initial-state
-   (fn []
-     {:expanded false})
-   :render
-   (fn [{:keys [props state]}]
-     [:div {:style {:marginTop "1em"}}
-      [:div {:style {:display "inline-block" :marginRight "1em"}} (:label props)]
-      (style/create-link
-        #(swap! state assoc :expanded (not (:expanded @state)))
-        (if (:expanded @state) "Hide" "Show"))
-      (when (:expanded @state)
-        (map-indexed
-          (fn [index data]
-            (org.broadinstitute.firecloud-ui.utils/jslog data)
-            [:div {:style {:padding "0.5em 0 0 0.5em"}}
-             [:div {:style {:paddingBottom "0.25em"}} (str "Call #" (inc index) ":")]
-             [:div {:style {:paddingLeft "0.5em"}}
-              (create-field "ID" (data "jobId"))
-              (let [status (data "executionStatus")]
-                (create-field "Status" (icon-for-wf-status status) status))
-              (create-field "Started" (render-date (data "start")))
-              (create-field "Ended" (render-date (data "end")))
-              (create-field "stdout" [:a {:href (common/gcs-uri->download-url (data "stdout"))
-                                          :target "_blank" :download "stdout"}
-                                      "Click to download"])
-              (create-field "stderr" [:a {:href (common/gcs-uri->download-url (data "stderr"))
-                                          :target "_blank" :download "stderr"}
-                                      "Click to download"])
-              [IODetail {:label "Inputs" :data (data "inputs")}]
-              [IODetail {:label "Outputs" :data (data "outputs")}]]])
-          (:data props)))])})
-
-(defn- render-workflow-detail [workflow]
-  [:div {:style {:padding "1em" :border (str "1px solid " (:line-gray style/colors)) :borderRadius 4
-                 :backgroundColor (:background-gray style/colors)}}
-   [:div {}
-    (create-field "Workflow ID" (workflow "id"))
-    (let [status (workflow "status")]
-      (create-field "Status" (icon-for-wf-status status) status))
-    (when (workflow "submission")
-      (create-field "Submitted" (render-date (workflow "submission"))))
-    (when (workflow "start")
-      (create-field "Started" (render-date (workflow "start"))))
-    (when (workflow "end")
-      (create-field "Ended" (render-date (workflow "end"))))
-    [IODetail {:label "Inputs" :data (workflow "inputs")}]
-    [IODetail {:label "Outputs" :data (workflow "outputs")}]]
-   [:div {:style {:marginTop "1em" :fontWeight 500}} "Calls:"]
-   (for [[call data] (workflow "calls")]
-     [CallDetail {:label call :data data}])])
 
 (react/defc WorkflowsTable
   {:get-initial-state
@@ -138,18 +46,6 @@
      (if (:selected-workflow @state)
        (react/call :render-workflow-details this)
        (react/call :render-table this)))
-   :component-did-update
-   (fn [{:keys [props prev-state state]}]
-     (when (and (nil? (:selected-workflow prev-state))
-                (:selected-workflow @state))
-       (endpoints/call-ajax-orch
-        {:endpoint
-         (endpoints/get-workflow-details
-          (:workspace-id props) (:submission-id props) (:id (:selected-workflow @state)))
-         :on-done (fn [{:keys [success? get-parsed-response status-text]}]
-                    (swap! state update-in [:selected-workflow]
-                      assoc :server-response {:success? success?
-                                              :response (if success? (get-parsed-response) status-text)}))})))
    :render-table
    (fn [{:keys [props state]}]
      [:div {}
@@ -174,11 +70,11 @@
                         #(swap! state assoc :selected-workflow {:id (x "workflowId") :name n})
                         n)))}
                   {:header "Last Changed" :starting-width 280
-                   :content-renderer render-date :filter-by render-date}
+                   :content-renderer moncommon/render-date :filter-by moncommon/render-date}
                   {:header "Status" :starting-width 120
                    :content-renderer (fn [status]
                                        [:div {}
-                                        (icon-for-wf-status status)
+                                        (moncommon/icon-for-wf-status status)
                                         status])}
                   {:header "Messages" :starting-width 300
                    :content-renderer (fn [message-list]
@@ -195,7 +91,7 @@
                       (row "workflowId")])
                    (filter-workflows (:active-filter @state) (:workflows props)))}]])
    :render-workflow-details
-   (fn [{:keys [state]}]
+   (fn [{:keys [props state]}]
      [:div {}
       [:div {}
        (style/create-link
@@ -204,14 +100,9 @@
        (icons/font-icon {:style {:verticalAlign "middle" :margin "0 1ex 0 1ex"}} :angle-right)
        [:b {} (:name (:selected-workflow @state))]]
       [:div {:style {:marginTop "1em"}}
-       (let [server-response (:server-response (:selected-workflow @state))]
-         (cond
-           (nil? server-response)
-           [:div {} [comps/Spinner {:text "Loading workflow details..."}]]
-           (not (:success? server-response))
-           (style/create-server-error-message (:response server-response))
-           :else
-           (render-workflow-detail (:response server-response))))]])})
+       (workflow-details/render
+        (merge (select-keys props [:workspace-id :submission-id])
+               {:workflow-id (get-in @state [:selected-workflow :id])}))]])})
 
 
 (react/defc WorkflowFailuresTable

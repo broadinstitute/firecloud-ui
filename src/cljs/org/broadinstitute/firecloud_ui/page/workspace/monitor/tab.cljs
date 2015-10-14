@@ -1,4 +1,4 @@
-(ns org.broadinstitute.firecloud-ui.page.workspace.monitor-tab
+(ns org.broadinstitute.firecloud-ui.page.workspace.monitor.tab
   (:require
     [dmohs.react :as react]
     cljsjs.moment
@@ -6,7 +6,8 @@
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.common.table :as table]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
-    [org.broadinstitute.firecloud-ui.page.workspace.submission-details :as submission-details]
+    [org.broadinstitute.firecloud-ui.page.workspace.monitor.submission-details
+     :as submission-details]
     ))
 
 
