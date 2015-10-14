@@ -71,7 +71,7 @@
                                     (:entity-map props) (first (keys (:entity-map props))))]
          [:a {:style {:textDecoration "none" :marginLeft "1ex"}
               :href (str "/service/api/workspaces/" (:namespace (:workspace-id props)) "/"
-                      (:name (:workspace-id props)) "/" selected-entity-type "/export")
+                      (:name (:workspace-id props)) "/" selected-entity-type "/tsv")
               :target "_blank"}
           "Download '" selected-entity-type "' data"])]
       (let [attribute-keys (apply union (map (fn [e] (set (keys (e "attributes")))) (:entities @state)))]
