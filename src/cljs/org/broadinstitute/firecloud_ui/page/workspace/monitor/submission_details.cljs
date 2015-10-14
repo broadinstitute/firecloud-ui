@@ -90,7 +90,7 @@
                       (row "workflowId")])
                    (filter-workflows (:active-filter @state) (:workflows props)))}]])
    :render-workflow-details
-   (fn [{:keys [state]}]
+   (fn [{:keys [state props]}]
      [:div {}
       [:div {}
        (style/create-link
