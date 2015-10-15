@@ -18,20 +18,22 @@
   [table/Table
    {:empty-message "There are no analyses to display."
     :columns
-    [{:header "Date" :starting-width 200
-      :sort-by #(% "submissionDate") :filter-by #(render-date %)
+    [{:header "Date" :starting-width 200 :as-text render-date
+      :sort-by #(% "submissionDate")
       :sort-initial :desc
       :content-renderer (fn [submission]
                           (style/create-link
                             #(on-submission-clicked (submission "submissionId"))
                             (render-date submission)))}
      {:header "Status"}
-     {:header "Method Configuration" :starting-width 220}
+     {:header "Method Configuration" :starting-width 220
+      :content-renderer (fn [[namespace name]]
+                          [:div {} namespace "/" name])}
      {:header "Data Entity" :starting-width 220}]
     :data (map (fn [x]
                  [x
                   (x "status")
-                  (str (x "methodConfigurationNamespace") ":" (x "methodConfigurationName"))
+                  [(x "methodConfigurationNamespace") (x "methodConfigurationName")]
                   (str (get-in x ["submissionEntity" "entityName"])
                        " (" (get-in x ["submissionEntity" "entityType"]) ")")])
                submissions)}])

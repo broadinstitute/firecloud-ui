@@ -156,9 +156,10 @@
                                  :desc (swap! state dissoc :sort-column :sort-order :key-fn)
                                  (assert false "bad state"))
                                (swap! state assoc :sort-column i :sort-order :asc
-                                 :key-fn (if-let [sorter (:sort-by column)]
-                                           (fn [row] (sorter (nth row i)))
-                                           (fn [row] (nth row i)))))
+                                 :key-fn (let [sort-fn (or (:sort-by column) identity)]
+                                           (if (= sort-fn :text)
+                                             (fn [row] ((:as-text column) (nth row i)))
+                                             (fn [row] (sort-fn (nth row i)))))))
                              (react/call :set-body-rows this)))
             :sortOrder (when (= i (:sort-column @state)) (:sort-order @state))})))
      (filter :showing? (:ordered-columns @state)))
@@ -193,7 +194,9 @@
             [:div {:style row-style}
              (map
                (fn [col]
-                 (let [render-content (or (:content-renderer col) (fn [data] (default-render data)))]
+                 (let [render-content (or (:content-renderer col)
+                                          (:as-text col)
+                                          default-render)]
                    (render-cell
                      {:width (:width col)
                       :content (render-content (nth row (:index col)))
@@ -293,9 +296,10 @@
               (utils/matches-filter-text
                (apply str (map-indexed
                            (fn [i column]
-                             (if-let [f (:filter-by column)]
-                               (if (= f :none) "" (f (nth row i)))
-                               (str (nth row i))))
+                             (let [func (or (:filter-by column)
+                                            (:as-text column)
+                                            str)]
+                               (if (= func :none) "" (func (nth row i)))))
                            columns))
                filter-text))
             data)))
@@ -315,7 +319,7 @@
   (let [format-date #(.format (js/moment %) (or (:format props) "LLL"))]
     {:header (or (:header props) "Create Date")
      :starting-width (or (:starting-width props) 200)
-     :content-renderer format-date :filter-by format-date}))
+     :as-text format-date}))
 
 
 ;; Table component with specifiable style and column behaviors.
@@ -353,18 +357,22 @@
 ;;         The text to display.
 ;;       :starting-width (optional, default 100)
 ;;         The initial width, which may be resized
+;;       :as-text (optional)
+;;         A function from the column value to a one-line text representation.  Used as a fallback for
+;;         rendering, filtering, and sorting, and TODO: will be used for exporting tables
 ;;       :content-renderer (optional)
-;;         A function from the column value to a displayable representation.  If omitted, a
-;;         default renderer is used which displays a reasonable string for most types
+;;         A function from the column value to a displayable representation.  If omitted, :as-text is used.
+;;         If :as-text is also omitted, a default renderer is used.
 ;;       :resizable? (optional)
 ;;         Controls if the column is resizable.  If absent, falls back to the table.
-;;       :filter-by (optional, defaults to 'str')
+;;       :filter-by (optional, defaults to :as-text and then to 'str')
 ;;         A function from the column value to a string to use for matching filter text.
 ;;         Use ':filter-by :none' to disable filtering a specific column of an otherwise filterable table.
 ;;       :sort-by (optional)
 ;;         A function from the column value to a sortable type.  If present, the column is made
 ;;         sortable.  If omitted, the :sortable-columns? top-level property is checked to see if
 ;;         the column should be sortable, and if so, the column is sorted by the column type directly.
+;;         Use ':sort-by :text' to sort on the value returned by :as-text.
 ;;         Use ':sort-by :none' to disable sorting a specific column of an otherwise sortable table.
 ;;       :sort-initial (optional)
 ;;         A flag to set the initial column to sort.  Value is either :asc or :desc.  If present on multiple
