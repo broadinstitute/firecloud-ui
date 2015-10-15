@@ -74,10 +74,8 @@
               #(swap! state assoc :editing-acl? true)
               "Sharing...")
             ")"])])
-      (when-let [bucketName (get-in ws ["workspace" "bucketName"])]
-        [:div {}
-         (style/create-section-header "Google Bucket")
-         (style/create-paragraph [:div {} bucketName])])]
+      (style/create-section-header "Google Bucket")
+      (style/create-paragraph (get-in ws ["workspace" "bucketName"]))]
      (common/clear-both)]))
 
 (react/defc Summary

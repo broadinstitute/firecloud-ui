@@ -70,7 +70,7 @@
                              "Attribute2" "[some value]"
                              "Attribute3" "[some value]"}
                 :createdBy "somebody@broadinstitute.org"
-                :bucketName "unavailable"
+                :bucketName (rand-nth ["unavailable" "bucket-12345" "bucket-67890"])
                 :namespace (:namespace workspace-id)
                 :createdDate (.toISOString (js/Date.))}
     :workspaceSubmissionStats {:runningSubmissionsCount (rand-int 2)
