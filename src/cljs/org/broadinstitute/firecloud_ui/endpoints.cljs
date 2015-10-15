@@ -462,13 +462,9 @@
 (defn get-agora-method-acl [ns n sid is-conf]
   {:path (str "/" (if is-conf "configurations" "methods"  ) "/" ns "/" n "/" sid "/permissions"  )
    :method :get
-   :mock-data
-   (map (fn [i] {(str "user" ) (str "user" i)
-                 (str "roles") (rand-nth
-                                 [["Read"]
-                                  ["Read" "Write" "Create" "Redact" "Manage"]
-                                  []])})
-     (range (inc (rand-int 5))))})
+   :mock-data (map (fn [i] {:user (str "user" i "@broadinstitute.org")
+                           :accessLevel (rand-nth ["READER" "OWNER" "NO ACCESS"])})
+                (range (inc (rand-int 5))))})
 
 
 (defn persist-agora-method-acl [ent]
