@@ -51,33 +51,38 @@
 (react/defc EntitiesList
   {:get-initial-state
    (fn [{:keys [props]}]
-     {:entities (get (:entity-map props)
-                  (or (:initial-entity-type props)
-                      (first (keys (:entity-map props)))))})
+     (let [entity-type (first (:entity-types props))]
+       {:entities (filter #(= entity-type (% "entityType")) (:entity-list props))
+        :entity-type entity-type}))
    :render
-   (fn [{:keys [props state refs]}]
+   (fn [{:keys [props state]}]
      [:div {}
       [:div {:style {:padding "0 0 0.5em 1em"}}
-       (style/create-form-label "Select Entity Type")
-       (style/create-select
-         {:style {:width "50%" :minWidth 50 :maxWidth 200} :ref "filter"
-          :defaultValue (:initial-entity-type props)
-          :onChange #(let [value (common/get-text refs "filter")
-                           entities (get-in props [:entity-map value])]
-                      (swap! state assoc :entities entities :entity-type value))}
-         (keys (:entity-map props)))
-       (when-let [selected-entity-type (cond
-                                    (:entity-type @state) (:entity-type @state)
-                                    (:entity-map props) (first (keys (:entity-map props))))]
-         [:a {:style {:textDecoration "none" :marginLeft "1ex"}
-              :href (str "/service/api/workspaces/" (:namespace (:workspace-id props)) "/"
-                      (:name (:workspace-id props)) "/" selected-entity-type "/tsv")
-              :target "_blank"}
-          "Download '" selected-entity-type "' data"])]
+       [:div {:style {:textAlign "center"}}
+        [comps/FilterBar {:data (:entity-list props)
+                          :buttons (mapv (fn [key] {:text key
+                                                    :filter #(= key (% "entityType"))})
+                                     (:entity-types props))
+                          :did-filter (fn [data info]
+                                        (swap! state assoc :entities data :entity-type (:text info)))}]]]
       (let [attribute-keys (apply union (map (fn [e] (set (keys (e "attributes")))) (:entities @state)))]
         [table/Table
          {:key (:entity-type @state)
           :empty-message "There are no entities to display."
+          :toolbar (fn [built-in]
+                     [:div {}
+                      [:div {:style {:float "left"}} built-in]
+                      (when-let [selected-entity-type (:entity-type @state)]
+                        [:a {:style {:textDecoration "none" :float "left" :margin "5px 0 0 1em"}
+                             :href (str "/service/api/workspaces/" (:namespace (:workspace-id props)) "/"
+                                     (:name (:workspace-id props)) "/" selected-entity-type "/tsv")
+                             :target "_blank"}
+                         (str "Download '" selected-entity-type "' data")])
+                      [:div {:style {:float "right" :paddingRight "2em"}}
+                       [comps/Button {:text "Import Data..."
+                                      :disabled? (if (:locked? @state) "This workspace is locked")
+                                      :onClick (:show-import props)}]]
+                      (common/clear-both)])
           :columns (concat
                      [{:header "Entity Type" :starting-width 100}
                       {:header "Entity Name" :starting-width 100}]
@@ -110,17 +115,15 @@
                          [DataImporter {:dismiss #(swap! state dissoc :show-import?)
                                         :workspace-id (:workspace-id props)
                                         :reload-data-tab (fn [entity-type]
-                                                           (swap! state dissoc :entity-map)
+                                                           (swap! state dissoc :entity-list :entity-types)
                                                            (react/call :load this entity-type))}])}])
       (cond
-        (and (:entity-map @state) (contains? @state :locked?))
-        [:div {}
-         [:div {:style {:float "right" :paddingRight "2em"}}
-          [comps/Button {:text "Import Data..." :disabled? (if (:locked? @state) "This workspace is locked")
-                         :onClick #(swap! state assoc :show-import? true)}]]
-         [EntitiesList {:entity-map (:entity-map @state)
-                        :workspace-id (:workspace-id props)
-                        :initial-entity-type (:initial-entity-type @state)}]]
+        (and (:entity-list @state) (contains? @state :locked?))
+        [EntitiesList {:entity-list (:entity-list @state)
+                       :entity-types (:entity-types @state)
+                       :workspace-id (:workspace-id props)
+                       :initial-entity-type (:initial-entity-type @state)
+                       :show-import #(swap! state assoc :show-import? true)}]
         (:error @state) (style/create-server-error-message (:error @state))
         :else [:div {:style {:textAlign "center"}} [comps/Spinner {:text "Loading entities..."}]])])
    :component-did-mount
@@ -138,9 +141,11 @@
        {:endpoint (endpoints/get-entities-by-type (:workspace-id props))
         :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                    (if success?
-                     (swap! state assoc
-                       :entity-map (group-by #(% "entityType") (get-parsed-response))
-                       :initial-entity-type entity-type)
+                     (let [entities (get-parsed-response)]
+                       (swap! state assoc
+                         :entity-list entities
+                         :entity-types (distinct (map #(% "entityType") entities))
+                         :initial-entity-type entity-type))
                      (swap! state assoc :error status-text)))}))})
 
 (defn render [workspace]

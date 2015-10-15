@@ -221,62 +221,48 @@
                      (swap! state assoc :error status-text)))}))})
 
 
-(defn- get-ordered-id-fields [method]
-  (mapv #(method %) ["namespace" "name" "snapshotId"]))
-
 (react/defc Table
-  {:get-initial-state
-   (fn []
-     {:filter :all})
-   :render
+  {:render
    (fn [{:keys [props state]}]
-     (let [selected-items (case (:filter @state)
-                            :all (concat (:methods props) (:configs props))
-                            :methods-only (:methods props)
-                            :configs-only (:configs props))
-           build-button (fn [text f]
-                          {:text text
-                           :active? (= f (:filter @state))
-                           :onClick #(swap! state assoc :filter f)})]
-       [:div {}
-        [:div {:style {:textAlign "center" :paddingBottom "1em"}}
-         [comps/FilterButtons {:buttons [(build-button "All" :all)
-                                         (build-button "Methods Only" :methods-only)
-                                         (build-button "Configs Only" :configs-only)]}]]
-        [table/Table
-         {:key (gensym)
-          :empty-message (case (:filter @state)
-                           :methods-only "There are no methods available"
-                           :configs-only "There are no method configurations available"
-                           :all "There are no methods or configurations available")
-          :columns [{:header "Type" :starting-width 100}
-                    {:header "Namespace" :starting-width 150}
-                    {:header "Name" :starting-width 200 :filter-by #(% "name") :sort-by #(% "name")
-                     :content-renderer
-                     (fn [item]
-                       (style/create-link
-                         (let [func (if (= "Method" (:type item)) :on-method-selected :on-config-selected)]
-                           #((func props) (dissoc item :type)))
-                         (item "name")))}
-                    {:header "Snapshot ID" :starting-width 100}
-                    {:header "Synopsis" :starting-width 160}
-                    (table/date-column {:header "Created"})
-                    {:header "Referenced Method" :starting-width 250
-                     :filter-by #(clojure.string/join " " (get-ordered-id-fields %))
-                     :sort-by #(get-ordered-id-fields %)
-                     :content-renderer (fn [i method]
-                                         (when-not (empty? method)
-                                           (clojure.string/join " | " (get-ordered-id-fields method))))}]
-          :data (map
+     [table/Table
+      {:toolbar (fn [built-in]
+                  [:div {}
+                   [:div {:style {:float "left"}} built-in]
+                   [:div {:style {:float "left" :marginLeft "1em" :marginTop -3}}
+                    [comps/FilterBar {:data (concat (:methods props) (:configs props))
+                                      :buttons [{:text "All" :filter identity}
+                                                {:text "Methods Only" :filter #(= :method (:type %))}
+                                                {:text "Configs Only" :filter #(= :config (:type %))}]
+                                      :did-filter #(swap! state assoc :data %)}]]
+                   (common/clear-both)])
+       :columns [{:header "Type" :starting-width 100}
+                 {:header "Namespace" :starting-width 150}
+                 {:header "Name" :starting-width 200 :as-text #(% "name") :sort-by :text
+                  :content-renderer
                   (fn [item]
-                    [(item "entityType")
-                     (item "namespace")
-                     item
-                     (item "snapshotId")
-                     (item "synopsis")
-                     (item "createDate")
-                     (get item "method" {})])
-                  selected-items)}]]))})
+                    (style/create-link
+                      (let [func (if (= :method (:type item)) :on-method-selected :on-config-selected)]
+                        #((func props) (dissoc item :type)))
+                      (item "name")))}
+                 {:header "Snapshot ID" :starting-width 100}
+                 {:header "Synopsis" :starting-width 160}
+                 (table/date-column {:header "Created"})
+                 {:header "Referenced Method" :starting-width 250
+                  :content-renderer (fn [fields]
+                                      (if fields
+                                        (apply style/render-entity fields)
+                                        "N/A"))}]
+       :data (map
+               (fn [item]
+                 [(item "entityType")
+                  (item "namespace")
+                  item
+                  (item "snapshotId")
+                  (item "synopsis")
+                  (item "createDate")
+                  (when (= :config (:type item))
+                    (mapv #((get item "method" {}) %) ["namespace" "name" "snapshotId"]))])
+               (:data @state))}])})
 
 
 (react/defc MethodConfigImporter
@@ -308,11 +294,11 @@
        {:endpoint endpoints/list-configurations
         :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                    (if success?
-                     (swap! state assoc :configs-list (map #(assoc % :type "Configuration") (get-parsed-response)))
+                     (swap! state assoc :configs-list (map #(assoc % :type :config) (get-parsed-response)))
                      (swap! state assoc :error-message status-text)))})
      (endpoints/call-ajax-orch
        {:endpoint endpoints/list-methods
         :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                    (if success?
-                     (swap! state assoc :methods-list (map #(assoc % :type "Method") (get-parsed-response)))
+                     (swap! state assoc :methods-list (map #(assoc % :type :method) (get-parsed-response)))
                      (swap! state assoc :error-message status-text)))}))})

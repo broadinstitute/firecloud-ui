@@ -96,3 +96,9 @@
     [:div {:style {:display "inline-block"}}
      [:span {:style {:fontWeight 600}} (nth tokens 0)]
      [:span {:style {:fontweight 300}} (str "@" (nth tokens 1))]]))
+
+(defn render-entity [namespace name snapshot-id]
+  [:div {}
+   [:span {:style {:fontWeight 500}} namespace "/" name]
+   [:span {:style {:fontWeight 200 :paddingLeft "1em"}} "Snapshot ID: "]
+   [:span {:style {:fontWeight 500}} snapshot-id]])
