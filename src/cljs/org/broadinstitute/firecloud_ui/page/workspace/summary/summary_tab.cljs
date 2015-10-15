@@ -73,7 +73,11 @@
             (style/create-link
               #(swap! state assoc :editing-acl? true)
               "Sharing...")
-            ")"])])]
+            ")"])])
+      (when-let [bucketName (get-in ws ["workspace" "bucketName"])]
+        [:div {}
+         (style/create-section-header "Google Bucket")
+         (style/create-paragraph [:div {} bucketName])])]
      (common/clear-both)]))
 
 (react/defc Summary
