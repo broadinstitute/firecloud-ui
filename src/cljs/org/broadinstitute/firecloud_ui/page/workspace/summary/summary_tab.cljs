@@ -73,7 +73,9 @@
             (style/create-link
               #(swap! state assoc :editing-acl? true)
               "Sharing...")
-            ")"])])]
+            ")"])])
+      (style/create-section-header "Google Bucket")
+      (style/create-paragraph (get-in ws ["workspace" "bucketName"]))]
      (common/clear-both)]))
 
 (react/defc Summary
