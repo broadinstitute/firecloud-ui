@@ -113,7 +113,7 @@
      (fn [i]
        {:name (str "Configuration " (inc i))
         :namespace (rand-nth ["Broad" "nci" "public"])
-        :rootEntityType "Task"
+        :rootEntityType (rand-nth ["sample" "participant"])
         :methodRepoMethod {:methodNamespace (rand-nth ["Broad" "nci" "public"])
                            :methodName (rand-nth ["foo" "bar" "baz"])
                            :methodVersion (rand-int 50)}
@@ -145,7 +145,7 @@
    :mock-data
    {:methodConfiguration {:name (str (config "name"))
                           :namespace (rand-nth ["Broad" "nci" "public"])
-                          :rootEntityType "Task"
+                          :rootEntityType (rand-nth ["sample" "participant"])
                           :methodRepoMethod {:methodNamespace (str (config "namespace"))
                                              :methodName (str (config "name"))
                                              :methodVersion (str "ms_v_1")}
@@ -180,7 +180,7 @@
    :mock-data
    {:methodConfiguration {:name (str (config "name"))
                           :namespace (rand-nth ["Broad" "nci" "public"])
-                          :rootEntityType "Task"
+                          :rootEntityType (rand-nth ["sample" "participant"])
                           :methodRepoMethod {:methodNamespace (str (config "namespace"))
                                              :methodName (str (config "name"))
                                              :methodVersion (str "ms_v_1")}

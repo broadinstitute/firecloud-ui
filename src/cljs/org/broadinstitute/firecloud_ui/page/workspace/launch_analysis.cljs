@@ -52,68 +52,58 @@
        (js/alert "Please select an entity.")))})
 
 
-(defn- render-table [entities filter selected-entity on-entity-selected]
-  (let [attribute-keys (apply union (map (fn [e] (set (keys (e "attributes")))) entities))]
-    [table/Table
-     {:key filter
-      :empty-message "No entities available."
-      :columns (concat
-                [{:header "" :starting-width 40 :resizable? false :reorderable? false
-                  :sort-by :none :filter-by :none
-                  :content-renderer (fn [data]
-                                      [:input {:type "radio"
-                                               :checked (identical? data selected-entity)
-                                               :onChange #(on-entity-selected data)}])}
-                 {:header "Entity Type" :starting-width 100}
-                 {:header "Entity Name" :starting-width 100}]
-                (map (fn [k] {:header k :starting-width 100}) attribute-keys))
-      :data (map (fn [m]
-                   (concat
-                    [m
-                     (m "entityType")
-                     (m "name")]
-                    (map (fn [k] (get-in m ["attributes" k])) attribute-keys)))
-                 entities)}]))
-
-
-(defn render-form [entities state refs props]
-  (let [entity-map (group-by #(% "entityType") entities)
-        filter (or (:filter @state) (:root-entity-type props) "Sample")
-        filtered-entities (entity-map filter)
-        selected-entity (or (:selected-entity @state) (first filtered-entities))]
-    [:div {:style {:padding "22px 48px 40px" :backgroundColor (:background-gray style/colors)}}
-     (if (:launch-result @state)
-       [:div {}
-        (if (:launch-exception @state)
-          (icons/font-icon {:style {:fontSize "200%" :color (:exception-red style/colors)}}
-                           :status-warning-triangle)
-          (icons/font-icon {:style {:fontSize "200%" :color (:success-green style/colors)}}
-                           :status-done))
-        [:pre {} (.stringify js/JSON (.parse js/JSON (:launch-result @state)) nil 2)]]
-       [:div {}
-        (style/create-form-label "Select Entity Type")
-        (style/create-select
-         {:style {:width "50%" :minWidth 50 :maxWidth 200} :ref "filter"
-          :defaultValue (or (:root-entity-type props) "Sample")
-          :onChange #(let [value (common/get-text refs "filter")]
-                       (swap! state assoc :filter value))}
-         (keys entity-map))
-        (style/create-form-label "Select Entity")
-        [:div {:style {:backgroundColor "#fff" :border (str "1px solid " (:line-gray style/colors))
-                       :padding "1em" :marginBottom "0.5em"}}
-         (render-table filtered-entities filter selected-entity
-                       #(swap! state assoc :selected-entity %))]
-        (style/create-form-label "Define Expression")
-        (style/create-text-field {:placeholder "leave blank for default"
-                                  :value (:expression @state)
-                                  :onChange #(swap! state assoc :expression (-> % .-target .-value))})
-        [LaunchButton (merge props {:entity-id (when selected-entity (entity->id selected-entity))
-                                    :expression (:expression @state)})]])]))
+(react/defc LaunchForm
+  {:get-initial-state
+   (fn [{:keys [props]}]
+     (let [types (:entity-types props)
+           root (:root-entity-type props)]
+       (if (contains? (set types) root)
+         {:ordered-buttons (cons root (remove #(= % root) types))
+          :selected-entity (first (filter #(= root (% "entityType")) (:entities props)))}
+         {:ordered-buttons types})))
+   :render
+   (fn [{:keys [props state]}]
+     [:div {:style {:padding "22px 48px 40px" :backgroundColor (:background-gray style/colors)}}
+      (style/create-form-label "Select Entity")
+      [:div {:style {:backgroundColor "#fff" :border (str "1px solid " (:line-gray style/colors))
+                     :padding "1em" :marginBottom "0.5em"}}
+       [:div {:style {:textAlign "center" :marginBottom "0.5em"}}
+        [comps/FilterBar {:data (:entities props)
+                          :buttons (mapv (fn [key] {:text key
+                                                    :filter #(= key (% "entityType"))})
+                                     (:ordered-buttons @state))
+                          :did-filter #(swap! state assoc :filtered-entities %)}]]
+       (let [attribute-keys (apply union (map #(set (keys (% "attributes"))) (:filtered-entities @state)))]
+         [table/Table
+          {:empty-message "No entities available."
+           :columns (concat
+                      [{:header "" :starting-width 40 :resizable? false :reorderable? false
+                        :sort-by :none :filter-by :none
+                        :content-renderer (fn [data]
+                                            [:input {:type "radio"
+                                                     :checked (identical? data (:selected-entity @state))
+                                                     :onChange #(swap! state assoc :selected-entity data)}])}
+                       {:header "Entity Type" :starting-width 100}
+                       {:header "Entity Name" :starting-width 100}]
+                      (map (fn [k] {:header k :starting-width 100}) attribute-keys))
+           :data (map (fn [m]
+                        (concat
+                          [m
+                           (m "entityType")
+                           (m "name")]
+                          (map (fn [k] (get-in m ["attributes" k])) attribute-keys)))
+                   (:filtered-entities @state))}])]
+      (style/create-form-label "Define Expression")
+      (style/create-text-field {:placeholder "leave blank for default"
+                                :value (:expression @state)
+                                :onChange #(swap! state assoc :expression (-> % .-target .-value))})
+      [LaunchButton (merge props {:entity-id (when (:selected-entity @state) (entity->id (:selected-entity @state)))
+                                  :expression (:expression @state)})]])})
 
 
 (react/defc Page
   {:render
-   (fn [{:keys [props state refs]}]
+   (fn [{:keys [props state]}]
      [:div {}
       [:div {:style {:borderBottom (str "1px solid " (:line-gray style/colors))
                      :padding "20px 48px 18px"
@@ -123,7 +113,7 @@
        [comps/Button {:icon :x :onClick #((:on-cancel props))}]]
       [:div {:style {:marginTop "1em" :minHeight "10em"}}
        (let [{:keys [server-response]} @state
-             {:keys [entities error-message]} server-response]
+             {:keys [entities entity-types error-message]} server-response]
          (cond
            (nil? server-response)
            [:div {:style {:textAlign "center"}}
@@ -133,7 +123,9 @@
            (style/create-message-well "No data found.")
            :else
            [:div {:style {:marginTop "-1em"}}
-            (render-form entities state refs props)]))]])
+            [LaunchForm {:entities entities
+                         :entity-types entity-types
+                         :root-entity-type (:root-entity-type props)}]]))]])
    :component-did-mount
    (fn [{:keys [props state]}]
      (endpoints/call-ajax-orch
@@ -141,7 +133,9 @@
         :on-done (fn [{:keys [success? status-text get-parsed-response]}]
                    (swap! state assoc
                      :server-response (if success?
-                                        {:entities (get-parsed-response)}
+                                        (let [entities (get-parsed-response)]
+                                          {:entities entities
+                                           :entity-types (distinct (map #(% "entityType") entities))})
                                         {:error-message status-text})))}))})
 
 
