@@ -487,3 +487,30 @@
 (defn copy-entity-to-workspace [workspace-id]
   {:path (str "/workspaces/" (ws-path workspace-id) "/entities/copy")
    :method :post})
+
+
+(defn get-gcs-stats [bucket object]
+  {:path (str "/storage/" bucket "/" object)
+   :method :get
+   :mock-data
+   (let [generation (rand-int 2000000000000000)]
+     {:kind "storage#object"
+      :id (str bucket "/" object "/" generation)
+      :selfLink (str "https://www.googleapis.com/storage/v1/b/" bucket "/o/" object)
+      :name object
+      :bucket bucket
+      :generation generation
+      :metageneration (rand-int 5)
+      :contentType "application/octet-stream"
+      :timeCreated (utils/rand-recent-time)
+      :updated (utils/rand-recent-time)
+      :storageClass "STANDARD"
+      :size (rand-int 1000000000)
+      :md5Hash "wVDkfF0kkuCJPazkScLgzQ=="
+      :mediaLink (str "https://www.googleapis.com/download/storage/v1/b/" bucket
+                   "/o/" name "?generation=" generation "&alt=media")
+      :contentLanguage "en"
+      :owner {:entity "user-00b4903a972fe36b39dff1717b25449fb5d31ca67369e9a60cb0dc4590461a0d"
+              :entityId "00b4903a972fe36b39dff1717b25449fb5d31ca67369e9a60cb0dc4590461a0d"}
+      :crc32c "avsUEw=="
+      :etag "CNjyodHyuscCEAI="})})

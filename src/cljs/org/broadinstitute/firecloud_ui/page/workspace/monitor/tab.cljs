@@ -2,6 +2,7 @@
   (:require
     [dmohs.react :as react]
     cljsjs.moment
+    [org.broadinstitute.firecloud-ui.common :as common]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.common.table :as table]
@@ -12,7 +13,7 @@
 
 
 (defn- render-date [submission]
-  (.format (js/moment (submission "submissionDate")) "LLL"))
+  (common/format-date (submission "submissionDate")))
 
 (defn- render-submissions-table [submissions on-submission-clicked]
   [table/Table

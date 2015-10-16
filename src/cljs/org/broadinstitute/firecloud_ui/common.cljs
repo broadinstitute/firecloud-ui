@@ -106,3 +106,19 @@
   (let [matcher (re-find #"gs://([^/]+)/(.+)" gcs-uri)]
     (when (= 3 (count matcher)) ;; first match will be the whole thing
       (str "https://console.developers.google.com/m/cloudstorage/b/" (matcher 1) "/o/" (matcher 2)))))
+
+(defn parse-gcs-uri [gcs-uri]
+  (let [matcher (re-find #"gs://([^/]+)/(.+)" gcs-uri)]
+    (when (= 3 (count matcher)) ;; first match will be the whole thing
+      {:bucket-name (matcher 1)
+       :object (matcher 2)})))
+
+(defn format-date [date & [format]]
+  (-> date js/moment (.format (or format "LLL"))))
+
+(defn format-filesize [bytes]
+  (letfn [(loop [b n]
+            (if (< b 1000)
+              (str (.toFixed b 2) " " (nth ["B" "KB" "MB" "GB" "TB" "PB" "EB" "ZB" "YB"] n))
+              (loop (/ b 1000) (inc n))))]
+    (loop bytes 0)))
