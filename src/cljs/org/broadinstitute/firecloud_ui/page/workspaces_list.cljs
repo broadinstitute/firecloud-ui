@@ -37,6 +37,7 @@
                        (endpoints/call-ajax-orch
                          {:endpoint (endpoints/create-workspace ns n)
                           :payload {:namespace ns :name n :attributes {}}
+                          :headers {"Content-Type" "application/json"}
                           :on-done (fn [{:keys [success?]}]
                                      (swap! state dissoc :creating-wf)
                                      (if success?
