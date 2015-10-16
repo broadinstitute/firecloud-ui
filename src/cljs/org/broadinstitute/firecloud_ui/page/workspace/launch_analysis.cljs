@@ -109,8 +109,7 @@
                      :padding "20px 48px 18px"
                      :fontSize "137%" :fontWeight 400 :lineHeight 1}}
        "Select Entity"]
-      [:div {:style {:position "absolute" :top 4 :right 4}}
-       [comps/Button {:icon :x :onClick #((:on-cancel props))}]]
+      [comps/XButton {:dismiss (:on-cancel props)}]
       [:div {:style {:marginTop "1em" :minHeight "10em"}}
        (let [{:keys [server-response]} @state
              {:keys [entities entity-types error-message]} server-response]
