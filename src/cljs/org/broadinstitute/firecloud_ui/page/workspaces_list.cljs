@@ -25,18 +25,21 @@
          (style/create-text-field {:style {:width "100%"} :ref "wsNamespace"
                                    :defaultValue "broad-dsde-dev"})
          (style/create-form-label "Name")
-         (style/create-text-field {:style {:width "100%"} :ref "wsName"})])
+         (style/create-text-field {:style {:width "100%"} :ref "wsName"})
+         (style/create-form-label "Description (optional)")
+         (style/create-text-area {:style {:width "100%"} :rows 5 :ref "wsDescription"})])
       :dismiss-self #(swap! state dissoc :overlay-shown?)
       :ok-button
       (react/create-element
         [comps/Button
          {:text "Create Workspace" :ref "createButton"
-          :onClick #(let [[ns n] (common/get-text refs "wsNamespace" "wsName")]
+          :onClick #(let [[ns n desc] (common/get-text refs "wsNamespace" "wsName" "wsDescription")
+                          attributes (if (clojure.string/blank? desc) {} {:description desc})]
                      (when-not (or (empty? ns) (empty? n))
                        (swap! state assoc :creating-wf true)
                        (endpoints/call-ajax-orch
                          {:endpoint (endpoints/create-workspace ns n)
-                          :payload {:namespace ns :name n :attributes {}}
+                          :payload {:namespace ns :name n :attributes attributes}
                           :headers {"Content-Type" "application/json"}
                           :on-done (fn [{:keys [success?]}]
                                      (swap! state dissoc :creating-wf)
@@ -114,10 +117,10 @@
            :content-renderer (fn [data] [WorkspaceCell {:data data}])
            :filter-by :name}
           {:header "Description" :starting-width 400
-           :content-renderer (fn [data]
-                               [:div {:style {:padding "1.1em 0 0 14px"}}
-                                "No data available."])
-           :filter-by :none}]
+           :content-renderer (fn [description]
+                               [:div {:style {:padding "1.1em 0 0 14px"
+                                              :fontStyle (when-not description "oblique")}}
+                                (or description "No description provided")])}]
          :data (map (fn [ws]
                       [{:status (:status ws)
                         :onClick #((:onWorkspaceSelected props) (ws "workspace"))}
@@ -125,7 +128,7 @@
                                 "/" (get-in ws ["workspace" "name"]))
                         :status (:status ws)
                         :onClick #((:onWorkspaceSelected props) (ws "workspace"))}
-                       ws])
+                       (get-in ws ["workspace" "attributes" "description"])])
                  (:filtered-workspaces @state))}]))})
 
 

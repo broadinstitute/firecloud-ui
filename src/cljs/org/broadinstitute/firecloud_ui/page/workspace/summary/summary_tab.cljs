@@ -74,6 +74,8 @@
               #(swap! state assoc :editing-acl? true)
               "Sharing...")
             ")"])])
+      (style/create-section-header "Description")
+      (style/create-paragraph (get-in ws ["workspace" "attributes" "description"]))
       (style/create-section-header "Google Bucket")
       (style/create-paragraph (get-in ws ["workspace" "bucketName"]))]
      (common/clear-both)]))
@@ -97,7 +99,7 @@
          (if (:viewing-attributes? @state)
            (let [ws-response ((get-in @state [:server-response :workspace]) "workspace")]
              [AttributeViewer {:ws ws :writer? writer? :on-done #(swap! state dissoc :viewing-attributes?)
-                               :attrs-list (mapv (fn [[k v]] [k v]) (ws-response "attributes"))
+                               :attrs-list (mapv (fn [[k v]] [k v]) (dissoc (ws-response "attributes") "description"))
                                :workspace-id (:workspace-id props)}])
            (view-summary state props ws status owner? this #(swap! state assoc :viewing-attributes? true))))))
    :load-workspace
