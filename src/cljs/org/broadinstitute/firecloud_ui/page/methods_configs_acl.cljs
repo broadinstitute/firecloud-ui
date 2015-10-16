@@ -24,7 +24,7 @@
 
 (react/defc AgoraPermsEditor
   {:render
-   (fn [{:keys [props state this]}]
+   (fn [{:keys [props  refs state this]}]
      [comps/Dialog
       {:width "75%"
        :blocking? true
@@ -63,7 +63,8 @@
                              {:onChange (fn [e]
                                           (let [selected (-> e .-target .-value)
                                                 selected-is-owner (= selected "OWNER")
-                                                is-public-user? (= (acl-entry "user") "public")]
+                                                user-id (-> (@refs (str "acl-key" i)) .getDOMNode .-value trim)
+                                                is-public-user? (= user-id "public")]
                                             (when (and selected-is-owner is-public-user?)
                                               (set! (-> e .-target .-value) "READER"))))
                               :ref (str "acl-value" i)
