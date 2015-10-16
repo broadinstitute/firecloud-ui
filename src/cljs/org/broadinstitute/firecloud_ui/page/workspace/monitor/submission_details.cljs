@@ -27,16 +27,6 @@
         :else [comps/ExceptionIcon {:size 36}]))
 
 
-(defn- filter-workflows [f wfs]
-  (filter (fn [wf]
-            (case f
-              :all true
-              :succeeded (= "Succeeded" (wf "status"))
-              :running (contains? #{"Running" "Submitted"} (wf "status"))
-              (contains? #{"Failed" "Aborted" "Unknown"} (wf "status"))))
-    wfs))
-
-
 (react/defc WorkflowsTable
   {:get-initial-state
    (fn []
@@ -48,47 +38,47 @@
        (react/call :render-table this)))
    :render-table
    (fn [{:keys [props state]}]
-     [:div {}
-      (let [make-button (fn [name f]
-                          {:text (str name " (" (count (filter-workflows f (:workflows props))) ")")
-                           :active? (= f (:active-filter @state))
-                           :onClick #(swap! state assoc :active-filter f)})]
-        [:div {:style {:marginBottom "1em" :textAlign "center"}}
-         [comps/FilterButtons {:buttons [(make-button "All" :all)
-                                         (make-button "Succeeded" :succeeded)
-                                         (make-button "Running" :running)
-                                         (make-button "Failed" :failed)]}]])
-      [table/Table
-       {:key (:active-filter @state)
-        :empty-message "No Workflows"
-        :columns [{:header "Data Entity" :starting-width 200
-                   :content-renderer
-                   (fn [x]
-                     (let [e (x "workflowEntity")
-                           n (str (e "entityName") " (" (e "entityType") ")")]
-                       (style/create-link
+     [table/Table
+      {:empty-message "No Workflows"
+       :toolbar (fn [built-in]
+                  [:div {}
+                   [:div {:style {:float "left"}} built-in]
+                   [:div {:style {:float "left" :margin "-3 0 0 1em"}}
+                    [comps/FilterBar {:data (:workflows props)
+                                      :buttons [{:text "All" :filter identity}
+                                                {:text "Succeeded" :filter #(= "Succeeded" (% "status"))}
+                                                {:text "Running" :filter #(contains? #{"Running" "Submitted"} (% "status"))}
+                                                {:text "Failed" :filter #(contains? #{"Failed" "Aborted" "Unknown"} (% "status"))}]
+                                      :did-filter (fn [data] (swap! state assoc :filtered-workflows data))}]]
+                   (common/clear-both)])
+       :columns [{:header "Data Entity" :starting-width 200
+                  :content-renderer
+                  (fn [x]
+                    (let [e (x "workflowEntity")
+                          n (str (e "entityName") " (" (e "entityType") ")")]
+                      (style/create-link
                         #(swap! state assoc :selected-workflow {:id (x "workflowId") :name n})
                         n)))}
-                  {:header "Last Changed" :starting-width 280 :as-text moncommon/render-date}
-                  {:header "Status" :starting-width 120
-                   :content-renderer (fn [status]
-                                       [:div {}
-                                        (moncommon/icon-for-wf-status status)
-                                        status])}
-                  {:header "Messages" :starting-width 300
-                   :content-renderer (fn [message-list]
-                                       [:div {}
-                                        (map (fn [message]
-                                               [:div {} message])
-                                          message-list)])}
-                  {:header "Workflow ID" :starting-width 300}]
-        :data (map (fn [row]
-                     [row
-                      (row "statusLastChangedDate")
-                      (row "status")
-                      (row "messages")
-                      (row "workflowId")])
-                   (filter-workflows (:active-filter @state) (:workflows props)))}]])
+                 {:header "Last Changed" :starting-width 280 :as-text moncommon/render-date}
+                 {:header "Status" :starting-width 120
+                  :content-renderer (fn [status]
+                                      [:div {}
+                                       (moncommon/icon-for-wf-status status)
+                                       status])}
+                 {:header "Messages" :starting-width 300
+                  :content-renderer (fn [message-list]
+                                      [:div {}
+                                       (map (fn [message]
+                                              [:div {} message])
+                                         message-list)])}
+                 {:header "Workflow ID" :starting-width 300}]
+       :data (map (fn [row]
+                    [row
+                     (row "statusLastChangedDate")
+                     (row "status")
+                     (row "messages")
+                     (row "workflowId")])
+               (:filtered-workflows @state))}])
    :render-workflow-details
    (fn [{:keys [state props]}]
      [:div {}

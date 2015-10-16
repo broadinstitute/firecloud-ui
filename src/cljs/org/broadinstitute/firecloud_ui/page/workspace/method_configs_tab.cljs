@@ -37,34 +37,31 @@
           [comps/Spinner {:text "Loading configurations..."}]
           error-message (style/create-server-error-message error-message)
           :else
-          [:div {}
-           [:div {:style {:float "right" :padding "0 2em 1em 0"}}
-            [comps/Button {:text "Import Configuration..." :disabled? (when (:locked? @state) "The workspace is locked")
-                           :onClick #(swap! state assoc :show-import-overlay? true)}]]
-           (common/clear-both)
-           [table/Table
-            {:empty-message "There are no method configurations to display."
-             :columns
-             [{:header "Name" :starting-width 240 :as-text #(% "name") :sort-by :text
-               :content-renderer
-               (fn [config]
-                 (style/create-link
-                   #((:on-config-selected props) config)
-                   (config "name")))}
-              {:header "Root Entity Type" :starting-width 140}
-              {:header "Method" :starting-width 800
-               :content-renderer
-               (fn [[namespace name snapshot-id]]
-                 [:div {}
-                  [:span {:style {:fontWeight 500}} namespace "/" name]
-                  [:span {:style {:fontWeight 200 :marginLeft "2em"}} "Snapshot ID: "]
-                  [:span {:style {:fontWeight 500}} snapshot-id]])}]
-             :data (map
-                     (fn [config]
-                       [config
-                        (config "rootEntityType")
-                        (mapv #(get-in config ["methodRepoMethod" %]) ["methodNamespace" "methodName" "methodVersion"])])
-                     configs)}]]))])
+          [table/Table
+           {:empty-message "There are no method configurations to display."
+            :toolbar (fn [built-in]
+                       [:div {}
+                        [:div {:style {:float "left" :margin "5 0 -5 0"}} built-in]
+                        [:div {:style {:float "right" :paddingRight "2em"}}
+                         [comps/Button {:text "Import Configuration..." :disabled? (when (:locked? @state) "The workspace is locked")
+                                        :onClick #(swap! state assoc :show-import-overlay? true)}]]
+                        (common/clear-both)])
+            :columns
+            [{:header "Name" :starting-width 240 :as-text #(% "name") :sort-by :text
+              :content-renderer
+              (fn [config]
+                (style/create-link
+                  #((:on-config-selected props) config)
+                  (config "name")))}
+             {:header "Root Entity Type" :starting-width 140}
+             {:header "Method" :starting-width 800
+              :content-renderer (fn [fields] (apply style/render-entity fields))}]
+            :data (map
+                    (fn [config]
+                      [config
+                       (config "rootEntityType")
+                       (mapv #(get-in config ["methodRepoMethod" %]) ["methodNamespace" "methodName" "methodVersion"])])
+                    configs)}]))])
    :component-did-mount
    (fn [{:keys [this]}]
      (react/call :load this))

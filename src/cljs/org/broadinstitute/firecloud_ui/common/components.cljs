@@ -46,28 +46,45 @@
             "+"]])]))})
 
 
-(react/defc FilterButtons
-  (let [Button
-        (react/create-class
-          {:render
-           (fn [{:keys [props]}]
-             [:div {:style {:float "left" :textAlign "center"
-                            :backgroundColor (if (:active? props)
-                                               (:button-blue style/colors)
-                                               (:background-gray style/colors))
-                            :color (when (:active? props) "white")
-                            :marginLeft "1em" :padding "1ex" :width "16ex"
-                            :border (str "1px solid " (:line-gray style/colors))
-                            :borderRadius "2em"
-                            :cursor "pointer"}
-                    :onClick (fn [e] ((:onClick props) e))}
-              (:text props)])})]
-    {:render
-     (fn [{:keys [props]}]
-       [:div {:style {:display "inline-block" :marginLeft "-1em"}}
-        (map (fn [button] [Button button])
-          (:buttons props))
-        (common/clear-both)])}))
+(react/defc FilterBar
+  {:get-initial-state
+   (fn [{:keys [props]}]
+     {:selected-index 0
+      :filtered-data (into {} (map-indexed
+                                (fn [index item]
+                                  [index (filter (:filter item) (:data props))])
+                                (:buttons props)))})
+   :render
+   (fn [{:keys [props state this]}]
+     [:div {:style {:display "inline-block"}}
+      (map-indexed (fn [index item]
+                     [:div {:style {:float "left" :textAlign "center"
+                                    :backgroundColor (if (= index (:selected-index @state))
+                                                       (:button-blue style/colors)
+                                                       (:background-gray style/colors))
+                                    :color (when (= index (:selected-index @state)) "white")
+                                    :padding "1ex" :minWidth 50
+                                    :marginLeft (when (pos? index) -1)
+                                    :border (str "1px solid " (:line-gray style/colors))
+                                    :borderRadius (cond (zero? index) "8 0 0 8"
+                                                        (= index (dec (count (:buttons props)))) "0 8 8 0"
+                                                        :else nil)
+                                    :cursor "pointer"}
+                            :onClick #(do (swap! state assoc :selected-index index)
+                                          (react/call :update-data this))}
+                      (str (:text item) " (" (count (get (:filtered-data @state) index)) ")")])
+        (:buttons props))
+      (common/clear-both)])
+   :component-did-mount
+   (fn [{:keys [this]}]
+     (react/call :update-data this))
+   :update-data
+   (fn [{:keys [props state]}]
+     (let [index (:selected-index @state)]
+       ((:did-filter props)
+         (get-in @state [:filtered-data index])
+         {:index index
+          :text (get-in props [:buttons index :text])})))})
 
 
 (react/defc TabBar

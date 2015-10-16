@@ -350,6 +350,10 @@
 ;;     Style to apply to odd-numbered-rows.  Properties override :row-style
 ;;   :header-row-style (optional)
 ;;     Style to apply to the header row.  When omitted, style is a dark gray background with bold white text
+;;   :toolbar (optional)
+;;     Use to provide more items in the toolbar, along with the filterer and column reorderer (if present).
+;;     This value should be a function that takes the "built-in" toolbar as a parameter, and returns an
+;;     HTML element.  If this property is not supplied, the built-in toolbar is placed as normal.
 ;;   :columns (REQUIRED)
 ;;     A sequence of column maps.  The order given is used as the initial order.
 ;;     Columns have the following properties:
@@ -389,7 +393,8 @@
       :reorderable-columns? true
       :sortable-columns? true
       :filterable? true
-      :empty-message "There are no rows to display."})
+      :empty-message "There are no rows to display."
+      :toolbar identity})
    :get-initial-state
    (fn [{:keys [props]}]
      (let [ordered-columns (create-ordered-columns (:columns props))]
@@ -404,45 +409,47 @@
             :sort-column (:index col)}))))
    :render
    (fn [{:keys [this state props refs]}]
-     (if (zero? (count (:data props)))
-       (style/create-message-well (:empty-message props))
-       (let [paginator-above (= :above (:paginator props))
-             paginator-below (= :below (:paginator props))
-             paginator [Paginator {:ref "paginator"
-                                   :num-total-rows (count (:data props))
-                                   :onChange #(react/call :set-body-rows this)}]]
-         [:div {}
-          (when (or (:filterable? props) (:reorderable-columns? props))
-            [:div {:style {:padding "0 0 1em 1em"}}
-             (when (:filterable? props)
-               [:div {:style {:float "left" :marginRight "1em"}}
-                [Filterer {:ref "filterer" :onFilter #(react/call :set-body-rows this)}]])
-             (when (:reorderable-columns? props)
-               [:div {:style {:float "left"}}
-                [comps/Button {:icon :gear :title-text "Select Columns..." :ref "col-edit-button"
-                               :onClick #(swap! state assoc :reordering-columns? true)}]
-                (when (:reordering-columns? @state)
-                  [comps/Dialog {:get-anchor-dom-node #(.getDOMNode (@refs "col-edit-button"))
-                                 :blocking? false
-                                 :dismiss-self #(swap! state assoc :reordering-columns? false)
-                                 :content (react/create-element
-                                            ColumnEditor
-                                            {:columns (:ordered-columns @state)
-                                             :submit #(swap! state assoc :ordered-columns %)})}])])
-             (common/clear-both)])
-          (when paginator-above [:div {:style {:paddingBottom (:paginator-space props)}} paginator])
-          [:div {:style {:overflowX "auto"}}
-           [:div {:style {:position "relative"
-                          :paddingBottom 10
-                          :minWidth (reduce
-                                      + (map :width (filter :showing? (:ordered-columns @state))))
-                          :cursor (when (:dragging? @state) "col-resize")}}
-            (render-header state props this)
-            [Body (assoc props
-                    :ref "body"
-                    :columns (filter :showing? (:ordered-columns @state))
-                    :initial-rows (react/call :get-body-rows this (:data props) true))]]]
-          (when paginator-below [:div {:style {:paddingTop (:paginator-space props)}} paginator])])))
+     (let [paginator-above (= :above (:paginator props))
+           paginator-below (= :below (:paginator props))
+           paginator [Paginator {:ref "paginator"
+                                 :num-total-rows (count (:data props))
+                                 :onChange #(react/call :set-body-rows this)}]]
+       [:div {}
+        (when (or (:filterable? props) (:reorderable-columns? props) (:toolbar props))
+          (let [built-in [:div {:style {:paddingBottom "1em"}}
+                          (when (:filterable? props)
+                            [:div {:style {:float "left" :marginLeft "1em"}}
+                             [Filterer {:ref "filterer" :onFilter #(react/call :set-body-rows this)}]])
+                          (when (:reorderable-columns? props)
+                            [:div {:style {:float "left" :marginLeft "1em"}}
+                             [comps/Button {:icon :gear :title-text "Select Columns..." :ref "col-edit-button"
+                                            :onClick #(swap! state assoc :reordering-columns? true)}]
+                             (when (:reordering-columns? @state)
+                               [comps/Dialog {:get-anchor-dom-node #(.getDOMNode (@refs "col-edit-button"))
+                                              :blocking? false
+                                              :dismiss-self #(swap! state assoc :reordering-columns? false)
+                                              :content (react/create-element
+                                                         ColumnEditor
+                                                         {:columns (:ordered-columns @state)
+                                                          :submit #(swap! state assoc :ordered-columns %)})}])])
+                          (common/clear-both)]]
+            ((:toolbar props) built-in)))
+        (if (zero? (count (:data props)))
+          (style/create-message-well (:empty-message props))
+          [:div {}
+           (when paginator-above [:div {:style {:paddingBottom (:paginator-space props)}} paginator])
+           [:div {:style {:overflowX "auto"}}
+            [:div {:style {:position "relative"
+                           :paddingBottom 10
+                           :minWidth (reduce
+                                       + (map :width (filter :showing? (:ordered-columns @state))))
+                           :cursor (when (:dragging? @state) "col-resize")}}
+             (render-header state props this)
+             [Body (assoc props
+                     :ref "body"
+                     :columns (filter :showing? (:ordered-columns @state))
+                     :initial-rows (react/call :get-body-rows this (:data props) true))]]]
+           (when paginator-below [:div {:style {:paddingTop (:paginator-space props)}} paginator])])]))
    :get-filtered-data
    (fn [{:keys [props refs]}]
      (filter-data (:data props) (:columns props)
@@ -481,6 +488,10 @@
          (common/restore-text-selection (:saved-user-select-state @state))
          (swap! state assoc :dragging? false)))
      (.addEventListener js/window "mouseup" (.-onMouseUpHandler this)))
+   :component-did-update
+   (fn [{:keys [this prev-props props]}]
+     (when (not= (:data props) (:data prev-props))
+       (react/call :set-body-rows this)))
    :component-will-unmount
    (fn [{:keys [this]}]
      (.removeEventListener js/window "mousemove" (.-onMouseMoveHandler this))

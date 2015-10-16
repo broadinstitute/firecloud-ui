@@ -73,58 +73,63 @@
        (get-in props [:data :name])]])})
 
 
-(defn- filter-workspaces [f workspaces]
-  (case f
-    :all workspaces
-    :complete (filter (fn [ws] (= "Complete" (:status ws))) workspaces)
-    :running (filter (fn [ws] (= "Running" (:status ws))) workspaces)
-    :exception (filter (fn [ws] (= "Exception" (:status ws))) workspaces)))
-
-
-(defn- render-table [props workspaces key]
-  (let [border-style (str "1px solid " (:line-gray style/colors))]
-    [table/Table
-     {:key key
-      :empty-message "No workspaces to display."
-      :cell-padding-left nil
-      :header-row-style {:fontWeight nil :fontSize "90%"
-                         :color (:text-light style/colors) :backgroundColor nil}
-      :header-style {:padding "0 0 1em 14px" :overflow nil}
-      :resizable-columns? false :reorderable-columns? false :sortable-columns? false
-      :body-style {:fontSize nil :fontWeight nil
-                   :borderLeft border-style :borderRight border-style
-                   :borderBottom border-style :borderRadius 4}
-      :row-style {:height 56 :borderTop border-style}
-      :even-row-style {:backgroundColor nil}
-      :cell-content-style {:padding nil}
-      :columns
-      [{:header [:div {:style {:marginLeft -6}} "Status"] :starting-width 60
-        :content-renderer (fn [data] [StatusCell {:data data}])
-        :filter-by :none}
-       {:header "Workspace" :starting-width 450
-        :content-renderer (fn [data] [WorkspaceCell {:data data}])
-        :filter-by :name}
-       {:header "Description" :starting-width 400
-        :content-renderer (fn [data]
-                            [:div {:style {:padding "1.1em 0 0 14px"}}
-                             "No data available."])
-        :filter-by :none}]
-      :data (map (fn [ws]
-                   [{:status (:status ws)
-                     :onClick #((:onWorkspaceSelected props) (ws "workspace"))}
-                    {:name (str (get-in ws ["workspace" "namespace"])
-                             "/" (get-in ws ["workspace" "name"]))
-                     :status (:status ws)
-                     :onClick #((:onWorkspaceSelected props) (ws "workspace"))}
-                    ws])
-              workspaces)}]))
+(react/defc WorkspaceTable
+  {:render
+   (fn [{:keys [state props]}]
+     (let [border-style (str "1px solid " (:line-gray style/colors))]
+       [table/Table
+        {:empty-message "No workspaces to display."
+         :cell-padding-left nil
+         :header-row-style {:fontWeight nil :fontSize "90%"
+                            :color (:text-light style/colors) :backgroundColor nil}
+         :header-style {:padding "0 0 1em 14px" :overflow nil}
+         :resizable-columns? false :reorderable-columns? false :sortable-columns? false
+         :body-style {:fontSize nil :fontWeight nil
+                      :borderLeft border-style :borderRight border-style
+                      :borderBottom border-style :borderRadius 4}
+         :row-style {:height 56 :borderTop border-style}
+         :even-row-style {:backgroundColor nil}
+         :cell-content-style {:padding nil}
+         :toolbar (fn [built-in]
+                    [:div {}
+                     [:div {:style {:float "left"}} built-in]
+                     [:div {:style {:float "left" :marginLeft "1em" :marginTop -3}}
+                      [comps/FilterBar {:data (:workspaces props)
+                                        :buttons [{:text "All" :filter identity}
+                                                  {:text "Complete" :filter #(= "Complete" (:status %))}
+                                                  {:text "Running" :filter #(= "Running" (:status %))}
+                                                  {:text "Exception" :filter #(= "Exception" (:status %))}]
+                                        :did-filter #(swap! state assoc :filtered-workspaces %)}]]
+                     [:div {:style {:float "right" :marginTop -5}}
+                      [comps/Button
+                       {:text "Create New Workspace..." :style :add
+                        :onClick (:show-create-workspace props)}]]
+                     (common/clear-both)])
+         :columns
+         [{:header [:div {:style {:marginLeft -6}} "Status"] :starting-width 60
+           :content-renderer (fn [data] [StatusCell {:data data}])
+           :filter-by :none}
+          {:header "Workspace" :starting-width 450
+           :content-renderer (fn [data] [WorkspaceCell {:data data}])
+           :filter-by :name}
+          {:header "Description" :starting-width 400
+           :content-renderer (fn [data]
+                               [:div {:style {:padding "1.1em 0 0 14px"}}
+                                "No data available."])
+           :filter-by :none}]
+         :data (map (fn [ws]
+                      [{:status (:status ws)
+                        :onClick #((:onWorkspaceSelected props) (ws "workspace"))}
+                       {:name (str (get-in ws ["workspace" "namespace"])
+                                "/" (get-in ws ["workspace" "name"]))
+                        :status (:status ws)
+                        :onClick #((:onWorkspaceSelected props) (ws "workspace"))}
+                       ws])
+                 (:filtered-workspaces @state))}]))})
 
 
 (react/defc WorkspaceList
-  {:get-initial-state
-   (fn []
-     {:active-filter :all})
-   :render
+  {:render
    (fn [{:keys [props state]}]
      (let [server-response (:server-response @state)]
        (cond
@@ -132,22 +137,8 @@
          (not (:success? server-response))
          (style/create-server-error-message (:error-message server-response))
          :else
-         (let [workspaces (:workspaces server-response)
-               filtered-workspaces (filter-workspaces (:active-filter @state) workspaces)
-               build-button (fn [name filter]
-                              {:text (str name " ("
-                                       (count (filter-workspaces filter workspaces))
-                                       ")")
-                               :active? (= filter (:active-filter @state))
-                               :onClick #(swap! state assoc :active-filter filter)})]
-           [:div {}
-            [:div {:style {:marginBottom "2em" :textAlign "center"}}
-             [comps/FilterButtons {:buttons [(build-button "All" :all)
-                                             (build-button "Complete" :complete)
-                                             (build-button "Running" :running)
-                                             (build-button "Exception" :exception)]}]]
-            [:div {:style {:margin "0 2em"}}
-             (render-table props filtered-workspaces (:active-filter @state))]]))))
+         [:div {:style {:margin "0 2em"}}
+          [WorkspaceTable (assoc props :workspaces (:workspaces server-response))]])))
    :component-did-mount
    (fn [{:keys [state]}]
      (endpoints/call-ajax-orch
@@ -164,14 +155,15 @@
                        {:success? false :error-message status-text})))}))})
 
 
-(defn- render-workspaces-list [nav-context]
+(defn- render-workspaces-list [state nav-context]
   (react/create-element
     WorkspaceList
     {:onWorkspaceSelected
      (fn [workspace]
        (nav/navigate
          nav-context (str (workspace "namespace") ":" (workspace "name")))
-       (common/scroll-to-top))}))
+       (common/scroll-to-top))
+     :show-create-workspace #(swap! state assoc :overlay-shown? true)}))
 
 
 (defn- get-workspace-id-from-nav-segment [segment]
@@ -194,13 +186,9 @@
             :get-first-element-dom-node #(.getDOMNode (@refs "wsNamespace"))
             :get-last-element-dom-node #(.getDOMNode (@refs "createButton"))}])
         [:div {:style {:padding "2em"}}
-         [:div {:style {:float "right" :display (when (:name selected-ws-id) "none")}}
-          [comps/Button
-           {:text "Create New Workspace..." :style :add
-            :onClick #(swap! state assoc :overlay-shown? true)}]]
          [:span {:style {:fontSize "180%"}}
           (if selected-ws-id (:name selected-ws-id) "Workspaces")]]
         (if selected-ws-id
           ;; TODO: add 'back' function to nav
           (render-workspace-details selected-ws-id #(set! (-> js/window .-location .-hash) "workspaces"))
-          (render-workspaces-list nav-context))]))})
+          (render-workspaces-list state nav-context))]))})
