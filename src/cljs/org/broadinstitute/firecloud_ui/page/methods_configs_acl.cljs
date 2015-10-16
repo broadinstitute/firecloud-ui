@@ -60,7 +60,13 @@
                               :spellCheck false
                               :defaultValue (acl-entry "user")})
                            (style/create-select
-                             {:ref (str "acl-value" i)
+                             {:onChange (fn [e]
+                                          (let [selected (-> e .-target .-value)
+                                                selected-is-owner (= selected "OWNER")
+                                                is-public-user? (= (acl-entry "user") "public")]
+                                            (when (and selected-is-owner is-public-user?)
+                                              (set! (-> e .-target .-value) "READER"))))
+                              :ref (str "acl-value" i)
                               :style {:float "right" :width column-width :height 33}
                               :defaultValue (acl-entry "accessLevel")}
                              access-levels)
