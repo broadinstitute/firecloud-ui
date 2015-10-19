@@ -1,4 +1,4 @@
-(ns org.broadinstitute.firecloud-ui.page.workspace.data-tab
+(ns org.broadinstitute.firecloud-ui.page.workspace.data.tab
   (:require
     [dmohs.react :as react]
     [clojure.set :refer [union]]
@@ -8,8 +8,8 @@
     [org.broadinstitute.firecloud-ui.common.table :as table]
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
-    [org.broadinstitute.firecloud-ui.page.workspace.copy-data-workspaces :as copy-data-workspaces]
-    [org.broadinstitute.firecloud-ui.page.workspace.import-data :as import-data]
+    [org.broadinstitute.firecloud-ui.page.workspace.data.copy-data-workspaces :as copy-data-workspaces]
+    [org.broadinstitute.firecloud-ui.page.workspace.data.import-data :as import-data]
     ))
 
 

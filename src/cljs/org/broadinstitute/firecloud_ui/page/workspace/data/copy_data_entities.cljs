@@ -1,4 +1,4 @@
-(ns org.broadinstitute.firecloud-ui.page.workspace.copy-data-entities
+(ns org.broadinstitute.firecloud-ui.page.workspace.data.copy-data-entities
   (:require
     [clojure.set :refer [union]]
     [clojure.string]
