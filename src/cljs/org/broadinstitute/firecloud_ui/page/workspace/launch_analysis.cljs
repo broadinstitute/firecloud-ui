@@ -47,7 +47,7 @@
             :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                        (swap! state dissoc :launching?)
                        (if success?
-                         (on-success (get-in (get-parsed-response) [0 "submissionId"]))
+                         (on-success ((get-parsed-response) "submissionId"))
                          (js/alert (str "Launch failed: " status-text))))}))
        (js/alert "Please select an entity.")))})
 
@@ -123,7 +123,10 @@
            (style/create-message-well "No data found.")
            :else
            [:div {:style {:marginTop "-1em"}}
-            [LaunchForm {:entities entities
+            [LaunchForm {:on-success (:on-success props)
+                         :config-id (:config-id props)
+                         :workspace-id (:workspace-id props)
+                         :entities entities
                          :entity-types entity-types
                          :root-entity-type (:root-entity-type props)}]]))]])
    :component-did-mount
