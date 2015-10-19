@@ -65,7 +65,7 @@
                        [:input {:type "radio"
                                 :checked (identical? ws (:selected-workspace @state))
                                 :onChange #(swap! state assoc :selected-workspace ws)}])}
-                    {:header "Namespace" :starting-width 150}
+                    {:header "Google Project" :starting-width 150}
                     {:header "Name" :starting-width 200}
                     {:header "Owner(s)" :starting-width 300}]
           :data (map

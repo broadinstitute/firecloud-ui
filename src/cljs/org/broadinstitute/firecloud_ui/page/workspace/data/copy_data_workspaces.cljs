@@ -19,7 +19,7 @@
         [table/Table
          {:empty-message "There are no workspaces to display."
           :columns (concat
-                     [{:header "Namespace" :starting-width 150}
+                     [{:header "Google Project" :starting-width 150}
                       {:header "Name" :starting-width 150
                        :as-text #(get-in % ["workspace" "name"]) :sort-by :text
                        :content-renderer

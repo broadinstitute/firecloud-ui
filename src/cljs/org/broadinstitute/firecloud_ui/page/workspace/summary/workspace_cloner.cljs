@@ -22,13 +22,13 @@
                           [:div {}
                            (when (:working? @state)
                              [comps/Blocker {:banner "Cloning..."}])
-                           (style/create-form-label "Namespace:")
+                           (style/create-form-label "Google Project")
                            (style/create-text-field {:ref "namespace"
                                                      :style {:width "100%"}
                                                      :defaultValue (get-in props [:workspace-id :namespace])
                                                      :placeholder "Required"
                                                      :onChange #(swap! state dissoc :error)})
-                           (style/create-form-label "Name:")
+                           (style/create-form-label "Name")
                            (style/create-text-field {:ref "name"
                                                      :style {:width "100%"}
                                                      :defaultValue (get-in props [:workspace-id :name])
