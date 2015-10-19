@@ -455,18 +455,21 @@
      (filter-data (:data props) (:columns props)
                   (react/call :get-filter-text (@refs "filterer"))))
    :get-body-rows
-   (fn [{:keys [state refs]} filtered-data & [initial-render?]]
-     (let [[n c] (if initial-render?
-                   [1 initial-rows-per-page]
-                   (react/call :get-current-slice (@refs "paginator")))
-           sorted-data (if-let [keyfn (:key-fn @state)] (sort-by keyfn filtered-data) filtered-data)
-           ordered-data (if (= :desc (:sort-order @state)) (reverse sorted-data) sorted-data)]
-       (take c (drop (* (dec n) c) ordered-data))))
+   (fn [{:keys [state props refs]} filtered-data & [initial-render?]]
+     (if (zero? (count (:data props)))
+       []
+       (let [[n c] (if initial-render?
+                     [1 initial-rows-per-page]
+                     (react/call :get-current-slice (@refs "paginator")))
+             sorted-data (if-let [keyfn (:key-fn @state)] (sort-by keyfn filtered-data) filtered-data)
+             ordered-data (if (= :desc (:sort-order @state)) (reverse sorted-data) sorted-data)]
+         (take c (drop (* (dec n) c) ordered-data)))))
    :set-body-rows
-   (fn [{:keys [this refs]}]
-     (let [rows (react/call :get-filtered-data this)]
-       (react/call :set-rows (@refs "body") (react/call :get-body-rows this rows))
-       (react/call :set-num-rows-visible (@refs "paginator") (count rows))))
+   (fn [{:keys [this props refs]}]
+     (when (pos? (count (:data props)))
+       (let [rows (react/call :get-filtered-data this)]
+         (react/call :set-rows (@refs "body") (react/call :get-body-rows this rows))
+         (react/call :set-num-rows-visible (@refs "paginator") (count rows)))))
    :component-did-mount
    (fn [{:keys [this state]}]
      (set! (.-onMouseMoveHandler this)

@@ -1,4 +1,4 @@
-(ns org.broadinstitute.firecloud-ui.page.workspace.import-data
+(ns org.broadinstitute.firecloud-ui.page.workspace.data.import-data
   (:require
     [clojure.string]
     [dmohs.react :as react]

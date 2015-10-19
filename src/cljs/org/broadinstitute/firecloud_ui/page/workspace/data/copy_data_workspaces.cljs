@@ -1,4 +1,4 @@
-(ns org.broadinstitute.firecloud-ui.page.workspace.copy-data-workspaces
+(ns org.broadinstitute.firecloud-ui.page.workspace.data.copy-data-workspaces
   (:require
     [clojure.string]
     [dmohs.react :as react]
@@ -7,7 +7,7 @@
     [org.broadinstitute.firecloud-ui.common.table :as table]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
     [org.broadinstitute.firecloud-ui.common.style :as style]
-    [org.broadinstitute.firecloud-ui.page.workspace.copy-data-entities :as copy-data-entities]
+    [org.broadinstitute.firecloud-ui.page.workspace.data.copy-data-entities :as copy-data-entities]
     ))
 
 (react/defc WorkspaceList

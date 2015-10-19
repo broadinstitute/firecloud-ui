@@ -1,4 +1,4 @@
-(ns org.broadinstitute.firecloud-ui.page.workspace.summary.summary-tab
+(ns org.broadinstitute.firecloud-ui.page.workspace.summary.tab
   (:require
     [clojure.string :refer [trim capitalize blank?]]
     [dmohs.react :as react]
