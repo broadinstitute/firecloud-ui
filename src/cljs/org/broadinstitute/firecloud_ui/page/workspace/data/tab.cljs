@@ -49,12 +49,7 @@
 
 
 (react/defc EntitiesList
-  {:get-initial-state
-   (fn [{:keys [props]}]
-     (let [entity-type (first (:entity-types props))]
-       {:entities (filter #(= entity-type (% "entityType")) (:entity-list props))
-        :entity-type entity-type}))
-   :render
+  {:render
    (fn [{:keys [props state]}]
      [:div {}
       [:div {:style {:padding "0 0 0.5em 1em"}}
@@ -62,10 +57,12 @@
         [comps/FilterBar {:data (:entity-list props)
                           :buttons (mapv (fn [key] {:text key
                                                     :filter #(= key (% "entityType"))})
-                                     (:entity-types props))
+                                     (if-let [type (:initial-entity-type props)]
+                                       (cons type (filter #(not= % type) (:entity-types props)))
+                                       (:entity-types props)))
                           :did-filter (fn [data info]
                                         (swap! state assoc :entities data :entity-type (:text info)))}]]]
-      (let [attribute-keys (apply union (map (fn [e] (set (keys (e "attributes")))) (:entities @state)))]
+      (let [attribute-keys (apply union (map #(set (keys (% "attributes"))) (:entities @state)))]
         [table/Table
          {:key (:entity-type @state)
           :empty-message "There are no entities to display."
