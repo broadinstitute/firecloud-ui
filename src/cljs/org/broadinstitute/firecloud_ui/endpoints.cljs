@@ -35,7 +35,8 @@
                       :isLocked (> (rand) 0.8)
                       :attributes {"Attribute1" "[some value]"
                                    "Attribute2" "[some value]"
-                                   "Attribute3" "[some value]"}
+                                   "Attribute3" "[some value]"
+                                   "description" "This is a test workspace"}
                       :createdBy "somebody@broadinstitute.org"
                       :bucketName "unavailable"
                       :namespace ns
@@ -68,7 +69,8 @@
                 :isLocked (> (rand) 0.8)
                 :attributes {"Attribute1" "[some value]"
                              "Attribute2" "[some value]"
-                             "Attribute3" "[some value]"}
+                             "Attribute3" "[some value]"
+                             "description" "This is a test workspace"}
                 :createdBy "somebody@broadinstitute.org"
                 :bucketName (rand-nth ["unavailable" "bucket-12345" "bucket-67890"])
                 :namespace (:namespace workspace-id)
