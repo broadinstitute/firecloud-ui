@@ -191,7 +191,9 @@
             :get-last-element-dom-node #(.getDOMNode (@refs "createButton"))}])
         [:div {:style {:padding "2em"}}
          [:span {:style {:fontSize "180%"}}
-          (if selected-ws-id (:name selected-ws-id) "Workspaces")]]
+          (if selected-ws-id
+            (str (:namespace selected-ws-id) "/" (:name selected-ws-id))
+            "Workspaces")]]
         (if selected-ws-id
           ;; TODO: add 'back' function to nav
           (render-workspace-details selected-ws-id #(set! (-> js/window .-location .-hash) "workspaces"))

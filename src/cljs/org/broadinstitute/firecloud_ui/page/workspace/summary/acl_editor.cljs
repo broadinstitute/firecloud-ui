@@ -21,7 +21,7 @@
   [comps/OKCancelForm
    {:header
     (let [workspace-id (:workspace-id props)]
-      (str "Permissions for " (:namespace workspace-id) ":" (:name workspace-id)))
+      (str "Permissions for " (:namespace workspace-id) "/" (:name workspace-id)))
     :content
     (react/create-element
       [:div {}
