@@ -24,4 +24,4 @@ exec docker run --rm --name firecloud-ui -p 80:80 -p 443:443 \
   -e BUILD_TYPE='' \
   -v "$PWD":/app \
   "$@" \
-  broadinstitute/firecloud-ui
+  broadinstitute/firecloud-ui:dev
