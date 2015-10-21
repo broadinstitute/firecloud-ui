@@ -12,18 +12,14 @@
     ))
 
 
-(defn- all-success? [submission]
-  (and (every? #(= "Succeeded" (% "status")) (submission "workflows"))
-       (zero? (count (submission "notstarted")))))
-
 (defn- color-for-submission [submission]
   (cond (= "Submitted" (submission "status")) (:running-blue style/colors)
-        (all-success? submission) (:success-green style/colors)
+        (moncommon/all-success? submission) (:success-green style/colors)
         :else (:exception-red style/colors)))
 
 (defn- icon-for-submission [submission]
   (cond (= "Submitted" (submission "status")) [comps/RunningIcon {:size 36}]
-        (all-success? submission) [comps/CompleteIcon {:size 36}]
+        (moncommon/all-success? submission) [comps/CompleteIcon {:size 36}]
         :else [comps/ExceptionIcon {:size 36}]))
 
 

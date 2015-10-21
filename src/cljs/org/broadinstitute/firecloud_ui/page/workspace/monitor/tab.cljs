@@ -3,9 +3,11 @@
     [dmohs.react :as react]
     cljsjs.moment
     [org.broadinstitute.firecloud-ui.common.components :as comps]
+    [org.broadinstitute.firecloud-ui.common.icons :as icons]
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.common.table :as table]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
+    [org.broadinstitute.firecloud-ui.page.workspace.monitor.common :as moncommon]
     [org.broadinstitute.firecloud-ui.page.workspace.monitor.submission-details
      :as submission-details]
     ))
@@ -25,17 +27,26 @@
                           (style/create-link
                             #(on-submission-clicked (submission "submissionId"))
                             (render-date submission)))}
-     {:header "Status"}
-     {:header "Method Configuration" :starting-width 220
+     {:header "Status" :as-text #(% "status") :sort-by :text
+      :content-renderer (fn [submission]
+                          [:div {}
+                           (when (and (= "Done" (submission "status"))
+                                      (not (moncommon/all-success? submission)))
+                             (icons/font-icon {:style {:color (:exception-red style/colors)
+                                                       :marginRight 8}} :status-warning))
+                           (submission "status")])}
+     {:header "Method Configuration" :starting-width 300
       :content-renderer (fn [[namespace name]]
                           [:div {} namespace "/" name])}
-     {:header "Data Entity" :starting-width 220}]
+     {:header "Data Entity" :starting-width 220}
+     {:header "Submitted By" :starting-width 220}]
     :data (map (fn [x]
                  [x
-                  (x "status")
+                  x
                   [(x "methodConfigurationNamespace") (x "methodConfigurationName")]
                   (str (get-in x ["submissionEntity" "entityName"])
-                       " (" (get-in x ["submissionEntity" "entityType"]) ")")])
+                       " (" (get-in x ["submissionEntity" "entityType"]) ")")
+                  (x "submitter")])
                submissions)}])
 
 

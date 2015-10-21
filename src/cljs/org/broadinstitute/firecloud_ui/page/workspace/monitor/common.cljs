@@ -7,6 +7,11 @@
     ))
 
 
+(defn- all-success? [submission]
+  (and (every? #(= "Succeeded" (% "status")) (submission "workflows"))
+    (zero? (count (submission "notstarted")))))
+
+
 (defn render-date [date]
   (let [m (js/moment date)]
     (str (.format m "L [at] LTS") " (" (.fromNow m) ")")))
