@@ -514,3 +514,36 @@
               :entityId "00b4903a972fe36b39dff1717b25449fb5d31ca67369e9a60cb0dc4590461a0d"}
       :crc32c "avsUEw=="
       :etag "CNjyodHyuscCEAI="})})
+
+
+(defn profile-get
+  ([on-done]
+   (utils/ajax-orch
+    "/profile"
+    {:on-done on-done
+     :canned-response
+     {:status (rand-nth [200 200 500]) :delay-ms (rand-int 2000)
+      :responseText
+      (utils/->json-string
+       {:userId "55"
+        :keyValuePairs
+        (map (fn [[k v]] {:key k :value v})
+             {:isActive true :name "John Doe" :contactEmail "jdoe@example.com"
+              :googleProjectIds ["14" "7"] :institution "Broad Institute"
+              :piName "Jane Doe"})})}}))
+  ([k on-done]
+   (utils/ajax-orch
+    (str "/profile/" (name k))
+    {:on-done on-done
+     :canned-response
+     {:status (rand-nth [200 200 500]) :delay-ms (rand-int 2000)
+      :responseText (utils/->json-string {:userId "55" :keyValuePair {:key k :value "asdf"}})}})))
+
+
+(defn profile-set [k v on-done]
+  (utils/ajax-orch
+   (str "/profile/" (name k))
+   {:method :post
+    :data v
+    :on-done on-done
+    :canned-response {:status (rand-nth [200 200 500]) :delay-ms (rand-int 2000)}}))
