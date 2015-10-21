@@ -3,7 +3,7 @@
     [dmohs.react :as react]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
     [org.broadinstitute.firecloud-ui.page.workspace.data.tab :as data-tab]
-    [org.broadinstitute.firecloud-ui.page.workspace.method-configs-tab :as method-configs-tab]
+    [org.broadinstitute.firecloud-ui.page.workspace.method-configs.tab :as method-configs-tab]
     [org.broadinstitute.firecloud-ui.page.workspace.monitor.tab :as monitor-tab]
     [org.broadinstitute.firecloud-ui.page.workspace.summary.tab :as summary-tab]
     ))

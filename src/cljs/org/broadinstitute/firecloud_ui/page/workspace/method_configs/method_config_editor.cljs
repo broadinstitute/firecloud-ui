@@ -1,4 +1,4 @@
-(ns org.broadinstitute.firecloud-ui.page.workspace.method-config-editor
+(ns org.broadinstitute.firecloud-ui.page.workspace.method-configs.method-config-editor
   (:require
     [dmohs.react :as react]
     [clojure.string :refer [trim blank?]]
@@ -7,7 +7,7 @@
     [org.broadinstitute.firecloud-ui.common.icons :as icons]
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
-    [org.broadinstitute.firecloud-ui.page.workspace.launch-analysis :as launch]
+    [org.broadinstitute.firecloud-ui.page.workspace.method-configs.launch-analysis :as launch]
     ))
 
 

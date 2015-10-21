@@ -1,4 +1,4 @@
-(ns org.broadinstitute.firecloud-ui.page.workspace.method-configs-tab
+(ns org.broadinstitute.firecloud-ui.page.workspace.method-configs.tab
   (:require
     [dmohs.react :as react]
     clojure.string
@@ -8,7 +8,7 @@
     [org.broadinstitute.firecloud-ui.common.table :as table]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
     [org.broadinstitute.firecloud-ui.page.method-config-importer :refer [MethodConfigImporter]]
-    [org.broadinstitute.firecloud-ui.page.workspace.method-config-editor :refer [MethodConfigEditor]]
+    [org.broadinstitute.firecloud-ui.page.workspace.method-configs.method-config-editor :refer [MethodConfigEditor]]
     ))
 
 
