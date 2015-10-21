@@ -228,6 +228,10 @@
         :attributes {}})
      (range (rand-int 20)))})
 
+(defn delete-entity [workspace-id entity-type entity-name]
+  {:path (str "/workspaces/" (ws-path workspace-id) "/entities/" entity-type "/" entity-name)
+   :method :delete})
+
 
 (defn list-submissions [workspace-id]
   {:path (str "/workspaces/" (ws-path workspace-id) "/submissions")

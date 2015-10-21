@@ -9,6 +9,7 @@
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
     [org.broadinstitute.firecloud-ui.page.workspace.data.copy-data-workspaces :as copy-data-workspaces]
+    [org.broadinstitute.firecloud-ui.page.workspace.data.entity-selector :refer [EntitySelector]]
     [org.broadinstitute.firecloud-ui.page.workspace.data.import-data :as import-data]
     [org.broadinstitute.firecloud-ui.utils :as utils]
     ))
@@ -76,6 +77,10 @@
                        [comps/Button {:text "Import Data..."
                                       :disabled? (if (:locked? @state) "This workspace is locked")
                                       :onClick (:show-import props)}]]
+                      [:div {:style {:float "right" :paddingRight "2em"}}
+                       [comps/Button {:text "Delete..."
+                                      :disabled? (if (:locked? @state) "This workspace is locked")
+                                      :onClick (:show-delete props)}]]
                       (common/clear-both)])
           :columns (concat
                      [{:header "Entity Type" :starting-width 100}
@@ -107,8 +112,10 @@
 
 (react/defc WorkspaceData
   {:render
-   (fn [{:keys [props state this]}]
+   (fn [{:keys [props state refs this]}]
      [:div {:style {:marginTop "1em"}}
+      (when (:deleting? @state)
+        [comps/Blocker {:banner "Deleting..."}])
       (when (:show-import? @state)
         [comps/Dialog {:dismiss-self #(swap! state dissoc :show-import?)
                        :width "80%"
@@ -119,13 +126,41 @@
                                         :reload-data-tab (fn [entity-type]
                                                            (swap! state dissoc :entity-list :entity-types)
                                                            (react/call :load this entity-type))}])}])
+      (when (:show-delete? @state)
+        [comps/Dialog
+         {:dismiss-self #(swap! state dissoc :show-delete?)
+          :width "80%"
+          :content
+          (react/create-element
+            [comps/OKCancelForm
+             {:header "Delete Entities"
+              :dismiss-self #(swap! state dissoc :show-delete?)
+              :content (react/create-element
+                         [EntitySelector
+                          {:ref "EntitySelector"
+                           :left-text "Workspace Entities" :right-text "Will Be Deleted"
+                           :entities (:entity-list @state)}])
+              :ok-button [comps/Button
+                          {:text "Delete"
+                           :disabled? (when (and (@refs "EntitySelector")
+                                                 (empty? (react/call :get-selected-entities (@refs "EntitySelector"))))
+                                        "No entities selected")
+                           :onClick #(let [selected-entities (react/call :get-selected-entities (@refs "EntitySelector"))
+                                           num (count selected-entities)
+                                           msg (if (= 1 num)
+                                                 "Really delete this entity?"
+                                                 (str "Really delete these " num " entities?"))]
+                                      (when (js/confirm msg)
+                                        (swap! state dissoc :show-delete?)
+                                        (react/call :delete this selected-entities)))}]}])}])
       (cond
         (and (:entity-list @state) (contains? @state :locked?))
         [EntitiesList {:entity-list (:entity-list @state)
                        :entity-types (:entity-types @state)
                        :workspace-id (:workspace-id props)
                        :initial-entity-type (:initial-entity-type @state)
-                       :show-import #(swap! state assoc :show-import? true)}]
+                       :show-import #(swap! state assoc :show-import? true)
+                       :show-delete #(swap! state assoc :show-delete? true)}]
         (:error @state) (style/create-server-error-message (:error @state))
         :else [:div {:style {:textAlign "center"}} [comps/Spinner {:text "Loading entities..."}]])])
    :component-did-mount
@@ -148,7 +183,23 @@
                          :entity-list entities
                          :entity-types (distinct (map #(% "entityType") entities))
                          :initial-entity-type entity-type))
-                     (swap! state assoc :error status-text)))}))})
+                     (swap! state assoc :error status-text)))}))
+   :delete
+   (fn [{:keys [props state this]} selected-entities]
+     (swap! state assoc :deleting? true)
+     (let [countdown (atom (count selected-entities))
+           errors (atom #{})]
+       (doseq [entity selected-entities]
+         (endpoints/call-ajax-orch
+           {:endpoint (endpoints/delete-entity (:workspace-id props) (entity "entityType") (entity "name"))
+            :on-done (fn [{:keys [success? status-text]}]
+                       (when-not success?
+                         (swap! errors conj status-text))
+                       (when (zero? (swap! countdown dec))
+                         (swap! state dissoc :deleting? :entity-list)
+                         (react/call :load this)
+                         (when (pos? (count @errors))
+                           (js/alert (apply str (interpose "\n" (cons "Errors:" @errors)))))))}))))})
 
 (defn render [workspace]
   [WorkspaceData {:workspace-id workspace}])

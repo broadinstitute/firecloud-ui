@@ -50,11 +50,19 @@
 ;;     Use to provide more items in the toolbar, along with the filterer and column reorderer (if present).
 ;;     This value should be a function that takes the "built-in" toolbar as a parameter, and returns an
 ;;     HTML element.  If this property is not supplied, the built-in toolbar is placed as normal.
+;;   :width (optional, default normal)
+;;     Specify :width :narrow to make the paginator layout in a narrow width friendly way.  Any other value
+;;     (including none) corresponds to the normal layout
 ;;   :columns (REQUIRED)
 ;;     A sequence of column maps.  The order given is used as the initial order.
 ;;     Columns have the following properties:
 ;;       :header (optional, default none)
 ;;         The text to display.
+;;       :reorderable? (optional, default true)
+;;         Whether or not the column should be allowed to be reordered.  Unused if :reorderable-columns?
+;;         is false on the table.
+;;       :show-initial? (optional, default true)
+;;         Whether or not to initially show the column.
 ;;       :starting-width (optional, default 100)
 ;;         The initial width, which may be resized
 ;;       :as-text (optional)
