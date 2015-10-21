@@ -316,10 +316,9 @@
 
 
 (defn date-column [props]
-  (let [format-date #(.format (js/moment %) (or (:format props) "LLL"))]
-    {:header (or (:header props) "Create Date")
-     :starting-width (or (:starting-width props) 200)
-     :as-text format-date}))
+  {:header (or (:header props) "Create Date")
+   :starting-width (or (:starting-width props) 200)
+   :as-text #(common/format-date % (:format props))})
 
 
 ;; Table component with specifiable style and column behaviors.

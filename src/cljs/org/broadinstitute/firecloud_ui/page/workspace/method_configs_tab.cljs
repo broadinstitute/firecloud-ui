@@ -23,9 +23,7 @@
           :dismiss-self #(swap! state dissoc :show-import-overlay?)
           :content (react/create-element
                      [:div {:style {:padding "1em"}}
-                      [:div {:style {:position "absolute" :top 4 :right 4}}
-                       [comps/Button {:icon :x
-                                      :onClick #(swap! state dissoc :show-import-overlay?)}]]
+                      [comps/XButton {:dismiss #(swap! state dissoc :show-import-overlay?)}]
                       [MethodConfigImporter {:workspace-id (:workspace-id props)
                                              :after-import (fn [config]
                                                              (swap! state dissoc :show-import-overlay?)

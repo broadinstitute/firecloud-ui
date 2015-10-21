@@ -18,8 +18,7 @@
    (fn [{:keys [state props]}]
      (let [choice? (or (:importing-from-file @state) (:copying-from-workspace @state))]
        [:div {}
-        [:div {:style {:position "absolute" :top 2 :right 2}}
-         [comps/Button {:icon :x :onClick #((:dismiss props))}]]
+        [comps/XButton {:dismiss (:dismiss props)}]
         (when choice?
           [:div {:style {:padding "0.5em"}}
            (style/create-link
@@ -87,8 +86,9 @@
                                    :content-renderer
                                    (fn [maybe-uri]
                                      (if (string? maybe-uri)
-                                       (if-let [converted (common/gcs-uri->download-url maybe-uri)]
-                                         [:a {:href converted} maybe-uri]
+                                       (if-let [parsed (common/parse-gcs-uri maybe-uri)]
+                                         [comps/GCSFilePreviewLink (assoc parsed
+                                                                     :gcs-uri maybe-uri)]
                                          maybe-uri)
                                        maybe-uri))})
                        attribute-keys))
