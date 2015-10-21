@@ -7,7 +7,7 @@
     ))
 
 
-(defn- all-success? [submission]
+(defn all-success? [submission]
   (and (every? #(= "Succeeded" (% "status")) (submission "workflows"))
     (zero? (count (submission "notstarted")))))
 

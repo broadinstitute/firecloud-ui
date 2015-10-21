@@ -7,6 +7,7 @@
     [org.broadinstitute.firecloud-ui.common.icons :as icons]
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
+    [org.broadinstitute.firecloud-ui.page.workspace.monitor.common :refer [all-success?]]
     [org.broadinstitute.firecloud-ui.page.workspace.summary.acl-editor :refer [AclEditor]]
     [org.broadinstitute.firecloud-ui.page.workspace.summary.attribute-editor :refer [AttributeViewer]]
     [org.broadinstitute.firecloud-ui.page.workspace.summary.workspace-cloner :refer [WorkspaceCloner]]
@@ -23,8 +24,9 @@
      (map (fn [tag] [:span {:style tagstyle} tag]) tags)]))
 
 
-(defn- view-summary [state props ws status owner? this on-view-attributes]
-  (let [locked? (get-in ws ["workspace" "isLocked"])]
+(defn- view-summary [state props ws submissions status owner? this on-view-attributes]
+  (let [locked? (get-in ws ["workspace" "isLocked"])
+        owners (ws "owners")]
     [:div {:style {:margin "45px 25px"}}
      (when (:deleting? @state)
        [comps/Blocker {:banner "Deleting..."}])
@@ -39,7 +41,9 @@
                          :workspace-id (:workspace-id props)}])
      [:div {:style {:float "left" :width 290 :marginRight 40}}
       ;; TODO - make the width of the float-left dynamic
-      [comps/StatusLabel {:text (capitalize (name status))
+      [comps/StatusLabel {:text (str status
+                                  (when (= status "Running")
+                                    (str " (" (get-in ws ["workspaceSubmissionStats" "runningSubmissionsCount"]) ")")))
                           :icon (case status
                                   "Complete" [comps/CompleteIcon {:size 36}]
                                   "Running" [comps/RunningIcon {:size 36}]
@@ -63,7 +67,7 @@
                                          (swap! state assoc :deleting? true)
                                          (react/call :delete this))}])]
      [:div {:style {:marginLeft 330}}
-      (style/create-section-header "Workspace Owner")
+      (style/create-section-header (str "Workspace Owner" (when (> (count owners) 1) "s")))
       (style/create-paragraph
         [:div {}
          (interpose ", " (ws "owners"))
@@ -75,9 +79,23 @@
               "Sharing...")
             ")"])])
       (style/create-section-header "Description")
-      (style/create-paragraph (get-in ws ["workspace" "attributes" "description"]))
+      (style/create-paragraph
+        (or (get-in ws ["workspace" "attributes" "description"])
+          [:span {:style {:fontStyle "oblique"}} "No description provided"]))
       (style/create-section-header "Google Bucket")
-      (style/create-paragraph (get-in ws ["workspace" "bucketName"]))]
+      (style/create-paragraph (get-in ws ["workspace" "bucketName"]))
+      (style/create-section-header "Created By")
+      (style/create-paragraph
+        [:div {} (get-in ws ["workspace" "createdBy"])]
+        [:div {} (common/format-date (get-in ws ["workspace" "createdDate"]))])
+      (style/create-section-header "Submissions")
+      (style/create-paragraph
+        (let [fail-count (->> submissions
+                           (filter (complement all-success?))
+                           count)]
+          (str (count submissions) " Submissions"
+            (when (pos? fail-count)
+              (str " (" fail-count " failed)")))))]
      (common/clear-both)]))
 
 (react/defc Summary
@@ -87,21 +105,23 @@
    :render
    (fn [{:keys [state props this]}]
      (cond
-       (nil? (:server-response @state))
-       [comps/Spinner {:text "Loading workspace..."}]
-       (get-in @state [:server-response :error-message])
-       (style/create-server-error-message (get-in @state [:server-response :error-message]))
-       :else
-       (let [ws (get-in @state [:server-response :workspace])
-             owner? (= "OWNER" (ws "accessLevel"))
-             writer? (or (= "WRITER" (ws "accessLevel")) owner?)
-             status (common/compute-status ws)]
-         (if (:viewing-attributes? @state)
-           (let [ws-response ((get-in @state [:server-response :workspace]) "workspace")]
-             [AttributeViewer {:ws ws :writer? writer? :on-done #(swap! state dissoc :viewing-attributes?)
-                               :attrs-list (mapv (fn [[k v]] [k v]) (dissoc (ws-response "attributes") "description"))
-                               :workspace-id (:workspace-id props)}])
-           (view-summary state props ws status owner? this #(swap! state assoc :viewing-attributes? true))))))
+       (and (:server-response @state) (:submission-response @state))
+       (let [{:keys [workspace workspace-error]} (:server-response @state)
+             {:keys [submissions submissions-error]} (:submission-response @state)]
+         (cond workspace-error (style/create-server-error-message workspace-error)
+               submissions-error (style/create-server-error-message submissions-error)
+               :else
+               (let [owner? (= "OWNER" (workspace "accessLevel"))
+                     writer? (or (= "WRITER" (workspace "accessLevel")) owner?)
+                     status (common/compute-status workspace)]
+                 (if (:viewing-attributes? @state)
+                   [AttributeViewer {:ws workspace :writer? writer? :on-done #(swap! state dissoc :viewing-attributes?)
+                                     :attrs-list (mapv (fn [[k v]] [k v])
+                                                   (dissoc (get-in workspace ["workspace" "attributes"]) "description"))
+                                     :workspace-id (:workspace-id props)}]
+                   (view-summary state props workspace submissions status owner? this
+                     #(swap! state assoc :viewing-attributes? true))))))
+       :else [comps/Spinner {:text "Loading workspace..."}]))
    :load-workspace
    (fn [{:keys [props state]}]
      (endpoints/call-ajax-orch
@@ -109,7 +129,14 @@
         :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                    (swap! state assoc :server-response
                      (if success? {:workspace (get-parsed-response)}
-                                  {:error-message status-text})))}))
+                                  {:workspace-error status-text})))})
+     (endpoints/call-ajax-orch
+       {:endpoint (endpoints/list-submissions (:workspace-id props))
+        :on-done (fn [{:keys [success? status-text get-parsed-response]}]
+                   (swap! state assoc :submission-response
+                     (if success?
+                       {:submissions (get-parsed-response)}
+                       {:submissions-error status-text})))}))
    :delete
    (fn [{:keys [props state]}]
      (endpoints/call-ajax-orch
@@ -129,7 +156,9 @@
                      (if (and (= status-code 409) (not locked-now?))
                        (js/alert "Could not lock workspace, one or more analyses are currently running")
                        (js/alert (str "Error: " status-text))))
-                   (swap! state #(if success? (dissoc % :locking? :server-response) (dissoc % :locking?))))}))
+                   (swap! state #(if success?
+                                  (dissoc % :locking? :server-response :submission-response)
+                                  (dissoc % :locking?))))}))
    :component-did-mount
    (fn [{:keys [this]}]
      (react/call :load-workspace this))
@@ -141,7 +170,7 @@
    (fn [{:keys [props next-props state]}]
      (utils/cljslog props next-props)
      (when-not (apply = (map :workspace-id [props next-props]))
-       (swap! state assoc :server-response nil)))})
+       (swap! state dissoc :server-response :submission-response)))})
 
 
 (defn render [workspace-id on-delete]
