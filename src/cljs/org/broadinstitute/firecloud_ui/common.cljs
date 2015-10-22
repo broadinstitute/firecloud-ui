@@ -97,11 +97,11 @@
 
 
 (defn compute-status [workspace]
-  (let [lastSuccess (js/moment (get-in workspace ["workspaceSubmissionStats" "lastSuccessDate"]))
-        lastFailure (js/moment (get-in workspace ["workspaceSubmissionStats" "lastFailureDate"]))
-        count (get-in workspace ["workspaceSubmissionStats" "runningSubmissionsCount"])]
-    (cond (pos? count) "Running"
-          (.isAfter lastFailure lastSuccess) "Exception"
+  (let [last-success (js/moment (get-in workspace ["workspaceSubmissionStats" "lastSuccessDate"]))
+        last-failure (js/moment (get-in workspace ["workspaceSubmissionStats" "lastFailureDate"]))
+        count-running (get-in workspace ["workspaceSubmissionStats" "runningSubmissionsCount"])]
+    (cond (pos? count-running) "Running"
+          (.isAfter last-failure last-success) "Exception"
           :else "Complete")))
 
 (defn gcs-uri->download-url [gcs-uri]
