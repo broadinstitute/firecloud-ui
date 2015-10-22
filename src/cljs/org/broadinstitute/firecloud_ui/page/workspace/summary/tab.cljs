@@ -66,7 +66,7 @@
       (style/create-section-header "Workspace Owner")
       (style/create-paragraph
         [:div {}
-         (interpose ", " (map #(style/render-email %) (ws "owners")))
+         (interpose ", " (ws "owners"))
          (when owner?
            [:span {}
             " ("
