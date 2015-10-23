@@ -16,9 +16,9 @@
   (let [{:keys [workspace-id on-back]} props
         workspaces-list (:workspaces-list @state)]
     [:div {}
-     (when (:importing? @state)
-       [comps/Blocker {:banner "Importing..."}])
-
+     (when (:blocking? @state)
+       [comps/Blocker {:banner (if (:blocking-text @state)
+                                 (:blocking-text @state) "Please wait...")}])
      [:div {:style {:paddingBottom "0.5em"}}
       (style/create-link #(on-back)
         (icons/font-icon {:style {:fontSize "70%" :marginRight "0.5em"}} :angle-left)
@@ -33,10 +33,31 @@
             :dismiss-self #(swap! state dissoc :show-perms-overlay?)}])
         [comps/SidebarButton {:style :light :margin :top :color :button-blue
                               :text "Permissions..." :icon :gear
-                              :onClick #(swap! state assoc :show-perms-overlay? true)}]])
-
+                              :onClick #(swap! state assoc :show-perms-overlay? true)}]
+        [comps/SidebarButton
+         {:style :light :margin :top :color :exception-red
+          :text "Redact" :icon :trash-can
+          :onClick
+          (fn []
+            (let [conf (js/confirm "Are you sure ?")]
+              (when conf
+                (let [type (if (contains? entity "method")
+                             "configuration" "method")
+                      name (entity "name")
+                      namespace (entity "namespace")
+                      snapshotId (entity "snapshotId")]
+                  (do
+                    (swap! state assoc :blocking-text "Redacting..." :blocking? true)
+                    (endpoints/call-ajax-orch
+                      {:endpoint (endpoints/delete-agora-entity
+                                   type namespace name snapshotId)
+                       :on-done (fn [{:keys [success? status-text]}]
+                                  (do
+                                    (swap! state dissoc :blocking? :blocking-text)
+                                    (if success?
+                                      ((:on-delete props))
+                                      (js/alert (str "Error ! Message : " status-text)))))}))))))}]])
      [comps/EntityDetails {:entity entity}]
-
      [:div {:style {:fontSize "120%" :margin "1.5em 0 0.5em 0"}} "Save as:"]
      (map
        (fn [field]
@@ -95,7 +116,7 @@
            (common/scroll-to-center (.getDOMNode (@refs "error")) 100)
            (swap! state assoc :bad-input true))
          (do
-           (swap! state assoc :importing? true)
+           (swap! state assoc :blocking? true :blocking-text "Importing...")
            (endpoints/call-ajax-orch
              {:endpoint (endpoints/copy-method-config-to-workspace workspace-id)
               :payload {"configurationNamespace" (config "namespace")
@@ -105,7 +126,7 @@
                         "destinationName" name}
               :headers {"Content-Type" "application/json"}
               :on-done (fn [{:keys [success? xhr]}]
-                         (swap! state dissoc :importing?)
+                         (swap! state dissoc :blocking?)
                          (if success?
                            (do
                              (on-back)
@@ -161,7 +182,7 @@
            (common/scroll-to-center (.getDOMNode (@refs "error")) 100)
            (swap! state assoc :bad-input true))
          (do
-           (swap! state assoc :importing? true)
+           (swap! state assoc :blocking? true :blocking-text "Importing...")
            (endpoints/call-ajax-orch
              {:endpoint (endpoints/post-workspace-method-config workspace-id)
               :payload (assoc (:template @state)
@@ -170,7 +191,7 @@
                          "rootEntityType" rootEntityType)
               :headers {"Content-Type" "application/json"}
               :on-done (fn [{:keys [success? xhr]}]
-                         (swap! state dissoc :importing?)
+                         (swap! state dissoc :blocking?)
                          (if success?
                            (do
                              (on-back)
@@ -257,15 +278,17 @@
 
 (react/defc MethodConfigImporter
   {:render
-   (fn [{:keys [props state]}]
+   (fn [{:keys [props state this]}]
      (cond
        (:selected-method @state)
-       [MethodImportForm {:method (:selected-method @state)
+       [MethodImportForm {:on-delete  #(react/call :reload-entities this)
+                          :method (:selected-method @state)
                           :workspace-id (:workspace-id props)
                           :on-back #(swap! state dissoc :selected-method)
                           :after-import (:after-import props)}]
        (:selected-config @state)
-       [ConfigImportForm {:config (:selected-config @state)
+       [ConfigImportForm {:on-delete  #(react/call :reload-entities this)
+                          :config (:selected-config @state)
                           :workspace-id (:workspace-id props)
                           :on-back #(swap! state dissoc :selected-config)
                           :after-import (:after-import props)}]
@@ -278,8 +301,9 @@
 
        (:error-message @state) (style/create-server-error-message (:error-message @state))
        :else [comps/Spinner {:text "Loading..."}]))
-   :component-did-mount
-   (fn [{:keys [state]}]
+   :reload-entities
+   (fn [{:keys [state this]}]
+     (swap! state dissoc :blocking? :selected-method :selected-config :methods-list :configs-list)
      (endpoints/call-ajax-orch
        {:endpoint endpoints/list-configurations
         :on-done (fn [{:keys [success? get-parsed-response status-text]}]
@@ -291,4 +315,7 @@
         :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                    (if success?
                      (swap! state assoc :methods-list (map #(assoc % :type :method) (get-parsed-response)))
-                     (swap! state assoc :error-message status-text)))}))})
+                     (swap! state assoc :error-message status-text)))}))
+   :component-did-mount
+   (fn [{:keys [state this]}]
+     (react/call :reload-entities this))})

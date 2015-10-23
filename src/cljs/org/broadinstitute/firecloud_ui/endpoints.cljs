@@ -469,6 +469,11 @@
                 (range (inc (rand-int 5))))})
 
 
+(defn delete-agora-entity [type ns n sid]
+  {:path (str "/" type "s/" ns "/" n "/" sid)
+   :method :delete})
+
+
 (defn persist-agora-method-acl [ent]
   {:path (let [ent-type (ent "entityType")
                name (ent "name")
