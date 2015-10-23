@@ -48,50 +48,6 @@
             "+"]])]))})
 
 
-(react/defc FilterBar
-  {:get-initial-state
-   (fn [{:keys [props]}]
-     {:selected-index 0
-      :filtered-data (into {} (map-indexed
-                               (fn [index item]
-                                 [index (filter (:filter item) (:data props))])
-                               (:buttons props)))})
-   :render
-   (fn [{:keys [props state this]}]
-     [:div {:style {:display "inline-block"}}
-      (map-indexed (fn [index item]
-                     (let [first? (zero? index)
-                           last? (= index (dec (count (:buttons props))))]
-                       [:div {:style {:float "left" :textAlign "center"
-                                      :backgroundColor (if (= index (:selected-index @state))
-                                                         (:button-blue style/colors)
-                                                         (:background-gray style/colors))
-                                      :color (when (= index (:selected-index @state)) "white")
-                                      :padding "1ex" :minWidth 50
-                                      :marginLeft (when-not first? -1)
-                                      :border (str "1px solid " (:line-gray style/colors))
-                                      :borderTopLeftRadius (when first? 8)
-                                      :borderBottomLeftRadius (when first? 8)
-                                      :borderTopRightRadius (when last? 8)
-                                      :borderBottomRightRadius (when last? 8)
-                                      :cursor "pointer"}
-                              :onClick #(do (swap! state assoc :selected-index index)
-                                            (react/call :update-data this))}
-                        (str (:text item) " (" (count (get (:filtered-data @state) index)) ")")]))
-        (:buttons props))
-      (common/clear-both)])
-   :component-did-mount
-   (fn [{:keys [this]}]
-     (react/call :update-data this))
-   :update-data
-   (fn [{:keys [props state]}]
-     (let [index (:selected-index @state)]
-       ((:did-filter props)
-         (get-in @state [:filtered-data index])
-         {:index index
-          :text (get-in props [:buttons index :text])})))})
-
-
 (react/defc TabBar
   (let [Tab (react/create-class
               {:get-initial-state

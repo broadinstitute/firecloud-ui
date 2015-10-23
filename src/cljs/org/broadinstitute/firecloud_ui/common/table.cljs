@@ -83,7 +83,6 @@
   {:get-default-props
    (fn []
      {:cell-padding-left "16px"
-      :paginator :below
       :paginator-space 24
       :resizable-columns? true
       :reorderable-columns? true
@@ -92,22 +91,24 @@
       :empty-message "There are no rows to display."
       :toolbar identity})
    :get-initial-state
-   (fn [{:keys [props]}]
+   (fn [{:keys [this props]}]
+     (set! (.-filtered-data this) (if-let [filters (:filters props)]
+                                    (filter (get-in filters [0 :filter]) (:data props))
+                                    (:data props)))
      (let [ordered-columns (table-utils/create-ordered-columns (:columns props))]
        (merge
-         {:ordered-columns ordered-columns
-          :dragging? false}
-         (when-let [col (first (filter #(contains? % :sort-initial) ordered-columns))]
-           {:key-fn (if-let [sorter (:sort-by col)]
-                      (fn [row] (sorter (nth row (:index col))))
-                      (fn [row] (nth row (:index col))))
-            :sort-order (:sort-initial col)
-            :sort-column (:index col)}))))
+        {:no-data? (zero? (count (:data props)))
+         :ordered-columns ordered-columns
+         :dragging? false}
+        (when-let [col (first (filter #(contains? % :sort-initial) ordered-columns))]
+          {:key-fn (if-let [sorter (:sort-by col)]
+                     (fn [row] (sorter (nth row (:index col))))
+                     (fn [row] (nth row (:index col))))
+           :sort-order (:sort-initial col)
+           :sort-column (:index col)}))))
    :render
    (fn [{:keys [this state props refs]}]
-     (let [paginator-above (= :above (:paginator props))
-           paginator-below (= :below (:paginator props))
-           paginator [table-utils/Paginator {:ref "paginator"
+     (let [paginator [table-utils/Paginator {:ref "paginator"
                                  :initial-rows-per-page initial-rows-per-page
                                  :num-total-rows (count (:data props))
                                  :onChange #(react/call :set-body-rows this)}]]
@@ -115,9 +116,15 @@
         (when (or (:filterable? props) (:reorderable-columns? props) (:toolbar props))
           (let [built-in [:div {:style {:paddingBottom "1em"}}
                           (when (:filterable? props)
-                            [:div {:style {:float "left" :marginLeft "1em"}}
+                            [:div {:style {:float "left"}}
                              [table-utils/Filterer {:ref "filterer"
                                                     :onFilter #(react/call :set-body-rows this)}]])
+                          (when (:filters props)
+                            [:div {:style {:float "left" :marginLeft "1em" :marginTop -3}}
+                             [table-utils/FilterBar
+                              (merge (select-keys props [:filters :columns :data])
+                                     {:ref "filter-bar"
+                                      :on-change #(react/call :set-body-rows this)})]])
                           (when (:reorderable-columns? props)
                             [:div {:style {:float "left" :marginLeft "1em"}}
                              [comps/Button {:icon :gear :title-text "Select Columns..." :ref "col-edit-button"
@@ -132,44 +139,47 @@
                                                           :submit #(swap! state assoc :ordered-columns %)})}])])
                           (common/clear-both)]]
             ((:toolbar props) built-in)))
-        (if (zero? (count (:data props)))
-          (style/create-message-well (:empty-message props))
-          [:div {}
-           (when paginator-above [:div {:style {:paddingBottom (:paginator-space props)}} paginator])
-           [:div {:style {:overflowX "auto"}}
-            [:div {:style {:position "relative"
-                           :paddingBottom 10
-                           :minWidth (reduce
-                                       + (map :width (filter :showing? (:ordered-columns @state))))
-                           :cursor (when (:dragging? @state) "col-resize")}}
-             (table-utils/render-header state props this)
-             [table-utils/Body
-              (assoc props
-                     :ref "body"
-                     :columns (filter :showing? (:ordered-columns @state))
-                     :initial-rows
-                     (react/call :get-body-rows this (map (:->row props) (:data props)) true))]]]
-           (when paginator-below [:div {:style {:paddingTop (:paginator-space props)}} paginator])])]))
+        [:div {}
+         [:div {:style {:overflowX "auto"}}
+          [:div {:style {:position "relative"
+                         :paddingBottom 10
+                         :minWidth (reduce
+                                    + (map :width (filter :showing? (:ordered-columns @state))))
+                         :cursor (when (:dragging? @state) "col-resize")}}
+           (if (:no-data? @state)
+             (style/create-message-well (:empty-message props))
+             (table-utils/render-header state props this))
+           [table-utils/Body
+            (assoc props
+                   :ref "body"
+                   :columns (filter :showing? (:ordered-columns @state))
+                   :initial-rows
+                   (react/call :get-body-rows this))]]]]
+        [:div {:style {:paddingTop (:paginator-space props)}} paginator]]))
    :get-filtered-data
    (fn [{:keys [props refs]}]
      (table-utils/filter-data
-      (map (:->row props) (:data props)) (:columns props) (react/call :get-filter-text (@refs "filterer"))))
+      (if (@refs "filter-bar")
+        (react/call :apply-filter (@refs "filter-bar"))
+        (:data props))
+      (:->row props) (:columns props) (react/call :get-filter-text (@refs "filterer"))))
    :get-body-rows
-   (fn [{:keys [state props refs]} filtered-data & [initial-render?]]
-     (if (zero? (count (:data props)))
+   (fn [{:keys [this state props refs]}]
+     (if (zero? (count (.-filtered-data this)))
        []
-       (let [[n c] (if initial-render?
-                     [1 initial-rows-per-page]
-                     (react/call :get-current-slice (@refs "paginator")))
-             sorted-data (if-let [keyfn (:key-fn @state)] (sort-by keyfn filtered-data) filtered-data)
+       (let [[n c] (if (@refs "paginator")
+                     (react/call :get-current-slice (@refs "paginator"))
+                     [1 initial-rows-per-page])
+             rows (map (:->row props) (.-filtered-data this))
+             sorted-data (if-let [keyfn (:key-fn @state)] (sort-by keyfn rows) rows)
              ordered-data (if (= :desc (:sort-order @state)) (reverse sorted-data) sorted-data)]
          (take c (drop (* (dec n) c) ordered-data)))))
    :set-body-rows
-   (fn [{:keys [this props refs]}]
-     (when (pos? (count (:data props)))
-       (let [rows (react/call :get-filtered-data this)]
-         (react/call :set-rows (@refs "body") (react/call :get-body-rows this rows))
-         (react/call :set-num-rows-visible (@refs "paginator") (count rows)))))
+   (fn [{:keys [this props state refs]}]
+     (set! (.-filtered-data this) (react/call :get-filtered-data this))
+     (swap! state assoc :no-data? (zero? (count (.-filtered-data this))))
+     (react/call :set-rows (@refs "body") (react/call :get-body-rows this))
+     (react/call :set-num-rows-visible (@refs "paginator") (count (.-filtered-data this))))
    :component-did-mount
    (fn [{:keys [this state]}]
      (set! (.-onMouseMoveHandler this)

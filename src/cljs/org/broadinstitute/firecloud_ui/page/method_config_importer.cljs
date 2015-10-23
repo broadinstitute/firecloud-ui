@@ -229,17 +229,7 @@
   {:render
    (fn [{:keys [props state]}]
      [table/Table
-      {:toolbar (fn [built-in]
-                  [:div {}
-                   [:div {:style {:float "left"}} built-in]
-                   [:div {:style {:float "left" :marginLeft "1em" :marginTop -3}}
-                    [comps/FilterBar {:data (concat (:methods props) (:configs props))
-                                      :buttons [{:text "All" :filter identity}
-                                                {:text "Methods Only" :filter #(= :method (:type %))}
-                                                {:text "Configs Only" :filter #(= :config (:type %))}]
-                                      :did-filter #(swap! state assoc :data %)}]]
-                   (common/clear-both)])
-       :columns [{:header "Type" :starting-width 100}
+      {:columns [{:header "Type" :starting-width 100}
                  {:header "Namespace" :starting-width 150}
                  {:header "Name" :starting-width 200 :as-text #(% "name") :sort-by :text
                   :content-renderer
@@ -256,7 +246,10 @@
                                       (if fields
                                         (apply style/render-entity fields)
                                         "N/A"))}]
-       :data (:data @state)
+       :filters [{:text "All" :filter identity}
+                 {:text "Methods Only" :filter #(= :method (:type %))}
+                 {:text "Configs Only" :filter #(= :config (:type %))}]
+       :data (concat (:methods props) (:configs props))
        :->row (fn [item]
                 [(item "entityType")
                  (item "namespace")

@@ -98,18 +98,15 @@
          :toolbar (fn [built-in]
                     [:div {}
                      [:div {:style {:float "left"}} built-in]
-                     [:div {:style {:float "left" :marginLeft "1em" :marginTop -3}}
-                      [comps/FilterBar {:data (:workspaces props)
-                                        :buttons [{:text "All" :filter identity}
-                                                  {:text "Complete" :filter #(= "Complete" (:status %))}
-                                                  {:text "Running" :filter #(= "Running" (:status %))}
-                                                  {:text "Exception" :filter #(= "Exception" (:status %))}]
-                                        :did-filter #(swap! state assoc :filtered-workspaces %)}]]
                      [:div {:style {:float "right" :marginTop -5}}
                       [comps/Button
                        {:text "Create New Workspace..." :style :add
                         :onClick (:show-create-workspace props)}]]
                      (common/clear-both)])
+         :filters [{:text "All" :filter identity}
+                   {:text "Complete" :filter #(= "Complete" (:status %))}
+                   {:text "Running" :filter #(= "Running" (:status %))}
+                   {:text "Exception" :filter #(= "Exception" (:status %))}]
          :columns
          [{:header [:div {:style {:marginLeft -6}} "Status"] :starting-width 60
            :content-renderer (fn [data] [StatusCell {:data data}])
@@ -122,7 +119,7 @@
                                [:div {:style {:padding "1.1em 0 0 14px"
                                               :fontStyle (when-not description "oblique")}}
                                 (or description "No description provided")])}]
-         :data (:filtered-workspaces @state)
+         :data (:workspaces props)
          :->row (fn [ws]
                   [{:status (:status ws)
                     :onClick #((:onWorkspaceSelected props) (ws "workspace"))}

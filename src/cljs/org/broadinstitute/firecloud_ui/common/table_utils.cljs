@@ -56,33 +56,33 @@
          (style/create-unselectable
           :div {:style {:float "left" :display "inline-block" :width "33.33%"
                         :padding "1.6em 0em" :verticalAlign "middle" :textAlign "center"}}
-           [:div {:style {:display "inline-block" :padding "0.55em 0.9em"
-                          :color (if allow-prev
-                                   (:button-blue style/colors)
-                                   (:border-gray style/colors))
-                          :cursor (when allow-prev "pointer")}
-                  :onClick (when allow-prev #(swap! state update-in [:current-page] dec))}
-            (icons/font-icon {:style {:fontSize "70%"}} :angle-left)
-            [:span {:style {:paddingLeft "1em"}} "Prev"]]
-           [:span {}
-            (map (fn [n]
-                   (let [selected? (= n current-page)]
-                     [:div {:style {:paddingTop 5 :display "inline-block" :width 29 :height 24
-                                    :backgroundColor (when selected? (:button-blue style/colors))
-                                    :color (if selected? "white" (:button-blue style/colors))
-                                    :borderRadius (when selected? "100%")
-                                    :cursor (when-not selected? "pointer")}
-                            :onClick (when-not selected? #(swap! state assoc :current-page n))}
-                      n]))
-              (create-page-range current-page num-pages))]
-           [:div {:style {:display "inline-block" :padding "0.55em 0.9em"
-                          :color (if allow-next
-                                   (:button-blue style/colors)
-                                   (:border-gray style/colors))
-                          :cursor (when allow-next "pointer")}
-                  :onClick (when allow-next #(swap! state update-in [:current-page] inc))}
-            [:span {:style {:paddingRight "1em"}} "Next"]
-            (icons/font-icon {:style {:fontSize "70%"}} :angle-right)])
+          [:div {:style {:display "inline-block" :padding "0.55em 0.9em"
+                         :color (if allow-prev
+                                  (:button-blue style/colors)
+                                  (:border-gray style/colors))
+                         :cursor (when allow-prev "pointer")}
+                 :onClick (when allow-prev #(swap! state update-in [:current-page] dec))}
+           (icons/font-icon {:style {:fontSize "70%"}} :angle-left)
+           [:span {:style {:paddingLeft "1em"}} "Prev"]]
+          [:span {}
+           (map (fn [n]
+                  (let [selected? (= n current-page)]
+                    [:div {:style {:paddingTop 5 :display "inline-block" :width 29 :height 24
+                                   :backgroundColor (when selected? (:button-blue style/colors))
+                                   :color (if selected? "white" (:button-blue style/colors))
+                                   :borderRadius (when selected? "100%")
+                                   :cursor (when-not selected? "pointer")}
+                           :onClick (when-not selected? #(swap! state assoc :current-page n))}
+                     n]))
+                (create-page-range current-page num-pages))]
+          [:div {:style {:display "inline-block" :padding "0.55em 0.9em"
+                         :color (if allow-next
+                                  (:button-blue style/colors)
+                                  (:border-gray style/colors))
+                         :cursor (when allow-next "pointer")}
+                 :onClick (when allow-next #(swap! state update-in [:current-page] inc))}
+           [:span {:style {:paddingRight "1em"}} "Next"]
+           (icons/font-icon {:style {:fontSize "70%"}} :angle-right)])
          [:div {:style {:float "left" :display "inline-block" :width "33.33%"
                         :padding "2.15em 0em" :textAlign "right"}}
           "Display"
@@ -138,32 +138,34 @@
      {:rows (:initial-rows props)})
    :render
    (fn [{:keys [props state]}]
-     [:div {:style (merge {:fontSize "80%" :fontWeight 500} (:body-style props))}
-      (map-indexed
-        (fn [row-index row]
-          (let [row-style (merge
+     (if (zero? (count (:rows @state)))
+       nil
+       [:div {:style (merge {:fontSize "80%" :fontWeight 500} (:body-style props))}
+        (map-indexed
+         (fn [row-index row]
+           (let [row-style (merge
                             (:row-style props)
                             (if (even? row-index)
                               (merge
-                                {:backgroundColor (:background-gray style/colors)}
-                                (:even-row-style props))
+                               {:backgroundColor (:background-gray style/colors)}
+                               (:even-row-style props))
                               (:odd-row-style props)))]
-            [:div {:style row-style}
-             (map
+             [:div {:style row-style}
+              (map
                (fn [col]
                  (let [render-content (or (:content-renderer col)
                                           (:as-text col)
                                           default-render)]
                    (render-cell
-                     {:width (:width col)
-                      :content (render-content (nth row (:index col)))
-                      :cell-padding-left (or (:cell-padding-left props) 0)
-                      :content-container-style (merge
-                                                 {:padding (str "0.6em 0 0.6em " (or (:cell-padding-left props) 0))}
-                                                 (:cell-content-style props))})))
+                    {:width (:width col)
+                     :content (render-content (nth row (:index col)))
+                     :cell-padding-left (or (:cell-padding-left props) 0)
+                     :content-container-style (merge
+                                               {:padding (str "0.6em 0 0.6em " (or (:cell-padding-left props) 0))}
+                                               (:cell-content-style props))})))
                (:columns props))
-             (common/clear-both)]))
-        (:rows @state))])})
+              (common/clear-both)]))
+         (:rows @state))]))})
 
 
 (defn- render-header [state props this]
@@ -235,17 +237,61 @@
        ((:onFilter props) text)))})
 
 
-(defn- filter-data [data columns filter-text]
+(react/defc FilterBar
+  {:apply-filter
+   (fn [{:keys [props state]} & [filter-index]]
+     (let [selected-filter (nth (:filters props) (or filter-index (:selected-index @state)))
+           matches-text? (constantly true)]
+       (filter (fn [x]
+                 (and ((:filter selected-filter) x)
+                      (matches-text? x)))
+               (:data props))))
+   :get-initial-state
+   (fn [{:keys [props]}]
+     {:selected-index 0})
+   :render
+   (fn [{:keys [this props state]}]
+     [:div {:style {:display "inline-block"}}
+      (map-indexed (fn [index item]
+                     (let [first? (zero? index)
+                           last? (= index (dec (count (:filters props))))]
+                       [:div {:style {:float "left" :textAlign "center"
+                                      :backgroundColor (if (= index (:selected-index @state))
+                                                         (:button-blue style/colors)
+                                                         (:background-gray style/colors))
+                                      :color (when (= index (:selected-index @state)) "white")
+                                      :padding "1ex" :minWidth 50
+                                      :marginLeft (when-not first? -1)
+                                      :border (str "1px solid " (:line-gray style/colors))
+                                      :borderTopLeftRadius (when first? 8)
+                                      :borderBottomLeftRadius (when first? 8)
+                                      :borderTopRightRadius (when last? 8)
+                                      :borderBottomRightRadius (when last? 8)
+                                      :cursor "pointer"}
+                              :onClick #(swap! state assoc :selected-index index)}
+                        (str (:text item)
+                             " (" (count (react/call :apply-filter this index))
+                             ")")]))
+        (:filters props))
+      (common/clear-both)])
+   :component-did-update
+   (fn [{:keys [props state prev-state]}]
+     (when-not (= (:selected-index @state) (:selected-index prev-state))
+       ((:on-change props))))})
+
+
+
+(defn- filter-data [data ->row columns filter-text]
   (if (empty? filter-text)
     data
-    (filter (fn [row]
+    (filter (fn [item]
               (utils/matches-filter-text
                (apply str (map-indexed
                            (fn [i column]
                              (let [func (or (:filter-by column)
                                             (:as-text column)
                                             str)]
-                               (if (= func :none) "" (func (nth row i)))))
+                               (if (= func :none) "" (func (nth (->row item) i)))))
                            columns))
                filter-text))
             data)))

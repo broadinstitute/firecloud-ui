@@ -51,17 +51,7 @@
   {:render
    (fn [{:keys [props state]}]
      [:div {}
-      [:div {:style {:padding "0 0 0.5em 1em"}}
-       [:div {:style {:textAlign "center"}}
-        [comps/FilterBar {:data (:entity-list props)
-                          :buttons (mapv (fn [key] {:text key
-                                                    :filter #(= key (% "entityType"))})
-                                     (if-let [type (:initial-entity-type props)]
-                                       (cons type (filter #(not= % type) (:entity-types props)))
-                                       (:entity-types props)))
-                          :did-filter (fn [data info]
-                                        (swap! state assoc :entities data :entity-type (:text info)))}]]]
-      (let [attribute-keys (apply union (map #(set (keys (% "attributes"))) (:entities @state)))]
+      (let [attribute-keys (apply union (map #(set (keys (% "attributes"))) (:entity-list props)))]
         [table/Table
          {:key (:entity-type @state)
           :empty-message "There are no entities to display."
@@ -91,8 +81,13 @@
                                                                      :gcs-uri maybe-uri)]
                                          maybe-uri)
                                        maybe-uri))})
-                       attribute-keys))
-          :data (:entities @state)
+                          attribute-keys))
+          :filters (mapv (fn [key] {:text key
+                                    :filter #(= key (% "entityType"))})
+                         (if-let [type (:initial-entity-type props)]
+                           (cons type (filter #(not= % type) (:entity-types props)))
+                           (:entity-types props)))
+          :data (:entity-list props)
           :->row (fn [m]
                    (concat
                     [(m "entityType")

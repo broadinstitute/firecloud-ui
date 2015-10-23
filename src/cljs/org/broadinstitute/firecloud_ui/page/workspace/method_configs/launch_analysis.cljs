@@ -64,15 +64,7 @@
       (style/create-form-label "Select Entity")
       [:div {:style {:backgroundColor "#fff" :border (str "1px solid " (:line-gray style/colors))
                      :padding "1em" :marginBottom "0.5em"}}
-       [:div {:style {:textAlign "center" :marginBottom "0.5em"}}
-        [comps/FilterBar {:data (:entities props)
-                          :buttons (mapv (fn [key] {:text key
-                                                    :filter #(= key (% "entityType"))})
-                                     (:ordered-buttons @state))
-                          :did-filter (fn [list data]
-                                        (swap! state assoc :filtered-entities list
-                                          :selected-entity-type (:text data)))}]]
-       (let [attribute-keys (apply union (map #(set (keys (% "attributes"))) (:filtered-entities @state)))]
+       (let [attribute-keys (apply union (map #(set (keys (% "attributes"))) (:entities props)))]
          [table/Table
           {:empty-message "No entities available."
            :columns (concat
@@ -87,7 +79,10 @@
                        {:header "Entity Type" :starting-width 100}
                        {:header "Entity Name" :starting-width 100}]
                       (map (fn [k] {:header k :starting-width 100}) attribute-keys))
-           :data (:filtered-entities @state)
+           ;; TODO(dmohs): Set :selected-entity-type on filter.
+           :filters (mapv (fn [key] {:text key :filter #(= key (% "entityType"))})
+                          (:ordered-buttons @state))
+           :data (:entities props)
            :->row (fn [m]
                     (concat
                      [m
