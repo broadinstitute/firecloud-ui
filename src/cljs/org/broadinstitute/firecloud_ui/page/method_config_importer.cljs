@@ -52,11 +52,10 @@
                       {:endpoint (endpoints/delete-agora-entity
                                    type namespace name snapshotId)
                        :on-done (fn [{:keys [success? status-text]}]
-                                  (do
                                     (swap! state dissoc :blocking? :blocking-text)
                                     (if success?
                                       ((:on-delete props))
-                                      (js/alert (str "Error ! Message : " status-text)))))}))))))}]])
+                                      (js/alert (str "Error ! Message : " status-text))))}))))))}]])
      [comps/EntityDetails {:entity entity}]
      [:div {:style {:fontSize "120%" :margin "1.5em 0 0.5em 0"}} "Save as:"]
      (map
