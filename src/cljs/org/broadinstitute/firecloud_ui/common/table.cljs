@@ -77,8 +77,16 @@
 ;;       :sort-initial (optional)
 ;;         A flag to set the initial column to sort.  Value is either :asc or :desc.  If present on multiple
 ;;         columns, the first one will be used.
+;;   :filters (OPTIONAL)
+;;     A vector of filters to apply to the data. Each item as the following properties:
+;;       :text (required)
+;;         A label for the filter.
+;;       :pred (required)
+;;         A function that, given a data item, returns true if that item matches the filter.
 ;;   :data (REQUIRED)
-;;     A sequence-of-sequences forming the data grid.
+;;     A sequence items that will appear in the table.
+;;   :->row (REQUIRED)
+;;     A function that takes a data item and returns a vector representing a table row.
 (react/defc Table
   {:get-default-props
    (fn []
