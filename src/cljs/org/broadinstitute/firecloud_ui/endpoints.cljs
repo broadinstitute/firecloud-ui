@@ -469,8 +469,9 @@
                 (range (inc (rand-int 5))))})
 
 
-(defn delete-agora-entity [type ns n sid]
-  {:path (str "/" type "s/" ns "/" n "/" sid)
+(defn delete-agora-entity [config? ns n sid]
+  {:path (let [base (if config? "configurations" "methods")]
+           (str "/" base "/" ns "/" n "/" sid))
    :method :delete})
 
 

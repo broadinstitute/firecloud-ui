@@ -41,16 +41,14 @@
           (fn []
             (let [conf (js/confirm "Are you sure ?")]
               (when conf
-                (let [type (if (contains? entity "method")
-                             "configuration" "method")
-                      name (entity "name")
+                (let [name (entity "name")
                       namespace (entity "namespace")
                       snapshotId (entity "snapshotId")]
                   (do
                     (swap! state assoc :blocking-text "Redacting..." :blocking? true)
                     (endpoints/call-ajax-orch
                       {:endpoint (endpoints/delete-agora-entity
-                                   type namespace name snapshotId)
+                                   config? namespace name snapshotId)
                        :on-done (fn [{:keys [success? status-text]}]
                                     (swap! state dissoc :blocking? :blocking-text)
                                     (if success?
