@@ -16,9 +16,8 @@
   (let [{:keys [workspace-id on-back]} props
         workspaces-list (:workspaces-list @state)]
     [:div {}
-     (when (:blocking? @state)
-       [comps/Blocker {:banner (if (:blocking-text @state)
-                                 (:blocking-text @state) "Please wait...")}])
+     (when (:blocking-text @state)
+       [comps/Blocker {:banner (:blocking-text @state)}])
      [:div {:style {:paddingBottom "0.5em"}}
       (style/create-link #(on-back)
         (icons/font-icon {:style {:fontSize "70%" :marginRight "0.5em"}} :angle-left)
@@ -42,12 +41,12 @@
             (let [name (entity "name")
                   namespace (entity "namespace")
                   snapshotId (entity "snapshotId")]
-              (swap! state assoc :blocking-text "Redacting..." :blocking? true)
+              (swap! state assoc :blocking-text "Redacting...")
               (endpoints/call-ajax-orch
                 {:endpoint (endpoints/delete-agora-entity
                              config? namespace name snapshotId)
                  :on-done (fn [{:keys [success? status-text]}]
-                            (swap! state dissoc :blocking? :blocking-text)
+                            (swap! state dissoc :blocking-text)
                             (if success?
                               ((:on-delete props))
                               (js/alert (str "Error ! Message : " status-text))))})))}]])
@@ -110,7 +109,7 @@
            (common/scroll-to-center (.getDOMNode (@refs "error")) 100)
            (swap! state assoc :bad-input true))
          (do
-           (swap! state assoc :blocking? true :blocking-text "Importing...")
+           (swap! state assoc :blocking-text "Importing...")
            (endpoints/call-ajax-orch
              {:endpoint (endpoints/copy-method-config-to-workspace workspace-id)
               :payload {"configurationNamespace" (config "namespace")
@@ -120,7 +119,7 @@
                         "destinationName" name}
               :headers {"Content-Type" "application/json"}
               :on-done (fn [{:keys [success? xhr]}]
-                         (swap! state dissoc :blocking?)
+                         (swap! state dissoc :blocking-text)
                          (if success?
                            (do
                              (on-back)
@@ -176,7 +175,7 @@
            (common/scroll-to-center (.getDOMNode (@refs "error")) 100)
            (swap! state assoc :bad-input true))
          (do
-           (swap! state assoc :blocking? true :blocking-text "Importing...")
+           (swap! state assoc :blocking-text "Importing...")
            (endpoints/call-ajax-orch
              {:endpoint (endpoints/post-workspace-method-config workspace-id)
               :payload (assoc (:template @state)
@@ -185,7 +184,7 @@
                          "rootEntityType" rootEntityType)
               :headers {"Content-Type" "application/json"}
               :on-done (fn [{:keys [success? xhr]}]
-                         (swap! state dissoc :blocking?)
+                         (swap! state dissoc :blocking-text)
                          (if success?
                            (do
                              (on-back)
@@ -297,7 +296,7 @@
        :else [comps/Spinner {:text "Loading..."}]))
    :reload-entities
    (fn [{:keys [state this]}]
-     (swap! state dissoc :blocking? :selected-method :selected-config :methods-list :configs-list)
+     (swap! state dissoc :blocking-text :selected-method :selected-config :methods-list :configs-list)
      (endpoints/call-ajax-orch
        {:endpoint endpoints/list-configurations
         :on-done (fn [{:keys [success? get-parsed-response status-text]}]
