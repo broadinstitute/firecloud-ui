@@ -45,4 +45,5 @@
    [:div {}
     [StatusLine {:label "Orchestration" :request {:path "/status/ping"}}]
     [StatusLine {:label "Rawls" :request {:path "/workspaces"}}]
-    [StatusLine {:label "Agora" :request {:path "/methods"}}]]))
+    [StatusLine {:label "Agora" :request {:path "/methods"}}]
+    [StatusLine {:label "Thurloe" :request {:path "/profile"}}]]))
