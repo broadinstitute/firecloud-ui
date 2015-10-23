@@ -9,7 +9,7 @@
     [org.broadinstitute.firecloud-ui.common.table :as table]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
     [org.broadinstitute.firecloud-ui.page.methods-configs-acl :as mca]
-    ))
+    [org.broadinstitute.firecloud-ui.utils :as utils]))
 
 
 (defn- create-import-form [state props this entity fields]
@@ -55,27 +55,17 @@
 
      (when-not workspace-id
        [:div {:style {:marginBottom "1em"}}
-        [:div {:style {:fontSize "120%" :margin "1em 0"}} "Destination:"]
-        [table/Table
-         {:empty-message "No workspaces available"
-          :columns [{:starting-width 35
-                     :resizable? false :reorderable? false :filter-by :none :sort-by :none
-                     :content-renderer
-                     (fn [ws]
-                       [:input {:type "radio"
-                                :checked (identical? ws (:selected-workspace @state))
-                                :onChange #(swap! state assoc :selected-workspace ws)}])}
-                    {:header "Google Project" :starting-width 150}
-                    {:header "Name" :starting-width 200}
-                    {:header "Owner(s)" :starting-width 300}]
-          :data (map
-                  (fn [ws]
-                    [ws
-                     (get-in ws ["workspace" "namespace"])
-                     (get-in ws ["workspace" "name"])
-                     (ws "owners")])
-                  workspaces-list)}]])
-     [:div {:style {:textAlign "center"}}
+        [:div {:style {:fontSize "120%" :margin "1em 0"}} "Destination Workspace:"]
+        (style/create-select
+          {:ref "workspace-id"
+           :style {:width 300}
+           :onChange (fn [event]
+                       (swap! state assoc :selected-workspace
+                                   (nth workspaces-list (js/parseInt (.-value (.-target event))))))}
+          (map
+            (fn [ws] (str (get-in ws ["workspace" "namespace"]) "/" (get-in ws ["workspace" "name"])))
+            workspaces-list))])
+     [:div {}
       [comps/Button {:text (if workspace-id "Import" "Export")
                      :onClick #(react/call :perform-copy this)}]]]))
 
