@@ -11,6 +11,7 @@
     ))
 
 
+(def ^:private rows-per-page-options [10 25 100 500])
 (def ^:private initial-rows-per-page 10)
 
 (defn- create-page-range [current-page total-pages]
@@ -34,7 +35,7 @@
       :current-page 1
       :num-rows-visible (:num-total-rows props)})
    :render
-   (fn [{:keys [props state refs]}]
+   (fn [{:keys [props state]}]
      (let [rows-per-page (:rows-per-page @state)
            current-page (:current-page @state)
            num-rows-visible (:num-rows-visible @state)
@@ -86,12 +87,11 @@
                         :padding "2.15em 0em" :textAlign "right"}}
           "Display"
           (style/create-select
-           {:style {:width 60 :margin "0em 1em"} :ref "numRows"
+           {:style {:width 60 :margin "0em 1em"}
             :onChange #(swap! state assoc
-                              :rows-per-page (js/parseInt
-                                               (-> (@refs "numRows") .getDOMNode .-value))
+                              :rows-per-page (nth rows-per-page-options (-> % .-target .-value js/parseInt))
                               :current-page 1)}
-            [10 25 100 500])
+            rows-per-page-options)
           "rows per page"]
          (common/clear-both)]]))
    :component-did-update
