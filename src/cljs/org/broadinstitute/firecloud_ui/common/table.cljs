@@ -114,30 +114,33 @@
                                  :onChange #(react/call :set-body-rows this)}]]
        [:div {}
         (when (or (:filterable? props) (:reorderable-columns? props) (:toolbar props))
-          (let [built-in [:div {:style {:paddingBottom "1em"}}
-                          (when (:filterable? props)
-                            [:div {:style {:float "left"}}
-                             [table-utils/Filterer {:ref "filterer"
-                                                    :onFilter #(react/call :set-body-rows this)}]])
-                          (when (:filters props)
-                            [:div {:style {:float "left" :marginLeft "1em" :marginTop -3}}
-                             [table-utils/FilterBar
-                              (merge (select-keys props [:filters :columns :data])
-                                     {:ref "filter-bar"
-                                      :on-change #(react/call :set-body-rows this)})]])
-                          (when (:reorderable-columns? props)
-                            [:div {:style {:float "left" :marginLeft "1em"}}
-                             [comps/Button {:icon :gear :title-text "Select Columns..." :ref "col-edit-button"
-                                            :onClick #(swap! state assoc :reordering-columns? true)}]
-                             (when (:reordering-columns? @state)
-                               [comps/Dialog {:get-anchor-dom-node #(.getDOMNode (@refs "col-edit-button"))
-                                              :blocking? false
-                                              :dismiss-self #(swap! state assoc :reordering-columns? false)
-                                              :content (react/create-element
-                                                         table-utils/ColumnEditor
-                                                         {:columns (:ordered-columns @state)
-                                                          :submit #(swap! state assoc :ordered-columns %)})}])])
-                          (common/clear-both)]]
+          (let [built-in
+                [:div {:style {:paddingBottom "1em"}}
+                 (when (:reorderable-columns? props)
+                   [:div {:style {:float "left"}}
+                    [comps/Button {:icon :gear :title-text "Select Columns..."
+                                   :ref "col-edit-button"
+                                   :onClick #(swap! state assoc :reordering-columns? true)}]
+                    (when (:reordering-columns? @state)
+                      [comps/Dialog
+                       {:get-anchor-dom-node #(.getDOMNode (@refs "col-edit-button"))
+                        :blocking? false
+                        :dismiss-self #(swap! state assoc :reordering-columns? false)
+                        :content (react/create-element
+                                  table-utils/ColumnEditor
+                                  {:columns (:ordered-columns @state)
+                                   :submit #(swap! state assoc :ordered-columns %)})}])])
+                 (when (:filterable? props)
+                   [:div {:style {:float "left" :marginLeft "1em"}}
+                    [table-utils/Filterer {:ref "filterer"
+                                           :onFilter #(react/call :set-body-rows this)}]])
+                 (when (:filters props)
+                   [:div {:style {:float "left" :marginLeft "1em" :marginTop -3}}
+                    [table-utils/FilterBar
+                     (merge (select-keys props [:filters :columns :data])
+                            {:ref "filter-bar"
+                             :on-change #(react/call :set-body-rows this)})]])
+                 (common/clear-both)]]
             ((:toolbar props) built-in)))
         [:div {}
          [:div {:style {:overflowX "auto"}}
