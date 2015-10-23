@@ -38,22 +38,19 @@
          {:style :light :margin :top :color :exception-red
           :text "Redact" :icon :trash-can
           :onClick
-          (fn []
-            (let [conf (js/confirm "Are you sure ?")]
-              (when conf
-                (let [name (entity "name")
-                      namespace (entity "namespace")
-                      snapshotId (entity "snapshotId")]
-                  (do
-                    (swap! state assoc :blocking-text "Redacting..." :blocking? true)
-                    (endpoints/call-ajax-orch
-                      {:endpoint (endpoints/delete-agora-entity
-                                   config? namespace name snapshotId)
-                       :on-done (fn [{:keys [success? status-text]}]
-                                    (swap! state dissoc :blocking? :blocking-text)
-                                    (if success?
-                                      ((:on-delete props))
-                                      (js/alert (str "Error ! Message : " status-text))))}))))))}]])
+          #(when (js/confirm "Are you sure?")
+            (let [name (entity "name")
+                  namespace (entity "namespace")
+                  snapshotId (entity "snapshotId")]
+              (swap! state assoc :blocking-text "Redacting..." :blocking? true)
+              (endpoints/call-ajax-orch
+                {:endpoint (endpoints/delete-agora-entity
+                             config? namespace name snapshotId)
+                 :on-done (fn [{:keys [success? status-text]}]
+                            (swap! state dissoc :blocking? :blocking-text)
+                            (if success?
+                              ((:on-delete props))
+                              (js/alert (str "Error ! Message : " status-text))))})))}]])
      [comps/EntityDetails {:entity entity}]
      [:div {:style {:fontSize "120%" :margin "1.5em 0 0.5em 0"}} "Save as:"]
      (map
