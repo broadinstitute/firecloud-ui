@@ -49,7 +49,7 @@
                             (swap! state dissoc :blocking-text)
                             (if success?
                               ((:on-delete props))
-                              (js/alert (str "Error ! Message : " status-text))))})))}]])
+                              (js/alert (str "Error: " status-text))))})))}]])
      [comps/EntityDetails {:entity entity}]
      [:div {:style {:fontSize "120%" :margin "1.5em 0 0.5em 0"}} "Save as:"]
      (map
