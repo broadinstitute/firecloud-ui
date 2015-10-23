@@ -168,7 +168,6 @@
        (react/call :load-workspace this)))
    :component-will-receive-props
    (fn [{:keys [props next-props state]}]
-     (utils/cljslog props next-props)
      (when-not (apply = (map :workspace-id [props next-props]))
        (swap! state dissoc :server-response :submission-response)))})
 

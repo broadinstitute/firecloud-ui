@@ -1,9 +1,12 @@
 (ns org.broadinstitute.firecloud-ui.main
   (:require
    [dmohs.react :as react]
+   [org.broadinstitute.firecloud-ui.common.components :as comps]
    [org.broadinstitute.firecloud-ui.common.style :as style]
+   [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
    [org.broadinstitute.firecloud-ui.nav :as nav]
    [org.broadinstitute.firecloud-ui.page.method-repo :as method-repo]
+   [org.broadinstitute.firecloud-ui.page.profile :as profile-page]
    [org.broadinstitute.firecloud-ui.page.status :as status-page]
    [org.broadinstitute.firecloud-ui.page.workspaces-list :as workspaces]
    [org.broadinstitute.firecloud-ui.utils :as utils :refer [rlog jslog cljslog]]
@@ -100,7 +103,7 @@
 
 (react/defc LoggedIn
   {:render
-   (fn [{:keys [props]}]
+   (fn [{:keys [this props state]}]
      (let [nav-context (nav/parse-segment (:nav-context props))
            page (keyword (:segment nav-context))]
        (when-not (or (contains? (set (map :key top-nav-bar-items)) page)
@@ -117,15 +120,50 @@
           [:a {:href "javascript:;" :onClick (fn [e] (-> js/window .-location (.reload)))}
            "Log-Out"]]
          (text-logo)
-         (if (= page :status)
-           (status-page/render)
-           [:div {}
-            [TopNavBar {:selected-item page
-                        :on-nav (fn [item] (nav/navigate (:nav-context props) (name item)))}]
-            (let [item (first (filter #(= (% :key) page) top-nav-bar-items))]
-              (if item
-                ((item :render) {:nav-context nav-context})
-                [:div {} "Page not found."]))])]]))})
+         (case (:registration-status @state)
+           nil [:div {:style {:margin "2em 0" :textAlign "center"}}
+                [comps/Spinner {:text "Loading user information..."}]]
+           :error [:div {:style {:margin "2em 0"}}
+                   (style/create-server-error-message (.-errorMessage this))]
+           :not-registered (profile-page/render
+                            {:new-registration? true
+                             :on-done #(swap! state assoc :registration-status :registered)})
+           :registered
+           (case page
+             :status (status-page/render) 
+             [:div {}
+              [TopNavBar {:selected-item page
+                          :on-nav (fn [item] (nav/navigate (:nav-context props) (name item)))}]
+              (let [item (first (filter #(= (% :key) page) top-nav-bar-items))]
+                (if item
+                  ((item :render) {:nav-context nav-context})
+                  [:div {} "Page not found."]))]))]]))
+   :component-did-mount
+   (fn [{:keys [this state]}]
+     (endpoints/profile-get
+      :isRegistrationComplete
+      (fn [{:keys [success? status-text get-parsed-response]}]
+        (cond
+          (and success? (= (get-in (get-parsed-response) ["keyValuePair" "value"]) "true"))
+          (swap! state assoc :registration-status :registered)
+          (not success?)
+          (swap! state assoc :registration-status :not-registered)
+          :else
+          (do
+            (set! (.-errorMessage this) status-text)
+            (swap! state assoc :registration-status :error))))))})
+
+
+(react/defc RegisterLink
+  {:render
+   (fn [{:keys [state]}]
+     (if-not (:expanded? @state)
+       [:a {:href "javascript:;" :onClick #(swap! state assoc :expanded? true)} "Register"]
+       [:div {:style {:maxWidth 600}}
+        [:div {} [:b {} "FireCloud requires a Google account."]]
+        [:div {} "Please use the \"sign-in\" button above to sign-in with your Google Account."
+         " Once you have successfully signed-in with Google, you will be taken to the FireCloud"
+         " registration page."]]))})
 
 
 (react/defc LoggedOut
@@ -135,19 +173,23 @@
       [:div {:style {:padding "50px 25px"}}
        [:div {:style {:marginBottom "2em"}} (text-logo)]
        [:div {:id "google-sign-in-button"}]
-       [:div {:style {:width "600px" :paddingTop "25px" :fontSize ".75em"}}
+       [:div {:style {:marginTop "1em"}} [RegisterLink]]
+       [:div {:style {:maxWidth 600 :paddingTop "2em" :fontSize "small"}}
         [:p {:style {:fontWeight "bold"}} "WARNING NOTICE"]
         [:p {}
-         "You are accessing a US Government web site which may contain information that must be protected under the US"
-         " Privacy Act or other sensitive information and is intended for Government authorized use only."]
+         "You are accessing a US Government web site which may contain information that must be "
+         "protected under the US Privacy Act or other sensitive information and is intended for "
+         "Government authorized use only."]
         [:p {}
-         "Unauthorized attempts to upload information, change information, or use of this web site may result in"
-         " disciplinary action, civil, and/or criminal penalties. Unauthorized users of this website should have no"
-         " expectation of privacy regarding any communications or data processed by this website."]
+         "Unauthorized attempts to upload information, change information, or use of this web site "
+         "may result in disciplinary action, civil, and/or criminal penalties. Unauthorized users "
+         "of this website should have no expectation of privacy regarding any communications or "
+         "data processed by this website."]
         [:p {}
-         "Anyone accessing this website expressly consents to monitoring of their actions and all communications or"
-         " data transiting or stored on related to this website and is advised that if such monitoring reveals possible"
-         " evidence of criminal activity, NIH may provide that evidence to law enforcement officials."]]]])})
+         "Anyone accessing this website expressly consents to monitoring of their actions and all "
+         "communications or data transiting or stored on related to this website and is advised "
+         "that if such monitoring reveals possible evidence of criminal activity, NIH may provide "
+         "that evidence to law enforcement officials."]]]])})
 
 
 (def google-sign-in-scopes
