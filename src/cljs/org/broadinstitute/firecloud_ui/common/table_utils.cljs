@@ -240,12 +240,8 @@
 (react/defc FilterBar
   {:apply-filter
    (fn [{:keys [props state]} & [filter-index]]
-     (let [selected-filter (nth (:filters props) (or filter-index (:selected-index @state)))
-           matches-text? (constantly true)]
-       (filter (fn [x]
-                 (and ((:filter selected-filter) x)
-                      (matches-text? x)))
-               (:data props))))
+     (let [selected-filter (nth (:filters props) (or filter-index (:selected-index @state)))]
+       (filter (:pred selected-filter) (:data props))))
    :get-initial-state
    (fn [{:keys [props]}]
      {:selected-index 0})

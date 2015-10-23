@@ -48,8 +48,7 @@
                           (if (contains? (:selected-entities @state) entity) disj conj) entity)
                         (entity "name")))}]
                   (map (fn [k] {:header k :starting-width 100}) attribute-keys))
-       :filters (mapv (fn [key] {:text key
-                                 :filter #(= key (% "entityType"))})
+       :filters (mapv (fn [key] {:text key :pred #(= key (% "entityType"))})
                       (:entity-types props))
        :data (:entity-list props)
        :->row (fn [m]

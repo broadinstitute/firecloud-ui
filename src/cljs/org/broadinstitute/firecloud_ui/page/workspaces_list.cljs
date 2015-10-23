@@ -103,10 +103,10 @@
                        {:text "Create New Workspace..." :style :add
                         :onClick (:show-create-workspace props)}]]
                      (common/clear-both)])
-         :filters [{:text "All" :filter identity}
-                   {:text "Complete" :filter #(= "Complete" (:status %))}
-                   {:text "Running" :filter #(= "Running" (:status %))}
-                   {:text "Exception" :filter #(= "Exception" (:status %))}]
+         :filters [{:text "All" :pred (constantly true)}
+                   {:text "Complete" :pred #(= "Complete" (:status %))}
+                   {:text "Running" :pred #(= "Running" (:status %))}
+                   {:text "Exception" :pred #(= "Exception" (:status %))}]
          :columns
          [{:header [:div {:style {:marginLeft -6}} "Status"] :starting-width 60
            :content-renderer (fn [data] [StatusCell {:data data}])

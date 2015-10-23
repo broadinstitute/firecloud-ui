@@ -82,8 +82,7 @@
                                          maybe-uri)
                                        maybe-uri))})
                           attribute-keys))
-          :filters (mapv (fn [key] {:text key
-                                    :filter #(= key (% "entityType"))})
+          :filters (mapv (fn [key] {:text key :pred #(= key (% "entityType"))})
                          (if-let [type (:initial-entity-type props)]
                            (cons type (filter #(not= % type) (:entity-types props)))
                            (:entity-types props)))

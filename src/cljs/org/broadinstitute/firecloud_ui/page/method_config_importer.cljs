@@ -246,9 +246,9 @@
                                       (if fields
                                         (apply style/render-entity fields)
                                         "N/A"))}]
-       :filters [{:text "All" :filter identity}
-                 {:text "Methods Only" :filter #(= :method (:type %))}
-                 {:text "Configs Only" :filter #(= :config (:type %))}]
+       :filters [{:text "All" :pred (constantly true)}
+                 {:text "Methods Only" :pred #(= :method (:type %))}
+                 {:text "Configs Only" :pred #(= :config (:type %))}]
        :data (concat (:methods props) (:configs props))
        :->row (fn [item]
                 [(item "entityType")

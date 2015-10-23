@@ -93,7 +93,7 @@
    :get-initial-state
    (fn [{:keys [this props]}]
      (set! (.-filtered-data this) (if-let [filters (:filters props)]
-                                    (filter (get-in filters [0 :filter]) (:data props))
+                                    (filter (get-in filters [0 :pred]) (:data props))
                                     (:data props)))
      (let [ordered-columns (table-utils/create-ordered-columns (:columns props))]
        (merge

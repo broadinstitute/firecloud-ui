@@ -80,7 +80,7 @@
                        {:header "Entity Name" :starting-width 100}]
                       (map (fn [k] {:header k :starting-width 100}) attribute-keys))
            ;; TODO(dmohs): Set :selected-entity-type on filter.
-           :filters (mapv (fn [key] {:text key :filter #(= key (% "entityType"))})
+           :filters (mapv (fn [key] {:text key :pred #(= key (% "entityType"))})
                           (:ordered-buttons @state))
            :data (:entities props)
            :->row (fn [m]

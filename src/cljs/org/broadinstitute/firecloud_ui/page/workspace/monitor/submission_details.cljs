@@ -57,10 +57,10 @@
                                               [:div {} message])
                                          message-list)])}
                  {:header "Workflow ID" :starting-width 300}]
-       :filters [{:text "All" :filter identity}
-                 {:text "Succeeded" :filter #(= "Succeeded" (% "status"))}
-                 {:text "Running" :filter #(contains? #{"Running" "Submitted"} (% "status"))}
-                 {:text "Failed" :filter #(contains? #{"Failed" "Aborted" "Unknown"} (% "status"))}]
+       :filters [{:text "All" :pred (constantly true)}
+                 {:text "Succeeded" :pred #(= "Succeeded" (% "status"))}
+                 {:text "Running" :pred #(contains? #{"Running" "Submitted"} (% "status"))}
+                 {:text "Failed" :pred #(contains? #{"Failed" "Aborted" "Unknown"} (% "status"))}]
        :data (:workflows props)
        :->row (fn [row]
                 [row
