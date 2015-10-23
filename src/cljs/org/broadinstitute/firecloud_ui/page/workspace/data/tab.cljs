@@ -92,12 +92,12 @@
                                          maybe-uri)
                                        maybe-uri))})
                        attribute-keys))
-          :data (map (fn [m]
-                       (concat
-                         [(m "entityType")
-                          (m "name")]
-                         (map (fn [k] (get-in m ["attributes" k])) attribute-keys)))
-                  (:entities @state))}])])})
+          :data (:entities @state)
+          :->row (fn [m]
+                   (concat
+                    [(m "entityType")
+                     (m "name")]
+                    (map (fn [k] (get-in m ["attributes" k])) attribute-keys)))}])])})
 
 
 (react/defc WorkspaceData

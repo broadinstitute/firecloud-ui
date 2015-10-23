@@ -147,12 +147,13 @@
               (assoc props
                      :ref "body"
                      :columns (filter :showing? (:ordered-columns @state))
-                     :initial-rows (react/call :get-body-rows this (:data props) true))]]]
+                     :initial-rows
+                     (react/call :get-body-rows this (map (:->row props) (:data props)) true))]]]
            (when paginator-below [:div {:style {:paddingTop (:paginator-space props)}} paginator])])]))
    :get-filtered-data
    (fn [{:keys [props refs]}]
      (table-utils/filter-data
-      (:data props) (:columns props) (react/call :get-filter-text (@refs "filterer"))))
+      (map (:->row props) (:data props)) (:columns props) (react/call :get-filter-text (@refs "filterer"))))
    :get-body-rows
    (fn [{:keys [state props refs]} filtered-data & [initial-render?]]
      (if (zero? (count (:data props)))

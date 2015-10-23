@@ -9,6 +9,7 @@
     [org.broadinstitute.firecloud-ui.common.table :as table]
     [org.broadinstitute.firecloud-ui.nav :as nav]
     [org.broadinstitute.firecloud-ui.page.workspace.details :refer [render-workspace-details]]
+    [org.broadinstitute.firecloud-ui.utils :as utils]
     ))
 
 
@@ -121,15 +122,15 @@
                                [:div {:style {:padding "1.1em 0 0 14px"
                                               :fontStyle (when-not description "oblique")}}
                                 (or description "No description provided")])}]
-         :data (map (fn [ws]
-                      [{:status (:status ws)
-                        :onClick #((:onWorkspaceSelected props) (ws "workspace"))}
-                       {:name (str (get-in ws ["workspace" "namespace"])
-                                "/" (get-in ws ["workspace" "name"]))
-                        :status (:status ws)
-                        :onClick #((:onWorkspaceSelected props) (ws "workspace"))}
-                       (get-in ws ["workspace" "attributes" "description"])])
-                 (:filtered-workspaces @state))}]))})
+         :data (:filtered-workspaces @state)
+         :->row (fn [ws]
+                  [{:status (:status ws)
+                    :onClick #((:onWorkspaceSelected props) (ws "workspace"))}
+                   {:name (str (get-in ws ["workspace" "namespace"])
+                               "/" (get-in ws ["workspace" "name"]))
+                    :status (:status ws)
+                    :onClick #((:onWorkspaceSelected props) (ws "workspace"))}
+                   (get-in ws ["workspace" "attributes" "description"])])}]))})
 
 
 (react/defc WorkspaceList

@@ -6,6 +6,7 @@
     [org.broadinstitute.firecloud-ui.common.icons :as icons]
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
+    [org.broadinstitute.firecloud-ui.utils :as utils]
     ))
 
 
@@ -52,9 +53,9 @@
    (fn [{:keys [props]}]
      {:selected-index 0
       :filtered-data (into {} (map-indexed
-                                (fn [index item]
-                                  [index (filter (:filter item) (:data props))])
-                                (:buttons props)))})
+                               (fn [index item]
+                                 [index (filter (:filter item) (:data props))])
+                               (:buttons props)))})
    :render
    (fn [{:keys [props state this]}]
      [:div {:style {:display "inline-block"}}

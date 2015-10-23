@@ -87,13 +87,13 @@
                        {:header "Entity Type" :starting-width 100}
                        {:header "Entity Name" :starting-width 100}]
                       (map (fn [k] {:header k :starting-width 100}) attribute-keys))
-           :data (map (fn [m]
-                        (concat
-                          [m
-                           (m "entityType")
-                           (m "name")]
-                          (map (fn [k] (get-in m ["attributes" k])) attribute-keys)))
-                   (:filtered-entities @state))}])]
+           :data (:filtered-entities @state)
+           :->row (fn [m]
+                    (concat
+                     [m
+                      (m "entityType")
+                      (m "name")]
+                     (map (fn [k] (get-in m ["attributes" k])) attribute-keys)))}])]
       (style/create-form-label "Define Expression")
       (let [disabled (= (:root-entity-type props) (:selected-entity-type @state))]
         (style/create-text-field {:placeholder "leave blank for default"

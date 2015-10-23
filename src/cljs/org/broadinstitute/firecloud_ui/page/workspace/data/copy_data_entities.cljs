@@ -56,13 +56,13 @@
                           (if (contains? (:selected-entities @state) entity) disj conj) entity)
                         (entity "name")))}]
                   (map (fn [k] {:header k :starting-width 100}) attribute-keys))
-       :data (map (fn [m]
-                    (concat
-                      [m
-                       (m "entityType")
-                       m]
-                      (map (fn [k] (get-in m ["attributes" k])) attribute-keys)))
-               (:entities @state))}])])
+       :data (:entities @state)
+       :->row (fn [m]
+                (concat
+                 [m
+                  (m "entityType")
+                  m]
+                 (map (fn [k] (get-in m ["attributes" k])) attribute-keys)))}])])
 
 (react/defc EntitiesList
   {:get-initial-state

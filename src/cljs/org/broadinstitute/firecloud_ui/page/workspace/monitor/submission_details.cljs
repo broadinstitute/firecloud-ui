@@ -68,13 +68,13 @@
                                               [:div {} message])
                                          message-list)])}
                  {:header "Workflow ID" :starting-width 300}]
-       :data (map (fn [row]
-                    [row
-                     (row "statusLastChangedDate")
-                     (row "status")
-                     (row "messages")
-                     (row "workflowId")])
-               (:filtered-workflows @state))}])
+       :data (:filtered-workflows @state)
+       :->row (fn [row]
+                [row
+                 (row "statusLastChangedDate")
+                 (row "status")
+                 (row "messages")
+                 (row "workflowId")])}])
    :render-workflow-details
    (fn [{:keys [state props]}]
      [:div {}
@@ -106,10 +106,10 @@
                                        (map (fn [error]
                                               [:div {} error])
                                          error-list)])}]
-       :data (map (fn [row]
-                    [{:type (row "entityType") :name (row "entityName")}
-                     (row "errors")])
-               (:workflows props))}])})
+       :data (:workflows props)
+       :->row (fn [row]
+                [{:type (row "entityType") :name (row "entityName")}
+                 (row "errors")])}])})
 
 
 (react/defc AbortButton

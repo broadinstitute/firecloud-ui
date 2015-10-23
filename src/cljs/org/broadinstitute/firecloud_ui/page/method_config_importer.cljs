@@ -256,17 +256,16 @@
                                       (if fields
                                         (apply style/render-entity fields)
                                         "N/A"))}]
-       :data (map
-               (fn [item]
-                 [(item "entityType")
-                  (item "namespace")
-                  item
-                  (item "snapshotId")
-                  (item "synopsis")
-                  (item "createDate")
-                  (when (= :config (:type item))
-                    (mapv #((get item "method" {}) %) ["namespace" "name" "snapshotId"]))])
-               (:data @state))}])})
+       :data (:data @state)
+       :->row (fn [item]
+                [(item "entityType")
+                 (item "namespace")
+                 item
+                 (item "snapshotId")
+                 (item "synopsis")
+                 (item "createDate")
+                 (when (= :config (:type item))
+                   (mapv #((get item "method" {}) %) ["namespace" "name" "snapshotId"]))])}])})
 
 
 (react/defc MethodConfigImporter
