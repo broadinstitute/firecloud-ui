@@ -62,7 +62,7 @@
 
 (defn create-select [props options]
   [:select (deep-merge {:style select-style} props)
-   (map (fn [opt] [:option {} opt]) options)])
+   (map-indexed (fn [i opt] [:option {:value i} opt]) options)])
 
 (defn create-server-error-message [message]
   [:div {:style {:textAlign "center" :color (:exception-red colors)}}
