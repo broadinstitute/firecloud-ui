@@ -13,14 +13,6 @@ if [[ "$PWD" != "$HOME"* ]]; then
   exit 1;
 fi
 
-ORCH_URL_ROOT=${ORCH_URL_ROOT:-'https://firecloud-orchestration.dsde-dev.broadinstitute.org'}
+docker run --rm -it -v "$PWD":/working broadinstitute/dsde-toolbox render-templates.sh local $VAULT_TOKEN
 
-exec docker run --rm --name firecloud-ui -p 80:80 -p 443:443 \
-  -p 3449:3449 \
-  -e GOOGLE_CLIENT_ID="$GOOGLE_CLIENT_ID" \
-  -e ORCH_URL_ROOT="$ORCH_URL_ROOT" \
-  -e HTTPS_ONLY=false \
-  -e BUILD_TYPE='' \
-  -v "$PWD":/app \
-  "$@" \
-  broadinstitute/firecloud-ui:dev
+docker-compose -p firecloud -f target/config/docker-compose.yaml up -d
