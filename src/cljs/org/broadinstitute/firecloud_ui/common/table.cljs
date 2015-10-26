@@ -83,6 +83,8 @@
 ;;         A label for the filter.
 ;;       :pred (required)
 ;;         A function that, given a data item, returns true if that item matches the filter.
+;;   :on-filter-change (OPTIONAL)
+;;     A function called when the active filter is changed. Passed the new filter index.
 ;;   :data (REQUIRED)
 ;;     A sequence items that will appear in the table.
 ;;   :->row (REQUIRED)
@@ -147,7 +149,10 @@
                     [table-utils/FilterBar
                      (merge (select-keys props [:filters :columns :data])
                             {:ref "filter-bar"
-                             :on-change #(react/call :set-body-rows this)})]])
+                             :on-change #(do
+                                           (react/call :set-body-rows this)
+                                           (when-let [f (:on-filter-change props)]
+                                             (f %)))})]])
                  (common/clear-both)]]
             ((:toolbar props) built-in)))
         [:div {}

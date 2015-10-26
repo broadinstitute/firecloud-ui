@@ -273,7 +273,7 @@
    :component-did-update
    (fn [{:keys [props state prev-state]}]
      (when-not (= (:selected-index @state) (:selected-index prev-state))
-       ((:on-change props))))})
+       ((:on-change props) (:selected-index @state))))})
 
 
 
