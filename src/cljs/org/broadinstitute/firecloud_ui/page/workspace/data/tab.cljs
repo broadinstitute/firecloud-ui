@@ -142,17 +142,16 @@
                            :entities (:entity-list @state)}])
               :ok-button [comps/Button
                           {:text "Delete"
-                           :disabled? (when (and (@refs "EntitySelector")
-                                                 (empty? (react/call :get-selected-entities (@refs "EntitySelector"))))
-                                        "No entities selected")
                            :onClick #(let [selected-entities (react/call :get-selected-entities (@refs "EntitySelector"))
                                            num (count selected-entities)
-                                           msg (if (= 1 num)
+                                           msg (if (= num 1)
                                                  "Really delete this entity?"
                                                  (str "Really delete these " num " entities?"))]
-                                      (when (js/confirm msg)
-                                        (swap! state dissoc :show-delete?)
-                                        (react/call :delete this selected-entities)))}]}])}])
+                                      (if (zero? num)
+                                        (js/alert "Please select one or more entities to delete")
+                                        (when (js/confirm msg)
+                                          (swap! state dissoc :show-delete?)
+                                          (react/call :delete this selected-entities))))}]}])}])
       (cond
         (and (:entity-list @state) (contains? @state :locked?))
         [EntitiesList {:entity-list (:entity-list @state)
