@@ -9,13 +9,25 @@
 
 (def ^:private access-levels
   ["OWNER" "WRITER" "READER" "NO ACCESS"])
+(def ^:private OWNER 0)
+(def ^:private WRITER 1)
+(def ^:private READER 2)
+(def ^:private NO_ACCESS 3)
+(defn- access-level-to-index [string]
+  (case string
+    "OWNER" OWNER
+    "WRITER" WRITER
+    "READER" READER
+    "NO ACCESS" NO_ACCESS))
+(defn- index-to-access-level [index]
+  (nth access-levels index))
 
 (def ^:private column-width "calc(50% - 4px)")
 
 (defn- build-acl-vec [acl-map]
   (mapv
-    (fn [k] {:userId k :accessLevel (acl-map k)})
-    (keys acl-map)))
+    (fn [[k v]] {:userId k :accessLevel (access-level-to-index v)})
+    acl-map))
 
 (defn- render-acl-content [props state this]
   [comps/OKCancelForm
@@ -51,7 +63,7 @@
        [comps/Button {:text "Add new" :style :add
                       :onClick #(do
                                  (react/call :capture-ui-state this)
-                                 (swap! state update-in [:acl-vec] conj {:userId "" :accessLevel "READER"}))}]])
+                                 (swap! state update-in [:acl-vec] conj {:userId "" :accessLevel READER}))}]])
     :dismiss-self (:dismiss-self props)
     :ok-button
     [comps/Button {:text "Save"
@@ -78,13 +90,15 @@
      (swap! state assoc :acl-vec
        (mapv
          (fn [i]
-           (let [[userId accessLevel] (common/get-text refs (str "acl-key" i) (str "acl-value" i))]
-             {:userId userId :accessLevel accessLevel}))
+           (let [[user-id access-level] (common/get-text refs (str "acl-key" i) (str "acl-value" i))]
+             {:userId user-id :accessLevel (js/parseInt access-level)}))
          (range (count (:acl-vec @state))))))
    :persist-acl
    (fn [{:keys [props state]}]
      (swap! state assoc :saving? true)
-     (let [filtered-acl (filter #(not (empty? (:userId %))) (:acl-vec @state))]
+     (let [filtered-acl (->> (:acl-vec @state)
+                          (filter #(not (empty? (:userId %))))
+                          (map #(update % :accessLevel index-to-access-level)))]
        (endpoints/call-ajax-orch
          {:endpoint (endpoints/update-workspace-acl (:workspace-id props))
           :headers {"Content-Type" "application/json"}
