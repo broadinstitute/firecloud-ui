@@ -31,6 +31,7 @@
        :dismiss-self (:dismiss-self props)
        :content (react/create-element
                   [:div {:style {:background "#fff" :padding "2em"}}
+                   [comps/XButton {:dismiss (:dismiss-self props)}]
                    (cond
                      (:acl-vec @state)
                      [:div {}
