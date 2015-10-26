@@ -23,9 +23,13 @@
        #((:back props))
        (icons/font-icon {:style {:fontSize "70%" :marginRight "0.5em"}} :angle-left)
        "Choose a different workspace")]]
-   (let [attribute-keys (apply union (map #(set (keys (% "attributes"))) (:entity-list props)))]
+   (let [attribute-keys (apply union (map #(set (keys (% "attributes")))
+                                          (filter #(= (% "entityType")
+                                                      (:selected-entity-type @state))
+                                                  (:entity-list props))))]
      [table/Table
-      {:empty-message "There are no entities to display."
+      {:key (:selected-entity-type @state)
+       :empty-message "There are no entities to display."
        :toolbar (fn [built-in]
                   [:div {}
                    [:div {:style {:float "left"}} built-in]
@@ -50,6 +54,9 @@
                   (map (fn [k] {:header k :starting-width 100}) attribute-keys))
        :filters (mapv (fn [key] {:text key :pred #(= key (% "entityType"))})
                       (:entity-types props))
+       :selected-filter-index (.indexOf (to-array (:entity-types props))
+                                        (:selected-entity-type @state))
+       :on-filter-change #(swap! state assoc :selected-entity-type (nth (:entity-types props) %))
        :data (:entity-list props)
        :->row (fn [m]
                 (concat
@@ -60,8 +67,9 @@
 
 (react/defc EntitiesList
   {:get-initial-state
-   (fn []
-     {:selected-entities #{}})
+   (fn [{:keys [props]}]
+     {:selected-entity-type (or (:initial-entity-type props) (first (:entity-types props)))
+      :selected-entities #{}})
    :render
    (fn [{:keys [props state this]}]
      (let [from-ws (:selected-from-workspace props)]

@@ -244,7 +244,7 @@
        (filter (:pred selected-filter) (:data props))))
    :get-initial-state
    (fn [{:keys [props]}]
-     {:selected-index 0})
+     {:selected-index (or (:selected-index props) 0)})
    :render
    (fn [{:keys [this props state]}]
      [:div {:style {:display "inline-block"}}

@@ -83,6 +83,8 @@
 ;;         A label for the filter.
 ;;       :pred (required)
 ;;         A function that, given a data item, returns true if that item matches the filter.
+;;   :selected-filter-index (OPTIONAL)
+;;     Currently selected filter.
 ;;   :on-filter-change (OPTIONAL)
 ;;     A function called when the active filter is changed. Passed the new filter index.
 ;;   :data (REQUIRED)
@@ -103,7 +105,9 @@
    :get-initial-state
    (fn [{:keys [this props]}]
      (set! (.-filtered-data this) (if-let [filters (:filters props)]
-                                    (filter (get-in filters [0 :pred]) (:data props))
+                                    (filter
+                                     (get-in filters [(or (:selected-filter-index props) 0) :pred])
+                                     (:data props))
                                     (:data props)))
      (let [ordered-columns (table-utils/create-ordered-columns (:columns props))]
        (merge
@@ -149,6 +153,7 @@
                     [table-utils/FilterBar
                      (merge (select-keys props [:filters :columns :data])
                             {:ref "filter-bar"
+                             :selected-index (:selected-filter-index props)
                              :on-change #(do
                                            (react/call :set-body-rows this)
                                            (when-let [f (:on-filter-change props)]
