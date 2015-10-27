@@ -9,6 +9,7 @@
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.common.table :as table]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
+    [org.broadinstitute.firecloud-ui.utils :as utils]
     ))
 
 
@@ -55,45 +56,52 @@
        (if (contains? (set types) root)
          (let [entity (first (filter #(= root (% "entityType")) (:entities props)))]
            ((:entity-selected props) (entity->id entity))
-           {:ordered-buttons (cons root (remove #(= % root) types))
-            :selected-entity (first (filter #(= root (% "entityType")) (:entities props)))})
-         {:ordered-buttons types})))
+           {:selected-entity (first (filter #(= root (% "entityType")) (:entities props)))
+            :selected-entity-type root})
+         {:selected-entity-type (first types)})))
    :render
    (fn [{:keys [props state]}]
      [:div {}
       (style/create-form-label "Select Entity")
       [:div {:style {:backgroundColor "#fff" :border (str "1px solid " (:line-gray style/colors))
                      :padding "1em" :marginBottom "0.5em"}}
-       [:div {:style {:textAlign "center" :marginBottom "0.5em"}}
-        [comps/FilterBar {:data (:entities props)
-                          :buttons (mapv (fn [key] {:text key
-                                                    :filter #(= key (% "entityType"))})
-                                     (:ordered-buttons @state))
-                          :did-filter (fn [list data]
-                                        (swap! state assoc :filtered-entities list
-                                          :selected-entity-type (:text data)))}]]
-       (let [attribute-keys (apply union (map #(set (keys (% "attributes"))) (:filtered-entities @state)))]
+       (let [attribute-keys (apply
+                             union
+                             (map #(set (keys (% "attributes")))
+                                  (filter #(= (% "entityType") (:selected-entity-type @state))
+                                          (:entities props))))
+             types (:entity-types props)
+             root (:root-entity-type props)
+             ordered-types (if (contains? (set types) root)
+                             (cons root (remove #(= % root) types))
+                             types)]
          [table/Table
-          {:empty-message "No entities available."
+          {:key (:selected-entity-type @state)
+           :empty-message "No entities available."
            :columns (concat
-                      [{:header "" :starting-width 40 :resizable? false :reorderable? false
-                        :sort-by :none :filter-by :none
-                        :content-renderer
-                        (fn [data]
-                          [:input {:type "radio"
-                                   :checked (identical? data (:selected-entity @state))
-                                   :onChange #(do (swap! state assoc :selected-entity data)
-                                                  ((:entity-selected props) (entity->id data)))}])}
-                       {:header "Entity Type" :starting-width 100}
-                       {:header "Entity Name" :starting-width 100}]
-                      (map (fn [k] {:header k :starting-width 100}) attribute-keys))
-           :data (map (fn [m]
-                        (concat
-                          [m
-                           (m "entityType")
-                           (m "name")]
-                          (map (fn [k] (get-in m ["attributes" k])) attribute-keys)))
-                   (:filtered-entities @state))}])]
+                     [{:header "" :starting-width 40 :resizable? false :reorderable? false
+                       :sort-by :none :filter-by :none
+                       :content-renderer
+                       (fn [data]
+                         [:input {:type "radio"
+                                  :checked (identical? data (:selected-entity @state))
+                                  :onChange #(do (swap! state assoc :selected-entity data)
+                                                 ((:entity-selected props) (entity->id data)))}])}
+                      {:header "Entity Type" :starting-width 100}
+                      {:header "Entity Name" :starting-width 100}]
+                     (map (fn [k] {:header k :starting-width 100}) attribute-keys))
+           :filters (mapv (fn [key] {:text key :pred #(= key (% "entityType"))}) ordered-types)
+           :selected-filter-index (.indexOf (to-array ordered-types)
+                                            (:selected-entity-type @state))
+           :on-filter-change #(swap! state assoc
+                                     :selected-entity-type (nth ordered-types %))
+           :data (:entities props)
+           :->row (fn [m]
+                    (concat
+                     [m
+                      (m "entityType")
+                      (m "name")]
+                     (map (fn [k] (get-in m ["attributes" k])) attribute-keys)))}])]
       (style/create-form-label "Define Expression")
       (let [disabled (= (:root-entity-type props) (:selected-entity-type @state))]
         (style/create-text-field {:placeholder "leave blank for default"

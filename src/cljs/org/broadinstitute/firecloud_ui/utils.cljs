@@ -1,10 +1,12 @@
 (ns org.broadinstitute.firecloud-ui.utils
   (:require
-    [clojure.string :refer [join lower-case split]]
-    ))
+   cljs.pprint
+   [clojure.string :refer [join lower-case split]]
+   ))
 
 
 (defn rlog [& args]
+  (js/console.log (str (get (split (.-stack (js/Error.)) #"\s+at\s+") 3) ":"))
   (let [arr (array)]
     (doseq [x args] (.push arr x))
     (js/console.log.apply js/console arr))
@@ -12,12 +14,18 @@
 
 
 (defn jslog [& args]
-  (apply rlog (map clj->js args))
+  (js/console.log (str (get (split (.-stack (js/Error.)) #"\s+at\s+") 3) ":"))
+  (let [arr (array)]
+    (doseq [x (map clj->js args)] (.push arr x))
+    (js/console.log.apply js/console arr))
   (last args))
 
 
 (defn cljslog [& args]
-  (apply rlog (map pr-str args))
+  (js/console.log (str (get (split (.-stack (js/Error.)) #"\s+at\s+") 3) ":"))
+  (let [arr (array)]
+    (doseq [x (map #(with-out-str (cljs.pprint/pprint %)) args)] (.push arr x))
+    (js/console.log.apply js/console arr))
   (last args))
 
 

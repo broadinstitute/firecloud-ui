@@ -41,14 +41,14 @@
                           [:div {} namespace "/" name])}
      {:header "Data Entity" :starting-width 220}
      {:header "Submitted By" :starting-width 220}]
-    :data (map (fn [x]
-                 [x
-                  x
-                  [(x "methodConfigurationNamespace") (x "methodConfigurationName")]
-                  (str (get-in x ["submissionEntity" "entityName"])
-                       " (" (get-in x ["submissionEntity" "entityType"]) ")")
-                  (x "submitter")])
-               submissions)}])
+    :data submissions
+    :->row (fn [x]
+             [x
+              x
+              [(x "methodConfigurationNamespace") (x "methodConfigurationName")]
+              (str (get-in x ["submissionEntity" "entityName"])
+                   " (" (get-in x ["submissionEntity" "entityType"]) ")")
+              (x "submitter")])}])
 
 
 (react/defc SubmissionsList

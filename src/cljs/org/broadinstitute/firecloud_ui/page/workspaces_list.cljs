@@ -9,6 +9,7 @@
     [org.broadinstitute.firecloud-ui.common.table :as table]
     [org.broadinstitute.firecloud-ui.nav :as nav]
     [org.broadinstitute.firecloud-ui.page.workspace.details :refer [render-workspace-details]]
+    [org.broadinstitute.firecloud-ui.utils :as utils]
     ))
 
 
@@ -97,18 +98,15 @@
          :toolbar (fn [built-in]
                     [:div {}
                      [:div {:style {:float "left"}} built-in]
-                     [:div {:style {:float "left" :marginLeft "1em" :marginTop -3}}
-                      [comps/FilterBar {:data (:workspaces props)
-                                        :buttons [{:text "All" :filter identity}
-                                                  {:text "Complete" :filter #(= "Complete" (:status %))}
-                                                  {:text "Running" :filter #(= "Running" (:status %))}
-                                                  {:text "Exception" :filter #(= "Exception" (:status %))}]
-                                        :did-filter #(swap! state assoc :filtered-workspaces %)}]]
                      [:div {:style {:float "right" :marginTop -5}}
                       [comps/Button
                        {:text "Create New Workspace..." :style :add
                         :onClick (:show-create-workspace props)}]]
                      (common/clear-both)])
+         :filters [{:text "All" :pred (constantly true)}
+                   {:text "Complete" :pred #(= "Complete" (:status %))}
+                   {:text "Running" :pred #(= "Running" (:status %))}
+                   {:text "Exception" :pred #(= "Exception" (:status %))}]
          :columns
          [{:header [:div {:style {:marginLeft -6}} "Status"] :starting-width 60
            :content-renderer (fn [data] [StatusCell {:data data}])
@@ -121,15 +119,15 @@
                                [:div {:style {:padding "1.1em 0 0 14px"
                                               :fontStyle (when-not description "oblique")}}
                                 (or description "No description provided")])}]
-         :data (map (fn [ws]
-                      [{:status (:status ws)
-                        :onClick #((:onWorkspaceSelected props) (ws "workspace"))}
-                       {:name (str (get-in ws ["workspace" "namespace"])
-                                "/" (get-in ws ["workspace" "name"]))
-                        :status (:status ws)
-                        :onClick #((:onWorkspaceSelected props) (ws "workspace"))}
-                       (get-in ws ["workspace" "attributes" "description"])])
-                 (:filtered-workspaces @state))}]))})
+         :data (:workspaces props)
+         :->row (fn [ws]
+                  [{:status (:status ws)
+                    :onClick #((:onWorkspaceSelected props) (ws "workspace"))}
+                   {:name (str (get-in ws ["workspace" "namespace"])
+                               "/" (get-in ws ["workspace" "name"]))
+                    :status (:status ws)
+                    :onClick #((:onWorkspaceSelected props) (ws "workspace"))}
+                   (get-in ws ["workspace" "attributes" "description"])])}]))})
 
 
 (react/defc WorkspaceList

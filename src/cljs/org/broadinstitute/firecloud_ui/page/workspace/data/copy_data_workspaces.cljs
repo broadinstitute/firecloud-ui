@@ -31,15 +31,15 @@
                       (table/date-column {})
                       {:header "Access Level" :starting-width 100}]
                      (map (fn [k] {:header k :starting-width 100}) attribute-keys))
-          :data (map (fn [ws]
-                       (concat
-                         [(get-in ws ["workspace" "namespace"])
-                          ws
-                          (get-in ws ["workspace" "createdBy"])
-                          (get-in ws ["workspace" "createdDate"])
-                          (ws "accessLevel")]
-                         (map (fn [k] (get-in ws ["attributes" k])) attribute-keys)))
-                  (:workspaces props))}])])})
+          :data (:workspaces props)
+          :->row (fn [ws]
+                   (concat
+                    [(get-in ws ["workspace" "namespace"])
+                     ws
+                     (get-in ws ["workspace" "createdBy"])
+                     (get-in ws ["workspace" "createdDate"])
+                     (ws "accessLevel")]
+                    (map (fn [k] (get-in ws ["attributes" k])) attribute-keys)))}])])})
 
 (defn- remove-self [workspace-list workspace-id]
   (filter #(not= workspace-id {:namespace (get-in % ["workspace" "namespace"])

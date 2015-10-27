@@ -36,17 +36,6 @@
    (fn [{:keys [props state]}]
      [table/Table
       {:empty-message "No Workflows"
-       :toolbar (fn [built-in]
-                  [:div {}
-                   [:div {:style {:float "left"}} built-in]
-                   [:div {:style {:float "left" :margin "-3 0 0 1em"}}
-                    [comps/FilterBar {:data (:workflows props)
-                                      :buttons [{:text "All" :filter identity}
-                                                {:text "Succeeded" :filter #(= "Succeeded" (% "status"))}
-                                                {:text "Running" :filter #(contains? #{"Running" "Submitted"} (% "status"))}
-                                                {:text "Failed" :filter #(contains? #{"Failed" "Aborted" "Unknown"} (% "status"))}]
-                                      :did-filter (fn [data] (swap! state assoc :filtered-workflows data))}]]
-                   (common/clear-both)])
        :columns [{:header "Data Entity" :starting-width 200
                   :content-renderer
                   (fn [x]
@@ -68,13 +57,17 @@
                                               [:div {} message])
                                          message-list)])}
                  {:header "Workflow ID" :starting-width 300}]
-       :data (map (fn [row]
-                    [row
-                     (row "statusLastChangedDate")
-                     (row "status")
-                     (row "messages")
-                     (row "workflowId")])
-               (:filtered-workflows @state))}])
+       :filters [{:text "All" :pred (constantly true)}
+                 {:text "Succeeded" :pred #(= "Succeeded" (% "status"))}
+                 {:text "Running" :pred #(contains? #{"Running" "Submitted"} (% "status"))}
+                 {:text "Failed" :pred #(contains? #{"Failed" "Aborted" "Unknown"} (% "status"))}]
+       :data (:workflows props)
+       :->row (fn [row]
+                [row
+                 (row "statusLastChangedDate")
+                 (row "status")
+                 (row "messages")
+                 (row "workflowId")])}])
    :render-workflow-details
    (fn [{:keys [state props]}]
      [:div {}
@@ -106,10 +99,10 @@
                                        (map (fn [error]
                                               [:div {} error])
                                          error-list)])}]
-       :data (map (fn [row]
-                    [{:type (row "entityType") :name (row "entityName")}
-                     (row "errors")])
-               (:workflows props))}])})
+       :data (:workflows props)
+       :->row (fn [row]
+                [{:type (row "entityType") :name (row "entityName")}
+                 (row "errors")])}])})
 
 
 (react/defc AbortButton

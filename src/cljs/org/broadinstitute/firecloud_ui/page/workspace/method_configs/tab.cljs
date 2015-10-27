@@ -54,12 +54,12 @@
              {:header "Root Entity Type" :starting-width 140}
              {:header "Method" :starting-width 800
               :content-renderer (fn [fields] (apply style/render-entity fields))}]
-            :data (map
-                    (fn [config]
-                      [config
-                       (config "rootEntityType")
-                       (mapv #(get-in config ["methodRepoMethod" %]) ["methodNamespace" "methodName" "methodVersion"])])
-                    configs)}]))])
+            :data configs
+            :->row (fn [config]
+                     [config
+                      (config "rootEntityType")
+                      (mapv #(get-in config ["methodRepoMethod" %])
+                            ["methodNamespace" "methodName" "methodVersion"])])}]))])
    :component-did-mount
    (fn [{:keys [this]}]
      (react/call :load this))

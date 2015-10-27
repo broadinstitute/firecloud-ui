@@ -10,6 +10,7 @@
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
     [org.broadinstitute.firecloud-ui.page.workspace.data.copy-data-workspaces :as copy-data-workspaces]
     [org.broadinstitute.firecloud-ui.page.workspace.data.import-data :as import-data]
+    [org.broadinstitute.firecloud-ui.utils :as utils]
     ))
 
 
@@ -48,27 +49,24 @@
 
 
 (react/defc EntitiesList
-  {:render
+  {:get-initial-state
+   (fn [{:keys [props]}]
+     {:selected-entity-type (or (:initial-entity-type props) (first (:entity-types props)))})
+   :render
    (fn [{:keys [props state]}]
      [:div {}
-      [:div {:style {:padding "0 0 0.5em 1em"}}
-       [:div {:style {:textAlign "center"}}
-        [comps/FilterBar {:data (:entity-list props)
-                          :buttons (mapv (fn [key] {:text key
-                                                    :filter #(= key (% "entityType"))})
-                                     (if-let [type (:initial-entity-type props)]
-                                       (cons type (filter #(not= % type) (:entity-types props)))
-                                       (:entity-types props)))
-                          :did-filter (fn [data info]
-                                        (swap! state assoc :entities data :entity-type (:text info)))}]]]
-      (let [attribute-keys (apply union (map #(set (keys (% "attributes"))) (:entities @state)))]
+      (let [attribute-keys (apply
+                            union
+                            (map #(set (keys (% "attributes")))
+                                 (filter #(= (% "entityType") (:selected-entity-type @state))
+                                         (:entity-list props))))]
         [table/Table
-         {:key (:entity-type @state)
+         {:key (:selected-entity-type @state)
           :empty-message "There are no entities to display."
           :toolbar (fn [built-in]
                      [:div {}
                       [:div {:style {:float "left"}} built-in]
-                      (when-let [selected-entity-type (:entity-type @state)]
+                      (when-let [selected-entity-type (:selected-entity-type @state)]
                         [:a {:style {:textDecoration "none" :float "left" :margin "5px 0 0 1em"}
                              :href (str "/service/api/workspaces/" (:namespace (:workspace-id props)) "/"
                                      (:name (:workspace-id props)) "/" selected-entity-type "/tsv")
@@ -91,13 +89,20 @@
                                                                      :gcs-uri maybe-uri)]
                                          maybe-uri)
                                        maybe-uri))})
-                       attribute-keys))
-          :data (map (fn [m]
-                       (concat
-                         [(m "entityType")
-                          (m "name")]
-                         (map (fn [k] (get-in m ["attributes" k])) attribute-keys)))
-                  (:entities @state))}])])})
+                          attribute-keys))
+          :filters (mapv (fn [key] {:text key :pred #(= key (% "entityType"))})
+                         (if-let [type (:initial-entity-type props)]
+                           (cons type (filter #(not= % type) (:entity-types props)))
+                           (:entity-types props)))
+          :selected-filter-index (.indexOf (to-array (:entity-types props))
+                                           (:selected-entity-type @state))
+          :on-filter-change #(swap! state assoc :selected-entity-type (nth (:entity-types props) %))
+          :data (:entity-list props)
+          :->row (fn [m]
+                   (concat
+                    [(m "entityType")
+                     (m "name")]
+                    (map (fn [k] (get-in m ["attributes" k])) attribute-keys)))}])])})
 
 
 (react/defc WorkspaceData
