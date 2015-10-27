@@ -63,7 +63,7 @@
         [comps/SidebarButton {:style :light :margin :top :color :exception-red
                               :text "Delete" :icon :trash-can
                               :disabled? (if locked? "This workspace is locked")
-                              :onClick #(when (js/confirm "Are you sure?")
+                              :onClick #(when (js/confirm "Are you sure?\nBucket data will also be deleted.")
                                          (swap! state assoc :deleting? true)
                                          (react/call :delete this))}])]
      [:div {:style {:marginLeft 330}}
