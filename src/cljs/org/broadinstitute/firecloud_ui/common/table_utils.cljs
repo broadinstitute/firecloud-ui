@@ -128,7 +128,7 @@
     (:content props)]])
 
 
-(defn- default-render [data]
+(defn default-render [data]
   (cond (map? data) (utils/map-to-string data)
         (sequential? data) (clojure.string/join ", " data)
         :else data))

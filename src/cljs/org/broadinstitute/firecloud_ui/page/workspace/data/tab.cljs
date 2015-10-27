@@ -6,6 +6,7 @@
     [org.broadinstitute.firecloud-ui.common.components :as comps]
     [org.broadinstitute.firecloud-ui.common.icons :as icons]
     [org.broadinstitute.firecloud-ui.common.table :as table]
+    [org.broadinstitute.firecloud-ui.common.table-utils :as table-utils]
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
     [org.broadinstitute.firecloud-ui.page.workspace.data.copy-data-workspaces :as copy-data-workspaces]
@@ -93,7 +94,7 @@
                                          [comps/GCSFilePreviewLink (assoc parsed
                                                                      :gcs-uri maybe-uri)]
                                          maybe-uri)
-                                       maybe-uri))})
+                                       (table-utils/default-render maybe-uri)))})
                           attribute-keys))
           :filters (mapv (fn [key] {:text key :pred #(= key (% "entityType"))})
                          (if-let [type (:initial-entity-type props)]
