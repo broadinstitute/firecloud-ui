@@ -23,8 +23,6 @@
 ;; Properties:
 ;;   :cell-padding-left (optional, default 16px)
 ;;     A CSS padding-left value to apply to each cell
-;;   :paginator (optional, default :below)
-;;     Either :above or :below, determines where the paginator appears relative to the table
 ;;   :paginator-space (optional, default 24)
 ;;     A CSS padding value used to separate the table and paginator.
 ;;   :resizable-columns? (optional, default true)
@@ -130,10 +128,12 @@
            :sort-column (:index col)}))))
    :render
    (fn [{:keys [this state props refs]}]
-     (let [paginator [table-utils/Paginator {:ref "paginator"
-                                 :initial-rows-per-page initial-rows-per-page
-                                 :num-total-rows (count (:data props))
-                                 :onChange #(react/call :set-body-rows this)}]]
+     (let [paginator [table-utils/Paginator
+                      {:ref "paginator"
+                       :width (:width props)
+                       :initial-rows-per-page initial-rows-per-page
+                       :num-total-rows (count (:data props))
+                       :onChange #(react/call :set-body-rows this)}]]
        [:div {}
         (when (or (:filterable? props) (:reorderable-columns? props) (:toolbar props))
           (let [built-in

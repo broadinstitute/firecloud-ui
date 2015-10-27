@@ -35,19 +35,22 @@
                        (map (fn [k] {:header k :starting-width 100 :show-initial? false})
                          attribute-keys)))
            data (fn [source?]
-                  (map (fn [[index entity]]
-                         (concat
-                           [(entity "entityType")
-                            [entity index]]
-                           (map (fn [k] (get-in entity ["attributes" k])) attribute-keys)))
-                    (replace
-                      (into [] (zipmap (range) (:entities props)))
-                      ((if source? :unselected :selected) @state))))
+                  (replace
+                    (into [] (zipmap (range) (:entities props)))
+                    ((if source? :unselected :selected) @state)))
+           ->row (fn [[index entity]]
+                   (concat
+                     [(entity "entityType")
+                      [entity index]]
+                     (map (fn [k] (get-in entity ["attributes" k])) attribute-keys)))
            create-table (fn [source?]
                           [:div {:style {:float (if source? "left" "right") :width box-width
                                          :padding "0.5em" :boxSizing "border-box"
                                          :backgroundColor "#fff" :border (str "1px solid" (:line-gray style/colors))}}
-                           [table/Table {:width :narrow :columns (columns source?) :data (data source?)}]])]
+                           [table/Table {:width :narrow
+                                         :columns (columns source?)
+                                         :data (data source?)
+                                         :->row ->row}]])]
        [:div {}
         [:div {:style {:float "left" :width box-width}}
          (:left-text props)]
