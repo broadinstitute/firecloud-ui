@@ -1,7 +1,6 @@
 #!/bin/bash
-set -euo pipefail
+set -euox pipefail
 IFS=$'\n\t'
-set -x
 
 # Starts server for development.
 # - exposes Figwheel port (3449)
@@ -14,7 +13,7 @@ if [[ "$PWD" != "$HOME"* ]]; then
   exit 1;
 fi
 
-ORCH_URL_ROOT=${ORCH_URL_ROOT:-'https://firecloud.dsde-dev.broadinstitute.org/service'}
+ORCH_URL_ROOT=${ORCH_URL_ROOT:-'https://firecloud-orchestration.dsde-dev.broadinstitute.org'}
 
 exec docker run --rm --name firecloud-ui -p 80:80 -p 443:443 \
   -p 3449:3449 \
