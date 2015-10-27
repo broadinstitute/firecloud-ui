@@ -7,7 +7,6 @@ FROM broadinstitute/openidc-baseimage
 RUN \
   add-apt-repository ppa:openjdk-r/ppa && apt-get update --fix-missing \
   && apt-get install -y -qq --no-install-recommends \
-    libapache2-mod-shib2 \
     openjdk-8-jdk \
     php5-cli \
     rlfe \
@@ -38,9 +37,6 @@ COPY script/common script/common
 RUN ./script/common/build.sh once
 
 COPY src/docker/run-apache.sh /etc/service/apache2/run
-COPY src/docker/shibboleth2.xml /etc/shibboleth/shibboleth2.xml
-COPY src/docker/run-shibboleth.sh /etc/service/shibboleth/run
-# Idp metadata available at https://this-host/Shibboleth.sso/Metadata
 
 # openidc-baseimage requires this unused variable.
 ENV CALLBACK_URI=http://example.com/

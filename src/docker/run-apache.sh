@@ -17,9 +17,6 @@ LogLevel ${LOG_LEVEL}
   # Allow for proxying requests to HTTPS endpoints.
   SSLProxyEngine on
 
-  # Causes Shibboleth to play nice with other authentication schemes.
-  ShibCompatValidUser On
-
   --EXTRA_VHOST_HTTP--
 </VirtualHost>
 
@@ -32,9 +29,6 @@ LogLevel ${LOG_LEVEL}
   SSLCertificateFile "/etc/ssl/certs/server.crt"
   SSLCertificateKeyFile "/etc/ssl/private/server.key"
   SSLCertificateChainFile "/etc/ssl/certs/ca-bundle.crt"
-
-  # Causes Shibboleth to play nice with other authentication schemes.
-  ShibCompatValidUser On
 
   --EXTRA_VHOST_HTTPS--
 </VirtualHost>
@@ -61,12 +55,6 @@ LOCATION_DIRECTIVES=$(cat << EOF
     Require valid-user
     ProxyPass ${ORCH_URL_ROOT}/api
     ProxyPassReverse ${ORCH_URL_ROOT}/api
-  </Location>
-
-  <Location "/service/link-nih-account">
-    AuthType shibboleth
-    ShibRequestSetting requireSession 1
-    Require valid-user
   </Location>
 EOF
 )
