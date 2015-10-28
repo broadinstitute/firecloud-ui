@@ -93,7 +93,7 @@
                (style/create-select
                  {:style {:width 60 :margin "0em 1em"}
                   :onChange #(swap! state assoc
-                              :rows-per-page (-> % .-target .-value js/parseInt)
+                              :rows-per-page (nth rows-per-page-options (-> % .-target .-value js/parseInt))
                               :current-page 1)}
                  rows-per-page-options)
                "rows per page"]]
@@ -357,7 +357,7 @@
   (vec (map-indexed
         (fn [index col]
           (assoc col
-                 :index index :showing? true
+                 :index index :showing? (get col :show-initial? true)
                  :width (or (:starting-width col) 100)
                  :starting-width (or (:starting-width col) 100)))
         columns)))

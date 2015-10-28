@@ -1,7 +1,7 @@
 (ns org.broadinstitute.firecloud-ui.page.workspace.data.entity-selector
   (:require
     [dmohs.react :as react]
-    [clojure.set :refer [union]]
+    [clojure.set :refer [union difference]]
     [org.broadinstitute.firecloud-ui.common :as common]
     [org.broadinstitute.firecloud-ui.common.table :as table]
     [org.broadinstitute.firecloud-ui.common.style :as style]
@@ -14,9 +14,8 @@
    (fn [{:keys [props state]}]
      (replace (:entities props) (:selected @state)))
    :get-initial-state
-   (fn [{:keys [props]}]
-     {:unselected (-> (:entities props) count range set)
-      :selected #{}})
+   (fn []
+     {:selected #{}})
    :render
    (fn [{:keys [state props]}]
      (let [attribute-keys (apply union (map #(set (keys (% "attributes"))) (:entities props)))
@@ -28,16 +27,16 @@
                          :content-renderer
                          (fn [[entity index]]
                            (style/create-link
-                             #(swap! state (fn [s] (-> s
-                                                     (update-in [:selected] (if source? conj disj) index)
-                                                     (update-in [:unselected] (if source? disj conj) index))))
+                             #(swap! state update-in [:selected] (if source? conj disj) index)
                              (entity "name")))}]
                        (map (fn [k] {:header k :starting-width 100 :show-initial? false})
                          attribute-keys)))
            data (fn [source?]
                   (replace
                     (into [] (zipmap (range) (:entities props)))
-                    ((if source? :unselected :selected) @state)))
+                    (if source?
+                      (difference (-> (:entities props) count range set) (:selected @state))
+                      (:selected @state))))
            ->row (fn [[index entity]]
                    (concat
                      [(entity "entityType")

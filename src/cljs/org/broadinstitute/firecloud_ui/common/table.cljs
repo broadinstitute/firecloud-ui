@@ -172,8 +172,9 @@
          [:div {:style {:overflowX "auto"}}
           [:div {:style {:position "relative"
                          :paddingBottom 10
-                         :minWidth (reduce
-                                    + (map :width (filter :showing? (:ordered-columns @state))))
+                         :minWidth (when-not (:no-data? @state)
+                                     (reduce
+                                       + (map :width (filter :showing? (:ordered-columns @state)))))
                          :cursor (when (:dragging? @state) "col-resize")}}
            (if (:no-data? @state)
              (style/create-message-well (:empty-message props))
