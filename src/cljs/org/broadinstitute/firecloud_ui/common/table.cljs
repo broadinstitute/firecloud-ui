@@ -23,8 +23,6 @@
 ;; Properties:
 ;;   :cell-padding-left (optional, default 16px)
 ;;     A CSS padding-left value to apply to each cell
-;;   :paginator (optional, default :below)
-;;     Either :above or :below, determines where the paginator appears relative to the table
 ;;   :paginator-space (optional, default 24)
 ;;     A CSS padding value used to separate the table and paginator.
 ;;   :resizable-columns? (optional, default true)
@@ -50,11 +48,19 @@
 ;;     Use to provide more items in the toolbar, along with the filterer and column reorderer (if present).
 ;;     This value should be a function that takes the "built-in" toolbar as a parameter, and returns an
 ;;     HTML element.  If this property is not supplied, the built-in toolbar is placed as normal.
+;;   :width (optional, default normal)
+;;     Specify :width :narrow to make the paginator layout in a narrow width friendly way.  Any other value
+;;     (including none) corresponds to the normal layout
 ;;   :columns (REQUIRED)
 ;;     A sequence of column maps.  The order given is used as the initial order.
 ;;     Columns have the following properties:
 ;;       :header (optional, default none)
 ;;         The text to display.
+;;       :reorderable? (optional, default true)
+;;         Whether or not the column should be allowed to be reordered.  Unused if :reorderable-columns?
+;;         is false on the table.
+;;       :show-initial? (optional, default true)
+;;         Whether or not to initially show the column.
 ;;       :starting-width (optional, default 100)
 ;;         The initial width, which may be resized
 ;;       :as-text (optional)
@@ -122,10 +128,12 @@
            :sort-column (:index col)}))))
    :render
    (fn [{:keys [this state props refs]}]
-     (let [paginator [table-utils/Paginator {:ref "paginator"
-                                 :initial-rows-per-page initial-rows-per-page
-                                 :num-total-rows (count (:data props))
-                                 :onChange #(react/call :set-body-rows this)}]]
+     (let [paginator [table-utils/Paginator
+                      {:ref "paginator"
+                       :width (:width props)
+                       :initial-rows-per-page initial-rows-per-page
+                       :num-total-rows (count (:data props))
+                       :onChange #(react/call :set-body-rows this)}]]
        [:div {}
         (when (or (:filterable? props) (:reorderable-columns? props) (:toolbar props))
           (let [built-in
@@ -164,8 +172,9 @@
          [:div {:style {:overflowX "auto"}}
           [:div {:style {:position "relative"
                          :paddingBottom 10
-                         :minWidth (reduce
-                                    + (map :width (filter :showing? (:ordered-columns @state))))
+                         :minWidth (when-not (:no-data? @state)
+                                     (reduce
+                                       + (map :width (filter :showing? (:ordered-columns @state)))))
                          :cursor (when (:dragging? @state) "col-resize")}}
            (if (:no-data? @state)
              (style/create-message-well (:empty-message props))

@@ -45,56 +45,61 @@
            right-num (min num-rows-visible (* current-page rows-per-page))
            left-num (if (zero? right-num) 0 (inc (* (dec current-page) rows-per-page)))]
        [:div {:style {:border "1px solid #ebebeb" :boxShadow "-3px -6px 23px -7px #ebebeb inset"}}
-        [:div {:style {:fontSize 13 :lineHeight 1.5 :padding "0px 48px" :verticalAlign "middle"}}
-
-         [:div {:style {:float "left" :display "inline-block" :width "33.33%" :padding "2.15em 0em"
-                        :verticalAlign "middle"}}
-          [:b {} (str left-num " - " right-num)]
-          (str " of " (pluralize num-rows-visible " result")
-               (when-not (= num-rows-visible (:num-total-rows props))
-                 (str " (filtered from " (:num-total-rows props) " total)")))]
-         (style/create-unselectable
-          :div {:style {:float "left" :display "inline-block" :width "33.33%"
-                        :padding "1.6em 0em" :verticalAlign "middle" :textAlign "center"}}
-          [:div {:style {:display "inline-block" :padding "0.55em 0.9em"
-                         :color (if allow-prev
-                                  (:button-blue style/colors)
-                                  (:border-gray style/colors))
-                         :cursor (when allow-prev "pointer")}
-                 :onClick (when allow-prev #(swap! state update-in [:current-page] dec))}
-           (icons/font-icon {:style {:fontSize "70%"}} :angle-left)
-           [:span {:style {:paddingLeft "1em"}} "Prev"]]
-          [:span {}
-           (map (fn [n]
-                  (let [selected? (= n current-page)]
-                    [:div {:style {:paddingTop 5 :display "inline-block" :width 29 :height 24
-                                   :backgroundColor (when selected? (:button-blue style/colors))
-                                   :color (if selected? "white" (:button-blue style/colors))
-                                   :borderRadius (when selected? "100%")
-                                   :cursor (when-not selected? "pointer")}
-                           :onClick (when-not selected? #(swap! state assoc :current-page n))}
-                     n]))
-                (create-page-range current-page num-pages))]
-          [:div {:style {:display "inline-block" :padding "0.55em 0.9em"
-                         :color (if allow-next
-                                  (:button-blue style/colors)
-                                  (:border-gray style/colors))
-                         :cursor (when allow-next "pointer")}
-                 :onClick (when allow-next #(swap! state update-in [:current-page] inc))}
-           [:span {:style {:paddingRight "1em"}} "Next"]
-           (icons/font-icon {:style {:fontSize "70%"}} :angle-right)])
-         [:div {:style {:float "left" :display "inline-block" :width "33.33%"
-                        :padding "2.15em 0em" :textAlign "right"}}
-          "Display"
-          (style/create-select
-           {:style {:width 60 :margin "0em 1em"}
-            :onChange #(swap! state assoc
-                              :rows-per-page (nth rows-per-page-options
-                                                  (-> % .-target .-value js/parseInt))
+        (let [layout-style (if (= :narrow (:width props))
+                             {:textAlign "center" :padding "1ex"}
+                             {:float "left" :width "33.33%"})
+              view-component
+              [:div {:style (merge {:padding "2.15em 0em" :verticalAlign "middle"}
+                              layout-style)}
+               [:b {} (str left-num " - " right-num)]
+               (str " of " (pluralize num-rows-visible " result")
+                 (when-not (= num-rows-visible (:num-total-rows props))
+                   (str " (filtered from " (:num-total-rows props) " total)")))]
+              page-component
+              (style/create-unselectable
+                :div {:style (merge {:padding "1.6em 0em" :verticalAlign "middle" :textAlign "center"}
+                               layout-style)}
+                [:div {:style {:display "inline-block" :padding "0.55em 0.9em"
+                               :color (if allow-prev
+                                        (:button-blue style/colors)
+                                        (:border-gray style/colors))
+                               :cursor (when allow-prev "pointer")}
+                       :onClick (when allow-prev #(swap! state update-in [:current-page] dec))}
+                 (icons/font-icon {:style {:fontSize "70%"}} :angle-left)
+                 [:span {:style {:paddingLeft "1em"}} "Prev"]]
+                [:span {}
+                 (map (fn [n]
+                        (let [selected? (= n current-page)]
+                          [:div {:style {:paddingTop 5 :display "inline-block" :width 29 :height 24
+                                         :backgroundColor (when selected? (:button-blue style/colors))
+                                         :color (if selected? "white" (:button-blue style/colors))
+                                         :borderRadius (when selected? "100%")
+                                         :cursor (when-not selected? "pointer")}
+                                 :onClick (when-not selected? #(swap! state assoc :current-page n))}
+                           n]))
+                   (create-page-range current-page num-pages))]
+                [:div {:style {:display "inline-block" :padding "0.55em 0.9em"
+                               :color (if allow-next
+                                        (:button-blue style/colors)
+                                        (:border-gray style/colors))
+                               :cursor (when allow-next "pointer")}
+                       :onClick (when allow-next #(swap! state update-in [:current-page] inc))}
+                 [:span {:style {:paddingRight "1em"}} "Next"]
+                 (icons/font-icon {:style {:fontSize "70%"}} :angle-right)])
+              rows-component
+              [:div {:style (merge {:padding "2.15em 0em" :textAlign "right"}
+                              layout-style)}
+               "Display"
+               (style/create-select
+                 {:style {:width 60 :margin "0em 1em"}
+                  :onChange #(swap! state assoc
+                              :rows-per-page (nth rows-per-page-options (-> % .-target .-value js/parseInt))
                               :current-page 1)}
-            rows-per-page-options)
-          "rows per page"]
-         (common/clear-both)]]))
+                 rows-per-page-options)
+               "rows per page"]]
+          [:div {:style {:fontSize 13 :lineHeight 1.5 :padding "0px 48px" :verticalAlign "middle"}}
+           view-component page-component rows-component
+           (common/clear-both)])]))
    :component-did-update
    (fn [{:keys [props state prev-state]}]
      (when-not (and (apply = (map :rows-per-page [prev-state @state]))
@@ -123,7 +128,7 @@
     (:content props)]])
 
 
-(defn- default-render [data]
+(defn default-render [data]
   (cond (map? data) (utils/map-to-string data)
         (sequential? data) (clojure.string/join ", " data)
         :else data))
@@ -352,7 +357,7 @@
   (vec (map-indexed
         (fn [index col]
           (assoc col
-                 :index index :showing? true
+                 :index index :showing? (get col :show-initial? true)
                  :width (or (:starting-width col) 100)
                  :starting-width (or (:starting-width col) 100)))
         columns)))
