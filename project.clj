@@ -28,7 +28,10 @@
                                                             ":3449/figwheel-ws")}}}}}
              :minimized {:cljsbuild
                          {:builds {:client {:compiler
-                                            {:optimizations :advanced
+                                            {;; As of 10/29/15, advanced optimization triggers
+                                             ;; infinite recursion, which I was not able to figure
+                                             ;; out.
+                                             :optimizations :simple
                                              :pretty-print false
                                              :closure-defines {"goog.DEBUG" false}}}}}}}
   :cljsbuild {:builds {:client {:source-paths ["src/cljs"]
