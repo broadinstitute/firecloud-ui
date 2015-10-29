@@ -48,25 +48,27 @@
                                   "Running" [icons/RunningIcon {:size 36}]
                                   "Exception" [icons/ExceptionIcon {:size 36}])
                           :color (style/color-for-status status)}]
-      [comps/SidebarButton {:style :light :margin :top :color :button-blue
-                            :text "Clone..." :icon :plus
-                            :onClick #(swap! state assoc :cloning? true)}]
-      (when owner?
+      (when-not (:editing? @state)
         [comps/SidebarButton {:style :light :margin :top :color :button-blue
-                              :text (if locked? "Unlock" "Lock") :icon :locked
-                              :onClick #(react/call :lock-or-unlock this locked?)}])
-      (when owner?
-        [comps/SidebarButton {:style :light :margin :top :color :exception-red
-                              :text "Delete" :icon :trash-can
-                              :disabled? (if locked? "This workspace is locked")
-                              :onClick #(when (js/confirm "Are you sure?\nBucket data will also be deleted.")
-                                         (swap! state assoc :deleting? true)
-                                         (react/call :delete this))}])
+                              :text "Clone..." :icon :plus
+                              :onClick #(swap! state assoc :cloning? true)}])
+        (when (and  owner? (not (:editing? @state)))
+          [comps/SidebarButton {:style :light :margin :top :color :button-blue
+                                :text (if locked? "Unlock" "Lock") :icon :locked
+                                :onClick #(react/call :lock-or-unlock this locked?)}])
+      (when (and  owner? (not (:editing? @state)))
+          [comps/SidebarButton {:style :light :margin :top :color :exception-red
+                                :text "Delete" :icon :trash-can
+                                :disabled? (if locked? "This workspace is locked")
+                                :onClick #(when (js/confirm "Are you sure?\nBucket data will also be deleted.")
+                                           (swap! state assoc :deleting? true)
+                                           (react/call :delete this))}])
       (when writer?
         (if (:editing? @state)
+          [:div {}
           [comps/SidebarButton
            {:style :light :color :button-blue  :margin :top
-            :text "Done Editing" :icon :status-done
+            :text "Save" :icon :status-done
             :onClick (fn [e]
                        (swap! state assoc :editing? false)
                        (swap! state assoc
@@ -81,6 +83,11 @@
                            (do
                            (react/call :load-workspace this)
                            (swap! state dissoc :saving?)))))}]
+           [comps/SidebarButton
+            {:style :light :color :exception-red :margin :top
+             :icon :x
+             :text "Cancel"
+             :onClick #(swap! state assoc :editing false)}]]
           [comps/SidebarButton
            {:style :light :color :button-blue  :margin :top
             :text "Edit attributes" :icon :pencil
@@ -106,25 +113,30 @@
           [:span {:style {:fontStyle "oblique"}} "No description provided"]))
       (style/create-section-header "Google Bucket")
       (style/create-paragraph (get-in ws ["workspace" "bucketName"]))
-      (style/create-section-header "Created By")
-      (style/create-paragraph
-        [:div {} (get-in ws ["workspace" "createdBy"])]
-        [:div {} (common/format-date (get-in ws ["workspace" "createdDate"]))])
-      (style/create-section-header "Submissions")
-      (style/create-paragraph
-        (let [fail-count (->> submissions
-                           (filter (complement all-success?))
-                           count)]
-          (str (count submissions) " Submissions"
-            (when (pos? fail-count)
-              (str " (" fail-count " failed)")))))]
+       (style/create-section-header "Workspace Attributes")
+       (let [{:keys [workspace workspace-error]} (:server-response @state)
+             owner? (= "OWNER" (workspace "accessLevel"))
+             writer? (or (= "WRITER" (workspace "accessLevel")) owner?)
+             status (common/compute-status workspace)]
+         (render-attributes props state refs))
+       ]
       [:div {:style {:marginRight "25%" :float "right"}}
-      (style/create-section-header "Workspace Attributes")
-      (let [{:keys [workspace workspace-error]} (:server-response @state)
-            owner? (= "OWNER" (workspace "accessLevel"))
-            writer? (or (= "WRITER" (workspace "accessLevel")) owner?)
-            status (common/compute-status workspace)]
-        (render-attributes props state refs))]]
+       (style/create-section-header "Created By")
+       (style/create-paragraph
+         [:div {} (get-in ws ["workspace" "createdBy"])]
+         [:div {} (common/format-date (get-in ws ["workspace" "createdDate"]))])
+       (style/create-section-header "Submissions")
+       (style/create-paragraph
+         (let [fail-count (->> submissions
+                            (filter (complement all-success?))
+                            count)]
+           (str (count submissions) " Submissions"
+             (when (pos? fail-count)
+               (str " (" fail-count " failed)")))))
+
+
+
+       ]]
      (common/clear-both)]))
 
 (react/defc Summary
