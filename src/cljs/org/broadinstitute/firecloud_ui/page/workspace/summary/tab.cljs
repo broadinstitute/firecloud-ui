@@ -9,7 +9,7 @@
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
     [org.broadinstitute.firecloud-ui.page.workspace.monitor.common :refer [all-success?]]
     [org.broadinstitute.firecloud-ui.page.workspace.summary.acl-editor :refer [AclEditor]]
-    [org.broadinstitute.firecloud-ui.page.workspace.summary.attribute-editor :refer [AttributeViewer]]
+    [org.broadinstitute.firecloud-ui.page.workspace.summary.attribute-editor :refer [render-attributes add-update-attributes reload-attributes]]
     [org.broadinstitute.firecloud-ui.page.workspace.summary.workspace-cloner :refer [WorkspaceCloner]]
     ))
 
@@ -23,7 +23,7 @@
      (map (fn [tag] [:span {:style tagstyle} tag]) tags)]))
 
 
-(defn- view-summary [state props ws submissions status owner? this on-view-attributes]
+(defn- view-summary [state props ws submissions status owner? writer? this on-view-attributes refs]
   (let [locked? (get-in ws ["workspace" "isLocked"])
         owners (ws "owners")]
     [:div {:style {:margin "45px 25px"}}
@@ -49,9 +49,6 @@
                                   "Exception" [icons/ExceptionIcon {:size 36}])
                           :color (style/color-for-status status)}]
       [comps/SidebarButton {:style :light :margin :top :color :button-blue
-                            :text "View attributes" :icon :document
-                            :onClick on-view-attributes}]
-      [comps/SidebarButton {:style :light :margin :top :color :button-blue
                             :text "Clone..." :icon :plus
                             :onClick #(swap! state assoc :cloning? true)}]
       (when owner?
@@ -64,8 +61,34 @@
                               :disabled? (if locked? "This workspace is locked")
                               :onClick #(when (js/confirm "Are you sure?\nBucket data will also be deleted.")
                                          (swap! state assoc :deleting? true)
-                                         (react/call :delete this))}])]
+                                         (react/call :delete this))}])
+      (when writer?
+        (if (:editing? @state)
+          [comps/SidebarButton
+           {:style :light :color :button-blue  :margin :top
+            :text "Done Editing" :icon :status-done
+            :onClick (fn [e]
+                       (swap! state assoc :editing? false)
+                       (swap! state assoc
+                         :attrs-list (filterv
+                                       (fn [pair] (not (clojure.string/blank? (clojure.string/trim (first pair)))))
+                                       (:attrs-list @state))
+                         :saving? true)
+                       ;; TODO: rawls will soon return attributes after update- use that intead of reload
+                       (add-update-attributes
+                         props state (:attrs-list @state)
+                         (fn []
+                           (do
+                           (react/call :load-workspace this)
+                           (swap! state dissoc :saving?)))))}]
+          [comps/SidebarButton
+           {:style :light :color :button-blue  :margin :top
+            :text "Edit attributes" :icon :pencil
+            :onClick #(swap! state assoc
+                       :editing? true
+                       :reserved-keys (vec (range 0 (count (:attrs-list @state)))))}]))]
      [:div {:style {:marginLeft 330}}
+      [:div {:style {:float "left"}}
       (style/create-section-header (str "Workspace Owner" (when (> (count owners) 1) "s")))
       (style/create-paragraph
         [:div {}
@@ -95,6 +118,13 @@
           (str (count submissions) " Submissions"
             (when (pos? fail-count)
               (str " (" fail-count " failed)")))))]
+      [:div {:style {:marginRight "25%" :float "right"}}
+      (style/create-section-header "Workspace Attributes")
+      (let [{:keys [workspace workspace-error]} (:server-response @state)
+            owner? (= "OWNER" (workspace "accessLevel"))
+            writer? (or (= "WRITER" (workspace "accessLevel")) owner?)
+            status (common/compute-status workspace)]
+        (render-attributes props state refs))]]
      (common/clear-both)]))
 
 (react/defc Summary
@@ -102,7 +132,7 @@
    (fn []
      {:viewing-attributes? false})
    :render
-   (fn [{:keys [state props this]}]
+   (fn [{:keys [state props this refs]}]
      (cond
        (and (:server-response @state) (:submission-response @state))
        (let [{:keys [workspace workspace-error]} (:server-response @state)
@@ -113,13 +143,8 @@
                (let [owner? (= "OWNER" (workspace "accessLevel"))
                      writer? (or (= "WRITER" (workspace "accessLevel")) owner?)
                      status (common/compute-status workspace)]
-                 (if (:viewing-attributes? @state)
-                   [AttributeViewer {:ws workspace :writer? writer? :on-done #(swap! state dissoc :viewing-attributes?)
-                                     :attrs-list (mapv (fn [[k v]] [k v])
-                                                   (dissoc (get-in workspace ["workspace" "attributes"]) "description"))
-                                     :workspace-id (:workspace-id props)}]
-                   (view-summary state props workspace submissions status owner? this
-                     #(swap! state assoc :viewing-attributes? true))))))
+                  (view-summary state props workspace submissions status owner? writer? this
+                     #(swap! state assoc :viewing-attributes? true) refs))))
        :else [comps/Spinner {:text "Loading workspace..."}]))
    :load-workspace
    (fn [{:keys [props state]}]
@@ -128,7 +153,14 @@
         :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                    (swap! state assoc :server-response
                      (if success? {:workspace (get-parsed-response)}
-                                  {:workspace-error status-text})))})
+                                  {:workspace-error status-text}))
+                   (if success?
+                       (let [attrs-list
+                             (mapv (fn [[k v]] [k v])
+                               (get-in (:server-response @state )
+                                 [ :workspace "workspace" "attributes" ]))]
+                         (swap! state assoc :attrs-list attrs-list))
+                     (swap! state dissoc :attrs-list)))})
      (endpoints/call-ajax-orch
        {:endpoint (endpoints/list-submissions (:workspace-id props))
         :on-done (fn [{:keys [success? status-text get-parsed-response]}]
@@ -159,12 +191,17 @@
                                   (dissoc % :locking? :server-response :submission-response)
                                   (dissoc % :locking?))))}))
    :component-did-mount
-   (fn [{:keys [this]}]
+   (fn [{:keys [this state refs]}]
      (react/call :load-workspace this))
    :component-did-update
-   (fn [{:keys [this state]}]
+   (fn [{:keys [this state refs]}]
      (when (nil? (:server-response @state))
-       (react/call :load-workspace this)))
+       (react/call :load-workspace this))
+     (when (:editing? @state)
+       (when (> (count (:attrs-list @state)) 0)
+         (common/focus-and-select
+           (-> (@refs (str "field" (- (count (:attrs-list @state)) 1))) .getDOMNode))))
+     )
    :component-will-receive-props
    (fn [{:keys [props next-props state]}]
      (when-not (apply = (map :workspace-id [props next-props]))
