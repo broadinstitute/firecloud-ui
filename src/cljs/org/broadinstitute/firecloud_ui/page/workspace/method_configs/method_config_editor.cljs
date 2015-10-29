@@ -26,11 +26,12 @@
 
 (defn- commit [state refs config props]
   (let [workspace-id (:workspace-id props)
-        name (get-text refs "confname")
+        [name rootEntityType] (get-text refs "confname" "rootentitytype")
         inputs (into {} (map (juxt identity #(get-text refs (str "in_" %))) (keys (config "inputs"))))
         outputs (into {} (map (juxt identity #(get-text refs (str "out_" %))) (keys (config "outputs"))))
         new-conf (assoc config
                    "name" name
+                   "rootEntityType" rootEntityType
                    "inputs" inputs
                    "outputs" outputs
                    "workspaceName" workspace-id)]
@@ -179,10 +180,10 @@
 (defn- validation-status [invalid?]
   (if invalid?
     (icons/font-icon {:style {:paddingLeft "0.5em" :padding "1em 0.7em"
-                              :color (:exception-red style/colors) :cursor "pointer"}}
+                              :color (:exception-red style/colors)}}
       :x)
     (icons/font-icon {:style {:paddingLeft "0.5em" :padding "1em 0.7em"
-                              :color (:success-green style/colors) :cursor "pointer"}}
+                              :color (:success-green style/colors)}}
       :status-done)))
 
 (defn- input-output-list [config value-type invalid-values editing?]
@@ -218,10 +219,16 @@
     [:div {:style {:marginLeft 330}}
      (create-section-header "Method Configuration Name")
      (create-section
-       [:div {:style {:display (when editing? "none") :padding "0.5em 0 1em 0"}}
-        (config "name")]
-       [:div {:style {:display (when-not editing? "none")}}
-        (style/create-text-field {:ref "confname" :defaultValue (config "name")})])
+       (if editing?
+         (style/create-text-field {:ref "confname" :style {:width 500}
+                                   :defaultValue (config "name")})
+         [:div {:style {:padding "0.5em 0 1em 0"}} (config "name")]))
+     (create-section-header "Root Entity Type")
+     (create-section
+       (if editing?
+         (style/create-text-field {:ref "rootentitytype" :style {:width 500}
+                                   :defaultValue (config "rootEntityType")})
+         [:div {:style {:padding "0.5em 0 1em 0"}} (config "rootEntityType")]))
      (create-section-header "Inputs")
      (input-output-list config "inputs" invalid-inputs editing?)
      (create-section-header "Outputs")
