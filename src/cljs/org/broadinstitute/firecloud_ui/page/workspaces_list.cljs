@@ -4,6 +4,8 @@
     [dmohs.react :as react]
     [org.broadinstitute.firecloud-ui.common :as common]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
+    [org.broadinstitute.firecloud-ui.common.dialog :as dialog]
+    [org.broadinstitute.firecloud-ui.common.icons :as icons]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.common.table :as table]
@@ -15,7 +17,7 @@
 
 (defn- render-modal [state refs nav-context]
   (react/create-element
-    [comps/OKCancelForm
+    [dialog/OKCancelForm
      {:header "Create New Workspace"
       :content
       (react/create-element
@@ -62,9 +64,9 @@
                        :position "absolute" :top 0 :right 0 :bottom 0 :left 2}}]
         (style/center {}
           (case status
-            "Complete"  [comps/CompleteIcon]
-            "Running"   [comps/RunningIcon]
-            "Exception" [comps/ExceptionIcon]))]))})
+            "Complete" [icons/CompleteIcon]
+            "Running" [icons/RunningIcon]
+            "Exception" [icons/ExceptionIcon]))]))})
 
 
 (react/defc WorkspaceCell
@@ -181,7 +183,7 @@
            selected-ws-id (get-workspace-id-from-nav-segment (:segment nav-context))]
        [:div {}
         (when (:overlay-shown? @state)
-          [comps/Dialog
+          [dialog/Dialog
            {:width 500
             :dismiss-self #(swap! state dissoc :overlay-shown?)
             :content (render-modal state refs nav-context)

@@ -2,12 +2,15 @@
   (:require
     [dmohs.react :as react]
     [clojure.string :refer [trim blank?]]
-    [org.broadinstitute.firecloud-ui.common :as common :refer [clear-both get-text]]
+    [org.broadinstitute.firecloud-ui.common :refer [clear-both get-text]]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
+    [org.broadinstitute.firecloud-ui.common.dialog :as dialog]
     [org.broadinstitute.firecloud-ui.common.icons :as icons]
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
+    [org.broadinstitute.firecloud-ui.page.workspace.method-configs.delete-config :as delete]
     [org.broadinstitute.firecloud-ui.page.workspace.method-configs.launch-analysis :as launch]
+    [org.broadinstitute.firecloud-ui.page.workspace.method-configs.publish :as publish]
     ))
 
 
@@ -71,76 +74,6 @@
     [:span {} (get-in config ["methodRepoMethod" "methodVersion"])]]
    (clear-both)])
 
-(react/defc DeleteButton
-  {:rm-mc (fn [{:keys [props state]}]
-            (endpoints/call-ajax-orch
-              {:endpoint (endpoints/delete-workspace-method-config (:workspace-id props) (:config props))
-               :on-done (fn [{:keys [success? xhr]}]
-                          (swap! state dissoc :deleting?)
-                          (if success?
-                            ((:on-rm props))
-                            (js/alert (str "Error during deletion: " (.-statusText xhr)))))}))
-   :render (fn [{:keys [this state props]}]
-             (when (:deleting? @state)
-               [comps/Blocker {:banner (str "Deleting...")}])
-             [comps/SidebarButton {:style :light :color :exception-red :margin :top
-                                   :text "Delete" :icon :trash-can
-                                   :disabled? (:disabled? props)
-                                   :onClick #(when (js/confirm "Are you sure?")
-                                              (swap! state assoc :deleting? true)
-                                              (react/call :rm-mc this))}])})
-
-(defn- render-modal-publish [state refs props]
-  (react/create-element
-    [comps/OKCancelForm
-     {:header "Publish Method Configuration"
-      :content
-      (react/create-element
-        [:div {}
-         (when (:creating-wf @state)
-           [comps/Blocker {:banner "Publishing Method Configuration..."}])
-         (style/create-form-label "Method Configuration Namespace")
-         (style/create-text-field {:style {:width "100%"} :ref "mcNamespace"
-                                   :defaultValue (get-in (:config props) ["namespace"])})
-         (style/create-form-label "Method Configuration Name")
-         (style/create-text-field {:style {:width "100%"} :ref "mcName"
-                                   :defaultValue (get-in (:config props) ["name"])})])
-      :dismiss-self #(swap! state dissoc :publishing?)
-      :ok-button
-      (react/create-element
-        [comps/Button {:text "Publish" :ref "publishButton"
-                       :onClick
-                       #(let [[ns n] (common/get-text refs "mcNamespace" "mcName")]
-                         (when-not (or (empty? ns) (empty? n))
-                           (swap! state assoc :creating-wf true)
-                           (endpoints/call-ajax-orch
-                             {:endpoint (endpoints/copy-method-config-to-repo (:workspace-id props) (:config props))
-                              :headers {"Content-Type" "application/json"}
-                              :payload  {:configurationNamespace ns,
-                                         :configurationName n,
-                                         :sourceNamespace (get-in (:config props) ["namespace"]),
-                                         :sourceName (get-in (:config props) ["name"])}
-                              :on-done  (fn [{:keys [success?]}]
-                                          (swap! state dissoc :creating-wf)
-                                          (if success?
-                                            (swap! state dissoc :publishing?)
-                                            (js/alert "Method Configuration Publish Failed.")))})))}])}]))
-
-(react/defc PublishButton
-  {:render
-   (fn [{:keys [props state refs]}]
-     [:div {}
-      (when (:publishing? @state)
-        [comps/Dialog
-         {:width 500
-          :dismiss-self #(swap! state dissoc :publishing?)
-          :content (render-modal-publish state refs props)
-          :get-first-element-dom-node #(.getDOMNode (@refs "mcNamespace"))
-          :get-last-element-dom-node #(.getDOMNode (@refs "publishButton"))}])
-      [comps/SidebarButton {:style :light :color :button-blue :margin :top
-                            :text "Publish" :icon :share
-                            :onClick #(swap! state assoc :publishing? true)}]])})
-
 
 (defn- render-side-bar [state refs config editing? props]
   [:div {:style {:width 290 :float "left"}}
@@ -156,17 +89,15 @@
                                 :disabled? (when locked? "The workspace is locked")
                                 :onClick #(swap! state assoc :editing? true)}])
         (when-not editing?
-          [DeleteButton
-           {:workspace-id (:workspace-id props)
-            :disabled? (when locked? "The workspace is locked")
-            :on-rm (:on-rm props)
-            :config config}])
+          [comps/SidebarButton {:style :light :color :exception-red :margin :top
+                                :text "Delete" :icon :trash-can
+                                :disabled? (when locked? "The workspace is locked")
+                                :onClick #(swap! state assoc :show-delete-dialog? true)}])
 
         (when-not editing?
-          [PublishButton
-           {:workspace-id (:workspace-id props)
-            :on-publish (:on-publish props)
-            :config config}])
+          [comps/SidebarButton {:style :light :color :button-blue :margin :top
+                                :text "Publish" :icon :share
+                                :onClick #(swap! state assoc :show-publish-dialog? true)}])
 
         (when editing?
           [comps/SidebarButton {:color :success-green
@@ -237,6 +168,16 @@
 (defn- render-display [state refs wrapped-config editing? props]
   (let [config (get-in wrapped-config ["methodConfiguration"])]
     [:div {}
+     (when (:show-publish-dialog? @state)
+       [publish/PublishDialog {:dismiss-self #(swap! state dissoc :show-publish-dialog?)
+                               :config config
+                               :workspace-id (:workspace-id props)}])
+     (when (:show-delete-dialog? @state)
+       [delete/DeleteDialog {:dismiss-self #(swap! state dissoc :show-delete-dialog?)
+                             :config config
+                             :workspace-id (:workspace-id props)
+                             :after-delete (:after-delete props)}])
+
      [comps/Blocker {:banner (:blocker @state)}]
      [:div {:style {:padding "0em 2em"}}
       (render-top-bar config)
@@ -280,7 +221,7 @@
      (set! (.-onScrollHandler this)
            (fn []
              (when-let [sidebar (@refs "sidebar")]
-               (let [visible (common/is-in-view (.getDOMNode sidebar))]
+               (let [visible (< (.-scrollY js/window) (.-offsetTop (.getDOMNode sidebar))) ]
                  (when-not (= visible (:sidebar-visible? @state))
                    (swap! state assoc :sidebar-visible? visible))))))
      (.addEventListener js/window "scroll" (.-onScrollHandler this)))

@@ -18,9 +18,9 @@
         :else (:exception-red style/colors)))
 
 (defn- icon-for-submission [submission]
-  (cond (= "Submitted" (submission "status")) [comps/RunningIcon {:size 36}]
-        (moncommon/all-success? submission) [comps/CompleteIcon {:size 36}]
-        :else [comps/ExceptionIcon {:size 36}]))
+  (cond (= "Submitted" (submission "status")) [icons/RunningIcon {:size 36}]
+        (moncommon/all-success? submission) [icons/CompleteIcon {:size 36}]
+        :else [icons/ExceptionIcon {:size 36}]))
 
 
 (react/defc WorkflowsTable

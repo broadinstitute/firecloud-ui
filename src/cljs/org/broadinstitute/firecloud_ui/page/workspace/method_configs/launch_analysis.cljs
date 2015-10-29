@@ -3,13 +3,11 @@
     [clojure.set :refer [union]]
     clojure.string
     [dmohs.react :as react]
-    [org.broadinstitute.firecloud-ui.common :as common]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
-    [org.broadinstitute.firecloud-ui.common.icons :as icons]
+    [org.broadinstitute.firecloud-ui.common.dialog :as dialog]
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.common.table :as table]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
-    [org.broadinstitute.firecloud-ui.utils :as utils]
     ))
 
 
@@ -120,7 +118,7 @@
 (react/defc Page
   {:render
    (fn [{:keys [props state]}]
-     [comps/OKCancelForm
+     [dialog/OKCancelForm
       {:header "Launch Analysis"
        :dismiss-self (:on-cancel props)
        :content
@@ -166,12 +164,12 @@
    (fn [{:keys [props state]}]
      [:span {}
       (when (:display-modal? @state)
-        [comps/Dialog {:width "80%"
-                       :dismiss-self #(swap! state dissoc :display-modal?)
-                       :content (react/create-element
-                                 Page
-                                 (merge props
-                                  {:on-cancel #(swap! state dissoc :display-modal?)}))}])
+        [dialog/Dialog {:width "80%"
+                        :dismiss-self #(swap! state dissoc :display-modal?)
+                        :content (react/create-element
+                                   Page
+                                   (merge props
+                                     {:on-cancel #(swap! state dissoc :display-modal?)}))}])
       [comps/Button {:text "Launch Analysis..."
                      :disabled? (when (:disabled? props) "The workspace is locked")
                      :onClick #(swap! state assoc :display-modal? true)}]])})
