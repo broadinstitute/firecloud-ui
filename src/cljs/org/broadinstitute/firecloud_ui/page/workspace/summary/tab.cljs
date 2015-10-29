@@ -87,7 +87,7 @@
             {:style :light :color :exception-red :margin :top
              :icon :x
              :text "Cancel"
-             :onClick #(swap! state assoc :editing false)}]]
+             :onClick #(swap! state assoc :editing? false)}]]
           [comps/SidebarButton
            {:style :light :color :button-blue  :margin :top
             :text "Edit attributes" :icon :pencil
@@ -169,8 +169,12 @@
                    (if success?
                        (let [attrs-list
                              (mapv (fn [[k v]] [k v])
+                               ;(dissoc (get-in workspace ["workspace" "attributes"]) "description")
+                               ;(dissoc (get-in (:server-response @state) ["workspace" "attributes"]) "description")
                                (get-in (:server-response @state )
-                                 [ :workspace "workspace" "attributes" ]))]
+                                 [:workspace "workspace" "attributes" ]
+                                 )
+                               )]
                          (swap! state assoc :attrs-list attrs-list))
                      (swap! state dissoc :attrs-list)))})
      (endpoints/call-ajax-orch
@@ -208,12 +212,7 @@
    :component-did-update
    (fn [{:keys [this state refs]}]
      (when (nil? (:server-response @state))
-       (react/call :load-workspace this))
-     (when (:editing? @state)
-       (when (> (count (:attrs-list @state)) 0)
-         (common/focus-and-select
-           (-> (@refs (str "field" (- (count (:attrs-list @state)) 1))) .getDOMNode))))
-     )
+       (react/call :load-workspace this)))
    :component-will-receive-props
    (fn [{:keys [props next-props state]}]
      (when-not (apply = (map :workspace-id [props next-props]))
