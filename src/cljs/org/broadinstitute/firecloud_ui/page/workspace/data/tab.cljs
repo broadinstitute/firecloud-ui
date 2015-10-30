@@ -187,19 +187,18 @@
    :delete
    (fn [{:keys [props state this]} selected-entities]
      (swap! state assoc :deleting? true)
-     (let [countdown (atom (count selected-entities))
-           errors (atom #{})]
-       (doseq [entity selected-entities]
-         (endpoints/call-ajax-orch
-           {:endpoint (endpoints/delete-entity (:workspace-id props) (entity "entityType") (entity "name"))
-            :on-done (fn [{:keys [success? status-text]}]
-                       (when-not success?
-                         (swap! errors conj status-text))
-                       (when (zero? (swap! countdown dec))
-                         (swap! state dissoc :deleting? :entity-list)
-                         (react/call :load this)
-                         (when (pos? (count @errors))
-                           (js/alert (apply str (interpose "\n" (cons "Errors:" @errors)))))))}))))})
+     (endpoints/call-ajax-orch
+       {:endpoint (endpoints/delete-entities (:workspace-id props))
+        :payload {:recursive false ;; TODO implement
+                  :entities (map (fn [e] {:entityName (e "name")
+                                          :entityType (e "entityType")}) selected-entities)}
+        :headers {"Content-Type" "application/json"}
+        :on-done (fn [{:keys [success? get-parsed-response]}]
+                   (swap! state dissoc :deleting? :entity-list)
+                   (react/call :load this)
+                   (when-not success?
+                     (let [response (get-parsed-response)]
+                       (js/alert (response "message")))))}))})
 
 (defn render [workspace]
   [WorkspaceData {:workspace-id workspace}])
