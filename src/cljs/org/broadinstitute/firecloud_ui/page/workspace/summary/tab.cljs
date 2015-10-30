@@ -169,12 +169,8 @@
                    (if success?
                        (let [attrs-list
                              (mapv (fn [[k v]] [k v])
-                               ;(dissoc (get-in workspace ["workspace" "attributes"]) "description")
-                               ;(dissoc (get-in (:server-response @state) ["workspace" "attributes"]) "description")
-                               (get-in (:server-response @state )
-                                 [:workspace "workspace" "attributes" ]
-                                 )
-                               )]
+                               (dissoc (get-in (:server-response @state)
+                                         [:workspace "workspace" "attributes"]) "description"))]
                          (swap! state assoc :attrs-list attrs-list))
                      (swap! state dissoc :attrs-list)))})
      (endpoints/call-ajax-orch
