@@ -53,10 +53,10 @@
         [comps/SidebarButton {:style :light :margin :top :color :button-blue
                               :text "Clone..." :icon :plus
                               :onClick #(swap! state assoc :cloning? true)}])
-        (when (and  owner? (not (:editing? @state)))
-          [comps/SidebarButton {:style :light :margin :top :color :button-blue
-                                :text (if locked? "Unlock" "Lock") :icon :locked
-                                :onClick #(react/call :lock-or-unlock this locked?)}])
+      (when (and  owner? (not (:editing? @state)))
+        [comps/SidebarButton {:style :light :margin :top :color :button-blue
+                              :text (if locked? "Unlock" "Lock") :icon :locked
+                              :onClick #(react/call :lock-or-unlock this locked?)}])
       (when (and  owner? (not (:editing? @state)))
           [comps/SidebarButton {:style :light :margin :top :color :exception-red
                                 :text "Delete" :icon :trash-can
