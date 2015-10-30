@@ -212,7 +212,7 @@
                 (map
                   (fn [line]
                     (let [[class method file num]
-                          (map #(line %) ["className" "methodName" "fileName" "lineNumber"])]
+                          (map line ["className" "methodName" "fileName" "lineNumber"])]
                       [:div {:style {:marginLeft "1em" :whiteSpace "nowrap"}}
                        (str "at " class "." method " (" file ":" num ")")]))
                   (:lines props))
@@ -224,7 +224,7 @@
            (fn [{:keys [props state]}]
              (if (:expanded? @state)
                (let [[source causes stack-trace message]
-                     (map #(props %) ["source" "causes" "stackTrace" "message"])]
+                     (map props ["source" "causes" "stackTrace" "message"])]
                  [:div {:style {:marginLeft "1em"}}
                   [:div {} "Message: " message]
                   (when source [:div {} "Source: " source])
@@ -238,18 +238,19 @@
                (style/create-link #(swap! state assoc :expanded? true) "Show Cause")))})]
     {:render
      (fn [{:keys [props]}]
-       (let [[source status-code causes stack-trace message]
-             (map #(get-in props [:error %]) ["source" "statusCode" "causes" "stackTrace" "message"])]
-         [:div {:style {:textAlign "initial"}}
-          [:div {}
-           [:span {:style {:paddingRight "1ex"}}
-            (icons/font-icon {:style {:color (:exception-red style/colors)}}
-              :status-warning-triangle)]
-           (str "Error " status-code ": " message)]
-          (when source [:div {} "Source: " source])
-          (when-not (empty? causes)
+       (when-let [error (:error props)]
+         (let [[source status-code causes stack-trace message]
+               (map error ["source" "statusCode" "causes" "stackTrace" "message"])]
+           [:div {:style {:textAlign "initial"}}
             [:div {}
-             [:div {} (str "Cause" (when (> (count causes) 1) "s") ":")]
-             (map (fn [cause] [CauseViewer cause]) causes)])
-          (when-not (empty? stack-trace)
-            [StackTraceViewer {:lines stack-trace}])]))}))
+             [:span {:style {:paddingRight "1ex"}}
+              (icons/font-icon {:style {:color (:exception-red style/colors)}}
+                :status-warning-triangle)]
+             (str "Error " status-code ": " message)]
+            (when source [:div {} "Source: " source])
+            (when-not (empty? causes)
+              [:div {}
+               [:div {} (str "Cause" (when (> (count causes) 1) "s") ":")]
+               (map (fn [cause] [CauseViewer cause]) causes)])
+            (when-not (empty? stack-trace)
+              [StackTraceViewer {:lines stack-trace}])])))}))
