@@ -13,6 +13,14 @@
     ))
 
 
+
+(defn- WSAccessLevelKeyFunc [accessLevel]
+  (case accessLevel
+    "OWNER" 0
+    "WRITER" 1
+    "READER" 2))
+
+
 (defn- render-modal [state refs nav-context]
   (react/create-element
     [comps/OKCancelForm
@@ -88,7 +96,7 @@
          :header-row-style {:fontWeight nil :fontSize "90%"
                             :color (:text-light style/colors) :backgroundColor nil}
          :header-style {:padding "0 0 1em 14px" :overflow nil}
-         :resizable-columns? false :reorderable-columns? false :sortable-columns? false
+         :resizable-columns? false :reorderable-columns? false :sortable-columns? true
          :body-style {:fontSize nil :fontWeight nil
                       :borderLeft border-style :borderRight border-style
                       :borderBottom border-style :borderRadius 4}
@@ -108,17 +116,24 @@
                    {:text "Running" :pred #(= "Running" (:status %))}
                    {:text "Exception" :pred #(= "Exception" (:status %))}]
          :columns
-         [{:header [:div {:style {:marginLeft -6}} "Status"] :starting-width 60
-           :content-renderer (fn [data] [StatusCell {:data data}])
-           :filter-by :none}
-          {:header "Workspace" :starting-width 450
-           :content-renderer (fn [data] [WorkspaceCell {:data data}])
-           :filter-by :name}
+         [{:sort-by (fn [m] (:status m))
+           :header [:div {:style {:marginLeft -6}} "Status"] :starting-width 60
+           :content-renderer (fn [data] [StatusCell {:data data}]) :filter-by :none}
+          {:sort-by (fn [m] (:name m))
+           :header "Workspace" :starting-width 450
+           :content-renderer (fn [data] [WorkspaceCell {:data data}]) :filter-by :name}
           {:header "Description" :starting-width 400
            :content-renderer (fn [description]
                                [:div {:style {:padding "1.1em 0 0 14px"
                                               :fontStyle (when-not description "oblique")}}
-                                (or description "No description provided")])}]
+                                (or description "No description provided")])}
+          {:header "Access Level" :starting-width 400 :sort-by WSAccessLevelKeyFunc
+           :sort-initial :asc
+           :content-renderer
+           (fn [accessLevel]
+             [:div {:style {:padding "1.1em 0 0 14px"
+                            :fontStyle (when-not accessLevel "oblique")}}
+              (clojure.string/capitalize accessLevel)])}]
          :data (:workspaces props)
          :->row (fn [ws]
                   [{:status (:status ws)
@@ -127,7 +142,8 @@
                                "/" (get-in ws ["workspace" "name"]))
                     :status (:status ws)
                     :onClick #((:onWorkspaceSelected props) (ws "workspace"))}
-                   (get-in ws ["workspace" "attributes" "description"])])}]))})
+                   (get-in ws ["workspace" "attributes" "description"])
+                   (get-in ws ["accessLevel"])])}]))})
 
 
 (react/defc WorkspaceList
