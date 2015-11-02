@@ -95,7 +95,7 @@
          :cell-padding-left nil
          :header-row-style {:fontWeight nil :fontSize "90%"
                             :color (:text-light style/colors) :backgroundColor nil}
-         :header-style {:padding "0 0 1em 14px" :overflow nil}
+         :header-style {:padding "0.5em 0 0.5em 14px" :overflow nil}
          :resizable-columns? false :reorderable-columns? false :sortable-columns? true
          :body-style {:fontSize nil :fontWeight nil
                       :borderLeft border-style :borderRight border-style
@@ -127,7 +127,7 @@
                                [:div {:style {:padding "1.1em 0 0 14px"
                                               :fontStyle (when-not description "oblique")}}
                                 (or description "No description provided")])}
-          {:header "Access Level"  
+          {:header "Access Level"
            :sort-by WSAccessLevelKeyFunc :sort-initial :asc
            :content-renderer
            (fn [accessLevel]
