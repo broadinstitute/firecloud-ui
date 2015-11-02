@@ -231,7 +231,8 @@
      [table/Table
       {:columns [{:header "Type" :starting-width 100}
                  {:header "Namespace" :starting-width 150}
-                 {:header "Name" :starting-width 200 :as-text #(% "name") :sort-by :text
+                 {:header "Name" :starting-width 200 :as-text #(% "name")
+                  :sort-by (fn [m] (str (m "namespace") (m "name"))) :sort-initial :asc
                   :content-renderer
                   (fn [item]
                     (style/create-link
