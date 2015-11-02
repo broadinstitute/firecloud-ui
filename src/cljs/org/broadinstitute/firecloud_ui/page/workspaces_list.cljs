@@ -119,7 +119,7 @@
          [{:sort-by (fn [m] (:status m))
            :header [:div {:style {:marginLeft -6}} "Status"] :starting-width 60
            :content-renderer (fn [data] [StatusCell {:data data}]) :filter-by :none}
-          {:sort-by (fn [m] (:name m))
+          {:sort-by :text  :as-text :name
            :header "Workspace" :starting-width 450
            :content-renderer (fn [data] [WorkspaceCell {:data data}]) :filter-by :name}
           {:header "Description" :starting-width 400
@@ -131,8 +131,7 @@
            :sort-initial :asc
            :content-renderer
            (fn [accessLevel]
-             [:div {:style {:padding "1.1em 0 0 14px"
-                            :fontStyle (when-not accessLevel "oblique")}}
+             [:div {:style {:padding "1.1em 0 0 14px"}}
               (clojure.string/capitalize accessLevel)])}]
          :data (:workspaces props)
          :->row (fn [ws]
