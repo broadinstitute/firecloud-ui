@@ -35,14 +35,7 @@
 
 
 (react/defc Page
-  {:get-initial-state
-   (fn [{:keys [props]}]
-     (when (:new-registration? props)
-       (let [google-profile (-> (utils/get-current-user)
-                                (utils/call-external-object-method :getBasicProfile))]
-         {:initial-values {:name (utils/call-external-object-method google-profile :getName)
-                           :email (utils/call-external-object-method google-profile :getEmail)}})))
-   :render
+  {:render
    (fn [{:keys [this props state]}]
      (let [new? (:new-registration? props)]
        [:div {:style {:marginTop "2em"}}

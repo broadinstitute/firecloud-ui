@@ -83,13 +83,6 @@
   (.removeItem window.localStorage (subs (str k) 1)))
 
 
-(defn get-current-user []
-  (-> js/gapi (aget "auth2")
-      (call-external-object-method :getAuthInstance)
-      (aget "currentUser")
-      (call-external-object-method :get)))
-
-
 (defonce use-live-data? (atom (let [value (local-storage-read ::use-live-data? true)]
                                 (if (nil? value) true value))))
 (add-watch
@@ -145,15 +138,15 @@
             (.send xhr)))))))
 
 
+(def access-token (atom nil))
+
+
 (defn ajax-orch [path arg-map]
   (assert (= (subs path 0 1) "/") (str "Path must start with '/': " path))
-  (let [access-token (-> (get-current-user)
-                         (call-external-object-method :getAuthResponse)
-                         (aget "access_token"))]
-    (ajax (assoc
-           arg-map :url (str "/service/api" path)
-           :headers (merge {"Authorization" (str "Bearer " access-token)}
-                           (:headers arg-map))))))
+  (ajax (assoc
+         arg-map :url (str "/service/api" path)
+         :headers (merge {"Authorization" (str "Bearer " @access-token)}
+                         (:headers arg-map)))))
 
 
 (defn deep-merge [& maps]

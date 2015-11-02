@@ -33,7 +33,7 @@
                     :fontFamily (when (:icon props) "fontIcons")
                     :fontSize (when (:icon props) "80%")
                     :textDecoration "none"}
-            :href "javascript:;"
+            :href (or (:href props) "javascript:;")
             :onClick (if disabled?
                        #(js/alert (if (string? disabled?) disabled? "This action is disabled"))
                        (fn [e] ((:onClick props) e)))

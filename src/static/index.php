@@ -4,14 +4,7 @@
     <meta http-equiv="Content-type" content="text/html;charset=utf-8">
     <meta name="viewport" content="initial-scale=1,width=device-width">
 
-    <?php if (!getenv('GOOGLE_CLIENT_ID')) {
-        fwrite(STDERR, "Missing ENV var GOOGLE_CLIENT_ID\n");
-        exit(1);
-    } ?>
     <?php $is_minimized_build = getenv('BUILD_TYPE') == 'minimized'; ?>
-    <script>
-      window.GOOGLE_CLIENT_ID = '<?php echo getenv('GOOGLE_CLIENT_ID') ?>';
-    </script>
     <title>FireCloud | Broad Institute</title>
     <link href='//fonts.googleapis.com/css?family=Roboto:400,500,700' rel='stylesheet' type='text/css'>
     <style>
@@ -54,10 +47,6 @@
     <?php } ?>
     <script>
       var app = org.broadinstitute.firecloud_ui.main.render(document.getElementById('contentRoot'));
-      function handleGapiDidLoad() {
-        app.handleGapiDidLoad();
-      }
     </script>
-    <script src="https://apis.google.com/js/platform.js?onload=handleGapiDidLoad" async defer></script>
   </body>
 </html>

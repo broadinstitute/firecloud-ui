@@ -4,11 +4,15 @@
    [org.broadinstitute.firecloud-ui.utils :as utils :refer [rlog jslog cljslog]]))
 
 
+(defn get-hash-value []
+  (let [hash (-> js/window .-location .-hash)]
+    (if (= (subs hash 0 1) "#") (subs hash 1) hash)))
+
+
 (defn create-nav-context
   "Returns a new nav-context from the browser's location hash."
   []
-  (let [hash (-> js/window .-location .-hash)
-        hash (if (= (subs hash 0 1) "#") (subs hash 1) hash)]
+  (let [hash (get-hash-value)]
     {:hash hash :consumed (list) :remaining hash}))
 
 
