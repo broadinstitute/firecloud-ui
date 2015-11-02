@@ -4,6 +4,7 @@
    [clojure.string :refer [trim]]
    [org.broadinstitute.firecloud-ui.common :as common]
    [org.broadinstitute.firecloud-ui.common.components :as comps]
+   [org.broadinstitute.firecloud-ui.common.dialog :as dialog]
    [org.broadinstitute.firecloud-ui.common.style :as style]
    [org.broadinstitute.firecloud-ui.common.table :as table]
    [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
@@ -25,7 +26,7 @@
 (react/defc AgoraPermsEditor
   {:render
    (fn [{:keys [props state this]}]
-     [comps/Dialog
+     [dialog/Dialog
       {:width "75%"
        :blocking? true
        :dismiss-self (:dismiss-self props)

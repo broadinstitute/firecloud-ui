@@ -4,6 +4,7 @@
     clojure.string
     [org.broadinstitute.firecloud-ui.common :as common]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
+    [org.broadinstitute.firecloud-ui.common.dialog :as dialog]
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.common.table :as table]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
@@ -17,7 +18,7 @@
    (fn [{:keys [props state]}]
      [:div {}
       (when (:show-import-overlay? @state)
-        [comps/Dialog
+        [dialog/Dialog
          {:blocker? true
           :width "80%"
           :dismiss-self #(swap! state dissoc :show-import-overlay?)
@@ -91,7 +92,7 @@
         [MethodConfigEditor {:config (:selected-method-config @state)
                              :workspace-id (:workspace-id props)
                              :on-submission-success (:on-submission-success props)
-                             :on-rm (fn [] (swap! state dissoc :selected-method-config))}]
+                             :after-delete #(swap! state dissoc :selected-method-config)}]
         [MethodConfigurationsList
          {:workspace-id (:workspace-id props)
           ;TODO: For both callbacks - rename config to config-id and follow the workspace-id pattern

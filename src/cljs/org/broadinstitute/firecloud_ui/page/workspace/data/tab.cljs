@@ -4,6 +4,7 @@
     [clojure.set :refer [union]]
     [org.broadinstitute.firecloud-ui.common :as common]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
+    [org.broadinstitute.firecloud-ui.common.dialog :as dialog]
     [org.broadinstitute.firecloud-ui.common.icons :as icons]
     [org.broadinstitute.firecloud-ui.common.table :as table]
     [org.broadinstitute.firecloud-ui.common.table-utils :as table-utils]
@@ -12,7 +13,6 @@
     [org.broadinstitute.firecloud-ui.page.workspace.data.copy-data-workspaces :as copy-data-workspaces]
     [org.broadinstitute.firecloud-ui.page.workspace.data.entity-selector :refer [EntitySelector]]
     [org.broadinstitute.firecloud-ui.page.workspace.data.import-data :as import-data]
-    [org.broadinstitute.firecloud-ui.utils :as utils]
     ))
 
 
@@ -91,8 +91,8 @@
                                    (fn [maybe-uri]
                                      (if (string? maybe-uri)
                                        (if-let [parsed (common/parse-gcs-uri maybe-uri)]
-                                         [comps/GCSFilePreviewLink (assoc parsed
-                                                                     :gcs-uri maybe-uri)]
+                                         [dialog/GCSFilePreviewLink (assoc parsed
+                                                                      :gcs-uri maybe-uri)]
                                          maybe-uri)
                                        (table-utils/default-render maybe-uri)))})
                           attribute-keys))
@@ -118,22 +118,22 @@
       (when (:deleting? @state)
         [comps/Blocker {:banner "Deleting..."}])
       (when (:show-import? @state)
-        [comps/Dialog {:dismiss-self #(swap! state dissoc :show-import?)
-                       :width "80%"
-                       :content
-                       (react/create-element
-                         [DataImporter {:dismiss #(swap! state dissoc :show-import?)
-                                        :workspace-id (:workspace-id props)
-                                        :reload-data-tab (fn [entity-type]
-                                                           (swap! state dissoc :entity-list :entity-types)
-                                                           (react/call :load this entity-type))}])}])
+        [dialog/Dialog {:dismiss-self #(swap! state dissoc :show-import?)
+                        :width "80%"
+                        :content
+                        (react/create-element
+                          [DataImporter {:dismiss #(swap! state dissoc :show-import?)
+                                         :workspace-id (:workspace-id props)
+                                         :reload-data-tab (fn [entity-type]
+                                                            (swap! state dissoc :entity-list :entity-types)
+                                                            (react/call :load this entity-type))}])}])
       (when (:show-delete? @state)
-        [comps/Dialog
+        [dialog/Dialog
          {:dismiss-self #(swap! state dissoc :show-delete?)
           :width "80%"
           :content
           (react/create-element
-            [comps/OKCancelForm
+            [dialog/OKCancelForm
              {:header "Delete Entities"
               :dismiss-self #(swap! state dissoc :show-delete?)
               :content (react/create-element

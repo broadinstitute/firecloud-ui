@@ -1,7 +1,5 @@
 (ns org.broadinstitute.firecloud-ui.page.workspace.monitor.common
   (:require
-    [dmohs.react :as react]
-    [org.broadinstitute.firecloud-ui.common.components :as comps]
     [org.broadinstitute.firecloud-ui.common.icons :as icons]
     [org.broadinstitute.firecloud-ui.common.style :as style]
     ))
@@ -26,9 +24,9 @@
         [:span {:style {:backgroundColor (:running-blue style/colors) :position "relative"
                         :width 16 :height 16 :display "inline-block" :borderRadius 3
                         :verticalAlign "middle" :marginTop -4 :marginRight 4}}
-         (style/center {} [comps/RunningIcon {:size 12}])]
+         (style/center {} [icons/RunningIcon {:size 12}])]
         :else
         [:span {:style {:backgroundColor (:exception-red style/colors) :position "relative"
                         :width 16 :height 16 :display "inline-block" :borderRadius 3
                         :verticalAlign "middle" :marginTop -4 :marginRight 4}}
-         (style/center {} [comps/ExceptionIcon {:size 12}])]))
+         (style/center {} [icons/ExceptionIcon {:size 12}])]))

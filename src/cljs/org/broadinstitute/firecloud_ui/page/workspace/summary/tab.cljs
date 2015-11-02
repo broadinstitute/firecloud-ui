@@ -11,7 +11,6 @@
     [org.broadinstitute.firecloud-ui.page.workspace.summary.acl-editor :refer [AclEditor]]
     [org.broadinstitute.firecloud-ui.page.workspace.summary.attribute-editor :refer [AttributeViewer]]
     [org.broadinstitute.firecloud-ui.page.workspace.summary.workspace-cloner :refer [WorkspaceCloner]]
-    [org.broadinstitute.firecloud-ui.utils :as utils]
     ))
 
 
@@ -45,9 +44,9 @@
                                   (when (= status "Running")
                                     (str " (" (get-in ws ["workspaceSubmissionStats" "runningSubmissionsCount"]) ")")))
                           :icon (case status
-                                  "Complete" [comps/CompleteIcon {:size 36}]
-                                  "Running" [comps/RunningIcon {:size 36}]
-                                  "Exception" [comps/ExceptionIcon {:size 36}])
+                                  "Complete" [icons/CompleteIcon {:size 36}]
+                                  "Running" [icons/RunningIcon {:size 36}]
+                                  "Exception" [icons/ExceptionIcon {:size 36}])
                           :color (style/color-for-status status)}]
       [comps/SidebarButton {:style :light :margin :top :color :button-blue
                             :text "View attributes" :icon :document

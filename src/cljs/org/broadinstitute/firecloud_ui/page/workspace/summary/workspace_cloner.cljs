@@ -4,6 +4,7 @@
     [dmohs.react :as react]
     [org.broadinstitute.firecloud-ui.common :as common]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
+    [org.broadinstitute.firecloud-ui.common.dialog :as dialog]
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
     ))
@@ -11,10 +12,10 @@
 (react/defc WorkspaceCloner
   {:render
    (fn [{:keys [props refs state this]}]
-     [comps/Dialog {:width 400 :dismiss-self (:dismiss props)
+     [dialog/Dialog {:width 400 :dismiss-self (:dismiss props)
                     :content
                     (react/create-element
-                      [comps/OKCancelForm
+                      [dialog/OKCancelForm
                        {:header "Clone Workspace to:"
                         :dismiss-self (:dismiss props)
                         :content

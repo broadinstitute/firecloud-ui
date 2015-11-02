@@ -4,6 +4,7 @@
     [org.broadinstitute.firecloud-ui.common :as common]
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
+    [org.broadinstitute.firecloud-ui.common.dialog :as dialog]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
     ))
 
@@ -30,7 +31,7 @@
     acl-map))
 
 (defn- render-acl-content [props state this]
-  [comps/OKCancelForm
+  [dialog/OKCancelForm
    {:header
     (let [workspace-id (:workspace-id props)]
       (str "Permissions for " (:namespace workspace-id) "/" (:name workspace-id)))
@@ -74,7 +75,7 @@
 (react/defc AclEditor
   {:render
    (fn [{:keys [props state this]}]
-     [comps/Dialog
+     [dialog/Dialog
       {:width "50%"
        :dismiss-self (:dismiss-self props)
        :content

@@ -50,8 +50,7 @@
            (icons/font-icon {:style {:fontSize "200%" :color (:success-green style/colors)}} :status-done)
            [:span {:style {:margin "-0.5em 0 0 1em"}} "Success!"]]
           [:div {:style {:paddingTop "1em"}}
-           (icons/font-icon {:style {:fontSize "200%" :color (:exception-red style/colors)}} :status-warning)
-           [:span {:style {:margin "-0.5em 0 0 1em"}} "Error: " (:error-message result)]]))])
+           [comps/ErrorViewer {:error (:error result)}]]))])
    :do-upload
    (fn [{:keys [props state]}]
      (swap! state assoc :loading? true)
@@ -59,10 +58,10 @@
        {:endpoint (endpoints/import-entities (:workspace-id props))
         :raw-data (utils/generate-form-data {:entities (:file @state)})
         :encType "multipart/form-data"
-        :on-done (fn [{:keys [success? xhr]}]
+        :on-done (fn [{:keys [success? xhr get-parsed-response]}]
                    (swap! state dissoc :loading? :file :file-contents)
                    (if success?
                      (do
                        (swap! state assoc :upload-result {:success? true})
                        ((:reload-data-tab props) (.-responseText xhr)))
-                     (swap! state assoc :upload-result {:success? false :error-message (.-responseText xhr)})))}))})
+                     (swap! state assoc :upload-result {:success? false :error (get-parsed-response)})))}))})

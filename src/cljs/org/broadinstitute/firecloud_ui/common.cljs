@@ -6,7 +6,7 @@
    :pgup 33 :pgdown 34 :end 35 :home 67 :left 37 :up 38 :right 39 :down 40 :insert 45 :del 46})
 
 (defn create-key-handler
-  ([keys func] (create-key-handler keys (fn [e] true) func))
+  ([keys func] (create-key-handler keys (constantly true) func))
   ([keys modifier func] (fn [e]
                           (when (modifier e)
                             (let [keycode (.-keyCode e)]
@@ -68,13 +68,6 @@
        (- elem-center-x (/ (.-innerWidth js/window) 2))
        (- elem-center-y (/ (.-innerHeight js/window) 2))
        duration))))
-
-(defn is-in-view [elem]
-  (let [doc-view-top (.-scrollY js/window)
-        doc-view-bottom (+ doc-view-top (.-innerHeight js/window))
-        elem-top (.-offsetTop elem)
-        elem-bottom (+ elem-top (.-offsetHeight elem))]
-    (and (< doc-view-top elem-top) (> doc-view-bottom elem-bottom))))
 
 
 (def ^:private user-select-keys ["userSelect" "webkitTouchCallout" "webkitUserSelect"
