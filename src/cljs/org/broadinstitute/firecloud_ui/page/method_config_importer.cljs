@@ -230,16 +230,16 @@
    (fn [{:keys [props state]}]
      [table/Table
       {:columns [{:header "Type" :starting-width 100}
-                 {:header "Namespace" :starting-width 150}
-                 {:header "Name" :starting-width 200 :as-text #(% "name")
-                  :sort-by (fn [m] (str (m "namespace") (m "name"))) :sort-initial :asc
+                 {:header "Name" :starting-width 450 :as-text #(% "name")
+                  :sort-by (fn [m]
+                             [(str (m "namespace") (m "name")) (int (m "snapshotId"))])
+                  :sort-initial :asc
                   :content-renderer
                   (fn [item]
                     (style/create-link
                       (let [func (if (= :method (:type item)) :on-method-selected :on-config-selected)]
                         #((func props) (dissoc item :type)))
-                      (item "name")))}
-                 {:header "Snapshot ID" :starting-width 100}
+                      (str  (item "namespace") "/" (item "name") "/" (item "snapshotId")   )))}
                  {:header "Synopsis" :starting-width 160}
                  (table/date-column {:header "Created"})
                  {:header "Referenced Method" :starting-width 250
@@ -253,9 +253,7 @@
        :data (concat (:methods props) (:configs props))
        :->row (fn [item]
                 [(item "entityType")
-                 (item "namespace")
                  item
-                 (item "snapshotId")
                  (item "synopsis")
                  (item "createDate")
                  (when (= :config (:type item))
