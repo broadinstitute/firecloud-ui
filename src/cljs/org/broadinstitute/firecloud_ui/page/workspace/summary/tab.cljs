@@ -7,6 +7,7 @@
     [org.broadinstitute.firecloud-ui.common.icons :as icons]
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
+    [org.broadinstitute.firecloud-ui.nav :as nav]
     [org.broadinstitute.firecloud-ui.page.workspace.monitor.common :refer [all-success?]]
     [org.broadinstitute.firecloud-ui.page.workspace.summary.acl-editor :refer [AclEditor]]
     [org.broadinstitute.firecloud-ui.page.workspace.summary.attribute-editor :refer [AttributeViewer]]
@@ -23,7 +24,8 @@
      (map (fn [tag] [:span {:style tagstyle} tag]) tags)]))
 
 
-(defn- view-summary [state props ws submissions status owner? this on-view-attributes]
+(defn- view-summary [state props ws submissions status owner?
+                     this on-view-attributes nav-context]
   (let [locked? (get-in ws ["workspace" "isLocked"])
         owners (ws "owners")]
     [:div {:style {:margin "45px 25px"}}
@@ -36,7 +38,9 @@
                    :dismiss-self #(swap! state dissoc :editing-acl?)
                    :update-owners #(swap! state update-in [:server-response :workspace] assoc "owners" %)}])
      (when (:cloning? @state)
-       [WorkspaceCloner {:dismiss #(swap! state dissoc :cloning?)
+       [WorkspaceCloner {:on-success (fn [namespace name]
+                                       (swap! state dissoc :cloning?)
+                                       (nav/navigate nav-context (str namespace ":" name)))
                          :workspace-id (:workspace-id props)}])
      [:div {:style {:float "left" :width 290 :marginRight 40}}
       ;; TODO - make the width of the float-left dynamic
@@ -114,12 +118,16 @@
                      writer? (or (= "WRITER" (workspace "accessLevel")) owner?)
                      status (common/compute-status workspace)]
                  (if (:viewing-attributes? @state)
-                   [AttributeViewer {:ws workspace :writer? writer? :on-done #(swap! state dissoc :viewing-attributes?)
-                                     :attrs-list (mapv (fn [[k v]] [k v])
-                                                   (dissoc (get-in workspace ["workspace" "attributes"]) "description"))
+                   [AttributeViewer {:ws workspace :writer? writer?
+                                     :on-done #(swap! state dissoc :viewing-attributes?)
+                                     :attrs-list
+                                     (mapv (fn [[k v]] [k v])
+                                       (dissoc
+                                         (get-in workspace
+                                           ["workspace" "attributes"]) "description"))
                                      :workspace-id (:workspace-id props)}]
-                   (view-summary state props workspace submissions status owner? this
-                     #(swap! state assoc :viewing-attributes? true))))))
+                   (view-summary state props workspace submissions status owner?
+                     this #(swap! state assoc :viewing-attributes? true) (:nav-context props))))))
        :else [comps/Spinner {:text "Loading workspace..."}]))
    :load-workspace
    (fn [{:keys [props state]}]
@@ -171,5 +179,7 @@
        (swap! state dissoc :server-response :submission-response)))})
 
 
-(defn render [workspace-id on-delete]
-  (react/create-element Summary {:workspace-id workspace-id :on-delete on-delete}))
+(defn render [workspace-id on-delete nav-context]
+  (react/create-element Summary {:nav-context nav-context
+                                 :workspace-id workspace-id
+                                 :on-delete on-delete}))
