@@ -239,7 +239,9 @@
                     (style/create-link
                       (let [func (if (= :method (:type item)) :on-method-selected :on-config-selected)]
                         #((func props) (dissoc item :type)))
-                      (str  (item "namespace") "/" (item "name") "/" (item "snapshotId")   )))}
+                      (str  (item "namespace") "/"
+                        (item "name")
+                        " Snapshot ID:" (item "snapshotId"))))}
                  {:header "Synopsis" :starting-width 160}
                  (table/date-column {:header "Created"})
                  {:header "Referenced Method" :starting-width 250
