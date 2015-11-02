@@ -127,7 +127,7 @@
                                [:div {:style {:padding "1.1em 0 0 14px"
                                               :fontStyle (when-not description "oblique")}}
                                 (or description "No description provided")])}
-          {:header "Access Level"
+          {:header "Access Level"  :starting-width 150
            :sort-by WSAccessLevelKeyFunc :sort-initial :asc
            :content-renderer
            (fn [accessLevel]
