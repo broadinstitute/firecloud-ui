@@ -7,7 +7,6 @@
     [org.broadinstitute.firecloud-ui.common.dialog :as dialog]
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
-    [org.broadinstitute.firecloud-ui.utils :as utils]
     ))
 
 (react/defc WorkspaceCloner
@@ -62,5 +61,5 @@
               :on-done (fn [{:keys [success? status-text]}]
                          (swap! state dissoc :working?)
                          (if success?
-                           ((:on-success props) namespace name)
+                           ((:dismiss props))
                            (swap! state assoc :error status-text)))})))))})

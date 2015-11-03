@@ -56,98 +56,66 @@
                     (on-success)))})))
 
 
-(react/defc AttributeViewer
-  {:get-initial-state
-   (fn [{:keys [props]}]
-     {:editing? false :attrs-list (:attrs-list props)})
-   :render
-   (fn [{:keys [this props state]}]
-     [:div {:style {:margin "45px 25px"}}
-      (react/call :render-sidebar this)
-      [:div {:style {:display "inline-block"}}
-       [:div {:style {:display "inline-block"}}
-        (style/create-section-header "Workspace Attributes")
-        (create-section
-          (when (or (:saving? @state) (:deleting? @state))
-            [comps/Blocker {:banner "Updating..."}])
-          [:div {}
-           (map-indexed
-             (fn [i a]
-               [:div {}
-                [:div {:style {:float "left" :marginRight "0.5em"}}
-                 (style/create-text-field
-                   {:value (first a)
-                    :onChange #(swap! state update-in [:attrs-list i]
-                                assoc 0 (-> % .-target .-value))
-                    :disabled (or (not (:editing? @state))
-                                (contains? (:reserved-keys @state) i))
-                    :style (if (or (contains? (:reserved-keys @state) i)
-                                 (not (:editing? @state)))
-                             {:backgroundColor (:background-gray style/colors)}
-                             {:backgroundColor "#fff"})})]
-                [:div {:style {:float "right"}}
-                 (style/create-text-field
-                   {:value (second a)
-                    :onChange #(swap! state update-in [:attrs-list i]
-                                assoc 1 (-> % .-target .-value))
-                    :disabled (not (:editing? @state))
-                    :style (if-not (:editing? @state)
-                             {:backgroundColor (:background-gray style/colors)}
-                             {:backgroundColor "#fff"})})
-                 (icons/font-icon
-                   {:style {:paddingLeft "0.5em" :padding "1em 0.7em"
-                            :color "red" :cursor "pointer"
-                            :display (when-not (:editing? @state) "none")}
-                    :onClick (fn [e]
-                               (if (contains? (:reserved-keys @state) i)
-                                 (do
-                                   (swap! state assoc :deleting? true)
-                                   (delete-attribute props (first a)
-                                     (fn [e] (swap! state #(-> %
-                                                            (assoc :deleting? false)
-                                                            (update-in [:reserved-keys] utils/delete i)
-                                                            (update-in [:attrs-list] utils/delete i))))))
-                                 (swap! state update-in [:attrs-list] utils/delete i)))}
-                   :x)]
-                (common/clear-both)])
-             (:attrs-list @state))
-           ;TODO: new textfields should gain typing focus when adding new rows
-           [:div {:style {:display (when-not (:editing? @state) "none")}}
-            [comps/Button {:style :add :text "Add new"
-                           :onClick #(swap! state update-in [:attrs-list] conj ["" ""])}]]])
-        [:div {:style {:display
-                       (when (or (or (:editing? @state)
-                                   (not-empty (:attrs-list @state))) (:saving? @state)) "none")}}
-         (style/create-paragraph [:em {} "There are no attributes to display"])]]]
-      (common/clear-both)])
-   :render-sidebar
-   (fn [{:keys [props state]}]
-     [:div {:style {:float "left" :width 290 :marginRight 40}}
-      (if-not (:editing? @state)
-        [:div {}
-         [comps/SidebarButton
-          {:style :light :margin :bottom :color :button-blue
-           :text "View summary" :icon :document
-           :onClick (:on-done props)}]
-         (when (:writer? props)
-           [comps/SidebarButton
-            {:style :light :color :button-blue
-             :text "Edit attributes" :icon :pencil
-             :onClick #(swap! state assoc
-                        :editing? true
-                        :reserved-keys (vec (range 0 (count (:attrs-list @state)))))}])]
-        [:div {:style {:fontSize "106%" :lineHeight 1 :textAlign "center"}}
-         [comps/SidebarButton
-          {:color :success-green
-           :text "Done" :icon :status-done
-           :onClick (fn [e]
-                      (swap! state assoc
-                        :attrs-list (filterv
-                                      (fn [pair] (not (clojure.string/blank? (clojure.string/trim (first pair)))))
-                                      (:attrs-list @state))
-                        :saving? true)
-                      ;; TODO: rawls will soon return attributes after update- use that intead of reload
-                      (add-update-attributes
-                        props state (:attrs-list @state)
-                        (fn [e] (reload-attributes props state
-                                  #(swap! state assoc :editing? false :saving? false)))))}]])])})
+(defn render-attributes [props state refs]
+  [:div {}
+   [:div {:style {:display "inline-block"}}
+    [:div {:style {:display "inline-block"}}
+     (create-section
+       (when (or (:saving? @state) (:deleting? @state))
+         [comps/Blocker {:banner "Updating..."}])
+       [:div {}
+        (map-indexed
+          (fn [i a]
+            [:div {}
+             [:div {:style {:float "left" :marginRight "0.5em"}}
+              (style/create-text-field
+                {:ref (str "field" i)
+                 :value (first a)
+                 :onChange #(swap! state update-in [:attrs-list i]
+                             assoc 0 (-> % .-target .-value))
+                 :disabled (or (not (:editing? @state))
+                             (contains? (:reserved-keys @state) i))
+                 :style (if (or (contains? (:reserved-keys @state) i)
+                              (not (:editing? @state)))
+                          {:backgroundColor (:background-gray style/colors)}
+                          {:backgroundColor "#fff"})})]
+             [:div {:style {:float "right"}}
+              (style/create-text-field
+                {:value (second a)
+                 :onChange #(swap! state update-in [:attrs-list i]
+                             assoc 1 (-> % .-target .-value))
+                 :disabled (not (:editing? @state))
+                 :style (if-not (:editing? @state)
+                          {:backgroundColor (:background-gray style/colors)}
+                          {:backgroundColor "#fff"})})
+              (icons/font-icon
+                {:style {:paddingLeft "0.5em" :padding "1em 0.7em"
+                         :color "red" :cursor "pointer"
+                         :display (when-not (:editing? @state) "none")}
+                 :onClick (fn [e]
+                            (if (contains? (:reserved-keys @state) i)
+                              (do
+                                (swap! state assoc :deleting? true)
+                                (delete-attribute props (first a)
+                                  (fn [e] (swap! state #(-> %
+                                                         (assoc :deleting? false)
+                                                         (update-in [:reserved-keys] utils/delete i)
+                                                         (update-in [:attrs-list] utils/delete i))))))
+                              (swap! state update-in [:attrs-list] utils/delete i)))}
+                :x)]
+             (common/clear-both)])
+          (:attrs-list @state))
+        [:div {:style {:display (when-not (:editing? @state) "none")}}
+         [comps/Button {:style :add :text "Add new"
+                        :onClick
+                        #(do
+                           (swap! state update-in [:attrs-list] conj ["" ""])
+                           (js/setTimeout
+                             (fn [] (common/focus-and-select
+                                      (-> (@refs (str "field" (dec (count (:attrs-list @state))))) .getDOMNode)))
+                             0))}]]])
+     [:div {:style {:display
+                    (when (or (or (:editing? @state)
+                                (not-empty (:attrs-list @state))) (:saving? @state)) "none")}}
+      (style/create-paragraph [:em {} "There are no attributes to display"])]]]
+   (common/clear-both)])
