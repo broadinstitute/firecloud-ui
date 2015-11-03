@@ -16,7 +16,9 @@
       [comps/TabBar {:ref "tab-bar"
                      :items
                      [{:text "Summary"
-                       :render #(summary-tab/render (:workspace-id props) (:on-delete props))}
+                       :render #(summary-tab/render (:workspace-id props)
+                                 (:on-delete props)
+                                 (:nav-context props))}
                       {:text "Data" :render #(data-tab/render (:workspace-id props))}
                       {:text "Method Configurations"
                        :render (fn []
@@ -26,5 +28,7 @@
                       {:text "Monitor" :render #(monitor-tab/render (:workspace-id props) %)}]}]])})
 
 
-(defn render-workspace-details [workspace-id on-delete]
-  (react/create-element WorkspaceDetails {:workspace-id workspace-id :on-delete on-delete}))
+(defn render-workspace-details [workspace-id on-delete nav-context]
+  (react/create-element WorkspaceDetails {:nav-context nav-context
+                                          :workspace-id workspace-id
+                                          :on-delete on-delete}))
