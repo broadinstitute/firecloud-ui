@@ -34,15 +34,16 @@
 
 (def ^:private input-text-style
   {:backgroundColor "#fff"
-   :border (str "1px solid " (:border-gray colors)) :borderRadius 3
+   ;; Split out border properties so they can be individually overridden
+   :borderWidth 1 :borderStyle "solid" :borderColor (:border-gray colors) :borderRadius 3
    :boxShadow "0px 1px 3px rgba(0,0,0,0.06)" :boxSizing "border-box"
    :fontSize "88%"
    :marginBottom "0.75em" :padding "0.5em"})
 
 (def ^:private select-style
-  {:backgroundColor "#fff" ;;TODO background image?
-   ;;:backgroundPosition "right center" :backgroundRepeat "no-repeat"
-   :borderColor (:border-gray colors) :borderRadius 2 :borderWidth 1 :borderStyle "solid"
+  {:backgroundColor "#fff"
+   ;; Split out border properties so they can be individually overridden
+   :borderWidth 1 :borderStyle "solid" :borderColor (:border-gray colors) :borderRadius 2
    :color "#000"
    :marginBottom "0.75em" :padding "0.33em 0.5em"
    :width "100%" :fontSize "88%"})
@@ -67,6 +68,10 @@
 (defn create-server-error-message [message]
   [:div {:style {:textAlign "center" :color (:exception-red colors)}}
    "FireCloud service returned error: " (or message "(no message provided)")])
+
+(defn create-validation-error-message [fails]
+  [:div {:style {:color (:exception-red colors)}}
+   (map (fn [fail] [:div {} fail]) fails)])
 
 (defn create-message-well [message]
   [:div {:style {:textAlign "center" :backgroundColor (:background-gray colors)
