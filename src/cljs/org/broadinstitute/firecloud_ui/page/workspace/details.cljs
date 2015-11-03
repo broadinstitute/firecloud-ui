@@ -12,7 +12,7 @@
 (react/defc WorkspaceDetails
   {:render
    (fn [{:keys [props refs]}]
-     [:div {}
+     [:div {:style {:margin "0 -1em"}}
       [comps/TabBar {:ref "tab-bar"
                      :items
                      [{:text "Summary"

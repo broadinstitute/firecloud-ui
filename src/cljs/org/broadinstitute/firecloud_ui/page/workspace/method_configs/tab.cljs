@@ -14,7 +14,14 @@
 
 
 (react/defc MethodConfigurationsList
-  {:render
+  {:reload
+   (fn [{:keys [state this]}]
+     (swap! state dissoc :server-response)
+     (react/call :load this))
+   :get-initial-state
+   (fn []
+     {:load-counter 0})
+   :render
    (fn [{:keys [props state]}]
      [:div {}
       (when (:show-import-overlay? @state)
@@ -32,8 +39,8 @@
       (let [server-response (:server-response @state)
             {:keys [configs error-message]} server-response]
         (cond
-          (or (nil? server-response) (not (contains? @state :locked?)))
-          [comps/Spinner {:text "Loading configurations..."}]
+          (pos? (:load-counter @state))
+          [:div {:style {:textAlign "center"}} [comps/Spinner {:text "Loading configurations..."}]]
           error-message (style/create-server-error-message error-message)
           :else
           [table/Table
@@ -42,7 +49,8 @@
                        [:div {}
                         [:div {:style {:float "left" :margin "5 0 -5 0"}} built-in]
                         [:div {:style {:float "right" :paddingRight "2em"}}
-                         [comps/Button {:text "Import Configuration..." :disabled? (when (:locked? @state) "The workspace is locked")
+                         [comps/Button {:text "Import Configuration..."
+                                        :disabled? (when (:locked? @state) "The workspace is locked")
                                         :onClick #(swap! state assoc :show-import-overlay? true)}]]
                         (common/clear-both)])
             :columns
@@ -70,39 +78,46 @@
        (react/call :load this)))
    :load
    (fn [{:keys [props state]}]
-     (endpoints/call-ajax-orch
-       {:endpoint (endpoints/get-workspace (:workspace-id props))
-        :on-done (fn [{:keys [success? get-parsed-response status-text]}]
-                   (if success?
-                     (swap! state assoc :locked? (get-in (get-parsed-response) ["workspace" "isLocked"]))
-                     (swap! state assoc :error status-text)))})
-     (endpoints/call-ajax-orch
-       {:endpoint (endpoints/list-workspace-method-configs (:workspace-id props))
-        :on-done (fn [{:keys [success? get-parsed-response status-text]}]
-                   (if success?
-                     (swap! state assoc :server-response {:configs (vec (get-parsed-response))})
-                     (swap! state assoc :server-response {:error-message status-text})))}))})
+     (when (zero? (:load-counter @state))
+       (swap! state assoc :load-counter 2)
+       (endpoints/call-ajax-orch
+         {:endpoint (endpoints/get-workspace (:workspace-id props))
+          :on-done (fn [{:keys [success? get-parsed-response status-text]}]
+                     (if success?
+                       (swap! state assoc :locked? (get-in (get-parsed-response) ["workspace" "isLocked"]))
+                       (swap! state assoc :error status-text))
+                     (swap! state update-in [:load-counter] dec))})
+       (endpoints/call-ajax-orch
+         {:endpoint (endpoints/list-workspace-method-configs (:workspace-id props))
+          :on-done (fn [{:keys [success? get-parsed-response status-text]}]
+                     (if success?
+                       (swap! state assoc :server-response {:configs (vec (get-parsed-response))})
+                       (swap! state assoc :server-response {:error-message status-text}))
+                     (swap! state update-in [:load-counter] dec))})))})
 
 
 (react/defc Page
   {:render
    (fn [{:keys [props state]}]
-     [:div {:style {:padding "1em 0"}}
+     [:div {:style {:padding "1em"}}
       (if (:selected-method-config @state)
         [MethodConfigEditor {:config (:selected-method-config @state)
                              :workspace-id (:workspace-id props)
                              :on-submission-success (:on-submission-success props)
                              :after-delete #(swap! state dissoc :selected-method-config)}]
         [MethodConfigurationsList
-         {:workspace-id (:workspace-id props)
+         {:ref "method-config-list"
+          :workspace-id (:workspace-id props)
           ;TODO: For both callbacks - rename config to config-id and follow the workspace-id pattern
           :on-config-selected (fn [config]
                                 (swap! state assoc :selected-method-config config))
           :on-config-imported (fn [config]
                                 (swap! state assoc :selected-method-config config))}])])
    :component-will-receive-props
-   (fn [{:keys [state]}]
-     (swap! state dissoc :selected-method-config))})
+   (fn [{:keys [state refs]}]
+     (if (:selected-method-config @state)
+       (swap! state dissoc :selected-method-config)
+       (react/call :reload (@refs "method-config-list"))))})
 
 
 (defn render [workspace-id on-submission-success]
