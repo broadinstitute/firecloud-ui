@@ -232,16 +232,14 @@
       {:columns [{:header "Type" :starting-width 100}
                  {:header "Name" :starting-width 450 :as-text #(% "name")
                   :sort-by (fn [m]
-                             [(str (m "namespace") (m "name")) (int (m "snapshotId"))])
+                             [(m "namespace") (m "name") (int (m "snapshotId"))])
                   :sort-initial :asc
                   :content-renderer
                   (fn [item]
                     (style/create-link
                       (let [func (if (= :method (:type item)) :on-method-selected :on-config-selected)]
                         #((func props) (dissoc item :type)))
-                      (str  (item "namespace") "/"
-                        (item "name")
-                        " Snapshot ID:" (item "snapshotId"))))}
+                      (style/render-entity (item "namespace") (item "name") (item "snapshotId"))))}
                  {:header "Synopsis" :starting-width 160}
                  (table/date-column {:header "Created"})
                  {:header "Referenced Method" :starting-width 250
