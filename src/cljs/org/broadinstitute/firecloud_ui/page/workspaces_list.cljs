@@ -203,6 +203,5 @@
             "Workspaces")]]
         (if selected-ws-id
           ;; TODO: add 'back' function to nav
-          (render-workspace-details selected-ws-id
-            #(set! (-> js/window .-location .-hash) "workspaces") (:nav-context props))
+          (render-workspace-details selected-ws-id #(set! (-> js/window .-location .-hash) "workspaces"))
           (render-workspaces-list state nav-context))]))})
