@@ -67,36 +67,33 @@
       (when writer?
         (if (:editing? @state)
           [:div {}
-          [comps/SidebarButton
-           {:style :light :color :button-blue  :margin :top
-            :text "Save" :icon :status-done
-            :onClick (fn [e]
-                       (swap! state assoc :editing? false)
-                       (swap! state assoc
-                         :attrs-list (filterv
-                                       (fn [pair] (not (clojure.string/blank? (clojure.string/trim (first pair)))))
-                                       (:attrs-list @state))
-                         :saving? true)
-                       ;; TODO: rawls will soon return attributes after update- use that intead of reload
-                       (add-update-attributes
-                         props state (:attrs-list @state)
-                         (fn []
-                           (do
-                           (react/call :load-workspace this)
-                           (swap! state dissoc :saving?)))))}]
+           [comps/SidebarButton
+            {:style :light :color :button-blue  :margin :top
+             :text "Save" :icon :status-done
+             :onClick (fn [e]
+                        (swap! state assoc
+                          :editing? false
+                          :attrs-list (filterv
+                                        (fn [pair] (not (clojure.string/blank? (clojure.string/trim (first pair)))))
+                                        (:attrs-list @state))
+                          :saving? true)
+                        ;; TODO: rawls will soon return attributes after update- use that intead of reload
+                        (add-update-attributes
+                          props state (:attrs-list @state)
+                          (fn []
+                            (react/call :load-workspace this)
+                            (swap! state dissoc :saving?))))}]
            [comps/SidebarButton
             {:style :light :color :exception-red :margin :top
-             :icon :x
-             :text "Cancel"
+             :icon :x :text "Cancel"
              :onClick #(swap! state assoc :editing? false)}]]
           [comps/SidebarButton
            {:style :light :color :button-blue  :margin :top
             :text "Edit attributes" :icon :pencil
             :onClick #(swap! state assoc
-                       :editing? true
-                       :reserved-keys (vec (range 0 (count (:attrs-list @state)))))}]))]
-     [:div {:style {:marginLeft 330}}
-      [:div {:style {:float "left"}}
+                        :editing? true
+                        :reserved-keys (vec (range 0 (count (:attrs-list @state)))))}]))]
+     [:div {:style {:display "inline-block"}}
       (style/create-section-header (str "Workspace Owner" (when (> (count owners) 1) "s")))
       (style/create-paragraph
         [:div {}
@@ -114,30 +111,25 @@
           [:span {:style {:fontStyle "oblique"}} "No description provided"]))
       (style/create-section-header "Google Bucket")
       (style/create-paragraph (get-in ws ["workspace" "bucketName"]))
-       (style/create-section-header "Workspace Attributes")
-       (let [{:keys [workspace workspace-error]} (:server-response @state)
-             owner? (= "OWNER" (workspace "accessLevel"))
-             writer? (or (= "WRITER" (workspace "accessLevel")) owner?)
-             status (common/compute-status workspace)]
-         (render-attributes props state refs))
-       ]
-      [:div {:style {:marginRight "25%" :float "right"}}
-       (style/create-section-header "Created By")
-       (style/create-paragraph
-         [:div {} (get-in ws ["workspace" "createdBy"])]
-         [:div {} (common/format-date (get-in ws ["workspace" "createdDate"]))])
-       (style/create-section-header "Submissions")
-       (style/create-paragraph
-         (let [fail-count (->> submissions
-                            (filter (complement all-success?))
-                            count)]
-           (str (count submissions) " Submissions"
-             (when (pos? fail-count)
-               (str " (" fail-count " failed)")))))
-
-
-
-       ]]
+      (style/create-section-header "Workspace Attributes")
+      (let [{:keys [workspace workspace-error]} (:server-response @state)
+            owner? (= "OWNER" (workspace "accessLevel"))
+            writer? (or (= "WRITER" (workspace "accessLevel")) owner?)
+            status (common/compute-status workspace)]
+        (render-attributes props state refs))]
+     [:div {:style {:display "inline-block" :marginLeft 40 :float "right"}}
+      (style/create-section-header "Created By")
+      (style/create-paragraph
+        [:div {} (get-in ws ["workspace" "createdBy"])]
+        [:div {} (common/format-date (get-in ws ["workspace" "createdDate"]))])
+      (style/create-section-header "Submissions")
+      (style/create-paragraph
+        (let [fail-count (->> submissions
+                           (filter (complement all-success?))
+                           count)]
+          (str (count submissions) " Submissions"
+            (when (pos? fail-count)
+              (str " (" fail-count " failed)")))))]
      (common/clear-both)]))
 
 (react/defc Summary

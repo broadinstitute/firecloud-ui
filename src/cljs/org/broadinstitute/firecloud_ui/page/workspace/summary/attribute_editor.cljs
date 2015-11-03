@@ -109,11 +109,11 @@
          [comps/Button {:style :add :text "Add new"
                         :onClick
                         #(do
-                          (swap! state update-in [:attrs-list] conj ["" ""])
-                          (js/setTimeout (fn [] (common/focus-and-select
-                                           (-> (@refs (str "field" (- (count (:attrs-list @state)) 1))) .getDOMNode))) 250 )
-                          )
-                        }]]])
+                           (swap! state update-in [:attrs-list] conj ["" ""])
+                           (js/setTimeout
+                             (fn [] (common/focus-and-select
+                                      (-> (@refs (str "field" (dec (count (:attrs-list @state))))) .getDOMNode)))
+                             0))}]]])
      [:div {:style {:display
                     (when (or (or (:editing? @state)
                                 (not-empty (:attrs-list @state))) (:saving? @state)) "none")}}
