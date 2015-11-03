@@ -96,7 +96,7 @@
          :header-row-style {:fontWeight nil :fontSize "90%"
                             :color (:text-light style/colors) :backgroundColor nil}
          :header-style {:padding "0.5em 0 0.5em 14px" :overflow nil}
-         :resizable-columns? false :reorderable-columns? false :sortable-columns? true
+         :resizable-columns? false :reorderable-columns? false
          :body-style {:fontSize nil :fontWeight nil
                       :borderLeft border-style :borderRight border-style
                       :borderBottom border-style :borderRadius 4}
