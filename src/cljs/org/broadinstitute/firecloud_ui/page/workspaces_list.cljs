@@ -46,7 +46,7 @@
                       (let [desc (common/get-text refs "wsDescription")
                             [ns n] (input/get-text refs "wsNamespace" "wsName")
                             attributes (if (clojure.string/blank? desc) {} {:description desc})]
-                        (swap! state assoc :creating-wf true :error nil)
+                        (swap! state assoc :creating-wf true :error nil :validation-error nil)
                         (endpoints/call-ajax-orch
                           {:endpoint (endpoints/create-workspace ns n)
                            :payload {:namespace ns :name n :attributes attributes}
