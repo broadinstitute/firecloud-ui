@@ -13,14 +13,6 @@
     ))
 
 
-
-(defn- WSAccessLevelKeyFunc [accessLevel]
-  (case accessLevel
-    "OWNER" 0
-    "WRITER" 1
-    "READER" 2))
-
-
 (defn- render-modal [state refs nav-context]
   (react/create-element
     [comps/OKCancelForm
@@ -116,19 +108,19 @@
                    {:text "Running" :pred #(= "Running" (:status %))}
                    {:text "Exception" :pred #(= "Exception" (:status %))}]
          :columns
-         [{:sort-by (fn [m] (:status m))
+         [{:sort-by :none :filter-by :none
            :header [:div {:style {:marginLeft -6}} "Status"] :starting-width 60
-           :content-renderer (fn [data] [StatusCell {:data data}]) :filter-by :none}
-          {:sort-by :text  :as-text :name
+           :content-renderer (fn [data] [StatusCell {:data data}])}
+          {:as-text :name :sort-by :text
            :header "Workspace" :starting-width 450
-           :content-renderer (fn [data] [WorkspaceCell {:data data}]) :filter-by :name}
+           :content-renderer (fn [data] [WorkspaceCell {:data data}])}
           {:header "Description" :starting-width 400
            :content-renderer (fn [description]
                                [:div {:style {:padding "1.1em 0 0 14px"
                                               :fontStyle (when-not description "oblique")}}
                                 (or description "No description provided")])}
           {:header "Access Level"  :starting-width 150
-           :sort-by WSAccessLevelKeyFunc :sort-initial :asc
+           :sort-by #(case % "OWNER" 0 "WRITER" 1 "READER" 2) :sort-initial :asc
            :content-renderer
            (fn [accessLevel]
              [:div {:style {:padding "1.1em 0 0 14px"}}
