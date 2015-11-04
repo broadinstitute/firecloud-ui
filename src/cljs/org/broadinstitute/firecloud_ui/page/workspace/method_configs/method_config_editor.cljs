@@ -214,7 +214,7 @@
      (cond (and (:loaded-config @state) (contains? @state :locked?))
            (render-display state refs (:loaded-config @state) (:editing? @state) props)
            (:error @state) (style/create-server-error-message (:error @state))
-           :else [comps/Spinner {:text "Loading Method Configuration..."}]))
+           :else [:div {:style {:textAlign "center"}} [comps/Spinner {:text "Loading Method Configuration..."}]]))
    :component-did-mount
    (fn [{:keys [state props refs this]}]
      (endpoints/call-ajax-orch
