@@ -21,12 +21,64 @@
 (def ^:private access-levels
   ["READER" "OWNER" "NO ACCESS"])
 
+(defn- index-to-access-level [idx]
+  (str (nth access-levels idx)))
+
+(defn- access-level-to-index [access-level]
+  (case access-level
+    "READER" 0
+    "OWNER" 1
+    "NO ACCESS" 2))
+
 (def ^:private column-width "calc(50% - 4px)")
+
+(defn- correspondsToReader [access-level]
+  (if
+    (or
+      (= access-level "READER")
+      (= access-level "OWNER"))
+    true
+    false))
+
+(defn- filter-public [acl-vec]
+  (let [hasNotPublicUser
+        (fn [m]
+          (not
+            (and
+              (map? m)
+              (contains? m :user)
+              (= "public" (:user m)))))]
+    (filterv hasNotPublicUser acl-vec)))
+
+
+(defn- make-ui-vec [a-map]
+  {:user (get a-map "user")
+   :role (get a-map "role")})
+
+(defn- extract-last-public-access-level [acl-vec]
+  (let [hasPublicUser
+        (fn [m]
+          (and
+            (map? m)
+            (contains? m :user)
+            (= "public" (:user m))))
+        justPublic (filterv hasPublicUser acl-vec)
+        numJustPublic (count justPublic)]
+      (if (<= numJustPublic 0)
+      ;if public isn't in the acl-return NO ACCESS
+      "NO ACCESS"
+      (let [lastPublic (get justPublic (- numJustPublic 1))
+            lastPublicAccessLevel (get lastPublic :role)]
+        ;if public is in the acl return the value of the last one
+        lastPublicAccessLevel))))
+
+
 
 (react/defc AgoraPermsEditor
   {:render
-   (fn [{:keys [props state this]}]
+   (fn [{:keys [props refs state this]}]
      [dialog/Dialog
+
       {:width "75%"
        :blocking? true
        :dismiss-self (:dismiss-self props)
@@ -60,19 +112,33 @@
                                                          (:background-gray style/colors))}
                               :disabled (< i (:count-orig @state))
                               :spellCheck false
-                              :defaultValue (acl-entry "user")})
+                              :defaultValue (:user acl-entry)
+                              :onChange (fn [e]
+                                          (let [new-val (-> e .-target .-value)
+                                                new-val-is-public (= "public" new-val)]
+                                            (when new-val-is-public
+                                              (do
+                                                (js/alert "Cannot set value to 'public'!  Use the check-box instead.")
+                                                (set! (-> e .-target .-value) "")))))})
                            (style/create-select
                              {:ref (str "acl-value" i)
                               :style {:float "right" :width column-width :height 33}
-                              :defaultValue (acl-entry "accessLevel")}
+                              :defaultValue (access-level-to-index (:role acl-entry))}
                              access-levels)
                            (common/clear-both)])
                         (:acl-vec @state))
-                      [comps/Button
-                       {:text "Add new" :style :add
-                        :onClick #(swap! state assoc
-                                   :acl-vec (flatten [(:acl-vec @state)
-                                                      {"user" "" "accessLevel" "READER"}]))}]
+                      [comps/Button {:text "Add new" :style :add
+                                     :onClick #(swap! state assoc :acl-vec
+                                                (conj
+                                                  (react/call :capture-ui-state this)
+                                                  {:user "" :role "READER"}))}]
+                      [:input {:type "checkbox"
+                               :ref "publicbox"
+                               :onChange (fn []
+                                           (let [checkValue (-> (@refs "publicbox") .getDOMNode .-checked)]
+                                             (swap! state assoc :public-status checkValue)))
+                               :checked (:public-status @state)}]
+                      "Publicly Readable?"
                       [:div {:style {:textAlign "center" :marginTop "1em"}}
                        [:a {:href "javascript:;"
                             :style {:textDecoration "none"
@@ -99,13 +165,23 @@
                       nmsp name sid (:is-conf props)))
         :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                    (if success?
-                     (let [acl-vec (get-parsed-response)]
-                       (swap! state assoc :acl-vec acl-vec :count-orig (count acl-vec)))
+                     (let [parsed-response (get-parsed-response)
+                           ui-vec (mapv make-ui-vec parsed-response)
+                           public-level (extract-last-public-access-level ui-vec)
+                           checkValue (correspondsToReader public-level)
+                           filtered-ui-vec (filter-public ui-vec)
+                           acl-vec filtered-ui-vec]
+                       (swap! state assoc :acl-vec acl-vec
+                         :public-status checkValue
+                         :count-orig (count acl-vec)))
                      (swap! state assoc :error status-text)))}))
    :persist-acl
    (fn [{:keys [props state this]}]
      (swap! state assoc :saving? true)
-     (swap! state assoc :acl-vec (react/call :capture-ui-state this))
+     (swap! state assoc :acl-vec
+       (flatten [{:user "public" :role
+                 (if (:public-status @state) "READER" "NO ACCESS")}
+       (react/call :capture-ui-state this)]))
      (endpoints/call-ajax-orch
        {:endpoint (endpoints/persist-agora-method-acl (:selected-entity props))
         :headers {"Content-Type" "application/json"}
@@ -120,5 +196,5 @@
      (mapv
        (fn [i]
          {:user (-> (@refs (str "acl-key" i)) .getDOMNode .-value trim)
-          :accessLevel (-> (@refs (str "acl-value" i)) .getDOMNode .-value)})
+          :role (index-to-access-level (int (-> (@refs (str "acl-value" i)) .getDOMNode .-value)))})
        (range (count (:acl-vec @state)))))})
