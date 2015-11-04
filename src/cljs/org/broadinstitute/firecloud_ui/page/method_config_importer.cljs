@@ -230,7 +230,7 @@
    (fn [{:keys [props state]}]
      [table/Table
       {:columns [{:header "Type" :starting-width 100}
-                 {:header "Name" :starting-width 450 :as-text #(% "name")
+                 {:header "Item" :starting-width 450 :as-text #(% "name")
                   :sort-by (fn [m]
                              [(m "namespace") (m "name") (int (m "snapshotId"))])
                   :sort-initial :asc
