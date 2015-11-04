@@ -36,7 +36,7 @@
                       :attributes {"Attribute1" "[some value]"
                                    "Attribute2" "[some value]"
                                    "Attribute3" "[some value]"
-                                   "description" "This is a test workspace"}
+                                   "description" (str "This is a test workspace " i)}
                       :createdBy "somebody@broadinstitute.org"
                       :bucketName "unavailable"
                       :namespace ns
