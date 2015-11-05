@@ -492,7 +492,7 @@
                nmsp (ent "namespace")
                sid (ent "snapshotId")
                base (cond
-                      (= "Configuration" ent-type) "/configurations"
+                      (= "Configuration" ent-type) "configurations"
                       (or (= "Task" ent-type) (= "Workflow" ent-type)) "methods"
                       :else (do
                               (utils/rlog "Error, unknown type : " ent-type)
