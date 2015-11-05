@@ -21,22 +21,26 @@
 (def ^:private access-levels
   ["READER" "OWNER" "NO ACCESS"])
 
+(def ^:private reader-level (nth access-levels 0))
+(def ^:private  owner-level (nth access-levels 1))
+(def ^:private  no-access-level (nth access-levels 2))
+
 (defn- index-to-access-level [idx]
   (str (nth access-levels idx)))
 
 (defn- access-level-to-index [access-level]
   (case access-level
-    "READER" 0
-    "OWNER" 1
-    "NO ACCESS" 2))
+    reader-level 0
+    owner-level 1
+    no-access-level 2))
 
 (def ^:private column-width "calc(50% - 4px)")
 
 (defn- correspondsToReader [access-level]
   (if
     (or
-      (= access-level "READER")
-      (= access-level "OWNER"))
+      (= access-level reader-level)
+      (= access-level owner-level))
     true
     false))
 
@@ -66,7 +70,7 @@
         numJustPublic (count justPublic)]
       (if (<= numJustPublic 0)
       ;if public isn't in the acl-return NO ACCESS
-      "NO ACCESS"
+      no-access-level
       (let [lastPublic (get justPublic (- numJustPublic 1))
             lastPublicAccessLevel (get lastPublic :role)]
         ;if public is in the acl return the value of the last one
@@ -78,7 +82,6 @@
   {:render
    (fn [{:keys [props refs state this]}]
      [dialog/Dialog
-
       {:width "75%"
        :blocking? true
        :dismiss-self (:dismiss-self props)
@@ -131,7 +134,7 @@
                                      :onClick #(swap! state assoc :acl-vec
                                                 (conj
                                                   (react/call :capture-ui-state this)
-                                                  {:user "" :role "READER"}))}]
+                                                  {:user "" :role reader-level}))}]
                       [:input {:type "checkbox"
                                :ref "publicbox"
                                :onChange (fn []
@@ -180,7 +183,7 @@
      (swap! state assoc :saving? true)
      (swap! state assoc :acl-vec
        (flatten [{:user "public" :role
-                 (if (:public-status @state) "READER" "NO ACCESS")}
+                 (if (:public-status @state) reader-level no-access-level)}
        (react/call :capture-ui-state this)]))
      (endpoints/call-ajax-orch
        {:endpoint (endpoints/persist-agora-method-acl (:selected-entity props))
