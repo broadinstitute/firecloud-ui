@@ -22,11 +22,11 @@
   ["READER" "OWNER" "NO ACCESS"])
 
 (def ^:private reader-level (nth access-levels 0))
-(def ^:private  owner-level (nth access-levels 1))
-(def ^:private  no-access-level (nth access-levels 2))
+(def ^:private owner-level (nth access-levels 1))
+(def ^:private no-access-level (nth access-levels 2))
 
 (defn- index-to-access-level [idx]
-  (str (nth access-levels idx)))
+  (nth access-levels idx))
 
 (defn- access-level-to-index [access-level]
   (case access-level
@@ -37,12 +37,9 @@
 (def ^:private column-width "calc(50% - 4px)")
 
 (defn- correspondsToReader [access-level]
-  (if
     (or
       (= access-level reader-level)
-      (= access-level owner-level))
-    true
-    false))
+      (= access-level owner-level)))
 
 (defn- filter-public [acl-vec]
   (let [hasNotPublicUser
