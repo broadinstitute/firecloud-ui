@@ -11,7 +11,6 @@
     [org.broadinstitute.firecloud-ui.page.workspace.method-configs.delete-config :as delete]
     [org.broadinstitute.firecloud-ui.page.workspace.method-configs.launch-analysis :as launch]
     [org.broadinstitute.firecloud-ui.page.workspace.method-configs.publish :as publish]
-    [org.broadinstitute.firecloud-ui.page.workspace.launch-analysis :as launch]
     [org.broadinstitute.firecloud-ui.utils :as utils]
     ))
 
@@ -63,17 +62,33 @@
                                         (when-not success?
                                           (js/alert (str "Exception:\n" (.-statusText xhr)))))})))))})))
 
+
+(defn- render-top-bar-config [config]
+  [:div {:style {:backgroundColor (:background-gray style/colors)
+                 :borderRadius 8 :border (str "1px solid " (:line-gray style/colors))
+                 :padding "1em"}}
+   [:div {:style {:float "left" :width "33.33%" :textAlign "left"}}
+    [:span {:style {:fontWeight 500 :padding "0 0.5em"}} "Method Namespace:"]
+    [:span {} (get-in config ["methodRepoMethod" "methodNamespace"])]]
+   [:div {:style {:float "left" :width "33.33%" :textAlign "center"}}
+    [:span {:style {:fontWeight 500 :padding "0 0.5em"}} "Method Name:"]
+    [:span {} (get-in config ["methodRepoMethod" "methodName"])]]
+   [:div {:style {:float "left" :width "33.33%" :textAlign "right"}}
+    [:span {:style {:fontWeight 500 :padding "0 0.5em"}} "Method Version:"]
+    [:span {} (get-in config ["methodRepoMethod" "methodVersion"])]]
+   (clear-both)])
+
+
 (react/defc MethodDetailsViewer
   {:render
-   (fn [{:keys [state refs]}]
+   (fn [{:keys [props state]}]
      [:div {:style {:marginRight "20%"}}
       (cond
         (:loaded-method @state)
         [:div {}
          [comps/EntityDetails
           {:entity (:loaded-method @state)}]]
-        (:error @state) (style/create-server-error-message (:error @state))
-        :else [:div {}[comps/Spinner {:text "Loading method details..."}]])])
+        :else (render-top-bar-config (:config props)))])
    :component-did-mount
    (fn [{:keys [props state]}]
      (endpoints/call-ajax-orch
@@ -91,7 +106,9 @@
   [MethodDetailsViewer
    {:name (get-in config ["methodRepoMethod" "methodName"])
     :namespace (get-in config ["methodRepoMethod" "methodNamespace"])
-    :snapshotId (get-in config ["methodRepoMethod" "methodVersion"])}])
+    :snapshotId (get-in config ["methodRepoMethod" "methodVersion"])
+    :config config
+    }])
 
 
 (defn- render-side-bar [state refs config editing? props]
