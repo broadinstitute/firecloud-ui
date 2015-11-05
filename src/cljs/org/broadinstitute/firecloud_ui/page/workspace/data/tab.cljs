@@ -112,9 +112,12 @@
 
 
 (react/defc WorkspaceData
-  {:render
+  {:get-initial-state
+   (fn []
+     {:load-counter 0})
+   :render
    (fn [{:keys [props state refs this]}]
-     [:div {:style {:marginTop "1em"}}
+     [:div {:style {:padding "1em"}}
       (when (:deleting? @state)
         [comps/Blocker {:banner "Deleting..."}])
       (when (:show-import? @state)
@@ -154,7 +157,7 @@
                                           (swap! state dissoc :show-delete?)
                                           (react/call :delete this selected-entities))))}]}])}])
       (cond
-        (and (:entity-list @state) (contains? @state :locked?))
+        (and (:entity-list @state) (zero? (:load-counter @state)))
         [EntitiesList {:entity-list (:entity-list @state)
                        :entity-types (:entity-types @state)
                        :workspace-id (:workspace-id props)
@@ -166,24 +169,32 @@
    :component-did-mount
    (fn [{:keys [this]}]
      (react/call :load this))
+   :component-will-receive-props
+   (fn [{:keys [state this]}]
+     (swap! state dissoc :entity-list)
+     (react/call :load this))
    :load
    (fn [{:keys [state props]} & [entity-type]]
-     (endpoints/call-ajax-orch
-       {:endpoint (endpoints/get-workspace (:workspace-id props))
-        :on-done (fn [{:keys [success? get-parsed-response status-text]}]
-                   (if success?
-                     (swap! state assoc :locked? (get-in (get-parsed-response) ["workspace" "isLocked"]))
-                     (swap! state assoc :error status-text)))})
-     (endpoints/call-ajax-orch
-       {:endpoint (endpoints/get-entities-by-type (:workspace-id props))
-        :on-done (fn [{:keys [success? get-parsed-response status-text]}]
-                   (if success?
-                     (let [entities (get-parsed-response)]
-                       (swap! state assoc
-                         :entity-list entities
-                         :entity-types (distinct (map #(% "entityType") entities))
-                         :initial-entity-type entity-type))
-                     (swap! state assoc :error status-text)))}))
+     (when (zero? (:load-counter @state))
+       (swap! state assoc :load-counter 2)
+       (endpoints/call-ajax-orch
+         {:endpoint (endpoints/get-workspace (:workspace-id props))
+          :on-done (fn [{:keys [success? get-parsed-response status-text]}]
+                     (if success?
+                       (swap! state assoc :locked? (get-in (get-parsed-response) ["workspace" "isLocked"]))
+                       (swap! state assoc :error status-text))
+                     (swap! state update-in [:load-counter] dec))})
+       (endpoints/call-ajax-orch
+         {:endpoint (endpoints/get-entities-by-type (:workspace-id props))
+          :on-done (fn [{:keys [success? get-parsed-response status-text]}]
+                     (if success?
+                       (let [entities (get-parsed-response)]
+                         (swap! state assoc
+                           :entity-list entities
+                           :entity-types (distinct (map #(% "entityType") entities))
+                           :initial-entity-type entity-type))
+                       (swap! state assoc :error status-text))
+                     (swap! state update-in [:load-counter] dec))})))
    :delete
    (fn [{:keys [props state this]} selected-entities]
      (swap! state assoc :deleting? true)

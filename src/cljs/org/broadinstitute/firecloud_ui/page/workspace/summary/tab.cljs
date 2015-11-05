@@ -104,7 +104,8 @@
 (react/defc Summary
   {:get-initial-state
    (fn []
-     {:viewing-attributes? false})
+     {:viewing-attributes? false
+      :load-counter 0})
    :render
    (fn [{:keys [state props this]}]
      (cond
@@ -128,22 +129,28 @@
                                      :workspace-id (:workspace-id props)}]
                    (view-summary state props workspace submissions status owner?
                      this #(swap! state assoc :viewing-attributes? true) (:nav-context props))))))
-       :else [comps/Spinner {:text "Loading workspace..."}]))
+       :else [:div {:style {:textAlign "center" :padding "1em"}}
+              [comps/Spinner {:text "Loading workspace..."}]]))
    :load-workspace
    (fn [{:keys [props state]}]
-     (endpoints/call-ajax-orch
-       {:endpoint (endpoints/get-workspace (:workspace-id props))
-        :on-done (fn [{:keys [success? get-parsed-response status-text]}]
-                   (swap! state assoc :server-response
-                     (if success? {:workspace (get-parsed-response)}
-                                  {:workspace-error status-text})))})
-     (endpoints/call-ajax-orch
-       {:endpoint (endpoints/list-submissions (:workspace-id props))
-        :on-done (fn [{:keys [success? status-text get-parsed-response]}]
-                   (swap! state assoc :submission-response
-                     (if success?
-                       {:submissions (get-parsed-response)}
-                       {:submissions-error status-text})))}))
+     (when (zero? (:load-counter @state))
+       (swap! state assoc :load-counter 2)
+       (endpoints/call-ajax-orch
+         {:endpoint (endpoints/get-workspace (:workspace-id props))
+          :on-done (fn [{:keys [success? get-parsed-response status-text]}]
+                     (swap! state assoc :server-response
+                       (if success?
+                         {:workspace (get-parsed-response)}
+                         {:workspace-error status-text})
+                       (swap! state update-in [:load-counter] dec)))})
+       (endpoints/call-ajax-orch
+         {:endpoint (endpoints/list-submissions (:workspace-id props))
+          :on-done (fn [{:keys [success? status-text get-parsed-response]}]
+                     (swap! state assoc :submission-response
+                       (if success?
+                         {:submissions (get-parsed-response)}
+                         {:submissions-error status-text})
+                       (swap! state update-in [:load-counter] dec)))})))
    :delete
    (fn [{:keys [props state]}]
      (endpoints/call-ajax-orch
@@ -174,9 +181,9 @@
      (when (nil? (:server-response @state))
        (react/call :load-workspace this)))
    :component-will-receive-props
-   (fn [{:keys [props next-props state]}]
-     (when-not (apply = (map :workspace-id [props next-props]))
-       (swap! state dissoc :server-response :submission-response)))})
+   (fn [{:keys [props next-props state this]}]
+     (swap! state dissoc :server-response :submission-response)
+     (react/call :load-workspace this))})
 
 
 (defn render [workspace-id on-delete nav-context]
