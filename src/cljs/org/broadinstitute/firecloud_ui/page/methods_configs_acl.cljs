@@ -43,15 +43,16 @@
       (= access-level reader-level)
       (= access-level owner-level)))
 
+
+
+
+(defn- validate-user [acl-map]
+  (let [user (:user acl-map)]
+    (not (= "public" user))))
+
+
 (defn- filter-public [acl-vec]
-  (let [hasNotPublicUser
-        (fn [m]
-          (not
-            (and
-              (map? m)
-              (contains? m :user)
-              (= "public" (:user m)))))]
-    (filterv hasNotPublicUser acl-vec)))
+  (filter validate-user acl-vec))
 
 
 (defn- make-ui-vec [a-map]
@@ -59,27 +60,20 @@
    :role (get a-map "role")})
 
 (defn- extract-last-public-access-level [acl-vec]
+
   (let [hasPublicUser
         (fn [m]
-          (and
-            (map? m)
-            (contains? m :user)
-            (= "public" (:user m))))
-        justPublic (filterv hasPublicUser acl-vec)
+          (= "public" (:user m)))
+        justPublic (filter hasPublicUser acl-vec)
         numJustPublic (count justPublic)]
       (if (<= numJustPublic 0)
       ;if public isn't in the acl-return NO ACCESS
       no-access-level
-      (let [lastPublic (get justPublic (- numJustPublic 1))
+      (let [lastPublic (nth justPublic (- numJustPublic 1))
             lastPublicAccessLevel (get lastPublic :role)]
         ;if public is in the acl return the value of the last one
         lastPublicAccessLevel))))
 
-
-
-(defn- validate-user [acl-map]
-  (let [user (acl-map :user)]
-    (not (= "public" user))))
 
 
 (react/defc AgoraPermsEditor
