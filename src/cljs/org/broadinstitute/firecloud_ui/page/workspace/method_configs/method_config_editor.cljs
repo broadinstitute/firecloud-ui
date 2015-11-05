@@ -18,9 +18,6 @@
 (defn- filter-empty [list]
   (vec (remove blank? (map trim list))))
 
-
-
-
 (defn- create-section-header [text]
   [:div {:style {:fontSize "125%" :fontWeight 500}} text])
 
@@ -102,13 +99,12 @@
                      (swap! state assoc :loaded-method (get-parsed-response))
                      (swap! state assoc :error status-text)))}))})
 
-(defn- render-top-bar [config]
+(defn- render-top-bar-method [config]
   [MethodDetailsViewer
    {:name (get-in config ["methodRepoMethod" "methodName"])
     :namespace (get-in config ["methodRepoMethod" "methodNamespace"])
     :snapshotId (get-in config ["methodRepoMethod" "methodVersion"])
-    :config config
-    }])
+    :config config}])
 
 
 (defn- render-side-bar [state refs config editing? props]
@@ -217,7 +213,7 @@
 
      [comps/Blocker {:banner (:blocker @state)}]
      [:div {:style {:padding "0em 2em"}}
-      (render-top-bar config)
+      (render-top-bar-method config)
       [:div {:style {:padding "1em 0em"}}
        (render-side-bar state refs config editing? props)
        (when-not editing?
@@ -265,4 +261,3 @@
    :component-will-unmount
    (fn [{:keys [this]}]
      (.removeEventListener js/window "scroll" (.-onScrollHandler this)))})
-
