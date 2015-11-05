@@ -29,10 +29,12 @@
   (nth access-levels idx))
 
 (defn- access-level-to-index [access-level]
-  (case access-level
-    reader-level 0
-    owner-level 1
-    no-access-level 2))
+  (cond
+    (= "READER" access-level) 0
+    (= "OWNER" access-level) 1
+    (= "NO ACCESS" access-level) 2
+    :else (do  (utils/rlog (str "Unknown access-level :'" access-level "'"))  reader-level)))
+
 
 (def ^:private column-width "calc(50% - 4px)")
 
@@ -75,6 +77,11 @@
 
 
 
+(defn- validate-user [acl-map]
+  (let [user (acl-map :user)]
+    (not (= "public" user))))
+
+
 (react/defc AgoraPermsEditor
   {:render
    (fn [{:keys [props refs state this]}]
@@ -112,14 +119,7 @@
                                                          (:background-gray style/colors))}
                               :disabled (< i (:count-orig @state))
                               :spellCheck false
-                              :defaultValue (:user acl-entry)
-                              :onChange (fn [e]
-                                          (let [new-val (-> e .-target .-value)
-                                                new-val-is-public (= "public" new-val)]
-                                            (when new-val-is-public
-                                              (do
-                                                (js/alert "Cannot set value to 'public'!  Use the check-box instead.")
-                                                (set! (-> e .-target .-value) "")))))})
+                              :defaultValue (:user acl-entry)})
                            (style/create-select
                              {:ref (str "acl-value" i)
                               :style {:float "right" :width column-width :height 33}
@@ -177,20 +177,27 @@
                      (swap! state assoc :error status-text)))}))
    :persist-acl
    (fn [{:keys [props state this]}]
-     (swap! state assoc :saving? true)
-     (swap! state assoc :acl-vec
-       (flatten [{:user "public" :role
-                 (if (:public-status @state) reader-level no-access-level)}
-       (react/call :capture-ui-state this)]))
-     (endpoints/call-ajax-orch
-       {:endpoint (endpoints/persist-agora-method-acl (:selected-entity props))
-        :headers {"Content-Type" "application/json"}
-        :payload (filterv #(not (empty? (:user %))) (:acl-vec @state))
-        :on-done (fn [{:keys [success? status-text]}]
-                   (swap! state dissoc :saving?)
-                   (if success?
-                     ((:dismiss-self props))
-                     (js/alert "Error saving permissions: " status-text)))}))
+     (swap! state assoc :acl-vec (react/call :capture-ui-state this))
+     (let [validity-flags (map validate-user (:acl-vec @state))
+           all-valid (every? true? validity-flags)]
+       (if all-valid
+         (let
+           [non-empty-acls (filterv #(not (empty? (:user %))) (:acl-vec @state))
+            non-empty-acls-w-public (flatten [non-empty-acls
+                                              {:user "public" :role
+                                               (if (:public-status @state)
+                                                 reader-level no-access-level)}])]
+           (swap! state assoc :saving? true)
+           (endpoints/call-ajax-orch
+             {:endpoint (endpoints/persist-agora-method-acl (:selected-entity props))
+              :headers {"Content-Type" "application/json"}
+              :payload non-empty-acls-w-public
+              :on-done (fn [{:keys [success? status-text]}]
+                         (swap! state dissoc :saving?)
+                         (if success?
+                           ((:dismiss-self props))
+                           (js/alert "Error saving permissions: " status-text)))}))
+         (js/alert "Cannot set value to 'public'!  Use the check-box instead."))))
    :capture-ui-state
    (fn [{:keys [state refs]}]
      (mapv
