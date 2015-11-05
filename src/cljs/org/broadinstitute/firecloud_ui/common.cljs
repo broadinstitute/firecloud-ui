@@ -116,6 +116,6 @@
 (defn format-filesize [bytes]
   (letfn [(loop [b n]
             (if (< b 1000)
-              (str (.toFixed b 2) " " (nth ["B" "KB" "MB" "GB" "TB" "PB" "EB" "ZB" "YB"] n))
+              (str (.toFixed (js/parseFloat b) 2) " " (nth ["B" "KB" "MB" "GB" "TB" "PB" "EB" "ZB" "YB"] n))
               (loop (/ b 1000) (inc n))))]
     (loop bytes 0)))
