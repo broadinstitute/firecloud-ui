@@ -11,12 +11,12 @@
     [org.broadinstitute.firecloud-ui.page.workspace.method-configs.delete-config :as delete]
     [org.broadinstitute.firecloud-ui.page.workspace.method-configs.launch-analysis :as launch]
     [org.broadinstitute.firecloud-ui.page.workspace.method-configs.publish :as publish]
+    [org.broadinstitute.firecloud-ui.utils :as utils]
     ))
 
 
 (defn- filter-empty [list]
   (vec (remove blank? (map trim list))))
-
 
 (defn- create-section-header [text]
   [:div {:style {:fontSize "125%" :fontWeight 500}} text])
@@ -59,7 +59,8 @@
                                         (when-not success?
                                           (js/alert (str "Exception:\n" (.-statusText xhr)))))})))))})))
 
-(defn- render-top-bar [config]
+
+(defn- render-top-bar-config [config]
   [:div {:style {:backgroundColor (:background-gray style/colors)
                  :borderRadius 8 :border (str "1px solid " (:line-gray style/colors))
                  :padding "1em"}}
@@ -73,6 +74,37 @@
     [:span {:style {:fontWeight 500 :padding "0 0.5em"}} "Method Version:"]
     [:span {} (get-in config ["methodRepoMethod" "methodVersion"])]]
    (clear-both)])
+
+
+(react/defc MethodDetailsViewer
+  {:render
+   (fn [{:keys [props state]}]
+     [:div {:style {:marginRight "20%"}}
+      (cond
+        (:loaded-method @state)
+        [:div {}
+         [comps/EntityDetails
+          {:entity (:loaded-method @state)}]]
+        :else (render-top-bar-config (:config props)))])
+   :component-did-mount
+   (fn [{:keys [props state]}]
+     (endpoints/call-ajax-orch
+       {:endpoint (endpoints/get-agora-method
+                    (:namespace props)
+                    (:name props)
+                    (:snapshotId props))
+        :headers {"Content-Type" "application/json"}
+        :on-done (fn [{:keys [success? get-parsed-response status-text]}]
+                   (if success?
+                     (swap! state assoc :loaded-method (get-parsed-response))
+                     (swap! state assoc :error status-text)))}))})
+
+(defn- render-top-bar-method [config]
+  [MethodDetailsViewer
+   {:name (get-in config ["methodRepoMethod" "methodName"])
+    :namespace (get-in config ["methodRepoMethod" "methodNamespace"])
+    :snapshotId (get-in config ["methodRepoMethod" "methodVersion"])
+    :config config}])
 
 
 (defn- render-side-bar [state refs config editing? props]
@@ -129,19 +161,20 @@
         [:div {:style {:float "left" :display (when editing? "none") :padding "0.5em 0 1em 0"}}
          (get (config value-type) key)
          (validation-status (contains? invalid-values key))]
-        [:div {:style {:float "left" :display (when-not editing? "none")}}
-         (if (= value-type "inputs")
-           (style/create-text-field {:ref (str "in_" key)
-                                     :defaultValue (get (config value-type) key)})
-           (style/create-text-field {:ref (str "out_" key)
-                                     :defaultValue (get (config value-type) key)}))]
-        (clear-both)
-        [:div {:style {:marginRight "1em" :padding "0.5em" :marginBottom "0.5em"
-                       :backgroundColor (:exception-red style/colors)
-                       :display (if-not (contains? invalid-values key) "none")
-                       :width 450
-                       :border (str "1px solid " (:line-gray style/colors)) :borderRadius 2}}
-         (get invalid-values key)]])]))
+        [:div {}
+         [:div {:style {:float "left" :display (when-not editing? "none")}}
+          (if (= value-type "inputs")
+            (style/create-text-field {:ref (str "in_" key)
+                                      :defaultValue (get (config value-type) key)})
+            (style/create-text-field {:ref (str "out_" key)
+                                      :defaultValue (get (config value-type) key)}))]
+         (clear-both)
+         [:div {:style {:marginRight "1em" :padding "0.5em" :marginBottom "0.5em"
+                        :backgroundColor (:exception-red style/colors)
+                        :display (if-not (contains? invalid-values key) "none")
+                        :width 450
+                        :border (str "1px solid " (:line-gray style/colors)) :borderRadius 2}}
+          (get invalid-values key)]]])]))
 
 (defn- render-main-display [wrapped-config editing?]
   (let [config (get-in wrapped-config ["methodConfiguration"])
@@ -180,7 +213,7 @@
 
      [comps/Blocker {:banner (:blocker @state)}]
      [:div {:style {:padding "0em 2em"}}
-      (render-top-bar config)
+      (render-top-bar-method config)
       [:div {:style {:padding "1em 0em"}}
        (render-side-bar state refs config editing? props)
        (when-not editing?
@@ -228,4 +261,3 @@
    :component-will-unmount
    (fn [{:keys [this]}]
      (.removeEventListener js/window "scroll" (.-onScrollHandler this)))})
-
