@@ -468,9 +468,16 @@
 (defn get-agora-method-acl [ns n sid is-conf]
   {:path (str "/" (if is-conf "configurations" "methods"  ) "/" ns "/" n "/" sid "/permissions"  )
    :method :get
-   :mock-data (map (fn [i] {:user (str "user" i "@broadinstitute.org")
-                           :accessLevel (rand-nth ["READER" "OWNER" "NO ACCESS"])})
-                (range (inc (rand-int 5))))})
+   :mock-data
+   (let [random-data (map (fn [i] {:user (str "user" i "@broadinstitute.org")
+                                   :role (rand-nth ["READER" "OWNER" "NO ACCESS"])})
+                       (range (inc (rand-int 5))))
+         add-public? (rand-nth [true false])
+         public-value (rand-nth ["READER" "NO ACCESS"])
+         public-map {:user "public" :role public-value}]
+     (if add-public?
+       (flatten [public-map random-data])
+       random-data))})
 
 
 (defn delete-agora-entity [config? ns n sid]
@@ -485,7 +492,7 @@
                nmsp (ent "namespace")
                sid (ent "snapshotId")
                base (cond
-                      (= "Configuration" ent-type) "/configurations"
+                      (= "Configuration" ent-type) "configurations"
                       (or (= "Task" ent-type) (= "Workflow" ent-type)) "methods"
                       :else (do
                               (utils/rlog "Error, unknown type : " ent-type)
