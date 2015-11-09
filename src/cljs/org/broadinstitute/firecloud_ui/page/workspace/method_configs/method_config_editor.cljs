@@ -60,32 +60,13 @@
                                           (js/alert (str "Exception:\n" (.-statusText xhr)))))})))))})))
 
 
-(defn- render-top-bar-config [config]
-  [:div {:style {:backgroundColor (:background-gray style/colors)
-                 :borderRadius 8 :border (str "1px solid " (:line-gray style/colors))
-                 :padding "1em"}}
-   [:div {:style {:float "left" :width "33.33%" :textAlign "left"}}
-    [:span {:style {:fontWeight 500 :padding "0 0.5em"}} "Method Namespace:"]
-    [:span {} (get-in config ["methodRepoMethod" "methodNamespace"])]]
-   [:div {:style {:float "left" :width "33.33%" :textAlign "center"}}
-    [:span {:style {:fontWeight 500 :padding "0 0.5em"}} "Method Name:"]
-    [:span {} (get-in config ["methodRepoMethod" "methodName"])]]
-   [:div {:style {:float "left" :width "33.33%" :textAlign "right"}}
-    [:span {:style {:fontWeight 500 :padding "0 0.5em"}} "Method Version:"]
-    [:span {} (get-in config ["methodRepoMethod" "methodVersion"])]]
-   (clear-both)])
-
-
 (react/defc MethodDetailsViewer
   {:render
    (fn [{:keys [props state]}]
-     [:div {:style {:marginRight "20%"}}
-      (cond
-        (:loaded-method @state)
-        [:div {}
-         [comps/EntityDetails
-          {:entity (:loaded-method @state)}]]
-        :else (render-top-bar-config (:config props)))])
+     (cond
+       (:loaded-method @state) [comps/EntityDetails {:entity (:loaded-method @state)}]
+       (:error @state) (style/create-server-error-message (:error @state))
+       :else [comps/Spinner {:text "Loading details..."}]))
    :component-did-mount
    (fn [{:keys [props state]}]
      (endpoints/call-ajax-orch
@@ -98,13 +79,6 @@
                    (if success?
                      (swap! state assoc :loaded-method (get-parsed-response))
                      (swap! state assoc :error status-text)))}))})
-
-(defn- render-top-bar-method [config]
-  [MethodDetailsViewer
-   {:name (get-in config ["methodRepoMethod" "methodName"])
-    :namespace (get-in config ["methodRepoMethod" "methodNamespace"])
-    :snapshotId (get-in config ["methodRepoMethod" "methodVersion"])
-    :config config}])
 
 
 (defn- render-side-bar [state refs config editing? props]
@@ -196,7 +170,13 @@
      (create-section-header "Inputs")
      (input-output-list config "inputs" invalid-inputs editing?)
      (create-section-header "Outputs")
-     (input-output-list config "outputs" invalid-outputs editing?)]))
+     (input-output-list config "outputs" invalid-outputs editing?)
+     (create-section-header "Referenced Method")
+     (create-section [MethodDetailsViewer
+                      {:name (get-in config ["methodRepoMethod" "methodName"])
+                       :namespace (get-in config ["methodRepoMethod" "methodNamespace"])
+                       :snapshotId (get-in config ["methodRepoMethod" "methodVersion"])
+                       :config config}])]))
 
 (defn- render-display [state refs wrapped-config editing? props]
   (let [config (get-in wrapped-config ["methodConfiguration"])]
@@ -212,19 +192,17 @@
                              :after-delete (:after-delete props)}])
 
      [comps/Blocker {:banner (:blocker @state)}]
-     [:div {:style {:padding "0em 2em"}}
-      (render-top-bar-method config)
-      [:div {:style {:padding "1em 0em"}}
-       (render-side-bar state refs config editing? props)
-       (when-not editing?
-         [:div {:style {:float "right"}}
-          (launch/render-button {:workspace-id (:workspace-id props)
-                                 :config-id {:namespace (config "namespace") :name (config "name")}
-                                 :root-entity-type (config "rootEntityType")
-                                 :disabled? (:locked? @state)
-                                 :on-success (:on-submission-success props)})])
-       (render-main-display wrapped-config editing?)
-       (clear-both)]]]))
+     [:div {:style {:padding "1em 2em"}}
+      (render-side-bar state refs config editing? props)
+      (when-not editing?
+        [:div {:style {:float "right"}}
+         (launch/render-button {:workspace-id (:workspace-id props)
+                                :config-id {:namespace (config "namespace") :name (config "name")}
+                                :root-entity-type (config "rootEntityType")
+                                :disabled? (:locked? @state)
+                                :on-success (:on-submission-success props)})])
+      (render-main-display wrapped-config editing?)
+      (clear-both)]]))
 
 (react/defc MethodConfigEditor
   {:get-initial-state
