@@ -23,7 +23,6 @@ RUN lein --version
 WORKDIR /app
 
 ENV SERVER_NAME=dhost
-ENV GOOGLE_CLIENT_ID=not-valid
 ENV BUILD_TYPE=minimized
 
 COPY project.clj project.clj

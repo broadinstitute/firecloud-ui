@@ -11,7 +11,6 @@ ui:
   {{.Data.ui_dns}}
   {{.Data.ui_volumes}}
   environment:
-    GOOGLE_CLIENT_ID: {{.Data.env_client_id}}
     ORCH_URL_ROOT: {{.Data.env_orchestration_url}}
     LOG_LEVEL: {{.Data.env_log_level}}
     SERVER_NAME: {{.Data.env_server_name}}

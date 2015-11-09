@@ -69,8 +69,5 @@ SITE_CONF=${SITE_CONF/'--EXTRA_VHOST_HTTPS--'/"$LOCATION_DIRECTIVES"}
 
 set -x
 
-# Rebuild index.html with a new GOOGLE_CLIENT_ID since it may have been overridden.
-(cd /app && ./script/common/create-index-html.sh release)
-
 echo "$SITE_CONF" > /etc/apache2/sites-available/site.conf
 exec /usr/sbin/apachectl -DNO_DETACH -DFOREGROUND 2>&1
