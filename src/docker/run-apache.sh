@@ -49,13 +49,6 @@ LOCATION_DIRECTIVES=$(cat << EOF
     ProxyPass ${ORCH_URL_ROOT}
     ProxyPassReverse ${ORCH_URL_ROOT}
   </Location>
-
-  <Location "/service/api">
-    AuthType oauth20
-    Require valid-user
-    ProxyPass ${ORCH_URL_ROOT}/api
-    ProxyPassReverse ${ORCH_URL_ROOT}/api
-  </Location>
 EOF
 )
 
