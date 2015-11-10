@@ -19,6 +19,7 @@
          fails)))
    :render
    (fn [{:keys [state props refs]}]
+     (assert (not (empty? (:predicates props))) "No predicates for input/TextField")
      (style/create-text-field {:ref "textfield"
                                :style (merge (:style props)
                                         (when (:invalid @state)

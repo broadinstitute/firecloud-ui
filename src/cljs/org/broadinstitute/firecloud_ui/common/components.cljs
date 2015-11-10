@@ -241,16 +241,22 @@
        (when-let [error (:error props)]
          (let [[source status-code causes stack-trace message]
                (map error ["source" "statusCode" "causes" "stackTrace" "message"])]
-           [:div {:style {:textAlign "initial"}}
-            [:div {}
-             [:span {:style {:paddingRight "1ex"}}
-              (icons/font-icon {:style {:color (:exception-red style/colors)}}
-                :status-warning-triangle)]
-             (str "Error " status-code ": " message)]
-            (when source [:div {} "Source: " source])
-            (when-not (empty? causes)
+           (if-let [expected-msg (get-in props [:expect status-code])]
+             [:div {}
+              [:span {:style {:paddingRight "1ex"}}
+               (icons/font-icon {:style {:color (:exception-red style/colors)}}
+                 :status-warning-triangle)]
+              (str "Error: " expected-msg)]
+             [:div {:style {:textAlign "initial"}}
               [:div {}
-               [:div {} (str "Cause" (when (> (count causes) 1) "s") ":")]
-               (map (fn [cause] [CauseViewer cause]) causes)])
-            (when-not (empty? stack-trace)
-              [StackTraceViewer {:lines stack-trace}])])))}))
+               [:span {:style {:paddingRight "1ex"}}
+                (icons/font-icon {:style {:color (:exception-red style/colors)}}
+                  :status-warning-triangle)]
+               (str "Error " status-code ": " message)]
+              (when source [:div {} "Source: " source])
+              (when-not (empty? causes)
+                [:div {}
+                 [:div {} (str "Cause" (when (> (count causes) 1) "s") ":")]
+                 (map (fn [cause] [CauseViewer cause]) causes)])
+              (when-not (empty? stack-trace)
+                [StackTraceViewer {:lines stack-trace}])]))))}))

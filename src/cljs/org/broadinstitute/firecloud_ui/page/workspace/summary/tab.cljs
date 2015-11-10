@@ -38,7 +38,8 @@
                    :dismiss-self #(swap! state dissoc :editing-acl?)
                    :update-owners #(swap! state update-in [:server-response :workspace] assoc "owners" %)}])
      (when (:cloning? @state)
-       [WorkspaceCloner {:on-success (fn [namespace name]
+       [WorkspaceCloner {:dismiss #(swap! state dissoc :cloning?)
+                         :on-success (fn [namespace name]
                                        (swap! state dissoc :cloning?)
                                        (nav/navigate nav-context (str namespace ":" name)))
                          :workspace-id (:workspace-id props)}])
