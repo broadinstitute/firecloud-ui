@@ -1,5 +1,6 @@
 (ns org.broadinstitute.firecloud-ui.common.table
   (:require
+   [clojure.set :refer [union]]
    [dmohs.react :as react]
    [org.broadinstitute.firecloud-ui.common :as common]
    [org.broadinstitute.firecloud-ui.common.components :as comps]
@@ -106,9 +107,7 @@
       :resizable-columns? true
       :reorderable-columns? true
       :sortable-columns? true
-      :filterable? true
-      :empty-message "There are no rows to display."
-      :toolbar identity})
+      :filterable? true})
    :get-initial-state
    (fn [{:keys [this props]}]
      (set! (.-filtered-data this) (if-let [filters (:filters props)]
@@ -168,7 +167,7 @@
                                            (when-let [f (:on-filter-change props)]
                                              (f %)))})]])
                  (common/clear-both)]]
-            ((:toolbar props) built-in)))
+            ((or (:toolbar props) identity) built-in)))
         [:div {}
          [:div {:style {:overflowX "auto"}}
           [:div {:style {:position "relative"
@@ -178,7 +177,7 @@
                                        + (map :width (filter :showing? (:ordered-columns @state)))))
                          :cursor (when (:dragging? @state) "col-resize")}}
            (if (:no-data? @state)
-             (style/create-message-well (:empty-message props))
+             (style/create-message-well (or (:empty-message props) "There are no rows to display."))
              (table-utils/render-header state props this))
            [table-utils/Body
             (assoc props
@@ -240,3 +239,49 @@
    (fn [{:keys [this]}]
      (.removeEventListener js/window "mousemove" (.-onMouseMoveHandler this))
      (.removeEventListener js/window "mouseup" (.-onMouseUpHandler this)))})
+
+
+(react/defc EntityTable
+  {:get-initial-state
+   (fn [{:keys [props]}]
+     {:selected-entity-type (or (:initial-entity-type props) (first (:entity-types props)))})
+   :get-default-props
+   (fn []
+     {:empty-message "There are no entities to display."
+      :attribute-renderer identity})
+   :render
+   (fn [{:keys [props state]}]
+     (let [attribute-keys (apply union
+                            (map #(set (keys (% "attributes")))
+                              (filter #(= (% "entityType") (:selected-entity-type @state))
+                                (:entities props))))]
+       [Table
+        (merge props
+          {:key (:selected-entity-type @state)
+           :columns (concat
+                      [{:header "Entity Type" :starting-width 100
+                        :content-renderer (or (:entity-type-renderer props)
+                                            (fn [entity] (entity "entityType")))}
+                       {:header "Entity Name" :starting-width 100
+                        :content-renderer (or (:entity-name-renderer props)
+                                            (fn [entity] (entity "name")))}]
+                      (map (fn [k] {:header k :starting-width 100
+                                    :content-renderer
+                                    (fn [attr-value]
+                                      (if (and (map? attr-value)
+                                            (= (set (keys attr-value)) #{"entityType" "entityName"}))
+                                        (attr-value "entityName")
+                                        ((:attribute-renderer props) attr-value)))})
+                        attribute-keys))
+           :filters (mapv (fn [key] {:text key :pred #(= key (% "entityType"))})
+                      (:entity-types props))
+           :selected-filter-index (.indexOf (to-array (:entity-types props))
+                                    (:selected-entity-type @state))
+           :on-filter-change (fn [index]
+                               (swap! state assoc :selected-entity-type (nth (:entity-types props) index))
+                               (when-let [func (:on-filter-change props)]
+                                 (func index)))
+           :data (:entities props)
+           :->row (fn [m]
+                    (concat [m m]
+                      (map (fn [k] (get-in m ["attributes" k])) attribute-keys)))})]))})

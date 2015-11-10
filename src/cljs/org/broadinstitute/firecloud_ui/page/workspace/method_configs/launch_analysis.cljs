@@ -3,6 +3,7 @@
     [clojure.set :refer [union]]
     clojure.string
     [dmohs.react :as react]
+    [org.broadinstitute.firecloud-ui.common :as common]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
     [org.broadinstitute.firecloud-ui.common.dialog :as dialog]
     [org.broadinstitute.firecloud-ui.common.style :as style]
@@ -31,8 +32,7 @@
                              :methodConfigurationName (:name config-id)
                              :entityType (:type entity-id)
                              :entityName (:name entity-id)}
-                            (when-not (clojure.string/blank? expression) {:expression expression}))
-             on-success (:on-success props)]
+                            (when-not (clojure.string/blank? expression) {:expression expression}))]
          (swap! state assoc :launching? true)
          (endpoints/call-ajax-orch
            {:endpoint (endpoints/create-submission (:workspace-id props))
@@ -41,8 +41,8 @@
             :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                        (swap! state dissoc :launching?)
                        (if success?
-                         (on-success ((get-parsed-response) "submissionId"))
-                         (js/alert (str "Launch failed: " status-text))))}))
+                         ((:on-success props) ((get-parsed-response) "submissionId"))
+                         ((:on-error props) (get-parsed-response))))}))
        (js/alert "Please select an entity.")))})
 
 
@@ -54,7 +54,7 @@
        (if (contains? (set types) root)
          (let [entity (first (filter #(= root (% "entityType")) (:entities props)))]
            ((:entity-selected props) (entity->id entity))
-           {:selected-entity (first (filter #(= root (% "entityType")) (:entities props)))
+           {:selected-entity entity
             :selected-entity-type root})
          {:selected-entity-type (first types)})))
    :render
@@ -63,45 +63,21 @@
       (style/create-form-label "Select Entity")
       [:div {:style {:backgroundColor "#fff" :border (str "1px solid " (:line-gray style/colors))
                      :padding "1em" :marginBottom "0.5em"}}
-       (let [attribute-keys (apply
-                             union
-                             (map #(set (keys (% "attributes")))
-                                  (filter #(= (% "entityType") (:selected-entity-type @state))
-                                          (:entities props))))
-             types (:entity-types props)
-             root (:root-entity-type props)
-             ordered-types (if (contains? (set types) root)
-                             (cons root (remove #(= % root) types))
-                             types)]
-         [table/Table
-          {:key (:selected-entity-type @state)
-           :empty-message "No entities available."
-           :columns (concat
-                     [{:header "" :starting-width 40 :resizable? false :reorderable? false
-                       :sort-by :none :filter-by :none
-                       :content-renderer
-                       (fn [data]
-                         [:input {:type "radio"
-                                  :checked (identical? data (:selected-entity @state))
-                                  :onChange #(do (swap! state assoc :selected-entity data)
-                                                 ((:entity-selected props) (entity->id data)))}])}
-                      {:header "Entity Type" :starting-width 100}
-                      {:header "Entity Name" :starting-width 100}]
-                     (map (fn [k] {:header k :starting-width 100}) attribute-keys))
-           :filters (mapv (fn [key] {:text key :pred #(= key (% "entityType"))}) ordered-types)
-           :selected-filter-index (.indexOf (to-array ordered-types)
-                                            (:selected-entity-type @state))
-           :on-filter-change #(swap! state assoc
-                                     :selected-entity-type (nth ordered-types %))
-           :data (:entities props)
-           :->row (fn [m]
-                    (concat
-                     [m
-                      (m "entityType")
-                      (m "name")]
-                     (map (fn [k] (get-in m ["attributes" k])) attribute-keys)))}])]
+       [:div {:style {:marginBottom "1em" :fontSize "140%"}}
+        (str "Selected: "
+          (if-let [e (:selected-entity @state)]
+            (str (e "name") " (" (e "entityType") ")")
+            "None"))]
+       [table/EntityTable
+        {:entities (:entities props)
+         :entity-types (:entity-types props)
+         :entity-name-renderer (fn [entity]
+                                 (style/create-link
+                                   #(do (swap! state assoc :selected-entity entity)
+                                        ((:entity-selected props) (entity->id entity)))
+                                   (entity "name")))}]]
       (style/create-form-label "Define Expression")
-      (let [disabled (= (:root-entity-type props) (:selected-entity-type @state))]
+      (let [disabled (= (:root-entity-type props) (get-in @state [:selected-entity "entityType"]))]
         (style/create-text-field {:placeholder "leave blank for default"
                                   :style {:width "100%"
                                           :backgroundColor (when disabled
@@ -132,10 +108,7 @@
            (zero? (count @state))
            (style/create-message-well "No data found.")
            :else
-           [LaunchForm {:on-success (:on-success props)
-                        :config-id (:config-id props)
-                        :workspace-id (:workspace-id props)
-                        :entities entities
+           [LaunchForm {:entities entities
                         :entity-types entity-types
                         :root-entity-type (:root-entity-type props)
                         :entity-selected #(swap! state assoc :selected-entity-id %)
@@ -145,9 +118,11 @@
                        {:entity-id (:selected-entity-id @state)
                         :expression (when-not (= (:root-entity-type props)
                                                  (:type (:selected-entity-id @state)))
-                                      (:selected-expression @state))})]}])
+                                      (:selected-expression @state))
+                        :on-error #(swap! state assoc :launch-server-error %)})]}])
    :component-did-mount
    (fn [{:keys [props state]}]
+     (common/scroll-to-top 100)
      (endpoints/call-ajax-orch
        {:endpoint (endpoints/get-entities-by-type (:workspace-id props))
         :on-done (fn [{:keys [success? status-text get-parsed-response]}]

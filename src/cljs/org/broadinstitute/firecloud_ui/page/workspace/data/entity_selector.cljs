@@ -4,15 +4,19 @@
     [clojure.set :refer [union difference]]
     [org.broadinstitute.firecloud-ui.common :as common]
     [org.broadinstitute.firecloud-ui.common.table :as table]
+    [org.broadinstitute.firecloud-ui.common.table-utils :refer [default-render]]
     [org.broadinstitute.firecloud-ui.common.style :as style]
     ))
 
-(def ^:private box-width "calc(50% - 4px)")
+(def ^:private box-width "calc(50% - 20px)")
 
 (react/defc EntitySelector
   {:get-selected-entities
    (fn [{:keys [props state]}]
      (replace (:entities props) (:selected @state)))
+   :get-default-props
+   (fn []
+     {:right-empty-text "Nothing selected"})
    :get-initial-state
    (fn []
      {:selected #{}})
@@ -29,7 +33,13 @@
                            (style/create-link
                              #(swap! state update-in [:selected] (if source? conj disj) index)
                              (entity "name")))}]
-                       (map (fn [k] {:header k :starting-width 100 :show-initial? false})
+                       (map (fn [k] {:header k :starting-width 100 :show-initial? false
+                                     :content-renderer
+                                     (fn [attr-value]
+                                       (if (and (map? attr-value)
+                                             (= (set (keys attr-value)) #{"entityType" "entityName"}))
+                                         (attr-value "entityName")
+                                         (default-render attr-value)))})
                          attribute-keys)))
            data (fn [source?]
                   (replace
@@ -47,6 +57,7 @@
                                          :padding "0.5em" :boxSizing "border-box"
                                          :backgroundColor "#fff" :border (str "1px solid" (:line-gray style/colors))}}
                            [table/Table {:width :narrow
+                                         :empty-message ((if source? :left-empty-text :right-empty-text) props)
                                          :columns (columns source?)
                                          :data (data source?)
                                          :->row ->row}]])]
@@ -57,5 +68,8 @@
          (:right-text props)]
         (common/clear-both)
         (create-table true)
+        [:div {:style {:float "left" :width 40 :paddingTop 120
+                       :textAlign "center" :fontSize "180%"}}
+         "⇄"]
         (create-table false)
         (common/clear-both)]))})

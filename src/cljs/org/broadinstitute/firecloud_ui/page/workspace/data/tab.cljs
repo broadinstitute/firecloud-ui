@@ -50,65 +50,37 @@
      (common/scroll-to-top 100))})
 
 
-(react/defc EntitiesList
-  {:get-initial-state
-   (fn [{:keys [props]}]
-     {:selected-entity-type (or (:initial-entity-type props) (first (:entity-types props)))})
-   :render
-   (fn [{:keys [props state]}]
-     [:div {}
-      (let [attribute-keys (apply
-                            union
-                            (map #(set (keys (% "attributes")))
-                                 (filter #(= (% "entityType") (:selected-entity-type @state))
-                                         (:entity-list props))))]
-        [table/Table
-         {:key (:selected-entity-type @state)
-          :empty-message "There are no entities to display."
-          :toolbar (fn [built-in]
-                     [:div {}
-                      [:div {:style {:float "left"}} built-in]
-                      (when-let [selected-entity-type (:selected-entity-type @state)]
-                        [:a {:style {:textDecoration "none" :float "left" :margin "5px 0 0 1em"}
-                             :href (str "/service/api/workspaces/" (:namespace (:workspace-id props)) "/"
-                                     (:name (:workspace-id props)) "/" selected-entity-type "/tsv")
-                             :target "_blank"}
-                         (str "Download '" selected-entity-type "' data")])
-                      [:div {:style {:float "right" :paddingRight "2em"}}
-                       [comps/Button {:text "Import Data..."
-                                      :disabled? (if (:locked? @state) "This workspace is locked")
-                                      :onClick (:show-import props)}]]
-                      [:div {:style {:float "right" :paddingRight "2em"}}
-                       [comps/Button {:text "Delete..."
-                                      :disabled? (if (:locked? @state) "This workspace is locked")
-                                      :onClick (:show-delete props)}]]
-                      (common/clear-both)])
-          :columns (concat
-                     [{:header "Entity Type" :starting-width 100}
-                      {:header "Entity Name" :starting-width 100}]
-                     (map (fn [k] {:header k :starting-width 100
-                                   :content-renderer
-                                   (fn [maybe-uri]
-                                     (if (string? maybe-uri)
-                                       (if-let [parsed (common/parse-gcs-uri maybe-uri)]
-                                         [dialog/GCSFilePreviewLink (assoc parsed
-                                                                      :gcs-uri maybe-uri)]
-                                         maybe-uri)
-                                       (table-utils/default-render maybe-uri)))})
-                          attribute-keys))
-          :filters (mapv (fn [key] {:text key :pred #(= key (% "entityType"))})
-                         (if-let [type (:initial-entity-type props)]
-                           (cons type (filter #(not= % type) (:entity-types props)))
-                           (:entity-types props)))
-          :selected-filter-index (.indexOf (to-array (:entity-types props))
-                                           (:selected-entity-type @state))
-          :on-filter-change #(swap! state assoc :selected-entity-type (nth (:entity-types props) %))
-          :data (:entity-list props)
-          :->row (fn [m]
-                   (concat
-                    [(m "entityType")
-                     (m "name")]
-                    (map (fn [k] (get-in m ["attributes" k])) attribute-keys)))}])])})
+(defn- entity-table [state props]
+  [table/EntityTable
+   {:entities (:entity-list @state)
+    :entity-types (:entity-types @state)
+    :initial-entity-type (:initial-entity-type @state)
+    :toolbar (fn [built-in]
+               [:div {}
+                [:div {:style {:float "left"}} built-in]
+                (when-let [selected-entity-type (:selected-entity-type @state)]
+                  [:a {:style {:textDecoration "none" :float "left" :margin "7px 0 0 1em"}
+                       :href (str "/service/api/workspaces/" (:namespace (:workspace-id props)) "/"
+                               (:name (:workspace-id props)) "/" selected-entity-type "/tsv")
+                       :target "_blank"}
+                   (str "Download '" selected-entity-type "' data")])
+                [:div {:style {:float "right" :paddingRight "2em"}}
+                 [comps/Button {:text "Import Data..."
+                                :disabled? (if (:locked? @state) "This workspace is locked")
+                                :onClick #(swap! state assoc :show-import? true)}]]
+                [:div {:style {:float "right" :paddingRight "2em"}}
+                 [comps/Button {:text "Delete..."
+                                :disabled? (if (:locked? @state) "This workspace is locked")
+                                :onClick #(swap! state assoc :show-delete? true)}]]
+                (common/clear-both)])
+    :on-filter-change #(swap! state assoc :selected-entity-type (nth (:entity-types @state) %))
+    :attribute-renderer (fn [maybe-uri]
+                          (if (string? maybe-uri)
+                            (if-let [parsed (common/parse-gcs-uri maybe-uri)]
+                              [dialog/GCSFilePreviewLink (assoc parsed
+                                                           :gcs-uri maybe-uri)]
+                              maybe-uri)
+                            (table-utils/default-render maybe-uri)))}])
 
 
 (react/defc WorkspaceData
@@ -157,13 +129,7 @@
                                           (swap! state dissoc :show-delete?)
                                           (react/call :delete this selected-entities))))}]}])}])
       (cond
-        (and (:entity-list @state) (zero? (:load-counter @state)))
-        [EntitiesList {:entity-list (:entity-list @state)
-                       :entity-types (:entity-types @state)
-                       :workspace-id (:workspace-id props)
-                       :initial-entity-type (:initial-entity-type @state)
-                       :show-import #(swap! state assoc :show-import? true)
-                       :show-delete #(swap! state assoc :show-delete? true)}]
+        (and (:entity-list @state) (zero? (:load-counter @state))) (entity-table state props)
         (:error @state) (style/create-server-error-message (:error @state))
         :else [:div {:style {:textAlign "center"}} [comps/Spinner {:text "Loading entities..."}]])])
    :component-did-mount
