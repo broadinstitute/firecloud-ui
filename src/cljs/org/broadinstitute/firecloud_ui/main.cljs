@@ -1,6 +1,7 @@
 (ns org.broadinstitute.firecloud-ui.main
   (:require
    [dmohs.react :as react]
+   [org.broadinstitute.firecloud-ui.common :as common]
    [org.broadinstitute.firecloud-ui.common.components :as comps]
    [org.broadinstitute.firecloud-ui.common.style :as style]
    [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
@@ -69,14 +70,18 @@
       [Link {:href "mailto:firecloud-help@broadinstitute.org?Subject=FireCloud%20Help" :text "Support" :target "_blank"}]]]))
 
 
-(def top-nav-bar-items
-  [{:key :workspaces
+(def routes
+  [{:key :profile
+    :render #(react/create-element profile-page/Page %)}
+   {:key :workspaces
     :name "Workspaces"
     :render #(react/create-element workspaces/Page %)}
    {:key :methods
     :name "Method Repository"
     :render #(react/create-element method-repo/Page %)}])
 
+(def top-nav-bar-items
+  (filter (fn [r] (contains? #{:workspaces :methods} (:key r))) routes))
 
 (react/defc TopNavBarLink
   {:render
@@ -106,11 +111,14 @@
    (fn [{:keys [this props state]}]
      (let [nav-context (nav/parse-segment (:nav-context props))
            page (keyword (:segment nav-context))]
-       (when-not (or (contains? (set (map :key top-nav-bar-items)) page)
+       (when-not (or (contains? (set (map :key routes)) page)
                      (= page :status))
          (nav/navigate (:nav-context props) "workspaces"))
        [:div {}
         [:div {:style {:padding "1em" :borderBottom (str "1px solid " (:line-gray style/colors))}}
+         [:div {:style {:float "right" :fontSize "70%"}}
+          [:a {:style {:marginRight "1ex" :color (:link-blue style/colors)}
+               :href "#profile" } (:name @state)]]
          (text-logo)
          (case (:registration-status @state)
            nil [:div {:style {:margin "2em 0" :textAlign "center"}}
@@ -126,24 +134,24 @@
              [:div {}
               [TopNavBar {:selected-item page
                           :on-nav (fn [item] (nav/navigate (:nav-context props) (name item)))}]
-              (let [item (first (filter #(= (% :key) page) top-nav-bar-items))]
+              (let [item (first (filter #(= (% :key) page) routes))]
                 (if item
                   ((item :render) {:nav-context nav-context})
                   [:div {} "Page not found."]))]))]]))
    :component-did-mount
    (fn [{:keys [this state]}]
      (endpoints/profile-get
-      :isRegistrationComplete
-      (fn [{:keys [success? status-text get-parsed-response]}]
-        (cond
-          (and success? (= (get-in (get-parsed-response) ["keyValuePair" "value"]) "true"))
-          (swap! state assoc :registration-status :registered)
-          (not success?)
-          (swap! state assoc :registration-status :not-registered)
-          :else
-          (do
-            (set! (.-errorMessage this) status-text)
-            (swap! state assoc :registration-status :error))))))})
+       (fn [{:keys [success? status-text get-parsed-response]}]
+         (let [parsed-values (common/parse-profile (get-parsed-response))]
+           (cond
+             (and success? (= (:isRegistrationComplete parsed-values) "true"))
+             (swap! state assoc :registration-status :registered :name (:name parsed-values))
+             success? ; partial profile case
+             (swap! state assoc :registration-status :not-registered)
+             :else
+             (do
+               (set! (.-errorMessage this) status-text)
+               (swap! state assoc :registration-status :error)))))))})
 
 
 (react/defc RegisterLink

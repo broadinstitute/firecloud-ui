@@ -52,9 +52,6 @@
 (defn create-form-label [text]
   [:div {:style {:marginBottom "0.16667em" :fontSize "88%"}} text])
 
-(defn create-hint [text]
-  [:em {:style {:fontSize "69%"}} text])
-
 (defn create-text-field [props]
   [:input (deep-merge {:type "text" :style input-text-style} props)])
 
