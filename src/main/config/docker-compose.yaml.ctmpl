@@ -11,7 +11,7 @@ ui:
   {{.Data.ui_dns}}
   {{.Data.ui_volumes}}
   environment:
-    ORCH_URL_ROOT: {{.Data.env_orchestration_url}}
+    ORCH_URL_ROOT: {{.Data.env_orchestration_url_root}}
     LOG_LEVEL: {{.Data.env_log_level}}
     SERVER_NAME: {{.Data.env_server_name}}
     BUILD_TYPE: {{.Data.env_build_type}}
