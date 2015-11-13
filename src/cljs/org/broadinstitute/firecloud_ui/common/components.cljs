@@ -36,7 +36,7 @@
             :href (or (:href props) "javascript:;")
             :onClick (if disabled?
                        #(js/alert (if (string? disabled?) disabled? "This action is disabled"))
-                       (fn [e] ((:onClick props) e)))
+                       (when-let [on-click (:onClick props)] #(on-click %)))
             :onKeyDown (when-not disabled? (common/create-key-handler [:space :enter] (:onClick props)))}
         (or (:text props) (icons/icon-text (:icon props)))
         (when (= (:style props) :add)

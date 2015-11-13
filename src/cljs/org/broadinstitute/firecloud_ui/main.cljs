@@ -84,7 +84,7 @@
      [:a {:href "javascript:;"
           :style {:padding "1ex" :textDecoration "none"
                   :fontWeight (when (:selected props) "bold")
-                  :color (if (:hovering? @state) (:link-blue style/colors) "black") }
+                  :color (if (:hovering? @state) (:link-blue style/colors) "black")}
           :onClick (fn [e] ((:onClick props) e))
           :onMouseOver (fn [e] (swap! state assoc :hovering? true))
           :onMouseOut (fn [e] (swap! state assoc :hovering? false))}
@@ -98,7 +98,7 @@
       (map (fn [item] [TopNavBarLink {:name (item :name)
                                       :selected (= (:selected-item props) (item :key))
                                       :onClick (fn [e] ((:on-nav props) (item :key)))}])
-            top-nav-bar-items)])})
+           top-nav-bar-items)])})
 
 
 (react/defc LoggedIn
@@ -110,7 +110,7 @@
                      (= page :status))
          (nav/navigate (:nav-context props) "workspaces"))
        [:div {}
-        [:div {:style {:padding "1em" :borderBottom (str "1px solid " (:line-gray style/colors))}} 
+        [:div {:style {:padding "1em" :borderBottom (str "1px solid " (:line-gray style/colors))}}
          (text-logo)
          (case (:registration-status @state)
            nil [:div {:style {:margin "2em 0" :textAlign "center"}}
@@ -122,7 +122,7 @@
                              :on-done #(swap! state assoc :registration-status :registered)})
            :registered
            (case page
-             :status (status-page/render) 
+             :status (status-page/render)
              [:div {}
               [TopNavBar {:selected-item page
                           :on-nav (fn [item] (nav/navigate (:nav-context props) (name item)))}]
@@ -164,12 +164,13 @@
      [:div {:style {:padding "50px 25px"}}
       [:div {:style {:marginBottom "2em"}} (text-logo)]
       [:div {}
-       [comps/Button {:text "Sign In"
-                      :href (str "/service/login?path="
-                                 (js/encodeURIComponent (let [hash (nav/get-hash-value)]
-                                                          (if (clojure.string/blank? hash)
-                                                            "workspaces"
-                                                            hash))))}]]
+       [comps/Button
+        {:text "Sign In"
+         :href (str "/service/login?callback="
+                    (js/encodeURIComponent
+                     (str js/window.location.protocol "//" js/window.location.hostname))
+                    (let [hash (nav/get-hash-value)]
+                      (if (clojure.string/blank? hash) "" (str "&path=" hash))))}]]
       [:div {:style {:marginTop "1em"}} [RegisterLink]]
       [:div {:style {:maxWidth 600 :paddingTop "2em" :fontSize "small"}}
        [:p {:style {:fontWeight "bold"}} "WARNING NOTICE"]
@@ -195,7 +196,12 @@
      (swap! state assoc :root-nav-context (nav/create-nav-context)))
    :get-initial-state
    (fn []
-     {:root-nav-context (nav/create-nav-context)})
+     (let [hash (nav/get-hash-value)
+           at-index (utils/str-index-of hash "?access_token=")
+           [_ token] (clojure.string/split (subs hash at-index) #"=")]
+       (when-not (neg? at-index)
+         (.replace (.-location js/window) (str "#"(subs hash 0 at-index))))
+       {:access-token token :root-nav-context (nav/create-nav-context)}))
    :render
    (fn [{:keys [state]}]
      [:div {}
@@ -204,15 +210,12 @@
          [LoggedIn {:nav-context (:root-nav-context @state)}]
          [LoggedOut])]
       (footer)])
+   :component-will-mount
+   (fn [{:keys [state]}]
+     (reset! utils/access-token (:access-token @state)))
    :component-did-mount
    (fn [{:keys [this state]}]
-     (.addEventListener js/window "hashchange" (partial react/call :handle-hash-change this))
-     (let [hash (-> js/window .-location .-hash)
-           at-index (utils/str-index-of hash "?access_token=")
-           [_ token] (clojure.string/split (subs hash at-index) #"=")]
-       (when-not (neg? at-index)
-         (swap! state assoc :access-token token)
-         (.replace (.-location js/window) (subs hash 0 at-index)))))
+     (.addEventListener js/window "hashchange" (partial react/call :handle-hash-change this)))
    :component-will-update
    (fn [{:keys [next-state]}]
      (reset! utils/access-token (:access-token next-state)))})
