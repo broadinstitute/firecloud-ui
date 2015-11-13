@@ -141,10 +141,10 @@
 (def access-token (atom nil))
 
 
-(defn ajax-orch [path arg-map]
+(defn ajax-orch [path arg-map & {:keys [service-prefix] :or {service-prefix "/service/api"}}]
   (assert (= (subs path 0 1) "/") (str "Path must start with '/': " path))
   (ajax (assoc
-         arg-map :url (str "/service/api" path)
+         arg-map :url (str service-prefix path)
          :headers (merge {"Authorization" (str "Bearer " @access-token)}
                          (:headers arg-map)))))
 

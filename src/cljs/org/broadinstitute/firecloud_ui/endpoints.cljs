@@ -536,8 +536,8 @@
 (defn profile-get
   ([on-done]
    (utils/ajax-orch
-    "/profile"
-    {:on-done on-done
+     "/profile"
+     {:on-done on-done
      :canned-response
      {:status (rand-nth [200 200 500]) :delay-ms (rand-int 2000)
       :responseText
@@ -547,20 +547,23 @@
         (map (fn [[k v]] {:key k :value v})
              {:isActive true :name "John Doe" :contactEmail "jdoe@example.com"
               :googleProjectIds ["14" "7"] :institution "Broad Institute"
-              :piName "Jane Doe"})})}}))
+              :piName "Jane Doe"})})}}
+     :service-prefix "/service/register"))
   ([k on-done]
    (utils/ajax-orch
-    (str "/profile/" (name k))
-    {:on-done on-done
+     (str "/profile/" (name k))
+     {:on-done on-done
      :canned-response
      {:status (rand-nth [200 200 500]) :delay-ms (rand-int 2000)
-      :responseText (utils/->json-string {:userId "55" :keyValuePair {:key k :value "asdf"}})}})))
+      :responseText (utils/->json-string {:userId "55" :keyValuePair {:key k :value "asdf"}})}}
+     :service-prefix "/service/register")))
 
 
 (defn profile-set [k v on-done]
   (utils/ajax-orch
-   (str "/profile/" (name k))
-   {:method :post
+    (str "/profile/" (name k))
+    {:method :post
     :data v
     :on-done on-done
-    :canned-response {:status (rand-nth [200 200 500]) :delay-ms (rand-int 2000)}}))
+    :canned-response {:status (rand-nth [200 200 500]) :delay-ms (rand-int 2000)}}
+    :service-prefix "/service/register"))
