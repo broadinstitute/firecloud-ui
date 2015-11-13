@@ -166,10 +166,10 @@
       [:div {}
        [comps/Button {:text "Sign In"
                       :href (str "/service/login?path="
-                                 (js/encodeURIComponent (let [hash (nav/get-hash-value)]
+                                 (js/encodeURIComponent (js/decodeURIComponent (let [hash (nav/get-hash-value)]
                                                           (if (clojure.string/blank? hash)
                                                             "workspaces"
-                                                            hash))))}]]
+                                                            hash)))))}]]
       [:div {:style {:marginTop "1em"}} [RegisterLink]]
       [:div {:style {:maxWidth 600 :paddingTop "2em" :fontSize "small"}}
        [:p {:style {:fontWeight "bold"}} "WARNING NOTICE"]
