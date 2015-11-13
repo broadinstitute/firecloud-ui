@@ -1,5 +1,5 @@
 {{with $environment := env "ENVIRONMENT"}}
-{{$keyname := printf "secret/dsde/%s/firecloud-ui/docker-compose.yaml" $environment}}
+{{$keyname := printf "secret/dsde/%s/firecloud-ui/firecloud-ui-compose.yaml" $environment}}
 {{with vault $keyname}}
 
 ui:
