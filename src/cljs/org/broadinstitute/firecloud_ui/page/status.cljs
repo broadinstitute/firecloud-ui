@@ -34,8 +34,12 @@
            [:div {} "Response text:" [:br] (-> (:xhr response) .-responseText)]]))])
    :component-did-mount
    (fn [{:keys [props state]}]
-     (utils/ajax-orch (:path (:request props))
-                      {:on-done #(swap! state assoc :response %)}))})
+     (if (= (:path (:request props)) "/profile")
+       (utils/ajax-orch (:path (:request props))
+                        {:on-done #(swap! state assoc :response %)}
+                        :service-prefix "/service/register")
+       (utils/ajax-orch (:path (:request props))
+                        {:on-done #(swap! state assoc :response %)})))})
 
 
 (defn render []
@@ -46,4 +50,4 @@
     [StatusLine {:label "Orchestration" :request {:path "/status/ping"}}]
     [StatusLine {:label "Rawls" :request {:path "/workspaces"}}]
     [StatusLine {:label "Agora" :request {:path "/methods"}}]
-    [StatusLine {:label "Thurloe" :request {:path "/register/profile"}}]]))
+    [StatusLine {:label "Thurloe" :request {:path "/profile"}}]]))
