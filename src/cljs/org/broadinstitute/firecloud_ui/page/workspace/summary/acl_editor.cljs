@@ -27,7 +27,7 @@
 
 (defn- build-acl-vec [acl-map]
   (mapv
-    (fn [[k v]] {:userId k :accessLevel (access-level-to-index v)})
+    (fn [[k v]] {:email k :accessLevel (access-level-to-index v)})
     acl-map))
 
 (defn- render-acl-content [props state this]
@@ -53,7 +53,7 @@
                        :backgroundColor (when (< i (:count-orig @state)) (:background-gray style/colors))}
                :disabled (< i (:count-orig @state))
                :spellCheck false
-               :defaultValue (:userId acl-entry)})
+               :defaultValue (:email acl-entry)})
             (style/create-select
               {:ref (str "acl-value" i)
                :style {:float "right" :width column-width :height 33}
@@ -64,7 +64,7 @@
        [comps/Button {:text "Add new" :style :add
                       :onClick #(do
                                  (react/call :capture-ui-state this)
-                                 (swap! state update-in [:acl-vec] conj {:userId "" :accessLevel READER}))}]])
+                                 (swap! state update-in [:acl-vec] conj {:email "" :accessLevel READER}))}]])
     :dismiss-self (:dismiss-self props)
     :ok-button
     [comps/Button {:text "Save"
@@ -92,13 +92,13 @@
        (mapv
          (fn [i]
            (let [[user-id access-level] (common/get-text refs (str "acl-key" i) (str "acl-value" i))]
-             {:userId user-id :accessLevel (js/parseInt access-level)}))
+             {:email user-id :accessLevel (js/parseInt access-level)}))
          (range (count (:acl-vec @state))))))
    :persist-acl
    (fn [{:keys [props state]}]
      (swap! state assoc :saving? true)
      (let [filtered-acl (->> (:acl-vec @state)
-                          (filter #(not (empty? (:userId %))))
+                          (filter #(not (empty? (:email %))))
                           (map #(update % :accessLevel index-to-access-level)))]
        (endpoints/call-ajax-orch
          {:endpoint (endpoints/update-workspace-acl (:workspace-id props))
@@ -108,7 +108,7 @@
                      (swap! state dissoc :saving?)
                      (if success?
                        (do
-                         ((:update-owners props) (map :userId (filter #(= "OWNER" (:accessLevel %)) filtered-acl)))
+                         ((:update-owners props) (map :email (filter #(= "OWNER" (:accessLevel %)) filtered-acl)))
                          ((:dismiss-self props)))
                        (js/alert "Error saving permissions: " status-text)))})))
    :component-did-mount
