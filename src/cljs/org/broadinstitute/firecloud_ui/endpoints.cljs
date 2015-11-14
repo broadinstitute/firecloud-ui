@@ -90,9 +90,9 @@
   {:path (str "/workspaces/" (ws-path workspace-id) "/acl")
    :method :get
    :mock-data
-   {:acl (into {} (map (fn [i] [(str "user" i "@broadinstitute.org")
+   (into {} (map (fn [i] [(str "user" i "@broadinstitute.org")
                                 (rand-nth ["OWNER" "WRITER" "READER"])])
-                    (range (inc (rand-int 5)))))}})
+                    (range (inc (rand-int 5)))))})
 
 (defn update-workspace-acl [workspace-id]
   {:path (str "/workspaces/" (ws-path workspace-id) "/acl")
