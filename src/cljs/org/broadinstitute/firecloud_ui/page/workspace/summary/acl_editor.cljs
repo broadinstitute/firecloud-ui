@@ -118,6 +118,6 @@
        {:endpoint (endpoints/get-workspace-acl (:workspace-id props))
         :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                    (if success?
-                     (let [acl-vec (build-acl-vec ((get-parsed-response) "acl"))]
+                     (let [acl-vec (build-acl-vec (get-parsed-response))]
                        (swap! state assoc :acl-vec acl-vec :count-orig (count acl-vec)))
                      (swap! state assoc :error status-text)))}))})
