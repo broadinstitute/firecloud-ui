@@ -45,6 +45,15 @@ EOF
 )
 
 LOCATION_DIRECTIVES=$(cat << EOF
+  <LocationMatch "/service/api/workspaces/[^/]+/[^/]+/entities/[^/]+/tsv">
+    RewriteEngine On
+    RewriteCond %{HTTP_COOKIE} FCtoken=([^;]+)
+    RewriteRule .* - [END,QSD,env=ACCESSTOKEN:%1]
+    RequestHeader set Authorization "Bearer %{ACCESSTOKEN}e"
+    ProxyPass ${ORCH_URL_ROOT}
+    ProxyPassReverse ${ORCH_URL_ROOT}
+  </LocationMatch>
+
   <Location "/service">
     ProxyPass ${ORCH_URL_ROOT}
     ProxyPassReverse ${ORCH_URL_ROOT}
