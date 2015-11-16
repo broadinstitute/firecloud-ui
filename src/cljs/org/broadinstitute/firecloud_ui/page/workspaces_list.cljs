@@ -41,22 +41,22 @@
       (react/create-element
         [comps/Button
          {:text "Create Workspace" :ref "createButton"
-          :onClick #(if-let [fails (input/validate refs "wsNamespace" "wsName")]
-                      (swap! state assoc :validation-error fails)
-                      (let [desc (common/get-text refs "wsDescription")
-                            [ns n] (input/get-text refs "wsNamespace" "wsName")
-                            attributes (if (clojure.string/blank? desc) {} {:description desc})]
-                        (swap! state assoc :creating-wf true :error nil :validation-error nil)
-                        (endpoints/call-ajax-orch
-                          {:endpoint (endpoints/create-workspace ns n)
-                           :payload {:namespace ns :name n :attributes attributes}
-                           :headers {"Content-Type" "application/json"}
-                           :on-done (fn [{:keys [success? get-parsed-response]}]
-                                      (swap! state dissoc :creating-wf)
-                                      (if success?
-                                        (do (swap! state dissoc :overlay-shown? :server-error :validation-error)
-                                          (nav/navigate nav-context (str ns ":" n)))
-                                        (swap! state assoc :server-error (get-parsed-response))))})))}])}]))
+          :onClick #(let [[ns n & fails] (input/get-and-validate refs "wsNamespace" "wsName")]
+                      (if fails
+                        (swap! state assoc :validation-error fails :server-error nil)
+                        (let [desc (common/get-text refs "wsDescription")
+                              attributes (if (clojure.string/blank? desc) {} {:description desc})]
+                          (swap! state assoc :creating-wf true :server-error nil :validation-error nil)
+                          (endpoints/call-ajax-orch
+                            {:endpoint (endpoints/create-workspace ns n)
+                             :payload {:namespace ns :name n :attributes attributes}
+                             :headers {"Content-Type" "application/json"}
+                             :on-done (fn [{:keys [success? get-parsed-response]}]
+                                        (swap! state dissoc :creating-wf)
+                                        (if success?
+                                          (do (swap! state dissoc :overlay-shown? :server-error :validation-error)
+                                            (nav/navigate nav-context (str ns ":" n)))
+                                          (swap! state assoc :server-error (get-parsed-response))))}))))}])}]))
 
 
 (react/defc StatusCell

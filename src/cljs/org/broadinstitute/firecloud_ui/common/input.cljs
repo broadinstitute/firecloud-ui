@@ -32,8 +32,14 @@
   (map #(react/call :get-text (@refs %)) ids))
 
 (defn validate [refs & ids]
-  (let [result (flatten (keep #(react/call :validate (@refs %)) ids))]
-    (when-not (empty? result) result)))
+  (not-empty (distinct (flatten (keep #(react/call :validate (@refs %)) ids)))))
+
+;; usage: (let [[field1 field2 & fails] (get-and-validate refs "field1-ref" "field2-ref")]
+;;          (if fails
+;;              (do-failure fails)
+;;              (do-success field1 field2)))
+(defn get-and-validate [refs & ids]
+  (concat (apply get-text refs ids) (apply validate refs ids)))
 
 
 (defn nonempty [field-name]
