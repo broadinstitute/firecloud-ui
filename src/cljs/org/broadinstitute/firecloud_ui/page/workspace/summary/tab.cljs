@@ -222,15 +222,6 @@
                          {:submissions (get-parsed-response)}
                          {:submissions-error status-text})
                        (swap! state update-in [:load-counter] dec)))})))
-   :delete
-   (fn [{:keys [props state]}]
-     (endpoints/call-ajax-orch
-       {:endpoint (endpoints/delete-workspace (:workspace-id props))
-        :on-done (fn [{:keys [success? status-text]}]
-                   (swap! state dissoc :deleting?)
-                   (if success?
-                     ((:on-delete props))
-                     (js/alert (str "Error on delete: " status-text))))}))
    :lock-or-unlock
    (fn [{:keys [props state]} locked-now?]
      (swap! state assoc :locking? locked-now?)
