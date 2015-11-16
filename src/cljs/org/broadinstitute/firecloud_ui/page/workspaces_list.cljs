@@ -86,11 +86,26 @@
       [:div {:style {:padding "1em 0 0 1em" :fontWeight 600}}
        (get-in props [:data :name])]])})
 
+(defn- get-workspace-name-string [ws]
+  (str (get-in ws ["workspace" "namespace"]) "/" (get-in ws ["workspace" "name"])))
+
+(defn- get-max-workspace-name-length [workspaces]
+  (apply max (map count (map #(get-workspace-name-string %) workspaces))))
+
+(defn- get-workspace-description [ws]
+  (get-in ws ["workspace" "attributes" "description"]))
+
+(defn- get-max-workspace-description-length [workspaces]
+  (apply max (map count (cons (map #(get-workspace-description %) workspaces) ["No description provided"]))))
 
 (react/defc WorkspaceTable
   {:render
    (fn [{:keys [state props]}]
-     (let [border-style (str "1px solid " (:line-gray style/colors))]
+     (let [border-style (str "1px solid " (:line-gray style/colors))
+           max-workspace-name-length (get-max-workspace-name-length (:workspaces props))
+           max-description-length (get-max-workspace-description-length (:workspaces props))]
+       (utils/cljslog (str "max-workspace-name-length: " max-workspace-name-length))
+       (utils/cljslog (str "max-description-length: " max-description-length))
        [table/Table
         {:empty-message "No workspaces to display."
          :cell-padding-left nil
@@ -121,9 +136,9 @@
            :header [:div {:style {:marginLeft -6}} "Status"] :starting-width 60
            :content-renderer (fn [data] [StatusCell {:data data}])}
           {:as-text :name :sort-by :text
-           :header "Workspace" :starting-width 450
+           :header "Workspace" :starting-width  (* max-workspace-name-length 10)
            :content-renderer (fn [data] [WorkspaceCell {:data data}])}
-          {:header "Description" :starting-width 400
+          {:header "Description" :starting-width (* max-description-length 10)
            :content-renderer (fn [description]
                                [:div {:style {:padding "1.1em 0 0 14px"
                                               :fontStyle (when-not description "oblique")}}
@@ -138,8 +153,7 @@
          :->row (fn [ws]
                   [{:status (:status ws)
                     :onClick #((:onWorkspaceSelected props) (ws "workspace"))}
-                   {:name (str (get-in ws ["workspace" "namespace"])
-                               "/" (get-in ws ["workspace" "name"]))
+                   {:name (get-workspace-name-string ws)
                     :status (:status ws)
                     :onClick #((:onWorkspaceSelected props) (ws "workspace"))}
                    (get-in ws ["workspace" "attributes" "description"])
