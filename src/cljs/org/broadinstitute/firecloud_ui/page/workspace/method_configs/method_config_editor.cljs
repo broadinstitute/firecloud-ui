@@ -119,9 +119,7 @@
     (icons/font-icon {:style {:paddingLeft "0.5em" :padding "1em 0.7em"
                               :color (:exception-red style/colors)}}
       :x)
-    (icons/font-icon {:style {:paddingLeft "0.5em" :padding "1em 0.7em"
-                              :color (:success-green style/colors)}}
-      :status-done)))
+    ))
 
 (defn- input-output-list [config value-type invalid-values editing?]
   (create-section
