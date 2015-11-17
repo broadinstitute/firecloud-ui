@@ -254,7 +254,8 @@
      (let [attribute-keys (apply union
                             (map #(set (keys (% "attributes")))
                               (filter #(= (% "entityType") (:selected-entity-type @state))
-                                (:entities props))))]
+                                (:entities props))))
+           attr-col-width (max 100 (min 400 (int (/ 1000 (count attribute-keys)))))]
        [Table
         (merge props
           {:key (:selected-entity-type @state)
@@ -262,16 +263,25 @@
                       [{:header "Entity Type" :starting-width 100
                         :content-renderer (or (:entity-type-renderer props)
                                             (fn [entity] (entity "entityType")))}
-                       {:header "Entity Name" :starting-width 100
+                       {:header "Entity Name" :starting-width 200
                         :content-renderer (or (:entity-name-renderer props)
                                             (fn [entity] (entity "name")))}]
-                      (map (fn [k] {:header k :starting-width 100
+                      (map (fn [k] {:header k :starting-width attr-col-width
                                     :content-renderer
                                     (fn [attr-value]
-                                      (if (and (map? attr-value)
-                                            (= (set (keys attr-value)) #{"entityType" "entityName"}))
+                                      (cond
+                                        ;; for attributes referring to a single other entity
+                                        ;; e.g. samples referring to participants
+                                        (and (map? attr-value)
+                                             (= (set (keys attr-value)) #{"entityType" "entityName"}))
                                         (attr-value "entityName")
-                                        ((:attribute-renderer props) attr-value)))})
+                                        ;; for attributes referring to a list of entities
+                                        ;; e.g. sample sets referring to samples
+                                        (and (sequential? attr-value)
+                                             (map? (first attr-value)) ;; we'll just assume homogeneous lists
+                                             (= (set (keys (first attr-value))) #{"entityType" "entityName"}))
+                                        (clojure.string/join ", " (map (fn [refr] (refr "entityName")) attr-value))
+                                        :else ((:attribute-renderer props) attr-value)))})
                         attribute-keys))
            :filters (mapv (fn [key] {:text key :pred #(= key (% "entityType"))})
                       (:entity-types props))
