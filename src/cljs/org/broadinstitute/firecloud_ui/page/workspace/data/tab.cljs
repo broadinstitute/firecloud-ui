@@ -52,6 +52,60 @@
      (common/scroll-to-top 100))})
 
 
+(react/defc DataDeleter
+  {:render
+   (fn [{:keys [state props refs this]}]
+     [dialog/Dialog
+      {:dismiss-self (:dismiss-self props)
+       :width "80%"
+       :content
+       (react/create-element
+         [dialog/OKCancelForm
+          {:header "Delete Entities"
+           :dismiss-self (:dismiss-self props)
+           :content (react/create-element
+                      [:div {}
+                       (when (:deleting? @state)
+                         [comps/Blocker {:banner "Deleting..."}])
+                       [EntitySelector
+                        {:ref "EntitySelector"
+                         :left-text "Workspace Entities" :right-text "Will Be Deleted"
+                         :entities (:entity-list props)}]
+                       [:div {:style {:text-align "center" :marginTop "1em"}}
+                        (style/create-validation-error-message (:validation-error @state))
+                        [comps/ErrorViewer {:error (:server-error @state)}]]])
+           :ok-button [comps/Button
+                       {:text "Delete"
+                        :onClick #(let [selected-entities (react/call :get-selected-entities (@refs "EntitySelector"))
+                                        num (count selected-entities)
+                                        msg (if (= num 1)
+                                              "Really delete this entity?"
+                                              (str "Really delete these " num " entities?"))]
+                                    (swap! state dissoc :server-error)
+                                    (if (zero? num)
+                                      (swap! state assoc :validation-error ["Please select one or more entities to delete"])
+                                      (when (js/confirm msg)
+                                        (react/call :delete this selected-entities))))}]}])}])
+   :component-did-mount
+   (fn []
+     (common/scroll-to-top 100))
+   :delete
+   (fn [{:keys [props state this]} selected-entities]
+     (swap! state assoc :deleting? true :validation-error nil :server-error nil)
+     (endpoints/call-ajax-orch
+       {:endpoint (endpoints/delete-entities (:workspace-id props))
+        :payload {:recursive false ;; TODO implement
+                  :entities (map (fn [e] {:entityName (e "name")
+                                          :entityType (e "entityType")}) selected-entities)}
+        :headers {"Content-Type" "application/json"}
+        :on-done (fn [{:keys [success? get-parsed-response]}]
+                   (swap! state dissoc :deleting?)
+                   (if success?
+                     (do ((:reload props))
+                         ((:dismiss-self props)))
+                     (swap! state assoc :server-error (get-parsed-response))))}))})
+
+
 (defn- entity-table [state props]
   [table/EntityTable
    {:entities (:entity-list @state)
@@ -106,31 +160,10 @@
                                                             (swap! state dissoc :entity-list :entity-types)
                                                             (react/call :load this entity-type))}])}])
       (when (:show-delete? @state)
-        [dialog/Dialog
-         {:dismiss-self #(swap! state dissoc :show-delete?)
-          :width "80%"
-          :content
-          (react/create-element
-            [dialog/OKCancelForm
-             {:header "Delete Entities"
-              :dismiss-self #(swap! state dissoc :show-delete?)
-              :content (react/create-element
-                         [EntitySelector
-                          {:ref "EntitySelector"
-                           :left-text "Workspace Entities" :right-text "Will Be Deleted"
-                           :entities (:entity-list @state)}])
-              :ok-button [comps/Button
-                          {:text "Delete"
-                           :onClick #(let [selected-entities (react/call :get-selected-entities (@refs "EntitySelector"))
-                                           num (count selected-entities)
-                                           msg (if (= num 1)
-                                                 "Really delete this entity?"
-                                                 (str "Really delete these " num " entities?"))]
-                                      (if (zero? num)
-                                        (js/alert "Please select one or more entities to delete")
-                                        (when (js/confirm msg)
-                                          (swap! state dissoc :show-delete?)
-                                          (react/call :delete this selected-entities))))}]}])}])
+        [DataDeleter {:dismiss-self #(swap! state dissoc :show-delete?)
+                      :entity-list (:entity-list @state)
+                      :workspace-id (:workspace-id props)
+                      :reload #(react/call :load this)}])
       (cond
         (and (:entity-list @state) (zero? (:load-counter @state))) (entity-table state props)
         (:error @state) (style/create-server-error-message (:error @state))
@@ -163,22 +196,7 @@
                            :entity-types (distinct (map #(% "entityType") entities))
                            :initial-entity-type entity-type))
                        (swap! state assoc :error status-text))
-                     (swap! state update-in [:load-counter] dec))})))
-   :delete
-   (fn [{:keys [props state this]} selected-entities]
-     (swap! state assoc :deleting? true)
-     (endpoints/call-ajax-orch
-       {:endpoint (endpoints/delete-entities (:workspace-id props))
-        :payload {:recursive false ;; TODO implement
-                  :entities (map (fn [e] {:entityName (e "name")
-                                          :entityType (e "entityType")}) selected-entities)}
-        :headers {"Content-Type" "application/json"}
-        :on-done (fn [{:keys [success? get-parsed-response]}]
-                   (swap! state dissoc :deleting? :entity-list)
-                   (react/call :load this)
-                   (when-not success?
-                     (let [response (get-parsed-response)]
-                       (js/alert (response "message")))))}))})
+                     (swap! state update-in [:load-counter] dec))})))})
 
 (defn render [workspace]
   [WorkspaceData {:workspace-id workspace}])
