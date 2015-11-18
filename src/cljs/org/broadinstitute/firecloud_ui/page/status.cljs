@@ -1,7 +1,7 @@
 (ns org.broadinstitute.firecloud-ui.page.status
   (:require
    [dmohs.react :as react]
-   [org.broadinstitute.firecloud-ui.utils :as utils :refer [rlog jslog cljslog]]
+   [org.broadinstitute.firecloud-ui.utils :as utils]
    ))
 
 

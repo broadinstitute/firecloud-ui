@@ -495,7 +495,7 @@
                       (= "Configuration" ent-type) "configurations"
                       (or (= "Task" ent-type) (= "Workflow" ent-type)) "methods"
                       :else (do
-                              (utils/rlog "Error, unknown type : " ent-type)
+                              (utils/log "Error, unknown type : " ent-type)
                               (str "configurations")))]
            (str "/" base "/" nmsp "/" name "/" sid "/permissions"))
    :method :post})

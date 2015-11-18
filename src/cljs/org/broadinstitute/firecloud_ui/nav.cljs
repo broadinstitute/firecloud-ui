@@ -1,7 +1,7 @@
 (ns org.broadinstitute.firecloud-ui.nav
   (:require
    clojure.string
-   [org.broadinstitute.firecloud-ui.utils :as utils :refer [rlog jslog cljslog]]))
+   [org.broadinstitute.firecloud-ui.utils :as utils]))
 
 
 (defn get-hash-value []

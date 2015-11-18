@@ -10,7 +10,7 @@
    [org.broadinstitute.firecloud-ui.page.profile :as profile-page]
    [org.broadinstitute.firecloud-ui.page.status :as status-page]
    [org.broadinstitute.firecloud-ui.page.workspaces-list :as workspaces]
-   [org.broadinstitute.firecloud-ui.utils :as utils :refer [rlog jslog cljslog]]
+   [org.broadinstitute.firecloud-ui.utils :as utils]
    ))
 
 
