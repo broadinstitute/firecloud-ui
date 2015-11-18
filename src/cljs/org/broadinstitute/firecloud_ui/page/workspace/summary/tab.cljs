@@ -92,7 +92,7 @@
       (style/create-paragraph
         [:div {} (get-in ws ["workspace" "createdBy"])]
         [:div {} (common/format-date (get-in ws ["workspace" "createdDate"]))])
-      (style/create-section-header "Submissions")
+      (style/create-section-header "Analysis Submissions")
       (style/create-paragraph
         (let [fail-count (->> submissions
                            (filter (complement all-success?))
