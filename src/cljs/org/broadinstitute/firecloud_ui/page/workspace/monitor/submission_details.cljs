@@ -109,7 +109,7 @@
   {:render (fn [{:keys [state this]}]
              (when (:aborting-submission? @state)
                [comps/Blocker {:banner "Aborting submission ..."}])
-             [comps/SidebarButton {:color :exception-red :margin :top
+             [comps/SidebarButton {:color :button-blue :style :light :margin :top
                                    :text "Abort" :icon :status-warning-triangle
                                    :onClick #(when (js/confirm "Are you sure?")
                                               (react/call :abort-submission this))}])
