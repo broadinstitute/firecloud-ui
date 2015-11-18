@@ -141,7 +141,7 @@
                                                          (react/call :load-workspace this))
                                                        (when-not (empty? up-mapv)
                                                          (update-orch-fn  up-mapv))))}))
-                         uniq-keys? (== (count curr-keys) (count (distinct curr-keys)))]
+                         uniq-keys? (or (empty? curr-keys) (apply distinct? curr-keys))]
                         (cond
                           (not valid-keys?) (js/alert "Empty attribute keys are not allowed!")
                           (not valid-vals?) (js/alert "Empty attribute values are not allowed!")
