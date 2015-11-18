@@ -14,8 +14,7 @@
   [:div {:style {:padding "1em 0 2em 0"}} children])
 
 (defn view-attributes [state refs]
-  [:div {:style {:margin "45px 25px"
-                 :display "inline-block"}}
+  [:div {:style {:display "inline-block"}}
    (style/create-section-header "Workspace Attributes")
    (create-section
      (when (or (:saving? @state) (:deleting? @state))
