@@ -539,15 +539,15 @@
      "/profile"
      {:on-done on-done
      :canned-response
-     {:status (rand-nth [200 200 500]) :delay-ms (rand-int 2000)
+     {:status 200 :delay-ms (rand-int 2000)
       :responseText
       (utils/->json-string
        {:userId "55"
         :keyValuePairs
         (map (fn [[k v]] {:key k :value v})
-             {:isActive true :name "John Doe" :contactEmail "jdoe@example.com"
+             {:isRegistrationComplete "true" :name "John Doe" :email "jdoe@example.com"
               :googleProjectIds ["14" "7"] :institution "Broad Institute"
-              :piName "Jane Doe"})})}}
+              :pi "Jane Doe"})})}}
      :service-prefix "/service/register"))
   ([k on-done]
    (utils/ajax-orch

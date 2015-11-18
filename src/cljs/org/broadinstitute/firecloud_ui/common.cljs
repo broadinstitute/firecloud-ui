@@ -119,3 +119,7 @@
               (str (.toFixed (js/parseFloat b) 2) " " (nth ["B" "KB" "MB" "GB" "TB" "PB" "EB" "ZB" "YB"] n))
               (loop (/ b 1000) (inc n))))]
     (loop bytes 0)))
+
+(defn parse-profile [unparsed-profile]
+  (let [unparsed-values (get unparsed-profile "keyValuePairs")]
+    (into {} (map (fn [m] [(keyword (m "key")) (m "value")]) unparsed-values))))
