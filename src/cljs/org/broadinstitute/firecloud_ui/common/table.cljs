@@ -38,12 +38,9 @@
 ;;   :empty-message (optional, default "There are no rows to display.")
 ;;     A banner to display when the table is empty
 ;;   :row-style (optional)
-;;     Style to apply to each row.  Properties overridden by :even-row-style and :odd-row-style.
-;;     When row styling is omitted, default properties create alternating white and gray backgrounds
-;;   :even-row-style (optional)
-;;     Style to apply to even-numbered rows.  Properties override :row-style
-;;   :odd-row-style (optional)
-;;     Style to apply to odd-numbered-rows.  Properties override :row-style
+;;     Style to apply to each row.  Value is either a style map, or a function taking the index and row
+;;     data and returning a style map.
+;;     When omitted, default properties create alternating white and gray backgrounds.
 ;;   :header-row-style (optional)
 ;;     Style to apply to the header row.  When omitted, style is a dark gray background with bold white text
 ;;   :toolbar (optional)
@@ -107,7 +104,9 @@
       :resizable-columns? true
       :reorderable-columns? true
       :sortable-columns? true
-      :filterable? true})
+      :filterable? true
+      :row-style (fn [index row]
+                   {:backgroundColor (if (even? index) (:background-gray style/colors) "#fff")})})
    :get-initial-state
    (fn [{:keys [this props]}]
      (set! (.-filtered-data this) (if-let [filters (:filters props)]
