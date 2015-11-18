@@ -93,10 +93,10 @@
   (apply max (map count (map #(get-workspace-name-string %) workspaces))))
 
 (defn- get-workspace-description [ws]
-  (get-in ws ["workspace" "attributes" "description"]))
+  (or (get-in ws ["workspace" "attributes" "description"]) "No description provided"))
 
 (defn- get-max-workspace-description-length [workspaces]
-  (apply max (map count (cons (map #(get-workspace-description %) workspaces) ["No description provided"]))))
+  (apply max (map count (map #(get-workspace-description %) workspaces))))
 
 (react/defc WorkspaceTable
   {:render
@@ -104,8 +104,6 @@
      (let [border-style (str "1px solid " (:line-gray style/colors))
            max-workspace-name-length (get-max-workspace-name-length (:workspaces props))
            max-description-length (get-max-workspace-description-length (:workspaces props))]
-       (utils/cljslog (str "max-workspace-name-length: " max-workspace-name-length))
-       (utils/cljslog (str "max-description-length: " max-description-length))
        [table/Table
         {:empty-message "No workspaces to display."
          :cell-padding-left nil
@@ -140,9 +138,7 @@
            :content-renderer (fn [data] [WorkspaceCell {:data data}])}
           {:header "Description" :starting-width (* max-description-length 10)
            :content-renderer (fn [description]
-                               [:div {:style {:padding "1.1em 0 0 14px"
-                                              :fontStyle (when-not description "oblique")}}
-                                (or description "No description provided")])}
+                               [:div {:style {:padding "1.1em 0 0 14px"}} description])}
           {:header "Access Level"  :starting-width 150
            :sort-by #(case % "OWNER" 0 "WRITER" 1 "READER" 2) :sort-initial :asc
            :content-renderer
@@ -156,7 +152,7 @@
                    {:name (get-workspace-name-string ws)
                     :status (:status ws)
                     :onClick #((:onWorkspaceSelected props) (ws "workspace"))}
-                   (get-in ws ["workspace" "attributes" "description"])
+                   (get-workspace-description ws)
                    (get-in ws ["accessLevel"])])}]))})
 
 
