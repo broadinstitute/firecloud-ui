@@ -64,19 +64,18 @@
         [comps/SidebarButton {:style :light :margin :top :color :button-blue
                             :text "Clone..." :icon :plus
                             :onClick #(swap! state assoc :cloning? true)}])
-      (when owner?
-        (if editing? nil
-          [comps/SidebarButton {:style :light :margin :top :color :button-blue
-                                :text (if locked? "Unlock" "Lock") :icon :locked
-                                :onClick #(react/call :lock-or-unlock this locked?)}]))
-      (when owner?
-        (if editing? nil
-          [comps/SidebarButton {:style :light :margin :top :color :exception-red
-                                :text "Delete" :icon :trash-can
-                                :disabled? (if locked? "This workspace is locked")
-                                :onClick #(when (js/confirm "Are you sure?\nBucket data will also be deleted.")
-                                           (swap! state assoc :deleting? true)
-                                           (react/call :delete this))}]))
+      (when-not (and owner? editing?)
+        [comps/SidebarButton {:style :light :margin :top :color :button-blue
+                              :text (if locked? "Unlock" "Lock") :icon :locked
+                              :onClick #(react/call :lock-or-unlock this locked?)}])
+      (when-not (and owner? editing?)
+        [comps/SidebarButton {:style :light :margin :top :color :exception-red
+                              :text "Delete" :icon :trash-can
+                              :disabled? (if locked? "This workspace is locked")
+                              :onClick #(when (js/confirm
+                                                "Are you sure?\nBucket data will also be deleted.")
+                                         (swap! state assoc :deleting? true)
+                                         (react/call :delete this))}])
       (when (or owner? writer?)
         (if (not editing?)
           [comps/SidebarButton
@@ -89,69 +88,70 @@
            [comps/SidebarButton
             {:style :light :color :button-blue :margin :top
              :text "Save Attributes" :icon :document
-             :onClick #(do
-                        (let [orig-keys (mapv first (:orig-attrs @state))
-                              curr-keys (mapv first (:attrs-list @state))
-                              curr-vals (mapv second (:attrs-list @state))
-                              valid-keys? (every? pos? (map count curr-keys))
-                              valid-vals? (every? pos? (map count curr-vals))
-                              to-delete (vec (set-ops/difference
-                                               (set orig-keys)
-                                               (set curr-keys)))
-                              workspace-id (:workspace-id props)
-                              make-delete-map-fn (fn [k]
-                                                   {:op "RemoveAttribute"
-                                                    :attributeName k})
-                              make-update-map-fn (fn [p]
-                                                   {:op "AddUpdateAttribute"
-                                                    :attributeName (first p)
-                                                    :addUpdateAttribute (second p)})
-                              del-mapv (mapv make-delete-map-fn to-delete)
-                              up-mapv (mapv make-update-map-fn (:attrs-list @state))
-                              update-orch-fn (fn [add-update-ops]
-                                               (swap! state assoc :updating-attrs? true)
-                                               (endpoints/call-ajax-orch
-                                                 {:endpoint (endpoints/update-workspace-attrs
-                                                              workspace-id)
-                                                  :payload add-update-ops
-                                                  :headers {"Content-Type" "application/json"}
-                                                  :on-done (fn [{:keys [success? xhr]}]
-                                                             (swap! state dissoc :updating-attrs?)
-                                                             (if-not success?
-                                                               (do
-                                                                 (js/alert (str "Exception:\n" (.-statusText xhr)))
-                                                                 (swap! state dissoc :orig-attrs)
-                                                                 (react/call :load-workspace this))))}))
-                              del-orch-fn (fn [del-ops]
-                                            (swap! state assoc :deleting-attrs? true)
-                                            (endpoints/call-ajax-orch
-                                              {:endpoint (endpoints/update-workspace-attrs
-                                                           workspace-id)
-                                               :payload del-ops
-                                               :headers {"Content-Type" "application/json"}
-                                               :on-done (fn [{:keys [success? xhr]}]
-                                                          (swap! state dissoc :deleting-attrs?)
-                                                          (if-not success?
-                                                            (do
-                                                              (js/alert (str "Exception:\n" (.-statusText xhr)))
-                                                              (swap! state assoc :attrs-list (:orig-attrs @state))
-                                                              (swap! state dissoc :orig-attrs)
-                                                              (react/call :load-workspace this))
-                                                            (when-not (zero? (count up-mapv))
-                                                              (update-orch-fn  up-mapv))))}))
-                              uniq-keys (== (count curr-keys) (count (distinct curr-keys)))]
-                          (if-not valid-keys?
-                            (js/alert "Empty attribute keys are not allowed!")
-                            (if-not valid-vals?
-                              (js/alert "Empty attribute values are not allowed!")
-                              (if-not uniq-keys
-                                (js/alert "Unique keys must be used!")
-                                (do
-                                  (if (zero? (count to-delete))
-                                    (when-not (zero? (count up-mapv))
+             :onClick #(let
+                        [orig-keys (mapv first (:orig-attrs @state))
+                         curr-keys (mapv first (:attrs-list @state))
+                         curr-vals (mapv second (:attrs-list @state))
+                         valid-keys? (every? pos? (map count curr-keys))
+                         valid-vals? (every? pos? (map count curr-vals))
+                         to-delete (vec (set-ops/difference
+                                          (set orig-keys)
+                                          (set curr-keys)))
+                         workspace-id (:workspace-id props)
+                         make-delete-map-fn (fn [k]
+                                              {:op "RemoveAttribute"
+                                               :attributeName k})
+                         make-update-map-fn (fn [p]
+                                              {:op "AddUpdateAttribute"
+                                               :attributeName (first p)
+                                               :addUpdateAttribute (second p)})
+                         del-mapv (mapv make-delete-map-fn to-delete)
+                         up-mapv (mapv make-update-map-fn (:attrs-list @state))
+                         update-orch-fn (fn [add-update-ops]
+                                          (swap! state assoc :updating-attrs? true)
+                                          (endpoints/call-ajax-orch
+                                            {:endpoint (endpoints/update-workspace-attrs
+                                                         workspace-id)
+                                             :payload add-update-ops
+                                             :headers {"Content-Type" "application/json"}
+                                             :on-done (fn [{:keys [success? xhr]}]
+                                                        (swap! state dissoc :updating-attrs?)
+                                                        (if-not success?
+                                                          (do
+                                                            (js/alert (str "Exception:\n"
+                                                                        (.-statusText xhr)))
+                                                            (swap! state dissoc :orig-attrs)
+                                                            (react/call :load-workspace this))))}))
+                         del-orch-fn (fn [del-ops]
+                                       (swap! state assoc :deleting-attrs? true)
+                                       (endpoints/call-ajax-orch
+                                         {:endpoint (endpoints/update-workspace-attrs
+                                                      workspace-id)
+                                          :payload del-ops
+                                          :headers {"Content-Type" "application/json"}
+                                          :on-done (fn [{:keys [success? xhr]}]
+                                                     (swap! state dissoc :deleting-attrs?)
+                                                     (if-not success?
+                                                       (do
+                                                         (js/alert (str "Exception:\n"
+                                                                     (.-statusText xhr)))
+                                                         (swap! state assoc
+                                                           :attrs-list (:orig-attrs @state))
+                                                         (swap! state dissoc :orig-attrs)
+                                                         (react/call :load-workspace this))
+                                                       (when-not (empty? up-mapv)
+                                                         (update-orch-fn  up-mapv))))}))
+                         uniq-keys? (== (count curr-keys) (count (distinct curr-keys)))]
+                        (cond
+                          (not valid-keys?) (js/alert "Empty attribute keys are not allowed!")
+                          (not valid-vals?) (js/alert "Empty attribute values are not allowed!")
+                          (not uniq-keys?) (js/alert "Unique keys must be used!")
+                          :else (do
+                                  (if (empty? to-delete)
+                                    (when-not (empty? up-mapv)
                                       (update-orch-fn  up-mapv))
                                     (del-orch-fn del-mapv))
-                                  (swap! state assoc :editing? false)))))))}]
+                                  (swap! state assoc :editing? false))))}]
            [comps/SidebarButton
             {:style :light :color :exception-red :margin :top
              :text "Cancel Attribute Editing" :icon :x
@@ -226,12 +226,9 @@
                            {:workspace-error status-text}))
                        (if success?
                          (let [response (:server-response @state)
-                               r1 (utils/rlog (str "the response is " response))
-                               attributes (get-in response [:workspace "workspace" "attributes" ])
-                               r2 (utils/rlog (str "attrs is " attributes))
+                               attributes (get-in response
+                                            [:workspace "workspace" "attributes" ])
                                attrs-list (mapv (fn [[k v]] [k v]) attributes)]
-                           (utils/rlog (str "the response is " response))
-                           (utils/rlog (str "the attrs-list is "attrs-list))
                            (swap! state assoc :attrs-list attrs-list))
                          (swap! state dissoc :attrs-list))
                        (swap! state update-in [:load-counter] dec)))})
