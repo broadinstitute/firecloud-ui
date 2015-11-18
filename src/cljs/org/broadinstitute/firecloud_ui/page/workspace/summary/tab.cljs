@@ -227,7 +227,8 @@
                        (let [response (:server-response @state)
                              attributes (get-in response
                                           [:workspace "workspace" "attributes" ])
-                             attrs-list (mapv (fn [[k v]] [k v]) attributes)]
+                             attrs-list (mapv (fn [[k v]] [k v])
+                                          (dissoc attributes "description"))]
                          (swap! state assoc :attrs-list attrs-list))
                        (swap! state dissoc :attrs-list))
                      (swap! state update-in [:load-counter] dec))})
