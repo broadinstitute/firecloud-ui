@@ -15,7 +15,7 @@ ui:
     LOG_LEVEL: {{.Data.env_log_level}}
     SERVER_NAME: {{.Data.env_server_name}}
     BUILD_TYPE: {{.Data.env_build_type}}
-    HTTPS_ONLY: {{.Data.env_http_only}}
+    HTTPS_ONLY: "{{.Data.env_http_only}}"
 
 {{end}}
 {{end}}
