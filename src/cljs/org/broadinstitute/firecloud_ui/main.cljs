@@ -140,18 +140,19 @@
                   [:div {} "Page not found."]))]))]]))
    :component-did-mount
    (fn [{:keys [this state]}]
-     (endpoints/profile-get
-       (fn [{:keys [success? status-text get-parsed-response]}]
-         (let [parsed-values (common/parse-profile (get-parsed-response))]
-           (cond
-             (and success? (= (:isRegistrationComplete parsed-values) "true"))
-             (swap! state assoc :registration-status :registered :name (:name parsed-values))
-             success? ; partial profile case
-             (swap! state assoc :registration-status :not-registered)
-             :else
-             (do
-               (set! (.-errorMessage this) status-text)
-               (swap! state assoc :registration-status :error)))))))})
+     (when (nil? (:registration-status @state))
+       (endpoints/profile-get
+         (fn [{:keys [success? status-text get-parsed-response]}]
+           (let [parsed-values (common/parse-profile (get-parsed-response))]
+             (cond
+               (and success? (= (:isRegistrationComplete parsed-values) "true"))
+               (swap! state assoc :registration-status :registered :name (:name parsed-values))
+               success? ; partial profile case
+               (swap! state assoc :registration-status :not-registered)
+               :else
+               (do
+                 (set! (.-errorMessage this) status-text)
+                 (swap! state assoc :registration-status :error))))))))})
 
 
 (react/defc RegisterLink

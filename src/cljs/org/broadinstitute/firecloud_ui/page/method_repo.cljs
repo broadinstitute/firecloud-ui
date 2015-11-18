@@ -9,5 +9,4 @@
   {:render
    (fn []
      [:div {:style {:padding "1em"}}
-      [:h2 {} "Method Repository"]
       [MethodConfigImporter {}]])})

@@ -18,12 +18,7 @@
         workspaces-list (:workspaces-list @state)]
     [:div {}
      (when (:blocking-text @state)
-       [comps/Blocker {:banner (:blocking-text @state)}])
-     [:div {:style {:paddingBottom "0.5em"}}
-      (style/create-link #(on-back)
-        (icons/font-icon {:style {:fontSize "70%" :marginRight "0.5em"}} :angle-left)
-        "Back to table")]
-
+       [comps/Blocker {:banner (:blocking-text @state)}]) 
      (let [config? (contains? entity "method")]
        [:div {:style {:marginBottom "1em" :width 290}}
         (when (:show-perms-overlay? @state)
@@ -217,80 +212,88 @@
 
 
 (react/defc Table
-  {:render
-   (fn [{:keys [props state]}]
-     [table/Table
-      {:columns [{:header "Type" :starting-width 100}
-                 {:header "Item" :starting-width 450 :as-text #(% "name")
-                  :sort-by (fn [m]
-                             [(m "namespace") (m "name") (int (m "snapshotId"))])
-                  :sort-initial :asc
-                  :content-renderer
-                  (fn [item]
-                    (style/create-link
-                      (let [func (if (= :method (:type item)) :on-method-selected :on-config-selected)]
-                        #((func props) (dissoc item :type)))
+ {:reload
+  (fn [{:keys [state]}]
+    (swap! state dissoc :methods :configs))
+  :render
+  (fn [{:keys [props state]}]
+    (cond
+      (:hidden? props) nil
+      (:error-message @state) (style/create-server-error-message (:error-message @state))
+      (or (nil? (:methods @state)) (nil? (:configs @state)))
+      [comps/Spinner {:text "Loading methods and configurations..."}]
+      :else
+      [table/Table
+       {:columns [{:header "Type" :starting-width 100}
+                  {:header "Item" :starting-width 450 :as-text #(% "name")
+                   :sort-by (fn [m]
+                              [(m "namespace") (m "name") (int (m "snapshotId"))])
+                   :sort-initial :asc
+                   :content-renderer
+                   (fn [item]
+                     (style/create-link
+                      #((:on-item-selected props) item)
                       (style/render-entity (item "namespace") (item "name") (item "snapshotId"))))}
-                 {:header "Synopsis" :starting-width 160}
-                 (table/date-column {:header "Created"})
-                 {:header "Referenced Method" :starting-width 250
-                  :content-renderer (fn [fields]
-                                      (if fields
-                                        (apply style/render-entity fields)
-                                        "N/A"))}]
-       :filters [{:text "All" :pred (constantly true)}
-                 {:text "Methods Only" :pred #(= :method (:type %))}
-                 {:text "Configs Only" :pred #(= :config (:type %))}]
-       :data (concat (:methods props) (:configs props))
-       :->row (fn [item]
-                [(item "entityType")
-                 item
-                 (item "synopsis")
-                 (item "createDate")
-                 (when (= :config (:type item))
-                   (mapv #((get item "method" {}) %) ["namespace" "name" "snapshotId"]))])}])})
+                  {:header "Synopsis" :starting-width 160}
+                  (table/date-column {:header "Created"})
+                  {:header "Referenced Method" :starting-width 250
+                   :content-renderer (fn [fields]
+                                       (if fields
+                                         (apply style/render-entity fields)
+                                         "N/A"))}]
+        :filters [{:text "All" :pred (constantly true)}
+                  {:text "Methods Only" :pred #(= :method (:type %))}
+                  {:text "Configs Only" :pred #(= :config (:type %))}]
+        :data (concat (:methods @state) (:configs @state))
+        :->row (fn [item]
+                 [(item "entityType")
+                  item
+                  (item "synopsis")
+                  (item "createDate")
+                  (when (= :config (:type item))
+                    (mapv #((get item "method" {}) %) ["namespace" "name" "snapshotId"]))])}]))
+  :component-did-mount #(react/call :load-data (:this %))
+  :component-did-update #(react/call :load-data (:this %))
+  :load-data
+  (fn [{:keys [this state]}]
+    (when-not (or (:configs @state) (:methods @state))
+      (endpoints/call-ajax-orch
+       {:endpoint endpoints/list-configurations
+        :on-done
+        (fn [{:keys [success? get-parsed-response status-text]}]
+          (if success?
+            (swap! state assoc :configs (map #(assoc % :type :config) (get-parsed-response)))
+            (swap! state assoc :error-message status-text)))})
+      (endpoints/call-ajax-orch
+       {:endpoint endpoints/list-methods
+        :on-done
+        (fn [{:keys [success? get-parsed-response status-text]}]
+          (if success?
+            (swap! state assoc :methods (map #(assoc % :type :method) (get-parsed-response)))
+            (swap! state assoc :error-message status-text)))})))})
 
 
 (react/defc MethodConfigImporter
   {:render
-   (fn [{:keys [props state this]}]
-     (cond
-       (:selected-method @state)
-       [MethodImportForm {:on-delete  #(react/call :reload-entities this)
-                          :method (:selected-method @state)
-                          :workspace-id (:workspace-id props)
-                          :on-back #(swap! state dissoc :selected-method)
-                          :after-import (:after-import props)}]
-       (:selected-config @state)
-       [ConfigImportForm {:on-delete  #(react/call :reload-entities this)
-                          :config (:selected-config @state)
-                          :workspace-id (:workspace-id props)
-                          :on-back #(swap! state dissoc :selected-config)
-                          :after-import (:after-import props)}]
-
-       (and (:configs-list @state) (:methods-list @state))
-       [Table {:configs (:configs-list @state)
-               :methods (:methods-list @state)
-               :on-config-selected #(swap! state assoc :selected-config %)
-               :on-method-selected #(swap! state assoc :selected-method %)}]
-
-       (:error-message @state) (style/create-server-error-message (:error-message @state))
-       :else [comps/Spinner {:text "Loading..."}]))
-   :reload-entities
-   (fn [{:keys [state this]}]
-     (swap! state dissoc :blocking-text :selected-method :selected-config :methods-list :configs-list)
-     (endpoints/call-ajax-orch
-       {:endpoint endpoints/list-configurations
-        :on-done (fn [{:keys [success? get-parsed-response status-text]}]
-                   (if success?
-                     (swap! state assoc :configs-list (map #(assoc % :type :config) (get-parsed-response)))
-                     (swap! state assoc :error-message status-text)))})
-     (endpoints/call-ajax-orch
-       {:endpoint endpoints/list-methods
-        :on-done (fn [{:keys [success? get-parsed-response status-text]}]
-                   (if success?
-                     (swap! state assoc :methods-list (map #(assoc % :type :method) (get-parsed-response)))
-                     (swap! state assoc :error-message status-text)))}))
-   :component-did-mount
-   (fn [{:keys [state this]}]
-     (react/call :reload-entities this))})
+   (fn [{:keys [this props state refs]}]
+     [:div {}
+      (if-let [item (:selected-item @state)]
+        [:div {}
+         (style/create-link #(swap! state dissoc :selected-item) "Methods")
+         (icons/font-icon {:style {:verticalAlign "middle" :margin "0 1ex 0 1ex"}} :angle-right)
+         [:h2 {:style {:display "inline-block"}} (item "namespace") "/" (item "name")
+          [:span {:style {:marginLeft "1ex" :fontWeight "normal"}} "#" (item "snapshotId")]]]
+        [:h2 {} "Methods"])
+      (when (:selected-item @state)
+        (let [item-type (:type (:selected-item @state))
+              form (if (= item-type :method) MethodImportForm ConfigImportForm)]
+          [form {:on-delete (fn []
+                              (swap! state dissoc :selected-item)
+                              (react/call :reload (@refs "table")))
+                 item-type (:selected-item @state)
+                 :workspace-id (:workspace-id props)
+                 :on-back #(swap! state dissoc :selected-item)
+                 :after-import (:after-import props)}]))
+      [Table {:ref "table"
+              :hidden? (:selected-item @state)
+              :on-item-selected #(swap! state assoc :selected-item %)}]])})
