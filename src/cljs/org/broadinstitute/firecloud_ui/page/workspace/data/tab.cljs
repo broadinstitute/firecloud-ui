@@ -58,7 +58,7 @@
     :toolbar (fn [built-in]
                [:div {}
                 [:div {:style {:float "left"}} built-in]
-                (when-let [selected-entity-type (:selected-entity-type @state)]
+                (when-let [selected-entity-type (or (:selected-entity-type @state) (:initial-entity-type @state) (first (:entity-types @state)))]
                   [:a {:style {:textDecoration "none" :float "left" :margin "7px 0 0 1em"}
                        :href (str "/service/api/workspaces/" (:namespace (:workspace-id props)) "/"
                                (:name (:workspace-id props)) "/" selected-entity-type "/tsv")
