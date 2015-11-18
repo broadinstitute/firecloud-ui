@@ -219,19 +219,18 @@
        (endpoints/call-ajax-orch
          {:endpoint (endpoints/get-workspace (:workspace-id props))
           :on-done (fn [{:keys [success? get-parsed-response status-text]}]
-                     (do
-                       (swap! state assoc :server-response
-                         (if success?
-                           {:workspace (get-parsed-response)}
-                           {:workspace-error status-text}))
+                     (swap! state assoc :server-response
                        (if success?
-                         (let [response (:server-response @state)
-                               attributes (get-in response
-                                            [:workspace "workspace" "attributes" ])
-                               attrs-list (mapv (fn [[k v]] [k v]) attributes)]
-                           (swap! state assoc :attrs-list attrs-list))
-                         (swap! state dissoc :attrs-list))
-                       (swap! state update-in [:load-counter] dec)))})
+                         {:workspace (get-parsed-response)}
+                         {:workspace-error status-text}))
+                     (if success?
+                       (let [response (:server-response @state)
+                             attributes (get-in response
+                                          [:workspace "workspace" "attributes" ])
+                             attrs-list (mapv (fn [[k v]] [k v]) attributes)]
+                         (swap! state assoc :attrs-list attrs-list))
+                       (swap! state dissoc :attrs-list))
+                     (swap! state update-in [:load-counter] dec))})
        (endpoints/call-ajax-orch
          {:endpoint (endpoints/list-submissions (:workspace-id props))
           :on-done (fn [{:keys [success? status-text get-parsed-response]}]
