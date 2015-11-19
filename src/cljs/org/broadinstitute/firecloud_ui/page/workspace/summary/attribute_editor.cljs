@@ -45,31 +45,29 @@
                :style (if-not (:editing? @state)
                         {:backgroundColor (:background-gray style/colors)}
                         {:backgroundColor "#fff"})})
-            (icons/font-icon
-              {:style {:paddingLeft "0.5em" :padding "1em 0.7em"
-                       :color "red" :cursor "pointer"
-                       :display (when-not (:editing? @state) "none")}
-               :onClick (fn [e]
-                          (when (contains? (:reserved-keys @state) i)
-                            ;if it's reserved delete i from the reservation list
-                            (swap! state update-in [:reserved-keys] utils/delete i))
-                          ;delete the item from the list unconditionally
-                          (swap! state update-in [:attrs-list] utils/delete i))}
-              :x)]
+            (when (:editing? @state)
+              (icons/font-icon
+                {:style {:paddingLeft "0.5em" :padding "1em 0.7em"
+                         :color "red" :cursor "pointer"}
+                 :onClick (fn [e]
+                            (when (contains? (:reserved-keys @state) i)
+                              ;if it's reserved delete i from the reservation list
+                              (swap! state update-in [:reserved-keys] utils/delete i))
+                            ;delete the item from the list unconditionally
+                            (swap! state update-in [:attrs-list] utils/delete i))}
+                :x))]
            (common/clear-both)])
         (:attrs-list @state))
-      [:div {:style {:display (when-not (:editing? @state) "none")}}
-       [comps/Button {:style :add :text "Add new"
-                      :onClick #(do
-                                 (swap! state update-in [:attrs-list] conj ["" ""])
-                                 (js/setTimeout
-                                   (fn []
-                                     (common/focus-and-select
-                                       (-> (@refs (str "key_"
-                                                    (dec (count
-                                                           (:attrs-list @state))))).getDOMNode)))0))}]]])
-   [:div {:style {:display
-                  (when (or (or (:editing? @state)
-                              (not-empty (:attrs-list @state))) (:saving? @state)) "none")}}
-    (style/create-paragraph [:em {} "There are no attributes to display"])]])
+      (when (:editing? @state)
+        [comps/Button {:style :add :text "Add new"
+                       :onClick (fn [e]
+                                  (swap! state update-in [:attrs-list] conj ["" ""])
+                                  (js/setTimeout
+                                    #(common/focus-and-select
+                                       (->> @state :attrs-list count dec (str "key_") (@refs) .getDOMNode))
+                                    0))}])])
+   (when (and (not (:editing? @state))
+              (empty? (:attrs-list @state))
+              (not (:saving? @state)))
+     (style/create-paragraph [:em {} "There are no attributes to display"]))])
 

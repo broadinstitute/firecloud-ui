@@ -193,37 +193,40 @@
 
 
 (defn- render-main [state refs ws owner? owners submissions]
-  [:div {:style {:marginLeft 330}}
-   (style/create-section-header (str "Workspace Owner" (when (> (count owners) 1) "s")))
-   (style/create-paragraph
-     [:div {}
-      (interpose ", " owners)
-      (when owner?
-        [:span {}
-         " ("
-         (style/create-link
-           #(swap! state assoc :editing-acl? true)
-           "Sharing...")
-         ")"])])
-   (style/create-section-header "Description")
-   (style/create-paragraph
-     (or (get-in ws ["workspace" "attributes" "description"])
-       [:span {:style {:fontStyle "oblique"}} "No description provided"]))
-   (style/create-section-header "Google Bucket")
-   (style/create-paragraph (get-in ws ["workspace" "bucketName"]))
-   (style/create-section-header "Created By")
-   (style/create-paragraph
-     [:div {} (get-in ws ["workspace" "createdBy"])]
-     [:div {} (common/format-date (get-in ws ["workspace" "createdDate"]))])
-   (style/create-section-header "Analysis Submissions")
-   (style/create-paragraph
-     (let [fail-count (->> submissions
-                        (filter (complement all-success?))
-                        count)]
-       (str (count submissions) " Submissions"
-         (when (pos? fail-count)
-           (str " (" fail-count " failed)")))))
-   (attributes/view-attributes state refs)])
+  [:div {}
+   [:div {:style {:float "left"}}
+    (style/create-section-header (str "Workspace Owner" (when (> (count owners) 1) "s")))
+    (style/create-paragraph
+      [:div {}
+       (interpose ", " owners)
+       (when owner?
+         [:span {}
+          " ("
+          (style/create-link
+            #(swap! state assoc :editing-acl? true)
+            "Sharing...")
+          ")"])])
+    (style/create-section-header "Description")
+    (style/create-paragraph
+      (or (get-in ws ["workspace" "attributes" "description"])
+        [:span {:style {:fontStyle "oblique"}} "No description provided"]))
+    (attributes/view-attributes state refs)]
+   [:div {:style {:float "right"}}
+    (style/create-section-header "Created By")
+    (style/create-paragraph
+      [:div {} (get-in ws ["workspace" "createdBy"])]
+      [:div {} (common/format-date (get-in ws ["workspace" "createdDate"]))])
+    (style/create-section-header "Google Bucket")
+    (style/create-paragraph (get-in ws ["workspace" "bucketName"]))
+    (style/create-section-header "Analysis Submissions")
+    (style/create-paragraph
+      (let [fail-count (->> submissions
+                         (filter (complement all-success?))
+                         count)]
+        (str (count submissions) " Submissions"
+          (when (pos? fail-count)
+            (str " (" fail-count " failed)")))))]
+   (common/clear-both)])
 
 
 (defn- view-summary [state props ws submissions status owner? writer?
