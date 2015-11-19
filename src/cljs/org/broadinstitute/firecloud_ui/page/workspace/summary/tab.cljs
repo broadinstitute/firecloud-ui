@@ -82,7 +82,7 @@
                        :workspace-id (:workspace-id props)}])])
 
 
-(defn- render-sidebar [state props this ws owner? writer?]
+(defn- render-sidebar [state props refs this ws owner? writer?]
   (let [locked? (get-in ws ["workspace" "isLocked"])
         status (common/compute-status ws)]
     [:div {:style {:float "left" :width 290 :marginRight 40}}
@@ -94,6 +94,26 @@
                                  "Running" [icons/RunningIcon {:size 36}]
                                  "Exception" [icons/ExceptionIcon {:size 36}])
                          :color (style/color-for-status status)}]
+     (when (or owner? writer?)
+       (if (not (:editing? @state))
+         [comps/SidebarButton
+          {:style :light :color :button-blue :margin :top
+           :text "Edit" :icon :pencil
+           :onClick #(swap! state assoc
+                       :reserved-keys (vec (range 0 (count (:attrs-list @state))))
+                       :orig-attrs (:attrs-list @state) :editing? true)}]
+         [:div {}
+          [comps/SidebarButton
+           {:style :light :color :button-blue :margin :top
+            :text "Save" :icon :document
+            :onClick #(attributes/save-attributes state props this
+                        (common/get-text refs "descriptionArea"))}]
+          [comps/SidebarButton
+           {:style :light :color :exception-red :margin :top
+            :text "Cancel Editing" :icon :x
+            :onClick #(swap! state assoc
+                        :editing? false
+                        :attrs-list (:orig-attrs @state))}]]))
      (when-not (:editing? @state)
        [comps/SidebarButton {:style :light :margin :top :color :button-blue
                              :text "Clone..." :icon :plus
@@ -106,32 +126,13 @@
        [comps/SidebarButton {:style :light :margin :top :color :exception-red
                              :text "Delete" :icon :trash-can
                              :disabled? (if locked? "This workspace is locked")
-                             :onClick #(swap! state assoc :show-delete-dialog? true)}])
-     (when (or owner? writer?)
-       (if (not (:editing? @state))
-         [comps/SidebarButton
-          {:style :light :color :button-blue :margin :top
-           :text "Edit attributes" :icon :pencil
-           :onClick #(swap! state assoc
-                       :reserved-keys (vec (range 0 (count (:attrs-list @state))))
-                       :orig-attrs (:attrs-list @state) :editing? true)}]
-         [:div {}
-          [comps/SidebarButton
-           {:style :light :color :button-blue :margin :top
-            :text "Save Attributes" :icon :document
-            :onClick #(attributes/save-attributes state props this)}]
-          [comps/SidebarButton
-           {:style :light :color :exception-red :margin :top
-            :text "Cancel Attribute Editing" :icon :x
-            :onClick #(swap! state assoc
-                        :editing? false
-                        :attrs-list (:orig-attrs @state))}]]))]))
+                             :onClick #(swap! state assoc :show-delete-dialog? true)}])]))
 
 
 (defn- render-main [state refs ws owner? submissions]
   (let [owners (ws "owners")]
     [:div {}
-     [:div {:style {:float "left"}}
+     [:div {:style {:display "inline-block"}}
       (style/create-section-header (str "Workspace Owner" (when (> (count owners) 1) "s")))
       (style/create-paragraph
         [:div {}
@@ -145,8 +146,14 @@
             ")"])])
       (style/create-section-header "Description")
       (style/create-paragraph
-        (or (get-in ws ["workspace" "attributes" "description"])
-          [:span {:style {:fontStyle "oblique"}} "No description provided"]))
+        (let [description (get-in ws ["workspace" "attributes" "description"])]
+          (cond (:editing? @state) (react/create-element
+                                     (style/create-text-area {:ref "descriptionArea"
+                                                              :defaultValue description
+                                                              :style {:width 400}
+                                                              :rows 5}))
+                description description
+                :else [:span {:style {:fontStyle "oblique"}} "No description provided"])))
       (attributes/view-attributes state refs)]
      [:div {:style {:float "right"}}
       (style/create-section-header "Created By")
@@ -184,7 +191,7 @@
                      writer? (or (= "WRITER" (workspace "accessLevel")) owner?)]
                  [:div {:style {:margin "45px 25px"}}
                   (render-overlays state props)
-                  (render-sidebar state props this workspace owner? writer?)
+                  (render-sidebar state props refs this workspace owner? writer?)
                   (render-main state refs workspace owner? submissions)])))
        :else [:div {:style {:textAlign "center" :padding "1em"}}
               [comps/Spinner {:text "Loading workspace..."}]]))

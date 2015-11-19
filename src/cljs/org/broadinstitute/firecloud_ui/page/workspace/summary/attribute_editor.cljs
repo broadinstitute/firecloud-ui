@@ -65,13 +65,13 @@
                                   (js/setTimeout
                                     #(common/focus-and-select
                                        (->> @state :attrs-list count dec (str "key_") (@refs) .getDOMNode))
-                                    0))}])])
-   (when (and (not (:editing? @state))
+                                    0))}])
+      (when (and (not (:editing? @state))
               (empty? (:attrs-list @state))
               (not (:saving? @state)))
-     (style/create-paragraph [:em {} "There are no attributes to display"]))])
+        (style/create-paragraph [:em {} "There are no attributes to display"]))])])
 
-(defn save-attributes [state props this]
+(defn save-attributes [state props this description]
   (let
     [orig-keys (mapv first (:orig-attrs @state))
      curr-keys (mapv first (:attrs-list @state))
@@ -79,7 +79,7 @@
      del-mapv (mapv (fn [k] {:op "RemoveAttribute" :attributeName k})
                 (clojure.set/difference (set orig-keys) (set curr-keys)))
      up-mapv (mapv (fn [[name attr]] {:op "AddUpdateAttribute" :attributeName name :addUpdateAttribute attr})
-               (:attrs-list @state))
+               (conj (:attrs-list @state) ["description" description]))
      update-orch-fn (fn [add-update-ops]
                       (swap! state assoc :updating-attrs? true)
                       (endpoints/call-ajax-orch
@@ -117,5 +117,6 @@
                 (when-not (empty? up-mapv)
                   (update-orch-fn up-mapv))
                 (del-orch-fn del-mapv))
+              (swap! state update-in [:server-response :workspace "workspace" "attributes"] assoc "description" description)
               (swap! state assoc :editing? false)))))
 
