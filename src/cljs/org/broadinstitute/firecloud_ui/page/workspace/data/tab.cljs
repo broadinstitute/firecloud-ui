@@ -2,7 +2,7 @@
   (:require
     [dmohs.react :as react]
     [clojure.set :refer [union]]
-    [goog.net.cookies :as cks]
+    goog.net.cookies
     [org.broadinstitute.firecloud-ui.common :as common]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
     [org.broadinstitute.firecloud-ui.common.dialog :as dialog]
@@ -11,10 +11,10 @@
     [org.broadinstitute.firecloud-ui.common.table-utils :as table-utils]
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
-    [org.broadinstitute.firecloud-ui.utils :as utils :refer [access-token]]
     [org.broadinstitute.firecloud-ui.page.workspace.data.copy-data-workspaces :as copy-data-workspaces]
     [org.broadinstitute.firecloud-ui.page.workspace.data.entity-selector :refer [EntitySelector]]
     [org.broadinstitute.firecloud-ui.page.workspace.data.import-data :as import-data]
+    [org.broadinstitute.firecloud-ui.utils :as utils :refer [access-token]]
     ))
 
 
