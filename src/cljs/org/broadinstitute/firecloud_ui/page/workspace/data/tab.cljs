@@ -2,6 +2,7 @@
   (:require
     [dmohs.react :as react]
     [clojure.set :refer [union]]
+    goog.net.cookies
     [org.broadinstitute.firecloud-ui.common :as common]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
     [org.broadinstitute.firecloud-ui.common.dialog :as dialog]
@@ -13,6 +14,7 @@
     [org.broadinstitute.firecloud-ui.page.workspace.data.copy-data-workspaces :as copy-data-workspaces]
     [org.broadinstitute.firecloud-ui.page.workspace.data.entity-selector :refer [EntitySelector]]
     [org.broadinstitute.firecloud-ui.page.workspace.data.import-data :as import-data]
+    [org.broadinstitute.firecloud-ui.utils :as utils :refer [access-token]]
     ))
 
 
@@ -61,7 +63,8 @@
                 (when-let [selected-entity-type (or (:selected-entity-type @state) (:initial-entity-type @state) (first (:entity-types @state)))]
                   [:a {:style {:textDecoration "none" :float "left" :margin "7px 0 0 1em"}
                        :href (str "/service/api/workspaces/" (:namespace (:workspace-id props)) "/"
-                               (:name (:workspace-id props)) "/" selected-entity-type "/tsv")
+                               (:name (:workspace-id props)) "/entities/" selected-entity-type "/tsv")
+                       :onClick (fn [] (.set goog.net.cookies "FCtoken" @access-token 300))
                        :target "_blank"}
                    (str "Download '" selected-entity-type "' data")])
                 [:div {:style {:float "right" :paddingRight "2em"}}
