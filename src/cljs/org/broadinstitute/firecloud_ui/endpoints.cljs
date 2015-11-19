@@ -559,11 +559,12 @@
      :service-prefix "/service/register")))
 
 
-(defn profile-set [k v on-done]
+(defn profile-set [payload on-done]
   (utils/ajax-orch
-    (str "/profile/" (name k))
+    "/profile"
     {:method :post
-    :data v
+    :data (utils/->json-string payload)
     :on-done on-done
+    :headers {"Content-Type" "application/json"}
     :canned-response {:status (rand-nth [200 200 500]) :delay-ms (rand-int 2000)}}
     :service-prefix "/service/register"))
