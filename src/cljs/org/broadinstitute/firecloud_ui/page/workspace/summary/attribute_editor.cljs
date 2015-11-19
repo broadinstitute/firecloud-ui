@@ -76,64 +76,46 @@
     [orig-keys (mapv first (:orig-attrs @state))
      curr-keys (mapv first (:attrs-list @state))
      curr-vals (mapv second (:attrs-list @state))
-     valid-keys? (every? pos? (map count curr-keys))
-     valid-vals? (every? pos? (map count curr-vals))
-     to-delete (vec (clojure.set/difference
-                      (set orig-keys)
-                      (set curr-keys)))
-     workspace-id (:workspace-id props)
-     make-delete-map-fn (fn [k]
-                          {:op "RemoveAttribute"
-                           :attributeName k})
-     make-update-map-fn (fn [p]
-                          {:op "AddUpdateAttribute"
-                           :attributeName (first p)
-                           :addUpdateAttribute (second p)})
-     del-mapv (mapv make-delete-map-fn to-delete)
-     up-mapv (mapv make-update-map-fn (:attrs-list @state))
+     del-mapv (mapv (fn [k] {:op "RemoveAttribute" :attributeName k})
+                (clojure.set/difference (set orig-keys) (set curr-keys)))
+     up-mapv (mapv (fn [[name attr]] {:op "AddUpdateAttribute" :attributeName name :addUpdateAttribute attr})
+               (:attrs-list @state))
      update-orch-fn (fn [add-update-ops]
                       (swap! state assoc :updating-attrs? true)
                       (endpoints/call-ajax-orch
-                        {:endpoint (endpoints/update-workspace-attrs
-                                     workspace-id)
+                        {:endpoint (endpoints/update-workspace-attrs (:workspace-id props))
                          :payload add-update-ops
                          :headers {"Content-Type" "application/json"}
                          :on-done (fn [{:keys [success? xhr]}]
                                     (swap! state dissoc :updating-attrs?)
-                                    (if-not success?
-                                      (do
-                                        (js/alert (str "Exception:\n"
-                                                    (.-statusText xhr)))
-                                        (swap! state dissoc :orig-attrs)
-                                        (react/call :load-workspace this))))}))
+                                    (when-not success?
+                                      (js/alert (str "Exception:\n" (.-statusText xhr)))
+                                      (swap! state dissoc :orig-attrs)
+                                      (react/call :load-workspace this)))}))
      del-orch-fn (fn [del-ops]
                    (swap! state assoc :deleting-attrs? true)
                    (endpoints/call-ajax-orch
-                     {:endpoint (endpoints/update-workspace-attrs
-                                  workspace-id)
+                     {:endpoint (endpoints/update-workspace-attrs (:workspace-id props))
                       :payload del-ops
                       :headers {"Content-Type" "application/json"}
                       :on-done (fn [{:keys [success? xhr]}]
                                  (swap! state dissoc :deleting-attrs?)
                                  (if-not success?
                                    (do
-                                     (js/alert (str "Exception:\n"
-                                                 (.-statusText xhr)))
-                                     (swap! state assoc
-                                       :attrs-list (:orig-attrs @state))
+                                     (js/alert (str "Exception:\n" (.-statusText xhr)))
+                                     (swap! state assoc :attrs-list (:orig-attrs @state))
                                      (swap! state dissoc :orig-attrs)
                                      (react/call :load-workspace this))
                                    (when-not (empty? up-mapv)
-                                     (update-orch-fn  up-mapv))))}))
-     uniq-keys? (or (empty? curr-keys) (apply distinct? curr-keys))]
+                                     (update-orch-fn up-mapv))))}))]
     (cond
-      (not valid-keys?) (js/alert "Empty attribute keys are not allowed!")
-      (not valid-vals?) (js/alert "Empty attribute values are not allowed!")
-      (not uniq-keys?) (js/alert "Unique keys must be used!")
+      (some empty? curr-keys) (js/alert "Empty attribute keys are not allowed!")
+      (some empty? curr-vals) (js/alert "Empty attribute values are not allowed!")
+      (not (or (empty? curr-keys) (apply distinct? curr-keys))) (js/alert "Unique keys must be used!")
       :else (do
-              (if (empty? to-delete)
+              (if (empty? del-mapv)
                 (when-not (empty? up-mapv)
-                  (update-orch-fn  up-mapv))
+                  (update-orch-fn up-mapv))
                 (del-orch-fn del-mapv))
               (swap! state assoc :editing? false)))))
 
