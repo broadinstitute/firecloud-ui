@@ -85,7 +85,7 @@
 (defn- render-sidebar [state props refs this ws owner? writer?]
   (let [locked? (get-in ws ["workspace" "isLocked"])
         status (common/compute-status ws)]
-    [:div {:style {:float "left" :width 290 :marginRight 40}}
+    [:div {:style {:flex "0 0 270px" :paddingRight 30}}
      [comps/StatusLabel {:text (str status
                                  (when (= status "Running")
                                    (str " (" (get-in ws ["workspaceSubmissionStats" "runningSubmissionsCount"]) ")")))
@@ -131,8 +131,8 @@
 
 (defn- render-main [state refs ws owner? submissions]
   (let [owners (ws "owners")]
-    [:div {}
-     [:div {:style {:display "inline-block"}}
+    [:div {:style {:flex "1 1 auto" :display "flex"}}
+     [:div {:style {:flex "1 1 50%"}}
       (style/create-section-header (str "Workspace Owner" (when (> (count owners) 1) "s")))
       (style/create-paragraph
         [:div {}
@@ -155,7 +155,7 @@
                 description description
                 :else [:span {:style {:fontStyle "oblique"}} "No description provided"])))
       (attributes/view-attributes state refs)]
-     [:div {:style {:float "right"}}
+     [:div {:style {:flex "1 1 50%" :paddingLeft 10}}
       (style/create-section-header "Created By")
       (style/create-paragraph
         [:div {} (get-in ws ["workspace" "createdBy"])]
@@ -169,8 +169,7 @@
                            count)]
           (str (count submissions) " Submissions"
             (when (pos? fail-count)
-              (str " (" fail-count " failed)")))))]
-     (common/clear-both)]))
+              (str " (" fail-count " failed)")))))]]))
 
 
 (react/defc Summary
@@ -189,7 +188,7 @@
                :else
                (let [owner? (= "OWNER" (workspace "accessLevel"))
                      writer? (or (= "WRITER" (workspace "accessLevel")) owner?)]
-                 [:div {:style {:margin "45px 25px"}}
+                 [:div {:style {:margin "45px 25px" :display "flex"}}
                   (render-overlays state props)
                   (render-sidebar state props refs this workspace owner? writer?)
                   (render-main state refs workspace owner? submissions)])))
