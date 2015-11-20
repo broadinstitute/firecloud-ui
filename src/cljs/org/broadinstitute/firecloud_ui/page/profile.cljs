@@ -61,28 +61,14 @@
    :save
    (fn [{:keys [this props state refs]}]
      (swap! state (fn [s] (assoc (dissoc s :error-message) :in-progress? true)))
-     (let [values (react/call :get-values (@refs "form"))
-           values (assoc values :isRegistrationComplete "true")
-           errors (atom {})
-           saved-count (atom 0)
-           save-value (fn [k v]
-                        (endpoints/profile-set
-                         k v
-                         (fn [{:keys [success?]}]
-                           (swap! saved-count inc)
-                           (when-not success?
-                             (swap! errors assoc k "Save failed."))
-                           (when (= @saved-count (count values))
-                             (react/call :save-did-complete this @errors)))))]
-       (doall (map #(apply save-value %) values))))
-   :save-did-complete
-   (fn [{:keys [props state]} errors]
-     (let [new-state (dissoc @state :in-progress?)]
-       (if (pos? (count errors))
-         (reset! state (assoc new-state :error-message "Some fields failed to save."))
-         (do (reset! state (assoc new-state :done? true))
-             (js/setTimeout (:on-done props) 2000)))))})
-
+     (let [values (react/call :get-values (@refs "form"))]
+       (endpoints/profile-set values
+         (fn [{:keys [success?]}]
+           (let [new-state (dissoc @state :in-progress?)]
+             (if-not success?
+               (reset! state (assoc new-state :error-message "Profile failed to save."))
+               (do (reset! state (assoc new-state :done? true))
+                 (js/setTimeout (:on-done props) 2000))))))))})
 
 (defn render [props]
   (react/create-element Page props))
