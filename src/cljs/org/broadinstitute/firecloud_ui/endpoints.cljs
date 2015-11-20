@@ -548,14 +548,6 @@
              {:isRegistrationComplete "true" :name "John Doe" :email "jdoe@example.com"
               :googleProjectIds ["14" "7"] :institution "Broad Institute"
               :pi "Jane Doe"})})}}
-     :service-prefix "/service/register"))
-  ([k on-done]
-   (utils/ajax-orch
-     (str "/profile/" (name k))
-     {:on-done on-done
-     :canned-response
-     {:status (rand-nth [200 200 500]) :delay-ms (rand-int 2000)
-      :responseText (utils/->json-string {:userId "55" :keyValuePair {:key k :value "asdf"}})}}
      :service-prefix "/service/register")))
 
 
