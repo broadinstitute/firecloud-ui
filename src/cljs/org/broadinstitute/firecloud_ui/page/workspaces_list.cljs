@@ -16,47 +16,62 @@
     ))
 
 
-(defn- render-modal [state refs nav-context]
-  (react/create-element
-    [dialog/OKCancelForm
-     {:header "Create New Workspace"
-      :content
-      (react/create-element
-        [:div {:style {:marginBottom -20}}
-         (when (:creating-wf @state)
-           [comps/Blocker {:banner "Creating Workspace..."}])
-         (style/create-form-label "Google Project")
-         [input/TextField {:ref "wsNamespace" :style {:width "100%"}
-                           :defaultValue "broad-dsde-dev"
-                           :predicates [(input/nonempty "Google Project")]}]
-         (style/create-form-label "Name")
-         [input/TextField {:ref "wsName" :style {:width "100%"}
-                           :predicates [(input/nonempty "Workspace name")]}]
-         (style/create-form-label "Description (optional)")
-         (style/create-text-area {:style {:width "100%"} :rows 5 :ref "wsDescription"})
-         [comps/ErrorViewer {:error (:server-error @state)}]
-         (style/create-validation-error-message (:validation-error @state))])
-      :dismiss-self #(swap! state dissoc :overlay-shown? :server-error :validation-error)
-      :ok-button
-      (react/create-element
-        [comps/Button
-         {:text "Create Workspace" :ref "createButton"
-          :onClick #(if-let [fails (input/validate refs "wsNamespace" "wsName")]
-                      (swap! state assoc :validation-error fails)
-                      (let [desc (common/get-text refs "wsDescription")
-                            [ns n] (input/get-text refs "wsNamespace" "wsName")
-                            attributes (if (clojure.string/blank? desc) {} {:description desc})]
-                        (swap! state assoc :creating-wf true :error nil :validation-error nil)
-                        (endpoints/call-ajax-orch
-                          {:endpoint (endpoints/create-workspace ns n)
-                           :payload {:namespace ns :name n :attributes attributes}
-                           :headers {"Content-Type" "application/json"}
-                           :on-done (fn [{:keys [success? get-parsed-response]}]
-                                      (swap! state dissoc :creating-wf)
-                                      (if success?
-                                        (do (swap! state dissoc :overlay-shown? :server-error :validation-error)
-                                          (nav/navigate nav-context (str ns ":" n)))
-                                        (swap! state assoc :server-error (get-parsed-response))))})))}])}]))
+(react/defc CreateWorkspaceDialog
+  {:render
+   (fn [{:keys [props state refs this]}]
+     [dialog/Dialog
+      {:width 500
+       :dismiss-self (:dismiss props)
+       :content
+       (react/create-element
+         [dialog/OKCancelForm
+          {:header "Create New Workspace"
+           :content
+           (react/create-element
+             [:div {:style {:marginBottom -20}}
+              (when (:creating-wf @state)
+                [comps/Blocker {:banner "Creating Workspace..."}])
+              (style/create-form-label "Google Project")
+              [input/TextField {:ref "wsNamespace" :style {:width "100%"}
+                                :defaultValue "broad-dsde-dev"
+                                :predicates [(input/nonempty "Google Project")]}]
+              (style/create-form-label "Name")
+              [input/TextField {:ref "wsName" :style {:width "100%"}
+                                :predicates [(input/nonempty "Workspace name")]}]
+              (style/create-form-label "Description (optional)")
+              (style/create-text-area {:style {:width "100%"} :rows 5 :ref "wsDescription"})
+              [comps/ErrorViewer {:error (:server-error @state)}]
+              (style/create-validation-error-message (:validation-error @state))])
+           :dismiss-self (:dismiss props)
+           :ok-button
+           (react/create-element
+             [comps/Button
+              {:text "Create Workspace" :ref "createButton"
+               :onClick #(react/call :create-workspace this)}])}])
+       :get-first-element-dom-node #(.getDOMNode (@refs "wsNamespace"))
+       :get-last-element-dom-node #(.getDOMNode (@refs "createButton"))}])
+   :create-workspace
+   (fn [{:keys [props state refs]}]
+     (swap! state dissoc :server-error :validation-error)
+     (if-let [fails (input/validate refs "wsNamespace" "wsName")]
+       (swap! state assoc :validation-error fails)
+       (let [desc (common/get-text refs "wsDescription")
+             [ns n] (input/get-text refs "wsNamespace" "wsName")
+             attributes (if (clojure.string/blank? desc) {} {:description desc})]
+         (swap! state assoc :creating-wf true)
+         (endpoints/call-ajax-orch
+           {:endpoint (endpoints/create-workspace ns n)
+            :payload {:namespace ns :name n :attributes attributes}
+            :headers {"Content-Type" "application/json"}
+            :on-done (fn [{:keys [success? get-parsed-response]}]
+                       (swap! state dissoc :creating-wf)
+                       (if success?
+                         (do ((:dismiss props))
+                           (nav/navigate (:nav-context props) (str ns ":" n)))
+                         (swap! state assoc :server-error (get-parsed-response))))}))))
+   :component-did-mount
+   (fn [{:keys [props state]}]
+     (js/console.log "TODO: hit /api/user/billing Rawls endpoint"))})
 
 
 (react/defc StatusCell
@@ -100,7 +115,7 @@
 
 (react/defc WorkspaceTable
   {:render
-   (fn [{:keys [state props]}]
+   (fn [{:keys [props]}]
      (let [border-style (str "1px solid " (:line-gray style/colors))
            max-workspace-name-length (get-max-workspace-name-length (:workspaces props))
            max-description-length (get-max-workspace-description-length (:workspaces props))]
@@ -207,12 +222,8 @@
            selected-ws-id (get-workspace-id-from-nav-segment (:segment nav-context))]
        [:div {}
         (when (:overlay-shown? @state)
-          [dialog/Dialog
-           {:width 500
-            :dismiss-self #(swap! state dissoc :overlay-shown?)
-            :content (render-modal state refs nav-context)
-            :get-first-element-dom-node #(.getDOMNode (@refs "wsNamespace"))
-            :get-last-element-dom-node #(.getDOMNode (@refs "createButton"))}])
+          [CreateWorkspaceDialog {:dismiss #(swap! state dissoc :overlay-shown?)
+                                  :nav-context nav-context}])
         [:div {:style {:padding "2em"}}
          [:span {:style {:fontSize "180%"}}
           (if selected-ws-id
