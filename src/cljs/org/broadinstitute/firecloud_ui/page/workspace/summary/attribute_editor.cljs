@@ -45,31 +45,78 @@
                :style (if-not (:editing? @state)
                         {:backgroundColor (:background-gray style/colors)}
                         {:backgroundColor "#fff"})})
-            (icons/font-icon
-              {:style {:paddingLeft "0.5em" :padding "1em 0.7em"
-                       :color "red" :cursor "pointer"
-                       :display (when-not (:editing? @state) "none")}
-               :onClick (fn [e]
-                          (when (contains? (:reserved-keys @state) i)
-                            ;if it's reserved delete i from the reservation list
-                            (swap! state update-in [:reserved-keys] utils/delete i))
-                          ;delete the item from the list unconditionally
-                          (swap! state update-in [:attrs-list] utils/delete i))}
-              :x)]
+            (when (:editing? @state)
+              (icons/font-icon
+                {:style {:paddingLeft "0.5em" :padding "1em 0.7em"
+                         :color "red" :cursor "pointer"}
+                 :onClick (fn [e]
+                            (when (contains? (:reserved-keys @state) i)
+                              ;if it's reserved delete i from the reservation list
+                              (swap! state update-in [:reserved-keys] utils/delete i))
+                            ;delete the item from the list unconditionally
+                            (swap! state update-in [:attrs-list] utils/delete i))}
+                :x))]
            (common/clear-both)])
         (:attrs-list @state))
-      [:div {:style {:display (when-not (:editing? @state) "none")}}
-       [comps/Button {:style :add :text "Add new"
-                      :onClick #(do
-                                 (swap! state update-in [:attrs-list] conj ["" ""])
-                                 (js/setTimeout
-                                   (fn []
-                                     (common/focus-and-select
-                                       (-> (@refs (str "key_"
-                                                    (dec (count
-                                                           (:attrs-list @state))))).getDOMNode)))0))}]]])
-   [:div {:style {:display
-                  (when (or (or (:editing? @state)
-                              (not-empty (:attrs-list @state))) (:saving? @state)) "none")}}
-    (style/create-paragraph [:em {} "There are no attributes to display"])]])
+      (when (:editing? @state)
+        [comps/Button {:style :add :text "Add new"
+                       :onClick (fn [e]
+                                  (swap! state update-in [:attrs-list] conj ["" ""])
+                                  (js/setTimeout
+                                    #(common/focus-and-select
+                                       (->> @state :attrs-list count dec (str "key_") (@refs) .getDOMNode))
+                                    0))}])
+      (when (and (not (:editing? @state))
+              (empty? (:attrs-list @state))
+              (not (:saving? @state)))
+        (style/create-paragraph [:em {} "There are no attributes to display"]))])])
+
+(defn save-attributes [state props this description]
+  (let
+    [orig-keys (mapv first (:orig-attrs @state))
+     curr-keys (mapv first (:attrs-list @state))
+     curr-vals (mapv second (:attrs-list @state))
+     del-mapv (mapv (fn [k] {:op "RemoveAttribute" :attributeName k})
+                (clojure.set/difference (set orig-keys) (set curr-keys)))
+     up-mapv (mapv (fn [[name attr]] {:op "AddUpdateAttribute" :attributeName name :addUpdateAttribute attr})
+               (conj (:attrs-list @state) ["description" description]))
+     update-orch-fn (fn [add-update-ops]
+                      (swap! state assoc :updating-attrs? true)
+                      (endpoints/call-ajax-orch
+                        {:endpoint (endpoints/update-workspace-attrs (:workspace-id props))
+                         :payload add-update-ops
+                         :headers {"Content-Type" "application/json"}
+                         :on-done (fn [{:keys [success? xhr]}]
+                                    (swap! state dissoc :updating-attrs?)
+                                    (when-not success?
+                                      (js/alert (str "Exception:\n" (.-statusText xhr)))
+                                      (swap! state dissoc :orig-attrs)
+                                      (react/call :load-workspace this)))}))
+     del-orch-fn (fn [del-ops]
+                   (swap! state assoc :deleting-attrs? true)
+                   (endpoints/call-ajax-orch
+                     {:endpoint (endpoints/update-workspace-attrs (:workspace-id props))
+                      :payload del-ops
+                      :headers {"Content-Type" "application/json"}
+                      :on-done (fn [{:keys [success? xhr]}]
+                                 (swap! state dissoc :deleting-attrs?)
+                                 (if-not success?
+                                   (do
+                                     (js/alert (str "Exception:\n" (.-statusText xhr)))
+                                     (swap! state assoc :attrs-list (:orig-attrs @state))
+                                     (swap! state dissoc :orig-attrs)
+                                     (react/call :load-workspace this))
+                                   (when-not (empty? up-mapv)
+                                     (update-orch-fn up-mapv))))}))]
+    (cond
+      (some empty? curr-keys) (js/alert "Empty attribute keys are not allowed!")
+      (some empty? curr-vals) (js/alert "Empty attribute values are not allowed!")
+      (not (or (empty? curr-keys) (apply distinct? curr-keys))) (js/alert "Unique keys must be used!")
+      :else (do
+              (if (empty? del-mapv)
+                (when-not (empty? up-mapv)
+                  (update-orch-fn up-mapv))
+                (del-orch-fn del-mapv))
+              (swap! state update-in [:server-response :workspace "workspace" "attributes"] assoc "description" description)
+              (swap! state assoc :editing? false)))))
 
