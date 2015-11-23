@@ -29,7 +29,9 @@
                                :placeholder (:placeholder props)}))})
 
 (defn get-text [refs & ids]
-  (map #(react/call :get-text (@refs %)) ids))
+  (if (= 1 (count ids))
+    (react/call :get-text (@refs (first ids)))
+    (map #(react/call :get-text (@refs %)) ids)))
 
 (defn validate [refs & ids]
   (let [result (flatten (keep #(react/call :validate (@refs %)) ids))]

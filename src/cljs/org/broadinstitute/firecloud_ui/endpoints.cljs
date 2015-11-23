@@ -568,3 +568,9 @@
     :headers {"Content-Type" "application/json"}
     :canned-response {:status (rand-nth [200 200 500]) :delay-ms (rand-int 2000)}}
     :service-prefix "/service/register"))
+
+
+(def get-billing-projects
+  {:path "/profile/billing"
+   :method :get
+   :mock-data ["broad-dsde-dev"]})
