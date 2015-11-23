@@ -161,7 +161,12 @@
         [:div {} (get-in ws ["workspace" "createdBy"])]
         [:div {} (common/format-date (get-in ws ["workspace" "createdDate"]))])
       (style/create-section-header "Google Bucket")
-      (style/create-paragraph (get-in ws ["workspace" "bucketName"]))
+      (style/create-paragraph
+        [:a {:href (str "https://console.developers.google.com/storage/browser/" (get-in ws ["workspace" "bucketName"]) "/")
+              :title "Click to open the Google Cloud Storage browser for this bucket"
+              :style {:textDecoration "none" :color (:button-blue style/colors)}
+              :target "_blank"}
+         (get-in ws ["workspace" "bucketName"])])
       (style/create-section-header "Analysis Submissions")
       (style/create-paragraph
         (let [fail-count (->> submissions
