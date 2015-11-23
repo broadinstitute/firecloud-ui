@@ -24,54 +24,63 @@
        :dismiss-self (:dismiss props)
        :content
        (react/create-element
-         [dialog/OKCancelForm
-          {:header "Create New Workspace"
-           :content
-           (react/create-element
-             [:div {:style {:marginBottom -20}}
-              (when (:creating-wf @state)
-                [comps/Blocker {:banner "Creating Workspace..."}])
-              (style/create-form-label "Google Project")
-              [input/TextField {:ref "wsNamespace" :style {:width "100%"}
-                                :defaultValue "broad-dsde-dev"
-                                :predicates [(input/nonempty "Google Project")]}]
-              (style/create-form-label "Name")
-              [input/TextField {:ref "wsName" :style {:width "100%"}
-                                :predicates [(input/nonempty "Workspace name")]}]
-              (style/create-form-label "Description (optional)")
-              (style/create-text-area {:style {:width "100%"} :rows 5 :ref "wsDescription"})
-              [comps/ErrorViewer {:error (:server-error @state)}]
-              (style/create-validation-error-message (:validation-error @state))])
-           :dismiss-self (:dismiss props)
-           :ok-button
-           (react/create-element
-             [comps/Button
-              {:text "Create Workspace" :ref "createButton"
-               :onClick #(react/call :create-workspace this)}])}])
-       :get-first-element-dom-node #(.getDOMNode (@refs "wsNamespace"))
-       :get-last-element-dom-node #(.getDOMNode (@refs "createButton"))}])
+         (cond
+           (:load-error @state) (style/create-message-well "Unable to load list of Google projects")
+           (:billing-projects @state)
+           [dialog/OKCancelForm
+            {:header "Create New Workspace"
+             :content
+             (react/create-element
+               [:div {:style {:marginBottom -20}}
+                (when (:creating-wf @state)
+                  [comps/Blocker {:banner "Creating Workspace..."}])
+                (style/create-form-label "Google Project")
+                (style/create-select {:onChange #(swap! state assoc :selected-project (-> % .-target .-value))}
+                  (:billing-projects @state))
+                (style/create-form-label "Name")
+                [input/TextField {:ref "wsName" :style {:width "100%"}
+                                  :predicates [(input/nonempty "Workspace name")]}]
+                (style/create-form-label "Description (optional)")
+                (style/create-text-area {:style {:width "100%"} :rows 5 :ref "wsDescription"})
+                [comps/ErrorViewer {:error (:server-error @state)}]
+                (style/create-validation-error-message (:validation-error @state))])
+             :dismiss-self (:dismiss props)
+             :ok-button
+             (react/create-element
+               [comps/Button
+                {:text "Create Workspace" :ref "createButton"
+                 :onClick #(react/call :create-workspace this)}])}]
+           :else [:div {:style {:padding "2em"}}
+                  [comps/Spinner {:text "Loading available Google projects..."}]]))}])
    :create-workspace
    (fn [{:keys [props state refs]}]
      (swap! state dissoc :server-error :validation-error)
-     (if-let [fails (input/validate refs "wsNamespace" "wsName")]
+     (if-let [fails (input/validate refs "wsName")]
        (swap! state assoc :validation-error fails)
-       (let [desc (common/get-text refs "wsDescription")
-             [ns n] (input/get-text refs "wsNamespace" "wsName")
+       (let [project (:selected-project @state)
+             name (input/get-text refs "wsName")
+             desc (common/get-text refs "wsDescription")
              attributes (if (clojure.string/blank? desc) {} {:description desc})]
          (swap! state assoc :creating-wf true)
          (endpoints/call-ajax-orch
-           {:endpoint (endpoints/create-workspace ns n)
-            :payload {:namespace ns :name n :attributes attributes}
+           {:endpoint (endpoints/create-workspace project name)
+            :payload {:namespace project :name name :attributes attributes}
             :headers {"Content-Type" "application/json"}
             :on-done (fn [{:keys [success? get-parsed-response]}]
                        (swap! state dissoc :creating-wf)
                        (if success?
                          (do ((:dismiss props))
-                           (nav/navigate (:nav-context props) (str ns ":" n)))
+                           (nav/navigate (:nav-context props) (str project ":" name)))
                          (swap! state assoc :server-error (get-parsed-response))))}))))
    :component-did-mount
    (fn [{:keys [props state]}]
-     (js/console.log "TODO: hit /api/user/billing Rawls endpoint"))})
+     (endpoints/call-ajax-orch
+       {:endpoint endpoints/get-billing-projects
+        :on-done (fn [{:keys [success? get-parsed-response]}]
+                   (if success?
+                     (let [projects (get-parsed-response)]
+                       (swap! state assoc :billing-projects projects :selected-project (first projects)))
+                     (swap! state assoc :load-error (get-parsed-response))))}))})
 
 
 (react/defc StatusCell
