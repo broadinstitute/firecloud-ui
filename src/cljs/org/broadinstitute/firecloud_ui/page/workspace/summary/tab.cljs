@@ -258,6 +258,7 @@
 
 
 (defn render [workspace-id on-delete nav-context]
-  (react/create-element Summary {:nav-context nav-context
+  (react/create-element Summary {:key workspace-id
+                                 :nav-context nav-context
                                  :workspace-id workspace-id
                                  :on-delete on-delete}))
