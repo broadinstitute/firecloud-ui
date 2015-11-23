@@ -175,8 +175,6 @@
        [comps/Button
         {:text "Sign In"
          :href (str "/service/login?callback="
-                    (js/encodeURIComponent
-                     (str js/window.location.protocol "//" js/window.location.hostname))
                     (let [hash (nav/get-hash-value)]
                       (if (clojure.string/blank? hash) "" (str "&path=" hash))))}]]
       [:div {:style {:marginTop "1em"}} [RegisterLink]]
