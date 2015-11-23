@@ -165,7 +165,7 @@
     (insert (delete vec start) (if (> end start) (dec end) end) elem)))
 
 (defn rand-subset [items]
-  (take (rand-int (count items)) (shuffle items)))
+  (take (rand-int (inc (count items))) (shuffle items)))
 
 (defn rand-recent-time []
   (.format (.subtract (js/moment (js/Date.)) (rand-int 100000) "seconds")))
