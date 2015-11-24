@@ -33,7 +33,7 @@
       :entity-types (:entity-types props)
       :entity-name-renderer (fn [entity]
                               (style/create-link
-                                #(swap! state assoc :selected-entity entity :validation-error nil)
+                                #(swap! state assoc :selected-entity entity :validation-errors nil)
                                 (entity "name")))}]]
    (style/create-form-label "Define Expression")
    (let [disabled (= (:root-entity-type props) (get-in @state [:selected-entity "entityType"]))]
@@ -47,7 +47,7 @@
                                         (:expression @state))
                                :onChange #(let [text (-> % .-target .-value clojure.string/trim)]
                                             (swap! state assoc :expression text))}))
-   (style/create-validation-error-message (:validation-error @state))
+   (style/create-validation-error-message (:validation-errors @state))
    [comps/ErrorViewer {:error (:launch-server-error @state)}]])
 
 (react/defc Form
@@ -87,7 +87,7 @@
                        (if success?
                          ((:on-success props) ((get-parsed-response) "submissionId"))
                          (swap! state assoc :launch-server-error (get-parsed-response))))}))
-       (swap! state assoc :validation-error ["Please select an entity"])))})
+       (swap! state assoc :validation-errors ["Please select an entity"])))})
 
 
 (react/defc Page

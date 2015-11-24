@@ -72,7 +72,7 @@
                          :left-text "Workspace Entities" :right-text "Will Be Deleted"
                          :entities (:entity-list props)}]
                        [:div {:style {:text-align "center" :marginTop "1em"}}
-                        (style/create-validation-error-message (:validation-error @state))
+                        (style/create-validation-error-message (:validation-errors @state))
                         [comps/ErrorViewer {:error (:server-error @state)}]]])
            :ok-button [comps/Button
                        {:text "Delete"
@@ -83,7 +83,8 @@
                                               (str "Really delete these " num " entities?"))]
                                     (swap! state dissoc :server-error)
                                     (if (zero? num)
-                                      (swap! state assoc :validation-error ["Please select one or more entities to delete"])
+                                      (swap! state assoc :validation-errors
+                                        ["Please select one or more entities to delete"])
                                       (when (js/confirm msg)
                                         (react/call :delete this selected-entities))))}]}])}])
    :component-did-mount
@@ -91,7 +92,7 @@
      (common/scroll-to-top 100))
    :delete
    (fn [{:keys [props state this]} selected-entities]
-     (swap! state assoc :deleting? true :validation-error nil :server-error nil)
+     (swap! state assoc :deleting? true :validation-errors nil :server-error nil)
      (endpoints/call-ajax-orch
        {:endpoint (endpoints/delete-entities (:workspace-id props))
         :payload {:recursive false ;; TODO implement
