@@ -115,7 +115,6 @@
                       :borderLeft border-style :borderRight border-style
                       :borderBottom border-style :borderRadius 4}
          :row-style {:height 56 :borderTop border-style :overflow "hidden"}
-         :even-row-style {:backgroundColor nil}
          :cell-content-style {:padding nil}
          :toolbar (fn [built-in]
                     [:div {}

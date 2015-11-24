@@ -147,29 +147,24 @@
        nil
        [:div {:style (merge {:fontSize "80%" :fontWeight 500} (:body-style props))}
         (map-indexed
-         (fn [row-index row]
-           (let [row-style (merge
-                            (:row-style props)
-                            (if (even? row-index)
-                              (merge
-                               {:backgroundColor (:background-gray style/colors)}
-                               (:even-row-style props))
-                              (:odd-row-style props)))]
-             [:div {:style row-style}
-              (map
-               (fn [col]
-                 (let [render-content (or (:content-renderer col)
+          (fn [row-index row]
+            (let [row-style (:row-style props)
+                  row-style (if (fn? row-style) (row-style row-index row) row-style)]
+              [:div {:style row-style}
+               (map
+                 (fn [col]
+                   (let [render-content (or (:content-renderer col)
                                           (:as-text col)
                                           default-render)]
-                   (render-cell
-                    {:width (:width col)
-                     :content (render-content (nth row (:index col)))
-                     :cell-padding-left (or (:cell-padding-left props) 0)
-                     :content-container-style (merge
-                                               {:padding (str "0.6em 0 0.6em " (or (:cell-padding-left props) 0))}
-                                               (:cell-content-style props))})))
-               (:columns props))
-              (common/clear-both)]))
+                     (render-cell
+                       {:width (:width col)
+                        :content (render-content (nth row (:index col)))
+                        :cell-padding-left (or (:cell-padding-left props) 0)
+                        :content-container-style (merge
+                                                   {:padding (str "0.6em 0 0.6em " (or (:cell-padding-left props) 0))}
+                                                   (:cell-content-style props))})))
+                 (:columns props))
+               (common/clear-both)]))
          (:rows @state))]))})
 
 

@@ -26,17 +26,23 @@
     [:div {:style {:marginBottom "1em" :fontSize "140%"}}
      (str "Selected: "
        (if-let [e (:selected-entity @state)]
-         (str (e "name") " (" (e "entityType") ")")
+         (str (:name e) " (" (:type e) ")")
          "None"))]
     [table/EntityTable
      {:entities (:entities props)
       :entity-types (:entity-types props)
-      :entity-name-renderer (fn [entity]
-                              (style/create-link
-                                #(swap! state assoc :selected-entity entity :validation-errors nil)
-                                (entity "name")))}]]
+      :row-style (fn [row-index row-data]
+                   {:backgroundColor
+                    (cond (= (entity->id (first row-data)) (:selected-entity @state)) "yellow"
+                      (even? row-index) (:background-gray style/colors)
+                      :else "#fff")})
+      :entity-name-renderer (fn [e]
+                              (let [entity-id (entity->id e)]
+                                (style/create-link
+                                  #(swap! state assoc :selected-entity entity-id)
+                                  (:name entity-id))))}]]
    (style/create-form-label "Define Expression")
-   (let [disabled (= (:root-entity-type props) (get-in @state [:selected-entity "entityType"]))]
+   (let [disabled (= (:root-entity-type props) (get-in @state [:selected-entity :type]))]
      (style/create-text-field {:placeholder "leave blank for default"
                                :style {:width "100%"
                                        :backgroundColor (when disabled
@@ -56,7 +62,7 @@
      (let [types (:entity-types props)
            root (:root-entity-type props)]
        (if (contains? (set types) root)
-         {:selected-entity (first (filter #(= root (% "entityType")) (:entities props)))}
+         {:selected-entity (entity->id (first (filter #(= root (% "entityType")) (:entities props))))}
          {})))
    :render
    (fn [{:keys [props state this]}]
