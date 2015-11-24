@@ -31,7 +31,9 @@
                                :spellCheck (:spellCheck props)}))})
 
 (defn get-text [refs & ids]
-  (map #(react/call :get-text (@refs %)) ids))
+  (if (= 1 (count ids))
+    (react/call :get-text (@refs (first ids)))
+    (map #(react/call :get-text (@refs %)) ids)))
 
 (defn validate [refs & ids]
   (not-empty (distinct (flatten (keep #(react/call :validate (@refs %)) ids)))))
