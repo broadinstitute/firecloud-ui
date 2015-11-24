@@ -107,7 +107,7 @@
   (apply max (map count (map #(get-workspace-name-string %) workspaces))))
 
 (defn- get-workspace-description [ws]
-  (or (get-in ws ["workspace" "attributes" "description"]) "No description provided"))
+  (not-empty (get-in ws ["workspace" "attributes" "description"])))
 
 (defn- get-max-workspace-description-length [workspaces]
   (apply max (map count (map #(get-workspace-description %) workspaces))))
@@ -154,9 +154,12 @@
           {:as-text :name :sort-by :text
            :header "Workspace" :starting-width (* max-workspace-name-length 10)
            :content-renderer (fn [data] [WorkspaceCell {:data data}])}
-          {:header "Description" :starting-width (* max-description-length 10)
+          {:header "Description" :starting-width (max 200 (* max-description-length 10))
            :content-renderer (fn [description]
-                               [:div {:style {:padding "1.1em 0 0 14px"}} description])}
+                               [:div {:style {:padding "1.1em 0 0 14px"}}
+                                (if description description
+                                  [:span {:style {:fontStyle "oblique"}}
+                                   "No description provided"])])}
           {:header "Access Level" :starting-width 150
            :sort-by #(case % "OWNER" 0 "WRITER" 1 "READER" 2) :sort-initial :asc
            :content-renderer

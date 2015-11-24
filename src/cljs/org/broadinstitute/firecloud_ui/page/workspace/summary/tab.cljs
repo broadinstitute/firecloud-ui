@@ -148,7 +148,7 @@
             ")"])])
       (style/create-section-header "Description")
       (style/create-paragraph
-        (let [description (get-in ws ["workspace" "attributes" "description"])]
+        (let [description (not-empty (get-in ws ["workspace" "attributes" "description"]))]
           (cond (:editing? @state) (react/create-element
                                      (style/create-text-area {:ref "descriptionArea"
                                                               :defaultValue description
