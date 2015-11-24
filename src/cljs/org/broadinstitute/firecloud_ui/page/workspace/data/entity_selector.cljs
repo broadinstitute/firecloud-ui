@@ -26,7 +26,7 @@
            columns (fn [source?]
                      (concat
                        [{:header "Entity Type" :starting-width 100}
-                        {:header "Entity Name" :starting-width 100
+                        {:header "Entity Name" :starting-width 200
                          :as-text #(get-in % [0 "name"]) :sort-by :text
                          :content-renderer
                          (fn [[entity index]]

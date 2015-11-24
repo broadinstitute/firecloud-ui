@@ -21,20 +21,47 @@
    (fn [{:keys [state props refs]}]
      (assert (not (empty? (:predicates props))) "No predicates for input/TextField")
      (style/create-text-field {:ref "textfield"
-                               :style (merge (:style props)
+                               :style (merge (or (:style props) {})
                                         (when (:invalid @state)
                                           {:borderColor (:exception-red style/colors)}))
                                :onChange #(swap! state dissoc :invalid)
                                :defaultValue (:defaultValue props)
-                               :placeholder (:placeholder props)}))})
+                               :placeholder (:placeholder props)
+                               :disabled (:disabled props)
+                               :spellCheck (:spellCheck props)}))})
 
 (defn get-text [refs & ids]
   (map #(react/call :get-text (@refs %)) ids))
 
 (defn validate [refs & ids]
-  (let [result (flatten (keep #(react/call :validate (@refs %)) ids))]
-    (when-not (empty? result) result)))
+  (not-empty (distinct (flatten (keep #(react/call :validate (@refs %)) ids)))))
 
+;; usage: (let [[field1 field2 & fails] (get-and-validate refs "field1-ref" "field2-ref")]
+;;          (if fails
+;;              (do-failure fails)
+;;              (do-success field1 field2)))
+(defn get-and-validate [refs & ids]
+  (concat (apply get-text refs ids) (apply validate refs ids)))
+
+
+;; Some premade predicates:
 
 (defn nonempty [field-name]
   {:test #(not (empty? %)) :message (str field-name " cannot be empty")})
+
+
+(def ^:private strictnesses
+  {:simple #"^\S+@\S+\.\S+$"
+   :strict #"^([\w-]+(?:\.[\w-]+)*)@((?:[\w-]+\.)*\w[\w-]{0,66})\.([a-z]{2,6}(?:\.[a-z]{2})?)$"})
+
+(defn- is-valid-email? [test strictness]
+  (re-matches (get strictnesses strictness (:simple strictnesses)) (clojure.string/lower-case test)))
+
+(defn valid-email [field-name & [strictness]]
+  {:test #(is-valid-email? % strictness) :message (str field-name " is not a valid email address")})
+
+(defn valid-email-or-empty [field-name & [strictness]]
+  {:test (fn [test] (or (empty? test) (is-valid-email? test strictness)))
+   :message (str field-name " is not a valid email address (or empty)")})
+
+

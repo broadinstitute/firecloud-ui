@@ -5,6 +5,7 @@
     [org.broadinstitute.firecloud-ui.common :as common :refer [clear-both get-text]]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
     [org.broadinstitute.firecloud-ui.common.icons :as icons]
+    [org.broadinstitute.firecloud-ui.common.input :as input]
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.common.table :as table]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
@@ -56,15 +57,10 @@
        (fn [field]
          [:div {:style {:float "left" :marginRight "0.5em"}}
           (style/create-form-label (:label field))
-          (style/create-text-field {:defaultValue (entity (:key field))
-                                    :ref (:key field) :placeholder "Required"
-                                    :onChange #(swap! state dissoc :bad-input)})])
+          [input/TextField {:defaultValue (entity (:key field))
+                            :ref (:key field) :placeholder "Required"
+                            :predicates [(input/nonempty "Fields")]}]])
        fields)
-     [:div {:ref "error" :style {:float "left"}}]
-     (when (:bad-input @state)
-       [:div {:style {:float "left" :padding "1.6em 0 0 1em"
-                      :fontWeight 500 :color (:exception-red style/colors)}}
-        "All fields required"])
      (clear-both)
 
      (when-not workspace-id
@@ -79,9 +75,10 @@
           (map
             (fn [ws] (str (get-in ws ["workspace" "namespace"]) "/" (get-in ws ["workspace" "name"])))
             workspaces-list))])
-     [:div {}
-      [comps/Button {:text (if workspace-id "Import" "Export")
-                     :onClick #(react/call :perform-copy this)}]]]))
+     (style/create-validation-error-message (:validation-error @state))
+     [comps/ErrorViewer {:error (:server-error @state)}]
+     [comps/Button {:text (if workspace-id "Import" "Export")
+                    :onClick #(react/call :perform-copy this)}]]))
 
 
 (react/defc ConfigImportForm
@@ -99,15 +96,12 @@
    :perform-copy
    (fn [{:keys [props state refs]}]
      (let [{:keys [workspace-id config after-import on-back]} props
-           [namespace name] (get-text refs "namespace" "name")
+           [namespace name & fails] (input/get-and-validate refs "namespace" "name")
            workspace-id (or workspace-id
                           {:namespace (get-in (:selected-workspace @state) ["workspace" "namespace"])
                            :name (get-in (:selected-workspace @state) ["workspace" "name"])})]
-       ;; TODO - implement generalized validation
-       (if (some empty? [namespace name])
-         (do
-           (common/scroll-to-center (.getDOMNode (@refs "error")) 100)
-           (swap! state assoc :bad-input true))
+       (if fails
+         (swap! state assoc :validation-error fails)
          (do
            (swap! state assoc :blocking-text "Importing...")
            (endpoints/call-ajax-orch
@@ -118,7 +112,7 @@
                         "destinationNamespace" namespace
                         "destinationName" name}
               :headers {"Content-Type" "application/json"}
-              :on-done (fn [{:keys [success? xhr]}]
+              :on-done (fn [{:keys [success? get-parsed-response]}]
                          (swap! state dissoc :blocking-text)
                          (if success?
                            (do
@@ -126,7 +120,7 @@
                              (common/scroll-to-top)
                              (when after-import (after-import {"namespace" namespace
                                                                "name" name})))
-                           (js/alert (str "Import error: " (.-responseText xhr)))))})))))
+                           (swap! state assoc :server-error (get-parsed-response))))})))))
    :component-did-mount
    (fn [{:keys [props state]}]
      (when-not (:workspace-id props)
@@ -165,15 +159,12 @@
    :perform-copy
    (fn [{:keys [props state refs]}]
      (let [{:keys [workspace-id after-import on-back]} props
-           [namespace name rootEntityType] (get-text refs "namespace" "name" "rootEntityType")
+           [namespace name rootEntityType & fails] (input/get-and-validate refs "namespace" "name" "rootEntityType")
            workspace-id (or workspace-id
                           {:namespace (get-in (:selected-workspace @state) ["workspace" "namespace"])
                            :name (get-in (:selected-workspace @state) ["workspace" "name"])})]
-       ;; TODO - implement generalized validation
-       (if (some empty? [namespace name rootEntityType])
-         (do
-           (common/scroll-to-center (.getDOMNode (@refs "error")) 100)
-           (swap! state assoc :bad-input true))
+       (if fails
+         (swap! state assoc :validation-error fails)
          (do
            (swap! state assoc :blocking-text "Importing...")
            (endpoints/call-ajax-orch
@@ -183,7 +174,7 @@
                          "name" name
                          "rootEntityType" rootEntityType)
               :headers {"Content-Type" "application/json"}
-              :on-done (fn [{:keys [success? xhr]}]
+              :on-done (fn [{:keys [success? get-parsed-response]}]
                          (swap! state dissoc :blocking-text)
                          (if success?
                            (do
@@ -191,7 +182,7 @@
                              (common/scroll-to-top)
                              (when after-import (after-import {"namespace" namespace
                                                                "name" name})))
-                           (js/alert (str "Import error: " (.-responseText xhr)))))})))))
+                           (swap! state assoc :server-error (get-parsed-response))))})))))
    :component-did-mount
    (fn [{:keys [props state]}]
      (when-not (:workspace-id props)

@@ -16,24 +16,68 @@
   {:type (entity "entityType") :name (entity "name")})
 
 
-(react/defc LaunchButton
-  {:render
-   (fn [{:keys [this state]}]
-     [:div {:style {:display "inline-block"}}
-      [comps/Button {:text "Launch" :onClick #(react/call :handle-click this)}]
-      (when (:launching? @state)
-        [comps/Blocker {:banner "Launching analysis..."}])])
-   :handle-click
+(defn- render-form [state props]
+  [:div {}
+   (when (:launching? @state)
+     [comps/Blocker {:banner "Launching analysis..."}])
+   (style/create-form-label "Select Entity")
+   [:div {:style {:backgroundColor "#fff" :border (str "1px solid " (:line-gray style/colors))
+                  :padding "1em" :marginBottom "0.5em"}}
+    [:div {:style {:marginBottom "1em" :fontSize "140%"}}
+     (str "Selected: "
+       (if-let [e (:selected-entity @state)]
+         (str (e "name") " (" (e "entityType") ")")
+         "None"))]
+    [table/EntityTable
+     {:entities (:entities props)
+      :entity-types (:entity-types props)
+      :entity-name-renderer (fn [entity]
+                              (style/create-link
+                                #(swap! state assoc :selected-entity entity :validation-errors nil)
+                                (entity "name")))}]]
+   (style/create-form-label "Define Expression")
+   (let [disabled (= (:root-entity-type props) (get-in @state [:selected-entity "entityType"]))]
+     (style/create-text-field {:placeholder "leave blank for default"
+                               :style {:width "100%"
+                                       :backgroundColor (when disabled
+                                                          (:background-gray style/colors))}
+                               :disabled disabled
+                               :value (if disabled
+                                        "Disabled - selected entity is of root entity type"
+                                        (:expression @state))
+                               :onChange #(let [text (-> % .-target .-value clojure.string/trim)]
+                                            (swap! state assoc :expression text))}))
+   (style/create-validation-error-message (:validation-errors @state))
+   [comps/ErrorViewer {:error (:launch-server-error @state)}]])
+
+(react/defc Form
+  {:get-initial-state
+   (fn [{:keys [props]}]
+     (let [types (:entity-types props)
+           root (:root-entity-type props)]
+       (if (contains? (set types) root)
+         {:selected-entity (first (filter #(= root (% "entityType")) (:entities props)))}
+         {})))
+   :render
+   (fn [{:keys [props state this]}]
+     [dialog/OKCancelForm
+      {:header "Launch Analysis"
+       :dismiss-self (:dismiss-self props)
+       :content (render-form state props)
+       :ok-button
+       [comps/Button {:text "Launch" :disabled? (:disabled? props)
+                      :onClick #(react/call :launch this)}]}])
+   :launch
    (fn [{:keys [props state]}]
-     (if-let [entity-id (:entity-id props)]
+     (if-let [entity (:selected-entity @state)]
        (let [config-id (:config-id props)
-             expression (:expression props)
+             expression (:expression @state)
              payload (merge {:methodConfigurationNamespace (:namespace config-id)
                              :methodConfigurationName (:name config-id)
-                             :entityType (:type entity-id)
-                             :entityName (:name entity-id)}
-                            (when-not (clojure.string/blank? expression) {:expression expression}))]
-         (swap! state assoc :launching? true)
+                             :entityType (entity "entityType")
+                             :entityName (entity "name")}
+                       (when-not (clojure.string/blank? expression) {:expression expression}))]
+         (swap! state assoc :launching? true :launch-server-error nil)
          (endpoints/call-ajax-orch
            {:endpoint (endpoints/create-submission (:workspace-id props))
             :payload payload
@@ -42,96 +86,38 @@
                        (swap! state dissoc :launching?)
                        (if success?
                          ((:on-success props) ((get-parsed-response) "submissionId"))
-                         ((:on-error props) (get-parsed-response))))}))
-       (js/alert "Please select an entity.")))})
-
-
-(react/defc LaunchForm
-  {:get-initial-state
-   (fn [{:keys [props]}]
-     (let [types (:entity-types props)
-           root (:root-entity-type props)]
-       (if (contains? (set types) root)
-         (let [entity (first (filter #(= root (% "entityType")) (:entities props)))]
-           ((:entity-selected props) (entity->id entity))
-           {:selected-entity entity
-            :selected-entity-type root})
-         {:selected-entity-type (first types)})))
-   :render
-   (fn [{:keys [props state]}]
-     [:div {}
-      (style/create-form-label "Select Entity")
-      [:div {:style {:backgroundColor "#fff" :border (str "1px solid " (:line-gray style/colors))
-                     :padding "1em" :marginBottom "0.5em"}}
-       [:div {:style {:marginBottom "1em" :fontSize "140%"}}
-        (str "Selected: "
-          (if-let [e (:selected-entity @state)]
-            (str (e "name") " (" (e "entityType") ")")
-            "None"))]
-       [table/EntityTable
-        {:entities (:entities props)
-         :entity-types (:entity-types props)
-         :entity-name-renderer (fn [entity]
-                                 (style/create-link
-                                   #(do (swap! state assoc :selected-entity entity)
-                                        ((:entity-selected props) (entity->id entity)))
-                                   (entity "name")))}]]
-      (style/create-form-label "Define Expression")
-      (let [disabled (= (:root-entity-type props) (get-in @state [:selected-entity "entityType"]))]
-        (style/create-text-field {:placeholder "leave blank for default"
-                                  :style {:width "100%"
-                                          :backgroundColor (when disabled
-                                                             (:background-gray style/colors))}
-                                  :disabled disabled
-                                  :value (if disabled
-                                           "Disabled - selected entity is of root entity type"
-                                           (:expression @state))
-                                  :onChange #(let [text (-> % .-target .-value clojure.string/trim)]
-                                              (swap! state assoc :expression text)
-                                              ((:expression-selected props) text))}))])})
+                         (swap! state assoc :launch-server-error (get-parsed-response))))}))
+       (swap! state assoc :validation-errors ["Please select an entity"])))})
 
 
 (react/defc Page
   {:render
    (fn [{:keys [props state]}]
-     [dialog/OKCancelForm
-      {:header "Launch Analysis"
-       :dismiss-self (:on-cancel props)
-       :content
-       (let [{:keys [server-response]} @state
-             {:keys [entities entity-types error-message]} server-response]
-         (cond
-           (nil? server-response)
-           [:div {:style {:textAlign "center" :background "#fff" :padding "1em"}}
-            [comps/Spinner {:text "Loading data..."}]]
-           error-message (style/create-server-error-message error-message)
-           (zero? (count @state))
-           (style/create-message-well "No data found.")
-           :else
-           [LaunchForm {:entities entities
-                        :entity-types entity-types
-                        :root-entity-type (:root-entity-type props)
-                        :entity-selected #(swap! state assoc :selected-entity-id %)
-                        :expression-selected #(swap! state assoc :selected-expression %)}]))
-       :ok-button
-       [LaunchButton (merge props
-                       {:entity-id (:selected-entity-id @state)
-                        :expression (when-not (= (:root-entity-type props)
-                                                 (:type (:selected-entity-id @state)))
-                                      (:selected-expression @state))
-                        :on-error #(swap! state assoc :launch-server-error %)})]}])
+     (let [{:keys [server-response]} @state
+           {:keys [entities entity-types error-response]} server-response]
+       (cond
+         entities [Form {:config-id (:config-id props)
+                         :workspace-id (:workspace-id props)
+                         :entities entities
+                         :entity-types entity-types
+                         :root-entity-type (:root-entity-type props)
+                         :dismiss-self (:on-cancel props)
+                         :on-success (:on-success props)}]
+         error-response [comps/ErrorViewer {:error error-response}]
+         :else [:div {:style {:textAlign "center" :padding "1em"}}
+                [comps/Spinner {:text "Loading data..."}]])))
    :component-did-mount
    (fn [{:keys [props state]}]
      (common/scroll-to-top 100)
      (endpoints/call-ajax-orch
        {:endpoint (endpoints/get-entities-by-type (:workspace-id props))
-        :on-done (fn [{:keys [success? status-text get-parsed-response]}]
+        :on-done (fn [{:keys [success? get-parsed-response]}]
                    (swap! state assoc
                      :server-response (if success?
                                         (let [entities (get-parsed-response)]
                                           {:entities entities
                                            :entity-types (distinct (map #(% "entityType") entities))})
-                                        {:error-message status-text})))}))})
+                                        {:error-response (get-parsed-response)})))}))})
 
 
 (react/defc ShowLaunchModalButton
