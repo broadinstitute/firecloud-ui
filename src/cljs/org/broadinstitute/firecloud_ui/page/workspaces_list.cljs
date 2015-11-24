@@ -35,7 +35,8 @@
               (when (:creating-wf @state)
                 [comps/Blocker {:banner "Creating Workspace..."}])
               (style/create-form-label "Google Project")
-              (style/create-select {:onChange #(swap! state assoc :selected-project (-> % .-target .-value))}
+              (style/create-select {:value (:selected-project @state)
+                                    :onChange #(swap! state assoc :selected-project (-> % .-target .-value))}
                 (:billing-projects props))
               (style/create-form-label "Name")
               [input/TextField {:ref "wsName" :style {:width "100%"}
