@@ -295,9 +295,11 @@
           {:key (:selected-entity-type @state)
            :columns (concat
                       [{:header "Entity Type" :starting-width 100
+                        :as-text #(% "entityType") :sort-by :text
                         :content-renderer (or (:entity-type-renderer props)
                                             (fn [entity] (entity "entityType")))}
                        {:header "Entity Name" :starting-width 200
+                        :as-text #(% "name") :sort-by :text
                         :content-renderer (or (:entity-name-renderer props)
                                             (fn [entity] (entity "name")))}]
                       (map (fn [k] {:header k :starting-width attr-col-width
