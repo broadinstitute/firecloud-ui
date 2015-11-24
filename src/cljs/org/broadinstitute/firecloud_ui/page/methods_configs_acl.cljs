@@ -33,7 +33,7 @@
     (= "READER" access-level) 0
     (= "OWNER" access-level) 1
     (= "NO ACCESS" access-level) 2
-    :else (do  (utils/rlog (str "Unknown access-level :'" access-level "'"))  reader-level)))
+    :else (do  (utils/log (str "Unknown access-level :'" access-level "'"))  reader-level)))
 
 
 (def ^:private column-width "calc(50% - 4px)")

@@ -115,12 +115,17 @@
                                      (get-in filters [(or (:selected-filter-index props) 0) :pred])
                                      (:data props))
                                     (:data props)))
-     (let [ordered-columns (table-utils/create-ordered-columns (:columns props))]
+     (let [columns (vec (map-indexed (fn [i col]
+                                       {:width (or (:starting-width col) 100)
+                                        :visible? (get col :show-initial? true)
+                                        :index i
+                                        :display-index i})
+                                     (:columns props)))]
        (merge
         {:no-data? (zero? (count (:data props)))
-         :ordered-columns ordered-columns
+         :columns columns
          :dragging? false}
-        (when-let [col (first (filter #(contains? % :sort-initial) ordered-columns))]
+        (when-let [col (first (filter #(contains? % :sort-initial) columns))]
           {:key-fn (if-let [sorter (:sort-by col)]
                      (fn [row] (sorter (nth row (:index col))))
                      (fn [row] (nth row (:index col))))
@@ -148,10 +153,31 @@
                        {:get-anchor-dom-node #(.getDOMNode (@refs "col-edit-button"))
                         :blocking? false
                         :dismiss-self #(swap! state assoc :reordering-columns? false)
-                        :content (react/create-element
-                                  table-utils/ColumnEditor
-                                  {:columns (:ordered-columns @state)
-                                   :submit #(swap! state assoc :ordered-columns %)})}])])
+                        :content
+                        (react/create-element
+                         table-utils/ColumnEditor
+                         {:columns (react/call :get-ordered-columns this)
+                          :on-reorder
+                          (fn [source-index target-index]
+                            (let [column-order (vec (sort-by
+                                                     :display-index
+                                                     (map #(select-keys % [:index :display-index])
+                                                          (:columns @state))))
+                                  new-order (utils/move column-order source-index target-index)
+                                  new-order (map-indexed (fn [i c] (assoc c :display-index i))
+                                                         new-order)
+                                  new-order (map :display-index (sort-by :index new-order))]
+                              (swap! state update-in [:columns]
+                                     #(mapv (fn [new-index c] (assoc c :display-index new-index))
+                                            new-order %))))
+                          :on-visibility-change
+                          (fn [column-index visible?]
+                            (swap!
+                             state update-in [:columns]
+                             (fn [columns]
+                               (if (= :all column-index)
+                                 (mapv #(assoc % :visible? visible?) columns)
+                                 (assoc-in columns [column-index :visible?] visible?)))))})}])])
                  (when (:filterable? props)
                    [:div {:style {:float "left" :marginLeft "1em"}}
                     [table-utils/Filterer {:ref "filterer"
@@ -174,7 +200,9 @@
                          :paddingBottom 10
                          :minWidth (when-not (:no-data? @state)
                                      (reduce
-                                       + (map :width (filter :showing? (:ordered-columns @state)))))
+                                      + (map :width
+                                             (filter :visible?
+                                                     (react/call :get-ordered-columns this)))))
                          :cursor (when (:dragging? @state) "col-resize")}}
            (if (:no-data? @state)
              (style/create-message-well (or (:empty-message props) "There are no rows to display."))
@@ -182,10 +210,16 @@
            [table-utils/Body
             (assoc props
                    :ref "body"
-                   :columns (filter :showing? (:ordered-columns @state))
+                   :columns (filter :visible? (react/call :get-ordered-columns this))
                    :initial-rows
                    (react/call :get-body-rows this))]]]]
         [:div {:style {:paddingTop (:paginator-space props)}} paginator]]))
+   :get-ordered-columns
+   (fn [{:keys [props state]}]
+     (vec
+      (sort-by
+       :display-index
+       (map merge (repeat {:starting-width 100}) (:columns props) (:columns @state)))))
    :get-filtered-data
    (fn [{:keys [props refs]}]
      (table-utils/filter-data
@@ -215,16 +249,16 @@
      (set! (.-onMouseMoveHandler this)
        (fn [e]
          (when (:dragging? @state)
-           (let [current-width (:width (nth (:ordered-columns @state) (:drag-column @state)))
+           (let [current-width (:width (nth (react/call :get-ordered-columns this)
+                                            (:drag-column @state)))
                  new-mouse-x (.-clientX e)
                  drag-amount (- new-mouse-x (:mouse-x @state))
                  new-width (+ current-width drag-amount)]
              (when (and (>= new-width 10) (not (zero? drag-amount)))
                ;; Update in a single step like this to avoid multiple re-renders
-               (let [new-state (assoc @state :mouse-x new-mouse-x)
-                     new-state (update-in new-state [:ordered-columns (:drag-column @state)]
-                                 assoc :width new-width)]
-                 (reset! state new-state)))))))
+               (swap! state (fn [s]
+                              (assoc-in (assoc s :mouse-x new-mouse-x)
+                                        [:columns (:drag-column s) :width] new-width))))))))
      (.addEventListener js/window "mousemove" (.-onMouseMoveHandler this))
      (set! (.-onMouseUpHandler this)
        #(when (:dragging? @state)

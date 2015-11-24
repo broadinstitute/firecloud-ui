@@ -192,11 +192,12 @@
             :cell-style (when onResizeMouseDown {:borderRight "1px solid #777777" :marginRight -1})
             :cell-padding-left (or (:cell-padding-left props) 0)
             :content-container-style (merge
-                                       {:padding (str "0.8em 0 0.8em " (or (:cell-padding-left props) 0))}
-                                       (:header-style props))
+                                      {:padding (str "0.8em 0 0.8em "
+                                                     (or (:cell-padding-left props) 0))}
+                                      (:header-style props))
             :onResizeMouseDown onResizeMouseDown
-            :onResizeDoubleClick #(swap! state update-in [:ordered-columns display-index]
-                                     assoc :width (:starting-width column))
+            :onResizeDoubleClick #(swap! state assoc-in [:columns i :width]
+                                         (:starting-width column))
             :onSortClick (when (and (or (:sort-by column)
                                         (:sortable-columns? props))
                                     (not= :none (:sort-by column)))
@@ -204,8 +205,7 @@
                              (if (= i (:sort-column @state))
                                (case (:sort-order @state)
                                  :asc (swap! state assoc :sort-order :desc)
-                                 :desc (swap! state dissoc :sort-column :sort-order :key-fn)
-                                 (assert false "bad state"))
+                                 :desc (swap! state dissoc :sort-column :sort-order :key-fn))
                                (swap! state assoc :sort-column i :sort-order :asc
                                  :key-fn (let [sort-fn (or (:sort-by column) identity)]
                                            (if (= sort-fn :text)
@@ -213,7 +213,7 @@
                                              (fn [row] (sort-fn (nth row i)))))))
                              (react/call :set-body-rows this)))
             :sortOrder (when (= i (:sort-column @state)) (:sort-order @state))})))
-     (filter :showing? (:ordered-columns @state)))
+     (filter :visible? (react/call :get-ordered-columns this)))
    (common/clear-both)])
 
 
@@ -320,44 +320,34 @@
                                  (swap! state assoc :drag-active true)))))
             :onMouseUp (when (:drag-index @state)
                          (fn [e]
-                           ((:submit props)
-                             (utils/move (:columns props) (:drag-index @state) (:drop-index @state)))
+                           ((:on-reorder props) (:drag-index @state) (:drop-index @state))
                            (swap! state dissoc :drag-index :drag-active :drop-index)))}
       "Show:"
       (let [style {:padding "4px 8px" :marginRight 5 :borderRadius 5
                    :cursor (when-not (:drag-active @state) "pointer")
-                   :backgroundColor (:button-blue style/colors) :color "#fff"}
-            submit (fn [b] (fn [] ((:submit props) (mapv #(assoc % :showing? b) (:columns props)))))]
+                   :backgroundColor (:button-blue style/colors) :color "#fff"}]
         [:div {:style {:padding "0.5em 0"}}
-         [:span {:style style :onClick (submit true)} "All"]
-         [:span {:style style :onClick (submit false)} "None"]])
+         [:span {:style style :onClick #((:on-visibility-change props) :all true)} "All"]
+         [:span {:style style :onClick #((:on-visibility-change props) :all false)} "None"]])
       (map-indexed
-        (fn [i column]
-          (when (get column :reorderable? true)
-            (let [showing? (:showing? column)]
-              [:div {:ref (str "div" i)
-                     :style {:borderTop (when (= i (:drop-index @state)) "1px solid gray")}}
-               [:img {:src "assets/drag_temp.png"
-                      :style {:height 16 :verticalAlign "middle" :marginRight "1ex" :cursor "ns-resize"}
-                      :draggable false
-                      :onMouseDown (fn [e] (swap! state assoc :drag-index i
-                                             :start-x (.-clientX e) :start-y (.-clientY e)))}]
-               [:label {:style {:cursor (when-not (:drag-active @state) "pointer")}}
-                [:input {:type "checkbox" :checked showing?
-                         :onChange #((:submit props)
-                                     (update-in (:columns props) [i] assoc :showing? (not showing?)))}]
-                [:span {:style {:paddingLeft "0.5em"}} (:header column)]]])))
-        (:columns props))
+       (fn [i column]
+         (when (get column :reorderable? true)
+           (let [visible? (:visible? column)]
+             [:div {:ref (str "div" i)
+                    :style {:borderTop (when (= i (:drop-index @state)) "1px solid gray")}}
+              [:img {:src "assets/drag_temp.png"
+                     :style {:height 16 :verticalAlign "middle" :marginRight "1ex"
+                             :cursor "ns-resize"}
+                     :draggable false
+                     :onMouseDown (fn [e] (swap! state assoc
+                                                 :drag-index i
+                                                 :start-x (.-clientX e)
+                                                 :start-y (.-clientY e)))}]
+              [:label {:style {:cursor (when-not (:drag-active @state) "pointer")}}
+               [:input {:type "checkbox" :checked visible?
+                        :onChange #((:on-visibility-change props) (:index column) (not visible?))}]
+               [:span {:style {:paddingLeft "0.5em"}} (:header column)]]])))
+       (:columns props))
       (let [i (count (:columns props))]
         [:div {:ref (str "div" i)
                :style {:borderTop (when (= i (:drop-index @state)) "1px solid gray")}}])])})
-
-
-(defn- create-ordered-columns [columns]
-  (vec (map-indexed
-        (fn [index col]
-          (assoc col
-                 :index index :showing? (get col :show-initial? true)
-                 :width (or (:starting-width col) 100)
-                 :starting-width (or (:starting-width col) 100)))
-        columns)))

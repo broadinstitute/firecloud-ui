@@ -1,7 +1,6 @@
 #!/bin/bash
-set -euo pipefail
+set -euox pipefail
 IFS=$'\n\t'
-set -x
 
 # Starts figwheel so changes are immediately loaded into the running browser window and appear
 # without requiring a page reload.
