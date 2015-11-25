@@ -80,8 +80,8 @@
              expression (:expression @state)
              payload (merge {:methodConfigurationNamespace (:namespace config-id)
                              :methodConfigurationName (:name config-id)
-                             :entityType (entity "entityType")
-                             :entityName (entity "name")}
+                             :entityType (:type entity)
+                             :entityName (:name entity)}
                        (when-not (clojure.string/blank? expression) {:expression expression}))]
          (swap! state assoc :launching? true :launch-server-error nil)
          (endpoints/call-ajax-orch
