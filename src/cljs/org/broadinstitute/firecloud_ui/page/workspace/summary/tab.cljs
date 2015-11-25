@@ -178,55 +178,43 @@
 
 
 (react/defc Summary
-  {:get-initial-state
-   (fn []
-     {:viewing-attributes? false
-      :load-counter 0})
-   :render
+  {:render
    (fn [{:keys [refs state props this]}]
-     (cond
-       (and (:server-response @state) (:submission-response @state))
-       (let [{:keys [workspace workspace-error]} (:server-response @state)
-             {:keys [submissions submissions-error]} (:submission-response @state)]
-         (cond workspace-error (style/create-server-error-message workspace-error)
-               submissions-error (style/create-server-error-message submissions-error)
-               :else
-               (let [owner? (= "OWNER" (workspace "accessLevel"))
-                     writer? (or (= "WRITER" (workspace "accessLevel")) owner?)]
-                 [:div {:style {:margin "45px 25px" :display "flex"}}
-                  (render-overlays state props)
-                  (render-sidebar state props refs this workspace owner? writer?)
-                  (render-main state refs workspace owner? submissions)])))
-       :else [:div {:style {:textAlign "center" :padding "1em"}}
-              [comps/Spinner {:text "Loading workspace..."}]]))
+     (let [server-response (:server-response @state)
+           {:keys [workspace submissions server-error]} server-response]
+       (cond
+         server-error (style/create-server-error-message server-error)
+         (some nil? [workspace submissions]) [:div {:style {:textAlign "center" :padding "1em"}}
+                                              [comps/Spinner {:text "Loading workspace..."}]]
+         :else
+         (let [owner? (= "OWNER" (workspace "accessLevel"))
+               writer? (or owner? (= "WRITER" (workspace "accessLevel")))]
+           [:div {:style {:margin "45px 25px" :display "flex"}}
+            (render-overlays state props)
+            (render-sidebar state props refs this workspace owner? writer?)
+            (render-main state refs workspace owner? submissions)]))))
    :load-workspace
    (fn [{:keys [props state]}]
-     (when (zero? (:load-counter @state))
-       (swap! state assoc :load-counter 2)
-       (endpoints/call-ajax-orch
-         {:endpoint (endpoints/get-workspace (:workspace-id props))
-          :on-done (fn [{:keys [success? get-parsed-response status-text]}]
-                     (swap! state assoc :server-response
-                       (if success?
-                         {:workspace (get-parsed-response)}
-                         {:workspace-error status-text}))
-                     (if success?
-                       (let [response (:server-response @state)
-                             attributes (get-in response
-                                          [:workspace "workspace" "attributes" ])
-                             attrs-list (mapv (fn [[k v]] [k v])
-                                          (dissoc attributes "description"))]
-                         (swap! state assoc :attrs-list attrs-list))
-                       (swap! state dissoc :attrs-list))
-                     (swap! state update-in [:load-counter] dec))})
-       (endpoints/call-ajax-orch
-         {:endpoint (endpoints/list-submissions (:workspace-id props))
-          :on-done (fn [{:keys [success? status-text get-parsed-response]}]
-                     (swap! state assoc :submission-response
-                       (if success?
-                         {:submissions (get-parsed-response)}
-                         {:submissions-error status-text})
-                       (swap! state update-in [:load-counter] dec)))})))
+     (endpoints/call-ajax-orch
+       {:endpoint (endpoints/get-workspace (:workspace-id props))
+        :on-done (fn [{:keys [success? get-parsed-response status-text]}]
+                   (if success?
+                     (let [workspace (get-parsed-response)
+                           attributes (get-in workspace ["workspace" "attributes"])]
+                       (swap! state update-in [:server-response]
+                         assoc :workspace workspace)
+                       (swap! state assoc :attrs-list (mapv (fn [[k v]] [k v])
+                                                        (dissoc attributes "description"))))
+                     (swap! state update-in [:server-response]
+                       assoc :server-error status-text)))})
+     (endpoints/call-ajax-orch
+       {:endpoint (endpoints/list-submissions (:workspace-id props))
+        :on-done (fn [{:keys [success? status-text get-parsed-response]}]
+                   (if success?
+                     (swap! state update-in [:server-response]
+                       assoc :submissions (get-parsed-response))
+                     (swap! state update-in [:server-response]
+                       assoc :server-error status-text)))}))
    :lock-or-unlock
    (fn [{:keys [props state]} locked-now?]
      (swap! state assoc :locking? locked-now?)
