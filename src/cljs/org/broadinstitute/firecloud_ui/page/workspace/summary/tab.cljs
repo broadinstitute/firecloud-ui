@@ -57,7 +57,7 @@
                      (swap! state assoc :server-error (get-parsed-response))))}))})
 
 
-(defn- render-overlays [state props]
+(defn- render-overlays [state props billing-projects]
   [:div {}
    (when (:show-delete-dialog? @state)
      [DeleteDialog
@@ -79,10 +79,11 @@
                        :on-success (fn [namespace name]
                                      (swap! state dissoc :cloning?)
                                      (nav/navigate (:nav-context props) (str namespace ":" name)))
-                       :workspace-id (:workspace-id props)}])])
+                       :workspace-id (:workspace-id props)
+                       :billing-projects billing-projects}])])
 
 
-(defn- render-sidebar [state props refs this ws owner? writer?]
+(defn- render-sidebar [state props refs this ws billing-projects owner? writer?]
   (let [locked? (get-in ws ["workspace" "isLocked"])
         status (common/compute-status ws)]
     [:div {:style {:flex "0 0 270px" :paddingRight 30}}
@@ -117,6 +118,7 @@
      (when-not (:editing? @state)
        [comps/SidebarButton {:style :light :margin :top :color :button-blue
                              :text "Clone..." :icon :plus
+                             :disabled? (when (empty? billing-projects) "No Google projects available")
                              :onClick #(swap! state assoc :cloning? true)}])
      (when-not (and owner? (:editing? @state))
        [comps/SidebarButton {:style :light :margin :top :color :button-blue
@@ -181,17 +183,19 @@
   {:render
    (fn [{:keys [refs state props this]}]
      (let [server-response (:server-response @state)
-           {:keys [workspace submissions server-error]} server-response]
+           {:keys [workspace submissions billing-projects server-error]} server-response]
        (cond
-         server-error (style/create-server-error-message server-error)
-         (some nil? [workspace submissions]) [:div {:style {:textAlign "center" :padding "1em"}}
-                                              [comps/Spinner {:text "Loading workspace..."}]]
+         server-error
+         (style/create-server-error-message server-error)
+         (some nil? [workspace submissions billing-projects])
+         [:div {:style {:textAlign "center" :padding "1em"}}
+          [comps/Spinner {:text "Loading workspace..."}]]
          :else
          (let [owner? (= "OWNER" (workspace "accessLevel"))
                writer? (or owner? (= "WRITER" (workspace "accessLevel")))]
            [:div {:style {:margin "45px 25px" :display "flex"}}
-            (render-overlays state props)
-            (render-sidebar state props refs this workspace owner? writer?)
+            (render-overlays state props billing-projects)
+            (render-sidebar state props refs this workspace billing-projects owner? writer?)
             (render-main state refs workspace owner? submissions)]))))
    :load-workspace
    (fn [{:keys [props state]}]
@@ -213,6 +217,14 @@
                    (if success?
                      (swap! state update-in [:server-response]
                        assoc :submissions (get-parsed-response))
+                     (swap! state update-in [:server-response]
+                       assoc :server-error status-text)))})
+     (endpoints/call-ajax-orch
+       {:endpoint (endpoints/get-billing-projects)
+        :on-done (fn [{:keys [success? status-text get-parsed-response]}]
+                   (if success?
+                     (swap! state update-in [:server-response]
+                       assoc :billing-projects (get-parsed-response))
                      (swap! state update-in [:server-response]
                        assoc :server-error status-text)))}))
    :lock-or-unlock
