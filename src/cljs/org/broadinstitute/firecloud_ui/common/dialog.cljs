@@ -122,7 +122,8 @@
                                 (labeled "File size"
                                   (common/format-filesize data-size)
                                   [:span {:style {:marginLeft "1em"}}
-                                   [:a {:href (data "mediaLink")} "Download"]]
+                                   [:a {:href (common/gcs-object->download-url (:bucket-name props) (:object props))
+                                    :target "_blank" :download (:object props)} "Download"]]
                                   (when (> data-size 100000000)
                                     [:span {:style {:color (:exception-red style/colors) :marginLeft "2ex"}}
                                      (icons/font-icon {:style {:fontSize "100%" :verticalAlign "middle" :marginRight "1ex"}}

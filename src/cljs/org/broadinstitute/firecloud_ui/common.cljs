@@ -99,10 +99,13 @@
                    (.isAfter (js/moment last-failure) (js/moment last-success)))) "Exception"
           :else "Complete")))
 
+(defn gcs-object->download-url [bucket object]
+  (str "https://console.cloud.google.com/m/cloudstorage/b/" bucket "/o/" object))
+
 (defn gcs-uri->download-url [gcs-uri]
   (let [matcher (re-find #"gs://([^/]+)/(.+)" gcs-uri)]
     (when (= 3 (count matcher)) ;; first match will be the whole thing
-      (str "https://console.developers.google.com/m/cloudstorage/b/" (matcher 1) "/o/" (matcher 2)))))
+      (gcs-object->download-url (matcher 1) (matcher 2)))))
 
 (defn parse-gcs-uri [gcs-uri]
   (let [matcher (re-find #"gs://([^/]+)/(.+)" gcs-uri)]
