@@ -215,7 +215,7 @@
    :component-did-mount
    (fn [{:keys [state props refs this]}]
      (endpoints/call-ajax-orch
-       {:endpoint (endpoints/get-validated-workspace-method-config (:workspace-id props) (:config props))
+       {:endpoint (endpoints/get-validated-workspace-method-config (:workspace-id props) (:config-id props))
         :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                    (if success?
                      (swap! state assoc :loaded-config (get-parsed-response))

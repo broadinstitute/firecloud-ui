@@ -8,9 +8,15 @@
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.common.table :as table]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
+    [org.broadinstitute.firecloud-ui.nav :as nav]
     [org.broadinstitute.firecloud-ui.page.method-config-importer :refer [MethodConfigImporter]]
     [org.broadinstitute.firecloud-ui.page.workspace.method-configs.method-config-editor :refer [MethodConfigEditor]]
+    [org.broadinstitute.firecloud-ui.utils :as utils]
     ))
+
+
+(defn- config->id [config]
+  {:namespace (config "namespace") :name (config "name")})
 
 
 (react/defc MethodConfigurationsList
@@ -58,7 +64,7 @@
               :content-renderer
               (fn [config]
                 (style/create-link
-                  #((:on-config-selected props) config)
+                  #((:on-config-selected props) (config->id config))
                   (config "name")))}
              {:header "Root Entity Type" :starting-width 140}
              {:header "Method" :starting-width 800
@@ -98,27 +104,32 @@
 
 (react/defc Page
   {:render
-   (fn [{:keys [props state]}]
-     [:div {:style {:padding "1em"}}
-      (if (:selected-method-config @state)
-        [MethodConfigEditor {:config (:selected-method-config @state)
-                             :workspace-id (:workspace-id props)
-                             :on-submission-success (:on-submission-success props)
-                             :after-delete #(swap! state dissoc :selected-method-config)}]
-        [MethodConfigurationsList
-         {:ref "method-config-list"
-          :workspace-id (:workspace-id props)
-          ;TODO: For both callbacks - rename config to config-id and follow the workspace-id pattern
-          :on-config-selected (fn [config]
-                                (swap! state assoc :selected-method-config config))
-          :on-config-imported (fn [config]
-                                (swap! state assoc :selected-method-config config))}])])
+   (fn [{:keys [props]}]
+     (let [nav-context (nav/parse-segment (:nav-context props))
+           selected-method-config-id (common/get-id-from-nav-segment (:segment nav-context))
+           nav-to (fn [config-id]
+                    (nav/navigate nav-context (str (:namespace config-id) ":" (:name config-id))))]
+       [:div {:style {:padding "1em"}}
+        (if selected-method-config-id
+          [MethodConfigEditor {:config-id selected-method-config-id
+                               :workspace-id (:workspace-id props)
+                               :on-submission-success (:on-submission-success props)
+                               :after-delete #(nav/back nav-context)}]
+          [MethodConfigurationsList
+           {:ref "method-config-list"
+            :workspace-id (:workspace-id props)
+            :on-config-selected nav-to
+            :on-config-imported nav-to}])]))
    :component-will-receive-props
-   (fn [{:keys [state refs]}]
-     (if (:selected-method-config @state)
-       (swap! state dissoc :selected-method-config)
-       (react/call :reload (@refs "method-config-list"))))})
+   (fn [{:keys [props refs]}]
+     (let [nav-context (nav/parse-segment (:nav-context props))
+           selected-method-config-id (common/get-id-from-nav-segment (:segment nav-context))]
+       (if selected-method-config-id
+         (nav/back nav-context)
+         (react/call :reload (@refs "method-config-list")))))})
 
 
-(defn render [workspace-id on-submission-success]
-  [Page {:workspace-id workspace-id :on-submission-success on-submission-success}])
+(defn render [workspace-id on-submission-success nav-context]
+  [Page {:workspace-id workspace-id
+         :on-submission-success on-submission-success
+         :nav-context nav-context}])
