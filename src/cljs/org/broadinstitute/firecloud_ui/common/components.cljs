@@ -214,7 +214,7 @@
                       (str "at " class "." method " (" file ":" num ")")]))
             (:lines props))
           (style/create-link #(swap! state assoc :expanded? false) "Hide Stack Trace")]
-         (style/create-link #(swap! state assoc :expanded? true) "Show Stack Trace")))})
+         [:div {} (style/create-link #(swap! state assoc :expanded? true) "Show Stack Trace")]))})
 
 (react/defc CauseViewer
   {:render
