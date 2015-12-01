@@ -200,63 +200,62 @@
         [:div {:style {:fontSize "90%"}} (entity "documentation")])])})
 
 
-(declare CauseViewer)
+(react/defc StackTraceViewer
+  {:render
+   (fn [{:keys [props state]}]
+       (if (:expanded? @state)
+         [:div {:style {:overflowX "auto"}}
+          [:div {} "Stack Trace:"]
+          (map
+            (fn [line]
+                (let [[class method file num]
+                      (map line ["className" "methodName" "fileName" "lineNumber"])]
+                     [:div {:style {:marginLeft "1em" :whiteSpace "nowrap"}}
+                      (str "at " class "." method " (" file ":" num ")")]))
+            (:lines props))
+          (style/create-link #(swap! state assoc :expanded? false) "Hide Stack Trace")]
+         [:div {} (style/create-link #(swap! state assoc :expanded? true) "Show Stack Trace")]))})
+
+(react/defc CauseViewer
+  {:render
+   (fn [{:keys [props state]}]
+       (if (:expanded? @state)
+         (let [[source causes stack-trace message]
+               (map props ["source" "causes" "stackTrace" "message"])]
+              [:div {:style {:marginLeft "1em"}}
+               [:div {} "Message: " message]
+               (when source [:div {} "Source: " source])
+               (when (seq causes)
+                     [:div {}
+                      [:div {} (str "Cause" (when (> (count causes) 1) "s") ":")]
+                      (map (fn [cause] [CauseViewer cause]) causes)])
+               (when (seq stack-trace)
+                     [StackTraceViewer {:lines stack-trace}])
+               (style/create-link #(swap! state assoc :expanded? false) "Hide Cause")])
+         (style/create-link #(swap! state assoc :expanded? true) "Show Cause")))})
+
 (react/defc ErrorViewer
-  (let [StackTraceViewer
-        (react/create-class
-          {:render
-           (fn [{:keys [props state]}]
-             (if (:expanded? @state)
-               [:div {:style {:overflowX "auto"}}
-                [:div {} "Stack Trace:"]
-                (map
-                  (fn [line]
-                    (let [[class method file num]
-                          (map line ["className" "methodName" "fileName" "lineNumber"])]
-                      [:div {:style {:marginLeft "1em" :whiteSpace "nowrap"}}
-                       (str "at " class "." method " (" file ":" num ")")]))
-                  (:lines props))
-                (style/create-link #(swap! state assoc :expanded? false) "Hide Stack Trace")]
-               (style/create-link #(swap! state assoc :expanded? true) "Show Stack Trace")))})
-        CauseViewer
-        (react/create-class
-          {:render
-           (fn [{:keys [props state]}]
-             (if (:expanded? @state)
-               (let [[source causes stack-trace message]
-                     (map props ["source" "causes" "stackTrace" "message"])]
-                 [:div {:style {:marginLeft "1em"}}
-                  [:div {} "Message: " message]
-                  (when source [:div {} "Source: " source])
-                  (when-not (empty? causes)
-                    [:div {}
-                     [:div {} (str "Cause" (when (> (count causes) 1) "s") ":")]
-                     (map (fn [cause] [CauseViewer cause]) causes)])
-                  (when-not (empty? stack-trace)
-                    [StackTraceViewer {:lines stack-trace}])
-                  (style/create-link #(swap! state assoc :expanded? false) "Hide Cause")])
-               (style/create-link #(swap! state assoc :expanded? true) "Show Cause")))})]
-    {:render
-     (fn [{:keys [props]}]
-       (when-let [error (:error props)]
-         (let [[source status-code causes stack-trace message]
-               (map error ["source" "statusCode" "causes" "stackTrace" "message"])]
-           (if-let [expected-msg (get-in props [:expect status-code])]
-             [:div {}
-              [:span {:style {:paddingRight "1ex"}}
-               (icons/font-icon {:style {:color (:exception-red style/colors)}}
-                 :status-warning-triangle)]
-              (str "Error: " expected-msg)]
-             [:div {:style {:textAlign "initial"}}
+  {:render
+   (fn [{:keys [props]}]
+     (when-let [error (:error props)]
+       (let [[source status-code causes stack-trace message]
+             (map error ["source" "statusCode" "causes" "stackTrace" "message"])]
+         (if-let [expected-msg (get-in props [:expect status-code])]
+           [:div {}
+            [:span {:style {:paddingRight "1ex"}}
+             (icons/font-icon {:style {:color (:exception-red style/colors)}}
+               :status-warning-triangle)]
+            (str "Error: " expected-msg)]
+           [:div {:style {:textAlign "initial"}}
+            [:div {}
+             [:span {:style {:paddingRight "1ex"}}
+              (icons/font-icon {:style {:color (:exception-red style/colors)}}
+                :status-warning-triangle)]
+             (str "Error " status-code ": " message)]
+            (when source [:div {} "Source: " source])
+            (when (seq causes)
               [:div {}
-               [:span {:style {:paddingRight "1ex"}}
-                (icons/font-icon {:style {:color (:exception-red style/colors)}}
-                  :status-warning-triangle)]
-               (str "Error " status-code ": " message)]
-              (when source [:div {} "Source: " source])
-              (when-not (empty? causes)
-                [:div {}
-                 [:div {} (str "Cause" (when (> (count causes) 1) "s") ":")]
-                 (map (fn [cause] [CauseViewer cause]) causes)])
-              (when-not (empty? stack-trace)
-                [StackTraceViewer {:lines stack-trace}])]))))}))
+               [:div {} (str "Cause" (when (> (count causes) 1) "s") ":")]
+               (map (fn [cause] [CauseViewer cause]) causes)])
+            (when (seq stack-trace)
+              [StackTraceViewer {:lines stack-trace}])]))))})
