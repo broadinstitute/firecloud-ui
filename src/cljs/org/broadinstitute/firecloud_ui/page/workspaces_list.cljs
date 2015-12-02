@@ -212,10 +212,11 @@
   (let [segments (split hash #"/")]
     (map-indexed
       (fn [index segment]
-        {:text (if (zero? index)
-                 "Workspaces"
-                 (replace (js/decodeURIComponent segment) ":" "/"))
-         :href (str "#" (join "/" (subvec segments 0 (inc index))))})
+        (case index
+          0 {:text "Workspaces" :href "#workspaces"}
+          1 {:text (replace (js/decodeURIComponent segment) ":" "/")}
+          {:text (replace (js/decodeURIComponent segment) ":" "/")
+           :href (str "#" (join "/" (subvec segments 0 (inc index))))}))
       segments)))
 
 

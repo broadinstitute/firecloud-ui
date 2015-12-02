@@ -268,14 +268,12 @@
 
 
 (defn- validate-crumb [crumb]
-  (and (contains? crumb :text)
-       (or (contains? crumb :on-click)
-           (contains? crumb :href))))
+  (contains? crumb :text))
 
 (react/defc Breadcrumbs
   {:push
    (fn [{:keys [state]} new-crumb]
-     (assert (validate-crumb new-crumb) "Crumb must have :text and :on-click or :href")
+     (assert (validate-crumb new-crumb) "Crumb must have :text")
      (swap! state update-in [:crumbs] conj new-crumb))
    :set-crumbs
    (fn [{:keys [state]} crumbs]
@@ -284,7 +282,7 @@
    :get-initial-state
    (fn [{:keys [props]}]
      (assert (every? validate-crumb (:initial-crumbs props))
-       "Each initial crumb must have :text and :on-click or :href")
+       "Each initial crumb must have :text")
      {:crumbs (vec (:initial-crumbs props))})
    :render
    (fn [{:keys [state]}]
@@ -297,9 +295,11 @@
           (interpose sep
             (map-indexed
               (fn [index {:keys [text on-click href]}]
-                (style/create-link2 {:href href :text text
-                                     :onClick #(do (when on-click (on-click))
-                                                   (swap! state update-in [:crumbs] subvec 0 (inc index)))}))
+                (if (or on-click href)
+                  (style/create-link2 {:href href :text text
+                                       :onClick #(do (when on-click (on-click))
+                                                   (swap! state update-in [:crumbs] subvec 0 (inc index)))})
+                  text))
               (butlast crumbs)))
           sep
           (:text (last crumbs))])))})
