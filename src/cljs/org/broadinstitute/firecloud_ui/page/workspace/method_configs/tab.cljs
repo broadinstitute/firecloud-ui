@@ -41,7 +41,7 @@
                       [MethodConfigImporter {:workspace-id (:workspace-id props)
                                              :after-import (fn [config]
                                                              (swap! state dissoc :show-import-overlay?)
-                                                             ((:on-config-imported props) config))}]])}])
+                                                             ((:on-config-imported props) (config->id config)))}]])}])
       (let [server-response (:server-response @state)
             {:keys [configs error-message]} server-response]
         (cond
