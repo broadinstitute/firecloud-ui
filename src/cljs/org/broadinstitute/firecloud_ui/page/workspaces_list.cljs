@@ -230,7 +230,7 @@
          [:span {:style {:fontSize "180%"}}
           [comps/Breadcrumbs {:ref "breadcrumbs"}]]]
         (if selected-ws-id
-          (render-workspace-details selected-ws-id #(nav/back nav-context) (:nav-context props))
+          (render-workspace-details selected-ws-id #(nav/back nav-context) nav-context)
           [WorkspaceList
            {:onWorkspaceSelected
             (fn [workspace]

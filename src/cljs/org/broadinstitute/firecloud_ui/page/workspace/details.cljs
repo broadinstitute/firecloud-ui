@@ -28,9 +28,8 @@
   {:render
    (fn [{:keys [props refs]}]
      (let [nav-context (nav/parse-segment (:nav-context props))
-           workspace-id (common/get-id-from-nav-segment (:segment nav-context))
-           tab-context (nav/parse-segment nav-context)
-           tab (:segment tab-context)]
+           workspace-id (:workspace-id props)
+           tab (:segment nav-context)]
        [:div {:style {:margin "0 -1em"}}
         [comps/TabBar {:ref "tab-bar"
                        :initial-tab-index (tab-string-to-index tab)
@@ -40,22 +39,22 @@
                                     workspace-id
                                     (:on-delete props)
                                     nav-context)
-                         :onTabSelected #(nav/navigate nav-context SUMMARY)}
+                         :onTabSelected #(nav/navigate (:nav-context props) SUMMARY)}
                         {:text DATA
                          :render #(data-tab/render (:workspace-id props))
-                         :onTabSelected #(nav/navigate nav-context DATA)}
+                         :onTabSelected #(nav/navigate (:nav-context props) DATA)}
                         {:text CONFIGS
                          :render (fn []
                                    (method-configs-tab/render
                                      workspace-id
                                      #(react/call :set-active-tab (@refs "tab-bar") 3 %)
-                                     tab-context))
-                         :onTabSelected #(when (empty? (:remaining tab-context))
-                                           (nav/navigate nav-context CONFIGS))}
+                                     nav-context))
+                         :onTabSelected #(when (empty? (:remaining nav-context))
+                                           (nav/navigate (:nav-context props) CONFIGS))}
                         {:text MONITOR
                          :render (fn [submission-id]
                                    (monitor-tab/render workspace-id submission-id))
-                         :onTabSelected #(nav/navigate nav-context MONITOR)}]}]]))})
+                         :onTabSelected #(nav/navigate (:nav-context props) MONITOR)}]}]]))})
 
 
 (defn render-workspace-details [workspace-id on-delete nav-context]
