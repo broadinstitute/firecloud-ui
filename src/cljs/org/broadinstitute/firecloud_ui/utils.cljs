@@ -88,12 +88,15 @@
           call-on-done (fn []
                          (let [status-code (.-status xhr)
                                get-parsed-response #(parse-json-string (.-responseText xhr))]
-                           (on-done {:xhr xhr
-                                     :status-code status-code
-                                     :success? (and (>= status-code 200)
-                                                    (< status-code 300))
-                                     :status-text (.-statusText xhr)
-                                     :get-parsed-response get-parsed-response})))]
+                           ; TODO: Fix this with a real log-out once the login bug is fixed and logout is implemented.
+                           (if (= status-code 401)
+                             (set! (-> js/window .-location) (str js/window.location.protocol "//" js/window.location.hostname))
+                             (on-done {:xhr xhr
+                                       :status-code status-code
+                                       :success? (and (>= status-code 200)
+                                                      (< status-code 300))
+                                       :status-text (.-statusText xhr)
+                                       :get-parsed-response get-parsed-response}))))]
       (when with-credentials?
         (set! (.-withCredentials xhr) true))
       (if canned-response-params
