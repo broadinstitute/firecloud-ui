@@ -1,6 +1,6 @@
 (ns org.broadinstitute.firecloud-ui.page.workspaces-list
   (:require
-    clojure.string
+    [clojure.string :refer [split join replace]]
     [dmohs.react :as react]
     [org.broadinstitute.firecloud-ui.common :as common]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
@@ -208,30 +208,41 @@
                        assoc :error-message status-text)))}))})
 
 
-(defn- get-workspace-id-from-nav-segment [segment]
-  (when-not (clojure.string/blank? segment)
-    (let [[ns n] (clojure.string/split segment #":")]
-      {:namespace ns :name n})))
+(defn- create-breadcrumbs-from-hash [hash]
+  (let [segments (split hash #"/")]
+    (map-indexed
+      (fn [index segment]
+        (case index
+          0 {:text "Workspaces" :href "#workspaces"}
+          1 {:text (replace (js/decodeURIComponent segment) ":" "/")}
+          {:text (replace (js/decodeURIComponent segment) ":" "/")
+           :href (str "#" (join "/" (subvec segments 0 (inc index))))}))
+      segments)))
 
 
 (react/defc Page
   {:render
-   (fn [{:keys [props state refs]}]
+   (fn [{:keys [props refs]}]
      (let [nav-context (nav/parse-segment (:nav-context props))
-           selected-ws-id (get-workspace-id-from-nav-segment (:segment nav-context))]
+           selected-ws-id (common/get-id-from-nav-segment (:segment nav-context))]
        [:div {}
         [:div {:style {:padding "2em"}}
          [:span {:style {:fontSize "180%"}}
-          (if selected-ws-id
-            (str "Workspace: " (:namespace selected-ws-id) "/" (:name selected-ws-id))
-            "Workspaces")]]
+          [comps/Breadcrumbs {:ref "breadcrumbs"}]]]
         (if selected-ws-id
-          ;; TODO: add 'back' function to nav
-          (render-workspace-details selected-ws-id
-            #(set! (-> js/window .-location .-hash) "workspaces") (:nav-context props))
+          (render-workspace-details selected-ws-id #(nav/back nav-context) nav-context)
           [WorkspaceList
            {:onWorkspaceSelected
             (fn [workspace]
               (nav/navigate nav-context (str (workspace "namespace") ":" (workspace "name")))
               (common/scroll-to-top))
-            :nav-context nav-context}])]))})
+            :nav-context nav-context}])]))
+   :component-did-mount
+   (fn [{:keys [this refs]}]
+     (set! (.-onHashChange this)
+       #(react/call :set-crumbs (@refs "breadcrumbs") (create-breadcrumbs-from-hash (nav/get-hash-value))))
+     ((.-onHashChange this))
+     (.addEventListener js/window "hashchange" (.-onHashChange this)))
+   :component-will-unmount
+   (fn [{:keys [this]}]
+     (.removeEventListener js/window "hashchange" (.-onHashChange this)))})

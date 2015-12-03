@@ -76,8 +76,8 @@
        (set! (.-renderArgs this) render-args)
        (swap! state assoc :active-tab-index index))
      :get-initial-state
-     (fn []
-       {:active-tab-index 0})
+     (fn [{:keys [props]}]
+       {:active-tab-index (or (:initial-tab-index props) 0)})
      :render
      (fn [{:keys [this props state]}]
        [:div {}
@@ -96,7 +96,13 @@
          (common/clear-both)]
         (let [active-item (nth (:items props) (:active-tab-index @state))
               render (:render active-item)]
-          [:div {} (apply render (.-renderArgs this))])])}))
+          [:div {} (apply render (.-renderArgs this))])])
+     :component-did-mount
+     (fn [{:keys [props]}]
+       (let [index (or (:initial-tab-index props) 0)
+             onTabSelected (get-in props [:items index :onTabSelected])]
+         (when onTabSelected
+           (onTabSelected))))}))
 
 
 (react/defc XButton
@@ -259,3 +265,41 @@
                (map (fn [cause] [CauseViewer cause]) causes)])
             (when (seq stack-trace)
               [StackTraceViewer {:lines stack-trace}])]))))})
+
+
+(defn- validate-crumb [crumb]
+  (contains? crumb :text))
+
+(react/defc Breadcrumbs
+  {:push
+   (fn [{:keys [state]} new-crumb]
+     (assert (validate-crumb new-crumb) "Crumb must have :text")
+     (swap! state update-in [:crumbs] conj new-crumb))
+   :set-crumbs
+   (fn [{:keys [state]} crumbs]
+     (assert (every? validate-crumb crumbs))
+     (swap! state assoc :crumbs (vec crumbs)))
+   :get-initial-state
+   (fn [{:keys [props]}]
+     (assert (every? validate-crumb (:initial-crumbs props))
+       "Each initial crumb must have :text")
+     {:crumbs (vec (:initial-crumbs props))})
+   :render
+   (fn [{:keys [state]}]
+     (let [sep (icons/font-icon {:style {:fontSize "50%" :margin "0 0.5em"}} :angle-right)
+           crumbs (:crumbs @state)]
+       (case (count crumbs)
+         0 [:div {}]
+         1 [:div {} (:text (first crumbs))]
+         [:div {}
+          (interpose sep
+            (map-indexed
+              (fn [index {:keys [text on-click href]}]
+                (if (or on-click href)
+                  (style/create-link2 {:href href :text text
+                                       :onClick #(do (when on-click (on-click))
+                                                   (swap! state update-in [:crumbs] subvec 0 (inc index)))})
+                  text))
+              (butlast crumbs)))
+          sep
+          (:text (last crumbs))])))})

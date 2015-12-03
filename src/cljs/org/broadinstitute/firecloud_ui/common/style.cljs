@@ -86,6 +86,13 @@
                              :KhtmlUserSelect "none" :MsUserSelect "none"}} props)
    children])
 
+(defn create-link2 [{:keys [href style onClick text]}]
+  [:a (merge
+        {:href (or href "javascript:;")
+         :style (merge {:textDecoration "none" :color (:button-blue colors)} style)}
+        (when onClick {:onClick onClick}))
+   text])
+
 (defn create-link [onClick & children]
   [:a {:href "javascript:;"
        :style {:textDecoration "none" :color (:button-blue colors)}

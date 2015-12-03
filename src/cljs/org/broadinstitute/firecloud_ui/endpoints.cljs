@@ -175,19 +175,19 @@
            "/method_configs/" (config "namespace") "/" (config "name"))
    :method :delete})
 
-(defn get-validated-workspace-method-config [workspace-id config]
+(defn get-validated-workspace-method-config [workspace-id config-id]
   {:path (str "/workspaces/" (ws-path workspace-id)
-           "/method_configs/" (config "namespace") "/" (config "name") "/validate")
+           "/method_configs/" (:namespace config-id) "/" (:name config-id) "/validate")
    :method :get
    :mock-data
-   {:methodConfiguration {:name (str (config "name"))
+   {:methodConfiguration {:name (:name config-id)
                           :namespace (rand-nth ["Broad" "nci" "public"])
                           :rootEntityType (rand-nth ["sample" "participant"])
-                          :methodRepoMethod {:methodNamespace (str (config "namespace"))
-                                             :methodName (str (config "name"))
+                          :methodRepoMethod {:methodNamespace (:namespace config-id)
+                                             :methodName (:name config-id)
                                              :methodVersion (str "ms_v_1")}
-                          :methodStoreConfig {:methodConfigNamespace (str (config "namespace"))
-                                              :methodConfigName (str (config "name"))
+                          :methodStoreConfig {:methodConfigNamespace (:namespace config-id)
+                                              :methodConfigName (:name config-id)
                                               :methodConfigVersion (str "msc_v_1")}
                           ;; Real data doesn't have the following fields, but for mock data we carry the same
                           ;; objects around, so initialize them here for convenience

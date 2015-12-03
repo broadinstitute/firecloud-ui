@@ -35,3 +35,7 @@
 (defn navigate [nav-context segment-name]
   (set! (-> js/window .-location .-hash)
         (str (apply str (reverse (:consumed nav-context))) (js/encodeURIComponent segment-name))))
+
+(defn back [nav-context]
+  (set! (-> js/window .-location .-hash)
+    (str (apply str (butlast (reverse (:consumed nav-context)))))))
