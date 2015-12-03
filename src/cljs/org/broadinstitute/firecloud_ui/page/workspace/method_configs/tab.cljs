@@ -117,7 +117,8 @@
                     (nav/navigate nav-context (str (:namespace config-id) ":" (:name config-id))))]
        [:div {:style {:padding "1em"}}
         (if selected-method-config-id
-          [MethodConfigEditor {:config-id selected-method-config-id
+          [MethodConfigEditor {:key selected-method-config-id
+                               :config-id selected-method-config-id
                                :workspace-id (:workspace-id props)
                                :on-submission-success (:on-submission-success props)
                                :after-delete #(nav/back nav-context)}]

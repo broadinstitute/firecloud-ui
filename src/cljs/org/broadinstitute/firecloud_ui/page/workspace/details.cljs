@@ -55,7 +55,7 @@
                            [method-configs-tab/Page {:ref CONFIGS
                                                      :workspace-id workspace-id
                                                      :on-submission-success #(nav/navigate (:nav-context props) MONITOR %)
-                                                     :nav-context nav-context}])
+                                                     :nav-context (nav/terminate-when (not= tab CONFIGS) nav-context)}])
                          :onTabSelected #(when (or (empty? (:remaining nav-context))
                                                    (not= CONFIGS tab))
                                            (nav/navigate (:nav-context props) CONFIGS))
@@ -65,7 +65,7 @@
                          (react/create-element
                            [monitor-tab/Page {:ref MONITOR
                                               :workspace-id workspace-id
-                                              :nav-context nav-context}])
+                                              :nav-context (nav/terminate-when (not= tab MONITOR) nav-context)}])
                          :onTabSelected #(when (or (empty? (:remaining nav-context))
                                                    (not= MONITOR tab))
                                            (nav/navigate (:nav-context props) MONITOR))
