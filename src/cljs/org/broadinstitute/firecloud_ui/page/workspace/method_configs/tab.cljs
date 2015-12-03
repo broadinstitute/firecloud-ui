@@ -103,7 +103,14 @@
 
 
 (react/defc Page
-  {:render
+  {:refresh
+   (fn [{:keys [props refs]}]
+     (let [nav-context (nav/parse-segment (:nav-context props))
+           selected-method-config-id (common/get-id-from-nav-segment (:segment nav-context))]
+       (if selected-method-config-id
+         (nav/back nav-context)
+         (react/call :reload (@refs "method-config-list")))))
+   :render
    (fn [{:keys [props]}]
      (let [nav-context (nav/parse-segment (:nav-context props))
            selected-method-config-id (common/get-id-from-nav-segment (:segment nav-context))
@@ -119,17 +126,4 @@
            {:ref "method-config-list"
             :workspace-id (:workspace-id props)
             :on-config-selected nav-to
-            :on-config-imported nav-to}])]))
-   :component-will-receive-props
-   (fn [{:keys [props refs]}]
-     (let [nav-context (nav/parse-segment (:nav-context props))
-           selected-method-config-id (common/get-id-from-nav-segment (:segment nav-context))]
-       (if selected-method-config-id
-         (nav/back nav-context)
-         (react/call :reload (@refs "method-config-list")))))})
-
-
-(defn render [workspace-id on-submission-success nav-context]
-  [Page {:workspace-id workspace-id
-         :on-submission-success on-submission-success
-         :nav-context nav-context}])
+            :on-config-imported nav-to}])]))})
