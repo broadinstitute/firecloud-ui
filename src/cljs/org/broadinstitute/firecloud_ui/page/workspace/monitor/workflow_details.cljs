@@ -18,6 +18,12 @@
    contents])
 
 
+(defn- display-gcs-link [gcs-uri]
+  (if-let [parsed (common/parse-gcs-uri gcs-uri)]
+    [dialog/GCSFilePreviewLink (assoc parsed :gcs-uri gcs-uri :style-props {:style {:display "inline"}})]
+    gcs-uri))
+
+
 (react/defc IODetail
   {:get-initial-state
    (fn []
@@ -35,10 +41,7 @@
       (when (:expanded @state)
         [:div {:style {:padding "0.25em 0 0.25em 1em"}}
          (for [[k v] (:data props)]
-           [:div {} k [:span {:style {:margin "0 1em"}} "→"]
-            (if-let [parsed (common/parse-gcs-uri v)]
-              [dialog/GCSFilePreviewLink (assoc parsed :gcs-uri v)]
-              v)])])])})
+           [:div {} k [:span {:style {:margin "0 1em"}} "→"] (display-gcs-link v)])])])})
 
 
 (react/defc CallDetail
@@ -64,12 +67,8 @@
                 (create-field "Status" (moncommon/icon-for-wf-status status) status))
               (create-field "Started" (moncommon/render-date (data "start")))
               (create-field "Ended" (moncommon/render-date (data "end")))
-              (create-field "stdout" [:a {:href (common/gcs-uri->download-url (data "stdout"))
-                                          :target "_blank" :download "stdout"}
-                                      "Click to download"])
-              (create-field "stderr" [:a {:href (common/gcs-uri->download-url (data "stderr"))
-                                          :target "_blank" :download "stderr"}
-                                      "Click to download"])
+              (create-field "stdout" (display-gcs-link (data "stdout")))
+              (create-field "stderr" (display-gcs-link (data "stderr")))
               [IODetail {:label "Inputs" :data (data "inputs")}]
               [IODetail {:label "Outputs" :data (data "outputs")}]]])
           (:data props)))])})

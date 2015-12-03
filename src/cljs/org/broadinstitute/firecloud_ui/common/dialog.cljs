@@ -91,7 +91,7 @@
    (fn [{:keys [props state this]}]
      (assert (:bucket-name props) "No bucket name provided")
      (assert (:object props) "No GCS object provided")
-     [:div {}
+     [:div (if-let [style-props (:style-props props)] style-props {})
       [:a {:href "javascript:;"
            :onClick #(react/call :show-dialog this)}
        (:gcs-uri props)]
