@@ -134,12 +134,10 @@
                                    (labeled "Created" (common/format-date (data "timeCreated")))
                                    (labeled "Updated" (common/format-date (data "updated")))
                                    (labeled "MD5" (data "md5Hash"))
-                                   (style/create-link
-                                     #(swap! state dissoc :show-details?)
-                                     "Collapse")]
-                                  (style/create-link
-                                    #(swap! state assoc :show-details? true)
-                                    "More info"))])
+                                   (style/create-link {:text "Collapse"
+                                                       :onClick #(swap! state dissoc :show-details?)})]
+                                  (style/create-link {:text "More info"
+                                                      :onClick #(swap! state assoc :show-details? true)}))])
                              (when error
                                [:div {:style {:marginTop "1em"}}
                                 [:span {:style {:color (:exception-red style/colors)}} "Error! "]
@@ -147,13 +145,11 @@
                                 (if (:show-error-details? @state)
                                   [:div {}
                                    [:pre {} error]
-                                   (style/create-link
-                                     #(swap! state dissoc :show-error-details?)
-                                     "Hide detail")]
+                                   (style/create-link {:text "Hide detail"
+                                                       :onClick #(swap! state dissoc :show-error-details?)})]
                                   [:div {}
-                                   (style/create-link
-                                     #(swap! state assoc :show-error-details? true)
-                                     "Show full error response")])])])
+                                   (style/create-link {:text "Show full error response"
+                                                       :onClick #(swap! state assoc :show-error-details? true)})])])])
                  :dismiss-self #(swap! state dissoc :show-dialog?)
                  :show-cancel? false
                  :ok-button [Button {:text "Done" :onClick #(swap! state dissoc :show-dialog?)}]}])}]]))])

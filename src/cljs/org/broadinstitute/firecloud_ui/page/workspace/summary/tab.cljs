@@ -142,9 +142,8 @@
          (when owner?
            [:span {}
             " ("
-            (style/create-link
-              #(swap! state assoc :editing-acl? true)
-              "Sharing...")
+            (style/create-link {:text "Sharing..."
+                                :onClick #(swap! state assoc :editing-acl? true)})
             ")"])])
       (style/create-section-header "Description")
       (style/create-paragraph
