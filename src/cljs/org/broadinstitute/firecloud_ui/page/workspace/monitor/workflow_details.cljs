@@ -3,6 +3,7 @@
     [dmohs.react :as react]
     [org.broadinstitute.firecloud-ui.common :as common]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
+    [org.broadinstitute.firecloud-ui.common.dialog :as dialog]
     [org.broadinstitute.firecloud-ui.common.icons :as icons]
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
@@ -34,7 +35,10 @@
       (when (:expanded @state)
         [:div {:style {:padding "0.25em 0 0.25em 1em"}}
          (for [[k v] (:data props)]
-           [:div {} k [:span {:style {:margin "0 1em"}} "→"] v])])])})
+           [:div {} k [:span {:style {:margin "0 1em"}} "→"]
+            (if-let [parsed (common/parse-gcs-uri v)]
+              [dialog/GCSFilePreviewLink (assoc parsed :gcs-uri v)]
+              v)])])])})
 
 
 (react/defc CallDetail
