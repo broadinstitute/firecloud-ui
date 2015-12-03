@@ -32,9 +32,17 @@
               :remaining (subs remaining (inc stop-index)))))))
 
 
-(defn navigate [nav-context segment-name]
+(defn navigate [nav-context & segment-names]
   (set! (-> js/window .-location .-hash)
-        (str (apply str (reverse (:consumed nav-context))) (js/encodeURIComponent segment-name))))
+        (apply str
+          (apply str (reverse (:consumed nav-context)))
+          (interpose "/" (map js/encodeURIComponent segment-names)))))
+
+(defn terminate [nav-context]
+  (assoc nav-context :remaining ""))
+
+(defn terminate-when [pred nav-context]
+  (if pred (terminate nav-context) nav-context))
 
 (defn back [nav-context]
   (set! (-> js/window .-location .-hash)

@@ -8,9 +8,10 @@
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.common.table :as table]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
+    [org.broadinstitute.firecloud-ui.nav :as nav]
     [org.broadinstitute.firecloud-ui.page.workspace.monitor.common :as moncommon]
-    [org.broadinstitute.firecloud-ui.page.workspace.monitor.submission-details
-     :as submission-details]
+    [org.broadinstitute.firecloud-ui.page.workspace.monitor.submission-details :as submission-details]
+    [org.broadinstitute.firecloud-ui.utils :as utils]
     ))
 
 
@@ -25,9 +26,8 @@
       :sort-by #(% "submissionDate")
       :sort-initial :desc
       :content-renderer (fn [submission]
-                          (style/create-link
-                            #(on-submission-clicked (submission "submissionId"))
-                            (render-date submission)))}
+                          (style/create-link {:text (render-date submission)
+                                              :onClick #(on-submission-clicked (submission "submissionId"))}))}
      {:header "Status" :as-text #(% "status") :sort-by :text
       :content-renderer (fn [submission]
                           [:div {}
@@ -86,23 +86,23 @@
 
 
 (react/defc Page
-  {:get-initial-state
-   (fn [{:keys [props]}]
-     {:selected-submission-id (:initial-submission-id props)})
+  {:refresh
+   (fn [{:keys [props refs]}]
+     (let [nav-context (nav/parse-segment (:nav-context props))
+           selected-submission-id (not-empty (:segment nav-context))]
+       (if selected-submission-id
+         (nav/back nav-context)
+         (react/call :reload (@refs "submissions-list")))))
    :render
-   (fn [{:keys [props state]}]
-     [:div {:style {:padding "1em"}}
-      (if-let [sid (:selected-submission-id @state)]
-        [submission-details/Page {:workspace-id (:workspace-id props) :submission-id sid}]
-        [SubmissionsList {:ref "submissions-list"
-                          :workspace-id (:workspace-id props)
-                          :on-submission-clicked #(swap! state assoc :selected-submission-id %)}])])
-   :component-will-receive-props
-   (fn [{:keys [state refs]}]
-     (if (:selected-submission-id @state)
-       (swap! state dissoc :selected-submission-id)
-       (react/call :reload (@refs "submissions-list"))))})
-
-
-(defn render [workspace-id & [submission-id]]
-  [Page {:workspace-id workspace-id :initial-submission-id submission-id}])
+   (fn [{:keys [props]}]
+     (let [workspace-id (:workspace-id props)
+           nav-context (nav/parse-segment (:nav-context props))
+           selected-submission-id (not-empty (:segment nav-context))]
+       [:div {:style {:padding "1em"}}
+        (if selected-submission-id
+          [submission-details/Page {:key selected-submission-id
+                                    :workspace-id workspace-id
+                                    :submission-id selected-submission-id}]
+          [SubmissionsList {:ref "submissions-list"
+                            :workspace-id workspace-id
+                            :on-submission-clicked #(nav/navigate nav-context %)}])]))})

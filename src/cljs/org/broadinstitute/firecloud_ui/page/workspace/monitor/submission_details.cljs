@@ -41,9 +41,9 @@
                   (fn [x]
                     (let [e (x "workflowEntity")
                           n (str (e "entityName") " (" (e "entityType") ")")]
-                      (style/create-link
-                        #(swap! state assoc :selected-workflow {:id (x "workflowId") :name n})
-                        n)))}
+                      (style/create-link {:text n
+                                          :onClick #(swap! state assoc :selected-workflow {:id (x "workflowId")
+                                                                                           :name n})})))}
                  {:header "Last Changed" :starting-width 280 :as-text moncommon/render-date}
                  {:header "Status" :starting-width 120
                   :content-renderer (fn [status]
@@ -72,9 +72,8 @@
    (fn [{:keys [state props]}]
      [:div {}
       [:div {}
-       (style/create-link
-        #(swap! state dissoc :selected-workflow)
-        "Workflows")
+       (style/create-link {:text "Workflows"
+                           :onClick #(swap! state dissoc :selected-workflow)})
        (icons/font-icon {:style {:verticalAlign "middle" :margin "0 1ex 0 1ex"}} :angle-right)
        [:b {} (:name (:selected-workflow @state))]]
       [:div {:style {:marginTop "1em"}}

@@ -35,9 +35,8 @@
         (:label props)
         (if (empty? (:data props))
           "None"
-          (style/create-link
-            #(swap! state assoc :expanded (not (:expanded @state)))
-            (if (:expanded @state) "Hide" "Show"))))
+          (style/create-link {:text (if (:expanded @state) "Hide" "Show")
+                              :onClick #(swap! state assoc :expanded (not (:expanded @state)))})))
       (when (:expanded @state)
         [:div {:style {:padding "0.25em 0 0.25em 1em"}}
          (for [[k v] (:data props)]
@@ -52,9 +51,8 @@
    (fn [{:keys [props state]}]
      [:div {:style {:marginTop "1em"}}
       [:div {:style {:display "inline-block" :marginRight "1em"}} (:label props)]
-      (style/create-link
-        #(swap! state assoc :expanded (not (:expanded @state)))
-        (if (:expanded @state) "Hide" "Show"))
+      (style/create-link {:text (if (:expanded @state) "Hide" "Show")
+                          :onClick #(swap! state assoc :expanded (not (:expanded @state)))})
       (when (:expanded @state)
         (map-indexed
           (fn [index data]
