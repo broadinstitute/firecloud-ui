@@ -58,7 +58,6 @@
       (when (:expanded @state)
         (map-indexed
           (fn [index data]
-            (org.broadinstitute.firecloud-ui.utils/jslog data)
             [:div {:style {:padding "0.5em 0 0 0.5em"}}
              [:div {:style {:paddingBottom "0.25em"}} (str "Call #" (inc index) ":")]
              [:div {:style {:paddingLeft "0.5em"}}
