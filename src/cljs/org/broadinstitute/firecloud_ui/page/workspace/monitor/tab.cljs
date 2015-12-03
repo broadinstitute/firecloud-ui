@@ -100,7 +100,9 @@
            selected-submission-id (not-empty (:segment nav-context))]
        [:div {:style {:padding "1em"}}
         (if selected-submission-id
-          [submission-details/Page {:workspace-id workspace-id :submission-id selected-submission-id}]
+          [submission-details/Page {:key selected-submission-id
+                                    :workspace-id workspace-id
+                                    :submission-id selected-submission-id}]
           [SubmissionsList {:ref "submissions-list"
                             :workspace-id workspace-id
                             :on-submission-clicked #(nav/navigate nav-context %)}])]))})
