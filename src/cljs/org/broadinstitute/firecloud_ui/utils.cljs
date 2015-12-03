@@ -90,7 +90,7 @@
                                get-parsed-response #(parse-json-string (.-responseText xhr))]
                            ; TODO: Fix this with a real log-out once the login bug is fixed and logout is implemented.
                            (if (= status-code 401)
-                             (set! (-> js/window .-location) (str js/window.location.protocol "//" js/window.location.hostname))
+                             (set! (-> js/window .-location) "/")
                              (on-done {:xhr xhr
                                        :status-code status-code
                                        :success? (and (>= status-code 200)
