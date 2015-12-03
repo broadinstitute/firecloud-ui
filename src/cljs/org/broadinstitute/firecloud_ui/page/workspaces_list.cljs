@@ -237,7 +237,7 @@
           [WorkspaceList
            {:onWorkspaceSelected
             (fn [workspace]
-              (nav/navigate nav-context (str (workspace "namespace") ":" (workspace "name")))
+              (nav/navigate nav-context (str (workspace "namespace") ":" (workspace "name")) "Summary")
               (common/scroll-to-top))
             :nav-context nav-context}])]))
    :component-did-mount

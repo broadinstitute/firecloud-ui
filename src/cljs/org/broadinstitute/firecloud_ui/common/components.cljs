@@ -90,13 +90,17 @@
              [Tab {:index i :text (:text tab)
                    :active? (= i (:active-tab-index @state))
                    :onClick (fn [e]
-                              (swap! state assoc :active-tab-index i)
-                              (when-let [f (:onTabSelected tab)] (f e)))}])
+                              (let [k (if (= i (:active-tab-index @state)) :onTabRefreshed :onTabSelected)
+                                    f (tab k)]
+                                (swap! state assoc :active-tab-index i)
+                                (when f (f e))))}])
            (:items props))
          (common/clear-both)]
         (let [active-item (nth (:items props) (:active-tab-index @state))
               render (:render active-item)]
-          [:div {} (apply render (.-renderArgs this))])])
+          (if (fn? render)
+            [:div {} (apply render (.-renderArgs this))]
+            [:div {} render]))])
      :component-did-mount
      (fn [{:keys [props]}]
        (let [index (or (:initial-tab-index props) 0)

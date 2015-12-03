@@ -31,30 +31,45 @@
            workspace-id (:workspace-id props)
            tab (:segment nav-context)]
        [:div {:style {:margin "0 -1em"}}
-        [comps/TabBar {:ref "tab-bar"
+        [comps/TabBar {:ref "tab-bar" :key tab
                        :initial-tab-index (tab-string-to-index tab)
                        :items
                        [{:text SUMMARY
-                         :render #(summary-tab/render
-                                    workspace-id
-                                    (:on-delete props)
-                                    nav-context)
-                         :onTabSelected #(nav/navigate (:nav-context props) SUMMARY)}
+                         :render
+                         (react/create-element
+                           [summary-tab/Summary {:key workspace-id :ref SUMMARY
+                                                 :workspace-id workspace-id
+                                                 :nav-context nav-context
+                                                 :on-delete (:on-delete props)}])
+                         :onTabSelected #(nav/navigate (:nav-context props) SUMMARY)
+                         :onTabRefreshed #(react/call :refresh (@refs SUMMARY))}
                         {:text DATA
-                         :render #(data-tab/render (:workspace-id props))
-                         :onTabSelected #(nav/navigate (:nav-context props) DATA)}
+                         :render
+                         (react/create-element
+                           [data-tab/WorkspaceData {:ref DATA :workspace-id workspace-id}])
+                         :onTabSelected #(nav/navigate (:nav-context props) DATA)
+                         :onTabRefreshed #(react/call :refresh (@refs DATA))}
                         {:text CONFIGS
-                         :render (fn []
-                                   (method-configs-tab/render
-                                     workspace-id
-                                     #(react/call :set-active-tab (@refs "tab-bar") 3 %)
-                                     nav-context))
-                         :onTabSelected #(when (empty? (:remaining nav-context))
-                                           (nav/navigate (:nav-context props) CONFIGS))}
+                         :render
+                         (react/create-element
+                           [method-configs-tab/Page {:ref CONFIGS
+                                                     :workspace-id workspace-id
+                                                     :on-submission-success #(nav/navigate (:nav-context props) MONITOR %)
+                                                     :nav-context nav-context}])
+                         :onTabSelected #(when (or (empty? (:remaining nav-context))
+                                                   (not= CONFIGS tab))
+                                           (nav/navigate (:nav-context props) CONFIGS))
+                         :onTabRefreshed #(react/call :refresh (@refs CONFIGS))}
                         {:text MONITOR
-                         :render (fn [submission-id]
-                                   (monitor-tab/render workspace-id submission-id))
-                         :onTabSelected #(nav/navigate (:nav-context props) MONITOR)}]}]]))})
+                         :render
+                         (react/create-element
+                           [monitor-tab/Page {:ref MONITOR
+                                              :workspace-id workspace-id
+                                              :nav-context nav-context}])
+                         :onTabSelected #(when (or (empty? (:remaining nav-context))
+                                                   (not= MONITOR tab))
+                                           (nav/navigate (:nav-context props) MONITOR))
+                         :onTabRefreshed #(react/call :refresh (@refs MONITOR))}]}]]))})
 
 
 (defn render-workspace-details [workspace-id on-delete nav-context]
