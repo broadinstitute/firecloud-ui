@@ -96,11 +96,8 @@
                                 (when f (f e))))}])
            (:items props))
          (common/clear-both)]
-        (let [active-item (nth (:items props) (:active-tab-index @state))
-              render (:render active-item)]
-          (if (fn? render)
-            [:div {} (apply render (.-renderArgs this))]
-            [:div {} render]))])
+        (let [active-item (nth (:items props) (:active-tab-index @state))]
+          (:content active-item))])
      :component-did-mount
      (fn [{:keys [props]}]
        (let [index (or (:initial-tab-index props) 0)
@@ -281,7 +278,7 @@
      (swap! state update-in [:crumbs] conj new-crumb))
    :set-crumbs
    (fn [{:keys [state]} crumbs]
-     (assert (every? validate-crumb crumbs))
+     (assert (every? validate-crumb crumbs) "Every crumb must have :text")
      (swap! state assoc :crumbs (vec crumbs)))
    :get-initial-state
    (fn [{:keys [props]}]

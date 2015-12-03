@@ -35,7 +35,7 @@
                        :initial-tab-index (tab-string-to-index tab)
                        :items
                        [{:text SUMMARY
-                         :render
+                         :content
                          (react/create-element
                            [summary-tab/Summary {:key workspace-id :ref SUMMARY
                                                  :workspace-id workspace-id
@@ -44,13 +44,13 @@
                          :onTabSelected #(nav/navigate (:nav-context props) SUMMARY)
                          :onTabRefreshed #(react/call :refresh (@refs SUMMARY))}
                         {:text DATA
-                         :render
+                         :content
                          (react/create-element
                            [data-tab/WorkspaceData {:ref DATA :workspace-id workspace-id}])
                          :onTabSelected #(nav/navigate (:nav-context props) DATA)
                          :onTabRefreshed #(react/call :refresh (@refs DATA))}
                         {:text CONFIGS
-                         :render
+                         :content
                          (react/create-element
                            [method-configs-tab/Page {:ref CONFIGS
                                                      :workspace-id workspace-id
@@ -61,7 +61,7 @@
                                            (nav/navigate (:nav-context props) CONFIGS))
                          :onTabRefreshed #(react/call :refresh (@refs CONFIGS))}
                         {:text MONITOR
-                         :render
+                         :content
                          (react/create-element
                            [monitor-tab/Page {:ref MONITOR
                                               :workspace-id workspace-id
