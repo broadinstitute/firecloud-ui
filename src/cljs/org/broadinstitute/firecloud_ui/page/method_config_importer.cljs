@@ -231,9 +231,8 @@
                    :sort-initial :asc
                    :content-renderer
                    (fn [item]
-                     (style/create-link
-                      #((:on-item-selected props) item)
-                      (style/render-entity (item "namespace") (item "name") (item "snapshotId"))))}
+                     (style/create-link {:text (style/render-entity (item "namespace") (item "name") (item "snapshotId"))
+                                         :onClick #((:on-item-selected props) item)}))}
                   {:header "Synopsis" :starting-width 160}
                   (table/date-column {:header "Created"})
                   {:header "Referenced Method" :starting-width 250
@@ -279,7 +278,8 @@
      [:div {}
       (if-let [item (:selected-item @state)]
         [:div {}
-         (style/create-link #(swap! state dissoc :selected-item) "Methods")
+         (style/create-link {:text "Methods"
+                             :onClick #(swap! state dissoc :selected-item)})
          (icons/font-icon {:style {:verticalAlign "middle" :margin "0 1ex 0 1ex"}} :angle-right)
          [:h2 {:style {:display "inline-block"}} (item "namespace") "/" (item "name")
           [:span {:style {:marginLeft "1ex" :fontWeight "normal"}} "#" (item "snapshotId")]]]

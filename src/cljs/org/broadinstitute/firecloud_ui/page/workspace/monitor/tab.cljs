@@ -26,9 +26,8 @@
       :sort-by #(% "submissionDate")
       :sort-initial :desc
       :content-renderer (fn [submission]
-                          (style/create-link
-                            #(on-submission-clicked (submission "submissionId"))
-                            (render-date submission)))}
+                          (style/create-link {:text (render-date submission)
+                                              :onClick #(on-submission-clicked (submission "submissionId"))}))}
      {:header "Status" :as-text #(% "status") :sort-by :text
       :content-renderer (fn [submission]
                           [:div {}

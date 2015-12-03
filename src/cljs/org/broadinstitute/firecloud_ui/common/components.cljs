@@ -178,9 +178,8 @@
         (react/call :render-details this make-field entity)
         [:div {:style {:paddingTop "0.5em"}}
          [:span {:style {:fontWeight 500 :marginRight "1em"}} (if config? "Referenced Method:" "Payload:")]
-         (style/create-link
-           #(swap! state assoc :payload-expanded (not (:payload-expanded @state)))
-           (if (:payload-expanded @state) "Collapse" "Expand"))]
+         (style/create-link {:text (if (:payload-expanded @state) "Collapse" "Expand")
+                             :onClick #(swap! state assoc :payload-expanded (not (:payload-expanded @state)))})]
         (when (:payload-expanded @state)
           (if config?
             [:div {:style {:margin "0.5em 0 0 1em"}}
@@ -220,8 +219,8 @@
                      [:div {:style {:marginLeft "1em" :whiteSpace "nowrap"}}
                       (str "at " class "." method " (" file ":" num ")")]))
             (:lines props))
-          (style/create-link #(swap! state assoc :expanded? false) "Hide Stack Trace")]
-         [:div {} (style/create-link #(swap! state assoc :expanded? true) "Show Stack Trace")]))})
+          (style/create-link {:text "Hide Stack Trace" :onClick #(swap! state assoc :expanded? false)})]
+         [:div {} (style/create-link {:text "Show Stack Trace" :onClick #(swap! state assoc :expanded? true)})]))})
 
 (react/defc CauseViewer
   {:render
@@ -238,8 +237,8 @@
                       (map (fn [cause] [CauseViewer cause]) causes)])
                (when (seq stack-trace)
                      [StackTraceViewer {:lines stack-trace}])
-               (style/create-link #(swap! state assoc :expanded? false) "Hide Cause")])
-         (style/create-link #(swap! state assoc :expanded? true) "Show Cause")))})
+               (style/create-link {:text "Hide Cause" :onClick #(swap! state assoc :expanded? false)})])
+         (style/create-link {:text "Show Cause" :onClick #(swap! state assoc :expanded? true)})))})
 
 (react/defc ErrorViewer
   {:render
@@ -297,9 +296,9 @@
             (map-indexed
               (fn [index {:keys [text on-click href]}]
                 (if (or on-click href)
-                  (style/create-link2 {:href href :text text
-                                       :onClick #(do (when on-click (on-click))
-                                                   (swap! state update-in [:crumbs] subvec 0 (inc index)))})
+                  (style/create-link {:href href :text text
+                                      :onClick #(do (when on-click (on-click))
+                                                    (swap! state update-in [:crumbs] subvec 0 (inc index)))})
                   text))
               (butlast crumbs)))
           sep

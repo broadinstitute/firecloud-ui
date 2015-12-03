@@ -26,10 +26,10 @@
         [comps/XButton {:dismiss (:dismiss props)}]
         (when choice?
           [:div {:style {:padding "0.5em"}}
-           (style/create-link
-             #(swap! state dissoc :importing-from-file :copying-from-workspace)
-             (icons/font-icon {:style {:fontSize "70%" :marginRight "1em"}} :angle-left)
-             "Back")])
+           (style/create-link {:text [:span {}
+                                      (icons/font-icon {:style {:fontSize "70%" :marginRight "1em"}} :angle-left)
+                                      "Back"]
+                               :onClick #(swap! state dissoc :importing-from-file :copying-from-workspace)})])
         (when (:importing-from-file @state)
           [:div {:style {:padding "1em"}}
            [import-data/Page (select-keys props [:workspace-id :reload-data-tab])]])
