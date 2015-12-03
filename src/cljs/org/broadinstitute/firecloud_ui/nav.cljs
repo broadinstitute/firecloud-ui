@@ -38,6 +38,12 @@
           (apply str (reverse (:consumed nav-context)))
           (interpose "/" (map js/encodeURIComponent segment-names)))))
 
+(defn terminate [nav-context]
+  (assoc nav-context :remaining ""))
+
+(defn terminate-when [pred nav-context]
+  (if pred (terminate nav-context) nav-context))
+
 (defn back [nav-context]
   (set! (-> js/window .-location .-hash)
     (str (apply str (butlast (reverse (:consumed nav-context)))))))

@@ -24,9 +24,8 @@
                        :as-text #(get-in % ["workspace" "name"]) :sort-by :text
                        :content-renderer
                        (fn [ws]
-                         (style/create-link
-                           #((:onWorkspaceSelected props) ws)
-                           (get-in ws ["workspace" "name"])))}
+                         (style/create-link {:text (get-in ws ["workspace" "name"])
+                                             :onClick #((:onWorkspaceSelected props) ws)}))}
                       {:header "Created By" :starting-width 200}
                       (table/date-column {})
                       {:header "Access Level" :starting-width 100}]

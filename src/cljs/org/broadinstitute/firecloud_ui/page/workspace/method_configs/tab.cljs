@@ -63,9 +63,8 @@
             [{:header "Name" :starting-width 240 :as-text #(% "name") :sort-by :text
               :content-renderer
               (fn [config]
-                (style/create-link
-                  #((:on-config-selected props) (config->id config))
-                  (config "name")))}
+                (style/create-link {:text (config "name")
+                                    :onClick #((:on-config-selected props) (config->id config))}))}
              {:header "Root Entity Type" :starting-width 140}
              {:header "Method" :starting-width 800
               :content-renderer (fn [fields] (apply style/render-entity fields))}]
@@ -118,7 +117,8 @@
                     (nav/navigate nav-context (str (:namespace config-id) ":" (:name config-id))))]
        [:div {:style {:padding "1em"}}
         (if selected-method-config-id
-          [MethodConfigEditor {:config-id selected-method-config-id
+          [MethodConfigEditor {:key selected-method-config-id
+                               :config-id selected-method-config-id
                                :workspace-id (:workspace-id props)
                                :on-submission-success (:on-submission-success props)
                                :after-delete #(nav/back nav-context)}]

@@ -26,9 +26,8 @@
       :sort-by #(% "submissionDate")
       :sort-initial :desc
       :content-renderer (fn [submission]
-                          (style/create-link
-                            #(on-submission-clicked (submission "submissionId"))
-                            (render-date submission)))}
+                          (style/create-link {:text (render-date submission)
+                                              :onClick #(on-submission-clicked (submission "submissionId"))}))}
      {:header "Status" :as-text #(% "status") :sort-by :text
       :content-renderer (fn [submission]
                           [:div {}
@@ -57,9 +56,6 @@
    (fn [{:keys [state this]}]
      (swap! state dissoc :server-response)
      (react/call :load-submissions this))
-   :get-initial-state
-   (fn []
-     {:loading? false})
    :render
    (fn [{:keys [props state]}]
      (let [server-response (:server-response @state)
@@ -71,19 +67,16 @@
          :else
          (render-submissions-table submissions (:on-submission-clicked props)))))
    :component-did-mount
-    (fn [{:keys [this]}]
-      (react/call :load-submissions this))
+   (fn [{:keys [this]}]
+     (react/call :load-submissions this))
    :load-submissions
    (fn [{:keys [props state]}]
-     (when-not (:loading? @state)
-       (swap! state assoc :loading true)
-       (endpoints/call-ajax-orch
-         {:endpoint (endpoints/list-submissions (:workspace-id props))
-          :on-done (fn [{:keys [success? status-text get-parsed-response]}]
-                     (swap! state assoc :server-response (if success?
-                                                           {:submissions (get-parsed-response)}
-                                                           {:error-message status-text}))
-                     (swap! state assoc :loading false))})))})
+     (endpoints/call-ajax-orch
+       {:endpoint (endpoints/list-submissions (:workspace-id props))
+        :on-done (fn [{:keys [success? status-text get-parsed-response]}]
+                   (swap! state assoc :server-response (if success?
+                                                         {:submissions (get-parsed-response)}
+                                                         {:error-message status-text})))}))})
 
 
 (react/defc Page
@@ -101,7 +94,9 @@
            selected-submission-id (not-empty (:segment nav-context))]
        [:div {:style {:padding "1em"}}
         (if selected-submission-id
-          [submission-details/Page {:workspace-id workspace-id :submission-id selected-submission-id}]
+          [submission-details/Page {:key selected-submission-id
+                                    :workspace-id workspace-id
+                                    :submission-id selected-submission-id}]
           [SubmissionsList {:ref "submissions-list"
                             :workspace-id workspace-id
                             :on-submission-clicked #(nav/navigate nav-context %)}])]))})
