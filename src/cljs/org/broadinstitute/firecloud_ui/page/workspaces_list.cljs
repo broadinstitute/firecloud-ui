@@ -231,7 +231,7 @@
        [:div {}
         [:div {:style {:padding "2em"}}
          [:span {:style {:fontSize "180%"}}
-          [comps/Breadcrumbs {:ref "breadcrumbs"}]]]
+          [comps/Breadcrumbs {:crumbs (create-breadcrumbs-from-hash (:hash nav-context))}]]]
         (if selected-ws-id
           (render-workspace-details selected-ws-id #(nav/back nav-context) nav-context)
           [WorkspaceList
@@ -239,13 +239,4 @@
             (fn [workspace]
               (nav/navigate nav-context (str (workspace "namespace") ":" (workspace "name")) "Summary")
               (common/scroll-to-top))
-            :nav-context nav-context}])]))
-   :component-did-mount
-   (fn [{:keys [this refs]}]
-     (set! (.-onHashChange this)
-       #(react/call :set-crumbs (@refs "breadcrumbs") (create-breadcrumbs-from-hash (nav/get-hash-value))))
-     ((.-onHashChange this))
-     (.addEventListener js/window "hashchange" (.-onHashChange this)))
-   :component-will-unmount
-   (fn [{:keys [this]}]
-     (.removeEventListener js/window "hashchange" (.-onHashChange this)))})
+            :nav-context nav-context}])]))})
