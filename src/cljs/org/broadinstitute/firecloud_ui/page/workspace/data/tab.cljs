@@ -19,37 +19,45 @@
 
 
 (react/defc DataImporter
-  {:render
-   (fn [{:keys [state props]}]
-     (let [choice? (or (:importing-from-file @state) (:copying-from-workspace @state))]
-       [:div {}
+  {:get-initial-state
+   (fn [{:keys [this]}]
+     {:crumbs [{:text "Choose Source"
+                :onClick #(react/call :back this)}]})
+   :render
+   (fn [{:keys [state props refs]}]
+     (let [from-file (:importing-from-file @state)
+           from-ws (:copying-from-workspace @state)
+           choice? (or from-file from-ws)
+           push-crumb #(swap! state update-in [:crumbs] conj %)
+           pop-crumb #(swap! state update-in [:crumbs] (fn [cs] (vec (butlast cs))))]
+       [:div {:style {:padding "1em"}}
         [comps/XButton {:dismiss (:dismiss props)}]
-        (when choice?
-          [:div {:style {:padding "0.5em"}}
-           (style/create-link {:text [:span {}
-                                      (icons/font-icon {:style {:fontSize "70%" :marginRight "1em"}} :angle-left)
-                                      "Back"]
-                               :onClick #(swap! state dissoc :importing-from-file :copying-from-workspace)})])
-        (when (:importing-from-file @state)
+        [:div {:style {:fontSize "150%"}}
+         [comps/Breadcrumbs {:crumbs (:crumbs @state)}]]
+        (when from-file
           [:div {:style {:padding "1em"}}
-           [import-data/Page (select-keys props [:workspace-id :reload-data-tab])]])
-        (when (:copying-from-workspace @state)
+           [import-data/Page (assoc (select-keys props [:workspace-id :reload-data-tab])
+                               :push-crumb push-crumb :pop-crumb pop-crumb)]])
+        (when from-ws
           [:div {:style {:padding "1em"}}
-           [copy-data-workspaces/Page (select-keys props [:workspace-id :reload-data-tab])]])
+           [copy-data-workspaces/Page (assoc (select-keys props [:workspace-id :reload-data-tab])
+                                        :push-crumb push-crumb :pop-crumb pop-crumb)]])
         (when-not choice?
           (let [style {:width 240 :margin "auto" :textAlign "center" :cursor "pointer"
                        :backgroundColor (:button-blue style/colors)
                        :color "#fff" :padding "1em" :borderRadius 8}]
             [:div {:style {:padding "2em"}}
-             [:div {:onClick #(swap! state assoc :importing-from-file true) :style style}
+             [:div {:style style :onClick #(swap! state assoc :importing-from-file true)}
               "Import from file"]
              [:div {:style {:height "1em"}}]
-             [:div {:onClick #(swap! state assoc :copying-from-workspace true)
-                    :style style}
+             [:div {:style style :onClick #(swap! state assoc :copying-from-workspace true)}
               "Copy from another workspace"]]))]))
    :component-did-mount
    (fn []
-     (common/scroll-to-top 100))})
+     (common/scroll-to-top 100))
+   :back
+   (fn [{:keys [state]}]
+     (swap! state dissoc :importing-from-file :copying-from-workspace))})
 
 
 (react/defc DataDeleter
@@ -115,7 +123,9 @@
     :toolbar (fn [built-in]
                [:div {}
                 [:div {:style {:float "left"}} built-in]
-                (when-let [selected-entity-type (or (:selected-entity-type @state) initial-entity-type (first entity-types))]
+                (when-let [selected-entity-type (or (:selected-entity-type @state)
+                                                    initial-entity-type
+                                                    (first entity-types))]
                   [:a {:style {:textDecoration "none" :float "left" :margin "7px 0 0 1em"}
                        :href (str "/service/api/workspaces/" (:namespace workspace-id) "/"
                                (:name workspace-id) "/entities/" selected-entity-type "/tsv")
@@ -135,8 +145,7 @@
     :attribute-renderer (fn [maybe-uri]
                           (if (string? maybe-uri)
                             (if-let [parsed (common/parse-gcs-uri maybe-uri)]
-                              [dialog/GCSFilePreviewLink (assoc parsed
-                                                           :gcs-uri maybe-uri)]
+                              [dialog/GCSFilePreviewLink (assoc parsed :gcs-uri maybe-uri)]
                               maybe-uri)
                             (table-utils/default-render maybe-uri)))}])
 
@@ -166,7 +175,7 @@
                                                               (react/call :refresh this entity-type))}])}])
         (when (:show-delete? @state)
           [DataDeleter {:dismiss-self #(swap! state dissoc :show-delete?)
-                        :entity-list (:entity-list @state)
+                        :entity-list entity-list
                         :workspace-id workspace-id
                         :reload #(react/call :refresh this)}])
         (cond

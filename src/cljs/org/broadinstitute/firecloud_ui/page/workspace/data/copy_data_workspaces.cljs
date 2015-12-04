@@ -14,7 +14,6 @@
   {:render
    (fn [{:keys [props]}]
      [:div {:style {:margin "1em"}}
-      [:h3 {} "Select a workspace from which to copy entities:"]
       (let [attribute-keys (apply union (map (fn [e] (set (keys (e "attributes")))) (:workspaces props)))]
         [table/Table
          {:empty-message "There are no workspaces to display."
@@ -45,10 +44,7 @@
                                :name (get-in % ["workspace" "name"])}) workspace-list))
 
 (react/defc Page
-  {:did-load-data? ; TODO: Fix this hack. It is necessary for the previous caller to know how to get back to it's original state. Ugh.
-   (fn [{:keys [state]}]
-     (:workspaces @state))
-   :render
+  {:render
    (fn [{:keys [state props]}]
      (cond
        (:selected-from-workspace @state)
@@ -56,17 +52,22 @@
                                  :workspace-id (:workspace-id props)
                                  :selected-from-workspace (:selected-from-workspace @state)
                                  :reload-data-tab (:reload-data-tab props)
-                                 :back #(swap! state dissoc :selected-from-workspace)}]
+                                 :push-crumb (:push-crumb props)
+                                 :pop-crumb (:pop-crumb props)}]
        (:workspaces @state) [WorkspaceList {:workspaces (:workspaces @state)
                                             :onWorkspaceSelected
-                                            (fn [ws] (swap! state assoc :selected-from-workspace ws)) }]
+                                            (fn [ws] (swap! state assoc :selected-from-workspace ws))}]
        (:error-message @state) (style/create-server-error-message (:error-message @state))
        :else [:div {:style {:textAlign "center"}} [comps/Spinner {:text "Loading workspaces..."}]]))
-     :component-did-mount
-     (fn [{:keys [state props]}]
-       (endpoints/call-ajax-orch
-         {:endpoint endpoints/list-workspaces
-          :on-done (fn [{:keys [success? status-text get-parsed-response]}]
-                     (if success?
-                       (swap! state assoc :workspaces (remove-self (get-parsed-response) (:workspace-id props)))
-                       (swap! state assoc :error-message status-text)))}))})
+   :component-did-mount
+   (fn [{:keys [state props]}]
+     ((:push-crumb props) {:text "Choose Workspace" :onClick #(swap! state dissoc :selected-from-workspace)})
+     (endpoints/call-ajax-orch
+       {:endpoint endpoints/list-workspaces
+        :on-done (fn [{:keys [success? status-text get-parsed-response]}]
+                   (if success?
+                     (swap! state assoc :workspaces (remove-self (get-parsed-response) (:workspace-id props)))
+                     (swap! state assoc :error-message status-text)))}))
+   :component-will-unmount
+   (fn [{:keys [props]}]
+     ((:pop-crumb props)))})

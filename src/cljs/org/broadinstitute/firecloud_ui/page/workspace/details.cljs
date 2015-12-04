@@ -30,8 +30,7 @@
            workspace-id (:workspace-id props)
            tab (:segment nav-context)]
        [:div {:style {:margin "0 -1em"}}
-        [comps/TabBar {:ref "tab-bar" :key tab
-                       :initial-tab-index (tab-string-to-index tab)
+        [comps/TabBar {:initial-tab-index (tab-string-to-index tab)
                        :items
                        [{:text SUMMARY
                          :content

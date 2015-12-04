@@ -61,6 +61,9 @@
                          (swap! state assoc :server-error (get-parsed-response))))}))))})
 
 
+(defn- get-namespace-and-name [props]
+  (map #(get-in props [:selected-from-workspace "workspace" %]) ["namespace" "name"]))
+
 (react/defc Page
   {:render
    (fn [{:keys [state props]}]
@@ -69,17 +72,19 @@
                                             :selected-from-workspace (:selected-from-workspace props)
                                             :entity-list (:entity-list @state)
                                             :entity-types (:entity-types @state)
-                                            :reload-data-tab (:reload-data-tab props)
-                                            :back (:back props)}]
+                                            :reload-data-tab (:reload-data-tab props)}]
        (:error-message @state) (style/create-server-error-message (:error-message @state))
        :else [:div {:style {:textAlign "center"}} [comps/Spinner {:text "Loading entities..."}]]))
    :component-did-mount
-   (fn [{:keys [this]}]
+   (fn [{:keys [props this]}]
+     ((:push-crumb props) {:text (->> props get-namespace-and-name (interpose "/") (apply str))})
      (react/call :load-entities this))
+   :component-will-unmount
+   (fn [{:keys [props]}]
+     ((:pop-crumb props)))
    :load-entities
    (fn [{:keys [state props]}]
-     (let [name (get-in props [:selected-from-workspace "workspace" "name"])
-           namespace (get-in props [:selected-from-workspace"workspace" "namespace"])]
+     (let [[namespace name] (get-namespace-and-name props)]
        (endpoints/call-ajax-orch
          {:endpoint (endpoints/get-entities-by-type {:name name :namespace namespace})
           :on-done (fn [{:keys [success? get-parsed-response status-text]}]
