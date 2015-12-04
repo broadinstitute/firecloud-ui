@@ -215,9 +215,8 @@
   (let [segments (split hash #"/")]
     (map-indexed
       (fn [index segment]
-        (case index
-          0 {:text "Workspaces" :href "#workspaces"}
-          1 {:text (replace (js/decodeURIComponent segment) ":" "/")}
+        (if (zero? index)
+          {:text "Workspaces" :href "#workspaces"}
           {:text (replace (js/decodeURIComponent segment) ":" "/")
            :href (str "#" (join "/" (subvec segments 0 (inc index))))}))
       segments)))
@@ -237,6 +236,6 @@
           [WorkspaceList
            {:onWorkspaceSelected
             (fn [workspace]
-              (nav/navigate nav-context (str (workspace "namespace") ":" (workspace "name")) "Summary")
+              (nav/navigate nav-context (str (workspace "namespace") ":" (workspace "name")))
               (common/scroll-to-top))
             :nav-context nav-context}])]))})
