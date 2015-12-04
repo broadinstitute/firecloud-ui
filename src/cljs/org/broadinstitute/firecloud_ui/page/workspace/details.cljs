@@ -18,7 +18,6 @@
 (defn- tab-string-to-index [tab-string]
   ;; for some reason the more compact "case" isn't working with strings :(
   (cond
-    (= tab-string SUMMARY) 0
     (= tab-string DATA) 1
     (= tab-string CONFIGS) 2
     (= tab-string MONITOR) 3
@@ -41,7 +40,7 @@
                                                  :workspace-id workspace-id
                                                  :nav-context nav-context
                                                  :on-delete (:on-delete props)}])
-                         :onTabSelected #(nav/navigate (:nav-context props) SUMMARY)
+                         :onTabSelected #(nav/navigate (:nav-context props))
                          :onTabRefreshed #(react/call :refresh (@refs SUMMARY))}
                         {:text DATA
                          :content
