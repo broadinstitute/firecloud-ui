@@ -267,39 +267,23 @@
               [StackTraceViewer {:lines stack-trace}])]))))})
 
 
-(defn- validate-crumb [crumb]
-  (contains? crumb :text))
-
 (react/defc Breadcrumbs
-  {:push
-   (fn [{:keys [state]} new-crumb]
-     (assert (validate-crumb new-crumb) "Crumb must have :text")
-     (swap! state update-in [:crumbs] conj new-crumb))
-   :set-crumbs
-   (fn [{:keys [state]} crumbs]
-     (assert (every? validate-crumb crumbs) "Every crumb must have :text")
-     (swap! state assoc :crumbs (vec crumbs)))
-   :get-initial-state
+  {:render
    (fn [{:keys [props]}]
-     (assert (every? validate-crumb (:initial-crumbs props))
-       "Each initial crumb must have :text")
-     {:crumbs (vec (:initial-crumbs props))})
-   :render
-   (fn [{:keys [state]}]
-     (let [sep (icons/font-icon {:style {:fontSize "50%" :margin "0 0.5em"}} :angle-right)
-           crumbs (:crumbs @state)]
+     (let [sep [:span {} " " (icons/font-icon {:style {:fontSize "50%"}} :angle-right) " "]
+           crumbs (:crumbs props)]
        (case (count crumbs)
          0 [:div {}]
          1 [:div {} (:text (first crumbs))]
          [:div {}
           (interpose sep
             (map-indexed
-              (fn [index {:keys [text on-click href]}]
-                (if (or on-click href)
-                  (style/create-link {:href href :text text
-                                      :onClick #(do (when on-click (on-click))
-                                                    (swap! state update-in [:crumbs] subvec 0 (inc index)))})
-                  text))
+              (fn [index {:keys [text onClick href] :as link-props}]
+                [:span {:style {:fontSize "60%" :verticalAlign "middle" :whiteSpace "pre"}}
+                 (if (or onClick href)
+                   (style/create-link link-props)
+                   text)])
               (butlast crumbs)))
           sep
-          (:text (last crumbs))])))})
+          [:span {:style {:verticalAlign "middle"}}
+           (:text (last crumbs))]])))})
