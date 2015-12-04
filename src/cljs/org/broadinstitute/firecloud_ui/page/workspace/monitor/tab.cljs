@@ -56,9 +56,6 @@
    (fn [{:keys [state this]}]
      (swap! state dissoc :server-response)
      (react/call :load-submissions this))
-   :get-initial-state
-   (fn []
-     {:loading? false})
    :render
    (fn [{:keys [props state]}]
      (let [server-response (:server-response @state)
@@ -70,19 +67,16 @@
          :else
          (render-submissions-table submissions (:on-submission-clicked props)))))
    :component-did-mount
-    (fn [{:keys [this]}]
-      (react/call :load-submissions this))
+   (fn [{:keys [this]}]
+     (react/call :load-submissions this))
    :load-submissions
    (fn [{:keys [props state]}]
-     (when-not (:loading? @state)
-       (swap! state assoc :loading true)
-       (endpoints/call-ajax-orch
-         {:endpoint (endpoints/list-submissions (:workspace-id props))
-          :on-done (fn [{:keys [success? status-text get-parsed-response]}]
-                     (swap! state assoc :server-response (if success?
-                                                           {:submissions (get-parsed-response)}
-                                                           {:error-message status-text}))
-                     (swap! state assoc :loading false))})))})
+     (endpoints/call-ajax-orch
+       {:endpoint (endpoints/list-submissions (:workspace-id props))
+        :on-done (fn [{:keys [success? status-text get-parsed-response]}]
+                   (swap! state assoc :server-response (if success?
+                                                         {:submissions (get-parsed-response)}
+                                                         {:error-message status-text})))}))})
 
 
 (react/defc Page
