@@ -73,23 +73,25 @@
                                    :backgroundColor "white"}}])])})]
     {:render
      (fn [{:keys [this props]}]
-       [:div {}
-        [:div {:style {:backgroundColor (:background-gray style/colors)
-                       :borderTop (str "1px solid " (:line-gray style/colors))
-                       :borderBottom (str "1px solid " (:line-gray style/colors))
-                       :padding "0 1.5em"}}
-         (map-indexed
-           (fn [i tab]
-             [Tab {:index i :text (:text tab)
-                   :active? (= i (:selected-index props))
-                   :onClick (fn [e]
-                              (let [k (if (= i (:selected-index props)) :onTabRefreshed :onTabSelected)
-                                    f (tab k)]
-                                (when f (f e))))}])
-           (:items props))
-         (common/clear-both)]
-        (let [active-item (nth (:items props) (:selected-index props))]
-          (:content active-item))])}))
+       (let [{:keys [selected-index items]} props]
+         [:div {}
+          [:div {:key selected-index
+                 :style {:backgroundColor (:background-gray style/colors)
+                         :borderTop (str "1px solid " (:line-gray style/colors))
+                         :borderBottom (str "1px solid " (:line-gray style/colors))
+                         :padding "0 1.5em"}}
+           (map-indexed
+             (fn [i tab]
+               [Tab {:index i :text (:text tab)
+                     :active? (= i selected-index)
+                     :onClick (fn [e]
+                                (let [k (if (= i selected-index) :onTabRefreshed :onTabSelected)
+                                      f (tab k)]
+                                  (when f (f e))))}])
+             items)
+           (common/clear-both)]
+          (let [active-item (nth items selected-index)]
+            (:content active-item))]))}))
 
 
 (react/defc XButton
