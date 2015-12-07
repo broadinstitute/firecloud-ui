@@ -13,10 +13,7 @@
 (def ^:private preview-limit 4096)
 
 (react/defc Page
-  {:did-load-data?
-   (fn [{:keys [state]}]
-     (:entities-loaded? @state))
-   :render
+  {:render
    (fn [{:keys [state refs this]}]
      [:div {:style {:textAlign "center"}}
       (when (:loading? @state)
@@ -51,6 +48,12 @@
            [:span {:style {:margin "-0.5em 0 0 1em"}} "Success!"]]
           [:div {:style {:paddingTop "1em"}}
            [comps/ErrorViewer {:error (:error result)}]]))])
+   :component-did-mount
+   (fn [{:keys [props]}]
+     ((:push-crumb props) {:text "File"}))
+   :component-will-unmount
+   (fn [{:keys [props]}]
+     ((:pop-crumb props)))
    :do-upload
    (fn [{:keys [props state]}]
      (swap! state assoc :loading? true)
