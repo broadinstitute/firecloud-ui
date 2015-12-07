@@ -71,15 +71,8 @@
                   (when (:active? props)
                     [:div {:style {:position "absolute" :bottom -1 :left 0 :width "100%" :height 2
                                    :backgroundColor "white"}}])])})]
-    {:set-active-tab
-     (fn [{:keys [this state]} index & render-args]
-       (set! (.-renderArgs this) render-args)
-       (swap! state assoc :active-tab-index index))
-     :get-initial-state
-     (fn [{:keys [props]}]
-       {:active-tab-index (or (:initial-tab-index props) 0)})
-     :render
-     (fn [{:keys [this props state]}]
+    {:render
+     (fn [{:keys [this props]}]
        [:div {}
         [:div {:style {:backgroundColor (:background-gray style/colors)
                        :borderTop (str "1px solid " (:line-gray style/colors))
@@ -88,22 +81,15 @@
          (map-indexed
            (fn [i tab]
              [Tab {:index i :text (:text tab)
-                   :active? (= i (:active-tab-index @state))
+                   :active? (= i (:selected-index props))
                    :onClick (fn [e]
-                              (let [k (if (= i (:active-tab-index @state)) :onTabRefreshed :onTabSelected)
+                              (let [k (if (= i (:selected-index props)) :onTabRefreshed :onTabSelected)
                                     f (tab k)]
-                                (swap! state assoc :active-tab-index i)
                                 (when f (f e))))}])
            (:items props))
          (common/clear-both)]
-        (let [active-item (nth (:items props) (:active-tab-index @state))]
-          (:content active-item))])
-     :component-did-mount
-     (fn [{:keys [props]}]
-       (let [index (or (:initial-tab-index props) 0)
-             onTabSelected (get-in props [:items index :onTabSelected])]
-         (when onTabSelected
-           (onTabSelected))))}))
+        (let [active-item (nth (:items props) (:selected-index props))]
+          (:content active-item))])}))
 
 
 (react/defc XButton
