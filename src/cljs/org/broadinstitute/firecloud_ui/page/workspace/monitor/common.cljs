@@ -6,7 +6,7 @@
 
 
 (defn all-success? [submission]
-  (and (every? #(= "Succeeded" (% "status")) (submission "workflows"))
+  (and (every? #(or (= "Succeeded" (% "status")) (= "Success" (% "status"))) (submission "workflows"))
     (zero? (count (submission "notstarted")))))
 
 
