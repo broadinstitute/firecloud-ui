@@ -71,39 +71,27 @@
                   (when (:active? props)
                     [:div {:style {:position "absolute" :bottom -1 :left 0 :width "100%" :height 2
                                    :backgroundColor "white"}}])])})]
-    {:set-active-tab
-     (fn [{:keys [this state]} index & render-args]
-       (set! (.-renderArgs this) render-args)
-       (swap! state assoc :active-tab-index index))
-     :get-initial-state
-     (fn [{:keys [props]}]
-       {:active-tab-index (or (:initial-tab-index props) 0)})
-     :render
-     (fn [{:keys [this props state]}]
-       [:div {}
-        [:div {:style {:backgroundColor (:background-gray style/colors)
-                       :borderTop (str "1px solid " (:line-gray style/colors))
-                       :borderBottom (str "1px solid " (:line-gray style/colors))
-                       :padding "0 1.5em"}}
-         (map-indexed
-           (fn [i tab]
-             [Tab {:index i :text (:text tab)
-                   :active? (= i (:active-tab-index @state))
-                   :onClick (fn [e]
-                              (let [k (if (= i (:active-tab-index @state)) :onTabRefreshed :onTabSelected)
-                                    f (tab k)]
-                                (swap! state assoc :active-tab-index i)
-                                (when f (f e))))}])
-           (:items props))
-         (common/clear-both)]
-        (let [active-item (nth (:items props) (:active-tab-index @state))]
-          (:content active-item))])
-     :component-did-mount
-     (fn [{:keys [props]}]
-       (let [index (or (:initial-tab-index props) 0)
-             onTabSelected (get-in props [:items index :onTabSelected])]
-         (when onTabSelected
-           (onTabSelected))))}))
+    {:render
+     (fn [{:keys [this props]}]
+       (let [{:keys [selected-index items]} props]
+         [:div {}
+          [:div {:key selected-index
+                 :style {:backgroundColor (:background-gray style/colors)
+                         :borderTop (str "1px solid " (:line-gray style/colors))
+                         :borderBottom (str "1px solid " (:line-gray style/colors))
+                         :padding "0 1.5em"}}
+           (map-indexed
+             (fn [i tab]
+               [Tab {:index i :text (:text tab)
+                     :active? (= i selected-index)
+                     :onClick (fn [e]
+                                (let [k (if (= i selected-index) :onTabRefreshed :onTabSelected)
+                                      f (tab k)]
+                                  (when f (f e))))}])
+             items)
+           (common/clear-both)]
+          (let [active-item (nth items selected-index)]
+            (:content active-item))]))}))
 
 
 (react/defc XButton
