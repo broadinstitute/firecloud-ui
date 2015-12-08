@@ -207,10 +207,14 @@
    (fn []
      (let [hash (nav/get-hash-value)
            at-index (utils/str-index-of hash "?access_token=")
-           [_ token] (clojure.string/split (subs hash at-index) #"=")]
+           [_ token] (clojure.string/split (subs hash at-index) #"=")
+           cookie-token (utils/get-access-token-cookie)]
        (when-not (neg? at-index)
          (.replace (.-location js/window) (str "#"(subs hash 0 at-index))))
-       {:access-token token :root-nav-context (nav/create-nav-context)}))
+       (cond
+         (not (nil? token)) {:access-token token :root-nav-context (nav/create-nav-context)}
+         (not (nil? cookie-token)) {:access-token cookie-token :root-nav-context (nav/create-nav-context)}
+         :else {:root-nav-context (nav/create-nav-context)})))
    :render
    (fn [{:keys [state]}]
      [:div {}
@@ -221,13 +225,15 @@
       (footer)])
    :component-will-mount
    (fn [{:keys [state]}]
-     (reset! utils/access-token (:access-token @state)))
+     (reset! utils/access-token (:access-token @state))
+     (utils/set-access-token-cookie (:access-token @state)))
    :component-did-mount
    (fn [{:keys [this state]}]
      (.addEventListener js/window "hashchange" (partial react/call :handle-hash-change this)))
    :component-will-update
    (fn [{:keys [next-state]}]
-     (reset! utils/access-token (:access-token next-state)))})
+     (reset! utils/access-token (:access-token next-state))
+     (utils/set-access-token-cookie (:access-token next-state)))})
 
 
 (defn- render-without-init [element]
