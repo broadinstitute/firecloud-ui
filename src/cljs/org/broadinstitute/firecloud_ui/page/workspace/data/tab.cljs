@@ -25,39 +25,42 @@
                 :onClick #(react/call :back this)}]})
    :render
    (fn [{:keys [state props refs]}]
-     (let [from-file (:importing-from-file @state)
-           from-ws (:copying-from-workspace @state)
-           choice? (or from-file from-ws)
-           push-crumb #(swap! state update-in [:crumbs] conj %)
-           pop-crumb #(swap! state update-in [:crumbs] (fn [cs] (vec (butlast cs))))]
+     (let [last-crumb-id (:id (second (:crumbs @state)))
+           add-crumb (fn [id text]
+                       (swap!
+                        state update-in [:crumbs] conj
+                        {:id id :text text
+                         :onClick (fn [e] (swap! state update-in [:crumbs] #(vec (take 2 %))))}))]
        [:div {:style {:padding "1em"}}
         [comps/XButton {:dismiss (:dismiss props)}]
         [:div {:style {:fontSize "150%"}}
          [comps/Breadcrumbs {:crumbs (:crumbs @state)}]]
-        (when from-file
+        (case last-crumb-id
+          :file-import
           [:div {:style {:padding "1em"}}
-           [import-data/Page (assoc (select-keys props [:workspace-id :reload-data-tab])
-                               :push-crumb push-crumb :pop-crumb pop-crumb)]])
-        (when from-ws
+           [import-data/Page (select-keys props [:workspace-id :reload-data-tab])]]
+          :workspace-import
           [:div {:style {:padding "1em"}}
-           [copy-data-workspaces/Page (assoc (select-keys props [:workspace-id :reload-data-tab])
-                                        :push-crumb push-crumb :pop-crumb pop-crumb)]])
-        (when-not choice?
+           [copy-data-workspaces/Page
+            (assoc (select-keys props [:workspace-id :reload-data-tab])
+                   :crumbs (drop 2 (:crumbs @state))
+                   :add-crumb #(swap! state update-in [:crumbs] conj %))]]
           (let [style {:width 240 :margin "auto" :textAlign "center" :cursor "pointer"
                        :backgroundColor (:button-blue style/colors)
                        :color "#fff" :padding "1em" :borderRadius 8}]
             [:div {:style {:padding "2em"}}
-             [:div {:style style :onClick #(swap! state assoc :importing-from-file true)}
+             [:div {:style style
+                    :onClick #(add-crumb :file-import "File")}
               "Import from file"]
              [:div {:style {:height "1em"}}]
-             [:div {:style style :onClick #(swap! state assoc :copying-from-workspace true)}
+             [:div {:style style :onClick #(add-crumb :workspace-import "Choose Workspace")}
               "Copy from another workspace"]]))]))
    :component-did-mount
    (fn []
      (common/scroll-to-top 100))
    :back
    (fn [{:keys [state]}]
-     (swap! state dissoc :importing-from-file :copying-from-workspace))})
+     (swap! state update-in [:crumbs] #(vec (take 1 %))))})
 
 
 (react/defc DataDeleter

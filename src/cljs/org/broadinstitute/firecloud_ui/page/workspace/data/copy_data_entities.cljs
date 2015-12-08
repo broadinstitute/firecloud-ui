@@ -77,11 +77,7 @@
        :else [:div {:style {:textAlign "center"}} [comps/Spinner {:text "Loading entities..."}]]))
    :component-did-mount
    (fn [{:keys [props this]}]
-     ((:push-crumb props) {:text (->> props get-namespace-and-name (interpose "/") (apply str))})
      (react/call :load-entities this))
-   :component-will-unmount
-   (fn [{:keys [props]}]
-     ((:pop-crumb props)))
    :load-entities
    (fn [{:keys [state props]}]
      (let [[namespace name] (get-namespace-and-name props)]

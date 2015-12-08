@@ -8,6 +8,7 @@
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.page.workspace.data.copy-data-entities :as copy-data-entities]
+    [org.broadinstitute.firecloud-ui.utils :as utils]
     ))
 
 (react/defc WorkspaceList
@@ -46,28 +47,30 @@
 (react/defc Page
   {:render
    (fn [{:keys [state props]}]
-     (cond
-       (:selected-from-workspace @state)
-       [copy-data-entities/Page {:ref "data-import"
-                                 :workspace-id (:workspace-id props)
-                                 :selected-from-workspace (:selected-from-workspace @state)
-                                 :reload-data-tab (:reload-data-tab props)
-                                 :push-crumb (:push-crumb props)
-                                 :pop-crumb (:pop-crumb props)}]
-       (:workspaces @state) [WorkspaceList {:workspaces (:workspaces @state)
-                                            :onWorkspaceSelected
-                                            (fn [ws] (swap! state assoc :selected-from-workspace ws))}]
-       (:error-message @state) (style/create-server-error-message (:error-message @state))
-       :else [:div {:style {:textAlign "center"}} [comps/Spinner {:text "Loading workspaces..."}]]))
+     (let [selected-workspace (:selected-workspace (first (:crumbs props)))]
+       (cond
+         selected-workspace
+         [copy-data-entities/Page {:ref "data-import"
+                                   :workspace-id (:workspace-id props)
+                                   :selected-from-workspace selected-workspace
+                                   :reload-data-tab (:reload-data-tab props)}]
+         (:workspaces @state)
+         [WorkspaceList {:workspaces (:workspaces @state)
+                         :onWorkspaceSelected
+                         (fn [ws]
+                           ((:add-crumb props)
+                            {:text (str (get-in ws ["workspace" "namespace"]) "/"
+                                        (get-in ws ["workspace" "name"]))
+                             :selected-workspace ws}))}]
+         (:error-message @state) (style/create-server-error-message (:error-message @state))
+         :else [:div {:style {:textAlign "center"}}
+                [comps/Spinner {:text "Loading workspaces..."}]])))
    :component-did-mount
    (fn [{:keys [state props]}]
-     ((:push-crumb props) {:text "Choose Workspace" :onClick #(swap! state dissoc :selected-from-workspace)})
      (endpoints/call-ajax-orch
        {:endpoint endpoints/list-workspaces
         :on-done (fn [{:keys [success? status-text get-parsed-response]}]
                    (if success?
-                     (swap! state assoc :workspaces (remove-self (get-parsed-response) (:workspace-id props)))
-                     (swap! state assoc :error-message status-text)))}))
-   :component-will-unmount
-   (fn [{:keys [props]}]
-     ((:pop-crumb props)))})
+                     (swap! state assoc :workspaces
+                            (remove-self (get-parsed-response) (:workspace-id props)))
+                     (swap! state assoc :error-message status-text)))}))})
