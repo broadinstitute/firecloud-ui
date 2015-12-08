@@ -122,6 +122,14 @@
 (def access-token (atom nil))
 
 
+(defn set-access-token-cookie [token]
+  (.set goog.net.cookies "FCtoken" token 300))
+
+
+(defn get-access-token-cookie []
+  (.get goog.net.cookies "FCtoken"))
+
+
 (defn ajax-orch [path arg-map & {:keys [service-prefix] :or {service-prefix "/service/api"}}]
   (assert (= (subs path 0 1) "/") (str "Path must start with '/': " path))
   (ajax (assoc
