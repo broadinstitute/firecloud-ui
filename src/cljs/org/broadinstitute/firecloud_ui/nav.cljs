@@ -4,6 +4,9 @@
    [org.broadinstitute.firecloud-ui.utils :as utils]))
 
 
+(def ^:private delimiter "/")
+
+
 (defn get-hash-value []
   (let [hash (-> js/window .-location .-hash)]
     (if (= (subs hash 0 1) "#") (subs hash 1) hash)))
@@ -18,25 +21,32 @@
 
 (defn parse-segment
   "Returns a new nav-context with :segment set to the parsed segment."
-  ([nav-context] (parse-segment nav-context "/"))
-  ([nav-context delimeter]
+  ([nav-context]
    (if (clojure.string/blank? (:remaining nav-context))
      (assoc nav-context :segment "")
      (let [remaining (:remaining nav-context)
-           stop-index (utils/str-index-of remaining delimeter)
+           stop-index (utils/str-index-of remaining delimiter)
            stop-index (if (neg? stop-index) (count remaining) stop-index)
            segment (subs remaining 0 stop-index)]
        (assoc nav-context
               :segment (js/decodeURIComponent segment)
-              :consumed (conj (:consumed nav-context) (str segment delimeter))
+              :consumed (conj (:consumed nav-context) segment)
               :remaining (subs remaining (inc stop-index)))))))
+
+
+(defn create-hash [nav-context & segment-names]
+  (apply str (interpose delimiter (concat (reverse (:consumed nav-context))
+                                          (map js/encodeURIComponent segment-names)))))
+
+
+(defn create-href [nav-context & segment-names]
+  (str "#" (apply create-hash nav-context segment-names)))
 
 
 (defn navigate [nav-context & segment-names]
   (set! (-> js/window .-location .-hash)
-        (apply str
-          (apply str (reverse (:consumed nav-context)))
-          (interpose "/" (map js/encodeURIComponent segment-names)))))
+        (apply create-hash nav-context segment-names)))
+
 
 (defn terminate [nav-context]
   (assoc nav-context :remaining ""))
