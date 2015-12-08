@@ -56,17 +56,17 @@
           [:div {:style {:color (:success-green style/colors)}} "Profile saved!"])
         (when (:in-progress? @state)
           [components/Spinner {:text "Saving..."}])
-        (when (:error-message @state)
-          [:div {:style {:color (:exception-red style/colors)}} (:error-message @state)])]))
+        (when (:server-error @state)
+          [components/ErrorViewer {:error (:server-error @state)}])]))
    :save
    (fn [{:keys [this props state refs]}]
-     (swap! state (fn [s] (assoc (dissoc s :error-message) :in-progress? true)))
+     (swap! state (fn [s] (assoc (dissoc s :server-error) :in-progress? true)))
      (let [values (react/call :get-values (@refs "form"))]
        (endpoints/profile-set values
-         (fn [{:keys [success?]}]
+         (fn [{:keys [success? get-parsed-response]}]
            (let [new-state (dissoc @state :in-progress?)]
              (if-not success?
-               (reset! state (assoc new-state :error-message "Profile failed to save."))
+               (reset! state (assoc new-state :server-error (get-parsed-response)))
                (do (reset! state (assoc new-state :done? true))
                  (js/setTimeout (:on-done props) 2000))))))))})
 
