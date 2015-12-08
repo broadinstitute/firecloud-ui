@@ -78,7 +78,7 @@
      [WorkspaceCloner {:dismiss #(swap! state dissoc :cloning?)
                        :on-success (fn [namespace name]
                                      (swap! state dissoc :cloning?)
-                                     (nav/navigate (:nav-context props) (str namespace ":" name)))
+                                     ((:on-clone props) (str namespace ":" name)))
                        :workspace-id (:workspace-id props)
                        :billing-projects billing-projects}])])
 

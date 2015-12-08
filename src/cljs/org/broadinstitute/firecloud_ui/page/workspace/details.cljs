@@ -39,7 +39,8 @@
                            [summary-tab/Summary {:key workspace-id :ref SUMMARY
                                                  :workspace-id workspace-id
                                                  :nav-context nav-context
-                                                 :on-delete (:on-delete props)}])
+                                                 :on-delete (:on-delete props)
+                                                 :on-clone (:on-clone props)}])
                          :onTabSelected #(nav/navigate (:nav-context props))
                          :onTabRefreshed #(react/call :refresh (@refs SUMMARY))}
                         {:text DATA
@@ -69,9 +70,3 @@
                                                    (not= MONITOR tab))
                                            (nav/navigate (:nav-context props) MONITOR))
                          :onTabRefreshed #(react/call :refresh (@refs MONITOR))}]}]]))})
-
-
-(defn render-workspace-details [workspace-id on-delete nav-context]
-  (react/create-element WorkspaceDetails {:nav-context nav-context
-                                          :workspace-id workspace-id
-                                          :on-delete on-delete}))
