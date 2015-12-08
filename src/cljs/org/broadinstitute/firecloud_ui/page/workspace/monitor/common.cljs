@@ -6,7 +6,7 @@
 
 
 (defn all-success? [submission]
-  (and (every? #(= "Succeeded" (% "status")) (submission "workflows"))
+  (and (every? #(or (= "Succeeded" (% "status")) (= "Success" (% "status"))) (submission "workflows"))
     (zero? (count (submission "notstarted")))))
 
 
@@ -16,7 +16,7 @@
 
 
 (defn icon-for-wf-status [status]
-  (cond (= "Succeeded" status)
+  (cond (or (= "Succeeded" status) (= "Success" status))
         (icons/font-icon {:style {:color (:success-green style/colors)
                                   :fontSize 12 :marginRight 4}}
                          :status-done)
