@@ -19,37 +19,48 @@
 
 
 (react/defc DataImporter
-  {:render
-   (fn [{:keys [state props]}]
-     (let [choice? (or (:importing-from-file @state) (:copying-from-workspace @state))]
-       [:div {}
+  {:get-initial-state
+   (fn [{:keys [this]}]
+     {:crumbs [{:text "Choose Source"
+                :onClick #(react/call :back this)}]})
+   :render
+   (fn [{:keys [state props refs]}]
+     (let [last-crumb-id (:id (second (:crumbs @state)))
+           add-crumb (fn [id text]
+                       (swap!
+                        state update-in [:crumbs] conj
+                        {:id id :text text
+                         :onClick (fn [e] (swap! state update-in [:crumbs] #(vec (take 2 %))))}))]
+       [:div {:style {:padding "1em"}}
         [comps/XButton {:dismiss (:dismiss props)}]
-        (when choice?
-          [:div {:style {:padding "0.5em"}}
-           (style/create-link
-             #(swap! state dissoc :importing-from-file :copying-from-workspace)
-             (icons/font-icon {:style {:fontSize "70%" :marginRight "1em"}} :angle-left)
-             "Back")])
-        (when (:importing-from-file @state)
+        [:div {:style {:fontSize "150%"}}
+         [comps/Breadcrumbs {:crumbs (:crumbs @state)}]]
+        (case last-crumb-id
+          :file-import
           [:div {:style {:padding "1em"}}
-           [import-data/Page (select-keys props [:workspace-id :reload-data-tab])]])
-        (when (:copying-from-workspace @state)
+           [import-data/Page (select-keys props [:workspace-id :reload-data-tab])]]
+          :workspace-import
           [:div {:style {:padding "1em"}}
-           [copy-data-workspaces/Page (select-keys props [:workspace-id :reload-data-tab])]])
-        (when-not choice?
+           [copy-data-workspaces/Page
+            (assoc (select-keys props [:workspace-id :reload-data-tab])
+                   :crumbs (drop 2 (:crumbs @state))
+                   :add-crumb #(swap! state update-in [:crumbs] conj %))]]
           (let [style {:width 240 :margin "auto" :textAlign "center" :cursor "pointer"
                        :backgroundColor (:button-blue style/colors)
                        :color "#fff" :padding "1em" :borderRadius 8}]
             [:div {:style {:padding "2em"}}
-             [:div {:onClick #(swap! state assoc :importing-from-file true) :style style}
+             [:div {:style style
+                    :onClick #(add-crumb :file-import "File")}
               "Import from file"]
              [:div {:style {:height "1em"}}]
-             [:div {:onClick #(swap! state assoc :copying-from-workspace true)
-                    :style style}
+             [:div {:style style :onClick #(add-crumb :workspace-import "Choose Workspace")}
               "Copy from another workspace"]]))]))
    :component-did-mount
    (fn []
-     (common/scroll-to-top 100))})
+     (common/scroll-to-top 100))
+   :back
+   (fn [{:keys [state]}]
+     (swap! state update-in [:crumbs] #(vec (take 1 %))))})
 
 
 (react/defc DataDeleter
@@ -71,7 +82,7 @@
                         {:ref "EntitySelector"
                          :left-text "Workspace Entities" :right-text "Will Be Deleted"
                          :entities (:entity-list props)}]
-                       [:div {:style {:text-align "center" :marginTop "1em"}}
+                       [:div {:style {:textAlign "center" :marginTop "1em"}}
                         (style/create-validation-error-message (:validation-errors @state))
                         [comps/ErrorViewer {:error (:server-error @state)}]]])
            :ok-button [comps/Button
@@ -107,97 +118,97 @@
                      (swap! state assoc :server-error (get-parsed-response))))}))})
 
 
-(defn- entity-table [state props]
+(defn- entity-table [state workspace-id locked? entity-list entity-types initial-entity-type]
   [table/EntityTable
-   {:entities (:entity-list @state)
-    :entity-types (:entity-types @state)
-    :initial-entity-type (:initial-entity-type @state)
+   {:entities entity-list
+    :entity-types entity-types
+    :initial-entity-type initial-entity-type
     :toolbar (fn [built-in]
                [:div {}
                 [:div {:style {:float "left"}} built-in]
-                (when-let [selected-entity-type (or (:selected-entity-type @state) (:initial-entity-type @state) (first (:entity-types @state)))]
+                (when-let [selected-entity-type (or (:selected-entity-type @state)
+                                                    initial-entity-type
+                                                    (first entity-types))]
                   [:a {:style {:textDecoration "none" :float "left" :margin "7px 0 0 1em"}
-                       :href (str "/service/api/workspaces/" (:namespace (:workspace-id props)) "/"
-                               (:name (:workspace-id props)) "/entities/" selected-entity-type "/tsv")
+                       :href (str "/service/api/workspaces/" (:namespace workspace-id) "/"
+                               (:name workspace-id) "/entities/" selected-entity-type "/tsv")
                        :onClick (fn [] (utils/set-access-token-cookie @access-token))
                        :target "_blank"}
                    (str "Download '" selected-entity-type "' data")])
                 [:div {:style {:float "right" :paddingRight "2em"}}
                  [comps/Button {:text "Import Data..."
-                                :disabled? (if (:locked? @state) "This workspace is locked")
+                                :disabled? (if locked? "This workspace is locked")
                                 :onClick #(swap! state assoc :show-import? true)}]]
                 [:div {:style {:float "right" :paddingRight "2em"}}
                  [comps/Button {:text "Delete..."
-                                :disabled? (if (:locked? @state) "This workspace is locked")
+                                :disabled? (if locked? "This workspace is locked")
                                 :onClick #(swap! state assoc :show-delete? true)}]]
                 (common/clear-both)])
-    :on-filter-change #(swap! state assoc :selected-entity-type (nth (:entity-types @state) %))
+    :on-filter-change #(swap! state assoc :selected-entity-type (nth entity-types %))
     :attribute-renderer (fn [maybe-uri]
                           (if (string? maybe-uri)
                             (if-let [parsed (common/parse-gcs-uri maybe-uri)]
-                              [dialog/GCSFilePreviewLink (assoc parsed
-                                                           :gcs-uri maybe-uri)]
+                              [dialog/GCSFilePreviewLink (assoc parsed :gcs-uri maybe-uri)]
                               maybe-uri)
                             (table-utils/default-render maybe-uri)))}])
 
 
 (react/defc WorkspaceData
-  {:get-initial-state
-   (fn []
-     {:load-counter 0})
+  {:refresh
+   (fn [{:keys [state this]} & [entity-type]]
+     (swap! state dissoc :server-response)
+     (react/call :load this entity-type))
    :render
    (fn [{:keys [props state refs this]}]
-     [:div {:style {:padding "1em"}}
-      (when (:deleting? @state)
-        [comps/Blocker {:banner "Deleting..."}])
-      (when (:show-import? @state)
-        [dialog/Dialog {:dismiss-self #(swap! state dissoc :show-import?)
-                        :width "80%"
-                        :content
-                        (react/create-element
-                          [DataImporter {:dismiss #(swap! state dissoc :show-import?)
-                                         :workspace-id (:workspace-id props)
-                                         :reload-data-tab (fn [entity-type]
-                                                            (swap! state dissoc :entity-list :entity-types)
-                                                            (react/call :load this entity-type))}])}])
-      (when (:show-delete? @state)
-        [DataDeleter {:dismiss-self #(swap! state dissoc :show-delete?)
-                      :entity-list (:entity-list @state)
-                      :workspace-id (:workspace-id props)
-                      :reload #(react/call :load this)}])
-      (cond
-        (and (:entity-list @state) (zero? (:load-counter @state))) (entity-table state props)
-        (:error @state) (style/create-server-error-message (:error @state))
-        :else [:div {:style {:textAlign "center"}} [comps/Spinner {:text "Loading entities..."}]])])
+     (let [workspace-id (:workspace-id props)
+           server-response (:server-response @state)
+           {:keys [server-error locked? entity-list entity-types initial-entity-type]} server-response]
+       [:div {:style {:padding "1em"}}
+        (when (:deleting? @state)
+          [comps/Blocker {:banner "Deleting..."}])
+        (when (:show-import? @state)
+          [dialog/Dialog {:dismiss-self #(swap! state dissoc :show-import?)
+                          :width "80%"
+                          :content
+                          (react/create-element
+                            [DataImporter {:dismiss #(swap! state dissoc :show-import?)
+                                           :workspace-id workspace-id
+                                           :reload-data-tab (fn [entity-type]
+                                                              (swap! state dissoc :entity-list :entity-types)
+                                                              (react/call :refresh this entity-type))}])}])
+        (when (:show-delete? @state)
+          [DataDeleter {:dismiss-self #(swap! state dissoc :show-delete?)
+                        :entity-list entity-list
+                        :workspace-id workspace-id
+                        :reload #(react/call :refresh this)}])
+        (cond
+          server-error
+          (style/create-server-error-message server-error)
+          (some nil? [locked? entity-list])
+          [:div {:style {:textAlign "center"}} [comps/Spinner {:text "Loading entities..."}]]
+          :else
+          (entity-table state workspace-id locked? entity-list entity-types initial-entity-type))]))
    :component-did-mount
    (fn [{:keys [this]}]
      (react/call :load this))
-   :component-will-receive-props
-   (fn [{:keys [state this]}]
-     (swap! state dissoc :entity-list)
-     (react/call :load this))
    :load
    (fn [{:keys [state props]} & [entity-type]]
-     (when (zero? (:load-counter @state))
-       (swap! state assoc :load-counter 2)
-       (endpoints/call-ajax-orch
-         {:endpoint (endpoints/get-workspace (:workspace-id props))
-          :on-done (fn [{:keys [success? get-parsed-response status-text]}]
-                     (if success?
-                       (swap! state assoc :locked? (get-in (get-parsed-response) ["workspace" "isLocked"]))
-                       (swap! state assoc :error status-text))
-                     (swap! state update-in [:load-counter] dec))})
-       (endpoints/call-ajax-orch
-         {:endpoint (endpoints/get-entities-by-type (:workspace-id props))
-          :on-done (fn [{:keys [success? get-parsed-response status-text]}]
-                     (if success?
-                       (let [entities (get-parsed-response)]
-                         (swap! state assoc
-                           :entity-list entities
-                           :entity-types (distinct (map #(% "entityType") entities))
-                           :initial-entity-type entity-type))
-                       (swap! state assoc :error status-text))
-                     (swap! state update-in [:load-counter] dec))})))})
-
-(defn render [workspace]
-  [WorkspaceData {:workspace-id workspace}])
+     (endpoints/call-ajax-orch
+       {:endpoint (endpoints/get-workspace (:workspace-id props))
+        :on-done (fn [{:keys [success? get-parsed-response status-text]}]
+                   (if success?
+                     (swap! state update-in [:server-response]
+                       assoc :locked? (get-in (get-parsed-response) ["workspace" "isLocked"]))
+                     (swap! state update-in [:server-response]
+                       assoc :server-error status-text)))})
+     (endpoints/call-ajax-orch
+       {:endpoint (endpoints/get-entities-by-type (:workspace-id props))
+        :on-done (fn [{:keys [success? get-parsed-response status-text]}]
+                   (if success?
+                     (let [entities (get-parsed-response)]
+                       (swap! state update-in [:server-response]
+                         assoc :entity-list entities
+                               :entity-types (distinct (map #(% "entityType") entities))
+                               :initial-entity-type entity-type))
+                     (swap! state update-in [:server-response]
+                       assoc :server-error status-text)))}))})

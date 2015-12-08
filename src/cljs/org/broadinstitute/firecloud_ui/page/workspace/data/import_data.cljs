@@ -13,10 +13,7 @@
 (def ^:private preview-limit 4096)
 
 (react/defc Page
-  {:did-load-data?
-   (fn [{:keys [state]}]
-     (:entities-loaded? @state))
-   :render
+  {:render
    (fn [{:keys [state refs this]}]
      [:div {:style {:textAlign "center"}}
       (when (:loading? @state)

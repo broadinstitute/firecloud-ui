@@ -35,8 +35,9 @@
               (when (:creating-wf @state)
                 [comps/Blocker {:banner "Creating Workspace..."}])
               (style/create-form-label "Google Project")
-              (style/create-select {:value (:selected-project @state)
-                                    :onChange #(swap! state assoc :selected-project (-> % .-target .-value))}
+              (style/create-select
+               {:value (:selected-project @state)
+                :onChange #(swap! state assoc :selected-project (-> % .-target .-value))}
                 (:billing-projects props))
               (style/create-form-label "Name")
               [input/TextField {:ref "wsName" :style {:width "100%"}
@@ -77,12 +78,12 @@
   {:render
    (fn [{:keys [props]}]
      (let [status (get-in props [:data :status])]
-       [:div {:style {:backgroundColor (style/color-for-status status)
-                      :margin "2px 0 0 2px" :height "calc(100% - 4px)"
-                      :position "relative" :cursor "pointer"}
-              :onClick #((get-in props [:data :onClick]))}
-        [:div {:style {:backgroundColor "rgba(0,0,0,0.2)"
-                       :position "absolute" :top 0 :right 0 :bottom 0 :left 2}}]
+       [:a {:href (nav/create-href (:nav-context props) (get-in props [:data :href])) 
+            :style {:display "block" :backgroundColor (style/color-for-status status)
+                    :margin "2px 0 0 2px" :height "calc(100% - 4px)"
+                    :position "relative"}}
+        [:span {:style {:display "block" :backgroundColor "rgba(0,0,0,0.2)"
+                        :position "absolute" :top 0 :right 0 :bottom 0 :left 2}}]
         (style/center {}
           (case status
             "Complete" [icons/CompleteIcon]
@@ -93,11 +94,12 @@
 (react/defc WorkspaceCell
   {:render
    (fn [{:keys [props]}]
-     [:div {:style {:backgroundColor (style/color-for-status (get-in props [:data :status]))
-                    :marginTop 2 :height "calc(100% - 4px)"
-                    :color "white" :cursor "pointer"}
-            :onClick #((get-in props [:data :onClick]))}
-      [:div {:style {:padding "1em 0 0 1em" :fontWeight 600}}
+     [:a {:href (nav/create-href (:nav-context props) (get-in props [:data :href]))
+          :style {:display "block"
+                  :backgroundColor (style/color-for-status (get-in props [:data :status]))
+                  :marginTop 2 :height "calc(100% - 4px)"
+                  :color "white" :textDecoration "none"}}
+      [:span {:style {:display "block" :padding "1em 0 0 1em" :fontWeight 600}}
        (get-in props [:data :name])]])})
 
 (defn- get-workspace-name-string [ws]
@@ -150,10 +152,12 @@
          :columns
          [{:sort-by :none :filter-by :none
            :header [:div {:style {:marginLeft -6}} "Status"] :starting-width 60
-           :content-renderer (fn [data] [StatusCell {:data data}])}
+           :content-renderer (fn [data] [StatusCell {:data data
+                                                     :nav-context (:nav-context props)}])}
           {:as-text :name :sort-by :text
            :header "Workspace" :starting-width (* max-workspace-name-length 10)
-           :content-renderer (fn [data] [WorkspaceCell {:data data}])}
+           :content-renderer (fn [data] [WorkspaceCell {:data data
+                                                        :nav-context (:nav-context props)}])}
           {:header "Description" :starting-width (max 200 (* max-description-length 10))
            :content-renderer (fn [description]
                                [:div {:style {:padding "1.1em 0 0 14px"}}
@@ -168,13 +172,12 @@
               (clojure.string/capitalize accessLevel)])}]
          :data (:workspaces props)
          :->row (fn [ws]
-                  [{:status (:status ws)
-                    :onClick #((:onWorkspaceSelected props) (ws "workspace"))}
-                   {:name (get-workspace-name-string ws)
-                    :status (:status ws)
-                    :onClick #((:onWorkspaceSelected props) (ws "workspace"))}
-                   (get-workspace-description ws)
-                   (get-in ws ["accessLevel"])])}]))})
+                  (let [ws-name (get-workspace-name-string ws)
+                        ws-href (let [x (ws "workspace")] (str (x "namespace") ":" (x "name")))]
+                    [{:name ws-name :href ws-href :status (:status ws)}
+                     {:name ws-name :href ws-href :status (:status ws)}
+                     (get-workspace-description ws)
+                     (get-in ws ["accessLevel"])]))}]))})
 
 
 (react/defc WorkspaceList
@@ -187,7 +190,8 @@
          (some nil? [workspaces billing-projects]) [comps/Spinner {:text "Loading workspaces..."}]
          :else
          [:div {:style {:margin "0 2em"}}
-          [WorkspaceTable (assoc props :workspaces workspaces :billing-projects billing-projects)]])))
+          [WorkspaceTable
+           (assoc props :workspaces workspaces :billing-projects billing-projects)]])))
    :component-did-mount
    (fn [{:keys [state]}]
      (endpoints/call-ajax-orch
@@ -215,9 +219,8 @@
   (let [segments (split hash #"/")]
     (map-indexed
       (fn [index segment]
-        (case index
-          0 {:text "Workspaces" :href "#workspaces"}
-          1 {:text (replace (js/decodeURIComponent segment) ":" "/")}
+        (if (zero? index)
+          {:text "Workspaces" :href "#workspaces"}
           {:text (replace (js/decodeURIComponent segment) ":" "/")
            :href (str "#" (join "/" (subvec segments 0 (inc index))))}))
       segments)))
@@ -231,21 +234,7 @@
        [:div {}
         [:div {:style {:padding "2em"}}
          [:span {:style {:fontSize "180%"}}
-          [comps/Breadcrumbs {:ref "breadcrumbs"}]]]
+          [comps/Breadcrumbs {:crumbs (create-breadcrumbs-from-hash (:hash nav-context))}]]]
         (if selected-ws-id
           (render-workspace-details selected-ws-id #(nav/back nav-context) nav-context)
-          [WorkspaceList
-           {:onWorkspaceSelected
-            (fn [workspace]
-              (nav/navigate nav-context (str (workspace "namespace") ":" (workspace "name")))
-              (common/scroll-to-top))
-            :nav-context nav-context}])]))
-   :component-did-mount
-   (fn [{:keys [this refs]}]
-     (set! (.-onHashChange this)
-       #(react/call :set-crumbs (@refs "breadcrumbs") (create-breadcrumbs-from-hash (nav/get-hash-value))))
-     ((.-onHashChange this))
-     (.addEventListener js/window "hashchange" (.-onHashChange this)))
-   :component-will-unmount
-   (fn [{:keys [this]}]
-     (.removeEventListener js/window "hashchange" (.-onHashChange this)))})
+          [WorkspaceList {:nav-context nav-context}])]))})

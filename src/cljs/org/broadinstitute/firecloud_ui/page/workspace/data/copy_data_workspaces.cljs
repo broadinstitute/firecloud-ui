@@ -8,13 +8,13 @@
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.page.workspace.data.copy-data-entities :as copy-data-entities]
+    [org.broadinstitute.firecloud-ui.utils :as utils]
     ))
 
 (react/defc WorkspaceList
   {:render
    (fn [{:keys [props]}]
      [:div {:style {:margin "1em"}}
-      [:h3 {} "Select a workspace from which to copy entities:"]
       (let [attribute-keys (apply union (map (fn [e] (set (keys (e "attributes")))) (:workspaces props)))]
         [table/Table
          {:empty-message "There are no workspaces to display."
@@ -24,9 +24,8 @@
                        :as-text #(get-in % ["workspace" "name"]) :sort-by :text
                        :content-renderer
                        (fn [ws]
-                         (style/create-link
-                           #((:onWorkspaceSelected props) ws)
-                           (get-in ws ["workspace" "name"])))}
+                         (style/create-link {:text (get-in ws ["workspace" "name"])
+                                             :onClick #((:onWorkspaceSelected props) ws)}))}
                       {:header "Created By" :starting-width 200}
                       (table/date-column {})
                       {:header "Access Level" :starting-width 100}]
@@ -46,28 +45,32 @@
                                :name (get-in % ["workspace" "name"])}) workspace-list))
 
 (react/defc Page
-  {:did-load-data? ; TODO: Fix this hack. It is necessary for the previous caller to know how to get back to it's original state. Ugh.
-   (fn [{:keys [state]}]
-     (:workspaces @state))
-   :render
+  {:render
    (fn [{:keys [state props]}]
-     (cond
-       (:selected-from-workspace @state)
-       [copy-data-entities/Page {:ref "data-import"
-                                 :workspace-id (:workspace-id props)
-                                 :selected-from-workspace (:selected-from-workspace @state)
-                                 :reload-data-tab (:reload-data-tab props)
-                                 :back #(swap! state dissoc :selected-from-workspace)}]
-       (:workspaces @state) [WorkspaceList {:workspaces (:workspaces @state)
-                                            :onWorkspaceSelected
-                                            (fn [ws] (swap! state assoc :selected-from-workspace ws)) }]
-       (:error-message @state) (style/create-server-error-message (:error-message @state))
-       :else [:div {:style {:textAlign "center"}} [comps/Spinner {:text "Loading workspaces..."}]]))
-     :component-did-mount
-     (fn [{:keys [state props]}]
-       (endpoints/call-ajax-orch
-         {:endpoint endpoints/list-workspaces
-          :on-done (fn [{:keys [success? status-text get-parsed-response]}]
-                     (if success?
-                       (swap! state assoc :workspaces (remove-self (get-parsed-response) (:workspace-id props)))
-                       (swap! state assoc :error-message status-text)))}))})
+     (let [selected-workspace (:selected-workspace (first (:crumbs props)))]
+       (cond
+         selected-workspace
+         [copy-data-entities/Page {:ref "data-import"
+                                   :workspace-id (:workspace-id props)
+                                   :selected-from-workspace selected-workspace
+                                   :reload-data-tab (:reload-data-tab props)}]
+         (:workspaces @state)
+         [WorkspaceList {:workspaces (:workspaces @state)
+                         :onWorkspaceSelected
+                         (fn [ws]
+                           ((:add-crumb props)
+                            {:text (str (get-in ws ["workspace" "namespace"]) "/"
+                                        (get-in ws ["workspace" "name"]))
+                             :selected-workspace ws}))}]
+         (:error-message @state) (style/create-server-error-message (:error-message @state))
+         :else [:div {:style {:textAlign "center"}}
+                [comps/Spinner {:text "Loading workspaces..."}]])))
+   :component-did-mount
+   (fn [{:keys [state props]}]
+     (endpoints/call-ajax-orch
+       {:endpoint endpoints/list-workspaces
+        :on-done (fn [{:keys [success? status-text get-parsed-response]}]
+                   (if success?
+                     (swap! state assoc :workspaces
+                            (remove-self (get-parsed-response) (:workspace-id props)))
+                     (swap! state assoc :error-message status-text)))}))})

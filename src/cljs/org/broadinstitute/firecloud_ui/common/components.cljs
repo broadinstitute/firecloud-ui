@@ -71,38 +71,26 @@
                   (when (:active? props)
                     [:div {:style {:position "absolute" :bottom -1 :left 0 :width "100%" :height 2
                                    :backgroundColor "white"}}])])})]
-    {:set-active-tab
-     (fn [{:keys [this state]} index & render-args]
-       (set! (.-renderArgs this) render-args)
-       (swap! state assoc :active-tab-index index))
-     :get-initial-state
-     (fn [{:keys [props]}]
-       {:active-tab-index (or (:initial-tab-index props) 0)})
-     :render
-     (fn [{:keys [this props state]}]
-       [:div {}
-        [:div {:style {:backgroundColor (:background-gray style/colors)
-                       :borderTop (str "1px solid " (:line-gray style/colors))
-                       :borderBottom (str "1px solid " (:line-gray style/colors))
-                       :padding "0 1.5em"}}
-         (map-indexed
-           (fn [i tab]
-             [Tab {:index i :text (:text tab)
-                   :active? (= i (:active-tab-index @state))
-                   :onClick (fn [e]
-                              (swap! state assoc :active-tab-index i)
-                              (when-let [f (:onTabSelected tab)] (f e)))}])
-           (:items props))
-         (common/clear-both)]
-        (let [active-item (nth (:items props) (:active-tab-index @state))
-              render (:render active-item)]
-          [:div {} (apply render (.-renderArgs this))])])
-     :component-did-mount
-     (fn [{:keys [props]}]
-       (let [index (or (:initial-tab-index props) 0)
-             onTabSelected (get-in props [:items index :onTabSelected])]
-         (when onTabSelected
-           (onTabSelected))))}))
+    {:render
+     (fn [{:keys [this props]}]
+       (let [{:keys [selected-index items]} props]
+         [:div {}
+          [:div {:style {:backgroundColor (:background-gray style/colors)
+                         :borderTop (str "1px solid " (:line-gray style/colors))
+                         :borderBottom (str "1px solid " (:line-gray style/colors))
+                         :padding "0 1.5em"}}
+           (map-indexed
+             (fn [i tab]
+               [Tab {:index i :text (:text tab)
+                     :active? (= i selected-index)
+                     :onClick (fn [e]
+                                (let [k (if (= i selected-index) :onTabRefreshed :onTabSelected)
+                                      f (tab k)]
+                                  (when f (f e))))}])
+             items)
+           (common/clear-both)]
+          (let [active-item (nth items selected-index)]
+            (:content active-item))]))}))
 
 
 (react/defc XButton
@@ -177,9 +165,8 @@
         (react/call :render-details this make-field entity)
         [:div {:style {:paddingTop "0.5em"}}
          [:span {:style {:fontWeight 500 :marginRight "1em"}} (if config? "Referenced Method:" "Payload:")]
-         (style/create-link
-           #(swap! state assoc :payload-expanded (not (:payload-expanded @state)))
-           (if (:payload-expanded @state) "Collapse" "Expand"))]
+         (style/create-link {:text (if (:payload-expanded @state) "Collapse" "Expand")
+                             :onClick #(swap! state assoc :payload-expanded (not (:payload-expanded @state)))})]
         (when (:payload-expanded @state)
           (if config?
             [:div {:style {:margin "0.5em 0 0 1em"}}
@@ -219,8 +206,8 @@
                      [:div {:style {:marginLeft "1em" :whiteSpace "nowrap"}}
                       (str "at " class "." method " (" file ":" num ")")]))
             (:lines props))
-          (style/create-link #(swap! state assoc :expanded? false) "Hide Stack Trace")]
-         [:div {} (style/create-link #(swap! state assoc :expanded? true) "Show Stack Trace")]))})
+          (style/create-link {:text "Hide Stack Trace" :onClick #(swap! state assoc :expanded? false)})]
+         [:div {} (style/create-link {:text "Show Stack Trace" :onClick #(swap! state assoc :expanded? true)})]))})
 
 (react/defc CauseViewer
   {:render
@@ -237,8 +224,8 @@
                       (map (fn [cause] [CauseViewer cause]) causes)])
                (when (seq stack-trace)
                      [StackTraceViewer {:lines stack-trace}])
-               (style/create-link #(swap! state assoc :expanded? false) "Hide Cause")])
-         (style/create-link #(swap! state assoc :expanded? true) "Show Cause")))})
+               (style/create-link {:text "Hide Cause" :onClick #(swap! state assoc :expanded? false)})])
+         (style/create-link {:text "Show Cause" :onClick #(swap! state assoc :expanded? true)})))})
 
 (react/defc ErrorViewer
   {:render
@@ -267,39 +254,23 @@
               [StackTraceViewer {:lines stack-trace}])]))))})
 
 
-(defn- validate-crumb [crumb]
-  (contains? crumb :text))
-
 (react/defc Breadcrumbs
-  {:push
-   (fn [{:keys [state]} new-crumb]
-     (assert (validate-crumb new-crumb) "Crumb must have :text")
-     (swap! state update-in [:crumbs] conj new-crumb))
-   :set-crumbs
-   (fn [{:keys [state]} crumbs]
-     (assert (every? validate-crumb crumbs))
-     (swap! state assoc :crumbs (vec crumbs)))
-   :get-initial-state
+  {:render
    (fn [{:keys [props]}]
-     (assert (every? validate-crumb (:initial-crumbs props))
-       "Each initial crumb must have :text")
-     {:crumbs (vec (:initial-crumbs props))})
-   :render
-   (fn [{:keys [state]}]
-     (let [sep (icons/font-icon {:style {:fontSize "50%" :margin "0 0.5em"}} :angle-right)
-           crumbs (:crumbs @state)]
+     (let [sep [:span {} " " (icons/font-icon {:style {:fontSize "50%"}} :angle-right) " "]
+           crumbs (:crumbs props)]
        (case (count crumbs)
          0 [:div {}]
          1 [:div {} (:text (first crumbs))]
          [:div {}
           (interpose sep
             (map-indexed
-              (fn [index {:keys [text on-click href]}]
-                (if (or on-click href)
-                  (style/create-link2 {:href href :text text
-                                       :onClick #(do (when on-click (on-click))
-                                                   (swap! state update-in [:crumbs] subvec 0 (inc index)))})
-                  text))
+              (fn [index {:keys [text onClick href] :as link-props}]
+                [:span {:style {:fontSize "60%" :verticalAlign "middle" :whiteSpace "pre"}}
+                 (if (or onClick href)
+                   (style/create-link link-props)
+                   text)])
               (butlast crumbs)))
           sep
-          (:text (last crumbs))])))})
+          [:span {:style {:verticalAlign "middle"}}
+           (:text (last crumbs))]])))})
