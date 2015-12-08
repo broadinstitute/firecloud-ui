@@ -8,6 +8,7 @@
     [org.broadinstitute.firecloud-ui.page.workspace.method-configs.tab :as method-configs-tab]
     [org.broadinstitute.firecloud-ui.page.workspace.monitor.tab :as monitor-tab]
     [org.broadinstitute.firecloud-ui.page.workspace.summary.tab :as summary-tab]
+    [org.broadinstitute.firecloud-ui.utils :as utils]
     ))
 
 

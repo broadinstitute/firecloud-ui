@@ -75,8 +75,7 @@
      (fn [{:keys [this props]}]
        (let [{:keys [selected-index items]} props]
          [:div {}
-          [:div {:key selected-index
-                 :style {:backgroundColor (:background-gray style/colors)
+          [:div {:style {:backgroundColor (:background-gray style/colors)
                          :borderTop (str "1px solid " (:line-gray style/colors))
                          :borderBottom (str "1px solid " (:line-gray style/colors))
                          :padding "0 1.5em"}}
