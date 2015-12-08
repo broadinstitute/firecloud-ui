@@ -142,9 +142,8 @@
          (when owner?
            [:span {}
             " ("
-            (style/create-link
-              #(swap! state assoc :editing-acl? true)
-              "Sharing...")
+            (style/create-link {:text "Sharing..."
+                                :onClick #(swap! state assoc :editing-acl? true)})
             ")"])])
       (style/create-section-header "Description")
       (style/create-paragraph
@@ -180,7 +179,11 @@
 
 
 (react/defc Summary
-  {:render
+  {:refresh
+   (fn [{:keys [state this]}]
+     (swap! state dissoc :server-response :submission-response)
+     (react/call :load-workspace this))
+   :render
    (fn [{:keys [refs state props this]}]
      (let [server-response (:server-response @state)
            {:keys [workspace submissions billing-projects server-error]} server-response]
@@ -228,7 +231,7 @@
                      (swap! state update-in [:server-response]
                        assoc :server-error status-text)))}))
    :lock-or-unlock
-   (fn [{:keys [props state]} locked-now?]
+   (fn [{:keys [props state this]} locked-now?]
      (swap! state assoc :locking? locked-now?)
      (endpoints/call-ajax-orch
        {:endpoint (endpoints/lock-or-unlock-workspace (:workspace-id props) locked-now?)
@@ -237,24 +240,8 @@
                      (if (and (= status-code 409) (not locked-now?))
                        (js/alert "Could not lock workspace, one or more analyses are currently running")
                        (js/alert (str "Error: " status-text))))
-                   (swap! state #(if success?
-                                  (dissoc % :locking? :server-response :submission-response)
-                                  (dissoc % :locking?))))}))
+                   (swap! state dissoc :locking?)
+                   (react/call :refresh this))}))
    :component-did-mount
    (fn [{:keys [this]}]
-     (react/call :load-workspace this))
-   :component-did-update
-   (fn [{:keys [this state]}]
-     (when (nil? (:server-response @state))
-       (react/call :load-workspace this)))
-   :component-will-receive-props
-   (fn [{:keys [props next-props state this]}]
-     (swap! state dissoc :server-response :submission-response)
      (react/call :load-workspace this))})
-
-
-(defn render [workspace-id on-delete nav-context]
-  (react/create-element Summary {:key workspace-id
-                                 :nav-context nav-context
-                                 :workspace-id workspace-id
-                                 :on-delete on-delete}))

@@ -30,9 +30,9 @@
                          :as-text #(get-in % [0 "name"]) :sort-by :text
                          :content-renderer
                          (fn [[entity index]]
-                           (style/create-link
-                             #(swap! state update-in [:selected] (if source? conj disj) index)
-                             (entity "name")))}]
+                           (style/create-link {:text (entity "name")
+                                               :onClick #(swap! state update-in [:selected]
+                                                           (if source? conj disj) index)}))}]
                        (map (fn [k] {:header k :starting-width 100 :show-initial? false
                                      :content-renderer
                                      (fn [attr-value]
