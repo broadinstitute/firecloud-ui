@@ -40,6 +40,11 @@
   (js->clj (js/JSON.parse x)))
 
 
+(defn keywordize-keys [m]
+      (into {} (map (fn [[k v]]
+                        [(keyword k) (if (map? v) (keywordize-keys v) v)])
+                    m)))
+
 (defn local-storage-write
   ([k v] (local-storage-write k v false))
   ([k v stringify?]
@@ -68,6 +73,7 @@
  (fn [k r os ns]
    (local-storage-write ::use-live-data? ns true)))
 
+(def access-token (atom nil))
 
 (defn ajax [arg-map]
   (let [url (:url arg-map)
@@ -88,10 +94,34 @@
           call-on-done (fn []
                          (let [status-code (.-status xhr)
                                get-parsed-response #(parse-json-string (.-responseText xhr))]
-                           ; TODO: Fix this with a real log-out once the login bug is fixed and logout is implemented.
-                           (if (= status-code 401)
-                             (set! (-> js/window .-location) "/")
-                             (on-done {:xhr xhr
+                              (if (= status-code 401)
+                                (let [us-xhr (js/XMLHttpRequest.)]
+                                     (set! (.-withCredentials us-xhr) true)
+                                     (.addEventListener us-xhr "loadend"
+                                       (fn []
+                                           (let [us-status (.-status us-xhr)
+                                                 parsed-us-response (parse-json-string (.-responseText us-xhr))
+                                                 user-info (keywordize-keys parsed-us-response)]
+                                                (cond
+                                                  (and (= us-status 200) (not (:ldap (:enabled (:userInfo user-info)))))
+                                                  (on-done {:xhr us-xhr
+                                                            :status-code 403
+                                                            :success? false
+                                                            :status-text "Access Disabled"
+                                                            :get-parsed-response parsed-us-response})
+                                                  ;TODO: Fix this with a real log-out once the login bug is fixed and logout is implemented.
+                                                  (= us-status 401) (set! (-> js/window .-location) "/")
+                                                  :else (on-done {:xhr us-xhr
+                                                                  :status-code us-status
+                                                                  :success? false
+                                                                  :status-text (.-statusText us-xhr)
+                                                                  :get-parsed-response parsed-us-response})))))
+                                     (.open us-xhr "GET" "/service/register")
+                                     (.setRequestHeader us-xhr "Authorization" (str "Bearer " @access-token))
+                                     (.setRequestHeader us-xhr "Content-Type" "application/json" )
+                                     (.setRequestHeader us-xhr "Accept" "application/json" )
+                                     (.send us-xhr))
+                              (on-done {:us-xhr xhr
                                        :status-code status-code
                                        :success? (and (>= status-code 200)
                                                       (< status-code 300))
@@ -119,15 +149,12 @@
             (.send xhr)))))))
 
 
-(def access-token (atom nil))
-
-
 (defn set-access-token-cookie [token]
-  (.set goog.net.cookies "FCtoken" token 300))
+      (.set goog.net.cookies "FCtoken" token 300))
 
 
 (defn get-access-token-cookie []
-  (.get goog.net.cookies "FCtoken"))
+      (.get goog.net.cookies "FCtoken"))
 
 
 (defn ajax-orch [path arg-map & {:keys [service-prefix] :or {service-prefix "/service/api"}}]
