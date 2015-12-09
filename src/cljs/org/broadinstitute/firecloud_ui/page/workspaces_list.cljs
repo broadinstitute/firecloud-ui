@@ -11,7 +11,7 @@
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.common.table :as table]
     [org.broadinstitute.firecloud-ui.nav :as nav]
-    [org.broadinstitute.firecloud-ui.page.workspace.details :refer [render-workspace-details]]
+    [org.broadinstitute.firecloud-ui.page.workspace.details :refer [WorkspaceDetails]]
     [org.broadinstitute.firecloud-ui.utils :as utils]
     ))
 
@@ -78,7 +78,7 @@
   {:render
    (fn [{:keys [props]}]
      (let [status (get-in props [:data :status])]
-       [:a {:href (nav/create-href (:nav-context props) (get-in props [:data :href])) 
+       [:a {:href (nav/create-href (:nav-context props) (get-in props [:data :href]))
             :style {:display "block" :backgroundColor (style/color-for-status status)
                     :margin "2px 0 0 2px" :height "calc(100% - 4px)"
                     :position "relative"}}
@@ -236,5 +236,8 @@
          [:span {:style {:fontSize "180%"}}
           [comps/Breadcrumbs {:crumbs (create-breadcrumbs-from-hash (:hash nav-context))}]]]
         (if selected-ws-id
-          (render-workspace-details selected-ws-id #(nav/back nav-context) nav-context)
+          [WorkspaceDetails {:workspace-id selected-ws-id
+                             :nav-context nav-context
+                             :on-delete #(nav/back nav-context)
+                             :on-clone #(nav/navigate (:nav-context props) %)}]
           [WorkspaceList {:nav-context nav-context}])]))})
