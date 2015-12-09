@@ -1,4 +1,4 @@
-(ns org.broadinstitute.firecloud-ui.page.method-config-importer
+(ns org.broadinstitute.firecloud-ui.page.method-repo.method-config-importer
   (:require
     [dmohs.react :as react]
     [clojure.string :refer [trim]]
@@ -9,43 +9,31 @@
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.common.table :as table]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
-    [org.broadinstitute.firecloud-ui.page.methods-configs-acl :as mca]
+    [org.broadinstitute.firecloud-ui.page.method-repo.methods-configs-acl :as mca]
+    [org.broadinstitute.firecloud-ui.page.method-repo.redact :as redact]
     [org.broadinstitute.firecloud-ui.utils :as utils]))
 
 
-(defn- create-import-form [state props this entity fields]
+(defn- create-import-form [state props this entity is-config? fields]
   (let [{:keys [workspace-id on-back]} props
         workspaces-list (:workspaces-list @state)]
     [:div {}
      (when (:blocking-text @state)
-       [comps/Blocker {:banner (:blocking-text @state)}]) 
-     (let [config? (contains? entity "method")]
-       [:div {:style {:marginBottom "1em" :width 290}}
-        (when (:show-perms-overlay? @state)
-          [mca/AgoraPermsEditor
-           {:is-conf config?
-            :selected-entity entity
-            :dismiss-self #(swap! state dissoc :show-perms-overlay?)}])
-        [comps/SidebarButton {:style :light :margin :top :color :button-blue
-                              :text "Permissions..." :icon :gear
-                              :onClick #(swap! state assoc :show-perms-overlay? true)}]
-        [comps/SidebarButton
-         {:style :light :margin :top :color :exception-red
-          :text "Redact" :icon :trash-can
-          :onClick
-          #(when (js/confirm "Are you sure?")
-            (let [name (entity "name")
-                  namespace (entity "namespace")
-                  snapshotId (entity "snapshotId")]
-              (swap! state assoc :blocking-text "Redacting...")
-              (endpoints/call-ajax-orch
-                {:endpoint (endpoints/delete-agora-entity
-                             config? namespace name snapshotId)
-                 :on-done (fn [{:keys [success? status-text]}]
-                            (swap! state dissoc :blocking-text)
-                            (if success?
-                              ((:on-delete props))
-                              (js/alert (str "Error: " status-text))))})))}]])
+       [comps/Blocker {:banner (:blocking-text @state)}])
+     [:div {:style {:marginBottom "1em" :width 290}}
+      (when (:show-perms-overlay? @state)
+        [mca/AgoraPermsEditor {:selected-entity entity :is-conf is-config?
+                               :dismiss-self #(swap! state dissoc :show-perms-overlay?)}])
+      (when (:show-redact-dialog? @state)
+        [redact/Redacter {:entity entity :is-config? is-config?
+                          :dismiss-self #(swap! state dissoc :show-redact-dialog?)
+                          :on-delete (:on-delete props)}])
+      [comps/SidebarButton {:style :light :margin :top :color :button-blue
+                            :text "Permissions..." :icon :gear
+                            :onClick #(swap! state assoc :show-perms-overlay? true)}]
+      [comps/SidebarButton {:style :light :margin :top :color :exception-red
+                            :text "Redact" :icon :trash-can
+                            :onClick #(swap! state assoc :show-redact-dialog? true)}]]
      [comps/EntityDetails {:entity entity}]
      [:div {:style {:fontSize "120%" :margin "1.5em 0 0.5em 0"}} "Save as:"]
      (map
@@ -82,7 +70,7 @@
      (cond
        (and (:loaded-config @state)
          (or (:workspace-id props) (:workspaces-list @state)))
-       (create-import-form state props this (:loaded-config @state)
+       (create-import-form state props this (:loaded-config @state) true
          [{:label "Configuration Namespace" :key "namespace"}
           {:label "Configuration Name" :key "name"}])
 
@@ -144,7 +132,7 @@
      (cond
        (and (:template @state) (:loaded-method @state)
          (or (:workspace-id props) (:workspaces-list @state)))
-       (create-import-form state props this (:loaded-method @state)
+       (create-import-form state props this (:loaded-method @state) false
          [{:label "Configuration Namespace" :key "namespace"}
           {:label "Configuration Name" :key "name"}
           {:label "Root Entity Type" :key "rootEntityType"}])

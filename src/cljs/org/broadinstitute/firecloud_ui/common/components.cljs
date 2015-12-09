@@ -231,9 +231,10 @@
   {:render
    (fn [{:keys [props]}]
      (when-let [error (:error props)]
-       (let [[source status-code causes stack-trace message]
-             (map error ["source" "statusCode" "causes" "stackTrace" "message"])]
-         (if-let [expected-msg (get-in props [:expect status-code])]
+       (let [[source status-code code causes stack-trace message]
+             (map error ["source" "statusCode" "code" "causes" "stackTrace" "message"])]
+         (if-let [expected-msg (or (get-in props [:expect status-code])
+                                   (get-in props [:expect code]))]
            [:div {}
             [:span {:style {:paddingRight "1ex"}}
              (icons/font-icon {:style {:color (:exception-red style/colors)}}
