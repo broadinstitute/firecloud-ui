@@ -123,7 +123,7 @@
                                   (common/format-filesize data-size)
                                   [:span {:style {:marginLeft "1em"}}
                                    [:a {:href (common/gcs-object->download-url (:bucket-name props) (:object props))
-                                    :target "_blank" :download (:object props)} "Download"]]
+                                    :target "_blank"} "Open"] [:span {:style {:fontStyle "italic" :color (:text-gray style/colors)}}" (right-click to download)"]]
                                   (when (> data-size 100000000)
                                     [:span {:style {:color (:exception-red style/colors) :marginLeft "2ex"}}
                                      (icons/font-icon {:style {:fontSize "100%" :verticalAlign "middle" :marginRight "1ex"}}
