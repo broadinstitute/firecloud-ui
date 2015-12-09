@@ -56,4 +56,4 @@
 
 (defn back [nav-context]
   (set! (-> js/window .-location .-hash)
-    (str (apply str (butlast (reverse (:consumed nav-context)))))))
+    (apply str (interpose delimiter (butlast (reverse (:consumed nav-context)))))))

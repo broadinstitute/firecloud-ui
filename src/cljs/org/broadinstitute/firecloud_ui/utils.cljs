@@ -121,7 +121,7 @@
                                      (.setRequestHeader us-xhr "Content-Type" "application/json" )
                                      (.setRequestHeader us-xhr "Accept" "application/json" )
                                      (.send us-xhr))
-                              (on-done {:us-xhr xhr
+                              (on-done {:xhr xhr
                                        :status-code status-code
                                        :success? (and (>= status-code 200)
                                                       (< status-code 300))
