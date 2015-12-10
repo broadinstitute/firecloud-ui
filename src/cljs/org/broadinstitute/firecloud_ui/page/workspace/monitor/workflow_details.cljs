@@ -20,7 +20,7 @@
 
 (defn- display-gcs-link [gcs-uri]
   (if-let [parsed (common/parse-gcs-uri gcs-uri)]
-    [dialog/GCSFilePreviewLink (assoc parsed :gcs-uri gcs-uri :style-props {:style {:display "inline"}})]
+    [dialog/GCSFilePreviewLink (assoc parsed :style-props {:style {:display "inline"}})]
     gcs-uri))
 
 

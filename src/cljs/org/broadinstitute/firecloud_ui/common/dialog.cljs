@@ -94,7 +94,7 @@
      [:div (if-let [style-props (:style-props props)] style-props {})
       [:a {:href "javascript:;"
            :onClick #(react/call :show-dialog this)}
-       (:gcs-uri props)]
+       (:object props)]
       (when (or (:show-dialog? @state) (:loading? @state))
         (let [{:keys [data error]} (:response @state)
               data-size (when data (data "size"))
