@@ -109,6 +109,8 @@
                                                             :success? false
                                                             :status-text "Access Disabled"
                                                             :get-parsed-response parsed-us-response})
+                                                  ; 404 means the user is not in Rawls and needs to register
+                                                  (= us-status 404) (set! (-> js/window .-location) "/#profile")
                                                   ;TODO: Fix this with a real log-out once the login bug is fixed and logout is implemented.
                                                   (= us-status 401) (set! (-> js/window .-location) "/")
                                                   :else (on-done {:xhr us-xhr
