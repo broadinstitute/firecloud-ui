@@ -1,6 +1,7 @@
 (ns org.broadinstitute.firecloud-ui.common.table
   (:require
    [clojure.set :refer [union]]
+   [clojure.string :refer [join]]
    [dmohs.react :as react]
    [org.broadinstitute.firecloud-ui.common :as common]
    [org.broadinstitute.firecloud-ui.common.components :as comps]
@@ -273,6 +274,18 @@
      (.removeEventListener js/window "mousemove" (.-onMouseMoveHandler this))
      (.removeEventListener js/window "mouseup" (.-onMouseUpHandler this)))})
 
+;; for attributes referring to a single other entity
+;; e.g. samples referring to participants
+(defn- is-single-ref? [attr-value]
+  (and (map? attr-value)
+       (= (set (keys attr-value)) #{"entityType" "entityName"})))
+
+;; for attributes referring to a list of entities
+;; e.g. sample sets referring to samples
+(defn- is-ref-list? [attr-value]
+  (and (sequential? attr-value)
+       (map? (first attr-value)) ;; we'll just assume homogeneous lists
+       (= (set (keys (first attr-value))) #{"entityType" "entityName"})))
 
 (react/defc EntityTable
   {:get-initial-state
@@ -301,21 +314,18 @@
                         :as-text #(% "name") :sort-by :text
                         :content-renderer (or (:entity-name-renderer props)
                                             (fn [entity] (entity "name")))}]
-                      (map (fn [k] {:header k :starting-width attr-col-width
+                      (map (fn [k] {:header k :starting-width attr-col-width :sort-by :text
+                                    :as-text
+                                    (fn [attr-value]
+                                      (cond
+                                        (is-single-ref? attr-value) (attr-value "entityName")
+                                        (is-ref-list? attr-value) (map #(% "entityName") attr-value)
+                                        :else attr-value))
                                     :content-renderer
                                     (fn [attr-value]
                                       (cond
-                                        ;; for attributes referring to a single other entity
-                                        ;; e.g. samples referring to participants
-                                        (and (map? attr-value)
-                                             (= (set (keys attr-value)) #{"entityType" "entityName"}))
-                                        (attr-value "entityName")
-                                        ;; for attributes referring to a list of entities
-                                        ;; e.g. sample sets referring to samples
-                                        (and (sequential? attr-value)
-                                             (map? (first attr-value)) ;; we'll just assume homogeneous lists
-                                             (= (set (keys (first attr-value))) #{"entityType" "entityName"}))
-                                        (clojure.string/join ", " (map (fn [refr] (refr "entityName")) attr-value))
+                                        (is-single-ref? attr-value) (attr-value "entityName")
+                                        (is-ref-list? attr-value) (join ", " (map #(% "entityName") attr-value))
                                         :else ((:attribute-renderer props) attr-value)))})
                         attribute-keys))
            :filters (mapv (fn [key] {:text key :pred #(= key (% "entityType"))})

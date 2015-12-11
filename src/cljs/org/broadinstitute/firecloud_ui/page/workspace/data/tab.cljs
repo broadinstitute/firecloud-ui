@@ -148,7 +148,7 @@
     :attribute-renderer (fn [maybe-uri]
                           (if (string? maybe-uri)
                             (if-let [parsed (common/parse-gcs-uri maybe-uri)]
-                              [dialog/GCSFilePreviewLink (assoc parsed :gcs-uri maybe-uri)]
+                              [dialog/GCSFilePreviewLink parsed]
                               maybe-uri)
                             (table-utils/default-render maybe-uri)))}])
 
