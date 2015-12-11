@@ -1,4 +1,4 @@
-(ns org.broadinstitute.firecloud-ui.page.methods-configs-acl
+(ns org.broadinstitute.firecloud-ui.page.method-repo.methods-configs-acl
   (:require
    [dmohs.react :as react]
    [clojure.string :refer [trim]]

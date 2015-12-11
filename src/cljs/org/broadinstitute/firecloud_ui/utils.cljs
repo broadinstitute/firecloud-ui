@@ -75,6 +75,11 @@
 
 (def access-token (atom nil))
 
+(defn- adjust-xhr [xhr]
+  (set! (.-status xhr) 403)
+  (set! (.-statusText xhr) "Access Disabled")
+  xhr)
+
 (defn ajax [arg-map]
   (let [url (:url arg-map)
         on-done (:on-done arg-map)
@@ -94,34 +99,34 @@
           call-on-done (fn []
                          (let [status-code (.-status xhr)
                                get-parsed-response #(parse-json-string (.-responseText xhr))]
-                              (if (= status-code 401)
-                                (let [us-xhr (js/XMLHttpRequest.)]
-                                     (set! (.-withCredentials us-xhr) true)
-                                     (.addEventListener us-xhr "loadend"
-                                       (fn []
-                                           (let [us-status (.-status us-xhr)
-                                                 parsed-us-response (parse-json-string (.-responseText us-xhr))
-                                                 user-info (keywordize-keys parsed-us-response)]
-                                                (cond
-                                                  (and (= us-status 200) (not (:ldap (:enabled (:userInfo user-info)))))
-                                                  (on-done {:xhr us-xhr
-                                                            :status-code 403
-                                                            :success? false
-                                                            :status-text "Access Disabled"
-                                                            :get-parsed-response parsed-us-response})
-                                                  ;TODO: Fix this with a real log-out once the login bug is fixed and logout is implemented.
-                                                  (= us-status 401) (set! (-> js/window .-location) "/")
-                                                  :else (on-done {:xhr us-xhr
-                                                                  :status-code us-status
-                                                                  :success? false
-                                                                  :status-text (.-statusText us-xhr)
-                                                                  :get-parsed-response parsed-us-response})))))
-                                     (.open us-xhr "GET" "/service/register")
-                                     (.setRequestHeader us-xhr "Authorization" (str "Bearer " @access-token))
-                                     (.setRequestHeader us-xhr "Content-Type" "application/json" )
-                                     (.setRequestHeader us-xhr "Accept" "application/json" )
-                                     (.send us-xhr))
-                              (on-done {:xhr xhr
+                           (if (= status-code 401)
+                             (let [us-xhr (js/XMLHttpRequest.)]
+                               (set! (.-withCredentials us-xhr) true)
+                               (.addEventListener us-xhr "loadend"
+                                 (fn []
+                                   (let [us-status (.-status us-xhr)
+                                         parsed-us-response (parse-json-string (.-responseText us-xhr))
+                                         user-info (keywordize-keys parsed-us-response)]
+                                     (cond
+                                       (and (= us-status 200) (not (:ldap (:enabled (:userInfo user-info)))))
+                                       (on-done {:xhr (adjust-xhr xhr)
+                                                 :status-code 403
+                                                 :success? false
+                                                 :status-text "Access Disabled"
+                                                 :get-parsed-response get-parsed-response})
+                                       ;TODO: Fix this with a real log-out once the login bug is fixed and logout is implemented.
+                                       (= us-status 401) (set! (-> js/window .-location) "/")
+                                       :else (on-done {:xhr xhr
+                                                       :status-code status-code
+                                                       :success? false
+                                                       :status-text (.-statusText xhr)
+                                                       :get-parsed-response get-parsed-response})))))
+                               (.open us-xhr "GET" "/service/register")
+                               (.setRequestHeader us-xhr "Authorization" (str "Bearer " @access-token))
+                               (.setRequestHeader us-xhr "Content-Type" "application/json" )
+                               (.setRequestHeader us-xhr "Accept" "application/json" )
+                               (.send us-xhr))
+                             (on-done {:xhr xhr
                                        :status-code status-code
                                        :success? (and (>= status-code 200)
                                                       (< status-code 300))
