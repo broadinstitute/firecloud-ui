@@ -75,6 +75,15 @@
 
 (def access-token (atom nil))
 
+(defn set-access-token-cookie [token]
+      (.set goog.net.cookies "FCtoken" token 300))
+
+(defn get-access-token-cookie []
+      (.get goog.net.cookies "FCtoken"))
+
+(defn delete-access-token-cookie []
+      (.remove goog.net.cookies "FCtoken"))
+
 (defn ajax [arg-map]
   (let [url (:url arg-map)
         on-done (:on-done arg-map)
@@ -92,30 +101,37 @@
                     (aset xhr (name k) v))
                   xhr))
           call-on-done (fn []
-                         (let [status-code (.-status xhr)
-                               get-parsed-response #(parse-json-string (.-responseText xhr))]
+                         (let [status-code (.-status xhr)]
                               (if (= status-code 401)
                                 (let [us-xhr (js/XMLHttpRequest.)]
                                      (set! (.-withCredentials us-xhr) true)
                                      (.addEventListener us-xhr "loadend"
                                        (fn []
-                                           (let [us-status (.-status us-xhr)
-                                                 parsed-us-response (parse-json-string (.-responseText us-xhr))
-                                                 user-info (keywordize-keys parsed-us-response)]
+                                           (let [us-status (.-status us-xhr)]
                                                 (cond
-                                                  (and (= us-status 200) (not (:ldap (:enabled (:userInfo user-info)))))
-                                                  (on-done {:xhr us-xhr
-                                                            :status-code 403
-                                                            :success? false
-                                                            :status-text "Access Disabled"
-                                                            :get-parsed-response parsed-us-response})
                                                   ;TODO: Fix this with a real log-out once the login bug is fixed and logout is implemented.
-                                                  (= us-status 401) (set! (-> js/window .-location) "/")
+                                                  (= us-status 401)
+                                                    (do (delete-access-token-cookie)
+                                                        (.reload (.-location js/window)))
+                                                  (= us-status 200)
+                                                    (let [parsed-us-response (parse-json-string (.-responseText us-xhr))
+                                                        user-info (keywordize-keys parsed-us-response)]
+                                                      (when (not (:ldap (:enabled (:userInfo user-info)))))
+                                                        (on-done {:xhr us-xhr
+                                                                  :status-code 403
+                                                                  :success? false
+                                                                  :status-text "Access Disabled"
+                                                                  :get-parsed-response parsed-us-response})
+                                                        :else (on-done {:xhr us-xhr
+                                                                   :status-code us-status
+                                                                   :success? false
+                                                                   :status-text (.-statusText us-xhr)
+                                                                   :get-parsed-response parsed-us-response}))
                                                   :else (on-done {:xhr us-xhr
                                                                   :status-code us-status
                                                                   :success? false
                                                                   :status-text (.-statusText us-xhr)
-                                                                  :get-parsed-response parsed-us-response})))))
+                                                                  :get-parsed-response (parse-json-string (.-responseText us-xhr))})))))
                                      (.open us-xhr "GET" "/service/register")
                                      (.setRequestHeader us-xhr "Authorization" (str "Bearer " @access-token))
                                      (.setRequestHeader us-xhr "Content-Type" "application/json" )
@@ -126,7 +142,7 @@
                                        :success? (and (>= status-code 200)
                                                       (< status-code 300))
                                        :status-text (.-statusText xhr)
-                                       :get-parsed-response get-parsed-response}))))]
+                                       :get-parsed-response #(parse-json-string (.-responseText xhr))}))))]
       (when with-credentials?
         (set! (.-withCredentials xhr) true))
       (if canned-response-params
@@ -147,15 +163,6 @@
           (if data
             (.send xhr data)
             (.send xhr)))))))
-
-
-(defn set-access-token-cookie [token]
-      (.set goog.net.cookies "FCtoken" token 300))
-
-
-(defn get-access-token-cookie []
-      (.get goog.net.cookies "FCtoken"))
-
 
 (defn ajax-orch [path arg-map & {:keys [service-prefix] :or {service-prefix "/service/api"}}]
   (assert (= (subs path 0 1) "/") (str "Path must start with '/': " path))
