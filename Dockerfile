@@ -1,4 +1,4 @@
-FROM broadinstitute/openidc-baseimage:1.8.5
+FROM broadinstitute/openidc-baseimage:dev
 
 # How to install OpenJDK 8 from:
 # http://ubuntuhandbook.org/index.php/2015/01/install-openjdk-8-ubuntu-14-04-12-04-lts/
@@ -35,7 +35,9 @@ COPY src/static src/static
 COPY script/common script/common
 RUN ./script/common/build.sh once
 
-COPY src/docker/run-apache.sh /etc/service/apache2/run
+COPY src/docker/override.sh /etc/apache2/
+COPY src/docker/site*.conf /etc/apache2/sites-available/
+COPY src/docker/locations.conf /etc/apache2/
 
 # openidc-baseimage requires this unused variable.
 ENV CALLBACK_URI=http://example.com/
