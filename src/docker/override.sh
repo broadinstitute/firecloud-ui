@@ -9,4 +9,7 @@ fi
 if [ "${HTTPS_ONLY}" = 'true' ]; then
     a2dissite site
     a2ensite site-https-only
+else
+    a2dissite site-https-only
+    a2ensite site
 fi
