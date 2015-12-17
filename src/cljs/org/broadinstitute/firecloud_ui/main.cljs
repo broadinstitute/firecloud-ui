@@ -207,7 +207,7 @@
    (fn []
      (let [hash (nav/get-hash-value)
            at-index (utils/str-index-of hash "?access_token=")
-           [_ token] (clojure.string/split (subs hash at-index) #"=")
+           [_ token] (when-not (neg? at-index) (clojure.string/split (subs hash at-index) #"="))
            cookie-token (utils/get-access-token-cookie)]
        (when-not (neg? at-index)
          (.replace (.-location js/window) (str "#"(subs hash 0 at-index))))
