@@ -1,4 +1,4 @@
-FROM broadinstitute/openidc-baseimage
+FROM broadinstitute/openidc-baseimage:1.8.5
 
 # How to install OpenJDK 8 from:
 # http://ubuntuhandbook.org/index.php/2015/01/install-openjdk-8-ubuntu-14-04-12-04-lts/
