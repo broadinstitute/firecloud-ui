@@ -7,6 +7,7 @@
 (defproject org.broadinstitute/firecloud-ui "0.0.1"
   :dependencies
   [
+   [binaryage/devtools "0.4.1"]
    ;; React library and cljs bindings for React.
    [dmohs/react "0.2.8"]
    [org.clojure/clojure "1.7.0"]

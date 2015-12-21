@@ -1,5 +1,6 @@
 (ns org.broadinstitute.firecloud-ui.main
   (:require
+   [devtools.core :as devtools]
    [dmohs.react :as react]
    [org.broadinstitute.firecloud-ui.common :as common]
    [org.broadinstitute.firecloud-ui.common.components :as comps]
@@ -264,3 +265,11 @@
 
 (defn dev-reload [figwheel-data]
   (render-without-init @dev-element))
+
+
+(when goog.DEBUG
+  (defonce devtools-installed?
+    (do
+      (devtools/set-pref! :install-sanity-hints true)
+      (devtools/install!)
+      nil)))

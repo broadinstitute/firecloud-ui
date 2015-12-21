@@ -2,11 +2,9 @@
 
 
 (defmacro log-with-transform [transform & args]
-  (let [last-arg-sym (gensym "last-arg")
-        transformed-args (map (fn [x] `(~transform x)))]
-    `(let [~last-arg-sym ~(last args)]
-       (js/console.log ~@(map (fn [x] `(~transform ~x)) (butlast args)) (~transform ~last-arg-sym))
-      ~last-arg-sym)))
+  `(let [last-arg# ~(last args)]
+     (js/console.log ~@(map (fn [x] `(~transform ~x)) (butlast args)) (~transform last-arg#))
+     last-arg#))
 
 
 (defmacro log
@@ -28,3 +26,14 @@
    Logs, pretty printing ClojureScript arguments. Returns last argument."
   [& args]
   `(log-with-transform #(with-out-str (cljs.pprint/pprint %)) ~@args))
+
+
+(defmacro pause
+  "Throws and catches its own exception. Useful with \"Pause On Caught Exception\" option in
+   Chrome."
+  ([expr]
+   (let [result-sym (gensym "result-")]
+     `(let [~result-sym ~expr]
+        (try (throw (js/Error. "pause")) (catch js/Object ~'_))
+        ~result-sym)))
+  ([] `(try (throw (js/Error. "pause")) (catch js/Object ~'_))))

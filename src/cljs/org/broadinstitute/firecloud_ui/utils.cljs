@@ -1,6 +1,6 @@
 (ns org.broadinstitute.firecloud-ui.utils
   (:require-macros
-   [org.broadinstitute.firecloud-ui.utils :refer [log jslog cljslog]])
+   [org.broadinstitute.firecloud-ui.utils :refer [log jslog cljslog pause]])
   (:require
    cljs.pprint
    [clojure.string :refer [join lower-case split]]
