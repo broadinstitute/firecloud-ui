@@ -11,3 +11,5 @@ fi
 
 docker run --rm -it -v "$PWD":/working broadinstitute/dsde-toolbox \
   render-templates.sh local $VAULT_TOKEN
+
+cp src/main/config/dsde-local/config.json target

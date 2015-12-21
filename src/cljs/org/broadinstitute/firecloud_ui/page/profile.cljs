@@ -5,6 +5,7 @@
    [org.broadinstitute.firecloud-ui.common :as common]
    [org.broadinstitute.firecloud-ui.common.components :as components]
    [org.broadinstitute.firecloud-ui.common.style :as style]
+   [org.broadinstitute.firecloud-ui.config :as config]
    [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
    [org.broadinstitute.firecloud-ui.nav :as nav]
    [org.broadinstitute.firecloud-ui.utils :as utils]
@@ -86,7 +87,7 @@
           (let [parsed (get-parsed-response)]
             (swap! state assoc
                    :values (common/parse-profile parsed)
-                   :shibboleth-url-root (or (parsed "shibbolethUrlRoot") "https://shibboleth.dsde-dev.broadinstitute.org")))
+                   :shibboleth-url-root (@config/config "shibbolethUrlRoot")))
           (swap! state assoc :error-message status-text)))))})
 
 
