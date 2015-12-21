@@ -255,7 +255,7 @@
   :component-did-update #(react/call :load-data (:this %))
   :load-data
   (fn [{:keys [this state]}]
-    (when-not (or (:configs @state) (:methods @state))
+    (when-not (some (or @state {}) [:configs :methods :error-message])
       (endpoints/call-ajax-orch
        {:endpoint endpoints/list-configurations
         :on-done
