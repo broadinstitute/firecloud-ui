@@ -7,4 +7,4 @@ mkdir -p target
 # already something using the directory (e.g., a web server serving files from it) it doesn't get
 # screwed up.
 # Also, don't clobber the config directory.
-find target -mindepth 1 -maxdepth 1 -and -not -name 'config' -exec rm -rf '{}' ';'
+find target -mindepth 1 -maxdepth 1 -and -not -name 'config*' -exec rm -rf '{}' ';'
