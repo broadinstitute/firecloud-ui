@@ -47,8 +47,8 @@
            (react/create-element
              [comps/Button {:text "OK" :ref "okButton"
                             :onClick #(react/call :do-clone this)}])}])
-       :get-first-element-dom-node #(.getDOMNode (@refs "project"))
-       :get-last-element-dom-node #(.getDOMNode (@refs "okButton"))}])
+       :get-first-element-dom-node #(@refs "project")
+       :get-last-element-dom-node #(react/find-dom-node (@refs "okButton"))}])
    :component-did-mount
    (fn []
      (common/scroll-to-top 100))

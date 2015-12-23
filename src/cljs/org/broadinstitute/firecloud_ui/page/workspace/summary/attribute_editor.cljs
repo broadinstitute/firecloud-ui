@@ -64,7 +64,7 @@
                                   (swap! state update-in [:attrs-list] conj ["" ""])
                                   (js/setTimeout
                                     #(common/focus-and-select
-                                       (->> @state :attrs-list count dec (str "key_") (@refs) .getDOMNode))
+                                       (->> @state :attrs-list count dec (str "key_") (@refs)))
                                     0))}])
       (when (and (not (:editing? @state))
               (empty? (:attrs-list @state))

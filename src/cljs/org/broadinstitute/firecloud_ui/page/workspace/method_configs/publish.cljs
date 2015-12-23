@@ -53,5 +53,5 @@
       {:width 500
        :dismiss-self (:dismiss-self props)
        :content (render-modal-publish state refs props)
-       :get-first-element-dom-node #(.getDOMNode (@refs "mcNamespace"))
-       :get-last-element-dom-node #(.getDOMNode (@refs "publishButton"))}])})
+       :get-first-element-dom-node #(@refs "mcNamespace")
+       :get-last-element-dom-node #(react/find-dom-node (@refs "publishButton"))}])})

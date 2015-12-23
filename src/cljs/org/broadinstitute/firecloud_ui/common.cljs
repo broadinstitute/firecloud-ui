@@ -16,16 +16,12 @@
                               (when (some #(= keycode (% keymap)) keys)
                                 (func e)))))))
 
-(defn clear! [refs & ids]
-  (doseq [id ids]
-    (set! (.-value (.getDOMNode (@refs id))) "")))
-
 (defn get-text [refs & ids]
   (if (= 1 (count ids))
-    (-> (@refs (first ids)) .getDOMNode .-value clojure.string/trim)
+    (-> (@refs (first ids)) .-value clojure.string/trim)
     (map
       (fn [id]
-        (-> (@refs id) .getDOMNode .-value clojure.string/trim))
+        (-> (@refs id) .-value clojure.string/trim))
       ids)))
 
 (defn clear-both [] [:div {:style {:clear "both"}}])

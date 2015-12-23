@@ -68,7 +68,7 @@
    :component-did-update
    (fn [{:keys [prev-state state refs]}]
      (when (@refs "pending-spinner")
-       (common/scroll-to-center (-> (@refs "pending-spinner") .getDOMNode))))
+       (common/scroll-to-center (-> (@refs "pending-spinner") react/find-dom-node))))
    :component-did-mount
    (fn [{:keys [props state refs]}]
      (let [nav-context (nav/parse-segment (:parent-nav-context props))

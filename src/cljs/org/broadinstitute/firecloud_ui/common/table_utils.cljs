@@ -306,7 +306,7 @@
                                    div-locs (map
                                               (fn [i] {:index i :y
                                                        (-> (@refs (str "div" i))
-                                                         .getDOMNode .getBoundingClientRect .-top)})
+                                                           .getBoundingClientRect .-top)})
                                               (range (inc (count (:columns props)))))
                                    closest-div (apply min-key #(js/Math.abs (- y (:y %))) div-locs)]
                                (when (not= (:index closest-div) (:drop-index @state))
