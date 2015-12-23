@@ -1,4 +1,7 @@
-(ns org.broadinstitute.firecloud-ui.common)
+(ns org.broadinstitute.firecloud-ui.common
+  (:require
+   [org.broadinstitute.firecloud-ui.utils :as utils]
+   ))
 
 
 (def keymap

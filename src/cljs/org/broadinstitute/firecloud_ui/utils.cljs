@@ -1,6 +1,6 @@
 (ns org.broadinstitute.firecloud-ui.utils
   (:require-macros
-   [org.broadinstitute.firecloud-ui.utils :refer [log jslog cljslog]])
+   [org.broadinstitute.firecloud-ui.utils :refer [log jslog cljslog pause]])
   (:require
    cljs.pprint
    [clojure.string :refer [join lower-case split]]
@@ -75,14 +75,16 @@
 
 (def access-token (atom nil))
 
+(defn delete-access-token-cookie []
+  (.remove goog.net.cookies "FCtoken"))
+
 (defn set-access-token-cookie [token]
-      (.set goog.net.cookies "FCtoken" token 300))
+  (if token
+    (.set goog.net.cookies "FCtoken" token)
+    (delete-access-token-cookie)))
 
 (defn get-access-token-cookie []
-      (.get goog.net.cookies "FCtoken"))
-
-(defn delete-access-token-cookie []
-      (.remove goog.net.cookies "FCtoken"))
+  (.get goog.net.cookies "FCtoken"))
 
 (defn ajax [arg-map]
   (let [url (:url arg-map)

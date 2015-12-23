@@ -1,9 +1,11 @@
 (ns org.broadinstitute.firecloud-ui.main
   (:require
+   [devtools.core :as devtools]
    [dmohs.react :as react]
    [org.broadinstitute.firecloud-ui.common :as common]
    [org.broadinstitute.firecloud-ui.common.components :as comps]
    [org.broadinstitute.firecloud-ui.common.style :as style]
+   [org.broadinstitute.firecloud-ui.config :as config]
    [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
    [org.broadinstitute.firecloud-ui.nav :as nav]
    [org.broadinstitute.firecloud-ui.page.method-repo :as method-repo]
@@ -142,17 +144,17 @@
    (fn [{:keys [this state]}]
      (when (nil? (:registration-status @state))
        (endpoints/profile-get
-         (fn [{:keys [success? status-text get-parsed-response]}]
-           (let [parsed-values (common/parse-profile (get-parsed-response))]
-             (cond
-               (and success? (= (:isRegistrationComplete parsed-values) "true"))
-               (swap! state assoc :registration-status :registered :name (:name parsed-values))
-               success? ; partial profile case
-               (swap! state assoc :registration-status :not-registered)
-               :else
-               (do
-                 (set! (.-errorMessage this) status-text)
-                 (swap! state assoc :registration-status :error))))))))})
+        (fn [{:keys [success? status-text get-parsed-response]}]
+          (let [parsed-values (when success? (common/parse-profile (get-parsed-response)))]
+            (cond
+              (and success? (= (:isRegistrationComplete parsed-values) "true"))
+              (swap! state assoc :registration-status :registered :name (:name parsed-values))
+              success? ; partial profile case
+              (swap! state assoc :registration-status :not-registered)
+              :else
+              (do
+                (set! (.-errorMessage this) status-text)
+                (swap! state assoc :registration-status :error))))))))})
 
 
 (react/defc RegisterLink
@@ -207,7 +209,7 @@
    (fn []
      (let [hash (nav/get-hash-value)
            at-index (utils/str-index-of hash "?access_token=")
-           [_ token] (clojure.string/split (subs hash at-index) #"=")
+           [_ token] (when-not (neg? at-index) (clojure.string/split (subs hash at-index) #"="))
            cookie-token (utils/get-access-token-cookie)]
        (when-not (neg? at-index)
          (.replace (.-location js/window) (str "#"(subs hash 0 at-index))))
@@ -219,8 +221,13 @@
    (fn [{:keys [state]}]
      [:div {}
       [:div {:style {:backgroundColor "white" :paddingBottom "2em"}}
-       (if (:access-token @state)
+       (cond
+         (and (:access-token @state) (= (:config-status @state) :success))
          [LoggedIn {:nav-context (:root-nav-context @state)}]
+         (= (:config-status @state) :error)
+         [:div {:style {:color (:exception-red style/colors)}}
+          "Error loading configuration. Please try again later."]
+         :else
          [LoggedOut])]
       (footer)])
    :component-will-mount
@@ -229,7 +236,14 @@
      (utils/set-access-token-cookie (:access-token @state)))
    :component-did-mount
    (fn [{:keys [this state]}]
-     (.addEventListener js/window "hashchange" (partial react/call :handle-hash-change this)))
+     (.addEventListener js/window "hashchange" (partial react/call :handle-hash-change this))
+     (utils/ajax {:url "/config.json"
+                  :on-done (fn [{:keys [success? get-parsed-response]}]
+                             (if success?
+                               (do
+                                 (reset! config/config (get-parsed-response))
+                                 (swap! state assoc :config-status :success))
+                               (swap! state assoc :config-status :error)))}))
    :component-will-update
    (fn [{:keys [next-state]}]
      (reset! utils/access-token (:access-token next-state))
@@ -251,3 +265,11 @@
 
 (defn dev-reload [figwheel-data]
   (render-without-init @dev-element))
+
+
+(when goog.DEBUG
+  (defonce devtools-installed?
+    (do
+      (devtools/set-pref! :install-sanity-hints true)
+      (devtools/install!)
+      nil)))
