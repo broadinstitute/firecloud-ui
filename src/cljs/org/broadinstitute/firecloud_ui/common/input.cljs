@@ -9,7 +9,7 @@
 (react/defc TextField
   {:get-text
    (fn [{:keys [refs]}]
-     (-> (@refs "textfield") .getDOMNode .-value trim))
+     (-> (@refs "textfield") .-value trim))
    :validate
    (fn [{:keys [props state this]}]
      (let [text (react/call :get-text this)

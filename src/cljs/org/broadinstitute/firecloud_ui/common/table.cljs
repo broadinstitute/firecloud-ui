@@ -150,7 +150,7 @@
                                    :onClick #(swap! state assoc :reordering-columns? true)}]
                     (when (:reordering-columns? @state)
                       [dialog/Dialog
-                       {:get-anchor-dom-node #(.getDOMNode (@refs "col-edit-button"))
+                       {:get-anchor-dom-node #(react/find-dom-node (@refs "col-edit-button"))
                         :blocking? false
                         :dismiss-self #(swap! state assoc :reordering-columns? false)
                         :content

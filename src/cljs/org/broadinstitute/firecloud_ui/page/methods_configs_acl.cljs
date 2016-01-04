@@ -129,7 +129,7 @@
                       [:input {:type "checkbox"
                                :ref "publicbox"
                                :onChange (fn []
-                                           (let [checkValue (-> (@refs "publicbox") .getDOMNode .-checked)]
+                                           (let [checkValue (-> (@refs "publicbox") .-checked)]
                                              (swap! state assoc :public-status checkValue)))
                                :checked (:public-status @state)}]
                       "Publicly Readable?"
@@ -196,6 +196,6 @@
    (fn [{:keys [state refs]}]
      (mapv
        (fn [i]
-         {:user (-> (@refs (str "acl-key" i)) .getDOMNode .-value trim)
-          :role (index-to-access-level (int (-> (@refs (str "acl-value" i)) .getDOMNode .-value)))})
+         {:user (-> (@refs (str "acl-key" i)) .-value trim)
+          :role (index-to-access-level (int (-> (@refs (str "acl-value" i)) .-value)))})
        (range (count (:acl-vec @state)))))})

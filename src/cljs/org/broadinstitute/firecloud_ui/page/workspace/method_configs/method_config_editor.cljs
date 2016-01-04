@@ -229,7 +229,7 @@
      (set! (.-onScrollHandler this)
            (fn []
              (when-let [sidebar (@refs "sidebar")]
-               (let [visible (< (.-scrollY js/window) (.-offsetTop (.getDOMNode sidebar))) ]
+               (let [visible (< (.-scrollY js/window) (.-offsetTop sidebar)) ]
                  (when-not (= visible (:sidebar-visible? @state))
                    (swap! state assoc :sidebar-visible? visible))))))
      (.addEventListener js/window "scroll" (.-onScrollHandler this)))
