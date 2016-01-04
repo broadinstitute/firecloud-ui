@@ -70,17 +70,22 @@
      (when (@refs "pending-spinner")
        (common/scroll-to-center (-> (@refs "pending-spinner") react/find-dom-node))))
    :component-did-mount
-   (fn [{:keys [props state refs]}]
+   (fn [{:keys [this props state refs after-update]}]
      (let [nav-context (nav/parse-segment (:parent-nav-context props))
            segment (:segment nav-context)]
-       (when-not (clojure.string/blank? segment)
-         (assert (re-find #"^nih-username-token=" segment) "Unexpected URL hash")
-         (let [[_ token] (clojure.string/split segment #"=")]
-           (swap! state assoc :pending-nih-username-token token)
-           ;; Navigate to the parent (this page without the token), but replace the location so
-           ;; the back button doesn't take the user back to the token.
-           (.replace (.-location js/window)
-                     (str "#" (nav/create-hash (:parent-nav-context props)))))))
+       (if-not (clojure.string/blank? segment)
+         (do
+           (assert (re-find #"^nih-username-token=" segment) "Unexpected URL hash")
+           (let [[_ token] (clojure.string/split segment #"=")]
+             (swap! state assoc :pending-nih-username-token token)
+             (after-update #(react/call :link-nih-account this token))
+             ;; Navigate to the parent (this page without the token), but replace the location so
+             ;; the back button doesn't take the user back to the token.
+             (.replace (.-location js/window)
+                       (str "#" (nav/create-hash (:parent-nav-context props))))))
+         (react/call :load-profile this))))
+   :load-profile
+   (fn [{:keys [state]}]
      (endpoints/profile-get
       (fn [{:keys [success? status-text get-parsed-response]}]
         (if success?
@@ -88,7 +93,17 @@
             (swap! state assoc
                    :values (common/parse-profile parsed)
                    :shibboleth-url-root (@config/config "shibbolethUrlRoot")))
-          (swap! state assoc :error-message status-text)))))})
+          (swap! state assoc :error-message status-text)))))
+   :link-nih-account
+   (fn [{:keys [this state]} token]
+     (endpoints/profile-link-nih-account
+      token
+      (fn [{:keys [success?]}]
+        (if success?
+          (do
+            (swap! state dissoc :values :pending-nih-username-token)
+            (react/call :load-profile this))
+          (swap! state assoc :error-message "Failed to link NIH account")))))})
 
 
 (react/defc Page
