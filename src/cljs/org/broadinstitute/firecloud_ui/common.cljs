@@ -1,5 +1,6 @@
 (ns org.broadinstitute.firecloud-ui.common
   (:require
+   [dmohs.react :as react]
    [org.broadinstitute.firecloud-ui.utils :as utils]
    ))
 
@@ -18,10 +19,10 @@
 
 (defn get-text [refs & ids]
   (if (= 1 (count ids))
-    (-> (@refs (first ids)) .-value clojure.string/trim)
+    (-> (react/find-dom-node (@refs (first ids))) .-value clojure.string/trim)
     (map
       (fn [id]
-        (-> (@refs id) .-value clojure.string/trim))
+        (-> (react/find-dom-node (@refs id)) .-value clojure.string/trim))
       ids)))
 
 (defn clear-both [] [:div {:style {:clear "both"}}])
