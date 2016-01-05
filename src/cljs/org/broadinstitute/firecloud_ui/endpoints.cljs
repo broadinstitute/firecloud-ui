@@ -562,6 +562,16 @@
     :service-prefix "/service/register"))
 
 
+(defn profile-link-nih-account [token on-done]
+  (utils/ajax-orch
+   "/nih/callback"
+   {:method :post
+    :data (utils/->json-string {:jwt token})
+    :on-done on-done
+    :headers {"Content-Type" "application/json"}
+    :canned-response {:status 200 :delay-ms (rand-int 2000)}}))
+
+
 (defn get-billing-projects []
   {:path "/profile/billing"
    :method :get
