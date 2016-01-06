@@ -57,7 +57,7 @@
      (if-let [fails (input/validate refs "name")]
        (swap! state assoc :validation-error fails)
        (let [name (input/get-text refs "name")
-             project (:selected-project @state)]
+             project (nth (:billing-projects props) (int (:selected-project @state)))]
          (swap! state assoc :working? true :validation-error nil :error nil)
          (endpoints/call-ajax-orch
            {:endpoint (endpoints/clone-workspace (:workspace-id props))

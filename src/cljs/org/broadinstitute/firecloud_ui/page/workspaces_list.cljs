@@ -57,7 +57,7 @@
      (swap! state dissoc :server-error :validation-errors)
      (if-let [fails (input/validate refs "wsName")]
        (swap! state assoc :validation-errors fails)
-       (let [project (:selected-project @state)
+       (let [project (nth (:billing-projects props) (int (:selected-project @state)))
              name (input/get-text refs "wsName")
              desc (common/get-text refs "wsDescription")
              attributes (if (clojure.string/blank? desc) {} {:description desc})]
