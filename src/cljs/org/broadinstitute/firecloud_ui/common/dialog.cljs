@@ -112,7 +112,7 @@
                [OKCancelForm
                 {:header "File Details"
                  :content (react/create-element
-                            [:div {}
+                            [:div {:style {:overflow "auto"}}
                              (labeled "Google Bucket" (:bucket-name props))
                              (labeled "Object" (:object props))
                              (when (:loading? @state)
