@@ -126,13 +126,15 @@
                                                 (conj
                                                   (react/call :capture-ui-state this)
                                                   {:user "" :role reader-level}))}]
-                      [:input {:type "checkbox"
-                               :ref "publicbox"
-                               :onChange (fn []
-                                           (let [checkValue (-> (@refs "publicbox") .-checked)]
-                                             (swap! state assoc :public-status checkValue)))
-                               :checked (:public-status @state)}]
-                      "Publicly Readable?"
+                      [:label {:style {:cursor "pointer"}}
+                       [:input {:type "checkbox"
+                                :ref "publicbox"
+                                :style {:marginLeft "2em" :verticalAlign "middle"}
+                                :onChange (fn []
+                                            (let [checkValue (-> (@refs "publicbox") .-checked)]
+                                              (swap! state assoc :public-status checkValue)))
+                                :checked (:public-status @state)}]
+                       [:span {:style {:paddingLeft "6px" :verticalAlign "middle"}} "Publicly Readable?"]]
                       [:div {:style {:textAlign "center" :marginTop "1em"}}
                        [:a {:href "javascript:;"
                             :style {:textDecoration "none"

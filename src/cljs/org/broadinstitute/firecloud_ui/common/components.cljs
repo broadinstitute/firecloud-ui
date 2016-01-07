@@ -231,8 +231,10 @@
   {:render
    (fn [{:keys [props]}]
      (when-let [error (:error props)]
-       (let [[source status-code causes stack-trace message]
-             (map error ["source" "statusCode" "causes" "stackTrace" "message"])]
+       (let [[source status-code code causes stack-trace message]
+             (map error ["source" "statusCode" "code" "causes" "stackTrace" "message"])
+             ;; method redact is responding with "code" for 401.  TODO: standardize and remove this extra logic
+             status-code (or status-code code)]
          (if-let [expected-msg (get-in props [:expect status-code])]
            [:div {}
             [:span {:style {:paddingRight "1ex"}}
