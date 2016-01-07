@@ -131,3 +131,6 @@
   (when-not (clojure.string/blank? segment)
     (let [[ns n] (clojure.string/split segment #":")]
       {:namespace ns :name n})))
+
+(def root-entity-types
+  '("participant","sample","pair","participant_set","sample_set","pair_set"))

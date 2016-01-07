@@ -2,7 +2,7 @@
   (:require
     [dmohs.react :as react]
     [clojure.string :refer [trim]]
-    [org.broadinstitute.firecloud-ui.common :as common :refer [clear-both get-text]]
+    [org.broadinstitute.firecloud-ui.common :as common :refer [clear-both get-text root-entity-types]]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
     [org.broadinstitute.firecloud-ui.common.icons :as icons]
     [org.broadinstitute.firecloud-ui.common.input :as input]
@@ -51,10 +51,15 @@
      (map
        (fn [field]
          [:div {:style {:float "left" :marginRight "0.5em"}}
-          (style/create-form-label (:label field))
-          [input/TextField {:defaultValue (entity (:key field))
-                            :ref (:key field) :placeholder "Required"
-                            :predicates [(input/nonempty "Fields")]}]])
+            (style/create-form-label (:label field))
+              (cond (= (:type field) "identity-select")
+                (style/create-identity-select {:ref (:key field)
+                  :value (entity (:key field))}
+                  root-entity-types)
+                :else
+                  [input/TextField {:defaultValue (entity (:key field))
+                    :ref (:key field) :placeholder "Required"
+                    :predicates [(input/nonempty "Fields")]}])])
        fields)
      (clear-both)
 
@@ -147,14 +152,15 @@
        (create-import-form state props this (:loaded-method @state)
          [{:label "Configuration Namespace" :key "namespace"}
           {:label "Configuration Name" :key "name"}
-          {:label "Root Entity Type" :key "rootEntityType"}])
+          {:label "Root Entity Type" :key "rootEntityType" :type "identity-select" :options root-entity-types}])
 
        (:error @state) (style/create-server-error-message (:error @state))
        :else [comps/Spinner {:text "Creating template..."}]))
    :perform-copy
    (fn [{:keys [props state refs]}]
      (let [{:keys [workspace-id after-import on-back]} props
-           [namespace name rootEntityType & fails] (input/get-and-validate refs "namespace" "name" "rootEntityType")
+           [namespace name & fails] (input/get-and-validate refs "namespace" "name")
+           rootEntityType (.-value (@refs "rootEntityType"))
            workspace-id (or workspace-id
                           {:namespace (get-in (:selected-workspace @state) ["workspace" "namespace"])
                            :name (get-in (:selected-workspace @state) ["workspace" "name"])})]
