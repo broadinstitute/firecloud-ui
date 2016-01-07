@@ -103,48 +103,38 @@
                     (aset xhr (name k) v))
                   xhr))
           call-on-done (fn []
-                         (let [status-code (.-status xhr)]
-                              (if (= status-code 401)
-                                (let [us-xhr (js/XMLHttpRequest.)]
-                                     (set! (.-withCredentials us-xhr) true)
-                                     (.addEventListener us-xhr "loadend"
-                                       (fn []
-                                           (let [us-status (.-status us-xhr)]
-                                                (cond
-                                                  ;TODO: Fix this with a real log-out once the login bug is fixed and logout is implemented.
-                                                  (= us-status 401)
-                                                    (do (delete-access-token-cookie)
-                                                        (.reload (.-location js/window)))
-                                                  (= us-status 200)
-                                                    (let [parsed-us-response (parse-json-string (.-responseText us-xhr))
-                                                        user-info (keywordize-keys parsed-us-response)]
-                                                      (when (not (:ldap (:enabled (:userInfo user-info)))))
-                                                        (on-done {:xhr us-xhr
-                                                                  :status-code 403
-                                                                  :success? false
-                                                                  :status-text "Access Disabled"
-                                                                  :get-parsed-response parsed-us-response})
-                                                        :else (on-done {:xhr us-xhr
-                                                                   :status-code us-status
-                                                                   :success? false
-                                                                   :status-text (.-statusText us-xhr)
-                                                                   :get-parsed-response parsed-us-response}))
-                                                  :else (on-done {:xhr us-xhr
-                                                                  :status-code us-status
-                                                                  :success? false
-                                                                  :status-text (.-statusText us-xhr)
-                                                                  :get-parsed-response (parse-json-string (.-responseText us-xhr))})))))
-                                     (.open us-xhr "GET" "/service/register")
-                                     (.setRequestHeader us-xhr "Authorization" (str "Bearer " @access-token))
-                                     (.setRequestHeader us-xhr "Content-Type" "application/json" )
-                                     (.setRequestHeader us-xhr "Accept" "application/json" )
-                                     (.send us-xhr))
-                              (on-done {:xhr xhr
-                                       :status-code status-code
-                                       :success? (and (>= status-code 200)
-                                                      (< status-code 300))
-                                       :status-text (.-statusText xhr)
-                                       :get-parsed-response #(parse-json-string (.-responseText xhr))}))))]
+                         (let [status-code (.-status xhr)
+                               orig-response {:xhr xhr
+                                              :status-code status-code
+                                              :success? (< 199 status-code 300)
+                                              :status-text (.-statusText xhr)
+                                              :get-parsed-response #(parse-json-string (.-responseText xhr))}]
+                           (if (= status-code 401)
+                             (let [us-xhr (js/XMLHttpRequest.)]
+                               (set! (.-withCredentials us-xhr) true)
+                               (.addEventListener us-xhr "loadend"
+                                 (fn []
+                                   (let [us-status (.-status us-xhr)
+                                         parsed-us-response (parse-json-string (.-responseText us-xhr))
+                                         keywordized-us-response (keywordize-keys parsed-us-response)]
+                                     (cond
+                                       ;TODO: Fix this with a real log-out once the login bug is fixed and logout is implemented.
+                                       (= us-status 401) (do (delete-access-token-cookie)
+                                                           (.reload (.-location js/window)))
+                                       (= us-status 403)
+                                       (on-done {:xhr us-xhr
+                                                 :status-code us-status
+                                                 :success? false
+                                                 :status-text "FireCloud user not activated"
+                                                 :get-parsed-response parsed-us-response})
+                                       (= us-status 404) (.replace (.-location js/window) "#profile")
+                                       :else (on-done orig-response)))))
+                               (.open us-xhr "GET" "/service/me")
+                               (.setRequestHeader us-xhr "Authorization" (str "Bearer " @access-token))
+                               (.setRequestHeader us-xhr "Content-Type" "application/json")
+                               (.setRequestHeader us-xhr "Accept" "application/json")
+                               (.send us-xhr))
+                             (on-done orig-response))))]
       (when with-credentials?
         (set! (.-withCredentials xhr) true))
       (if canned-response-params
