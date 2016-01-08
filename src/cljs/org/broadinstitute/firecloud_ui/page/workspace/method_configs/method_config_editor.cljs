@@ -162,9 +162,9 @@
      (create-section
        (if editing?
          (style/create-identity-select {:ref "rootentitytype"
-                               :defaultValue (config "rootEntityType")
-                               :style {:width "500px"}}
-                              root-entity-types)
+                                        :defaultValue (config "rootEntityType")
+                                        :style {:width "500px"}}
+                                       root-entity-types)
          [:div {:style {:padding "0.5em 0 1em 0"}} (config "rootEntityType")]))
      (create-section-header "Inputs")
      (input-output-list config "inputs" invalid-inputs editing?)

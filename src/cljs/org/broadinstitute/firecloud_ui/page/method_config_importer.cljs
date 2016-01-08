@@ -54,12 +54,12 @@
             (style/create-form-label (:label field))
               (cond (= (:type field) "identity-select")
                 (style/create-identity-select {:ref (:key field)
-                  :value (entity (:key field))}
-                  root-entity-types)
+                                               :value (entity (:key field))}
+                                              (:options field))
                 :else
                   [input/TextField {:defaultValue (entity (:key field))
-                    :ref (:key field) :placeholder "Required"
-                    :predicates [(input/nonempty "Fields")]}])])
+                                    :ref (:key field) :placeholder "Required"
+                                    :predicates [(input/nonempty "Fields")]}])])
        fields)
      (clear-both)
 

@@ -133,4 +133,4 @@
       {:namespace ns :name n})))
 
 (def root-entity-types
-  '("participant","sample","pair","participant_set","sample_set","pair_set"))
+  ["participant" "sample" "pair" "participant_set" "sample_set" "pair_set"])
