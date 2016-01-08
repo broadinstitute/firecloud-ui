@@ -12,6 +12,13 @@
    ))
 
 
+(defn get-nih-link-href []
+  (str (get @config/config "shibbolethUrlRoot")
+       "/link-nih-account?redirect-url="
+       (js/encodeURIComponent
+        (str (-> js/window .-location .-href) "/nih-username-token={token}"))))
+
+
 (react/defc Form
   {:get-values
    (fn [{:keys [state]}]
@@ -49,11 +56,7 @@
             (:pending-nih-username-token @state)
             [components/Spinner {:ref "pending-spinner" :text "Creating NIH account link..."}]
             (nil? linkedNihUsername)
-            [:a {:href (str (:shibboleth-url-root @state)
-                            "/link-nih-account?redirect-url="
-                            (js/encodeURIComponent
-                             (str (-> js/window .-location .-href)
-                                  "/nih-username-token={token}")))}
+            [:a {:href (get-nih-link-href)}
              "Log-In to NIH to link your account"]
             :else
             linkedNihUsername)]]
@@ -90,9 +93,7 @@
       (fn [{:keys [success? status-text get-parsed-response]}]
         (if success?
           (let [parsed (get-parsed-response)]
-            (swap! state assoc
-                   :values (common/parse-profile parsed)
-                   :shibboleth-url-root (@config/config "shibbolethUrlRoot")))
+            (swap! state assoc :values (common/parse-profile parsed)))
           (swap! state assoc :error-message status-text)))))
    :link-nih-account
    (fn [{:keys [this state]} token]

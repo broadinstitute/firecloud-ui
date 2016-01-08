@@ -74,13 +74,16 @@
                          (swap! state assoc :server-error (get-parsed-response))))}))))})
 
 
+(def row-height-px 56)
+
+
 (react/defc StatusCell
   {:render
    (fn [{:keys [props]}]
      (let [status (get-in props [:data :status])]
        [:a {:href (nav/create-href (:nav-context props) (get-in props [:data :href]))
             :style {:display "block" :backgroundColor (style/color-for-status status)
-                    :margin "2px 0 0 2px" :height "calc(100% - 4px)"
+                    :margin "2px 0 0 2px" :height (- row-height-px 4)
                     :position "relative"}}
         [:span {:style {:display "block" :backgroundColor "rgba(0,0,0,0.2)"
                         :position "absolute" :top 0 :right 0 :bottom 0 :left 2}}]
@@ -97,7 +100,7 @@
      [:a {:href (nav/create-href (:nav-context props) (get-in props [:data :href]))
           :style {:display "block"
                   :backgroundColor (style/color-for-status (get-in props [:data :status]))
-                  :marginTop 2 :height "calc(100% - 4px)"
+                  :marginTop 2 :height (- row-height-px 4)
                   :color "white" :textDecoration "none"}}
       [:span {:style {:display "block" :padding "1em 0 0 1em" :fontWeight 600}}
        (get-in props [:data :name])]])})
@@ -130,7 +133,7 @@
          :body-style {:fontSize nil :fontWeight nil
                       :borderLeft border-style :borderRight border-style
                       :borderBottom border-style :borderRadius 4}
-         :row-style {:height 56 :borderTop border-style :overflow "hidden"}
+         :row-style {:height row-height-px :borderTop border-style :overflow "hidden"}
          :cell-content-style {:padding nil}
          :toolbar (fn [built-in]
                     [:div {}

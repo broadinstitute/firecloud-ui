@@ -1,5 +1,6 @@
 (ns org.broadinstitute.firecloud-ui.page.workspace.summary.attribute-editor
   (:require
+    clojure.set
     [dmohs.react :as react]
     [org.broadinstitute.firecloud-ui.common :as common]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
