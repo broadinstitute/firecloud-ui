@@ -272,5 +272,5 @@
                    text)])
               (butlast crumbs)))
           sep
-          [:span {:style {:verticalAlign "middle"}}
+          [:span {:style {:fontSize "60%" :verticalAlign "middle"}}
            (:text (last crumbs))]])))})
