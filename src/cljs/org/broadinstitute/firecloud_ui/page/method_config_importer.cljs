@@ -4,6 +4,7 @@
     [clojure.string :refer [trim]]
     [org.broadinstitute.firecloud-ui.common :as common :refer [clear-both get-text]]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
+    [org.broadinstitute.firecloud-ui.common.dialog :as dialog]
     [org.broadinstitute.firecloud-ui.common.icons :as icons]
     [org.broadinstitute.firecloud-ui.common.input :as input]
     [org.broadinstitute.firecloud-ui.common.style :as style]
@@ -13,39 +14,60 @@
     [org.broadinstitute.firecloud-ui.utils :as utils]))
 
 
-(defn- create-import-form [state props this entity fields]
+(react/defc Redactor
+  {:render
+   (fn [{:keys [props state this]}]
+     [dialog/Dialog
+      {:width 500
+       :dismiss-self (:dismiss props)
+       :content
+       (react/create-element
+         [dialog/OKCancelForm
+          {:dismiss-self (:dismiss props)
+           :header "Confirm redaction"
+           :content [:div {}
+                     (when (:redacting? @state)
+                       [comps/Blocker {:banner "Redacting..."}])
+                     [:div {:style {:marginBottom "1em"}}
+                      (str "Are you sure you want to redact this " (if (:config? props) "configuration" "method") "?")]
+                     [comps/ErrorViewer {:error (:error @state)
+                                         :expect {401 "Unauthorized"}}]]
+           :ok-button [comps/Button {:text "Redact" :onClick #(react/call :redact this)}]}])}])
+   :component-did-mount
+   (fn []
+     (common/scroll-to-top 100))
+   :redact
+   (fn [{:keys [props state]}]
+     (let [[name namespace snapshotId] (map (:entity props) ["name" "namespace" "snapshotId"])]
+       (swap! state assoc :redacting? true :error nil)
+       (endpoints/call-ajax-orch
+         {:endpoint (endpoints/delete-agora-entity (:config? props) namespace name snapshotId)
+          :on-done (fn [{:keys [success? get-parsed-response xhr]}]
+                     (swap! state dissoc :redacting?)
+                     (if success?
+                       ((:on-delete props))
+                       (swap! state assoc :error (get-parsed-response))))})))})
+
+(defn- create-import-form [state props this entity config? fields]
   (let [{:keys [workspace-id on-back]} props
         workspaces-list (:workspaces-list @state)]
     [:div {}
      (when (:blocking-text @state)
-       [comps/Blocker {:banner (:blocking-text @state)}]) 
-     (let [config? (contains? entity "method")]
-       [:div {:style {:marginBottom "1em" :width 290}}
-        (when (:show-perms-overlay? @state)
-          [mca/AgoraPermsEditor
-           {:is-conf config?
-            :selected-entity entity
-            :dismiss-self #(swap! state dissoc :show-perms-overlay?)}])
-        [comps/SidebarButton {:style :light :margin :top :color :button-blue
-                              :text "Permissions..." :icon :gear
-                              :onClick #(swap! state assoc :show-perms-overlay? true)}]
-        [comps/SidebarButton
-         {:style :light :margin :top :color :exception-red
-          :text "Redact" :icon :trash-can
-          :onClick
-          #(when (js/confirm "Are you sure?")
-            (let [name (entity "name")
-                  namespace (entity "namespace")
-                  snapshotId (entity "snapshotId")]
-              (swap! state assoc :blocking-text "Redacting...")
-              (endpoints/call-ajax-orch
-                {:endpoint (endpoints/delete-agora-entity
-                             config? namespace name snapshotId)
-                 :on-done (fn [{:keys [success? status-text]}]
-                            (swap! state dissoc :blocking-text)
-                            (if success?
-                              ((:on-delete props))
-                              (js/alert (str "Error: " status-text))))})))}]])
+       [comps/Blocker {:banner (:blocking-text @state)}])
+     [:div {:style {:marginBottom "1em" :width 290}}
+      (when (:show-perms-overlay? @state)
+        [mca/AgoraPermsEditor {:is-conf config? :selected-entity entity
+                               :dismiss-self #(swap! state dissoc :show-perms-overlay?)}])
+      (when (:show-redact-overlay? @state)
+        [Redactor {:dismiss #(swap! state dissoc :show-redact-overlay?)
+                   :entity entity :config? config? :on-delete (:on-delete props)}])
+      [comps/SidebarButton {:style :light :margin :top :color :button-blue
+                            :text "Permissions..." :icon :gear
+                            :onClick #(swap! state assoc :show-perms-overlay? true)}]
+      [comps/SidebarButton
+       {:style :light :margin :top :color :exception-red
+        :text "Redact" :icon :trash-can
+        :onClick #(swap! state assoc :show-redact-overlay? true)}]]
      [comps/EntityDetails {:entity entity}]
      [:div {:style {:fontSize "120%" :margin "1.5em 0 0.5em 0"}} "Save as:"]
      (map
@@ -82,7 +104,7 @@
      (cond
        (and (:loaded-config @state)
          (or (:workspace-id props) (:workspaces-list @state)))
-       (create-import-form state props this (:loaded-config @state)
+       (create-import-form state props this (:loaded-config @state) true
          [{:label "Configuration Namespace" :key "namespace"}
           {:label "Configuration Name" :key "name"}])
 
@@ -144,7 +166,7 @@
      (cond
        (and (:template @state) (:loaded-method @state)
          (or (:workspace-id props) (:workspaces-list @state)))
-       (create-import-form state props this (:loaded-method @state)
+       (create-import-form state props this (:loaded-method @state) false
          [{:label "Configuration Namespace" :key "namespace"}
           {:label "Configuration Name" :key "name"}
           {:label "Root Entity Type" :key "rootEntityType"}])
