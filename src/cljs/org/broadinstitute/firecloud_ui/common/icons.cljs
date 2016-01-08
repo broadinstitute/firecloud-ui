@@ -40,7 +40,7 @@
      [:span {:style {:display "inline-block" :position "relative" :verticalAlign "middle"
                      :width (int (* 1.27 (:size props)))
                      :height (int (* 1.27 (:size props)))
-                     :backgroundColor "fff" :borderRadius "100%"}}
+                     :backgroundColor "#fff" :borderRadius "100%"}}
       (style/center {}
         (font-icon {:style {:color (:color props) :fontSize (int (* 0.5 (:size props)))}}
           :status-done))])})
