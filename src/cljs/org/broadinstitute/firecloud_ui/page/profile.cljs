@@ -16,7 +16,8 @@
   (str (get @config/config "shibbolethUrlRoot")
        "/link-nih-account?redirect-url="
        (js/encodeURIComponent
-        (str (-> js/window .-location .-href) "/nih-username-token={token}"))))
+        (let [loc (.-location js/window)]
+          (str (.-protocol loc) "//" (.-host loc) "/#profile/nih-username-token={token}")))))
 
 
 (react/defc Form
@@ -101,9 +102,7 @@
       token
       (fn [{:keys [success?]}]
         (if success?
-          (do
-            (swap! state dissoc :values :pending-nih-username-token)
-            (react/call :load-profile this))
+          (.. js/window -location (reload))
           (swap! state assoc :error-message "Failed to link NIH account")))))})
 
 

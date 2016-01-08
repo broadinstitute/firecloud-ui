@@ -16,22 +16,21 @@
                                     :responseText (.-responseText xhr)})
                     (on-done m)))]
     (utils/ajax-orch
-     "/profile"
-     (merge ajax-args {:on-done on-done})
-     :service-prefix "/service/register")))
+     "/nih/status"
+     (merge ajax-args {:on-done on-done}))))
 
 
 (react/defc NihLinkWarning
   {:render
    (fn [{:keys [props state]}]
-     (when-let [profile (:profile @state)]
-       (let [expire-time (-> (:linkExpireTime profile) js/parseInt (* 1000) (js/moment.))
+     (when-let [status (:status @state)]
+       (let [expire-time (-> (get status "linkExpireTime") (* 1000) (js/moment.))
              _24-hours-from-now (.add (js/moment.) 24 "hours")]
-         (when (and (= (:isDbgapAuthorized profile) "true")
+         (when (and (get status "isDbgapAuthorized")
                     (.isBefore expire-time _24-hours-from-now))
            [:div {:style {:border "1px solid #c00" :backgroundColor "#fcc"
                           :color "#800" :fontSize "small" :padding "6px 10px"}}
-            "Your NIH account link (" (:linkedNihUsername profile) ") will expire "
+            "Your NIH account link (" (get status "linkedNihUsername") ") will expire "
             (.calendar expire-time) ". "
             [:a {:href (profile/get-nih-link-href)} "Re-link"]
             " your account before then to retain dbGAP authorization."]))))
@@ -42,4 +41,4 @@
       (fn [{:keys [success? get-parsed-response]}]
         ;; Silently fail on errors?
         (when success?
-          (swap! state assoc :profile (common/parse-profile (get-parsed-response)))))))})
+          (swap! state assoc :status (get-parsed-response))))))})
