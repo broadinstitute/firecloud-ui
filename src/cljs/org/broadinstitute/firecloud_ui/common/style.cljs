@@ -36,7 +36,7 @@
   {:backgroundColor "#fff"
    ;; Split out border properties so they can be individually overridden
    :borderWidth 1 :borderStyle "solid" :borderColor (:border-gray colors) :borderRadius 3
-   :boxShadow "0px 1px 3px rgba(0,0,0,0.06)" :boxSizing "border-box"
+   :boxSizing "border-box"
    :fontSize "88%"
    :marginBottom "0.75em" :padding "0.5em"})
 
