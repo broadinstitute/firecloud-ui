@@ -2,7 +2,7 @@
   (:require
     [dmohs.react :as react]
     [clojure.string :refer [trim blank?]]
-    [org.broadinstitute.firecloud-ui.common :refer [clear-both get-text]]
+    [org.broadinstitute.firecloud-ui.common :refer [clear-both get-text root-entity-types]]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
     [org.broadinstitute.firecloud-ui.common.dialog :as dialog]
     [org.broadinstitute.firecloud-ui.common.icons :as icons]
@@ -161,8 +161,10 @@
      (create-section-header "Root Entity Type")
      (create-section
        (if editing?
-         (style/create-text-field {:ref "rootentitytype" :style {:width 500}
-                                   :defaultValue (config "rootEntityType")})
+         (style/create-identity-select {:ref "rootentitytype"
+                                        :defaultValue (config "rootEntityType")
+                                        :style {:width "500px"}}
+                                       root-entity-types)
          [:div {:style {:padding "0.5em 0 1em 0"}} (config "rootEntityType")]))
      (create-section-header "Inputs")
      (input-output-list config "inputs" invalid-inputs editing?)

@@ -62,6 +62,10 @@
   [:select (deep-merge {:style select-style} props)
    (map-indexed (fn [i opt] [:option {:value i} opt]) options)])
 
+(defn create-identity-select [props options]
+  [:select (deep-merge {:style select-style} props)
+   (map (fn [opt] [:option {:value opt} opt]) options)])
+
 (defn create-server-error-message [message]
   [:div {:style {:textAlign "center" :color (:exception-red colors)}}
    "FireCloud service returned error: " (or message "(no message provided)")])
