@@ -44,7 +44,7 @@
            allow-next (< current-page num-pages)
            right-num (min num-rows-visible (* current-page rows-per-page))
            left-num (if (zero? right-num) 0 (inc (* (dec current-page) rows-per-page)))]
-       [:div {:style {:border "1px solid #ebebeb" :boxShadow "-3px -6px 23px -7px #ebebeb inset"}}
+       [:div {:style {:border "1px solid #ebebeb"}}
         (let [layout-style (if (= :narrow (:width props))
                              {:textAlign "center" :padding "1ex"}
                              {:float "left" :width "33.33%"})
