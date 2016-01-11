@@ -81,15 +81,12 @@
         (merge (select-keys props [:workspace-id :submission-id])
                {:workflow-id (get-in @state [:selected-workflow :id])}))]])})
 
-(defn- getErrorsFromInputResolutions [inputResolutions]
-  (let [errors (filter (fn [m] (contains? m "error")) inputResolutions)
-        keyedErrors (map utils/keywordize-keys errors)]
-       (map (fn [k] (:error k)) keyedErrors)))
 
-(defn- getErrorInputsFromInputResolutions [inputResolutions]
-  (let [errors (filter (fn [m] (contains? m "error")) inputResolutions)
-        keyedErrors (map utils/keywordize-keys errors)]
-       (map (fn [k] (:inputName k)) keyedErrors)))
+(defn- getErrorKeysFromInputResolutions [key inputResolutions]
+       (let [errors (filter (fn [m] (contains? m "error")) inputResolutions)
+             keyedErrors (map utils/keywordize-keys errors)]
+            (map key keyedErrors)))
+
 
 (react/defc WorkflowFailuresTable
   {:render
@@ -116,8 +113,8 @@
        :data (:workflows props)
        :->row (fn [row]
                 [{:type (row "entityType") :name (row "entityName")}
-                 (getErrorInputsFromInputResolutions (row "inputResolutions"))
-                 (getErrorsFromInputResolutions (row "inputResolutions"))])}])})
+                 (getErrorKeysFromInputResolutions :inputName (row "inputResolutions"))
+                 (getErrorKeysFromInputResolutions :error (row "inputResolutions"))])}])})
 
 
 (react/defc AbortButton
