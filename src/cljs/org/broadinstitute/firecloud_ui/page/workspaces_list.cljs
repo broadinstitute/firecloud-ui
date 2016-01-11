@@ -41,7 +41,9 @@
                 (:billing-projects props))
               (style/create-form-label "Name")
               [input/TextField {:ref "wsName" :style {:width "100%"}
-                                :predicates [(input/nonempty "Workspace name")]}]
+                                :predicates [(input/nonempty "Workspace name")
+                                             (input/alphanumeric_- "Workspace name")]}]
+              (style/create-textfield-hint "Only letters, numbers, underscores, and dashes allowed")
               (style/create-form-label "Description (optional)")
               (style/create-text-area {:style {:width "100%"} :rows 5 :ref "wsDescription"})
               [comps/ErrorViewer {:error (:server-error @state)}]

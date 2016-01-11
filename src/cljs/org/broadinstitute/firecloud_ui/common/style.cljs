@@ -31,6 +31,9 @@
                  :fontSize "90%" :lineHeight 1.5}}
    children])
 
+(defn create-textfield-hint [text]
+  [:div {:style {:fontSize "80%" :fontStyle "oblique" :margin "-1.3ex 0 1ex 0"}} text])
+
 
 (def ^:private input-text-style
   {:backgroundColor "#fff"

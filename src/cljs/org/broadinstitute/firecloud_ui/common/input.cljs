@@ -51,6 +51,10 @@
 (defn nonempty [field-name]
   {:test #(not (empty? %)) :message (str field-name " cannot be empty")})
 
+(defn alphanumeric_- [field-name]
+  {:test #(re-matches #"[A-Za-z0-9_\-]*" %)
+   :message (str field-name " may only contain letters, numbers, underscores, and dashes.")})
+
 
 (def ^:private strictnesses
   {:simple #"^\S+@\S+\.\S+$"
