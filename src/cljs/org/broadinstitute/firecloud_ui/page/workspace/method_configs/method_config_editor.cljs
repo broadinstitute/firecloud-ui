@@ -30,8 +30,14 @@
 (defn- commit [state refs config props]
   (let [workspace-id (:workspace-id props)
         [name rootEntityType] (get-text refs "confname" "rootentitytype")
-        inputs (into {} (map (juxt identity #(get-text refs (str "in_" %))) (keys (config "inputs"))))
-        outputs (into {} (map (juxt identity #(get-text refs (str "out_" %))) (keys (config "outputs"))))
+        inputs (->> (keys (config "inputs"))
+                 (map (juxt identity #(get-text refs (str "in_" %))))
+                 (filter (fn [[k v]] (not (empty? v))))
+                 (into {}))
+        outputs (->> (keys (config "outputs"))
+                  (map (juxt identity #(get-text refs (str "out_" %))))
+                  (filter (fn [[k v]] (not (empty? v))))
+                  (into {}))
         new-conf (assoc config
                    "name" name
                    "rootEntityType" rootEntityType
@@ -114,40 +120,41 @@
                                 :text "Cancel Editing" :icon :x
                                 :onClick #(stop-editing state)}])]))])
 
-(defn- validation-status [invalid?]
-  (when invalid?
-    (icons/font-icon {:style {:paddingLeft "0.5em" :padding "1em 0.7em"
-                              :color (:exception-red style/colors)}}
-      :x)))
 
-(defn- input-output-list [config value-type invalid-values editing?]
+(defn- input-output-list [config value-type invalid-values editing? all-values]
   (create-section
     [:div {}
-     (for [key (keys (config value-type))]
-       [:div {:style {:verticalAlign "middle"}}
-        [:div {:style {:float "left" :marginRight "1em" :padding "0.5em" :marginBottom "0.5em"
-                       :backgroundColor (:background-gray style/colors)
-                       :border (str "1px solid " (:line-gray style/colors)) :borderRadius 2}}
-         (str key ":")]
-        [:div {:style {:float "left" :display (when editing? "none") :padding "0.5em 0 1em 0"}}
-         (get (config value-type) key)
-         (validation-status (contains? invalid-values key))]
-        [:div {}
-         [:div {:style {:float "left" :display (when-not editing? "none")}}
-          (if (= value-type "inputs")
-            (style/create-text-field {:ref (str "in_" key)
-                                      :defaultValue (get (config value-type) key)})
-            (style/create-text-field {:ref (str "out_" key)
-                                      :defaultValue (get (config value-type) key)}))]
-         (clear-both)
-         [:div {:style {:marginRight "1em" :padding "0.5em" :marginBottom "0.5em"
-                        :backgroundColor (:exception-red style/colors)
-                        :display (if-not (contains? invalid-values key) "none")
-                        :width 450
-                        :border (str "1px solid " (:line-gray style/colors)) :borderRadius 2}}
-          (get invalid-values key)]]])]))
+     (map
+       (fn [m]
+         (let [[field-name inputType outputType optional?] (map m ["name" "inputType" "outputType" "optional"])
+               type (or inputType outputType)
+               field-value (get (config value-type) field-name)
+               error (invalid-values field-name)]
+           [:div {}
+            [:div {:style {:float "left" :margin "0 1em 0.5em 0" :padding "0.5em" :verticalAlign "middle"
+                           :backgroundColor (:background-gray style/colors)
+                           :border (str "1px solid " (:line-gray style/colors)) :borderRadius 2}}
+             (str field-name ": (" (when optional? "optional ") type ")")]
+            (if editing?
+              [:div {:style {:float "left"}}
+               (style/create-text-field {:ref (str (if (= value-type "inputs") "in" "out") "_" field-name)
+                                         :defaultValue field-value})]
+              [:div {:style {:float "left" :marginTop "0.5em"}}
+               (or field-value [:span {:style {:fontStyle "oblique"}} "No value entered"])
+               (when error
+                 (icons/font-icon {:style {:margin "0.5em 0 0 0.7em" :verticalAlign "middle"
+                                           :color (:exception-red style/colors)}}
+                   :x))])
+            (clear-both)
+            (when error
+              [:div {:style {:padding "0.5em" :marginBottom "0.5em"
+                             :backgroundColor (:exception-red style/colors)
+                             :display "inline-block"
+                             :border (str "1px solid " (:line-gray style/colors)) :borderRadius 2}}
+               error])]))
+       all-values)]))
 
-(defn- render-main-display [wrapped-config editing?]
+(defn- render-main-display [wrapped-config editing? inputs-outputs]
   (let [config (get-in wrapped-config ["methodConfiguration"])
         invalid-inputs (get-in wrapped-config ["invalidInputs"])
         invalid-outputs (get-in wrapped-config ["invalidOutputs"])]
@@ -167,9 +174,9 @@
                                        root-entity-types)
          [:div {:style {:padding "0.5em 0 1em 0"}} (config "rootEntityType")]))
      (create-section-header "Inputs")
-     (input-output-list config "inputs" invalid-inputs editing?)
+     (input-output-list config "inputs" invalid-inputs editing? (inputs-outputs "inputs"))
      (create-section-header "Outputs")
-     (input-output-list config "outputs" invalid-outputs editing?)
+     (input-output-list config "outputs" invalid-outputs editing? (inputs-outputs "outputs"))
      (create-section-header "Referenced Method")
      (create-section [MethodDetailsViewer
                       {:name (get-in config ["methodRepoMethod" "methodName"])
@@ -177,8 +184,11 @@
                        :snapshotId (get-in config ["methodRepoMethod" "methodVersion"])
                        :config config}])]))
 
-(defn- render-display [state refs wrapped-config editing? props]
-  (let [config (get-in wrapped-config ["methodConfiguration"])]
+(defn- render-display [state refs props]
+  (let [wrapped-config (:loaded-config @state)
+        config (wrapped-config "methodConfiguration")
+        inputs-outputs (:inputs-outputs @state)
+        editing? (:editing? @state)]
     [:div {}
      (when (:show-publish-dialog? @state)
        [publish/PublishDialog {:dismiss-self #(swap! state dissoc :show-publish-dialog?)
@@ -200,7 +210,7 @@
                                 :root-entity-type (config "rootEntityType")
                                 :disabled? (:locked? @state)
                                 :on-success (:on-submission-success props)})])
-      (render-main-display wrapped-config editing?)
+      (render-main-display wrapped-config editing? (:inputs-outputs @state))
       (clear-both)]]))
 
 (react/defc MethodConfigEditor
@@ -210,8 +220,7 @@
       :sidebar-visible? true})
    :render
    (fn [{:keys [state refs props]}]
-     (cond (and (:loaded-config @state) (contains? @state :locked?))
-           (render-display state refs (:loaded-config @state) (:editing? @state) props)
+     (cond (and (:loaded-config @state) (contains? @state :locked?)) (render-display state refs props)
            (:error @state) (style/create-server-error-message (:error @state))
            :else [:div {:style {:textAlign "center"}} [comps/Spinner {:text "Loading Method Configuration..."}]]))
    :component-did-mount
@@ -220,7 +229,14 @@
        {:endpoint (endpoints/get-validated-workspace-method-config (:workspace-id props) (:config-id props))
         :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                    (if success?
-                     (swap! state assoc :loaded-config (get-parsed-response))
+                     (let [response (get-parsed-response)]
+                       (endpoints/call-ajax-orch
+                         {:endpoint endpoints/get-inputs-outputs
+                          :payload (get-in response ["methodConfiguration" "methodRepoMethod"])
+                          :headers {"Content-Type" "application/json"}
+                          :on-done (fn [{:keys [success? get-parsed-response]}]
+                                     (if success?
+                                       (swap! state assoc :loaded-config response :inputs-outputs (get-parsed-response))))}))
                      (swap! state assoc :error status-text)))})
      (endpoints/call-ajax-orch
        {:endpoint (endpoints/get-workspace (:workspace-id props))
