@@ -122,7 +122,7 @@
                                         :display-index i})
                                      (:columns props)))]
        (merge
-        {:no-data? (zero? (count (:data props)))
+        {:no-data? (zero? (count (.-filtered-data this)))
          :columns columns
          :dragging? false}
         (when-let [col (first (filter #(contains? % :sort-initial) columns))]
@@ -237,7 +237,8 @@
              rows (map (:->row props) (.-filtered-data this))
              sorted-data (if-let [keyfn (:key-fn @state)] (sort-by keyfn rows) rows)
              ordered-data (if (= :desc (:sort-order @state)) (reverse sorted-data) sorted-data)]
-         (take c (drop (* (dec n) c) ordered-data)))))
+         ;; realize this sequence so errors can be caught early
+         (doall (take c (drop (* (dec n) c) ordered-data))))))
    :set-body-rows
    (fn [{:keys [this props state refs]}]
      (set! (.-filtered-data this) (react/call :get-filtered-data this))
@@ -330,8 +331,8 @@
                         attribute-keys))
            :filters (mapv (fn [key] {:text key :pred #(= key (% "entityType"))})
                       (:entity-types props))
-           :selected-filter-index (.indexOf (to-array (:entity-types props))
-                                    (:selected-entity-type @state))
+           :selected-filter-index (max 0 (.indexOf (to-array (:entity-types props))
+                                                   (:selected-entity-type @state)))
            :on-filter-change (fn [index]
                                (swap! state assoc :selected-entity-type (nth (:entity-types props) index))
                                (when-let [func (:on-filter-change props)]

@@ -6,6 +6,7 @@
     [org.broadinstitute.firecloud-ui.common.table :as table]
     [org.broadinstitute.firecloud-ui.common.table-utils :refer [default-render]]
     [org.broadinstitute.firecloud-ui.common.style :as style]
+    [org.broadinstitute.firecloud-ui.utils :as utils]
     ))
 
 (def ^:private box-width "calc(50% - 20px)")
@@ -20,6 +21,10 @@
    :get-initial-state
    (fn []
      {:selected #{}})
+   :component-will-receive-props
+   (fn [{:keys [props state next-props]}]
+     (when (not= (:entities props) (:entities next-props))
+       (swap! state assoc :selected #{})))
    :render
    (fn [{:keys [state props]}]
      (let [attribute-keys (apply union (map #(set (keys (% "attributes"))) (:entities props)))
