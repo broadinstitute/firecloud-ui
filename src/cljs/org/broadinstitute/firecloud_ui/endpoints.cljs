@@ -545,7 +545,7 @@
        {:userId "55"
         :keyValuePairs
         (map (fn [[k v]] {:key k :value v})
-             {:isRegistrationComplete "true" :name "John Doe" :email "jdoe@example.com"
+             {:isRegistrationComplete "1" :name "John Doe" :email "jdoe@example.com"
               :googleProjectIds ["14" "7"] :institution "Broad Institute"
               :pi "Jane Doe"})})}}
      :service-prefix "/service/register")))

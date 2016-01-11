@@ -149,7 +149,7 @@
         (fn [{:keys [success? status-text get-parsed-response]}]
           (let [parsed-values (when success? (common/parse-profile (get-parsed-response)))]
             (cond
-              (and success? (= (:isRegistrationComplete parsed-values) "true"))
+              (and success? (>= (int (:isRegistrationComplete parsed-values)) 1))
               (swap! state assoc :registration-status :registered :name (:name parsed-values))
               success? ; partial profile case
               (swap! state assoc :registration-status :not-registered)
