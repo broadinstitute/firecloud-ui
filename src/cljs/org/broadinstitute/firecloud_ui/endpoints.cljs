@@ -305,6 +305,12 @@
     :notstarted (map (fn [i]
                        {:entityType (rand-nth ["Sample" "Participant"])
                         :entityName (str "entity " i)
+                        :inputResolutions [{"value" "gs://cancer-exome-pipeline-demo-data/panel_100_genes.interval_list",
+                                            "inputName" (rand-nth ["input1" "input2"])}
+                                           {"error" "Expected single value for workflow input, but evaluated result set was empty",
+                                            "inputName" (rand-nth ["input1" "input2"])}
+                                           {"value" "mutations.vcf",
+                                            "inputName" (rand-nth ["input1" "input2"])}]
                         :errors (utils/rand-subset ["Prerequisites not met" "Server error"
                                                     "I didn't feel like it" "Syntax error"])})
                   (range (rand-int 5)))

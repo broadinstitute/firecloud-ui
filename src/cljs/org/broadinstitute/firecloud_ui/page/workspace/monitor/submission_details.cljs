@@ -1,15 +1,15 @@
 (ns org.broadinstitute.firecloud-ui.page.workspace.monitor.submission-details
-  (:require
-    [dmohs.react :as react]
-    [org.broadinstitute.firecloud-ui.common :as common]
-    [org.broadinstitute.firecloud-ui.common.components :as comps]
-    [org.broadinstitute.firecloud-ui.common.icons :as icons]
-    [org.broadinstitute.firecloud-ui.common.style :as style]
-    [org.broadinstitute.firecloud-ui.common.table :as table]
-    [org.broadinstitute.firecloud-ui.page.workspace.monitor.common :as moncommon]
-    [org.broadinstitute.firecloud-ui.page.workspace.monitor.workflow-details :as workflow-details]
-    [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
-    ))
+    (:require
+      [dmohs.react :as react]
+      [org.broadinstitute.firecloud-ui.common :as common]
+      [org.broadinstitute.firecloud-ui.common.components :as comps]
+      [org.broadinstitute.firecloud-ui.common.icons :as icons]
+      [org.broadinstitute.firecloud-ui.common.style :as style]
+      [org.broadinstitute.firecloud-ui.common.table :as table]
+      [org.broadinstitute.firecloud-ui.page.workspace.monitor.common :as moncommon]
+      [org.broadinstitute.firecloud-ui.page.workspace.monitor.workflow-details :as workflow-details]
+      [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
+      [org.broadinstitute.firecloud-ui.utils :as utils]))
 
 
 (defn- color-for-submission [submission]
@@ -82,6 +82,12 @@
                {:workflow-id (get-in @state [:selected-workflow :id])}))]])})
 
 
+(defn- getErrorKeysFromInputResolutions [key inputResolutions]
+       (let [errors (filter (fn [m] (contains? m "error")) inputResolutions)
+             keyedErrors (map utils/keywordize-keys errors)]
+            (map key keyedErrors)))
+
+
 (react/defc WorkflowFailuresTable
   {:render
    (fn [{:keys [props]}]
@@ -92,6 +98,12 @@
                                (str (:type entity) " " (:name entity)))
                   :content-renderer (fn [entity]
                                       (str (:name entity) " (" (:type entity) ")"))}
+                 {:header "Input" :starting-width 300 :sort-by count
+                  :content-renderer (fn [input-list]
+                                        [:div {}
+                                         (map (fn [error]
+                                                  [:div {} error])
+                                              input-list)])}
                  {:header "Errors" :starting-width 500 :sort-by count
                   :content-renderer (fn [error-list]
                                       [:div {}
@@ -101,7 +113,8 @@
        :data (:workflows props)
        :->row (fn [row]
                 [{:type (row "entityType") :name (row "entityName")}
-                 (row "errors")])}])})
+                 (getErrorKeysFromInputResolutions :inputName (row "inputResolutions"))
+                 (getErrorKeysFromInputResolutions :error (row "inputResolutions"))])}])})
 
 
 (react/defc AbortButton
