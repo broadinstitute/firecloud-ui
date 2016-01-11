@@ -34,7 +34,7 @@
                         {:header "Entity Name" :starting-width 200
                          :as-text #(get-in % [0 "name"]) :sort-by :text
                          :content-renderer
-                         (fn [[entity index]]
+                         (fn [[index entity]]
                            (style/create-link {:text (entity "name")
                                                :onClick #(swap! state update-in [:selected]
                                                            (if source? conj disj) index)}))}]
@@ -48,14 +48,14 @@
                          attribute-keys)))
            data (fn [source?]
                   (replace
-                    (into [] (zipmap (range) (:entities props)))
+                    (mapv vector (range) (:entities props))
                     (if source?
                       (difference (-> (:entities props) count range set) (:selected @state))
                       (:selected @state))))
-           ->row (fn [[index entity]]
+           ->row (fn [[index entity :as item]]
                    (concat
                      [(entity "entityType")
-                      [entity index]]
+                      item]
                      (map (fn [k] (get-in entity ["attributes" k])) attribute-keys)))
            create-table (fn [source?]
                           [:div {:style {:float (if source? "left" "right") :width box-width
