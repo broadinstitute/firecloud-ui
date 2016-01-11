@@ -39,7 +39,9 @@
                                 :style {:width "100%"}
                                 :defaultValue (get-in props [:workspace-id :name])
                                 :placeholder "Required"
-                                :predicates [(input/nonempty "Workspace name")]}]
+                                :predicates [(input/nonempty "Workspace name")
+                                             (input/alphanumeric_- "Workspace name")]}]
+              (style/create-textfield-hint "Only letters, numbers, underscores, and dashes allowed")
               (style/create-validation-error-message (:validation-error @state))
               [comps/ErrorViewer {:error (:error @state)
                                   :expect {409 "A workspace with this name already exists in this project"}}]])
