@@ -465,6 +465,25 @@
                        :methodName (method "name")
                        :methodVersion 1}}})
 
+(def get-inputs-outputs
+  {:path "/inputsOutputs"
+   :method :post
+   :mock-data
+   {:inputs [{:name "CancerExomePipeline_v2.M2.ref_fasta"
+              :inputType "File"
+              :optional false}
+             {:name "CancerExomePipeline_v2.M2.ref_fasta_dict"
+              :inputType "File"
+              :optional false}
+             {:name "CancerExomePipeline_v2.M2.ref_fasta_fai"
+              :inputType "File"
+              :optional false}
+             {:name "CancerExomePipeline_v2.M2.m2_output_vcf_name"
+              :inputType "String"
+              :optional true}]
+    :outputs [{:name "CancerExomePipeline_v2.M2.m2_output_vcf"
+               :outputType "File"}]}})
+
 (defn get-agora-method-acl [ns n sid is-conf]
   {:path (str "/" (if is-conf "configurations" "methods"  ) "/" ns "/" n "/" sid "/permissions"  )
    :method :get
