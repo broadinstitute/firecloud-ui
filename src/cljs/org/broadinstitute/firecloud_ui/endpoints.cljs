@@ -299,7 +299,7 @@
                        :statusLastChangedDate (utils/rand-recent-time)
                        :workflowEntity {:entityType "sample"
                                         :entityName (str "sample_" i)}
-                       :status (rand-nth ["Succeeded" "Submitted" "Running" "Failed" "Aborted" "Unknown"])
+                       :status (rand-nth ["Succeeded" "Submitted" "Running" "Aborting" "Failed" "Aborted" "Unknown"])
                        :workflowId "97adf170-ee40-40a5-9539-76b72802e124"})
                  (range (rand-int 10)))
     :notstarted (map (fn [i]
@@ -345,7 +345,7 @@
              "CancerExomePipeline_v2.M2.ref_fasta_fai" "gs://cancer-exome-pipeline-demo-data/Homo_sapiens_assembly19.fasta.fai"
              "CancerExomePipeline_v2.M2.m2_output_vcf_name" "mutations.vcf"}
     :submission (utils/rand-recent-time)
-    :status (rand-nth ["Succeeded" "Submitted" "Running" "Failed" "Aborted" "Unknown"])
+    :status (rand-nth ["Succeeded" "Submitted" "Running" "Aborting" "Failed" "Aborted" "Unknown"])
     :start (utils/rand-recent-time)
     :end (rand-nth [(utils/rand-recent-time) nil])}})
 

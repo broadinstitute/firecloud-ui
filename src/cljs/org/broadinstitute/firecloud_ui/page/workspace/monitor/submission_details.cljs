@@ -60,7 +60,7 @@
        :filters [{:text "All" :pred (constantly true)}
                  {:text "Succeeded" :pred #(= "Succeeded" (% "status"))}
                  {:text "Running" :pred #(contains? #{"Running" "Submitted"} (% "status"))}
-                 {:text "Failed" :pred #(contains? #{"Failed" "Aborted" "Unknown"} (% "status"))}]
+                 {:text "Failed" :pred #(contains? #{"Failed" "Aborting" "Aborted" "Unknown"} (% "status"))}]
        :data (:workflows props)
        :->row (fn [row]
                 [row
