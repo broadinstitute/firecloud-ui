@@ -60,8 +60,8 @@
              [:div {:style {:paddingBottom "0.25em"}} (str "Call #" (inc index) ":")]
              [:div {:style {:paddingLeft "0.5em"}}
               (create-field "ID" (data "jobId"))
-              (let [status (data "backendStatus")]
-                (create-field "Status" (moncommon/icon-for-wf-status status) status))
+              (let [status (data "executionStatus")]
+                (create-field "Status" (moncommon/icon-for-call-status status) status))
               (create-field "Started" (moncommon/render-date (data "start")))
               (create-field "Ended" (moncommon/render-date (data "end")))
               (create-field "stdout" (display-gcs-link (data "stdout")))
