@@ -2,6 +2,7 @@
   (:require
     [org.broadinstitute.firecloud-ui.common.icons :as icons]
     [org.broadinstitute.firecloud-ui.common.style :as style]
+    [org.broadinstitute.firecloud-ui.utils :as utils]
     ))
 
 
@@ -15,18 +16,41 @@
     (str (.format m "L [at] LTS") " (" (.fromNow m) ")")))
 
 
+(def wf-success-statuses #{"Succeeded"})
+(def wf-running-statuses #{"Running" "Submitted"})
+(def wf-failure-statuses #{"Failed" "Aborting" "Aborted" "Unknown"})
+
+(def call-success-statuses #{"Done"})
+(def call-running-statuses #{"NotStarted" "Starting" "Running"})
+(def call-failure-statuses #{"Failed" "Aborted"})
+
+(def ^:private success-icon
+  (icons/font-icon {:style {:color (:success-green style/colors) :fontSize 12 :marginRight 4}}
+    :status-done))
+(def ^:private running-icon
+  [:span {:style {:backgroundColor (:running-blue style/colors) :position "relative"
+                  :width 16 :height 16 :display "inline-block" :borderRadius 3
+                  :verticalAlign "middle" :marginTop -4 :marginRight 4}}
+   (style/center {} [icons/RunningIcon {:size 12}])])
+(def ^:private failure-icon
+  [:span {:style {:backgroundColor (:exception-red style/colors) :position "relative"
+                  :width 16 :height 16 :display "inline-block" :borderRadius 3
+                  :verticalAlign "middle" :marginTop -4 :marginRight 4}}
+   (style/center {} [icons/ExceptionIcon {:size 12}])])
+
+
 (defn icon-for-wf-status [status]
-  (cond (or (= "Succeeded" status) (= "Success" status))
-        (icons/font-icon {:style {:color (:success-green style/colors)
-                                  :fontSize 12 :marginRight 4}}
-                         :status-done)
-        (or (= "Running" status) (= "Submitted" status))
-        [:span {:style {:backgroundColor (:running-blue style/colors) :position "relative"
-                        :width 16 :height 16 :display "inline-block" :borderRadius 3
-                        :verticalAlign "middle" :marginTop -4 :marginRight 4}}
-         (style/center {} [icons/RunningIcon {:size 12}])]
-        :else
-        [:span {:style {:backgroundColor (:exception-red style/colors) :position "relative"
-                        :width 16 :height 16 :display "inline-block" :borderRadius 3
-                        :verticalAlign "middle" :marginTop -4 :marginRight 4}}
-         (style/center {} [icons/ExceptionIcon {:size 12}])]))
+  (cond
+    (contains? wf-success-statuses status) success-icon
+    (contains? wf-running-statuses status) running-icon
+    (contains? wf-failure-statuses status) failure-icon
+    :else (do (utils/log "Unknown workflow status: " status)
+            failure-icon)))
+
+(defn icon-for-call-status [status]
+  (cond
+    (contains? call-success-statuses status) success-icon
+    (contains? call-running-statuses status) running-icon
+    (contains? call-failure-statuses status) failure-icon
+    :else (do (utils/log "Unknown call status: " status)
+            failure-icon)))
