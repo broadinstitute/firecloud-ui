@@ -29,15 +29,49 @@
      (cond (:error-message @state) (style/create-server-error-message (:error-message @state))
            (:values @state)
            [:div {}
-            (react/call :render-field this :name "Full Name:")
-            (react/call :render-field this :email "Contact Email:")
-            (react/call :render-field this :institution "Institutional Affiliation:")
-            (react/call :render-field this :pi "Principal Investigator:")
+            [:div {:style {:fontWeight "bold" :margin "1em 0 1em 0"}} "* - required fields"]
+            (react/call :render-field this :firstName "*First Name:")
+            (react/call :render-field this :lastName "*Last Name")
+            (react/call :render-field this :title "*Title:")
+            (react/call :render-field this :institute "*Institute:")
+            (react/call :render-field this :institutionalProgram "*Institutional Program:")
+            [:div {:style {:fontSize "88%"}} "Program Location:"
+              [:div {}
+                (react/call :render-nested-field this :programLocationCity "*City:")
+                (react/call :render-nested-field this :programLocationState "*State/Province:")
+                (react/call :render-nested-field this :programLocationCountry "*Country:")]]
+                (react/call :render-field this :pi "*Principal Investigator/Program Lead:")
+            [:div {:style {:marginBottom "1em" :fontSize "88%"}} "*NonProfit Status:"
+              (react/call :render-radio-field this :nonProfitStatus "Profit")
+              (react/call :render-radio-field this :nonProfitStatus "Non-Profit")]
+            (react/call :render-field this :billingAccountName "Google Billing Account Name")
             [:div {} (react/call :render-nih-link-section this)]]
            :else [components/Spinner {:text "Loading User Profile..."}]))
+   :render-radio-field
+   (fn [{:keys [state]} key value]
+       [:div {:style {:clear "both" :marginTop "0.167em" :width "30ex"}}
+        (if (= (get-in @state [:values key]) value)
+          [:input {:type "radio"
+                   :value value
+                   :checked true
+                   :name key
+                   :onChange #(swap! state assoc-in [:values key] value)} value]
+          [:input {:type "radio"
+                   :value value
+                   :name key
+                   :onChange #(swap! state assoc-in [:values key] value)} value])])
+   :render-nested-field
+   (fn [{:keys [state]} key label]
+       [:div {:style {:float "left"}}
+        [:label {}
+         [:div {:style {:marginBottom "0.16667em"}} label]]
+        (style/create-text-field
+          {:style {:marginRight "1em" :marginTop "0.167em" :width "30ex"}
+           :value (get-in @state [:values key])
+           :onChange #(swap! state assoc-in [:values key] (-> % .-target .-value))})])
    :render-field
    (fn [{:keys [state]} key label]
-     [:div {}
+     [:div {:style {:clear "both"}}
       [:label {}
        (style/create-form-label label)
        (style/create-text-field
