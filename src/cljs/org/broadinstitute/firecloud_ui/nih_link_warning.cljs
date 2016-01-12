@@ -33,7 +33,7 @@
             "Your NIH account link (" (get status "linkedNihUsername") ") will expire "
             (.calendar expire-time) ". "
             [:a {:href (profile/get-nih-link-href)} "Re-link"]
-            " your account before then to retain dbGAP authorization."]))))
+            " your account before then to retain dbGaP authorization."]))))
    :component-did-mount
    (fn [{:keys [props state]}]
      (get-profile
