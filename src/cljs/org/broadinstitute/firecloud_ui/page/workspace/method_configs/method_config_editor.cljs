@@ -234,9 +234,10 @@
                          {:endpoint endpoints/get-inputs-outputs
                           :payload (get-in response ["methodConfiguration" "methodRepoMethod"])
                           :headers {"Content-Type" "application/json"}
-                          :on-done (fn [{:keys [success? get-parsed-response]}]
+                          :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                                      (if success?
-                                       (swap! state assoc :loaded-config response :inputs-outputs (get-parsed-response))))}))
+                                       (swap! state assoc :loaded-config response :inputs-outputs (get-parsed-response))
+                                       (swap! state assoc :error ((get-parsed-response) "message"))))}))
                      (swap! state assoc :error status-text)))})
      (endpoints/call-ajax-orch
        {:endpoint (endpoints/get-workspace (:workspace-id props))
