@@ -7,29 +7,13 @@
     [org.broadinstitute.firecloud-ui.common.components :as comps]
     [org.broadinstitute.firecloud-ui.common.dialog :as dialog]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
+    [org.broadinstitute.firecloud-ui.utils :as utils]
     ))
 
-(def ^:private access-levels
-  ["OWNER" "WRITER" "READER" "NO ACCESS"])
-(def ^:private OWNER 0)
-(def ^:private WRITER 1)
-(def ^:private READER 2)
-(def ^:private NO_ACCESS 3)
-(defn- access-level-to-index [string]
-  (case string
-    "OWNER" OWNER
-    "WRITER" WRITER
-    "READER" READER
-    "NO ACCESS" NO_ACCESS))
-(defn- index-to-access-level [index]
-  (nth access-levels index))
 
+(def ^:private access-levels ["OWNER" "WRITER" "READER" "NO ACCESS"])
 (def ^:private column-width "calc(50% - 4px)")
 
-(defn- build-acl-vec [acl-map]
-  (mapv
-    (fn [[k v]] {:email k :accessLevel (access-level-to-index v)})
-    acl-map))
 
 (defn- render-acl-content [props state this]
   [dialog/OKCancelForm
@@ -52,22 +36,25 @@
              {:ref (str "acl-key" i)
               :predicates [(input/valid-email-or-empty "User or Group ID")]
               :style {:float "left" :width column-width :color "black"
-                      :backgroundColor (when (< i (:count-orig @state)) (:background-gray style/colors))}
-              :disabled (< i (:count-orig @state))
+                      :backgroundColor (when (:read-only? acl-entry)
+                                         (:background-gray style/colors))}
+              :disabled (:read-only? acl-entry)
               :spellCheck false
-              :defaultValue (:email acl-entry)}]
-            (style/create-select
+              :value (:email acl-entry)
+              :onChange #(swap! state assoc-in [:acl-vec i :email] %)}]
+            (style/create-identity-select
               {:ref (str "acl-value" i)
                :style {:float "right" :width column-width :height 33}
-               :defaultValue (:accessLevel acl-entry)}
+               :value (:accessLevel acl-entry)
+               :onChange #(swap! state assoc-in [:acl-vec i :accessLevel]
+                                 (.. % -target -value))}
               access-levels)
             (common/clear-both)])
          (:acl-vec @state))
        [:div {:style {:marginBottom "0.5em"}}
         [comps/Button {:text "Add new" :style :add
-                       :onClick #(do
-                                   (react/call :capture-ui-state this)
-                                   (swap! state update-in [:acl-vec] conj {:email "" :accessLevel READER}))}]]
+                       :onClick #(swap! state update-in [:acl-vec]
+                                        conj {:email "" :accessLevel "READER"})}]]
        (style/create-validation-error-message (:validation-error @state))
        [comps/ErrorViewer {:error (:save-error @state)}]])
     :dismiss-self (:dismiss-self props)
@@ -87,21 +74,13 @@
             (if (:load-error @state)
               (style/create-server-error-message (:load-error @state))
               [comps/Spinner {:text "Loading Permissions..."}])]))}])
-   :capture-ui-state
-   (fn [{:keys [state refs]}]
-     (swap! state assoc :acl-vec
-       (mapv
-         (fn [i]
-           (let [[user-id access-level] (common/get-text refs (str "acl-key" i) (str "acl-value" i))]
-             {:email user-id :accessLevel (js/parseInt access-level)}))
-         (range (count (:acl-vec @state))))))
    :persist-acl
    (fn [{:keys [props state refs this]}]
-     (react/call :capture-ui-state this)
      (swap! state dissoc :save-error :validation-error)
      (let [filtered-acl (->> (:acl-vec @state)
-                          (filter #(not (empty? (:email %))))
-                          (map #(update % :accessLevel index-to-access-level)))
+                             (map #(dissoc % :read-only?))
+                             (map #(update-in % [:email] clojure.string/trim))
+                             (filter #(not (empty? (:email %)))))
            fails (apply input/validate refs (map #(str "acl-key" %) (range (count (:acl-vec @state)))))]
        (if fails
          (swap! state assoc :validation-error fails)
@@ -123,8 +102,11 @@
      (common/scroll-to-top 100)
      (endpoints/call-ajax-orch
        {:endpoint (endpoints/get-workspace-acl (:workspace-id props))
-        :on-done (fn [{:keys [success? get-parsed-response status-text]}]
-                   (if success?
-                     (let [acl-vec (build-acl-vec (get-parsed-response))]
-                       (swap! state assoc :acl-vec acl-vec :count-orig (count acl-vec)))
-                     (swap! state assoc :load-error (get-parsed-response))))}))})
+        :on-done
+        (fn [{:keys [success? get-parsed-response status-text]}]
+          (if success?
+            (swap! state assoc :acl-vec
+                   (mapv (fn [[k v]]
+                           {:email k :accessLevel v :read-only? true})
+                         (get-parsed-response)))
+            (swap! state assoc :load-error (get-parsed-response))))}))})

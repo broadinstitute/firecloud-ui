@@ -24,8 +24,11 @@
                                :style (merge (or (:style props) {})
                                         (when (:invalid @state)
                                           {:borderColor (:exception-red style/colors)}))
-                               :onChange #(swap! state dissoc :invalid)
+                               :onChange #(do (swap! state dissoc :invalid)
+                                              (when-let [x (:onChange props)]
+                                                (x (.. % -target -value))))
                                :defaultValue (:defaultValue props)
+                               :value (:value props)
                                :placeholder (:placeholder props)
                                :disabled (:disabled props)
                                :spellCheck (:spellCheck props)}))})
