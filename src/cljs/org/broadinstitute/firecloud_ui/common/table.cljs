@@ -132,7 +132,7 @@
            :sort-order (:sort-initial col)
            :sort-column (:index col)}))))
    :render
-   (fn [{:keys [this state props refs]}]
+   (fn [{:keys [this state props refs after-update]}]
      (let [paginator [table-utils/Paginator
                       {:ref "paginator"
                        :width (:width props)
@@ -206,7 +206,7 @@
                          :cursor (when (:dragging? @state) "col-resize")}}
            (if (:no-data? @state)
              (style/create-message-well (or (:empty-message props) "There are no rows to display."))
-             (table-utils/render-header state props this))
+             (table-utils/render-header state props this after-update))
            [table-utils/Body
             (assoc props
                    :ref "body"

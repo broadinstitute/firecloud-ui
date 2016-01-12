@@ -168,7 +168,7 @@
          (:rows @state))]))})
 
 
-(defn- render-header [state props this]
+(defn render-header [state props this after-update]
   [:div {:style (merge
                   {:fontWeight 500 :fontSize "80%"
                    :color "#fff" :backgroundColor (:header-darkgray style/colors)}
@@ -206,7 +206,7 @@
                                            (if (= sort-fn :text)
                                              (fn [row] ((:as-text column) (nth row i)))
                                              (fn [row] (sort-fn (nth row i)))))))
-                             (react/call :set-body-rows this)))
+                             (after-update #(react/call :set-body-rows this))))
             :sortOrder (when (= i (:sort-column @state)) (:sort-order @state))})))
      (filter :visible? (react/call :get-ordered-columns this)))
    (common/clear-both)])
