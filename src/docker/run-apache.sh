@@ -10,6 +10,10 @@ ServerName ${SERVER_NAME}
 LogFormat "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\"" combined
 LogLevel ${LOG_LEVEL}
 
+Header always append X-Frame-Options SAMEORIGIN
+ServerTokens ProductOnly
+TraceEnable off
+
 <VirtualHost _default_:${HTTPD_PORT}>
   ErrorLog /dev/stdout
   CustomLog "/dev/stdout" combined
@@ -26,6 +30,8 @@ LogLevel ${LOG_LEVEL}
 
   SSLEngine on
   SSLProxyEngine on
+  SSLProtocol -SSLv3 -TLSv1 -TLSv1.1 +TLSv1.2
+  SSLCipherSuite ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES128-SHA:ECDHE-ECDSA-AES256-SHA:ECDHE-ECDSA-DES-CBC3-SHA:ECDHE-RSA-AES128-SHA:ECDHE-RSA-AES256-SHA:ECDHE-RSA-DES-CBC3-SHA:DHE-RSA-AES128-SHA:DHE-RSA-AES256-SHA:EDH-RSA-DES-CBC3-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA:AES256-SHA:!aNULL:!eNULL:!EXPORT:!DES:!RC4:!3DES:!ADH!MD5:!PSK:!aECDH:!EDH-DSS-DES-CBC3-SHA:!EDH-RSA-DES-CBC3-SHA:!KRB5-DES-CBC3-SHA:!DH
   SSLCertificateFile "/etc/ssl/certs/server.crt"
   SSLCertificateKeyFile "/etc/ssl/private/server.key"
   SSLCertificateChainFile "/etc/ssl/certs/ca-bundle.crt"
