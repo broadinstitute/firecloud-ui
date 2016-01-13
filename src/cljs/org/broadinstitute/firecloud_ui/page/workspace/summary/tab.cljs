@@ -12,7 +12,7 @@
     [org.broadinstitute.firecloud-ui.page.workspace.summary.acl-editor :refer [AclEditor]]
     [org.broadinstitute.firecloud-ui.page.workspace.summary.attribute-editor :as attributes]
     [org.broadinstitute.firecloud-ui.page.workspace.summary.workspace-cloner :refer [WorkspaceCloner]]
-    ))
+    [org.broadinstitute.firecloud-ui.utils :as utils]))
 
 
 (defn- render-tags [tags]
@@ -170,12 +170,12 @@
          (get-in ws ["workspace" "bucketName"])])
       (style/create-section-header "Analysis Submissions")
       (style/create-paragraph
-        (let [fail-count (->> submissions
-                           (filter (complement all-success?))
-                           count)]
-          (str (count submissions) " Submissions"
-            (when (pos? fail-count)
-              (str " (" fail-count " failed)")))))]]))
+        (let [workflows (flatten (map #(get-in % ["workflows"]) submissions))
+              statuses (map #(% "status") workflows)
+              frequencies (into (sorted-map-by <) (frequencies statuses))]
+             [:div {}
+              (str (count submissions) " Submissions")
+              [:ul {} (map (fn [[k v]] [:li {} (str k ": " v)]) frequencies)]]))]]))
 
 
 (react/defc Summary
