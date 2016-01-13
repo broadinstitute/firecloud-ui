@@ -125,7 +125,7 @@
                                        (on-done {:xhr us-xhr
                                                  :status-code us-status
                                                  :success? false
-                                                 :status-text "FireCloud user not activated"
+                                                 :status-text "You are successfully registered, but your account is currently inactive. You will be contacted via email when your account is activated."
                                                  :get-parsed-response parsed-us-response})
                                        (= us-status 404) (.replace (.-location js/window) "#profile")
                                        :else (on-done orig-response)))))
