@@ -8,11 +8,11 @@
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
     [org.broadinstitute.firecloud-ui.nav :as nav]
-    [org.broadinstitute.firecloud-ui.page.workspace.monitor.common :refer [all-success?]]
+    [org.broadinstitute.firecloud-ui.page.workspace.monitor.common :refer [all-success? any-running? any-failed?]]
     [org.broadinstitute.firecloud-ui.page.workspace.summary.acl-editor :refer [AclEditor]]
     [org.broadinstitute.firecloud-ui.page.workspace.summary.attribute-editor :as attributes]
     [org.broadinstitute.firecloud-ui.page.workspace.summary.workspace-cloner :refer [WorkspaceCloner]]
-    ))
+    [org.broadinstitute.firecloud-ui.utils :as utils]))
 
 
 (defn- render-tags [tags]
@@ -170,12 +170,22 @@
          (get-in ws ["workspace" "bucketName"])])
       (style/create-section-header "Analysis Submissions")
       (style/create-paragraph
-        (let [fail-count (->> submissions
-                           (filter (complement all-success?))
-                           count)]
-          (str (count submissions) " Submissions"
-            (when (pos? fail-count)
-              (str " (" fail-count " failed)")))))]]))
+        (let [success-count (->> submissions (filter all-success?) count)
+              running-count (->> submissions (filter any-running?) count)
+              fail-count (->> submissions (filter any-failed?) count)
+              unknown-count (- (count submissions) success-count running-count fail-count)]
+             [:div {}
+              (str (count submissions) " Submissions")
+              (when (or (pos? fail-count) (pos? running-count) (pos? success-count) (pos? unknown-count))
+                    [:ul {:style {:marginTop "0"}}
+                     (when (pos? success-count)
+                           [:li {} (str success-count " succeeded")])
+                     (when (pos? fail-count)
+                           [:li {} (str fail-count " failed")])
+                     (when (pos? running-count)
+                           [:li {} (str running-count " running")])
+                     (when (pos? unknown-count)
+                           [:li {} (str unknown-count " unknown")])])]))]]))
 
 
 (react/defc Summary
