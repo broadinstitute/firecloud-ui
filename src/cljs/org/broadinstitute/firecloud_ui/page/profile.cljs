@@ -50,16 +50,11 @@
    :render-radio-field
    (fn [{:keys [state]} key value]
        [:div {:style {:clear "both" :marginTop "0.167em" :width "30ex"}}
-        (if (= (get-in @state [:values key]) value)
-          [:input {:type "radio"
-                   :value value
-                   :checked true
-                   :name key
-                   :onChange #(swap! state assoc-in [:values key] value)} value]
-          [:input {:type "radio"
-                   :value value
-                   :name key
-                   :onChange #(swap! state assoc-in [:values key] value)} value])])
+        [:label {}
+         [:input {:type "radio" :value value :name key
+                  :checked (= (get-in @state [:values key]) value)
+                  :onChange #(swap! state assoc-in [:values key] value)}]
+         value]])
    :render-nested-field
    (fn [{:keys [state]} key label]
        [:div {:style {:float "left"}}

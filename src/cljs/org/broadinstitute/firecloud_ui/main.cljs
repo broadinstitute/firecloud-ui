@@ -150,7 +150,12 @@
           (let [parsed-values (when success? (common/parse-profile (get-parsed-response)))]
             (cond
               (and success? (>= (int (:isRegistrationComplete parsed-values)) 1))
-              (swap! state assoc :registration-status :registered :name (str (:firstName parsed-values) (:lastName parsed-values)))
+              (swap! state assoc :registration-status :registered
+                :name (let [name (str (:firstName parsed-values) " " (:lastName parsed-values))]
+                        (if (-> name clojure.string/trim empty?)
+                          ; this is here primarily for old users without :firstName/:lastName fields
+                          "Profile"
+                          name)))
               success? ; partial profile case
               (swap! state assoc :registration-status :not-registered)
               :else
