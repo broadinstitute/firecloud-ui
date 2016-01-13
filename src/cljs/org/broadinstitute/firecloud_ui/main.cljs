@@ -70,7 +70,7 @@
       spacer
       [Link {:href "#" :text "Terms of Service" :target "_self"}]
       spacer
-      [Link {:href "mailto:firecloud-help@broadinstitute.org?Subject=FireCloud%20Help" :text "Support" :target "_blank"}]]]))
+      [Link {:href "http://gatkforums.broadinstitute.org/firecloud" :text "Support" :target "_blank"}]]]))
 
 
 (def routes
