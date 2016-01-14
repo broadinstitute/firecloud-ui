@@ -22,9 +22,16 @@
 
 
 (react/defc Form
-  {:get-values
-   (fn [{:keys [state]}]
+  {:get-field-keys
+   (fn []
+     (list :firstName :lastName :title :institute :institutionalProgram :programLocationCity :programLocationState
+       :programLocationCountry))
+   :get-values
+   (fn [{:keys [state refs this]}]
      (reduce-kv (fn [r k v] (assoc r k (clojure.string/trim v))) {} (:values @state)))
+   :valid?
+   (fn [{:keys [refs this]}]
+     (apply input/validate refs (map name (react/call :get-field-keys this))))
    :render
    (fn [{:keys [state this]}]
      (cond (:error-message @state) (style/create-server-error-message (:error-message @state))
@@ -61,19 +68,21 @@
        [:div {:style {:float "left"}}
         [:label {}
          [:div {:style {:marginBottom "0.16667em"}} label]]
-        (style/create-text-field
-          {:style {:marginRight "1em" :marginTop "0.167em" :width "30ex"}
-           :value (get-in @state [:values key])
-           :onChange #(swap! state assoc-in [:values key] (-> % .-target .-value))})])
+        [input/TextField {:style {:marginRight "1em"}
+                          :defaultValue (get-in @state [:values key])
+                          :ref (name key) :placeholder (get-in @state [:values key])
+                          :predicates [(input/nonempty "Field")]
+                          :onChange #(swap! state assoc-in [:values key] (-> % .-target .-value))}]])
    :render-field
    (fn [{:keys [state]} key label]
      [:div {:style {:clear "both"}}
       [:label {}
        (style/create-form-label label)
-       (style/create-text-field
-         {:style {:marginTop "0.167em" :width "30ex"}
-          :value (get-in @state [:values key])
-          :onChange #(swap! state assoc-in [:values key] (-> % .-target .-value))})]])
+       [input/TextField {
+                         :defaultValue (get-in @state [:values key])
+                         :ref (name key) :placeholder (get-in @state [:values key])
+                         :predicates [(input/nonempty "Fields")]
+                         :onChange #(swap! state assoc-in [:values key] (-> % .-target .-value))}]]])
    :render-nih-link-section
    (fn [{:keys [state]}]
      (let [{:keys [linkedNihUsername lastLinkTime isDbgapAuthorized]} (:values @state)
@@ -159,17 +168,19 @@
    :save
    (fn [{:keys [this props state refs]}]
      (swap! state (fn [s] (assoc (dissoc s :server-error) :in-progress? true)))
-     (let [values (react/call :get-values (@refs "form"))]
-       (endpoints/profile-set
-         values
-         (fn [{:keys [success? get-parsed-response]}]
-           (swap! state (fn [s]
-                          (let [new-state (dissoc s :in-progress?)]
-                            (if-not success?
-                              (assoc new-state :server-error (get-parsed-response))
-                              (let [on-done (or (:on-done props) #(swap! state dissoc :done?))]
-                                (js/setTimeout on-done 2000)
-                                (assoc new-state :done? true))))))))))})
+     (let [values (react/call :get-values (@refs "form"))
+           valid? (react/call :valid? (@refs "form"))]
+       (when valid?
+         (endpoints/profile-set
+           values
+           (fn [{:keys [success? get-parsed-response]}]
+             (swap! state (fn [s]
+                            (let [new-state (dissoc s :in-progress?)]
+                              (if-not success?
+                                (assoc new-state :server-error (get-parsed-response))
+                                (let [on-done (or (:on-done props) #(swap! state dissoc :done?))]
+                                  (js/setTimeout on-done 2000)
+                                  (assoc new-state :done? true)))))))))))})
 
 (defn render [props]
   (react/create-element Page props))
