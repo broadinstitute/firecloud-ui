@@ -4,6 +4,7 @@
    [dmohs.react :as react]
    [org.broadinstitute.firecloud-ui.common :as common]
    [org.broadinstitute.firecloud-ui.common.components :as components]
+   [org.broadinstitute.firecloud-ui.common.input :as input]
    [org.broadinstitute.firecloud-ui.common.style :as style]
    [org.broadinstitute.firecloud-ui.config :as config]
    [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
@@ -144,30 +145,31 @@
         [:div {}
          [Form {:ref "form" :parent-nav-context (:nav-context props)}]]
         [:div {:style {:marginTop "2em"}}
+         (when (:server-error @state)
+           [:div {:style {:marginBottom "1em"}}
+            [components/ErrorViewer {:error (:server-error @state)}]])
          (cond
-           (not (or (:in-progress? @state) (:done? @state)))
-           [components/Button {:text (if new? "Register" "Save Profile") 
-                               :onClick #(react/call :save this)}]
            (:done? @state)
            [:div {:style {:color (:success-green style/colors)}} "Profile saved!"]
            (:in-progress? @state)
            [components/Spinner {:text "Saving..."}]
-           (:server-error @state)
-           [components/ErrorViewer {:error (:server-error @state)}])]]))
+           :else
+           [components/Button {:text (if new? "Register" "Save Profile")
+                               :onClick #(react/call :save this)}])]]))
    :save
    (fn [{:keys [this props state refs]}]
      (swap! state (fn [s] (assoc (dissoc s :server-error) :in-progress? true)))
      (let [values (react/call :get-values (@refs "form"))]
        (endpoints/profile-set
-        values
-        (fn [{:keys [success? get-parsed-response]}]
-          (swap! state (fn [s]
-                         (let [new-state (dissoc s :in-progress?)]
-                           (if-not success?
-                             (assoc new-state :server-error (get-parsed-response))
-                             (let [on-done (or (:on-done props) #(swap! state dissoc :done?))]
-                               (js/setTimeout on-done 2000)
-                               (assoc new-state :done? true))))))))))})
+         values
+         (fn [{:keys [success? get-parsed-response]}]
+           (swap! state (fn [s]
+                          (let [new-state (dissoc s :in-progress?)]
+                            (if-not success?
+                              (assoc new-state :server-error (get-parsed-response))
+                              (let [on-done (or (:on-done props) #(swap! state dissoc :done?))]
+                                (js/setTimeout on-done 2000)
+                                (assoc new-state :done? true))))))))))})
 
 (defn render [props]
   (react/create-element Page props))
