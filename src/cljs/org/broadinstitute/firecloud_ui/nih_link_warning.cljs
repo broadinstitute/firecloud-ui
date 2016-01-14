@@ -29,11 +29,12 @@
          (when (and (get status "isDbgapAuthorized")
                     (.isBefore expire-time _24-hours-from-now))
            [:div {:style {:border "1px solid #c00" :backgroundColor "#fcc"
-                          :color "#800" :fontSize "small" :padding "6px 10px"}}
-            "Your NIH account link (" (get status "linkedNihUsername") ") will expire "
+                          :color "#800" :fontSize "small" :padding "6px 10px" :text-align "center"}}
+            "Your access to TCGA Controlled Access workspaces and data will expire "
             (.calendar expire-time) ". "
             [:a {:href (profile/get-nih-link-href)} "Re-link"]
-            " your account before then to retain dbGaP authorization."]))))
+            " your FireCloud and eRA Commons / NIH accounts (" (get status "linkedNihUsername")
+            ") before then to retain access to these workspaces and data."]))))
    :component-did-mount
    (fn [{:keys [props state]}]
      (get-profile
