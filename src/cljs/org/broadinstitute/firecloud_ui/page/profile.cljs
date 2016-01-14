@@ -25,7 +25,7 @@
   {:get-field-keys
    (fn []
      (list :firstName :lastName :title :institute :institutionalProgram :programLocationCity :programLocationState
-       :programLocationCountry))
+       :programLocationCountry :pi))
    :get-values
    (fn [{:keys [state refs this]}]
      (reduce-kv (fn [r k v] (assoc r k (clojure.string/trim v))) {} (:values @state)))
@@ -81,7 +81,7 @@
        [input/TextField {
                          :defaultValue (get-in @state [:values key])
                          :ref (name key) :placeholder (get-in @state [:values key])
-                         :predicates [(input/nonempty "Fields")]
+                         :predicates [(input/nonempty "Field")]
                          :onChange #(swap! state assoc-in [:values key] (-> % .-target .-value))}]]])
    :render-nih-link-section
    (fn [{:keys [state]}]
