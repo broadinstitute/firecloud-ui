@@ -107,7 +107,8 @@
                                       :selected (= (:selected-item props) (item :key))
                                       :onClick (fn [e] ((:on-nav props) (item :key)))}])
            top-nav-bar-items)
-      [nih-link-warning/NihLinkWarning]])})
+      (when (:show-nih-link-warning? props)
+        [nih-link-warning/NihLinkWarning])])})
 
 
 (react/defc LoggedIn
@@ -137,7 +138,8 @@
              :status (status-page/render)
              [:div {}
               [TopNavBar {:selected-item page
-                          :on-nav (fn [item] (nav/navigate (:nav-context props) (name item)))}]
+                          :on-nav (fn [item] (nav/navigate (:nav-context props) (name item)))
+                          :show-nih-link-warning? (not (contains? #{:status :profile} page))}]
               (let [item (first (filter #(= (% :key) page) routes))]
                 (if item
                   ((item :render) {:nav-context nav-context})

@@ -1,5 +1,6 @@
 (ns org.broadinstitute.firecloud-ui.nih-link-warning
   (:require
+   cljsjs.moment
    [dmohs.react :as react]
    [org.broadinstitute.firecloud-ui.common :as common]
    [org.broadinstitute.firecloud-ui.page.profile :as profile]

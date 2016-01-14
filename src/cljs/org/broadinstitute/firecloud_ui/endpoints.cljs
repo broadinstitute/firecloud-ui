@@ -587,6 +587,12 @@
     :service-prefix "/service/register"))
 
 
+(defn profile-get-nih-status [on-done]
+  (utils/ajax-orch
+   "/nih/status"
+   {:on-done on-done}))
+
+
 (defn profile-link-nih-account [token on-done]
   (utils/ajax-orch
    "/nih/callback"
