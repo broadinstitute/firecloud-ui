@@ -29,8 +29,8 @@
          (when (and (get status "isDbgapAuthorized")
                     (.isBefore expire-time _24-hours-from-now))
            [:div {:style {:border "1px solid #c00" :backgroundColor "#fcc"
-                          :color "#800" :fontSize "small" :padding "6px 10px"}}
-            "Your access to TCGA Controlled Access workspaces and data will expire today at "
+                          :color "#800" :fontSize "small" :padding "6px 10px" :text-align "center"}}
+            "Your access to TCGA Controlled Access workspaces and data will expire "
             (.calendar expire-time) ". "
             [:a {:href (profile/get-nih-link-href)} "Re-link"]
             " your FireCloud and eRA Commons / NIH accounts (" (get status "linkedNihUsername")
