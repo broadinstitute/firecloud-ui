@@ -6,11 +6,6 @@
     ))
 
 
-(defn all-success? [submission]
-  (and (every? #(or (= "Succeeded" (% "status")) (= "Success" (% "status"))) (submission "workflows"))
-    (zero? (count (submission "notstarted")))))
-
-
 (defn render-date [date]
   (let [m (js/moment date)]
     (str (.format m "L [at] LTS") " (" (.fromNow m) ")")))
@@ -23,6 +18,17 @@
 (def call-success-statuses #{"Done"})
 (def call-running-statuses #{"NotStarted" "Starting" "Running"})
 (def call-failure-statuses #{"Failed" "Aborted"})
+
+(defn all-success? [submission]
+  (and (every? #(contains? wf-success-statuses (% "status")) (submission "workflows"))
+    (zero? (count (submission "notstarted")))))
+
+(defn any-running? [submission]
+  (some #(contains? wf-running-statuses (% "status")) (submission "workflows")))
+
+(defn any-failed? [submission]
+  (or (some #(contains? wf-failure-statuses (% "status")) (submission "workflows"))
+    (pos? (count (submission "notstarted")))))
 
 (def ^:private success-icon
   (icons/font-icon {:style {:color (:success-green style/colors) :fontSize 12 :marginRight 4}}
