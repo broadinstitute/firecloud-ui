@@ -29,7 +29,7 @@
    :get-values
    (fn [{:keys [state refs this]}]
      (reduce-kv (fn [r k v] (assoc r k (clojure.string/trim v))) {} (:values @state)))
-   :valid?
+   :invalid-messages
    (fn [{:keys [refs this]}]
      (apply input/validate refs (map name (react/call :get-field-keys this))))
    :render
@@ -169,8 +169,13 @@
    (fn [{:keys [this props state refs]}]
      (swap! state (fn [s] (assoc (dissoc s :server-error) :in-progress? true)))
      (let [values (react/call :get-values (@refs "form"))
-           valid? (react/call :valid? (@refs "form"))]
-       (when valid?
+           invalid-messages (react/call :invalid-messages (@refs "form"))]
+       (cond
+         (not (nil? invalid-messages))
+         (swap! state (fn [s]
+                        (let [new-state (dissoc s :in-progress?)]
+                          (assoc new-state :server-error (fn [] (str invalid-messages))))))
+         :else
          (endpoints/profile-set
            values
            (fn [{:keys [success? get-parsed-response]}]
