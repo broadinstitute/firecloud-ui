@@ -46,15 +46,7 @@
           [:div {}
            [:div {:style {:display "flex"}}
             [:div {:style {:flex "0 0 20ex"}} "eRA Commons / NIH Username:"]
-            [:div {:style {:flex "0 0 auto"}}
-             (cond
-               (:pending-nih-username-token @state)
-               [components/Spinner {:ref "pending-spinner" :text "Creating NIH account link..."}]
-               (nil? username)
-               [:a {:href (get-nih-link-href)}
-                "Log-In to NIH to link your account"]
-               :else
-               username)]]
+            [:div {:style {:flex "0 0 auto"}} username]]
            [:div {:style {:display "flex" :marginTop "1em"}}
             [:div {:style {:flex "0 0 20ex"}} "Link Expiration:"]
             [:div {:style {:flex "0 0 auto"}}
