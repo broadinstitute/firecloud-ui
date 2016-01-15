@@ -31,7 +31,9 @@
            [:div {:style {:border "1px solid #c00" :backgroundColor "#fcc"
                           :color "#800" :fontSize "small" :padding "6px 10px" :text-align "center"}}
             "Your access to TCGA Controlled Access workspaces and data will expire "
-            (.calendar expire-time) ". "
+            (.calendar expire-time) " and your access to TCGA Controlled Access workspaces will be revoked "
+            "within 24 hours of that time. "
+            [:br]
             [:a {:href (profile/get-nih-link-href)} "Re-link"]
             " your FireCloud and eRA Commons / NIH accounts (" (get status "linkedNihUsername")
             ") before then to retain access to these workspaces and data."]))))
