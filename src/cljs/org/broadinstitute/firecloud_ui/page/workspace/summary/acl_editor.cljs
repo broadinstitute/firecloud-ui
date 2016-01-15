@@ -41,7 +41,7 @@
               :disabled (:read-only? acl-entry)
               :spellCheck false
               :value (:email acl-entry)
-              :onChange #(swap! state assoc-in [:acl-vec i :email] %)}]
+              :onChange #(swap! state assoc-in [:acl-vec i :email] (.. % -target -value))}]
             (style/create-identity-select
               {:ref (str "acl-value" i)
                :style {:float "right" :width column-width :height 33}

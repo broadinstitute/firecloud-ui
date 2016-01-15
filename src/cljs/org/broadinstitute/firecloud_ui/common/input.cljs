@@ -26,7 +26,7 @@
                                           {:borderColor (:exception-red style/colors)}))
                                :onChange #(do (swap! state dissoc :invalid)
                                               (when-let [x (:onChange props)]
-                                                (x (.. % -target -value))))
+                                                (x %)))
                                :defaultValue (:defaultValue props)
                                :value (:value props)
                                :placeholder (:placeholder props)
