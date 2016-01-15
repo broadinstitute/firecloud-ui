@@ -1,16 +1,16 @@
 (ns org.broadinstitute.firecloud-ui.page.profile
   (:require
-   clojure.string
-   [dmohs.react :as react]
-   [org.broadinstitute.firecloud-ui.common :as common]
-   [org.broadinstitute.firecloud-ui.common.components :as components]
-   [org.broadinstitute.firecloud-ui.common.input :as input]
-   [org.broadinstitute.firecloud-ui.common.style :as style]
-   [org.broadinstitute.firecloud-ui.config :as config]
-   [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
-   [org.broadinstitute.firecloud-ui.nav :as nav]
-   [org.broadinstitute.firecloud-ui.utils :as utils]
-   ))
+    clojure.string
+    [dmohs.react :as react]
+    [org.broadinstitute.firecloud-ui.common :as common]
+    [org.broadinstitute.firecloud-ui.common.components :as components]
+    [org.broadinstitute.firecloud-ui.common.input :as input]
+    [org.broadinstitute.firecloud-ui.common.style :as style]
+    [org.broadinstitute.firecloud-ui.config :as config]
+    [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
+    [org.broadinstitute.firecloud-ui.nav :as nav]
+    [org.broadinstitute.firecloud-ui.utils :as utils]
+    [org.broadinstitute.firecloud-ui.common.icons :as icons]))
 
 
 (defn get-nih-link-href []
@@ -29,7 +29,7 @@
    :get-values
    (fn [{:keys [state refs this]}]
      (reduce-kv (fn [r k v] (assoc r k (clojure.string/trim v))) {} (:values @state)))
-   :invalid-messages
+   :validation-errors
    (fn [{:keys [refs this]}]
      (apply input/validate refs (map name (react/call :get-field-keys this))))
    :render
@@ -38,21 +38,22 @@
            (:values @state)
            [:div {}
             [:div {:style {:fontWeight "bold" :margin "1em 0 1em 0"}} "* - required fields"]
-            (react/call :render-field this :firstName "*First Name:")
-            (react/call :render-field this :lastName "*Last Name")
-            (react/call :render-field this :title "*Title:")
-            (react/call :render-field this :institute "*Institute:")
-            (react/call :render-field this :institutionalProgram "*Institutional Program:")
-            [:div {:style {:fontSize "88%"}} "Program Location:"
+            (react/call :render-field this :firstName "First Name" true)
+            (react/call :render-field this :lastName "Last Name" true)
+            (react/call :render-field this :title "Title" true)
+            (react/call :render-field this :institute "Institute" true)
+            (react/call :render-field this :institutionalProgram "Institutional Program" true)
+            [:div {}
+              [:span {:style {:fontSize "88%"}} "Program Location:"]
               [:div {}
-                (react/call :render-nested-field this :programLocationCity "*City:")
-                (react/call :render-nested-field this :programLocationState "*State/Province:")
-                (react/call :render-nested-field this :programLocationCountry "*Country:")]]
-                (react/call :render-field this :pi "*Principal Investigator/Program Lead:")
-            [:div {:style {:marginBottom "1em" :fontSize "88%"}} "*NonProfit Status:"
+                (react/call :render-nested-field this :programLocationCity "City" true)
+                (react/call :render-nested-field this :programLocationState "State/Province" true)
+                (react/call :render-nested-field this :programLocationCountry "Country" true)]]
+                (react/call :render-field this :pi "Principal Investigator/Program Lead" true)
+            [:div {:style {:marginBottom "1em" :fontSize "88%"}} "*NonProfit Status"
               (react/call :render-radio-field this :nonProfitStatus "Profit")
               (react/call :render-radio-field this :nonProfitStatus "Non-Profit")]
-            (react/call :render-field this :billingAccountName "Google Billing Account Name")
+            (react/call :render-field this :billingAccountName "Google Billing Account Name" false)
             [:div {} (react/call :render-nih-link-section this)]]
            :else [components/Spinner {:text "Loading User Profile..."}]))
    :render-radio-field
@@ -64,24 +65,23 @@
                   :onChange #(swap! state assoc-in [:values key] value)}]
          value]])
    :render-nested-field
-   (fn [{:keys [state]} key label]
+   (fn [{:keys [state]} key label required]
        [:div {:style {:float "left"}}
         [:label {}
-         [:div {:style {:marginBottom "0.16667em"}} label]]
+         [:div {:style {:marginBottom "0.16667em" :fontSize "88%"}} (str (when required "*") label ":")]]
         [input/TextField {:style {:marginRight "1em"}
                           :defaultValue (get-in @state [:values key])
                           :ref (name key) :placeholder (get-in @state [:values key])
-                          :predicates [(input/nonempty "Field")]
+                          :predicates [(when required (input/nonempty label))]
                           :onChange #(swap! state assoc-in [:values key] (-> % .-target .-value))}]])
    :render-field
-   (fn [{:keys [state]} key label]
+   (fn [{:keys [state]} key label required]
      [:div {:style {:clear "both"}}
       [:label {}
-       (style/create-form-label label)
-       [input/TextField {
-                         :defaultValue (get-in @state [:values key])
+       (style/create-form-label (str (when required "*") label ":"))
+       [input/TextField {:defaultValue (get-in @state [:values key])
                          :ref (name key) :placeholder (get-in @state [:values key])
-                         :predicates [(input/nonempty "Field")]
+                         :predicates [(when required (input/nonempty label))]
                          :onChange #(swap! state assoc-in [:values key] (-> % .-target .-value))}]]])
    :render-nih-link-section
    (fn [{:keys [state]}]
@@ -157,6 +157,13 @@
          (when (:server-error @state)
            [:div {:style {:marginBottom "1em"}}
             [components/ErrorViewer {:error (:server-error @state)}]])
+         (when (:validation-errors @state)
+           [:div {:style {:marginBottom "1em"}}
+            [:span {:style {:paddingRight "1ex"}}
+             (icons/font-icon {:style {:color (:exception-red style/colors)}}
+               :status-warning-triangle)] "Validation Errors: "
+            [:ul {}
+             (map (fn [e] [:li {} e]) (:validation-errors @state))]])
          (cond
            (:done? @state)
            [:div {:style {:color (:success-green style/colors)}} "Profile saved!"]
@@ -169,23 +176,23 @@
    (fn [{:keys [this props state refs]}]
      (swap! state (fn [s] (assoc (dissoc s :server-error) :in-progress? true)))
      (let [values (react/call :get-values (@refs "form"))
-           invalid-messages (react/call :invalid-messages (@refs "form"))]
+           validation-errors (react/call :validation-errors (@refs "form"))]
        (cond
-         (not (nil? invalid-messages))
-         (swap! state (fn [s]
-                        (let [new-state (dissoc s :in-progress?)]
-                          (assoc new-state :server-error (fn [] (str invalid-messages))))))
-         :else
+         (nil? validation-errors)
          (endpoints/profile-set
            values
            (fn [{:keys [success? get-parsed-response]}]
              (swap! state (fn [s]
-                            (let [new-state (dissoc s :in-progress?)]
+                            (let [new-state (dissoc s :in-progress? :validation-errors)]
                               (if-not success?
                                 (assoc new-state :server-error (get-parsed-response))
                                 (let [on-done (or (:on-done props) #(swap! state dissoc :done?))]
                                   (js/setTimeout on-done 2000)
-                                  (assoc new-state :done? true)))))))))))})
+                                  (assoc new-state :done? true))))))))
+         :else
+         (swap! state (fn [s]
+                        (let [new-state (dissoc s :in-progress? :done?)]
+                          (assoc new-state :validation-errors validation-errors)))))))})
 
 (defn render [props]
   (react/create-element Page props))
