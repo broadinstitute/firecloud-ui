@@ -200,7 +200,13 @@
         "Anyone accessing this website expressly consents to monitoring of their actions and all "
         "communications or data transiting or stored on related to this website and is advised "
         "that if such monitoring reveals possible evidence of criminal activity, NIH may provide "
-        "that evidence to law enforcement officials."]]])})
+        "that evidence to law enforcement officials."]
+       [:p {:style {:fontWeight "bold"}} "WARNING NOTICE (when accessing controlled data)"]
+       [:p {:style {:fontWeight "bold"}}
+        "You are reminded that when accessing controlled access information you are bound by the "
+        "dbGaP TCGA "
+        [:a {:href "http://cancergenome.nih.gov/pdfs/Data_Use_Certv082014" :target "_blank"}
+         "DATA USE CERTIFICATION AGREEMENT (DUCA)"] "."]]])})
 
 
 (react/defc App
