@@ -55,15 +55,15 @@
                         (swap! state dissoc :blocker))
                     (if (= name (config "name"))
                       (swap! state assoc :loaded-config (get-parsed-response) :blocker nil)
-                      (do (swap! state assoc :loaded-config (get-parsed-response))
-                          (endpoints/call-ajax-orch ;; TODO - make unified call in orchestration
-                            {:endpoint (endpoints/rename-workspace-method-config workspace-id config)
-                             :payload (select-keys new-conf ["name" "namespace" "workspaceName"])
-                             :headers {"Content-Type" "application/json"}
-                             :on-done (fn [{:keys [success? xhr]}]
-                                        (swap! state assoc :blocker nil)
-                                        (when-not success?
-                                          (js/alert (str "Exception:\n" (.-statusText xhr)))))})))))})))
+                      (endpoints/call-ajax-orch ;; TODO - make unified call in orchestration
+                        {:endpoint (endpoints/rename-workspace-method-config workspace-id config)
+                         :payload (select-keys new-conf ["name" "namespace" "workspaceName"])
+                         :headers {"Content-Type" "application/json"}
+                         :on-done (fn [{:keys [success? xhr]}]
+                                    (swap! state dissoc :blocker)
+                                    (if success?
+                                      ((:on-rename props) name)
+                                      (js/alert (str "Exception:\n" (.-statusText xhr)))))}))))})))
 
 
 (react/defc MethodDetailsViewer
