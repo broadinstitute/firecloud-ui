@@ -7,7 +7,6 @@ ui:
   ports:
     - "80:80"
     - "443:443"
-    {{.Data.ui_additional_ports}}
   {{.Data.ui_dns}}
   {{.Data.ui_volumes}}
   environment:

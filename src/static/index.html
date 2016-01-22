@@ -1,12 +1,12 @@
+<!DOCTYPE html>
 <html>
   <head profile="http://www.w3.org/2005/10/profile">
     <meta charset="utf-8">
     <meta http-equiv="Content-type" content="text/html;charset=utf-8">
     <meta name="viewport" content="initial-scale=1,width=device-width">
-
-    <?php $is_minimized_build = getenv('BUILD_TYPE') == 'minimized'; ?>
     <title>FireCloud | Broad Institute</title>
-    <link href='//fonts.googleapis.com/css?family=Roboto:400,500,700' rel='stylesheet' type='text/css'>
+    <link href='//fonts.googleapis.com/css?family=Roboto:400,500,700'
+          rel='stylesheet' type='text/css'>
     <style>
       body {
         margin: 0;
@@ -35,18 +35,9 @@
       ga('create', 'UA-64736463-1', 'auto');
       ga('send', 'pageview');
     </script>
-    <?php if (!$is_minimized_build) { ?>
-      <script src="build/goog/base.js"></script>
-    <?php } ?>
   </head>
   <body>
-    <div id="contentRoot"></div>
+    <div id="app">Loading application...</div>
     <script src="compiled.js"></script>
-    <?php if (!$is_minimized_build) { ?>
-      <script>goog.require('org.broadinstitute.firecloud_ui.main');</script>
-    <?php } ?>
-    <script>
-      var app = org.broadinstitute.firecloud_ui.main.render(document.getElementById('contentRoot'));
-    </script>
   </body>
 </html>

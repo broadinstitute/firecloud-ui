@@ -1,6 +1,5 @@
 (ns org.broadinstitute.firecloud-ui.main
   (:require
-   [devtools.core :as devtools]
    [dmohs.react :as react]
    [org.broadinstitute.firecloud-ui.common :as common]
    [org.broadinstitute.firecloud-ui.common.components :as comps]
@@ -247,8 +246,9 @@
      (reset! utils/access-token (:access-token @state))
      (utils/set-access-token-cookie (:access-token @state)))
    :component-did-mount
-   (fn [{:keys [this state]}]
-     (.addEventListener js/window "hashchange" (partial react/call :handle-hash-change this))
+   (fn [{:keys [this state locals]}]
+     (swap! locals assoc :hash-change-listener (partial react/call :handle-hash-change this))
+     (.addEventListener js/window "hashchange" (:hash-change-listener @locals))
      (utils/ajax {:url "/config.json"
                   :on-done (fn [{:keys [success? get-parsed-response]}]
                              (if success?
@@ -259,29 +259,11 @@
    :component-will-update
    (fn [{:keys [next-state]}]
      (reset! utils/access-token (:access-token next-state))
-     (utils/set-access-token-cookie (:access-token next-state)))})
+     (utils/set-access-token-cookie (:access-token next-state)))
+   :component-will-unmount
+   (fn [{:keys [locals]}]
+     (.removeEventListener js/window "hashchange" (:hash-change-listener @locals)))})
 
 
-(defn- render-without-init [element]
-  (react/render (react/create-element App) element nil goog.DEBUG))
-
-
-(defonce dev-element (atom nil))
-
-
-(defn ^:export render [element]
-  (when goog.DEBUG
-    (reset! dev-element element))
-  (render-without-init element))
-
-
-(defn dev-reload [figwheel-data]
-  (render-without-init @dev-element))
-
-
-(when goog.DEBUG
-  (defonce devtools-installed?
-    (do
-      (devtools/set-pref! :install-sanity-hints true)
-      (devtools/install!)
-      nil)))
+(defn render-application [& [hot-reload?]]
+  (react/render (react/create-element App) (.. js/document (getElementById "app")) nil hot-reload?))
