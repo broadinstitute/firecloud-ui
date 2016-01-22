@@ -7,8 +7,10 @@
 
 
 (defn render-date [date]
-  (let [m (js/moment date)]
-    (str (.format m "L [at] LTS") " (" (.fromNow m) ")")))
+  (if date
+    (let [m (js/moment date)]
+      (str (.format m "L [at] LTS") " (" (.fromNow m) ")"))
+    [:span {:style {:fontStyle "oblique"}} "Pending..."]))
 
 
 (def wf-success-statuses #{"Succeeded"})
