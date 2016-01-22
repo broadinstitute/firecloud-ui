@@ -189,8 +189,10 @@
           [WorkflowsTable {:workflows (submission "workflows")
                            :workspace-id (:workspace-id props)
                            :submission-id (submission "submissionId")}]
-          [:h2 {:style {:padding "3em 0 0.5em 0"}} "Failed to Start:"]
-          [WorkflowFailuresTable {:workflows (submission "notstarted")}]])))
+          (when-not (empty? (submission "notstarted"))
+            [:div {}
+             [:h2 {:style {:padding "3em 0 0.5em 0"}} "Failed to Start:"]
+             [WorkflowFailuresTable {:workflows (submission "notstarted")}]])])))
    :load-details
    (fn [{:keys [props state]}]
      (endpoints/call-ajax-orch
