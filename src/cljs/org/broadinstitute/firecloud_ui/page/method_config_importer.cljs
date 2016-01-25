@@ -54,53 +54,59 @@
     [:div {}
      (when (:blocking-text @state)
        [comps/Blocker {:banner (:blocking-text @state)}])
-     [:div {:style {:marginBottom "1em" :width 290}}
-      (when (:show-perms-overlay? @state)
-        [mca/AgoraPermsEditor {:is-conf config? :selected-entity entity
-                               :dismiss-self #(swap! state dissoc :show-perms-overlay?)}])
-      (when (:show-redact-overlay? @state)
-        [Redactor {:dismiss #(swap! state dissoc :show-redact-overlay?)
-                   :entity entity :config? config? :on-delete (:on-delete props)}])
-      [comps/SidebarButton {:style :light :margin :top :color :button-blue
-                            :text "Permissions..." :icon :gear
-                            :onClick #(swap! state assoc :show-perms-overlay? true)}]
-      [comps/SidebarButton
-       {:style :light :margin :top :color :exception-red
-        :text "Redact" :icon :trash-can
-        :onClick #(swap! state assoc :show-redact-overlay? true)}]]
+     (when (:show-perms-overlay? @state)
+       [mca/AgoraPermsEditor {:is-conf config? :selected-entity entity
+                              :dismiss-self #(swap! state dissoc :show-perms-overlay?)}])
+     (when (:show-redact-overlay? @state)
+       [Redactor {:dismiss #(swap! state dissoc :show-redact-overlay?)
+                  :entity entity :config? config? :on-delete (:on-delete props)}])
      [comps/EntityDetails {:entity entity}]
-     [:div {:style {:fontSize "120%" :margin "1.5em 0 0.5em 0"}} "Save as:"]
-     (map
-       (fn [field]
-         [:div {:style {:float "left" :marginRight "0.5em"}}
-            (style/create-form-label (:label field))
-              (cond (= (:type field) "identity-select")
-                (style/create-identity-select {:ref (:key field)
-                                               :value (entity (:key field))}
-                                              (:options field))
-                :else
-                  [input/TextField {:defaultValue (entity (:key field))
-                                    :ref (:key field) :placeholder "Required"
-                                    :predicates [(input/nonempty "Fields")]}])])
-       fields)
-     (clear-both)
-
-     (when-not workspace-id
-       [:div {:style {:marginBottom "1em"}}
-        [:div {:style {:fontSize "120%" :margin "1em 0"}} "Destination Workspace:"]
-        (style/create-select
-          {:ref "workspace-id"
-           :style {:width 300}
-           :onChange (fn [event]
-                       (swap! state assoc :selected-workspace
-                                   (nth workspaces-list (js/parseInt (.-value (.-target event))))))}
-          (map
-            (fn [ws] (str (get-in ws ["workspace" "namespace"]) "/" (get-in ws ["workspace" "name"])))
-            workspaces-list))])
-     (style/create-validation-error-message (:validation-error @state))
-     [comps/ErrorViewer {:error (:server-error @state)}]
-     [comps/Button {:text (if workspace-id "Import" "Export")
-                    :onClick #(react/call :perform-copy this)}]]))
+     (when (:allow-edit props)
+       [:div {:style {:margin "1em 0"}}
+        [:div {:style {:float "left" :width 290 :paddingRight "1em"}}
+         [comps/SidebarButton {:style :light :color :button-blue
+                               :text "Permissions..." :icon :gear
+                               :onClick #(swap! state assoc :show-perms-overlay? true)}]]
+        [:div {:style {:float "left" :width 290}}
+         [comps/SidebarButton {:style :light :color :exception-red
+                               :text "Redact" :icon :trash-can
+                               :onClick #(swap! state assoc :show-redact-overlay? true)}]]
+        (clear-both)])
+     [:div {:style {:border (str "1px solid " (:line-gray style/colors))
+                    :backgroundColor (:background-gray style/colors)
+                    :borderRadius 8 :padding "1em" :marginTop "1em"}}
+      [:div {:style {:fontSize "120%" :marginBottom "0.5em"}}
+       (if workspace-id "Import as:" "Export to Workspace as:")]
+      (map
+        (fn [field]
+          [:div {:style {:float "left" :marginRight "0.5em"}}
+           (style/create-form-label (:label field))
+           (cond (= (:type field) "identity-select")
+             (style/create-identity-select {:ref (:key field)
+                                            :value (entity (:key field))}
+               (:options field))
+             :else
+             [input/TextField {:defaultValue (entity (:key field))
+                               :ref (:key field) :placeholder "Required"
+                               :predicates [(input/nonempty "Fields")]}])])
+        fields)
+      (clear-both)
+      (when-not workspace-id
+        [:div {:style {:marginBottom "1em"}}
+         [:div {:style {:fontSize "120%" :margin "1em 0"}} "Destination Workspace:"]
+         (style/create-select
+           {:ref "workspace-id"
+            :style {:width 300}
+            :onChange (fn [event]
+                        (swap! state assoc :selected-workspace
+                          (nth workspaces-list (js/parseInt (.-value (.-target event))))))}
+           (map
+             (fn [ws] (str (get-in ws ["workspace" "namespace"]) "/" (get-in ws ["workspace" "name"])))
+             workspaces-list))])
+      (style/create-validation-error-message (:validation-error @state))
+      [comps/ErrorViewer {:error (:server-error @state)}]
+      [comps/Button {:text (if workspace-id "Import" "Export")
+                     :onClick #(react/call :perform-copy this)}]]]))
 
 
 (react/defc ConfigImportForm
@@ -137,11 +143,8 @@
               :on-done (fn [{:keys [success? get-parsed-response]}]
                          (swap! state dissoc :blocking-text)
                          (if success?
-                           (do
-                             (on-back)
-                             (common/scroll-to-top)
-                             (when after-import (after-import {"namespace" namespace
-                                                               "name" name})))
+                           (when after-import (after-import {:config-id {:namespace namespace :name name}
+                                                             :workspace-id workspace-id}))
                            (swap! state assoc :server-error (get-parsed-response))))})))))
    :component-did-mount
    (fn [{:keys [props state]}]
@@ -200,11 +203,8 @@
               :on-done (fn [{:keys [success? get-parsed-response]}]
                          (swap! state dissoc :blocking-text)
                          (if success?
-                           (do
-                             (on-back)
-                             (common/scroll-to-top)
-                             (when after-import (after-import {"namespace" namespace
-                                                               "name" name})))
+                           (when after-import (after-import {:config-id {:namespace namespace :name name}
+                                                             :workspace-id workspace-id}))
                            (swap! state assoc :server-error (get-parsed-response))))})))))
    :component-did-mount
    (fn [{:keys [props state]}]
@@ -320,6 +320,7 @@
                               (react/call :reload (@refs "table")))
                  item-type (:selected-item @state)
                  :workspace-id (:workspace-id props)
+                 :allow-edit (:allow-edit props)
                  :on-back #(swap! state dissoc :selected-item)
                  :after-import (:after-import props)}]))
       [Table {:ref "table"
