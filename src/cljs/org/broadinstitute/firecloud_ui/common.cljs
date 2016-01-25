@@ -100,7 +100,7 @@
           :else "Complete")))
 
 (defn gcs-object->download-url [bucket object]
-  (str "https://console.cloud.google.com/m/cloudstorage/b/" bucket "/o/" object))
+  (str "https://storage.cloud.google.com/" bucket "/" object))
 
 (defn gcs-uri->download-url [gcs-uri]
   (let [matcher (re-find #"gs://([^/]+)/(.+)" gcs-uri)]
