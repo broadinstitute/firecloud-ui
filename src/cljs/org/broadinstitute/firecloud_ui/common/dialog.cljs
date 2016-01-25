@@ -82,7 +82,7 @@
                :href "javascript:;"
                :onClick #((:dismiss-self props))
                :onKeyDown (common/create-key-handler [:space :enter] #((:dismiss-self props)))}
-           "Cancel"])
+           (or (:cancel-text props) "Cancel")])
         (:ok-button props)]]])})
 
 

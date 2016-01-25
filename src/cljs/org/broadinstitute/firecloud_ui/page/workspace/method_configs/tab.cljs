@@ -39,9 +39,9 @@
                      [:div {:style {:padding "1em"}}
                       [comps/XButton {:dismiss #(swap! state dissoc :show-import-overlay?)}]
                       [MethodConfigImporter {:workspace-id (:workspace-id props)
-                                             :after-import (fn [config]
+                                             :after-import (fn [{:keys [config-id]}]
                                                              (swap! state dissoc :show-import-overlay?)
-                                                             ((:on-config-imported props) (config->id config)))}]])}])
+                                                             ((:on-config-imported props) config-id))}]])}])
       (let [server-response (:server-response @state)
             {:keys [configs error-message]} server-response]
         (cond

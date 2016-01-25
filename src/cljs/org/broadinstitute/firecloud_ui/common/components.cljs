@@ -37,7 +37,8 @@
             :onClick (if disabled?
                        #(js/alert (if (string? disabled?) disabled? "This action is disabled"))
                        (when-let [on-click (:onClick props)] #(on-click %)))
-            :onKeyDown (when-not disabled? (common/create-key-handler [:space :enter] (:onClick props)))}
+            :onKeyDown (when (and (:onClick props) (not disabled?))
+                         (common/create-key-handler [:space :enter] (:onClick props)))}
         (or (:text props) (icons/icon-text (:icon props)))
         (when (= (:style props) :add)
           [:span {:style {:display "inline-block" :height "1em" :width "1em" :marginLeft "1em"
@@ -165,24 +166,24 @@
                       :padding "1em"}}
         (react/call :render-details this make-field entity)
         [:div {:style {:paddingTop "0.5em"}}
-         [:span {:style {:fontWeight 500 :marginRight "1em"}} (if config? "Referenced Method:" "Payload:")]
+         [:span {:style {:fontWeight 500 :marginRight "1em"}} (if config? "Referenced Method:" "WDL:")]
          (style/create-link {:text (if (:payload-expanded @state) "Collapse" "Expand")
                              :onClick #(swap! state assoc :payload-expanded (not (:payload-expanded @state)))})]
         (when (:payload-expanded @state)
           (if config?
             [:div {:style {:margin "0.5em 0 0 1em"}}
              (react/call :render-details this make-field (entity "method"))
-             [:div {:style {:fontWeight 500 :marginTop "1em"}} "Payload:"]
-             [:pre {:style {:fontSize "90%"}} (get-in entity ["method" "payload"])]]
-            [:pre {:style {:fontSize "90%"}} (entity "payload")]))]))
+             [:div {:style {:fontWeight 500 :marginTop "1em"}} "WDL:"]
+             [:pre {:style {:fontSize "90%" :overflow "auto"}} (get-in entity ["method" "payload"])]]
+            [:pre {:style {:fontSize "90%" :overflow "auto"}} (entity "payload")]))]))
    :render-details
    (fn [{:keys []} make-field entity]
      [:div {}
-      [:div {:style {:float "left"}}
+      [:div {:style {:float "left" :marginRight "5em"}}
        (make-field entity "namespace" "Namespace: ")
        (make-field entity "name" "Name: ")
        (make-field entity "snapshotId" "Snapshot ID: ")]
-      [:div {:style {:float "left" :marginLeft "5em"}}
+      [:div {:style {:float "left"}}
        (make-field entity "createDate" "Created: " common/format-date)
        (make-field entity "entityType" "Entity Type: ")
        (make-field entity "synopsis" "Synopsis: ")]
