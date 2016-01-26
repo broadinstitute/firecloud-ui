@@ -53,16 +53,17 @@
                  {:hovering? false})
                :render
                (fn [{:keys [props state]}]
-                 [:div {:style {:float "left" :padding "1em 2em"
-                                :borderLeft (when (zero? (:index props))
-                                              (str "1px solid " (:line-gray style/colors)))
-                                :borderRight (str "1px solid " (:line-gray style/colors))
-                                :backgroundColor (when (:active? props) "white")
-                                :cursor "pointer"
-                                :position "relative"}
-                        :onMouseOver #(swap! state assoc :hovering? true)
-                        :onMouseOut #(swap! state assoc :hovering? false)
-                        :onClick #((:onClick props) %)}
+                 [:a {:style {:float "left" :padding "1em 2em"
+                              :borderLeft (when (zero? (:index props))
+                                            (str "1px solid " (:line-gray style/colors)))
+                              :borderRight (str "1px solid " (:line-gray style/colors))
+                              :backgroundColor (when (:active? props) "white")
+                              :cursor "pointer" :textDecoration "none" :color "black"
+                              :position "relative"}
+                      :href (:href props)
+                      :onMouseOver #(swap! state assoc :hovering? true)
+                      :onMouseOut #(swap! state assoc :hovering? false)
+                      :onClick #((:onClick props) %)}
                   (:text props)
                   (when (or (:active? props) (:hovering? @state))
                     [:div {:style {:position "absolute" :top "-0.5ex" :left 0
@@ -81,7 +82,7 @@
                          :padding "0 1.5em"}}
            (map-indexed
              (fn [i tab]
-               [Tab {:index i :text (:text tab)
+               [Tab {:index i :text (:text tab) :href (:href tab)
                      :active? (= i selected-index)
                      :onClick (fn [e]
                                 (let [k (if (= i selected-index) :onTabRefreshed :onTabSelected)

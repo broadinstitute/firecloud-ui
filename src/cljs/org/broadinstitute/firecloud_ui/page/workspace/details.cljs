@@ -33,7 +33,7 @@
        [:div {:style {:margin "0 -1em"}}
         [comps/TabBar {:selected-index (tab-string-to-index tab)
                        :items
-                       [{:text SUMMARY
+                       [{:text SUMMARY :href (nav/create-href (:nav-context props))
                          :content
                          (react/create-element
                            [summary-tab/Summary {:key workspace-id :ref SUMMARY
@@ -41,32 +41,24 @@
                                                  :nav-context nav-context
                                                  :on-delete (:on-delete props)
                                                  :on-clone (:on-clone props)}])
-                         :onTabSelected #(nav/navigate (:nav-context props))
                          :onTabRefreshed #(react/call :refresh (@refs SUMMARY))}
-                        {:text DATA
+                        {:text DATA :href (nav/create-href (:nav-context props) DATA)
                          :content
                          (react/create-element
                            [data-tab/WorkspaceData {:ref DATA :workspace-id workspace-id}])
-                         :onTabSelected #(nav/navigate (:nav-context props) DATA)
                          :onTabRefreshed #(react/call :refresh (@refs DATA))}
-                        {:text CONFIGS
+                        {:text CONFIGS :href (nav/create-href (:nav-context props) CONFIGS)
                          :content
                          (react/create-element
                            [method-configs-tab/Page {:ref CONFIGS
                                                      :workspace-id workspace-id
                                                      :on-submission-success #(nav/navigate (:nav-context props) MONITOR %)
                                                      :nav-context (nav/terminate-when (not= tab CONFIGS) nav-context)}])
-                         :onTabSelected #(when (or (empty? (:remaining nav-context))
-                                                   (not= CONFIGS tab))
-                                           (nav/navigate (:nav-context props) CONFIGS))
                          :onTabRefreshed #(react/call :refresh (@refs CONFIGS))}
-                        {:text MONITOR
+                        {:text MONITOR :href (nav/create-href (:nav-context props) MONITOR)
                          :content
                          (react/create-element
                            [monitor-tab/Page {:ref MONITOR
                                               :workspace-id workspace-id
                                               :nav-context (nav/terminate-when (not= tab MONITOR) nav-context)}])
-                         :onTabSelected #(when (or (empty? (:remaining nav-context))
-                                                   (not= MONITOR tab))
-                                           (nav/navigate (:nav-context props) MONITOR))
                          :onTabRefreshed #(react/call :refresh (@refs MONITOR))}]}]]))})
