@@ -108,7 +108,7 @@
 
 
 (defn- render-cell [{:keys [width onResizeMouseDown onSortClick sortOrder] :as props}]
-  [:div {:style (merge {:float "left" :position "relative" :width width :minWidth 10}
+  [:div {:style (merge {:display "inline-block" :position "relative" :width width :minWidth 10}
                   (:cell-style props))}
    (when (:onResizeMouseDown props)
      [:div {:style {:position "absolute" :width 20 :top 0 :bottom 0 :left (- width 10) :zIndex 1
@@ -150,7 +150,7 @@
           (fn [row-index row]
             (let [row-style (:row-style props)
                   row-style (if (fn? row-style) (row-style row-index row) row-style)]
-              [:div {:style row-style}
+              [:div {:style (merge {:whiteSpace "nowrap"} row-style)}
                (map
                  (fn [col]
                    (let [render-content (or (:content-renderer col)
@@ -184,7 +184,8 @@
          (render-cell
            {:width (:width column)
             :content (:header column)
-            :cell-style (when onResizeMouseDown {:borderRight "1px solid #777777" :marginRight -1})
+            :cell-style (when onResizeMouseDown {:borderRight (str "1px solid " (or (:resize-tab-color props) "#777777"))
+                                                 :marginRight -1})
             :cell-padding-left (or (:cell-padding-left props) 0)
             :content-container-style (merge
                                       {:padding (str "0.8em 0 0.8em "

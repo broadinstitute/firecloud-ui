@@ -30,6 +30,8 @@
 ;;     A CSS padding value used to separate the table and paginator.
 ;;   :resizable-columns? (optional, default true)
 ;;     Fallback value for column resizing.
+;;   :resize-tab-color (optional, default gray)
+;;     Color for the drag-to-resize tab
 ;;   :reorderable-columns? (optional, default true)
 ;;     Controls whether or not columns are reorderable.  When true, a reorder widget is presented
 ;;   :sortable-columns? (optional, default true)

@@ -88,7 +88,7 @@
                     :margin "2px 0 0 2px" :height (- row-height-px 4)
                     :position "relative"}}
         [:span {:style {:display "block" :backgroundColor "rgba(0,0,0,0.2)"
-                        :position "absolute" :top 0 :right 0 :bottom 0 :left 2}}]
+                        :position "absolute" :top 0 :right 0 :bottom 0 :left 0}}]
         (style/center {}
           (case status
             "Complete" [icons/CompleteIcon]
@@ -102,7 +102,7 @@
      [:a {:href (nav/create-href (:nav-context props) (get-in props [:data :href]))
           :style {:display "block"
                   :backgroundColor (style/color-for-status (get-in props [:data :status]))
-                  :marginTop 2 :height (- row-height-px 4)
+                  :height (- row-height-px 4)
                   :color "white" :textDecoration "none"}}
       [:span {:style {:display "block" :padding "1em 0 0 1em" :fontWeight 600}}
        (get-in props [:data :name])]])})
@@ -130,12 +130,12 @@
          :cell-padding-left nil
          :header-row-style {:fontWeight nil :fontSize "90%"
                             :color (:text-light style/colors) :backgroundColor nil}
-         :header-style {:padding "0.5em 0 0.5em 14px" :overflow nil}
-         :resizable-columns? false :reorderable-columns? false
+         :header-style {:padding "0.5em 0 0.5em 14px"}
+         :resizable-columns? true :reorderable-columns? false :resize-tab-color (:line-gray style/colors)
          :body-style {:fontSize nil :fontWeight nil
                       :borderLeft border-style :borderRight border-style
                       :borderBottom border-style :borderRadius 4}
-         :row-style {:height row-height-px :borderTop border-style :overflow "hidden"}
+         :row-style {:height row-height-px :borderTop border-style}
          :cell-content-style {:padding nil}
          :toolbar (fn [built-in]
                     [:div {}
@@ -155,25 +155,25 @@
                    {:text "Running" :pred #(= "Running" (:status %))}
                    {:text "Exception" :pred #(= "Exception" (:status %))}]
          :columns
-         [{:sort-by :none :filter-by :none
-           :header [:div {:style {:marginLeft -6}} "Status"] :starting-width 60
+         [{:sort-by :none :filter-by :none :starting-width row-height-px :resizable? false
+           :header [:div {:style {:marginLeft -6}} "Status"]
            :content-renderer (fn [data] [StatusCell {:data data
                                                      :nav-context (:nav-context props)}])}
           {:as-text :name :sort-by :text
-           :header "Workspace" :starting-width (* max-workspace-name-length 10)
+           :header "Workspace" :starting-width (min 500 (* max-workspace-name-length 10))
            :content-renderer (fn [data] [WorkspaceCell {:data data
                                                         :nav-context (:nav-context props)}])}
           {:header "Description" :starting-width (max 200 (* max-description-length 10))
            :content-renderer (fn [description]
-                               [:div {:style {:padding "1.1em 0 0 14px"}}
+                               [:div {:style {:padding "0 0 16px 14px"}}
                                 (if description description
                                   [:span {:style {:fontStyle "oblique"}}
                                    "No description provided"])])}
-          {:header "Access Level" :starting-width 150
+          {:header "Access Level" :starting-width 122 :resizable? false
            :sort-by #(case % "OWNER" 0 "WRITER" 1 "READER" 2) :sort-initial :asc
            :content-renderer
            (fn [accessLevel]
-             [:div {:style {:padding "1.1em 0 0 14px"}}
+             [:div {:style {:padding "0 0 16px 14px"}}
               (clojure.string/capitalize accessLevel)])}]
          :data (:workspaces props)
          :->row (fn [ws]
