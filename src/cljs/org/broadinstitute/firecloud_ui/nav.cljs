@@ -34,9 +34,22 @@
               :remaining (subs remaining (inc stop-index)))))))
 
 
+(defn- id? [segment]
+  (and (map? segment)
+       (= #{:namespace :name} (set (keys segment)))))
+
+(defn- process-segment [segment]
+  (if (id? segment)
+    (str (:namespace segment) ":" (:name segment))
+    segment))
+
 (defn create-hash [nav-context & segment-names]
-  (apply str (interpose delimiter (concat (reverse (:consumed nav-context))
-                                          (map js/encodeURIComponent segment-names)))))
+  (->> segment-names
+    (map process-segment)
+    (map js/encodeURIComponent)
+    (concat (reverse (:consumed nav-context)))
+    (interpose delimiter)
+    (apply str)))
 
 
 (defn create-href [nav-context & segment-names]
@@ -44,8 +57,10 @@
 
 
 (defn navigate [nav-context & segment-names]
-  (set! (-> js/window .-location .-hash)
-        (apply create-hash nav-context segment-names)))
+  (->> segment-names
+    (map process-segment)
+    (apply create-hash nav-context)
+    (set! (.. js/window -location -hash))))
 
 
 (defn terminate [nav-context]

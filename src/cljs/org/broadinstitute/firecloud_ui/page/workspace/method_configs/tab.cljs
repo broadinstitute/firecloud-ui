@@ -60,17 +60,17 @@
                                         :onClick #(swap! state assoc :show-import-overlay? true)}]]
                         (common/clear-both)])
             :columns
-            [{:header "Name" :starting-width 240 :as-text #(% "name") :sort-by :text
+            [{:header "Name" :starting-width 240 :as-text :name :sort-by :text
               :content-renderer
-              (fn [config]
-                (style/create-link {:text (config "name")
-                                    :onClick #((:on-config-selected props) (config->id config))}))}
+              (fn [config-id]
+                (style/create-link {:text (:name config-id)
+                                    :href (nav/create-href (:nav-context props) config-id)}))}
              {:header "Root Entity Type" :starting-width 140}
              {:header "Method" :starting-width 800
               :content-renderer (fn [fields] (apply style/render-entity fields))}]
             :data configs
             :->row (fn [config]
-                     [config
+                     [(config->id config)
                       (config "rootEntityType")
                       (mapv #(get-in config ["methodRepoMethod" %])
                             ["methodNamespace" "methodName" "methodVersion"])])}]))])
@@ -112,9 +112,7 @@
    :render
    (fn [{:keys [props]}]
      (let [nav-context (nav/parse-segment (:nav-context props))
-           selected-method-config-id (common/get-id-from-nav-segment (:segment nav-context))
-           nav-to (fn [config-id]
-                    (nav/navigate nav-context (str (:namespace config-id) ":" (:name config-id))))]
+           selected-method-config-id (common/get-id-from-nav-segment (:segment nav-context))]
        [:div {:style {:padding "1em"}}
         (if selected-method-config-id
           [MethodConfigEditor {:key selected-method-config-id
@@ -125,6 +123,6 @@
                                :after-delete #(nav/back nav-context)}]
           [MethodConfigurationsList
            {:ref "method-config-list"
+            :nav-context nav-context
             :workspace-id (:workspace-id props)
-            :on-config-selected nav-to
-            :on-config-imported nav-to}])]))})
+            :on-config-imported #(nav/navigate nav-context %)}])]))})

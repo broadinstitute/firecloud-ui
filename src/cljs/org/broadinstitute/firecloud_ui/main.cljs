@@ -48,7 +48,7 @@
   (let [thisyear (.getFullYear (js/Date.))
         startyear 2015
         yeartext (if (= startyear thisyear) (str startyear) (str startyear "-" thisyear))
-        spacer [:span {:style {:padding "0 0.6em 0 0.5em"}} "|"]
+        spacer [:span {:style {:padding "0 0.6em"}} "|"]
         Link (react/create-class
               {:render
                (fn [{:keys [props state]}]
@@ -76,10 +76,10 @@
 (def routes
   [{:key :profile
     :render #(react/create-element profile-page/Page %)}
-   {:key :workspaces
+   {:key :workspaces :href "#workspaces"
     :name "Workspaces"
     :render #(react/create-element workspaces/Page %)}
-   {:key :methods
+   {:key :methods :href "#methods"
     :name "Method Repository"
     :render #(react/create-element method-repo/Page %)}])
 
@@ -89,13 +89,12 @@
 (react/defc TopNavBarLink
   {:render
    (fn [{:keys [props state]}]
-     [:a {:href "javascript:;"
+     [:a {:href (:href props)
           :style {:padding "1ex" :textDecoration "none"
                   :fontWeight (when (:selected props) "bold")
                   :color (if (:hovering? @state) (:link-blue style/colors) "black")}
-          :onClick (fn [e] ((:onClick props) e))
-          :onMouseOver (fn [e] (swap! state assoc :hovering? true))
-          :onMouseOut (fn [e] (swap! state assoc :hovering? false))}
+          :onMouseOver #(swap! state assoc :hovering? true)
+          :onMouseOut #(swap! state assoc :hovering? false)}
       (:name props)])})
 
 
@@ -103,9 +102,8 @@
   {:render
    (fn [{:keys [props]}]
      [:div {:style {:textAlign "right"}}
-      (map (fn [item] [TopNavBarLink {:name (item :name)
-                                      :selected (= (:selected-item props) (item :key))
-                                      :onClick (fn [e] ((:on-nav props) (item :key)))}])
+      (map (fn [item] [TopNavBarLink {:name (:name item) :href (:href item)
+                                      :selected (= (:selected-item props) (:key item))}])
            top-nav-bar-items)
       (when (:show-nih-link-warning? props)
         [nih-link-warning/NihLinkWarning])])})
@@ -138,7 +136,6 @@
              :status (status-page/render)
              [:div {}
               [TopNavBar {:selected-item page
-                          :on-nav (fn [item] (nav/navigate (:nav-context props) (name item)))
                           :show-nih-link-warning? (not (contains? #{:status :profile} page))}]
               (let [item (first (filter #(= (% :key) page) routes))]
                 (if item

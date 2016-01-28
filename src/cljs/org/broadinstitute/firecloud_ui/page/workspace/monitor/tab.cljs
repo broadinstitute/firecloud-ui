@@ -17,7 +17,7 @@
 (defn- render-date [submission]
   (common/format-date (submission "submissionDate")))
 
-(defn- render-submissions-table [submissions on-submission-clicked]
+(defn- render-submissions-table [submissions nav-context]
   [table/Table
    {:empty-message "There are no analyses to display."
     :columns
@@ -26,7 +26,7 @@
       :sort-initial :desc
       :content-renderer (fn [submission]
                           (style/create-link {:text (render-date submission)
-                                              :onClick #(on-submission-clicked (submission "submissionId"))}))}
+                                              :href (nav/create-href nav-context (submission "submissionId"))}))}
      {:header "Status" :as-text #(% "status") :sort-by :text
       :content-renderer (fn [submission]
                           [:div {}
@@ -64,7 +64,7 @@
          [:div {:style {:textAlign "center"}} [comps/Spinner {:text "Loading analyses..."}]]
          error-message (style/create-server-error-message error-message)
          :else
-         (render-submissions-table submissions (:on-submission-clicked props)))))
+         (render-submissions-table submissions (:nav-context props)))))
    :component-did-mount
    (fn [{:keys [this]}]
      (react/call :load-submissions this))
@@ -98,4 +98,4 @@
                                     :submission-id selected-submission-id}]
           [SubmissionsList {:ref "submissions-list"
                             :workspace-id workspace-id
-                            :on-submission-clicked #(nav/navigate nav-context %)}])]))})
+                            :nav-context nav-context}])]))})
