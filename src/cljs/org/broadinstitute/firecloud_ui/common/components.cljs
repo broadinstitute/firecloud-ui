@@ -3,8 +3,10 @@
     [clojure.string :refer [blank?]]
     [dmohs.react :as react]
     [org.broadinstitute.firecloud-ui.common :as common]
+    [org.broadinstitute.firecloud-ui.common.codemirror :refer [CodeMirror]]
     [org.broadinstitute.firecloud-ui.common.icons :as icons]
     [org.broadinstitute.firecloud-ui.common.style :as style]
+    [org.broadinstitute.firecloud-ui.utils :as utils]
     ))
 
 
@@ -174,8 +176,8 @@
             [:div {:style {:margin "0.5em 0 0 1em"}}
              (react/call :render-details this make-field (entity "method"))
              [:div {:style {:fontWeight 500 :marginTop "1em"}} "WDL:"]
-             [:pre {:style {:fontSize "90%" :overflow "auto"}} (get-in entity ["method" "payload"])]]
-            [:pre {:style {:fontSize "90%" :overflow "auto"}} (entity "payload")]))]))
+             [CodeMirror {:text (get-in entity ["method" "payload"])}]]
+            [CodeMirror {:text (entity "payload")}]))]))
    :render-details
    (fn [{:keys []} make-field entity]
      [:div {}
