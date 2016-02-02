@@ -172,7 +172,7 @@
   {:render
    (fn [{:keys [props state this]}]
      (cond
-       (and (:template @state) (:loaded-method @state)
+       (and (:loaded-method @state)
          (or (:workspace-id props) (:workspaces-list @state)))
        (create-import-form state props this (:loaded-method @state) false
          [{:label "Configuration Namespace" :key "namespace"}
@@ -194,18 +194,29 @@
          (do
            (swap! state assoc :blocking-text "Importing...")
            (endpoints/call-ajax-orch
-             {:endpoint (endpoints/post-workspace-method-config workspace-id)
-              :payload (assoc (:template @state)
-                         "namespace" namespace
-                         "name" name
-                         "rootEntityType" rootEntityType)
+             {:endpoint (endpoints/create-template (:method props))
+              :payload (assoc (:method props)
+                         "methodNamespace" (get-in props [:method "namespace"])
+                         "methodName" (get-in props [:method "name"])
+                         "methodVersion" (get-in props [:method "snapshotId"]))
               :headers {"Content-Type" "application/json"}
-              :on-done (fn [{:keys [success? get-parsed-response]}]
-                         (swap! state dissoc :blocking-text)
-                         (if success?
-                           (when after-import (after-import {:config-id {:namespace namespace :name name}
-                                                             :workspace-id workspace-id}))
-                           (swap! state assoc :server-error (get-parsed-response))))})))))
+              :on-done (fn [{:keys [success? get-parsed-response status-text]}]
+                         (if-not success?
+                           (swap! state assoc :error status-text :blocking-text nil)
+                           (let [template (get-parsed-response)]
+                             (endpoints/call-ajax-orch
+                               {:endpoint (endpoints/post-workspace-method-config workspace-id)
+                                :payload (assoc template
+                                           "namespace" namespace
+                                           "name" name
+                                           "rootEntityType" rootEntityType)
+                                :headers {"Content-Type" "application/json"}
+                                :on-done (fn [{:keys [success? get-parsed-response]}]
+                                           (swap! state dissoc :blocking-text)
+                                           (if success?
+                                             (when after-import (after-import {:config-id {:namespace namespace :name name}
+                                                                               :workspace-id workspace-id}))
+                                             (swap! state assoc :server-error (get-parsed-response))))}))))})))))
    :component-did-mount
    (fn [{:keys [props state]}]
      (when-not (:workspace-id props)
@@ -225,17 +236,6 @@
         :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                    (if success?
                      (swap! state assoc :loaded-method (get-parsed-response))
-                     (swap! state assoc :error status-text)))})
-     (endpoints/call-ajax-orch
-       {:endpoint (endpoints/create-template (:method props))
-        :payload (assoc (:method props)
-                   "methodNamespace" (get-in props [:method "namespace"])
-                   "methodName" (get-in props [:method "name"])
-                   "methodVersion" (get-in props [:method "snapshotId"]))
-        :headers {"Content-Type" "application/json"}
-        :on-done (fn [{:keys [success? get-parsed-response status-text]}]
-                   (if success?
-                     (swap! state assoc :template (get-parsed-response))
                      (swap! state assoc :error status-text)))}))})
 
 
