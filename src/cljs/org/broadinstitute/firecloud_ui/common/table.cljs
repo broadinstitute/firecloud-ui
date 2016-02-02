@@ -118,10 +118,14 @@
                                      (:data props))
                                     (:data props)))
      (let [columns (vec (map-indexed (fn [i col]
-                                       {:width (or (:starting-width col) 100)
-                                        :visible? (get col :show-initial? true)
-                                        :index i
-                                        :display-index i})
+                                       (merge
+                                         {:width (or (:starting-width col) 100)
+                                          :visible? (get col :show-initial? true)
+                                          :index i
+                                          :display-index i}
+                                         (when-let [sort-initial (:sort-initial col)]
+                                           {:sort-initial sort-initial
+                                            :sort-by (:sort-by col)})))
                                      (:columns props)))]
        (merge
         {:no-data? (zero? (count (.-filtered-data this)))
