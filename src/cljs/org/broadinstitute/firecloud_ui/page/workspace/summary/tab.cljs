@@ -153,7 +153,7 @@
                                                               :defaultValue description
                                                               :style {:width 400}
                                                               :rows 5}))
-                description description
+                description [:div {:style {:whiteSpace "pre-wrap"}} description]
                 :else [:span {:style {:fontStyle "oblique"}} "No description provided"])))
       (attributes/view-attributes state refs)]
      [:div {:style {:flex "1 1 50%" :paddingLeft 10}}
