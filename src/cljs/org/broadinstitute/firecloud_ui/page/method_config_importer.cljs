@@ -253,9 +253,11 @@
       :else
       [table/Table
        {:columns [{:header "Type" :starting-width 100}
-                  {:header "Item" :starting-width 450 :as-text #(% "name")
+                  {:header "Item" :starting-width 450
                    :sort-by (fn [m]
                               [(m "namespace") (m "name") (int (m "snapshotId"))])
+                   :filter-by (fn [m]
+                                (clojure.string/join "/" (map #(m %) ["namespace" "name" "snapshotId"])))
                    :sort-initial :asc
                    :content-renderer
                    (fn [item]
