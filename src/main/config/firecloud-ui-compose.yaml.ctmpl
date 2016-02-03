@@ -10,6 +10,7 @@ ui:
     {{.Data.ui_additional_ports}}
   {{.Data.ui_dns}}
   {{.Data.ui_volumes}}
+  restart: always
   environment:
     ORCH_URL_ROOT: {{.Data.env_orchestration_url_root}}
     LOG_LEVEL: {{.Data.env_log_level}}
