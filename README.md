@@ -1,10 +1,8 @@
-# firecloud-ui
+# FireCloud UI
 
 FireCloud user interface for web browsers.
 
-https://firecloud.dsde-dev.broadinstitute.org/
-
-https://firecloud.dsde-staging.broadinstitute.org/
+https://firecloud.dsde-prod.broadinstitute.org/
 
 ## Technologies
 
@@ -25,20 +23,20 @@ see https://github.com/broadinstitute/firecloud-environment
 
 Build once:
 ```
-./script/dev/build-once.sh
+./script/build-once.sh
 ```
 
 Watch files and rebuild whenever a file is saved:
 ```
-./script/dev/start-auto-build.sh
+./script/start-auto-build.sh
 ```
 
 Watch files, rebuild, and reload changes into the running browser window:
 ```
-./script/dev/start-hot-reloader.sh
+./script/start-hot-reloader.sh
 ```
 
-For this build, you must be viewing the application via HTTP, not HTTPS. HTTPS is not supported by Figwheel.
+For this build, you must be viewing the application via HTTP, not HTTPS. HTTPS is not supported by Figwheel. Also, set FIGWHEEL_HOST in your environment to point to your docker machine's IP address so the Figwheel client in the browser can connect to the Figwheel server.
 
 This can take around 20 seconds to completely start. When ready, it will display the following message:
 ```

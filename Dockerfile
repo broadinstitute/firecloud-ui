@@ -1,39 +1,7 @@
 FROM broadinstitute/openidc-baseimage:1.8.5
 
-# How to install OpenJDK 8 from:
-# http://ubuntuhandbook.org/index.php/2015/01/install-openjdk-8-ubuntu-14-04-12-04-lts/
-
-# Add repo, update, cleanup all in one command to minimize layer size.
-RUN \
-  add-apt-repository ppa:openjdk-r/ppa && apt-get update --fix-missing \
-  && apt-get install -y -qq --no-install-recommends \
-    openjdk-8-jdk \
-    php5-cli \
-    rlfe \
-  && apt-get -yq autoremove && apt-get -yq clean && rm -rf /var/lib/apt/lists/* \
-  && rm -rf /tmp/* && rm -rf /var/tmp/*
-
-RUN curl https://raw.githubusercontent.com/technomancy/leiningen/stable/bin/lein > /usr/bin/lein
-RUN chmod 755 /usr/bin/lein
-# Tell lein that running as root is okay.
-ENV LEIN_ROOT=1
-# Actually install leiningen.
-RUN lein --version
-
 WORKDIR /app
-
-ENV SERVER_NAME=dhost
-ENV BUILD_TYPE=minimized
-
-COPY project.clj project.clj
-# Download deps and plugins.
-RUN lein cljsbuild once
-
-# File copies are explicit to ensure rebuilds use as much cache as possible.
-COPY src/cljs src/cljs
-COPY src/static src/static
-COPY script/common script/common
-RUN ./script/common/build.sh once
+COPY target /app/target
 
 COPY src/docker/run-apache.sh /etc/service/apache2/run
 
@@ -46,7 +14,7 @@ EXPOSE 443
 ENV HTTPD_PORT=80 SSL_HTTPD_PORT=443
 ENV SERVER_ADMIN=devops@broadinstitute.org
 ENV LOG_LEVEL=warn
-ENV ORCH_URL_ROOT=http://orch:8080
+ENV ORCH_URL_ROOT=FIXME
 
 # Override in development since figwheel does not support secure websockets.
 ENV HTTPS_ONLY=true
