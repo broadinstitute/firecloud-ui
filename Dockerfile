@@ -1,9 +1,11 @@
-FROM broadinstitute/openidc-baseimage:1.8.5
+FROM broadinstitute/openidc-baseimage:1.8.6
 
 WORKDIR /app
 COPY target /app/target
 
-COPY src/docker/run-apache.sh /etc/service/apache2/run
+COPY src/docker/override.sh /etc/apache2/
+COPY src/docker/site*.conf /etc/apache2/sites-available/
+COPY src/docker/locations.conf /etc/apache2/
 
 # openidc-baseimage requires this unused variable.
 ENV CALLBACK_URI=http://example.com/
