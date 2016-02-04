@@ -140,11 +140,14 @@
          :toolbar (fn [built-in]
                     [:div {}
                      [:div {:style {:float "left"}} built-in]
-                     (when-not (empty? (:billing-projects props))
-                       [:div {:style {:float "right" :marginTop -5}}
-                        [comps/Button
-                         {:text "Create New Workspace..." :style :add
-                          :onClick #(swap! state assoc :show-create-workspace? true)}]])
+                     [:div {:style {:float "right" :marginTop -5}}
+                      [comps/Button
+                       {:text "Create New Workspace..." :style :add
+                        :disabled? (if (empty? (:billing-projects props))
+                                     (str "You must have a billing project in your profile to"
+                                          " create a workspace.")
+                                     false)
+                        :onClick #(swap! state assoc :show-create-workspace? true)}]]
                      (common/clear-both)
                      (when (:show-create-workspace? @state)
                        [CreateWorkspaceDialog {:dismiss #(swap! state dissoc :show-create-workspace?)

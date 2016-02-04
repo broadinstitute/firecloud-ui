@@ -180,7 +180,7 @@
           {:label "Root Entity Type" :key "rootEntityType" :type "identity-select" :options root-entity-types}])
 
        (:error @state) (style/create-server-error-message (:error @state))
-       :else [comps/Spinner {:text "Creating template..."}]))
+       :else [comps/Spinner {:text "Loading method..."}]))
    :perform-copy
    (fn [{:keys [props state refs]}]
      (let [{:keys [workspace-id after-import on-back]} props

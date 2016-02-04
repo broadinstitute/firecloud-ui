@@ -23,7 +23,7 @@
             [dialog/OKCancelForm
              {:dismiss-self #(swap! state dissoc :destination)
               :header "Import successful"
-              :content "Would you like to go to the edit page now?"
+              :content "View the imported method configuration?"
               :cancel-text "No, stay here"
               :ok-button [comps/Button {:text "Yes" :href (:destination @state)}]}])}])
       [MethodConfigImporter {:allow-edit true
