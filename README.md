@@ -17,7 +17,11 @@ Figwheel replaces the running JavaScript within the page so changes are visible 
 
 ## Getting Started
 
-see https://github.com/broadinstitute/firecloud-environment
+FireCloud is currently supported within Broad's engineering environment:
+
+https://github.com/broadinstitute/firecloud-develop
+
+Support for running FireCloud outside of the Broad is planned.
 
 ## Build Options
 
