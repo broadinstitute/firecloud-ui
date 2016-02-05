@@ -37,7 +37,7 @@
      (if (= (:path (:request props)) "/profile")
        (utils/ajax-orch (:path (:request props))
                         {:on-done #(swap! state assoc :response %)}
-                        :service-prefix "/service/register")
+                        :service-prefix "/register")
        (utils/ajax-orch (:path (:request props))
                         {:on-done #(swap! state assoc :response %)})))})
 

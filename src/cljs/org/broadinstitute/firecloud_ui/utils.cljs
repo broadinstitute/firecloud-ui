@@ -4,6 +4,7 @@
   (:require
    cljs.pprint
    [clojure.string :refer [join lower-case split]]
+   [org.broadinstitute.firecloud-ui.config :as config]
    ))
 
 
@@ -111,7 +112,6 @@
                                               :get-parsed-response #(parse-json-string (.-responseText xhr))}]
                            (if (= status-code 401)
                              (let [us-xhr (js/XMLHttpRequest.)]
-                               (set! (.-withCredentials us-xhr) true)
                                (.addEventListener us-xhr "loadend"
                                  (fn []
                                    (let [us-status (.-status us-xhr)
@@ -129,7 +129,7 @@
                                                  :get-parsed-response parsed-us-response})
                                        (= us-status 404) (.replace (.-location js/window) "#profile")
                                        :else (on-done orig-response)))))
-                               (.open us-xhr "GET" "/service/me")
+                               (.open us-xhr "GET" (str (get @config/config "apiUrlRoot") "/me"))
                                (.setRequestHeader us-xhr "Authorization" (str "Bearer " @access-token))
                                (.setRequestHeader us-xhr "Content-Type" "application/json")
                                (.setRequestHeader us-xhr "Accept" "application/json")
@@ -156,10 +156,10 @@
             (.send xhr data)
             (.send xhr)))))))
 
-(defn ajax-orch [path arg-map & {:keys [service-prefix] :or {service-prefix "/service/api"}}]
+(defn ajax-orch [path arg-map & {:keys [service-prefix] :or {service-prefix "/api"}}]
   (assert (= (subs path 0 1) "/") (str "Path must start with '/': " path))
   (ajax (assoc
-         arg-map :url (str service-prefix path)
+         arg-map :url (str (get @config/config "apiUrlRoot") service-prefix path)
          :headers (merge {"Authorization" (str "Bearer " @access-token)}
                          (:headers arg-map)))))
 

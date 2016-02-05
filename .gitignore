@@ -1,5 +1,5 @@
 *.log
-configure
+configure.rb
 config/
 
 # npm/bower specific
