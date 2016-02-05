@@ -573,7 +573,7 @@
              {:isRegistrationComplete "1" :name "John Doe" :email "jdoe@example.com"
               :googleProjectIds ["14" "7"] :institution "Broad Institute"
               :pi "Jane Doe"})})}}
-     :service-prefix "/service/register")))
+     :service-prefix "/register")))
 
 
 (defn profile-set [payload on-done]
@@ -584,7 +584,7 @@
     :on-done on-done
     :headers {"Content-Type" "application/json"}
     :canned-response {:status (rand-nth [200 200 500]) :delay-ms (rand-int 2000)}}
-    :service-prefix "/service/register"))
+    :service-prefix "/register"))
 
 
 (defn profile-get-nih-status [on-done]

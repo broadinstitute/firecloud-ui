@@ -2,9 +2,11 @@
 set -euo pipefail
 IFS=$'\n\t'
 
-cp /config/config.json /app/target/config.json
 
-SITE_CONF=$(cat << EOF
+cp /config/config.json /var/www/html
+ 
+
+SITE_CONF=$(cat <<EOF
 ServerAdmin ${SERVER_ADMIN}
 ServerName ${SERVER_NAME}
 
@@ -48,25 +50,11 @@ DocumentRoot /app/target
   Allow from all
   Require all granted
 </Directory>
+
+Alias /config.json /var/www/html/config.json
 EOF
 )
 
-LOCATION_DIRECTIVES=$(cat << EOF
-  <LocationMatch "/service/api/workspaces/[^/]+/[^/]+/entities/[^/]+/tsv">
-    RewriteEngine On
-    RewriteCond %{HTTP_COOKIE} FCtoken=([^;]+)
-    RewriteRule .* - [END,QSD,env=ACCESSTOKEN:%1]
-    RequestHeader set Authorization "Bearer %{ACCESSTOKEN}e"
-    ProxyPass ${ORCH_URL_ROOT}
-    ProxyPassReverse ${ORCH_URL_ROOT}
-  </LocationMatch>
-
-  <Location "/service">
-    ProxyPass ${ORCH_URL_ROOT}
-    ProxyPassReverse ${ORCH_URL_ROOT}
-  </Location>
-EOF
-)
 
 if [ "$HTTPS_ONLY" = 'true' ]; then
   SITE_CONF=${SITE_CONF/'--EXTRA_VHOST_HTTP--'/'Redirect / '"https://$SERVER_NAME/"}
