@@ -127,7 +127,8 @@
         {:no-data? (zero? (count (.-filtered-data this)))
          :columns columns
          :dragging? false}
-        (when-let [col (first (filter #(contains? % :sort-initial) columns))]
+        (when-let [col (first (filter #(contains? % :sort-initial)
+                                      (map merge (:columns props) columns)))]
           {:key-fn (if-let [sorter (:sort-by col)]
                      (fn [row] (sorter (nth row (:index col))))
                      (fn [row] (nth row (:index col))))
