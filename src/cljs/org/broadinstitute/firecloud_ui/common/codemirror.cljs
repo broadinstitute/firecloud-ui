@@ -55,14 +55,6 @@
      [:div {}
       [:textarea {:ref "ref" :defaultValue (:text props)}]])
    :component-did-mount
-   (fn [{:keys [refs props locals]}]
-     (let [style-tag (js/document.createElement "link")]
-       (.setAttribute style-tag "rel" "stylesheet")
-       (.setAttribute style-tag "href" "https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.11.0/codemirror.css")
-       (swap! locals assoc :style style-tag)
-       (js/document.head.appendChild style-tag))
+   (fn [{:keys [refs props]}]
      (js/CodeMirror.fromTextArea (@refs "ref")
-       #js{:mode "wdl" :lineNumbers (:line-numbers? props) :readOnly (:read-only? props)}))
-   :component-will-unmount
-   (fn [{:keys [locals]}]
-     (.remove (:style @locals)))})
+       #js{:mode "wdl" :lineNumbers (:line-numbers? props) :readOnly (:read-only? props)}))})
