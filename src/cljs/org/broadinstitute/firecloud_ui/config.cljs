@@ -2,3 +2,7 @@
 
 
 (def config (atom nil))
+
+
+(defn debug? []
+  (get @config "isDebug"))

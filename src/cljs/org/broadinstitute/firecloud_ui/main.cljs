@@ -61,7 +61,8 @@
     [:div {:style {:borderTop (str "2px solid " (:line-gray style/colors))
                    :padding "1em 25px 2em 25px"
                    :color (:footer-text style/colors) :fontSize "90%"}}
-     [:div {:style {:float "right"}} [PopUpFooterControl]]
+     (when (config/debug?)
+       [:div {:style {:float "right"}} [PopUpFooterControl]])
      [:div {:style {:display "block"}}
       (str "\u00A9 " yeartext " Broad Institute")
       spacer
@@ -131,8 +132,8 @@
                             {:new-registration? true
                              :on-done #(swap! state assoc :registration-status :registered)})
            :registered
-           (case page
-             :status (status-page/render)
+           (if (and (= page :status) (config/debug?))
+             (status-page/render)
              [:div {}
               [TopNavBar {:selected-item page
                           :show-nih-link-warning? (not (contains? #{:status :profile} page))}]
