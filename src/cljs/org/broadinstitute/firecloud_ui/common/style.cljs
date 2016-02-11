@@ -70,7 +70,7 @@
 
 (defn create-server-error-message [message]
   [:div {:style {:textAlign "center" :color (:exception-red colors)}}
-   "FireCloud error: " (or message "(no message provided)")])
+   message])
 
 (defn create-validation-error-message [fails]
   [:div {:style {:color (:exception-red colors)}}
