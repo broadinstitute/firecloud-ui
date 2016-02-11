@@ -129,7 +129,7 @@
                                                  :get-parsed-response parsed-us-response})
                                        (= us-status 404) (.replace (.-location js/window) "#profile")
                                        :else (on-done orig-response)))))
-                               (.open us-xhr "GET" (str (get @config/config "apiUrlRoot") "/me"))
+                               (.open us-xhr "GET" (str (config/api-url-root) "/me"))
                                (.setRequestHeader us-xhr "Authorization" (str "Bearer " @access-token))
                                (.setRequestHeader us-xhr "Content-Type" "application/json")
                                (.setRequestHeader us-xhr "Accept" "application/json")
@@ -159,7 +159,7 @@
 (defn ajax-orch [path arg-map & {:keys [service-prefix] :or {service-prefix "/api"}}]
   (assert (= (subs path 0 1) "/") (str "Path must start with '/': " path))
   (ajax (assoc
-         arg-map :url (str (get @config/config "apiUrlRoot") service-prefix path)
+         arg-map :url (str (config/api-url-root) service-prefix path)
          :headers (merge {"Authorization" (str "Bearer " @access-token)}
                          (:headers arg-map)))))
 

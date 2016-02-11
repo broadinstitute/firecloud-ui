@@ -24,7 +24,7 @@ TraceEnable off
   # Allow for proxying requests to HTTPS endpoints.
   SSLProxyEngine on
 
-  --EXTRA_VHOST_HTTP--
+  --REDIRECT--
 </VirtualHost>
 
 <VirtualHost _default_:${SSL_HTTPD_PORT}>
@@ -38,8 +38,6 @@ TraceEnable off
   SSLCertificateFile "/config/server.crt"
   SSLCertificateKeyFile "/config/server.key"
   SSLCertificateChainFile "/config/ca-bundle.crt"
-
-  --EXTRA_VHOST_HTTPS--
 </VirtualHost>
 
 DocumentRoot /app/target
@@ -57,12 +55,11 @@ EOF
 
 
 if [ "$HTTPS_ONLY" = 'true' ]; then
-  SITE_CONF=${SITE_CONF/'--EXTRA_VHOST_HTTP--'/'Redirect / '"https://$SERVER_NAME/"}
+  SITE_CONF=${SITE_CONF/'--REDIRECT--'/'Redirect / '"https://$SERVER_NAME/"}
 else
-  SITE_CONF=${SITE_CONF/'--EXTRA_VHOST_HTTP--'/"$LOCATION_DIRECTIVES"}
+  SITE_CONF=${SITE_CONF/'--REDIRECT--'/''}
 fi
 
-SITE_CONF=${SITE_CONF/'--EXTRA_VHOST_HTTPS--'/"$LOCATION_DIRECTIVES"}
 
 set -x
 

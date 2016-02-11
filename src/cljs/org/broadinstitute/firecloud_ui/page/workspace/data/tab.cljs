@@ -10,6 +10,7 @@
     [org.broadinstitute.firecloud-ui.common.table :as table]
     [org.broadinstitute.firecloud-ui.common.table-utils :as table-utils]
     [org.broadinstitute.firecloud-ui.common.style :as style]
+    [org.broadinstitute.firecloud-ui.config :as config]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
     [org.broadinstitute.firecloud-ui.page.workspace.data.copy-data-workspaces :as copy-data-workspaces]
     [org.broadinstitute.firecloud-ui.page.workspace.data.entity-selector :refer [EntitySelector]]
@@ -130,8 +131,9 @@
                                                     initial-entity-type
                                                     (first entity-types))]
                   [:a {:style {:textDecoration "none" :float "left" :margin "7px 0 0 1em"}
-                       :href (str "/service/api/workspaces/" (:namespace workspace-id) "/"
-                               (:name workspace-id) "/entities/" selected-entity-type "/tsv")
+                       :href (str (config/api-url-root) "/cookie-authed/workspaces/"
+                                  (:namespace workspace-id) "/"
+                                  (:name workspace-id) "/entities/" selected-entity-type "/tsv")
                        :onClick (fn [] (utils/set-access-token-cookie @access-token))
                        :target "_blank"}
                    (str "Download '" selected-entity-type "' data")])
