@@ -183,7 +183,7 @@
       [:div {}
        [comps/Button
         {:text "Sign In"
-         :href (str (get @config/config "apiUrlRoot") "/login?callback="
+         :href (str (config/api-url-root) "/login?callback="
                     (js/encodeURIComponent
                      (str js/window.location.protocol "//" js/window.location.hostname))
                     (let [hash (nav/get-hash-value)]

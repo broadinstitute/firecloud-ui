@@ -4,5 +4,5 @@
 (def config (atom nil))
 
 
-(defn debug? []
-  (get @config "isDebug"))
+(defn api-url-root [] (get @config "apiUrlRoot"))
+(defn debug? [] (get @config "isDebug"))

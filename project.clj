@@ -37,7 +37,7 @@
   :profiles {:dev {:dependencies [[binaryage/devtools "0.4.1"]]
                    :cljsbuild
                    {:builds {:client {:source-paths ["src/cljsdev"]
-                                      :figwheel ~(get-figwheel-opts)
+                                      :figwheel ~(merge {} (get-figwheel-opts))
                                       :compiler
                                       {:main ~(with-ns "dev")
                                        :optimizations :none
