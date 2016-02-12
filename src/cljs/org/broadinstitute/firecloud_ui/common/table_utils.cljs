@@ -44,21 +44,19 @@
            allow-next (< current-page num-pages)
            right-num (min num-rows-visible (* current-page rows-per-page))
            left-num (if (zero? right-num) 0 (inc (* (dec current-page) rows-per-page)))]
-       [:div {:style {:border "1px solid #ebebeb"}}
+       [:div {:style {:border "1px solid #ebebeb" :padding "1em"}}
         (let [layout-style (if (= :narrow (:width props))
                              {:textAlign "center" :padding "1ex"}
-                             {:float "left" :width "33.33%"})
+                             {:display "inline-block" :width "33.33%"})
               view-component
-              [:div {:style (merge {:padding "2.15em 0em" :verticalAlign "middle"}
-                              layout-style)}
+              [:div {:style layout-style}
                [:b {} (str left-num " - " right-num)]
                (str " of " (pluralize num-rows-visible " result")
                  (when-not (= num-rows-visible (:num-total-rows props))
                    (str " (filtered from " (:num-total-rows props) " total)")))]
               page-component
               (style/create-unselectable
-                :div {:style (merge {:padding "1.6em 0em" :verticalAlign "middle" :textAlign "center"}
-                               layout-style)}
+                :div {:style (merge {:textAlign "center"} layout-style)}
                 [:div {:style {:display "inline-block" :padding "0.55em 0.9em"
                                :color (if allow-prev
                                         (:button-blue style/colors)
@@ -87,8 +85,7 @@
                  [:span {:style {:paddingRight "1em"}} "Next"]
                  (icons/font-icon {:style {:fontSize "70%"}} :angle-right)])
               rows-component
-              [:div {:style (merge {:padding "2.15em 0em" :textAlign "right"}
-                              layout-style)}
+              [:div {:style (merge {:textAlign "right"} layout-style)}
                "Display"
                (style/create-select
                  {:style {:width 60 :margin "0em 1em"}
@@ -97,7 +94,7 @@
                               :current-page 1)}
                  rows-per-page-options)
                "rows per page"]]
-          [:div {:style {:fontSize 13 :lineHeight 1.5 :padding "0px 48px" :verticalAlign "middle"}}
+          [:div {:style {:fontSize 13 :lineHeight 1.5 :padding "0px 48px"}}
            view-component page-component rows-component
            (common/clear-both)])]))
    :component-did-update
