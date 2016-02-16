@@ -40,7 +40,7 @@
    ;; Split out border properties so they can be individually overridden
    :borderWidth 1 :borderStyle "solid" :borderColor (:border-gray colors) :borderRadius 3
    :boxSizing "border-box"
-   :fontSize "88%" :height 33
+   :fontSize "88%"
    :marginBottom "0.75em" :padding "0.5em"})
 
 (def ^:private select-style
