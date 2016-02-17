@@ -105,7 +105,8 @@
 
 
 (defn- render-cell [{:keys [width onResizeMouseDown onSortClick sortOrder] :as props}]
-  [:div {:style (merge {:display "inline-block" :position "relative" :width width :minWidth 10}
+  [:div {:style (merge {:display "inline-block" :verticalAlign "bottom"
+                        :position "relative" :width width :minWidth 10}
                   (:cell-style props))}
    (when (:onResizeMouseDown props)
      [:div {:style {:position "absolute" :width 20 :top 0 :bottom 0 :left (- width 10) :zIndex 1
