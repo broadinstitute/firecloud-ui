@@ -81,7 +81,7 @@
 
 (defn set-access-token-cookie [token]
   (if token
-    (.set goog.net.cookies "FCtoken" token)
+    (.set goog.net.cookies "FCtoken" token -1 "/" (join "." (rest (split js/window.location.hostname "."))))
     (delete-access-token-cookie)))
 
 (defn get-access-token-cookie []
