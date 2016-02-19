@@ -2,6 +2,7 @@
   (:require
    [dmohs.react :as react]
    [org.broadinstitute.firecloud-ui.utils :as utils]
+   [org.broadinstitute.firecloud-ui.config :as config]
    ))
 
 
@@ -100,7 +101,7 @@
           :else "Complete")))
 
 (defn gcs-object->download-url [bucket object]
-  (str "https://storage.cloud.google.com/" bucket "/" object))
+  (str (config/api-url-root) "/cookie-authed/download/b/" bucket "/o/" object))
 
 (defn gcs-uri->download-url [gcs-uri]
   (let [matcher (re-find #"gs://([^/]+)/(.+)" gcs-uri)]
