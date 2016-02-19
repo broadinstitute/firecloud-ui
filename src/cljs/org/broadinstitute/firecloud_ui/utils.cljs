@@ -77,7 +77,7 @@
 (def access-token (atom nil))
 
 (defn delete-access-token-cookie []
-  (.remove goog.net.cookies "FCtoken"))
+  (.remove goog.net.cookies "FCtoken" "/" (join "." (rest (split js/window.location.hostname ".")))))
 
 (defn set-access-token-cookie [token]
   (if token
