@@ -140,7 +140,7 @@
                (style/create-text-field {:ref (str (if (= value-type "inputs") "in" "out") "_" field-name)
                                          :defaultValue field-value})]
               [:div {:style {:float "left" :marginTop "0.5em"}}
-               (or field-value [:span {:style {:fontStyle "oblique"}} "No value entered"])
+               (or field-value [:span {:style {:fontStyle "italic"}} "No value entered"])
                (when error
                  (icons/font-icon {:style {:margin "0.5em 0 0 0.7em" :verticalAlign "middle"
                                            :color (:exception-red style/colors)}}

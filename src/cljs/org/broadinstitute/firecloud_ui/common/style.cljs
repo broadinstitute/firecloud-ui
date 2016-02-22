@@ -32,7 +32,7 @@
    children])
 
 (defn create-textfield-hint [text]
-  [:div {:style {:fontSize "80%" :fontStyle "oblique" :margin "-1.3ex 0 1ex 0"}} text])
+  [:div {:style {:fontSize "80%" :fontStyle "italic" :margin "-1.3ex 0 1ex 0"}} text])
 
 
 (def ^:private input-text-style
