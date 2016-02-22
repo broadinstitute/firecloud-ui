@@ -10,7 +10,7 @@
   (if date
     (let [m (js/moment date)]
       (str (.format m "L [at] LTS") " (" (.fromNow m) ")"))
-    [:span {:style {:fontStyle "oblique"}} "Pending..."]))
+    [:span {:style {:fontStyle "italic"}} "Pending..."]))
 
 
 (def wf-success-statuses #{"Succeeded"})

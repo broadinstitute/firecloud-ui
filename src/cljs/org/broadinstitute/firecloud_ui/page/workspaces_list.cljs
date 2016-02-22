@@ -167,7 +167,7 @@
            :content-renderer (fn [description]
                                [:div {:style {:padding "0 0 16px 14px"}}
                                 (if description description
-                                  [:span {:style {:fontStyle "oblique"}}
+                                  [:span {:style {:fontStyle "italic"}}
                                    "No description provided"])])}
           {:header "Access Level" :starting-width 122 :resizable? false
            :sort-by #(case % "OWNER" 0 "WRITER" 1 "READER" 2) :sort-initial :asc

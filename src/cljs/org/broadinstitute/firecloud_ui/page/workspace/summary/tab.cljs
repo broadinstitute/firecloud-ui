@@ -154,7 +154,7 @@
                                                               :style {:width 400}
                                                               :rows 5}))
                 description [:div {:style {:whiteSpace "pre-wrap"}} description]
-                :else [:span {:style {:fontStyle "oblique"}} "No description provided"])))
+                :else [:span {:style {:fontStyle "italic"}} "No description provided"])))
       (attributes/view-attributes state refs)]
      [:div {:style {:flex "1 1 50%" :paddingLeft 10}}
       (style/create-section-header "Created By")
@@ -164,18 +164,19 @@
       (style/create-section-header "Google Bucket")
       (style/create-paragraph
         [:a {:href (str "https://console.developers.google.com/storage/browser/" (get-in ws ["workspace" "bucketName"]) "/")
-              :title "Click to open the Google Cloud Storage browser for this bucket"
-              :style {:textDecoration "none" :color (:button-blue style/colors)}
-              :target "_blank"}
+             :title "Click to open the Google Cloud Storage browser for this bucket"
+             :style {:textDecoration "none" :color (:button-blue style/colors)}
+             :target "_blank"}
          (get-in ws ["workspace" "bucketName"])])
       (style/create-section-header "Analysis Submissions")
       (style/create-paragraph
-        (let [success-count (->> submissions (filter all-success?) count)
+        (let [count-all (count submissions)
+              success-count (->> submissions (filter all-success?) count)
               running-count (->> submissions (filter any-running?) count)
               fail-count (->> submissions (filter any-failed?) count)
-              unknown-count (- (count submissions) success-count running-count fail-count)]
+              unknown-count (- count-all success-count running-count fail-count)]
              [:div {}
-              (str (count submissions) " Submissions")
+              (str count-all " Submission" (when-not (= 1 count-all) "s"))
               (when (or (pos? fail-count) (pos? running-count) (pos? success-count) (pos? unknown-count))
                     [:ul {:style {:marginTop "0"}}
                      (when (pos? success-count)
@@ -217,11 +218,11 @@
         :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                    (if success?
                      (let [workspace (get-parsed-response)
-                           attributes (get-in workspace ["workspace" "attributes"])]
-                       (swap! state update-in [:server-response]
-                         assoc :workspace workspace)
-                       (swap! state assoc :attrs-list (mapv (fn [[k v]] [k v])
-                                                        (dissoc attributes "description"))))
+                           attributes (get-in workspace ["workspace" "attributes"])
+                           new-state (update-in @state [:server-response]
+                                       assoc :workspace workspace)
+                           new-state (assoc new-state :attrs-list (vec (dissoc attributes "description")))]
+                       (reset! state new-state))
                      (swap! state update-in [:server-response]
                        assoc :server-error status-text)))})
      (endpoints/call-ajax-orch
