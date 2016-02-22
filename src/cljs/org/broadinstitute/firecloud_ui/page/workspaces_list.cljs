@@ -46,6 +46,8 @@
               (style/create-textfield-hint "Only letters, numbers, underscores, and dashes allowed")
               (style/create-form-label "Description (optional)")
               (style/create-text-area {:style {:width "100%"} :rows 5 :ref "wsDescription"})
+              [:div {:style {:marginBottom "1em"}}
+               [comps/Checkbox {:ref "protected-check" :label "Workspace intended to contain NIH protected data"}]]
               [comps/ErrorViewer {:error (:server-error @state)}]
               (style/create-validation-error-message (:validation-errors @state))])
            :dismiss-self (:dismiss props)
@@ -62,11 +64,12 @@
        (let [project (nth (:billing-projects props) (int (:selected-project @state)))
              name (input/get-text refs "wsName")
              desc (common/get-text refs "wsDescription")
-             attributes (if (clojure.string/blank? desc) {} {:description desc})]
+             attributes (if (clojure.string/blank? desc) {} {:description desc})
+             protected? (react/call :checked? (@refs "protected-check"))]
          (swap! state assoc :creating-wf true)
          (endpoints/call-ajax-orch
            {:endpoint (endpoints/create-workspace project name)
-            :payload {:namespace project :name name :attributes attributes}
+            :payload {:namespace project :name name :attributes attributes :isProtected protected?}
             :headers {"Content-Type" "application/json"}
             :on-done (fn [{:keys [success? get-parsed-response]}]
                        (swap! state dissoc :creating-wf)
