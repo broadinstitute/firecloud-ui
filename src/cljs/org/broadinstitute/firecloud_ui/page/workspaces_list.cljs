@@ -163,7 +163,7 @@
            :header "Workspace" :starting-width (min 500 (* max-workspace-name-length 10))
            :content-renderer (fn [data] [WorkspaceCell {:data data
                                                         :nav-context (:nav-context props)}])}
-          {:header "Description" :starting-width (min 500 (* max-description-length 10))
+          {:header "Description" :starting-width (max 200 (min 500 (* max-description-length 10)))
            :content-renderer (fn [description]
                                [:div {:style {:padding "0 0 16px 14px"}}
                                 (if description description
