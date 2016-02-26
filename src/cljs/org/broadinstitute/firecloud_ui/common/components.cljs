@@ -49,6 +49,18 @@
             "+"]])]))})
 
 
+(react/defc Checkbox
+  {:checked?
+   (fn [{:keys [refs]}]
+     (.-checked (@refs "check")))
+   :render
+   (fn [{:keys [props]}]
+     [:label {:style {:cursor "pointer"}}
+      [:input {:type "checkbox" :ref "check"
+               :style {:cursor "pointer"}}]
+      [:span {:style {:marginLeft "0.5ex"}} (:label props)]])})
+
+
 (react/defc TabBar
   (let [Tab (react/create-class
               {:get-initial-state
