@@ -104,37 +104,13 @@
                     (aset xhr (name k) v))
                   xhr))
           call-on-done (fn []
-                         (let [status-code (.-status xhr)
-                               orig-response {:xhr xhr
-                                              :status-code status-code
-                                              :success? (< 199 status-code 300)
-                                              :status-text (.-statusText xhr)
-                                              :get-parsed-response #(parse-json-string (.-responseText xhr))}]
-                           (if (= status-code 401)
-                             (let [us-xhr (js/XMLHttpRequest.)]
-                               (.addEventListener us-xhr "loadend"
-                                 (fn []
-                                   (let [us-status (.-status us-xhr)
-                                         parsed-us-response (parse-json-string (.-responseText us-xhr))
-                                         keywordized-us-response (keywordize-keys parsed-us-response)]
-                                     (cond
-                                       ;TODO: Fix this with a real log-out once the login bug is fixed and logout is implemented.
-                                       (= us-status 401) (do (delete-access-token-cookie)
-                                                           (.reload (.-location js/window)))
-                                       (= us-status 403)
-                                       (on-done {:xhr us-xhr
-                                                 :status-code us-status
-                                                 :success? false
-                                                 :status-text "You are successfully registered, but your account is currently inactive. You will be contacted via email when your account is activated."
-                                                 :get-parsed-response parsed-us-response})
-                                       (= us-status 404) (.replace (.-location js/window) "#profile")
-                                       :else (on-done orig-response)))))
-                               (.open us-xhr "GET" (str (config/api-url-root) "/me"))
-                               (.setRequestHeader us-xhr "Authorization" (str "Bearer " @access-token))
-                               (.setRequestHeader us-xhr "Content-Type" "application/json")
-                               (.setRequestHeader us-xhr "Accept" "application/json")
-                               (.send us-xhr))
-                             (on-done orig-response))))]
+                         (on-done (let [status-code (.-status xhr)]
+                                    {:xhr xhr
+                                     :status-code status-code
+                                     :success? (<= 200 status-code 299)
+                                     :status-text (.-statusText xhr)
+                                     :get-parsed-response #(parse-json-string
+                                                            (.-responseText xhr))})))]
       (when with-credentials?
         (set! (.-withCredentials xhr) true))
       (if canned-response-params
@@ -156,12 +132,19 @@
             (.send xhr data)
             (.send xhr)))))))
 
+
 (defn ajax-orch [path arg-map & {:keys [service-prefix] :or {service-prefix "/api"}}]
   (assert (= (subs path 0 1) "/") (str "Path must start with '/': " path))
-  (ajax (assoc
-         arg-map :url (str (config/api-url-root) service-prefix path)
-         :headers (merge {"Authorization" (str "Bearer " @access-token)}
-                         (:headers arg-map)))))
+  (let [on-done (:on-done arg-map)]
+    (ajax (assoc
+           arg-map :url (str (config/api-url-root) service-prefix path)
+           :headers (merge {"Authorization" (str "Bearer " @access-token)}
+                           (:headers arg-map))
+           :on-done (fn [{:keys [status-code] :as m}]
+                      ;; Handle auth token expiration
+                      (if (= status-code 401)
+                        (.. js/window -location (reload))
+                        (on-done m)))))))
 
 
 (defn deep-merge [& maps]
