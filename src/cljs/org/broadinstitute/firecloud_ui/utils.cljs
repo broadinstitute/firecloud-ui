@@ -143,7 +143,8 @@
            :on-done (fn [{:keys [status-code] :as m}]
                       ;; Handle auth token expiration
                       (if (= status-code 401)
-                        (.. js/window -location (reload))
+                        (do (delete-access-token-cookie)
+                            (.. js/window -location (reload)))
                         (on-done m)))))))
 
 

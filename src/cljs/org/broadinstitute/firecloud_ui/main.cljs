@@ -273,6 +273,7 @@
      (.removeEventListener js/window "hashchange" (:hash-change-listener @locals)))
    :load-config
    (fn [{:keys [this state]}]
+     ;; Use basic ajax call here to bypass authentication.
      (utils/ajax {:url "/config.json"
                   :on-done (fn [{:keys [success? get-parsed-response]}]
                              (if success?
@@ -287,6 +288,7 @@
            at-index (utils/str-index-of hash "?access_token=")
            [_ token] (when-not (neg? at-index) (clojure.string/split (subs hash at-index) #"="))
            attempt-auth (fn [token on-done]
+                          ;; Use basic ajax call here to bypass default ajax-orch failure behavior.
                           (utils/ajax {:url (str (config/api-url-root) "/me")
                                        :headers {"Authorization" (str "Bearer " token)}
                                        :on-done on-done}))]
