@@ -312,7 +312,8 @@
              (attempt-auth token (fn [{:keys [success? status-code]}]
                                    (cond
                                      (= 401 status-code) ; maybe bad cookie, not auth failure
-                                     (swap! state assoc :user-status :not-logged-in)
+                                     (do (utils/delete-access-token-cookie)
+                                         (swap! state assoc :user-status :not-logged-in))
                                      (= 403 status-code)
                                      (swap! state assoc :user-status :not-activated)
                                      ;; 404 just means not registered
