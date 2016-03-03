@@ -1,6 +1,5 @@
 (ns org.broadinstitute.firecloud-ui.page.workspace.summary.workspace-cloner
   (:require
-    [clojure.string :refer [blank?]]
     [dmohs.react :as react]
     [org.broadinstitute.firecloud-ui.common :as common]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
@@ -18,7 +17,7 @@
    :render
    (fn [{:keys [props refs state this]}]
      [dialog/Dialog
-      {:width 400 :dismiss-self (:dismiss props)
+      {:width 500 :dismiss-self (:dismiss props)
        :content
        (react/create-element
          [dialog/OKCancelForm
@@ -42,6 +41,12 @@
                                 :predicates [(input/nonempty "Workspace name")
                                              (input/alphanumeric_- "Workspace name")]}]
               (style/create-textfield-hint "Only letters, numbers, underscores, and dashes allowed")
+              (style/create-form-label "Description (optional)")
+              (style/create-text-area {:style {:width "100%"} :rows 5 :ref "wsDescription"
+                                       :defaultValue (:description props)})
+              (if (:is-protected? props)
+                [:div {} "Cloned workspace will automatically be protected because this workspace is protected."]
+                [comps/Checkbox {:ref "protected-check" :label "Workspace intended to contain NIH protected data"}])
               (style/create-validation-error-message (:validation-error @state))
               [comps/ErrorViewer {:error (:error @state)
                                   :expect {409 "A workspace with this name already exists in this project"}}]])
@@ -59,11 +64,16 @@
      (if-let [fails (input/validate refs "name")]
        (swap! state assoc :validation-error fails)
        (let [name (input/get-text refs "name")
-             project (nth (:billing-projects props) (int (:selected-project @state)))]
+             project (nth (:billing-projects props) (int (:selected-project @state)))
+             desc (common/get-text refs "wsDescription")
+             attributes (if (or (:description props) (not (clojure.string/blank? desc)))
+                          {:description desc}
+                          {})
+             protected? (or (:is-protected? props) (react/call :checked? (@refs "protected-check")))]
          (swap! state assoc :working? true :validation-error nil :error nil)
          (endpoints/call-ajax-orch
            {:endpoint (endpoints/clone-workspace (:workspace-id props))
-            :payload {:namespace project :name name}
+            :payload {:namespace project :name name :attributes attributes :isProtected protected?}
             :headers {"Content-Type" "application/json"}
             :on-done (fn [{:keys [success? get-parsed-response]}]
                        (swap! state dissoc :working?)

@@ -57,7 +57,7 @@
                      (swap! state assoc :server-error (get-parsed-response))))}))})
 
 
-(defn- render-overlays [state props billing-projects]
+(defn- render-overlays [state props workspace billing-projects]
   [:div {}
    (when (:show-delete-dialog? @state)
      [DeleteDialog
@@ -80,6 +80,8 @@
                                      (swap! state dissoc :cloning?)
                                      ((:on-clone props) (str namespace ":" name)))
                        :workspace-id (:workspace-id props)
+                       :description (get-in workspace ["workspace" "attributes" "description"])
+                       :is-protected? (get-in workspace ["workspace" "isProtected"])
                        :billing-projects billing-projects}])])
 
 
@@ -208,7 +210,7 @@
          (let [owner? (= "OWNER" (workspace "accessLevel"))
                writer? (or owner? (= "WRITER" (workspace "accessLevel")))]
            [:div {:style {:margin "45px 25px" :display "flex"}}
-            (render-overlays state props billing-projects)
+            (render-overlays state props workspace billing-projects)
             (render-sidebar state props refs this workspace billing-projects owner? writer?)
             (render-main state refs workspace owner? submissions)]))))
    :load-workspace

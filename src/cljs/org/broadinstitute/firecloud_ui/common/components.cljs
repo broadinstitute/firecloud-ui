@@ -53,12 +53,21 @@
   {:checked?
    (fn [{:keys [refs]}]
      (.-checked (@refs "check")))
+   :get-default-props
+   (fn []
+     {:initial-checked? false
+      :disabled? false})
    :render
    (fn [{:keys [props]}]
-     [:label {:style {:cursor "pointer"}}
-      [:input {:type "checkbox" :ref "check"
-               :style {:cursor "pointer"}}]
-      [:span {:style {:marginLeft "0.5ex"}} (:label props)]])})
+     (let [disabled? (:disabled? props)]
+       [:label {:style {:cursor (when-not disabled? "pointer")
+                        :color (when disabled? (:text-gray style/colors))}
+                :title (when disabled? (:disabled-text props))}
+        [:input {:type "checkbox" :ref "check"
+                 :defaultChecked (:initial-checked? props)
+                 :disabled disabled?
+                 :style {:cursor (when-not disabled? "pointer")}}]
+        [:span {:style {:marginLeft "0.5ex"}} (:label props)]]))})
 
 
 (react/defc TabBar

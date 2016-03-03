@@ -1,6 +1,6 @@
 (ns org.broadinstitute.firecloud-ui.page.workspaces-list
   (:require
-    [clojure.string :refer [split join replace]]
+    [clojure.string :refer [split join replace split-lines]]
     [dmohs.react :as react]
     [org.broadinstitute.firecloud-ui.common :as common]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
@@ -169,7 +169,7 @@
           {:header "Description" :starting-width (max 200 (min 500 (* max-description-length 10)))
            :content-renderer (fn [description]
                                [:div {:style {:padding "0 0 16px 14px"}}
-                                (if description description
+                                (if description (-> description split-lines first)
                                   [:span {:style {:fontStyle "italic"}}
                                    "No description provided"])])}
           {:header "Access Level" :starting-width 122 :resizable? false
