@@ -3,6 +3,7 @@
     [clojure.string]
     [dmohs.react :as react]
     [clojure.set :refer [union]]
+    [org.broadinstitute.firecloud-ui.common :as common]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
     [org.broadinstitute.firecloud-ui.common.table :as table]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
@@ -15,34 +16,47 @@
   {:render
    (fn [{:keys [props]}]
      [:div {:style {:margin "1em"}}
-      (let [attribute-keys (apply union (map (fn [e] (set (keys (e "attributes")))) (:workspaces props)))]
-        [table/Table
-         {:empty-message "There are no workspaces to display."
-          :columns (concat
-                     [{:header "Google Project" :starting-width 150}
-                      {:header "Name" :starting-width 150
-                       :as-text #(get-in % ["workspace" "name"]) :sort-by :text
-                       :content-renderer
-                       (fn [ws]
-                         (style/create-link {:text (get-in ws ["workspace" "name"])
-                                             :onClick #((:onWorkspaceSelected props) ws)}))}
-                      {:header "Created By" :starting-width 200}
-                      (table/date-column {})
-                      {:header "Access Level" :starting-width 100}]
-                     (map (fn [k] {:header k :starting-width 100}) attribute-keys))
-          :data (:workspaces props)
-          :->row (fn [ws]
-                   (concat
-                    [(get-in ws ["workspace" "namespace"])
-                     ws
-                     (get-in ws ["workspace" "createdBy"])
-                     (get-in ws ["workspace" "createdDate"])
-                     (ws "accessLevel")]
-                    (map (fn [k] (get-in ws ["attributes" k])) attribute-keys)))}])])})
+      [table/Table
+       {:empty-message "There are no workspaces to display."
+        :columns [{:header "Google Project" :starting-width 150}
+                  {:header "Name" :starting-width 150
+                   :as-text #(get-in % ["workspace" "name"]) :sort-by :text
+                   :content-renderer
+                   (fn [ws]
+                     (style/create-link {:text (get-in ws ["workspace" "name"])
+                                         :onClick #((:onWorkspaceSelected props) ws)}))}
+                  {:header "Created By" :starting-width 200}
+                  (table/date-column {})
+                  {:header "Access Level" :starting-width 106}
+                  {:header "Protected" :starting-width 86
+                   :content-renderer #(if % "Yes" "No")}]
+        :toolbar (fn [built-in]
+                   [:div {}
+                    [:div {:style {:float "left"}} built-in]
+                    (let [num (:num-filtered props)]
+                      (when (pos? num)
+                        [:div {:style {:float "left" :margin "7px 0 0 1em"}}
+                         (str
+                           (:num-filtered props)
+                           " workspace(s) unavailable because they contain protected data.")]))
+                    (common/clear-both)])
+        :data (:workspaces props)
+        :->row (fn [ws]
+                 [(get-in ws ["workspace" "namespace"])
+                  ws
+                  (get-in ws ["workspace" "createdBy"])
+                  (get-in ws ["workspace" "createdDate"])
+                  (ws "accessLevel")
+                  (get-in ws ["workspace" "isProtected"])])}]])})
 
-(defn- remove-self [workspace-list workspace-id]
+(defn- remove-self [workspace-id workspace-list]
   (filter #(not= workspace-id {:namespace (get-in % ["workspace" "namespace"])
                                :name (get-in % ["workspace" "name"])}) workspace-list))
+
+(defn- filter-workspaces [this-realm workspace-list]
+  (filter #(let [src-realm (get-in % ["workspace" "realm" "groupName"])]
+             (or (nil? src-realm) (= src-realm this-realm)))
+    workspace-list))
 
 (react/defc Page
   {:render
@@ -56,6 +70,7 @@
                                    :reload-data-tab (:reload-data-tab props)}]
          (:workspaces @state)
          [WorkspaceList {:workspaces (:workspaces @state)
+                         :num-filtered (:num-filtered @state)
                          :onWorkspaceSelected
                          (fn [ws]
                            ((:add-crumb props)
@@ -71,6 +86,8 @@
        {:endpoint endpoints/list-workspaces
         :on-done (fn [{:keys [success? status-text get-parsed-response]}]
                    (if success?
-                     (swap! state assoc :workspaces
-                            (remove-self (get-parsed-response) (:workspace-id props)))
+                     (let [all-workspaces (remove-self (:workspace-id props) (get-parsed-response))
+                           filtered-workspaces (filter-workspaces (:this-realm props) all-workspaces)]
+                       (swap! state assoc :workspaces filtered-workspaces
+                         :num-filtered (- (count all-workspaces) (count filtered-workspaces))))
                      (swap! state assoc :error-message status-text)))}))})

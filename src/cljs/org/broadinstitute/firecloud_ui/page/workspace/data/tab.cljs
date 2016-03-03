@@ -43,7 +43,7 @@
           :workspace-import
           [:div {:style {:padding "1em"}}
            [copy-data-workspaces/Page
-            (assoc (select-keys props [:workspace-id :reload-data-tab])
+            (assoc (select-keys props [:workspace-id :this-realm :reload-data-tab])
                    :crumbs (drop 2 (:crumbs @state))
                    :add-crumb #(swap! state update-in [:crumbs] conj %))]]
           (let [style {:width 240 :margin "auto" :textAlign "center" :cursor "pointer"
@@ -164,7 +164,7 @@
    (fn [{:keys [props state refs this]}]
      (let [workspace-id (:workspace-id props)
            server-response (:server-response @state)
-           {:keys [server-error locked? entity-list entity-types initial-entity-type]} server-response]
+           {:keys [server-error locked? entity-list entity-types initial-entity-type this-realm]} server-response]
        [:div {:style {:padding "1em"}}
         (when (:deleting? @state)
           [comps/Blocker {:banner "Deleting..."}])
@@ -175,6 +175,7 @@
                           (react/create-element
                             [DataImporter {:dismiss #(swap! state dissoc :show-import?)
                                            :workspace-id workspace-id
+                                           :this-realm this-realm
                                            :reload-data-tab (fn [entity-type]
                                                               (swap! state dissoc :entity-list :entity-types)
                                                               (react/call :refresh this entity-type))}])}])
@@ -199,8 +200,9 @@
        {:endpoint (endpoints/get-workspace (:workspace-id props))
         :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                    (if success?
-                     (swap! state update-in [:server-response]
-                       assoc :locked? (get-in (get-parsed-response) ["workspace" "isLocked"]))
+                     (let [workspace ((get-parsed-response) "workspace")]
+                       (swap! state update-in [:server-response]
+                         assoc :locked? (workspace "isLocked") :this-realm (get-in workspace ["realm" "groupName"])))
                      (swap! state update-in [:server-response]
                        assoc :server-error status-text)))})
      (endpoints/call-ajax-orch
