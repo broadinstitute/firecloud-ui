@@ -118,29 +118,28 @@
                      (= page :status))
          (nav/navigate (:nav-context props) "workspaces"))
        [:div {}
-        [:div {:style {:padding "1em" :borderBottom (str "1px solid " (:line-gray style/colors))}}
-         [:div {:style {:float "right" :fontSize "70%"}}
-          [:a {:style {:marginRight "1ex" :color (:link-blue style/colors)}
-               :href "#profile" } (:name @state)]]
-         (text-logo)
-         (case (:registration-status @state)
-           nil [:div {:style {:margin "2em 0" :textAlign "center"}}
-                [comps/Spinner {:text "Loading user information..."}]]
-           :error [:div {:style {:margin "2em 0"}}
-                   (style/create-server-error-message (.-errorMessage this))]
-           :not-registered (profile-page/render
-                            {:new-registration? true
-                             :on-done #(swap! state assoc :registration-status :registered)})
-           :registered
-           (if (and (= page :status) (config/debug?))
-             (status-page/render)
-             [:div {}
-              [TopNavBar {:selected-item page
-                          :show-nih-link-warning? (not (contains? #{:status :profile} page))}]
-              (let [item (first (filter #(= (% :key) page) routes))]
-                (if item
-                  ((item :render) {:nav-context nav-context})
-                  [:div {} "Page not found."]))]))]]))
+        [:div {:style {:float "right" :fontSize "70%"}}
+         [:a {:style {:marginRight "1ex" :color (:link-blue style/colors)}
+              :href "#profile" } (:name @state)]]
+        (text-logo)
+        (case (:registration-status @state)
+          nil [:div {:style {:margin "2em 0" :textAlign "center"}}
+               [comps/Spinner {:text "Loading user information..."}]]
+          :error [:div {:style {:margin "2em 0"}}
+                  (style/create-server-error-message (.-errorMessage this))]
+          :not-registered (profile-page/render
+                           {:new-registration? true
+                            :on-done #(.. js/window -location (reload))})
+          :registered
+          (if (and (= page :status) (config/debug?))
+            (status-page/render)
+            [:div {}
+             [TopNavBar {:selected-item page
+                         :show-nih-link-warning? (not (contains? #{:status :profile} page))}]
+             (let [item (first (filter #(= (% :key) page) routes))]
+               (if item
+                 ((item :render) {:nav-context nav-context})
+                 [:div {} "Page not found."]))]))]))
    :component-did-mount
    (fn [{:keys [this state]}]
      (when (nil? (:registration-status @state))
@@ -178,7 +177,7 @@
 (react/defc LoggedOut
   {:render
    (fn [{:keys [props]}]
-     [:div {:style {:padding "50px 25px"}}
+     [:div {}
       [:div {:style {:marginBottom "2em"}} (text-logo)]
       [:div {}
        [comps/Button
@@ -219,51 +218,118 @@
      (swap! state assoc :root-nav-context (nav/create-nav-context)))
    :get-initial-state
    (fn []
-     (let [hash (nav/get-hash-value)
-           at-index (utils/str-index-of hash "?access_token=")
-           [_ token] (when-not (neg? at-index) (clojure.string/split (subs hash at-index) #"="))
-           cookie-token (utils/get-access-token-cookie)]
-       (when-not (neg? at-index)
-         (.replace (.-location js/window) (str "#"(subs hash 0 at-index))))
-       (cond
-         (not (nil? token)) {:access-token token :root-nav-context (nav/create-nav-context)}
-         (not (nil? cookie-token)) {:access-token cookie-token :root-nav-context (nav/create-nav-context)}
-         :else {:root-nav-context (nav/create-nav-context)})))
+     {:root-nav-context (nav/create-nav-context)})
    :render
    (fn [{:keys [state]}]
      [:div {}
-      [:div {:style {:backgroundColor "white" :paddingBottom "2em"}}
-       (cond
-         (and (:access-token @state) (= (:config-status @state) :success))
-         [LoggedIn {:nav-context (:root-nav-context @state)}]
-         (= (:config-status @state) :error)
-         [:div {:style {:color (:exception-red style/colors)}}
-          "Error loading configuration. Please try again later."]
-         :else
-         [LoggedOut])]
+      [:div {:style {:backgroundColor "white" :padding 20}}
+       [:div {}
+        (cond
+          (nil? (:config-status @state))
+          [:div {}
+           (text-logo)
+           [:div {:style {:padding "40px 0"}}
+            [comps/Spinner {:text "Loading configuration..."}]]]
+          (= :error (:config-status @state))
+          [:div {}
+           (text-logo)
+           [:div {:style {:padding "40px 0"}}
+            [:div {:style {:color (:exception-red style/colors)}}
+             "Error loading configuration. Please try again later."]]]
+          (nil? (:user-status @state))
+          [:div {}
+           (text-logo)
+           [:div {:style {:padding "40px 0"}}
+            [comps/Spinner {:text "Loading user data..."}]]]
+          (= :error (:user-status @state))
+          [:div {}
+           (text-logo)
+           [:div {:style {:padding "40px 0"}}
+            [:div {:style {:color (:exception-red style/colors)}}
+             "Error getting user information."]]]
+          (= :auth-failure (:user-status @state))
+          [:div {}
+           (text-logo)
+           [:div {:style {:padding "40px 0"}}
+            [:div {:style {:color (:exception-red style/colors)}}
+             "Authentication failed."]]]
+          (= :not-activated (:user-status @state))
+          [:div {}
+           (text-logo)
+           [:div {:style {:padding "40px 0"}}
+            [:div {:style {:color (:exception-reds style/colors)}}
+             "Thank you for registering. Your account is currently inactive."
+             " You will be contacted via email when your account is activated."]]]
+          (= :logged-in (:user-status @state))
+          [LoggedIn {:nav-context (:root-nav-context @state)}]
+          (= :not-logged-in (:user-status @state))
+          [LoggedOut])]]
       (footer)])
-   :component-will-mount
-   (fn [{:keys [state]}]
-     (reset! utils/access-token (:access-token @state))
-     (utils/set-access-token-cookie (:access-token @state)))
    :component-did-mount
    (fn [{:keys [this state locals]}]
-     (swap! locals assoc :hash-change-listener (partial react/call :handle-hash-change this))
-     (.addEventListener js/window "hashchange" (:hash-change-listener @locals))
+     (react/call :load-config this))
+   :component-will-unmount
+   (fn [{:keys [locals]}]
+     (.removeEventListener js/window "hashchange" (:hash-change-listener @locals)))
+   :load-config
+   (fn [{:keys [this state]}]
+     ;; Use basic ajax call here to bypass authentication.
      (utils/ajax {:url "/config.json"
                   :on-done (fn [{:keys [success? get-parsed-response]}]
                              (if success?
                                (do
                                  (reset! config/config (get-parsed-response))
-                                 (swap! state assoc :config-status :success))
+                                 (swap! state assoc :config-status :success)
+                                 (react/call :authenticate-user this))
                                (swap! state assoc :config-status :error)))}))
-   :component-will-update
-   (fn [{:keys [next-state]}]
-     (reset! utils/access-token (:access-token next-state))
-     (utils/set-access-token-cookie (:access-token next-state)))
-   :component-will-unmount
-   (fn [{:keys [locals]}]
-     (.removeEventListener js/window "hashchange" (:hash-change-listener @locals)))})
+   :authenticate-user
+   (fn [{:keys [this state]}]
+     (let [hash (nav/get-hash-value)
+           at-index (utils/str-index-of hash "?access_token=")
+           [_ token] (when-not (neg? at-index) (clojure.string/split (subs hash at-index) #"="))
+           attempt-auth (fn [token on-done]
+                          ;; Use basic ajax call here to bypass default ajax-orch failure behavior.
+                          (utils/ajax {:url (str (config/api-url-root) "/me")
+                                       :headers {"Authorization" (str "Bearer " token)}
+                                       :on-done on-done}))]
+       (if-not (neg? at-index)
+         (do
+           ;; New access token. Attempt to authenticate with it.
+           (.replace (.-location js/window) (str "#" (subs hash 0 at-index)))
+           (attempt-auth token (fn [{:keys [success? status-code]}]
+                                 (cond
+                                   (= 401 status-code)
+                                   (swap! state assoc :user-status :auth-failure)
+                                   (= 403 status-code)
+                                   (do (utils/set-access-token-cookie token)
+                                       (swap! state assoc :user-status :not-activated))
+                                   ;; 404 just means not registered
+                                   (or success? (= status-code 404))
+                                   (do (utils/set-access-token-cookie token)
+                                       (react/call :handle-successful-auth this token))
+                                   :else
+                                   (swap! state assoc :user-status :error)))))
+         (let [token (utils/get-access-token-cookie)]
+           (if token
+             (attempt-auth token (fn [{:keys [success? status-code]}]
+                                   (cond
+                                     (= 401 status-code) ; maybe bad cookie, not auth failure
+                                     (do (utils/delete-access-token-cookie)
+                                         (swap! state assoc :user-status :not-logged-in))
+                                     (= 403 status-code)
+                                     (swap! state assoc :user-status :not-activated)
+                                     ;; 404 just means not registered
+                                     (or success? (= status-code 404))
+                                     (react/call :handle-successful-auth this token)
+                                     :else
+                                     (swap! state assoc :user-status :error))))
+             (swap! state assoc :user-status :not-logged-in))))))
+   :handle-successful-auth
+   (fn [{:keys [this state locals]} token]
+     (reset! utils/access-token token)
+     (swap! locals assoc :hash-change-listener (partial react/call :handle-hash-change this))
+     (.addEventListener js/window "hashchange" (:hash-change-listener @locals))
+     (swap! state assoc :user-status :logged-in :root-nav-context (nav/create-nav-context)))})
 
 
 (defn render-application [& [hot-reload?]]
