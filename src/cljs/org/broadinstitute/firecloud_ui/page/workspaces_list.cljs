@@ -173,7 +173,7 @@
                                   [:span {:style {:fontStyle "italic"}}
                                    "No description provided"])])}
           {:header "Access Level" :starting-width 122 :resizable? false
-           :sort-by #(case % "OWNER" 0 "WRITER" 1 "READER" 2) :sort-initial :asc
+           :sort-by #(case % "OWNER" 0 "WRITER" 1 "READER" 2 "NO ACCESS" 3 4) :sort-initial :asc
            :content-renderer
            (fn [accessLevel]
              [:div {:style {:padding "0 0 16px 14px"}}
