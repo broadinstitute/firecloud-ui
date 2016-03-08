@@ -217,6 +217,23 @@
    [{:entityName "foo" :entityType "bar" :succeeded false :message "ohno"}
     {:entityName "bar" :entityType "baz" :succeeded true :message "hooray"}]})
 
+(defn get-entity-types [workspace-id]
+  {:path (str "/workspaces/" (ws-path workspace-id) "/entities")
+   :method :get
+   :mock-data {"participant" (rand-int 100)
+               "sample" (rand-int 100)
+               "pair" (rand-int 10)}})
+
+(defn get-entities-of-type [workspace-id type]
+  {:path (str "/workspaces/" (ws-path workspace-id) "/entities/" type)
+   :method :get
+   :mock-data
+   (map (fn [i]
+          {:entityType type
+           :name (str "entity" (inc i))
+           :attributes {}})
+     (range (rand-int 20)))})
+
 (defn get-entities-by-type [workspace-id]
   {:path (str "/workspaces/" (ws-path workspace-id) "/entities_with_type")
    :method :get
