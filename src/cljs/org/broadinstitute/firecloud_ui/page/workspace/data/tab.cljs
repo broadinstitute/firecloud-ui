@@ -119,17 +119,16 @@
                      (swap! state assoc :server-error (get-parsed-response))))}))})
 
 
-(defn- entity-table [state workspace-id locked? entity-list entity-types initial-entity-type]
+(defn- entity-table [state workspace-id locked?]
   [table/EntityTable
-   {:entities entity-list
-    :entity-types entity-types
-    :initial-entity-type initial-entity-type
+   {;:entities entity-list
+    ;:entity-types entity-types
+    ;:initial-entity-type initial-entity-type
+    :workspace-id workspace-id
     :toolbar (fn [built-in]
                [:div {}
                 [:div {:style {:float "left"}} built-in]
-                (when-let [selected-entity-type (or (:selected-entity-type @state)
-                                                    initial-entity-type
-                                                    (first entity-types))]
+                (when-let [selected-entity-type (:selected-entity-type @state)]
                   [:a {:style {:textDecoration "none" :float "left" :margin "7px 0 0 1em"}
                        :href (str (config/api-url-root) "/cookie-authed/workspaces/"
                                   (:namespace workspace-id) "/"
@@ -146,7 +145,7 @@
                                 :disabled? (if locked? "This workspace is locked")
                                 :onClick #(swap! state assoc :show-delete? true)}]]
                 (common/clear-both)])
-    :on-filter-change #(swap! state assoc :selected-entity-type (nth entity-types %))
+    ;:on-filter-change #(swap! state assoc :selected-entity-type (nth entity-types %))
     :attribute-renderer (fn [maybe-uri]
                           (if (string? maybe-uri)
                             (if-let [parsed (common/parse-gcs-uri maybe-uri)]
@@ -164,7 +163,7 @@
    (fn [{:keys [props state refs this]}]
      (let [workspace-id (:workspace-id props)
            server-response (:server-response @state)
-           {:keys [server-error locked? entity-list entity-types initial-entity-type this-realm]} server-response]
+           {:keys [server-error locked? this-realm]} server-response]
        [:div {:style {:padding "1em"}}
         (when (:deleting? @state)
           [comps/Blocker {:banner "Deleting..."}])
@@ -181,16 +180,16 @@
                                                               (react/call :refresh this entity-type))}])}])
         (when (:show-delete? @state)
           [DataDeleter {:dismiss-self #(swap! state dissoc :show-delete?)
-                        :entity-list entity-list
+                        ;:entity-list entity-list
                         :workspace-id workspace-id
                         :reload #(react/call :refresh this)}])
         (cond
           server-error
           (style/create-server-error-message server-error)
-          (some nil? [locked? entity-list])
-          [:div {:style {:textAlign "center"}} [comps/Spinner {:text "Loading entities..."}]]
+          (nil? locked?)
+          [:div {:style {:textAlign "center"}} [comps/Spinner {:text "Fetching entity types..."}]]
           :else
-          (entity-table state workspace-id locked? entity-list entity-types initial-entity-type))]))
+          (entity-table state workspace-id locked?))]))
    :component-did-mount
    (fn [{:keys [this]}]
      (react/call :load this))
@@ -203,16 +202,5 @@
                      (let [workspace ((get-parsed-response) "workspace")]
                        (swap! state update-in [:server-response]
                          assoc :locked? (workspace "isLocked") :this-realm (get-in workspace ["realm" "groupName"])))
-                     (swap! state update-in [:server-response]
-                       assoc :server-error status-text)))})
-     (endpoints/call-ajax-orch
-       {:endpoint (endpoints/get-entities-by-type (:workspace-id props))
-        :on-done (fn [{:keys [success? get-parsed-response status-text]}]
-                   (if success?
-                     (let [entities (get-parsed-response)]
-                       (swap! state update-in [:server-response]
-                         assoc :entity-list entities
-                               :entity-types (distinct (map #(% "entityType") entities))
-                               :initial-entity-type entity-type))
                      (swap! state update-in [:server-response]
                        assoc :server-error status-text)))}))})
