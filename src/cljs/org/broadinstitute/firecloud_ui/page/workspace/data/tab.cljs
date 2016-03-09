@@ -82,7 +82,7 @@
                        [EntitySelector
                         {:ref "EntitySelector"
                          :left-text "Workspace Entities" :right-text "Will Be Deleted"
-                         :entities (:entity-list props)}]
+                         :entities ((:get-entity-list props))}]
                        [:div {:style {:textAlign "center" :marginTop "1em"}}
                         (style/create-validation-error-message (:validation-errors @state))
                         [comps/ErrorViewer {:error (:server-error @state)}]]])
@@ -121,9 +121,7 @@
 
 (defn- entity-table [state workspace-id locked?]
   [table/EntityTable
-   {;:entities entity-list
-    ;:entity-types entity-types
-    ;:initial-entity-type initial-entity-type
+   {:ref "entity-table"
     :workspace-id workspace-id
     :toolbar (fn [built-in]
                [:div {}
@@ -145,7 +143,6 @@
                                 :disabled? (if locked? "This workspace is locked")
                                 :onClick #(swap! state assoc :show-delete? true)}]]
                 (common/clear-both)])
-    ;:on-filter-change #(swap! state assoc :selected-entity-type (nth entity-types %))
     :attribute-renderer (fn [maybe-uri]
                           (if (string? maybe-uri)
                             (if-let [parsed (common/parse-gcs-uri maybe-uri)]
@@ -156,7 +153,7 @@
 
 (react/defc WorkspaceData
   {:refresh
-   (fn [{:keys [state this]} & [entity-type]]
+   (fn [{:keys [state refs this]} & [entity-type]]
      (swap! state dissoc :server-response)
      (react/call :load this entity-type))
    :render
@@ -180,7 +177,7 @@
                                                               (react/call :refresh this entity-type))}])}])
         (when (:show-delete? @state)
           [DataDeleter {:dismiss-self #(swap! state dissoc :show-delete?)
-                        ;:entity-list entity-list
+                        :get-entity-list #(react/call :get-entity-list (@refs "entity-table"))
                         :workspace-id workspace-id
                         :reload #(react/call :refresh this)}])
         (cond

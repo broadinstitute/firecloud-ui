@@ -265,8 +265,9 @@
                                       :cursor "pointer"}
                               :onClick #(swap! state assoc :selected-index index)}
                         (str (:text item)
-                             " (" (count (react/call :apply-filter this index))
-                             ")")]))
+                          " ("
+                          (or (:count item) (count (react/call :apply-filter this index)))
+                          ")")]))
         (:filters props))
       (common/clear-both)])
    :component-did-update
