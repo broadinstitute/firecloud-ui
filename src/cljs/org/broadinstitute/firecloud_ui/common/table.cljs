@@ -92,6 +92,8 @@
 ;;         A label for the filter.
 ;;       :pred (required)
 ;;         A function that, given a data item, returns true if that item matches the filter.
+;;       :count (optional)
+;;         Use to override the displayed count, which normally uses the :pred
 ;;   :selected-filter-index (OPTIONAL)
 ;;     Currently selected filter.
 ;;   :on-filter-change (OPTIONAL)
@@ -293,23 +295,7 @@
        (= (set (keys (first attr-value))) #{"entityType" "entityName"})))
 
 (react/defc EntityTable
-  {:refresh-types
-   (fn [{:keys [props state this]} & [selected-type]]
-     (endpoints/call-ajax-orch
-       {:endpoint (endpoints/get-entity-types (:workspace-id props))
-        :on-done (fn [{:keys [success? get-parsed-response]}]
-                   (if success?
-                     (let [types (get-parsed-response)
-                           first-type (or selected-type (first types))]
-                       (swap! state update-in [:server-response]
-                         assoc :entity-types types :selected-entity-type first-type)
-                       (react/call :load-type this first-type))
-                     (swap! state update-in [:server-response]
-                       assoc :server-error (get-parsed-response))))}))
-   :get-selected-entity-type
-   (fn [{:keys [state]}]
-     (get-in @state [:server-response :selected-entity-type]))
-   :get-entity-list
+  {:get-entity-list
    (fn [{:keys [state]}]
      (get-in @state [:server-response :entity-list]))
    :get-default-props
@@ -351,7 +337,7 @@
                                              (is-ref-list? attr-value) (join ", " (map #(% "entityName") attr-value))
                                              :else ((:attribute-renderer props) attr-value)))})
                              attribute-keys))
-                :filters (mapv (fn [key] {:text key :count 5 :pred (constantly true)})
+                :filters (mapv (fn [key] {:text key :count "?" :pred (constantly true)})
                            entity-types)
                 :selected-filter-index (max 0 (.indexOf (to-array entity-types)
                                                 selected-entity-type))
@@ -360,13 +346,23 @@
                                       (swap! state update-in [:server-response] assoc :selected-entity-type type)
                                       (react/call :load-type this type)
                                       (when-let [func (:on-filter-change props)]
-                                        (func index))))
+                                        (func type))))
                 :data entity-list
                 :->row (fn [m]
                          (into [m] (map (fn [k] (get-in m ["attributes" k])) attribute-keys)))})]))]))
    :component-did-mount
-   (fn [{:keys [this]}]
-     (react/call :refresh-types this))
+   (fn [{:keys [props state this]} & [selected-type]]
+     (endpoints/call-ajax-orch
+       {:endpoint (endpoints/get-entity-types (:workspace-id props))
+        :on-done (fn [{:keys [success? get-parsed-response]}]
+                   (if success?
+                     (let [types (get-parsed-response)
+                           first-type (or selected-type (first types))]
+                       (swap! state update-in [:server-response]
+                         assoc :entity-types types :selected-entity-type first-type)
+                       (react/call :load-type this first-type))
+                     (swap! state update-in [:server-response]
+                       assoc :server-error (get-parsed-response))))}))
    :load-type
    (fn [{:keys [props state]} type]
      (if-not type
@@ -379,4 +375,6 @@
             :on-done (fn [{:keys [success? get-parsed-response]}]
                        (swap! state update-in [:server-response]
                          assoc (if success? :entity-list :server-error) (get-parsed-response))
-                       (swap! state dissoc :loading-entities?))}))))})
+                       (swap! state dissoc :loading-entities?)
+                       (when-let [func (:on-filter-change props)]
+                         (func type)))}))))})

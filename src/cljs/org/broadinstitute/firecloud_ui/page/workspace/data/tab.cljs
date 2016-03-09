@@ -143,6 +143,7 @@
                                 :disabled? (if locked? "This workspace is locked")
                                 :onClick #(swap! state assoc :show-delete? true)}]]
                 (common/clear-both)])
+    :on-filter-change #(swap! state assoc :selected-entity-type %)
     :attribute-renderer (fn [maybe-uri]
                           (if (string? maybe-uri)
                             (if-let [parsed (common/parse-gcs-uri maybe-uri)]
