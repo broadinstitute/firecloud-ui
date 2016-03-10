@@ -136,11 +136,11 @@
                    (str "Download '" selected-entity-type "' data")])
                 [:div {:style {:float "right" :paddingRight "2em"}}
                  [comps/Button {:text "Import Data..."
-                                :disabled? (if locked? "This workspace is locked")
+                                :disabled? (when locked? "This workspace is locked")
                                 :onClick #(swap! state assoc :show-import? true)}]]
                 [:div {:style {:float "right" :paddingRight "2em"}}
                  [comps/Button {:text "Delete..."
-                                :disabled? (if locked? "This workspace is locked")
+                                :disabled? (when locked? "This workspace is locked")
                                 :onClick #(swap! state assoc :show-delete? true)}]]
                 (common/clear-both)])
     :on-filter-change #(swap! state assoc :selected-entity-type %)
@@ -173,9 +173,7 @@
                             [DataImporter {:dismiss #(swap! state dissoc :show-import?)
                                            :workspace-id workspace-id
                                            :this-realm this-realm
-                                           :reload-data-tab (fn [entity-type]
-                                                              (swap! state dissoc :entity-list :entity-types)
-                                                              (react/call :refresh this entity-type))}])}])
+                                           :reload-data-tab #(react/call :refresh this %)}])}])
         (when (:show-delete? @state)
           [DataDeleter {:dismiss-self #(swap! state dissoc :show-delete?)
                         :get-entity-list #(react/call :get-entity-list (@refs "entity-table"))
