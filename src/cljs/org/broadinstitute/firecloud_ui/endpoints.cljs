@@ -220,7 +220,9 @@
 (defn get-entity-types [workspace-id]
   {:path (str "/workspaces/" (ws-path workspace-id) "/entities")
    :method :get
-   :mock-data ["participant" "sample" "pair"]})
+   :mock-data {"participant" (rand-int 100)
+               "sample" (rand-int 100)
+               "pair" (rand-int 10)}})
 
 (defn get-entities-of-type [workspace-id type]
   {:path (str "/workspaces/" (ws-path workspace-id) "/entities/" type)

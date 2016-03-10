@@ -337,12 +337,12 @@
                                              (is-ref-list? attr-value) (join ", " (map #(% "entityName") attr-value))
                                              :else ((:attribute-renderer props) attr-value)))})
                              attribute-keys))
-                :filters (mapv (fn [key] {:text key :count "?" :pred (constantly true)})
+                :filters (mapv (fn [[type count]] {:text type :count count :pred (constantly true)})
                            entity-types)
-                :selected-filter-index (max 0 (.indexOf (to-array entity-types)
+                :selected-filter-index (max 0 (.indexOf (to-array (map first entity-types))
                                                 selected-entity-type))
                 :on-filter-change (fn [index]
-                                    (let [type (nth entity-types index)]
+                                    (let [type (first (nth entity-types index))]
                                       (swap! state update-in [:server-response] assoc :selected-entity-type type)
                                       (react/call :load-type this type)
                                       (when-let [func (:on-filter-change props)]
@@ -356,8 +356,8 @@
        {:endpoint (endpoints/get-entity-types (:workspace-id props))
         :on-done (fn [{:keys [success? get-parsed-response]}]
                    (if success?
-                     (let [types (get-parsed-response)
-                           first-type (or selected-type (first types))]
+                     (let [types (vec (get-parsed-response))
+                           first-type (or selected-type (first (first types)))]
                        (swap! state update-in [:server-response]
                          assoc :entity-types types :selected-entity-type first-type)
                        (react/call :load-type this first-type))
