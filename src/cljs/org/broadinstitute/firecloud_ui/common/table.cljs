@@ -351,13 +351,13 @@
                 :->row (fn [m]
                          (into [m] (map (fn [k] (get-in m ["attributes" k])) attribute-keys)))})]))]))
    :component-did-mount
-   (fn [{:keys [props state this]} & [selected-type]]
+   (fn [{:keys [props state this]}]
      (endpoints/call-ajax-orch
        {:endpoint (endpoints/get-entity-types (:workspace-id props))
         :on-done (fn [{:keys [success? get-parsed-response]}]
                    (if success?
                      (let [types (vec (get-parsed-response))
-                           first-type (or selected-type (first (first types)))]
+                           first-type (or (:initial-entity-type props) (first (first types)))]
                        (swap! state update-in [:server-response]
                          assoc :entity-types types :selected-entity-type first-type)
                        (react/call :load-type this first-type))

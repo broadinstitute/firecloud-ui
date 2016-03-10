@@ -30,6 +30,7 @@
          "None"))]
     [table/EntityTable
      {:workspace-id (:workspace-id props)
+      :initial-entity-type (:root-entity-type props)
       :row-style (fn [row-index row-data]
                    {:backgroundColor
                     (cond (= (entity->id (first row-data)) (:selected-entity @state)) "yellow"
