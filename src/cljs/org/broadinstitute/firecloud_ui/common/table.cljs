@@ -8,6 +8,7 @@
    [org.broadinstitute.firecloud-ui.common.dialog :as dialog]
    [org.broadinstitute.firecloud-ui.common.style :as style]
    [org.broadinstitute.firecloud-ui.common.table-utils :as table-utils]
+   [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
    [org.broadinstitute.firecloud-ui.utils :as utils]
    ))
 
@@ -91,6 +92,8 @@
 ;;         A label for the filter.
 ;;       :pred (required)
 ;;         A function that, given a data item, returns true if that item matches the filter.
+;;       :count (optional)
+;;         Use to override the displayed count, which normally uses the :pred
 ;;   :selected-filter-index (OPTIONAL)
 ;;     Currently selected filter.
 ;;   :on-filter-change (OPTIONAL)
@@ -292,55 +295,85 @@
        (= (set (keys (first attr-value))) #{"entityType" "entityName"})))
 
 (react/defc EntityTable
-  {:get-initial-state
-   (fn [{:keys [props]}]
-     {:selected-entity-type (or (:initial-entity-type props) (first (:entity-types props)))})
+  {:get-entity-list
+   (fn [{:keys [state]}]
+     (get-in @state [:server-response :entity-list]))
    :get-default-props
    (fn []
      {:empty-message "There are no entities to display."
       :attribute-renderer identity})
    :render
-   (fn [{:keys [props state]}]
-     (let [attribute-keys (apply union
-                            (map #(set (keys (% "attributes")))
-                              (filter #(= (% "entityType") (:selected-entity-type @state))
-                                (:entities props))))
-           attr-col-width (max 100 (min 400 (int (/ 1000 (count attribute-keys)))))]
-       [Table
-        (merge props
-          {:key (:selected-entity-type @state)
-           :columns (concat
-                      [{:header "Entity Type" :starting-width 100
-                        :as-text #(% "entityType") :sort-by :text
-                        :content-renderer (or (:entity-type-renderer props)
-                                            (fn [entity] (entity "entityType")))}
-                       {:header "Entity Name" :starting-width 200
-                        :as-text #(% "name") :sort-by :text
-                        :content-renderer (or (:entity-name-renderer props)
-                                            (fn [entity] (entity "name")))}]
-                      (map (fn [k] {:header k :starting-width attr-col-width :sort-by :text
-                                    :as-text
-                                    (fn [attr-value]
-                                      (cond
-                                        (is-single-ref? attr-value) (attr-value "entityName")
-                                        (is-ref-list? attr-value) (map #(% "entityName") attr-value)
-                                        :else attr-value))
-                                    :content-renderer
-                                    (fn [attr-value]
-                                      (cond
-                                        (is-single-ref? attr-value) (attr-value "entityName")
-                                        (is-ref-list? attr-value) (join ", " (map #(% "entityName") attr-value))
-                                        :else ((:attribute-renderer props) attr-value)))})
-                        attribute-keys))
-           :filters (mapv (fn [key] {:text key :pred #(= key (% "entityType"))})
-                      (:entity-types props))
-           :selected-filter-index (max 0 (.indexOf (to-array (:entity-types props))
-                                                   (:selected-entity-type @state)))
-           :on-filter-change (fn [index]
-                               (swap! state assoc :selected-entity-type (nth (:entity-types props) index))
-                               (when-let [func (:on-filter-change props)]
-                                 (func index)))
-           :data (:entities props)
-           :->row (fn [m]
-                    (concat [m m]
-                      (map (fn [k] (get-in m ["attributes" k])) attribute-keys)))})]))})
+   (fn [{:keys [props state this]}]
+     (let [{:keys [server-response]} @state
+           {:keys [server-error entity-types selected-entity-type entity-list]} server-response]
+       [:div {}
+        (when (:loading-entities? @state)
+          [comps/Blocker {:banner "Loading entities..."}])
+        (cond
+          server-error (style/create-server-error-message server-error)
+          (nil? entity-types) [:div {:style {:textAlign "center"}} [comps/Spinner {:text "Retrieving entity types..."}]]
+          :else
+          (let [attribute-keys (->> entity-list (map #(-> (% "attributes") keys set)) (apply union))
+                attr-col-width (->> attribute-keys count (/ 1000) int (min 400) (max 100))]
+            [Table
+             (merge props
+               {:key (gensym)
+                :columns (concat
+                           [{:header "Entity Name" :starting-width 200
+                             :as-text #(% "name") :sort-by :text
+                             :content-renderer (or (:entity-name-renderer props)
+                                                 (fn [entity] (entity "name")))}]
+                           (map (fn [k] {:header k :starting-width attr-col-width :sort-by :text
+                                         :as-text
+                                         (fn [attr-value]
+                                           (cond
+                                             (is-single-ref? attr-value) (attr-value "entityName")
+                                             (is-ref-list? attr-value) (map #(% "entityName") attr-value)
+                                             :else attr-value))
+                                         :content-renderer
+                                         (fn [attr-value]
+                                           (cond
+                                             (is-single-ref? attr-value) (attr-value "entityName")
+                                             (is-ref-list? attr-value) (join ", " (map #(% "entityName") attr-value))
+                                             :else ((:attribute-renderer props) attr-value)))})
+                             attribute-keys))
+                :filters (mapv (fn [[type count]] {:text type :count count :pred (constantly true)})
+                           entity-types)
+                :selected-filter-index (max 0 (.indexOf (to-array (map first entity-types))
+                                                selected-entity-type))
+                :on-filter-change (fn [index]
+                                    (let [type (first (nth entity-types index))]
+                                      (swap! state update-in [:server-response] assoc :selected-entity-type type)
+                                      (react/call :load-type this type)
+                                      (when-let [func (:on-filter-change props)]
+                                        (func type))))
+                :data entity-list
+                :->row (fn [m]
+                         (into [m] (map (fn [k] (get-in m ["attributes" k])) attribute-keys)))})]))]))
+   :component-did-mount
+   (fn [{:keys [props state this]}]
+     (endpoints/call-ajax-orch
+       {:endpoint (endpoints/get-entity-types (:workspace-id props))
+        :on-done (fn [{:keys [success? get-parsed-response]}]
+                   (if success?
+                     (let [types (vec (get-parsed-response))
+                           first-type (or (:initial-entity-type props) (first (first types)))]
+                       (swap! state update-in [:server-response]
+                         assoc :entity-types types :selected-entity-type first-type)
+                       (react/call :load-type this first-type))
+                     (swap! state update-in [:server-response]
+                       assoc :server-error (get-parsed-response))))}))
+   :load-type
+   (fn [{:keys [props state]} type]
+     (if-not type
+       (swap! state update-in [:server-response] assoc :entity-list [])
+       (do
+         (swap! state assoc :loading-entities? true)
+         (endpoints/call-ajax-orch
+           {:endpoint (endpoints/get-entities-of-type (:workspace-id props) type)
+            :on-done (fn [{:keys [success? get-parsed-response]}]
+                       (swap! state update-in [:server-response]
+                         assoc (if success? :entity-list :server-error) (get-parsed-response))
+                       (swap! state dissoc :loading-entities?)
+                       (when-let [func (:on-filter-change props)]
+                         (func type)))}))))})

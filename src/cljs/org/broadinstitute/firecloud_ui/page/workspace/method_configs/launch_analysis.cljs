@@ -29,8 +29,8 @@
          (str (:name e) " (" (:type e) ")")
          "None"))]
     [table/EntityTable
-     {:entities (:entities props)
-      :entity-types (:entity-types props)
+     {:workspace-id (:workspace-id props)
+      :initial-entity-type (:root-entity-type props)
       :row-style (fn [row-index row-data]
                    {:backgroundColor
                     (cond (= (entity->id (first row-data)) (:selected-entity @state)) "yellow"
@@ -56,14 +56,7 @@
    [comps/ErrorViewer {:error (:launch-server-error @state)}]])
 
 (react/defc Form
-  {:get-initial-state
-   (fn [{:keys [props]}]
-     (let [types (:entity-types props)
-           root (:root-entity-type props)]
-       (if (contains? (set types) root)
-         {:selected-entity (entity->id (first (filter #(= root (% "entityType")) (:entities props))))}
-         {})))
-   :render
+  {:render
    (fn [{:keys [props state this]}]
      [dialog/OKCancelForm
       {:header "Launch Analysis"
@@ -95,37 +88,7 @@
        (swap! state assoc :validation-errors ["Please select an entity"])))})
 
 
-(react/defc Page
-  {:render
-   (fn [{:keys [props state]}]
-     (let [{:keys [server-response]} @state
-           {:keys [entities entity-types error-response]} server-response]
-       (cond
-         entities [Form {:config-id (:config-id props)
-                         :workspace-id (:workspace-id props)
-                         :entities entities
-                         :entity-types entity-types
-                         :root-entity-type (:root-entity-type props)
-                         :dismiss-self (:on-cancel props)
-                         :on-success (:on-success props)}]
-         error-response [comps/ErrorViewer {:error error-response}]
-         :else [:div {:style {:textAlign "center" :padding "1em"}}
-                [comps/Spinner {:text "Loading data..."}]])))
-   :component-did-mount
-   (fn [{:keys [props state]}]
-     (common/scroll-to-top 100)
-     (endpoints/call-ajax-orch
-       {:endpoint (endpoints/get-entities-by-type (:workspace-id props))
-        :on-done (fn [{:keys [success? get-parsed-response]}]
-                   (swap! state assoc
-                     :server-response (if success?
-                                        (let [entities (get-parsed-response)]
-                                          {:entities entities
-                                           :entity-types (distinct (map #(% "entityType") entities))})
-                                        {:error-response (get-parsed-response)})))}))})
-
-
-(react/defc ShowLaunchModalButton
+(react/defc LaunchAnalysisButton
   {:render
    (fn [{:keys [props state]}]
      [:span {}
@@ -133,13 +96,15 @@
         [dialog/Dialog {:width "80%"
                         :dismiss-self #(swap! state dissoc :display-modal?)
                         :content (react/create-element
-                                   Page
-                                   (merge props
-                                     {:on-cancel #(swap! state dissoc :display-modal?)}))}])
+                                   [Form
+                                    (merge
+                                      (select-keys props [:config-id :workspace-id :root-entity-type :on-success])
+                                      {:dismiss-self #(swap! state dissoc :display-modal?)})])}])
       [comps/Button {:text "Launch Analysis..."
                      :disabled? (when (:disabled? props) "The workspace is locked")
-                     :onClick #(swap! state assoc :display-modal? true)}]])})
+                     :onClick #(do (common/scroll-to-top 100)
+                                   (swap! state assoc :display-modal? true))}]])})
 
 
 (defn render-button [props]
-  (react/create-element ShowLaunchModalButton props))
+  (react/create-element LaunchAnalysisButton props))
