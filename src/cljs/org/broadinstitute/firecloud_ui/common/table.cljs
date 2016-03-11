@@ -368,7 +368,6 @@
      (if-not type
        (swap! state update-in [:server-response] assoc :entity-list [])
        (do
-         (swap! state update-in [:server-response] dissoc :entity-list)
          (swap! state assoc :loading-entities? true)
          (endpoints/call-ajax-orch
            {:endpoint (endpoints/get-entities-of-type (:workspace-id props) type)

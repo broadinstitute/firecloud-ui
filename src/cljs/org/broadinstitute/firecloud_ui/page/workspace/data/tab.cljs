@@ -183,7 +183,7 @@
           server-error
           (style/create-server-error-message server-error)
           (nil? locked?)
-          [:div {:style {:textAlign "center"}} [comps/Spinner {:text "Fetching entity types..."}]]
+          [:div {:style {:textAlign "center"}} [comps/Spinner {:text "Checking workspace..."}]]
           :else
           (entity-table state workspace-id locked?))]))
    :component-did-mount
