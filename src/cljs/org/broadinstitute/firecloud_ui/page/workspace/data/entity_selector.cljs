@@ -29,10 +29,10 @@
    (fn [{:keys [state props]}]
      (let [attribute-keys (apply union (map #(set (keys (% "attributes"))) (:entities props)))
            columns (fn [source?]
-                     (concat
+                     (into
                        [{:header "Entity Type" :starting-width 100}
                         {:header "Entity Name" :starting-width 200
-                         :as-text #(get-in % [0 "name"]) :sort-by :text
+                         :as-text #(get-in % [1 "name"]) :sort-by :text
                          :content-renderer
                          (fn [[index entity]]
                            (style/create-link {:text (entity "name")
@@ -53,7 +53,7 @@
                       (difference (-> (:entities props) count range set) (:selected @state))
                       (:selected @state))))
            ->row (fn [[index entity :as item]]
-                   (concat
+                   (into
                      [(entity "entityType")
                       item]
                      (map (fn [k] (get-in entity ["attributes" k])) attribute-keys)))

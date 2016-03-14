@@ -45,7 +45,8 @@
            [copy-data-workspaces/Page
             (assoc (select-keys props [:workspace-id :this-realm :reload-data-tab])
                    :crumbs (drop 2 (:crumbs @state))
-                   :add-crumb #(swap! state update-in [:crumbs] conj %))]]
+                   :add-crumb #(swap! state update-in [:crumbs] conj %)
+                   :pop-to-depth #(swap! state update-in [:crumbs] subvec 0 %))]]
           (let [style {:width 240 :margin "auto" :textAlign "center" :cursor "pointer"
                        :backgroundColor (:button-blue style/colors)
                        :color "#fff" :padding "1em" :borderRadius 8}]
