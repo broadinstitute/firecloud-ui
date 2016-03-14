@@ -62,7 +62,9 @@
      (let [disabled? (:disabled? props)]
        [:label {:style {:cursor (when-not disabled? "pointer")
                         :color (when disabled? (:text-gray style/colors))}
-                :title (when disabled? (:disabled-text props))}
+                :title (when disabled? (:disabled-text props))
+                :onClick (when disabled? #(js/alert (or (:disabled-text props)
+                                                        "This option is not available.")))}
         [:input {:type "checkbox" :ref "check"
                  :defaultChecked (:initial-checked? props)
                  :disabled disabled?
