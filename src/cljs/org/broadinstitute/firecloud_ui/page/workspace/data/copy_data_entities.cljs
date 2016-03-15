@@ -10,19 +10,19 @@
     [org.broadinstitute.firecloud-ui.common.table :as table]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
     [org.broadinstitute.firecloud-ui.page.workspace.data.entity-selector :refer [EntitySelector]]
+    [org.broadinstitute.firecloud-ui.utils :as utils]
     ))
 
 
 (react/defc EntitiesList
   {:render
    (fn [{:keys [props state this refs]}]
-     (let [from-ws (:selected-from-workspace props)]
+     (let [swid (:selected-workspace-id props)]
        [:div {:style {:margin "1em"}}
         (when (:copying? @state)
           [comps/Blocker {:banner "Copying..."}])
         [EntitySelector {:ref "EntitySelector"
-                         :left-text (str "Entities in " (get-in from-ws ["workspace" "namespace"])
-                                      "/" (get-in from-ws ["workspace" "name"]))
+                         :left-text (str "Entities in " (:namespace swid) "/" (:name swid))
                          :right-text "To be imported"
                          :entities (:entity-list props)}]
         [:div {:style {:textAlign "center"}}
@@ -40,53 +40,67 @@
                                        (react/call :perform-copy this selected)))}]]]]))
    :perform-copy
    (fn [{:keys [props state]} selected]
-     (swap! state dissoc :selection-error :server-error)
-     (let [grouped-entities (group-by #(% "entityType") selected)]
-       (swap! state assoc :copying? true :remaining (count grouped-entities))
-       (doseq
-         [[type list] grouped-entities]
-         (endpoints/call-ajax-orch
-           {:endpoint (endpoints/copy-entity-to-workspace (:workspace-id props))
-            :payload {:sourceWorkspace {:namespace (get-in props [:selected-from-workspace "workspace" "namespace"])
-                                        :name (get-in props [:selected-from-workspace "workspace" "name"])}
-                      :entityType type
-                      :entityNames (map #(% "name") list)}
-            :headers {"Content-Type" "application/json"}
-            :on-done (fn [{:keys [success? get-parsed-response]}]
-                       (swap! state update-in [:remaining] dec)
-                       (when (zero? (:remaining @state))
-                         (swap! state assoc :copying? false)
-                         ((:reload-data-tab props) type))
-                       (when-not success?
-                         (swap! state assoc :server-error (get-parsed-response))))}))))})
+     (swap! state assoc :selection-error nil :server-error nil :copying? true)
+     (endpoints/call-ajax-orch
+       {:endpoint (endpoints/copy-entity-to-workspace (:workspace-id props))
+        :payload {:sourceWorkspace (:selected-workspace-id props)
+                  :entityType (:type props)
+                  :entityNames (map #(% "name") selected)}
+        :headers {"Content-Type" "application/json"}
+        :on-done (fn [{:keys [success? get-parsed-response]}]
+                   (swap! state dissoc :copying?)
+                   (if success?
+                     ((:reload-data-tab props) (:type props))
+                     (swap! state assoc :server-error (get-parsed-response))))}))})
 
-
-(defn- get-namespace-and-name [props]
-  (map #(get-in props [:selected-from-workspace "workspace" %]) ["namespace" "name"]))
 
 (react/defc Page
   {:render
    (fn [{:keys [state props]}]
      (cond
        (:entity-list @state) [EntitiesList {:workspace-id (:workspace-id props)
-                                            :selected-from-workspace (:selected-from-workspace props)
+                                            :selected-workspace-id (:selected-workspace-id props)
                                             :entity-list (:entity-list @state)
-                                            :entity-types (:entity-types @state)
+                                            :type (:type props)
                                             :reload-data-tab (:reload-data-tab props)}]
-       (:error-message @state) (style/create-server-error-message (:error-message @state))
+       (:server-error @state) [comps/ErrorViewer {:error (:server-error @state)}]
        :else [:div {:style {:textAlign "center"}} [comps/Spinner {:text "Loading entities..."}]]))
    :component-did-mount
    (fn [{:keys [props this]}]
      (react/call :load-entities this))
    :load-entities
    (fn [{:keys [state props]}]
-     (let [[namespace name] (get-namespace-and-name props)]
-       (endpoints/call-ajax-orch
-         {:endpoint (endpoints/get-entities-by-type {:name name :namespace namespace})
-          :on-done (fn [{:keys [success? get-parsed-response status-text]}]
-                     (if success?
-                       (let [entities (get-parsed-response)]
-                         (swap! state assoc
-                           :entity-list entities
-                           :entity-types (distinct (map #(% "entityType") entities))))
-                       (swap! state assoc :error status-text)))})))})
+     (endpoints/call-ajax-orch
+       {:endpoint (endpoints/get-entities-of-type (:selected-workspace-id props) (:type props))
+        :on-done (fn [{:keys [success? get-parsed-response status-text]}]
+                   (if success?
+                     (swap! state assoc :entity-list (get-parsed-response))
+                     (swap! state assoc :server-error (get-parsed-response))))}))})
+
+
+(react/defc SelectType
+  {:render
+   (fn [{:keys [props state]}]
+     (let [selected-type (:text (first (:crumbs props)))]
+       (cond
+         selected-type [Page (merge props {:type selected-type})]
+
+         (:entity-types @state)
+         [:div {:style {:textAlign "center"}}
+          [:h3 {} "Choose type:"]
+          [:div {}
+           (map
+             (fn [[type count]]
+               [:div {:style {:display "inline-block" :margin "0px 1em"}}
+                [comps/Button {:text (str type " (" count ")")
+                               :onClick #((:add-crumb props) {:text type})}]])
+             (:entity-types @state))]]
+
+         (:server-error @state) [comps/ErrorViewer {:error (:server-error @state)}]
+         :else [:div {:style {:textAlign "center"}} [comps/Spinner {:text "Loading entity types..."}]])))
+   :component-did-mount
+   (fn [{:keys [props state]}]
+     (endpoints/call-ajax-orch
+       {:endpoint (endpoints/get-entity-types (:selected-workspace-id props))
+        :on-done (fn [{:keys [success? get-parsed-response]}]
+                   (swap! state assoc (if success? :entity-types :server-error) (get-parsed-response)))}))})

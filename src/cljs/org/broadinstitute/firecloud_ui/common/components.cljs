@@ -252,7 +252,7 @@
                (when (seq stack-trace)
                      [StackTraceViewer {:lines stack-trace}])
                (style/create-link {:text "Hide Cause" :onClick #(swap! state assoc :expanded? false)})])
-         (style/create-link {:text "Show Cause" :onClick #(swap! state assoc :expanded? true)})))})
+         [:div {} (style/create-link {:text "Show Cause" :onClick #(swap! state assoc :expanded? true)})]))})
 
 (react/defc ErrorViewer
   {:render
@@ -277,9 +277,12 @@
             (when timestamp [:div {} "Occurred: " (-> timestamp js/moment (.format "LLL Z"))])
             (when source [:div {} "Source: " source])
             (when (seq causes)
-              [:div {}
-               [:div {} (str "Cause" (when (> (count causes) 1) "s") ":")]
-               (map (fn [cause] [CauseViewer cause]) causes)])
+              (let [num-hidden (- (count causes) 4)]
+                [:div {}
+                 [:div {} (str "Cause" (when (> (count causes) 1) "s") ":")]
+                 (map (fn [cause] [CauseViewer cause]) (take 4 causes))
+                 (when (pos? num-hidden)
+                   [:div {} (str num-hidden " not shown")])]))
             (when (seq stack-trace)
               [StackTraceViewer {:lines stack-trace}])]))))})
 
