@@ -77,15 +77,20 @@
 (def access-token (atom nil))
 
 (defn delete-access-token-cookie []
-  (.remove goog.net.cookies "FCtoken" "/" (join "." (rest (split js/window.location.hostname ".")))))
+  (.remove goog.net.cookies "FCtoken" "/" (get-cookie-domain)))
 
 (defn set-access-token-cookie [token]
   (if token
-    (.set goog.net.cookies "FCtoken" token -1 "/" (join "." (rest (split js/window.location.hostname "."))))
+    (.set goog.net.cookies "FCtoken" token -1 "/" (get-cookie-domain))
     (delete-access-token-cookie)))
 
 (defn get-access-token-cookie []
   (.get goog.net.cookies "FCtoken"))
+
+(defn get-cookie-domain []
+  (if (= "local.broadinstitute.org" js/window.location.hostname)
+    "local.broadinstitute.org"
+    (join "." (rest (split js/window.location.hostname ".")))))
 
 (defn ajax [arg-map]
   (let [url (:url arg-map)
