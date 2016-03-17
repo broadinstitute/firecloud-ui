@@ -43,6 +43,33 @@
         [:a {:href "#status" :style {:textDecoration "none"}} "Status Page"]]]])})
 
 
+(react/defc Policy
+  {:render
+    (fn [{:keys [state]}]
+      [:div {:style {:maxWidth 600 :paddingTop "2em"}}
+        [:p {:style {:fontWeight "bold"}} "WARNING NOTICE"]
+        [:p {}
+          "You are accessing a US Government web site which may contain information that must be "
+          "protected under the US Privacy Act or other sensitive information and is intended for "
+          "Government authorized use only."]
+        [:p {}
+          "Unauthorized attempts to upload information, change information, or use of this web site "
+          "may result in disciplinary action, civil, and/or criminal penalties. Unauthorized users "
+          "of this website should have no expectation of privacy regarding any communications or "
+          "data processed by this website."]
+        [:p {}
+          "Anyone accessing this website expressly consents to monitoring of their actions and all "
+          "communications or data transiting or stored on related to this website and is advised "
+          "that if such monitoring reveals possible evidence of criminal activity, NIH may provide "
+          "that evidence to law enforcement officials."]
+        [:p {:style {:fontWeight "bold"}} "WARNING NOTICE (when accessing controlled data)"]
+        [:p {:style {:fontWeight "bold"}}
+          "You are reminded that when accessing controlled access information you are bound by the "
+          "dbGaP TCGA "
+          [:a {:href "http://cancergenome.nih.gov/pdfs/Data_Use_Certv082014" :target "_blank"}
+            "DATA USE CERTIFICATION AGREEMENT (DUCA)"] "."]])})
+
+
 (defn- footer []
   (let [thisyear (.getFullYear (js/Date.))
         startyear 2015
@@ -66,11 +93,14 @@
      [:div {:style {:display "block"}}
       (str "\u00A9 " yeartext " Broad Institute")
       spacer
-      [Link {:href "#" :text "Privacy Policy" :target "_self"}]
+      [Link {:href "#policy" :text "Privacy Policy"}]
       spacer
-      [Link {:href "#" :text "Terms of Service" :target "_self"}]
+      [Link {:href (str  "http://gatkforums.broadinstitute.org/firecloud/discussion/6819/"
+                         "firecloud-terms-of-service#latest")
+             :text "Terms of Service" :target "_blank"}]
       spacer
-      [Link {:href "http://gatkforums.broadinstitute.org/firecloud" :text "Support" :target "_blank"}]]]))
+      [Link {:href "http://gatkforums.broadinstitute.org/firecloud" :text "Support"
+             :target "_blank"}]]]))
 
 
 (def routes
@@ -81,7 +111,9 @@
     :render #(react/create-element workspaces/Page %)}
    {:key :methods :href "#methods"
     :name "Method Repository"
-    :render #(react/create-element method-repo/Page %)}])
+    :render #(react/create-element method-repo/Page %)}
+   {:key :policy
+    :render #(react/create-element Policy %)}])
 
 (def top-nav-bar-items
   (filter (fn [r] (contains? #{:workspaces :methods} (:key r))) routes))
@@ -189,27 +221,7 @@
                       (if (clojure.string/blank? hash) "" (str "&path=" hash))))}]]
       [:div {:style {:marginTop "1em"}} [RegisterLink]]
       [:div {:style {:maxWidth 600 :paddingTop "2em" :fontSize "small"}}
-       [:p {:style {:fontWeight "bold"}} "WARNING NOTICE"]
-       [:p {}
-        "You are accessing a US Government web site which may contain information that must be "
-        "protected under the US Privacy Act or other sensitive information and is intended for "
-        "Government authorized use only."]
-       [:p {}
-        "Unauthorized attempts to upload information, change information, or use of this web site "
-        "may result in disciplinary action, civil, and/or criminal penalties. Unauthorized users "
-        "of this website should have no expectation of privacy regarding any communications or "
-        "data processed by this website."]
-       [:p {}
-        "Anyone accessing this website expressly consents to monitoring of their actions and all "
-        "communications or data transiting or stored on related to this website and is advised "
-        "that if such monitoring reveals possible evidence of criminal activity, NIH may provide "
-        "that evidence to law enforcement officials."]
-       [:p {:style {:fontWeight "bold"}} "WARNING NOTICE (when accessing controlled data)"]
-       [:p {:style {:fontWeight "bold"}}
-        "You are reminded that when accessing controlled access information you are bound by the "
-        "dbGaP TCGA "
-        [:a {:href "http://cancergenome.nih.gov/pdfs/Data_Use_Certv082014" :target "_blank"}
-         "DATA USE CERTIFICATION AGREEMENT (DUCA)"] "."]]])})
+        [Policy]]])})
 
 
 (react/defc App
