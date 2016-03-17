@@ -47,7 +47,7 @@
   {:render
     (fn [{:keys [state]}]
       [:div {:style {:maxWidth 600 :paddingTop "2em"}}
-        [:p {:style {:fontWeight "bold"}} "WARNING NOTICE"])
+        [:p {:style {:fontWeight "bold"}} "WARNING NOTICE"]
         [:p {}
           "You are accessing a US Government web site which may contain information that must be "
           "protected under the US Privacy Act or other sensitive information and is intended for "
@@ -93,7 +93,9 @@
      [:div {:style {:display "block"}}
       (str "\u00A9 " yeartext " Broad Institute")
       spacer
-      [Link {:href "#policy" :text "Privacy Policy and Terms of Service" :target "_self"}]
+      [Link {:href "#policy" :text "Privacy Policy" :target "_self"}]
+      spacer
+      [Link {:href "http://gatkforums.broadinstitute.org/firecloud/discussion/6819/firecloud-terms-of-service#latest" :text "Terms of Service" :target "_self"}]
       spacer
       [Link {:href "http://gatkforums.broadinstitute.org/firecloud" :text "Support" :target "_blank"}]]]))
 
