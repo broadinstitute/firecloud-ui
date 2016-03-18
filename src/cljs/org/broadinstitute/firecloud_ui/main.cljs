@@ -93,7 +93,7 @@
      [:div {:style {:display "block"}}
       (str "\u00A9 " yeartext " Broad Institute")
       spacer
-      [Link {:href "#policy" :text "Privacy Policy" :target "_self"}]
+      [Link {:href "#policy" :text "Privacy Policy" :target "_blank"}]
       spacer
       [Link {:href (str  "http://gatkforums.broadinstitute.org/firecloud/discussion/6819/"
                          "firecloud-terms-of-service#latest")
