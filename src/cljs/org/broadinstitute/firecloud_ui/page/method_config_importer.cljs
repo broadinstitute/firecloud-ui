@@ -72,7 +72,7 @@
                                :text "Redact" :icon :trash-can
                                :onClick #(swap! state assoc :show-redact-overlay? true)}]]
         (clear-both)])
-     [:div {:style {:border (str "1px solid " (:line-gray style/colors))
+     [:div {:style {:border style/standard-line
                     :backgroundColor (:background-gray style/colors)
                     :borderRadius 8 :padding "1em" :marginTop "1em"}}
       [:div {:style {:fontSize "120%" :marginBottom "0.5em"}}

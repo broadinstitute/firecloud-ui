@@ -31,7 +31,7 @@
                                (.readAsText reader (.slice file 0 preview-limit)))))}]
       [comps/Button {:text "Choose file..." :onClick #(-> (@refs "entities") .click)}]
       (when (:file-contents @state)
-        [:div {:style {:margin "0.5em 2em" :padding "0.5em" :border (str "1px solid " (:line-gray style/colors))}}
+        [:div {:style {:margin "0.5em 2em" :padding "0.5em" :border style/standard-line}}
          (str "Previewing '" (-> (:file @state) .-name) "':")
          [:div {:style {:overflow "auto" :maxHeight 200
                         :paddingBottom "0.5em" :textAlign "left"}}
