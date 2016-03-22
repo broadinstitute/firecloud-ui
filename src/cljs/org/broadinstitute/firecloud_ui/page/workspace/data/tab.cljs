@@ -139,10 +139,11 @@
                  [comps/Button {:text "Import Data..."
                                 :disabled? (when locked? "This workspace is locked")
                                 :onClick #(swap! state assoc :show-import? true)}]]
-                [:div {:style {:float "right" :paddingRight "2em"}}
-                 [comps/Button {:text "Delete..."
-                                :disabled? (when locked? "This workspace is locked")
-                                :onClick #(swap! state assoc :show-delete? true)}]]
+;; TODO: Functionality disabled until GAWB-422 is complete
+;;                [:div {:style {:float "right" :paddingRight "2em"}}
+;;                 [comps/Button {:text "Delete..."
+;;                                :disabled? (when locked? "This workspace is locked")
+;;                                :onClick #(swap! state assoc :show-delete? true)}]]
                 (common/clear-both)])
     :on-filter-change #(swap! state assoc :selected-entity-type %)
     :attribute-renderer (fn [maybe-uri]
