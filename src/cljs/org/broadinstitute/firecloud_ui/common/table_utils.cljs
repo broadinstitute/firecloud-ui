@@ -257,7 +257,7 @@
                                       :color (when (= index (:selected-index @state)) "white")
                                       :padding "1ex" :minWidth 50
                                       :marginLeft (when-not first? -1)
-                                      :border (str "1px solid " (:line-gray style/colors))
+                                      :border style/standard-line
                                       :borderTopLeftRadius (when first? 8)
                                       :borderBottomLeftRadius (when first? 8)
                                       :borderTopRightRadius (when last? 8)

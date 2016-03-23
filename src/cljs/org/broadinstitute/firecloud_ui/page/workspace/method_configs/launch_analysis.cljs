@@ -21,7 +21,7 @@
    (when (:launching? @state)
      [comps/Blocker {:banner "Launching analysis..."}])
    (style/create-form-label "Select Entity")
-   [:div {:style {:backgroundColor "#fff" :border (str "1px solid " (:line-gray style/colors))
+   [:div {:style {:backgroundColor "#fff" :border style/standard-line
                   :padding "1em" :marginBottom "0.5em"}}
     [:div {:style {:marginBottom "1em" :fontSize "140%"}}
      (str "Selected: "

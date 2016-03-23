@@ -135,7 +135,7 @@
            [:div {}
             [:div {:style {:float "left" :margin "0 1em 0.5em 0" :padding "0.5em" :verticalAlign "middle"
                            :backgroundColor (:background-gray style/colors)
-                           :border (str "1px solid " (:line-gray style/colors)) :borderRadius 2}}
+                           :border style/standard-line :borderRadius 2}}
              (str field-name ": (" (when optional? "optional ") type ")")]
             (if editing?
               [:div {:style {:float "left"}}
@@ -152,7 +152,7 @@
               [:div {:style {:padding "0.5em" :marginBottom "0.5em"
                              :backgroundColor (:exception-red style/colors)
                              :display "inline-block"
-                             :border (str "1px solid " (:line-gray style/colors)) :borderRadius 2}}
+                             :border style/standard-line :borderRadius 2}}
                error])]))
        all-values)]))
 

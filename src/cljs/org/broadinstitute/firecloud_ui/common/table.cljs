@@ -41,6 +41,8 @@
 ;;     Controls whether or not columns are filterable.  When true, a filter widget is presented
 ;;   :empty-message (optional, default "There are no rows to display.")
 ;;     A banner to display when the table is empty
+;;   :retain-header-on-empty? (optional, default false)
+;;     Whether or not to show the header when there are no rows to display
 ;;   :row-style (optional)
 ;;     Style to apply to each row.  Value is either a style map, or a function taking the index and row
 ;;     data and returning a style map.
@@ -100,6 +102,9 @@
 ;;     A function called when the active filter is changed. Passed the new filter index.
 ;;   :data (REQUIRED)
 ;;     A sequence items that will appear in the table.
+;;   :num-total-rows (OPTIONAL)
+;;     The total number of rows that would normally be shown in the table.  Specify if you are externally
+;;     filtering; this value will show up in the paginator.
 ;;   :->row (REQUIRED)
 ;;     A function that takes a data item and returns a vector representing a table row.
 (react/defc Table
@@ -143,7 +148,7 @@
                       {:ref "paginator"
                        :width (:width props)
                        :initial-rows-per-page initial-rows-per-page
-                       :num-total-rows (count (:data props))
+                       :num-total-rows (or (:num-total-rows props) (count (:data props)))
                        :onChange #(react/call :set-body-rows this)}]]
        [:div {}
         (when (or (:filterable? props) (:reorderable-columns? props) (:toolbar props))
@@ -210,9 +215,10 @@
                                              (filter :visible?
                                                      (react/call :get-ordered-columns this)))))
                          :cursor (when (:dragging? @state) "col-resize")}}
-           (if (:no-data? @state)
-             (style/create-message-well (or (:empty-message props) "There are no rows to display."))
+           (when (or (not (:no-data? @state)) (:retain-header-on-empty? props))
              (table-utils/render-header state props this after-update))
+           (when (:no-data? @state)
+             (style/create-message-well (or (:empty-message props) "There are no rows to display.")))
            [table-utils/Body
             (assoc props
                    :ref "body"

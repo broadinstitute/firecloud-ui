@@ -72,7 +72,7 @@
 
 
 (defn- render-workflow-detail [workflow]
-  [:div {:style {:padding "1em" :border (str "1px solid " (:line-gray style/colors)) :borderRadius 4
+  [:div {:style {:padding "1em" :border style/standard-line :borderRadius 4
                  :backgroundColor (:background-gray style/colors)}}
    [:div {}
     (create-field "Workflow ID" (workflow "id"))

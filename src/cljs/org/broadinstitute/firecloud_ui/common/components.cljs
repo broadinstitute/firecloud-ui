@@ -80,9 +80,8 @@
                :render
                (fn [{:keys [props state]}]
                  [:a {:style {:float "left" :padding "1em 2em"
-                              :borderLeft (when (zero? (:index props))
-                                            (str "1px solid " (:line-gray style/colors)))
-                              :borderRight (str "1px solid " (:line-gray style/colors))
+                              :borderLeft (when (zero? (:index props)) style/standard-line)
+                              :borderRight style/standard-line
                               :backgroundColor (when (:active? props) "white")
                               :cursor "pointer" :textDecoration "none" :color "black"
                               :position "relative"}
@@ -103,8 +102,8 @@
        (let [{:keys [selected-index items]} props]
          [:div {}
           [:div {:style {:backgroundColor (:background-gray style/colors)
-                         :borderTop (str "1px solid " (:line-gray style/colors))
-                         :borderBottom (str "1px solid " (:line-gray style/colors))
+                         :borderTop style/standard-line
+                         :borderBottom style/standard-line
                          :padding "0 1.5em"}}
            (map-indexed
              (fn [i tab]
@@ -168,7 +167,7 @@
                       :cursor (if disabled? "default" "pointer")
                       :backgroundColor (if heavy? color "transparent")
                       :color (if heavy? "#fff" color)
-                      :border (when-not heavy? (str "1px solid " (:line-gray style/colors)))
+                      :border (when-not heavy? style/standard-line)
                       :borderRadius (when heavy? 4)}
               :onClick (if disabled?
                          #(js/alert (if (string? disabled?) disabled? "This action is disabled"))
@@ -187,7 +186,7 @@
               [:span {} ((or render identity) (entity key))]])
            config? (contains? entity "method")]
        [:div {:style {:backgroundColor (:background-gray style/colors)
-                      :borderRadius 8 :border (str "1px solid " (:line-gray style/colors))
+                      :borderRadius 8 :border style/standard-line
                       :padding "1em"}}
         (react/call :render-details this make-field entity)
         [:div {:style {:paddingTop "0.5em"}}

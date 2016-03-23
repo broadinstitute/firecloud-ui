@@ -6,6 +6,7 @@
     [org.broadinstitute.firecloud-ui.common.icons :as icons]
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
+    [org.broadinstitute.firecloud-ui.utils :as utils]
     ))
 
 (react/defc Dialog
@@ -39,8 +40,9 @@
    :component-did-mount
    (fn [{:keys [this props state]}]
      (when-let [get-dom-node (:get-anchor-dom-node props)]
-       (swap! state assoc :position {:top (.. (get-dom-node) -offsetTop)
-                                     :left (.. (get-dom-node) -offsetLeft)}))
+       (let [rect (.getBoundingClientRect (get-dom-node))]
+         (swap! state assoc :position {:top (+ (.-top rect) js/document.body.scrollTop)
+                                       :left (+ (.-left rect) js/document.body.scrollLeft)})))
      (when-let [get-first (:get-first-element-dom-node props)]
        (common/focus-and-select (get-first))
        (when-let [get-last (:get-last-element-dom-node props)]
@@ -67,7 +69,7 @@
    :render
    (fn [{:keys [props]}]
      [:div {}
-      [:div {:style {:borderBottom (str "1px solid " (:line-gray style/colors))
+      [:div {:style {:borderBottom style/standard-line
                      :padding "20px 48px 18px"
                      :fontSize "137%" :fontWeight 400 :lineHeight 1}}
        (:header props)]

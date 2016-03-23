@@ -16,6 +16,8 @@
              :text-gray "#666"
              :text-light "#7f7f7f"})
 
+(def standard-line (str "1px solid " (:line-gray colors)))
+
 (defn color-for-status [status]
   (case status
     "Complete" (:success-green colors)
