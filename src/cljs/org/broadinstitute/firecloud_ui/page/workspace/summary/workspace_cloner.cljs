@@ -46,7 +46,14 @@
                                        :defaultValue (:description props)})
               (if (:is-protected? props)
                 [:div {} "Cloned workspace will automatically be protected because this workspace is protected."]
-                [comps/Checkbox {:ref "protected-check" :label "Workspace intended to contain NIH protected data"}])
+                [comps/Checkbox
+                 {:ref "protected-check"
+                  :label "Workspace intended to contain NIH protected data"
+                  :disabled? (not= (:protected-option @state) :enabled)
+                  :disabled-text (case (:protected-option @state)
+                                       :not-loaded "Account status has not finished loading."
+                                       :not-available "This option is not available for your account."
+                                       nil)}])
               (style/create-validation-error-message (:validation-error @state))
               [comps/ErrorViewer {:error (:error @state)
                                   :expect {409 "A workspace with this name already exists in this project"}}]])
@@ -57,8 +64,14 @@
        :get-first-element-dom-node #(@refs "project")
        :get-last-element-dom-node #(react/find-dom-node (@refs "okButton"))}])
    :component-did-mount
-   (fn []
-     (common/scroll-to-top 100))
+   (fn [{:keys [state]}]
+     (common/scroll-to-top 100)
+     (utils/ajax-orch
+       "/nih/status"
+       {:on-done (fn [{:keys [success? get-parsed-response]}]
+                     (if (and success? (get (get-parsed-response) "isDbgapAuthorized"))
+                       (swap! state assoc :protected-option :enabled)
+                       (swap! state assoc :protected-option :not-available)))}))
    :do-clone
    (fn [{:keys [props refs state]}]
      (if-let [fails (input/validate refs "name")]
