@@ -18,10 +18,10 @@
    contents])
 
 
-(defn- display-gcs-link [gcs-uri]
+(defn- display-value [gcs-uri]
   (if-let [parsed (common/parse-gcs-uri gcs-uri)]
     [dialog/GCSFilePreviewLink (assoc parsed :style-props {:style {:display "inline"}})]
-    gcs-uri))
+    (str gcs-uri)))
 
 
 (react/defc IODetail
@@ -40,7 +40,7 @@
       (when (:expanded @state)
         [:div {:style {:padding "0.25em 0 0.25em 1em"}}
          (for [[k v] (:data props)]
-           [:div {} k [:span {:style {:margin "0 1em"}} "→"] (display-gcs-link v)])])])})
+           [:div {} k [:span {:style {:margin "0 1em"}} "→"] (display-value v)])])])})
 
 
 (react/defc CallDetail
@@ -64,8 +64,8 @@
                 (create-field "Status" (moncommon/icon-for-call-status status) status))
               (create-field "Started" (moncommon/render-date (data "start")))
               (create-field "Ended" (moncommon/render-date (data "end")))
-              (create-field "stdout" (display-gcs-link (data "stdout")))
-              (create-field "stderr" (display-gcs-link (data "stderr")))
+              (create-field "stdout" (display-value (data "stdout")))
+              (create-field "stderr" (display-value (data "stderr")))
               [IODetail {:label "Inputs" :data (data "inputs")}]
               [IODetail {:label "Outputs" :data (data "outputs")}]]])
           (:data props)))])})
