@@ -173,23 +173,13 @@
       (style/create-section-header "Analysis Submissions")
       (style/create-paragraph
         (let [count-all (count submissions)
-              success-count (->> submissions (filter all-success?) count)
-              running-count (->> submissions (filter any-running?) count)
-              fail-count (->> submissions (filter any-failed?) count)
-              unknown-count (- count-all success-count running-count fail-count)]
+              grouped-by-status (group-by #(% "status") submissions)]
              [:div {}
               (str count-all " Submission" (when-not (= 1 count-all) "s"))
-              (when (or (pos? fail-count) (pos? running-count) (pos? success-count) (pos? unknown-count))
+              (when (pos? count-all)
                     [:ul {:style {:marginTop "0"}}
-                     (when (pos? success-count)
-                           [:li {} (str success-count " succeeded")])
-                     (when (pos? fail-count)
-                           [:li {} (str fail-count " failed")])
-                     (when (pos? running-count)
-                           [:li {} (str running-count " running")])
-                     (when (pos? unknown-count)
-                           [:li {} (str unknown-count " unknown")])])]))]]))
-
+                     (for [[status subs] grouped-by-status]
+                        [:li {} (str (count subs) " " status)])])]))]]))
 
 (react/defc Summary
   {:refresh
