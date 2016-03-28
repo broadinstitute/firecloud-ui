@@ -103,16 +103,12 @@
 (defn gcs-object->download-url [bucket object]
   (str (config/api-url-root) "/cookie-authed/download/b/" bucket "/o/" object))
 
-(defn gcs-uri->download-url [gcs-uri]
-  (let [matcher (re-find #"gs://([^/]+)/(.+)" gcs-uri)]
-    (when (= 3 (count matcher)) ;; first match will be the whole thing
-      (gcs-object->download-url (matcher 1) (matcher 2)))))
-
 (defn parse-gcs-uri [gcs-uri]
-  (let [matcher (re-find #"gs://([^/]+)/(.+)" gcs-uri)]
-    (when (= 3 (count matcher)) ;; first match will be the whole thing
-      {:bucket-name (matcher 1)
-       :object (matcher 2)})))
+  (when (string? gcs-uri)
+    (let [matcher (re-find #"gs://([^/]+)/(.+)" gcs-uri)]
+      (when (= 3 (count matcher)) ;; first match will be the whole thing
+        {:bucket-name (matcher 1)
+         :object (matcher 2)}))))
 
 (defn format-date [date & [format]]
   (-> date js/moment (.format (or format "LLL"))))

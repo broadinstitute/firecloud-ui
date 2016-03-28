@@ -44,8 +44,7 @@
    (let [disabled (= (:root-entity-type props) (get-in @state [:selected-entity :type]))]
      (style/create-text-field {:placeholder "leave blank for default"
                                :style {:width "100%"
-                                       :backgroundColor (when disabled
-                                                          (:background-gray style/colors))}
+                                       :backgroundColor (when disabled (:background-gray style/colors))}
                                :disabled disabled
                                :value (if disabled
                                         "Disabled - selected entity is of root entity type"

@@ -307,7 +307,7 @@
    :get-default-props
    (fn []
      {:empty-message "There are no entities to display."
-      :attribute-renderer identity})
+      :attribute-renderer table-utils/default-render})
    :render
    (fn [{:keys [props state this]}]
      (let [{:keys [server-response]} @state
@@ -324,7 +324,7 @@
             [Table
              (merge props
                {:key (gensym)
-                :columns (concat
+                :columns (into
                            [{:header "Entity Name" :starting-width 200
                              :as-text #(% "name") :sort-by :text
                              :content-renderer (or (:entity-name-renderer props)
@@ -335,7 +335,7 @@
                                            (cond
                                              (is-single-ref? attr-value) (attr-value "entityName")
                                              (is-ref-list? attr-value) (map #(% "entityName") attr-value)
-                                             :else attr-value))
+                                             :else (str attr-value)))
                                          :content-renderer
                                          (fn [attr-value]
                                            (cond

@@ -129,7 +129,7 @@
 (defn default-render [data]
   (cond (map? data) (utils/map-to-string data)
         (sequential? data) (clojure.string/join ", " data)
-        :else data))
+        :else (str data)))
 
 
 (react/defc Body
