@@ -6,6 +6,7 @@
     [org.broadinstitute.firecloud-ui.common.components :as comps]
     [org.broadinstitute.firecloud-ui.common.dialog :as dialog]
     [org.broadinstitute.firecloud-ui.common.icons :as icons]
+    [org.broadinstitute.firecloud-ui.config :as config]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.common.table :as table]
@@ -61,8 +62,10 @@
   {"Owner" #(= "OWNER" (% "accessLevel"))
    "Writer" #(= "WRITER" (% "accessLevel"))
    "Reader" #(= "READER" (% "accessLevel"))
-   "TCGA Open Access" #(not (% "isProtected"))
-   "TCGA Protected Access" #(% "isProtected")})
+   "TCGA Open Access" #(and (= (config/tcga-namespace) (get-in % ["workspace" "namespace"]))
+                            (not (get-in % ["workspace" "realm"])))
+   "TCGA Protected Access" #(and (= (config/tcga-namespace) (get-in % ["workspace" "namespace"]))
+                                 (get-in % ["workspace" "realm"]))})
 
 (react/defc WorkspaceTable
   {:get-initial-state
