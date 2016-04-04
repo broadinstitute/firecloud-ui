@@ -275,6 +275,15 @@
         :submitter "abaumann@broadinstitute.org"})
      (range (rand-int 50)))})
 
+(defn count-submissions [workspace-id]
+  {:path (str "/workspaces/" (ws-path workspace-id) "/submissionsCount")
+   :method :get
+   :mock-data
+   [{:Done (rand-int 10)
+     :Submitted (rand-int 10)
+     :Aborted (rand-int 10)
+     :Aborting (rand-int 10)}]})
+
 (defn create-submission [workspace-id]
   {:path (str "/workspaces/" (ws-path workspace-id) "/submissions")
    :method :post

@@ -133,7 +133,7 @@
                              :onClick #(swap! state assoc :show-delete-dialog? true)}])]))
 
 
-(defn- render-main [state refs ws owner? submissions]
+(defn- render-main [state refs ws owner? submissions-count]
   (let [owners (ws "owners")]
     [:div {:style {:flex "1 1 auto" :display "flex"}}
      [:div {:style {:flex "1 1 50%"}}
@@ -172,14 +172,13 @@
          (get-in ws ["workspace" "bucketName"])])
       (style/create-section-header "Analysis Submissions")
       (style/create-paragraph
-        (let [count-all (count submissions)
-              grouped-by-status (group-by #(% "status") submissions)]
+        (let [count-all (apply + (vals submissions-count))]
              [:div {}
               (str count-all " Submission" (when-not (= 1 count-all) "s"))
               (when (pos? count-all)
                     [:ul {:style {:marginTop "0"}}
-                     (for [[status subs] grouped-by-status]
-                        [:li {} (str (count subs) " " status)])])]))]]))
+                     (for [[status subs] (sort submissions-count)]
+                        [:li {} (str subs " " status)])])]))]]))
 
 (react/defc Summary
   {:refresh
@@ -189,11 +188,11 @@
    :render
    (fn [{:keys [refs state props this]}]
      (let [server-response (:server-response @state)
-           {:keys [workspace submissions billing-projects server-error]} server-response]
+           {:keys [workspace submissions-count billing-projects server-error]} server-response]
        (cond
          server-error
          (style/create-server-error-message server-error)
-         (some nil? [workspace submissions billing-projects])
+         (some nil? [workspace submissions-count billing-projects])
          [:div {:style {:textAlign "center" :padding "1em"}}
           [comps/Spinner {:text "Loading workspace..."}]]
          :else
@@ -202,7 +201,7 @@
            [:div {:style {:margin "45px 25px" :display "flex"}}
             (render-overlays state props workspace billing-projects)
             (render-sidebar state props refs this workspace billing-projects owner? writer?)
-            (render-main state refs workspace owner? submissions)]))))
+            (render-main state refs workspace owner? submissions-count)]))))
    :load-workspace
    (fn [{:keys [props state]}]
      (endpoints/call-ajax-orch
@@ -218,11 +217,11 @@
                      (swap! state update-in [:server-response]
                        assoc :server-error status-text)))})
      (endpoints/call-ajax-orch
-       {:endpoint (endpoints/list-submissions (:workspace-id props))
+       {:endpoint (endpoints/count-submissions (:workspace-id props))
         :on-done (fn [{:keys [success? status-text get-parsed-response]}]
                    (if success?
                      (swap! state update-in [:server-response]
-                       assoc :submissions (get-parsed-response))
+                       assoc :submissions-count (get-parsed-response))
                      (swap! state update-in [:server-response]
                        assoc :server-error status-text)))})
      (endpoints/call-ajax-orch
