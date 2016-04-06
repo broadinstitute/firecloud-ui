@@ -262,8 +262,7 @@
      (set! (.-onMouseMoveHandler this)
        (fn [e]
          (when (:dragging? @state)
-           (let [current-width (:width (nth (react/call :get-ordered-columns this)
-                                            (:drag-column @state)))
+           (let [current-width (:width (nth (:columns @state) (:drag-column @state)))
                  new-mouse-x (.-clientX e)
                  drag-amount (- new-mouse-x (:mouse-x @state))
                  new-width (+ current-width drag-amount)]

@@ -177,7 +177,7 @@
              onResizeMouseDown
              (when (get column :resizable? (:resizable-columns? props))
                (fn [e]
-                 (swap! state assoc :dragging? true :mouse-x (.-clientX e) :drag-column display-index
+                 (swap! state assoc :dragging? true :mouse-x (.-clientX e) :drag-column i
                    :saved-user-select-state (common/disable-text-selection))))]
          (render-cell
            {:width (:width column)
