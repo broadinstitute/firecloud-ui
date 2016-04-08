@@ -1,15 +1,51 @@
 (ns org.broadinstitute.firecloud-ui.page.workspace.details
   (:require
-    [dmohs.react :as react]
-    [org.broadinstitute.firecloud-ui.common :as common]
-    [org.broadinstitute.firecloud-ui.common.components :as comps]
-    [org.broadinstitute.firecloud-ui.nav :as nav]
-    [org.broadinstitute.firecloud-ui.page.workspace.data.tab :as data-tab]
-    [org.broadinstitute.firecloud-ui.page.workspace.method-configs.tab :as method-configs-tab]
-    [org.broadinstitute.firecloud-ui.page.workspace.monitor.tab :as monitor-tab]
-    [org.broadinstitute.firecloud-ui.page.workspace.summary.tab :as summary-tab]
-    [org.broadinstitute.firecloud-ui.utils :as utils]
-    ))
+   [dmohs.react :as react]
+   [org.broadinstitute.firecloud-ui.common :as common]
+   [org.broadinstitute.firecloud-ui.common.components :as comps]
+   [org.broadinstitute.firecloud-ui.common.style :as style]
+   [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
+   [org.broadinstitute.firecloud-ui.nav :as nav]
+   [org.broadinstitute.firecloud-ui.page.workspace.data.tab :as data-tab]
+   [org.broadinstitute.firecloud-ui.page.workspace.method-configs.tab :as method-configs-tab]
+   [org.broadinstitute.firecloud-ui.page.workspace.monitor.tab :as monitor-tab]
+   [org.broadinstitute.firecloud-ui.page.workspace.summary.tab :as summary-tab]
+   [org.broadinstitute.firecloud-ui.utils :as utils]
+   ))
+
+
+(react/defc ProtectedBanner
+  {:render
+   (fn [{:keys [props state]}]
+     (let [{:keys [message protected? status]} @state]
+       [:div {:style {:position "relative"}}
+        (case status
+          nil [:div {:style {:position "absolute" :marginTop "-1.5em"}}
+               [comps/Spinner {:height "1.5ex"}]]
+          :error [:div {:style {:color (:exception-red style/colors)}}
+                  message]
+          :success (case protected?
+                     false nil
+                     true [:div {:style {:margin "-22px 0 2px 0"}}
+                           [:div {:style {:height 1 :backgroundColor "#bbb" :marginBottom 2}}]
+                           [:div {:style {:outlineTop (str "4px double #ccc")
+                                         :backgroundColor "#ccc"
+                                         :fontSize "small"
+                                         :padding "4px 0"
+                                         :textAlign "center"}}
+                           "This is a "
+                           [:b {} "restricted"]
+                           " workspace for TCGA Controlled Access Data."]]))]))
+   :component-did-mount
+   (fn [{:keys [props state]}]
+     (endpoints/call-ajax-orch
+      {:endpoint (endpoints/get-workspace (:workspace-id props))
+       :on-done (fn [{:keys [success? get-parsed-response status-text]}]
+                  (if success?
+                    (let [workspace (get-parsed-response)
+                          protected? (if (get-in workspace ["workspace" "realm"]) true false)]
+                      (swap! state assoc :status :success :protected? protected?))
+                    (swap! state assoc :status :error :message status-text)))}))})
 
 
 (def ^:private SUMMARY "Summary")
@@ -31,6 +67,7 @@
            workspace-id (:workspace-id props)
            tab (:segment nav-context)]
        [:div {:style {:margin "0 -1em"}}
+        [ProtectedBanner (select-keys props [:workspace-id])]
         [comps/TabBar {:selected-index (tab-string-to-index tab)
                        :items
                        [{:text SUMMARY :href (nav/create-href (:nav-context props))

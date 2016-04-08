@@ -30,7 +30,7 @@
          (when (and (get status "isDbgapAuthorized")
                     (.isBefore expire-time _24-hours-from-now))
            [:div {:style {:border "1px solid #c00" :backgroundColor "#fcc"
-                          :color "#800" :fontSize "small" :padding "6px 10px" :text-align "center"}}
+                          :color "#800" :fontSize "small" :padding "6px 10px" :textAlign "center"}}
             "Your access to TCGA Controlled Access workspaces and data will expire "
             (.calendar expire-time) " and your access to TCGA Controlled Access workspaces will be revoked "
             "within 24 hours of that time. "

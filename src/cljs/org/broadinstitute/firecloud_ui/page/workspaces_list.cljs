@@ -40,13 +40,24 @@
 (react/defc WorkspaceCell
   {:render
    (fn [{:keys [props]}]
-     [:a {:href (nav/create-href (:nav-context props) (get-in props [:data :href]))
-          :style {:display "block"
-                  :backgroundColor (style/color-for-status (get-in props [:data :status]))
-                  :height (- row-height-px 4)
-                  :color "white" :textDecoration "none"}}
-      [:span {:style {:display "block" :padding "1em 0 0 1em" :fontWeight 600}}
-       (get-in props [:data :name])]])})
+     (let [{:keys [nav-context data]} props
+           {:keys [href status protected?]} data
+           color (style/color-for-status status)]
+       [:a {:href (nav/create-href nav-context href)
+            :style {:display "block"
+                    :backgroundColor color
+                    :color "white" :textDecoration "none"
+                    :height (- row-height-px 4)}}
+        (when protected?
+          [:span {:style {:display "block" :position "relative"}}
+           [:span {:style {:display "block" :position "absolute" :left -16 :top 17
+                           :width (- row-height-px 4) :padding "4px 0"
+                           :backgroundColor "white" :color "#666" :fontSize "xx-small"
+                           :transform "rotate(-90deg)"}}
+            "RESTRICTED"]])
+        [:span {:style {:display "block" :padding "1em 0 0 24px" :fontWeight 600
+                        :position "relative"}}
+         (:name data)]]))})
 
 (defn- get-workspace-name-string [ws]
   (str (get-in ws ["workspace" "namespace"]) "/" (get-in ws ["workspace" "name"])))
@@ -119,7 +130,8 @@
             :content-renderer (fn [data] [StatusCell {:data data
                                                       :nav-context (:nav-context props)}])}
            {:as-text :name :sort-by :text
-            :header "Workspace" :starting-width (min 500 (* max-workspace-name-length 10))
+            :header [:span {:style {:marginLeft 10}} "Workspace"]
+            :starting-width (min 500 (* max-workspace-name-length 10))
             :content-renderer (fn [data] [WorkspaceCell {:data data
                                                          :nav-context (:nav-context props)}])}
            {:header "Description" :starting-width (max 200 (min 500 (* max-description-length 10)))
@@ -153,7 +165,8 @@
                    (let [ws-name (get-workspace-name-string ws)
                          ws-href (let [x (ws "workspace")] (str (x "namespace") ":" (x "name")))]
                      [{:name ws-name :href ws-href :status (:status ws)}
-                      {:name ws-name :href ws-href :status (:status ws)}
+                      {:name ws-name :href ws-href :status (:status ws)
+                       :protected? (get-in ws ["workspace" "realm"])}
                       (get-workspace-description ws)
                       (get-in ws ["accessLevel"])
                       nil]))}]]))})
