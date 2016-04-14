@@ -252,14 +252,40 @@
       [:div {}
        [comps/Button
         {:text "Sign In"
-         :href (str (config/api-url-root) "/login?callback="
-                    (js/encodeURIComponent
-                     (str js/window.location.protocol "//" js/window.location.hostname))
-                    (let [hash (nav/get-hash-value)]
-                      (if (clojure.string/blank? hash) "" (str "&path=" hash))))}]]
+         :onClick (fn [e]
+                    (.. js/window
+                        (open
+                         (str (config/api-url-root) "/login?callback="
+                              (js/encodeURIComponent (.. js/window -location -origin)))
+                         "Authentication"
+                         "menubar=no,toolbar=no,width=500,height=500")))}]]
       [:div {:style {:marginTop "1em"}} [RegisterLink]]
       [:div {:style {:maxWidth 600 :paddingTop "2em" :fontSize "small"}}
-        [Policy]]])})
+        [Policy]]])
+   :component-did-mount
+   (fn [{:keys [props]}]
+     (aset js/window (name ::handle-auth-message)
+           (fn [message] ((:on-login props) (get message "access_token")))))
+   :component-will-unmount
+   (fn [{:keys [locals]}]
+     (js-delete js/window (name ::handle-auth-message)))})
+
+
+(defn- parse-hash-into-map []
+  ;; Transforms the browser navigation hash into a map to make it easier to pass around. Technique
+  ;; stolen from Swagger's authentication flow.
+  (let [hash (nav/get-hash-value)
+        hash (clojure.string/replace hash #"^[?]" "")
+        parts (clojure.string/split hash #"[&=]")
+        parts (map js/decodeURIComponent parts)]
+    (apply assoc {} parts)))
+
+
+(defn- attempt-auth [token on-done]
+  ;; Use basic ajax call here to bypass default ajax-orch failure behavior.
+  (utils/ajax {:url (str (config/api-url-root) "/me")
+               :headers {"Authorization" (str "Bearer " token)}
+               :on-done on-done}))
 
 
 (defn- server-unavailable-dialog [dismiss]
@@ -285,7 +311,7 @@
    (fn []
      {:root-nav-context (nav/create-nav-context)})
    :render
-   (fn [{:keys [state]}]
+   (fn [{:keys [this state]}]
      [:div {}
       (when (:show-server-down-message? @state)
         (server-unavailable-dialog #(swap! state dissoc :show-server-down-message?)))
@@ -330,7 +356,7 @@
           (= :logged-in (:user-status @state))
           [LoggedIn {:nav-context (:root-nav-context @state)}]
           (= :not-logged-in (:user-status @state))
-          [LoggedOut])]]
+          [LoggedOut {:on-login #(react/call :authenticate-with-fresh-token this %)}])]]
       (footer)])
    :component-did-mount
    (fn [{:keys [this state]}]
@@ -358,31 +384,14 @@
                                (swap! state assoc :config-status :error)))}))
    :authenticate-user
    (fn [{:keys [this state]}]
-     (let [hash (nav/get-hash-value)
-           at-index (utils/str-index-of hash "?access_token=")
-           [_ token] (when-not (neg? at-index) (clojure.string/split (subs hash at-index) #"="))
-           attempt-auth (fn [token on-done]
-                          ;; Use basic ajax call here to bypass default ajax-orch failure behavior.
-                          (utils/ajax {:url (str (config/api-url-root) "/me")
-                                       :headers {"Authorization" (str "Bearer " token)}
-                                       :on-done on-done}))]
-       (if-not (neg? at-index)
-         (do
-           ;; New access token. Attempt to authenticate with it.
-           (.replace (.-location js/window) (str "#" (subs hash 0 at-index)))
-           (attempt-auth token (fn [{:keys [success? status-code]}]
-                                 (cond
-                                   (= 401 status-code)
-                                   (swap! state assoc :user-status :auth-failure)
-                                   (= 403 status-code)
-                                   (do (utils/set-access-token-cookie token)
-                                       (swap! state assoc :user-status :not-activated))
-                                   ;; 404 just means not registered
-                                   (or success? (= status-code 404))
-                                   (do (utils/set-access-token-cookie token)
-                                       (react/call :handle-successful-auth this token))
-                                   :else
-                                   (swap! state assoc :user-status :error)))))
+     (if-let [parent (.-opener js/window)]
+       ;; This window was used for login. Send the token to the parent. No need to render the UI.
+       (do
+         ((aget parent (name ::handle-auth-message)) (parse-hash-into-map))
+         (.close js/window))
+       (if-let [token (get (parse-hash-into-map) "access_token")]
+         ;; New access token. Attempt to authenticate with it.
+         (react/call :authenticate-with-fresh-token this token)
          (let [token (utils/get-access-token-cookie)]
            (if token
              (attempt-auth token (fn [{:keys [success? status-code]}]
@@ -398,6 +407,21 @@
                                      :else
                                      (swap! state assoc :user-status :error))))
              (swap! state assoc :user-status :not-logged-in))))))
+   :authenticate-with-fresh-token
+   (fn [{:keys [this state]} token]
+     (attempt-auth token (fn [{:keys [success? status-code]}]
+                           (cond
+                             (= 401 status-code)
+                             (swap! state assoc :user-status :auth-failure)
+                             (= 403 status-code)
+                             (do (utils/set-access-token-cookie token)
+                               (swap! state assoc :user-status :not-activated))
+                             ;; 404 just means not registered
+                             (or success? (= status-code 404))
+                             (do (utils/set-access-token-cookie token)
+                               (react/call :handle-successful-auth this token))
+                             :else
+                             (swap! state assoc :user-status :error)))))
    :handle-successful-auth
    (fn [{:keys [this state locals]} token]
      (reset! utils/access-token token)
