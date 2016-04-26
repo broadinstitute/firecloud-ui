@@ -57,4 +57,7 @@
                                 :compiler {:output-dir "target/build"
                                            :asset-path "build"
                                            :output-to "target/compiled.js"}}}}
-  :resource {:resource-paths ["src/static"] :skip-stencil [#".*"]}) 
+  :resource {:resource-paths ["src/static"]
+             :excludes [#".*\.DS_Store"]
+             :skip-stencil [#"src/static/assets/.*"]
+             :extra-values {:vtag ~(.getTime (java.util.Date.))}})
