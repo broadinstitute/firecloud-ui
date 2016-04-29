@@ -43,6 +43,19 @@
            [:div {} k [:span {:style {:margin "0 1em"}} "→"] (display-value v)])])])})
 
 
+(defn- backend-logs [data]
+  (when-let [log-map (data "backendLogs")]
+    ;; Right now we only ever have a single log, so we should only ever hit the "true" case.
+    ;; But in case something changes, I'll leave the general case so the UI doesn't totally bomb.
+    (if (= 1 (count log-map))
+      (create-field "JES log" (display-value (first (vals log-map))))
+      [:div {:style {:paddingBottom "0.25em"}} "Backend logs:"
+       (map
+         (fn [[name value]]
+           (create-field name (display-value value)))
+         log-map)])))
+
+
 (react/defc CallDetail
   {:get-initial-state
    (fn []
@@ -64,10 +77,11 @@
                 (create-field "Status" (moncommon/icon-for-call-status status) status))
               (create-field "Started" (moncommon/render-date (data "start")))
               (create-field "Ended" (moncommon/render-date (data "end")))
+              [IODetail {:label "Inputs" :data (data "inputs")}]
+              [IODetail {:label "Outputs" :data (data "outputs")}]
               (create-field "stdout" (display-value (data "stdout")))
               (create-field "stderr" (display-value (data "stderr")))
-              [IODetail {:label "Inputs" :data (data "inputs")}]
-              [IODetail {:label "Outputs" :data (data "outputs")}]]])
+              (backend-logs data)]])
           (:data props)))])})
 
 
@@ -93,7 +107,7 @@
 
 (react/defc WorkflowDetails
   {:render
-   (fn [{:keys [props state]}]
+   (fn [{:keys [state]}]
      (let [server-response (:server-response @state)]
        (cond
          (nil? server-response)
