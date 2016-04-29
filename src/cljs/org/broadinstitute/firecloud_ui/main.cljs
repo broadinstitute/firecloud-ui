@@ -222,7 +222,9 @@
                     (.. js/window
                         (open
                          (str (config/api-url-root) "/login?callback="
-                              (js/encodeURIComponent (config/sign-in-callback-url))))))}]]
+                              (js/encodeURIComponent (config/sign-in-callback-url)))
+                         "Authentication"
+                         "menubar=no,toolbar=no")))}]]
       [:div {:style {:marginTop "1em"}} [RegisterLink]]
       [:div {:style {:maxWidth 600 :paddingTop "2em" :fontSize "small"}}
         [Policy]]])
