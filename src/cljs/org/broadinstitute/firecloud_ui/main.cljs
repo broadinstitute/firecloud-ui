@@ -239,12 +239,10 @@
 
 
 (defn- get-access-token-from-hash []
-  ;; Handles the cases of an orchestration callback and a Swagger callback.
   (second (re-find #"\baccess_token=([^&]+)" (nav/get-hash-value))))
 
 
 (defn- parse-hash-as-json []
-  ;; Handles the cases of an orchestration callback and a Swagger callback.
   (let [hash (nav/get-hash-value)
         hash (clojure.string/replace hash #"^[?]" "")
         parts (clojure.string/split hash #"[&=]")
@@ -315,13 +313,7 @@
       (footer)])
    :component-did-mount
    (fn [{:keys [this state locals]}]
-     (if-let [parent (.-opener js/window)]
-       ;; This window was used for login. Send the token to the parent. No need to render the UI.
-       (let [parsed (parse-hash-as-json)
-             dev? (re-matches #".*[.]broadinstitute[.]org" (.. js/location -host))]
-         (.postMessage parent (clj->js parsed) (if dev? "*" "portal.firecloud.org"))
-         (.close js/window))
-       (react/call :load-config this)))
+     (react/call :load-config this))
    :component-will-unmount
    (fn [{:keys [locals]}]
      (.removeEventListener js/window "hashchange" (:hash-change-listener @locals)))
