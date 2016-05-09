@@ -68,11 +68,12 @@
 (defn- get-max-length [func workspaces]
   (->> workspaces (map func) (map count) (apply max)))
 
-(def ^:private access-types ["Owner" "Writer" "Reader" "TCGA Open Access" "TCGA Protected Access"])
+(def ^:private access-types ["Owner" "Writer" "Reader" "No Access" "TCGA Open Access" "TCGA Protected Access"])
 (def ^:private access-predicates
   {"Owner" #(= "OWNER" (% "accessLevel"))
    "Writer" #(= "WRITER" (% "accessLevel"))
    "Reader" #(= "READER" (% "accessLevel"))
+   "No Access" #(= "NO ACCESS" (% "accessLevel"))
    "TCGA Open Access" #(and (= (config/tcga-namespace) (get-in % ["workspace" "namespace"]))
                             (not (get-in % ["workspace" "realm"])))
    "TCGA Protected Access" #(and (= (config/tcga-namespace) (get-in % ["workspace" "namespace"]))
