@@ -1,6 +1,6 @@
 (ns org.broadinstitute.firecloud-ui.page.workspaces-list
   (:require
-    [clojure.string :refer [split join replace split-lines]]
+    [clojure.string :refer [split join split-lines]]
     [dmohs.react :as react]
     [org.broadinstitute.firecloud-ui.common :as common]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
@@ -19,15 +19,24 @@
 
 (def row-height-px 56)
 
+(def disabled-text
+  (str "This workspace contains controlled access data. You can only access the contents of this workspace if you are "
+       "dbGaP authorized for TCGA data and have linked your FireCloud account to your eRA Commons account."))
 
 (react/defc StatusCell
   {:render
    (fn [{:keys [props]}]
-     (let [status (get-in props [:data :status])]
-       [:a {:href (nav/create-href (:nav-context props) (get-in props [:data :href]))
+     (let [{:keys [nav-context data]} props
+           {:keys [href status disabled?]} data]
+       [:a {:href (if disabled?
+                    "javascript:;"
+                    (nav/create-href nav-context href))
             :style {:display "block" :backgroundColor (style/color-for-status status)
                     :margin "2px 0 0 2px" :height (- row-height-px 4)
-                    :position "relative"}}
+                    :cursor (when disabled? "default")
+                    :WebkitFilter (when disabled? "grayscale()")
+                    :position "relative"}
+            :title (when disabled? disabled-text)}
         [:span {:style {:display "block" :backgroundColor "rgba(0,0,0,0.2)"
                         :position "absolute" :top 0 :right 0 :bottom 0 :left 0}}]
         (style/center {}
@@ -41,13 +50,18 @@
   {:render
    (fn [{:keys [props]}]
      (let [{:keys [nav-context data]} props
-           {:keys [href status protected?]} data
+           {:keys [href status protected? disabled?]} data
            color (style/color-for-status status)]
-       [:a {:href (nav/create-href nav-context href)
+       [:a {:href (if disabled?
+                    "javascript:;"
+                    (nav/create-href nav-context href))
             :style {:display "block"
                     :backgroundColor color
                     :color "white" :textDecoration "none"
-                    :height (- row-height-px 4)}}
+                    :cursor (when disabled? "default")
+                    :WebkitFilter (when disabled? "grayscale()")
+                    :height (- row-height-px 4)}
+            :title (when disabled? disabled-text)}
         (when protected?
           [:span {:style {:display "block" :position "relative"}}
            [:span {:style {:display "block" :position "absolute" :left -16 :top 17
@@ -164,12 +178,13 @@
           :num-total-rows (count (:workspaces props))
           :->row (fn [ws]
                    (let [ws-name (get-workspace-name-string ws)
-                         ws-href (let [x (ws "workspace")] (str (x "namespace") ":" (x "name")))]
-                     [{:name ws-name :href ws-href :status (:status ws)}
-                      {:name ws-name :href ws-href :status (:status ws)
+                         ws-href (let [x (ws "workspace")] (str (x "namespace") ":" (x "name")))
+                         disabled? (= (ws "accessLevel") "NO ACCESS")]
+                     [{:name ws-name :href ws-href :status (:status ws) :disabled? disabled?}
+                      {:name ws-name :href ws-href :status (:status ws) :disabled? disabled?
                        :protected? (get-in ws ["workspace" "realm"])}
                       (get-workspace-description ws)
-                      (get-in ws ["accessLevel"])
+                      (ws "accessLevel")
                       nil]))}]]))})
 
 
@@ -214,7 +229,7 @@
       (fn [index segment]
         (if (zero? index)
           {:text "Workspaces" :href "#workspaces"}
-          {:text (replace (js/decodeURIComponent segment) ":" "/")
+          {:text (clojure.string/replace (js/decodeURIComponent segment) ":" "/")
            :href (str "#" (join "/" (subvec segments 0 (inc index))))}))
       segments)))
 
