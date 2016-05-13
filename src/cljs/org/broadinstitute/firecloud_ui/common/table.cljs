@@ -319,29 +319,38 @@
           (nil? entity-types) [:div {:style {:textAlign "center"}} [comps/Spinner {:text "Retrieving entity types..."}]]
           :else
           (let [attribute-keys (->> entity-list (map #(-> (% "attributes") keys set)) (apply union))
-                attr-col-width (->> attribute-keys count (/ 1000) int (min 400) (max 100))]
+                attr-col-width (->> attribute-keys count (/ 1000) int (min 400) (max 100))
+                entity-column [{:header "Entity Name" :starting-width 200
+                                :as-text #(% "name") :sort-by :text
+                                :content-renderer (or (:entity-name-renderer props)
+                                                      (fn [entity] (entity "name")))}]
+                attr-columns (map (fn [k] {:header k :starting-width attr-col-width :sort-by :text
+                                           :as-text
+                                           (fn [attr-value]
+                                             (cond
+                                               (is-single-ref? attr-value) (attr-value "entityName")
+                                               (is-ref-list? attr-value) (map #(% "entityName") attr-value)
+                                               :else (str attr-value)))
+                                           :content-renderer
+                                           (fn [attr-value]
+                                             (cond
+                                               (is-single-ref? attr-value) (attr-value "entityName")
+                                               (is-ref-list? attr-value) (join ", " (map #(% "entityName") attr-value))
+                                               :else ((:attribute-renderer props) attr-value)))})
+                                  attribute-keys)
+                make-pair (fn [s]
+                            [{:header (str "# " s) :starting-width 110}
+                             #(count (get-in % ["attributes" s]))])
+                [count-column count-data] (cond (= selected-entity-type "sample_set") (make-pair "samples")
+                                                (= selected-entity-type "pair_set") (make-pair "pairs")
+                                                (= selected-entity-type "participant_set") (make-pair "participants"))
+                columns (if count-column
+                          (concat entity-column [count-column] attr-columns)
+                          (concat entity-column attr-columns))]
             [Table
              (merge props
                {:key (gensym)
-                :columns (into
-                           [{:header "Entity Name" :starting-width 200
-                             :as-text #(% "name") :sort-by :text
-                             :content-renderer (or (:entity-name-renderer props)
-                                                 (fn [entity] (entity "name")))}]
-                           (map (fn [k] {:header k :starting-width attr-col-width :sort-by :text
-                                         :as-text
-                                         (fn [attr-value]
-                                           (cond
-                                             (is-single-ref? attr-value) (attr-value "entityName")
-                                             (is-ref-list? attr-value) (map #(% "entityName") attr-value)
-                                             :else (str attr-value)))
-                                         :content-renderer
-                                         (fn [attr-value]
-                                           (cond
-                                             (is-single-ref? attr-value) (attr-value "entityName")
-                                             (is-ref-list? attr-value) (join ", " (map #(% "entityName") attr-value))
-                                             :else ((:attribute-renderer props) attr-value)))})
-                             attribute-keys))
+                :columns columns
                 :filters (mapv (fn [[type count]] {:text type :count count :pred (constantly true)})
                            entity-types)
                 :selected-filter-index (max 0 (.indexOf (to-array (map first entity-types))
@@ -353,8 +362,14 @@
                                       (when-let [func (:on-filter-change props)]
                                         (func type))))
                 :data entity-list
-                :->row (fn [m]
-                         (into [m] (map (fn [k] (get-in m ["attributes" k])) attribute-keys)))})]))]))
+                :->row (if count-column
+                         (fn [m]
+                           (vec (concat [m]
+                                        [(count-data m)]
+                                        (map #(get-in m ["attributes" %]) attribute-keys))))
+                         (fn [m]
+                           (vec (concat [m]
+                                        (map #(get-in m ["attributes" %]) attribute-keys)))))})]))]))
    :component-did-mount
    (fn [{:keys [props state this]}]
      (endpoints/call-ajax-orch
