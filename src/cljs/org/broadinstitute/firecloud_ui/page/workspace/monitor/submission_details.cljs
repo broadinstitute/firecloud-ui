@@ -38,12 +38,14 @@
       {:empty-message "No Workflows"
        :columns [{:header "Data Entity" :starting-width 200
                   :content-renderer
-                  (fn [x]
-                    (let [e (x "workflowEntity")
-                          n (str (e "entityName") " (" (e "entityType") ")")]
-                      (style/create-link {:text n
-                                          :onClick #(swap! state assoc :selected-workflow {:id (x "workflowId")
-                                                                                           :name n})})))}
+                  (fn [workflow]
+                    (let [entity (workflow "workflowEntity")
+                          id (workflow "workflowId")
+                          name (str (entity "entityName") " (" (entity "entityType") ")")]
+                      (if-not id
+                        name
+                        (style/create-link {:text name
+                                            :onClick #(swap! state assoc :selected-workflow {:id id :name name})}))))}
                  {:header "Last Changed" :starting-width 280 :as-text moncommon/render-date}
                  {:header "Status" :starting-width 120
                   :content-renderer (fn [status]
