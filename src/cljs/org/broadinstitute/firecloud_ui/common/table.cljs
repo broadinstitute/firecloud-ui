@@ -320,34 +320,33 @@
           :else
           (let [attribute-keys (->> entity-list (map #(-> (% "attributes") keys set)) (apply union))
                 attr-col-width (->> attribute-keys count (/ 1000) int (min 400) (max 100))
-                columns [{:header "Entity Name" :starting-width 200
-                          :as-text #(% "name") :sort-by :text
-                          :content-renderer (or (:entity-name-renderer props)
-                                                (fn [entity] (entity "name")))}]
-                columns (into columns
-                          (map (fn [k] {:header k :starting-width attr-col-width :sort-by :text
-                                        :as-text
-                                        (fn [attr-value]
-                                          (cond
-                                            (is-single-ref? attr-value) (attr-value "entityName")
-                                            (is-ref-list? attr-value) (map #(% "entityName") attr-value)
-                                            :else (str attr-value)))
-                                        :content-renderer
-                                        (fn [attr-value]
-                                          (cond
-                                            (is-single-ref? attr-value) (attr-value "entityName")
-                                            (is-ref-list? attr-value) (join ", " (map #(% "entityName") attr-value))
-                                            :else ((:attribute-renderer props) attr-value)))})
-                               attribute-keys))
+                entity-column [{:header "Entity Name" :starting-width 200
+                                :as-text #(% "name") :sort-by :text
+                                :content-renderer (or (:entity-name-renderer props)
+                                                      (fn [entity] (entity "name")))}]
+                attr-columns (map (fn [k] {:header k :starting-width attr-col-width :sort-by :text
+                                           :as-text
+                                           (fn [attr-value]
+                                             (cond
+                                               (is-single-ref? attr-value) (attr-value "entityName")
+                                               (is-ref-list? attr-value) (map #(% "entityName") attr-value)
+                                               :else (str attr-value)))
+                                           :content-renderer
+                                           (fn [attr-value]
+                                             (cond
+                                               (is-single-ref? attr-value) (attr-value "entityName")
+                                               (is-ref-list? attr-value) (join ", " (map #(% "entityName") attr-value))
+                                               :else ((:attribute-renderer props) attr-value)))})
+                                  attribute-keys)
                 make-pair (fn [s]
-                            [{:header (str "# " (clojure.string/capitalize s)) :starting-width attr-col-width}
+                            [{:header (str "# " s) :starting-width 110}
                              #(count (get-in % ["attributes" s]))])
-                [count-header count-data] (cond (= selected-entity-type "sample_set") (make-pair "samples")
+                [count-column count-data] (cond (= selected-entity-type "sample_set") (make-pair "samples")
                                                 (= selected-entity-type "pair_set") (make-pair "pairs")
                                                 (= selected-entity-type "participant_set") (make-pair "participants"))
-                columns (if count-header
-                          (conj columns count-header)
-                          columns)]
+                columns (if count-column
+                          (concat entity-column [count-column] attr-columns)
+                          (concat entity-column attr-columns))]
             [Table
              (merge props
                {:key (gensym)
@@ -363,10 +362,14 @@
                                       (when-let [func (:on-filter-change props)]
                                         (func type))))
                 :data entity-list
-                :->row (fn [m]
-                         (vec (concat [m]
-                                      (map (fn [k] (get-in m ["attributes" k])) attribute-keys)
-                                      (when count-data [(count-data m)]))))})]))]))
+                :->row (if count-column
+                         (fn [m]
+                           (vec (concat [m]
+                                        [(count-data m)]
+                                        (map #(get-in m ["attributes" %]) attribute-keys))))
+                         (fn [m]
+                           (vec (concat [m]
+                                        (map #(get-in m ["attributes" %]) attribute-keys)))))})]))]))
    :component-did-mount
    (fn [{:keys [props state this]}]
      (endpoints/call-ajax-orch
