@@ -133,7 +133,6 @@
             [:div {:style {:marginBottom "1em" :fontSize "88%"}} "*NonProfit Status"
               (react/call :render-radio-field this :nonProfitStatus "Profit")
               (react/call :render-radio-field this :nonProfitStatus "Non-Profit")]
-            (react/call :render-field this :billingAccountName "Google Billing Account Name" false)
             (when-not (:new-registration? props)
               [:div {} [NihLink {:parent-nav-context (:parent-nav-context props)}]])]
            :else [components/Spinner {:text "Loading User Profile..."}]))
