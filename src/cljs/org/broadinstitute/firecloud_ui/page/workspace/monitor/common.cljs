@@ -14,8 +14,11 @@
 
 
 (def wf-success-statuses #{"Succeeded"})
-(def wf-running-statuses #{"Running" "Submitted"})
+(def wf-running-statuses #{"Running" "Submitted" "Queued" "Launching"})
 (def wf-failure-statuses #{"Failed" "Aborting" "Aborted" "Unknown"})
+(def wf-all-statuses ["Queued" "Launching" "Submitted" "Running" "Aborting" "Succeeded" "Failed" "Aborted"])
+
+(def sub-running-statuses #{"Accepted" "Evaluating" "Submitting" "Submitted"})
 
 (def call-success-statuses #{"Done"})
 (def call-running-statuses #{"NotStarted" "Starting" "Running"})
