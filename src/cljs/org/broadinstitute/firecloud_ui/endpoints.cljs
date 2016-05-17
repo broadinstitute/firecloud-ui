@@ -269,7 +269,7 @@
                                       :entityName "sample_01"}
                      :status "Succeeded"
                      :workflowId "97adf170-ee40-40a5-9539-76b72802e124"}]
-        :status (rand-nth ["Submitted" "Done"])
+        :status (rand-nth ["Accepted" "Evaluating" "Submitting" "Submitted" "Done"])
         :submissionEntity {:entityType "sample"
                            :entityName (str "sample_" (inc i))}
         :submitter "abaumann@broadinstitute.org"})
@@ -325,7 +325,7 @@
                        :statusLastChangedDate (utils/rand-recent-time)
                        :workflowEntity {:entityType "sample"
                                         :entityName (str "sample_" i)}
-                       :status (rand-nth ["Succeeded" "Submitted" "Running" "Aborting" "Failed" "Aborted" "Unknown"])
+                       :status (rand-nth ["Succeeded" "Submitted" "Running" "Launching" "Queued" "Aborting" "Failed" "Aborted" "Unknown"])
                        :workflowId "97adf170-ee40-40a5-9539-76b72802e124"})
                  (range (rand-int 10)))
     :notstarted (map (fn [i]
@@ -340,7 +340,7 @@
                         :errors (utils/rand-subset ["Prerequisites not met" "Server error"
                                                     "I didn't feel like it" "Syntax error"])})
                   (range (rand-int 5)))
-    :status (rand-nth ["Submitted" "Done"])}})
+    :status (rand-nth ["Accepted" "Evaluating" "Submitting" "Submitted" "Done"])}})
 
 (defn get-workflow-details [workspace-id submission-id workflow-id]
   {:path (str "/workspaces/" (ws-path workspace-id) "/submissions/" submission-id

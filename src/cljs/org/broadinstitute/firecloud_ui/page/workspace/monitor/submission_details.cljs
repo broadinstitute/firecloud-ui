@@ -13,12 +13,12 @@
 
 
 (defn- color-for-submission [submission]
-  (cond (= "Submitted" (submission "status")) (:running-blue style/colors)
+  (cond (contains? moncommon/sub-running-statuses (submission "status")) (:running-blue style/colors)
         (moncommon/all-success? submission) (:success-green style/colors)
         :else (:exception-red style/colors)))
 
 (defn- icon-for-submission [submission]
-  (cond (= "Submitted" (submission "status")) [icons/RunningIcon {:size 36}]
+  (cond (contains? moncommon/sub-running-statuses (submission "status")) [icons/RunningIcon {:size 36}]
         (moncommon/all-success? submission) [icons/CompleteIcon {:size 36}]
         :else [icons/ExceptionIcon {:size 36}]))
 
@@ -59,10 +59,10 @@
                                               [:div {} message])
                                          message-list)])}
                  {:header "Workflow ID" :starting-width 300}]
-       :filters [{:text "All" :pred (constantly true)}
-                 {:text "Succeeded" :pred #(contains? moncommon/wf-success-statuses (% "status"))}
-                 {:text "Running" :pred #(contains? moncommon/wf-running-statuses (% "status"))}
-                 {:text "Failed" :pred #(contains? moncommon/wf-failure-statuses (% "status"))}]
+       :filters
+       (vec (cons {:text "All" :pred (constantly true)}
+              (map (fn [status] {:text status :pred #(= status (% "status"))})
+                moncommon/wf-all-statuses)))
        :data (:workflows props)
        :->row (fn [row]
                 [row
@@ -154,7 +154,7 @@
            [comps/StatusLabel {:text (submission "status")
                                :color (color-for-submission submission)
                                :icon (icon-for-submission submission)}]
-           (when (= "Submitted" (submission "status"))
+           (when (contains? moncommon/sub-running-statuses (submission "status"))
              [AbortButton
               {:on-abort (fn []
                           (swap! state assoc :server-response nil)
