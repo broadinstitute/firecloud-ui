@@ -9,12 +9,37 @@
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.common.table :as table]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
+    [org.broadinstitute.firecloud-ui.utils :as utils]
     ))
 
 
 (defn- entity->id [entity]
   {:type (entity "entityType") :name (entity "name")})
 
+;; GAWB-662
+;; show Queued first, then Launching, and collapse all remaining states into Active
+(defn queue-status-remap [queue-status]
+  [["Queued" (get queue-status "Queued" 0)]
+   ["Launching" (get queue-status "Launching" 0)]
+   ["Active" (apply + (vals (dissoc queue-status "Queued" "Launching")))]])
+
+(defn queue-status-table-row [[status count]]
+  [:div {}
+   [:div {:style {:width 100 :float "right"}} status]
+   [:div {:style {:marginRight 10 :float "right"}} count]
+   (common/clear-both)])
+
+(defn queue-status-table [state]
+  (let [error-msg (:submission-queue-error-message @state)
+        queue-status (:submission-queue-status @state)]
+    [:div {:style {:marginBottom "1em" :float "right"}}
+     (cond
+       error-msg (style/create-server-error-message error-msg)
+       (not queue-status) [comps/Spinner {:text "Loading submission queue status..."}]
+       :else
+       [:div {}
+        "Queue Status: "
+        (map queue-status-table-row queue-status)])]))
 
 (defn- render-form [state props]
   [:div {}
@@ -23,11 +48,13 @@
    (style/create-form-label "Select Entity")
    [:div {:style {:backgroundColor "#fff" :border style/standard-line
                   :padding "1em" :marginBottom "0.5em"}}
-    [:div {:style {:marginBottom "1em" :fontSize "140%"}}
+    [:div {:style {:marginBottom "1em" :fontSize "140%" :float "left"}}
      (str "Selected: "
        (if-let [e (:selected-entity @state)]
          (str (:name e) " (" (:type e) ")")
          "None"))]
+    (queue-status-table state)
+    (common/clear-both)
     [table/EntityTable
      {:workspace-id (:workspace-id props)
       :initial-entity-type (:root-entity-type props)
@@ -64,6 +91,14 @@
        :ok-button
        [comps/Button {:text "Launch" :disabled? (:disabled? props)
                       :onClick #(react/call :launch this)}]}])
+   :component-did-mount
+   (fn [{:keys [props state]}]
+     (endpoints/call-ajax-orch
+       {:endpoint (endpoints/submissions-queue-status)
+        :on-done (fn [{:keys [success? status-text get-parsed-response]}]
+                   (if success?
+                     (swap! state assoc :submission-queue-status (queue-status-remap (get-parsed-response)))
+                     (swap! state assoc :submission-queue-error-message status-text)))}))
    :launch
    (fn [{:keys [props state]}]
      (if-let [entity (:selected-entity @state)]

@@ -633,3 +633,11 @@
   {:path "/profile/billing"
    :method :get
    :mock-data (utils/rand-subset ["broad-dsde-dev" "broad-institute"])})
+
+(defn submissions-queue-status []
+  {:path "/submissions/queueStatus"
+   :method :get
+   :mock-data {"Launching" 123
+               "Queued" 987654
+               "Some Other Status" 30
+               "Another Generic Status" 70}})
