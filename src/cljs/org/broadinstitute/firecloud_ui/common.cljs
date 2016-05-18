@@ -131,3 +131,10 @@
 
 (def root-entity-types
   ["participant" "sample" "pair" "participant_set" "sample_set" "pair_set"])
+
+(defn count-workflows [entity]
+  (case (entity "entityType")
+    "participant_set" (count (get-in entity ["attributes" "participants"]))
+    "sample_set" (count (get-in entity ["attributes" "samples"]))
+    "pair_set" (count (get-in entity ["attributes" "pairs"]))
+    1))

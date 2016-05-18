@@ -341,9 +341,11 @@
                 make-pair (fn [s]
                             [{:header (str "# " s) :starting-width 110}
                              #(count (get-in % ["attributes" s]))])
-                [count-column count-data] (cond (= selected-entity-type "sample_set") (make-pair "samples")
-                                                (= selected-entity-type "pair_set") (make-pair "pairs")
-                                                (= selected-entity-type "participant_set") (make-pair "participants"))
+                [count-column count-data] (case selected-entity-type
+                                            "sample_set" (make-pair "samples")
+                                            "pair_set" (make-pair "pairs")
+                                            "participant_set" (make-pair "participants")
+                                            nil)
                 columns (if count-column
                           (concat entity-column [count-column] attr-columns)
                           (concat entity-column attr-columns))]
