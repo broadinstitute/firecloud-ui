@@ -40,7 +40,7 @@
        (not queue-status) [comps/Spinner {:text "Loading submission queue status..."}]
        :else
        [:div {}
-        [:div {} "Estimated wait time: " (common/format-time (queue-status "estimatedQueueTimeMS"))]
+        [:div {} "Estimated wait time: " (.humanize (js/moment.duration (queue-status "estimatedQueueTimeMS")))]
         "Queue Status: "
         (map queue-status-table-row (queue-status "workflowCountsByStatus"))])]))
 
