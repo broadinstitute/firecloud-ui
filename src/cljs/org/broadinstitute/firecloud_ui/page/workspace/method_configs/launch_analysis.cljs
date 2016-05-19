@@ -19,9 +19,11 @@
 ;; GAWB-662
 ;; show Queued first, then Launching, and collapse all remaining states into Active
 (defn queue-status-remap [queue-status]
-  [["Queued" (get queue-status "Queued" 0)]
-   ["Launching" (get queue-status "Launching" 0)]
-   ["Active" (apply + (vals (dissoc queue-status "Queued" "Launching")))]])
+  (let [status-count-map (queue-status "workflowCountsByStatus")]
+    (assoc queue-status "workflowCountsByStatus"
+      [["Queued" (get status-count-map "Queued" 0)]
+       ["Launching" (get status-count-map "Launching" 0)]
+       ["Active" (apply + (vals (dissoc status-count-map "Queued" "Launching")))]])))
 
 (defn queue-status-table-row [[status count]]
   [:div {}
@@ -38,8 +40,9 @@
        (not queue-status) [comps/Spinner {:text "Loading submission queue status..."}]
        :else
        [:div {}
+        [:div {} "Estimated wait time: " (.humanize (js/moment.duration (queue-status "estimatedQueueTimeMS")))]
         "Queue Status: "
-        (map queue-status-table-row queue-status)])]))
+        (map queue-status-table-row (queue-status "workflowCountsByStatus"))])]))
 
 (defn- render-form [state props]
   [:div {}
@@ -92,7 +95,7 @@
        [comps/Button {:text "Launch" :disabled? (:disabled? props)
                       :onClick #(react/call :launch this)}]}])
    :component-did-mount
-   (fn [{:keys [props state]}]
+   (fn [{:keys [state]}]
      (endpoints/call-ajax-orch
        {:endpoint (endpoints/submissions-queue-status)
         :on-done (fn [{:keys [success? status-text get-parsed-response]}]
@@ -114,7 +117,7 @@
            {:endpoint (endpoints/create-submission (:workspace-id props))
             :payload payload
             :headers {"Content-Type" "application/json"}
-            :on-done (fn [{:keys [success? get-parsed-response status-text]}]
+            :on-done (fn [{:keys [success? get-parsed-response]}]
                        (swap! state dissoc :launching?)
                        (if success?
                          ((:on-success props) ((get-parsed-response) "submissionId"))
