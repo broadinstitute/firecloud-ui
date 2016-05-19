@@ -138,3 +138,16 @@
     "sample_set" (count (get-in entity ["attributes" "samples"]))
     "pair_set" (count (get-in entity ["attributes" "pairs"]))
     1))
+
+(defn- make-pair [single-type]
+  [{:header (str "# " single-type) :starting-width 110}
+   #(count (get-in % ["attributes" single-type]))])
+
+(defn make-count-column
+  "When the given entity type is a *_set, returns [column_header fn-from-row-to-count]"
+  [entity-type]
+  (case entity-type
+    "sample_set" (make-pair "samples")
+    "pair_set" (make-pair "pairs")
+    "participant_set" (make-pair "participants")
+    nil))
