@@ -637,7 +637,9 @@
 (defn submissions-queue-status []
   {:path "/submissions/queueStatus"
    :method :get
-   :mock-data {"Launching" 123
-               "Queued" 987654
-               "Some Other Status" 30
-               "Another Generic Status" 70}})
+   :mock-data {"estimatedQueueTimeMS" (rand-int 10000000)
+               "workflowCountsByStatus"
+               {"Launching" (rand-int 10000)
+                "Queued" (rand-int 10000)
+                "Some Other Status" (rand-int 5000)
+                "Another Generic Status" (rand-int 5000)}}})

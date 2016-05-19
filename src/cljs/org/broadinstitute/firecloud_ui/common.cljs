@@ -120,6 +120,18 @@
               (loop (/ b 1000) (inc n))))]
     (loop bytes 0)))
 
+(defn format-time [millis]
+  (let [seconds (int (/ millis 1000))
+        minutes (int (/ seconds 60))
+        hours (int (/ minutes 60))
+        days (int (/ hours 24))
+        format (fn [num unit]
+                 (str num " " unit (when (> num 1) "s")))]
+    (cond (> hours 36) (format days "day")
+          (> minutes 90) (format hours "hour")
+          (> seconds 90) (format minutes "minute")
+          :else (format seconds "second"))))
+
 (defn parse-profile [unparsed-profile]
   (let [unparsed-values (get unparsed-profile "keyValuePairs")]
     (into {} (map (fn [m] [(keyword (m "key")) (m "value")]) unparsed-values))))
