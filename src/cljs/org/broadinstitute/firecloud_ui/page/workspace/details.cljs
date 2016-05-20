@@ -37,15 +37,21 @@
                            [:b {} "restricted"]
                            " workspace for TCGA Controlled Access Data."]]))]))
    :component-did-mount
-   (fn [{:keys [props state]}]
+   (fn [{:keys [this props]}]
+     (react/call :load-workspace this (:workspace-id props)))
+   :component-will-receive-props
+   (fn [{:keys [this next-props]}]
+     (react/call :load-workspace this (:workspace-id next-props)))
+   :load-workspace
+   (fn [{:keys [state]} workspace-id]
      (endpoints/call-ajax-orch
-      {:endpoint (endpoints/get-workspace (:workspace-id props))
-       :on-done (fn [{:keys [success? get-parsed-response status-text]}]
-                  (if success?
-                    (let [workspace (get-parsed-response)
-                          protected? (if (get-in workspace ["workspace" "realm"]) true false)]
-                      (swap! state assoc :status :success :protected? protected?))
-                    (swap! state assoc :status :error :message status-text)))}))})
+       {:endpoint (endpoints/get-workspace workspace-id)
+        :on-done (fn [{:keys [success? get-parsed-response status-text]}]
+                   (if success?
+                     (let [workspace (get-parsed-response)
+                           protected? (if (get-in workspace ["workspace" "realm"]) true false)]
+                        (swap! state assoc :status :success :protected? protected?))
+                     (swap! state assoc :status :error :message status-text)))}))})
 
 
 (def ^:private SUMMARY "Summary")
