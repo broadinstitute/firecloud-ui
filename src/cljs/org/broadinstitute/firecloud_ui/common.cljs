@@ -131,3 +131,23 @@
 
 (def root-entity-types
   ["participant" "sample" "pair" "participant_set" "sample_set" "pair_set"])
+
+(def set-type->attribute
+  {"participant_set" "participants"
+   "sample_set" "samples"
+   "pair_set" "pairs"})
+
+(defn count-workflows [entity]
+  (if-let [attribute (set-type->attribute (entity "entityType"))]
+    (count (get-in entity ["attributes" attribute]))
+    1))
+
+(defn- make-pair [attribute]
+  [{:header (str "# " attribute) :starting-width 110}
+   #(count (get-in % ["attributes" attribute]))])
+
+(defn make-count-column
+  "When the given entity type is a *_set, returns [column_header fn-from-row-to-count]"
+  [entity-type]
+  (when-let [attribute (set-type->attribute entity-type)]
+    (make-pair attribute)))

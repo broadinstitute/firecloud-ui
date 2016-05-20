@@ -338,12 +338,7 @@
                                                (is-ref-list? attr-value) (join ", " (map #(% "entityName") attr-value))
                                                :else ((:attribute-renderer props) attr-value)))})
                                   attribute-keys)
-                make-pair (fn [s]
-                            [{:header (str "# " s) :starting-width 110}
-                             #(count (get-in % ["attributes" s]))])
-                [count-column count-data] (cond (= selected-entity-type "sample_set") (make-pair "samples")
-                                                (= selected-entity-type "pair_set") (make-pair "pairs")
-                                                (= selected-entity-type "participant_set") (make-pair "participants"))
+                [count-column count-data] (common/make-count-column selected-entity-type)
                 columns (if count-column
                           (concat entity-column [count-column] attr-columns)
                           (concat entity-column attr-columns))]

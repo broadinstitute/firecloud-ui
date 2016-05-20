@@ -6,8 +6,10 @@
     [org.broadinstitute.firecloud-ui.common :as common]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
     [org.broadinstitute.firecloud-ui.common.dialog :as dialog]
+    [org.broadinstitute.firecloud-ui.common.icons :as icons]
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.common.table :as table]
+    [org.broadinstitute.firecloud-ui.config :as config]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
     [org.broadinstitute.firecloud-ui.utils :as utils]
     ))
@@ -69,7 +71,9 @@
       :entity-name-renderer (fn [e]
                               (let [entity-id (entity->id e)]
                                 (style/create-link {:text (:name entity-id)
-                                                    :onClick #(swap! state assoc :selected-entity entity-id)})))}]]
+                                                    :onClick #(swap! state assoc
+                                                                     :selected-entity entity-id
+                                                                     :workflow-count (common/count-workflows e))})))}]]
    (style/create-form-label "Define Expression")
    (let [disabled (= (:root-entity-type props) (get-in @state [:selected-entity :type]))]
      (style/create-text-field {:placeholder "leave blank for default"
@@ -81,6 +85,14 @@
                                         (:expression @state))
                                :onChange #(let [text (-> % .-target .-value clojure.string/trim)]
                                             (swap! state assoc :expression text))}))
+   (when-let [wf-count (:workflow-count @state)]
+     (when (> wf-count (config/workflow-count-warning-threshold))
+       [:div {:style {:textAlign "center"}}
+        [:div {:style {:display "inline-block" :margin "1em 0 -1em 0" :padding "0.5em"
+                       :backgroundColor "white" :border style/standard-line :borderRadius 3}}
+         (icons/font-icon {:style {:color (:exception-red style/colors) :marginRight 5 :verticalAlign "middle"}}
+           :status-warning-triangle)
+         "Warning: This will launch " wf-count " workflows"]]))
    (style/create-validation-error-message (:validation-errors @state))
    [comps/ErrorViewer {:error (:launch-server-error @state)}]])
 
