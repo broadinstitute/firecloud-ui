@@ -18,34 +18,24 @@
 (defn- entity->id [entity]
   {:type (entity "entityType") :name (entity "name")})
 
-;; GAWB-662 / GAWB-715
-;; show Queued first, ignore Launching, and collapse all remaining states into Active
-(defn queue-status-remap [queue-status]
-  (let [status-count-map (queue-status "workflowCountsByStatus")]
-    (assoc queue-status "workflowCountsByStatus"
-      [["Queued" (get status-count-map "Queued" 0)]
-       ["Active" (apply + (vals (dissoc status-count-map "Queued" "Launching")))]])))
 
-(defn queue-status-table-row [[status count]]
+(defn- row [label content]
   [:div {}
-   [:div {:style {:width 100 :float "right"}} status]
-   [:div {:style {:marginRight 10 :float "right"}} count]
-   (common/clear-both)])
+   [:div {:style {:display "inline-block" :width 200 :textAlign "right" :marginRight "1ex"}} label]
+   [:div {:style {:display "inline-block" :width 240}} content]])
 
 (defn queue-status-table [state]
-  (let [error-msg (:submission-queue-error-message @state)
-        queue-status (:submission-queue-status @state)
-        {:strs [estimatedQueueTimeMS workflowsBeforeNextUserWorkflow workflowCountsByStatus]} queue-status]
+  (let [{:keys [queue-status queue-error]} @state
+        {:keys [queue-time queue-position queued active]} queue-status]
     [:div {:style {:marginBottom "1em" :float "right"}}
      (cond
-       error-msg (style/create-server-error-message error-msg)
+       queue-error (style/create-server-error-message queue-error)
        (not queue-status) [comps/Spinner {:text "Loading submission queue status..."}]
        :else
        [:div {}
-        [:div {} "Estimated wait time: " (.humanize (js/moment.duration estimatedQueueTimeMS))]
-        [:div {} (str "There are " workflowsBeforeNextUserWorkflow " workflows ahead of yours in the queue.")]
-        "Queue Status: "
-        (map queue-status-table-row workflowCountsByStatus)])]))
+        (row "Estimated wait time:" (.humanize (js/moment.duration queue-time)))
+        (row "Workflows ahead of yours:" queue-position)
+        (row "Queue status:" (str queued " Queued; " active " Active"))])]))
 
 (defn- render-form [state props]
   [:div {}
@@ -113,8 +103,8 @@
        {:endpoint (endpoints/submissions-queue-status)
         :on-done (fn [{:keys [success? status-text get-parsed-response]}]
                    (if success?
-                     (swap! state assoc :submission-queue-status (queue-status-remap (get-parsed-response)))
-                     (swap! state assoc :submission-queue-error-message status-text)))}))
+                     (swap! state assoc :queue-status (common/queue-status-counts (get-parsed-response)))
+                     (swap! state assoc :queue-error status-text)))}))
    :launch
    (fn [{:keys [props state]}]
      (if-let [entity (:selected-entity @state)]
