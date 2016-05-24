@@ -18,13 +18,12 @@
 (defn- entity->id [entity]
   {:type (entity "entityType") :name (entity "name")})
 
-;; GAWB-662
-;; show Queued first, then Launching, and collapse all remaining states into Active
+;; GAWB-662 / GAWB-715
+;; show Queued first, ignore Launching, and collapse all remaining states into Active
 (defn queue-status-remap [queue-status]
   (let [status-count-map (queue-status "workflowCountsByStatus")]
     (assoc queue-status "workflowCountsByStatus"
       [["Queued" (get status-count-map "Queued" 0)]
-       ["Launching" (get status-count-map "Launching" 0)]
        ["Active" (apply + (vals (dissoc status-count-map "Queued" "Launching")))]])))
 
 (defn queue-status-table-row [[status count]]
@@ -35,16 +34,18 @@
 
 (defn queue-status-table [state]
   (let [error-msg (:submission-queue-error-message @state)
-        queue-status (:submission-queue-status @state)]
+        queue-status (:submission-queue-status @state)
+        {:strs [estimatedQueueTimeMS workflowsBeforeNextUserWorkflow workflowCountsByStatus]} queue-status]
     [:div {:style {:marginBottom "1em" :float "right"}}
      (cond
        error-msg (style/create-server-error-message error-msg)
        (not queue-status) [comps/Spinner {:text "Loading submission queue status..."}]
        :else
        [:div {}
-        [:div {} "Estimated wait time: " (.humanize (js/moment.duration (queue-status "estimatedQueueTimeMS")))]
+        [:div {} "Estimated wait time: " (.humanize (js/moment.duration estimatedQueueTimeMS))]
+        [:div {} (str "There are " workflowsBeforeNextUserWorkflow " workflows ahead of yours in the queue.")]
         "Queue Status: "
-        (map queue-status-table-row (queue-status "workflowCountsByStatus"))])]))
+        (map queue-status-table-row workflowCountsByStatus)])]))
 
 (defn- render-form [state props]
   [:div {}
