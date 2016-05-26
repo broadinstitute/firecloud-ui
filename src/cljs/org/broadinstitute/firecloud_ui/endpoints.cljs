@@ -639,7 +639,12 @@
    :method :get
    :mock-data {"estimatedQueueTimeMS" (rand-int 10000000)
                "workflowCountsByStatus"
-               {"Launching" (rand-int 10000)
-                "Queued" (rand-int 10000)
-                "Some Other Status" (rand-int 5000)
-                "Another Generic Status" (rand-int 5000)}}})
+               {"Queued" (rand-int 10000)
+                "Launching" (rand-int 10000)
+                "Submitted" (rand-int 10000)
+                "Running" (rand-int 1000)
+                "Aborting" (rand-int 1000)
+                "Failed" (rand-int 1000)
+                "Succeeded" (rand-int 1000)
+                "Aborted" (rand-int 1000)
+                "Unknown" (rand-int 1000)}}})

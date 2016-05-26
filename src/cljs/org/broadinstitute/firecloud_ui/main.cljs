@@ -141,6 +141,34 @@
         [nih-link-warning/NihLinkWarning])])})
 
 
+(react/defc GlobalSubmissionStatus
+  {:render
+   (fn [{:keys [state]}]
+     (let [{:keys [status-error status-counts]} @state
+           {:keys [queued active queue-position]} status-counts]
+       [:div {} (str "Workflows: "
+                     (cond status-error status-error
+                           status-counts (str queued " Queued; " active " Active; " queue-position " ahead of yours")
+                           :else "loading..."))]))
+   :component-did-mount
+   (fn [{:keys [this locals]}]
+     ;; Call once for initial load
+     (react/call :load-data this)
+     ;; Add a long-polling call for continuous updates
+     (swap! locals assoc :interval-id (js/setInterval #(react/call :load-data this) (config/submission-status-refresh))))
+   :component-will-unmount
+   (fn [{:keys [locals]}]
+     (js/clearInterval (:interval-id @locals)))
+   :load-data
+   (fn [{:keys [state]}]
+     (endpoints/call-ajax-orch
+       {:endpoint (endpoints/submissions-queue-status)
+        :on-done (fn [{:keys [success? status-text get-parsed-response]}]
+                   (if success?
+                     (swap! state assoc :status-error nil :status-counts (common/queue-status-counts (get-parsed-response)))
+                     (swap! state assoc :status-error status-text :status-counts nil)))}))})
+
+
 (react/defc LoggedIn
   {:render
    (fn [{:keys [this props state]}]
@@ -150,9 +178,11 @@
                      (= page :status))
          (nav/navigate (:nav-context props) "workspaces"))
        [:div {}
-        [:div {:style {:float "right" :fontSize "70%"}}
-         [:a {:style {:marginRight "1ex" :color (:link-blue style/colors)}
-              :href "#profile" } (:name @state)]]
+        [:div {:style {:float "right" :fontSize "70%" :textAlign "right" :marginRight "1ex"}}
+         [:a {:style {:color (:link-blue style/colors)}
+              :href "#profile" }
+          (:name @state)]
+         [GlobalSubmissionStatus]]
         (text-logo)
         (case (:registration-status @state)
           nil [:div {:style {:margin "2em 0" :textAlign "center"}}
@@ -208,7 +238,7 @@
 
 (react/defc LoggedOut
   {:render
-   (fn [{:keys [props]}]
+   (fn [{:keys []}]
      [:div {}
       [:div {:style {:marginBottom "2em"}} (text-logo)]
       [:div {}
@@ -278,7 +308,7 @@
           [LoggedOut])]]
       (footer)])
    :component-did-mount
-   (fn [{:keys [this state locals]}]
+   (fn [{:keys [this]}]
      (react/call :load-config this))
    :component-will-unmount
    (fn [{:keys [locals]}]
