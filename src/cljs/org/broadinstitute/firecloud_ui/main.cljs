@@ -144,12 +144,13 @@
 (react/defc GlobalSubmissionStatus
   {:render
    (fn [{:keys [state]}]
-     (let [{:keys [status-error status-counts]} @state
+     (let [{:keys [status-error status-code status-counts]} @state
            {:keys [queued active queue-position]} status-counts]
-       [:div {} (str "Workflows: "
-                     (cond status-error status-error
-                           status-counts (str queued " Queued; " active " Active; " queue-position " ahead of yours")
-                           :else "loading..."))]))
+       (when-not (= status-code 401) ; to avoid displaying "Workflows: Unauthorized"
+         [:div {} (str "Workflows: "
+                       (cond status-error status-error
+                             status-counts (str queued " Queued; " active " Active; " queue-position " ahead of yours")
+                             :else "loading..."))])))
    :component-did-mount
    (fn [{:keys [this locals]}]
      ;; Call once for initial load
@@ -163,10 +164,10 @@
    (fn [{:keys [state]}]
      (endpoints/call-ajax-orch
        {:endpoint (endpoints/submissions-queue-status)
-        :on-done (fn [{:keys [success? status-text get-parsed-response]}]
+        :on-done (fn [{:keys [success? status-text status-code get-parsed-response]}]
                    (if success?
-                     (swap! state assoc :status-error nil :status-counts (common/queue-status-counts (get-parsed-response)))
-                     (swap! state assoc :status-error status-text :status-counts nil)))}))})
+                     (swap! state assoc :status-error nil :status-code nil :status-counts (common/queue-status-counts (get-parsed-response)))
+                     (swap! state assoc :status-error status-text :status-code status-code :status-counts nil)))}))})
 
 
 (react/defc LoggedIn
@@ -182,7 +183,8 @@
          [:a {:style {:color (:link-blue style/colors)}
               :href "#profile" }
           (:name @state)]
-         [GlobalSubmissionStatus]]
+         (when (= :registered (:registration-status @state))
+           [GlobalSubmissionStatus])]
         (text-logo)
         (case (:registration-status @state)
           nil [:div {:style {:margin "2em 0" :textAlign "center"}}

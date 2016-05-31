@@ -138,7 +138,7 @@
             (.send xhr)))))))
 
 
-(defn ajax-orch [path arg-map & {:keys [service-prefix] :or {service-prefix "/api"}}]
+(defn ajax-orch [path arg-map & {:keys [service-prefix ignore-auth-expiration?] :or {service-prefix "/api"}}]
   (assert (= (subs path 0 1) "/") (str "Path must start with '/': " path))
   (let [on-done (:on-done arg-map)]
     (ajax (assoc
@@ -147,7 +147,7 @@
                            (:headers arg-map))
            :on-done (fn [{:keys [status-code] :as m}]
                       ;; Handle auth token expiration
-                      (if (= status-code 401)
+                      (if (and (= status-code 401) (not ignore-auth-expiration?))
                         (do (delete-access-token-cookie)
                             (.. js/window -location (reload)))
                         (on-done m)))))))
