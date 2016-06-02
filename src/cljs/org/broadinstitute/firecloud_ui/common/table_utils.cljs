@@ -24,7 +24,7 @@
 (react/defc Paginator
   {:render
    (fn [{:keys [props]}]
-     (let [{:keys [pagination-params num-visible-rows]} props
+     (let [{:keys [pagination-params num-visible-rows num-total-rows]} props
            {:keys [current-page rows-per-page]} pagination-params
            num-pages (js/Math.ceil (/ num-visible-rows rows-per-page))
            allow-prev (> current-page 1)
@@ -39,8 +39,8 @@
               [:div {:style layout-style}
                [:b {} (str left-num " - " right-num)]
                (str " of " (pluralize num-visible-rows " result")
-                 (when-not (= num-visible-rows (:num-total-rows props))
-                   (str " (filtered from " (:num-total-rows props) " total)")))]
+                 (when-not (= num-visible-rows num-total-rows)
+                   (str " (filtered from " num-total-rows " total)")))]
               page-component
               (style/create-unselectable
                 :div {:style (merge {:textAlign "center"} layout-style)}

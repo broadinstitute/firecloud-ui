@@ -175,7 +175,6 @@
                     (cons (constantly false)) ;; keeps (apply some-fn) from bombing when the list is empty
                     (apply some-fn))
                   (:workspaces props))
-          :num-total-rows (count (:workspaces props))
           :->row (fn [ws]
                    (let [ws-name (get-workspace-name-string ws)
                          ws-href (let [x (ws "workspace")] (str (x "namespace") ":" (x "name")))
