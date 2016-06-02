@@ -88,16 +88,16 @@
 ;;       :sort-initial (optional)
 ;;         A flag to set the initial column to sort.  Value is either :asc or :desc.  If present on multiple
 ;;         columns, the first one will be used.
-;;   :filters (OPTIONAL)
-;;     A vector of filters to apply to the data. Each item as the following properties:
+;;   :filter-groups (OPTIONAL)
+;;     A vector of filter groups to apply to the data. Each item as the following properties:
 ;;       :text (required)
 ;;         A label for the filter.
 ;;       :pred (required)
 ;;         A function that, given a data item, returns true if that item matches the filter.
 ;;       :count (optional)
 ;;         Use to override the displayed count, which normally uses the :pred
-;;   :selected-filter-index (OPTIONAL)
-;;     Currently selected filter.
+;;   :initial-filter-group-index (OPTIONAL)
+;;     Initially selected filter group.
 ;;   :on-filter-change (OPTIONAL)
 ;;     A function called when the active filter is changed. Passed the new filter index.
 ;;   :data (REQUIRED)
@@ -120,9 +120,9 @@
                    {:backgroundColor (if (even? index) (:background-gray style/colors) "#fff")})})
    :get-initial-state
    (fn [{:keys [props]}]
-     (let [filtered-data (if-let [filters (:filters props)]
+     (let [filtered-data (if-let [filter-groups (:filter-groups props)]
                            (filter
-                             (get-in filters [(or (:selected-filter-index props) 0) :pred])
+                             (get-in filter-groups [(or (:initial-filter-group-index props) 0) :pred])
                              (:data props))
                            (:data props))
            columns (vec (map-indexed (fn [i col]
@@ -137,7 +137,7 @@
         :no-data? (zero? (count filtered-data))
         :columns columns
         :dragging? false
-        :selected-filter-index (or (:selected-filter-index props) 0)
+        :filter-group-index (or (:initial-filter-group-index props) 0)
         :query-params (merge
                         {:current-page 1 :rows-per-page initial-rows-per-page
                          :filter-text ""}
@@ -196,13 +196,12 @@
                                  (assoc-in columns [column-index :visible?] visible?)))))})}])])
                  (when (:filterable? props)
                    [:div {:style {:float "left" :marginLeft "1em"}}
-                    [table-utils/Filterer {:data (:data props)
-                                           :on-filter #(swap! state update-in [:query-params] assoc :filter-text %)}]])
-                 (when (:filters props)
+                    [table-utils/TextFilter {:on-filter #(swap! state update-in [:query-params] assoc :filter-text %)}]])
+                 (when (:filter-groups props)
                    [:div {:style {:float "left" :marginLeft "1em" :marginTop -3}}
-                    [table-utils/FilterBar
-                     (merge (select-keys props [:filters :data])
-                            {:selected-index (:selected-filter-index @state)
+                    [table-utils/FilterGroupBar
+                     (merge (select-keys props [:filter-groups :data])
+                            {:selected-index (:filter-group-index @state)
                              :on-change #(do
                                            (react/call :filter-item-selected this %)
                                            (when-let [f (:on-filter-change props)]
@@ -236,9 +235,10 @@
        (map merge (repeat {:starting-width 100}) (:columns props) (:columns @state)))))
    :filter-item-selected
    (fn [{:keys [props state]} filter-index]
-     (let [selected-filter (nth (:filters props) filter-index)]
-       (swap! state assoc :filtered-data (filter (:pred selected-filter) (:data props))
-                          :selected-filter-index filter-index)))
+     (let [selected-filter (nth (:filter-groups props) filter-index)]
+       (swap! state assoc
+              :filtered-data (filter (:pred selected-filter) (:data props))
+              :filter-group-index filter-index)))
    :get-filtered-data
    (fn [{:keys [props state]}]
      (table-utils/filter-data
@@ -348,10 +348,10 @@
              (merge props
                {:key (gensym)
                 :columns columns
-                :filters (mapv (fn [[type count]] {:text type :count count :pred (constantly true)})
-                           entity-types)
-                :selected-filter-index (max 0 (.indexOf (to-array (map first entity-types))
-                                                selected-entity-type))
+                :filter-groups (mapv (fn [[type count]] {:text type :count count :pred (constantly true)})
+                                     entity-types)
+                :initial-filter-group-index (max 0 (.indexOf (to-array (map first entity-types))
+                                                             selected-entity-type))
                 :on-filter-change (fn [index]
                                     (let [type (first (nth entity-types index))]
                                       (swap! state update-in [:server-response] assoc :selected-entity-type type)

@@ -186,7 +186,7 @@
      (common/clear-both)]))
 
 
-(react/defc Filterer
+(react/defc TextFilter
   {:get-initial-state
    (fn [] {:synced true})
    :render
@@ -205,13 +205,13 @@
      ((:on-filter props) (common/get-text refs "filter-field")))})
 
 
-(react/defc FilterBar
+(react/defc FilterGroupBar
   {:render
    (fn [{:keys [props]}]
      [:div {:style {:display "inline-block"}}
       (map-indexed (fn [index item]
                      (let [first? (zero? index)
-                           last? (= index (dec (count (:filters props))))]
+                           last? (= index (dec (count (:filter-groups props))))]
                        [:div {:style {:float "left" :textAlign "center"
                                       :backgroundColor (if (= index (:selected-index props))
                                                          (:button-blue style/colors)
@@ -231,7 +231,7 @@
                              (or (:count item)
                                  (count (filter (:pred item) (:data props))))
                              ")")]))
-        (:filters props))
+        (:filter-groups props))
       (common/clear-both)])})
 
 

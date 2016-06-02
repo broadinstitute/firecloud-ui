@@ -59,7 +59,7 @@
                                               [:div {} message])
                                          message-list)])}
                  {:header "Workflow ID" :starting-width 300}]
-       :filters
+       :filter-groups
        (vec (cons {:text "All" :pred (constantly true)}
               (map (fn [status] {:text status :pred #(= status (% "status"))})
                 moncommon/wf-all-statuses)))

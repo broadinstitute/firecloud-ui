@@ -270,9 +270,9 @@
                                        (if fields
                                          (apply style/render-entity fields)
                                          "N/A"))}]
-        :filters [{:text "All" :pred (constantly true)}
-                  {:text "Methods Only" :pred #(= :method (:type %))}
-                  {:text "Configs Only" :pred #(= :config (:type %))}]
+        :filter-groups [{:text "All" :pred (constantly true)}
+                        {:text "Methods Only" :pred #(= :method (:type %))}
+                        {:text "Configs Only" :pred #(= :config (:type %))}]
         :data (concat (:methods @state) (:configs @state))
         :->row (fn [item]
                  [(item "entityType")
