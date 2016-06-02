@@ -195,8 +195,7 @@
       (style/create-text-field
         {:ref "filter-field" :placeholder "Filter"
          :style {:backgroundColor (if (:synced @state) "#fff" (:tag-background style/colors))}
-         :onKeyDown (common/create-key-handler
-                      [:enter] #(react/call :apply-filter this))
+         :onKeyDown (common/create-key-handler [:enter] #(react/call :apply-filter this))
          :onChange #(swap! state assoc :synced false)})
       [:span {:style {:paddingLeft "1em"}}]
       [comps/Button {:icon :search :onClick #(react/call :apply-filter this)}]])
@@ -207,24 +206,17 @@
 
 
 (react/defc FilterBar
-  {:apply-filter
-   (fn [{:keys [props state]} & [filter-index]]
-     (let [selected-filter (nth (:filters props) (or filter-index (:selected-index @state)))]
-       (filter (:pred selected-filter) (:data props))))
-   :get-initial-state
+  {:render
    (fn [{:keys [props]}]
-     {:selected-index (or (:selected-index props) 0)})
-   :render
-   (fn [{:keys [this props state]}]
      [:div {:style {:display "inline-block"}}
       (map-indexed (fn [index item]
                      (let [first? (zero? index)
                            last? (= index (dec (count (:filters props))))]
                        [:div {:style {:float "left" :textAlign "center"
-                                      :backgroundColor (if (= index (:selected-index @state))
+                                      :backgroundColor (if (= index (:selected-index props))
                                                          (:button-blue style/colors)
                                                          (:background-gray style/colors))
-                                      :color (when (= index (:selected-index @state)) "white")
+                                      :color (when (= index (:selected-index props)) "white")
                                       :padding "1ex" :minWidth 50
                                       :marginLeft (when-not first? -1)
                                       :border style/standard-line
@@ -233,17 +225,14 @@
                                       :borderTopRightRadius (when last? 8)
                                       :borderBottomRightRadius (when last? 8)
                                       :cursor "pointer"}
-                              :onClick #(swap! state assoc :selected-index index)}
+                              :onClick #((:on-change props) index)}
                         (str (:text item)
-                          " ("
-                          (or (:count item) (count (react/call :apply-filter this index)))
-                          ")")]))
+                             " ("
+                             (or (:count item)
+                                 (count (filter (:pred item) (:data props))))
+                             ")")]))
         (:filters props))
-      (common/clear-both)])
-   :component-did-update
-   (fn [{:keys [props state prev-state]}]
-     (when-not (= (:selected-index @state) (:selected-index prev-state))
-       ((:on-change props) (:selected-index @state))))})
+      (common/clear-both)])})
 
 
 

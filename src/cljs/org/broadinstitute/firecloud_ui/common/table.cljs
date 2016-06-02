@@ -119,13 +119,13 @@
       :row-style (fn [index row]
                    {:backgroundColor (if (even? index) (:background-gray style/colors) "#fff")})})
    :get-initial-state
-   (fn [{:keys [this props]}]
-     (set! (.-filtered-data this) (if-let [filters (:filters props)]
-                                    (filter
-                                     (get-in filters [(or (:selected-filter-index props) 0) :pred])
-                                     (:data props))
-                                    (:data props)))
-     (let [columns (vec (map-indexed (fn [i col]
+   (fn [{:keys [props]}]
+     (let [filtered-data (if-let [filters (:filters props)]
+                           (filter
+                             (get-in filters [(or (:selected-filter-index props) 0) :pred])
+                             (:data props))
+                           (:data props))
+           columns (vec (map-indexed (fn [i col]
                                        {:width (or (:starting-width col) 100)
                                         :visible? (get col :show-initial? true)
                                         :index i
@@ -133,9 +133,11 @@
                                      (:columns props)))
            initial-sort-column (first (filter #(contains? % :sort-initial)
                                               (map merge (:columns props) columns)))]
-       {:no-data? (zero? (count (.-filtered-data this)))
+       {:filtered-data filtered-data
+        :no-data? (zero? (count filtered-data))
         :columns columns
         :dragging? false
+        :selected-filter-index (or (:selected-filter-index props) 0)
         :query-params (merge
                         {:current-page 1 :rows-per-page initial-rows-per-page
                          :filter-text ""}
@@ -150,7 +152,7 @@
      (let [paginator [table-utils/Paginator
                       {:width (:width props)
                        :pagination-params (select-keys (:query-params @state) [:current-page :rows-per-page])
-                       :num-visible-rows (count (.-filtered-data this))
+                       :num-visible-rows (count (:filtered-data @state))
                        :num-total-rows (or (:num-total-rows props) (count (:data props)))
                        :on-change #(swap! state update-in [:query-params] merge %)}]]
        [:div {}
@@ -194,15 +196,15 @@
                                  (assoc-in columns [column-index :visible?] visible?)))))})}])])
                  (when (:filterable? props)
                    [:div {:style {:float "left" :marginLeft "1em"}}
-                    [table-utils/Filterer {:on-filter #(swap! state update-in [:query-params] assoc :filter-text %)}]])
+                    [table-utils/Filterer {:data (:data props)
+                                           :on-filter #(swap! state update-in [:query-params] assoc :filter-text %)}]])
                  (when (:filters props)
                    [:div {:style {:float "left" :marginLeft "1em" :marginTop -3}}
                     [table-utils/FilterBar
-                     (merge (select-keys props [:filters :columns :data])
-                            {:ref "filter-bar"
-                             :selected-index (:selected-filter-index props)
+                     (merge (select-keys props [:filters :data])
+                            {:selected-index (:selected-filter-index @state)
                              :on-change #(do
-                                           (react/call :set-body-rows this)
+                                           (react/call :filter-item-selected this %)
                                            (when-let [f (:on-filter-change props)]
                                              (f %)))})]])
                  (common/clear-both)]]
@@ -232,27 +234,30 @@
       (sort-by
        :display-index
        (map merge (repeat {:starting-width 100}) (:columns props) (:columns @state)))))
+   :filter-item-selected
+   (fn [{:keys [props state]} filter-index]
+     (let [selected-filter (nth (:filters props) filter-index)]
+       (swap! state assoc :filtered-data (filter (:pred selected-filter) (:data props))
+                          :selected-filter-index filter-index)))
    :get-filtered-data
-   (fn [{:keys [props state refs]}]
+   (fn [{:keys [props state]}]
      (table-utils/filter-data
-      (if (@refs "filter-bar")
-        (react/call :apply-filter (@refs "filter-bar"))
-        (:data props))
-      (:->row props) (:columns props) (get-in @state [:query-params :filter-text])))
+       (:data props)
+       (:->row props) (:columns props) (get-in @state [:query-params :filter-text])))
    :get-body-rows
-   (fn [{:keys [this state props]}]
-     (if (zero? (count (.-filtered-data this)))
+   (fn [{:keys [state props]}]
+     (if (zero? (count (:filtered-data @state)))
        []
        (let [{:keys [current-page rows-per-page key-fn sort-order]} (:query-params @state)
-             rows (map (:->row props) (.-filtered-data this))
+             rows (map (:->row props) (:filtered-data @state))
              sorted-data (if key-fn (sort-by key-fn rows) rows)
              ordered-data (if (= :desc sort-order) (reverse sorted-data) sorted-data)]
          ;; realize this sequence so errors can be caught early
          (doall (take rows-per-page (drop (* (dec current-page) rows-per-page) ordered-data))))))
    :set-body-rows
    (fn [{:keys [this state]}]
-     (set! (.-filtered-data this) (react/call :get-filtered-data this))
-     (swap! state assoc :no-data? (zero? (count (.-filtered-data this)))))
+     (let [new-data (react/call :get-filtered-data this)]
+       (swap! state assoc :filtered-data new-data :no-data? (zero? (count new-data)))))
    :component-did-mount
    (fn [{:keys [this state]}]
      (set! (.-onMouseMoveHandler this)
