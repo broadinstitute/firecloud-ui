@@ -22,27 +22,14 @@
 
 
 (react/defc Paginator
-  {:get-current-slice
-   (fn [{:keys [state]}]
-     [(:current-page @state) (:rows-per-page @state)])
-   :set-num-rows-visible
-   (fn [{:keys [state]} n]
-     (when (not= n (:num-rows-visible @state))
-       (swap! state assoc :num-rows-visible n :current-page 1)))
-   :get-initial-state
+  {:render
    (fn [{:keys [props]}]
-     {:rows-per-page (:initial-rows-per-page props)
-      :current-page 1
-      :num-rows-visible (:num-total-rows props)})
-   :render
-   (fn [{:keys [props state]}]
-     (let [rows-per-page (:rows-per-page @state)
-           current-page (:current-page @state)
-           num-rows-visible (:num-rows-visible @state)
-           num-pages (js/Math.ceil (/ num-rows-visible rows-per-page))
+     (let [{:keys [pagination-params num-visible-rows]} props
+           {:keys [current-page rows-per-page]} pagination-params
+           num-pages (js/Math.ceil (/ num-visible-rows rows-per-page))
            allow-prev (> current-page 1)
            allow-next (< current-page num-pages)
-           right-num (min num-rows-visible (* current-page rows-per-page))
+           right-num (min num-visible-rows (* current-page rows-per-page))
            left-num (if (zero? right-num) 0 (inc (* (dec current-page) rows-per-page)))]
        [:div {:style {:border "1px solid #ebebeb" :padding "1em"}}
         (let [layout-style (if (= :narrow (:width props))
@@ -51,8 +38,8 @@
               view-component
               [:div {:style layout-style}
                [:b {} (str left-num " - " right-num)]
-               (str " of " (pluralize num-rows-visible " result")
-                 (when-not (= num-rows-visible (:num-total-rows props))
+               (str " of " (pluralize num-visible-rows " result")
+                 (when-not (= num-visible-rows (:num-total-rows props))
                    (str " (filtered from " (:num-total-rows props) " total)")))]
               page-component
               (style/create-unselectable
@@ -62,7 +49,7 @@
                                         (:button-blue style/colors)
                                         (:border-gray style/colors))
                                :cursor (when allow-prev "pointer")}
-                       :onClick (when allow-prev #(swap! state update-in [:current-page] dec))}
+                       :onClick (when allow-prev #((:on-change props) (update-in pagination-params [:current-page] dec)))}
                  (icons/font-icon {:style {:fontSize "70%"}} :angle-left)
                  [:span {:style {:paddingLeft "1em"}} "Prev"]]
                 [:span {}
@@ -73,7 +60,7 @@
                                          :color (if selected? "white" (:button-blue style/colors))
                                          :borderRadius (when selected? "100%")
                                          :cursor (when-not selected? "pointer")}
-                                 :onClick (when-not selected? #(swap! state assoc :current-page n))}
+                                 :onClick (when-not selected? #((:on-change props) (assoc-in pagination-params [:current-page] n)))}
                            n]))
                    (create-page-range current-page num-pages))]
                 [:div {:style {:display "inline-block" :padding "0.55em 0.9em"
@@ -81,7 +68,7 @@
                                         (:button-blue style/colors)
                                         (:border-gray style/colors))
                                :cursor (when allow-next "pointer")}
-                       :onClick (when allow-next #(swap! state update-in [:current-page] inc))}
+                       :onClick (when allow-next #((:on-change props) (update-in pagination-params [:current-page] inc)))}
                  [:span {:style {:paddingRight "1em"}} "Next"]
                  (icons/font-icon {:style {:fontSize "70%"}} :angle-right)])
               rows-component
@@ -89,19 +76,13 @@
                "Display"
                (style/create-select
                  {:style {:width 60 :margin "0em 1em"}
-                  :onChange #(swap! state assoc
-                              :rows-per-page (nth rows-per-page-options (-> % .-target .-value js/parseInt))
-                              :current-page 1)}
+                  :onChange #((:on-change props) {:rows-per-page (nth rows-per-page-options (-> % .-target .-value js/parseInt))
+                                                  :current-page 1})}
                  rows-per-page-options)
                "rows per page"]]
           [:div {:style {:fontSize 13 :lineHeight 1.5 :padding "0px 48px"}}
            view-component page-component rows-component
-           (common/clear-both)])]))
-   :component-did-update
-   (fn [{:keys [props state prev-state]}]
-     (when-not (and (apply = (map :rows-per-page [prev-state @state]))
-                    (apply = (map :current-page [prev-state @state])))
-       ((:onChange props))))})
+           (common/clear-both)])]))})
 
 
 (defn- render-cell [{:keys [width onResizeMouseDown onSortClick sortOrder] :as props}]
@@ -133,15 +114,9 @@
 
 
 (react/defc Body
-  {:set-rows
-   (fn [{:keys [state]} rows]
-     (swap! state assoc :rows rows))
-   :get-initial-state
+  {:render
    (fn [{:keys [props]}]
-     {:rows (:initial-rows props)})
-   :render
-   (fn [{:keys [props state]}]
-     (if (zero? (count (:rows @state)))
+     (if (zero? (count (:rows props)))
        nil
        [:div {:style (merge {:fontSize "80%" :fontWeight 500} (:body-style props))}
         (map-indexed
@@ -163,60 +138,57 @@
                                                    (:cell-content-style props))})))
                  (:columns props))
                (common/clear-both)]))
-         (:rows @state))]))})
+         (:rows props))]))})
 
 
-(defn render-header [state props this after-update]
-  [:div {:style (merge
-                  {:fontWeight 500 :fontSize "80%"
-                   :color "#fff" :backgroundColor (:header-darkgray style/colors)}
-                  (:header-row-style props))}
-   (map-indexed
-     (fn [display-index column]
-       (let [i (:index column)
-             onResizeMouseDown
-             (when (get column :resizable? (:resizable-columns? props))
-               (fn [e]
-                 (swap! state assoc :dragging? true :mouse-x (.-clientX e) :drag-column i
-                   :saved-user-select-state (common/disable-text-selection))))]
-         (render-cell
-           {:width (:width column)
-            :content (:header column)
-            :cell-style (when onResizeMouseDown {:borderRight (str "1px solid " (or (:resize-tab-color props) "#777777"))
-                                                 :marginRight -1})
-            :cell-padding-left (or (:cell-padding-left props) 0)
-            :content-container-style (merge
-                                      {:padding (str "0.8em 0 0.8em "
-                                                     (or (:cell-padding-left props) 0))}
-                                      (:header-style props))
-            :onResizeMouseDown onResizeMouseDown
-            :onResizeDoubleClick #(swap! state assoc-in [:columns i :width]
-                                         (:starting-width column))
-            :onSortClick (when (and (or (:sort-by column)
-                                        (:sortable-columns? props))
-                                    (not= :none (:sort-by column)))
-                           (fn [e]
-                             (if (= i (:sort-column @state))
-                               (case (:sort-order @state)
-                                 :asc (swap! state assoc :sort-order :desc)
-                                 :desc (swap! state dissoc :sort-column :sort-order :key-fn))
-                               (swap! state assoc :sort-column i :sort-order :asc
-                                 :key-fn (let [sort-fn (or (:sort-by column) identity)]
-                                           (if (= sort-fn :text)
-                                             (fn [row] ((:as-text column) (nth row i)))
-                                             (fn [row] (sort-fn (nth row i)))))))
-                             (after-update #(react/call :set-body-rows this))))
-            :sortOrder (when (= i (:sort-column @state)) (:sort-order @state))})))
-     (filter :visible? (react/call :get-ordered-columns this)))
-   (common/clear-both)])
+(defn render-header [state props this]
+  (let [{:keys [sort-column sort-order]} (:query-params @state)]
+    [:div {:style (merge
+                    {:fontWeight 500 :fontSize "80%"
+                     :color "#fff" :backgroundColor (:header-darkgray style/colors)}
+                    (:header-row-style props))}
+     (map
+       (fn [column]
+         (let [i (:index column)
+               onResizeMouseDown
+               (when (get column :resizable? (:resizable-columns? props))
+                 (fn [e]
+                   (swap! state assoc :dragging? true :mouse-x (.-clientX e) :drag-column i
+                          :saved-user-select-state (common/disable-text-selection))))]
+           (render-cell
+             {:width (:width column)
+              :content (:header column)
+              :cell-style (when onResizeMouseDown {:borderRight (str "1px solid " (or (:resize-tab-color props) "#777777"))
+                                                   :marginRight -1})
+              :cell-padding-left (or (:cell-padding-left props) 0)
+              :content-container-style (merge
+                                         {:padding (str "0.8em 0 0.8em "
+                                                        (or (:cell-padding-left props) 0))}
+                                         (:header-style props))
+              :onResizeMouseDown onResizeMouseDown
+              :onResizeDoubleClick #(swap! state assoc-in [:columns i :width]
+                                           (:starting-width column))
+              :onSortClick (when (and (or (:sort-by column)
+                                          (:sortable-columns? props))
+                                      (not= :none (:sort-by column)))
+                             (fn [e]
+                               (if (= i sort-column)
+                                 (case sort-order
+                                   :asc (swap! state update-in [:query-params] assoc :sort-order :desc)
+                                   :desc (swap! state update-in [:query-params] dissoc :sort-column :sort-order :key-fn))
+                                 (swap! state update-in [:query-params] assoc :sort-column i :sort-order :asc
+                                        :key-fn (let [sort-fn (or (:sort-by column) identity)]
+                                                  (if (= sort-fn :text)
+                                                    (fn [row] ((:as-text column) (nth row i)))
+                                                    (fn [row] (sort-fn (nth row i)))))))))
+              :sortOrder (when (= i sort-column) sort-order)})))
+       (filter :visible? (react/call :get-ordered-columns this)))
+     (common/clear-both)]))
 
 
 (react/defc Filterer
-  {:get-filter-text
-   (fn [{:keys [refs]}]
-     (common/get-text refs "filter-field"))
-   :get-initial-state
-   (fn [] {:initial true :synced true})
+  {:get-initial-state
+   (fn [] {:synced true})
    :render
    (fn [{:keys [state this]}]
      [:div {}
@@ -225,15 +197,13 @@
          :style {:backgroundColor (if (:synced @state) "#fff" (:tag-background style/colors))}
          :onKeyDown (common/create-key-handler
                       [:enter] #(react/call :apply-filter this))
-         :onChange #(swap! state assoc :initial false :synced false)})
+         :onChange #(swap! state assoc :synced false)})
       [:span {:style {:paddingLeft "1em"}}]
       [comps/Button {:icon :search :onClick #(react/call :apply-filter this)}]])
    :apply-filter
-   (fn [{:keys [this state props]}]
+   (fn [{:keys [state props refs]}]
      (swap! state assoc :synced true)
-     (let [text (react/call :get-filter-text this)]
-       (when (empty? text) (swap! state assoc :initial true))
-       ((:onFilter props) text)))})
+     ((:on-filter props) (common/get-text refs "filter-field")))})
 
 
 (react/defc FilterBar
