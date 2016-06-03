@@ -236,6 +236,28 @@
            :attributes {}})
      (range (rand-int 20)))})
 
+(defn get-entities-paginated [workspace-id type query-parameters]
+  (assert (= #{"page" "pageSize" "sortField" "sortDirection" "filterTerms"}
+             (set (keys query-parameters)))
+          (str "Malformed query parameters: " query-parameters))
+  {:path (str "/workspaces/" (ws-path workspace-id) "/entityQuery/" type "?"
+              (clojure.string/join "&" (keep (fn [[k v]]
+                                               (some->> v str not-empty (str k "=")))
+                                             query-parameters)))
+   :method :get
+   :mock-data
+   (let [{:strs [page pageSize]} query-parameters]
+     {:parameters query-parameters
+      :resultMetadata {:unfilteredCount 5678
+                       :filteredCount 1234
+                       :filteredPageCount (int (/ 1234 pageSize))}
+      :results (map (fn [i]
+                      {:entityType type
+                       :name (str "entity" (inc i))
+                       :attributes {}})
+                    (map #(-> % (+ 1 (* (dec page) pageSize)))
+                         (range pageSize)))})})
+
 (defn get-entities-by-type [workspace-id]
   {:path (str "/workspaces/" (ws-path workspace-id) "/entities_with_type")
    :method :get

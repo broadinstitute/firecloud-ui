@@ -25,9 +25,23 @@
 ;; Table component with specifiable style and column behaviors.
 ;;
 ;; Properties:
-;;   :cell-padding-left (optional, default 16px)
-;;     A CSS padding-left value to apply to each cell
-;;   :paginator-space (optional, default 24)
+;;   :pagination (optional, default :internal)
+;;     Defines how the table is paginated.  Options are:
+;;       :internal -- data is given via the :data property and client-side pagination is provided
+;;       (fn [query-params callback] ...) -- paginate externally (e.g. server-side) by providing a function
+;;           that takes the query parameters and sets the data via a callback.
+;;           query-params structure:
+;;             {:current-page <1-indexed int>
+;;              :rows-per-page <positive int>
+;;              :filter-text <possibly empty string>
+;;              :sort-column <0-indexed int>
+;;              :sort-order <:asc or :desc>
+;;              :filter-group-index <the selected 0-indexed filter group, ignore if filter groups not used>}
+;;           To complete, call `callback` providing:
+;;             {:group-count <size of the filter group (size of all data if not using filter groups)>
+;;              :filtered-count <number of rows post-filtering>
+;;              :rows <the row data>}
+;;   :paginator-space (optional, default 24 or unused)
 ;;     A CSS padding value used to separate the table and paginator.
 ;;   :resizable-columns? (optional, default true)
 ;;     Fallback value for column resizing.
@@ -37,6 +51,9 @@
 ;;     Controls whether or not columns are reorderable.  When true, a reorder widget is presented
 ;;   :sortable-columns? (optional, default true)
 ;;     Fallback value for column sorting.
+;;   :always-sort? (optional, default false)
+;;     Set to 'true' to force a column to always be sorting.  If no :initial-sort column is specified
+;;     then the first column will sort :asc initially.
 ;;   :filterable? (optional, default true)
 ;;     Controls whether or not columns are filterable.  When true, a filter widget is presented
 ;;   :empty-message (optional, default "There are no rows to display.")
@@ -47,6 +64,8 @@
 ;;     Style to apply to each row.  Value is either a style map, or a function taking the index and row
 ;;     data and returning a style map.
 ;;     When omitted, default properties create alternating white and gray backgrounds.
+;;   :cell-padding-left (optional, default 16px)
+;;     A CSS padding-left value to apply to each cell
 ;;   :header-row-style (optional)
 ;;     Style to apply to the header row.  When omitted, style is a dark gray background with bold white text
 ;;   :toolbar (optional)
@@ -88,21 +107,21 @@
 ;;       :sort-initial (optional)
 ;;         A flag to set the initial column to sort.  Value is either :asc or :desc.  If present on multiple
 ;;         columns, the first one will be used.
-;;   :filter-groups (OPTIONAL)
+;;   :filter-groups (optional)
 ;;     A vector of filter groups to apply to the data. Each item as the following properties:
-;;       :text (required)
+;;       :text (REQUIRED)
 ;;         A label for the filter.
-;;       :pred (required)
+;;       :pred (REQUIRED)
 ;;         A function that, given a data item, returns true if that item matches the filter.
 ;;       :count (optional)
 ;;         Use to override the displayed count, which normally uses the :pred
-;;   :initial-filter-group-index (OPTIONAL)
+;;   :initial-filter-group-index (optional)
 ;;     Initially selected filter group.
-;;   :on-filter-change (OPTIONAL)
+;;   :on-filter-change (optional)
 ;;     A function called when the active filter is changed. Passed the new filter index.
-;;   :data (REQUIRED)
+;;   :data (REQUIRED unless paginating externally)
 ;;     A sequence items that will appear in the table.
-;;   :num-total-rows (OPTIONAL)
+;;   :num-total-rows (optional)
 ;;     The total number of rows that would normally be shown in the table.  Specify if you are externally
 ;;     filtering; this value will show up in the paginator.
 ;;   :->row (REQUIRED)
@@ -110,12 +129,14 @@
 (react/defc Table
   {:get-default-props
    (fn []
-     {:cell-padding-left "16px"
+     {:pagination :internal
       :paginator-space 24
       :resizable-columns? true
       :reorderable-columns? true
       :sortable-columns? true
+      :always-sort? false
       :filterable? true
+      :cell-padding-left "16px"
       :row-style (fn [index row]
                    {:backgroundColor (if (even? index) (:background-gray style/colors) "#fff")})})
    :get-initial-state
@@ -126,8 +147,10 @@
                                         :index i
                                         :display-index i})
                                      (:columns props)))
-           initial-sort-column (first (filter #(contains? % :sort-initial)
-                                              (map merge (:columns props) columns)))]
+           initial-sort-column (or (first (filter #(contains? % :sort-initial)
+                                                  (map merge (:columns props) columns)))
+                                   (when (:always-sort? props)
+                                     (first (map merge (:columns props) columns))))]
        {:columns columns
         :dragging? false
         :filter-group-index (or (:initial-filter-group-index props) 0)
@@ -136,12 +159,12 @@
                          :filter-text ""}
                         (when initial-sort-column
                           {:sort-column (:index initial-sort-column)
-                           :sort-order (:sort-initial initial-sort-column)
+                           :sort-order (or (:sort-initial initial-sort-column) :asc) ; default needed when forcing sort
                            :key-fn (if-let [sorter (:sort-by initial-sort-column)]
                                      (fn [row] (sorter (nth row (:index initial-sort-column))))
                                      (fn [row] (nth row (:index initial-sort-column))))}))}))
    :render
-   (fn [{:keys [this state props refs]}]
+   (fn [{:keys [this state props refs after-update]}]
      [:div {}
       (when (or (:filterable? props) (:reorderable-columns? props) (:toolbar props))
         (let [built-in
@@ -189,10 +212,11 @@
                   [table-utils/FilterGroupBar
                    (merge (select-keys props [:filter-groups :data])
                           {:selected-index (:filter-group-index @state)
-                           :on-change #(do
-                                        (react/call :refresh-rows this %)
+                           :on-change (fn [new-index]
+                                        (swap! state assoc :filter-group-index new-index)
+                                        (after-update #(react/call :refresh-rows this))
                                         (when-let [f (:on-filter-change props)]
-                                          (f %)))})]])
+                                          (f new-index)))})]])
                (common/clear-both)]]
           ((or (:toolbar props) identity) built-in)))
       [:div {}
@@ -227,28 +251,36 @@
        :display-index
        (map merge (repeat {:starting-width 100}) (:columns props) (:columns @state)))))
    :refresh-rows
-   (fn [{:keys [props state]} & [filter-group-index]]
-     (let [->row (:->row props)
-           {:keys [current-page rows-per-page key-fn sort-order filter-text]} (:query-params @state)
-           filter-group-index (or filter-group-index (:filter-group-index @state))
-           grouped-data (if-not (:filter-groups props)
-                          (:data props)
-                          (filter (:pred (get-in props [:filter-groups filter-group-index]))
-                                  (:data props)))
-           filtered-data (if-let [txt (not-empty filter-text)]
-                           (table-utils/filter-data grouped-data ->row (:columns props) txt)
-                           grouped-data)
-           rows (map ->row filtered-data)
-           sorted-rows (if key-fn (sort-by key-fn rows) rows)
-           ordered-rows (if (= :desc sort-order) (reverse sorted-rows) sorted-rows)
-           ;; realize this sequence so errors can be caught early:
-           clipped-rows (doall (take rows-per-page (drop (* (dec current-page) rows-per-page) ordered-rows)))]
-       (swap! state assoc
-              :filter-group-index filter-group-index
-              :grouped-count (count grouped-data)
-              :filtered-count (count filtered-data)
-              :display-rows clipped-rows
-              :no-data? (empty? clipped-rows))))
+   (fn [{:keys [props state]}]
+     (let [pagination (:pagination props)]
+       (if (fn? pagination)
+         (pagination (merge (select-keys @state [:filter-group-index])
+                            (dissoc (:query-params @state) :key-fn))
+                     (fn [{:keys [group-count filtered-count rows]}]
+                       (swap! state assoc
+                              :grouped-count group-count
+                              :filtered-count filtered-count
+                              :display-rows (map (:->row props) rows)
+                              :no-data? (empty? rows))))
+         (let [->row (:->row props)
+               {:keys [current-page rows-per-page key-fn sort-order filter-text]} (:query-params @state)
+               grouped-data (if-not (:filter-groups props)
+                              (:data props)
+                              (filter (:pred (get-in props [:filter-groups (:filter-group-index @state)]))
+                                      (:data props)))
+               filtered-data (if-let [txt (not-empty filter-text)]
+                               (table-utils/filter-data grouped-data ->row (:columns props) txt)
+                               grouped-data)
+               rows (map ->row filtered-data)
+               sorted-rows (if key-fn (sort-by key-fn rows) rows)
+               ordered-rows (if (= :desc sort-order) (reverse sorted-rows) sorted-rows)
+               ;; realize this sequence so errors can be caught early:
+               clipped-rows (doall (take rows-per-page (drop (* (dec current-page) rows-per-page) ordered-rows)))]
+           (swap! state assoc
+                  :grouped-count (count grouped-data)
+                  :filtered-count (count filtered-data)
+                  :display-rows clipped-rows
+                  :no-data? (empty? clipped-rows))))))
    :component-did-mount
    (fn [{:keys [this state]}]
      (react/call :refresh-rows this)
@@ -294,30 +326,27 @@
        (= (set (keys (first attr-value))) #{"entityType" "entityName"})))
 
 (react/defc EntityTable
-  {:get-entity-list
-   (fn [{:keys [state]}]
-     (get-in @state [:server-response :entity-list]))
-   :get-default-props
+  {:get-default-props
    (fn []
      {:empty-message "There are no entities to display."
       :attribute-renderer table-utils/default-render})
    :render
    (fn [{:keys [props state this]}]
      (let [{:keys [server-response]} @state
-           {:keys [server-error entity-types selected-entity-type entity-list]} server-response]
+           {:keys [server-error entity-metadata entity-types selected-entity-type]} server-response]
        [:div {}
         (when (:loading-entities? @state)
           [comps/Blocker {:banner "Loading entities..."}])
         (cond
           server-error (style/create-server-error-message server-error)
-          (nil? entity-types) [:div {:style {:textAlign "center"}} [comps/Spinner {:text "Retrieving entity types..."}]]
+          (nil? entity-metadata) [:div {:style {:textAlign "center"}} [comps/Spinner {:text "Retrieving entity types..."}]]
           :else
-          (let [attribute-keys (->> entity-list (map #(-> (% "attributes") keys set)) (apply union))
-                attr-col-width (->> attribute-keys count (/ 1000) int (min 400) (max 100))
-                entity-column [{:header "Entity Name" :starting-width 200
-                                :as-text #(% "name") :sort-by :text
-                                :content-renderer (or (:entity-name-renderer props)
-                                                      (fn [entity] (entity "name")))}]
+          (let [attributes (get-in entity-metadata [selected-entity-type "attributeNames"])
+                attr-col-width (->> attributes count (/ 1000) int (min 400) (max 100))
+                entity-column {:header "Entity Name" :starting-width 200
+                               :as-text #(% "name") :sort-by :text
+                               :content-renderer (or (:entity-name-renderer props)
+                                                     (fn [entity] (entity "name")))}
                 attr-columns (map (fn [k] {:header k :starting-width attr-col-width :sort-by :text
                                            :as-text
                                            (fn [attr-value]
@@ -329,60 +358,60 @@
                                            (fn [attr-value]
                                              (cond
                                                (is-single-ref? attr-value) (attr-value "entityName")
-                                               (is-ref-list? attr-value) (join ", " (map #(% "entityName") attr-value))
+                                               (is-ref-list? attr-value) (str (count attr-value) " items: "
+                                                                              (join ", " (map #(% "entityName") attr-value)))
                                                :else ((:attribute-renderer props) attr-value)))})
-                                  attribute-keys)
-                [count-column count-data] (common/make-count-column selected-entity-type)
-                columns (if count-column
-                          (concat entity-column [count-column] attr-columns)
-                          (concat entity-column attr-columns))]
+                                  attributes)
+                columns (vec (cons entity-column attr-columns))]
             [Table
              (merge props
                {:key (gensym)
                 :columns columns
-                :filter-groups (mapv (fn [[type count]] {:text type :count count :pred (constantly true)})
-                                     entity-types)
-                :initial-filter-group-index (max 0 (.indexOf (to-array (map first entity-types))
-                                                             selected-entity-type))
+                :always-sort? true
+                :pagination (react/call :pagination this columns)
+                :filter-groups (map (fn [type]
+                                      {:text type :count (get-in entity-metadata [type "count"]) :pred (constantly true)})
+                                    entity-types)
+                :initial-filter-group-index (utils/index-of entity-types selected-entity-type)
                 :on-filter-change (fn [index]
-                                    (let [type (first (nth entity-types index))]
+                                    (let [type (nth entity-types index)]
                                       (swap! state update-in [:server-response] assoc :selected-entity-type type)
-                                      (react/call :load-type this type)
                                       (when-let [func (:on-filter-change props)]
                                         (func type))))
-                :data entity-list
-                :->row (if count-column
-                         (fn [m]
-                           (vec (concat [m]
-                                        [(count-data m)]
-                                        (map #(get-in m ["attributes" %]) attribute-keys))))
-                         (fn [m]
-                           (vec (concat [m]
-                                        (map #(get-in m ["attributes" %]) attribute-keys)))))})]))]))
+                :->row (fn [m]
+                         (->> attributes (map #(get-in m ["attributes" %])) (cons m) vec))})]))]))
    :component-did-mount
-   (fn [{:keys [props state this]}]
+   (fn [{:keys [props state]}]
      (endpoints/call-ajax-orch
        {:endpoint (endpoints/get-entity-types (:workspace-id props))
         :on-done (fn [{:keys [success? get-parsed-response]}]
                    (if success?
-                     (let [types (vec (get-parsed-response))
-                           first-type (or (:initial-entity-type props) (first (first types)))]
+                     (let [metadata (get-parsed-response)
+                           entity-types (vec (keys metadata))]
                        (swap! state update-in [:server-response]
-                         assoc :entity-types types :selected-entity-type first-type)
-                       (react/call :load-type this first-type))
+                         assoc :entity-metadata metadata
+                               :entity-types entity-types
+                               :selected-entity-type (or (:initial-entity-type props) (first entity-types))))
                      (swap! state update-in [:server-response]
                        assoc :server-error (get-parsed-response))))}))
-   :load-type
-   (fn [{:keys [props state]} type]
-     (if-not type
-       (swap! state update-in [:server-response] assoc :entity-list [])
-       (do
-         (swap! state assoc :loading-entities? true)
-         (endpoints/call-ajax-orch
-           {:endpoint (endpoints/get-entities-of-type (:workspace-id props) type)
-            :on-done (fn [{:keys [success? get-parsed-response]}]
-                       (swap! state update-in [:server-response]
-                         assoc (if success? :entity-list :server-error) (get-parsed-response))
-                       (swap! state dissoc :loading-entities?)
-                       (when-let [func (:on-filter-change props)]
-                         (func type)))}))))})
+   :pagination
+   (fn [{:keys [props state]} columns]
+     (let [{{:keys [entity-types]} :server-response} @state]
+       (fn [{:keys [current-page rows-per-page filter-text sort-column sort-order filter-group-index]} callback]
+         (let [type (nth entity-types filter-group-index)
+               sort-field (when (pos? sort-column)
+                            (get-in columns [sort-column :header]))]
+           (endpoints/call-ajax-orch
+             {:endpoint (endpoints/get-entities-paginated (:workspace-id props) type
+                                                          {"page" current-page
+                                                           "pageSize" rows-per-page
+                                                           "filterTerms" filter-text
+                                                           "sortField" sort-field
+                                                           "sortDirection" (name sort-order)})
+              :on-done (fn [{:keys [success? get-parsed-response]}]
+                         (if success?
+                           (let [{:strs [results]
+                                  {:strs [unfilteredCount filteredCount]} "resultMetadata"} (get-parsed-response)]
+                             (callback {:group-count unfilteredCount
+                                        :filtered-count filteredCount
+                                        :rows results}))))})))))})

@@ -25,7 +25,7 @@
      {:crumbs [{:text "Choose Source"
                 :onClick #(react/call :back this)}]})
    :render
-   (fn [{:keys [state props refs]}]
+   (fn [{:keys [state props]}]
      (let [last-crumb-id (:id (second (:crumbs @state)))
            add-crumb (fn [id text]
                        (swap!
@@ -156,17 +156,18 @@
 
 (react/defc WorkspaceData
   {:refresh
-   (fn [{:keys [state refs this]} & [entity-type]]
+   (fn [{:keys [state this]} & [entity-type]]
      (swap! state dissoc :server-response)
      (react/call :load this entity-type))
    :render
-   (fn [{:keys [props state refs this]}]
+   (fn [{:keys [props state this]}]
      (let [workspace-id (:workspace-id props)
            server-response (:server-response @state)
            {:keys [server-error locked? this-realm]} server-response]
        [:div {:style {:padding "1em"}}
-        (when (:deleting? @state)
-          [comps/Blocker {:banner "Deleting..."}])
+        ;; TODO: Functionality disabled until GAWB-422 is complete
+        ;(when (:deleting? @state)
+        ;  [comps/Blocker {:banner "Deleting..."}])
         (when (:show-import? @state)
           [dialog/Dialog {:dismiss-self #(swap! state dissoc :show-import?)
                           :width "80%"
@@ -176,11 +177,12 @@
                                            :workspace-id workspace-id
                                            :this-realm this-realm
                                            :reload-data-tab #(react/call :refresh this %)}])}])
-        (when (:show-delete? @state)
-          [DataDeleter {:dismiss-self #(swap! state dissoc :show-delete?)
-                        :get-entity-list #(react/call :get-entity-list (@refs "entity-table"))
-                        :workspace-id workspace-id
-                        :reload #(react/call :refresh this)}])
+        ;; TODO: Functionality disabled until GAWB-422 is complete
+        ;(when (:show-delete? @state)
+        ;  [DataDeleter {:dismiss-self #(swap! state dissoc :show-delete?)
+        ;                :get-entity-list #(react/call :get-entity-list (@refs "entity-table"))
+        ;                :workspace-id workspace-id
+        ;                :reload #(react/call :refresh this)}])
         (cond
           server-error
           (style/create-server-error-message server-error)
