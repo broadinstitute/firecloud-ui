@@ -13,13 +13,12 @@
    :validate
    (fn [{:keys [props state this]}]
      (let [text (react/call :get-text this)
-           fails (keep (fn [p] (when-not ((:test p) text) (:message p))) (:predicates props))]
+           fails (keep (fn [p] (when-not ((:test p) text) (:message p))) (filter some? (:predicates props)))]
        (when-not (empty? fails)
          (swap! state assoc :invalid true)
          fails)))
    :render
    (fn [{:keys [state props refs]}]
-     (assert (not (empty? (:predicates props))) "No predicates for input/TextField")
      (style/create-text-field {:ref "textfield"
                                :style (merge (or (:style props) {})
                                         (when (:invalid @state)
