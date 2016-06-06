@@ -104,7 +104,7 @@
 (react/defc Form
   {:get-field-keys
    (fn []
-     (list :firstName :lastName :title :institute :institutionalProgram :programLocationCity
+     (list :firstName :lastName :title :contactEmail :institute :institutionalProgram :programLocationCity
            :programLocationState :programLocationCountry :pi))
    :get-values
    (fn [{:keys [state refs this]}]
@@ -121,6 +121,7 @@
             (react/call :render-field this :firstName "First Name" true)
             (react/call :render-field this :lastName "Last Name" true)
             (react/call :render-field this :title "Title" true)
+            (react/call :render-field this :contactEmail "Contact Email (to receive FireCloud notifications)" false true)
             (react/call :render-field this :institute "Institute" true)
             (react/call :render-field this :institutionalProgram "Institutional Program" true)
             [:div {}
@@ -155,13 +156,14 @@
                           :predicates [(when required (input/nonempty label))]
                           :onChange #(swap! state assoc-in [:values key] (-> % .-target .-value))}]])
    :render-field
-   (fn [{:keys [state]} key label required]
+   (fn [{:keys [state]} key label required valid-email-or-empty]
      [:div {:style {:clear "both"}}
       [:label {}
        (style/create-form-label (str (when required "*") label ":"))
        [input/TextField {:defaultValue (get-in @state [:values key])
                          :ref (name key) :placeholder (get-in @state [:values key])
-                         :predicates [(when required (input/nonempty label))]
+                         :predicates [(when required (input/nonempty label))
+                                      (when valid-email-or-empty (input/valid-email-or-empty label))]
                          :onChange #(swap! state assoc-in [:values key] (-> % .-target .-value))}]]])
    :component-did-mount
    (fn [{:keys [state]}]
@@ -203,7 +205,7 @@
                                :onClick #(react/call :save this)}])]]))
    :save
    (fn [{:keys [this props state refs]}]
-     (swap! state (fn [s] (assoc (dissoc s :server-error) :in-progress? true)))
+     (swap! state (fn [s] (assoc (dissoc s :server-error :validation-errors) :in-progress? true)))
      (let [values (react/call :get-values (@refs "form"))
            validation-errors (react/call :validation-errors (@refs "form"))]
        (cond
