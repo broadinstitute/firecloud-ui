@@ -211,7 +211,7 @@
         (fn [{:keys [success? status-text get-parsed-response]}]
           (let [parsed-values (when success? (common/parse-profile (get-parsed-response)))]
             (cond
-              (and success? (>= (int (:isRegistrationComplete parsed-values)) 2))
+              (and success? (>= (int (:isRegistrationComplete parsed-values)) 3))
               (swap! state assoc :registration-status :registered
                 :name (let [name (str (:firstName parsed-values) " " (:lastName parsed-values))]
                         (if (-> name clojure.string/trim empty?)
