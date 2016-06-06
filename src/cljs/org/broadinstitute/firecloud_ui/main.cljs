@@ -194,6 +194,9 @@
           :not-registered (profile-page/render
                            {:new-registration? true
                             :on-done #(.. js/window -location (reload))})
+          :update-registered (profile-page/render
+                           {:update-registration? true
+                            :on-done #(.. js/window -location (reload))})
           :registered
           (if (and (= page :status) (config/debug?))
             (status-page/render)
@@ -218,7 +221,9 @@
                           ; this is here primarily for old users without :firstName/:lastName fields
                           "Profile"
                           name)))
-              success? ; partial profile case
+              (and success? (some? (:isRegistrationComplete parsed-values))) ; partial profile case
+              (swap! state assoc :registration-status :update-registered)
+              success? ; unregistered case
               (swap! state assoc :registration-status :not-registered)
               :else
               (do

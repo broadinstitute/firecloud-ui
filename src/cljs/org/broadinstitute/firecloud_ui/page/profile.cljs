@@ -178,9 +178,13 @@
 (react/defc Page
   {:render
    (fn [{:keys [this props state]}]
-     (let [new? (:new-registration? props)]
+     (let [new? (:new-registration? props)
+           update? (:update-registration? props)]
        [:div {:style {:marginTop "2em"}}
-        [:h2 {} (if new? "New User Registration" "Profile")]
+        [:h2 {} (cond
+                   new? "New User Registration"
+                   update? "Update Registration"
+                   :else "Profile")]
         [:div {}
          [Form {:ref "form" :parent-nav-context (:nav-context props)
                 :new-registration? (:new-registration? props)}]]
