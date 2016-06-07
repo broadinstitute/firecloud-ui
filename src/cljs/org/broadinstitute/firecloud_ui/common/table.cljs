@@ -88,16 +88,16 @@
 ;;       :sort-initial (optional)
 ;;         A flag to set the initial column to sort.  Value is either :asc or :desc.  If present on multiple
 ;;         columns, the first one will be used.
-;;   :filters (OPTIONAL)
-;;     A vector of filters to apply to the data. Each item as the following properties:
+;;   :filter-groups (OPTIONAL)
+;;     A vector of filter groups to apply to the data. Each item as the following properties:
 ;;       :text (required)
 ;;         A label for the filter.
 ;;       :pred (required)
 ;;         A function that, given a data item, returns true if that item matches the filter.
 ;;       :count (optional)
 ;;         Use to override the displayed count, which normally uses the :pred
-;;   :selected-filter-index (OPTIONAL)
-;;     Currently selected filter.
+;;   :initial-filter-group-index (OPTIONAL)
+;;     Initially selected filter group.
 ;;   :on-filter-change (OPTIONAL)
 ;;     A function called when the active filter is changed. Passed the new filter index.
 ;;   :data (REQUIRED)
@@ -119,12 +119,7 @@
       :row-style (fn [index row]
                    {:backgroundColor (if (even? index) (:background-gray style/colors) "#fff")})})
    :get-initial-state
-   (fn [{:keys [this props]}]
-     (set! (.-filtered-data this) (if-let [filters (:filters props)]
-                                    (filter
-                                     (get-in filters [(or (:selected-filter-index props) 0) :pred])
-                                     (:data props))
-                                    (:data props)))
+   (fn [{:keys [props]}]
      (let [columns (vec (map-indexed (fn [i col]
                                        {:width (or (:starting-width col) 100)
                                         :visible? (get col :show-initial? true)
@@ -133,9 +128,9 @@
                                      (:columns props)))
            initial-sort-column (first (filter #(contains? % :sort-initial)
                                               (map merge (:columns props) columns)))]
-       {:no-data? (zero? (count (.-filtered-data this)))
-        :columns columns
+       {:columns columns
         :dragging? false
+        :filter-group-index (or (:initial-filter-group-index props) 0)
         :query-params (merge
                         {:current-page 1 :rows-per-page initial-rows-per-page
                          :filter-text ""}
@@ -147,114 +142,116 @@
                                      (fn [row] (nth row (:index initial-sort-column))))}))}))
    :render
    (fn [{:keys [this state props refs]}]
-     (let [paginator [table-utils/Paginator
-                      {:width (:width props)
-                       :pagination-params (select-keys (:query-params @state) [:current-page :rows-per-page])
-                       :num-visible-rows (count (.-filtered-data this))
-                       :num-total-rows (or (:num-total-rows props) (count (:data props)))
-                       :on-change #(swap! state update-in [:query-params] merge %)}]]
-       [:div {}
-        (when (or (:filterable? props) (:reorderable-columns? props) (:toolbar props))
-          (let [built-in
-                [:div {:style {:paddingBottom "1em"}}
-                 (when (:reorderable-columns? props)
-                   [:div {:style {:float "left"}}
-                    [comps/Button {:icon :gear :title-text "Select Columns..."
-                                   :ref "col-edit-button"
-                                   :onClick #(swap! state assoc :reordering-columns? true)}]
-                    (when (:reordering-columns? @state)
-                      [dialog/Dialog
-                       {:get-anchor-dom-node #(react/find-dom-node (@refs "col-edit-button"))
-                        :blocking? false
-                        :dismiss-self #(swap! state assoc :reordering-columns? false)
-                        :content
-                        (react/create-element
-                         table-utils/ColumnEditor
-                         {:columns (react/call :get-ordered-columns this)
-                          :on-reorder
-                          (fn [source-index target-index]
-                            (let [column-order (vec (sort-by
+     [:div {}
+      (when (or (:filterable? props) (:reorderable-columns? props) (:toolbar props))
+        (let [built-in
+              [:div {:style {:paddingBottom "1em"}}
+               (when (:reorderable-columns? props)
+                 [:div {:style {:float "left"}}
+                  [comps/Button {:icon :gear :title-text "Select Columns..."
+                                 :ref "col-edit-button"
+                                 :onClick #(swap! state assoc :reordering-columns? true)}]
+                  (when (:reordering-columns? @state)
+                    [dialog/Dialog
+                     {:get-anchor-dom-node #(react/find-dom-node (@refs "col-edit-button"))
+                      :blocking? false
+                      :dismiss-self #(swap! state assoc :reordering-columns? false)
+                      :content
+                      (react/create-element
+                        table-utils/ColumnEditor
+                        {:columns (react/call :get-ordered-columns this)
+                         :on-reorder
+                         (fn [source-index target-index]
+                           (let [column-order (vec (sort-by
                                                      :display-index
                                                      (map #(select-keys % [:index :display-index])
                                                           (:columns @state))))
-                                  new-order (utils/move column-order source-index target-index)
-                                  new-order (map-indexed (fn [i c] (assoc c :display-index i))
-                                                         new-order)
-                                  new-order (map :display-index (sort-by :index new-order))]
-                              (swap! state update-in [:columns]
-                                     #(mapv (fn [new-index c] (assoc c :display-index new-index))
-                                            new-order %))))
-                          :on-visibility-change
-                          (fn [column-index visible?]
-                            (swap!
+                                 new-order (utils/move column-order source-index target-index)
+                                 new-order (map-indexed (fn [i c] (assoc c :display-index i))
+                                                        new-order)
+                                 new-order (map :display-index (sort-by :index new-order))]
+                             (swap! state update-in [:columns]
+                                    #(mapv (fn [new-index c] (assoc c :display-index new-index))
+                                           new-order %))))
+                         :on-visibility-change
+                         (fn [column-index visible?]
+                           (swap!
                              state update-in [:columns]
                              (fn [columns]
                                (if (= :all column-index)
                                  (mapv #(assoc % :visible? visible?) columns)
                                  (assoc-in columns [column-index :visible?] visible?)))))})}])])
-                 (when (:filterable? props)
-                   [:div {:style {:float "left" :marginLeft "1em"}}
-                    [table-utils/Filterer {:on-filter #(swap! state update-in [:query-params] assoc :filter-text %)}]])
-                 (when (:filters props)
-                   [:div {:style {:float "left" :marginLeft "1em" :marginTop -3}}
-                    [table-utils/FilterBar
-                     (merge (select-keys props [:filters :columns :data])
-                            {:ref "filter-bar"
-                             :selected-index (:selected-filter-index props)
-                             :on-change #(do
-                                           (react/call :set-body-rows this)
-                                           (when-let [f (:on-filter-change props)]
-                                             (f %)))})]])
-                 (common/clear-both)]]
-            ((or (:toolbar props) identity) built-in)))
-        [:div {}
-         [:div {:style {:overflowX "auto"}}
-          [:div {:style {:position "relative"
-                         :paddingBottom 10
-                         :minWidth (when-not (:no-data? @state)
-                                     (->> (react/call :get-ordered-columns this)
-                                          (filter :visible?)
-                                          (map :width)
-                                          (apply +)))
-                         :cursor (when (:dragging? @state) "col-resize")}}
-           (when (or (not (:no-data? @state)) (:retain-header-on-empty? props))
-             (table-utils/render-header state props this))
-           (when (:no-data? @state)
-             (style/create-message-well (or (:empty-message props) "There are no rows to display.")))
-           [table-utils/Body
-            (assoc props
-                   :columns (filter :visible? (react/call :get-ordered-columns this))
-                   :rows (react/call :get-body-rows this))]]]]
-        [:div {:style {:paddingTop (:paginator-space props)}} paginator]]))
+               (when (:filterable? props)
+                 [:div {:style {:float "left" :marginLeft "1em"}}
+                  [table-utils/TextFilter {:on-filter #(swap! state update-in [:query-params] assoc :filter-text %)}]])
+               (when (:filter-groups props)
+                 [:div {:style {:float "left" :marginLeft "1em" :marginTop -3}}
+                  [table-utils/FilterGroupBar
+                   (merge (select-keys props [:filter-groups :data])
+                          {:selected-index (:filter-group-index @state)
+                           :on-change #(do
+                                        (react/call :refresh-rows this %)
+                                        (when-let [f (:on-filter-change props)]
+                                          (f %)))})]])
+               (common/clear-both)]]
+          ((or (:toolbar props) identity) built-in)))
+      [:div {}
+       [:div {:style {:overflowX "auto"}}
+        [:div {:style {:position "relative"
+                       :paddingBottom 10
+                       :minWidth (when-not (:no-data? @state)
+                                   (->> (react/call :get-ordered-columns this)
+                                        (filter :visible?)
+                                        (map :width)
+                                        (apply +)))
+                       :cursor (when (:dragging? @state) "col-resize")}}
+         (when (or (not (:no-data? @state)) (:retain-header-on-empty? props))
+           (table-utils/render-header state props this))
+         (when (:no-data? @state)
+           (style/create-message-well (or (:empty-message props) "There are no rows to display.")))
+         [table-utils/Body
+          (assoc props
+            :columns (filter :visible? (react/call :get-ordered-columns this))
+            :rows (:display-rows @state))]]]]
+      [:div {:style {:paddingTop (:paginator-space props)}}
+       [table-utils/Paginator
+        {:width (:width props)
+         :pagination-params (select-keys (:query-params @state) [:current-page :rows-per-page])
+         :num-visible-rows (:filtered-count @state)
+         :num-total-rows (or (:num-total-rows props) (:grouped-count @state))
+         :on-change #(swap! state update-in [:query-params] merge %)}]]])
    :get-ordered-columns
    (fn [{:keys [props state]}]
      (vec
       (sort-by
        :display-index
        (map merge (repeat {:starting-width 100}) (:columns props) (:columns @state)))))
-   :get-filtered-data
-   (fn [{:keys [props state refs]}]
-     (table-utils/filter-data
-      (if (@refs "filter-bar")
-        (react/call :apply-filter (@refs "filter-bar"))
-        (:data props))
-      (:->row props) (:columns props) (get-in @state [:query-params :filter-text])))
-   :get-body-rows
-   (fn [{:keys [this state props]}]
-     (if (zero? (count (.-filtered-data this)))
-       []
-       (let [{:keys [current-page rows-per-page key-fn sort-order]} (:query-params @state)
-             rows (map (:->row props) (.-filtered-data this))
-             sorted-data (if key-fn (sort-by key-fn rows) rows)
-             ordered-data (if (= :desc sort-order) (reverse sorted-data) sorted-data)]
-         ;; realize this sequence so errors can be caught early
-         (doall (take rows-per-page (drop (* (dec current-page) rows-per-page) ordered-data))))))
-   :set-body-rows
-   (fn [{:keys [this state]}]
-     (set! (.-filtered-data this) (react/call :get-filtered-data this))
-     (swap! state assoc :no-data? (zero? (count (.-filtered-data this)))))
+   :refresh-rows
+   (fn [{:keys [props state]} & [filter-group-index]]
+     (let [->row (:->row props)
+           {:keys [current-page rows-per-page key-fn sort-order filter-text]} (:query-params @state)
+           filter-group-index (or filter-group-index (:filter-group-index @state))
+           grouped-data (if-not (:filter-groups props)
+                          (:data props)
+                          (filter (:pred (get-in props [:filter-groups filter-group-index]))
+                                  (:data props)))
+           filtered-data (if-let [txt (not-empty filter-text)]
+                           (table-utils/filter-data grouped-data ->row (:columns props) txt)
+                           grouped-data)
+           rows (map ->row filtered-data)
+           sorted-rows (if key-fn (sort-by key-fn rows) rows)
+           ordered-rows (if (= :desc sort-order) (reverse sorted-rows) sorted-rows)
+           ;; realize this sequence so errors can be caught early:
+           clipped-rows (doall (take rows-per-page (drop (* (dec current-page) rows-per-page) ordered-rows)))]
+       (swap! state assoc
+              :filter-group-index filter-group-index
+              :grouped-count (count grouped-data)
+              :filtered-count (count filtered-data)
+              :display-rows clipped-rows
+              :no-data? (empty? clipped-rows))))
    :component-did-mount
    (fn [{:keys [this state]}]
+     (react/call :refresh-rows this)
      (set! (.-onMouseMoveHandler this)
        (fn [e]
          (when (:dragging? @state)
@@ -277,7 +274,7 @@
    (fn [{:keys [this prev-props props prev-state state]}]
      (when (or (not= (:data props) (:data prev-props))
                (not= (:query-params @state) (:query-params prev-state)))
-       (react/call :set-body-rows this)))
+       (react/call :refresh-rows this)))
    :component-will-unmount
    (fn [{:keys [this]}]
      (.removeEventListener js/window "mousemove" (.-onMouseMoveHandler this))
@@ -343,10 +340,10 @@
              (merge props
                {:key (gensym)
                 :columns columns
-                :filters (mapv (fn [[type count]] {:text type :count count :pred (constantly true)})
-                           entity-types)
-                :selected-filter-index (max 0 (.indexOf (to-array (map first entity-types))
-                                                selected-entity-type))
+                :filter-groups (mapv (fn [[type count]] {:text type :count count :pred (constantly true)})
+                                     entity-types)
+                :initial-filter-group-index (max 0 (.indexOf (to-array (map first entity-types))
+                                                             selected-entity-type))
                 :on-filter-change (fn [index]
                                     (let [type (first (nth entity-types index))]
                                       (swap! state update-in [:server-response] assoc :selected-entity-type type)

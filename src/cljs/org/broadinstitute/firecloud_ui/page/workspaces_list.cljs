@@ -135,10 +135,10 @@
                       [:div {:style {:float "right" :marginTop -5}}
                        [create/Button {:nav-context (:nav-context props)}]]
                       (common/clear-both)])
-          :filters [{:text "All" :pred (constantly true)}
-                    {:text "Complete" :pred #(= "Complete" (:status %))}
-                    {:text "Running" :pred #(= "Running" (:status %))}
-                    {:text "Exception" :pred #(= "Exception" (:status %))}]
+          :filter-groups [{:text "All" :pred (constantly true)}
+                          {:text "Complete" :pred #(= "Complete" (:status %))}
+                          {:text "Running" :pred #(= "Running" (:status %))}
+                          {:text "Exception" :pred #(= "Exception" (:status %))}]
           :columns
           [{:sort-by :none :filter-by :none :starting-width row-height-px :resizable? false
             :header [:div {:style {:marginLeft -6}} "Status"]
@@ -175,7 +175,6 @@
                     (cons (constantly false)) ;; keeps (apply some-fn) from bombing when the list is empty
                     (apply some-fn))
                   (:workspaces props))
-          :num-total-rows (count (:workspaces props))
           :->row (fn [ws]
                    (let [ws-name (get-workspace-name-string ws)
                          ws-href (let [x (ws "workspace")] (str (x "namespace") ":" (x "name")))
