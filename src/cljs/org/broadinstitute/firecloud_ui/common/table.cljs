@@ -365,7 +365,7 @@
                 columns (vec (cons entity-column attr-columns))]
             [Table
              (merge props
-               {:key (gensym)
+               {:key selected-entity-type
                 :columns columns
                 :always-sort? true
                 :pagination (react/call :pagination this columns)
