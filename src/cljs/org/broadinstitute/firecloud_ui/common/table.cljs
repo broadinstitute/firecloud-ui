@@ -398,20 +398,22 @@
    (fn [{:keys [props state]} columns]
      (let [{{:keys [entity-types]} :server-response} @state]
        (fn [{:keys [current-page rows-per-page filter-text sort-column sort-order filter-group-index]} callback]
-         (let [type (nth entity-types filter-group-index)
-               sort-field (when (pos? sort-column)
-                            (get-in columns [sort-column :header]))]
-           (endpoints/call-ajax-orch
-             {:endpoint (endpoints/get-entities-paginated (:workspace-id props) type
-                                                          {"page" current-page
-                                                           "pageSize" rows-per-page
-                                                           "filterTerms" filter-text
-                                                           "sortField" sort-field
-                                                           "sortDirection" (name sort-order)})
-              :on-done (fn [{:keys [success? get-parsed-response]}]
-                         (if success?
-                           (let [{:strs [results]
-                                  {:strs [unfilteredCount filteredCount]} "resultMetadata"} (get-parsed-response)]
-                             (callback {:group-count unfilteredCount
-                                        :filtered-count filteredCount
-                                        :rows results}))))})))))})
+         (if (empty? entity-types)
+           (callback {:group-count 0 :filtered-count 0 :rows []})
+           (let [type (nth entity-types filter-group-index)
+                 sort-field (when (pos? sort-column)
+                              (get-in columns [sort-column :header]))]
+             (endpoints/call-ajax-orch
+               {:endpoint (endpoints/get-entities-paginated (:workspace-id props) type
+                                                            {"page" current-page
+                                                             "pageSize" rows-per-page
+                                                             "filterTerms" filter-text
+                                                             "sortField" sort-field
+                                                             "sortDirection" (name sort-order)})
+                :on-done (fn [{:keys [success? get-parsed-response]}]
+                           (if success?
+                             (let [{:strs [results]
+                                    {:strs [unfilteredCount filteredCount]} "resultMetadata"} (get-parsed-response)]
+                               (callback {:group-count unfilteredCount
+                                          :filtered-count filteredCount
+                                          :rows results}))))}))))))})
