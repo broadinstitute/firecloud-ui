@@ -175,7 +175,9 @@
                                (if (= i sort-column)
                                  (case sort-order
                                    :asc (swap! state update-in [:query-params] assoc :sort-order :desc)
-                                   :desc (swap! state update-in [:query-params] dissoc :sort-column :sort-order :key-fn))
+                                   :desc (if (:always-sort? props)
+                                           (swap! state update-in [:query-params] assoc :sort-order :asc)
+                                           (swap! state update-in [:query-params] dissoc :sort-column :sort-order :key-fn)))
                                  (swap! state update-in [:query-params] assoc :sort-column i :sort-order :asc
                                         :key-fn (let [sort-fn (or (:sort-by column) identity)]
                                                   (if (= sort-fn :text)

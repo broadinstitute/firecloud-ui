@@ -190,6 +190,11 @@
   (let [elem (nth vec start)]
     (insert (delete vec start) (if (> end start) (dec end) end) elem)))
 
+
+(defn index-of [coll item]
+  (first (keep-indexed (fn [i x] (when (= item x) i)) coll)))
+
+
 (defn rand-subset [items]
   (take (rand-int (inc (count items))) (shuffle items)))
 
