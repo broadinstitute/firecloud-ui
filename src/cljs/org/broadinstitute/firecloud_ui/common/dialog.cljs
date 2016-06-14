@@ -16,26 +16,26 @@
       :cycle-focus? false})
    :render
    (fn [{:keys [props state]}]
-     (let [content (:content props)
-           anchored? (not (nil? (:get-anchor-dom-node props)))]
+     (let [{:keys [content width blocking? dismiss-self get-anchor-dom-node]} props
+           anchored? (not (nil? get-anchor-dom-node))]
        (assert (react/valid-element? content)
          (subs (str "Not a react element: " content) 0 200))
        (when (or (not anchored?) (:position @state))
-         [:div {:style {:backgroundColor (if (:blocking? props)
+         [:div {:style {:backgroundColor (if blocking?
                                            "rgba(110, 110, 110, 0.4)"
                                            "rgba(210, 210, 210, 0.4)")
                         :position "absolute" :zIndex 8888
                         :top 0 :left 0 :right 0 :height (.. js/document -body -offsetHeight)}
-                :onKeyDown (common/create-key-handler [:esc] #((:dismiss-self props)))
-                :onClick (when-not (:blocking? props) #((:dismiss-self props)))}
+                :onKeyDown (common/create-key-handler [:esc] dismiss-self)
+                :onClick (when-not blocking? dismiss-self)}
           [:div {:style (if anchored?
                           {:position "absolute" :backgroundColor "#fff"
                            :top (get-in @state [:position :top])
                            :left (get-in @state [:position :left])}
                           {:transform "translate(-50%, 0px)" :backgroundColor "#fff"
                            :position "relative" :marginBottom 60
-                           :top 60 :left "50%" :width (:width props)})
-                 :onClick (when-not (:blocking? props) #(.stopPropagation %))}
+                           :top 60 :left "50%" :width width})
+                 :onClick (when-not blocking? #(.stopPropagation %))}
            content]])))
    :component-did-mount
    (fn [{:keys [this props state]}]
@@ -68,24 +68,25 @@
      {:show-cancel? true})
    :render
    (fn [{:keys [props]}]
-     [:div {}
-      [:div {:style {:borderBottom style/standard-line
-                     :padding "20px 48px 18px"
-                     :fontSize "137%" :fontWeight 400 :lineHeight 1}}
-       (:header props)]
-      [:div {:style {:padding "22px 48px 40px" :backgroundColor (:background-gray style/colors)}}
-       (:content props)
-       [:div {:style {:marginTop 40 :textAlign "center"}}
-        (when (:show-cancel? props)
-          [:a {:style {:marginRight 27 :marginTop 2 :padding "0.5em"
-                       :display "inline-block"
-                       :fontSize "106%" :fontWeight 500 :textDecoration "none"
-                       :color (:button-blue style/colors)}
-               :href "javascript:;"
-               :onClick #((:dismiss-self props))
-               :onKeyDown (common/create-key-handler [:space :enter] #((:dismiss-self props)))}
-           (or (:cancel-text props) "Cancel")])
-        (:ok-button props)]]])})
+     (let [{:keys [header content dismiss-self ok-button show-cancel? cancel-text]} props]
+       [:div {}
+        [:div {:style {:borderBottom style/standard-line
+                       :padding "20px 48px 18px"
+                       :fontSize "137%" :fontWeight 400 :lineHeight 1}}
+         header]
+        [:div {:style {:padding "22px 48px 40px" :backgroundColor (:background-gray style/colors)}}
+         content
+         [:div {:style {:marginTop 40 :textAlign "center"}}
+          (when show-cancel?
+            [:a {:style {:marginRight 27 :marginTop 2 :padding "0.5em"
+                         :display "inline-block"
+                         :fontSize "106%" :fontWeight 500 :textDecoration "none"
+                         :color (:button-blue style/colors)}
+                 :href "javascript:;"
+                 :onClick dismiss-self
+                 :onKeyDown (common/create-key-handler [:space :enter] dismiss-self)}
+             (or cancel-text "Cancel")])
+          ok-button]]]))})
 
 
 (react/defc GCSFilePreviewLink
