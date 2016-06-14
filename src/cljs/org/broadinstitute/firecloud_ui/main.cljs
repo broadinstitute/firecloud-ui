@@ -339,10 +339,11 @@
       (footer)])
    :component-did-mount
    (fn [{:keys [this state]}]
-     (add-watch utils/server-down? :server-watcher
-                (fn [_ _ os ns]
-                  (when (and ns (not os))
-                    (swap! state assoc :show-server-down-message? true))))
+     (add-watch
+       utils/server-down? :server-watcher
+       (fn [_ _ _ ns]
+         (when ns
+           (swap! state assoc :show-server-down-message? true))))
      (react/call :load-config this))
    :component-will-unmount
    (fn [{:keys [locals]}]
