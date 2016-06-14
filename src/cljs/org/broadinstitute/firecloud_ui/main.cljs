@@ -3,6 +3,7 @@
    [dmohs.react :as react]
    [org.broadinstitute.firecloud-ui.common :as common]
    [org.broadinstitute.firecloud-ui.common.components :as comps]
+   [org.broadinstitute.firecloud-ui.common.dialog :as dialog]
    [org.broadinstitute.firecloud-ui.common.style :as style]
    [org.broadinstitute.firecloud-ui.config :as config]
    [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
@@ -261,6 +262,26 @@
         [Policy]]])})
 
 
+(defn- server-unavailable-dialog [dismiss]
+  [dialog/Dialog
+   {:width 500
+    :dismiss-self dismiss
+    :content
+    (react/create-element
+      [dialog/OKCancelForm
+       {:header "Server Unavailable"
+        :dismiss-self dismiss
+        :show-cancel? false
+        :ok-button [comps/Button {:text "OK" :onClick dismiss}]
+        :content
+        (react/create-element
+          [:div {}
+           "FireCloud service is temporarily unavailable.  If this problem persists, check "
+           [:a {:href "http://status.firecloud.org/" :target "_blank"}
+            "http://status.firecloud.org/"]
+           " for more information."])}])}])
+
+
 (react/defc App
   {:handle-hash-change
    (fn [{:keys [state]}]
@@ -271,6 +292,8 @@
    :render
    (fn [{:keys [state]}]
      [:div {}
+      (when (:show-server-down-message? @state)
+        (server-unavailable-dialog #(swap! state dissoc :show-server-down-message?)))
       [:div {:style {:backgroundColor "white" :padding 20}}
        [:div {}
         (cond
@@ -315,11 +338,16 @@
           [LoggedOut])]]
       (footer)])
    :component-did-mount
-   (fn [{:keys [this]}]
+   (fn [{:keys [this state]}]
+     (add-watch utils/server-down? :server-watcher
+                (fn [_ _ os ns]
+                  (when (and ns (not os))
+                    (swap! state assoc :show-server-down-message? true))))
      (react/call :load-config this))
    :component-will-unmount
    (fn [{:keys [locals]}]
-     (.removeEventListener js/window "hashchange" (:hash-change-listener @locals)))
+     (.removeEventListener js/window "hashchange" (:hash-change-listener @locals))
+     (remove-watch utils/server-down? :server-watcher))
    :load-config
    (fn [{:keys [this state]}]
      ;; Use basic ajax call here to bypass authentication.

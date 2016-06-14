@@ -138,6 +138,9 @@
             (.send xhr)))))))
 
 
+(defonce server-down? (atom false))
+
+
 (defn ajax-orch [path arg-map & {:keys [service-prefix ignore-auth-expiration?] :or {service-prefix "/api"}}]
   (assert (= (subs path 0 1) "/") (str "Path must start with '/': " path))
   (let [on-done (:on-done arg-map)]
@@ -146,6 +149,7 @@
            :headers (merge {"Authorization" (str "Bearer " @access-token)}
                            (:headers arg-map))
            :on-done (fn [{:keys [status-code] :as m}]
+                      (reset! server-down? (= status-code 503))
                       ;; Handle auth token expiration
                       (if (and (= status-code 401) (not ignore-auth-expiration?))
                         (do (delete-access-token-cookie)
