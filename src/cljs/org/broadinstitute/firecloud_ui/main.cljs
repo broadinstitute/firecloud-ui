@@ -339,10 +339,11 @@
       (footer)])
    :component-did-mount
    (fn [{:keys [this state]}]
+     ;; pop up the message only when we start getting 503s, not on every 503
      (add-watch
        utils/server-down? :server-watcher
-       (fn [_ _ _ ns]
-         (when ns
+       (fn [_ _ _ down-now?]
+         (when down-now?
            (swap! state assoc :show-server-down-message? true))))
      (react/call :load-config this))
    :component-will-unmount
