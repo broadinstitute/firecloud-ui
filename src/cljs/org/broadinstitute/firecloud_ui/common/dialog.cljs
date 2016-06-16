@@ -89,6 +89,19 @@
           ok-button]]]))})
 
 
+(defn standard-dialog [props]
+  [Dialog
+   (merge (select-keys props [:width :blocking? :dismiss-self :get-anchor-dom-node
+                              :get-first-element-dom-node :get-last-element-dom-node :cycle-focus?])
+          {:content
+           (react/create-element
+             [OKCancelForm
+              (merge (select-keys props [:header :dismiss-self :ok-button :show-cancel? :cancel-text])
+                     {:content
+                      (react/create-element
+                        (:content props))})])})])
+
+
 (react/defc GCSFilePreviewLink
   {:render
    (fn [{:keys [props state this]}]
