@@ -120,55 +120,50 @@
                          contents])]
           [:div {:style {:position "fixed" :top 0 :left 0 :right 0 :bottom 0 :zIndex 9999
                          :fontSize "initial" :fontWeight "initial"}}
-           [Dialog
-            {:dismiss-self #(swap! state dissoc :show-dialog?)
-             :width "75%"
-             :content
-             (react/create-element
-               [OKCancelForm
-                {:header "File Details"
-                 :content (react/create-element
-                            [:div {:style {:overflow "auto"}}
-                             (labeled "Google Bucket" (:bucket-name props))
-                             (labeled "Object" (:object props))
-                             (when (:loading? @state)
-                               [Spinner {:text "Getting file info..."}])
-                             (when data
-                               [:div {:style {:marginTop "1em"}}
-                                (labeled "File size"
-                                  (common/format-filesize data-size)
-                                  [:span {:style {:marginLeft "1em"}}
-                                   [:a {:href (common/gcs-object->download-url (:bucket-name props) (:object props))
-                                    :target "_blank"} "Open"] [:span {:style {:fontStyle "italic" :color (:text-gray style/colors)}}" (right-click to download)"]]
-                                  (when (> data-size 100000000)
-                                    [:span {:style {:color (:exception-red style/colors) :marginLeft "2ex"}}
-                                     (icons/font-icon {:style {:fontSize "100%" :verticalAlign "middle" :marginRight "1ex"}}
-                                       :status-warning-triangle)
-                                     "Warning: Downloading this file may incur a large data egress charge"]))
-                                (if (:show-details? @state)
-                                  [:div {}
-                                   (labeled "Created" (common/format-date (data "timeCreated")))
-                                   (labeled "Updated" (common/format-date (data "updated")))
-                                   (labeled "MD5" (data "md5Hash"))
-                                   (style/create-link {:text "Collapse"
-                                                       :onClick #(swap! state dissoc :show-details?)})]
-                                  (style/create-link {:text "More info"
-                                                      :onClick #(swap! state assoc :show-details? true)}))])
-                             (when error
-                               [:div {:style {:marginTop "1em"}}
-                                [:span {:style {:color (:exception-red style/colors)}} "Error! "]
-                                "This file was not found."
-                                (if (:show-error-details? @state)
-                                  [:div {}
-                                   [:pre {} error]
-                                   (style/create-link {:text "Hide detail"
-                                                       :onClick #(swap! state dissoc :show-error-details?)})]
-                                  [:div {}
-                                   (style/create-link {:text "Show full error response"
-                                                       :onClick #(swap! state assoc :show-error-details? true)})])])])
-                 :dismiss-self #(swap! state dissoc :show-dialog?)
-                 :show-cancel? false
-                 :ok-button [Button {:text "Done" :onClick #(swap! state dissoc :show-dialog?)}]}])}]]))])
+           (standard-dialog
+             {:width "75%" :dismiss-self #(swap! state dissoc :show-dialog?)
+              :header "File Details"
+              :content
+              [:div {:style {:overflow "auto"}}
+               (labeled "Google Bucket" (:bucket-name props))
+               (labeled "Object" (:object props))
+               (when (:loading? @state)
+                 [Spinner {:text "Getting file info..."}])
+               (when data
+                 [:div {:style {:marginTop "1em"}}
+                  (labeled "File size"
+                           (common/format-filesize data-size)
+                           [:span {:style {:marginLeft "1em"}}
+                            [:a {:href (common/gcs-object->download-url (:bucket-name props) (:object props))
+                                 :target "_blank"} "Open"] [:span {:style {:fontStyle "italic" :color (:text-gray style/colors)}}" (right-click to download)"]]
+                           (when (> data-size 100000000)
+                             [:span {:style {:color (:exception-red style/colors) :marginLeft "2ex"}}
+                              (icons/font-icon {:style {:fontSize "100%" :verticalAlign "middle" :marginRight "1ex"}}
+                                               :status-warning-triangle)
+                              "Warning: Downloading this file may incur a large data egress charge"]))
+                  (if (:show-details? @state)
+                    [:div {}
+                     (labeled "Created" (common/format-date (data "timeCreated")))
+                     (labeled "Updated" (common/format-date (data "updated")))
+                     (labeled "MD5" (data "md5Hash"))
+                     (style/create-link {:text "Collapse"
+                                         :onClick #(swap! state dissoc :show-details?)})]
+                    (style/create-link {:text "More info"
+                                        :onClick #(swap! state assoc :show-details? true)}))])
+               (when error
+                 [:div {:style {:marginTop "1em"}}
+                  [:span {:style {:color (:exception-red style/colors)}} "Error! "]
+                  "This file was not found."
+                  (if (:show-error-details? @state)
+                    [:div {}
+                     [:pre {} error]
+                     (style/create-link {:text "Hide detail"
+                                         :onClick #(swap! state dissoc :show-error-details?)})]
+                    [:div {}
+                     (style/create-link {:text "Show full error response"
+                                         :onClick #(swap! state assoc :show-error-details? true)})])])]
+              :show-cancel? false
+              :ok-button [Button {:text "Done" :onClick #(swap! state dissoc :show-dialog?)}]})]))])
    :show-dialog
    (fn [{:keys [state props]}]
      (if (:response @state)
