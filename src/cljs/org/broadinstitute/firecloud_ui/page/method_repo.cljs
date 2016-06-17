@@ -15,17 +15,12 @@
    (fn [{:keys [state]}]
      [:div {:style {:padding "1em"}}
       (when (:destination @state)
-        [dialog/Dialog
-         {:dismiss-self #(swap! state dissoc :destination)
-          :width 500
-          :content
-          (react/create-element
-            [dialog/OKCancelForm
-             {:dismiss-self #(swap! state dissoc :destination)
-              :header "Import successful"
-              :content "Would you like to go to the edit page now?"
-              :cancel-text "No, stay here"
-              :ok-button [comps/Button {:text "Yes" :href (:destination @state)}]}])}])
+        (dialog/standard-dialog
+          {:width 500 :dismiss-self #(swap! state dissoc :destination)
+           :header "Import successful"
+           :content "Would you like to go to the edit page now?"
+           :cancel-text "No, stay here"
+           :ok-button [comps/Button {:text "Yes" :href (:destination @state)}]}))
       [MethodConfigImporter {:allow-edit true
                              :after-import (fn [{:keys [workspace-id config-id]}]
                                              (common/scroll-to-top 100)

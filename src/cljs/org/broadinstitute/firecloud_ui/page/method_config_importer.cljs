@@ -17,22 +17,18 @@
 (react/defc Redactor
   {:render
    (fn [{:keys [props state this]}]
-     [dialog/Dialog
-      {:width 500
-       :dismiss-self (:dismiss props)
-       :content
-       (react/create-element
-         [dialog/OKCancelForm
-          {:dismiss-self (:dismiss props)
-           :header "Confirm redaction"
-           :content [:div {}
-                     (when (:redacting? @state)
-                       [comps/Blocker {:banner "Redacting..."}])
-                     [:div {:style {:marginBottom "1em"}}
-                      (str "Are you sure you want to redact this " (if (:config? props) "configuration" "method") "?")]
-                     [comps/ErrorViewer {:error (:error @state)
-                                         :expect {401 "Unauthorized"}}]]
-           :ok-button [comps/Button {:text "Redact" :onClick #(react/call :redact this)}]}])}])
+     (dialog/standard-dialog
+       {:width 500 :dismiss-self (:dismiss props)
+        :header "Confirm redaction"
+        :content
+        [:div {}
+         (when (:redacting? @state)
+           [comps/Blocker {:banner "Redacting..."}])
+         [:div {:style {:marginBottom "1em"}}
+          (str "Are you sure you want to redact this " (if (:config? props) "configuration" "method") "?")]
+         [comps/ErrorViewer {:error (:error @state)
+                             :expect {401 "Unauthorized"}}]]
+        :ok-button [comps/Button {:text "Redact" :onClick #(react/call :redact this)}]}))
    :component-did-mount
    (fn []
      (common/scroll-to-top 100))
