@@ -263,23 +263,18 @@
 
 
 (defn- server-unavailable-dialog [dismiss]
-  [dialog/Dialog
-   {:width 500
-    :dismiss-self dismiss
-    :content
-    (react/create-element
-      [dialog/OKCancelForm
-       {:header "Server Unavailable"
-        :dismiss-self dismiss
-        :show-cancel? false
-        :ok-button [comps/Button {:text "OK" :onClick dismiss}]
-        :content
-        (react/create-element
-          [:div {}
-           "FireCloud service is temporarily unavailable.  If this problem persists, check "
-           [:a {:href "http://status.firecloud.org/" :target "_blank"}
-            "http://status.firecloud.org/"]
-           " for more information."])}])}])
+  (dialog/standard-dialog
+    {:width 500
+     :dismiss-self dismiss
+     :header "Server Unavailable"
+     :show-cancel? false
+     :ok-button [comps/Button {:text "OK" :onClick dismiss}]
+     :content
+     [:div {}
+      "FireCloud service is temporarily unavailable.  If this problem persists, check "
+      [:a {:href "http://status.firecloud.org/" :target "_blank"}
+       "http://status.firecloud.org/"]
+      " for more information."]}))
 
 
 (react/defc App
