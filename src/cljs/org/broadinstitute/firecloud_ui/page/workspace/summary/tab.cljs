@@ -27,21 +27,17 @@
 (react/defc DeleteDialog
   {:render
    (fn [{:keys [state props this]}]
-     [dialog/Dialog
-      {:width 500 :dismiss-self (:dismiss-self props)
-       :content
-       (react/create-element
-         [:div {}
-          (when (:deleting? @state)
-            [comps/Blocker {:banner "Deleting..."}])
-          [dialog/OKCancelForm
-           {:dismiss-self (:dismiss-self props) :header "Confirm Delete"
-            :content
-            [:div {}
-             [:p {:style {:margin 0}} "Are you sure you want to delete this workspace?"]
-             [:p {} "Bucket data will be deleted too."]
-             [comps/ErrorViewer {:error (:server-error @state)}]]
-            :ok-button [comps/Button {:text "Delete" :onClick #(react/call :delete this)}]}]])}])
+     (dialog/standard-dialog
+       {:width 500 :dismiss-self (:dismiss-self props)
+        :header "Confirm Delete"
+        :content
+        [:div {}
+         (when (:deleting? @state)
+           [comps/Blocker {:banner "Deleting..."}])
+         [:p {:style {:margin 0}} "Are you sure you want to delete this workspace?"]
+         [:p {} "Bucket data will be deleted too."]
+         [comps/ErrorViewer {:error (:server-error @state)}]]
+        :ok-button [comps/Button {:text "Delete" :onClick #(react/call :delete this)}]}))
    :component-did-mount
    (fn []
      (common/scroll-to-top 100))

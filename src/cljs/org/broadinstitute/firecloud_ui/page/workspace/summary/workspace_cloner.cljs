@@ -16,53 +16,47 @@
      {:selected-project (first (:billing-projects props))})
    :render
    (fn [{:keys [props refs state this]}]
-     [dialog/Dialog
-      {:width 500 :dismiss-self (:dismiss props)
-       :content
-       (react/create-element
-         [dialog/OKCancelForm
-          {:header "Clone Workspace to:"
-           :dismiss-self (:dismiss props)
-           :content
-           (react/create-element
-             [:div {}
-              (when (:working? @state)
-                [comps/Blocker {:banner "Cloning..."}])
-              (style/create-form-label "Google Project")
-              (style/create-select {:ref "project"
-                                    :value (:selected-project @state)
-                                    :onChange #(swap! state assoc :selected-project (-> % .-target .-value))}
-                (:billing-projects props))
-              (style/create-form-label "Name")
-              [input/TextField {:ref "name"
-                                :style {:width "100%"}
-                                :defaultValue (get-in props [:workspace-id :name])
-                                :placeholder "Required"
-                                :predicates [(input/nonempty "Workspace name")
-                                             (input/alphanumeric_- "Workspace name")]}]
-              (style/create-textfield-hint "Only letters, numbers, underscores, and dashes allowed")
-              (style/create-form-label "Description (optional)")
-              (style/create-text-area {:style {:width "100%"} :rows 5 :ref "wsDescription"
-                                       :defaultValue (:description props)})
-              (if (:is-protected? props)
-                [:div {} "Cloned workspace will automatically be protected because this workspace is protected."]
-                [comps/Checkbox
-                 {:ref "protected-check"
-                  :label "Workspace intended to contain NIH protected data"
-                  :disabled? (not= (:protected-option @state) :enabled)
-                  :disabled-text (case (:protected-option @state)
-                                       :not-loaded "Account status has not finished loading."
-                                       :not-available "This option is not available for your account."
-                                       nil)}])
-              (style/create-validation-error-message (:validation-error @state))
-              [comps/ErrorViewer {:error (:error @state)
-                                  :expect {409 "A workspace with this name already exists in this project"}}]])
-           :ok-button
-           (react/create-element
-             [comps/Button {:text "OK" :ref "okButton"
-                            :onClick #(react/call :do-clone this)}])}])
-       :get-first-element-dom-node #(@refs "project")
-       :get-last-element-dom-node #(react/find-dom-node (@refs "okButton"))}])
+     (dialog/standard-dialog
+       {:width 500 :dismiss-self (:dismiss props)
+        :header "Clone Workspace to:"
+        :ok-button (react/create-element
+                     [comps/Button {:text "OK" :ref "okButton"
+                                    :onClick #(react/call :do-clone this)}])
+        :get-first-element-dom-node #(@refs "project")
+        :get-last-element-dom-node #(react/find-dom-node (@refs "okButton"))
+        :content
+        [:div {}
+         (when (:working? @state)
+           [comps/Blocker {:banner "Cloning..."}])
+         (style/create-form-label "Google Project")
+         (style/create-select {:ref "project"
+                               :value (:selected-project @state)
+                               :onChange #(swap! state assoc :selected-project (-> % .-target .-value))}
+                              (:billing-projects props))
+         (style/create-form-label "Name")
+         [input/TextField {:ref "name"
+                           :style {:width "100%"}
+                           :defaultValue (get-in props [:workspace-id :name])
+                           :placeholder "Required"
+                           :predicates [(input/nonempty "Workspace name")
+                                        (input/alphanumeric_- "Workspace name")]}]
+         (style/create-textfield-hint "Only letters, numbers, underscores, and dashes allowed")
+         (style/create-form-label "Description (optional)")
+         (style/create-text-area {:style {:width "100%"} :rows 5 :ref "wsDescription"
+                                  :defaultValue (:description props)})
+         (if (:is-protected? props)
+           [:div {} "Cloned workspace will automatically be protected because this workspace is protected."]
+           [comps/Checkbox
+            {:ref "protected-check"
+             :label "Workspace intended to contain NIH protected data"
+             :disabled? (not= (:protected-option @state) :enabled)
+             :disabled-text (case (:protected-option @state)
+                              :not-loaded "Account status has not finished loading."
+                              :not-available "This option is not available for your account."
+                              nil)}])
+         (style/create-validation-error-message (:validation-error @state))
+         [comps/ErrorViewer {:error (:error @state)
+                             :expect {409 "A workspace with this name already exists in this project"}}]]}))
    :component-did-mount
    (fn [{:keys [state]}]
      (common/scroll-to-top 100)

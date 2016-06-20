@@ -68,38 +68,34 @@
 (react/defc DataDeleter
   {:render
    (fn [{:keys [state props refs this]}]
-     [dialog/Dialog
-      {:dismiss-self (:dismiss-self props)
-       :width "80%"
-       :content
-       (react/create-element
-         [dialog/OKCancelForm
-          {:header "Delete Entities"
-           :dismiss-self (:dismiss-self props)
-           :content (react/create-element
-                      [:div {}
-                       (when (:deleting? @state)
-                         [comps/Blocker {:banner "Deleting..."}])
-                       [EntitySelector
-                        {:ref "EntitySelector"
-                         :left-text "Workspace Entities" :right-text "Will Be Deleted"
-                         :entities ((:get-entity-list props))}]
-                       [:div {:style {:textAlign "center" :marginTop "1em"}}
-                        (style/create-validation-error-message (:validation-errors @state))
-                        [comps/ErrorViewer {:error (:server-error @state)}]]])
-           :ok-button [comps/Button
-                       {:text "Delete"
-                        :onClick #(let [selected-entities (react/call :get-selected-entities (@refs "EntitySelector"))
-                                        num (count selected-entities)
-                                        msg (if (= num 1)
-                                              "Really delete this entity?"
-                                              (str "Really delete these " num " entities?"))]
-                                    (swap! state dissoc :server-error)
-                                    (if (zero? num)
-                                      (swap! state assoc :validation-errors
-                                        ["Please select one or more entities to delete"])
-                                      (when (js/confirm msg)
-                                        (react/call :delete this selected-entities))))}]}])}])
+     (dialog/standard-dialog
+       {:width "80%" :dismiss-self (:dismiss-self props)
+        :header "Delete Entities"
+        :content
+        [:div {}
+         (when (:deleting? @state)
+           [comps/Blocker {:banner "Deleting..."}])
+         [EntitySelector
+          {:ref "EntitySelector"
+           :left-text "Workspace Entities" :right-text "Will Be Deleted"
+           :entities ((:get-entity-list props))}]
+         [:div {:style {:textAlign "center" :marginTop "1em"}}
+          (style/create-validation-error-message (:validation-errors @state))
+          [comps/ErrorViewer {:error (:server-error @state)}]]]
+        :ok-button
+        [comps/Button
+         {:text "Delete"
+          :onClick #(let [selected-entities (react/call :get-selected-entities (@refs "EntitySelector"))
+                          num (count selected-entities)
+                          msg (if (= num 1)
+                                "Really delete this entity?"
+                                (str "Really delete these " num " entities?"))]
+                     (swap! state dissoc :server-error)
+                     (if (zero? num)
+                       (swap! state assoc :validation-errors
+                              ["Please select one or more entities to delete"])
+                       (when (js/confirm msg)
+                         (react/call :delete this selected-entities))))}]}))
    :component-did-mount
    (fn []
      (common/scroll-to-top 100))
