@@ -136,8 +136,10 @@
    :queued (apply + (map workflowCountsByStatus ["Queued" "Launching"]))
    :active (apply + (map workflowCountsByStatus ["Submitted" "Running" "Aborting"]))})
 
-(def root-entity-types
-  ["participant" "sample" "pair" "participant_set" "sample_set" "pair_set"])
+(def root-entity-types ["participant" "sample" "pair" "participant_set" "sample_set" "pair_set"])
+(def singular->set {"participant" "participant_set"
+                    "sample" "sample_set"
+                    "pair" "pair_set"})
 
 (def set-type->attribute
   {"participant_set" "participants"
@@ -145,11 +147,13 @@
    "pair_set" "pairs"})
 
 (defn count-workflows [entity root-entity-type]
-  (if (contains? set-type->attribute root-entity-type)
-    1
-    (if-let [attribute (set-type->attribute (entity "entityType"))]
-      (count (get-in entity ["attributes" attribute]))
-      1)))
+  (let [entity-type (entity "entityType")]
+    (cond (= entity-type root-entity-type) 1
+          ;; example: entity is 'sample_set', RET is 'sample', presumably using expression 'this.samples'
+          (= entity-type (singular->set root-entity-type))
+          (count (get-in entity ["attributes" (set-type->attribute entity-type)]))
+          ;; something nonsensical has been selected, submission will probably fail anyway:
+          :else 1)))
 
 (defn- make-pair [attribute]
   [{:header (str "# " attribute) :starting-width 110}
