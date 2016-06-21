@@ -144,10 +144,12 @@
    "sample_set" "samples"
    "pair_set" "pairs"})
 
-(defn count-workflows [entity]
-  (if-let [attribute (set-type->attribute (entity "entityType"))]
-    (count (get-in entity ["attributes" attribute]))
-    1))
+(defn count-workflows [entity root-entity-type]
+  (if (contains? set-type->attribute root-entity-type)
+    1
+    (if-let [attribute (set-type->attribute (entity "entityType"))]
+      (count (get-in entity ["attributes" attribute]))
+      1)))
 
 (defn- make-pair [attribute]
   [{:header (str "# " attribute) :starting-width 110}
