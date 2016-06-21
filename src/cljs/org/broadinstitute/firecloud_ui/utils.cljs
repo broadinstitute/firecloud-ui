@@ -138,6 +138,9 @@
             (.send xhr)))))))
 
 
+(defonce auth-expiration-handler nil)
+
+
 (defonce server-down? (atom false))
 
 
@@ -152,10 +155,9 @@
                       (when (not= @server-down? (= status-code 503))
                         (swap! server-down? not))
                       ;; Handle auth token expiration
-                      (if (and (= status-code 401) (not ignore-auth-expiration?))
-                        (do (delete-access-token-cookie)
-                            (.. js/window -location (reload)))
-                        (on-done m)))))))
+                      (when (and (= status-code 401) (not ignore-auth-expiration?))
+                        (auth-expiration-handler))
+                      (on-done m))))))
 
 
 (defn deep-merge [& maps]

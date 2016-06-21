@@ -4,6 +4,8 @@
    [org.broadinstitute.firecloud-ui.common :as common]
    [org.broadinstitute.firecloud-ui.common.components :as comps]
    [org.broadinstitute.firecloud-ui.common.dialog :as dialog]
+   [org.broadinstitute.firecloud-ui.common.modal :as modal]
+   [org.broadinstitute.firecloud-ui.common.sign-in :as sign-in]
    [org.broadinstitute.firecloud-ui.common.style :as style]
    [org.broadinstitute.firecloud-ui.config :as config]
    [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
@@ -246,29 +248,14 @@
 
 (react/defc LoggedOut
   {:render
-   (fn [{:keys []}]
+   (fn [{:keys [props]}]
      [:div {}
       [:div {:style {:marginBottom "2em"}} (text-logo)]
       [:div {}
-       [comps/Button
-        {:text "Sign In"
-         :onClick (fn [e]
-                    (.. js/window
-                        (open
-                         (str (config/api-url-root) "/login?callback="
-                              (js/encodeURIComponent (.. js/window -location -origin)))
-                         "Authentication"
-                         "menubar=no,toolbar=no,width=500,height=500")))}]]
+       [sign-in/Button (select-keys props [:on-login])]]
       [:div {:style {:marginTop "1em"}} [RegisterLink]]
       [:div {:style {:maxWidth 600 :paddingTop "2em" :fontSize "small"}}
-        [Policy]]])
-   :component-did-mount
-   (fn [{:keys [props]}]
-     (aset js/window (name ::handle-auth-message)
-           (fn [message] ((:on-login props) (get message "access_token")))))
-   :component-will-unmount
-   (fn [{:keys [locals]}]
-     (js-delete js/window (name ::handle-auth-message)))})
+        [Policy]]])})
 
 
 (defn- parse-hash-into-map []
@@ -356,16 +343,21 @@
           (= :logged-in (:user-status @state))
           [LoggedIn {:nav-context (:root-nav-context @state)}]
           (= :not-logged-in (:user-status @state))
-          [LoggedOut {:on-login #(react/call :authenticate-with-fresh-token this %)}])]]
-      (footer)])
+          [LoggedOut {:on-login #(react/call :authenticate-with-fresh-token this
+                                             (get % "access_token"))}])]]
+      (footer)
+      ;; As low as possible on the page so it will be the frontmost component when displayed.
+      [modal/Component {:ref "modal"}]])
    :component-did-mount
-   (fn [{:keys [this state]}]
+   (fn [{:keys [this state refs]}]
+     (set! utils/auth-expiration-handler sign-in/show-expired-dialog)
      ;; pop up the message only when we start getting 503s, not on every 503
      (add-watch
        utils/server-down? :server-watcher
        (fn [_ _ _ down-now?]
          (when down-now?
            (swap! state assoc :show-server-down-message? true))))
+     (modal/set-instance! (@refs "modal"))
      (react/call :load-config this))
    :component-will-unmount
    (fn [{:keys [locals]}]
@@ -387,7 +379,7 @@
      (if-let [parent (.-opener js/window)]
        ;; This window was used for login. Send the token to the parent. No need to render the UI.
        (do
-         ((aget parent (name ::handle-auth-message)) (parse-hash-into-map))
+         ((aget parent sign-in/handler-fn-name) (parse-hash-into-map))
          (.close js/window))
        (if-let [token (get (parse-hash-into-map) "access_token")]
          ;; New access token. Attempt to authenticate with it.
