@@ -85,6 +85,7 @@
                                 :disabled? (when locked? "This workspace is locked")
                                 :onClick #(swap! state assoc :show-import? true)}]]
                 (common/clear-both)])
+    :initial-entity-type (:initial-entity-type @state)
     :on-filter-change #(swap! state assoc :selected-entity-type %)
     :attribute-renderer (fn [maybe-uri]
                           (if (string? maybe-uri)
@@ -131,7 +132,9 @@
         :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                    (if success?
                      (let [workspace ((get-parsed-response) "workspace")]
-                       (swap! state update-in [:server-response]
-                         assoc :locked? (workspace "isLocked") :this-realm (get-in workspace ["realm" "groupName"])))
+                       (swap! state update-in [:server-response] assoc
+                              :locked? (workspace "isLocked")
+                              :this-realm (get-in workspace ["realm" "groupName"])
+                              :initial-entity-type entity-type))
                      (swap! state update-in [:server-response]
                        assoc :server-error status-text)))}))})
