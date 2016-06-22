@@ -136,25 +136,21 @@
    :queued (apply + (map workflowCountsByStatus ["Queued" "Launching"]))
    :active (apply + (map workflowCountsByStatus ["Submitted" "Running" "Aborting"]))})
 
-(def root-entity-types
-  ["participant" "sample" "pair" "participant_set" "sample_set" "pair_set"])
+(def root-entity-types ["participant" "sample" "pair" "participant_set" "sample_set" "pair_set"])
+(def singular-type->set-type {"participant" "participant_set"
+                              "sample" "sample_set"
+                              "pair" "pair_set"})
 
-(def set-type->attribute
+(def set-type->membership-attribute
   {"participant_set" "participants"
    "sample_set" "samples"
    "pair_set" "pairs"})
 
-(defn count-workflows [entity]
-  (if-let [attribute (set-type->attribute (entity "entityType"))]
-    (count (get-in entity ["attributes" attribute]))
-    1))
-
-(defn- make-pair [attribute]
-  [{:header (str "# " attribute) :starting-width 110}
-   #(count (get-in % ["attributes" attribute]))])
-
-(defn make-count-column
-  "When the given entity type is a *_set, returns [column_header fn-from-row-to-count]"
-  [entity-type]
-  (when-let [attribute (set-type->attribute entity-type)]
-    (make-pair attribute)))
+(defn count-workflows [entity root-entity-type]
+  (let [entity-type (entity "entityType")]
+    (cond (= entity-type root-entity-type) 1
+          ;; example: entity is 'sample_set', RET is 'sample', presumably using expression 'this.samples'
+          (= entity-type (singular-type->set-type root-entity-type))
+          (count (get-in entity ["attributes" (set-type->membership-attribute entity-type)]))
+          ;; something nonsensical has been selected, submission will probably fail anyway:
+          :else 1)))
