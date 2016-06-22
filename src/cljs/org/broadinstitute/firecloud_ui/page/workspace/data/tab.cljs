@@ -65,57 +65,6 @@
      (swap! state update-in [:crumbs] #(vec (take 1 %))))})
 
 
-(react/defc DataDeleter
-  {:render
-   (fn [{:keys [state props refs this]}]
-     (dialog/standard-dialog
-       {:width "80%" :dismiss-self (:dismiss-self props)
-        :header "Delete Entities"
-        :content
-        [:div {}
-         (when (:deleting? @state)
-           [comps/Blocker {:banner "Deleting..."}])
-         [EntitySelector
-          {:ref "EntitySelector"
-           :left-text "Workspace Entities" :right-text "Will Be Deleted"
-           :entities ((:get-entity-list props))}]
-         [:div {:style {:textAlign "center" :marginTop "1em"}}
-          (style/create-validation-error-message (:validation-errors @state))
-          [comps/ErrorViewer {:error (:server-error @state)}]]]
-        :ok-button
-        [comps/Button
-         {:text "Delete"
-          :onClick #(let [selected-entities (react/call :get-selected-entities (@refs "EntitySelector"))
-                          num (count selected-entities)
-                          msg (if (= num 1)
-                                "Really delete this entity?"
-                                (str "Really delete these " num " entities?"))]
-                     (swap! state dissoc :server-error)
-                     (if (zero? num)
-                       (swap! state assoc :validation-errors
-                              ["Please select one or more entities to delete"])
-                       (when (js/confirm msg)
-                         (react/call :delete this selected-entities))))}]}))
-   :component-did-mount
-   (fn []
-     (common/scroll-to-top 100))
-   :delete
-   (fn [{:keys [props state this]} selected-entities]
-     (swap! state assoc :deleting? true :validation-errors nil :server-error nil)
-     (endpoints/call-ajax-orch
-       {:endpoint (endpoints/delete-entities (:workspace-id props))
-        :payload {:recursive false ;; TODO implement
-                  :entities (map (fn [e] {:entityName (e "name")
-                                          :entityType (e "entityType")}) selected-entities)}
-        :headers {"Content-Type" "application/json"}
-        :on-done (fn [{:keys [success? get-parsed-response]}]
-                   (swap! state dissoc :deleting?)
-                   (if success?
-                     (do ((:reload props))
-                         ((:dismiss-self props)))
-                     (swap! state assoc :server-error (get-parsed-response))))}))})
-
-
 (defn- entity-table [state workspace-id locked?]
   [EntityTable
    {:ref "entity-table"
@@ -135,11 +84,6 @@
                  [comps/Button {:text "Import Data..."
                                 :disabled? (when locked? "This workspace is locked")
                                 :onClick #(swap! state assoc :show-import? true)}]]
-;; TODO: Functionality disabled until GAWB-422 is complete
-;;                [:div {:style {:float "right" :paddingRight "2em"}}
-;;                 [comps/Button {:text "Delete..."
-;;                                :disabled? (when locked? "This workspace is locked")
-;;                                :onClick #(swap! state assoc :show-delete? true)}]]
                 (common/clear-both)])
     :on-filter-change #(swap! state assoc :selected-entity-type %)
     :attribute-renderer (fn [maybe-uri]
@@ -161,9 +105,6 @@
            server-response (:server-response @state)
            {:keys [server-error locked? this-realm]} server-response]
        [:div {:style {:padding "1em"}}
-        ;; TODO: Functionality disabled until GAWB-422 is complete
-        ;(when (:deleting? @state)
-        ;  [comps/Blocker {:banner "Deleting..."}])
         (when (:show-import? @state)
           [dialog/Dialog {:dismiss-self #(swap! state dissoc :show-import?)
                           :width "80%"
@@ -173,12 +114,6 @@
                                            :workspace-id workspace-id
                                            :this-realm this-realm
                                            :reload-data-tab #(react/call :refresh this %)}])}])
-        ;; TODO: Functionality disabled until GAWB-422 is complete
-        ;(when (:show-delete? @state)
-        ;  [DataDeleter {:dismiss-self #(swap! state dissoc :show-delete?)
-        ;                :get-entity-list #(react/call :get-entity-list (@refs "entity-table"))
-        ;                :workspace-id workspace-id
-        ;                :reload #(react/call :refresh this)}])
         (cond
           server-error
           (style/create-server-error-message server-error)
