@@ -66,13 +66,13 @@
        (:server-error @state) [comps/ErrorViewer {:error (:server-error @state)}]
        :else [:div {:style {:textAlign "center"}} [comps/Spinner {:text "Loading entities..."}]]))
    :component-did-mount
-   (fn [{:keys [props this]}]
+   (fn [{:keys [this]}]
      (react/call :load-entities this))
    :load-entities
    (fn [{:keys [state props]}]
      (endpoints/call-ajax-orch
        {:endpoint (endpoints/get-entities-of-type (:selected-workspace-id props) (:type props))
-        :on-done (fn [{:keys [success? get-parsed-response status-text]}]
+        :on-done (fn [{:keys [success? get-parsed-response]}]
                    (if success?
                      (swap! state assoc :entity-list (get-parsed-response))
                      (swap! state assoc :server-error (get-parsed-response))))}))})
@@ -90,7 +90,7 @@
           [:h3 {} "Choose type:"]
           [:div {}
            (map
-             (fn [[type count]]
+             (fn [[type {:strs [count]}]]
                [:div {:style {:display "inline-block" :margin "0px 1em"}}
                 [comps/Button {:text (str type " (" count ")")
                                :onClick #((:add-crumb props) {:text type})}]])
