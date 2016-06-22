@@ -22,6 +22,8 @@
         (let [loc (.-location js/window)]
           (str (.-protocol loc) "//" (.-host loc) "/#profile/nih-username-token={token}")))))
 
+(defn is-within-24-hours? [time]
+    (.isBefore (js/moment.) (.add time 24 "hours")))
 
 (react/defc NihLink
   {:render
@@ -32,7 +34,9 @@
            expired? (.isBefore expire-time (js/moment.))
            _24-hours-from-now (.add (js/moment.) 24 "hours")
            expiring-soon? (.isBefore expire-time _24-hours-from-now)
-           authorized? (get status "isDbgapAuthorized")]
+           authorized? (get status "isDbgapAuthorized")
+           linked-recently? (is-within-24-hours? (-> (get status "lastLinkTime") (* 1000) (js/moment.)))
+           pending? (and username (not authorized?) (not expired?) linked-recently?)]
        [:div {}
         [:h3 {} "Linked NIH Account"]
         (cond
@@ -59,9 +63,11 @@
            [:div {:style {:display "flex" :marginTop "1em"}}
             [:div {:style {:flex "0 0 20ex"}} "dbGaP Authorization:"]
             [:div {:style {:flex "0 0 auto"}}
-             (if authorized?
-               [:span {:style {:color (:success-green style/colors)}} "Authorized"]
-               [:span {:style {:color (:text-gray style/colors)}} "Not Authorized"])]]])]))
+              (cond
+                authorized? [:span {:style {:color (:success-green style/colors)}} "Authorized"]
+                pending? [:span {:style {:color (:success-green style/colors)}}
+                           "Your link was successful; you will be granted access shortly."]
+                :else [:span {:style {:color (:text-gray style/colors)}} "Not Authorized"])]]])]))
    :component-did-mount
    (fn [{:keys [this props state refs after-update]}]
      (let [nav-context (nav/parse-segment (:parent-nav-context props))
