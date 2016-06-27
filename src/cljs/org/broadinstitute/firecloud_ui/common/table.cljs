@@ -219,7 +219,7 @@
                  (common/clear-both)]]
             ((or toolbar identity) built-in)))
         [:div {:style {:position "relative"}}
-         [comps/SafeBlocker {:ref "blocker" :banner "Loading..."}]
+         [comps/DelayedBlocker {:ref "blocker" :banner "Loading..."}]
          [:div {:style {:overflowX "auto"}}
           [:div {:style {:position "relative"
                          :paddingBottom 10

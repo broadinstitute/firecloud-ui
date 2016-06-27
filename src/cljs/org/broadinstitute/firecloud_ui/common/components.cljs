@@ -127,39 +127,37 @@
       [Button {:icon :x :onClick #((:dismiss props))}]])})
 
 
+;; TODO: find out if :position "absolute" would work everywhere, or possibly get rid of Blocker entirely
+(defn- blocker [text position]
+  [:div {:style {:backgroundColor "rgba(210, 210, 210, 0.4)"
+                 :position position :top 0 :bottom 0 :right 0 :left 0 :zIndex 9999
+                 :display "flex" :justifyContent "center" :alignItems "center"}}
+   [:div {:style {:backgroundColor "#fff" :padding "2em"}}
+    [Spinner {:text text}]]])
+
 (react/defc Blocker
   {:render
    (fn [{:keys [props]}]
-     (when (:banner props)
-       [:div {:style {:backgroundColor "rgba(210, 210, 210, 0.4)"
-                      :position "fixed" :top 0 :bottom 0 :right 0 :left 0 :zIndex 9999}}
-        [:div {:style {:position "absolute" :top "50%" :left "50%"
-                       :transform "translate(-50%, -50%)"
-                       :backgroundColor "#fff" :padding "2em"}}
-         [Spinner {:text (:banner props)}]]]))})
+     (when-let [text (:banner props)]
+       (blocker text "fixed")))})
 
-
-(react/defc SafeBlocker
+(react/defc DelayedBlocker
   {:show
    (fn [{:keys [props state]}]
      (swap! state assoc :show-requested? true)
      (js/setTimeout #(when (:show-requested? @state)
                       (swap! state assoc :showing? true))
-                    (:delay-time props)))
+                    (:delay-time-ms props)))
    :hide
    (fn [{:keys [state]}]
      (swap! state dissoc :showing? :show-requested?))
    :get-default-props
    (fn []
-     {:delay-time 200})
+     {:delay-time-ms 200})
    :render
    (fn [{:keys [props state]}]
      (when (:showing? @state)
-       [:div {:style {:backgroundColor "rgba(210, 210, 210, 0.4)"
-                      :position "absolute" :top 0 :bottom 0 :right 0 :left 0 :zIndex 9999
-                      :display "flex" :justifyContent "center" :alignItems "center"}}
-        [:div {:style {:backgroundColor "#fff" :padding "2em"}}
-         [Spinner {:text (:banner props)}]]]))})
+       (blocker (:banner props) "absolute")))})
 
 
 (react/defc StatusLabel
