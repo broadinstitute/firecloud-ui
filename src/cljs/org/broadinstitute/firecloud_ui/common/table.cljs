@@ -232,7 +232,10 @@
          [comps/SafeBlocker {:ref "blocker" :banner "Loading..."}]
          (when (or (not (:no-data? @state)) (:retain-header-on-empty? props))
            (table-utils/render-header state props this))
-         (when (:no-data? @state)
+         (when (:error @state)
+           [:div {:style {:padding "0.5em"}}
+            (style/create-server-error-message (:error @state))])
+         (when (and (not (:error @state)) (:no-data? @state))
            (style/create-message-well (or (:empty-message props) "There are no rows to display.")))
          [table-utils/Body
           (assoc props
@@ -258,13 +261,14 @@
        (if (fn? pagination)
          (pagination (merge (select-keys @state [:filter-group-index])
                             (dissoc (:query-params @state) :key-fn))
-                     (fn [{:keys [group-count filtered-count rows]}]
+                     (fn [{:keys [group-count filtered-count rows error]}]
                        (react/call :hide (@refs "blocker"))
                        (swap! state assoc
                               :grouped-count group-count
                               :filtered-count filtered-count
                               :display-rows (map ->row rows)
-                              :no-data? (empty? rows))))
+                              :no-data? (empty? rows)
+                              :error error)))
          (let [{:keys [current-page rows-per-page key-fn sort-order filter-text]} (:query-params @state)
                grouped-data (if-not (:filter-groups props)
                               data
@@ -370,6 +374,7 @@
              (merge props
                {:key selected-entity-type
                 :columns columns
+                :retain-header-on-empty? true
                 :always-sort? true
                 :pagination (react/call :pagination this columns)
                 :filter-groups (map (fn [type]
@@ -413,10 +418,11 @@
                                                              "filterTerms" filter-text
                                                              "sortField" sort-field
                                                              "sortDirection" (name sort-order)})
-                :on-done (fn [{:keys [success? get-parsed-response]}]
+                :on-done (fn [{:keys [success? get-parsed-response status-text status-code]}]
                            (if success?
                              (let [{:strs [results]
                                     {:strs [unfilteredCount filteredCount]} "resultMetadata"} (get-parsed-response)]
                                (callback {:group-count unfilteredCount
                                           :filtered-count filteredCount
-                                          :rows results}))))}))))))})
+                                          :rows results}))
+                             (callback {:error (str status-text " (" status-code ")")})))}))))))})
