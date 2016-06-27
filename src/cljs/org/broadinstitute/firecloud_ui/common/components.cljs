@@ -156,10 +156,9 @@
    (fn [{:keys [props state]}]
      (when (:showing? @state)
        [:div {:style {:backgroundColor "rgba(210, 210, 210, 0.4)"
-                      :position "absolute" :top 0 :bottom 0 :right 0 :left 0 :zIndex 9999}}
-        [:div {:style {:position "absolute" :top "50%" :left "50%"
-                       :transform "translate(-50%, -50%)"
-                       :backgroundColor "#fff" :padding "2em"}}
+                      :position "absolute" :top 0 :bottom 0 :right 0 :left 0 :zIndex 9999
+                      :display "flex" :justifyContent "center" :alignItems "center"}}
+        [:div {:style {:backgroundColor "#fff" :padding "2em"}}
          [Spinner {:text (:banner props)}]]]))})
 
 
