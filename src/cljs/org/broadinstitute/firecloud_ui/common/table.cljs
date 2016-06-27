@@ -219,7 +219,8 @@
                                           (f new-index)))})]])
                (common/clear-both)]]
           ((or (:toolbar props) identity) built-in)))
-      [:div {}
+      [:div {:style {:position "relative"}}
+       [comps/SafeBlocker {:ref "blocker" :banner "Loading..."}]
        [:div {:style {:overflowX "auto"}}
         [:div {:style {:position "relative"
                        :paddingBottom 10
@@ -229,7 +230,6 @@
                                         (map :width)
                                         (apply +)))
                        :cursor (when (:dragging? @state) "col-resize")}}
-         [comps/SafeBlocker {:ref "blocker" :banner "Loading..."}]
          (when (or (not (:no-data? @state)) (:retain-header-on-empty? props))
            (table-utils/render-header state props this))
          (when (:error @state)
