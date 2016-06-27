@@ -8,7 +8,7 @@
     [org.broadinstitute.firecloud-ui.common.dialog :as dialog]
     [org.broadinstitute.firecloud-ui.common.icons :as icons]
     [org.broadinstitute.firecloud-ui.common.style :as style]
-    [org.broadinstitute.firecloud-ui.common.table :as table]
+    [org.broadinstitute.firecloud-ui.common.entity-table :refer [EntityTable]]
     [org.broadinstitute.firecloud-ui.config :as config]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
     [org.broadinstitute.firecloud-ui.utils :as utils]
@@ -51,7 +51,7 @@
          "None"))]
     (queue-status-table state)
     (common/clear-both)
-    [table/EntityTable
+    [EntityTable
      {:workspace-id (:workspace-id props)
       :initial-entity-type (:root-entity-type props)
       :row-style (fn [row-index row-data]

@@ -7,7 +7,7 @@
     [org.broadinstitute.firecloud-ui.common.components :as comps]
     [org.broadinstitute.firecloud-ui.common.dialog :as dialog]
     [org.broadinstitute.firecloud-ui.common.icons :as icons]
-    [org.broadinstitute.firecloud-ui.common.table :as table]
+    [org.broadinstitute.firecloud-ui.common.entity-table :refer [EntityTable]]
     [org.broadinstitute.firecloud-ui.common.table-utils :as table-utils]
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.config :as config]
@@ -117,7 +117,7 @@
 
 
 (defn- entity-table [state workspace-id locked?]
-  [table/EntityTable
+  [EntityTable
    {:ref "entity-table"
     :workspace-id workspace-id
     :toolbar (fn [built-in]
