@@ -229,6 +229,7 @@
                                         (map :width)
                                         (apply +)))
                        :cursor (when (:dragging? @state) "col-resize")}}
+         [comps/SafeBlocker {:ref "blocker" :banner "Loading..."}]
          (when (or (not (:no-data? @state)) (:retain-header-on-empty? props))
            (table-utils/render-header state props this))
          (when (:no-data? @state)
@@ -251,23 +252,24 @@
        :display-index
        (map merge (repeat {:starting-width 100}) (:columns props) (:columns @state)))))
    :refresh-rows
-   (fn [{:keys [props state]}]
-     (let [pagination (:pagination props)]
+   (fn [{:keys [props state refs]}]
+     (react/call :show (@refs "blocker"))
+     (let [{:keys [pagination data ->row]} props]
        (if (fn? pagination)
          (pagination (merge (select-keys @state [:filter-group-index])
                             (dissoc (:query-params @state) :key-fn))
                      (fn [{:keys [group-count filtered-count rows]}]
+                       (react/call :hide (@refs "blocker"))
                        (swap! state assoc
                               :grouped-count group-count
                               :filtered-count filtered-count
-                              :display-rows (map (:->row props) rows)
+                              :display-rows (map ->row rows)
                               :no-data? (empty? rows))))
-         (let [->row (:->row props)
-               {:keys [current-page rows-per-page key-fn sort-order filter-text]} (:query-params @state)
+         (let [{:keys [current-page rows-per-page key-fn sort-order filter-text]} (:query-params @state)
                grouped-data (if-not (:filter-groups props)
-                              (:data props)
+                              data
                               (filter (:pred (get-in props [:filter-groups (:filter-group-index @state)]))
-                                      (:data props)))
+                                      data))
                filtered-data (if-let [txt (not-empty filter-text)]
                                (table-utils/filter-data grouped-data ->row (:columns props) txt)
                                grouped-data)
@@ -276,6 +278,7 @@
                ordered-rows (if (= :desc sort-order) (reverse sorted-rows) sorted-rows)
                ;; realize this sequence so errors can be caught early:
                clipped-rows (doall (take rows-per-page (drop (* (dec current-page) rows-per-page) ordered-rows)))]
+           (react/call :hide (@refs "blocker"))
            (swap! state assoc
                   :grouped-count (count grouped-data)
                   :filtered-count (count filtered-data)
