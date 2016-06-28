@@ -85,7 +85,7 @@
                                 :disabled? (when locked? "This workspace is locked")
                                 :onClick #(swap! state assoc :show-import? true)}]]
                 (common/clear-both)])
-    :initial-entity-type (:initial-entity-type @state)
+    :initial-entity-type (get-in @state [:server-response :initial-entity-type])
     :on-filter-change #(swap! state assoc :selected-entity-type %)
     :attribute-renderer (fn [maybe-uri]
                           (if (string? maybe-uri)
