@@ -1,14 +1,11 @@
 (ns org.broadinstitute.firecloud-ui.common.table
   (:require
-   [clojure.set :refer [union]]
-   [clojure.string :refer [join]]
    [dmohs.react :as react]
    [org.broadinstitute.firecloud-ui.common :as common]
    [org.broadinstitute.firecloud-ui.common.components :as comps]
    [org.broadinstitute.firecloud-ui.common.dialog :as dialog]
    [org.broadinstitute.firecloud-ui.common.style :as style]
    [org.broadinstitute.firecloud-ui.common.table-utils :as table-utils]
-   [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
    [org.broadinstitute.firecloud-ui.utils :as utils]
    ))
 
@@ -165,85 +162,91 @@
                                      (fn [row] (nth row (:index initial-sort-column))))}))}))
    :render
    (fn [{:keys [this state props refs after-update]}]
-     [:div {}
-      (when (or (:filterable? props) (:reorderable-columns? props) (:toolbar props))
-        (let [built-in
-              [:div {:style {:paddingBottom "1em"}}
-               (when (:reorderable-columns? props)
-                 [:div {:style {:float "left"}}
-                  [comps/Button {:icon :gear :title-text "Select Columns..."
-                                 :ref "col-edit-button"
-                                 :onClick #(swap! state assoc :reordering-columns? true)}]
-                  (when (:reordering-columns? @state)
-                    [dialog/Dialog
-                     {:get-anchor-dom-node #(react/find-dom-node (@refs "col-edit-button"))
-                      :blocking? false
-                      :dismiss-self #(swap! state assoc :reordering-columns? false)
-                      :content
-                      (react/create-element
-                        table-utils/ColumnEditor
-                        {:columns (react/call :get-ordered-columns this)
-                         :on-reorder
-                         (fn [source-index target-index]
-                           (let [column-order (vec (sort-by
-                                                     :display-index
-                                                     (map #(select-keys % [:index :display-index])
-                                                          (:columns @state))))
-                                 new-order (utils/move column-order source-index target-index)
-                                 new-order (map-indexed (fn [i c] (assoc c :display-index i))
-                                                        new-order)
-                                 new-order (map :display-index (sort-by :index new-order))]
-                             (swap! state update-in [:columns]
-                                    #(mapv (fn [new-index c] (assoc c :display-index new-index))
-                                           new-order %))))
-                         :on-visibility-change
-                         (fn [column-index visible?]
-                           (swap!
-                             state update-in [:columns]
-                             (fn [columns]
-                               (if (= :all column-index)
-                                 (mapv #(assoc % :visible? visible?) columns)
-                                 (assoc-in columns [column-index :visible?] visible?)))))})}])])
-               (when (:filterable? props)
-                 [:div {:style {:float "left" :marginLeft "1em"}}
-                  [table-utils/TextFilter {:on-filter #(swap! state update-in [:query-params] assoc :filter-text %)}]])
-               (when (:filter-groups props)
-                 [:div {:style {:float "left" :marginLeft "1em" :marginTop -3}}
-                  [table-utils/FilterGroupBar
-                   (merge (select-keys props [:filter-groups :data])
-                          {:selected-index (:filter-group-index @state)
-                           :on-change (fn [new-index]
-                                        (swap! state assoc :filter-group-index new-index)
-                                        (after-update #(react/call :refresh-rows this))
-                                        (when-let [f (:on-filter-change props)]
-                                          (f new-index)))})]])
-               (common/clear-both)]]
-          ((or (:toolbar props) identity) built-in)))
-      [:div {}
-       [:div {:style {:overflowX "auto"}}
-        [:div {:style {:position "relative"
-                       :paddingBottom 10
-                       :minWidth (when-not (:no-data? @state)
-                                   (->> (react/call :get-ordered-columns this)
-                                        (filter :visible?)
-                                        (map :width)
-                                        (apply +)))
-                       :cursor (when (:dragging? @state) "col-resize")}}
-         (when (or (not (:no-data? @state)) (:retain-header-on-empty? props))
-           (table-utils/render-header state props this))
-         (when (:no-data? @state)
-           (style/create-message-well (or (:empty-message props) "There are no rows to display.")))
-         [table-utils/Body
-          (assoc props
-            :columns (filter :visible? (react/call :get-ordered-columns this))
-            :rows (:display-rows @state))]]]]
-      [:div {:style {:paddingTop (:paginator-space props)}}
-       [table-utils/Paginator
-        {:width (:width props)
-         :pagination-params (select-keys (:query-params @state) [:current-page :rows-per-page])
-         :num-visible-rows (:filtered-count @state)
-         :num-total-rows (or (:num-total-rows props) (:grouped-count @state))
-         :on-change #(swap! state update-in [:query-params] merge %)}]]])
+     (let [{:keys [filterable? reorderable-columns? toolbar retain-header-on-empty?]} props
+           {:keys [no-data? error]} @state]
+       [:div {}
+        (when (or filterable? reorderable-columns? toolbar)
+          (let [built-in
+                [:div {:style {:paddingBottom "1em"}}
+                 (when reorderable-columns?
+                   [:div {:style {:float "left"}}
+                    [comps/Button {:icon :gear :title-text "Select Columns..."
+                                   :ref "col-edit-button"
+                                   :onClick #(swap! state assoc :reordering-columns? true)}]
+                    (when (:reordering-columns? @state)
+                      [dialog/Dialog
+                       {:get-anchor-dom-node #(react/find-dom-node (@refs "col-edit-button"))
+                        :blocking? false
+                        :dismiss-self #(swap! state assoc :reordering-columns? false)
+                        :content
+                        (react/create-element
+                          table-utils/ColumnEditor
+                          {:columns (react/call :get-ordered-columns this)
+                           :on-reorder
+                           (fn [source-index target-index]
+                             (let [column-order (vec (sort-by
+                                                       :display-index
+                                                       (map #(select-keys % [:index :display-index])
+                                                            (:columns @state))))
+                                   new-order (utils/move column-order source-index target-index)
+                                   new-order (map-indexed (fn [i c] (assoc c :display-index i))
+                                                          new-order)
+                                   new-order (map :display-index (sort-by :index new-order))]
+                               (swap! state update-in [:columns]
+                                      #(mapv (fn [new-index c] (assoc c :display-index new-index))
+                                             new-order %))))
+                           :on-visibility-change
+                           (fn [column-index visible?]
+                             (swap!
+                               state update-in [:columns]
+                               (fn [columns]
+                                 (if (= :all column-index)
+                                   (mapv #(assoc % :visible? visible?) columns)
+                                   (assoc-in columns [column-index :visible?] visible?)))))})}])])
+                 (when filterable?
+                   [:div {:style {:float "left" :marginLeft "1em"}}
+                    [table-utils/TextFilter {:on-filter #(swap! state update-in [:query-params] assoc :filter-text %)}]])
+                 (when (:filter-groups props)
+                   [:div {:style {:float "left" :marginLeft "1em" :marginTop -3}}
+                    [table-utils/FilterGroupBar
+                     (merge (select-keys props [:filter-groups :data])
+                            {:selected-index (:filter-group-index @state)
+                             :on-change (fn [new-index]
+                                          (swap! state assoc :filter-group-index new-index)
+                                          (after-update #(react/call :refresh-rows this))
+                                          (when-let [f (:on-filter-change props)]
+                                            (f new-index)))})]])
+                 (common/clear-both)]]
+            ((or toolbar identity) built-in)))
+        [:div {:style {:position "relative"}}
+         [comps/DelayedBlocker {:ref "blocker" :banner "Loading..."}]
+         [:div {:style {:overflowX "auto"}}
+          [:div {:style {:position "relative"
+                         :paddingBottom 10
+                         :minWidth (when-not no-data?
+                                     (->> (react/call :get-ordered-columns this)
+                                          (filter :visible?)
+                                          (map :width)
+                                          (apply +)))
+                         :cursor (when (:dragging? @state) "col-resize")}}
+           (when (or (not no-data?) retain-header-on-empty?)
+             (table-utils/render-header state props this))
+           (when error
+             [:div {:style {:padding "0.5em"}}
+              (style/create-server-error-message error)])
+           (when (and (not error) no-data?)
+             (style/create-message-well (or (:empty-message props) "There are no rows to display.")))
+           [table-utils/Body
+            (assoc props
+              :columns (filter :visible? (react/call :get-ordered-columns this))
+              :rows (:display-rows @state))]]]]
+        [:div {:style {:paddingTop (:paginator-space props)}}
+         [table-utils/Paginator
+          {:width (:width props)
+           :pagination-params (select-keys (:query-params @state) [:current-page :rows-per-page])
+           :num-visible-rows (:filtered-count @state)
+           :num-total-rows (or (:num-total-rows props) (:grouped-count @state))
+           :on-change #(swap! state update-in [:query-params] merge %)}]]]))
    :get-ordered-columns
    (fn [{:keys [props state]}]
      (vec
@@ -251,23 +254,25 @@
        :display-index
        (map merge (repeat {:starting-width 100}) (:columns props) (:columns @state)))))
    :refresh-rows
-   (fn [{:keys [props state]}]
-     (let [pagination (:pagination props)]
+   (fn [{:keys [props state refs]}]
+     (react/call :show (@refs "blocker"))
+     (let [{:keys [pagination data ->row]} props]
        (if (fn? pagination)
          (pagination (merge (select-keys @state [:filter-group-index])
                             (dissoc (:query-params @state) :key-fn))
-                     (fn [{:keys [group-count filtered-count rows]}]
+                     (fn [{:keys [group-count filtered-count rows error]}]
+                       (react/call :hide (@refs "blocker"))
                        (swap! state assoc
                               :grouped-count group-count
                               :filtered-count filtered-count
-                              :display-rows (map (:->row props) rows)
-                              :no-data? (empty? rows))))
-         (let [->row (:->row props)
-               {:keys [current-page rows-per-page key-fn sort-order filter-text]} (:query-params @state)
+                              :display-rows (map ->row rows)
+                              :no-data? (empty? rows)
+                              :error error)))
+         (let [{:keys [current-page rows-per-page key-fn sort-order filter-text]} (:query-params @state)
                grouped-data (if-not (:filter-groups props)
-                              (:data props)
+                              data
                               (filter (:pred (get-in props [:filter-groups (:filter-group-index @state)]))
-                                      (:data props)))
+                                      data))
                filtered-data (if-let [txt (not-empty filter-text)]
                                (table-utils/filter-data grouped-data ->row (:columns props) txt)
                                grouped-data)
@@ -276,6 +281,7 @@
                ordered-rows (if (= :desc sort-order) (reverse sorted-rows) sorted-rows)
                ;; realize this sequence so errors can be caught early:
                clipped-rows (doall (take rows-per-page (drop (* (dec current-page) rows-per-page) ordered-rows)))]
+           (react/call :hide (@refs "blocker"))
            (swap! state assoc
                   :grouped-count (count grouped-data)
                   :filtered-count (count filtered-data)
@@ -311,109 +317,3 @@
    (fn [{:keys [this]}]
      (.removeEventListener js/window "mousemove" (.-onMouseMoveHandler this))
      (.removeEventListener js/window "mouseup" (.-onMouseUpHandler this)))})
-
-;; for attributes referring to a single other entity
-;; e.g. samples referring to participants
-(defn- is-single-ref? [attr-value]
-  (and (map? attr-value)
-       (= (set (keys attr-value)) #{"entityType" "entityName"})))
-
-;; for attributes referring to a list of entities
-;; e.g. sample sets referring to samples
-(defn- is-ref-list? [attr-value]
-  (and (sequential? attr-value)
-       (map? (first attr-value)) ;; we'll just assume homogeneous lists
-       (= (set (keys (first attr-value))) #{"entityType" "entityName"})))
-
-(react/defc EntityTable
-  {:get-default-props
-   (fn []
-     {:empty-message "There are no entities to display."
-      :attribute-renderer table-utils/default-render})
-   :render
-   (fn [{:keys [props state this]}]
-     (let [{:keys [server-response]} @state
-           {:keys [server-error entity-metadata entity-types selected-entity-type]} server-response]
-       [:div {}
-        (when (:loading-entities? @state)
-          [comps/Blocker {:banner "Loading entities..."}])
-        (cond
-          server-error (style/create-server-error-message server-error)
-          (nil? entity-metadata) [:div {:style {:textAlign "center"}} [comps/Spinner {:text "Retrieving entity types..."}]]
-          :else
-          (let [attributes (get-in entity-metadata [selected-entity-type "attributeNames"])
-                attr-col-width (->> attributes count (/ 1000) int (min 400) (max 100))
-                entity-column {:header "Entity Name" :starting-width 200
-                               :as-text #(% "name") :sort-by :text
-                               :content-renderer (or (:entity-name-renderer props)
-                                                     (fn [entity] (entity "name")))}
-                attr-columns (map (fn [k] {:header k :starting-width attr-col-width :sort-by :text
-                                           :as-text
-                                           (fn [attr-value]
-                                             (cond
-                                               (is-single-ref? attr-value) (attr-value "entityName")
-                                               (is-ref-list? attr-value) (map #(% "entityName") attr-value)
-                                               :else (str attr-value)))
-                                           :content-renderer
-                                           (fn [attr-value]
-                                             (cond
-                                               (is-single-ref? attr-value) (attr-value "entityName")
-                                               (is-ref-list? attr-value) (str (count attr-value) " items: "
-                                                                              (join ", " (map #(% "entityName") attr-value)))
-                                               :else ((:attribute-renderer props) attr-value)))})
-                                  attributes)
-                columns (vec (cons entity-column attr-columns))]
-            [Table
-             (merge props
-               {:key selected-entity-type
-                :columns columns
-                :always-sort? true
-                :pagination (react/call :pagination this columns)
-                :filter-groups (map (fn [type]
-                                      {:text type :count (get-in entity-metadata [type "count"]) :pred (constantly true)})
-                                    entity-types)
-                :initial-filter-group-index (utils/index-of entity-types selected-entity-type)
-                :on-filter-change (fn [index]
-                                    (let [type (nth entity-types index)]
-                                      (swap! state update-in [:server-response] assoc :selected-entity-type type)
-                                      (when-let [func (:on-filter-change props)]
-                                        (func type))))
-                :->row (fn [m]
-                         (->> attributes (map #(get-in m ["attributes" %])) (cons m) vec))})]))]))
-   :component-did-mount
-   (fn [{:keys [props state]}]
-     (endpoints/call-ajax-orch
-       {:endpoint (endpoints/get-entity-types (:workspace-id props))
-        :on-done (fn [{:keys [success? get-parsed-response]}]
-                   (if success?
-                     (let [metadata (get-parsed-response)
-                           entity-types (vec (keys metadata))]
-                       (swap! state update-in [:server-response]
-                         assoc :entity-metadata metadata
-                               :entity-types entity-types
-                               :selected-entity-type (or (:initial-entity-type props) (first entity-types))))
-                     (swap! state update-in [:server-response]
-                       assoc :server-error (get-parsed-response))))}))
-   :pagination
-   (fn [{:keys [props state]} columns]
-     (let [{{:keys [entity-types]} :server-response} @state]
-       (fn [{:keys [current-page rows-per-page filter-text sort-column sort-order filter-group-index]} callback]
-         (if (empty? entity-types)
-           (callback {:group-count 0 :filtered-count 0 :rows []})
-           (let [type (nth entity-types filter-group-index)
-                 sort-field (when (pos? sort-column)
-                              (get-in columns [sort-column :header]))]
-             (endpoints/call-ajax-orch
-               {:endpoint (endpoints/get-entities-paginated (:workspace-id props) type
-                                                            {"page" current-page
-                                                             "pageSize" rows-per-page
-                                                             "filterTerms" filter-text
-                                                             "sortField" sort-field
-                                                             "sortDirection" (name sort-order)})
-                :on-done (fn [{:keys [success? get-parsed-response]}]
-                           (if success?
-                             (let [{:strs [results]
-                                    {:strs [unfilteredCount filteredCount]} "resultMetadata"} (get-parsed-response)]
-                               (callback {:group-count unfilteredCount
-                                          :filtered-count filteredCount
-                                          :rows results}))))}))))))})
