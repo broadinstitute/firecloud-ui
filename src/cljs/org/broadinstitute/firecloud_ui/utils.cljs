@@ -152,7 +152,7 @@
            :headers (merge {"Authorization" (str "Bearer " @access-token)}
                            (:headers arg-map))
            :on-done (fn [{:keys [status-code] :as m}]
-                      (when (not= @server-down? (= status-code 503))
+                      (when (not= @server-down? (contains? #{500 503} status-code))
                         (swap! server-down? not))
                       ;; Handle auth token expiration
                       (when (and (= status-code 401) (not ignore-auth-expiration?))
