@@ -96,6 +96,10 @@
                                 (rand-nth ["OWNER" "WRITER" "READER"])])
                     (range (inc (rand-int 5)))))})
 
+(defn get-workspace-bucket [workspace-id]
+      {:path (str "/workspaces/" (ws-path workspace-id) "/bucket")
+       :method :get})
+
 (defn update-workspace-acl [workspace-id]
   {:path (str "/workspaces/" (ws-path workspace-id) "/acl")
    :method :patch})
@@ -659,7 +663,7 @@
    :mock-data (utils/rand-subset ["broad-dsde-dev" "broad-institute"])})
 
 (defn submissions-queue-status []
-  {:path "/submissions/queueStatus"
+  {:path "/workspaces/broad-dsde-dev/BRCAx2_Clones3_51/bucket"
    :method :get
    :mock-data {"estimatedQueueTimeMS" (rand-int 10000000)
                "workflowCountsByStatus"
