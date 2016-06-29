@@ -205,7 +205,8 @@
                                    (assoc-in columns [column-index :visible?] visible?)))))})}])])
                  (when filterable?
                    [:div {:style {:float "left" :marginLeft "1em"}}
-                    [table-utils/TextFilter {:on-filter #(swap! state update-in [:query-params] assoc :filter-text %)}]])
+                    [table-utils/TextFilter {:on-filter #(swap! state update-in [:query-params]
+                                                                assoc :filter-text % :current-page 1)}]])
                  (when (:filter-groups props)
                    [:div {:style {:float "left" :marginLeft "1em" :marginTop -3}}
                     [table-utils/FilterGroupBar
