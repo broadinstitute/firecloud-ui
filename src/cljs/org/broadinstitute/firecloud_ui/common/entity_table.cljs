@@ -3,6 +3,7 @@
     [clojure.set :refer [union]]
     [clojure.string :refer [join]]
     [dmohs.react :as react]
+    [org.broadinstitute.firecloud-ui.common :as common]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.common.table :refer [Table]]
@@ -88,9 +89,9 @@
         :on-done (fn [{:keys [success? get-parsed-response]}]
                    (if success?
                      (let [metadata (get-parsed-response)
-                           entity-types (vec (keys metadata))]
-                       (swap! state update-in [:server-response]
-                              assoc :entity-metadata metadata
+                           entity-types (utils/sort-match common/root-entity-types (vec (keys metadata)))]
+                       (swap! state update-in [:server-response] assoc
+                              :entity-metadata metadata
                               :entity-types entity-types
                               :selected-entity-type (or (:initial-entity-type props) (first entity-types))))
                      (swap! state update-in [:server-response]

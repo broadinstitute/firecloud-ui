@@ -201,6 +201,11 @@
 (defn index-of [coll item]
   (first (keep-indexed (fn [i x] (when (= item x) i)) coll)))
 
+(defn sort-match
+  "Sort a collection to match the ordering of a given 'target' collection"
+  [pattern coll]
+  (sort-by #(index-of pattern %) coll))
+
 
 (defn rand-subset [items]
   (take (rand-int (inc (count items))) (shuffle items)))
