@@ -54,8 +54,6 @@
                      (swap! state assoc :status :error :message status-text)))}))})
 
 (react/defc BucketBanner
-  ;actually probably do want to deal with status/success in this banner
-  ;because what happens if there's a timeout? it shows as "No bucket access"
   {:render
    (fn [{:keys [props]}]
     [:div {:style {:position "relative"}}
@@ -70,9 +68,16 @@
                             :fontSize "small"
                             :padding "4px 0"
                             :textAlign "center"}}
-              "Your access to the Google Bucket associated with"
-              " this workspace is pending. This banner will disappear"
-              " once you have been granted access to the bucket."]])])})
+              (case (:status-code props)
+                (= 404) (str "The Google Bucket associated with this workspace"
+                    " does not exist.")
+                (<= 400 (:status-code props) 499) (str "Your access to the Google Bucket associated"
+                    " with this workspace is pending. This banner will disappear once you have"
+                    " been granted access to the bucket.")
+                "default" (str "FireCloud is unable to query for your"
+                    " access to the Google Bucket associated with this workspace."
+                    " This is likely intermittent and you may or may not have access"
+                    " to the bucket at this time."))]])])})
 
 
 (def ^:private SUMMARY "Summary")
@@ -94,48 +99,48 @@
            workspace-id (:workspace-id props)
            tab (:segment nav-context)]
        [:div {:style {:margin "0 -1em"}}
-       [:div {:style {:margin "-22px 0 2px 0"}}
-        [ProtectedBanner (select-keys props [:workspace-id])]]
-       [:div {:style {:margin "-2px 0 2px 0"}}
-        [BucketBanner (select-keys @state [:bucket-access?])]]
-        [comps/TabBar {:selected-index (tab-string-to-index tab)
-                       :items
-                       [{:text SUMMARY :href (nav/create-href (:nav-context props))
-                         :content
-                         (react/create-element
-                           [summary-tab/Summary {:key workspace-id :ref SUMMARY
-                                                 :workspace-id workspace-id
-                                                 :bucket-access? (:bucket-access? @state)
-                                                 :nav-context nav-context
-                                                 :on-delete (:on-delete props)
-                                                 :on-clone (:on-clone props)}])
-                         :onTabRefreshed #(react/call :refresh (@refs SUMMARY))}
-                        {:text DATA :href (nav/create-href (:nav-context props) DATA)
-                         :content
-                         (react/create-element
-                           [data-tab/WorkspaceData {:ref DATA :workspace-id workspace-id}])
-                         :onTabRefreshed #(react/call :refresh (@refs DATA))}
-                        {:text CONFIGS :href (nav/create-href (:nav-context props) CONFIGS)
-                         :content
-                         (react/create-element
-                           [method-configs-tab/Page {:ref CONFIGS
-                                                     :workspace-id workspace-id
-                                                     :bucket-access? (:bucket-access? @state)
-                                                     :on-submission-success #(nav/navigate (:nav-context props) MONITOR %)
-                                                     :nav-context (nav/terminate-when (not= tab CONFIGS) nav-context)}])
-                         :onTabRefreshed #(react/call :refresh (@refs CONFIGS))}
-                        {:text MONITOR :href (nav/create-href (:nav-context props) MONITOR)
-                         :content
-                         (react/create-element
-                           [monitor-tab/Page {:ref MONITOR
-                                              :workspace-id workspace-id
-                                              :nav-context (nav/terminate-when (not= tab MONITOR) nav-context)}])
-                         :onTabRefreshed #(react/call :refresh (@refs MONITOR))}]}]]))
+         [:div {:style {:margin "-22px 0 2px 0"}}
+          [ProtectedBanner (select-keys props [:workspace-id])]]
+         [:div {:style {:margin "-2px 0 2px 0"}}
+          [BucketBanner (select-keys @state [:bucket-access? :status-code])]]
+          [comps/TabBar {:selected-index (tab-string-to-index tab)
+                         :items
+                         [{:text SUMMARY :href (nav/create-href (:nav-context props))
+                           :content
+                           (react/create-element
+                             [summary-tab/Summary {:key workspace-id :ref SUMMARY
+                                                   :workspace-id workspace-id
+                                                   :bucket-access? (:bucket-access? @state)
+                                                   :nav-context nav-context
+                                                   :on-delete (:on-delete props)
+                                                   :on-clone (:on-clone props)}])
+                           :onTabRefreshed #(react/call :refresh (@refs SUMMARY))}
+                          {:text DATA :href (nav/create-href (:nav-context props) DATA)
+                           :content
+                           (react/create-element
+                             [data-tab/WorkspaceData {:ref DATA :workspace-id workspace-id}])
+                           :onTabRefreshed #(react/call :refresh (@refs DATA))}
+                          {:text CONFIGS :href (nav/create-href (:nav-context props) CONFIGS)
+                           :content
+                           (react/create-element
+                             [method-configs-tab/Page {:ref CONFIGS
+                                                       :workspace-id workspace-id
+                                                       :bucket-access? (:bucket-access? @state)
+                                                       :on-submission-success #(nav/navigate (:nav-context props) MONITOR %)
+                                                       :nav-context (nav/terminate-when (not= tab CONFIGS) nav-context)}])
+                           :onTabRefreshed #(react/call :refresh (@refs CONFIGS))}
+                          {:text MONITOR :href (nav/create-href (:nav-context props) MONITOR)
+                           :content
+                           (react/create-element
+                             [monitor-tab/Page {:ref MONITOR
+                                                :workspace-id workspace-id
+                                                :nav-context (nav/terminate-when (not= tab MONITOR) nav-context)}])
+                           :onTabRefreshed #(react/call :refresh (@refs MONITOR))}]}]]))
    :component-did-mount
    (fn [{:keys [props state]}]
     (endpoints/call-ajax-orch
       {:endpoint (endpoints/get-workspace-bucket (:workspace-id props))
-       :on-done (fn [{:keys [success? get-parsed-response status-text]}]
+       :on-done (fn [{:keys [success? status-code get-parsed-response status-text]}]
                     (if success?
-                      (swap! state assoc :status :success :bucket-access? true)
-                      (swap! state assoc :status :success :bucket-access? false)))}))})
+                      (swap! state assoc :status :success :status-code status-code :bucket-access? true)
+                      (swap! state assoc :status :success :status-code status-code :bucket-access? false)))}))})
