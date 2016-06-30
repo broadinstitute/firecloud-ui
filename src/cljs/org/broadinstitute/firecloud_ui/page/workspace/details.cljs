@@ -68,16 +68,17 @@
                             :fontSize "small"
                             :padding "4px 0"
                             :textAlign "center"}}
-              (case (:status-code props)
-                (= 404) (str "The Google Bucket associated with this workspace"
-                    " does not exist.")
-                (<= 400 (:status-code props) 499) (str "Your access to the Google Bucket associated"
-                    " with this workspace is pending. This banner will disappear once you have"
-                    " been granted access to the bucket.")
-                "default" (str "FireCloud is unable to query for your"
-                    " access to the Google Bucket associated with this workspace."
-                    " This is likely intermittent and you may or may not have access"
-                    " to the bucket at this time."))]])])})
+              (if (= 404 (:status-code props))
+                (str "The Google Bucket associated with this workspace"
+                     " does not exist.")
+                (if (<= 400 (:status-code props) 499)
+                  (str "Your access to the Google Bucket associated"
+                       " with this workspace is pending. This banner will disappear once you have"
+                       " been granted access to the bucket.")
+                  (str "FireCloud is unable to query for your"
+                       " access to the Google Bucket associated with this workspace."
+                       " This is likely intermittent and you may or may not have access"
+                       " to the bucket at this time.")))]])])})
 
 
 (def ^:private SUMMARY "Summary")
