@@ -164,11 +164,11 @@
         (case bucket-access?
           nil [:div {:style {:position "absolute" :marginTop "-1.5em"}}
                [comps/Spinner {:height "1.5ex"}]]
-          true [:a {:href (str "https://console.developers.google.com/storage/browser/" (get-in ws ["workspace" "bucketName"]) "/")
-                    :title "Click to open the Google Cloud Storage browser for this bucket"
-                    :style {:textDecoration "none" :color (:button-blue style/colors)}
-                    :target "_blank"}
-                (get-in ws ["workspace" "bucketName"])]
+          true (style/create-link {:text (get-in ws ["workspace" "bucketName"])
+                                   :href (str "https://console.developers.google.com/storage/browser/" (get-in ws ["workspace" "bucketName"]) "/")
+                                   :title "Click to open the Google Cloud Storage browser for this bucket"
+                                   :style {:textDecoration "none" :color (:button-blue style/colors)}
+                                   :target "_blank"})
           false (get-in ws ["workspace" "bucketName"])))
       (style/create-section-header "Analysis Submissions")
       (style/create-paragraph

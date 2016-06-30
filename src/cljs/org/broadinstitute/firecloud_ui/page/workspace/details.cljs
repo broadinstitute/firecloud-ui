@@ -68,17 +68,17 @@
                             :fontSize "small"
                             :padding "4px 0"
                             :textAlign "center"}}
-              (if (= 404 (:status-code props))
-                (str "The Google Bucket associated with this workspace"
-                     " does not exist.")
-                (if (<= 400 (:status-code props) 499)
-                  (str "Your access to the Google Bucket associated"
-                       " with this workspace is pending. This banner will disappear once you have"
-                       " been granted access to the bucket.")
-                  (str "FireCloud is unable to query for your"
-                       " access to the Google Bucket associated with this workspace."
-                       " This is likely intermittent and you may or may not have access"
-                       " to the bucket at this time.")))]])])})
+              (cond (= 404 (:status-code props))
+                    (str "The Google Bucket associated with this workspace"
+                         " does not exist.")
+                    (<= 400 (:status-code props) 499)
+                    (str "Your access to the Google Bucket associated"
+                         " with this workspace is pending. This banner will disappear once you have"
+                         " been granted access to the bucket.")
+                    :else (str "FireCloud is unable to query for your"
+                               " access to the Google Bucket associated with this workspace."
+                               " This is likely intermittent and you may or may not have access"
+                               " to the bucket at this time."))]])])})
 
 
 (def ^:private SUMMARY "Summary")
@@ -141,7 +141,5 @@
    (fn [{:keys [props state]}]
     (endpoints/call-ajax-orch
       {:endpoint (endpoints/get-workspace-bucket (:workspace-id props))
-       :on-done (fn [{:keys [success? status-code get-parsed-response status-text]}]
-                    (if success?
-                      (swap! state assoc :status :success :status-code status-code :bucket-access? true)
-                      (swap! state assoc :status :success :status-code status-code :bucket-access? false)))}))})
+       :on-done (fn [{:keys [success? status-code]}]
+                    (swap! state assoc :status-code status-code :bucket-access? success?))}))})
