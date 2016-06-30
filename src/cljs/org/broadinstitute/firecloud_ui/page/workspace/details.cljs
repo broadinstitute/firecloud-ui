@@ -60,7 +60,7 @@
      (case (:bucket-access? props)
        nil [:div {:style {:position "absolute" :marginTop "-1.5em"}}
             [comps/Spinner {:height "1.5ex"}]]
-       true nil ;reverse this when no longer testing
+       true nil
        false [:div {:style {}}
              [:div {:style {:height 1 :backgroundColor "#bbb" :marginBottom 2}}]
              [:div {:style {:outlineTop (str "4px double #ccc")
