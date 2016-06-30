@@ -210,7 +210,7 @@
          (launch/render-button {:workspace-id (:workspace-id props)
                                 :config-id {:namespace (config "namespace") :name (config "name")}
                                 :root-entity-type (config "rootEntityType")
-                                :disabled? (:locked? @state)
+                                :disabled? (if (:locked? @state) "This workspace is locked foo" (if (not (:bucket-access? props)) "Your access to the workspace bucket is pending" nil))
                                 :on-success (:on-submission-success props)})])
       (render-main-display wrapped-config editing? (:inputs-outputs @state))
       (clear-both)]]))

@@ -26,7 +26,7 @@
                   message]
           :success (case protected?
                      false nil
-                     true [:div {:style {:margin "-22px 0 2px 0"}}
+                     true [:div {:style {}}
                            [:div {:style {:height 1 :backgroundColor "#bbb" :marginBottom 2}}]
                            [:div {:style {:outlineTop (str "4px double #ccc")
                                          :backgroundColor "#ccc"
@@ -54,42 +54,25 @@
                      (swap! state assoc :status :error :message status-text)))}))})
 
 (react/defc BucketBanner
+  ;actually probably do want to deal with status/success in this banner
+  ;because what happens if there's a timeout? it shows as "No bucket access"
   {:render
-   (fn [{:keys [props state]}]
-       (let [{:keys [message bucket-access? status]} @state]
-            [:div {:style {:position "relative"}}
-             (case status
-                   nil [:div {:style {:position "absolute" :marginTop "-1.5em"}}
-                        [comps/Spinner {:height "1.5ex"}]]
-                   :error [:div {:style {:color (:exception-red style/colors)}}
-                           message]
-                   :success (case bucket-access?
-                                  false nil ;reverse this when no longer testing
-                                  true [:div {:style {:margin "-22px 0 2px 0"}}
-                                        [:div {:style {:height 1 :backgroundColor "#bbb" :marginBottom 2}}]
-                                        [:div {:style {:outlineTop (str "4px double #ccc")
-                                                       :backgroundColor "#ff8060"
-                                                       :fontSize "small"
-                                                       :padding "4px 0"
-                                                       :textAlign "center"}}
-                                         "Your access to the Google Bucket associated with"
-                                         " this workspace is pending. This banner will automatically"
-                                         " disappear once you have been granted access to the bucket."]]))]))
-   :component-did-mount
-   (fn [{:keys [this props]}]
-       (react/call :load-bucket this (:workspace-id props)))
-   :component-will-receive-props
-   (fn [{:keys [this next-props]}]
-       (react/call :load-bucket this (:workspace-id next-props)))
-   :load-bucket
-   (fn [{:keys [state]} workspace-id]
-       (endpoints/call-ajax-orch
-         {:endpoint (endpoints/get-workspace-bucket workspace-id)
-          :on-done (fn [{:keys [success? get-parsed-response status-text]}]
-                       (if success?
-                         (let [bucket-access? true]
-                              (swap! state assoc :status :success :bucket-access? bucket-access?))
-                         (swap! state assoc :status :error :message status-text)))}))})
+   (fn [{:keys [props]}]
+    [:div {:style {:position "relative"}}
+     (case (:bucket-access? props)
+       nil [:div {:style {:position "absolute" :marginTop "-1.5em"}}
+            [comps/Spinner {:height "1.5ex"}]]
+       true nil ;reverse this when no longer testing
+       false [:div {:style {}}
+             [:div {:style {:height 1 :backgroundColor "#bbb" :marginBottom 2}}]
+             [:div {:style {:outlineTop (str "4px double #ccc")
+                            :backgroundColor "#ff8060"
+                            :fontSize "small"
+                            :padding "4px 0"
+                            :textAlign "center"}}
+              "Your access to the Google Bucket associated with"
+              " this workspace is pending. This banner will disappear"
+              " once you have been granted access to the bucket."]])])})
 
 
 (def ^:private SUMMARY "Summary")
@@ -106,15 +89,15 @@
 
 (react/defc WorkspaceDetails
   {:render
-   (fn [{:keys [props refs]}]
+   (fn [{:keys [props state refs]}]
      (let [nav-context (nav/parse-segment (:nav-context props))
            workspace-id (:workspace-id props)
            tab (:segment nav-context)]
        [:div {:style {:margin "0 -1em"}}
-        [:div {:style {:margin "0 -1em"}}
-         [ProtectedBanner (select-keys props [:workspace-id])]]
-        [:div {:style {:margin "0 -1em"}}
-         [BucketBanner (select-keys props [:workspace-id])]]
+       [:div {:style {:margin "-22px 0 2px 0"}}
+        [ProtectedBanner (select-keys props [:workspace-id])]]
+       [:div {:style {:margin "-2px 0 2px 0"}}
+        [BucketBanner (select-keys @state [:bucket-access?])]]
         [comps/TabBar {:selected-index (tab-string-to-index tab)
                        :items
                        [{:text SUMMARY :href (nav/create-href (:nav-context props))
@@ -122,6 +105,7 @@
                          (react/create-element
                            [summary-tab/Summary {:key workspace-id :ref SUMMARY
                                                  :workspace-id workspace-id
+                                                 :bucket-access? (:bucket-access? @state)
                                                  :nav-context nav-context
                                                  :on-delete (:on-delete props)
                                                  :on-clone (:on-clone props)}])
@@ -136,6 +120,7 @@
                          (react/create-element
                            [method-configs-tab/Page {:ref CONFIGS
                                                      :workspace-id workspace-id
+                                                     :bucket-access? (:bucket-access? @state)
                                                      :on-submission-success #(nav/navigate (:nav-context props) MONITOR %)
                                                      :nav-context (nav/terminate-when (not= tab CONFIGS) nav-context)}])
                          :onTabRefreshed #(react/call :refresh (@refs CONFIGS))}
@@ -145,4 +130,12 @@
                            [monitor-tab/Page {:ref MONITOR
                                               :workspace-id workspace-id
                                               :nav-context (nav/terminate-when (not= tab MONITOR) nav-context)}])
-                         :onTabRefreshed #(react/call :refresh (@refs MONITOR))}]}]]))})
+                         :onTabRefreshed #(react/call :refresh (@refs MONITOR))}]}]]))
+   :component-did-mount
+   (fn [{:keys [props state]}]
+    (endpoints/call-ajax-orch
+      {:endpoint (endpoints/get-workspace-bucket (:workspace-id props))
+       :on-done (fn [{:keys [success? get-parsed-response status-text]}]
+                    (if success?
+                      (swap! state assoc :status :success :bucket-access? true)
+                      (swap! state assoc :status :success :bucket-access? false)))}))})

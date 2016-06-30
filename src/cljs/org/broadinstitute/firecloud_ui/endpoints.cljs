@@ -663,7 +663,7 @@
    :mock-data (utils/rand-subset ["broad-dsde-dev" "broad-institute"])})
 
 (defn submissions-queue-status []
-  {:path "/workspaces/broad-dsde-dev/BRCAx2_Clones3_51/bucket"
+  {:path "/submissions/queueStatus"
    :method :get
    :mock-data {"estimatedQueueTimeMS" (rand-int 10000000)
                "workflowCountsByStatus"
