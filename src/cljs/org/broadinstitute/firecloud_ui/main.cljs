@@ -350,7 +350,7 @@
       [modal/Component {:ref "modal"}]])
    :component-did-mount
    (fn [{:keys [this state refs]}]
-     (set! utils/auth-expiration-handler sign-in/show-expired-dialog)
+     (set! utils/auth-expiration-handler #(sign-in/show-sign-in-dialog :expired))
      ;; pop up the message only when we start getting 503s, not on every 503
      (add-watch
        utils/server-down? :server-watcher
