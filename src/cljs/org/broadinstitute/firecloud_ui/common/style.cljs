@@ -94,11 +94,10 @@
                              :KhtmlUserSelect "none" :MsUserSelect "none"}} props)
    children])
 
-(defn create-link [{:keys [href style onClick text]}]
-  [:a (merge
-        {:href (or href "javascript:;")
-         :style (merge {:textDecoration "none" :color (:button-blue colors)} style)}
-        (when onClick {:onClick onClick}))
+(defn create-link [{:keys [text] :as attributes}]
+  [:a (deep-merge {:href "javascript:;"
+                   :style {:textDecoration "none" :color (:button-blue colors)}}
+                  (dissoc attributes :text))
    text])
 
 (defn render-entity [namespace name snapshot-id]
