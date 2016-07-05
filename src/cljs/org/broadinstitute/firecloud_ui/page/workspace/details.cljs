@@ -64,21 +64,16 @@
        false [:div {:style {}}
              [:div {:style {:height 1 :backgroundColor "#bbb" :marginBottom 2}}]
              [:div {:style {:outlineTop (str "4px double #ccc")
-                            :backgroundColor "#ff8060"
+                            :backgroundColor "#efdcd7"
                             :fontSize "small"
                             :padding "4px 0"
                             :textAlign "center"}}
               (cond (= 404 (:status-code props))
-                    (str "The Google Bucket associated with this workspace"
-                         " does not exist.")
-                    (<= 400 (:status-code props) 499)
-                    (str "Your access to the Google Bucket associated"
-                         " with this workspace is pending. This banner will disappear once you have"
-                         " been granted access to the bucket.")
-                    :else (str "FireCloud is unable to query for your"
-                               " access to the Google Bucket associated with this workspace."
-                               " This is likely intermittent and you may or may not have access"
-                               " to the bucket at this time."))]])])})
+                    (str "The Google bucket associated with this workspace"
+                         " does not exist. Please contact help@firecloud.org.")
+                    :else (str "The Google bucket associated with this workspace is currently unavailable."
+                         " This should be resolved shortly. If this persists for more than an hour,"
+                         " please contact help@firecloud.org."))]])])})
 
 
 (def ^:private SUMMARY "Summary")
