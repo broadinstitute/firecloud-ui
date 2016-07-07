@@ -96,6 +96,10 @@
                                 (rand-nth ["OWNER" "WRITER" "READER"])])
                     (range (inc (rand-int 5)))))})
 
+(defn check-bucket-read-access [workspace-id]
+      {:path (str "/workspaces/" (ws-path workspace-id) "/checkBucketReadAccess")
+       :method :get})
+
 (defn update-workspace-acl [workspace-id]
   {:path (str "/workspaces/" (ws-path workspace-id) "/acl")
    :method :patch})

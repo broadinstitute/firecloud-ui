@@ -129,7 +129,7 @@
                              :onClick #(swap! state assoc :show-delete-dialog? true)}])]))
 
 
-(defn- render-main [state refs ws owner? submissions-count]
+(defn- render-main [state refs ws owner? bucket-access? submissions-count]
   (let [owners (ws "owners")]
     [:div {:style {:flex "1 1 auto" :display "flex"}}
      [:div {:style {:flex "1 1 50%"}}
@@ -161,11 +161,14 @@
         [:div {} (common/format-date (get-in ws ["workspace" "createdDate"]))])
       (style/create-section-header "Google Bucket")
       (style/create-paragraph
-        [:a {:href (str "https://console.developers.google.com/storage/browser/" (get-in ws ["workspace" "bucketName"]) "/")
-             :title "Click to open the Google Cloud Storage browser for this bucket"
-             :style {:textDecoration "none" :color (:button-blue style/colors)}
-             :target "_blank"}
-         (get-in ws ["workspace" "bucketName"])])
+        (case bucket-access?
+          nil [:div {:style {:position "absolute" :marginTop "-1.5em"}}
+               [comps/Spinner {:height "1.5ex"}]]
+          true (style/create-link {:text (get-in ws ["workspace" "bucketName"])
+                                   :href (str "https://console.developers.google.com/storage/browser/" (get-in ws ["workspace" "bucketName"]) "/")
+                                   :title "Click to open the Google Cloud Storage browser for this bucket"
+                                   :target "_blank"})
+          false (get-in ws ["workspace" "bucketName"])))
       (style/create-section-header "Analysis Submissions")
       (style/create-paragraph
         (let [count-all (apply + (vals submissions-count))]
@@ -197,7 +200,7 @@
            [:div {:style {:margin "45px 25px" :display "flex"}}
             (render-overlays state props workspace billing-projects)
             (render-sidebar state props refs this workspace billing-projects owner? writer?)
-            (render-main state refs workspace owner? submissions-count)]))))
+            (render-main state refs workspace owner? (:bucket-access? props) submissions-count)]))))
    :load-workspace
    (fn [{:keys [props state]}]
      (endpoints/call-ajax-orch

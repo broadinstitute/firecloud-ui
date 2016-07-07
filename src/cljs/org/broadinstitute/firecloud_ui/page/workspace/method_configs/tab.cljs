@@ -118,6 +118,7 @@
           [MethodConfigEditor {:key selected-method-config-id
                                :config-id selected-method-config-id
                                :workspace-id (:workspace-id props)
+                               :bucket-access? (:bucket-access? props)
                                :on-submission-success (:on-submission-success props)
                                :on-rename #(nav/navigate (:nav-context props) (str (:namespace selected-method-config-id) ":" %))
                                :after-delete #(nav/back nav-context)}]

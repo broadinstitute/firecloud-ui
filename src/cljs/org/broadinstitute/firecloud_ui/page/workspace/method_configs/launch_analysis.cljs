@@ -143,7 +143,7 @@
                                       (select-keys props [:config-id :workspace-id :root-entity-type :on-success])
                                       {:dismiss-self #(swap! state dissoc :display-modal?)})])}])
       [comps/Button {:text "Launch Analysis..."
-                     :disabled? (when (:disabled? props) "The workspace is locked")
+                     :disabled? (:disabled? props)
                      :onClick #(do (common/scroll-to-top 100)
                                    (swap! state assoc :display-modal? true))}]])})
 
