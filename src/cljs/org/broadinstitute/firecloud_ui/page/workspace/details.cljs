@@ -135,6 +135,6 @@
    :component-did-mount
    (fn [{:keys [props state]}]
     (endpoints/call-ajax-orch
-      {:endpoint (endpoints/get-workspace-bucket (:workspace-id props))
+      {:endpoint (endpoints/check-bucket-read-access (:workspace-id props))
        :on-done (fn [{:keys [success? status-code]}]
                     (swap! state assoc :status-code status-code :bucket-access? success?))}))})
