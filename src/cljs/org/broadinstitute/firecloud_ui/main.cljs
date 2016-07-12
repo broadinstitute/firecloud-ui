@@ -376,29 +376,33 @@
                                (swap! state assoc :config-status :error)))}))
    :authenticate-user
    (fn [{:keys [this state]}]
-     (if-let [parent (.-opener js/window)]
-       ;; This window was used for login. Send the token to the parent. No need to render the UI.
-       (do
-         ((aget parent sign-in/handler-fn-name) (parse-hash-into-map))
-         (.close js/window))
-       (if-let [token (get (parse-hash-into-map) "access_token")]
-         ;; New access token. Attempt to authenticate with it.
-         (react/call :authenticate-with-fresh-token this token)
-         (let [token (utils/get-access-token-cookie)]
-           (if token
-             (attempt-auth token (fn [{:keys [success? status-code]}]
-                                   (cond
-                                     (= 401 status-code) ; maybe bad cookie, not auth failure
-                                     (do (utils/delete-access-token-cookie)
+     ;; Note: window.opener can be non-nil even when it wasn't opened with window.open, so be
+     ;; careful with this check.
+     (let [opener (.-opener js/window)
+           sign-in-handler (and opener (aget opener sign-in/handler-fn-name))]
+       (if sign-in-handler
+         ;; This window was used for login. Send the token to the parent. No need to render the UI.
+         (do
+           (sign-in-handler (parse-hash-into-map))
+           (.close js/window))
+         (if-let [token (get (parse-hash-into-map) "access_token")]
+           ;; New access token. Attempt to authenticate with it.
+           (react/call :authenticate-with-fresh-token this token)
+           (let [token (utils/get-access-token-cookie)]
+             (if token
+               (attempt-auth token (fn [{:keys [success? status-code]}]
+                                     (cond
+                                       (= 401 status-code) ; maybe bad cookie, not auth failure
+                                       (do (utils/delete-access-token-cookie)
                                          (swap! state assoc :user-status :not-logged-in))
-                                     (= 403 status-code)
-                                     (swap! state assoc :user-status :not-activated)
-                                     ;; 404 just means not registered
-                                     (or success? (= status-code 404))
-                                     (react/call :handle-successful-auth this token)
-                                     :else
-                                     (swap! state assoc :user-status :error))))
-             (swap! state assoc :user-status :not-logged-in))))))
+                                       (= 403 status-code)
+                                       (swap! state assoc :user-status :not-activated)
+                                       ;; 404 just means not registered
+                                       (or success? (= status-code 404))
+                                       (react/call :handle-successful-auth this token)
+                                       :else
+                                       (swap! state assoc :user-status :error))))
+               (swap! state assoc :user-status :not-logged-in)))))))
    :authenticate-with-fresh-token
    (fn [{:keys [this state]} token]
      (attempt-auth token (fn [{:keys [success? status-code]}]
