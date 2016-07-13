@@ -5,6 +5,7 @@
     [org.broadinstitute.firecloud-ui.common.components :as comps]
     [org.broadinstitute.firecloud-ui.common.dialog :as dialog]
     [org.broadinstitute.firecloud-ui.common.icons :as icons]
+    [org.broadinstitute.firecloud-ui.common.markdown :refer [MarkdownView]]
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
     [org.broadinstitute.firecloud-ui.nav :as nav]
@@ -176,7 +177,7 @@
                                                              :defaultValue description
                                                              :style {:width "100%"}
                                                              :rows 10}))
-               description [:div {:style {:whiteSpace "pre-wrap"}} description]
+               description [MarkdownView {:text description}]
                :else [:span {:style {:fontStyle "italic"}} "No description provided"])))
      (attributes/view-attributes state refs)]))
 
