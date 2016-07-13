@@ -662,6 +662,10 @@
    :method :get
    :mock-data (utils/rand-subset ["broad-dsde-dev" "broad-institute"])})
 
+(defn get-refresh-token-date []
+  {:path "/profile/refreshTokenDate"
+   :method :get})
+
 (defn submissions-queue-status []
   {:path "/submissions/queueStatus"
    :method :get

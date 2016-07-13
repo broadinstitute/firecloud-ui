@@ -34,12 +34,19 @@
      (js-delete js/window handler-fn-name))})
 
 
-(def ^:private showing-expired-dialog? false)
+(def ^:private showing-dialog? false)
 
 
-(react/defc ExpiredDialog
+(def ^:private dialog-keys
+  {:expired {:title "Session Expired"
+             :message "Your session has expired. Please sign-in again to continue."}
+   :refresh-token {:title "Refresh Token Expired"
+                   :message "Your refresh token has expired. Please sign-in again to acquire a new refresh token."}})
+
+
+(react/defc SignInDialog
   {:render
-   (fn [{:keys [state]}]
+   (fn [{:keys [state props]}]
      (let [{:keys [success?]} @state]
        [:div {:style {:position "relative"}}
         [:div {:style {:position "absolute" :top 0 :right 0
@@ -49,28 +56,30 @@
         [:div {:style {:borderBottom style/standard-line
                        :padding "20px 48px 18px"
                        :fontSize "137%" :fontWeight 400 :lineHeight 1}}
-         "Session Expired"]
+         (:title props)]
         [:div {:style {:padding "22px 48px 40px" :backgroundColor (:background-gray style/colors)}}
          (if success?
            [:div {:style {:color (:success-green style/colors)}} "Sign-in complete."
             [:div {:style {:marginTop 20 :textAlign "center"}}
              [comps/Button {:text "Close" :onClick modal/pop-modal}]]]
            [:div {}
-            "Your session has expired. Please sign-in again to continue."
+            (:message props)
             [:div {:style {:marginTop 20 :textAlign "center"}}
              [Button {:on-login (fn [message]
                                   (let [token (get message "access_token")]
                                     (reset! u/access-token token)
                                     (u/set-access-token-cookie token)
-                                    (swap! state assoc :success? true)))}]]])]]))
+                                    (swap! state assoc :success? true)
+                                    (when-let [callback (:callback props)]
+                                      (callback))))}]]])]]))
    :component-will-mount
    (fn []
-     (set! showing-expired-dialog? true))
+     (set! showing-dialog? true))
    :component-will-unmount
    (fn []
-     (set! showing-expired-dialog? false))})
+     (set! showing-dialog? false))})
 
 
-(defn show-expired-dialog []
-  (when-not showing-expired-dialog?
-    (modal/push-modal [ExpiredDialog])))
+(defn show-sign-in-dialog [key & [callback]]
+  (when-not showing-dialog?
+    (modal/push-modal [SignInDialog (merge (dialog-keys key) {:callback callback})])))

@@ -70,7 +70,7 @@
 
 (react/defc MethodDetailsViewer
   {:render
-   (fn [{:keys [props state]}]
+   (fn [{:keys [state]}]
      (cond
        (:loaded-method @state) [comps/EntityDetails {:entity (:loaded-method @state)}]
        (:error @state) (style/create-server-error-message (:error @state))
@@ -189,7 +189,6 @@
 (defn- render-display [state refs props]
   (let [wrapped-config (:loaded-config @state)
         config (wrapped-config "methodConfiguration")
-        inputs-outputs (:inputs-outputs @state)
         editing? (:editing? @state)]
     [:div {}
      (when (:show-publish-dialog? @state)
@@ -214,6 +213,8 @@
                                                  (not (:bucket-access? props))
                                                  (str "You do not currently have access"
                                                       " to the Google Bucket associated with this workspace"))
+                                :force-login? (not (:has-refresh-token? @state))
+                                :after-login #(swap! state assoc :has-refresh-token? true)
                                 :on-success (:on-submission-success props)})])
       (render-main-display wrapped-config editing? (:inputs-outputs @state))
       (clear-both)]]))
@@ -225,7 +226,8 @@
       :sidebar-visible? true})
    :render
    (fn [{:keys [state refs props]}]
-     (cond (and (:loaded-config @state) (contains? @state :locked?)) (render-display state refs props)
+     (cond (and (:loaded-config @state) (contains? @state :locked?) (contains? @state :has-refresh-token?))
+           (render-display state refs props)
            (:error @state) (style/create-server-error-message (:error @state))
            :else [:div {:style {:textAlign "center"}} [comps/Spinner {:text "Loading Method Configuration..."}]]))
    :component-did-mount
@@ -239,7 +241,7 @@
                          {:endpoint endpoints/get-inputs-outputs
                           :payload (get-in response ["methodConfiguration" "methodRepoMethod"])
                           :headers {"Content-Type" "application/json"}
-                          :on-done (fn [{:keys [success? get-parsed-response status-text]}]
+                          :on-done (fn [{:keys [success? get-parsed-response]}]
                                      (if success?
                                        (swap! state assoc :loaded-config response :inputs-outputs (get-parsed-response))
                                        (swap! state assoc :error ((get-parsed-response) "message"))))}))
@@ -250,6 +252,11 @@
                    (if success?
                      (swap! state assoc :locked? (get-in (get-parsed-response) ["workspace" "isLocked"]))
                      (swap! state assoc :error status-text)))})
+     (endpoints/call-ajax-orch
+       {:endpoint (endpoints/get-refresh-token-date)
+        :on-done (fn [{:keys [success?]}]
+                   ;; login checks validity of the token, so just check for existence
+                   (swap! state assoc :has-refresh-token? success?))})
      (set! (.-onScrollHandler this)
            (fn []
              (when-let [sidebar (@refs "sidebar")]

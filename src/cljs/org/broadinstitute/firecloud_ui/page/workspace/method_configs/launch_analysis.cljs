@@ -7,6 +7,7 @@
     [org.broadinstitute.firecloud-ui.common.components :as comps]
     [org.broadinstitute.firecloud-ui.common.dialog :as dialog]
     [org.broadinstitute.firecloud-ui.common.icons :as icons]
+    [org.broadinstitute.firecloud-ui.common.sign-in :as sign-in]
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.common.entity-table :refer [EntityTable]]
     [org.broadinstitute.firecloud-ui.config :as config]
@@ -144,8 +145,10 @@
                                       {:dismiss-self #(swap! state dissoc :display-modal?)})])}])
       [comps/Button {:text "Launch Analysis..."
                      :disabled? (:disabled? props)
-                     :onClick #(do (common/scroll-to-top 100)
-                                   (swap! state assoc :display-modal? true))}]])})
+                     :onClick #(if (:force-login? props)
+                                (sign-in/show-sign-in-dialog :refresh-token (:after-login props))
+                                (do (common/scroll-to-top 100)
+                                    (swap! state assoc :display-modal? true)))}]])})
 
 
 (defn render-button [props]
