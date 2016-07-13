@@ -11,6 +11,13 @@
 (js/marked.setOptions
   #js{:sanitize true})
 
+(defonce ^:private renderer (js/marked.Renderer.))
+(set! renderer.link
+  (fn [href, title, text]
+    (str "<a href='" href "' title='" title "' target='_blank'>"
+         text
+         "</a>")))
+
 (react/defc MarkdownView
   {:render
    (fn []
@@ -18,4 +25,4 @@
    :component-did-mount
    (fn [{:keys [props refs]}]
      (set! (.-innerHTML (@refs "ref"))
-           (js/marked (:text props))))})
+           (js/marked (:text props) #js{:renderer renderer})))})
