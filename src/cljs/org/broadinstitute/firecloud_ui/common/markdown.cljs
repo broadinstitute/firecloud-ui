@@ -8,10 +8,13 @@
 ;; Documentation:
 ;; https://github.com/chjj/marked
 
+(js/marked.setOptions
+  #js{:sanitize true})
+
 (react/defc MarkdownView
   {:render
    (fn []
-     [:div {:ref "ref"}])
+     [:div {:ref "ref" :className "markdown-body"}])
    :component-did-mount
    (fn [{:keys [props refs]}]
      (set! (.-innerHTML (@refs "ref"))
