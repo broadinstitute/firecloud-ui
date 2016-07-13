@@ -255,6 +255,7 @@
      (endpoints/call-ajax-orch
        {:endpoint (endpoints/get-refresh-token-date)
         :on-done (fn [{:keys [success?]}]
+                   ;; login checks validity of the token, so just check for existence
                    (swap! state assoc :has-refresh-token? success?))})
      (set! (.-onScrollHandler this)
            (fn []
