@@ -132,7 +132,7 @@
 
 (defn- render-main [state refs ws owner? bucket-access? submissions-count]
   (let [owners (ws "owners")]
-    [:div {:style {:flex "1 1 auto"}}
+    [:div {:style {:flex "1 1 auto" :overflow "hidden"}}
      [:div {:style {:flex "1 1 auto" :display "flex"}}
       [:div {:style {:flex "1 1 50%"}}
        (style/create-section-header (str "Workspace Owner" (when (> (count owners) 1) "s")))
