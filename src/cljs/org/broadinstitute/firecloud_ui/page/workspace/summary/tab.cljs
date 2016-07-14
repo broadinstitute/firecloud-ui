@@ -116,7 +116,7 @@
      (when-not (:editing? @state)
        [comps/SidebarButton {:style :light :margin :top :color :button-blue
                              :text "Clone..." :icon :plus
-                             :disabled? (when (empty? billing-projects) "No Google projects available")
+                             :disabled? (when (empty? billing-projects) "No billing projects available")
                              :onClick #(swap! state assoc :cloning? true)}])
      (when-not (and owner? (:editing? @state))
        [comps/SidebarButton {:style :light :margin :top :color :button-blue

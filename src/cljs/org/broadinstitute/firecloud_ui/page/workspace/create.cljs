@@ -28,7 +28,7 @@
         [:div {:style {:marginBottom -20}}
          (when (:creating-wf @state)
            [comps/Blocker {:banner "Creating Workspace..."}])
-         (style/create-form-label "Google Project")
+         (style/create-form-label "Billing Project")
          (style/create-select
            {:value (:selected-project @state)
             :onChange #(swap! state assoc :selected-project (-> % .-target .-value))}
