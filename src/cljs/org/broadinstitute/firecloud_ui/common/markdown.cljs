@@ -14,9 +14,12 @@
 (defonce ^:private renderer (js/marked.Renderer.))
 (set! renderer.link
   (fn [href, title, text]
-    (str "<a href='" href "' title='" title "' target='_blank'>"
-         text
-         "</a>")))
+    ;; whitelist http/https to guard agaisnt XSS
+    (if-not (re-matches #"^https?://.*" href)
+      text
+      (str "<a href='" (js/encodeURI href) "' title='" title "' target='_blank'>"
+           text
+           "</a>"))))
 
 (react/defc MarkdownView
   {:render
