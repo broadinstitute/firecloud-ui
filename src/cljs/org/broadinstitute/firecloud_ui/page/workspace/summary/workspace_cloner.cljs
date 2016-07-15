@@ -28,7 +28,7 @@
         [:div {}
          (when (:working? @state)
            [comps/Blocker {:banner "Cloning..."}])
-         (style/create-form-label "Google Project")
+         (style/create-form-label "Billing Project")
          (style/create-select {:ref "project"
                                :value (:selected-project @state)
                                :onChange #(swap! state assoc :selected-project (-> % .-target .-value))}
