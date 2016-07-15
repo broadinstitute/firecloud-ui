@@ -18,7 +18,7 @@
      [:div {:style {:margin "1em"}}
       [table/Table
        {:empty-message "There are no workspaces to display."
-        :columns [{:header "Google Project" :starting-width 150}
+        :columns [{:header "Billing Project" :starting-width 150}
                   {:header "Name" :starting-width 150
                    :as-text #(get-in % ["workspace" "name"]) :sort-by :text
                    :content-renderer

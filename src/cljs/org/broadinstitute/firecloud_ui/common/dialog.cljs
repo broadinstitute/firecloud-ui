@@ -96,10 +96,9 @@
           {:content
            (react/create-element
              [OKCancelForm
-              (merge (select-keys props [:header :dismiss-self :ok-button :show-cancel? :cancel-text])
-                     {:content
-                      (react/create-element
-                        (:content props))})])})])
+              (merge
+               (select-keys props [:header :dismiss-self :ok-button :show-cancel? :cancel-text])
+               {:content (react/create-element [:div {} (:content props)])})])})])
 
 
 (react/defc GCSFilePreviewLink

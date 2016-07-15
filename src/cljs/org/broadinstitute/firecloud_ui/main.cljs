@@ -192,10 +192,10 @@
        [:div {}
         [:div {:style {:float "right" :fontSize "70%" :textAlign "right" :marginRight "1ex"}}
          (if-not (:show-dropdown? @state)
-                 [:a {:href "javascript:;" :onClick #(swap! state assoc :show-dropdown? true)
-                      :style {:color (:link-blue style/colors)}}
-                  (:name @state)]
-                 [ProfileDropdown])
+           [:a {:href "javascript:;" :onClick #(swap! state assoc :show-dropdown? true)
+                :style {:color (:link-blue style/colors)}}
+            (:user-email props)]
+           [ProfileDropdown])
          (when (= :registered (:registration-status @state))
            [GlobalSubmissionStatus])]
         (text-logo)
@@ -228,12 +228,7 @@
           (let [parsed-values (when success? (common/parse-profile (get-parsed-response)))]
             (cond
               (and success? (>= (int (:isRegistrationComplete parsed-values)) 3))
-              (swap! state assoc :registration-status :registered
-                :name (let [name (str (:firstName parsed-values) " " (:lastName parsed-values))]
-                        (if (-> name clojure.string/trim empty?)
-                          ; this is here primarily for old users without :firstName/:lastName fields
-                          "Profile"
-                          name)))
+              (swap! state assoc :registration-status :registered)
               (and success? (some? (:isRegistrationComplete parsed-values))) ; partial profile case
               (swap! state assoc :registration-status :update-registered)
               success? ; unregistered case
@@ -351,7 +346,8 @@
              "Thank you for registering. Your account is currently inactive."
              " You will be contacted via email when your account is activated."]]]
           (= :logged-in (:user-status @state))
-          [LoggedIn {:nav-context (:root-nav-context @state)}]
+          [LoggedIn {:nav-context (:root-nav-context @state)
+                     :user-email (:user-email @state)}]
           (= :not-logged-in (:user-status @state))
           [LoggedOut {:on-login #(react/call :authenticate-with-fresh-token this
                                              (get % "access_token"))}])]]
@@ -386,32 +382,38 @@
                                (swap! state assoc :config-status :error)))}))
    :authenticate-user
    (fn [{:keys [this state]}]
-     (if-let [parent (.-opener js/window)]
-       ;; This window was used for login. Send the token to the parent. No need to render the UI.
-       (do
-         ((aget parent sign-in/handler-fn-name) (parse-hash-into-map))
-         (.close js/window))
-       (if-let [token (get (parse-hash-into-map) "access_token")]
-         ;; New access token. Attempt to authenticate with it.
-         (react/call :authenticate-with-fresh-token this token)
-         (let [token (utils/get-access-token-cookie)]
-           (if token
-             (attempt-auth token (fn [{:keys [success? status-code]}]
-                                   (cond
-                                     (= 401 status-code) ; maybe bad cookie, not auth failure
-                                     (do (utils/delete-access-token-cookie)
+     ;; Note: window.opener can be non-nil even when it wasn't opened with window.open, so be
+     ;; careful with this check.
+     (let [opener (.-opener js/window)
+           sign-in-handler (and opener (aget opener sign-in/handler-fn-name))]
+       (if sign-in-handler
+         ;; This window was used for login. Send the token to the parent. No need to render the UI.
+         (do
+           (sign-in-handler (parse-hash-into-map))
+           (.close js/window))
+         (if-let [token (get (parse-hash-into-map) "access_token")]
+           ;; New access token. Attempt to authenticate with it.
+           (react/call :authenticate-with-fresh-token this token)
+           (let [token (utils/get-access-token-cookie)]
+             (if token
+               (attempt-auth token (fn [{:keys [success? status-code get-parsed-response]}]
+                                     (swap! state assoc :user-email (get-in (get-parsed-response) ["userInfo" "userEmail"]))
+                                     (cond
+                                       (= 401 status-code) ; maybe bad cookie, not auth failure
+                                       (do (utils/delete-access-token-cookie)
                                          (swap! state assoc :user-status :not-logged-in))
-                                     (= 403 status-code)
-                                     (swap! state assoc :user-status :not-activated)
-                                     ;; 404 just means not registered
-                                     (or success? (= status-code 404))
-                                     (react/call :handle-successful-auth this token)
-                                     :else
-                                     (swap! state assoc :user-status :error))))
-             (swap! state assoc :user-status :not-logged-in))))))
+                                       (= 403 status-code)
+                                       (swap! state assoc :user-status :not-activated)
+                                       ;; 404 just means not registered
+                                       (or success? (= status-code 404))
+                                       (react/call :handle-successful-auth this token)
+                                       :else
+                                       (swap! state assoc :user-status :error))))
+               (swap! state assoc :user-status :not-logged-in)))))))
    :authenticate-with-fresh-token
    (fn [{:keys [this state]} token]
-     (attempt-auth token (fn [{:keys [success? status-code]}]
+     (attempt-auth token (fn [{:keys [success? status-code get-parsed-response]}]
+                           (swap! state assoc :user-email (get-in (get-parsed-response) ["userInfo" "userEmail"]))
                            (cond
                              (= 401 status-code)
                              (swap! state assoc :user-status :auth-failure)
