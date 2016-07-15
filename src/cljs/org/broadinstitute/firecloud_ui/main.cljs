@@ -185,7 +185,7 @@
         [:div {:style {:float "right" :fontSize "70%" :textAlign "right" :marginRight "1ex"}}
          [:a {:style {:color (:link-blue style/colors)}
               :href "#profile" }
-          (:name @state)]
+          (:user-email props)]
          (when (= :registered (:registration-status @state))
            [GlobalSubmissionStatus])]
         (text-logo)
@@ -218,12 +218,7 @@
           (let [parsed-values (when success? (common/parse-profile (get-parsed-response)))]
             (cond
               (and success? (>= (int (:isRegistrationComplete parsed-values)) 3))
-              (swap! state assoc :registration-status :registered
-                :name (let [name (str (:firstName parsed-values) " " (:lastName parsed-values))]
-                        (if (-> name clojure.string/trim empty?)
-                          ; this is here primarily for old users without :firstName/:lastName fields
-                          "Profile"
-                          name)))
+              (swap! state assoc :registration-status :registered)
               (and success? (some? (:isRegistrationComplete parsed-values))) ; partial profile case
               (swap! state assoc :registration-status :update-registered)
               success? ; unregistered case
@@ -341,7 +336,8 @@
              "Thank you for registering. Your account is currently inactive."
              " You will be contacted via email when your account is activated."]]]
           (= :logged-in (:user-status @state))
-          [LoggedIn {:nav-context (:root-nav-context @state)}]
+          [LoggedIn {:nav-context (:root-nav-context @state)
+                     :user-email (:user-email @state)}]
           (= :not-logged-in (:user-status @state))
           [LoggedOut {:on-login #(react/call :authenticate-with-fresh-token this
                                              (get % "access_token"))}])]]
@@ -390,7 +386,8 @@
            (react/call :authenticate-with-fresh-token this token)
            (let [token (utils/get-access-token-cookie)]
              (if token
-               (attempt-auth token (fn [{:keys [success? status-code]}]
+               (attempt-auth token (fn [{:keys [success? status-code get-parsed-response]}]
+                                     (swap! state assoc :user-email (get-in (get-parsed-response) ["userInfo" "userEmail"]))
                                      (cond
                                        (= 401 status-code) ; maybe bad cookie, not auth failure
                                        (do (utils/delete-access-token-cookie)
@@ -405,7 +402,8 @@
                (swap! state assoc :user-status :not-logged-in)))))))
    :authenticate-with-fresh-token
    (fn [{:keys [this state]} token]
-     (attempt-auth token (fn [{:keys [success? status-code]}]
+     (attempt-auth token (fn [{:keys [success? status-code get-parsed-response]}]
+                           (swap! state assoc :user-email (get-in (get-parsed-response) ["userInfo" "userEmail"]))
                            (cond
                              (= 401 status-code)
                              (swap! state assoc :user-status :auth-failure)
