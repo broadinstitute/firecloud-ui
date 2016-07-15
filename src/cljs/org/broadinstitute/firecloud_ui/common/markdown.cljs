@@ -12,8 +12,8 @@
   #js{:sanitize true})
 
 (defonce ^:private renderer (js/marked.Renderer.))
-(set! renderer.link
-  (fn [href, title, text]
+(set! (.-link renderer)
+  (fn [href title text]
     ;; whitelist http/https to guard agaisnt XSS
     (if-not (re-matches #"^https?://.*" href)
       text
