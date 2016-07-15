@@ -176,6 +176,13 @@
                      (swap! state assoc :status-error nil :status-code nil :status-counts (common/queue-status-counts (get-parsed-response)))
                      (swap! state assoc :status-error status-text :status-code status-code :status-counts nil)))}))})
 
+(react/defc ProfileDropdown
+  {:render
+   (fn [{:keys []}]
+       [:div {} "Profile"
+        "Billing"
+        "Logout"])})
+
 
 (react/defc LoggedIn
   {:render
@@ -187,9 +194,11 @@
          (nav/navigate (:nav-context props) "workspaces"))
        [:div {}
         [:div {:style {:float "right" :fontSize "70%" :textAlign "right" :marginRight "1ex"}}
-         [:a {:style {:color (:link-blue style/colors)}
-              :href "#profile" }
-          (:name @state)]
+         (if-not (:show-dropdown? @state)
+                 [:a {:href "javascript:;" :onClick #(swap! state assoc :show-dropdown? true)
+                      :style {:color (:link-blue style/colors)}}
+                  (:name @state)]
+                 [ProfileDropdown])
          (when (= :registered (:registration-status @state))
            [GlobalSubmissionStatus])]
         (text-logo)

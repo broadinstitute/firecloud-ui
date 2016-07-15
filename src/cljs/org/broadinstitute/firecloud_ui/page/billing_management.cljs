@@ -25,8 +25,8 @@
                    [comps/Spinner {:text "Loading billing projects..."}]
                    :else
                    [table/Table
-                    {:columns [{:header "Billing Project" :starting-width 300}
-                               {:header "Access Level" :starting-width 300}]
+                    {:columns [{:header "Project Name" :starting-width 300}
+                               {:header "Role" :starting-width 300}]
                      :data (:projects @state)
                      :->row (fn [item]
                                 [item
