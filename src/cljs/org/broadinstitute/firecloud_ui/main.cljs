@@ -12,6 +12,7 @@
    [org.broadinstitute.firecloud-ui.nav :as nav]
    [org.broadinstitute.firecloud-ui.nih-link-warning :as nih-link-warning]
    [org.broadinstitute.firecloud-ui.page.method-repo :as method-repo]
+   [org.broadinstitute.firecloud-ui.page.billing-management :as billing-management]
    [org.broadinstitute.firecloud-ui.page.profile :as profile-page]
    [org.broadinstitute.firecloud-ui.page.status :as status-page]
    [org.broadinstitute.firecloud-ui.page.workspaces-list :as workspaces]
@@ -115,11 +116,14 @@
    {:key :methods :href "#methods"
     :name "Method Repository"
     :render #(react/create-element method-repo/Page %)}
+   {:key :billing :href "#billing"
+    :name "Billing Management"
+    :render #(react/create-element billing-management/Page %)}
    {:key :policy
     :render #(react/create-element Policy %)}])
 
 (def top-nav-bar-items
-  (filter (fn [r] (contains? #{:workspaces :methods} (:key r))) routes))
+  (filter (fn [r] (contains? #{:workspaces :methods :billing} (:key r))) routes))
 
 (react/defc TopNavBarLink
   {:render
