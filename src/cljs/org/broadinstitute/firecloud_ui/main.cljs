@@ -179,10 +179,7 @@
 (react/defc ProfileDropdown
   {:render
    (fn [{:keys []}]
-       [:div {} "Profile"
-        "Billing"
-        "Logout"])})
-
+       [:div {} "A drop down will appear here once it's complete"])})
 
 (react/defc LoggedIn
   {:render
