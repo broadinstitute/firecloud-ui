@@ -110,15 +110,14 @@
 (def routes
   [{:key :profile
     :render #(react/create-element profile-page/Page %)}
+   {:key :billing
+    :render #(react/create-element billing-management/Page %)}
    {:key :workspaces :href "#workspaces"
     :name "Workspaces"
     :render #(react/create-element workspaces/Page %)}
    {:key :methods :href "#methods"
     :name "Method Repository"
     :render #(react/create-element method-repo/Page %)}
-   {:key :billing :href "#billing"
-    :name "Billing Management"
-    :render #(react/create-element billing-management/Page %)}
    {:key :policy
     :render #(react/create-element Policy %)}])
 
@@ -176,10 +175,40 @@
                      (swap! state assoc :status-error nil :status-code nil :status-counts (common/queue-status-counts (get-parsed-response)))
                      (swap! state assoc :status-error status-text :status-code status-code :status-counts nil)))}))})
 
-(react/defc ProfileDropdown
+(react/defc AccountDropdown
   {:render
-   (fn [{:keys []}]
-       [:div {} "A drop down will appear here once it's complete"])})
+   (fn [{:keys [state]}]
+       [:div {:style {:zIndex 20
+                      :textAlign "left"
+                      :boxShadow "0px 2px 15px 5px rgba(0, 0, 0, 0.15)"
+                      :backgroundColor "#ffffff"
+                      :position "absolute"
+                      :border (str "1px solid " (:line-gray style/colors))}}
+
+        [:div {:style {:fontSize "14px"
+                       :paddingLeft "1ex"
+                       :paddingRight "3ex"
+                       :backgroundColor (when (:hoveringProfile? @state) "#e8f5ff")
+                       :paddingBottom "1ex"
+                       :paddingTop "1ex"}
+               :onMouseOver #(swap! state assoc :hoveringProfile? true)
+               :onMouseOut #(swap! state assoc :hoveringProfile? false)}
+         [:a {:style {:color "#000"
+                      :textDecoration "none"}
+              :href "#profile" } "Profile"]]
+
+        [:div {:style {:fontSize "14px"
+                       :paddingLeft "1ex"
+                       :paddingRight "3ex"
+                       :backgroundColor (when (:hoveringBilling? @state) "#e8f5ff")
+                       :paddingBottom "1ex"
+                       :paddingTop "1ex"}
+               :onMouseOver #(swap! state assoc :hoveringBilling? true)
+               :onMouseOut #(swap! state assoc :hoveringBilling? false)}
+         [:a {:style {:color "#000"
+                      :textDecoration "none"}
+              :display "block"
+              :href "#billing" } "Billing"]]])})
 
 (react/defc LoggedIn
   {:render
@@ -195,7 +224,10 @@
            [:a {:href "javascript:;" :onClick #(swap! state assoc :show-dropdown? true)
                 :style {:color (:link-blue style/colors)}}
             (:user-email props)]
-           [ProfileDropdown])
+           [:div {} [:a {:href "javascript:;" :onClick #(swap! state assoc :show-dropdown? true)
+                         :style {:color (:link-blue style/colors)}}
+                     (:user-email props)]
+            [AccountDropdown]])
          (when (= :registered (:registration-status @state))
            [GlobalSubmissionStatus])]
         (text-logo)
