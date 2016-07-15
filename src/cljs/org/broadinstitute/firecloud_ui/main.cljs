@@ -290,6 +290,16 @@
       " for more information."]}))
 
 
+  (defn- maintenance-mode-dialog [dismiss]
+    (dialog/standard-dialog
+      {:width 500
+       :dismiss-self dismiss
+       :header "Maintenance Mode"
+       :show-cancel? false
+       :ok-button [comps/Button {:text "OK" :onClick dismiss}]
+       :content
+       [:div {}
+        "FireCloud is currently undergoing planned maintenance. We should be back online shortly."]}))
 (react/defc App
   {:handle-hash-change
    (fn [{:keys [state]}]
@@ -302,6 +312,8 @@
      [:div {}
       (when (:show-server-down-message? @state)
         (server-unavailable-dialog #(swap! state dissoc :show-server-down-message?)))
+      (when (:show-maintenance-mode-message? @state)
+        (maintenance-mode-dialog #(swap! state dissoc :show-maintenance-mode-message?)))
       [:div {:style {:backgroundColor "white" :padding 20}}
        [:div {}
         (cond
@@ -357,12 +369,18 @@
        (fn [_ _ _ down-now?]
          (when down-now?
            (swap! state assoc :show-server-down-message? true))))
+     (add-watch
+        utils/maintenance-mode? :server-watcher
+        (fn [_ _ _ maintenance-now?]
+          (when maintenance-now?
+            (swap! state assoc :show-maintenance-mode-message? true))))
      (modal/set-instance! (@refs "modal"))
      (react/call :load-config this))
    :component-will-unmount
    (fn [{:keys [locals]}]
      (.removeEventListener js/window "hashchange" (:hash-change-listener @locals))
-     (remove-watch utils/server-down? :server-watcher))
+     (remove-watch utils/server-down? :server-watcher)
+     (remove-watch utils/maintenance-mode? :server-watcher))
    :load-config
    (fn [{:keys [this state]}]
      ;; Use basic ajax call here to bypass authentication.
