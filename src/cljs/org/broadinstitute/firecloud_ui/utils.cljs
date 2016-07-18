@@ -155,8 +155,8 @@
            :on-done (fn [{:keys [status-code] :as m}]
                       (when (and (not @server-down?)  (not @maintenance-mode?))
                         (cond
-                          (= status-code 200) (swap! maintenance-mode? not)
-                          (contains? (set (range 190 600)) status-code) (swap! server-down? not)))
+                          (= status-code 502) (swap! maintenance-mode? not)
+                          (contains? (set (range 500 600)) status-code) (swap! server-down? not)))
                       ;; Handle auth token expiration
                       (when (and (= status-code 401) (not ignore-auth-expiration?))
                         (auth-expiration-handler))
