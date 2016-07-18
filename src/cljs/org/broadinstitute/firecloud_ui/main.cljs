@@ -177,38 +177,44 @@
 
 (react/defc AccountDropdown
   {:render
-   (fn [{:keys [state]}]
-       [:div {:style {:zIndex 20
-                      :textAlign "left"
-                      :boxShadow "0px 2px 15px 5px rgba(0, 0, 0, 0.15)"
-                      :backgroundColor "#ffffff"
-                      :position "absolute"
-                      :border (str "1px solid " (:line-gray style/colors))}}
+   (fn [{:keys [props state]}]
+       [:div {:style {:float "right"}}
+        (when (:show-dropdown? @state)
+          [:div {:style {:position "fixed"
+                         :top 0 :left 0 :right 0 :bottom 0}
+                 :onClick #(swap! state assoc :show-dropdown? false)}])
+        [:a {:href "javascript:;" :onClick #(swap! state update :show-dropdown? not)
+             :style {:color (:link-blue style/colors)}}
+         (:user-email props)]
+        (when (:show-dropdown? @state)
+          (let [DropdownItem
+                (react/create-class
+                  {:render
+                   (fn [{:keys [props state]}]
+                       [:a {:style {:color "#000"
+                                    :textDecoration "none"
+                                    :display "block"
+                                    :fontSize "14px"
+                                    :paddingLeft "1ex"
+                                    :paddingRight "3ex"
+                                    :backgroundColor (when (:hovering? @state) "#e8f5ff")
+                                    :paddingBottom "1ex"
+                                    :paddingTop "1ex"}
+                            :href (:href props)
+                            :onMouseOver #(swap! state assoc :hovering? true)
+                            :onMouseOut #(swap! state assoc :hovering? false)
+                            :onClick (:dismiss props)}
+                        (:text props)])})]
+                [:div {:style {:zIndex 20
+                               :textAlign "left"
+                               :float "right"
+                               :boxShadow "0px 2px 15px 5px rgba(0, 0, 0, 0.15)"
+                               :backgroundColor "#ffffff"
+                               :position "absolute"
+                               :border (str "1px solid " (:line-gray style/colors))}}
 
-        [:div {:style {:fontSize "14px"
-                       :paddingLeft "1ex"
-                       :paddingRight "3ex"
-                       :backgroundColor (when (:hoveringProfile? @state) "#e8f5ff")
-                       :paddingBottom "1ex"
-                       :paddingTop "1ex"}
-               :onMouseOver #(swap! state assoc :hoveringProfile? true)
-               :onMouseOut #(swap! state assoc :hoveringProfile? false)}
-         [:a {:style {:color "#000"
-                      :textDecoration "none"}
-              :href "#profile" } "Profile"]]
-
-        [:div {:style {:fontSize "14px"
-                       :paddingLeft "1ex"
-                       :paddingRight "3ex"
-                       :backgroundColor (when (:hoveringBilling? @state) "#e8f5ff")
-                       :paddingBottom "1ex"
-                       :paddingTop "1ex"}
-               :onMouseOver #(swap! state assoc :hoveringBilling? true)
-               :onMouseOut #(swap! state assoc :hoveringBilling? false)}
-         [:a {:style {:color "#000"
-                      :textDecoration "none"}
-              :display "block"
-              :href "#billing" } "Billing"]]])})
+                 [DropdownItem {:href "#profile" :text "Profile" :dismiss #(swap! state assoc :show-dropdown? false)}]
+                 [DropdownItem {:href "#billing" :text "Billing" :dismiss #(swap! state assoc :show-dropdown? false)}]]))])})
 
 (react/defc LoggedIn
   {:render
@@ -220,16 +226,10 @@
          (nav/navigate (:nav-context props) "workspaces"))
        [:div {}
         [:div {:style {:float "right" :fontSize "70%" :textAlign "right" :marginRight "1ex"}}
-         (if-not (:show-dropdown? @state)
-           [:a {:href "javascript:;" :onClick #(swap! state assoc :show-dropdown? true)
-                :style {:color (:link-blue style/colors)}}
-            (:user-email props)]
-           [:div {} [:a {:href "javascript:;" :onClick #(swap! state assoc :show-dropdown? true)
-                         :style {:color (:link-blue style/colors)}}
-                     (:user-email props)]
-            [AccountDropdown]])
+         [AccountDropdown {:user-email (:user-email props)}]
+         (common/clear-both)
          (when (= :registered (:registration-status @state))
-           [GlobalSubmissionStatus])]
+           [GlobalSubmissionStatus])(common/clear-both)]
         (text-logo)
         (case (:registration-status @state)
           nil [:div {:style {:margin "2em 0" :textAlign "center"}}
