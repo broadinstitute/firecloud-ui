@@ -153,10 +153,10 @@
            :headers (merge {"Authorization" (str "Bearer " @access-token)}
                            (:headers arg-map))
            :on-done (fn [{:keys [status-code] :as m}]
-                      (when (not= @server-down? (contains? (disj (set (range 500 600)) 502) status-code))
-                        (swap! server-down? not))
-                      (when (not= @maintenance-mode? (= status-code 502))
-                        (swap! maintenance-mode? not))
+                      (when (and (not @server-down?)  (not @maintenance-mode?))
+                        (cond
+                          (= status-code 200) (swap! maintenance-mode? not)
+                          (contains? (set (range 190 600)) status-code) (swap! server-down? not)))
                       ;; Handle auth token expiration
                       (when (and (= status-code 401) (not ignore-auth-expiration?))
                         (auth-expiration-handler))
