@@ -153,10 +153,11 @@
      (let [{:keys [status-error status-code status-counts]} @state
            {:keys [queued active queue-position]} status-counts]
        (when-not (= status-code 401) ; to avoid displaying "Workflows: Unauthorized"
-         [:div {} (str "Workflows: "
-                       (cond status-error status-error
-                             status-counts (str queued " Queued; " active " Active; " queue-position " ahead of yours")
-                             :else "loading..."))])))
+         [:div {:style {:textAlign "right"}}
+          (str "Workflows: "
+               (cond status-error status-error
+                     status-counts (str queued " Queued; " active " Active; " queue-position " ahead of yours")
+                     :else "loading..."))])))
    :component-did-mount
    (fn [{:keys [this locals]}]
      ;; Call once for initial load
@@ -188,8 +189,9 @@
                    :color "#000" :textDecoration "none"
                    :padding "1ex" :border style/standard-line
                    :minWidth 100}}
-       (:user-email props)
-       " ▼"]
+       [:div {:style {:display "flex" :justifyContent "space-between" :alignItems "baseline"}}
+        (:user-email props)
+        [:div {:style {:display "inline-block" :marginLeft "0.5ex"}} "▼"]]]
       (when (:show-dropdown? @state)
         (let [DropdownItem
               (react/create-class
@@ -221,7 +223,7 @@
                      (= page :status))
          (nav/navigate (:nav-context props) "workspaces"))
        [:div {}
-        [:div {:style {:float "right" :fontSize "70%" :textAlign "right" :margin "0 1ex 1em 0"}}
+        [:div {:style {:float "right" :fontSize "70%" :margin "0 1ex 1em 0"}}
          [AccountDropdown {:user-email (:user-email props)}]
          (common/clear-both)
          (when (= :registered (:registration-status @state))
