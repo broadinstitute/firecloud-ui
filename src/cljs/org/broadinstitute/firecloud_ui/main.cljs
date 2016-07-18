@@ -122,7 +122,7 @@
     :render #(react/create-element Policy %)}])
 
 (def top-nav-bar-items
-  (filter (fn [r] (contains? #{:workspaces :methods :billing} (:key r))) routes))
+  (filter (fn [r] (contains? #{:workspaces :methods} (:key r))) routes))
 
 (react/defc TopNavBarLink
   {:render
