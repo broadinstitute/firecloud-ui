@@ -28,7 +28,7 @@
          (fn [built-in]
            [:div {}
             [:div {:style {:float "left"}} built-in]
-            [:div {:style {:float "right"}}
+            [:div {:style {:float "right" :display "none"}}
              [comps/Button {:text "Create New Billing Project"
                             :disabled? true
                             :onClick #(swap! state assoc :foo "bar")}]]

@@ -186,12 +186,14 @@
       [:a {:href "javascript:;"
            :onClick #(swap! state assoc :show-dropdown? true)
            :style {:display "block"
+                   :borderRadius 2
+                   :backgroundColor (:background-gray style/colors)
                    :color "#000" :textDecoration "none"
                    :padding "1ex" :border style/standard-line
                    :minWidth 100}}
        [:div {:style {:display "flex" :justifyContent "space-between" :alignItems "baseline"}}
         (:user-email props)
-        [:div {:style {:display "inline-block" :marginLeft "0.5ex"}} "▼"]]]
+        [:div {:style {:display "inline-block" :marginLeft "0.5ex" :fontSize 8}} "▼"]]]
       (when (:show-dropdown? @state)
         (let [DropdownItem
               (react/create-class
@@ -207,7 +209,7 @@
                         :onClick (:dismiss props)}
                     (:text props)])})]
           [:div {:style {:textAlign "left" :float "right"
-                         :boxShadow "0px 2px 15px 5px rgba(0, 0, 0, 0.15)"
+                         :boxShadow "0px 3px 6px 0px rgba(0, 0, 0, 0.15)"
                          :backgroundColor "#fff"
                          :position "absolute" :left 0 :right 0
                          :border (str "1px solid " (:line-gray style/colors))}}
