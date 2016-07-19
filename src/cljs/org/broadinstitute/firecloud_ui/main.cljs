@@ -412,9 +412,11 @@
                                      (cond
                                         ;; (and (not utils/server-down?)  (not utils/maintenance-mode?))
                                        (= status-code 502)
-                                         (swap! utils/maintenance-mode? not)
+                                         (do (swap! utils/maintenance-mode? not)
+                                           (swap! state assoc :user-status :error))
                                        (contains? (set (range 500 600)) status-code)
-                                         (swap! utils/server-down? not)
+                                         (do (swap! utils/server-down? not)
+                                           (swap! state assoc :user-status :error))
                                        (= 401 status-code) ; maybe bad cookie, not auth failure
                                        (do (utils/delete-access-token-cookie)
                                          (swap! state assoc :user-status :not-logged-in))
