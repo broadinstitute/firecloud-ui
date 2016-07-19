@@ -5,6 +5,7 @@
     [org.broadinstitute.firecloud-ui.common.components :as comps]
     [org.broadinstitute.firecloud-ui.common.dialog :as dialog]
     [org.broadinstitute.firecloud-ui.common.icons :as icons]
+    [org.broadinstitute.firecloud-ui.common.markdown :refer [MarkdownView]]
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
     [org.broadinstitute.firecloud-ui.nav :as nav]
@@ -131,53 +132,54 @@
 
 (defn- render-main [state refs ws owner? bucket-access? submissions-count]
   (let [owners (ws "owners")]
-    [:div {:style {:flex "1 1 auto" :display "flex"}}
-     [:div {:style {:flex "1 1 50%"}}
-      (style/create-section-header (str "Workspace Owner" (when (> (count owners) 1) "s")))
-      (style/create-paragraph
-        [:div {}
-         (interpose ", " owners)
-         (when owner?
-           [:span {}
-            " ("
-            (style/create-link {:text "Sharing..."
-                                :onClick #(swap! state assoc :editing-acl? true)})
-            ")"])])
-      (style/create-section-header "Description")
-      (style/create-paragraph
-        (let [description (not-empty (get-in ws ["workspace" "attributes" "description"]))]
-          (cond (:editing? @state) (react/create-element
-                                     (style/create-text-area {:ref "descriptionArea"
-                                                              :defaultValue description
-                                                              :style {:width 400}
-                                                              :rows 5}))
-                description [:div {:style {:whiteSpace "pre-wrap"}} description]
-                :else [:span {:style {:fontStyle "italic"}} "No description provided"])))
-      (attributes/view-attributes state refs)]
-     [:div {:style {:flex "1 1 50%" :paddingLeft 10}}
-      (style/create-section-header "Created By")
-      (style/create-paragraph
-        [:div {} (get-in ws ["workspace" "createdBy"])]
-        [:div {} (common/format-date (get-in ws ["workspace" "createdDate"]))])
-      (style/create-section-header "Google Bucket")
-      (style/create-paragraph
-        (case bucket-access?
-          nil [:div {:style {:position "absolute" :marginTop "-1.5em"}}
-               [comps/Spinner {:height "1.5ex"}]]
-          true (style/create-link {:text (get-in ws ["workspace" "bucketName"])
-                                   :href (str "https://console.developers.google.com/storage/browser/" (get-in ws ["workspace" "bucketName"]) "/")
-                                   :title "Click to open the Google Cloud Storage browser for this bucket"
-                                   :target "_blank"})
-          false (get-in ws ["workspace" "bucketName"])))
-      (style/create-section-header "Analysis Submissions")
-      (style/create-paragraph
-        (let [count-all (apply + (vals submissions-count))]
-             [:div {}
-              (str count-all " Submission" (when-not (= 1 count-all) "s"))
-              (when (pos? count-all)
-                    [:ul {:style {:marginTop "0"}}
-                     (for [[status subs] (sort submissions-count)]
-                        [:li {} (str subs " " status)])])]))]]))
+    [:div {:style {:flex "1 1 auto" :overflow "hidden"}}
+     [:div {:style {:flex "1 1 auto" :display "flex"}}
+      [:div {:style {:flex "1 1 50%"}}
+       (style/create-section-header (str "Workspace Owner" (when (> (count owners) 1) "s")))
+       (style/create-paragraph
+         [:div {}
+          (interpose ", " owners)
+          (when owner?
+            [:span {}
+             " ("
+             (style/create-link {:text "Sharing..."
+                                 :onClick #(swap! state assoc :editing-acl? true)})
+             ")"])])
+       (style/create-section-header "Created By")
+       (style/create-paragraph
+         [:div {} (get-in ws ["workspace" "createdBy"])]
+         [:div {} (common/format-date (get-in ws ["workspace" "createdDate"]))])]
+      [:div {:style {:flex "1 1 50%" :paddingLeft 10}}
+       (style/create-section-header "Google Bucket")
+       (style/create-paragraph
+         (case bucket-access?
+           nil [:div {:style {:position "absolute" :marginTop "-1.5em"}}
+                [comps/Spinner {:height "1.5ex"}]]
+           true (style/create-link {:text (get-in ws ["workspace" "bucketName"])
+                                    :href (str "https://console.developers.google.com/storage/browser/" (get-in ws ["workspace" "bucketName"]) "/")
+                                    :title "Click to open the Google Cloud Storage browser for this bucket"
+                                    :target "_blank"})
+           false (get-in ws ["workspace" "bucketName"])))
+       (style/create-section-header "Analysis Submissions")
+       (style/create-paragraph
+         (let [count-all (apply + (vals submissions-count))]
+           [:div {}
+            (str count-all " Submission" (when-not (= 1 count-all) "s"))
+            (when (pos? count-all)
+              [:ul {:style {:marginTop "0"}}
+               (for [[status subs] (sort submissions-count)]
+                 [:li {} (str subs " " status)])])]))]]
+     (style/create-section-header "Description")
+     (style/create-paragraph
+       (let [description (not-empty (get-in ws ["workspace" "attributes" "description"]))]
+         (cond (:editing? @state) (react/create-element
+                                    (style/create-text-area {:ref "descriptionArea"
+                                                             :defaultValue description
+                                                             :style {:width "100%"}
+                                                             :rows 10}))
+               description [MarkdownView {:text description}]
+               :else [:span {:style {:fontStyle "italic"}} "No description provided"])))
+     (attributes/view-attributes state refs)]))
 
 (react/defc Summary
   {:refresh
