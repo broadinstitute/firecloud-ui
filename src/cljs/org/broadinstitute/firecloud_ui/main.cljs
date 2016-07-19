@@ -12,6 +12,7 @@
    [org.broadinstitute.firecloud-ui.nav :as nav]
    [org.broadinstitute.firecloud-ui.nih-link-warning :as nih-link-warning]
    [org.broadinstitute.firecloud-ui.page.method-repo :as method-repo]
+   [org.broadinstitute.firecloud-ui.page.billing-management :as billing-management]
    [org.broadinstitute.firecloud-ui.page.profile :as profile-page]
    [org.broadinstitute.firecloud-ui.page.status :as status-page]
    [org.broadinstitute.firecloud-ui.page.workspaces-list :as workspaces]
@@ -109,6 +110,8 @@
 (def routes
   [{:key :profile
     :render #(react/create-element profile-page/Page %)}
+   {:key :billing
+    :render #(react/create-element billing-management/Page %)}
    {:key :workspaces :href "#workspaces"
     :name "Workspaces"
     :render #(react/create-element workspaces/Page %)}
@@ -150,10 +153,11 @@
      (let [{:keys [status-error status-code status-counts]} @state
            {:keys [queued active queue-position]} status-counts]
        (when-not (= status-code 401) ; to avoid displaying "Workflows: Unauthorized"
-         [:div {} (str "Workflows: "
-                       (cond status-error status-error
-                             status-counts (str queued " Queued; " active " Active; " queue-position " ahead of yours")
-                             :else "loading..."))])))
+         [:div {:style {:textAlign "right"}}
+          (str "Workflows: "
+               (cond status-error status-error
+                     status-counts (str queued " Queued; " active " Active; " queue-position " ahead of yours")
+                     :else "loading..."))])))
    :component-did-mount
    (fn [{:keys [this locals]}]
      ;; Call once for initial load
@@ -172,6 +176,45 @@
                      (swap! state assoc :status-error nil :status-code nil :status-counts (common/queue-status-counts (get-parsed-response)))
                      (swap! state assoc :status-error status-text :status-code status-code :status-counts nil)))}))})
 
+(react/defc AccountDropdown
+  {:render
+   (fn [{:keys [props state]}]
+     [:div {:style {:float "right" :position "relative" :marginBottom "1ex"}}
+      (when (:show-dropdown? @state)
+        [:div {:style {:position "fixed" :top 0 :left 0 :right 0 :bottom 0}
+               :onClick #(swap! state assoc :show-dropdown? false)}])
+      [:a {:href "javascript:;"
+           :onClick #(swap! state assoc :show-dropdown? true)
+           :style {:display "block"
+                   :borderRadius 2
+                   :backgroundColor (:background-gray style/colors)
+                   :color "#000" :textDecoration "none"
+                   :padding "1ex" :border style/standard-line
+                   :minWidth 100}}
+       [:div {:style {:display "flex" :justifyContent "space-between" :alignItems "baseline"}}
+        (:user-email props)
+        [:div {:style {:display "inline-block" :marginLeft "0.5ex" :fontSize 8}} "▼"]]]
+      (when (:show-dropdown? @state)
+        (let [DropdownItem
+              (react/create-class
+                {:render
+                 (fn [{:keys [props state]}]
+                   [:a {:style {:display "block"
+                                :color "#000" :textDecoration "none" :fontSize "14px"
+                                :padding "1ex 3ex 1ex 1ex"
+                                :backgroundColor (when (:hovering? @state) "#e8f5ff")}
+                        :href (:href props)
+                        :onMouseOver #(swap! state assoc :hovering? true)
+                        :onMouseOut #(swap! state assoc :hovering? false)
+                        :onClick (:dismiss props)}
+                    (:text props)])})]
+          [:div {:style {:textAlign "left" :float "right"
+                         :boxShadow "0px 3px 6px 0px rgba(0, 0, 0, 0.15)"
+                         :backgroundColor "#fff"
+                         :position "absolute" :left 0 :right 0
+                         :border (str "1px solid " (:line-gray style/colors))}}
+           [DropdownItem {:href "#profile" :text "Profile" :dismiss #(swap! state assoc :show-dropdown? false)}]
+           [DropdownItem {:href "#billing" :text "Billing" :dismiss #(swap! state assoc :show-dropdown? false)}]]))])})
 
 (react/defc LoggedIn
   {:render
@@ -182,13 +225,13 @@
                      (= page :status))
          (nav/navigate (:nav-context props) "workspaces"))
        [:div {}
-        [:div {:style {:float "right" :fontSize "70%" :textAlign "right" :marginRight "1ex"}}
-         [:a {:style {:color (:link-blue style/colors)}
-              :href "#profile" }
-          (:name @state)]
+        [:div {:style {:float "right" :fontSize "70%" :margin "0 1ex 1em 0"}}
+         [AccountDropdown {:user-email (:user-email props)}]
+         (common/clear-both)
          (when (= :registered (:registration-status @state))
            [GlobalSubmissionStatus])]
         (text-logo)
+        (common/clear-both)
         (case (:registration-status @state)
           nil [:div {:style {:margin "2em 0" :textAlign "center"}}
                [comps/Spinner {:text "Loading user information..."}]]
@@ -218,12 +261,7 @@
           (let [parsed-values (when success? (common/parse-profile (get-parsed-response)))]
             (cond
               (and success? (>= (int (:isRegistrationComplete parsed-values)) 3))
-              (swap! state assoc :registration-status :registered
-                :name (let [name (str (:firstName parsed-values) " " (:lastName parsed-values))]
-                        (if (-> name clojure.string/trim empty?)
-                          ; this is here primarily for old users without :firstName/:lastName fields
-                          "Profile"
-                          name)))
+              (swap! state assoc :registration-status :registered)
               (and success? (some? (:isRegistrationComplete parsed-values))) ; partial profile case
               (swap! state assoc :registration-status :update-registered)
               success? ; unregistered case
@@ -341,7 +379,8 @@
              "Thank you for registering. Your account is currently inactive."
              " You will be contacted via email when your account is activated."]]]
           (= :logged-in (:user-status @state))
-          [LoggedIn {:nav-context (:root-nav-context @state)}]
+          [LoggedIn {:nav-context (:root-nav-context @state)
+                     :user-email (:user-email @state)}]
           (= :not-logged-in (:user-status @state))
           [LoggedOut {:on-login #(react/call :authenticate-with-fresh-token this
                                              (get % "access_token"))}])]]
@@ -390,7 +429,8 @@
            (react/call :authenticate-with-fresh-token this token)
            (let [token (utils/get-access-token-cookie)]
              (if token
-               (attempt-auth token (fn [{:keys [success? status-code]}]
+               (attempt-auth token (fn [{:keys [success? status-code get-parsed-response]}]
+                                     (swap! state assoc :user-email (get-in (get-parsed-response) ["userInfo" "userEmail"]))
                                      (cond
                                        (= 401 status-code) ; maybe bad cookie, not auth failure
                                        (do (utils/delete-access-token-cookie)
@@ -405,7 +445,8 @@
                (swap! state assoc :user-status :not-logged-in)))))))
    :authenticate-with-fresh-token
    (fn [{:keys [this state]} token]
-     (attempt-auth token (fn [{:keys [success? status-code]}]
+     (attempt-auth token (fn [{:keys [success? status-code get-parsed-response]}]
+                           (swap! state assoc :user-email (get-in (get-parsed-response) ["userInfo" "userEmail"]))
                            (cond
                              (= 401 status-code)
                              (swap! state assoc :user-status :auth-failure)
