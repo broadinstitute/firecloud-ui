@@ -24,7 +24,7 @@
 (react/defc MarkdownView
   {:render
    (fn []
-     [:div {:ref "ref" :className "markdown-body"}])
+     [:div {:ref "ref" :className "markdown-body firecloud-markdown"}])
    :component-did-mount
    (fn [{:keys [props refs]}]
      (set! (.-innerHTML (@refs "ref"))
