@@ -275,31 +275,33 @@
                :on-done on-done}))
 
 
-(defn- server-unavailable-dialog [dismiss]
-  (dialog/standard-dialog
-    {:width 500
-     :dismiss-self dismiss
-     :header "Server Unavailable"
-     :show-cancel? false
-     :ok-button [comps/Button {:text "OK" :onClick dismiss}]
-     :content
-     [:div {}
-      "FireCloud service is temporarily unavailable.  If this problem persists, check "
-      [:a {:href "http://status.firecloud.org/" :target "_blank"}
-       "http://status.firecloud.org/"]
-      " for more information."]}))
-
-
-  (defn- maintenance-mode-dialog [dismiss]
+(defn- show-server-unavailable-dialog [dismiss]
+  (modal/push-modal
     (dialog/standard-dialog
       {:width 500
        :dismiss-self dismiss
-       :header "Maintenance Mode"
+       :header "Server Unavailable"
        :show-cancel? false
        :ok-button [comps/Button {:text "OK" :onClick dismiss}]
        :content
        [:div {}
-        "FireCloud is currently undergoing planned maintenance. We should be back online shortly."]}))
+          "FireCloud service is temporarily unavailable.  If this problem persists, check "
+          [:a {:href "http://status.firecloud.org/" :target "_blank"}
+           "http://status.firecloud.org/"]
+          " for more information."]})))
+
+
+  (defn- show-maintenance-mode-dialog [dismiss]
+    (modal/push-modal
+      (dialog/standard-dialog
+        {:width 500
+         :dismiss-self dismiss
+         :header "Maintenance Mode"
+         :show-cancel? false
+         :ok-button [comps/Button {:text "OK" :onClick dismiss}]
+         :content
+           [:div {}
+            "FireCloud is currently undergoing planned maintenance. We should be back online shortly."]})))
 (react/defc App
   {:handle-hash-change
    (fn [{:keys [state]}]
@@ -311,9 +313,9 @@
    (fn [{:keys [this state]}]
      [:div {}
       (when (:show-server-down-message? @state)
-        (server-unavailable-dialog #(swap! state dissoc :show-server-down-message?)))
+        (show-server-unavailable-dialog #(swap! state dissoc :show-server-down-message?)))
       (when (:show-maintenance-mode-message? @state)
-        (maintenance-mode-dialog #(swap! state dissoc :show-maintenance-mode-message?)))
+        (show-maintenance-mode-dialog #(swap! state dissoc :show-maintenance-mode-message?)))
       [:div {:style {:backgroundColor "white" :padding 20}}
        [:div {}
         (cond
@@ -368,12 +370,12 @@
        utils/server-down? :server-watcher
        (fn [_ _ _ down-now?]
          (when down-now?
-           (swap! state assoc :show-server-down-message? true))))
+           (show-server-unavailable-dialog modal/pop-modal))))
      (add-watch
         utils/maintenance-mode? :server-watcher
         (fn [_ _ _ maintenance-now?]
           (when maintenance-now?
-            (swap! state assoc :show-maintenance-mode-message? true))))
+            (show-maintenance-mode-dialog modal/pop-modal))))
      (modal/set-instance! (@refs "modal"))
      (react/call :load-config this))
    :component-will-unmount
@@ -410,7 +412,6 @@
              (if token
                (attempt-auth token (fn [{:keys [success? status-code]}]
                                      (cond
-                                        ;; (and (not utils/server-down?)  (not utils/maintenance-mode?))
                                        (= status-code 502)
                                          (do (swap! utils/maintenance-mode? not)
                                            (swap! state assoc :user-status :error))
