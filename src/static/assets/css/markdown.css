@@ -1,3 +1,8 @@
+/*
+These styles override github-markdown.css, originally from:
+https://github.com/sindresorhus/github-markdown-css
+*/
+
 .markdown-body.firecloud-markdown {
   font-size: inherit;
 }
