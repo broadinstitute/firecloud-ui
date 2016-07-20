@@ -282,7 +282,6 @@
        :dismiss-self dismiss
        :header (if maintenance-mode? "Maintenance Mode" "Server Unavailable")
        :show-cancel? false
-       ;; :ok-button [comps/Button {:text "OK" :onClick dismiss}]
        :content (if maintenance-mode?
                   [:div {} "FireCloud is currently undergoing planned maintenance.
                    We should be back online shortly."]
