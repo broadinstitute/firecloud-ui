@@ -275,33 +275,21 @@
                :on-done on-done}))
 
 
-(defn- show-server-unavailable-dialog [dismiss]
+(defn- show-system-status-dialog [maintenance-mode? dismiss]
   (modal/push-modal
     (dialog/standard-dialog
       {:width 500
        :dismiss-self dismiss
-       :header "Server Unavailable"
+       :header (if maintenance-mode? "Maintenance Mode" "Server Unavailable")
        :show-cancel? false
-       :ok-button [comps/Button {:text "OK" :onClick dismiss}]
-       :content
-       [:div {}
-          "FireCloud service is temporarily unavailable.  If this problem persists, check "
-          [:a {:href "http://status.firecloud.org/" :target "_blank"}
-           "http://status.firecloud.org/"]
-          " for more information."]})))
-
-
-  (defn- show-maintenance-mode-dialog [dismiss]
-    (modal/push-modal
-      (dialog/standard-dialog
-        {:width 500
-         :dismiss-self dismiss
-         :header "Maintenance Mode"
-         :show-cancel? false
-         :ok-button [comps/Button {:text "OK" :onClick dismiss}]
-         :content
-           [:div {}
-            "FireCloud is currently undergoing planned maintenance. We should be back online shortly."]})))
+       ;; :ok-button [comps/Button {:text "OK" :onClick dismiss}]
+       :content (if maintenance-mode?
+                  [:div {} "FireCloud is currently undergoing planned maintenance.
+                   We should be back online shortly."]
+                  [:div {} "FireCloud service is temporarily unavailable.  If this problem persists, check "
+                   [:a {:href "http://status.firecloud.org/" :target "_blank"}
+                    "http://status.firecloud.org/"]
+                   " for more information."])})))
 (react/defc App
   {:handle-hash-change
    (fn [{:keys [state]}]
@@ -313,9 +301,9 @@
    (fn [{:keys [this state]}]
      [:div {}
       (when (:show-server-down-message? @state)
-        (show-server-unavailable-dialog #(swap! state dissoc :show-server-down-message?)))
+        (show-system-status-dialog false #(swap! state dissoc :show-server-down-message?)))
       (when (:show-maintenance-mode-message? @state)
-        (show-maintenance-mode-dialog #(swap! state dissoc :show-maintenance-mode-message?)))
+        (show-system-status-dialog true #(swap! state dissoc :show-maintenance-mode-message?)))
       [:div {:style {:backgroundColor "white" :padding 20}}
        [:div {}
         (cond
@@ -370,12 +358,12 @@
        utils/server-down? :server-watcher
        (fn [_ _ _ down-now?]
          (when down-now?
-           (show-server-unavailable-dialog modal/pop-modal))))
+           (show-system-status-dialog false modal/pop-modal))))
      (add-watch
-        utils/maintenance-mode? :server-watcher
-        (fn [_ _ _ maintenance-now?]
-          (when maintenance-now?
-            (show-maintenance-mode-dialog modal/pop-modal))))
+       utils/maintenance-mode? :server-watcher
+       (fn [_ _ _ maintenance-now?]
+         (when maintenance-now?
+           (show-system-status-dialog true modal/pop-modal))))
      (modal/set-instance! (@refs "modal"))
      (react/call :load-config this))
    :component-will-unmount
@@ -413,11 +401,11 @@
                (attempt-auth token (fn [{:keys [success? status-code]}]
                                      (cond
                                        (= status-code 502)
-                                         (do (swap! utils/maintenance-mode? not)
-                                           (swap! state assoc :user-status :error))
+                                       (do (swap! utils/maintenance-mode? true)
+                                         (swap! state assoc :user-status :error))
                                        (contains? (set (range 500 600)) status-code)
-                                         (do (swap! utils/server-down? not)
-                                           (swap! state assoc :user-status :error))
+                                       (do (swap! utils/server-down? true)
+                                         (swap! state assoc :user-status :error))
                                        (= 401 status-code) ; maybe bad cookie, not auth failure
                                        (do (utils/delete-access-token-cookie)
                                          (swap! state assoc :user-status :not-logged-in))
