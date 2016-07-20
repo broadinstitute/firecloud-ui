@@ -289,6 +289,8 @@
                    [:a {:href "http://status.firecloud.org/" :target "_blank"}
                     "http://status.firecloud.org/"]
                    " for more information."])})))
+
+
 (react/defc App
   {:handle-hash-change
    (fn [{:keys [state]}]
