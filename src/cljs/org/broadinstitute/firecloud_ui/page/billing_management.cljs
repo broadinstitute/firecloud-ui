@@ -26,10 +26,9 @@
            [:div {}
             [:div {:style {:fontSize "120%" :marginBottom "0.5ex"}}
              "Select a billing account:"]
-            [:div {:style {:width 500 :backgroundColor "white" :padding "1em"}}
+            [:div {:style {:width 750 :backgroundColor "white" :padding "1em"}}
              [table/Table
-              {:width :narrow
-               :columns [{:header "Account Name" :starting-width 300
+              {:columns [{:header "Account Name" :starting-width 300
                           :content-renderer
                           (fn [[name has-access]]
                             (if has-access
@@ -50,27 +49,34 @@
             [input/TextField {:ref "name-field"
                               :style {:width "100%"}
                               :predicates [(input/nonempty "Name")]}]
-            (style/create-validation-error-message (:validation-errors @state))]))
+            (style/create-validation-error-message (:validation-errors @state))
+            [comps/ErrorViewer {:error (:server-error @state)}]]))
        :ok-button [comps/Button {:text "OK" :onClick #(react/call :create-billing-project this)}]}])
    :create-billing-project
-   (fn [{:keys [state refs]}]
+   (fn [{:keys [props state refs]}]
      (let [account (:selected-account @state)]
        (if-not account
          (swap! state assoc :validation-errors ["Please select a billing account"])
-         (do
-           (swap! state dissoc :validation-errors)
-           (let [[name & fails] (input/get-and-validate refs "name-field")]
-             (if fails
-               (swap! state assoc :validation-errors fails)
-               (utils/log "Success:" name)))))))})
+         (let [[name & fails] (input/get-and-validate refs "name-field")]
+           (swap! state assoc :validation-errors fails)
+           (when-not fails
+             (endpoints/call-ajax-orch
+               {:endpoint endpoints/create-billing-project
+                :payload {:projectName name :billingAccount account}
+                :headers {"Content-Type" "application/json"}
+                :on-done (fn [{:keys [success? get-parsed-response]}]
+                           (if success?
+                             (do ((:on-success props))
+                                 (modal/pop-modal))
+                             (swap! state assoc :server-error (get-parsed-response))))}))))))})
 
 
-(react/defc Table
+(react/defc BillingProjectTable
   {:reload
    (fn [{:keys [this]}]
      (react/call :load-data this))
    :render
-   (fn [{:keys [state]}]
+   (fn [{:keys [state this]}]
      (cond
        (:error-message @state) (style/create-server-error-message (:error-message @state))
        (nil? (:projects @state)) [comps/Spinner {:text "Loading billing projects..."}]
@@ -84,7 +90,10 @@
              [comps/Button {:text "Create New Billing Project"
                             :disabled? (cond (:billing-acct-error @state) (:billing-acct-error @state)
                                              (nil? (:billing-accounts @state)) "Loading billing accounts")
-                            :onClick #(modal/push-modal [CreateBillingProjectDialog {:billing-accounts (:billing-accounts @state)}])}]))
+                            :onClick #(fn []
+                                       (modal/push-modal
+                                         [CreateBillingProjectDialog {:billing-accounts (:billing-accounts @state)
+                                                                      :on-success #(react/call :reload this)}]))}]))
          :data (:projects @state)
          :->row (fn [item]
                   [(item "projectName")
@@ -117,4 +126,4 @@
    (fn [{:keys []}]
      [:div {:style {:padding "1em"}}
       [:h2 {} "Billing Management"]
-      [Table]])})
+      [BillingProjectTable]])})

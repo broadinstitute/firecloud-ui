@@ -675,6 +675,10 @@
     {:accountName "billingAccounts/foo-bar-baz"
      :firecloudHasAccess true}]})
 
+(def create-billing-project
+  {:path "/profile/billing"
+   :method :post})
+
 (defn get-refresh-token-date []
   {:path "/profile/refreshTokenDate"
    :method :get})
