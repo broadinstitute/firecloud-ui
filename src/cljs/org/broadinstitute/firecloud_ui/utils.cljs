@@ -155,7 +155,6 @@
            :on-done (fn [{:keys [status-code] :as m}]
                       (when (and (not @server-down?)  (not @maintenance-mode?))
                         (cond
-                          ;; keeping swap in order to avoid the same popup showing up?
                           (= status-code 502) (swap! maintenance-mode? not)
                           (contains? (set (range 500 600)) status-code) (swap! server-down? not)))
                       ;; Handle auth token expiration

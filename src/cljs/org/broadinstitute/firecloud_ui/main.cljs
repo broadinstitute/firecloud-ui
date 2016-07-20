@@ -423,9 +423,9 @@
      (attempt-auth token (fn [{:keys [success? status-code]}]
                            (cond
                              (= status-code 502)
-                               (swap! utils/maintenance-mode? not)
+                             (swap! utils/maintenance-mode? true)
                              (contains? (set (range 500 600)) status-code)
-                               (swap! utils/server-down? not)
+                             (swap! utils/server-down? true)
                              (= 401 status-code)
                              (swap! state assoc :user-status :auth-failure)
                              (= 403 status-code)
