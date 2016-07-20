@@ -402,10 +402,10 @@
                (attempt-auth token (fn [{:keys [success? status-code]}]
                                      (cond
                                        (= status-code 502)
-                                       (do (swap! utils/maintenance-mode? true)
+                                       (do (reset! utils/maintenance-mode? true)
                                          (swap! state assoc :user-status :error))
                                        (contains? (set (range 500 600)) status-code)
-                                       (do (swap! utils/server-down? true)
+                                       (do (reset! utils/server-down? true)
                                          (swap! state assoc :user-status :error))
                                        (= 401 status-code) ; maybe bad cookie, not auth failure
                                        (do (utils/delete-access-token-cookie)
@@ -423,9 +423,9 @@
      (attempt-auth token (fn [{:keys [success? status-code]}]
                            (cond
                              (= status-code 502)
-                             (swap! utils/maintenance-mode? true)
+                             (reset! utils/maintenance-mode? true)
                              (contains? (set (range 500 600)) status-code)
-                             (swap! utils/server-down? true)
+                             (reset! utils/server-down? true)
                              (= 401 status-code)
                              (swap! state assoc :user-status :auth-failure)
                              (= 403 status-code)
