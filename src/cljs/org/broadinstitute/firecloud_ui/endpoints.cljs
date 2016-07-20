@@ -666,6 +666,15 @@
    :method :get
    :mock-data (utils/rand-subset ["broad-dsde-dev" "broad-institute"])})
 
+(defn get-billing-accounts []
+  {:path "/profile/billingAccounts"
+   :method :get
+   :mock-data
+   [{:accountName "billingAccounts/00473A-04A1D8-155CAB"
+     :firecloudHasAccess false}
+    {:accountName "billingAccounts/foo-bar-baz"
+     :firecloudHasAccess true}]})
+
 (defn get-refresh-token-date []
   {:path "/profile/refreshTokenDate"
    :method :get})
