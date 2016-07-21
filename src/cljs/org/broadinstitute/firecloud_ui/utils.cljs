@@ -142,6 +142,7 @@
 
 
 (defonce server-down? (atom false))
+(defonce maintenance-mode? (atom false))
 
 
 (defn ajax-orch [path arg-map & {:keys [service-prefix ignore-auth-expiration?] :or {service-prefix "/api"}}]
@@ -152,8 +153,10 @@
            :headers (merge {"Authorization" (str "Bearer " @access-token)}
                            (:headers arg-map))
            :on-done (fn [{:keys [status-code] :as m}]
-                      (when (not= @server-down? (contains? #{500 503} status-code))
-                        (swap! server-down? not))
+                      (when (and (not @server-down?)  (not @maintenance-mode?))
+                        (cond
+                          (= status-code 502) (reset! maintenance-mode? true)
+                          (contains? (set (range 500 600)) status-code) (reset! server-down? true)))
                       ;; Handle auth token expiration
                       (when (and (= status-code 401) (not ignore-auth-expiration?))
                         (auth-expiration-handler))

@@ -19,12 +19,20 @@
      [comps/Button
       {:text "Sign In"
        :onClick (fn [e]
-                  (.. js/window
-                      (open
-                       (str (config/api-url-root) "/login?callback="
-                            (js/encodeURIComponent (.. js/window -location -origin)))
-                       "Authentication"
-                       "menubar=no,toolbar=no,width=500,height=500")))}])
+                  (u/ajax {:url (str (config/api-url-root) "/me")
+                           :on-done (fn [{:keys [success? status-code]}]
+                                      (cond
+                                        (= status-code 502 )
+                                        (reset! u/maintenance-mode? true)
+                                        (contains? (set (range 500 600)) status-code)
+                                        (reset! u/server-down? true)
+                                        :else
+                                        (.. js/window
+                                            (open
+                                              (str (config/api-url-root) "/login?callback="
+                                                   (js/encodeURIComponent (.. js/window -location -origin)))
+                                              "Authentication"
+                                              "menubar=no,toolbar=no,width=500,height=500"))))}))}])
    :component-did-mount
    (fn [{:keys [props]}]
      (aset js/window handler-fn-name
