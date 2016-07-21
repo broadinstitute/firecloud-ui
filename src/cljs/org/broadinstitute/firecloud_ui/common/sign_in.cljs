@@ -25,7 +25,7 @@
                                         (= status-code 502 )
                                         (reset! u/maintenance-mode? true)
                                         (contains? (set (range 500 600)) status-code)
-                                        (reset! u/server-down? (atom true))
+                                        (reset! u/server-down? true)
                                         :else
                                         (.. js/window
                                             (open
