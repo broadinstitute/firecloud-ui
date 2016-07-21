@@ -27,7 +27,8 @@
    :render
    (fn [{:keys [props]}]
      (let [disabled? (:disabled? props)]
-       [:a {:style {:display "inline-block"
+       [:a {:id (:id props)
+            :style {:display "inline-block"
                     :backgroundColor (:color props)
                     :WebkitFilter (when disabled? "grayscale()")
                     :cursor (when disabled? "default")
@@ -124,7 +125,9 @@
   {:render
    (fn [{:keys [props]}]
      [:div {:style {:position "absolute" :top 4 :right 4}}
-      [Button {:icon :x :onClick #((:dismiss props))}]])})
+      [Button {:icon :x
+               :onClick (:dismiss props)
+               :id (:id props)}]])})
 
 
 ;; TODO: find out if :position "absolute" would work everywhere, or possibly get rid of Blocker entirely

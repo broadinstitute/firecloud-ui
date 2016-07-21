@@ -33,7 +33,7 @@
                         {:id id :text text
                          :onClick (fn [e] (swap! state update-in [:crumbs] #(vec (take 2 %))))}))]
        [:div {:style {:padding "1em"}}
-        [comps/XButton {:dismiss (:dismiss props)}]
+        [comps/XButton {:id "close-data-import" :dismiss (:dismiss props)}]
         [:div {:style {:fontSize "150%"}}
          [comps/Breadcrumbs {:crumbs (:crumbs @state)}]]
         (case last-crumb-id
