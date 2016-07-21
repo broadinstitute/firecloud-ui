@@ -284,7 +284,8 @@
        :show-cancel? false
        :content (if maintenance-mode?
                   [:div {} "FireCloud is currently undergoing planned maintenance.
-                   We should be back online shortly."]
+                   We should be back online shortly. For more information, please see "[:a {:href "http://status.firecloud.org/" :target "_blank"}
+                    "http://status.firecloud.org/"] ". "]
                   [:div {} "FireCloud service is temporarily unavailable.  If this problem persists, check "
                    [:a {:href "http://status.firecloud.org/" :target "_blank"}
                     "http://status.firecloud.org/"]
