@@ -28,9 +28,9 @@
 
 (react/defc DeleteDialog
   {:render
-   (fn [{:keys [state props this]}]
-     (dialog/standard-dialog
-       {:width 500 :dismiss-self (:dismiss-self props)
+   (fn [{:keys [state this]}]
+     [dialog/OKCancelForm
+       {:dismiss-self modal/pop-modal
         :header "Confirm Delete"
         :content
         [:div {}
@@ -39,10 +39,7 @@
          [:p {:style {:margin 0}} "Are you sure you want to delete this workspace?"]
          [:p {} "Bucket data will be deleted too."]
          [comps/ErrorViewer {:error (:server-error @state)}]]
-        :ok-button [comps/Button {:text "Delete" :onClick #(react/call :delete this)}]}))
-   :component-did-mount
-   (fn []
-     (common/scroll-to-top 100))
+        :ok-button [comps/Button {:text "Delete" :onClick #(react/call :delete this)}]}])
    :delete
    (fn [{:keys [props state]}]
      (swap! state assoc :deleting? true :server-error nil)
@@ -51,17 +48,12 @@
         :on-done (fn [{:keys [success? get-parsed-response]}]
                    (swap! state dissoc :deleting?)
                    (if success?
-                     ((:on-delete props))
+                     (do (modal/pop-modal) ((:on-delete props)))
                      (swap! state assoc :server-error (get-parsed-response))))}))})
 
 
 (defn- render-overlays [state props]
   [:div {}
-   (when (:show-delete-dialog? @state)
-     [DeleteDialog
-      {:dismiss-self #(swap! state dissoc :show-delete-dialog?)
-       :workspace-id (:workspace-id props)
-       :on-delete (:on-delete props)}])
    (when (:deleting-attrs? @state)
      [comps/Blocker {:banner "Deleting Attributes..."}])
    (when (:updating-attrs? @state)
@@ -127,7 +119,9 @@
        [comps/SidebarButton {:style :light :margin :top :color :exception-red
                              :text "Delete" :icon :trash-can
                              :disabled? (if locked? "This workspace is locked")
-                             :onClick #(swap! state assoc :show-delete-dialog? true)}])]))
+                             :onClick #(modal/push-modal [DeleteDialog
+                                                          {:workspace-id (:workspace-id props)
+                                                           :on-delete (:on-delete props)}])}])]))
 
 
 (defn- render-main [state refs ws owner? bucket-access? submissions-count]
