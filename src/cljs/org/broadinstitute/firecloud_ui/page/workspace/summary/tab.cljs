@@ -6,6 +6,7 @@
     [org.broadinstitute.firecloud-ui.common.dialog :as dialog]
     [org.broadinstitute.firecloud-ui.common.icons :as icons]
     [org.broadinstitute.firecloud-ui.common.markdown :refer [MarkdownView]]
+    [org.broadinstitute.firecloud-ui.common.modal :as modal]
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
     [org.broadinstitute.firecloud-ui.nav :as nav]
@@ -54,7 +55,7 @@
                      (swap! state assoc :server-error (get-parsed-response))))}))})
 
 
-(defn- render-overlays [state props workspace billing-projects]
+(defn- render-overlays [state props]
   [:div {}
    (when (:show-delete-dialog? @state)
      [DeleteDialog
@@ -70,16 +71,7 @@
    (when (:editing-acl? @state)
      [AclEditor {:workspace-id (:workspace-id props)
                  :dismiss-self #(swap! state dissoc :editing-acl?)
-                 :update-owners #(swap! state update-in [:server-response :workspace] assoc "owners" %)}])
-   (when (:cloning? @state)
-     [WorkspaceCloner {:dismiss #(swap! state dissoc :cloning?)
-                       :on-success (fn [namespace name]
-                                     (swap! state dissoc :cloning?)
-                                     ((:on-clone props) (str namespace ":" name)))
-                       :workspace-id (:workspace-id props)
-                       :description (get-in workspace ["workspace" "attributes" "description"])
-                       :is-protected? (get-in workspace ["workspace" "isProtected"])
-                       :billing-projects billing-projects}])])
+                 :update-owners #(swap! state update-in [:server-response :workspace] assoc "owners" %)}])])
 
 
 (defn- render-sidebar [state props refs this ws billing-projects owner? writer?]
@@ -118,7 +110,15 @@
        [comps/SidebarButton {:style :light :margin :top :color :button-blue
                              :text "Clone..." :icon :plus
                              :disabled? (when (empty? billing-projects) "No billing projects available")
-                             :onClick #(swap! state assoc :cloning? true)}])
+                             :onClick #(modal/push-modal
+                                        [WorkspaceCloner
+                                         {:on-success (fn [namespace name]
+                                                        (swap! state dissoc :cloning?)
+                                                        ((:on-clone props) (str namespace ":" name)))
+                                          :workspace-id (:workspace-id props)
+                                          :description (get-in ws ["workspace" "attributes" "description"])
+                                          :is-protected? (get-in ws ["workspace" "isProtected"])
+                                          :billing-projects billing-projects}])}])
      (when-not (and owner? (:editing? @state))
        [comps/SidebarButton {:style :light :margin :top :color :button-blue
                              :text (if locked? "Unlock" "Lock") :icon :locked
@@ -200,7 +200,7 @@
          (let [owner? (= "OWNER" (workspace "accessLevel"))
                writer? (or owner? (= "WRITER" (workspace "accessLevel")))]
            [:div {:style {:margin "45px 25px" :display "flex"}}
-            (render-overlays state props workspace billing-projects)
+            (render-overlays state props)
             (render-sidebar state props refs this workspace billing-projects owner? writer?)
             (render-main state refs workspace owner? (:bucket-access? props) submissions-count)]))))
    :load-workspace
