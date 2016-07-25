@@ -3,6 +3,7 @@
     [dmohs.react :as react]
     [org.broadinstitute.firecloud-ui.common :as common]
     [org.broadinstitute.firecloud-ui.common.input :as input]
+    [org.broadinstitute.firecloud-ui.common.modal :as modal]
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
     [org.broadinstitute.firecloud-ui.common.dialog :as dialog]
@@ -12,7 +13,6 @@
 
 
 (def ^:private access-levels ["OWNER" "WRITER" "READER" "NO ACCESS"])
-(def ^:private column-width "calc(50% - 4px)")
 
 
 (defn- render-acl-content [props state this]
@@ -26,8 +26,8 @@
        (when (:saving? @state)
          [comps/Blocker {:banner "Updating..."}])
        [:div {:style {:padding "0.5em 0" :fontSize "90%"}}
-        [:div {:style {:float "left" :width column-width}} "User or Group ID"]
-        [:div {:style {:float "right" :width column-width}} "Access Level"]
+        [:div {:style {:float "left" :width 400}} "User or Group ID"]
+        [:div {:style {:float "right" :width 200 :marginLeft "1em"}} "Access Level"]
         (common/clear-both)]
        (map-indexed
          (fn [i acl-entry]
@@ -35,7 +35,7 @@
             [input/TextField
              {:ref (str "acl-key" i)
               :predicates [(input/valid-email-or-empty "User or Group ID")]
-              :style {:float "left" :width column-width :color "black"
+              :style {:float "left" :width 400 :color "black"
                       :backgroundColor (when (:read-only? acl-entry)
                                          (:background-gray style/colors))}
               :disabled (:read-only? acl-entry)
@@ -44,7 +44,7 @@
               :onChange #(swap! state assoc-in [:acl-vec i :email] (.. % -target -value))}]
             (style/create-identity-select
               {:ref (str "acl-value" i)
-               :style {:float "right" :width column-width :height 33}
+               :style {:float "right" :width 200 :height 33 :marginLeft "1em"}
                :value (:accessLevel acl-entry)
                :onChange #(swap! state assoc-in [:acl-vec i :accessLevel]
                                  (.. % -target -value))}
@@ -57,25 +57,20 @@
                                         conj {:email "" :accessLevel "READER"})}]]
        (style/create-validation-error-message (:validation-error @state))
        [comps/ErrorViewer {:error (:save-error @state)}]])
-    :dismiss-self (:dismiss-self props)
+    :dismiss-self modal/pop-modal
     :ok-button [comps/Button {:text "Save" :onClick #(react/call :persist-acl this)}]}])
 
 (react/defc AclEditor
   {:render
    (fn [{:keys [props state this]}]
-     [dialog/Dialog
-      {:width "50%"
-       :dismiss-self (:dismiss-self props)
-       :content
-       (react/create-element
-         (if (:acl-vec @state)
-           (render-acl-content props state this)
-           [:div {:style {:padding "2em"}}
-            (if (:load-error @state)
-              (style/create-server-error-message (:load-error @state))
-              [comps/Spinner {:text "Loading Permissions..."}])]))}])
+     (if (:acl-vec @state)
+       (render-acl-content props state this)
+       [:div {:style {:padding "2em"}}
+        (if (:load-error @state)
+          (style/create-server-error-message (:load-error @state))
+          [comps/Spinner {:text "Loading Permissions..."}])]))
    :persist-acl
-   (fn [{:keys [props state refs this]}]
+   (fn [{:keys [props state refs]}]
      (swap! state dissoc :save-error :validation-error)
      (let [filtered-acl (->> (:acl-vec @state)
                              (map #(dissoc % :read-only?))
@@ -95,7 +90,7 @@
                          (if success?
                            (do
                              ((:update-owners props) (map :email (filter #(= "OWNER" (:accessLevel %)) filtered-acl)))
-                             ((:dismiss-self props)))
+                             (modal/pop-modal))
                            (swap! state assoc :save-error (get-parsed-response))))})))))
    :component-did-mount
    (fn [{:keys [props state]}]
@@ -103,7 +98,7 @@
      (endpoints/call-ajax-orch
        {:endpoint (endpoints/get-workspace-acl (:workspace-id props))
         :on-done
-        (fn [{:keys [success? get-parsed-response status-text]}]
+        (fn [{:keys [success? get-parsed-response]}]
           (if success?
             (swap! state assoc :acl-vec
                    (mapv (fn [[k v]]

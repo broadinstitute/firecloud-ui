@@ -52,18 +52,14 @@
                      (swap! state assoc :server-error (get-parsed-response))))}))})
 
 
-(defn- render-overlays [state props]
+(defn- render-overlays [state]
   [:div {}
    (when (:deleting-attrs? @state)
      [comps/Blocker {:banner "Deleting Attributes..."}])
    (when (:updating-attrs? @state)
      [comps/Blocker {:banner "Updating Attributes..."}])
    (when (contains? @state :locking?)
-     [comps/Blocker {:banner (if (:locking? @state) "Unlocking..." "Locking...")}])
-   (when (:editing-acl? @state)
-     [AclEditor {:workspace-id (:workspace-id props)
-                 :dismiss-self #(swap! state dissoc :editing-acl?)
-                 :update-owners #(swap! state update-in [:server-response :workspace] assoc "owners" %)}])])
+     [comps/Blocker {:banner (if (:locking? @state) "Unlocking..." "Locking...")}])])
 
 
 (defn- render-sidebar [state props refs this ws billing-projects owner? writer?]
@@ -124,7 +120,7 @@
                                                            :on-delete (:on-delete props)}])}])]))
 
 
-(defn- render-main [state refs ws owner? bucket-access? submissions-count]
+(defn- render-main [state props refs ws owner? bucket-access? submissions-count]
   (let [owners (ws "owners")]
     [:div {:style {:flex "1 1 auto" :overflow "hidden"}}
      [:div {:style {:flex "1 1 auto" :display "flex"}}
@@ -137,7 +133,10 @@
             [:span {}
              " ("
              (style/create-link {:text "Sharing..."
-                                 :onClick #(swap! state assoc :editing-acl? true)})
+                                 :onClick #(modal/push-modal
+                                            [AclEditor {:workspace-id (:workspace-id props)
+                                                        :update-owners (fn [new-owners]
+                                                                         (swap! state update-in [:server-response :workspace] assoc "owners" new-owners))}])})
              ")"])])
        (style/create-section-header "Created By")
        (style/create-paragraph
@@ -194,9 +193,9 @@
          (let [owner? (= "OWNER" (workspace "accessLevel"))
                writer? (or owner? (= "WRITER" (workspace "accessLevel")))]
            [:div {:style {:margin "45px 25px" :display "flex"}}
-            (render-overlays state props)
+            (render-overlays state)
             (render-sidebar state props refs this workspace billing-projects owner? writer?)
-            (render-main state refs workspace owner? (:bucket-access? props) submissions-count)]))))
+            (render-main state props refs workspace owner? (:bucket-access? props) submissions-count)]))))
    :load-workspace
    (fn [{:keys [props state]}]
      (endpoints/call-ajax-orch
