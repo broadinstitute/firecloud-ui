@@ -6,19 +6,19 @@
     ))
 
 
-(def ^:private instance)
+(defonce ^:private instance (atom nil))
 
 
 (defn set-instance! [x]
-  (set! instance x))
+  (reset! instance x))
 
 
 (defn push-modal [child]
-  (react/call :push-modal instance child))
+  (react/call :push-modal @instance child))
 
 
 (defn pop-modal []
-  (react/call :pop-modal instance))
+  (react/call :pop-modal @instance))
 
 
 (react/defc Component
