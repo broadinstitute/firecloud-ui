@@ -19,11 +19,15 @@
      {:selected-project (first (:billing-projects props))
       :protected-option :not-loaded})
    :render
-   (fn [{:keys [props state this]}]
+   (fn [{:keys [props state refs this]}]
      [dialog/OKCancelForm
       {:dismiss-self modal/pop-modal
        :header "Create New Workspace"
-       :ok-button [comps/Button {:text "Create Workspace" :onClick #(react/call :create-workspace this)}]
+       :ok-button (react/create-element
+                    [comps/Button {:ref "okButton" :text "Create Workspace"
+                                   :onClick #(react/call :create-workspace this)}])
+       :get-first-element-dom-node #(@refs "project")
+       :get-last-element-dom-node #(react/find-dom-node (@refs "okButton"))
        :content
        (react/create-element
          [:div {:style {:marginBottom -20}}
@@ -31,7 +35,7 @@
             [comps/Blocker {:banner "Creating Workspace..."}])
           (style/create-form-label "Billing Project")
           (style/create-select
-            {:value (:selected-project @state)
+            {:ref "project" :value (:selected-project @state)
              :onChange #(swap! state assoc :selected-project (-> % .-target .-value))}
             (:billing-projects props))
           (style/create-form-label "Name")

@@ -86,7 +86,20 @@
                  :onClick dismiss-self
                  :onKeyDown (common/create-key-handler [:space :enter] dismiss-self)}
              (or cancel-text "Cancel")])
-          ok-button]]]))})
+          ok-button]]]))
+   :component-did-mount
+   (fn [{:keys [props]}]
+     (when-let [get-first (:get-first-element-dom-node props)]
+       (common/focus-and-select (get-first))
+       (when-let [get-last (:get-last-element-dom-node props)]
+         (.addEventListener (get-first) "keydown" (common/create-key-handler [:tab] #(.-shiftKey %)
+                                                                             (fn [e] (.preventDefault e)
+                                                                               (when (:cycle-focus? props)
+                                                                                 (.focus (get-last))))))
+         (.addEventListener (get-last) "keydown" (common/create-key-handler [:tab] #(not (.-shiftKey %))
+                                                                            (fn [e] (.preventDefault e)
+                                                                              (when (:cycle-focus? props)
+                                                                                (.focus (get-first)))))))))})
 
 
 (defn standard-dialog [props]
