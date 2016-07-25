@@ -313,21 +313,21 @@
                :on-done on-done}))
 
 
-(defn- show-system-status-dialog [maintenance-mode? dismiss]
+(defn- show-system-status-dialog [maintenance-mode?]
   (modal/push-modal
-    (dialog/standard-dialog
-      {:width 500
-       :dismiss-self dismiss
-       :header (if maintenance-mode? "Maintenance Mode" "Server Unavailable")
-       :show-cancel? false
-       :content (if maintenance-mode?
-                  [:div {} "FireCloud is currently undergoing planned maintenance.
-                   We should be back online shortly. For more information, please see "[:a {:href "http://status.firecloud.org/" :target "_blank"}
-                    "http://status.firecloud.org/"] ". "]
-                  [:div {} "FireCloud service is temporarily unavailable.  If this problem persists, check "
-                   [:a {:href "http://status.firecloud.org/" :target "_blank"}
-                    "http://status.firecloud.org/"]
-                   " for more information."])})))
+    [dialog/OKCancelForm
+     {:dismiss-self modal/pop-modal
+      :header (if maintenance-mode? "Maintenance Mode" "Server Unavailable")
+      :show-cancel? false
+      :content (if maintenance-mode?
+                 [:div {} "FireCloud is currently undergoing planned maintenance.
+                   We should be back online shortly. For more information, please see "
+                  [:a {:href "http://status.firecloud.org/" :target "_blank"}
+                   "http://status.firecloud.org/"] "."]
+                 [:div {} "FireCloud service is temporarily unavailable.  If this problem persists, check "
+                  [:a {:href "http://status.firecloud.org/" :target "_blank"}
+                   "http://status.firecloud.org/"]
+                  " for more information."])}]))
 
 
 (react/defc App
@@ -340,10 +340,6 @@
    :render
    (fn [{:keys [this state]}]
      [:div {}
-      (when (:show-server-down-message? @state)
-        (show-system-status-dialog false #(swap! state dissoc :show-server-down-message?)))
-      (when (:show-maintenance-mode-message? @state)
-        (show-system-status-dialog true #(swap! state dissoc :show-maintenance-mode-message?)))
       [:div {:style {:backgroundColor "white" :padding 20}}
        [:div {}
         (cond
@@ -399,12 +395,12 @@
        utils/server-down? :server-watcher
        (fn [_ _ _ down-now?]
          (when down-now?
-           (show-system-status-dialog false modal/pop-modal))))
+           (show-system-status-dialog false))))
      (add-watch
        utils/maintenance-mode? :server-watcher
        (fn [_ _ _ maintenance-now?]
          (when maintenance-now?
-           (show-system-status-dialog true modal/pop-modal))))
+           (show-system-status-dialog true))))
      (modal/set-instance! (@refs "modal"))
      (react/call :load-config this))
    :component-will-unmount
