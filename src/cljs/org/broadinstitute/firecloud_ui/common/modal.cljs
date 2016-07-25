@@ -36,19 +36,19 @@
    (fn [{:keys [state]}]
      [:div {}
       (let [{:keys [stack]} @state]
-        (map-indexed (fn [i child]
-                       [:div {}
-                        [:div {:style {:position "fixed"
-                                       :top 0 :bottom 0 :left 0 :right 0
-                                       :backgroundColor "rgba(110,110,110,0.4)"}}]
-                        [:div {:style {:position "absolute"
-                                       :top (+ (aget js/document "body" "scrollTop") 30)
-                                       :left 0
-                                       :width "100%"}}
-                         [:div {:style {:display "flex" :justifyContent "center"}}
-                          [:div {:style {:backgroundColor "white"}}
-                           child]]]])
-                     stack))])
+        (map (fn [child]
+               [:div {}
+                [:div {:style {:position "fixed"
+                               :top 0 :bottom 0 :left 0 :right 0
+                               :backgroundColor "rgba(110,110,110,0.4)"}}]
+                [:div {:style {:position "absolute"
+                               :top (+ (aget js/document "body" "scrollTop") 30)
+                               :left 0
+                               :width "100%"}}
+                 [:div {:style {:display "flex" :justifyContent "center"}}
+                  [:div {:style {:backgroundColor "white"}}
+                   child]]]])
+             stack))])
    :component-did-mount
    (fn [{:keys [locals]}]
      (swap! locals assoc :keydown-handler (common/create-key-handler [:esc] pop-modal))
