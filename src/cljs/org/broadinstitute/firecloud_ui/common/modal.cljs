@@ -27,7 +27,8 @@
      (swap! state update-in [:stack] conj child))
    :pop-modal
    (fn [{:keys [state]}]
-     (swap! state update-in [:stack] pop))
+     (when-not (empty? (:stack @state))
+       (swap! state update-in [:stack] pop)))
    :get-initial-state
    (fn []
      {:stack (list)})
