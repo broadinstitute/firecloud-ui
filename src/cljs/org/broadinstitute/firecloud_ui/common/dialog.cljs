@@ -77,17 +77,18 @@
          header]
         [:div {:style {:padding "22px 48px 40px" :backgroundColor (:background-gray style/colors)}}
          content
-         [:div {:style {:marginTop 40 :textAlign "center"}}
-          (when show-cancel?
-            [:a {:style {:marginRight 27 :marginTop 2 :padding "0.5em"
-                         :display "inline-block"
-                         :fontSize "106%" :fontWeight 500 :textDecoration "none"
-                         :color (:button-blue style/colors)}
-                 :href "javascript:;"
-                 :onClick dismiss-self
-                 :onKeyDown (common/create-key-handler [:space :enter] dismiss-self)}
-             (or cancel-text "Cancel")])
-          ok-button]]]))
+         (when (or show-cancel? ok-button)
+           [:div {:style {:marginTop 40 :textAlign "center"}}
+            (when show-cancel?
+              [:a {:style {:marginRight (when ok-button 27) :marginTop 2 :padding "0.5em"
+                           :display "inline-block"
+                           :fontSize "106%" :fontWeight 500 :textDecoration "none"
+                           :color (:button-blue style/colors)}
+                   :href "javascript:;"
+                   :onClick dismiss-self
+                   :onKeyDown (common/create-key-handler [:space :enter] dismiss-self)}
+               (or cancel-text "Cancel")])
+            ok-button])]]))
    :component-did-mount
    (fn [{:keys [props]}]
      (when-let [get-first (:get-first-element-dom-node props)]

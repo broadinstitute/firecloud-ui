@@ -45,7 +45,7 @@
                        (swap! state assoc :error (get-parsed-response))))})))})
 
 (defn- create-import-form [state props this entity config? fields]
-  (let [{:keys [workspace-id on-back]} props
+  (let [{:keys [workspace-id]} props
         workspaces-list (:workspaces-list @state)]
     [:div {}
      (when (:blocking-text @state)
@@ -119,7 +119,7 @@
        :else [comps/Spinner {:text "Loading configuration details..."}]))
    :perform-copy
    (fn [{:keys [props state refs]}]
-     (let [{:keys [workspace-id config after-import on-back]} props
+     (let [{:keys [workspace-id config after-import]} props
            [namespace name & fails] (input/get-and-validate refs "namespace" "name")
            workspace-id (or workspace-id
                           {:namespace (get-in (:selected-workspace @state) ["workspace" "namespace"])
@@ -179,7 +179,7 @@
        :else [comps/Spinner {:text "Creating template..."}]))
    :perform-copy
    (fn [{:keys [props state refs]}]
-     (let [{:keys [workspace-id after-import on-back]} props
+     (let [{:keys [workspace-id after-import]} props
            [namespace name & fails] (input/get-and-validate refs "namespace" "name")
            rootEntityType (.-value (@refs "rootEntityType"))
            workspace-id (or workspace-id
@@ -280,7 +280,7 @@
   :component-did-mount #(react/call :load-data (:this %))
   :component-did-update #(react/call :load-data (:this %))
   :load-data
-  (fn [{:keys [this state]}]
+  (fn [{:keys [state]}]
     (when-not (some (or @state {}) [:configs :methods :error-message])
       (endpoints/call-ajax-orch
        {:endpoint endpoints/list-configurations
@@ -300,7 +300,7 @@
 
 (react/defc MethodConfigImporter
   {:render
-   (fn [{:keys [this props state refs]}]
+   (fn [{:keys [props state refs]}]
      [:div {}
       (if-let [item (:selected-item @state)]
         [:div {}
@@ -319,7 +319,6 @@
                  item-type (:selected-item @state)
                  :workspace-id (:workspace-id props)
                  :allow-edit (:allow-edit props)
-                 :on-back #(swap! state dissoc :selected-item)
                  :after-import (:after-import props)}]))
       [Table {:ref "table"
               :hidden? (:selected-item @state)
