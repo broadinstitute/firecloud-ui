@@ -107,7 +107,10 @@
           [comps/SidebarButton {:style :light :color :exception-red :margin :top
                                 :text "Delete" :icon :trash-can
                                 :disabled? (when locked? "The workspace is locked")
-                                :onClick #(swap! state assoc :show-delete-dialog? true)}])
+                                :onClick #(modal/push-modal
+                                           [delete/DeleteDialog {:config config
+                                                                 :workspace-id (:workspace-id props)
+                                                                 :after-delete (:after-delete props)}])}])
 
         (when-not editing?
           [comps/SidebarButton {:style :light :color :button-blue :margin :top
@@ -194,16 +197,6 @@
         config (wrapped-config "methodConfiguration")
         editing? (:editing? @state)]
     [:div {}
-     (when (:show-publish-dialog? @state)
-       [publish/PublishDialog {:dismiss-self #(swap! state dissoc :show-publish-dialog?)
-                               :config config
-                               :workspace-id (:workspace-id props)}])
-     (when (:show-delete-dialog? @state)
-       [delete/DeleteDialog {:dismiss-self #(swap! state dissoc :show-delete-dialog?)
-                             :config config
-                             :workspace-id (:workspace-id props)
-                             :after-delete (:after-delete props)}])
-
      [comps/Blocker {:banner (:blocker @state)}]
      [:div {:style {:padding "1em 2em"}}
       (render-side-bar state refs config editing? props)
