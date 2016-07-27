@@ -4,6 +4,7 @@
     [org.broadinstitute.firecloud-ui.common :as common]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
     [org.broadinstitute.firecloud-ui.common.dialog :as dialog]
+    [org.broadinstitute.firecloud-ui.common.input :as input]
     [org.broadinstitute.firecloud-ui.common.modal :as modal]
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
@@ -17,7 +18,7 @@
            {:strs [namespace name]} config]
        [dialog/OKCancelForm
         {:header "Publish Method Configuration"
-         :get-first-element-dom-node #(@refs "mcNamespace")
+         :get-first-element-dom-node #(react/call :access-field (@refs "mcNamespace"))
          :get-last-element-dom-node #(react/find-dom-node (@refs "publishButton"))
          :content
          (react/create-element
@@ -25,29 +26,33 @@
             (when (:publishing? @state)
               [comps/Blocker {:banner "Publishing Method Configuration..."}])
             (style/create-form-label "Method Configuration Namespace")
-            (style/create-text-field {:style {:width "100%"} :ref "mcNamespace"
-                                      :defaultValue namespace})
+            [input/TextField {:style {:width "100%"} :ref "mcNamespace"
+                              :defaultValue namespace
+                              :predicates [(input/nonempty "Namespace")]}]
             (style/create-form-label "Method Configuration Name")
-            (style/create-text-field {:style {:width "100%"} :ref "mcName"
-                                      :defaultValue name})
-            (when (:error @state)
-              [comps/ErrorViewer {:error (:error @state)}])])
+            [input/TextField {:style {:width "100%"} :ref "mcName"
+                                      :defaultValue name
+                                      :predicates [(input/nonempty "Name")]}]
+            (style/create-validation-error-message (:validation-errors @state))
+            [comps/ErrorViewer {:error (:error @state)}]])
          :dismiss-self modal/pop-modal
          :ok-button
          (react/create-element
            [comps/Button {:text "Publish" :ref "publishButton"
                           :onClick
-                          #(let [[ns n] (common/get-text refs "mcNamespace" "mcName")]
-                            (swap! state assoc :publishing? true :error nil)
-                            (endpoints/call-ajax-orch
-                              {:endpoint (endpoints/copy-method-config-to-repo workspace-id config)
-                               :headers {"Content-Type" "application/json"}
-                               :payload  {:configurationNamespace ns,
-                                          :configurationName n,
-                                          :sourceNamespace namespace,
-                                          :sourceName name}
-                               :on-done  (fn [{:keys [success? get-parsed-response]}]
-                                           (swap! state dissoc :publishing?)
-                                           (if success?
-                                             (modal/pop-modal)
-                                             (swap! state assoc :error (get-parsed-response))))}))}])}]))})
+                          #(let [[ns n & fails] (input/get-and-validate refs "mcNamespace" "mcName")]
+                            (swap! state assoc :validation-errors fails)
+                            (when-not fails
+                              (swap! state assoc :publishing? true :error nil)
+                              (endpoints/call-ajax-orch
+                                {:endpoint (endpoints/copy-method-config-to-repo workspace-id config)
+                                 :headers {"Content-Type" "application/json"}
+                                 :payload  {:configurationNamespace ns,
+                                            :configurationName n,
+                                            :sourceNamespace namespace,
+                                            :sourceName name}
+                                 :on-done  (fn [{:keys [success? get-parsed-response]}]
+                                             (swap! state dissoc :publishing?)
+                                             (if success?
+                                               (modal/pop-modal)
+                                               (swap! state assoc :error (get-parsed-response))))})))}])}]))})
