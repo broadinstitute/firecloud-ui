@@ -31,17 +31,17 @@
        (swap! state update-in [:stack] pop)))
    :get-initial-state
    (fn []
-     {:stack (list)})
+     {:stack []})
    :render
    (fn [{:keys [state]}]
      [:div {}
       (let [{:keys [stack]} @state]
         (map (fn [child]
                [:div {}
-                [:div {:style {:position "fixed"
+                [:div {:style {:position "fixed" :zIndex 1
                                :top 0 :bottom 0 :left 0 :right 0
                                :backgroundColor "rgba(110,110,110,0.4)"}}]
-                [:div {:style {:position "absolute"
+                [:div {:style {:position "absolute" :zIndex 1
                                :top (+ (aget js/document "body" "scrollTop") 30)
                                :left 0
                                :width "100%"}}
