@@ -6,6 +6,7 @@
     [org.broadinstitute.firecloud-ui.common.components :as comps]
     [org.broadinstitute.firecloud-ui.common.dialog :as dialog]
     [org.broadinstitute.firecloud-ui.common.icons :as icons]
+    [org.broadinstitute.firecloud-ui.common.modal :as modal]
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
     [org.broadinstitute.firecloud-ui.page.workspace.method-configs.delete-config :as delete]
@@ -111,7 +112,9 @@
         (when-not editing?
           [comps/SidebarButton {:style :light :color :button-blue :margin :top
                                 :text "Publish" :icon :share
-                                :onClick #(swap! state assoc :show-publish-dialog? true)}])
+                                :onClick #(modal/push-modal
+                                           [publish/PublishDialog {:config config
+                                                                   :workspace-id (:workspace-id props)}])}])
 
         (when editing?
           [comps/SidebarButton {:color :success-green
