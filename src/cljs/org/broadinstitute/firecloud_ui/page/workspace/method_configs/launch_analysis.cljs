@@ -7,6 +7,7 @@
     [org.broadinstitute.firecloud-ui.common.components :as comps]
     [org.broadinstitute.firecloud-ui.common.dialog :as dialog]
     [org.broadinstitute.firecloud-ui.common.icons :as icons]
+    [org.broadinstitute.firecloud-ui.common.modal :as modal]
     [org.broadinstitute.firecloud-ui.common.sign-in :as sign-in]
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.common.entity-table :refer [EntityTable]]
@@ -39,7 +40,7 @@
         (row "Queue status:" (str queued " Queued; " active " Active"))])]))
 
 (defn- render-form [state props]
-  [:div {}
+  [:div {:style {:width 1000}}
    (when (:launching? @state)
      [comps/Blocker {:banner "Launching analysis..."}])
    (style/create-form-label "Select Entity")
@@ -95,7 +96,7 @@
    (fn [{:keys [props state this]}]
      [dialog/OKCancelForm
       {:header "Launch Analysis"
-       :dismiss-self (:dismiss-self props)
+       :dismiss-self modal/pop-modal
        :content (render-form state props)
        :ok-button
        [comps/Button {:text "Launch" :disabled? (:disabled? props)
@@ -126,29 +127,19 @@
             :on-done (fn [{:keys [success? get-parsed-response]}]
                        (swap! state dissoc :launching?)
                        (if success?
-                         ((:on-success props) ((get-parsed-response) "submissionId"))
+                         (do (modal/pop-modal) ((:on-success props) ((get-parsed-response) "submissionId")))
                          (swap! state assoc :launch-server-error (get-parsed-response))))}))
        (swap! state assoc :validation-errors ["Please select an entity"])))})
 
 
 (react/defc LaunchAnalysisButton
   {:render
-   (fn [{:keys [props state]}]
-     [:span {}
-      (when (:display-modal? @state)
-        [dialog/Dialog {:width "80%"
-                        :dismiss-self #(swap! state dissoc :display-modal?)
-                        :content (react/create-element
-                                   [Form
-                                    (merge
-                                      (select-keys props [:config-id :workspace-id :root-entity-type :on-success])
-                                      {:dismiss-self #(swap! state dissoc :display-modal?)})])}])
-      [comps/Button {:text "Launch Analysis..."
-                     :disabled? (:disabled? props)
-                     :onClick #(if (:force-login? props)
-                                (sign-in/show-sign-in-dialog :refresh-token (:after-login props))
-                                (do (common/scroll-to-top 100)
-                                    (swap! state assoc :display-modal? true)))}]])})
+   (fn [{:keys [props]}]
+     [comps/Button {:text "Launch Analysis..."
+                    :disabled? (:disabled? props)
+                    :onClick #(if (:force-login? props)
+                               (sign-in/show-sign-in-dialog :refresh-token (:after-login props))
+                               (modal/push-modal [Form (select-keys props [:config-id :workspace-id :root-entity-type :on-success])]))}])})
 
 
 (defn render-button [props]
