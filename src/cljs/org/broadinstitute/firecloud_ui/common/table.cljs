@@ -170,7 +170,7 @@
                 [:div {:style {:paddingBottom "1em"}}
                  (when reorderable-columns?
                    [:div {:style {:float "left"}}
-                    [comps/Button {:icon :gear :title-text "Select Columns..."
+                    [comps/Button {:icon :gear :title-text "Select Columns..." :id "Column Selector"
                                    :ref "col-edit-button"
                                    :onClick #(swap! state assoc :reordering-columns? true)}]
                     (when (:reordering-columns? @state)

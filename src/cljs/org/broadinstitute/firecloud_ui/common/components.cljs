@@ -26,25 +26,28 @@
      {:color (:button-blue style/colors)})
    :render
    (fn [{:keys [props]}]
-     (let [disabled? (:disabled? props)]
-       [:a {:id (:id props)
+     (let [{:keys [id color icon href disabled? onClick text style]} props
+           id (or id text)]
+       (when-not id
+         (js/console.warn "Warning: no id provided for button"))
+       [:a {:id id
             :style {:display "inline-block"
-                    :backgroundColor (:color props)
+                    :backgroundColor color
                     :WebkitFilter (when disabled? "grayscale()")
                     :cursor (when disabled? "default")
                     :color "white" :fontWeight 500
-                    :borderRadius 2 :padding (if (:icon props) "0.7em" "0.7em 1em")
-                    :fontFamily (when (:icon props) "fontIcons")
-                    :fontSize (when (:icon props) "80%")
+                    :borderRadius 2 :padding (if icon "0.7em" "0.7em 1em")
+                    :fontFamily (when icon "fontIcons")
+                    :fontSize (when icon "80%")
                     :textDecoration "none"}
-            :href (or (:href props) "javascript:;")
+            :href (or href "javascript:;")
             :onClick (if disabled?
                        #(js/alert (if (string? disabled?) disabled? "This action is disabled"))
-                       (when-let [on-click (:onClick props)] #(on-click %)))
-            :onKeyDown (when (and (:onClick props) (not disabled?))
-                         (common/create-key-handler [:space :enter] (:onClick props)))}
-        (or (:text props) (icons/icon-text (:icon props)))
-        (when (= (:style props) :add)
+                       onClick)
+            :onKeyDown (when (and onClick (not disabled?))
+                         (common/create-key-handler [:space :enter] onClick))}
+        (or text (icons/icon-text icon))
+        (when (= style :add)
           [:span {:style {:display "inline-block" :height "1em" :width "1em" :marginLeft "1em"
                           :position "relative"}}
            [:span {:style {:position "absolute" :top "-55%" :fontSize "200%" :fontWeight "normal"}}

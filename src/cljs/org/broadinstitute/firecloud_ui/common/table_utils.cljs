@@ -200,7 +200,7 @@
          :onKeyDown (common/create-key-handler [:enter] #(react/call :apply-filter this))
          :onChange #(swap! state assoc :synced false)})
       [:span {:style {:paddingLeft "1em"}}]
-      [comps/Button {:icon :search :onClick #(react/call :apply-filter this)}]])
+      [comps/Button {:icon :search :id "Filter" :onClick #(react/call :apply-filter this)}]])
    :apply-filter
    (fn [{:keys [state props refs]}]
      (swap! state assoc :synced true)

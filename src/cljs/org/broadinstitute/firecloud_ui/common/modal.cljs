@@ -70,7 +70,8 @@
      {:show-cancel? true})
    :render
    (fn [{:keys [props]}]
-     (let [{:keys [header content ok-button show-cancel? cancel-text]} props]
+     (let [{:keys [header content ok-button show-cancel? cancel-text]} props
+           cancel-text (or cancel-text "Cancel")]
        [:div {}
         [:div {:style {:borderBottom style/standard-line
                        :padding "20px 48px 18px"
@@ -81,14 +82,15 @@
          (when (or show-cancel? ok-button)
            [:div {:style {:marginTop 40 :textAlign "center"}}
             (when show-cancel?
-              [:a {:style {:marginRight (when ok-button 27) :marginTop 2 :padding "0.5em"
+              [:a {:id cancel-text
+                   :style {:marginRight (when ok-button 27) :marginTop 2 :padding "0.5em"
                            :display "inline-block"
                            :fontSize "106%" :fontWeight 500 :textDecoration "none"
                            :color (:button-blue style/colors)}
                    :href "javascript:;"
                    :onClick pop-modal
                    :onKeyDown (common/create-key-handler [:space :enter] pop-modal)}
-               (or cancel-text "Cancel")])
+               cancel-text])
             (cond (fn? ok-button) [comps/Button {:text "OK" :onClick ok-button}]
                   (map? ok-button) [comps/Button ok-button]
                   :else ok-button)])]]))
