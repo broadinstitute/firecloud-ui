@@ -4,7 +4,6 @@
    [clojure.string :refer [trim]]
    [org.broadinstitute.firecloud-ui.common :as common]
    [org.broadinstitute.firecloud-ui.common.components :as comps]
-   [org.broadinstitute.firecloud-ui.common.dialog :as dialog]
    [org.broadinstitute.firecloud-ui.common.input :as input]
    [org.broadinstitute.firecloud-ui.common.modal :as modal]
    [org.broadinstitute.firecloud-ui.common.style :as style]
@@ -30,9 +29,8 @@
 (react/defc AgoraPermsEditor
   {:render
    (fn [{:keys [props refs state this]}]
-     [dialog/OKCancelForm
-      {:dismiss-self modal/pop-modal
-       :header (let [sel-ent (:selected-entity props)]
+     [modal/OKCancelForm
+      {:header (let [sel-ent (:selected-entity props)]
                  (str "Permissions for " (sel-ent "entityType") " " (get-ordered-name sel-ent)))
        :content
        (react/create-element

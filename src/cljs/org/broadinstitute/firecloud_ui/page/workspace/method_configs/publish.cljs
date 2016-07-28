@@ -3,7 +3,6 @@
     [dmohs.react :as react]
     [org.broadinstitute.firecloud-ui.common :as common]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
-    [org.broadinstitute.firecloud-ui.common.dialog :as dialog]
     [org.broadinstitute.firecloud-ui.common.input :as input]
     [org.broadinstitute.firecloud-ui.common.modal :as modal]
     [org.broadinstitute.firecloud-ui.common.style :as style]
@@ -16,7 +15,7 @@
    (fn [{:keys [props state refs]}]
      (let [{:keys [workspace-id config]} props
            {:strs [namespace name]} config]
-       [dialog/OKCancelForm
+       [modal/OKCancelForm
         {:header "Publish Method Configuration"
          :get-first-element-dom-node #(react/call :access-field (@refs "mcNamespace"))
          :get-last-element-dom-node #(react/find-dom-node (@refs "publishButton"))
@@ -35,7 +34,6 @@
                                       :predicates [(input/nonempty "Name")]}]
             (style/create-validation-error-message (:validation-errors @state))
             [comps/ErrorViewer {:error (:error @state)}]])
-         :dismiss-self modal/pop-modal
          :ok-button
          (react/create-element
            [comps/Button {:text "Publish" :ref "publishButton"

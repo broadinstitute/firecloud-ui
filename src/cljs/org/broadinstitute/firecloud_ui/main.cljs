@@ -3,7 +3,6 @@
    [dmohs.react :as react]
    [org.broadinstitute.firecloud-ui.common :as common]
    [org.broadinstitute.firecloud-ui.common.components :as comps]
-   [org.broadinstitute.firecloud-ui.common.dialog :as dialog]
    [org.broadinstitute.firecloud-ui.common.modal :as modal]
    [org.broadinstitute.firecloud-ui.common.sign-in :as sign-in]
    [org.broadinstitute.firecloud-ui.common.style :as style]
@@ -315,9 +314,8 @@
 
 (defn- show-system-status-dialog [maintenance-mode?]
   (modal/push-modal
-    [dialog/OKCancelForm
-     {:dismiss-self modal/pop-modal
-      :header (if maintenance-mode? "Maintenance Mode" "Server Unavailable")
+    [modal/OKCancelForm
+     {:header (if maintenance-mode? "Maintenance Mode" "Server Unavailable")
       :show-cancel? false
       :content (if maintenance-mode?
                  [:div {} "FireCloud is currently undergoing planned maintenance.

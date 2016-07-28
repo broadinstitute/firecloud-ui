@@ -2,7 +2,6 @@
   (:require
     [dmohs.react :as react]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
-    [org.broadinstitute.firecloud-ui.common.dialog :as dialog]
     [org.broadinstitute.firecloud-ui.common.modal :as modal]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
     ))
@@ -10,9 +9,8 @@
 (react/defc DeleteDialog
   {:render
    (fn [{:keys [props state]}]
-     [dialog/OKCancelForm
-      {:dismiss-self modal/pop-modal
-       :header "Confirm Delete"
+     [modal/OKCancelForm
+      {:header "Confirm Delete"
        :content
        [:div {:style {:width 500}}
         (cond

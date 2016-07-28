@@ -5,7 +5,6 @@
     [dmohs.react :as react]
     [org.broadinstitute.firecloud-ui.common :as common]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
-    [org.broadinstitute.firecloud-ui.common.dialog :as dialog]
     [org.broadinstitute.firecloud-ui.common.icons :as icons]
     [org.broadinstitute.firecloud-ui.common.modal :as modal]
     [org.broadinstitute.firecloud-ui.common.sign-in :as sign-in]
@@ -94,9 +93,8 @@
 (react/defc Form
   {:render
    (fn [{:keys [props state this]}]
-     [dialog/OKCancelForm
+     [modal/OKCancelForm
       {:header "Launch Analysis"
-       :dismiss-self modal/pop-modal
        :content (render-form state props)
        :ok-button
        [comps/Button {:text "Launch" :disabled? (:disabled? props)

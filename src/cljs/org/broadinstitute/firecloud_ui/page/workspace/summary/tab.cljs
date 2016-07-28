@@ -3,7 +3,6 @@
     [dmohs.react :as react]
     [org.broadinstitute.firecloud-ui.common :as common]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
-    [org.broadinstitute.firecloud-ui.common.dialog :as dialog]
     [org.broadinstitute.firecloud-ui.common.icons :as icons]
     [org.broadinstitute.firecloud-ui.common.markdown :refer [MarkdownView]]
     [org.broadinstitute.firecloud-ui.common.modal :as modal]
@@ -29,8 +28,8 @@
 (react/defc DeleteDialog
   {:render
    (fn [{:keys [state this]}]
-     [dialog/OKCancelForm
-       {:dismiss-self modal/pop-modal
+     [modal/OKCancelForm
+       {
         :header "Confirm Delete"
         :content
         [:div {}

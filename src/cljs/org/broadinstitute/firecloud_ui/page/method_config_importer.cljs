@@ -4,7 +4,6 @@
     [clojure.string :refer [trim]]
     [org.broadinstitute.firecloud-ui.common :as common :refer [clear-both get-text root-entity-types]]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
-    [org.broadinstitute.firecloud-ui.common.dialog :as dialog]
     [org.broadinstitute.firecloud-ui.common.icons :as icons]
     [org.broadinstitute.firecloud-ui.common.input :as input]
     [org.broadinstitute.firecloud-ui.common.modal :as modal]
@@ -18,9 +17,8 @@
 (react/defc Redactor
   {:render
    (fn [{:keys [props state this]}]
-     [dialog/OKCancelForm
-      {:dismiss-self modal/pop-modal
-       :header "Confirm redaction"
+     [modal/OKCancelForm
+      {:header "Confirm redaction"
        :content
        [:div {:style {:width 500}}
         (when (:redacting? @state)

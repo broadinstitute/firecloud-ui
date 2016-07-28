@@ -6,7 +6,6 @@
     [org.broadinstitute.firecloud-ui.common.modal :as modal]
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
-    [org.broadinstitute.firecloud-ui.common.dialog :as dialog]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
     [org.broadinstitute.firecloud-ui.utils :as utils]
     ))
@@ -16,7 +15,7 @@
 
 
 (defn- render-acl-content [props state this]
-  [dialog/OKCancelForm
+  [modal/OKCancelForm
    {:header
     (let [workspace-id (:workspace-id props)]
       (str "Permissions for " (:namespace workspace-id) "/" (:name workspace-id)))
@@ -57,7 +56,6 @@
                                         conj {:email "" :accessLevel "READER"})}]]
        (style/create-validation-error-message (:validation-error @state))
        [comps/ErrorViewer {:error (:save-error @state)}]])
-    :dismiss-self modal/pop-modal
     :ok-button [comps/Button {:text "Save" :onClick #(react/call :persist-acl this)}]}])
 
 (react/defc AclEditor

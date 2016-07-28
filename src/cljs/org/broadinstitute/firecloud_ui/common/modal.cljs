@@ -2,6 +2,7 @@
   (:require
     [dmohs.react :as react]
     [org.broadinstitute.firecloud-ui.common :as common]
+    [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.utils :as u]
     ))
 
@@ -56,3 +57,44 @@
    :component-will-unmount
    (fn [{:keys [locals]}]
      (.removeEventListener js/window "keydown" (:keydown-handler @locals)))})
+
+
+(react/defc OKCancelForm
+  {:get-default-props
+   (fn []
+     {:show-cancel? true})
+   :render
+   (fn [{:keys [props]}]
+     (let [{:keys [header content ok-button show-cancel? cancel-text]} props]
+       [:div {}
+        [:div {:style {:borderBottom style/standard-line
+                       :padding "20px 48px 18px"
+                       :fontSize "137%" :fontWeight 400 :lineHeight 1}}
+         header]
+        [:div {:style {:padding "22px 48px 40px" :backgroundColor (:background-gray style/colors)}}
+         content
+         (when (or show-cancel? ok-button)
+           [:div {:style {:marginTop 40 :textAlign "center"}}
+            (when show-cancel?
+              [:a {:style {:marginRight (when ok-button 27) :marginTop 2 :padding "0.5em"
+                           :display "inline-block"
+                           :fontSize "106%" :fontWeight 500 :textDecoration "none"
+                           :color (:button-blue style/colors)}
+                   :href "javascript:;"
+                   :onClick pop-modal
+                   :onKeyDown (common/create-key-handler [:space :enter] pop-modal)}
+               (or cancel-text "Cancel")])
+            ok-button])]]))
+   :component-did-mount
+   (fn [{:keys [props]}]
+     (when-let [get-first (:get-first-element-dom-node props)]
+       (common/focus-and-select (get-first))
+       (when-let [get-last (:get-last-element-dom-node props)]
+         (.addEventListener (get-first) "keydown" (common/create-key-handler [:tab] #(.-shiftKey %)
+                                                                             (fn [e] (.preventDefault e)
+                                                                               (when (:cycle-focus? props)
+                                                                                 (.focus (get-last))))))
+         (.addEventListener (get-last) "keydown" (common/create-key-handler [:tab] #(not (.-shiftKey %))
+                                                                            (fn [e] (.preventDefault e)
+                                                                              (when (:cycle-focus? props)
+                                                                                (.focus (get-first)))))))))})

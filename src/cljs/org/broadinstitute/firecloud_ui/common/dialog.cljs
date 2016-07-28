@@ -63,67 +63,13 @@
      (.removeEventListener js/window "keydown" (.-onKeyDownHandler this)))})
 
 
-(react/defc OKCancelForm
-  {:get-default-props
-   (fn []
-     {:show-cancel? true})
-   :render
-   (fn [{:keys [props]}]
-     (let [{:keys [header content dismiss-self ok-button show-cancel? cancel-text]} props]
-       [:div {}
-        [:div {:style {:borderBottom style/standard-line
-                       :padding "20px 48px 18px"
-                       :fontSize "137%" :fontWeight 400 :lineHeight 1}}
-         header]
-        [:div {:style {:padding "22px 48px 40px" :backgroundColor (:background-gray style/colors)}}
-         content
-         (when (or show-cancel? ok-button)
-           [:div {:style {:marginTop 40 :textAlign "center"}}
-            (when show-cancel?
-              [:a {:style {:marginRight (when ok-button 27) :marginTop 2 :padding "0.5em"
-                           :display "inline-block"
-                           :fontSize "106%" :fontWeight 500 :textDecoration "none"
-                           :color (:button-blue style/colors)}
-                   :href "javascript:;"
-                   :onClick dismiss-self
-                   :onKeyDown (common/create-key-handler [:space :enter] dismiss-self)}
-               (or cancel-text "Cancel")])
-            ok-button])]]))
-   :component-did-mount
-   (fn [{:keys [props]}]
-     (when-let [get-first (:get-first-element-dom-node props)]
-       (common/focus-and-select (get-first))
-       (when-let [get-last (:get-last-element-dom-node props)]
-         (.addEventListener (get-first) "keydown" (common/create-key-handler [:tab] #(.-shiftKey %)
-                                                                             (fn [e] (.preventDefault e)
-                                                                               (when (:cycle-focus? props)
-                                                                                 (.focus (get-last))))))
-         (.addEventListener (get-last) "keydown" (common/create-key-handler [:tab] #(not (.-shiftKey %))
-                                                                            (fn [e] (.preventDefault e)
-                                                                              (when (:cycle-focus? props)
-                                                                                (.focus (get-first)))))))))})
-
-
-(defn standard-dialog [props]
-  [Dialog
-   (merge (select-keys props [:width :blocking? :dismiss-self :get-anchor-dom-node
-                              :get-first-element-dom-node :get-last-element-dom-node :cycle-focus?])
-          {:content
-           (react/create-element
-             [OKCancelForm
-              (merge
-               (select-keys props [:header :dismiss-self :ok-button :show-cancel? :cancel-text])
-               {:content (react/create-element [:div {} (:content props)])})])})])
-
-
 (react/defc GCSFilePreviewLink
   (let [Dialog
         (react/create-class
           {:render
            (fn [{:keys [props state]}]
-             [OKCancelForm
-              {:dismiss-self modal/pop-modal
-               :header "File Details"
+             [modal/OKCancelForm
+              {:header "File Details"
                :content
                (let [{:keys [data error]} (:response @state)
                      data-size (when data (data "size"))

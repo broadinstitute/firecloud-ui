@@ -3,7 +3,6 @@
    [dmohs.react :as react]
    [org.broadinstitute.firecloud-ui.common :as common]
    [org.broadinstitute.firecloud-ui.common.components :as comps]
-   [org.broadinstitute.firecloud-ui.common.dialog :as dialog]
    [org.broadinstitute.firecloud-ui.common.modal :as modal]
    [org.broadinstitute.firecloud-ui.page.method-config-importer :refer [MethodConfigImporter]]
    [org.broadinstitute.firecloud-ui.nav :as nav]
@@ -18,8 +17,8 @@
       [MethodConfigImporter {:allow-edit true
                              :after-import (fn [{:keys [workspace-id config-id]}]
                                              (modal/push-modal
-                                               [dialog/OKCancelForm
-                                                {:header "Export successful" :dismiss-self modal/pop-modal
+                                               [modal/OKCancelForm
+                                                {:header "Export successful"
                                                  :content "Would you like to go to the edit page now?"
                                                  :cancel-text "No, stay here"
                                                  :ok-button

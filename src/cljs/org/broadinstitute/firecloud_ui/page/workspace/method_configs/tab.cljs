@@ -4,7 +4,6 @@
     clojure.string
     [org.broadinstitute.firecloud-ui.common :as common]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
-    [org.broadinstitute.firecloud-ui.common.dialog :as dialog]
     [org.broadinstitute.firecloud-ui.common.modal :as modal]
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.common.table :as table]
@@ -44,8 +43,8 @@
                                                     true "The workspace is locked"
                                                     false)
                                        :onClick #(modal/push-modal
-                                                  [dialog/OKCancelForm
-                                                   {:header "Import Method Configuration" :dismiss-self modal/pop-modal
+                                                  [modal/OKCancelForm
+                                                   {:header "Import Method Configuration"
                                                     :content
                                                     [:div {:style {:backgroundColor "white" :padding "1ex" :width 1000}}
                                                      [MethodConfigImporter {:workspace-id (:workspace-id props)

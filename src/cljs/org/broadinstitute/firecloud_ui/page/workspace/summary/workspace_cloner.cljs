@@ -3,7 +3,6 @@
     [dmohs.react :as react]
     [org.broadinstitute.firecloud-ui.common :as common]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
-    [org.broadinstitute.firecloud-ui.common.dialog :as dialog]
     [org.broadinstitute.firecloud-ui.common.input :as input]
     [org.broadinstitute.firecloud-ui.common.modal :as modal]
     [org.broadinstitute.firecloud-ui.common.style :as style]
@@ -17,8 +16,8 @@
      {:selected-project (first (:billing-projects props))})
    :render
    (fn [{:keys [props refs state this]}]
-     [dialog/OKCancelForm
-      {:header "Clone Workspace to:" :dismiss-self modal/pop-modal
+     [modal/OKCancelForm
+      {:header "Clone Workspace to:"
        :ok-button (react/create-element
                     [comps/Button {:text "OK" :ref "okButton" :onClick #(react/call :do-clone this)}])
        :get-first-element-dom-node #(@refs "project")

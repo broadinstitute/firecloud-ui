@@ -3,7 +3,6 @@
    [dmohs.react :as react]
    [org.broadinstitute.firecloud-ui.common :as common]
    [org.broadinstitute.firecloud-ui.common.components :as comps]
-   [org.broadinstitute.firecloud-ui.common.dialog :as dialog]
    [org.broadinstitute.firecloud-ui.common.input :as input]
    [org.broadinstitute.firecloud-ui.common.modal :as modal]
    [org.broadinstitute.firecloud-ui.common.style :as style]
@@ -20,9 +19,8 @@
       :protected-option :not-loaded})
    :render
    (fn [{:keys [props state refs this]}]
-     [dialog/OKCancelForm
-      {:dismiss-self modal/pop-modal
-       :header "Create New Workspace"
+     [modal/OKCancelForm
+      {:header "Create New Workspace"
        :ok-button (react/create-element
                     [comps/Button {:ref "okButton" :text "Create Workspace"
                                    :onClick #(react/call :create-workspace this)}])

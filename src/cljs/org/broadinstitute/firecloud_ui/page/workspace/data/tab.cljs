@@ -25,8 +25,8 @@
                 :onClick #(swap! state update-in [:crumbs] (comp vec (partial take 1)))}]})
    :render
    (fn [{:keys [state props]}]
-     [dialog/OKCancelForm
-      {:header "Import Data" :dismiss-self modal/pop-modal
+     [modal/OKCancelForm
+      {:header "Import Data"
        :show-cancel? false :ok-button [comps/Button {:text "Done" :onClick modal/pop-modal}]
        :content
        (let [last-crumb-id (:id (second (:crumbs @state)))
