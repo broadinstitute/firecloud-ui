@@ -120,7 +120,7 @@
        (if fails
          (swap! state assoc :validation-error fails)
          (do
-           (swap! state assoc :blocking-text "Importing...")
+           (swap! state assoc :blocking-text (if (:workspace-id props) "Importing..." "Exporting..."))
            (endpoints/call-ajax-orch
              {:endpoint (endpoints/copy-method-config-to-workspace workspace-id)
               :payload {"configurationNamespace" (config "namespace")
@@ -181,7 +181,7 @@
        (if fails
          (swap! state assoc :validation-error fails)
          (do
-           (swap! state assoc :blocking-text "Importing...")
+           (swap! state assoc :blocking-text (if (:workspace-id props) "Importing..." "Exporting..."))
            (endpoints/call-ajax-orch
              {:endpoint (endpoints/create-template (:method props))
               :payload (assoc (:method props)
