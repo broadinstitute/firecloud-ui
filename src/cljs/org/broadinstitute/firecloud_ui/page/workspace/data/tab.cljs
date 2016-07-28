@@ -5,7 +5,7 @@
     goog.net.cookies
     [org.broadinstitute.firecloud-ui.common :as common]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
-    [org.broadinstitute.firecloud-ui.common.dialog :as dialog]
+    [org.broadinstitute.firecloud-ui.common.gcs-file-preview :refer [GCSFilePreviewLink]]
     [org.broadinstitute.firecloud-ui.common.entity-table :refer [EntityTable]]
     [org.broadinstitute.firecloud-ui.common.modal :as modal]
     [org.broadinstitute.firecloud-ui.common.table-utils :as table-utils]
@@ -103,7 +103,7 @@
             :attribute-renderer (fn [maybe-uri]
                                   (if (string? maybe-uri)
                                     (if-let [parsed (common/parse-gcs-uri maybe-uri)]
-                                      [dialog/GCSFilePreviewLink parsed]
+                                      [GCSFilePreviewLink parsed]
                                       maybe-uri)
                                     (table-utils/default-render maybe-uri)))}])]))
    :component-did-mount

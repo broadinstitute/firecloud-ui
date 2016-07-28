@@ -4,7 +4,7 @@
     [clojure.string :refer [trim blank?]]
     [org.broadinstitute.firecloud-ui.common :refer [clear-both get-text root-entity-types]]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
-    [org.broadinstitute.firecloud-ui.common.dialog :as dialog]
+    [org.broadinstitute.firecloud-ui.common.overlay :as dialog]
     [org.broadinstitute.firecloud-ui.common.icons :as icons]
     [org.broadinstitute.firecloud-ui.common.modal :as modal]
     [org.broadinstitute.firecloud-ui.common.style :as style]

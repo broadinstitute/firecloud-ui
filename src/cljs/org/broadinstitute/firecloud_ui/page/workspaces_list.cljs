@@ -4,12 +4,12 @@
     [dmohs.react :as react]
     [org.broadinstitute.firecloud-ui.common :as common]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
-    [org.broadinstitute.firecloud-ui.common.dialog :as dialog]
     [org.broadinstitute.firecloud-ui.common.icons :as icons]
-    [org.broadinstitute.firecloud-ui.config :as config]
-    [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
+    [org.broadinstitute.firecloud-ui.common.overlay :as overlay]
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.common.table :as table]
+    [org.broadinstitute.firecloud-ui.config :as config]
+    [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
     [org.broadinstitute.firecloud-ui.nav :as nav]
     [org.broadinstitute.firecloud-ui.page.workspace.create :as create]
     [org.broadinstitute.firecloud-ui.page.workspace.details :refer [WorkspaceDetails]]
@@ -111,12 +111,12 @@
                                       :onChange #(swap! state update-in [:selected-types label] not)
                                       :style {:cursor "pointer"}}]
                              [:span {:style {:marginLeft "0.5ex"}} label]]])]
-            [dialog/Dialog {:blocking? false :get-anchor-dom-node #(react/find-dom-node (@refs "anchor"))
-                            :dismiss-self #(swap! state dissoc :show-access-level-select?)
-                            :content
-                            (react/create-element
-                              [:div {:style {:padding "1em" :border style/standard-line}}
-                               (map checkbox access-types)])}]))
+            [overlay/Overlay {:get-anchor-dom-node #(react/find-dom-node (@refs "anchor"))
+                              :dismiss-self #(swap! state dissoc :show-access-level-select?)
+                              :content
+                              (react/create-element
+                                [:div {:style {:padding "1em" :border style/standard-line}}
+                                 (map checkbox access-types)])}]))
         [table/Table
          {:empty-message "No workspaces to display." :retain-header-on-empty? true
           :cell-padding-left nil

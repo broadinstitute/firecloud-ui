@@ -1,8 +1,8 @@
-(ns org.broadinstitute.firecloud-ui.common.dialog
+(ns org.broadinstitute.firecloud-ui.common.gcs-file-preview
   (:require
     [dmohs.react :as react]
     [org.broadinstitute.firecloud-ui.common :as common]
-    [org.broadinstitute.firecloud-ui.common.components :refer [Spinner Button]]
+    [org.broadinstitute.firecloud-ui.common.components :refer [Spinner]]
     [org.broadinstitute.firecloud-ui.common.icons :as icons]
     [org.broadinstitute.firecloud-ui.common.modal :as modal]
     [org.broadinstitute.firecloud-ui.common.style :as style]
@@ -10,61 +10,8 @@
     [org.broadinstitute.firecloud-ui.utils :as utils]
     ))
 
-(react/defc Dialog
-  {:get-default-props
-   (fn []
-     {:blocking? true
-      :cycle-focus? false})
-   :render
-   (fn [{:keys [props state]}]
-     (let [{:keys [content width blocking? dismiss-self get-anchor-dom-node]} props
-           anchored? (not (nil? get-anchor-dom-node))]
-       (assert (react/valid-element? content)
-         (subs (str "Not a react element: " content) 0 200))
-       (when (or (not anchored?) (:position @state))
-         [:div {:style {:backgroundColor (if blocking?
-                                           "rgba(110, 110, 110, 0.4)"
-                                           "rgba(210, 210, 210, 0.4)")
-                        :position "absolute" :zIndex 8888
-                        :top 0 :left 0 :right 0 :height (.. js/document -body -offsetHeight)}
-                :onKeyDown (common/create-key-handler [:esc] dismiss-self)
-                :onClick (when-not blocking? dismiss-self)}
-          [:div {:style (if anchored?
-                          {:position "absolute" :backgroundColor "#fff"
-                           :top (get-in @state [:position :top])
-                           :left (get-in @state [:position :left])}
-                          {:transform "translate(-50%, 0px)" :backgroundColor "#fff"
-                           :position "relative" :marginBottom 60
-                           :top 60 :left "50%" :width width})
-                 :onClick (when-not blocking? #(.stopPropagation %))}
-           content]])))
-   :component-did-mount
-   (fn [{:keys [this props state]}]
-     (when-let [get-dom-node (:get-anchor-dom-node props)]
-       (let [rect (.getBoundingClientRect (get-dom-node))]
-         (swap! state assoc :position {:top (+ (.-top rect) js/document.body.scrollTop)
-                                       :left (+ (.-left rect) js/document.body.scrollLeft)})))
-     (when-let [get-first (:get-first-element-dom-node props)]
-       (common/focus-and-select (get-first))
-       (when-let [get-last (:get-last-element-dom-node props)]
-         (.addEventListener (get-first) "keydown" (common/create-key-handler [:tab] #(.-shiftKey %)
-                                                    (fn [e] (.preventDefault e)
-                                                      (when (:cycle-focus? props)
-                                                        (.focus (get-last))))))
-         (.addEventListener (get-last) "keydown" (common/create-key-handler [:tab] #(not (.-shiftKey %))
-                                                   (fn [e] (.preventDefault e)
-                                                     (when (:cycle-focus? props)
-                                                       (.focus (get-first))))))))
-     (set! (.-onKeyDownHandler this)
-       (common/create-key-handler [:esc] #((:dismiss-self props))))
-     (.addEventListener js/window "keydown" (.-onKeyDownHandler this)))
-   :component-will-unmount
-   (fn [{:keys [this]}]
-     (.removeEventListener js/window "keydown" (.-onKeyDownHandler this)))})
-
-
 (react/defc GCSFilePreviewLink
-  (let [Dialog
+  (let [PreviewDialog
         (react/create-class
           {:render
            (fn [{:keys [props state]}]
@@ -136,5 +83,5 @@
        (assert (:bucket-name props) "No bucket name provided")
        (assert (:object props) "No GCS object provided")
        [:div (if-let [style-props (:style-props props)] style-props {})
-        [:a {:href "javascript:;" :onClick #(modal/push-modal [Dialog props])}
+        [:a {:href "javascript:;" :onClick #(modal/push-modal [PreviewDialog props])}
          (:object props)]])}))

@@ -12,7 +12,7 @@
    ))
 
 
-(react/defc Dialog
+(react/defc CreateDialog
   {:get-initial-state
    (fn [{:keys [props]}]
      {:selected-project (first (:billing-projects props))
@@ -101,8 +101,8 @@
                      :no-billing (str "You must have a billing project associated with your account"
                                       " to create a new workspace.")
                      "Project billing data failed to load.")
-        :onClick #(modal/push-modal [Dialog {:billing-projects (:billing-projects @state)
-                                             :nav-context (:nav-context props)}])}]])
+        :onClick #(modal/push-modal [CreateDialog {:billing-projects (:billing-projects @state)
+                                                   :nav-context (:nav-context props)}])}]])
    :component-did-mount
    (fn [{:keys [state]}]
      (endpoints/call-ajax-orch
