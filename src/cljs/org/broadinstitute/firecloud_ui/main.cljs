@@ -314,18 +314,17 @@
 
 (defn- show-system-status-dialog [maintenance-mode?]
   (modal/push-modal
-    [modal/OKCancelForm
-     {:header (if maintenance-mode? "Maintenance Mode" "Server Unavailable")
-      :show-cancel? false
-      :content (if maintenance-mode?
-                 [:div {} "FireCloud is currently undergoing planned maintenance.
+    {:header (if maintenance-mode? "Maintenance Mode" "Server Unavailable")
+     :show-cancel? false
+     :content (if maintenance-mode?
+                [:div {} "FireCloud is currently undergoing planned maintenance.
                    We should be back online shortly. For more information, please see "
-                  [:a {:href "http://status.firecloud.org/" :target "_blank"}
-                   "http://status.firecloud.org/"] "."]
-                 [:div {} "FireCloud service is temporarily unavailable.  If this problem persists, check "
-                  [:a {:href "http://status.firecloud.org/" :target "_blank"}
-                   "http://status.firecloud.org/"]
-                  " for more information."])}]))
+                 [:a {:href "http://status.firecloud.org/" :target "_blank"}
+                  "http://status.firecloud.org/"] "."]
+                [:div {} "FireCloud service is temporarily unavailable.  If this problem persists, check "
+                 [:a {:href "http://status.firecloud.org/" :target "_blank"}
+                  "http://status.firecloud.org/"]
+                 " for more information."])}))
 
 
 (react/defc App

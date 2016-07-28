@@ -19,14 +19,13 @@
                                [comps/Spinner {:text "Deleting..."}]]
           :else "Are you sure you want to delete this method configuration?")]
        :ok-button
-       [comps/Button
-        {:text "Delete"
-         :onClick
-         #(do (swap! state assoc :deleting? true :error nil)
-           (endpoints/call-ajax-orch
-             {:endpoint (endpoints/delete-workspace-method-config (:workspace-id props) (:config props))
-              :on-done (fn [{:keys [success? get-parsed-response]}]
-                         (swap! state dissoc :deleting?)
-                         (if success?
-                           (do (modal/pop-modal) ((:after-delete props)))
-                           (swap! state assoc :error (get-parsed-response))))}))}]}])})
+       {:text "Delete"
+        :onClick
+        #(do (swap! state assoc :deleting? true :error nil)
+          (endpoints/call-ajax-orch
+            {:endpoint (endpoints/delete-workspace-method-config (:workspace-id props) (:config props))
+             :on-done (fn [{:keys [success? get-parsed-response]}]
+                        (swap! state dissoc :deleting?)
+                        (if success?
+                          (do (modal/pop-modal) ((:after-delete props)))
+                          (swap! state assoc :error (get-parsed-response))))}))}}])})

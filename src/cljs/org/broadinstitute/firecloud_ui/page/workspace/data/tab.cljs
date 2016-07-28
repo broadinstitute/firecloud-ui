@@ -27,7 +27,7 @@
    (fn [{:keys [state props]}]
      [modal/OKCancelForm
       {:header "Import Data"
-       :show-cancel? false :ok-button [comps/Button {:text "Done" :onClick modal/pop-modal}]
+       :show-cancel? false :ok-button {:text "Done" :onClick modal/pop-modal}
        :content
        (let [last-crumb-id (:id (second (:crumbs @state)))
              add-crumb (fn [id text]

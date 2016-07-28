@@ -56,7 +56,7 @@
                                         conj {:email "" :accessLevel "READER"})}]]
        (style/create-validation-error-message (:validation-error @state))
        [comps/ErrorViewer {:error (:save-error @state)}]])
-    :ok-button [comps/Button {:text "Save" :onClick #(react/call :persist-acl this)}]}])
+    :ok-button {:text "Save" :onClick #(react/call :persist-acl this)}}])
 
 (react/defc AclEditor
   {:render
@@ -92,7 +92,6 @@
                            (swap! state assoc :save-error (get-parsed-response))))})))))
    :component-did-mount
    (fn [{:keys [props state]}]
-     (common/scroll-to-top 100)
      (endpoints/call-ajax-orch
        {:endpoint (endpoints/get-workspace-acl (:workspace-id props))
         :on-done

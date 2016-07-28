@@ -17,14 +17,13 @@
       [MethodConfigImporter {:allow-edit true
                              :after-import (fn [{:keys [workspace-id config-id]}]
                                              (modal/push-modal
-                                               [modal/OKCancelForm
-                                                {:header "Export successful"
-                                                 :content "Would you like to go to the edit page now?"
-                                                 :cancel-text "No, stay here"
-                                                 :ok-button
-                                                 [comps/Button {:text "Yes"
-                                                                :onClick modal/pop-modal
-                                                                :href (str "#workspaces/"
-                                                                           (:namespace workspace-id) "%3A" (:name workspace-id)
-                                                                           "/Method%20Configurations/"
-                                                                           (:namespace config-id) "%3A" (:name config-id))}]}]))}]])})
+                                               {:header "Export successful"
+                                                :content "Would you like to go to the edit page now?"
+                                                :cancel-text "No, stay here"
+                                                :ok-button
+                                                {:text "Yes"
+                                                 :onClick modal/pop-modal
+                                                 :href (str "#workspaces/"
+                                                            (:namespace workspace-id) "%3A" (:name workspace-id)
+                                                            "/Method%20Configurations/"
+                                                            (:namespace config-id) "%3A" (:name config-id))}}))}]])})

@@ -27,7 +27,7 @@
          (str "Are you sure you want to redact this " (if (:config? props) "configuration" "method") "?")]
         [comps/ErrorViewer {:error (:error @state)
                             :expect {401 "Unauthorized"}}]]
-       :ok-button [comps/Button {:text "Redact" :onClick #(react/call :redact this)}]}])
+       :ok-button {:text "Redact" :onClick #(react/call :redact this)}}])
    :redact
    (fn [{:keys [props state]}]
      (let [[name namespace snapshotId] (map (:entity props) ["name" "namespace" "snapshotId"])]

@@ -119,7 +119,7 @@
                         (style/create-link {:text "Show full error response"
                                             :onClick #(swap! state assoc :show-error-details? true)})])])])
                :show-cancel? false
-               :ok-button [Button {:text "Done" :onClick modal/pop-modal}]}])
+               :ok-button {:text "Done" :onClick modal/pop-modal}}])
            :component-did-mount
            (fn [{:keys [props state]}]
              (swap! state assoc :loading? true)

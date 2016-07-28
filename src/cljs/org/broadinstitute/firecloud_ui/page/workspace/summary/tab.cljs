@@ -29,8 +29,7 @@
   {:render
    (fn [{:keys [state this]}]
      [modal/OKCancelForm
-       {
-        :header "Confirm Delete"
+       {:header "Confirm Delete"
         :content
         [:div {}
          (when (:deleting? @state)
@@ -38,7 +37,7 @@
          [:p {:style {:margin 0}} "Are you sure you want to delete this workspace?"]
          [:p {} "Bucket data will be deleted too."]
          [comps/ErrorViewer {:error (:server-error @state)}]]
-        :ok-button [comps/Button {:text "Delete" :onClick #(react/call :delete this)}]}])
+        :ok-button {:text "Delete" :onClick #(react/call :delete this)}}])
    :delete
    (fn [{:keys [props state]}]
      (swap! state assoc :deleting? true :server-error nil)

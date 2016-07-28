@@ -80,7 +80,7 @@
                                       ((:selected-entity props) "entityType") " "
                                       (get-ordered-name (:selected-entity props))
                                       "...")}]))
-       :ok-button [comps/Button {:text "Save" :onClick #(react/call :persist-acl this)}]}])
+       :ok-button {:text "Save" :onClick #(react/call :persist-acl this)}}])
    :component-did-mount
    (fn [{:keys [props state]}]
      (common/scroll-to-top 100)

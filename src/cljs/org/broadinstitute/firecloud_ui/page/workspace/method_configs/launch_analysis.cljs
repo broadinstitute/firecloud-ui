@@ -96,9 +96,7 @@
      [modal/OKCancelForm
       {:header "Launch Analysis"
        :content (render-form state props)
-       :ok-button
-       [comps/Button {:text "Launch" :disabled? (:disabled? props)
-                      :onClick #(react/call :launch this)}]}])
+       :ok-button {:text "Launch" :disabled? (:disabled? props) :onClick #(react/call :launch this)}}])
    :component-did-mount
    (fn [{:keys [state]}]
      (endpoints/call-ajax-orch

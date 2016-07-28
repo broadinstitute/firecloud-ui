@@ -2,6 +2,7 @@
   (:require
     [dmohs.react :as react]
     [org.broadinstitute.firecloud-ui.common :as common]
+    [org.broadinstitute.firecloud-ui.common.components :as comps]
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.utils :as u]
     ))
@@ -14,8 +15,12 @@
   (reset! instance x))
 
 
+(declare OKCancelForm)
 (defn push-modal [child]
-  (react/call :push-modal @instance child))
+  (react/call :push-modal @instance
+              (cond (map? child) [OKCancelForm child]
+                    (vector? child) (react/create-element child)
+                    :else child)))
 
 
 (defn pop-modal []
@@ -84,7 +89,9 @@
                    :onClick pop-modal
                    :onKeyDown (common/create-key-handler [:space :enter] pop-modal)}
                (or cancel-text "Cancel")])
-            ok-button])]]))
+            (cond (fn? ok-button) [comps/Button {:text "OK" :onClick ok-button}]
+                  (map? ok-button) [comps/Button ok-button]
+                  :else ok-button)])]]))
    :component-did-mount
    (fn [{:keys [props]}]
      (when-let [get-first (:get-first-element-dom-node props)]
