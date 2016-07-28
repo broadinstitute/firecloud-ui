@@ -7,6 +7,7 @@
     [org.broadinstitute.firecloud-ui.common.dialog :as dialog]
     [org.broadinstitute.firecloud-ui.common.icons :as icons]
     [org.broadinstitute.firecloud-ui.common.input :as input]
+    [org.broadinstitute.firecloud-ui.common.modal :as modal]
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.common.table :as table]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
@@ -17,31 +18,28 @@
 (react/defc Redactor
   {:render
    (fn [{:keys [props state this]}]
-     (dialog/standard-dialog
-       {:width 500 :dismiss-self (:dismiss props)
-        :header "Confirm redaction"
-        :content
-        [:div {}
-         (when (:redacting? @state)
-           [comps/Blocker {:banner "Redacting..."}])
-         [:div {:style {:marginBottom "1em"}}
-          (str "Are you sure you want to redact this " (if (:config? props) "configuration" "method") "?")]
-         [comps/ErrorViewer {:error (:error @state)
-                             :expect {401 "Unauthorized"}}]]
-        :ok-button [comps/Button {:text "Redact" :onClick #(react/call :redact this)}]}))
-   :component-did-mount
-   (fn []
-     (common/scroll-to-top 100))
+     [dialog/OKCancelForm
+      {:dismiss-self modal/pop-modal
+       :header "Confirm redaction"
+       :content
+       [:div {:style {:width 500}}
+        (when (:redacting? @state)
+          [comps/Blocker {:banner "Redacting..."}])
+        [:div {:style {:marginBottom "1em"}}
+         (str "Are you sure you want to redact this " (if (:config? props) "configuration" "method") "?")]
+        [comps/ErrorViewer {:error (:error @state)
+                            :expect {401 "Unauthorized"}}]]
+       :ok-button [comps/Button {:text "Redact" :onClick #(react/call :redact this)}]}])
    :redact
    (fn [{:keys [props state]}]
      (let [[name namespace snapshotId] (map (:entity props) ["name" "namespace" "snapshotId"])]
        (swap! state assoc :redacting? true :error nil)
        (endpoints/call-ajax-orch
          {:endpoint (endpoints/delete-agora-entity (:config? props) namespace name snapshotId)
-          :on-done (fn [{:keys [success? get-parsed-response xhr]}]
+          :on-done (fn [{:keys [success? get-parsed-response]}]
                      (swap! state dissoc :redacting?)
                      (if success?
-                       ((:on-delete props))
+                       (do (modal/pop-modal) ((:on-delete props)))
                        (swap! state assoc :error (get-parsed-response))))})))})
 
 (defn- create-import-form [state props this entity config? fields]
@@ -50,23 +48,18 @@
     [:div {}
      (when (:blocking-text @state)
        [comps/Blocker {:banner (:blocking-text @state)}])
-     (when (:show-perms-overlay? @state)
-       [mca/AgoraPermsEditor {:is-conf config? :selected-entity entity
-                              :dismiss-self #(swap! state dissoc :show-perms-overlay?)}])
-     (when (:show-redact-overlay? @state)
-       [Redactor {:dismiss #(swap! state dissoc :show-redact-overlay?)
-                  :entity entity :config? config? :on-delete (:on-delete props)}])
      [comps/EntityDetails {:entity entity}]
      (when (:allow-edit props)
        [:div {:style {:margin "1em 0"}}
         [:div {:style {:float "left" :width 290 :paddingRight "1em"}}
          [comps/SidebarButton {:style :light :color :button-blue
                                :text "Permissions..." :icon :gear
-                               :onClick #(swap! state assoc :show-perms-overlay? true)}]]
+                               :onClick #(modal/push-modal [mca/AgoraPermsEditor {:is-conf config? :selected-entity entity}])}]]
         [:div {:style {:float "left" :width 290}}
          [comps/SidebarButton {:style :light :color :exception-red
                                :text "Redact" :icon :trash-can
-                               :onClick #(swap! state assoc :show-redact-overlay? true)}]]
+                               :onClick #(modal/push-modal [Redactor {:entity entity :config? config?
+                                                                      :on-delete (:on-delete props)}])}]]
         (clear-both)])
      [:div {:style {:border style/standard-line
                     :backgroundColor (:background-gray style/colors)

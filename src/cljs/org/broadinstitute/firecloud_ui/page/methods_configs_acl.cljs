@@ -6,8 +6,8 @@
    [org.broadinstitute.firecloud-ui.common.components :as comps]
    [org.broadinstitute.firecloud-ui.common.dialog :as dialog]
    [org.broadinstitute.firecloud-ui.common.input :as input]
+   [org.broadinstitute.firecloud-ui.common.modal :as modal]
    [org.broadinstitute.firecloud-ui.common.style :as style]
-   [org.broadinstitute.firecloud-ui.common.table :as table]
    [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
    [org.broadinstitute.firecloud-ui.utils :as utils]
    ))
@@ -30,58 +30,59 @@
 (react/defc AgoraPermsEditor
   {:render
    (fn [{:keys [props refs state this]}]
-     (dialog/standard-dialog
-       {:width "75%" :dismiss-self (:dismiss-self props)
-        :header (let [sel-ent (:selected-entity props)]
-                  (str "Permissions for " (sel-ent "entityType") " " (get-ordered-name sel-ent)))
-        :content
-        (cond
-          (:acl-vec @state)
-          [:div {}
-           (when (:saving? @state)
-             [comps/Blocker {:banner "Updating..."}])
-           [:div {:style {:paddingBottom "0.5em" :fontSize "90%"}}
-            [:div {:style {:float "left" :width column-width}} "User or Group ID"]
-            [:div {:style {:float "right" :width column-width}} "Access Level"]
-            (common/clear-both)]
-           (map-indexed
-             (fn [i acl-entry]
-               [:div {}
-                [input/TextField
-                 {:ref (str "acl-key" i)
-                  :style {:float "left" :width column-width
-                          :backgroundColor (when (< i (:count-orig @state))
-                                             (:background-gray style/colors))}
-                  :disabled (< i (:count-orig @state))
-                  :spellCheck false
-                  :defaultValue (:user acl-entry)
-                  :predicates [(input/valid-email-or-empty "User ID")]}]
-                (style/create-identity-select
-                  {:ref (str "acl-value" i)
-                   :style {:float "right" :width column-width :height 33}
-                   :defaultValue (:role acl-entry)}
-                  access-levels)
-                (common/clear-both)])
-             (:acl-vec @state))
-           [comps/Button {:text "Add new" :style :add
-                          :onClick #(swap! state assoc :acl-vec
-                                           (conj (react/call :capture-ui-state this)
-                                                 {:user "" :role reader-level}))}]
-           [:label {:style {:cursor "pointer"}}
-            [:input {:type "checkbox" :ref "publicbox"
-                     :style {:marginLeft "2em" :verticalAlign "middle"}
-                     :onChange #(swap! state assoc :public-status (-> (@refs "publicbox") .-checked))
-                     :checked (:public-status @state)}]
-            [:span {:style {:paddingLeft "6px" :verticalAlign "middle"}} "Publicly Readable?"]]
-           (style/create-validation-error-message (:validation-error @state))
-           [comps/ErrorViewer {:error (:save-error @state)}]]
-          (:error @state) (style/create-server-error-message (:error @state))
-          :else [comps/Spinner {:text
-                                (str "Loading Permissions for "
-                                     ((:selected-entity props) "entityType") " "
-                                     (get-ordered-name (:selected-entity props))
-                                     "...")}])
-        :ok-button [comps/Button {:text "Save" :onClick #(react/call :persist-acl this)}]}))
+     [dialog/OKCancelForm
+      {:dismiss-self modal/pop-modal
+       :header (let [sel-ent (:selected-entity props)]
+                 (str "Permissions for " (sel-ent "entityType") " " (get-ordered-name sel-ent)))
+       :content
+       (react/create-element
+         (cond
+           (:acl-vec @state)
+           [:div {:style {:width 800}}
+            (when (:saving? @state)
+              [comps/Blocker {:banner "Updating..."}])
+            [:div {:style {:paddingBottom "0.5em" :fontSize "90%"}}
+             [:div {:style {:float "left" :width column-width}} "User or Group ID"]
+             [:div {:style {:float "right" :width column-width}} "Access Level"]
+             (common/clear-both)]
+            (map-indexed
+              (fn [i acl-entry]
+                [:div {}
+                 [input/TextField
+                  {:ref (str "acl-key" i)
+                   :style {:float "left" :width column-width
+                           :backgroundColor (when (< i (:count-orig @state))
+                                              (:background-gray style/colors))}
+                   :disabled (< i (:count-orig @state))
+                   :spellCheck false
+                   :defaultValue (:user acl-entry)
+                   :predicates [(input/valid-email-or-empty "User ID")]}]
+                 (style/create-identity-select
+                   {:ref (str "acl-value" i)
+                    :style {:float "right" :width column-width :height 33}
+                    :defaultValue (:role acl-entry)}
+                   access-levels)
+                 (common/clear-both)])
+              (:acl-vec @state))
+            [comps/Button {:text "Add new" :style :add
+                           :onClick #(swap! state assoc :acl-vec
+                                            (conj (react/call :capture-ui-state this)
+                                                  {:user "" :role reader-level}))}]
+            [:label {:style {:cursor "pointer"}}
+             [:input {:type "checkbox" :ref "publicbox"
+                      :style {:marginLeft "2em" :verticalAlign "middle"}
+                      :onChange #(swap! state assoc :public-status (-> (@refs "publicbox") .-checked))
+                      :checked (:public-status @state)}]
+             [:span {:style {:paddingLeft "6px" :verticalAlign "middle"}} "Publicly Readable?"]]
+            (style/create-validation-error-message (:validation-error @state))
+            [comps/ErrorViewer {:error (:save-error @state)}]]
+           (:error @state) (style/create-server-error-message (:error @state))
+           :else [comps/Spinner {:text
+                                 (str "Loading Permissions for "
+                                      ((:selected-entity props) "entityType") " "
+                                      (get-ordered-name (:selected-entity props))
+                                      "...")}]))
+       :ok-button [comps/Button {:text "Save" :onClick #(react/call :persist-acl this)}]}])
    :component-did-mount
    (fn [{:keys [props state]}]
      (common/scroll-to-top 100)
@@ -117,7 +118,7 @@
               :on-done (fn [{:keys [success? get-parsed-response]}]
                          (swap! state dissoc :saving?)
                          (if success?
-                           ((:dismiss-self props))
+                           modal/pop-modal
                            (swap! state assoc :save-error (get-parsed-response))))})))))
    :capture-ui-state
    (fn [{:keys [state refs]}]
