@@ -8,10 +8,10 @@
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.common.table :as table]
     [org.broadinstitute.firecloud-ui.common.table-utils :refer [float-right]]
+    [org.broadinstitute.firecloud-ui.common.sign-in :as sign-in]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
     [org.broadinstitute.firecloud-ui.utils :as utils]
     ))
-
 
 (react/defc CreateBillingProjectDialog
   {:render
@@ -21,7 +21,20 @@
        :content
        (react/create-element
          (let [{:keys [billing-accounts billing-acct-error]} @state]
-           (cond billing-acct-error [comps/ErrorViewer {:error billing-acct-error}]
+           (cond billing-acct-error
+                 ; if the user has not enabled the correct scopes to list billing accounts, the call will return an error
+                 ; with a redirect URL in string-encoded JSON format.  Rather than redirecting the browser directly
+                 ; (not permitted in AJAX) we pop up a separate window with a callback to this component's :get-billing-accounts
+                 (try
+                   (if-let [redirect-url ((utils/parse-json-string (billing-acct-error "message")) "redirect")]
+                     [comps/Button {:text "Click Here To Enable Billing Permissions"
+                                    :onClick (fn [e]
+                                               (.. js/window
+                                                   (open redirect-url
+                                                         "Authentication"
+                                                         "menubar=no,toolbar=no,width=500,height=500")))}]
+                     [comps/ErrorViewer {:error billing-acct-error}])
+                   (catch js/Object e [comps/ErrorViewer {:error billing-acct-error}]))
                  (not billing-accounts) [comps/Spinner {:text "Loading billing accounts..."}]
                  :else
                  (if (empty? billing-accounts)
@@ -56,16 +69,27 @@
                     [comps/ErrorViewer {:error (:server-error @state)}]]))))
        :ok-button #(react/call :create-billing-project this)}])
    :component-did-mount
+   (fn [{:keys [this]}]
+     (react/call :get-billing-accounts this)
+     ; register a function in the JS window
+     ; this window's child can access the function by calling its window.opener
+     (aset js/window sign-in/handler-fn-name
+       (fn [message]
+         (let [token (get message "access_token")]
+           (reset! utils/access-token token)
+           (utils/set-access-token-cookie token)
+           (react/call :get-billing-accounts this)))))
+   :component-will-unmount
+   (fn []
+     (js-delete js/window sign-in/handler-fn-name))
+   :get-billing-accounts
    (fn [{:keys [state]}]
+     (swap! state dissoc :billing-accounts :billing-acct-error)
      (endpoints/call-ajax-orch
        {:endpoint (endpoints/get-billing-accounts)
         :on-done
         (fn [{:keys [success? get-parsed-response]}]
-          (swap! state assoc :billing-accounts [{"accountName" "billingAccounts/00473A-04A1D8-155CAB"
-                                                 "firecloudHasAccess" false}
-                                                {"accountName" "billingAccounts/foo-bar-baz"
-                                                 "firecloudHasAccess" true}])
-          #_(swap! state assoc (if success? :billing-accounts :billing-acct-error) (get-parsed-response)))}))
+          (swap! state assoc (if success? :billing-accounts :billing-acct-error) (get-parsed-response)))}))
    :create-billing-project
    (fn [{:keys [props state refs]}]
      (let [account (:selected-account @state)]
@@ -83,7 +107,6 @@
                              (do ((:on-success props))
                                  (modal/pop-modal))
                              (swap! state assoc :server-error (get-parsed-response))))}))))))})
-
 
 (react/defc BillingProjectTable
   {:reload
