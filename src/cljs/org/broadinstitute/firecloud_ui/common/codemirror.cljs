@@ -1,14 +1,13 @@
 (ns org.broadinstitute.firecloud-ui.common.codemirror
   (:require
     cljsjs.codemirror
-    [clojure.string :refer [replace]]
     [dmohs.react :as react]
     [org.broadinstitute.firecloud-ui.utils :as utils]
     ))
 
 
 (defn- regex-escape [s]
-  (replace s #"[\\\*\+\|\^]" #(str "\\" %)))
+  (clojure.string/replace s #"[\\\*\+\|\^]" #(str "\\" %)))
 
 (def ^:private assignment-ops ["=" "+=" "-=" "*=" "/=" "//=" "%=" "&=" "|=" "^=" ">>=" "<<=" "**="])
 (def ^:private comparison-ops ["<=" ">=" "==" "<" ">" "!="])
@@ -46,7 +45,13 @@
                    (do (.next stream) nil)))}))
 
 (react/defc CodeMirror
-  {:get-default-props
+  {:set-text
+   (fn [{:keys [locals]} text]
+     (.setValue (aget (:code-mirror-component @locals) "doc") text))
+   :get-text
+   (fn [{:keys [locals]}]
+     (.getValue (aget (:code-mirror-component @locals) "doc")))
+   :get-default-props
    (fn []
      {:line-numbers? true
       :read-only? true})
@@ -55,6 +60,7 @@
      [:div {}
       [:textarea {:ref "ref" :defaultValue (:text props)}]])
    :component-did-mount
-   (fn [{:keys [refs props]}]
-     (js/CodeMirror.fromTextArea (@refs "ref")
-       #js{:mode "wdl" :lineNumbers (:line-numbers? props) :readOnly (:read-only? props)}))})
+   (fn [{:keys [refs props locals]}]
+     (swap! locals assoc :code-mirror-component
+            (js/CodeMirror.fromTextArea (@refs "ref")
+               #js{:mode "wdl" :lineNumbers (:line-numbers? props) :readOnly (:read-only? props)})))})

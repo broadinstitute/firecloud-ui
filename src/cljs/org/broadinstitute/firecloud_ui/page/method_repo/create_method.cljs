@@ -1,0 +1,75 @@
+(ns org.broadinstitute.firecloud-ui.page.method-repo.create-method
+  (:require
+    [dmohs.react :as react]
+    [org.broadinstitute.firecloud-ui.common :as common]
+    [org.broadinstitute.firecloud-ui.common.codemirror :refer [CodeMirror]]
+    [org.broadinstitute.firecloud-ui.common.components :as comps]
+    [org.broadinstitute.firecloud-ui.common.input :as input]
+    [org.broadinstitute.firecloud-ui.common.modal :as modal]
+    [org.broadinstitute.firecloud-ui.common.style :as style]
+    [org.broadinstitute.firecloud-ui.utils :as utils]
+    ))
+
+
+(react/defc CreateMethodDialog
+  {:render
+   (fn [{:keys [state refs this]}]
+     [modal/OKCancelForm
+      {:header "Create New Method"
+       :get-first-element-dom-node #(react/find-dom-node (@refs "namespace"))
+       :get-last-element-dom-node #(react/find-dom-node (@refs "ok-button"))
+       :content
+       (react/create-element
+         [:div {:style {:width "50vw"}}
+          (style/create-form-label "Namespace")
+          [input/TextField {:ref "namespace" :style {:width "100%"}
+                            :predicates [(input/nonempty "Method namespace")]}]
+          (style/create-form-label "Name")
+          [input/TextField {:ref "name" :style {:width "100%"}
+                            :predicates [(input/nonempty "Method name")]}]
+          (style/create-form-label "Synopsis (optional)")
+          (style/create-text-field {:ref "synopsis" :style {:width "100%"}})
+          (style/create-form-label "Documentation (optional)")
+          (style/create-text-area {:ref "documentation" :style {:width "100%"} :rows 5})
+
+          [:input {:type "file" :ref "wdl-uploader" :style {:display "none"}
+                   :onChange (fn [e]
+                               (let [file (-> e .-target .-files (aget 0))
+                                     reader (js/FileReader.)]
+                                 (when file
+                                   (set! (.-onload reader)
+                                         #(let [text (.-result reader)]
+                                            (swap! state assoc :file-name (.-name file) :file-contents text)
+                                            (react/call :set-wdl-text this text)))
+                                   (.readAsText reader file))))}]
+          (style/create-form-label [:span {}
+                                    [:span {:style {:paddingRight "1em"}} "WDL"]
+                                    (style/create-link {:text "Select file..."
+                                                        :onClick #(-> (@refs "wdl-uploader") .click)})
+                                    (when-let [file-name (:file-name @state)]
+                                      [:span {}
+                                       [:span {:style {:padding "0 1em 0 25px"}} (str "Selected: " file-name)]
+                                       (style/create-link {:text "Reset to file contents"
+                                                           :onClick #(react/call :set-wdl-text this (:file-contents @state))})])])
+          [:div {:style {:marginBottom "0.75em"}}
+           [CodeMirror {:ref "wdl-editor" :read-only? false}]]
+
+          (style/create-form-label "Type")
+          (style/create-identity-select {:ref "type"} ["Task" "Workflow"])
+
+          [comps/ErrorViewer {:error (:upload-error @state)}]
+          (style/create-validation-error-message (:validation-errors @state))])
+       :ok-button (react/create-element
+                    [comps/Button {:ref "ok-button" :text "Upload" :onClick #(react/call :create-method this)}])}])
+   :set-wdl-text
+   (fn [{:keys [refs]} text]
+     (react/call :set-text (@refs "wdl-editor") text))
+   :create-method
+   (fn [{:keys [state refs]}]
+     (let [[namespace name & fails] (input/get-and-validate refs "namespace" "name")
+           [synopsis documentation type] (common/get-text refs "synopsis" "documentation" "type")
+           wdl (react/call :get-text (@refs "wdl-editor"))
+           fails (or fails (when (clojure.string/blank? wdl) ["Please enter the WDL payload"]))]
+       (swap! state assoc :validation-errors fails)
+       (when-not fails
+         (utils/log "Success!" namespace name synopsis documentation wdl type))))})
