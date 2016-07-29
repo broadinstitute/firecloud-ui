@@ -1,4 +1,4 @@
-(ns org.broadinstitute.firecloud-ui.page.method-config-importer
+(ns org.broadinstitute.firecloud-ui.page.method-repo.method-config-importer
   (:require
     [dmohs.react :as react]
     [clojure.string :refer [trim]]
@@ -10,7 +10,7 @@
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.common.table :as table]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
-    [org.broadinstitute.firecloud-ui.page.methods-configs-acl :as mca]
+    [org.broadinstitute.firecloud-ui.page.method-repo.methods-configs-acl :as mca]
     [org.broadinstitute.firecloud-ui.utils :as utils]))
 
 

@@ -10,7 +10,7 @@
    [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
    [org.broadinstitute.firecloud-ui.nav :as nav]
    [org.broadinstitute.firecloud-ui.nih-link-warning :as nih-link-warning]
-   [org.broadinstitute.firecloud-ui.page.method-repo :as method-repo]
+   [org.broadinstitute.firecloud-ui.page.method-repo.method-repo-page :as method-repo]
    [org.broadinstitute.firecloud-ui.page.billing-management :as billing-management]
    [org.broadinstitute.firecloud-ui.page.profile :as profile-page]
    [org.broadinstitute.firecloud-ui.page.status :as status-page]
