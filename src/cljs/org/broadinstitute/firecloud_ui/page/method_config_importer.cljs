@@ -2,7 +2,7 @@
   (:require
     [dmohs.react :as react]
     [clojure.string :refer [trim]]
-    [org.broadinstitute.firecloud-ui.common :as common :refer [clear-both get-text root-entity-types]]
+    [org.broadinstitute.firecloud-ui.common :refer [clear-both root-entity-types]]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
     [org.broadinstitute.firecloud-ui.common.icons :as icons]
     [org.broadinstitute.firecloud-ui.common.input :as input]
@@ -228,8 +228,8 @@
 
 (react/defc Table
  {:reload
-  (fn [{:keys [state]}]
-    (swap! state dissoc :methods :configs))
+  (fn [{:keys [this]}]
+    (react/call :load-data this))
   :render
   (fn [{:keys [props state]}]
     (cond
@@ -244,7 +244,7 @@
                    :sort-by (fn [m]
                               [(m "namespace") (m "name") (int (m "snapshotId"))])
                    :filter-by (fn [m]
-                                (clojure.string/join "/" (map #(m %) ["namespace" "name" "snapshotId"])))
+                                (clojure.string/join "/" (map m ["namespace" "name" "snapshotId"])))
                    :sort-initial :asc
                    :content-renderer
                    (fn [item]
@@ -267,26 +267,27 @@
                   (item "synopsis")
                   (item "createDate")
                   (when (= :config (:type item))
-                    (mapv #((get item "method" {}) %) ["namespace" "name" "snapshotId"]))])}]))
-  :component-did-mount #(react/call :load-data (:this %))
-  :component-did-update #(react/call :load-data (:this %))
+                    (mapv (get item "method" {}) ["namespace" "name" "snapshotId"]))])}]))
+  :component-did-mount
+  (fn [{:keys [this]}]
+    (react/call :load-data this))
   :load-data
   (fn [{:keys [state]}]
-    (when-not (some (or @state {}) [:configs :methods :error-message])
-      (endpoints/call-ajax-orch
-       {:endpoint endpoints/list-configurations
-        :on-done
-        (fn [{:keys [success? get-parsed-response status-text]}]
-          (if success?
-            (swap! state assoc :configs (map #(assoc % :type :config) (get-parsed-response)))
-            (swap! state assoc :error-message status-text)))})
-      (endpoints/call-ajax-orch
-       {:endpoint endpoints/list-methods
-        :on-done
-        (fn [{:keys [success? get-parsed-response status-text]}]
-          (if success?
-            (swap! state assoc :methods (map #(assoc % :type :method) (get-parsed-response)))
-            (swap! state assoc :error-message status-text)))})))})
+    (swap! state dissoc :configs :methods :error-message)
+    (endpoints/call-ajax-orch
+      {:endpoint endpoints/list-configurations
+       :on-done
+       (fn [{:keys [success? get-parsed-response status-text]}]
+         (if success?
+           (swap! state assoc :configs (map #(assoc % :type :config) (get-parsed-response)))
+           (swap! state assoc :error-message status-text)))})
+    (endpoints/call-ajax-orch
+      {:endpoint endpoints/list-methods
+       :on-done
+       (fn [{:keys [success? get-parsed-response status-text]}]
+         (if success?
+           (swap! state assoc :methods (map #(assoc % :type :method) (get-parsed-response)))
+           (swap! state assoc :error-message status-text)))}))})
 
 
 (react/defc MethodConfigImporter
