@@ -83,7 +83,6 @@
        :ok-button {:text "Save" :onClick #(react/call :persist-acl this)}}])
    :component-did-mount
    (fn [{:keys [props state]}]
-     (common/scroll-to-top 100)
      (endpoints/call-ajax-orch
        {:endpoint (let [[name nmsp sid] (map (:selected-entity props) ["name" "namespace" "snapshotId"])]
                     (endpoints/get-agora-method-acl nmsp name sid (:is-conf props)))
