@@ -41,6 +41,13 @@
                   (map (juxt identity #(get-text refs (str "out_" %))))
                   (filter (fn [[k v]] (not (empty? v))))
                   (into {}))
+        method-ref ()
+
+        #_(let [new-method-ref (:method-ref @state)]
+                        (.log js/console new-method-ref)
+                        {:namespace (:namespace new-method-ref)
+                         :name (:name new-method-ref)
+                         :methodVersion (:methodVersion new-method-ref)})
         new-conf (assoc config
                    "name" name
                    "rootEntityType" rootEntityType
@@ -71,9 +78,9 @@
 
 (react/defc MethodDetailsViewer
   {:render
-   (fn [{:keys [state]}]
+   (fn [{:keys [props state]}]
      (cond
-       (:loaded-method @state) [comps/EntityDetails {:entity (:loaded-method @state)}]
+       (:loaded-method @state) [comps/EntityDetails {:entity (:loaded-method @state) :editing? (:editing? props)}]
        (:error @state) (style/create-server-error-message (:error @state))
        :else [comps/Spinner {:text "Loading details..."}]))
    :component-did-mount
@@ -190,7 +197,8 @@
                       {:name (get-in config ["methodRepoMethod" "methodName"])
                        :namespace (get-in config ["methodRepoMethod" "methodNamespace"])
                        :snapshotId (get-in config ["methodRepoMethod" "methodVersion"])
-                       :config config}])]))
+                       :config config
+                       :editing? editing?}])]))
 
 (defn- render-display [state refs props]
   (let [wrapped-config (:loaded-config @state)
