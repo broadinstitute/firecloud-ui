@@ -102,7 +102,7 @@
          (nav/back nav-context)
          (react/call :reload (@refs "method-config-list")))))
    :render
-   (fn [{:keys [props]}]
+   (fn [{:keys [props refs]}]
      (let [nav-context (nav/parse-segment (:nav-context props))
            selected-method-config-id (common/get-id-from-nav-segment (:segment nav-context))]
        [:div {:style {:padding "1em"}}

@@ -6,6 +6,7 @@
     [org.broadinstitute.firecloud-ui.common.codemirror :refer [CodeMirror]]
     [org.broadinstitute.firecloud-ui.common.icons :as icons]
     [org.broadinstitute.firecloud-ui.common.style :as style]
+    [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
     [org.broadinstitute.firecloud-ui.utils :as utils]
     ))
 
@@ -202,17 +203,22 @@
 
 (react/defc EntityDetails
   {:render
-   (fn [{:keys [props state this]}]
+   (fn [{:keys [props refs state this]}]
      (let [entity (:entity props)
            editing? (:editing? props)
            make-field
-           (fn [entity key label editable? & [render]]
+           (fn [entity key label editable? dropdown? & [render]]
                (if (and editing? editable?)
                  [:div {}
                   [:div {:style {}}
                    [:span {:style {:fontWeight 500 :width 100 :display "inline-block" :paddingBottom "0.3em"}} label]
-                   (style/create-text-field {:ref (entity key)
-                                             :defaultValue (entity key)})]]
+                   (if dropdown?
+                     (style/create-identity-select {:ref "snapshotId"
+                                                    :defaultValue "99"
+                                                    :style {:width "100px"}}
+                                                   ["1" "2" "3" "100"])
+                     (style/create-text-field {:ref (entity key)
+                                               :defaultValue (entity key)}))]]
                [:div {}
                 [:span {:style {:fontWeight 500 :width 100 :display "inline-block" :paddingBottom "0.3em"}} label]
                 [:span {} ((or render identity) (entity key))]]))
@@ -238,7 +244,7 @@
       [:div {:style {:float "left" :marginRight "5em"}}
        (make-field entity "namespace" "Namespace: " true)
        (make-field entity "name" "Name: " true)
-       (make-field entity "snapshotId" "Snapshot ID: " true)]
+       (make-field entity "snapshotId" "Snapshot ID: " true true)]
       [:div {:style {:float "left"}}
        (make-field entity "createDate" "Created: " false common/format-date)
        (make-field entity "entityType" "Entity Type: " false)
