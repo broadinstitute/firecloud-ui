@@ -40,7 +40,10 @@
                   (map (juxt identity #(get-text refs (str "out_" %))))
                   (filter (fn [[k v]] (not (empty? v))))
                   (into {}))
-        method-ref ()
+        method-ref {:methodNamespace "alex_methods"
+                    :methodName "echo_strings"
+                    :methodVersion (@refs "snapshotId")
+                    }
 
         #_(let [new-method-ref (:method-ref @state)]
                         (.log js/console new-method-ref)
@@ -52,6 +55,7 @@
                    "rootEntityType" rootEntityType
                    "inputs" inputs
                    "outputs" outputs
+                   "methodRepoMethod" method-ref
                    "workspaceName" workspace-id)]
     (swap! state assoc :blocker "Updating...")
     (endpoints/call-ajax-orch
@@ -77,7 +81,7 @@
 
 (react/defc MethodDetailsViewer
   {:render
-   (fn [{:keys [props state]}]
+   (fn [{:keys [props refs state]}]
      (cond
        (:loaded-method @state) [comps/EntityDetails {:entity (:loaded-method @state) :editing? (:editing? props)}]
        (:error @state) (style/create-server-error-message (:error @state))
