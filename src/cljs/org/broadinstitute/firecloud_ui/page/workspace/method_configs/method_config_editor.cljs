@@ -45,6 +45,7 @@
                     :methodVersion (@refs "snapshotId")
                     }
 
+        ;test
         #_(let [new-method-ref (:method-ref @state)]
                         (.log js/console new-method-ref)
                         {:namespace (:namespace new-method-ref)
