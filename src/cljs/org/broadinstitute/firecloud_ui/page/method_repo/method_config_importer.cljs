@@ -232,7 +232,7 @@
   (fn [{:keys [this]}]
     (react/call :load-data this))
   :render
-  (fn [{:keys [props state]}]
+  (fn [{:keys [props state this]}]
     (cond
       (:hidden? props) nil
       (:error-message @state) (style/create-server-error-message (:error-message @state))
@@ -261,8 +261,12 @@
         :toolbar (fn [built-in]
                    [:div {}
                     [:div {:style {:float "left"}} built-in]
-                    [:div {:style {:float "right"}} [comps/Button {:text "Create new method..."
-                                                                   :onClick #(modal/push-modal [create/CreateMethodDialog {}])}]]
+                    [:div {:style {:float "right"}}
+                     [comps/Button {:text "Create new method..."
+                                    :onClick #(modal/push-modal [create/CreateMethodDialog
+                                                                 {:on-success (fn [new-method]
+                                                                                (react/call :reload this)
+                                                                                ((:on-item-selected props) (assoc new-method :type :method)))}])}]]
                     (clear-both)])
         :filter-groups [{:text "All" :pred (constantly true)}
                         {:text "Methods Only" :pred #(= :method (:type %))}

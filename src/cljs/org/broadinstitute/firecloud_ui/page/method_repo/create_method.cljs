@@ -7,6 +7,7 @@
     [org.broadinstitute.firecloud-ui.common.input :as input]
     [org.broadinstitute.firecloud-ui.common.modal :as modal]
     [org.broadinstitute.firecloud-ui.common.style :as style]
+    [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
     [org.broadinstitute.firecloud-ui.utils :as utils]
     ))
 
@@ -21,6 +22,8 @@
        :content
        (react/create-element
          [:div {:style {:width "50vw"}}
+          (when (:uploading? @state)
+            [comps/Blocker {:banner "Uploading..."}])
           (style/create-form-label "Namespace")
           [input/TextField {:ref "namespace" :style {:width "100%"}
                             :predicates [(input/nonempty "Method namespace")]}]
@@ -65,11 +68,26 @@
    (fn [{:keys [refs]} text]
      (react/call :set-text (@refs "wdl-editor") text))
    :create-method
-   (fn [{:keys [state refs]}]
+   (fn [{:keys [props state refs]}]
      (let [[namespace name & fails] (input/get-and-validate refs "namespace" "name")
            [synopsis documentation type] (common/get-text refs "synopsis" "documentation" "type")
            wdl (react/call :get-text (@refs "wdl-editor"))
            fails (or fails (when (clojure.string/blank? wdl) ["Please enter the WDL payload"]))]
        (swap! state assoc :validation-errors fails)
        (when-not fails
-         (utils/log "Success!" namespace name synopsis documentation wdl type))))})
+         (swap! state assoc :uploading? true)
+         (endpoints/call-ajax-orch
+           {:endpoint endpoints/post-method
+            :payload {:namespace namespace
+                      :name name
+                      :synopsis synopsis
+                      :documentation documentation
+                      :payload wdl
+                      :entityType type}
+            :headers {"Content-Type" "application/json"}
+            :on-done
+            (fn [{:keys [success? get-parsed-response]}]
+              (swap! state dissoc :uploading?)
+              (if success?
+                (do (modal/pop-modal) ((:on-success props) (get-parsed-response)))
+                (swap! state assoc :upload-error (get-parsed-response))))}))))})
