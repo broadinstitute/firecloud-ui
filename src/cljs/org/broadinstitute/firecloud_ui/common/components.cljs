@@ -213,11 +213,11 @@
                   [:div {:style {}}
                    [:span {:style {:fontWeight 500 :width 100 :display "inline-block" :paddingBottom "0.3em"}} label]
                    (if dropdown?
-                     (style/create-identity-select {:ref "snapshotId"
+                     (style/create-identity-select {:ref key
                                                     :defaultValue "99"
                                                     :style {:width "100px"}}
                                                    ["1" "2" "3" "100"])
-                     (style/create-text-field {:ref (entity key)
+                     (style/create-text-field {:ref key
                                                :defaultValue (entity key)}))]]
                [:div {}
                 [:span {:style {:fontWeight 500 :width 100 :display "inline-block" :paddingBottom "0.3em"}} label]
