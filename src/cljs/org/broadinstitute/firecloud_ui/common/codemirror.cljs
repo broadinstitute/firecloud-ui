@@ -46,12 +46,15 @@
                    (do (.next stream) nil)))}))
 
 (react/defc CodeMirror
-  {:set-text
-   (fn [{:keys [locals]} text]
-     (.setValue (aget (:code-mirror-component @locals) "doc") text))
-   :get-text
-   (fn [{:keys [locals]}]
-     (.getValue (aget (:code-mirror-component @locals) "doc")))
+  {:add-listener
+   (fn [{:keys [this]} event-type listener]
+     (react/call :call-method this "on" event-type listener))
+   :remove-listener
+   (fn [{:keys [this]} event-type listener]
+     (react/call :call-method this "off" event-type listener))
+   :call-method
+   (fn [{:keys [locals]} method & args]
+     (apply utils/call-external-object-method (aget (:code-mirror-component @locals) "doc") method args))
    :get-default-props
    (fn []
      {:line-numbers? true

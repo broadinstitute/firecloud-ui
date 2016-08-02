@@ -53,29 +53,53 @@
                                             (swap! state assoc :file-name (.-name file) :file-contents text)
                                             (react/call :set-wdl-text this text)))
                                    (.readAsText reader file))))}]
-          (style/create-form-label [:span {}
-                                    [:span {:style {:paddingRight "1em"}} "WDL"]
-                                    (style/create-link {:text "Load from file..."
-                                                        :onClick #(-> (@refs "wdl-uploader") .click)})
-                                    (when-let [file-name (:file-name @state)]
-                                      [:span {}
-                                       [:span {:style {:padding "0 1em 0 25px"}} (str "Selected: " file-name)]
-                                       (style/create-link {:text "Reset to file"
-                                                           :onClick #(react/call :set-wdl-text this (:file-contents @state))})])])
+          (style/create-form-label
+            (let [{:keys [file-name]
+                   {:strs [undo redo]} :undo-history} @state
+                  [undo? redo?] (map pos? [undo redo])
+                  link (fn [label]
+                         (style/create-link {:text (clojure.string/capitalize label)
+                                             :onClick #(react/call :call-method (@refs "wdl-editor") label)
+                                             :style {:color (:text-gray style/colors)
+                                                     :padding "0 1ex"
+                                                     :border style/standard-line}}))]
+              [:div {:style {:display "flex" :width "100%"}}
+               [:span {:style {:paddingRight "1em"}} "WDL"]
+               (style/create-link {:text "Load from file..."
+                                   :onClick #(-> (@refs "wdl-uploader") .click)})
+               (when file-name
+                 [:span {}
+                  [:span {:style {:padding "0 1em 0 25px"}} (str "Selected: " file-name)]
+                  (style/create-link {:text "Reset to file"
+                                      :onClick #(react/call :set-wdl-text this (:file-contents @state))})])
+               [:span {:style {:flex "1 0 auto"}}]
+               (when (or undo? redo?)
+                 [:span {}
+                  (when undo?
+                    (link "undo")
+                    #_(style/create-link {:text "Undo" :onClick #(react/call :call-method (@refs "wdl-editor") "undo")}))
+                  (when redo?
+                    (link "redo")
+                    #_(style/create-link {:text "Redo" :onClick #(react/call :call-method (@refs "wdl-editor") "redo")}))])]))
           [CodeMirror {:ref "wdl-editor" :read-only? false}]
 
           [comps/ErrorViewer {:error (:upload-error @state)}]
           (style/create-validation-error-message (:validation-errors @state))])
        :ok-button (react/create-element
                     [comps/Button {:ref "ok-button" :text "Upload" :onClick #(react/call :create-method this)}])}])
+   :component-did-mount
+   (fn [{:keys [state refs]}]
+     (react/call :add-listener (@refs "wdl-editor") "change"
+                 #(swap! state assoc :undo-history
+                         (js->clj (react/call :call-method (@refs "wdl-editor") "historySize")))))
    :set-wdl-text
    (fn [{:keys [refs]} text]
-     (react/call :set-text (@refs "wdl-editor") text))
+     (react/call :call-method (@refs "wdl-editor") "setValue" text))
    :create-method
    (fn [{:keys [props state refs]}]
      (let [[namespace name & fails] (input/get-and-validate refs "namespace" "name")
            [synopsis documentation type] (common/get-text refs "synopsis" "documentation" "type")
-           wdl (react/call :get-text (@refs "wdl-editor"))
+           wdl (react/call :call-method (@refs "wdl-editor") "getValue")
            fails (or fails (when (clojure.string/blank? wdl) ["Please enter the WDL payload"]))]
        (swap! state assoc :validation-errors fails)
        (when-not fails
