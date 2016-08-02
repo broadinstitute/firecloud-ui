@@ -29,6 +29,7 @@
   (swap! state assoc :editing? false))
 
 (defn- commit [state refs config props]
+       (utils/cljslog @refs)
   (let [workspace-id (:workspace-id props)
         [name rootEntityType] (get-text refs "confname" "rootentitytype")
         inputs (->> ((:inputs-outputs @state) "inputs")
@@ -41,10 +42,7 @@
                   (map (juxt identity #(get-text refs (str "out_" %))))
                   (filter (fn [[k v]] (not (empty? v))))
                   (into {}))
-        method-ref {:methodNamespace "alex_methods"
-                    :methodName "echo_strings"
-                    :methodVersion (get-text refs "snapshotId")
-                    }
+        method-ref (react/call :get-fields (@refs "methodDetailsViewer"))
 
         #_(let [new-method-ref (:method-ref @state)]
                         (.log js/console new-method-ref)
@@ -81,10 +79,13 @@
 
 
 (react/defc MethodDetailsViewer
-  {:render
+  {:get-fields
+   (fn [{:keys [refs]}]
+       (react/call :get-fields (@refs "thing")))
+   :render
    (fn [{:keys [props refs state]}]
      (cond
-       (:loaded-method @state) [comps/EntityDetails {:entity (:loaded-method @state) :editing? (:editing? props)}]
+       (:loaded-method @state) [comps/EntityDetails {:entity (:loaded-method @state) :editing? (:editing? props) :ref "thing"}]
        (:error @state) (style/create-server-error-message (:error @state))
        :else [comps/Spinner {:text "Loading details..."}]))
    :component-did-mount
@@ -198,7 +199,8 @@
      (input-output-list config "outputs" invalid-outputs editing? (inputs-outputs "outputs"))
      (create-section-header "Referenced Method")
      (create-section [MethodDetailsViewer
-                      {:name (get-in config ["methodRepoMethod" "methodName"])
+                      {:ref "methodDetailsViewer"
+                       :name (get-in config ["methodRepoMethod" "methodName"])
                        :namespace (get-in config ["methodRepoMethod" "methodNamespace"])
                        :snapshotId (get-in config ["methodRepoMethod" "methodVersion"])
                        :config config
@@ -271,7 +273,7 @@
                    (if success?
                      (swap! state assoc :methods (get-parsed-response))
                      (swap! state assoc :error-message status-text))
-                     (.log js/console (:methods @state)))})
+                     (utils/cljslog (:methods @state)))})
      (set! (.-onScrollHandler this)
            (fn []
              (when-let [sidebar (@refs "sidebar")]
