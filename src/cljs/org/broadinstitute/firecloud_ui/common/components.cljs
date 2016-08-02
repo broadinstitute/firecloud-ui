@@ -202,7 +202,12 @@
         [:span {:style {:verticalAlign "middle" :marginLeft "1em"}} (:text props)]]))})
 
 (react/defc EntityDetails
-  {:render
+  {:get-fields
+   (fn [{:keys [refs]}]
+       {:methodNamespace (common/get-text refs "namespace")
+        :methodName (common/get-text refs "name")
+        :methodVersion (int (common/get-text refs "snapshotId"))})
+   :render
    (fn [{:keys [props refs state this]}]
      (let [entity (:entity props)
            editing? (:editing? props)
@@ -242,13 +247,13 @@
    (fn [{:keys []} make-field entity]
      [:div {}
       [:div {:style {:float "left" :marginRight "5em"}}
-       (make-field entity "namespace" "Namespace: " true)
-       (make-field entity "name" "Name: " true)
+       (make-field entity "namespace" "Namespace: " true false)
+       (make-field entity "name" "Name: " true false)
        (make-field entity "snapshotId" "Snapshot ID: " true true)]
       [:div {:style {:float "left"}}
-       (make-field entity "createDate" "Created: " false common/format-date)
-       (make-field entity "entityType" "Entity Type: " false)
-       (make-field entity "synopsis" "Synopsis: " false)]
+       (make-field entity "createDate" "Created: " false false common/format-date)
+       (make-field entity "entityType" "Entity Type: " false false)
+       (make-field entity "synopsis" "Synopsis: " false false)]
       (common/clear-both)
       [:div {:style {:fontWeight 500 :padding "0.5em 0 0.3em 0"}}
        "Documentation:"]
