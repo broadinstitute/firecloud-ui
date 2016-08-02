@@ -2,6 +2,7 @@
   (:require
     cljsjs.codemirror
     [dmohs.react :as react]
+    [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.utils :as utils]
     ))
 
@@ -57,7 +58,7 @@
       :read-only? true})
    :render
    (fn [{:keys [props]}]
-     [:div {}
+     [:div {:style {:border style/standard-line}}
       [:textarea {:ref "ref" :defaultValue (:text props)}]])
    :component-did-mount
    (fn [{:keys [refs props locals]}]

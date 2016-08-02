@@ -21,15 +21,23 @@
        :get-last-element-dom-node #(react/find-dom-node (@refs "ok-button"))
        :content
        (react/create-element
-         [:div {:style {:width "50vw"}}
+         [:div {:style {:width "80vw"}}
           (when (:uploading? @state)
             [comps/Blocker {:banner "Uploading..."}])
-          (style/create-form-label "Namespace")
-          [input/TextField {:ref "namespace" :style {:width "100%"}
-                            :predicates [(input/nonempty "Method namespace")]}]
-          (style/create-form-label "Name")
-          [input/TextField {:ref "name" :style {:width "100%"}
-                            :predicates [(input/nonempty "Method name")]}]
+
+          [:div {:style {:display "flex" :justifyContent "space-between"}}
+           [:div {:style {:flex "1 0 auto" :marginRight "1em"}}
+            (style/create-form-label "Namespace")
+            [input/TextField {:ref "namespace" :style {:width "100%"}
+                              :predicates [(input/nonempty "Method namespace")]}]]
+           [:div {:style {:flex "1 0 auto" :marginRight "1em"}}
+            (style/create-form-label "Name")
+            [input/TextField {:ref "name" :style {:width "100%"}
+                              :predicates [(input/nonempty "Method name")]}]]
+           [:div {:style {:flex "0 0 100px"}}
+            (style/create-form-label "Type")
+            (style/create-identity-select {:ref "type"} ["Task" "Workflow"])]]
+
           (style/create-form-label "Synopsis (optional)")
           (style/create-text-field {:ref "synopsis" :style {:width "100%"}})
           (style/create-form-label "Documentation (optional)")
@@ -47,18 +55,14 @@
                                    (.readAsText reader file))))}]
           (style/create-form-label [:span {}
                                     [:span {:style {:paddingRight "1em"}} "WDL"]
-                                    (style/create-link {:text "Select file..."
+                                    (style/create-link {:text "Load from file..."
                                                         :onClick #(-> (@refs "wdl-uploader") .click)})
                                     (when-let [file-name (:file-name @state)]
                                       [:span {}
                                        [:span {:style {:padding "0 1em 0 25px"}} (str "Selected: " file-name)]
-                                       (style/create-link {:text "Reset to file contents"
+                                       (style/create-link {:text "Reset to file"
                                                            :onClick #(react/call :set-wdl-text this (:file-contents @state))})])])
-          [:div {:style {:marginBottom "0.75em"}}
-           [CodeMirror {:ref "wdl-editor" :read-only? false}]]
-
-          (style/create-form-label "Type")
-          (style/create-identity-select {:ref "type"} ["Task" "Workflow"])
+          [CodeMirror {:ref "wdl-editor" :read-only? false}]
 
           [comps/ErrorViewer {:error (:upload-error @state)}]
           (style/create-validation-error-message (:validation-errors @state))])
