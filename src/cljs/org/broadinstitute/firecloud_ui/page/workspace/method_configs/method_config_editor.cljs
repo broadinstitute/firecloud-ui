@@ -43,10 +43,9 @@
                   (into {}))
         method-ref {:methodNamespace "alex_methods"
                     :methodName "echo_strings"
-                    :methodVersion (@refs "snapshotId")
+                    :methodVersion (get-text refs "snapshotId")
                     }
 
-        ;test
         #_(let [new-method-ref (:method-ref @state)]
                         (.log js/console new-method-ref)
                         {:namespace (:namespace new-method-ref)
@@ -266,6 +265,13 @@
         :on-done (fn [{:keys [success?]}]
                    ;; login checks validity of the token, so just check for existence
                    (swap! state assoc :has-refresh-token? success?))})
+     (endpoints/call-ajax-orch
+       {:endpoint endpoints/list-methods
+        :on-done (fn [{:keys [success? get-parsed-response status-text]}]
+                   (if success?
+                     (swap! state assoc :methods (get-parsed-response))
+                     (swap! state assoc :error-message status-text))
+                     (.log js/console (:methods @state)))})
      (set! (.-onScrollHandler this)
            (fn []
              (when-let [sidebar (@refs "sidebar")]
