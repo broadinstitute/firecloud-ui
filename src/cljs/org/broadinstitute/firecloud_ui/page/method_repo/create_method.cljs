@@ -57,30 +57,26 @@
             (let [{:keys [file-name]
                    {:strs [undo redo]} :undo-history} @state
                   [undo? redo?] (map pos? [undo redo])
-                  link (fn [label]
+                  link (fn [label enabled?]
                          (style/create-link {:text (clojure.string/capitalize label)
                                              :onClick #(react/call :call-method (@refs "wdl-editor") label)
-                                             :style {:color (:text-gray style/colors)
-                                                     :padding "0 1ex"
+                                             :style {:color ((if enabled? :text-gray :text-light) style/colors)
+                                                     :cursor (when-not enabled? "default")
+                                                     :backgroundColor (when enabled? "white")
+                                                     :padding "0 6px"
                                                      :border style/standard-line}}))]
-              [:div {:style {:display "flex" :width "100%"}}
+              [:div {:style {:display "flex" :alignItems "baseline" :width "100%"}}
                [:span {:style {:paddingRight "1em"}} "WDL"]
                (style/create-link {:text "Load from file..."
-                                   :onClick #(-> (@refs "wdl-uploader") .click)})
+                                   :onClick #(.click (@refs "wdl-uploader"))})
                (when file-name
                  [:span {}
                   [:span {:style {:padding "0 1em 0 25px"}} (str "Selected: " file-name)]
                   (style/create-link {:text "Reset to file"
                                       :onClick #(react/call :set-wdl-text this (:file-contents @state))})])
                [:span {:style {:flex "1 0 auto"}}]
-               (when (or undo? redo?)
-                 [:span {}
-                  (when undo?
-                    (link "undo")
-                    #_(style/create-link {:text "Undo" :onClick #(react/call :call-method (@refs "wdl-editor") "undo")}))
-                  (when redo?
-                    (link "redo")
-                    #_(style/create-link {:text "Redo" :onClick #(react/call :call-method (@refs "wdl-editor") "redo")}))])]))
+               (link "undo" undo?)
+               (link "redo" redo?)]))
           [CodeMirror {:ref "wdl-editor" :read-only? false}]
 
           [comps/ErrorViewer {:error (:upload-error @state)}]
