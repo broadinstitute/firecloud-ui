@@ -263,6 +263,10 @@
           (style/create-link {:text "Hide Stack Trace" :onClick #(swap! state assoc :expanded? false)})]
          [:div {} (style/create-link {:text "Show Stack Trace" :onClick #(swap! state assoc :expanded? true)})]))})
 
+
+(declare CauseViewer)
+
+
 (react/defc CauseViewer
   {:render
    (fn [{:keys [props state]}]
