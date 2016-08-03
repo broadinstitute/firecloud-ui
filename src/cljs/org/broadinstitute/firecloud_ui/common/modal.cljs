@@ -86,7 +86,7 @@
          (when (or show-cancel? ok-button)
            [:div {:style {:marginTop 40 :textAlign "center"}}
             (when show-cancel?
-              [:a {:id cancel-text
+              [:a {:className "cancel"
                    :style {:marginRight (when ok-button 27) :marginTop 2 :padding "0.5em"
                            :display "inline-block"
                            :fontSize "106%" :fontWeight 500 :textDecoration "none"
