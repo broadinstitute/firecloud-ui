@@ -14,13 +14,16 @@
 (defn set-instance! [x]
   (reset! instance x))
 
+(defn push-modal [child]
+  ;; Forces create-element so the caller can refer to refs in the dialog.
+  (react/call :push-modal @instance (react/create-element child)))
+
 
 (declare OKCancelForm)
-(defn push-modal [child]
-  (react/call :push-modal @instance
-              (cond (map? child) [OKCancelForm child]
-                    (vector? child) (react/create-element child)
-                    :else child)))
+
+
+(defn push-ok-cancel-modal [props]
+  (react/call :push-modal @instance (react/create-element OKCancelForm props)))
 
 
 (defn pop-modal []
@@ -100,11 +103,16 @@
      (when-let [get-first (:get-first-element-dom-node props)]
        (common/focus-and-select (get-first))
        (when-let [get-last (:get-last-element-dom-node props)]
-         (.addEventListener (get-first) "keydown" (common/create-key-handler [:tab] #(.-shiftKey %)
-                                                                             (fn [e] (.preventDefault e)
-                                                                               (when (:cycle-focus? props)
-                                                                                 (.focus (get-last))))))
-         (.addEventListener (get-last) "keydown" (common/create-key-handler [:tab] #(not (.-shiftKey %))
-                                                                            (fn [e] (.preventDefault e)
-                                                                              (when (:cycle-focus? props)
-                                                                                (.focus (get-first)))))))))})
+         (.addEventListener
+          (get-first) "keydown"
+          (common/create-key-handler [:tab] #(.-shiftKey %)
+                                     (fn [e] (.preventDefault e)
+                                       (when (:cycle-focus? props)
+                                         (.focus (get-last))))))
+         (.addEventListener
+          (get-last)
+          "keydown"
+          (common/create-key-handler [:tab] #(not (.-shiftKey %))
+                                     (fn [e] (.preventDefault e)
+                                       (when (:cycle-focus? props)
+                                         (.focus (get-first)))))))))})

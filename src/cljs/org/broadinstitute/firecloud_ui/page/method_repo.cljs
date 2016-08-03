@@ -16,7 +16,7 @@
      [:div {:style {:padding "1em"}}
       [MethodConfigImporter {:allow-edit true
                              :after-import (fn [{:keys [workspace-id config-id]}]
-                                             (modal/push-modal
+                                             (modal/push-ok-cancel-modal
                                                {:header "Export successful"
                                                 :content "Would you like to go to the edit page now?"
                                                 :cancel-text "No, stay here"
