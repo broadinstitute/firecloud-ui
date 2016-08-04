@@ -204,11 +204,10 @@
 (react/defc EntityDetails
   {:get-fields
    (fn [{:keys [refs]}]
-       {:methodNamespace (common/get-text refs "namespace")
-        :methodName (common/get-text refs "name")
-        :methodVersion (int (common/get-text refs "snapshotId"))})
+       {"methodVersion" (int (common/get-text refs "snapshotId"))})
    :render
    (fn [{:keys [props refs state this]}]
+       ;(swap! state assoc :)
      (let [entity (:entity props)
            editing? (:editing? props)
            make-field
@@ -219,9 +218,9 @@
                    [:span {:style {:fontWeight 500 :width 100 :display "inline-block" :paddingBottom "0.3em"}} label]
                    (if dropdown?
                      (style/create-identity-select {:ref key
-                                                    :defaultValue "99"
-                                                    :style {:width "100px"}}
-                                                   ["1" "2" "3" "100"])
+                                                    :style {:width "100px"}
+                                                    :onChange #(react/call :load-new-method-template (@refs "methodDetails") this props state)}
+                                                   (:snapshots props))
                      (style/create-text-field {:ref key
                                                :defaultValue (entity key)}))]]
                [:div {}
@@ -247,8 +246,8 @@
    (fn [{:keys []} make-field entity]
      [:div {}
       [:div {:style {:float "left" :marginRight "5em"}}
-       (make-field entity "namespace" "Namespace: " true false)
-       (make-field entity "name" "Name: " true false)
+       (make-field entity "namespace" "Namespace: " false false)
+       (make-field entity "name" "Name: " false false)
        (make-field entity "snapshotId" "Snapshot ID: " true true)]
       [:div {:style {:float "left"}}
        (make-field entity "createDate" "Created: " false false common/format-date)
