@@ -26,11 +26,8 @@
      {:color (:button-blue style/colors)})
    :render
    (fn [{:keys [props]}]
-     (let [{:keys [id color icon href disabled? onClick text style]} props
-           id (or id text)]
-       (when-not id
-         (js/console.warn "Warning: no id provided for button"))
-       [:a {:id id
+     (let [{:keys [color icon href disabled? onClick text style]} props]
+       [:a {:className "button"
             :style {:display "inline-block"
                     :backgroundColor color
                     :WebkitFilter (when disabled? "grayscale()")
@@ -262,6 +259,10 @@
             (:lines props))
           (style/create-link {:text "Hide Stack Trace" :onClick #(swap! state assoc :expanded? false)})]
          [:div {} (style/create-link {:text "Show Stack Trace" :onClick #(swap! state assoc :expanded? true)})]))})
+
+
+(declare CauseViewer)
+
 
 (react/defc CauseViewer
   {:render
