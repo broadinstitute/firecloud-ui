@@ -211,21 +211,18 @@
      (let [entity (:entity props)
            editing? (:editing? props)
            make-field
-           (fn [entity key label editable? dropdown? & [render]]
-               (if (and editing? editable?)
+           (fn [entity key label dropdown? & [render]]
+               (if (and editing? dropdown?)
                  [:div {}
                   [:div {:style {}}
                    [:span {:style {:fontWeight 500 :width 100 :display "inline-block" :paddingBottom "0.3em"}} label]
-                   (if dropdown?
-                     (style/create-identity-select {:ref key
-                                                    :style {:width "100px"}
-                                                    :onChange #(react/call :load-new-method-template (@refs "methodDetails") this props state)}
-                                                   (:snapshots props))
-                     (style/create-text-field {:ref key
-                                               :defaultValue (entity key)}))]]
-               [:div {}
-                [:span {:style {:fontWeight 500 :width 100 :display "inline-block" :paddingBottom "0.3em"}} label]
-                [:span {} ((or render identity) (entity key))]]))
+                   (style/create-identity-select {:ref key
+                                                  :style {:width "100px"}
+                                                  :onChange #(react/call :load-new-method-template (@refs "methodDetails") this props state)}
+                                                 (:snapshots props))]]
+                 [:div {}
+                  [:span {:style {:fontWeight 500 :width 100 :display "inline-block" :paddingBottom "0.3em"}} label]
+                  [:span {} ((or render identity) (entity key))]]))
            config? (contains? entity "method")]
        [:div {:style {:backgroundColor (:background-gray style/colors)
                       :borderRadius 8 :border style/standard-line
@@ -246,13 +243,13 @@
    (fn [{:keys []} make-field entity]
      [:div {}
       [:div {:style {:float "left" :marginRight "5em"}}
-       (make-field entity "namespace" "Namespace: " false false)
-       (make-field entity "name" "Name: " false false)
-       (make-field entity "snapshotId" "Snapshot ID: " true true)]
+       (make-field entity "namespace" "Namespace: " false)
+       (make-field entity "name" "Name: " false)
+       (make-field entity "snapshotId" "Snapshot ID: " true)]
       [:div {:style {:float "left"}}
-       (make-field entity "createDate" "Created: " false false common/format-date)
-       (make-field entity "entityType" "Entity Type: " false false)
-       (make-field entity "synopsis" "Synopsis: " false false)]
+       (make-field entity "createDate" "Created: " false common/format-date)
+       (make-field entity "entityType" "Entity Type: " false)
+       (make-field entity "synopsis" "Synopsis: " false)]
       (common/clear-both)
       [:div {:style {:fontWeight 500 :padding "0.5em 0 0.3em 0"}}
        "Documentation:"]
