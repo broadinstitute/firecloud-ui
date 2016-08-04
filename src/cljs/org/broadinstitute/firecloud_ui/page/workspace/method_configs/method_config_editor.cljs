@@ -28,9 +28,12 @@
 (defn- stop-editing [state]
   (swap! state assoc :editing? false))
 
+(defn- method-exists? [methods namespace name]
+   (contains? methods [namespace name]))
+
 (defn- commit [state refs config props]
-       (utils/cljslog @refs)
   (let [workspace-id (:workspace-id props)
+        method (get-in config ["methodRepoMethod"])
         [name rootEntityType] (get-text refs "confname" "rootentitytype")
         inputs (->> ((:inputs-outputs @state) "inputs")
                  (map #(% "name"))
@@ -42,13 +45,7 @@
                   (map (juxt identity #(get-text refs (str "out_" %))))
                   (filter (fn [[k v]] (not (empty? v))))
                   (into {}))
-        method-ref (react/call :get-fields (@refs "methodDetailsViewer"))
-
-        #_(let [new-method-ref (:method-ref @state)]
-                        (.log js/console new-method-ref)
-                        {:namespace (:namespace new-method-ref)
-                         :name (:name new-method-ref)
-                         :methodVersion (:methodVersion new-method-ref)})
+        method-ref (merge method (react/call :get-fields (@refs "methodDetailsViewer")))
         new-conf (assoc config
                    "name" name
                    "rootEntityType" rootEntityType
@@ -57,38 +54,41 @@
                    "methodRepoMethod" method-ref
                    "workspaceName" workspace-id)]
     (swap! state assoc :blocker "Updating...")
-    (endpoints/call-ajax-orch
+     (endpoints/call-ajax-orch
       {:endpoint (endpoints/update-workspace-method-config workspace-id config)
        :payload new-conf
        :headers {"Content-Type" "application/json"} ;; TODO - make endpoint take text/plain
        :on-done (fn [{:keys [success? get-parsed-response xhr]}]
-                  (if-not success?
-                    (do (js/alert (str "Exception:\n" (.-statusText xhr)))
-                        (swap! state dissoc :blocker))
-                    (if (= name (config "name"))
-                      (swap! state assoc :loaded-config (get-parsed-response) :blocker nil)
-                      (endpoints/call-ajax-orch ;; TODO - make unified call in orchestration
-                        {:endpoint (endpoints/rename-workspace-method-config workspace-id config)
-                         :payload (select-keys new-conf ["name" "namespace" "workspaceName"])
-                         :headers {"Content-Type" "application/json"}
-                         :on-done (fn [{:keys [success? xhr]}]
-                                    (swap! state dissoc :blocker)
-                                    (if success?
-                                      ((:on-rename props) name)
-                                      (js/alert (str "Exception:\n" (.-statusText xhr)))))}))))})))
-
+                    (if-not success?
+                            (do (js/alert (str "Exception:\n" (.-statusText xhr)))
+                                (swap! state dissoc :blocker))
+                            (if (= name (config "name"))
+                              (swap! state assoc :loaded-config (get-parsed-response) :blocker nil)
+                              (endpoints/call-ajax-orch ;; TODO - make unified call in orchestration
+                                {:endpoint (endpoints/rename-workspace-method-config workspace-id config)
+                                 :payload (select-keys new-conf ["name" "namespace" "workspaceName"])
+                                 :headers {"Content-Type" "application/json"}
+                                 :on-done (fn [{:keys [success? xhr]}]
+                                              (swap! state dissoc :blocker)
+                                              (if success?
+                                                ((:on-rename props) name)
+                                                (js/alert (str "Exception:\n" (.-statusText xhr)))))}))))})))
 
 (react/defc MethodDetailsViewer
   {:get-fields
    (fn [{:keys [refs]}]
-       (react/call :get-fields (@refs "thing")))
+     (react/call :get-fields (@refs "methodDetails")))
    :render
    (fn [{:keys [props refs state]}]
      (cond
-       (:loaded-method @state) [comps/EntityDetails {:entity (:loaded-method @state) :editing? (:editing? props) :ref "thing"}]
+       (:loaded-method @state) [comps/EntityDetails {:entity (:loaded-method @state) :editing? (:editing? props)
+                                                     :ref "methodDetails" :snapshots (get-in (:methods props) [[(get-in (:loaded-method @state) ["namespace"]) (get-in (:loaded-method @state) ["name"])]])}]
        (:error @state) (style/create-server-error-message (:error @state))
-       :else [comps/Spinner {:text "Loading details..."}]))
+        :else [comps/Spinner {:text "Loading details..."}]))
    :component-did-mount
+   (fn [{:keys [this props state]}]
+     (react/call :load-agora-method this props state))
+   :load-agora-method
    (fn [{:keys [props state]}]
      (endpoints/call-ajax-orch
        {:endpoint (endpoints/get-agora-method
@@ -97,9 +97,9 @@
                     (:snapshotId props))
         :headers {"Content-Type" "application/json"}
         :on-done (fn [{:keys [success? get-parsed-response status-text]}]
-                   (if success?
-                     (swap! state assoc :loaded-method (get-parsed-response))
-                     (swap! state assoc :error status-text)))}))})
+                     (if success?
+                       (swap! state assoc :loaded-method (get-parsed-response))
+                       (swap! state assoc :error status-text)))}))})
 
 
 (defn- render-side-bar [state refs config editing? props]
@@ -174,7 +174,7 @@
                error])]))
        all-values)]))
 
-(defn- render-main-display [wrapped-config editing? inputs-outputs]
+(defn- render-main-display [wrapped-config editing? inputs-outputs methods]
   (let [config (get-in wrapped-config ["methodConfiguration"])
         invalid-inputs (get-in wrapped-config ["invalidInputs"])
         invalid-outputs (get-in wrapped-config ["invalidOutputs"])]
@@ -204,6 +204,7 @@
                        :namespace (get-in config ["methodRepoMethod" "methodNamespace"])
                        :snapshotId (get-in config ["methodRepoMethod" "methodVersion"])
                        :config config
+                       :methods methods
                        :editing? editing?}])]))
 
 (defn- render-display [state refs props]
@@ -226,7 +227,7 @@
                                 :force-login? (not (:has-refresh-token? @state))
                                 :after-login #(swap! state assoc :has-refresh-token? true)
                                 :on-success (:on-submission-success props)})])
-      (render-main-display wrapped-config editing? (:inputs-outputs @state))
+      (render-main-display wrapped-config editing? (:inputs-outputs @state) (:methods @state))
       (clear-both)]]))
 
 (react/defc MethodConfigEditor
@@ -256,6 +257,7 @@
                                        (swap! state assoc :loaded-config response :inputs-outputs (get-parsed-response))
                                        (swap! state assoc :error ((get-parsed-response) "message"))))}))
                      (swap! state assoc :error status-text)))})
+       (react/call :load-new-method-template this)
      (endpoints/call-ajax-orch
        {:endpoint (endpoints/get-workspace (:workspace-id props))
         :on-done (fn [{:keys [success? get-parsed-response status-text]}]
@@ -271,9 +273,13 @@
        {:endpoint endpoints/list-methods
         :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                    (if success?
-                     (swap! state assoc :methods (get-parsed-response))
-                     (swap! state assoc :error-message status-text))
-                     (utils/cljslog (:methods @state)))})
+                     (swap! state assoc :methods (->> (get-parsed-response)
+                                                      (map utils/keywordize-keys)
+                                                      (map #(select-keys % [:namespace :name :snapshotId]))
+                                                      (group-by (juxt :namespace :name))
+                                                      (map (fn [[k v]] [k (map :snapshotId v)]))
+                                                      (into {})))
+                     (swap! state assoc :error-message status-text)))})
      (set! (.-onScrollHandler this)
            (fn []
              (when-let [sidebar (@refs "sidebar")]
@@ -281,6 +287,25 @@
                  (when-not (= visible (:sidebar-visible? @state))
                    (swap! state assoc :sidebar-visible? visible))))))
      (.addEventListener js/window "scroll" (.-onScrollHandler this)))
+   :load-new-method-template
+   (fn [{:keys [state props refs this]}]
+     (endpoints/call-ajax-orch
+       {:endpoint (endpoints/create-template {"methodNamespace" "dvoet3" "methodName" "test1" "methodVersion" 1})
+        :payload {"methodNamespace" "dvoet3" "methodName" "test1" "methodVersion" 1}
+        :headers {"Content-Type" "application/json"}
+        :on-done (fn [{:keys [success? get-parsed-response status-text]}]
+                     (if success?
+                       (let [response (get-parsed-response)]
+                            (utils/cljslog response)
+                            (endpoints/call-ajax-orch
+                              {:endpoint endpoints/get-inputs-outputs
+                               :payload (get-in response ["methodRepoMethod"])
+                               :headers {"Content-Type" "application/json"}
+                               :on-done (fn [{:keys [success? get-parsed-response]}]
+                                            (if success?
+                                              (swap! state assoc :loaded-config response :inputs-outputs (get-parsed-response))
+                                              (swap! state assoc :error ((get-parsed-response) "message"))))}))
+                       (swap! state assoc :error status-text)))}))
    :component-will-unmount
    (fn [{:keys [this]}]
      (.removeEventListener js/window "scroll" (.-onScrollHandler this)))})
