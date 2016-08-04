@@ -57,19 +57,19 @@
        :headers {"Content-Type" "application/json"} ;; TODO - make endpoint take text/plain
        :on-done (fn [{:keys [success? get-parsed-response xhr]}]
                   (if-not success?
-                          (do (js/alert (str "Exception:\n" (.-statusText xhr)))
-                              (swap! state dissoc :blocker))
-                          (if (= name (config "name"))
-                            (swap! state assoc :loaded-config (get-parsed-response) :blocker nil)
-                            (endpoints/call-ajax-orch ;; TODO - make unified call in orchestration
-                              {:endpoint (endpoints/rename-workspace-method-config workspace-id config)
-                               :payload (select-keys new-conf ["name" "namespace" "workspaceName"])
-                               :headers {"Content-Type" "application/json"}
-                               :on-done (fn [{:keys [success? xhr]}]
-                                            (swap! state dissoc :blocker)
-                                            (if success?
-                                              ((:on-rename props) name)
-                                              (js/alert (str "Exception:\n" (.-statusText xhr)))))}))))})))
+                    (do (js/alert (str "Exception:\n" (.-statusText xhr)))
+                        (swap! state dissoc :blocker))
+                    (if (= name (config "name"))
+                      (swap! state assoc :loaded-config (get-parsed-response) :blocker nil)
+                      (endpoints/call-ajax-orch ;; TODO - make unified call in orchestration
+                        {:endpoint (endpoints/rename-workspace-method-config workspace-id config)
+                         :payload (select-keys new-conf ["name" "namespace" "workspaceName"])
+                         :headers {"Content-Type" "application/json"}
+                         :on-done (fn [{:keys [success? xhr]}]
+                                    (swap! state dissoc :blocker)
+                                    (if success?
+                                      ((:on-rename props) name)
+                                      (js/alert (str "Exception:\n" (.-statusText xhr)))))}))))})))
 
 (react/defc MethodDetailsViewer
   {:get-fields
@@ -79,7 +79,10 @@
    (fn [{:keys [props refs state]}]
      (cond
        (:loaded-method @state) [comps/EntityDetails {:entity (:loaded-method @state) :editing? (:editing? props)
-                                                     :ref "methodDetails" :snapshots (get-in (:methods props) [[(get-in (:loaded-method @state) ["namespace"]) (get-in (:loaded-method @state) ["name"])]])}]
+                                                     :ref "methodDetails"
+                                                     :snapshots (get-in (:methods props)
+                                                                        [[(get-in (:loaded-method @state) ["namespace"])
+                                                                          (get-in (:loaded-method @state) ["name"])]])}]
        (:error @state) (style/create-server-error-message (:error @state))
         :else [comps/Spinner {:text "Loading details..."}]))
    :component-did-mount
@@ -131,7 +134,9 @@
         (when editing?
           [comps/SidebarButton {:color :success-green
                                 :text "Save" :icon :status-done
-                                :onClick #(do (commit state refs config props) (stop-editing state))}])
+                                :onClick #(do (commit state refs config props)
+                                              (stop-editing state)
+                                              (react/call :load-method-template (@refs "methodConfigEditor")))}])
         (when editing?
           [comps/SidebarButton {:color :exception-red :margin :top
                                 :text "Cancel Editing" :icon :x
@@ -240,21 +245,7 @@
            :else [:div {:style {:textAlign "center"}} [comps/Spinner {:text "Loading Method Configuration..."}]]))
    :component-did-mount
    (fn [{:keys [state props refs this]}]
-     (endpoints/call-ajax-orch
-       {:endpoint (endpoints/get-validated-workspace-method-config (:workspace-id props) (:config-id props))
-        :on-done (fn [{:keys [success? get-parsed-response status-text]}]
-                   (if success?
-                     (let [response (get-parsed-response)]
-                       (endpoints/call-ajax-orch
-                         {:endpoint endpoints/get-inputs-outputs
-                          :payload (get-in response ["methodConfiguration" "methodRepoMethod"])
-                          :headers {"Content-Type" "application/json"}
-                          :on-done (fn [{:keys [success? get-parsed-response]}]
-                                     (if success?
-                                       (swap! state assoc :loaded-config response :inputs-outputs (get-parsed-response))
-                                       (swap! state assoc :error ((get-parsed-response) "message"))))}))
-                     (swap! state assoc :error status-text)))})
-       (react/call :load-new-method-template this)
+     (react/call :load-method-template this)
      (endpoints/call-ajax-orch
        {:endpoint (endpoints/get-workspace (:workspace-id props))
         :on-done (fn [{:keys [success? get-parsed-response status-text]}]
@@ -284,6 +275,22 @@
                  (when-not (= visible (:sidebar-visible? @state))
                    (swap! state assoc :sidebar-visible? visible))))))
      (.addEventListener js/window "scroll" (.-onScrollHandler this)))
+   :load-method-template
+   (fn [{:keys [state props refs this]}]
+     (endpoints/call-ajax-orch
+       {:endpoint (endpoints/get-validated-workspace-method-config (:workspace-id props) (:config-id props))
+        :on-done (fn [{:keys [success? get-parsed-response status-text]}]
+                     (if success?
+                       (let [response (get-parsed-response)]
+                            (endpoints/call-ajax-orch
+                              {:endpoint endpoints/get-inputs-outputs
+                               :payload (get-in response ["methodConfiguration" "methodRepoMethod"])
+                               :headers {"Content-Type" "application/json"}
+                               :on-done (fn [{:keys [success? get-parsed-response]}]
+                                            (if success?
+                                              (swap! state assoc :loaded-config response :inputs-outputs (get-parsed-response))
+                                              (swap! state assoc :error ((get-parsed-response) "message"))))}))
+                       (swap! state assoc :error status-text)))}))
    :load-new-method-template
    (fn [{:keys [state props refs this]}]
      (endpoints/call-ajax-orch
