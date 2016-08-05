@@ -78,9 +78,10 @@
    :render
    (fn [{:keys [props refs state]}]
      (cond
-       (:loaded-method @state) [comps/EntityDetails {:entity (:loaded-method @state) :editing? (:editing? props)
-                                                     :ref "methodDetails"
-                                                     :onSnapshotIdChange (:onSnapshotIdChange props)
+       (:loaded-method @state)
+       [comps/EntityDetails {:entity (:loaded-method @state) :editing? (:editing? props)
+                             :ref "methodDetails"
+                             :onSnapshotIdChange (:onSnapshotIdChange props)
                                                      :snapshots (get-in (:methods props)
                                                                         [[(get-in (:loaded-method @state) ["namespace"])
                                                                           (get-in (:loaded-method @state) ["name"])]])}]
@@ -295,18 +296,17 @@
    :load-new-method-template
    (fn [{:keys [state props refs this]} new-snapshot-id]
      (let [namespace (get-in (:loaded-config @state) ["methodConfiguration" "methodRepoMethod" "methodNamespace"])
-           name (get-in (:loaded-config @state) ["methodConfiguration" "methodRepoMethod" "methodName"])]
+           name (get-in (:loaded-config @state) ["methodConfiguration" "methodRepoMethod" "methodName"])
+           method-ref {"methodNamespace" namespace
+                       "methodName" name
+                       "methodVersion" new-snapshot-id}]
        (swap! state assoc :blocker "Updating...")
        (react/call :load-agora-method (@refs "methodDetailsViewer") {:namespace namespace
                                                                      :name name
                                                                      :snapshotId new-snapshot-id} state)
        (endpoints/call-ajax-orch
-         {:endpoint (endpoints/create-template {"methodNamespace" namespace
-                                                "methodName" name
-                                                "methodVersion" new-snapshot-id})
-          :payload {"methodNamespace" namespace
-                    "methodName" name
-                    "methodVersion" new-snapshot-id}
+         {:endpoint (endpoints/create-template method-ref)
+          :payload method-ref
           :headers {"Content-Type" "application/json"}
           :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                        (if success?
