@@ -58,13 +58,17 @@
                    {:strs [undo redo]} :undo-history} @state
                   [undo? redo?] (map pos? [undo redo])
                   link (fn [label enabled?]
-                         (style/create-link {:text (clojure.string/capitalize label)
-                                             :onClick #(react/call :call-method (@refs "wdl-editor") label)
-                                             :style {:color ((if enabled? :text-gray :text-light) style/colors)
-                                                     :cursor (when-not enabled? "default")
-                                                     :backgroundColor (when enabled? "white")
-                                                     :padding "0 6px"
-                                                     :border style/standard-line}}))]
+                         (if enabled?
+                           (style/create-link {:text (clojure.string/capitalize label)
+                                               :onClick #(react/call :call-method (@refs "wdl-editor") label)
+                                               :style {:color (:text-gray style/colors)
+                                                       :backgroundColor "white"
+                                                       :padding "0 6px"
+                                                       :border style/standard-line}})
+                           [:span {:style {:color (:text-light style/colors)
+                                           :padding "0 6px"
+                                           :border style/standard-line}}
+                            (clojure.string/capitalize label)]))]
               [:div {:style {:display "flex" :alignItems "baseline" :width "100%"}}
                [:span {:style {:paddingRight "1em"}} "WDL"]
                (style/create-link {:text "Load from file..."
