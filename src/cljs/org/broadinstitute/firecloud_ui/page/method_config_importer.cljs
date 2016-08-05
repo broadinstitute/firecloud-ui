@@ -4,9 +4,9 @@
     [clojure.string :refer [trim]]
     [org.broadinstitute.firecloud-ui.common :as common :refer [clear-both get-text root-entity-types]]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
-    [org.broadinstitute.firecloud-ui.common.dialog :as dialog]
     [org.broadinstitute.firecloud-ui.common.icons :as icons]
     [org.broadinstitute.firecloud-ui.common.input :as input]
+    [org.broadinstitute.firecloud-ui.common.modal :as modal]
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.common.table :as table]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
@@ -17,56 +17,47 @@
 (react/defc Redactor
   {:render
    (fn [{:keys [props state this]}]
-     (dialog/standard-dialog
-       {:width 500 :dismiss-self (:dismiss props)
-        :header "Confirm redaction"
-        :content
-        [:div {}
-         (when (:redacting? @state)
-           [comps/Blocker {:banner "Redacting..."}])
-         [:div {:style {:marginBottom "1em"}}
-          (str "Are you sure you want to redact this " (if (:config? props) "configuration" "method") "?")]
-         [comps/ErrorViewer {:error (:error @state)
-                             :expect {401 "Unauthorized"}}]]
-        :ok-button [comps/Button {:text "Redact" :onClick #(react/call :redact this)}]}))
-   :component-did-mount
-   (fn []
-     (common/scroll-to-top 100))
+     [modal/OKCancelForm
+      {:header "Confirm redaction"
+       :content
+       [:div {:style {:width 500}}
+        (when (:redacting? @state)
+          [comps/Blocker {:banner "Redacting..."}])
+        [:div {:style {:marginBottom "1em"}}
+         (str "Are you sure you want to redact this " (if (:config? props) "configuration" "method") "?")]
+        [comps/ErrorViewer {:error (:error @state)
+                            :expect {401 "Unauthorized"}}]]
+       :ok-button {:text "Redact" :onClick #(react/call :redact this)}}])
    :redact
    (fn [{:keys [props state]}]
      (let [[name namespace snapshotId] (map (:entity props) ["name" "namespace" "snapshotId"])]
        (swap! state assoc :redacting? true :error nil)
        (endpoints/call-ajax-orch
          {:endpoint (endpoints/delete-agora-entity (:config? props) namespace name snapshotId)
-          :on-done (fn [{:keys [success? get-parsed-response xhr]}]
+          :on-done (fn [{:keys [success? get-parsed-response]}]
                      (swap! state dissoc :redacting?)
                      (if success?
-                       ((:on-delete props))
+                       (do (modal/pop-modal) ((:on-delete props)))
                        (swap! state assoc :error (get-parsed-response))))})))})
 
 (defn- create-import-form [state props this entity config? fields]
-  (let [{:keys [workspace-id on-back]} props
+  (let [{:keys [workspace-id]} props
         workspaces-list (:workspaces-list @state)]
     [:div {}
      (when (:blocking-text @state)
        [comps/Blocker {:banner (:blocking-text @state)}])
-     (when (:show-perms-overlay? @state)
-       [mca/AgoraPermsEditor {:is-conf config? :selected-entity entity
-                              :dismiss-self #(swap! state dissoc :show-perms-overlay?)}])
-     (when (:show-redact-overlay? @state)
-       [Redactor {:dismiss #(swap! state dissoc :show-redact-overlay?)
-                  :entity entity :config? config? :on-delete (:on-delete props)}])
      [comps/EntityDetails {:entity entity}]
      (when (:allow-edit props)
        [:div {:style {:margin "1em 0"}}
         [:div {:style {:float "left" :width 290 :paddingRight "1em"}}
          [comps/SidebarButton {:style :light :color :button-blue
                                :text "Permissions..." :icon :gear
-                               :onClick #(swap! state assoc :show-perms-overlay? true)}]]
+                               :onClick #(modal/push-modal [mca/AgoraPermsEditor {:is-conf config? :selected-entity entity}])}]]
         [:div {:style {:float "left" :width 290}}
          [comps/SidebarButton {:style :light :color :exception-red
                                :text "Redact" :icon :trash-can
-                               :onClick #(swap! state assoc :show-redact-overlay? true)}]]
+                               :onClick #(modal/push-modal [Redactor {:entity entity :config? config?
+                                                                      :on-delete (:on-delete props)}])}]]
         (clear-both)])
      [:div {:style {:border style/standard-line
                     :backgroundColor (:background-gray style/colors)
@@ -119,7 +110,7 @@
        :else [comps/Spinner {:text "Loading configuration details..."}]))
    :perform-copy
    (fn [{:keys [props state refs]}]
-     (let [{:keys [workspace-id config after-import on-back]} props
+     (let [{:keys [workspace-id config after-import]} props
            [namespace name & fails] (input/get-and-validate refs "namespace" "name")
            workspace-id (or workspace-id
                           {:namespace (get-in (:selected-workspace @state) ["workspace" "namespace"])
@@ -127,7 +118,7 @@
        (if fails
          (swap! state assoc :validation-error fails)
          (do
-           (swap! state assoc :blocking-text "Importing...")
+           (swap! state assoc :blocking-text (if (:workspace-id props) "Importing..." "Exporting..."))
            (endpoints/call-ajax-orch
              {:endpoint (endpoints/copy-method-config-to-workspace workspace-id)
               :payload {"configurationNamespace" (config "namespace")
@@ -179,7 +170,7 @@
        :else [comps/Spinner {:text "Creating template..."}]))
    :perform-copy
    (fn [{:keys [props state refs]}]
-     (let [{:keys [workspace-id after-import on-back]} props
+     (let [{:keys [workspace-id after-import]} props
            [namespace name & fails] (input/get-and-validate refs "namespace" "name")
            rootEntityType (.-value (@refs "rootEntityType"))
            workspace-id (or workspace-id
@@ -188,7 +179,7 @@
        (if fails
          (swap! state assoc :validation-error fails)
          (do
-           (swap! state assoc :blocking-text "Importing...")
+           (swap! state assoc :blocking-text (if (:workspace-id props) "Importing..." "Exporting..."))
            (endpoints/call-ajax-orch
              {:endpoint (endpoints/create-template (:method props))
               :payload (assoc (:method props)
@@ -280,7 +271,7 @@
   :component-did-mount #(react/call :load-data (:this %))
   :component-did-update #(react/call :load-data (:this %))
   :load-data
-  (fn [{:keys [this state]}]
+  (fn [{:keys [state]}]
     (when-not (some (or @state {}) [:configs :methods :error-message])
       (endpoints/call-ajax-orch
        {:endpoint endpoints/list-configurations
@@ -300,7 +291,7 @@
 
 (react/defc MethodConfigImporter
   {:render
-   (fn [{:keys [this props state refs]}]
+   (fn [{:keys [props state refs]}]
      [:div {}
       (if-let [item (:selected-item @state)]
         [:div {}
@@ -319,7 +310,6 @@
                  item-type (:selected-item @state)
                  :workspace-id (:workspace-id props)
                  :allow-edit (:allow-edit props)
-                 :on-back #(swap! state dissoc :selected-item)
                  :after-import (:after-import props)}]))
       [Table {:ref "table"
               :hidden? (:selected-item @state)

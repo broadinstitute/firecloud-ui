@@ -17,8 +17,11 @@
        (when-not (empty? fails)
          (swap! state assoc :invalid true)
          fails)))
+   :access-field
+   (fn [{:keys [refs]}]
+     (@refs "textfield"))
    :render
-   (fn [{:keys [state props refs]}]
+   (fn [{:keys [state props]}]
      (style/create-text-field {:ref "textfield"
                                :style (merge (or (:style props) {})
                                         (when (:invalid @state)

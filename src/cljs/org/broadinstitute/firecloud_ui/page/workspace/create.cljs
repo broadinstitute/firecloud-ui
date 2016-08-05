@@ -3,8 +3,8 @@
    [dmohs.react :as react]
    [org.broadinstitute.firecloud-ui.common :as common]
    [org.broadinstitute.firecloud-ui.common.components :as comps]
-   [org.broadinstitute.firecloud-ui.common.dialog :as dialog]
    [org.broadinstitute.firecloud-ui.common.input :as input]
+   [org.broadinstitute.firecloud-ui.common.modal :as modal]
    [org.broadinstitute.firecloud-ui.common.style :as style]
    [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
    [org.broadinstitute.firecloud-ui.nav :as nav]
@@ -12,45 +12,45 @@
    ))
 
 
-(react/defc Dialog
+(react/defc CreateDialog
   {:get-initial-state
    (fn [{:keys [props]}]
      {:selected-project (first (:billing-projects props))
       :protected-option :not-loaded})
    :render
-   (fn [{:keys [props state this]}]
-     (dialog/standard-dialog
-       {:width 500
-        :dismiss-self (:dismiss props)
-        :header "Create New Workspace"
-        :ok-button [comps/Button {:text "Create Workspace" :onClick #(react/call :create-workspace this)}]
-        :content
-        [:div {:style {:marginBottom -20}}
-         (when (:creating-wf @state)
-           [comps/Blocker {:banner "Creating Workspace..."}])
-         (style/create-form-label "Billing Project")
-         (style/create-select
-           {:value (:selected-project @state)
-            :onChange #(swap! state assoc :selected-project (-> % .-target .-value))}
-           (:billing-projects props))
-         (style/create-form-label "Name")
-         [input/TextField {:ref "wsName" :style {:width "100%"}
-                           :predicates [(input/nonempty "Workspace name")
-                                        (input/alphanumeric_- "Workspace name")]}]
-         (style/create-textfield-hint "Only letters, numbers, underscores, and dashes allowed")
-         (style/create-form-label "Description (optional)")
-         (style/create-text-area {:style {:width "100%"} :rows 5 :ref "wsDescription"})
-         [:div {:style {:marginBottom "1em"}}
-          [comps/Checkbox
-           {:ref "protected-check"
-            :label "Workspace intended to contain NIH protected data"
-            :disabled? (not= (:protected-option @state) :enabled)
-            :disabled-text (case (:protected-option @state)
-                             :not-loaded "Account status has not finished loading."
-                             :not-available "This option is not available for your account."
-                             nil)}]]
-         [comps/ErrorViewer {:error (:server-error @state)}]
-         (style/create-validation-error-message (:validation-errors @state))]}))
+   (fn [{:keys [props state refs this]}]
+     [modal/OKCancelForm
+      {:header "Create New Workspace"
+       :ok-button {:text "Create Workspace" :onClick #(react/call :create-workspace this)}
+       :get-first-element-dom-node #(@refs "project")
+       :content
+       (react/create-element
+         [:div {:style {:marginBottom -20}}
+          (when (:creating-wf @state)
+            [comps/Blocker {:banner "Creating Workspace..."}])
+          (style/create-form-label "Billing Project")
+          (style/create-select
+            {:ref "project" :value (:selected-project @state)
+             :onChange #(swap! state assoc :selected-project (-> % .-target .-value))}
+            (:billing-projects props))
+          (style/create-form-label "Name")
+          [input/TextField {:ref "wsName" :style {:width "100%"}
+                            :predicates [(input/nonempty "Workspace name")
+                                         (input/alphanumeric_- "Workspace name")]}]
+          (style/create-textfield-hint "Only letters, numbers, underscores, and dashes allowed")
+          (style/create-form-label "Description (optional)")
+          (style/create-text-area {:style {:width "100%"} :rows 5 :ref "wsDescription"})
+          [:div {:style {:marginBottom "1em"}}
+           [comps/Checkbox
+            {:ref "protected-check"
+             :label "Workspace intended to contain NIH protected data"
+             :disabled? (not= (:protected-option @state) :enabled)
+             :disabled-text (case (:protected-option @state)
+                              :not-loaded "Account status has not finished loading."
+                              :not-available "This option is not available for your account."
+                              nil)}]]
+          [comps/ErrorViewer {:error (:server-error @state)}]
+          (style/create-validation-error-message (:validation-errors @state))])}])
    :component-did-mount
    (fn [{:keys [state]}]
      (utils/ajax-orch
@@ -77,7 +77,7 @@
            :on-done (fn [{:keys [success? get-parsed-response]}]
                       (swap! state dissoc :creating-wf)
                       (if success?
-                        (do ((:dismiss props))
+                        (do (modal/pop-modal)
                           (nav/navigate (:nav-context props) (str project ":" name)))
                         (swap! state assoc :server-error (get-parsed-response))))}))))})
 
@@ -90,10 +90,6 @@
    (fn [{:keys [props state]}]
      (assert (:nav-context props) "Missing :nav-context prop")
      [:div {:style {:display "inline"}}
-      (when (:show-dialog? @state)
-        [Dialog {:dismiss #(swap! state dissoc :show-dialog?)
-                 :billing-projects (:billing-projects @state)
-                 :nav-context (:nav-context props)}])
       [comps/Button
        {:text "Create New Workspace..." :style :add
         :disabled? (case (:disabled-reason @state)
@@ -102,7 +98,8 @@
                      :no-billing (str "You must have a billing project associated with your account"
                                       " to create a new workspace.")
                      "Project billing data failed to load.")
-        :onClick #(swap! state assoc :show-dialog? true)}]])
+        :onClick #(modal/push-modal [CreateDialog {:billing-projects (:billing-projects @state)
+                                                   :nav-context (:nav-context props)}])}]])
    :component-did-mount
    (fn [{:keys [state]}]
      (endpoints/call-ajax-orch

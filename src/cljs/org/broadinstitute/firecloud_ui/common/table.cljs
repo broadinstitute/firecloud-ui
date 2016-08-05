@@ -3,7 +3,7 @@
    [dmohs.react :as react]
    [org.broadinstitute.firecloud-ui.common :as common]
    [org.broadinstitute.firecloud-ui.common.components :as comps]
-   [org.broadinstitute.firecloud-ui.common.dialog :as dialog]
+   [org.broadinstitute.firecloud-ui.common.overlay :as overlay]
    [org.broadinstitute.firecloud-ui.common.style :as style]
    [org.broadinstitute.firecloud-ui.common.table-utils :as table-utils]
    [org.broadinstitute.firecloud-ui.utils :as utils]
@@ -174,9 +174,8 @@
                                    :ref "col-edit-button"
                                    :onClick #(swap! state assoc :reordering-columns? true)}]
                     (when (:reordering-columns? @state)
-                      [dialog/Dialog
+                      [overlay/Overlay
                        {:get-anchor-dom-node #(react/find-dom-node (@refs "col-edit-button"))
-                        :blocking? false
                         :dismiss-self #(swap! state assoc :reordering-columns? false)
                         :content
                         (react/create-element

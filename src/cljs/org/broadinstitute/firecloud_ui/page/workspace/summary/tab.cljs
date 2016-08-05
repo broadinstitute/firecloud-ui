@@ -3,9 +3,9 @@
     [dmohs.react :as react]
     [org.broadinstitute.firecloud-ui.common :as common]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
-    [org.broadinstitute.firecloud-ui.common.dialog :as dialog]
     [org.broadinstitute.firecloud-ui.common.icons :as icons]
     [org.broadinstitute.firecloud-ui.common.markdown :refer [MarkdownView]]
+    [org.broadinstitute.firecloud-ui.common.modal :as modal]
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
     [org.broadinstitute.firecloud-ui.nav :as nav]
@@ -27,10 +27,9 @@
 
 (react/defc DeleteDialog
   {:render
-   (fn [{:keys [state props this]}]
-     (dialog/standard-dialog
-       {:width 500 :dismiss-self (:dismiss-self props)
-        :header "Confirm Delete"
+   (fn [{:keys [state this]}]
+     [modal/OKCancelForm
+       {:header "Confirm Delete"
         :content
         [:div {}
          (when (:deleting? @state)
@@ -38,10 +37,7 @@
          [:p {:style {:margin 0}} "Are you sure you want to delete this workspace?"]
          [:p {} "Bucket data will be deleted too."]
          [comps/ErrorViewer {:error (:server-error @state)}]]
-        :ok-button [comps/Button {:text "Delete" :onClick #(react/call :delete this)}]}))
-   :component-did-mount
-   (fn []
-     (common/scroll-to-top 100))
+        :ok-button {:text "Delete" :onClick #(react/call :delete this)}}])
    :delete
    (fn [{:keys [props state]}]
      (swap! state assoc :deleting? true :server-error nil)
@@ -50,36 +46,18 @@
         :on-done (fn [{:keys [success? get-parsed-response]}]
                    (swap! state dissoc :deleting?)
                    (if success?
-                     ((:on-delete props))
+                     (do (modal/pop-modal) ((:on-delete props)))
                      (swap! state assoc :server-error (get-parsed-response))))}))})
 
 
-(defn- render-overlays [state props workspace billing-projects]
+(defn- render-overlays [state]
   [:div {}
-   (when (:show-delete-dialog? @state)
-     [DeleteDialog
-      {:dismiss-self #(swap! state dissoc :show-delete-dialog?)
-       :workspace-id (:workspace-id props)
-       :on-delete (:on-delete props)}])
    (when (:deleting-attrs? @state)
      [comps/Blocker {:banner "Deleting Attributes..."}])
    (when (:updating-attrs? @state)
      [comps/Blocker {:banner "Updating Attributes..."}])
    (when (contains? @state :locking?)
-     [comps/Blocker {:banner (if (:locking? @state) "Unlocking..." "Locking...")}])
-   (when (:editing-acl? @state)
-     [AclEditor {:workspace-id (:workspace-id props)
-                 :dismiss-self #(swap! state dissoc :editing-acl?)
-                 :update-owners #(swap! state update-in [:server-response :workspace] assoc "owners" %)}])
-   (when (:cloning? @state)
-     [WorkspaceCloner {:dismiss #(swap! state dissoc :cloning?)
-                       :on-success (fn [namespace name]
-                                     (swap! state dissoc :cloning?)
-                                     ((:on-clone props) (str namespace ":" name)))
-                       :workspace-id (:workspace-id props)
-                       :description (get-in workspace ["workspace" "attributes" "description"])
-                       :is-protected? (get-in workspace ["workspace" "isProtected"])
-                       :billing-projects billing-projects}])])
+     [comps/Blocker {:banner (if (:locking? @state) "Unlocking..." "Locking...")}])])
 
 
 (defn- render-sidebar [state props refs this ws billing-projects owner? writer?]
@@ -118,7 +96,15 @@
        [comps/SidebarButton {:style :light :margin :top :color :button-blue
                              :text "Clone..." :icon :plus
                              :disabled? (when (empty? billing-projects) "No billing projects available")
-                             :onClick #(swap! state assoc :cloning? true)}])
+                             :onClick #(modal/push-modal
+                                        [WorkspaceCloner
+                                         {:on-success (fn [namespace name]
+                                                        (swap! state dissoc :cloning?)
+                                                        ((:on-clone props) (str namespace ":" name)))
+                                          :workspace-id (:workspace-id props)
+                                          :description (get-in ws ["workspace" "attributes" "description"])
+                                          :is-protected? (get-in ws ["workspace" "isProtected"])
+                                          :billing-projects billing-projects}])}])
      (when-not (and owner? (:editing? @state))
        [comps/SidebarButton {:style :light :margin :top :color :button-blue
                              :text (if locked? "Unlock" "Lock") :icon :locked
@@ -127,10 +113,12 @@
        [comps/SidebarButton {:style :light :margin :top :color :exception-red
                              :text "Delete" :icon :trash-can
                              :disabled? (if locked? "This workspace is locked")
-                             :onClick #(swap! state assoc :show-delete-dialog? true)}])]))
+                             :onClick #(modal/push-modal [DeleteDialog
+                                                          {:workspace-id (:workspace-id props)
+                                                           :on-delete (:on-delete props)}])}])]))
 
 
-(defn- render-main [state refs ws owner? bucket-access? submissions-count]
+(defn- render-main [state props refs ws owner? bucket-access? submissions-count]
   (let [owners (ws "owners")]
     [:div {:style {:flex "1 1 auto" :overflow "hidden"}}
      [:div {:style {:flex "1 1 auto" :display "flex"}}
@@ -143,7 +131,10 @@
             [:span {}
              " ("
              (style/create-link {:text "Sharing..."
-                                 :onClick #(swap! state assoc :editing-acl? true)})
+                                 :onClick #(modal/push-modal
+                                            [AclEditor {:workspace-id (:workspace-id props)
+                                                        :update-owners (fn [new-owners]
+                                                                         (swap! state update-in [:server-response :workspace] assoc "owners" new-owners))}])})
              ")"])])
        (style/create-section-header "Created By")
        (style/create-paragraph
@@ -200,9 +191,9 @@
          (let [owner? (= "OWNER" (workspace "accessLevel"))
                writer? (or owner? (= "WRITER" (workspace "accessLevel")))]
            [:div {:style {:margin "45px 25px" :display "flex"}}
-            (render-overlays state props workspace billing-projects)
+            (render-overlays state)
             (render-sidebar state props refs this workspace billing-projects owner? writer?)
-            (render-main state refs workspace owner? (:bucket-access? props) submissions-count)]))))
+            (render-main state props refs workspace owner? (:bucket-access? props) submissions-count)]))))
    :load-workspace
    (fn [{:keys [props state]}]
      (endpoints/call-ajax-orch

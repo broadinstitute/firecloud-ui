@@ -4,8 +4,9 @@
     [clojure.string :refer [trim blank?]]
     [org.broadinstitute.firecloud-ui.common :refer [clear-both get-text root-entity-types]]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
-    [org.broadinstitute.firecloud-ui.common.dialog :as dialog]
+    [org.broadinstitute.firecloud-ui.common.overlay :as dialog]
     [org.broadinstitute.firecloud-ui.common.icons :as icons]
+    [org.broadinstitute.firecloud-ui.common.modal :as modal]
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
     [org.broadinstitute.firecloud-ui.page.workspace.method-configs.delete-config :as delete]
@@ -106,12 +107,17 @@
           [comps/SidebarButton {:style :light :color :exception-red :margin :top
                                 :text "Delete" :icon :trash-can
                                 :disabled? (when locked? "The workspace is locked")
-                                :onClick #(swap! state assoc :show-delete-dialog? true)}])
+                                :onClick #(modal/push-modal
+                                           [delete/DeleteDialog {:config config
+                                                                 :workspace-id (:workspace-id props)
+                                                                 :after-delete (:after-delete props)}])}])
 
         (when-not editing?
           [comps/SidebarButton {:style :light :color :button-blue :margin :top
                                 :text "Publish" :icon :share
-                                :onClick #(swap! state assoc :show-publish-dialog? true)}])
+                                :onClick #(modal/push-modal
+                                           [publish/PublishDialog {:config config
+                                                                   :workspace-id (:workspace-id props)}])}])
 
         (when editing?
           [comps/SidebarButton {:color :success-green
@@ -191,16 +197,6 @@
         config (wrapped-config "methodConfiguration")
         editing? (:editing? @state)]
     [:div {}
-     (when (:show-publish-dialog? @state)
-       [publish/PublishDialog {:dismiss-self #(swap! state dissoc :show-publish-dialog?)
-                               :config config
-                               :workspace-id (:workspace-id props)}])
-     (when (:show-delete-dialog? @state)
-       [delete/DeleteDialog {:dismiss-self #(swap! state dissoc :show-delete-dialog?)
-                             :config config
-                             :workspace-id (:workspace-id props)
-                             :after-delete (:after-delete props)}])
-
      [comps/Blocker {:banner (:blocker @state)}]
      [:div {:style {:padding "1em 2em"}}
       (render-side-bar state refs config editing? props)
