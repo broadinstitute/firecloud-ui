@@ -207,7 +207,6 @@
        {"methodVersion" (int (common/get-text refs "snapshotId"))})
    :render
    (fn [{:keys [props refs state this]}]
-       ;(swap! state assoc :)
      (let [entity (:entity props)
            editing? (:editing? props)
            make-field
@@ -218,7 +217,11 @@
                    [:span {:style {:fontWeight 500 :width 100 :display "inline-block" :paddingBottom "0.3em"}} label]
                    (style/create-identity-select {:ref key
                                                   :style {:width "100px"}
-                                                  :onChange #(react/call :load-new-method-template (@refs "methodDetails") this props state)}
+                                                  :defaultValue (entity key)
+                                                  :onChange (when-let [f (:onSnapshotIdChange props)]
+                                                              #(f (int (common/get-text refs "snapshotId"))
+                                                                  (:namespace props)
+                                                                  (:name props)))}
                                                  (:snapshots props))]]
                  [:div {}
                   [:span {:style {:fontWeight 500 :width 100 :display "inline-block" :paddingBottom "0.3em"}} label]
