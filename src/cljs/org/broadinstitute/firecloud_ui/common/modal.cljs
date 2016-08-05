@@ -95,8 +95,8 @@
                    :onClick pop-modal
                    :onKeyDown (common/create-key-handler [:space :enter] pop-modal)}
                cancel-text])
-            (cond (fn? ok-button) [comps/Button {:text "OK" :ref "ok-button" :onClick ok-button}]
-                  (map? ok-button) [comps/Button (merge {:ref "ok-button"} ok-button)]
+            (cond (fn? ok-button) [comps/Button {:text "OK" :ref "ok-button" :class-name "ok-button" :onClick ok-button}]
+                  (map? ok-button) [comps/Button (merge {:ref "ok-button" :class-name "ok-button"} ok-button)]
                   :else ok-button)])]]))
    :component-did-mount
    (fn [{:keys [props refs]}]

@@ -26,8 +26,8 @@
      {:color (:button-blue style/colors)})
    :render
    (fn [{:keys [props]}]
-     (let [{:keys [color icon href disabled? onClick text style]} props]
-       [:a {:className "button"
+     (let [{:keys [color icon href disabled? onClick text style class-name]} props]
+       [:a {:className (or class-name "button")
             :style {:display "inline-block"
                     :backgroundColor color
                     :WebkitFilter (when disabled? "grayscale()")
