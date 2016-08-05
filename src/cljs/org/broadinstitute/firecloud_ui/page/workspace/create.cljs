@@ -21,11 +21,8 @@
    (fn [{:keys [props state refs this]}]
      [modal/OKCancelForm
       {:header "Create New Workspace"
-       :ok-button (react/create-element
-                    [comps/Button {:ref "okButton" :text "Create Workspace"
-                                   :onClick #(react/call :create-workspace this)}])
+       :ok-button {:text "Create Workspace" :onClick #(react/call :create-workspace this)}
        :get-first-element-dom-node #(@refs "project")
-       :get-last-element-dom-node #(react/find-dom-node (@refs "okButton"))
        :content
        (react/create-element
          [:div {:style {:marginBottom -20}}

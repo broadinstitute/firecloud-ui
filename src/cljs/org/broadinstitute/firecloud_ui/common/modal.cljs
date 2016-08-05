@@ -95,14 +95,15 @@
                    :onClick pop-modal
                    :onKeyDown (common/create-key-handler [:space :enter] pop-modal)}
                cancel-text])
-            (cond (fn? ok-button) [comps/Button {:text "OK" :onClick ok-button}]
-                  (map? ok-button) [comps/Button ok-button]
+            (cond (fn? ok-button) [comps/Button {:text "OK" :ref "ok-button" :onClick ok-button}]
+                  (map? ok-button) [comps/Button (merge {:ref "ok-button"} ok-button)]
                   :else ok-button)])]]))
    :component-did-mount
-   (fn [{:keys [props]}]
+   (fn [{:keys [props refs]}]
      (when-let [get-first (:get-first-element-dom-node props)]
        (common/focus-and-select (get-first))
-       (when-let [get-last (:get-last-element-dom-node props)]
+       (when-let [get-last (or (:get-last-element-dom-node props)
+                               #(react/find-dom-node (@refs "ok-button")))]
          (.addEventListener
           (get-first) "keydown"
           (common/create-key-handler [:tab] #(.-shiftKey %)

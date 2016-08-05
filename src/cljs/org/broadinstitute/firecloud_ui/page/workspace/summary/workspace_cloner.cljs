@@ -18,10 +18,8 @@
    (fn [{:keys [props refs state this]}]
      [modal/OKCancelForm
       {:header "Clone Workspace to:"
-       :ok-button (react/create-element
-                    [comps/Button {:text "OK" :ref "okButton" :onClick #(react/call :do-clone this)}])
+       :ok-button {:text "Clone" :onClick #(react/call :do-clone this)}
        :get-first-element-dom-node #(@refs "project")
-       :get-last-element-dom-node #(react/find-dom-node (@refs "okButton"))
        :content
        (react/create-element
          [:div {}
