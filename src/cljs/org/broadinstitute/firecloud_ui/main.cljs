@@ -317,11 +317,11 @@
     {:header (if maintenance-mode? "Maintenance Mode" "Server Unavailable")
      :show-cancel? false
      :content (if maintenance-mode?
-                [:div {} "FireCloud is currently undergoing planned maintenance.
+                [:div {:style {:width 500}} "FireCloud is currently undergoing planned maintenance.
                    We should be back online shortly. For more information, please see "
                  [:a {:href "http://status.firecloud.org/" :target "_blank"}
                   "http://status.firecloud.org/"] "."]
-                [:div {} "FireCloud service is temporarily unavailable.  If this problem persists, check "
+                [:div {:style {:width 500}} "FireCloud service is temporarily unavailable.  If this problem persists, check "
                  [:a {:href "http://status.firecloud.org/" :target "_blank"}
                   "http://status.firecloud.org/"]
                  " for more information."])}))
