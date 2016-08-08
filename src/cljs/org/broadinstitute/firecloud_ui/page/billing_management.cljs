@@ -16,9 +16,8 @@
 (react/defc CreateBillingProjectDialog
   {:render
    (fn [{:keys [state this]}]
-     [dialog/OKCancelForm
+     [modal/OKCancelForm
       {:header "Create Billing Project"
-       :dismiss-self #(modal/pop-modal)
        :content
        (react/create-element
          (let [{:keys [billing-accounts billing-acct-error]} @state]
@@ -55,7 +54,7 @@
                                       :predicates [(input/nonempty "Name")]}]
                     (style/create-validation-error-message (:validation-errors @state))
                     [comps/ErrorViewer {:error (:server-error @state)}]]))))
-       :ok-button [comps/Button {:text "OK" :onClick #(react/call :create-billing-project this)}]}])
+       :ok-button #(react/call :create-billing-project this)}])
    :component-did-mount
    (fn [{:keys [state]}]
      (endpoints/call-ajax-orch
@@ -98,7 +97,15 @@
        :else
        [table/Table
         {:columns [{:header "Project Name" :starting-width 300}
-                   {:header "Role" :starting-width 300}]
+                   {:header "Role" :starting-width 300
+                    :content-renderer
+                    (fn [role]
+                      [:span {}
+                       role
+                       (when (= role "Owner")
+                         (style/create-link {:text "Click to manage"
+                                             :style {:marginLeft "1em"}
+                                             :onClick #(utils/log "manage")}))])}]
          :toolbar
          (float-right
            (when false ; hidden until implemented
@@ -109,7 +116,7 @@
          :data (:projects @state)
          :->row (fn [item]
                   [(item "projectName")
-                  (item "role")])}]))
+                   (item "role")])}]))
    :component-did-mount
    (fn [{:keys [this]}]
      (react/call :load-data this))
