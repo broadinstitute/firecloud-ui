@@ -6,7 +6,6 @@
     [org.broadinstitute.firecloud-ui.common.codemirror :refer [CodeMirror]]
     [org.broadinstitute.firecloud-ui.common.icons :as icons]
     [org.broadinstitute.firecloud-ui.common.style :as style]
-    [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
     [org.broadinstitute.firecloud-ui.utils :as utils]
     ))
 
@@ -211,21 +210,16 @@
            editing? (:editing? props)
            make-field
            (fn [entity key label dropdown? & [render]]
-               (if (and editing? dropdown?)
-                 [:div {}
-                  [:div {:style {}}
-                   [:span {:style {:fontWeight 500 :width 100 :display "inline-block" :paddingBottom "0.3em"}} label]
-                   (style/create-identity-select {:ref key
-                                                  :style {:width "100px"}
-                                                  :defaultValue (entity key)
-                                                  :onChange (when-let [f (:onSnapshotIdChange props)]
-                                                              #(f (int (common/get-text refs "snapshotId"))
-                                                                  (:namespace props)
-                                                                  (:name props)))}
-                                                 (:snapshots props))]]
-                 [:div {}
-                  [:span {:style {:fontWeight 500 :width 100 :display "inline-block" :paddingBottom "0.3em"}} label]
-                  [:span {} ((or render identity) (entity key))]]))
+             [:div {}
+              [:span {:style {:fontWeight 500 :width 100 :display "inline-block" :paddingBottom "0.3em"}} label]
+              (if (and editing? dropdown?)
+                (style/create-identity-select {:ref key
+                                               :style {:width "100px"}
+                                               :defaultValue (entity key)
+                                               :onChange (when-let [f (:onSnapshotIdChange props)]
+                                                           #(f (int (common/get-text refs "snapshotId"))))}
+                                              (:snapshots props))
+                [:span {} ((or render identity) (entity key))])])
            config? (contains? entity "method")]
        [:div {:style {:backgroundColor (:background-gray style/colors)
                       :borderRadius 8 :border style/standard-line

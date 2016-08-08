@@ -107,8 +107,7 @@
            selected-method-config-id (common/get-id-from-nav-segment (:segment nav-context))]
        [:div {:style {:padding "1em"}}
         (if selected-method-config-id
-          [MethodConfigEditor {:ref "methodConfigEditor"
-                               :key selected-method-config-id
+          [MethodConfigEditor {:key selected-method-config-id
                                :config-id selected-method-config-id
                                :workspace-id (:workspace-id props)
                                :bucket-access? (:bucket-access? props)

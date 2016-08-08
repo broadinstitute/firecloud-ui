@@ -76,15 +76,14 @@
    (fn [{:keys [refs]}]
      (react/call :get-fields (@refs "methodDetails")))
    :render
-   (fn [{:keys [props refs state]}]
+   (fn [{:keys [props state]}]
      (cond
        (:loaded-method @state)
-       [comps/EntityDetails {:entity (:loaded-method @state) :editing? (:editing? props)
+       [comps/EntityDetails {:entity (:loaded-method @state)
+                             :editing? (:editing? props)
                              :ref "methodDetails"
                              :onSnapshotIdChange (:onSnapshotIdChange props)
-                                                     :snapshots (get-in (:methods props)
-                                                                        [[(get-in (:loaded-method @state) ["namespace"])
-                                                                          (get-in (:loaded-method @state) ["name"])]])}]
+                             :snapshots ((:methods props) (map (:loaded-method @state) ["namespace" "name"]))}]
        (:error @state) (style/create-server-error-message (:error @state))
         :else [comps/Spinner {:text "Loading details..."}]))
    :component-did-mount
@@ -278,7 +277,7 @@
                    (swap! state assoc :sidebar-visible? visible))))))
      (.addEventListener js/window "scroll" (.-onScrollHandler this)))
    :load-validated-method-config
-   (fn [{:keys [state props refs this]}]
+   (fn [{:keys [state props]}]
      (endpoints/call-ajax-orch
        {:endpoint (endpoints/get-validated-workspace-method-config (:workspace-id props) (:config-id props))
         :on-done (fn [{:keys [success? get-parsed-response status-text]}]
@@ -294,7 +293,7 @@
                                               (swap! state assoc :error ((get-parsed-response) "message"))))}))
                        (swap! state assoc :error status-text)))}))
    :load-new-method-template
-   (fn [{:keys [state props refs this]} new-snapshot-id]
+   (fn [{:keys [state refs]} new-snapshot-id]
      (let [namespace (get-in (:loaded-config @state) ["methodConfiguration" "methodRepoMethod" "methodNamespace"])
            name (get-in (:loaded-config @state) ["methodConfiguration" "methodRepoMethod" "methodName"])
            method-ref {"methodNamespace" namespace
@@ -303,7 +302,7 @@
        (swap! state assoc :blocker "Updating...")
        (react/call :load-agora-method (@refs "methodDetailsViewer") {:namespace namespace
                                                                      :name name
-                                                                     :snapshotId new-snapshot-id} state)
+                                                                     :snapshotId new-snapshot-id})
        (endpoints/call-ajax-orch
          {:endpoint (endpoints/create-template method-ref)
           :payload method-ref
@@ -317,14 +316,15 @@
                                  :headers {"Content-Type" "application/json"}
                                  :on-done (fn [{:keys [success? get-parsed-response]}]
                                             (swap! state dissoc :blocker)
-                                            (let [template {"methodConfiguration" (assoc response "namespace" namespace
-                                                                                         "name" name)}]
+                                            (let [template {"methodConfiguration" (assoc response
+                                                                                    "namespace" namespace
+                                                                                    "name" name)}]
                                               (if success?
                                                 (swap! state assoc :loaded-config (assoc template
-                                                                                         "invalidInputs" {}
-                                                                                         "validInputs" {}
-                                                                                         "invalidOutputs" {}
-                                                                                         "validOutputs" {})
+                                                                                    "invalidInputs" {}
+                                                                                    "validInputs" {}
+                                                                                    "invalidOutputs" {}
+                                                                                    "validOutputs" {})
                                                        :inputs-outputs (get-parsed-response))
                                                 (swap! state assoc :error ((get-parsed-response) "message")))))}))
                          (swap! state assoc :error status-text)))})))
