@@ -9,6 +9,7 @@
     [org.broadinstitute.firecloud-ui.common.modal :as modal]
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.common.table :as table]
+    [org.broadinstitute.firecloud-ui.common.table-utils :refer [float-right]]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
     [org.broadinstitute.firecloud-ui.page.method-repo.create-method :as create]
     [org.broadinstitute.firecloud-ui.page.method-repo.methods-configs-acl :as mca]
@@ -258,16 +259,14 @@
                                        (if fields
                                          (apply style/render-entity fields)
                                          "N/A"))}]
-        :toolbar (fn [built-in]
-                   [:div {}
-                    [:div {:style {:float "left"}} built-in]
-                    [:div {:style {:float "right"}}
-                     [comps/Button {:text "Create new method..."
-                                    :onClick #(modal/push-modal [create/CreateMethodDialog
-                                                                 {:on-success (fn [new-method]
-                                                                                (react/call :reload this)
-                                                                                ((:on-item-selected props) (assoc new-method :type :method)))}])}]]
-                    (clear-both)])
+        :toolbar (float-right
+                   [comps/Button
+                    {:text "Create new method..."
+                     :onClick #(modal/push-modal
+                                [create/CreateMethodDialog
+                                 {:on-success (fn [new-method]
+                                                (react/call :reload this)
+                                                ((:on-item-selected props) (assoc new-method :type :method)))}])}])
         :filter-groups [{:text "All" :pred (constantly true)}
                         {:text "Methods Only" :pred #(= :method (:type %))}
                         {:text "Configs Only" :pred #(= :config (:type %))}]

@@ -7,6 +7,7 @@
     [org.broadinstitute.firecloud-ui.common.modal :as modal]
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.common.table :as table]
+    [org.broadinstitute.firecloud-ui.common.table-utils :refer [float-right]]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
     [org.broadinstitute.firecloud-ui.nav :as nav]
     [org.broadinstitute.firecloud-ui.page.method-repo.method-config-importer :refer [MethodConfigImporter]]
@@ -33,25 +34,23 @@
          configs
          [table/Table
           {:empty-message "There are no method configurations to display."
-           :toolbar (fn [built-in]
-                      [:div {}
-                       [:div {:style {:float "left" :margin "5 0 -5 0"}} built-in]
-                       [:div {:style {:float "right" :paddingRight "2em"}}
-                        [comps/Button {:text "Import Configuration..."
-                                       :disabled? (case (:locked? @state)
-                                                    nil "Looking up workspace status..."
-                                                    true "The workspace is locked"
-                                                    false)
-                                       :onClick #(modal/push-modal
-                                                  [modal/OKCancelForm
-                                                   {:header "Import Method Configuration"
-                                                    :content
-                                                    [:div {:style {:backgroundColor "white" :padding "1ex" :width 1000}}
-                                                     [MethodConfigImporter {:workspace-id (:workspace-id props)
-                                                                            :after-import (fn [{:keys [config-id]}]
-                                                                                            (modal/pop-modal)
-                                                                                            ((:on-config-imported props) config-id))}]]}])}]]
-                       (common/clear-both)])
+           :toolbar
+           (float-right
+             [comps/Button {:text "Import Configuration..."
+                            :disabled? (case (:locked? @state)
+                                         nil "Looking up workspace status..."
+                                         true "The workspace is locked"
+                                         false)
+                            :onClick #(modal/push-modal
+                                       [modal/OKCancelForm
+                                        {:header "Import Method Configuration"
+                                         :content
+                                         [:div {:style {:backgroundColor "white" :padding "1ex" :width 1000}}
+                                          [MethodConfigImporter {:workspace-id (:workspace-id props)
+                                                                 :after-import (fn [{:keys [config-id]}]
+                                                                                 (modal/pop-modal)
+                                                                                 ((:on-config-imported props) config-id))}]]}])}]
+             {:paddingRight "2em"})
            :columns
            [{:header "Name" :starting-width 240 :as-text :name :sort-by :text
              :content-renderer

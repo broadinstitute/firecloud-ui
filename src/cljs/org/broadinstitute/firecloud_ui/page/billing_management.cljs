@@ -7,6 +7,7 @@
     [org.broadinstitute.firecloud-ui.common.icons :as icons]
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.common.table :as table]
+    [org.broadinstitute.firecloud-ui.common.table-utils :refer [float-right]]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
     [org.broadinstitute.firecloud-ui.utils :as utils]
     ))
@@ -25,14 +26,11 @@
         {:columns [{:header "Project Name" :starting-width 300}
                    {:header "Role" :starting-width 300}]
          :toolbar
-         (fn [built-in]
-           [:div {}
-            [:div {:style {:float "left"}} built-in]
-            [:div {:style {:float "right" :display "none"}}
+         (float-right
+           (when false ; hidden until implemented
              [comps/Button {:text "Create New Billing Project"
                             :disabled? true
-                            :onClick #(swap! state assoc :foo "bar")}]]
-            (common/clear-both)])
+                            :onClick #(swap! state assoc :foo "bar")}]))
          :data (:projects @state)
          :->row (fn [item]
                   [item

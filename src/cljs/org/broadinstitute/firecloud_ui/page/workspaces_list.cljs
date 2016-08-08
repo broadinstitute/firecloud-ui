@@ -8,6 +8,7 @@
     [org.broadinstitute.firecloud-ui.common.overlay :as overlay]
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.common.table :as table]
+    [org.broadinstitute.firecloud-ui.common.table-utils :refer [float-right]]
     [org.broadinstitute.firecloud-ui.config :as config]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
     [org.broadinstitute.firecloud-ui.nav :as nav]
@@ -129,12 +130,7 @@
                        :borderBottom style/standard-line :borderRadius 4}
           :row-style {:height row-height-px :borderTop style/standard-line}
           :cell-content-style {:padding nil}
-          :toolbar (fn [built-in]
-                     [:div {}
-                      [:div {:style {:float "left"}} built-in]
-                      [:div {:style {:float "right" :marginTop -5}}
-                       [create/Button {:nav-context (:nav-context props)}]]
-                      (common/clear-both)])
+          :toolbar (float-right [create/Button {:nav-context (:nav-context props)}] {:marginTop -5})
           :filter-groups [{:text "All" :pred (constantly true)}
                           {:text "Complete" :pred #(= "Complete" (:status %))}
                           {:text "Running" :pred #(= "Running" (:status %))}
