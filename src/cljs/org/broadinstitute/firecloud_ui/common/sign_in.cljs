@@ -74,6 +74,11 @@
                                     (swap! state assoc :success? true)
                                     (when-let [callback (:callback props)]
                                       (callback))))}]]])]]))
+   :component-did-update
+   (fn [{:keys [state]}]
+     (let [{:keys [success?]} @state]
+       (when success?
+         (modal/pop-modal))))
    :component-will-mount
    (fn []
      (set! showing-dialog? true))
