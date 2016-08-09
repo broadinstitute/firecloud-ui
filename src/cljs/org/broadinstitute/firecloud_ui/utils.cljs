@@ -143,6 +143,7 @@
 
 (defonce server-down? (atom false))
 (defonce maintenance-mode? (atom false))
+(defonce pending-calls (atom []))
 
 
 (defn ajax-orch [path arg-map & {:keys [service-prefix ignore-auth-expiration?] :or {service-prefix "/api"}}]
@@ -159,9 +160,14 @@
                           (contains? (set (range 500 600)) status-code) (reset! server-down? true)))
                       ;; Handle auth token expiration
                       (if (and (= status-code 401) (not ignore-auth-expiration?))
-                        (auth-expiration-handler
-                          (fn []
-                            (ajax-orch path arg-map {:service-prefix service-prefix :ignore-auth-expiration? true})))
+                        (do
+                          (swap! pending-calls conj [path arg-map
+                                                     :service-prefix service-prefix
+                                                     :ignore-auth-expiration? true])
+                          (auth-expiration-handler
+                           (fn []
+                             (dorun (map (fn [x] (apply ajax-orch x)) @pending-calls))
+                             (reset! pending-calls []))))
                         (on-done m)))))))
 
 
