@@ -431,6 +431,10 @@
         :entityType (rand-nth ["Task" "Workflow"])})
      (range (rand-int 100)))})
 
+(def post-method
+  {:path "/methods"
+   :method :post})
+
 ;; I would have called it "get-method" but that's already defined in core
 (defn get-agora-method [namespace name snapshot-id]
   {:path (str "/methods/" namespace "/" name "/" snapshot-id)

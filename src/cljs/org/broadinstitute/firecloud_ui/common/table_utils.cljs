@@ -85,6 +85,14 @@
            (common/clear-both)])]))})
 
 
+(defn float-right [component & [style]]
+  (fn [built-in]
+    [:div {}
+     [:div {:style {:float "left"}} built-in]
+     [:div {:style (merge (or style {}) {:float "right"})} component]
+     (common/clear-both)]))
+
+
 (defn- render-cell [{:keys [width onResizeMouseDown onSortClick sortOrder] :as props}]
   [:div {:style (merge {:display "inline-block" :verticalAlign "bottom"
                         :position "relative" :width width :minWidth 10}
