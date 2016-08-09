@@ -28,17 +28,16 @@
                  (try
                    (if-let [redirect-url ((utils/parse-json-string (billing-acct-error "message")) "redirect")]
                      [comps/Button {:text "Click Here To Enable Billing Permissions"
-                                    :onClick (fn [e]
-                                               (.. js/window
-                                                   (open redirect-url
-                                                         "Authentication"
-                                                         "menubar=no,toolbar=no,width=500,height=500")))}]
+                                    :onClick #(.. js/window
+                                                  (open redirect-url
+                                                        "Authentication"
+                                                        "menubar=no,toolbar=no,width=500,height=500"))}]
                      [comps/ErrorViewer {:error billing-acct-error}])
-                   (catch js/Object e [comps/ErrorViewer {:error billing-acct-error}]))
+                   (catch js/Object _ [comps/ErrorViewer {:error billing-acct-error}]))
                  (not billing-accounts) [comps/Spinner {:text "Loading billing accounts..."}]
                  :else
                  (if (empty? billing-accounts)
-                   [:div {} "No billing accounts :( [todo: help text]"]
+                   [:div {} "You do not have any billing accounts available."]
                    [:div {}
                     [:div {:style {:fontSize "120%" :marginBottom "0.5ex"}}
                      "Select a billing account:"]
@@ -67,7 +66,8 @@
                                       :predicates [(input/nonempty "Name")]}]
                     (style/create-validation-error-message (:validation-errors @state))
                     [comps/ErrorViewer {:error (:server-error @state)}]]))))
-       :ok-button #(react/call :create-billing-project this)}])
+       :ok-button (when-not (empty? (:billing-accounts @state))
+                    #(react/call :create-billing-project this))}])
    :component-did-mount
    (fn [{:keys [this]}]
      (react/call :get-billing-accounts this)
@@ -125,7 +125,7 @@
                     (fn [role]
                       [:span {}
                        role
-                       (when (= role "Owner")
+                       (when (and false (= role "Owner")) ; disable until ready
                          (style/create-link {:text "Click to manage"
                                              :style {:marginLeft "1em"}
                                              :onClick #(utils/log "manage")}))])}]
