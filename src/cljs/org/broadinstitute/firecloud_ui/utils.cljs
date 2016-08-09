@@ -158,9 +158,11 @@
                           (= status-code 502) (reset! maintenance-mode? true)
                           (contains? (set (range 500 600)) status-code) (reset! server-down? true)))
                       ;; Handle auth token expiration
-                      (when (and (= status-code 401) (not ignore-auth-expiration?))
-                        (auth-expiration-handler))
-                      (on-done m))))))
+                      (if (and (= status-code 401) (not ignore-auth-expiration?))
+                        (auth-expiration-handler
+                          (fn []
+                            (ajax-orch path arg-map {:service-prefix service-prefix :ignore-auth-expiration? true})))
+                        (on-done m)))))))
 
 
 (defn deep-merge [& maps]

@@ -71,9 +71,14 @@
                                   (let [token (get message "access_token")]
                                     (reset! u/access-token token)
                                     (u/set-access-token-cookie token)
-                                    (swap! state assoc :success? true)
-                                    (when-let [callback (:callback props)]
-                                      (callback))))}]]])]]))
+                                    (swap! state assoc :success? true)))}]]])]]))
+   :component-did-update
+   (fn [{:keys [state props]}]
+     (let [{:keys [success?]} @state]
+       (when success?
+         (modal/pop-modal)
+         (when-let [callback (:callback props)]
+           (callback)))))
    :component-will-mount
    (fn []
      (set! showing-dialog? true))
