@@ -93,7 +93,7 @@
         (fn [{:keys [success? get-parsed-response]}]
           (if success?
             (let [accts (get-parsed-response)]
-              (swap! state assoc :billing-accounts accts :selected-account ((first accts) "accountName")))
+              (swap! state assoc :billing-accounts accts :selected-account (get (first accts) "accountName")))
             (swap! state assoc :billing-acct-error (get-parsed-response))))}))
    :create-billing-project
    (fn [{:keys [props state refs]}]
