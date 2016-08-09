@@ -11,6 +11,7 @@
 
 
 (def handler-fn-name (name ::handle-auth-message))
+(def flow-start-location-hash "#sign-in")
 
 
 (react/defc Button
@@ -19,20 +20,13 @@
      [comps/Button
       {:text "Sign In"
        :onClick (fn [e]
-                  (u/ajax {:url (str (config/api-url-root) "/me")
-                           :on-done (fn [{:keys [success? status-code]}]
-                                      (cond
-                                        (= status-code 502 )
-                                        (reset! u/maintenance-mode? true)
-                                        (contains? (set (range 500 600)) status-code)
-                                        (reset! u/server-down? true)
-                                        :else
-                                        (.. js/window
-                                            (open
-                                              (str (config/api-url-root) "/login?callback="
-                                                   (js/encodeURIComponent (.. js/window -location -origin)))
-                                              "Authentication"
-                                              "menubar=no,toolbar=no,width=500,height=500"))))}))}])
+                  ;; Note: window.open must fire as a direct result of this click to prevent
+                  ;; browsers from automatically blocking the pop-up.
+                  (.. js/window
+                      (open
+                       (str (.. js/window -location -origin) "/" flow-start-location-hash)
+                       "Authentication"
+                       "menubar=no,toolbar=no,width=500,height=500")))}])
    :component-did-mount
    (fn [{:keys [props]}]
      (aset js/window handler-fn-name

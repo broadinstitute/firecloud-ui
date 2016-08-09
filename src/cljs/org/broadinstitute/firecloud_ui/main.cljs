@@ -399,14 +399,14 @@
          (when maintenance-now?
            (show-system-status-dialog true))))
      (modal/set-instance! (@refs "modal"))
-     (react/call :load-config this))
+     (react/call :load-config this #(react/call :authenticate-user this)))
    :component-will-unmount
    (fn [{:keys [locals]}]
      (.removeEventListener js/window "hashchange" (:hash-change-listener @locals))
      (remove-watch utils/server-down? :server-watcher)
      (remove-watch utils/maintenance-mode? :server-watcher))
    :load-config
-   (fn [{:keys [this state]}]
+   (fn [{:keys [this state]} on-success]
      ;; Use basic ajax call here to bypass authentication.
      (utils/ajax {:url "/config.json"
                   :on-done (fn [{:keys [success? get-parsed-response]}]
@@ -414,64 +414,71 @@
                                (do
                                  (reset! config/config (get-parsed-response))
                                  (swap! state assoc :config-status :success)
-                                 (react/call :authenticate-user this))
+                                 (on-success))
                                (swap! state assoc :config-status :error)))}))
    :authenticate-user
    (fn [{:keys [this state]}]
-     ;; Note: window.opener can be non-nil even when it wasn't opened with window.open, so be
-     ;; careful with this check.
-     (let [opener (.-opener js/window)
-           sign-in-handler (and opener (aget opener sign-in/handler-fn-name))]
-       (if sign-in-handler
-         ;; This window was used for login. Send the token to the parent. No need to render the UI.
-         (do
-           (sign-in-handler (parse-hash-into-map))
-           (.close js/window))
-         (if-let [token (get (parse-hash-into-map) "access_token")]
-           ;; New access token. Attempt to authenticate with it.
-           (react/call :authenticate-with-fresh-token this token)
-           (let [token (utils/get-access-token-cookie)]
-             (if token
-               (attempt-auth token (fn [{:keys [success? status-code get-parsed-response]}]
-                                     (swap! state assoc :user-email (get-in (get-parsed-response) ["userInfo" "userEmail"]))
-                                     (cond
-                                       (= status-code 502)
-                                       (do (reset! utils/maintenance-mode? true)
-                                         (swap! state assoc :user-status :error))
-                                       (contains? (set (range 500 600)) status-code)
-                                       (do (reset! utils/server-down? true)
-                                         (swap! state assoc :user-status :error))
-                                       (= 401 status-code) ; maybe bad cookie, not auth failure
-                                       (do (utils/delete-access-token-cookie)
-                                         (swap! state assoc :user-status :not-logged-in))
-                                       (= 403 status-code)
-                                       (swap! state assoc :user-status :not-activated)
-                                       ;; 404 just means not registered
-                                       (or success? (= status-code 404))
-                                       (react/call :handle-successful-auth this token)
-                                       :else
-                                       (swap! state assoc :user-status :error))))
-               (swap! state assoc :user-status :not-logged-in)))))))
+     (if (= (.. js/window -location -hash) sign-in/flow-start-location-hash)
+       (utils/ajax-orch
+        "/me"
+        {:service-prefix ""
+         :on-done (fn []
+                    ;; If this call fails, it will be caught by the normal handlers, so no need to
+                    ;; check for success here.
+                    (set! (.. js/window -location -href)
+                      (str (config/api-url-root) "/login?callback="
+                           (js/encodeURIComponent (.. js/window -location -origin)))))}
+        :ignore-auth-expiration? true)
+       ;; Note: window.opener can be non-nil even when it wasn't opened with window.open, so be
+       ;; careful with this check.
+       (let [opener (.-opener js/window)
+             sign-in-handler (and opener (aget opener sign-in/handler-fn-name))]
+         (if sign-in-handler
+           ;; This window was used for login. Send the token to the parent. No need to render the
+           ;; UI.
+           (do
+             (sign-in-handler (parse-hash-into-map))
+             (.close js/window))
+           (if-let [token (get (parse-hash-into-map) "access_token")]
+             ;; New access token. Attempt to authenticate with it.
+             (react/call :authenticate-with-fresh-token this token)
+             (let [token (utils/get-access-token-cookie)]
+               (if token
+                 (react/call :authenticate-with-token this token
+                             (fn []
+                               ;; maybe bad cookie, not auth failure
+                               (utils/delete-access-token-cookie)
+                               (swap! state assoc :user-status :not-logged-in))
+                             (fn []
+                               (react/call :handle-successful-auth this token)))
+                 (swap! state assoc :user-status :not-logged-in))))))))
    :authenticate-with-fresh-token
    (fn [{:keys [this state]} token]
-     (attempt-auth token (fn [{:keys [success? status-code get-parsed-response]}]
-                           (swap! state assoc :user-email (get-in (get-parsed-response) ["userInfo" "userEmail"]))
-                           (cond
-                             (= status-code 502)
-                             (reset! utils/maintenance-mode? true)
-                             (contains? (set (range 500 600)) status-code)
-                             (reset! utils/server-down? true)
-                             (= 401 status-code)
-                             (swap! state assoc :user-status :auth-failure)
-                             (= 403 status-code)
-                             (do (utils/set-access-token-cookie token)
-                               (swap! state assoc :user-status :not-activated))
-                             ;; 404 just means not registered
-                             (or success? (= status-code 404))
-                             (do (utils/set-access-token-cookie token)
-                               (react/call :handle-successful-auth this token))
-                             :else
-                             (swap! state assoc :user-status :error)))))
+     (react/call :authenticate-with-token this token
+                 (fn [] (swap! state assoc :user-status :auth-failure))
+                 (fn []
+                   (utils/set-access-token-cookie token)
+                   (react/call :handle-successful-auth this token))))
+   :authenticate-with-token
+   (fn [{:keys [state]} token on-failure on-success]
+     (attempt-auth
+      token
+      (fn [{:keys [success? status-code get-parsed-response]}]
+        (swap! state assoc :user-email (get-in (get-parsed-response) ["userInfo" "userEmail"]))
+        (cond
+          (= status-code 502)
+          (do (reset! utils/maintenance-mode? true) (swap! state assoc :user-status :error))
+          (contains? (set (range 500 600)) status-code)
+          (do (reset! utils/server-down? true) (swap! state assoc :user-status :error))
+          (= 401 status-code)
+          (on-failure)
+          (= 403 status-code)
+          (swap! state assoc :user-status :not-activated)
+          ;; 404 just means not registered
+          (or success? (= status-code 404))
+          (on-success)
+          :else
+          (swap! state assoc :user-status :error)))))
    :handle-successful-auth
    (fn [{:keys [this state locals]} token]
      (reset! utils/access-token token)
