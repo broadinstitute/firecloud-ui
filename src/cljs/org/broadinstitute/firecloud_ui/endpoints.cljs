@@ -677,7 +677,7 @@
      :firecloudHasAccess true}]})
 
 (def create-billing-project
-  {:path "/profile/billing"
+  {:path "/billing"
    :method :post})
 
 (defn get-refresh-token-date []

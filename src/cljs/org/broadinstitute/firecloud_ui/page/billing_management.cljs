@@ -38,10 +38,12 @@
                  :else
                  (if (empty? billing-accounts)
                    [:div {} "You do not have any billing accounts available."]
-                   [:div {}
+                   [:div {:style {:width 750}}
+                    (when (:creating? @state)
+                      [comps/Blocker {:banner "Creating billing account..."}])
                     [:div {:style {:fontSize "120%" :marginBottom "0.5ex"}}
                      "Select a billing account:"]
-                    [:div {:style {:width 750 :backgroundColor "white" :padding "1em"}}
+                    [:div {:style {:backgroundColor "white" :padding "1em"}}
                      [table/Table
                       {:columns [{:header "Account Name" :starting-width 300
                                   :content-renderer
@@ -89,7 +91,10 @@
        {:endpoint (endpoints/get-billing-accounts)
         :on-done
         (fn [{:keys [success? get-parsed-response]}]
-          (swap! state assoc (if success? :billing-accounts :billing-acct-error) (get-parsed-response)))}))
+          (if success?
+            (let [accts (get-parsed-response)]
+              (swap! state assoc :billing-accounts accts :selected-account ((first accts) "accountName")))
+            (swap! state assoc :billing-acct-error (get-parsed-response))))}))
    :create-billing-project
    (fn [{:keys [props state refs]}]
      (let [account (:selected-account @state)]
@@ -98,11 +103,13 @@
          (let [[name & fails] (input/get-and-validate refs "name-field")]
            (swap! state assoc :validation-errors fails)
            (when-not fails
+             (swap! state assoc :creating? true)
              (endpoints/call-ajax-orch
                {:endpoint endpoints/create-billing-project
                 :payload {:projectName name :billingAccount account}
                 :headers {"Content-Type" "application/json"}
                 :on-done (fn [{:keys [success? get-parsed-response]}]
+                           (swap! state dissoc :creating?)
                            (if success?
                              (do ((:on-success props))
                                  (modal/pop-modal))
