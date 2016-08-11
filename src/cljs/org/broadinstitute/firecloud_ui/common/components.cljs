@@ -201,14 +201,25 @@
         [:span {:style {:verticalAlign "middle" :marginLeft "1em"}} (:text props)]]))})
 
 (react/defc EntityDetails
-  {:render
-   (fn [{:keys [props state this]}]
+  {:get-fields
+   (fn [{:keys [refs]}]
+     {"methodVersion" (int (common/get-text refs "snapshotId"))})
+   :render
+   (fn [{:keys [props refs state this]}]
      (let [entity (:entity props)
+           editing? (:editing? props)
            make-field
-           (fn [entity key label & [render]]
+           (fn [entity key label dropdown? & [render]]
              [:div {}
               [:span {:style {:fontWeight 500 :width 100 :display "inline-block" :paddingBottom "0.3em"}} label]
-              [:span {} ((or render identity) (entity key))]])
+              (if (and editing? dropdown?)
+                (style/create-identity-select {:ref key
+                                               :style {:width "100px"}
+                                               :defaultValue (entity key)
+                                               :onChange (when-let [f (:onSnapshotIdChange props)]
+                                                           #(f (int (common/get-text refs "snapshotId"))))}
+                                              (:snapshots props))
+                [:span {} ((or render identity) (entity key))])])
            config? (contains? entity "method")]
        [:div {:style {:backgroundColor (:background-gray style/colors)
                       :borderRadius 8 :border style/standard-line
@@ -229,13 +240,13 @@
    (fn [{:keys []} make-field entity]
      [:div {}
       [:div {:style {:float "left" :marginRight "5em"}}
-       (make-field entity "namespace" "Namespace: ")
-       (make-field entity "name" "Name: ")
-       (make-field entity "snapshotId" "Snapshot ID: ")]
+       (make-field entity "namespace" "Namespace: " false)
+       (make-field entity "name" "Name: " false)
+       (make-field entity "snapshotId" "Snapshot ID: " true)]
       [:div {:style {:float "left"}}
-       (make-field entity "createDate" "Created: " common/format-date)
-       (make-field entity "entityType" "Entity Type: ")
-       (make-field entity "synopsis" "Synopsis: ")]
+       (make-field entity "createDate" "Created: " false common/format-date)
+       (make-field entity "entityType" "Entity Type: " false)
+       (make-field entity "synopsis" "Synopsis: " false)]
       (common/clear-both)
       [:div {:style {:fontWeight 500 :padding "0.5em 0 0.3em 0"}}
        "Documentation:"]

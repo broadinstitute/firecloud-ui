@@ -30,6 +30,7 @@
 
 (defn- commit [state refs config props]
   (let [workspace-id (:workspace-id props)
+        method (get-in config ["methodRepoMethod"])
         [name rootEntityType] (get-text refs "confname" "rootentitytype")
         inputs (->> ((:inputs-outputs @state) "inputs")
                  (map #(% "name"))
@@ -41,11 +42,13 @@
                   (map (juxt identity #(get-text refs (str "out_" %))))
                   (filter (fn [[k v]] (not (empty? v))))
                   (into {}))
+        method-ref (merge method (react/call :get-fields (@refs "methodDetailsViewer")))
         new-conf (assoc config
                    "name" name
                    "rootEntityType" rootEntityType
                    "inputs" inputs
                    "outputs" outputs
+                   "methodRepoMethod" method-ref
                    "workspaceName" workspace-id)]
     (swap! state assoc :blocker "Updating...")
     (endpoints/call-ajax-orch
@@ -68,21 +71,31 @@
                                       ((:on-rename props) name)
                                       (js/alert (str "Exception:\n" (.-statusText xhr)))))}))))})))
 
-
 (react/defc MethodDetailsViewer
-  {:render
-   (fn [{:keys [state]}]
-     (cond
-       (:loaded-method @state) [comps/EntityDetails {:entity (:loaded-method @state)}]
-       (:error @state) (style/create-server-error-message (:error @state))
-       :else [comps/Spinner {:text "Loading details..."}]))
-   :component-did-mount
+  {:get-fields
+   (fn [{:keys [refs]}]
+     (react/call :get-fields (@refs "methodDetails")))
+   :render
    (fn [{:keys [props state]}]
+     (cond
+       (:loaded-method @state)
+       [comps/EntityDetails {:entity (:loaded-method @state)
+                             :editing? (:editing? props)
+                             :ref "methodDetails"
+                             :onSnapshotIdChange (:onSnapshotIdChange props)
+                             :snapshots ((:methods props) (map (:loaded-method @state) ["namespace" "name"]))}]
+       (:error @state) (style/create-server-error-message (:error @state))
+        :else [comps/Spinner {:text "Loading details..."}]))
+   :component-did-mount
+   (fn [{:keys [this props state]}]
+     (react/call :load-agora-method this props state))
+   :load-agora-method
+   (fn [{:keys [props state]} method-ref]
      (endpoints/call-ajax-orch
        {:endpoint (endpoints/get-agora-method
-                    (:namespace props)
-                    (:name props)
-                    (:snapshotId props))
+                    (:namespace method-ref)
+                    (:name method-ref)
+                    (:snapshotId method-ref))
         :headers {"Content-Type" "application/json"}
         :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                    (if success?
@@ -122,7 +135,8 @@
         (when editing?
           [comps/SidebarButton {:color :success-green
                                 :text "Save" :icon :status-done
-                                :onClick #(do (commit state refs config props) (stop-editing state))}])
+                                :onClick #(do (commit state refs config props)
+                                              (stop-editing state))}])
         (when editing?
           [comps/SidebarButton {:color :exception-red :margin :top
                                 :text "Cancel Editing" :icon :x
@@ -162,7 +176,7 @@
                error])]))
        all-values)]))
 
-(defn- render-main-display [wrapped-config editing? inputs-outputs]
+(defn- render-main-display [this wrapped-config editing? inputs-outputs methods]
   (let [config (get-in wrapped-config ["methodConfiguration"])
         invalid-inputs (get-in wrapped-config ["invalidInputs"])
         invalid-outputs (get-in wrapped-config ["invalidOutputs"])]
@@ -187,12 +201,16 @@
      (input-output-list config "outputs" invalid-outputs editing? (inputs-outputs "outputs"))
      (create-section-header "Referenced Method")
      (create-section [MethodDetailsViewer
-                      {:name (get-in config ["methodRepoMethod" "methodName"])
+                      {:ref "methodDetailsViewer"
+                       :name (get-in config ["methodRepoMethod" "methodName"])
                        :namespace (get-in config ["methodRepoMethod" "methodNamespace"])
                        :snapshotId (get-in config ["methodRepoMethod" "methodVersion"])
-                       :config config}])]))
+                       :config config
+                       :methods methods
+                       :editing? editing?
+                       :onSnapshotIdChange #(react/call :load-new-method-template this %)}])]))
 
-(defn- render-display [state refs props]
+(defn- render-display [this state refs props]
   (let [wrapped-config (:loaded-config @state)
         config (wrapped-config "methodConfiguration")
         editing? (:editing? @state)]
@@ -212,7 +230,7 @@
                                 :force-login? (not (:has-refresh-token? @state))
                                 :after-login #(swap! state assoc :has-refresh-token? true)
                                 :on-success (:on-submission-success props)})])
-      (render-main-display wrapped-config editing? (:inputs-outputs @state))
+      (render-main-display this wrapped-config editing? (:inputs-outputs @state) (:methods @state))
       (clear-both)]]))
 
 (react/defc MethodConfigEditor
@@ -221,27 +239,14 @@
      {:editing? false
       :sidebar-visible? true})
    :render
-   (fn [{:keys [state refs props]}]
+   (fn [{:keys [this state refs props]}]
      (cond (and (:loaded-config @state) (contains? @state :locked?) (contains? @state :has-refresh-token?))
-           (render-display state refs props)
+           (render-display this state refs props)
            (:error @state) (style/create-server-error-message (:error @state))
            :else [:div {:style {:textAlign "center"}} [comps/Spinner {:text "Loading Method Configuration..."}]]))
    :component-did-mount
    (fn [{:keys [state props refs this]}]
-     (endpoints/call-ajax-orch
-       {:endpoint (endpoints/get-validated-workspace-method-config (:workspace-id props) (:config-id props))
-        :on-done (fn [{:keys [success? get-parsed-response status-text]}]
-                   (if success?
-                     (let [response (get-parsed-response)]
-                       (endpoints/call-ajax-orch
-                         {:endpoint endpoints/get-inputs-outputs
-                          :payload (get-in response ["methodConfiguration" "methodRepoMethod"])
-                          :headers {"Content-Type" "application/json"}
-                          :on-done (fn [{:keys [success? get-parsed-response]}]
-                                     (if success?
-                                       (swap! state assoc :loaded-config response :inputs-outputs (get-parsed-response))
-                                       (swap! state assoc :error ((get-parsed-response) "message"))))}))
-                     (swap! state assoc :error status-text)))})
+     (react/call :load-validated-method-config this)
      (endpoints/call-ajax-orch
        {:endpoint (endpoints/get-workspace (:workspace-id props))
         :on-done (fn [{:keys [success? get-parsed-response status-text]}]
@@ -253,6 +258,17 @@
         :on-done (fn [{:keys [success?]}]
                    ;; login checks validity of the token, so just check for existence
                    (swap! state assoc :has-refresh-token? success?))})
+     (endpoints/call-ajax-orch
+       {:endpoint endpoints/list-methods
+        :on-done (fn [{:keys [success? get-parsed-response status-text]}]
+                   (if success?
+                     (swap! state assoc :methods (->> (get-parsed-response)
+                                                      (map utils/keywordize-keys)
+                                                      (map #(select-keys % [:namespace :name :snapshotId]))
+                                                      (group-by (juxt :namespace :name))
+                                                      (map (fn [[k v]] [k (map :snapshotId v)]))
+                                                      (into {})))
+                     (swap! state assoc :error-message status-text)))})
      (set! (.-onScrollHandler this)
            (fn []
              (when-let [sidebar (@refs "sidebar")]
@@ -260,6 +276,58 @@
                  (when-not (= visible (:sidebar-visible? @state))
                    (swap! state assoc :sidebar-visible? visible))))))
      (.addEventListener js/window "scroll" (.-onScrollHandler this)))
+   :load-validated-method-config
+   (fn [{:keys [state props]}]
+     (endpoints/call-ajax-orch
+       {:endpoint (endpoints/get-validated-workspace-method-config (:workspace-id props) (:config-id props))
+        :on-done (fn [{:keys [success? get-parsed-response status-text]}]
+                     (if success?
+                       (let [response (get-parsed-response)]
+                            (endpoints/call-ajax-orch
+                              {:endpoint endpoints/get-inputs-outputs
+                               :payload (get-in response ["methodConfiguration" "methodRepoMethod"])
+                               :headers {"Content-Type" "application/json"}
+                               :on-done (fn [{:keys [success? get-parsed-response]}]
+                                            (if success?
+                                              (swap! state assoc :loaded-config response :inputs-outputs (get-parsed-response))
+                                              (swap! state assoc :error ((get-parsed-response) "message"))))}))
+                       (swap! state assoc :error status-text)))}))
+   :load-new-method-template
+   (fn [{:keys [state refs]} new-snapshot-id]
+     (let [namespace (get-in (:loaded-config @state) ["methodConfiguration" "methodRepoMethod" "methodNamespace"])
+           name (get-in (:loaded-config @state) ["methodConfiguration" "methodRepoMethod" "methodName"])
+           method-ref {"methodNamespace" namespace
+                       "methodName" name
+                       "methodVersion" new-snapshot-id}]
+       (swap! state assoc :blocker "Updating...")
+       (react/call :load-agora-method (@refs "methodDetailsViewer") {:namespace namespace
+                                                                     :name name
+                                                                     :snapshotId new-snapshot-id})
+       (endpoints/call-ajax-orch
+         {:endpoint (endpoints/create-template method-ref)
+          :payload method-ref
+          :headers {"Content-Type" "application/json"}
+          :on-done (fn [{:keys [success? get-parsed-response status-text]}]
+                       (if success?
+                         (let [response (get-parsed-response)]
+                              (endpoints/call-ajax-orch
+                                {:endpoint endpoints/get-inputs-outputs
+                                 :payload (get-in response ["methodRepoMethod"])
+                                 :headers {"Content-Type" "application/json"}
+                                 :on-done (fn [{:keys [success? get-parsed-response]}]
+                                            (swap! state dissoc :blocker)
+                                            (let [template {"methodConfiguration" (assoc response
+                                                                                    "namespace" namespace
+                                                                                    "name" name)}]
+                                              (if success?
+                                                (swap! state assoc :loaded-config (assoc template
+                                                                                    "invalidInputs" {}
+                                                                                    "validInputs" {}
+                                                                                    "invalidOutputs" {}
+                                                                                    "validOutputs" {})
+                                                       :inputs-outputs (get-parsed-response))
+                                                (swap! state assoc :error ((get-parsed-response) "message")))))}))
+                         (swap! state assoc :error status-text)))})))
    :component-will-unmount
    (fn [{:keys [this]}]
      (.removeEventListener js/window "scroll" (.-onScrollHandler this)))})
