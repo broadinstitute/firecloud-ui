@@ -32,14 +32,14 @@
        [:a {:href (if disabled?
                     "javascript:;"
                     (nav/create-href nav-context href))
-            :style {:display "block" :backgroundColor (style/color-for-status status)
-                    :margin "2px 0 0 2px" :height (- row-height-px 4)
+            :style {:display "block" :position "relative"
+                    :backgroundColor (style/color-for-status status)
+                    :margin "2px 0 2px 2px" :height (- row-height-px 4)
                     :cursor (when disabled? "default")
-                    :WebkitFilter (when disabled? "grayscale()")
-                    :position "relative"}
+                    :WebkitFilter (when disabled? "grayscale()")}
             :title (when disabled? disabled-text)}
-        [:span {:style {:display "block" :backgroundColor "rgba(0,0,0,0.2)"
-                        :position "absolute" :top 0 :right 0 :bottom 0 :left 0}}]
+        [:span {:style {:position "absolute" :top 0 :right 0 :bottom 0 :left 0
+                        :backgroundColor "rgba(0,0,0,0.2)"}}]
         (style/center {}
           (case status
             "Complete" [icons/CompleteIcon]
@@ -56,22 +56,22 @@
        [:a {:href (if disabled?
                     "javascript:;"
                     (nav/create-href nav-context href))
-            :style {:display "block"
+            :style {:display "flex" :alignItems "center"
                     :backgroundColor color
                     :color "white" :textDecoration "none"
                     :cursor (when disabled? "default")
                     :WebkitFilter (when disabled? "grayscale()")
-                    :height (- row-height-px 4)}
+                    :height (- row-height-px 4)
+                    :margin "2px 0"}
             :title (when disabled? disabled-text)}
         (when protected?
           [:span {:style {:display "block" :position "relative"}}
-           [:span {:style {:display "block" :position "absolute" :left -16 :top 17
+           [:span {:style {:display "block" :position "absolute" :left -16 :top -9
                            :width (- row-height-px 4) :padding "4px 0"
                            :backgroundColor "white" :color "#666" :fontSize "xx-small"
                            :transform "rotate(-90deg)"}}
             "RESTRICTED"]])
-        [:span {:style {:display "block" :padding "1em 0 0 24px" :fontWeight 600
-                        :position "relative"}}
+        [:span {:style {:paddingLeft 24 :fontWeight 600}}
          (:name data)]]))})
 
 (defn- get-workspace-name-string [ws]
@@ -147,7 +147,7 @@
                                                          :nav-context (:nav-context props)}])}
            {:header "Description" :starting-width (max 200 (min 500 (* max-description-length 10)))
             :content-renderer (fn [description]
-                                [:div {:style {:padding "0 0 16px 14px"}}
+                                [:div {:style {:paddingLeft 14}}
                                  (if description (-> description split-lines first)
                                    [:span {:style {:fontStyle "italic"}}
                                     "No description provided"])])}
@@ -155,7 +155,7 @@
             :sort-by #(case % "OWNER" 0 "WRITER" 1 "READER" 2 "NO ACCESS" 3 4) :sort-initial :asc
             :content-renderer
             (fn [accessLevel]
-              [:div {:style {:padding "0 0 16px 14px"}}
+              [:div {:style {:paddingLeft 14}}
                (clojure.string/capitalize accessLevel)])}
            {:header (react/create-element
                       [:span {:ref "anchor"
