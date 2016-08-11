@@ -33,8 +33,8 @@
                             :onClick #(swap! state assoc :foo "bar")}]))
          :data (:projects @state)
          :->row (fn [item]
-                  [item
-                   "Member"])}]))
+                  [(item "projectName")
+                  (item "role")])}]))
    :component-did-mount
    (fn [{:keys [this]}]
      (react/call :load-data this))
