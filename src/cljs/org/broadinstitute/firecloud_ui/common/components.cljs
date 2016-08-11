@@ -203,7 +203,7 @@
 (react/defc EntityDetails
   {:get-fields
    (fn [{:keys [refs]}]
-       {"methodVersion" (int (common/get-text refs "snapshotId"))})
+     {"methodVersion" (int (common/get-text refs "snapshotId"))})
    :render
    (fn [{:keys [props refs state this]}]
      (let [entity (:entity props)
