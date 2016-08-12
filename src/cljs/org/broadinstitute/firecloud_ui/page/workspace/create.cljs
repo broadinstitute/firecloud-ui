@@ -106,7 +106,10 @@
       {:endpoint (endpoints/get-billing-projects)
        :on-done (fn [{:keys [success? get-parsed-response]}]
                   (if success?
-                    (let [billing-projects (get-parsed-response)]
+                    (let [billing-projects (flatten (->> (get-parsed-response)
+                                                         (map utils/keywordize-keys)
+                                                         (map #(select-keys % [:projectName]))
+                                                         (map #(vals %))))]
                       (swap! state assoc :billing-projects billing-projects)
                       (if (empty? billing-projects)
                         (swap! state assoc :disabled-reason :no-billing)
