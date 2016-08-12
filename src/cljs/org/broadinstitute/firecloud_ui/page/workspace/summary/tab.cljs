@@ -221,10 +221,7 @@
         :on-done (fn [{:keys [success? status-text get-parsed-response]}]
                    (if success?
                      (swap! state update-in [:server-response]
-                       assoc :billing-projects (flatten (->> (get-parsed-response)
-                                                    (map utils/keywordize-keys)
-                                                    (map #(select-keys % [:projectName]))
-                                                    (map #(vals %)))))
+                       assoc :billing-projects (map #(% "projectName") (get-parsed-response)))
                      (swap! state update-in [:server-response]
                        assoc :server-error status-text)))}))
    :lock-or-unlock

@@ -98,20 +98,11 @@
                      :no-billing (str "You must have a billing project associated with your account"
                                       " to create a new workspace.")
                      "Project billing data failed to load.")
-        :onClick #(modal/push-modal [CreateDialog {:billing-projects (:billing-projects @state)
+        :onClick #(modal/push-modal [CreateDialog {:billing-projects (:billing-projects props)
                                                    :nav-context (:nav-context props)}])}]])
    :component-did-mount
-   (fn [{:keys [state]}]
-     (endpoints/call-ajax-orch
-      {:endpoint (endpoints/get-billing-projects)
-       :on-done (fn [{:keys [success? get-parsed-response]}]
-                  (if success?
-                    (let [billing-projects (flatten (->> (get-parsed-response)
-                                                         (map utils/keywordize-keys)
-                                                         (map #(select-keys % [:projectName]))
-                                                         (map #(vals %))))]
-                      (swap! state assoc :billing-projects billing-projects)
-                      (if (empty? billing-projects)
-                        (swap! state assoc :disabled-reason :no-billing)
-                        (swap! state dissoc :disabled-reason)))
-                    (swap! state assoc :disabled-reason :error)))}))})
+   (fn [{:keys [props state]}]
+     (let [disabled-reason (:disabled-reason props)]
+       (if (some? disabled-reason)
+         (swap! state assoc :disabled-reason disabled-reason)
+         (swap! state dissoc :disabled-reason))))})

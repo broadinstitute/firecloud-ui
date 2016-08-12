@@ -130,7 +130,9 @@
                        :borderBottom style/standard-line :borderRadius 4}
           :row-style {:height row-height-px :borderTop style/standard-line}
           :cell-content-style {:padding nil}
-          :toolbar (float-right [create/Button {:nav-context (:nav-context props)}] {:marginTop -5})
+          :toolbar (float-right [create/Button {:nav-context (:nav-context props)
+                                                :billing-projects (map #(% "projectName") (:billing-projects props))
+                                                :disabled-reason (:disabled-reason props)}] {:marginTop -5})
           :filter-groups [{:text "All" :pred (constantly true)}
                           {:text "Complete" :pred #(= "Complete" (:status %))}
                           {:text "Running" :pred #(= "Running" (:status %))}
@@ -194,7 +196,7 @@
          :else
          [:div {:style {:margin "0 2em"}}
           [WorkspaceTable
-           (assoc props :workspaces workspaces :billing-projects billing-projects)]])))
+           (assoc props :workspaces workspaces :billing-projects billing-projects :disabled-reason error-message)]])))
    :component-did-mount
    (fn [{:keys [state]}]
      (endpoints/call-ajax-orch
