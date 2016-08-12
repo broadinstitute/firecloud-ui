@@ -115,12 +115,45 @@
                                  (modal/pop-modal))
                              (swap! state assoc :server-error (get-parsed-response))))}))))))})
 
+
+(react/defc BillingProjectManagementPage
+  {:render
+   (fn [{:keys [props state]}]
+     (let [{:keys [load-error members]} @state]
+       (cond load-error [comps/ErrorViewer {:error load-error
+                                            :expect {403 "You are not an owner of this billing project."}}]
+             (not members) [comps/Spinner {:text "Loading project membership..."}]
+             :else
+             [:div {:style {:backgroundColor "white" :padding "1em"}}
+              [table/Table
+               {:toolbar (float-right [comps/Button {:text "Add User..." :style :add}])
+                :columns [{:header "Email" :starting-width 300}
+                          {:header "Role" :starting-width 100}
+                          {:header "Actions" :starting-width 100
+                           :filter-by :none :sort-by :none
+                           :content-renderer
+                           (fn [{:strs [email row]}]
+                             (style/create-link {:text "Remove"
+                                                 :onClick #(utils/log "remove")}))}]
+                :data members
+                :->row (fn [{:strs [email role] :as row}]
+                         [email
+                          role
+                          row])}]])))
+   :component-did-mount
+   (fn [{:keys [props state]}]
+     (endpoints/call-ajax-orch
+       {:endpoint (endpoints/list-billing-project-members (:project-name props))
+        :on-done (fn [{:keys [success? get-parsed-response]}]
+                   (swap! state assoc (if success? :members :load-error) (get-parsed-response)))}))})
+
+
 (react/defc BillingProjectTable
   {:reload
    (fn [{:keys [this]}]
      (react/call :load-data this))
    :render
-   (fn [{:keys [state this]}]
+   (fn [{:keys [props state this]}]
      (cond
        (:error-message @state) (style/create-server-error-message (:error-message @state))
        (nil? (:projects @state)) [comps/Spinner {:text "Loading billing projects..."}]
@@ -129,13 +162,13 @@
         {:columns [{:header "Project Name" :starting-width 300}
                    {:header "Role" :starting-width 300
                     :content-renderer
-                    (fn [role]
+                    (fn [{:strs [projectName role]}]
                       [:span {}
                        role
-                       (when (and false (= role "Owner")) ; disable until ready
+                       (when (= role "Owner")
                          (style/create-link {:text "Click to manage"
                                              :style {:marginLeft "1em"}
-                                             :onClick #(utils/log "manage")}))])}]
+                                             :onClick #((:on-select props) projectName)}))])}]
          :toolbar
          (float-right
            (when false ; hidden until implemented
@@ -144,9 +177,9 @@
                                        (modal/push-modal
                                          [CreateBillingProjectDialog {:on-success #(react/call :reload this)}]))}]))
          :data (:projects @state)
-         :->row (fn [item]
-                  [(item "projectName")
-                   (item "role")])}]))
+         :->row (fn [{:strs [projectName] :as row}]
+                  [projectName
+                   row])}]))
    :component-did-mount
    (fn [{:keys [this]}]
      (react/call :load-data this))
@@ -163,7 +196,14 @@
 
 (react/defc Page
   {:render
-   (fn [{:keys []}]
-     [:div {:style {:padding "1em"}}
-      [:h2 {} "Billing Management"]
-      [BillingProjectTable]])})
+   (fn [{:keys [state]}]
+     (let [{:keys [selected-project]} @state]
+       [:div {:style {:padding "1em"}}
+        [:div {:style {:fontSize "180%" :marginBottom "1em"}}
+         [comps/Breadcrumbs {:crumbs [{:text "Billing Management"
+                                       :onClick #(swap! state dissoc :selected-project)}
+                                      (when selected-project
+                                        {:text selected-project})]}]]
+        (if selected-project
+          [BillingProjectManagementPage {:project-name selected-project}]
+          [BillingProjectTable {:on-select #(swap! state assoc :selected-project %)}])]))})
