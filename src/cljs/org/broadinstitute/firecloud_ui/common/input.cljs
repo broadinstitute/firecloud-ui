@@ -48,7 +48,9 @@
 ;;              (do-failure fails)
 ;;              (do-success field1 field2)))
 (defn get-and-validate [refs & ids]
-  (concat (apply get-text refs ids) (apply validate refs ids)))
+  (if (= 1 (count ids))
+    (cons (get-text refs (first ids)) (validate refs (first ids)))
+    (concat (apply get-text refs ids) (apply validate refs ids))))
 
 
 ;; Some premade predicates:

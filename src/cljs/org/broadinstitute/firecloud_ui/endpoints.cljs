@@ -666,6 +666,20 @@
    :method :get
    :mock-data (utils/rand-subset ["broad-dsde-dev" "broad-institute"])})
 
+(defn get-billing-accounts []
+  {:path (str "/profile/billingAccounts?callback="
+           (js/encodeURIComponent (.. js/window -location -origin)))
+   :method :get
+   :mock-data
+   [{:accountName "billingAccounts/00473A-04A1D8-155CAB"
+     :firecloudHasAccess false}
+    {:accountName "billingAccounts/foo-bar-baz"
+     :firecloudHasAccess true}]})
+
+(def create-billing-project
+  {:path "/billing"
+   :method :post})
+
 (defn get-refresh-token-date []
   {:path "/profile/refreshTokenDate"
    :method :get})
