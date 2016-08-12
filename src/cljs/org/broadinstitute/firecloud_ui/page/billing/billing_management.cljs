@@ -23,7 +23,7 @@
        (nil? (:projects @state)) [comps/Spinner {:text "Loading billing projects..."}]
        :else
        [table/Table
-        {:columns [{:header "Project Name" :starting-width 400
+        {:columns [{:header "Project Name" :starting-width 400 :sort-by #(% "projectName")
                     :content-renderer
                     (fn [{:strs [projectName role]}]
                       (if (= role "Owner")
