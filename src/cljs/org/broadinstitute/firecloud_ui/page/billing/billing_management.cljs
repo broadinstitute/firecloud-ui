@@ -23,16 +23,14 @@
        (nil? (:projects @state)) [comps/Spinner {:text "Loading billing projects..."}]
        :else
        [table/Table
-        {:columns [{:header "Project Name" :starting-width 300}
-                   {:header "Role" :starting-width 300
+        {:columns [{:header "Project Name" :starting-width 400
                     :content-renderer
                     (fn [{:strs [projectName role]}]
-                      [:span {}
-                       role
-                       (when (= role "Owner")
-                         (style/create-link {:text "Click to manage"
-                                             :style {:marginLeft "1em"}
-                                             :onClick #((:on-select props) projectName)}))])}]
+                      (if (= role "Owner")
+                        (style/create-link {:text projectName
+                                            :onClick #((:on-select props) projectName)})
+                        projectName))}
+                   {:header "Role" :starting-width 100}]
          :toolbar
          (float-right
            (when false ; hidden until implemented
@@ -41,9 +39,9 @@
                                        (modal/push-modal
                                          [CreateBillingProjectDialog {:on-success #(react/call :reload this)}]))}]))
          :data (:projects @state)
-         :->row (fn [{:strs [projectName] :as row}]
-                  [projectName
-                   row])}]))
+         :->row (fn [{:strs [role] :as row}]
+                  [row
+                   role])}]))
    :component-did-mount
    (fn [{:keys [this]}]
      (react/call :load-data this))
