@@ -84,40 +84,6 @@
                {:workflow-id (get-in @state [:selected-workflow :id])}))]])})
 
 
-(defn- getErrorKeysFromInputResolutions [key inputResolutions]
-       (let [errors (filter (fn [m] (contains? m "error")) inputResolutions)
-             keyedErrors (map utils/keywordize-keys errors)]
-            (map key keyedErrors)))
-
-
-(react/defc WorkflowFailuresTable
-  {:render
-   (fn [{:keys [props]}]
-     [table/Table
-      {:empty-message "No Workflows"
-       :columns [{:header "Data Entity" :starting-width 200 :sort-by (juxt :type :name)
-                  :filter-by (fn [entity]
-                               (str (:type entity) " " (:name entity)))
-                  :content-renderer (fn [entity]
-                                      (str (:name entity) " (" (:type entity) ")"))}
-                 {:header "Input" :starting-width 300 :sort-by count
-                  :content-renderer (fn [input-list]
-                                        [:div {}
-                                         (map (fn [error]
-                                                  [:div {} error])
-                                              input-list)])}
-                 {:header "Errors" :starting-width 500 :sort-by count
-                  :content-renderer (fn [error-list]
-                                      [:div {}
-                                       (map (fn [error]
-                                              [:div {} error])
-                                         error-list)])}]
-       :data (:workflows props)
-       :->row (fn [row]
-                [{:type (row "entityType") :name (row "entityName")}
-                 (getErrorKeysFromInputResolutions :inputName (row "inputResolutions"))
-                 (getErrorKeysFromInputResolutions :error (row "inputResolutions"))])}])})
-
 
 (react/defc AbortButton
   {:render (fn [{:keys [state this]}]
@@ -190,11 +156,7 @@
           [:h2 {:style {:paddingBottom "0.5em"}} "Workflows:"]
           [WorkflowsTable {:workflows (submission "workflows")
                            :workspace-id (:workspace-id props)
-                           :submission-id (submission "submissionId")}]
-          (when-not (empty? (submission "notstarted"))
-            [:div {}
-             [:h2 {:style {:padding "3em 0 0.5em 0"}} "Failed to Start:"]
-             [WorkflowFailuresTable {:workflows (submission "notstarted")}]])])))
+                           :submission-id (submission "submissionId")}]])))
    :load-details
    (fn [{:keys [props state]}]
      (endpoints/call-ajax-orch

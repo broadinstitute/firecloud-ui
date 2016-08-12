@@ -94,8 +94,8 @@
 
 
 (defn- render-cell [{:keys [width onResizeMouseDown onSortClick sortOrder] :as props}]
-  [:div {:style (merge {:display "inline-block" :verticalAlign "bottom"
-                        :position "relative" :width width :minWidth 10}
+  [:div {:style (merge {:position "relative" :minWidth 10
+                        :flexGrow 0 :flexShrink 0 :flexBasis width}
                   (:cell-style props))}
    (when (:onResizeMouseDown props)
      [:div {:style {:position "absolute" :width 20 :top 0 :bottom 0 :left (- width 10) :zIndex 1
@@ -131,7 +131,7 @@
           (fn [row-index row]
             (let [row-style (:row-style props)
                   row-style (if (fn? row-style) (row-style row-index row) row-style)]
-              [:div {:style (merge {:whiteSpace "nowrap"} row-style)}
+              [:div {:style (merge {:display "flex" :alignItems "center"} row-style)}
                (map
                  (fn [col]
                    (let [render-content (or (:content-renderer col)
@@ -152,7 +152,7 @@
 (defn render-header [state props this]
   (let [{:keys [sort-column sort-order]} (:query-params @state)]
     [:div {:style (merge
-                    {:fontWeight 500 :fontSize "80%"
+                    {:display "flex" :fontWeight 500 :fontSize "80%"
                      :color "#fff" :backgroundColor (:header-darkgray style/colors)}
                     (:header-row-style props))}
      (map
