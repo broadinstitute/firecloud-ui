@@ -186,8 +186,12 @@
 
 
 (react/defc WorkspaceList
-  {:render
+  {:get-initial-state
+   (fn []
+       {:disabled-reason :not-loaded})
+   :render
    (fn [{:keys [props state]}]
+       (utils/cljslog @state)
      (let [server-response (:server-response @state)
            {:keys [workspaces billing-projects error-message]} server-response]
        (cond
@@ -196,7 +200,7 @@
          :else
          [:div {:style {:margin "0 2em"}}
           [WorkspaceTable
-           (assoc props :workspaces workspaces :billing-projects billing-projects :disabled-reason error-message)]])))
+           (assoc props :workspaces workspaces :billing-projects billing-projects :disabled-reason (:disabled-reason @state))]])))
    :component-did-mount
    (fn [{:keys [state]}]
      (endpoints/call-ajax-orch
@@ -215,9 +219,9 @@
         :on-done (fn [{:keys [success? status-text get-parsed-response]}]
                    (if success?
                      (swap! state update-in [:server-response]
-                       assoc :billing-projects (get-parsed-response))
+                       assoc :billing-projects (get-parsed-response) :disabled-reason nil)
                      (swap! state update-in [:server-response]
-                       assoc :error-message status-text)))}))})
+                       assoc :error-message status-text :disabled-reason :error)))}))})
 
 
 (defn- create-breadcrumbs-from-hash [hash]

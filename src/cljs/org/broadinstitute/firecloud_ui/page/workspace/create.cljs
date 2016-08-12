@@ -83,26 +83,17 @@
 
 
 (react/defc Button
-  {:get-initial-state
-   (fn []
-     {:disabled-reason :not-loaded})
-   :render
+  {:render
    (fn [{:keys [props state]}]
      (assert (:nav-context props) "Missing :nav-context prop")
      [:div {:style {:display "inline"}}
       [comps/Button
        {:text "Create New Workspace..." :style :add
-        :disabled? (case (:disabled-reason @state)
+        :disabled? (case (:disabled-reason props)
                      nil false
                      :not-loaded "Project billing data has not yet been loaded."
                      :no-billing (str "You must have a billing project associated with your account"
                                       " to create a new workspace.")
                      "Project billing data failed to load.")
         :onClick #(modal/push-modal [CreateDialog {:billing-projects (:billing-projects props)
-                                                   :nav-context (:nav-context props)}])}]])
-   :component-did-mount
-   (fn [{:keys [props state]}]
-     (let [disabled-reason (:disabled-reason props)]
-       (if (some? disabled-reason)
-         (swap! state assoc :disabled-reason disabled-reason)
-         (swap! state dissoc :disabled-reason))))})
+                                                   :nav-context (:nav-context props)}])}]])})
