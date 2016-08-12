@@ -22,18 +22,15 @@
      (@refs "textfield"))
    :render
    (fn [{:keys [state props]}]
-     (style/create-text-field {:ref "textfield"
-                               :style (merge (or (:style props) {})
-                                        (when (:invalid @state)
-                                          {:borderColor (:exception-red style/colors)}))
-                               :onChange #(do (swap! state dissoc :invalid)
-                                              (when-let [x (:onChange props)]
-                                                (x %)))
-                               :defaultValue (:defaultValue props)
-                               :value (:value props)
-                               :placeholder (:placeholder props)
-                               :disabled (:disabled props)
-                               :spellCheck (:spellCheck props)}))})
+     (style/create-text-field
+       (merge {:ref "textfield"
+               :style (merge (or (:style props) {})
+                             (when (:invalid @state)
+                               {:borderColor (:exception-red style/colors)}))
+               :onChange #(do (swap! state dissoc :invalid)
+                           (when-let [x (:onChange props)]
+                             (x %)))}
+              (dissoc props :ref :style :onChange))))})
 
 (defn get-text [refs & ids]
   (if (= 1 (count ids))

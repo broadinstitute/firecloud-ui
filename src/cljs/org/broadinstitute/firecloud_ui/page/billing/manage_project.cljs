@@ -14,26 +14,28 @@
 
 (react/defc AddUserDialog
   {:render
-   (fn [{:keys [props state this]}]
+   (fn [{:keys [props state this refs]}]
      [modal/OKCancelForm
       {:header (str "Add user to " (:project-name props))
        :ok-button #(react/call :add-user this)
+       :get-first-element-dom-node #(react/find-dom-node (@refs "email"))
        :content
        (react/create-element
-         [:div {:style {:width "75vw"}}
+         [:div {:style {:width "420px"}}
           (when (:adding? @state)
             [comps/Blocker {:banner "Adding user..."}])
           [:div {:style {:display "flex"}}
            [:div {:style {:flex "1 1 auto"}}
             (style/create-form-label "User email")
             [input/TextField {:ref "email" :style {:width "100%"}
-                              :predicates [(input/valid-email "Email")]}]]
+                              :predicates [(input/valid-email "Email")]
+                              :onKeyDown (common/create-key-handler [:enter] #(react/call :add-user this))}]]
            [:div {:style {:flex "0 0 10px"}}]
            [:div {:style {:flex "0 0 100px"}}
             (style/create-form-label "Role")
             (style/create-identity-select {:ref "role"} ["User" "Owner"])]]
           [:div {:style {:marginBottom "1em"}}
-           "Warning: This user will be able to spend your money"]
+           "Warning: Adding any user to this project will mean they can incur costs to the billing associated with this project."]
           (style/create-validation-error-message (:fails @state))
           [comps/ErrorViewer {:error (:server-error @state)
                               :expect {404 "This is not a registered user"}}]])}])
