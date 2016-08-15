@@ -131,7 +131,7 @@
           :row-style {:height row-height-px :borderTop style/standard-line}
           :cell-content-style {:padding nil}
           :toolbar (float-right [create/Button {:nav-context (:nav-context props)
-                                                :billing-projects (map #(% "projectName") (:billing-projects props))
+                                                :billing-projects (:billing-projects props)
                                                 :disabled-reason (:disabled-reason @state)}] {:marginTop -5})
           :filter-groups [{:text "All" :pred (constantly true)}
                           {:text "Complete" :pred #(= "Complete" (:status %))}
@@ -188,18 +188,21 @@
 (react/defc WorkspaceList
   {:get-initial-state
    (fn []
-     {:disabled-reason :not-loaded})
+     {:server-response {:disabled-reason :not-loaded}})
    :render
    (fn [{:keys [props state]}]
      (let [server-response (:server-response @state)
-           {:keys [workspaces billing-projects error-message]} server-response]
+           {:keys [workspaces billing-projects error-message disabled-reason]} server-response]
        (cond
          error-message (style/create-server-error-message error-message)
          (some nil? [workspaces billing-projects]) [comps/Spinner {:text "Loading workspaces..."}]
          :else
          [:div {:style {:margin "0 2em"}}
           [WorkspaceTable
-           (assoc props :workspaces workspaces :billing-projects billing-projects :disabled-reason (:disabled-reason @state))]])))
+           (assoc props
+             :workspaces workspaces
+             :billing-projects billing-projects
+             :disabled-reason disabled-reason)]])))
    :component-did-mount
    (fn [{:keys [state]}]
      (endpoints/call-ajax-orch
@@ -217,11 +220,12 @@
        {:endpoint (endpoints/get-billing-projects)
         :on-done (fn [{:keys [success? status-text get-parsed-response]}]
                    (if success?
-                     (swap! state update-in [:server-response]
-                       assoc :billing-projects (get-parsed-response)
-                       dissoc :billing-projects)
-                     (swap! state update-in [:server-response]
-                       assoc :error-message status-text :disabled-reason :error)))}))})
+                     (let [billing-projects (get-parsed-response)]
+                       (swap! state update-in [:server-response] assoc
+                              :billing-projects (map #(% "projectName") billing-projects)
+                              :disabled-reason (if (empty? billing-projects) :no-billing nil)))
+                     (swap! state update-in [:server-response] assoc
+                            :error-message status-text :disabled-reason :error)))}))})
 
 
 (defn- create-breadcrumbs-from-hash [hash]
@@ -237,7 +241,7 @@
 
 (react/defc Page
   {:render
-   (fn [{:keys [props refs]}]
+   (fn [{:keys [props]}]
      (let [nav-context (nav/parse-segment (:nav-context props))
            selected-ws-id (common/get-id-from-nav-segment (:segment nav-context))]
        [:div {}
