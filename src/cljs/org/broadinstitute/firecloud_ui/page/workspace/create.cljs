@@ -84,7 +84,7 @@
 
 (react/defc Button
   {:render
-   (fn [{:keys [props state]}]
+   (fn [{:keys [props]}]
      (assert (:nav-context props) "Missing :nav-context prop")
      [:div {:style {:display "inline"}}
       [comps/Button
