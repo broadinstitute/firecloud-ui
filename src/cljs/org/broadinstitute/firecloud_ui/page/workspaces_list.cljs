@@ -132,7 +132,7 @@
           :cell-content-style {:padding nil}
           :toolbar (float-right [create/Button {:nav-context (:nav-context props)
                                                 :billing-projects (map #(% "projectName") (:billing-projects props))
-                                                :disabled-reason (:disabled-reason props)}] {:marginTop -5})
+                                                :disabled-reason (:disabled-reason @state)}] {:marginTop -5})
           :filter-groups [{:text "All" :pred (constantly true)}
                           {:text "Complete" :pred #(= "Complete" (:status %))}
                           {:text "Running" :pred #(= "Running" (:status %))}
@@ -188,10 +188,9 @@
 (react/defc WorkspaceList
   {:get-initial-state
    (fn []
-       {:disabled-reason :not-loaded})
+     {:disabled-reason :not-loaded})
    :render
    (fn [{:keys [props state]}]
-       (utils/cljslog @state)
      (let [server-response (:server-response @state)
            {:keys [workspaces billing-projects error-message]} server-response]
        (cond
@@ -219,7 +218,8 @@
         :on-done (fn [{:keys [success? status-text get-parsed-response]}]
                    (if success?
                      (swap! state update-in [:server-response]
-                       assoc :billing-projects (get-parsed-response) :disabled-reason nil)
+                       assoc :billing-projects (get-parsed-response)
+                       dissoc :billing-projects)
                      (swap! state update-in [:server-response]
                        assoc :error-message status-text :disabled-reason :error)))}))})
 
