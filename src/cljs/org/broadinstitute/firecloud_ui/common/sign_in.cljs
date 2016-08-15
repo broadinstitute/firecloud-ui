@@ -60,20 +60,21 @@
                        :fontSize "137%" :fontWeight 400 :lineHeight 1}}
          (:title props)]
         [:div {:style {:padding "22px 48px 40px" :backgroundColor (:background-gray style/colors)}}
-         (if success?
-           [:div {:style {:color (:success-green style/colors)}} "Sign-in complete."
-            [:div {:style {:marginTop 20 :textAlign "center"}}
-             [comps/Button {:text "Close" :onClick modal/pop-modal}]]]
-           [:div {}
+          [:div {}
             (:message props)
             [:div {:style {:marginTop 20 :textAlign "center"}}
-             [Button {:on-login (fn [message]
-                                  (let [token (get message "access_token")]
-                                    (reset! u/access-token token)
-                                    (u/set-access-token-cookie token)
-                                    (swap! state assoc :success? true)
-                                    (when-let [callback (:callback props)]
-                                      (callback))))}]]])]]))
+              [Button {:on-login (fn [message]
+                                   (let [token (get message "access_token")]
+                                     (reset! u/access-token token)
+                                     (u/set-access-token-cookie token)
+                                     (swap! state assoc :success? true)))}]]]]]))
+   :component-did-update
+   (fn [{:keys [state props]}]
+     (let [{:keys [success?]} @state]
+       (when success?
+         (modal/pop-modal)
+         (when-let [callback (:callback props)]
+           (callback)))))
    :component-will-mount
    (fn []
      (set! showing-dialog? true))
