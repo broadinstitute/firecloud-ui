@@ -466,7 +466,7 @@
       (fn [{:keys [success? status-code get-parsed-response]}]
         (swap! state assoc :user-email (get-in (get-parsed-response) ["userInfo" "userEmail"]))
         (cond
-          (= status-code 502)
+          (= status-code 0)
           (do (reset! utils/maintenance-mode? true) (swap! state assoc :user-status :error))
           (contains? (set (range 500 600)) status-code)
           (do (reset! utils/server-down? true) (swap! state assoc :user-status :error))
