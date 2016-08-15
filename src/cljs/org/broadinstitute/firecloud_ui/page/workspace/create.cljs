@@ -83,32 +83,17 @@
 
 
 (react/defc Button
-  {:get-initial-state
-   (fn []
-     {:disabled-reason :not-loaded})
-   :render
-   (fn [{:keys [props state]}]
+  {:render
+   (fn [{:keys [props]}]
      (assert (:nav-context props) "Missing :nav-context prop")
      [:div {:style {:display "inline"}}
       [comps/Button
        {:text "Create New Workspace..." :style :add
-        :disabled? (case (:disabled-reason @state)
+        :disabled? (case (:disabled-reason props)
                      nil false
                      :not-loaded "Project billing data has not yet been loaded."
                      :no-billing (str "You must have a billing project associated with your account"
                                       " to create a new workspace.")
                      "Project billing data failed to load.")
-        :onClick #(modal/push-modal [CreateDialog {:billing-projects (:billing-projects @state)
-                                                   :nav-context (:nav-context props)}])}]])
-   :component-did-mount
-   (fn [{:keys [state]}]
-     (endpoints/call-ajax-orch
-      {:endpoint (endpoints/get-billing-projects)
-       :on-done (fn [{:keys [success? get-parsed-response]}]
-                  (if success?
-                    (let [billing-projects (get-parsed-response)]
-                      (swap! state assoc :billing-projects billing-projects)
-                      (if (empty? billing-projects)
-                        (swap! state assoc :disabled-reason :no-billing)
-                        (swap! state dissoc :disabled-reason)))
-                    (swap! state assoc :disabled-reason :error)))}))})
+        :onClick #(modal/push-modal [CreateDialog {:billing-projects (:billing-projects props)
+                                                   :nav-context (:nav-context props)}])}]])})
