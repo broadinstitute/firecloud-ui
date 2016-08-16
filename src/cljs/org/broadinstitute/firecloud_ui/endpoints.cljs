@@ -680,6 +680,19 @@
   {:path "/billing"
    :method :post})
 
+(defn list-billing-project-members [project-id]
+  {:path (str "/billing/" project-id "/members")
+   :method :get})
+
+(defn add-billing-project-user [{:keys [project-id role user-email]}]
+  {:path (str "/billing/" project-id "/" role "/" user-email)
+   :method :put})
+
+(defn delete-billing-project-user [{:keys [project-id role user-email]}]
+  {:path (str "/billing/" project-id "/" role "/" user-email)
+   :method :delete})
+
+
 (defn get-refresh-token-date []
   {:path "/profile/refreshTokenDate"
    :method :get})

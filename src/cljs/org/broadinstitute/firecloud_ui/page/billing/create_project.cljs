@@ -1,14 +1,12 @@
-(ns org.broadinstitute.firecloud-ui.page.billing-management
+(ns org.broadinstitute.firecloud-ui.page.billing.create-project
   (:require
     [dmohs.react :as react]
-    [org.broadinstitute.firecloud-ui.common :as common]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
     [org.broadinstitute.firecloud-ui.common.input :as input]
     [org.broadinstitute.firecloud-ui.common.modal :as modal]
     [org.broadinstitute.firecloud-ui.common.sign-in :as sign-in]
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.common.table :as table]
-    [org.broadinstitute.firecloud-ui.common.table-utils :refer [float-right]]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
     [org.broadinstitute.firecloud-ui.utils :as utils]
     ))
@@ -76,11 +74,11 @@
      ; register a function in the JS window
      ; this window's child can access the function by calling its window.opener
      (aset js/window sign-in/handler-fn-name
-       (fn [message]
-         (let [token (get message "access_token")]
-           (reset! utils/access-token token)
-           (utils/set-access-token-cookie token)
-           (react/call :get-billing-accounts this)))))
+           (fn [message]
+             (let [token (get message "access_token")]
+               (reset! utils/access-token token)
+               (utils/set-access-token-cookie token)
+               (react/call :get-billing-accounts this)))))
    :component-will-unmount
    (fn []
      (js-delete js/window sign-in/handler-fn-name))
@@ -112,58 +110,5 @@
                            (swap! state dissoc :creating?)
                            (if success?
                              (do ((:on-success props))
-                                 (modal/pop-modal))
+                               (modal/pop-modal))
                              (swap! state assoc :server-error (get-parsed-response))))}))))))})
-
-(react/defc BillingProjectTable
-  {:reload
-   (fn [{:keys [this]}]
-     (react/call :load-data this))
-   :render
-   (fn [{:keys [state this]}]
-     (cond
-       (:error-message @state) (style/create-server-error-message (:error-message @state))
-       (nil? (:projects @state)) [comps/Spinner {:text "Loading billing projects..."}]
-       :else
-       [table/Table
-        {:columns [{:header "Project Name" :starting-width 300}
-                   {:header "Role" :starting-width 300
-                    :content-renderer
-                    (fn [role]
-                      [:span {}
-                       role
-                       (when (and false (= role "Owner")) ; disable until ready
-                         (style/create-link {:text "Click to manage"
-                                             :style {:marginLeft "1em"}
-                                             :onClick #(utils/log "manage")}))])}]
-         :toolbar
-         (float-right
-           (when false ; hidden until implemented
-             [comps/Button {:text "Create New Billing Project"
-                            :onClick (fn []
-                                       (modal/push-modal
-                                         [CreateBillingProjectDialog {:on-success #(react/call :reload this)}]))}]))
-         :data (:projects @state)
-         :->row (fn [item]
-                  [(item "projectName")
-                   (item "role")])}]))
-   :component-did-mount
-   (fn [{:keys [this]}]
-     (react/call :load-data this))
-   :load-data
-   (fn [{:keys [state]}]
-     (endpoints/call-ajax-orch
-       {:endpoint (endpoints/get-billing-projects)
-        :on-done
-        (fn [{:keys [success? get-parsed-response status-text]}]
-          (if success?
-            (swap! state assoc :projects (get-parsed-response))
-            (swap! state assoc :error-message status-text)))}))})
-
-
-(react/defc Page
-  {:render
-   (fn [{:keys []}]
-     [:div {:style {:padding "1em"}}
-      [:h2 {} "Billing Management"]
-      [BillingProjectTable]])})

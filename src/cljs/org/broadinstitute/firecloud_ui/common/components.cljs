@@ -330,14 +330,14 @@
   {:render
    (fn [{:keys [props]}]
      (let [sep [:span {} " " (icons/font-icon {:style {:fontSize "50%"}} :angle-right) " "]
-           crumbs (:crumbs props)]
+           crumbs (filter some? (:crumbs props))]
        (case (count crumbs)
          0 [:div {}]
          1 [:div {} (:text (first crumbs))]
          [:div {}
           (interpose sep
-            (map-indexed
-              (fn [index {:keys [text onClick href] :as link-props}]
+            (map
+              (fn [{:keys [text onClick href] :as link-props}]
                 [:span {:style {:fontSize "60%" :verticalAlign "middle" :whiteSpace "pre"}}
                  (if (or onClick href)
                    (style/create-link link-props)
