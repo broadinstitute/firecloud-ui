@@ -15,48 +15,51 @@
   [:div {:style {:padding "1em 0 2em 0"}} children])
 
 (defn view-attributes [state refs]
-  [:div {:style {:display "inline-block"}}
+  [:div {}
    (style/create-section-header "Workspace Attributes")
    (create-section
      (when (or (:saving? @state) (:deleting? @state))
        [comps/Blocker {:banner "Updating..."}])
      [:div {}
       (map-indexed
-        (fn [i a]
-          [:div {}
-           [:div {:style {:float "left" :marginRight "0.5em"}}
+        (fn [i [attr-key attr-value]]
+          [:div {:style {:display "flex" :alignItems "baseline"}}
+           [:div {:style {:flex "1 0 auto" :marginRight "0.5em"}}
             (style/create-text-field
               {:ref (str "key_" i)
-               :value (first a)
+               :value attr-key
                :onChange #(swap! state update-in [:attrs-list i]
                            assoc 0 (-> % .-target .-value))
                :disabled (or (not (:editing? @state))
                            (contains? (:reserved-keys @state) i))
-               :style (if (or (contains? (:reserved-keys @state) i)
-                            (not (:editing? @state)))
-                        {:backgroundColor (:background-gray style/colors)}
-                        {:backgroundColor "#fff"})})]
-           [:div {:style {:float "right"}}
+               :style (merge
+                        (if (or (contains? (:reserved-keys @state) i)
+                                (not (:editing? @state)))
+                          {:backgroundColor (:background-gray style/colors)}
+                          {:backgroundColor "#fff"})
+                        {:width "100%"})})]
+           [:div {:style {:flex "1 0 auto"}}
             (style/create-text-field
               {:ref (str "val_" i)
-               :value (second a)
+               :value attr-value
                :onChange #(swap! state update-in [:attrs-list i]
                            assoc 1 (-> % .-target .-value))
                :disabled (not (:editing? @state))
-               :style (if-not (:editing? @state)
-                        {:backgroundColor (:background-gray style/colors)}
-                        {:backgroundColor "#fff"})})
-            (when (:editing? @state)
-              (icons/font-icon
-                {:style {:paddingLeft "0.5em" :padding "1em 0.7em"
-                         :color "red" :cursor "pointer"}
-                 :onClick (fn [e]
-                            (when (contains? (:reserved-keys @state) i)
-                              ;if it's reserved delete i from the reservation list
-                              (swap! state update-in [:reserved-keys] utils/delete i))
-                            ;delete the item from the list unconditionally
-                            (swap! state update-in [:attrs-list] utils/delete i))}
-                :x))]
+               :style (merge
+                        (if-not (:editing? @state)
+                          {:backgroundColor (:background-gray style/colors)}
+                          {:backgroundColor "#fff"})
+                        {:width "100%"})})]
+           (when (:editing? @state)
+             (icons/font-icon
+               {:style {:color "red" :cursor "pointer" :margin "0 0.5em"}
+                :onClick (fn [e]
+                           (when (contains? (:reserved-keys @state) i)
+                             ;if it's reserved delete i from the reservation list
+                             (swap! state update-in [:reserved-keys] utils/delete i))
+                           ;delete the item from the list unconditionally
+                           (swap! state update-in [:attrs-list] utils/delete i))}
+               :x))
            (common/clear-both)])
         (:attrs-list @state))
       (when (:editing? @state)
