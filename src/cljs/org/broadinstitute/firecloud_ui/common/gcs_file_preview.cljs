@@ -82,6 +82,6 @@
      (fn [{:keys [props]}]
        (assert (:bucket-name props) "No bucket name provided")
        (assert (:object props) "No GCS object provided")
-       [:div (if-let [style-props (:style-props props)] style-props {})
+       [:div (or (:attributes props) {})
         [:a {:href "javascript:;" :onClick #(modal/push-modal [PreviewDialog props])}
          (:object props)]])}))

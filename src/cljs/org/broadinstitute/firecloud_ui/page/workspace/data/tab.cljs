@@ -82,7 +82,6 @@
                        [:div {}
                         [:div {:style {:float "left"}} built-in]
                         (when-let [selected-entity-type (:selected-entity-type @state)]
-                          (utils/log selected-entity-type)
                           [:a {:style {:textDecoration "none" :float "left" :margin "7px 0 0 1em"}
                                :href (str (config/api-url-root) "/cookie-authed/workspaces/"
                                           (:namespace workspace-id) "/"
@@ -103,7 +102,9 @@
             :attribute-renderer (fn [maybe-uri]
                                   (if (string? maybe-uri)
                                     (if-let [parsed (common/parse-gcs-uri maybe-uri)]
-                                      [GCSFilePreviewLink parsed]
+                                      [GCSFilePreviewLink (assoc parsed :attributes
+                                                            {:style {:direction "rtl" :marginRight "0.5em"
+                                                                     :overflow "hidden" :textOverflow "ellipsis"}})]
                                       maybe-uri)
                                     (table-utils/default-render maybe-uri)))}])]))
    :component-did-mount
