@@ -81,5 +81,5 @@
             :on-done (fn [{:keys [success? get-parsed-response]}]
                        (swap! state dissoc :working?)
                        (if success?
-                         ((:on-success props) project name)
+                         (do (modal/pop-modal) ((:on-success props) project name))
                          (swap! state assoc :error (get-parsed-response))))}))))})
