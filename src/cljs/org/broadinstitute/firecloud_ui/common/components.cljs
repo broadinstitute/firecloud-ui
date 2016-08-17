@@ -354,12 +354,14 @@
      {:slider-position (or (:initial-slider-position props) 100)})
    :render
    (fn [{:keys [props state]}]
-     (let [{:keys [left right top bottom]} props]
+     (let [{:keys [left right top bottom]} props
+           grab-bar [:div {:style {:flex "0 0 2px" :borderRadius 1 :backgroundColor "#d0d0d0"}}]]
        (assert (or (and left right) (and top bottom)) "Either specify left/right or top/bottom for SplitPane")
        [:div {:style {:display "flex" :flexDirection (if left "row" "column")}}
         [:div {:style {:flexGrow 0 :flexShrink 0 :flexBasis (:slider-position @state)}}
          (or left top)]
         [:div {:style {:flex "0 0 10px"
+                       :display "flex" :flexDirection (if left "column" "row") :justifyContent "center"
                        :backgroundColor (:background-gray style/colors)
                        :margin (if left "0 3px" "3px 0")
                        :cursor (if left "ew-resize" "ns-resize")}
@@ -367,7 +369,10 @@
                               (swap! state assoc
                                      :dragging? true
                                      :mouse-pos (if left (.-clientX e) (.-clientY e))
-                                     :text-selection (common/disable-text-selection)))}]
+                                     :text-selection (common/disable-text-selection)))}
+         [:div {:style {:flex "0 0 10px" :padding 1
+                        :display "flex" :flexDirection (if left "row" "column") :justifyContent "space-between"}}
+          grab-bar grab-bar grab-bar]]
         [:div {:style {:flex "1 0 0" :overflow "auto"}}
          (or right bottom)]]))
    :component-did-mount
