@@ -204,14 +204,15 @@
    (fn [] {:synced true})
    :render
    (fn [{:keys [state this]}]
-     [:div {}
+     [:div {:style {:display "inline-flex"}}
       (style/create-text-field
         {:ref "filter-field" :placeholder "Filter"
-         :style {:backgroundColor (if (:synced @state) "#fff" (:tag-background style/colors))}
+         :style {:backgroundColor (if (:synced @state) "#fff" (:tag-background style/colors))
+                 :borderRadius "3px 0 0 3px" :marginBottom 0}
          :onKeyDown (common/create-key-handler [:enter] #(react/call :apply-filter this))
          :onChange #(swap! state assoc :synced false)})
-      [:span {:style {:paddingLeft "1em"}}]
-      [comps/Button {:icon :search :onClick #(react/call :apply-filter this)}]])
+      [comps/Button {:icon :search :onClick #(react/call :apply-filter this)
+                     :style {:borderRadius "0 3px 3px 0"}}]])
    :apply-filter
    (fn [{:keys [state props refs]}]
      (swap! state assoc :synced true)

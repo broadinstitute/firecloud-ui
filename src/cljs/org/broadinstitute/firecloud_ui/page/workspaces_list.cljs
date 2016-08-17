@@ -128,7 +128,7 @@
           :resizable-columns? true :reorderable-columns? false :resize-tab-color (:line-gray style/colors)
           :body-style {:fontSize nil :fontWeight nil
                        :borderLeft style/standard-line :borderRight style/standard-line
-                       :borderBottom style/standard-line :borderRadius 4}
+                       :borderBottom style/standard-line}
           :row-style {:height row-height-px :borderTop style/standard-line}
           :cell-content-style {:padding nil}
           :toolbar (float-right [create/Button {:nav-context (:nav-context props)

@@ -80,16 +80,22 @@
               (when (:removing? @state)
                 [comps/Blocker {:banner "Removing user..."}])
               [table/Table
-               {:toolbar (float-right
-                           [comps/Button {:text "Add User..." :style :add
+               {:header-row-style {:fontWeight nil :fontSize "90%"
+                                   :color (:text-light style/colors) :backgroundColor nil}
+                :header-style {:padding "0.5em 0 0.5em 14px"}
+                :row-style {:fontSize "120%" :backgroundColor (:background-gray style/colors)
+                            :borderRadius 8 :margin "4px 0"}
+                :reorderable-columns? false :resize-tab-color (:line-gray style/colors)
+                :toolbar (float-right
+                           [comps/Button {:text "Add User..." :type :add
                                           :onClick (fn [_]
                                                      (modal/push-modal
                                                        [AddUserDialog {:project-name (:project-name props)
                                                                        :on-add #(react/call :load this)}]))}])
-                :columns [{:header "Email" :starting-width 300}
-                          {:header "Role" :starting-width 100}
-                          {:header "Actions" :starting-width 100
-                           :filter-by :none :sort-by :none
+                :columns [{:header "Email" :starting-width 500}
+                          {:header "Role" :starting-width 100 :resizable? false}
+                          {:starting-width 100
+                           :filter-by :none :sort-by :none :resizable? false
                            :as-text
                            (fn [{:strs [email role]}]
                              (str "Remove " (clojure.string/lower-case role) " " email))
