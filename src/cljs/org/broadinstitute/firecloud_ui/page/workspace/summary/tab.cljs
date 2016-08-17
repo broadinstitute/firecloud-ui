@@ -4,7 +4,7 @@
     [org.broadinstitute.firecloud-ui.common :as common]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
     [org.broadinstitute.firecloud-ui.common.icons :as icons]
-    [org.broadinstitute.firecloud-ui.common.markdown :refer [MarkdownView]]
+    [org.broadinstitute.firecloud-ui.common.markdown :refer [MarkdownView MarkdownEditor]]
     [org.broadinstitute.firecloud-ui.common.modal :as modal]
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
@@ -85,7 +85,7 @@
            {:style :light :color :button-blue :margin :top
             :text "Save" :icon :document
             :onClick #(attributes/save-attributes state props this
-                        (common/get-text refs "descriptionArea"))}]
+                        (react/call :get-text (@refs "description")))}]
           [comps/SidebarButton
            {:style :light :color :exception-red :margin :top
             :text "Cancel Editing" :icon :x
@@ -163,11 +163,7 @@
      (style/create-section-header "Description")
      (style/create-paragraph
        (let [description (not-empty (get-in ws ["workspace" "attributes" "description"]))]
-         (cond (:editing? @state) (react/create-element
-                                    (style/create-text-area {:ref "descriptionArea"
-                                                             :defaultValue description
-                                                             :style {:width "100%"}
-                                                             :rows 10}))
+         (cond (:editing? @state) (react/create-element [MarkdownEditor {:ref "description" :initial-text description}])
                description [MarkdownView {:text description}]
                :else [:span {:style {:fontStyle "italic"}} "No description provided"])))
      (attributes/view-attributes state refs)]))

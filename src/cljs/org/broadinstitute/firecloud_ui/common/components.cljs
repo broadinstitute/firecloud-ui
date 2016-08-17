@@ -346,3 +346,53 @@
           sep
           [:span {:style {:verticalAlign "middle"}}
            (:text (last crumbs))]])))})
+
+
+(react/defc SplitPane
+  {:get-initial-state
+   (fn [{:keys [props]}]
+     {:slider-position (or (:initial-slider-position props) 100)})
+   :render
+   (fn [{:keys [props state]}]
+     (let [{:keys [left right top bottom]} props
+           grab-bar [:div {:style {:flex "0 0 2px" :borderRadius 1 :backgroundColor "#d0d0d0"}}]]
+       (assert (or (and left right) (and top bottom)) "Either specify left/right or top/bottom for SplitPane")
+       [:div {:style {:display "flex" :flexDirection (if left "row" "column")}}
+        [:div {:style {:flexGrow 0 :flexShrink 0 :flexBasis (:slider-position @state)}}
+         (or left top)]
+        [:div {:style {:flex "0 0 10px"
+                       :display "flex" :flexDirection (if left "column" "row") :justifyContent "center"
+                       :backgroundColor (:background-gray style/colors)
+                       :margin (if left "0 3px" "3px 0")
+                       :cursor (if left "ew-resize" "ns-resize")}
+               :onMouseDown (fn [e]
+                              (swap! state assoc
+                                     :dragging? true
+                                     :mouse-pos (if left (.-clientX e) (.-clientY e))
+                                     :text-selection (common/disable-text-selection)))}
+         [:div {:style {:flex "0 0 10px" :padding 1
+                        :display "flex" :flexDirection (if left "row" "column") :justifyContent "space-between"}}
+          grab-bar grab-bar grab-bar]]
+        [:div {:style {:flex "1 0 0" :overflow "auto"}}
+         (or right bottom)]]))
+   :component-did-mount
+   (fn [{:keys [props state locals]}]
+     (let [{:keys [left]} props
+           on-mouse-up #(when (:dragging? @state)
+                         (common/restore-text-selection (:text-selection @state))
+                         (swap! state dissoc :dragging? :text-selection))
+           on-mouse-move (fn [e]
+                           (when (:dragging? @state)
+                             (let [start-pos (:mouse-pos @state)
+                                   pos (if left (.-clientX e) (.-clientY e))]
+                               (when-not (= start-pos pos)
+                                 (swap! state assoc
+                                        :slider-position (+ (:slider-position @state) (- pos start-pos))
+                                        :mouse-pos pos)))))]
+       (swap! locals assoc :on-mouse-up on-mouse-up :on-mouse-move on-mouse-move)
+       (.addEventListener js/window "mouseup" on-mouse-up)
+       (.addEventListener js/window "mousemove" on-mouse-move)))
+   :component-will-unmount
+   (fn [{:keys [locals]}]
+     (.removeEventListener js/window "mouseup" (:on-mouse-up @locals))
+     (.removeEventListener js/window "mousemove" (:on-mouse-move @locals)))})
