@@ -72,50 +72,54 @@
                                  "Running" [icons/RunningIcon {:size 36}]
                                  "Exception" [icons/ExceptionIcon {:size 36}])
                          :color (style/color-for-status status)}]
-     (when (or owner? writer?)
-       (if (not (:editing? @state))
-         [comps/SidebarButton
-          {:style :light :color :button-blue :margin :top
-           :text "Edit" :icon :pencil
-           :onClick #(swap! state assoc
-                       :reserved-keys (vec (range 0 (count (:attrs-list @state))))
-                       :orig-attrs (:attrs-list @state) :editing? true)}]
-         [:div {}
-          [comps/SidebarButton
-           {:style :light :color :button-blue :margin :top
-            :text "Save" :icon :document
-            :onClick #(attributes/save-attributes state props this
-                        (react/call :get-text (@refs "description")))}]
-          [comps/SidebarButton
-           {:style :light :color :exception-red :margin :top
-            :text "Cancel Editing" :icon :x
-            :onClick #(swap! state assoc
-                        :editing? false
-                        :attrs-list (:orig-attrs @state))}]]))
-     (when-not (:editing? @state)
-       [comps/SidebarButton {:style :light :margin :top :color :button-blue
-                             :text "Clone..." :icon :plus
-                             :disabled? (when (empty? billing-projects) "No billing projects available")
-                             :onClick #(modal/push-modal
-                                        [WorkspaceCloner
-                                         {:on-success (fn [namespace name]
-                                                        (swap! state dissoc :cloning?)
-                                                        ((:on-clone props) (str namespace ":" name)))
-                                          :workspace-id (:workspace-id props)
-                                          :description (get-in ws ["workspace" "attributes" "description"])
-                                          :is-protected? (get-in ws ["workspace" "isProtected"])
-                                          :billing-projects billing-projects}])}])
-     (when-not (and owner? (:editing? @state))
-       [comps/SidebarButton {:style :light :margin :top :color :button-blue
-                             :text (if locked? "Unlock" "Lock") :icon :locked
-                             :onClick #(react/call :lock-or-unlock this locked?)}])
-     (when-not (and owner? (:editing? @state))
-       [comps/SidebarButton {:style :light :margin :top :color :exception-red
-                             :text "Delete" :icon :trash-can
-                             :disabled? (if locked? "This workspace is locked")
-                             :onClick #(modal/push-modal [DeleteDialog
-                                                          {:workspace-id (:workspace-id props)
-                                                           :on-delete (:on-delete props)}])}])]))
+     [:div {:ref "sidebar"}]
+     (style/create-unselectable :div {:style {:position (when-not (:sidebar-visible? @state) "fixed")
+                                              :top (when-not (:sidebar-visible? @state) 0)
+                                              :width 270}}
+       (when (or owner? writer?)
+         (if (not (:editing? @state))
+           [comps/SidebarButton
+            {:style :light :color :button-blue :margin :top
+             :text "Edit" :icon :pencil
+             :onClick #(swap! state assoc
+                         :reserved-keys (vec (range 0 (count (:attrs-list @state))))
+                         :orig-attrs (:attrs-list @state) :editing? true)}]
+           [:div {}
+            [comps/SidebarButton
+             {:style :light :color :button-blue :margin :top
+              :text "Save" :icon :document
+              :onClick #(attributes/save-attributes state props this
+                          (react/call :get-text (@refs "description")))}]
+            [comps/SidebarButton
+             {:style :light :color :exception-red :margin :top
+              :text "Cancel Editing" :icon :x
+              :onClick #(swap! state assoc
+                          :editing? false
+                          :attrs-list (:orig-attrs @state))}]]))
+       (when-not (:editing? @state)
+         [comps/SidebarButton {:style :light :margin :top :color :button-blue
+                               :text "Clone..." :icon :plus
+                               :disabled? (when (empty? billing-projects) "No billing projects available")
+                               :onClick #(modal/push-modal
+                                          [WorkspaceCloner
+                                           {:on-success (fn [namespace name]
+                                                          (swap! state dissoc :cloning?)
+                                                          ((:on-clone props) (str namespace ":" name)))
+                                            :workspace-id (:workspace-id props)
+                                            :description (get-in ws ["workspace" "attributes" "description"])
+                                            :is-protected? (get-in ws ["workspace" "isProtected"])
+                                            :billing-projects billing-projects}])}])
+       (when-not (and owner? (:editing? @state))
+         [comps/SidebarButton {:style :light :margin :top :color :button-blue
+                               :text (if locked? "Unlock" "Lock") :icon :locked
+                               :onClick #(react/call :lock-or-unlock this locked?)}])
+       (when-not (and owner? (:editing? @state))
+         [comps/SidebarButton {:style :light :margin :top :color :exception-red
+                               :text "Delete" :icon :trash-can
+                               :disabled? (if locked? "This workspace is locked")
+                               :onClick #(modal/push-modal [DeleteDialog
+                                                            {:workspace-id (:workspace-id props)
+                                                             :on-delete (:on-delete props)}])}]))]))
 
 
 (defn- render-main [state props refs ws owner? bucket-access? submissions-count]
@@ -173,6 +177,9 @@
    (fn [{:keys [state this]}]
      (swap! state dissoc :server-response :submission-response)
      (react/call :load-workspace this))
+   :get-initial-state
+   (fn []
+     {:sidebar-visible? true})
    :render
    (fn [{:keys [refs state props this]}]
      (let [server-response (:server-response @state)
@@ -233,5 +240,15 @@
                    (swap! state dissoc :locking?)
                    (react/call :refresh this))}))
    :component-did-mount
-   (fn [{:keys [this]}]
-     (react/call :load-workspace this))})
+   (fn [{:keys [state refs this locals]}]
+     (react/call :load-workspace this)
+     (swap! locals assoc :scroll-handler
+            (fn []
+              (when-let [sidebar (@refs "sidebar")]
+                (let [visible (< (.-scrollY js/window) (.-offsetTop sidebar)) ]
+                  (when-not (= visible (:sidebar-visible? @state))
+                    (swap! state assoc :sidebar-visible? visible))))))
+     (.addEventListener js/window "scroll" (:scroll-handler @locals)))
+   :component-will-unmount
+   (fn [{:keys [locals]}]
+     (.removeEventListener js/window "scroll" (:scroll-handler @locals)))})
