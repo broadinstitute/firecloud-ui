@@ -24,7 +24,7 @@
       (map-indexed
         (fn [i [attr-key attr-value]]
           [:div {:style {:display "flex" :alignItems "baseline"}}
-           [:div {:style {:flex "1 0 auto" :marginRight "0.5em"}}
+           [:div {:style {:flex "35 0 auto" :marginRight "0.5em"}}
             (style/create-text-field
               {:ref (str "key_" i)
                :value attr-key
@@ -38,7 +38,7 @@
                           {:backgroundColor (:background-gray style/colors)}
                           {:backgroundColor "#fff"})
                         {:width "100%"})})]
-           [:div {:style {:flex "1 0 auto"}}
+           [:div {:style {:flex "65 0 auto"}}
             (style/create-text-field
               {:ref (str "val_" i)
                :value attr-value
