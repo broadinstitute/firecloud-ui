@@ -15,7 +15,7 @@
 (react/defc Page
   {:render
    (fn [{:keys [state refs this]}]
-     [:div {:style {:textAlign "center"}}
+     [:div {:style {:textAlign "center" :width "50vw"}}
       (when (:loading? @state)
         [comps/Blocker {:banner "Uploading file..."}])
 
