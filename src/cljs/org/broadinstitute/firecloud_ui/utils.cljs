@@ -157,7 +157,7 @@
                       (when (and (not @server-down?)  (not @maintenance-mode?))
                         (cond
                           (contains? #{0 502} status-code) (reset! maintenance-mode? true)
-                          (contains? (set (range 500 600)) status-code) (reset! server-down? true)))
+                          (contains? (set (range 501 600)) status-code) (reset! server-down? true)))
                       ;; Handle auth token expiration
                       (if (and (= status-code 401) (not ignore-auth-expiration?))
                         (do
