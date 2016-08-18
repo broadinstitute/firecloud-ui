@@ -468,7 +468,7 @@
         (cond
           (contains? #{0 502} status-code)
           (do (reset! utils/maintenance-mode? true) (swap! state assoc :user-status :error))
-          (contains? (set (range 500 600)) status-code)
+          (contains? (set (range 501 600)) status-code)
           (do (reset! utils/server-down? true) (swap! state assoc :user-status :error))
           (= 401 status-code)
           (on-failure)
