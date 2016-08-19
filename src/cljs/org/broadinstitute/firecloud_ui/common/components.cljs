@@ -349,7 +349,10 @@
 
 
 (react/defc SplitPane
-  {:get-initial-state
+  {:get-default-props
+   (fn []
+     {:overflow-left "auto"})
+   :get-initial-state
    (fn [{:keys [props]}]
      {:slider-position (or (:initial-slider-position props) 100)})
    :render
@@ -358,7 +361,7 @@
            grab-bar [:div {:style {:flex "0 0 2px" :borderRadius 1 :backgroundColor "#d0d0d0"}}]]
        (assert (or (and left right) (and top bottom)) "Either specify left/right or top/bottom for SplitPane")
        [:div {:style {:display "flex" :flexDirection (if left "row" "column")}}
-        [:div {:style {:flexGrow 0 :flexShrink 0 :flexBasis (:slider-position @state)}}
+        [:div {:style {:flexGrow 0 :flexShrink 0 :flexBasis (:slider-position @state) :overflow (:overflow-left props)}}
          (or left top)]
         [:div {:style {:flex "0 0 10px"
                        :display "flex" :flexDirection (if left "column" "row") :justifyContent "center"
