@@ -6,6 +6,7 @@
    [org.broadinstitute.firecloud-ui.common.style :as style]
    [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
    [org.broadinstitute.firecloud-ui.nav :as nav]
+   [org.broadinstitute.firecloud-ui.page.workspace.analysis.tab :as analysis-tab]
    [org.broadinstitute.firecloud-ui.page.workspace.data.tab :as data-tab]
    [org.broadinstitute.firecloud-ui.page.workspace.method-configs.tab :as method-configs-tab]
    [org.broadinstitute.firecloud-ui.page.workspace.monitor.tab :as monitor-tab]
@@ -78,14 +79,16 @@
 
 (def ^:private SUMMARY "Summary")
 (def ^:private DATA "Data")
+(def ^:private ANALYSIS "Analysis")
 (def ^:private CONFIGS "Method Configurations")
 (def ^:private MONITOR "Monitor")
 (defn- tab-string-to-index [tab-string]
   ;; for some reason the more compact "case" isn't working with strings :(
   (cond
     (= tab-string DATA) 1
-    (= tab-string CONFIGS) 2
-    (= tab-string MONITOR) 3
+    (= tab-string ANALYSIS) 2
+    (= tab-string CONFIGS) 3
+    (= tab-string MONITOR) 4
     :else 0))
 
 (react/defc WorkspaceDetails
@@ -116,6 +119,11 @@
                            (react/create-element
                              [data-tab/WorkspaceData {:ref DATA :workspace-id workspace-id}])
                            :onTabRefreshed #(react/call :refresh (@refs DATA))}
+                          {:text ANALYSIS :href (nav/create-href (:nav-context props) ANALYSIS)
+                           :content
+                           (react/create-element
+                             [analysis-tab/Page {:ref ANALYSIS :workspace-id workspace-id}])
+                           :onTabRefreshed #(react/call :refresh (@refs ANALYSIS))}
                           {:text CONFIGS :href (nav/create-href (:nav-context props) CONFIGS)
                            :content
                            (react/create-element
