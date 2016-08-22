@@ -16,12 +16,13 @@
 (react/defc TrackSelectionDialog
   {:get-initial-state
    (fn [{:keys [props]}]
-     {:tracks (:tracks props)})
+     {:tracks-set (set (:tracks props))
+      :tracks-vec (vec (:tracks props))})
    :render
    (fn [{:keys [props state]}]
      [modal/OKCancelForm
       {:header "Select IGV Tracks"
-       :ok-button {:text "Load" :onClick #(do ((:on-ok props) (:tracks @state)) (modal/pop-modal))}
+       :ok-button {:text "Load" :onClick #(do ((:on-ok props) (:tracks-vec @state)) (modal/pop-modal))}
        :content
        (react/create-element
          [:div {:style {:width "80vw" :background "white" :border style/standard-line}}
@@ -36,21 +37,26 @@
                            :attribute-renderer
                            (fn [data]
                              (if (and (string? data)
+                                      (not (contains? (:tracks-set @state) data))
                                       (let [lc-data (clojure.string/lower-case data)]
                                         (some #(.endsWith lc-data %) supported-file-types)))
                                [:div {:style {:overflow "hidden" :textOverflow "ellipsis" :direction "rtl" :marginRight "0.5em"}}
-                                (style/create-link {:text data :onClick #(swap! state update-in [:tracks] conj data)})]
+                                (style/create-link {:text data
+                                                    :onClick #(swap! state
+                                                                     (fn [s] (-> s
+                                                                                 (update-in [:tracks-set] conj data)
+                                                                                 (update-in [:tracks-vec] conj data))))})]
                                data))}]]
             :right
             [:div {:style {:width "100%"}}
              [:div {:style {:margin "1em 0 0 1em"}}
               "Selected tracks"]
-             (when (empty? (:tracks @state))
+             (when (empty? (:tracks-set @state))
                [:div {:style {:margin "1em"}}
                 "None--select a file on the left"])
              [:div {:style {:marginTop "1em" :overflowY "auto"}}
-              (map
-                (fn [track]
+              (map-indexed
+                (fn [index track]
                   [:div {:style {:display "flex" :alignItems "center" :padding 4}}
                    [:img {:src "assets/drag_temp.png"
                           :style {:flex "0 0 auto" :height 16 :cursor "ns-resize"}
@@ -59,9 +65,12 @@
                                   :whiteSpace "nowrap" :overflow "hidden" :textOverflow "ellipsis" :direction "rtl"}}
                     track]
                    (icons/font-icon {:style {:flex "0 0 auto" :color (:exception-red style/colors) :cursor "pointer"}
-                                     :onClick #(swap! state update-in [:tracks] disj track)}
+                                     :onClick #(swap! state
+                                                      (fn [s] (-> s
+                                                                  (update-in [:tracks-set] disj track)
+                                                                  (update-in [:tracks-vec] utils/delete index))))}
                                     :x)])
-                (:tracks @state))]]
+                (:tracks-vec @state))]]
             :initial-slider-position 700}]])}])})
 
 
@@ -70,7 +79,7 @@
    (fn [])
    :get-initial-state
    (fn []
-     {:tracks #{}})
+     {:tracks []})
    :render
    (fn [{:keys [props state]}]
      [:div {}
@@ -82,5 +91,5 @@
                           [TrackSelectionDialog
                            (assoc props
                              :tracks (:tracks @state)
-                             :on-ok #(swap! state assoc :tracks %))]))}]]
+                             :on-ok #(swap! state assoc :tracks (vec %)))]))}]]
       [igv/IGVContainer {:tracks (:tracks @state)}]])})
