@@ -206,7 +206,9 @@
 
 (defn move [vec start end]
   (let [elem (nth vec start)]
-    (insert (delete vec start) (if (> end start) (dec end) end) elem)))
+    (-> vec
+        (delete start)
+        (insert end elem))))
 
 
 (defn index-of [coll item]
