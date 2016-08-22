@@ -47,11 +47,11 @@
       (let [{:keys [stack]} @state]
         (map (fn [child]
                [:div {}
-                ; CodeMirror uses zIndex values up to 5; make sure that modals appear on top
-                [:div {:style {:position "fixed" :zIndex 6
+                ; IGV uses zIndex values up to 128; make sure that modals appear on top
+                [:div {:style {:position "fixed" :zIndex 129
                                :top 0 :bottom 0 :left 0 :right 0
                                :backgroundColor "rgba(110,110,110,0.4)"}}]
-                [:div {:style {:position "absolute" :zIndex 6
+                [:div {:style {:position "absolute" :zIndex 129
                                :top (+ (aget js/document "body" "scrollTop") 30)
                                :left 0
                                :width "100%"}}
