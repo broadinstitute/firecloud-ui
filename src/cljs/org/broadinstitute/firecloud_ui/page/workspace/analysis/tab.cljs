@@ -6,6 +6,7 @@
     [org.broadinstitute.firecloud-ui.common.icons :as icons]
     [org.broadinstitute.firecloud-ui.common.modal :as modal]
     [org.broadinstitute.firecloud-ui.common.style :as style]
+    [org.broadinstitute.firecloud-ui.page.workspace.analysis.igv :as igv]
     [org.broadinstitute.firecloud-ui.utils :as utils]
     ))
 
@@ -72,17 +73,14 @@
      {:tracks #{}})
    :render
    (fn [{:keys [props state]}]
-     [:div {:style {:padding "1em"}}
-      [comps/Button {:text "Select Tracks..."
-                     :onClick
-                     (fn [_]
-                       (modal/push-modal
-                         [TrackSelectionDialog
-                          (assoc props
-                            :tracks (:tracks @state)
-                            :on-ok #(swap! state assoc :tracks %))]))}]
-      [:div {} "Selected tracks:"]
-      (map
-        (fn [track]
-          [:div {} track])
-        (:tracks @state))])})
+     [:div {}
+      [:div {:style {:margin "1em"}}
+       [comps/Button {:text "Select Tracks..."
+                      :onClick
+                      (fn [_]
+                        (modal/push-modal
+                          [TrackSelectionDialog
+                           (assoc props
+                             :tracks (:tracks @state)
+                             :on-ok #(swap! state assoc :tracks %))]))}]]
+      [igv/IGVContainer {:tracks (:tracks @state)}]])})
