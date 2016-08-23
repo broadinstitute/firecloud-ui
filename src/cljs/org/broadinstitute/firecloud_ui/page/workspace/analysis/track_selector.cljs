@@ -40,7 +40,7 @@
      (let [{:keys [tracks-vec]} props]
        [:div {:style {:width "100%"}
               :onMouseMove (fn [e]
-                             (when (:dragging? @state)
+                             (when (:drag-index @state)
                                (let [y (.-clientY e)
                                      div-locs (map (fn [i]
                                                      {:index i
@@ -48,13 +48,9 @@
                                                       (let [rect (.getBoundingClientRect (@refs (str "track" i)))]
                                                         (/ (+ (.-top rect) (.-bottom rect)) 2))})
                                                    (range (count tracks-vec)))
-                                     closest-div (apply min-key #(js/Math.abs (- y (:midpoint %))) div-locs)]
-                                 (when-not (= (:drop-index @state) (:index closest-div))
-                                   (swap! state assoc :drop-index (:index closest-div))))))
-              :onMouseUp #(when (:dragging? @state)
-                           ((:reorder props) (:drag-index @state) (:drop-index @state))
-                           (common/restore-text-selection (:text-selection @state))
-                           (swap! state dissoc :dragging? :drag-index :drop-index :text-selection))}
+                                     closest-div-index (:index (apply min-key #(js/Math.abs (- y (:midpoint %))) div-locs))]
+                                 (when-not (= (:drop-index @state) closest-div-index)
+                                   (swap! state assoc :drop-index closest-div-index)))))}
         [:div {:style {:margin "1em 0 0 1em"}}
          "Selected tracks"]
         (when (empty? tracks-vec)
@@ -65,7 +61,9 @@
            (fn [index track]
              (if (= track :dummy)
                [:div {:ref (str "track" index)
-                      :style {:height 27 :marginRight 3 :border style/standard-line :borderRadius 4 :boxSizing "border-box"}}]
+                      :style {:display "flex" :alignItems "center" :justifyContent "center"
+                              :height 27 :marginRight 3 :border style/standard-line :borderRadius 4 :boxSizing "border-box"}}
+                [:span {:style {:fontStyle "italic"}} "Drop track here"]]
                [:div {:ref (str "track" index)
                       :style {:display "flex"
                               :alignItems "center" :padding 4}}
@@ -73,7 +71,7 @@
                   [:img {:src "assets/drag_temp.png"
                          :style {:flex "0 0 auto" :height 16 :cursor "ns-resize"}
                          :draggable false
-                         :onMouseDown #(swap! state assoc :dragging? true :drag-index index :drop-index index
+                         :onMouseDown #(swap! state assoc :drag-index index :drop-index index
                                               :text-selection (common/disable-text-selection))}])
                 [:div {:style {:flex "1 1 auto" :margin "0 8px"
                                :whiteSpace "nowrap" :overflow "hidden" :textOverflow "ellipsis" :direction "rtl"}}
@@ -81,11 +79,22 @@
                 (icons/font-icon {:style {:flex "0 0 auto" :color (:exception-red style/colors) :cursor "pointer"}
                                   :onClick #((:on-remove props) index track)}
                                  :x)]))
-           (if (:dragging? @state)
+           (if (:drag-index @state)
              (-> tracks-vec
                  (utils/delete (:drag-index @state))
                  (utils/insert (:drop-index @state) :dummy))
-             tracks-vec))]]))})
+             tracks-vec))]]))
+   :component-did-mount
+   (fn [{:keys [props state locals]}]
+     (let [mouse-up #(when (:drag-index @state)
+                      ((:reorder props) (:drag-index @state) (:drop-index @state))
+                      (common/restore-text-selection (:text-selection @state))
+                      (swap! state dissoc :drag-index :drop-index :text-selection))]
+       (swap! locals assoc :mouse-up mouse-up)
+       (.addEventListener js/window "mouseup" mouse-up)))
+   :component-will-unmount
+   (fn [{:keys [locals]}]
+     (.removeEventListener js/window "mouseup" (:mouse-up @locals)))})
 
 
 (react/defc TrackSelectionDialog
