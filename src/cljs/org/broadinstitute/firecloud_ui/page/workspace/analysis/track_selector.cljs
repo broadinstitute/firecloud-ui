@@ -11,8 +11,9 @@
     ))
 
 
-(def ^:private supported-file-types [".bam" ".vcf" ".bed"])
-
+; TODO: support .vcf and .bed
+;(def ^:private supported-file-types [".bam" ".vcf" ".bed"])
+(def ^:private supported-file-types [".bam"])
 
 (react/defc Left
   {:render

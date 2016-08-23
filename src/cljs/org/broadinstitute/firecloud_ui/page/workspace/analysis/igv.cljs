@@ -18,7 +18,8 @@
      :tracks (map-indexed (fn [index track]
                             {:name (str "Track " (inc index))
                              :url track
-                             :indexUrl (clojure.string/replace track #".bam" ".bai")
+                             ;; TODO: is this the right relationship between .bam and .bai?
+                             :indexURL (clojure.string/replace track #".bam$" ".bai")
                              :type "bam"
                              :sourceType "gcs"
                              :displayMode "EXPANDED"})
@@ -37,5 +38,4 @@
      (react/call :refresh this))
    :refresh
    (fn [{:keys [props refs locals]}]
-     ;(set! js/oauth.google.access_token (utils/get-access-token-cookie))
      (swap! locals assoc :browser (.createBrowser js/igv (@refs "div") (options (:tracks props)))))})
