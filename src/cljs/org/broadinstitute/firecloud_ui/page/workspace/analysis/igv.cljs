@@ -18,6 +18,8 @@
      :tracks (map-indexed (fn [index track]
                             {:name (str "Track " (inc index))
                              :url track
+                             :indexUrl (clojure.string/replace track #".bam" ".bai")
+                             :type "bam"
                              :sourceType "gcs"
                              :displayMode "EXPANDED"})
                           tracks)}))
