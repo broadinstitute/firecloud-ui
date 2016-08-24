@@ -5,8 +5,10 @@
     [org.broadinstitute.firecloud-ui.common.components :as comps]
     [org.broadinstitute.firecloud-ui.common.entity-table :refer [EntityTable]]
     [org.broadinstitute.firecloud-ui.common.icons :as icons]
+    [org.broadinstitute.firecloud-ui.common.input :as input]
     [org.broadinstitute.firecloud-ui.common.modal :as modal]
     [org.broadinstitute.firecloud-ui.common.style :as style]
+    [org.broadinstitute.firecloud-ui.page.workspace.analysis.igv-utils :as igv-utils]
     [org.broadinstitute.firecloud-ui.utils :as utils]
     ))
 
@@ -27,18 +29,49 @@
                     :attribute-renderer
                     (fn [data]
                       (if (and (string? data)
-                               (not (contains? (:tracks-set props) data))
+                               (not-any? #(= data (:track-url %)) (:tracks props))
                                (let [lc-data (clojure.string/lower-case data)]
                                  (some #(.endsWith lc-data %) supported-file-types)))
-                        [:div {:style {:overflow "hidden" :textOverflow "ellipsis" :direction "rtl" :marginRight "0.5em"}}
+                        [:div {:style {:overflow "hidden" :textOverflow "ellipsis" :direction "rtl" :textAlign "left"
+                                       :marginRight "0.5em"}}
                          (style/create-link {:text data
                                              :onClick #((:on-select props) data)})]
                         data))}]])})
 
+
+(react/defc SpecifyIndexDialog
+  {:render
+   (fn [{:keys [props state this]}]
+     (let [{:keys [track]} props]
+       [modal/OKCancelForm
+        {:header "Specify index file"
+         :ok-button #(react/call :ok this)
+         :content
+         (react/create-element
+           [:div {}
+            ".bam file:"
+            [:div {:style {:maxWidth 800 :margin "0.5em 0"}}
+             (:track-url track)]
+            [:div {} ".bai file:"]
+            [input/TextField {:ref "input"
+                              :style {:width 800 :marginTop "0.5em"}
+                              :predicates [(input/nonempty "Index file")
+                                           {:test #(.endsWith (clojure.string/lower-case %) ".bai")
+                                            :message "Index must be a .bai file"}]}]
+            (style/create-validation-error-message (:validation-errors @state))])}]))
+   :ok
+   (fn [{:keys [props state refs]}]
+     (let [[index-file & fails] (input/get-and-validate refs "input")]
+       (swap! state assoc :validation-errors fails)
+       (when-not fails
+         (reset! (:index-url (:track props)) index-file)
+         (modal/pop-modal))))})
+
+
 (react/defc Right
   {:render
    (fn [{:keys [props state refs]}]
-     (let [{:keys [tracks-vec]} props]
+     (let [{:keys [tracks]} props]
        [:div {:style {:width "100%"}
               :onMouseMove (fn [e]
                              (when (:drag-index @state)
@@ -48,13 +81,13 @@
                                                       :midpoint
                                                       (let [rect (.getBoundingClientRect (@refs (str "track" i)))]
                                                         (/ (+ (.-top rect) (.-bottom rect)) 2))})
-                                                   (range (count tracks-vec)))
+                                                   (range (count tracks)))
                                      closest-div-index (:index (apply min-key #(js/Math.abs (- y (:midpoint %))) div-locs))]
                                  (when-not (= (:drop-index @state) closest-div-index)
                                    (swap! state assoc :drop-index closest-div-index)))))}
         [:div {:style {:margin "1em 0 0 1em"}}
          "Selected tracks"]
-        (when (empty? tracks-vec)
+        (when (empty? tracks)
           [:div {:style {:margin "1em"}}
            "None--select a file on the left"])
         [:div {:style {:marginTop "1em" :overflowY "auto"}}
@@ -68,23 +101,28 @@
                [:div {:ref (str "track" index)
                       :style {:display "flex"
                               :alignItems "center" :padding 4}}
-                (when (> (count tracks-vec) 1)
+                (when (> (count tracks) 1)
                   [:img {:src "assets/drag_temp.png"
                          :style {:flex "0 0 auto" :height 16 :cursor "ns-resize"}
                          :draggable false
                          :onMouseDown #(swap! state assoc :drag-index index :drop-index index
                                               :text-selection (common/disable-text-selection))}])
-                [:div {:style {:flex "1 1 auto" :margin "0 8px"
-                               :whiteSpace "nowrap" :overflow "hidden" :textOverflow "ellipsis" :direction "rtl"}}
-                 track]
+                [:div {:style {:flex "1 1 auto" :margin "0 8px" :whiteSpace "nowrap"
+                               :overflow "hidden" :textOverflow "ellipsis" :direction "rtl" :textAlign "left"}}
+                 (case @(:index-url track)
+                   :pending [comps/Spinner {:height "1em" :text "Searching for index file..."}]
+                   :error [:span {:style {:color (:exception-red style/colors) :cursor "pointer"}
+                                  :onClick #(modal/push-modal [SpecifyIndexDialog {:track track}])}
+                           "Could not find index file.  Click to specify."]
+                   (:track-url track))]
                 (icons/font-icon {:style {:flex "0 0 auto" :color (:exception-red style/colors) :cursor "pointer"}
-                                  :onClick #((:on-remove props) index track)}
+                                  :onClick #((:on-remove props) index)}
                                  :x)]))
            (if (:drag-index @state)
-             (-> tracks-vec
+             (-> tracks
                  (utils/delete (:drag-index @state))
                  (utils/insert (:drop-index @state) :dummy))
-             tracks-vec))]]))
+             tracks))]]))
    :component-did-mount
    (fn [{:keys [props state locals]}]
      (let [mouse-up #(when (:drag-index @state)
@@ -101,30 +139,40 @@
 (react/defc TrackSelectionDialog
   {:get-initial-state
    (fn [{:keys [props]}]
-     {:tracks-set (set (:tracks props))
-      :tracks-vec (vec (:tracks props))})
+     {:tracks (vec (:tracks props))})
    :render
    (fn [{:keys [props state]}]
      [modal/OKCancelForm
       {:header "Select IGV Tracks"
-       :ok-button {:text "Load" :onClick #(do ((:on-ok props) (:tracks-vec @state)) (modal/pop-modal))}
+       :ok-button {:text "Load"
+                   :onClick
+                   #(if (->> (:tracks @state)
+                             (map :index-url)
+                             (map deref)
+                             (some keyword?))
+                     (swap! state assoc :index-error true)
+                     (do ((:on-ok props) (:tracks @state))
+                         (modal/pop-modal)))}
        :content
        (react/create-element
-         [:div {:style {:width "80vw" :background "white" :border style/standard-line}}
-          [comps/SplitPane
-           {:left [Left {:workspace-id (:workspace-id props)
-                         :tracks-set (:tracks-set @state)
-                         :on-select (fn [track]
-                                      (swap! state
-                                             (fn [s] (-> s
-                                                         (update-in [:tracks-set] conj track)
-                                                         (update-in [:tracks-vec] conj track)))))}]
-            :right [Right {:tracks-vec (:tracks-vec @state)
-                           :reorder (fn [start-index end-index]
-                                      (swap! state update-in [:tracks-vec] utils/move start-index end-index))
-                           :on-remove (fn [index track]
-                                        (swap! state
-                                               (fn [s] (-> s
-                                                           (update-in [:tracks-set] disj track)
-                                                           (update-in [:tracks-vec] utils/delete index)))))}]
-            :initial-slider-position 700}]])}])})
+         [:div {:style {:width "80vw"}}
+          [:div {:style {:background "white" :border style/standard-line}}
+           [comps/SplitPane
+            {:left [Left {:workspace-id (:workspace-id props)
+                          :tracks (:tracks @state)
+                          :on-select (fn [track-url]
+                                       (swap! state assoc :loading? true)
+                                       (let [index-atom (atom :pending)]
+                                         (add-watch index-atom :loader #(swap! state dissoc :loading?))
+                                         (igv-utils/find-index {:track-url track-url
+                                                                :on-success #(reset! index-atom %)
+                                                                :on-error #(reset! index-atom :error)})
+                                         (swap! state update-in [:tracks] conj {:track-url track-url :index-url index-atom})))}]
+             :right [Right {:tracks (:tracks @state)
+                            :reorder (fn [start-index end-index]
+                                       (swap! state update-in [:tracks] utils/move start-index end-index))
+                            :on-remove #(swap! state update-in [:tracks] utils/delete %)}]
+             :initial-slider-position 700}]]
+          (when (:index-error @state)
+            [:div {:style {:textAlign "center" :color (:exception-red style/colors) :marginTop "1em"}}
+             "All selected tracks must have associated index files.  Either manually specify them or remove them from the list."])])}])})

@@ -15,11 +15,10 @@
      :trackDefaults {:palette ["#00A0B0" "#6A4A3C" "#CC333F" "#EB6841"]
                      :bam {:coverageThreshold 0.2
                            :coverageQualityWeight true}}
-     :tracks (map-indexed (fn [index track]
+     :tracks (map-indexed (fn [index {:keys [track-url index-url]}]
                             {:name (str "Track " (inc index))
-                             :url track
-                             ;; TODO: is this the right relationship between .bam and .bai?
-                             :indexURL (clojure.string/replace track #".bam$" ".bai")
+                             :url track-url
+                             :indexURL @index-url
                              :type "bam"
                              :sourceType "gcs"
                              :displayMode "EXPANDED"})

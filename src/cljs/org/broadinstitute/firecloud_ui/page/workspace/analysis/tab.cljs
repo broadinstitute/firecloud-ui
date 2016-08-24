@@ -3,7 +3,7 @@
     [dmohs.react :as react]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
     [org.broadinstitute.firecloud-ui.common.modal :as modal]
-    [org.broadinstitute.firecloud-ui.page.workspace.analysis.igv :as igv :refer [IGVContainer]]
+    [org.broadinstitute.firecloud-ui.page.workspace.analysis.igv :refer [IGVContainer]]
     [org.broadinstitute.firecloud-ui.page.workspace.analysis.track-selector :refer [TrackSelectionDialog]]
     [org.broadinstitute.firecloud-ui.utils :as utils]
     ))
