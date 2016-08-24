@@ -88,6 +88,15 @@
                                    :transform "translate(-50%, -50%)"}})
    children])
 
+(defn left-ellipses [props & children]
+  [:div (deep-merge props {:style {:overflow "hidden" :textOverflow "ellipsis" :whiteSpace "nowrap"
+                                   :direction "rtl" :textAlign "left"}})
+   children])
+
+(defn right-ellipses [props & children]
+  [:div (deep-merge props {:style {:overflow "hidden" :textOverflow "ellipsis" :whiteSpace "nowrap"}})
+   children])
+
 (defn create-unselectable [type props & children]
   [type (deep-merge {:style {:userSelect "none" :MozUserSelect "none"
                              :WebkitTouchCallout "none" :WebkitUserSelect "none"

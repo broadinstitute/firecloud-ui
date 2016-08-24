@@ -32,10 +32,9 @@
                                (not-any? #(= data (:track-url %)) (:tracks props))
                                (let [lc-data (clojure.string/lower-case data)]
                                  (some #(.endsWith lc-data %) supported-file-types)))
-                        [:div {:style {:overflow "hidden" :textOverflow "ellipsis" :direction "rtl" :textAlign "left"
-                                       :marginRight "0.5em"}}
-                         (style/create-link {:text data
-                                             :onClick #((:on-select props) data)})]
+                        (style/left-ellipses {:style {:marginRight "0.5em"}}
+                                             (style/create-link {:text data
+                                                                 :onClick #((:on-select props) data)}))
                         data))}]])})
 
 
@@ -49,10 +48,10 @@
          :content
          (react/create-element
            [:div {}
-            ".bam file:"
-            [:div {:style {:maxWidth 800 :margin "0.5em 0"}}
+            (style/create-form-label ".bam file:")
+            [:div {:style {:maxWidth 800 :marginBottom "0.667em"}}
              (:track-url track)]
-            [:div {} ".bai file:"]
+            (style/create-form-label ".bai file:")
             [input/TextField {:ref "input"
                               :style {:width 800 :marginTop "0.5em"}
                               :predicates [(input/nonempty "Index file")
@@ -107,14 +106,14 @@
                          :draggable false
                          :onMouseDown #(swap! state assoc :drag-index index :drop-index index
                                               :text-selection (common/disable-text-selection))}])
-                [:div {:style {:flex "1 1 auto" :margin "0 8px" :whiteSpace "nowrap"
-                               :overflow "hidden" :textOverflow "ellipsis" :direction "rtl" :textAlign "left"}}
-                 (case @(:index-url track)
-                   :pending [comps/Spinner {:height "1em" :text "Searching for index file..."}]
-                   :error [:span {:style {:color (:exception-red style/colors) :cursor "pointer"}
-                                  :onClick #(modal/push-modal [SpecifyIndexDialog {:track track}])}
-                           "Could not find index file.  Click to specify."]
-                   (:track-url track))]
+                (case @(:index-url track)
+                  :pending [comps/Spinner {:height "1em" :text "Searching for index file..."}]
+                  :error (style/right-ellipses {:style {:flex "1 1 auto" :margin "0 8px"
+                                                        :color (:exception-red style/colors) :cursor "pointer"}
+                                                :onClick #(modal/push-modal [SpecifyIndexDialog {:track track}])}
+                                               "Could not find index file.  Click to specify.")
+                  (style/left-ellipses {:style {:flex "1 1 auto" :margin "0 8px"}}
+                                       (:track-url track)))
                 (icons/font-icon {:style {:flex "0 0 auto" :color (:exception-red style/colors) :cursor "pointer"}
                                   :onClick #((:on-remove props) index)}
                                  :x)]))
