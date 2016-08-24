@@ -94,9 +94,9 @@
            (fn [index track]
              (if (= track :dummy)
                [:div {:ref (str "track" index)
-                      :style {:display "flex" :alignItems "center" :justifyContent "center"
+                      :style {:display "flex" :alignItems "center"
                               :height 27 :marginRight 3 :border style/standard-line :borderRadius 4 :boxSizing "border-box"}}
-                [:span {:style {:fontStyle "italic"}} "Drop track here"]]
+                (style/left-ellipses {:style {:margin "0 4px"}} (:drag-url @state))]
                [:div {:ref (str "track" index)
                       :style {:display "flex"
                               :alignItems "center" :padding 4}}
@@ -104,7 +104,7 @@
                   [:img {:src "assets/drag_temp.png"
                          :style {:flex "0 0 auto" :height 16 :cursor "ns-resize"}
                          :draggable false
-                         :onMouseDown #(swap! state assoc :drag-index index :drop-index index
+                         :onMouseDown #(swap! state assoc :drag-index index :drop-index index :drag-url (:track-url track)
                                               :text-selection (common/disable-text-selection))}])
                 (case @(:index-url track)
                   :pending [comps/Spinner {:height "1em" :text "Searching for index file..."}]
@@ -127,7 +127,7 @@
      (let [mouse-up #(when (:drag-index @state)
                       ((:reorder props) (:drag-index @state) (:drop-index @state))
                       (common/restore-text-selection (:text-selection @state))
-                      (swap! state dissoc :drag-index :drop-index :text-selection))]
+                      (swap! state dissoc :drag-index :drop-index :drag-url :text-selection))]
        (swap! locals assoc :mouse-up mouse-up)
        (.addEventListener js/window "mouseup" mouse-up)))
    :component-will-unmount
