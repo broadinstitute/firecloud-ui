@@ -1,30 +1,35 @@
-
-
-- [ ] **Submitter**: Rebase to develop. DO NOT SQUASH
-- [ ] **Submitter**: Make sure Swagger is updated if API changes
-- [ ] **Submitter**: Make sure documentation for code is complete
-- [ ] **Submitter**: Review code comments; remove done TODOs, create stories for remaining TODOs
 - [ ] **Submitter**: Include the JIRA issue number in the PR description
-- [ ] **Submitter**: Add description or comments on the PR explaining the hows/whys (if not obvious)
-- [ ] **Submitter**: Tell tech lead that the PR exists if s/he wants to look at it
-- [ ] **Submitter**: Anoint a lead reviewer (LR). **Assign PR to LR**
-- [ ] **LR**: Initial review by LR and others.
-- [ ] Comment / review / update cycle:
-  * Rest of team may comments on PR at will
+- [ ] **Submitter**: Make sure Swagger is updated if API changes
+- [ ] **Submitter**: If updating admin endpoints, also update [firecloud-admin-cli](https://github.com/broadinstitute/firecloud-admin-cli)
+- [ ] **Submitter**: Check documentation and code comments. Add explanatory PR comments if helpful.
+- [ ] **Submitter**: JIRA ticket checks:
+  * Acceptance criteria exists and is met
+  * Note any changes to implementation from the description
+  * Add notes on what you've tested
+- [ ] **Submitter**: Update RC_XXX release ticket with any config or environment changes necessary
+- [ ] **Submitter**: Update FISMA documentation if changes to:
+  * Authentication
+  * Authorization
+  * Encryption
+  * Audit trails
+- [ ] **Submitter**: If you're adding new libraries, sign us up to security updates for them
+- [ ] Tell the tech lead (TL) that the PR exists if they wants to look at it
+- [ ] Anoint a lead reviewer (LR). **Assign PR to LR**
+* Review cycle:
+  * LR reviews
+  * Rest of team may comment on PR at will
   * **LR assigns to submitter** for feedback fixes
-  * Submitter updates documentation as needed
   * Submitter rebases to develop again if necessary
-  * Submitter makes further commits. DO NOT SQUASH. **Reassign to LR** for further feedback
-- [ ] **Tech lead**: sign off
-- [ ] **LR**: sign off
+  * Submitter makes further commits. DO NOT SQUASH
+  * Submitter updates documentation as needed
+  * Submitter **reassigns to LR** for further feedback
+- [ ] **TL** sign off
+- [ ] **LR** sign off
 - [ ] **Assign to submitter** to finalize
-- [ ] **Submitter**: Squash commits, rebase if necessary
 - [ ] **Submitter**: Verify all tests go green, including CI tests
-- [ ] **Submitter**: Merge to develop 
+- [ ] **Submitter**: Squash commits and merge to develop
 - [ ] **Submitter**: Delete branch after merge
-- [ ] **Submitter**: Check configuration files in Jenkins in case they need changes
-- [ ] **Submitter**: **Test this change works on dev environment after deployment**. YOU own getting it fixed if dev isn't 
-working for ANY reason!
-- [ ] **Submitter**: Verify swagger UI on dev server still works after deployment
+- [ ] **Submitter**: **Test this change works on dev environment after deployment**. YOU own getting it fixed if dev isn't working for ANY reason!
+- [ ] **Submitter**: Verify swagger UI on dev environment still works after deployment
 - [ ] **Submitter**: Inform other teams of any API changes via hipchat and/or email
 - [ ] **Submitter**: Mark JIRA issue as resolved once this checklist is completed
