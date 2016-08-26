@@ -139,10 +139,17 @@
                              [monitor-tab/Page {:ref MONITOR
                                                 :workspace-id workspace-id
                                                 :nav-context (nav/terminate-when (not= tab MONITOR) nav-context)}])
-                           :onTabRefreshed #(react/call :refresh (@refs MONITOR))}]}]]))
+                           :onTabRefreshed #(react/call :refresh (@refs MONITOR))}]
+                         :toolbar-right
+                         (when-let [analysis-tab (:analysis-tab @state)]
+                           (react/call :get-tracks-button analysis-tab))}]]))
    :component-did-mount
    (fn [{:keys [props state]}]
-    (endpoints/call-ajax-orch
-      {:endpoint (endpoints/check-bucket-read-access (:workspace-id props))
-       :on-done (fn [{:keys [success? status-code]}]
-                    (swap! state assoc :status-code status-code :bucket-access? success?))}))})
+     (endpoints/call-ajax-orch
+       {:endpoint (endpoints/check-bucket-read-access (:workspace-id props))
+        :on-done (fn [{:keys [success? status-code]}]
+                   (swap! state assoc :status-code status-code :bucket-access? success?))}))
+   :component-did-update
+   (fn [{:keys [prev-state state refs]}]
+     (when (not= (:analysis-tab prev-state) (@refs ANALYSIS))
+       (swap! state assoc :analysis-tab (@refs ANALYSIS))))})

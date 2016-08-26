@@ -110,6 +110,11 @@
         {:bucket-name (matcher 1)
          :object (matcher 2)}))))
 
+(defn gcs-uri->download-url [gcs-uri]
+  (let [parsed (parse-gcs-uri gcs-uri)]
+    (when parsed
+      (gcs-object->download-url (:bucket-name parsed) (:object parsed)))))
+
 (defn format-date [date & [format]]
   (-> date js/moment (.format (or format "LLL"))))
 

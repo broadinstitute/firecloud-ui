@@ -81,7 +81,7 @@
                  {:hovering? false})
                :render
                (fn [{:keys [props state]}]
-                 [:a {:style {:float "left" :padding "1em 2em"
+                 [:a {:style {:flex "0 0 auto" :padding "1em 2em"
                               :borderLeft (when (zero? (:index props)) style/standard-line)
                               :borderRight style/standard-line
                               :backgroundColor (when (:active? props) "white")
@@ -100,10 +100,11 @@
                     [:div {:style {:position "absolute" :bottom -1 :left 0 :width "100%" :height 2
                                    :backgroundColor "white"}}])])})]
     {:render
-     (fn [{:keys [this props]}]
-       (let [{:keys [selected-index items]} props]
+     (fn [{:keys [props]}]
+       (let [{:keys [selected-index items toolbar-right]} props]
          [:div {}
-          [:div {:style {:backgroundColor (:background-gray style/colors)
+          [:div {:style {:display "flex"
+                         :backgroundColor (:background-gray style/colors)
                          :borderTop style/standard-line
                          :borderBottom style/standard-line
                          :padding "0 1.5em"}}
@@ -116,7 +117,9 @@
                                       f (tab k)]
                                   (when f (f e))))}])
              items)
-           (common/clear-both)]
+           [:div {:style {:flexGrow 1}}]
+           [:div {:style {:alignSelf "center"}}
+            toolbar-right]]
           (let [active-item (nth items selected-index)]
             (:content active-item))]))}))
 
