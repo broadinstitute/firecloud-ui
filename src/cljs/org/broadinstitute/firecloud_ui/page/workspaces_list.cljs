@@ -132,7 +132,7 @@
           :cell-content-style {:padding nil}
           :toolbar (float-right [create/Button {:nav-context (:nav-context props)
                                                 :billing-projects (:billing-projects props)
-                                                :disabled-reason (:disabled-reason @state)}] {:marginTop -5})
+                                                :disabled-reason (:disabled-reason props)}] {:marginTop -5})
           :filter-groups [{:text "All" :pred (constantly true)}
                           {:text "Complete" :pred #(= "Complete" (:status %))}
                           {:text "Running" :pred #(= "Running" (:status %))}
