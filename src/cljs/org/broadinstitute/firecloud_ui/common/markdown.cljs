@@ -72,5 +72,5 @@
           :preview markdown-view
           :side-by-side [comps/SplitPane
                          {:left text-area :overflow-left "initial"
-                          :right markdown-view
+                          :right [:div {:style {:marginLeft 2}} markdown-view]
                           :initial-slider-position (:or (:initial-slider-position props) 500)}])]))})

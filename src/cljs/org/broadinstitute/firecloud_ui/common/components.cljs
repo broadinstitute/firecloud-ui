@@ -366,7 +366,6 @@
         [:div {:style {:flex "0 0 10px"
                        :display "flex" :flexDirection (if left "column" "row") :justifyContent "center"
                        :backgroundColor (:background-gray style/colors)
-                       :margin (if left "0 3px" "3px 0")
                        :cursor (if left "ew-resize" "ns-resize")}
                :onMouseDown (fn [e]
                               (swap! state assoc

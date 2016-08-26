@@ -29,6 +29,7 @@
                     :attribute-renderer
                     (fn [data]
                       (if (and (string? data)
+                               (.startsWith data "gs://")
                                (not-any? #(= data (:track-url %)) (:tracks props))
                                (let [lc-data (clojure.string/lower-case data)]
                                  (some #(.endsWith lc-data %) supported-file-types)))
@@ -36,35 +37,6 @@
                                              (style/create-link {:text data
                                                                  :onClick #((:on-select props) data)}))
                         data))}]])})
-
-
-(react/defc SpecifyIndexDialog
-  {:render
-   (fn [{:keys [props state this]}]
-     (let [{:keys [track]} props]
-       [modal/OKCancelForm
-        {:header "Specify index file"
-         :ok-button #(react/call :ok this)
-         :content
-         (react/create-element
-           [:div {}
-            (style/create-form-label ".bam file:")
-            [:div {:style {:maxWidth 800 :marginBottom "0.667em"}}
-             (:track-url track)]
-            (style/create-form-label ".bai file:")
-            [input/TextField {:ref "input"
-                              :style {:width 800 :marginTop "0.5em"}
-                              :predicates [(input/nonempty "Index file")
-                                           {:test #(.endsWith (clojure.string/lower-case %) ".bai")
-                                            :message "Index must be a .bai file"}]}]
-            (style/create-validation-error-message (:validation-errors @state))])}]))
-   :ok
-   (fn [{:keys [props state refs]}]
-     (let [[index-file & fails] (input/get-and-validate refs "input")]
-       (swap! state assoc :validation-errors fails)
-       (when-not fails
-         (reset! (:index-url (:track props)) index-file)
-         (modal/pop-modal))))})
 
 
 (react/defc Right
@@ -87,33 +59,35 @@
         [:div {:style {:margin "1em 0 0 1em"}}
          "Selected tracks"]
         (when (empty? tracks)
-          [:div {:style {:margin "1em"}}
-           "None--select a file on the left"])
+          [:div {:style {:margin "1em" :textAlign "center"
+                         :border style/standard-line :borderRadius 4 :padding "1em"}}
+           "No tracks selected"])
         [:div {:style {:marginTop "1em" :overflowY "auto"}}
          (map-indexed
-           (fn [index track]
+           (fn [index {:keys [track-url index-url] :as track}]
              (if (= track :dummy)
                [:div {:ref (str "track" index)
-                      :style {:display "flex" :alignItems "center"
-                              :height 27 :marginRight 3 :border style/standard-line :borderRadius 4 :boxSizing "border-box"}}
-                (style/left-ellipses {:style {:margin "0 4px"}} (:drag-url @state))]
+                      :style {:display "flex" :alignItems "center" :justifyContent "center"
+                              :height 46 :padding "0 4px" :margin "2px 3px"
+                              :border (str "1px dotted " (:line-gray style/colors)) :borderRadius 4}}
+                (style/left-ellipses {} (:drag-url @state))]
                [:div {:ref (str "track" index)
-                      :style {:display "flex"
-                              :alignItems "center" :padding 4}}
+                      :style {:display "flex" :alignItems "center" :padding 4 :margin "2px 3px"
+                              :border style/standard-line :borderRadius 4}}
                 (when (> (count tracks) 1)
                   [:img {:src "assets/drag_temp.png"
                          :style {:flex "0 0 auto" :height 16 :cursor "ns-resize"}
                          :draggable false
-                         :onMouseDown #(swap! state assoc :drag-index index :drop-index index :drag-url (:track-url track)
+                         :onMouseDown #(swap! state assoc :drag-index index :drop-index index :drag-url track-url
                                               :text-selection (common/disable-text-selection))}])
-                (case @(:index-url track)
-                  :pending [comps/Spinner {:height "1em" :text "Searching for index file..."}]
-                  :error (style/right-ellipses {:style {:flex "1 1 auto" :margin "0 8px"
-                                                        :color (:exception-red style/colors) :cursor "pointer"}
-                                                :onClick #(modal/push-modal [SpecifyIndexDialog {:track track}])}
-                                               "Could not find index file.  Click to specify.")
-                  (style/left-ellipses {:style {:flex "1 1 auto" :margin "0 8px"}}
-                                       (:track-url track)))
+                (case @index-url
+                  :pending [:div {} [comps/Spinner {:height "1em" :text "Searching for index file..."}]]
+                  :error [:div {:style {:flex "1 1 auto" :margin "0 8px" :color (:exception-red style/colors) :overflow "hidden"}}
+                          (style/right-ellipses {} (str "Unable to find index file for '" track-url "'"))
+                          (style/right-ellipses {} "Please ensure you have the associated .bai or .bam.bai at the same path")]
+                  [:div {:style {:flex "1 1 auto" :margin "0 8px" :overflow "hidden"}}
+                   (style/left-ellipses {} track-url)
+                   (style/left-ellipses {} @index-url)])
                 (icons/font-icon {:style {:flex "0 0 auto" :color (:exception-red style/colors) :cursor "pointer"}
                                   :onClick #((:on-remove props) index)}
                                  :x)]))
@@ -174,4 +148,4 @@
              :initial-slider-position 700}]]
           (when (:index-error @state)
             [:div {:style {:textAlign "center" :color (:exception-red style/colors) :marginTop "1em"}}
-             "All selected tracks must have associated index files.  Either manually specify them or remove them from the list."])])}])})
+             "All selected tracks must have associated index files."])])}])})
