@@ -187,6 +187,16 @@
          (style/create-text-field {:ref "confname" :style {:width 500}
                                    :defaultValue (config "name")})
          [:div {:style {:padding "0.5em 0 1em 0"}} (config "name")]))
+     (create-section-header "Referenced Method")
+     (create-section [MethodDetailsViewer
+                      {:ref "methodDetailsViewer"
+                       :name (get-in config ["methodRepoMethod" "methodName"])
+                       :namespace (get-in config ["methodRepoMethod" "methodNamespace"])
+                       :snapshotId (get-in config ["methodRepoMethod" "methodVersion"])
+                       :config config
+                       :methods methods
+                       :editing? editing?
+                       :onSnapshotIdChange #(react/call :load-new-method-template this %)}])
      (create-section-header "Root Entity Type")
      (create-section
        (if editing?
@@ -198,17 +208,7 @@
      (create-section-header "Inputs")
      (input-output-list config "inputs" invalid-inputs editing? (inputs-outputs "inputs"))
      (create-section-header "Outputs")
-     (input-output-list config "outputs" invalid-outputs editing? (inputs-outputs "outputs"))
-     (create-section-header "Referenced Method")
-     (create-section [MethodDetailsViewer
-                      {:ref "methodDetailsViewer"
-                       :name (get-in config ["methodRepoMethod" "methodName"])
-                       :namespace (get-in config ["methodRepoMethod" "methodNamespace"])
-                       :snapshotId (get-in config ["methodRepoMethod" "methodVersion"])
-                       :config config
-                       :methods methods
-                       :editing? editing?
-                       :onSnapshotIdChange #(react/call :load-new-method-template this %)}])]))
+     (input-output-list config "outputs" invalid-outputs editing? (inputs-outputs "outputs"))]))
 
 (defn- render-display [this state refs props]
   (let [wrapped-config (:loaded-config @state)
