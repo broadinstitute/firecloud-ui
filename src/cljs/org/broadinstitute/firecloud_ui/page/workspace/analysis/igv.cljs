@@ -15,7 +15,7 @@
      :tracks (map-indexed (fn [index {:keys [track-url index-url]}]
                             {:name (str "Track " (inc index))
                              :url (common/gcs-uri->google-url track-url)
-                             :indexURL (common/gcs-uri->google-url @index-url)
+                             :indexURL (when (string? @index-url) (common/gcs-uri->google-url @index-url))
                              :headers {:Authorization (str "Bearer " (utils/get-access-token-cookie))}
                              :displayMode "EXPANDED"})
                           tracks)}))

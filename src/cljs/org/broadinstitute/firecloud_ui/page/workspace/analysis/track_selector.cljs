@@ -4,7 +4,6 @@
     [org.broadinstitute.firecloud-ui.common :as common]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
     [org.broadinstitute.firecloud-ui.common.entity-table :refer [EntityTable]]
-    [org.broadinstitute.firecloud-ui.common.icons :as icons]
     [org.broadinstitute.firecloud-ui.common.modal :as modal]
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.page.workspace.analysis.igv-utils :as igv-utils]
@@ -12,9 +11,7 @@
     ))
 
 
-; TODO: support .vcf and .bed
-;(def ^:private supported-file-types [".bam" ".vcf" ".bed"])
-(def ^:private supported-file-types [".bam"])
+(def ^:private supported-file-types [".bam" ".vcf" ".bed"])
 
 (react/defc Left
   {:render
@@ -63,7 +60,7 @@
            "No tracks selected"])
         [:div {:style {:marginTop "1em" :overflowY "auto"}}
          (map-indexed
-           (fn [index {:keys [track-url index-url] :as track}]
+           (fn [index {:keys [track-url index-url requires-index?] :as track}]
              (if (= track :dummy)
                [:div {:ref (str "track" index)
                       :style {:display "flex" :alignItems "center" :justifyContent "center"
@@ -81,15 +78,20 @@
                                               :text-selection (common/disable-text-selection))}])
                 (case @index-url
                   :pending [:div {} [comps/Spinner {:height "1em" :text "Searching for index file..."}]]
-                  :error [:div {:style {:flex "1 1 auto" :margin "0 8px" :color (:exception-red style/colors) :overflow "hidden"}}
-                          (style/right-ellipses {} (str "Unable to find index file for '" track-url "'"))
-                          (style/right-ellipses {} "Please ensure you have the associated .bai or .bam.bai at the same path")]
-                  [:div {:style {:flex "1 1 auto" :margin "0 8px" :overflow "hidden"}}
+                  :error (if requires-index?
+                           [:div {:style {:flex "1 1 auto" :marginLeft 8 :color (:exception-red style/colors) :overflow "hidden"}}
+                            (style/right-ellipses {} (str "Unable to find index file for '" track-url "'"))
+                            (style/right-ellipses {} "Please ensure you have the associated .bai or .bam.bai at the same path")]
+                           [:div {:style {:flex "1 1 auto" :marginLeft 8 :overflow "hidden"}}
+                            (style/left-ellipses {} track-url)
+                            (style/right-ellipses {} "Optional index file not found.")])
+                  [:div {:style {:flex "1 1 auto" :marginLeft 8 :overflow "hidden"}}
                    (style/left-ellipses {} track-url)
                    (style/left-ellipses {} @index-url)])
-                (icons/font-icon {:style {:flex "0 0 auto" :color (:exception-red style/colors) :cursor "pointer"}
-                                  :onClick #((:on-remove props) index)}
-                                 :x)]))
+                [:div {:style {:flex "0 0 auto" :alignSelf "flex-start" :cursor "pointer"
+                               :margin "-5px -5px 0 0" :padding "0 4px 1px 4px"}
+                       :onClick #((:on-remove props) index)}
+                 "×"]]))
            (if (:drag-index @state)
              (-> tracks
                  (utils/delete (:drag-index @state))
@@ -118,13 +120,15 @@
       {:header "Select IGV Tracks"
        :ok-button {:text "Load"
                    :onClick
-                   #(if (->> (:tracks @state)
-                             (map :index-url)
-                             (map deref)
-                             (some keyword?))
-                     (swap! state assoc :index-error true)
-                     (do ((:on-ok props) (:tracks @state))
-                         (modal/pop-modal)))}
+                   (fn [_]
+                     (if (->> (:tracks @state)
+                              (filter :requires-index?)
+                              (keep :index-url)
+                              (map deref)
+                              (some keyword?))
+                       (swap! state assoc :index-error true)
+                       (do ((:on-ok props) (:tracks @state))
+                         (modal/pop-modal))))}
        :content
        (react/create-element
          [:div {:style {:width "80vw"}}
@@ -133,13 +137,15 @@
             {:left [Left {:workspace-id (:workspace-id props)
                           :tracks (:tracks @state)
                           :on-select (fn [track-url]
-                                       (swap! state assoc :loading? true)
                                        (let [index-atom (atom :pending)]
+                                         (swap! state assoc :loading? true)
                                          (add-watch index-atom :loader #(swap! state dissoc :loading?))
-                                         (igv-utils/find-index {:track-url track-url
-                                                                :on-success #(reset! index-atom %)
-                                                                :on-error #(reset! index-atom :error)})
-                                         (swap! state update-in [:tracks] conj {:track-url track-url :index-url index-atom})))}]
+                                         (igv-utils/find-index-file {:track-url track-url
+                                                                     :on-success #(reset! index-atom %)
+                                                                     :on-error #(reset! index-atom :error)})
+                                         (swap! state update-in [:tracks] conj
+                                                {:track-url track-url :index-url index-atom
+                                                 :requires-index? (.endsWith track-url ".bam")})))}]
              :right [Right {:tracks (:tracks @state)
                             :reorder (fn [start-index end-index]
                                        (swap! state update-in [:tracks] utils/move start-index end-index))
@@ -147,4 +153,4 @@
              :initial-slider-position 700}]]
           (when (:index-error @state)
             [:div {:style {:textAlign "center" :color (:exception-red style/colors) :marginTop "1em"}}
-             "All selected tracks must have associated index files."])])}])})
+             "All .bam tracks must have associated index (.bai) files."])])}])})
