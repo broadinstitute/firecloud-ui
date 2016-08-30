@@ -28,6 +28,8 @@
          :on-done (fn [response]
                     (swap! cache assoc workspace-id response)
                     (js/setTimeout #(swap! cache dissoc workspace-id) 1000)
-                    (doseq [on-done (get @awaiting workspace-id)]
-                      (on-done response))
+                    (doseq [waiting-on-done (get @awaiting workspace-id)]
+                      (try
+                        (waiting-on-done response)
+                        (catch js/Object e (utils/jslog e))))
                     (swap! awaiting dissoc workspace-id))}))))
