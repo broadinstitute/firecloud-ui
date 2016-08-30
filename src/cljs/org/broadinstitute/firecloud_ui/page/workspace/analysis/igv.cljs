@@ -2,10 +2,6 @@
   (:require
     [dmohs.react :as react]
     [org.broadinstitute.firecloud-ui.common :as common]
-    [org.broadinstitute.firecloud-ui.common.components :as comps]
-    [org.broadinstitute.firecloud-ui.common.icons :as icons]
-    [org.broadinstitute.firecloud-ui.common.modal :as modal]
-    [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.utils :as utils]
     ))
 
@@ -18,11 +14,9 @@
                            :coverageQualityWeight true}}
      :tracks (map-indexed (fn [index {:keys [track-url index-url]}]
                             {:name (str "Track " (inc index))
-                             :url (utils/log (common/gcs-uri->download-url track-url))
-                             :indexURL (utils/log (common/gcs-uri->download-url @index-url))
+                             :url (common/gcs-uri->google-url track-url)
+                             :indexURL (common/gcs-uri->google-url @index-url)
                              :headers {:Authorization (str "Bearer " (utils/get-access-token-cookie))}
-                             ;:type "bam"
-                             ;:sourceType "gcs"
                              :displayMode "EXPANDED"})
                           tracks)}))
 
