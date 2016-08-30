@@ -9,7 +9,9 @@
   {:get-default-props
    (fn []
      {:cycle-focus? false
-      :anchor-side :left})
+      ;; or :right and :bottom
+      :anchor-x :left
+      :anchor-y :top})
    :render
    (fn [{:keys [props state]}]
      (let [{:keys [content width dismiss-self get-anchor-dom-node]} props
@@ -25,8 +27,8 @@
           [:div {:style (if anchored?
                           {:position "absolute" :backgroundColor "#fff"
                            :top (get-in @state [:position :top])
-                           :left (when (= (:anchor-side props) :left) (get-in @state [:position :left]))
-                           :right (when (= (:anchor-side props) :right) (get-in @state [:position :right]))}
+                           :left (when (= (:anchor-x props) :left) (get-in @state [:position :left]))
+                           :right (when (= (:anchor-x props) :right) (get-in @state [:position :right]))}
                           {:transform "translate(-50%, 0px)" :backgroundColor "#fff"
                            :position "relative" :marginBottom 60
                            :top 60 :left "50%" :width width})
@@ -36,7 +38,8 @@
    (fn [{:keys [props state locals]}]
      (when-let [get-dom-node (:get-anchor-dom-node props)]
        (let [rect (.getBoundingClientRect (get-dom-node))]
-         (swap! state assoc :position {:top (+ (.-top rect) (.. js/document -body -scrollTop))
+         (swap! state assoc :position {:top (+ (if (= (:anchor-y props) :top) (.-top rect) (.-bottom rect))
+                                               (.. js/document -body -scrollTop))
                                        :left (+ (.-left rect) (.. js/document -body -scrollLeft))
                                        :right (- (.. js/document -body -clientWidth) (.-right rect))})))
      (when-let [get-first (:get-first-element-dom-node props)]
