@@ -173,17 +173,14 @@
      (attributes/view-attributes state refs)]))
 
 (react/defc Summary
-  {:refresh
-   (fn [{:keys [state this]}]
-     (swap! state dissoc :server-response :submission-response)
-     (react/call :load-workspace this))
-   :get-initial-state
+  {:get-initial-state
    (fn []
      {:sidebar-visible? true})
    :render
    (fn [{:keys [refs state props this]}]
      (let [server-response (:server-response @state)
-           {:keys [workspace submissions-count billing-projects server-error]} server-response]
+           {:keys [workspace]} props
+           {:keys [submissions-count billing-projects server-error]} server-response]
        (cond
          server-error
          (style/create-server-error-message server-error)
@@ -197,36 +194,6 @@
             (render-overlays state)
             (render-sidebar state props refs this workspace billing-projects owner? writer?)
             (render-main state props refs workspace owner? (:bucket-access? props) submissions-count)]))))
-   :load-workspace
-   (fn [{:keys [props state]}]
-     (endpoints/call-ajax-orch
-       {:endpoint (endpoints/get-workspace (:workspace-id props))
-        :on-done (fn [{:keys [success? get-parsed-response status-text]}]
-                   (if success?
-                     (let [workspace (get-parsed-response)
-                           attributes (get-in workspace ["workspace" "attributes"])
-                           new-state (update-in @state [:server-response]
-                                       assoc :workspace workspace)
-                           new-state (assoc new-state :attrs-list (vec (dissoc attributes "description")))]
-                       (reset! state new-state))
-                     (swap! state update-in [:server-response]
-                       assoc :server-error status-text)))})
-     (endpoints/call-ajax-orch
-       {:endpoint (endpoints/count-submissions (:workspace-id props))
-        :on-done (fn [{:keys [success? status-text get-parsed-response]}]
-                   (if success?
-                     (swap! state update-in [:server-response]
-                       assoc :submissions-count (get-parsed-response))
-                     (swap! state update-in [:server-response]
-                       assoc :server-error status-text)))})
-     (endpoints/call-ajax-orch
-       {:endpoint (endpoints/get-billing-projects)
-        :on-done (fn [{:keys [success? status-text get-parsed-response]}]
-                   (if success?
-                     (swap! state update-in [:server-response]
-                       assoc :billing-projects (map #(% "projectName") (get-parsed-response)))
-                     (swap! state update-in [:server-response]
-                       assoc :server-error status-text)))}))
    :lock-or-unlock
    (fn [{:keys [props state this]} locked-now?]
      (swap! state assoc :locking? locked-now?)
@@ -240,8 +207,8 @@
                    (swap! state dissoc :locking?)
                    (react/call :refresh this))}))
    :component-did-mount
-   (fn [{:keys [state refs this locals]}]
-     (react/call :load-workspace this)
+   (fn [{:keys [state refs locals this]}]
+     (react/call :refresh this)
      (swap! locals assoc :scroll-handler
             (fn []
               (when-let [sidebar (@refs "sidebar")]
@@ -251,4 +218,23 @@
      (.addEventListener js/window "scroll" (:scroll-handler @locals)))
    :component-will-unmount
    (fn [{:keys [locals]}]
-     (.removeEventListener js/window "scroll" (:scroll-handler @locals)))})
+     (.removeEventListener js/window "scroll" (:scroll-handler @locals)))
+   :refresh
+   (fn [{:keys [props state]}]
+     ((:request-refresh props))
+     (endpoints/call-ajax-orch
+       {:endpoint (endpoints/count-submissions (:workspace-id props))
+        :on-done (fn [{:keys [success? status-text get-parsed-response]}]
+                   (if success?
+                     (swap! state update-in [:server-response]
+                            assoc :submissions-count (get-parsed-response))
+                     (swap! state update-in [:server-response]
+                            assoc :server-error status-text)))})
+     (endpoints/call-ajax-orch
+       {:endpoint (endpoints/get-billing-projects)
+        :on-done (fn [{:keys [success? status-text get-parsed-response]}]
+                   (if success?
+                     (swap! state update-in [:server-response]
+                            assoc :billing-projects (map #(% "projectName") (get-parsed-response)))
+                     (swap! state update-in [:server-response]
+                            assoc :server-error status-text)))}))})
