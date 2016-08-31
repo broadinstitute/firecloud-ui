@@ -90,7 +90,7 @@
    (fn [{:keys [props state refs this]}]
      (let [nav-context (nav/parse-segment (:nav-context props))
            workspace-id (:workspace-id props)
-           {:keys [workspace workspace-error]} @state
+           {:keys [workspace workspace-error bucket-access?]} @state
            tab (:segment nav-context)
            refresh #(react/call :refresh-workflow this)]
        [:div {:style {:margin "0 -1em"}}
@@ -107,7 +107,7 @@
                                                  :workspace-id workspace-id
                                                  :workspace workspace
                                                  :request-refresh refresh
-                                                 :bucket-access? (:bucket-access? @state)
+                                                 :bucket-access? bucket-access?
                                                  :nav-context nav-context
                                                  :on-delete (:on-delete props)
                                                  :on-clone (:on-clone props)}])
@@ -131,7 +131,9 @@
                          (react/create-element
                            [method-configs-tab/Page {:ref CONFIGS
                                                      :workspace-id workspace-id
-                                                     :bucket-access? (:bucket-access? @state)
+                                                     :workspace workspace
+                                                     :request-refresh refresh
+                                                     :bucket-access? bucket-access?
                                                      :on-submission-success #(nav/navigate (:nav-context props) MONITOR %)
                                                      :nav-context (nav/terminate-when (not= tab CONFIGS) nav-context)}])
                          :onTabRefreshed #(react/call :refresh (@refs CONFIGS))}
