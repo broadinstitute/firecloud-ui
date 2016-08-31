@@ -76,7 +76,6 @@
 (react/defc WorkspaceDetails
   {:refresh-workflow
    (fn [{:keys [props state]}]
-     (swap! state dissoc :bucket-status-code :bucket-access? :workspace :workspace-error)
      (endpoints/call-ajax-orch
        {:endpoint (endpoints/check-bucket-read-access (:workspace-id props))
         :on-done (fn [{:keys [success? status-code]}]
@@ -91,6 +90,7 @@
    (fn [{:keys [props state refs this]}]
      (let [nav-context (nav/parse-segment (:nav-context props))
            workspace-id (:workspace-id props)
+           {:keys [workspace workspace-error]} @state
            tab (:segment nav-context)
            refresh #(react/call :refresh-workflow this)]
        [:div {:style {:margin "0 -1em"}}
@@ -105,7 +105,7 @@
                          (react/create-element
                            [summary-tab/Summary {:key workspace-id :ref SUMMARY
                                                  :workspace-id workspace-id
-                                                 :workspace (:workspace @state)
+                                                 :workspace workspace
                                                  :request-refresh refresh
                                                  :bucket-access? (:bucket-access? @state)
                                                  :nav-context nav-context
@@ -115,8 +115,12 @@
                         {:text DATA :href (nav/create-href (:nav-context props) DATA)
                          :content
                          (react/create-element
-                           [data-tab/WorkspaceData {:ref DATA :workspace-id workspace-id}])
-                         :onTabRefreshed #(react/call :refresh (@refs DATA))}
+                           [data-tab/WorkspaceData {:ref DATA
+                                                    :workspace-id workspace-id
+                                                    :workspace workspace
+                                                    :workspace-error workspace-error
+                                                    :request-refresh refresh}])
+                         :onTabRefreshed refresh}
                         {:text ANALYSIS :href (nav/create-href (:nav-context props) ANALYSIS)
                          :content
                          (react/create-element
