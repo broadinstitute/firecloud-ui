@@ -11,12 +11,13 @@
    [org.broadinstitute.firecloud-ui.page.workspace.monitor.tab :as monitor-tab]
    [org.broadinstitute.firecloud-ui.page.workspace.summary.tab :as summary-tab]
    [org.broadinstitute.firecloud-ui.utils :as utils]
+   [org.broadinstitute.firecloud-ui.workspace-cache :refer [get-workspace]]
    ))
 
 
 (react/defc ProtectedBanner
   {:render
-   (fn [{:keys [props state]}]
+   (fn [{:keys [state]}]
      (let [{:keys [message protected? status]} @state]
        [:div {:style {:position "relative"}}
         (case status
@@ -44,14 +45,13 @@
      (react/call :load-workspace this (:workspace-id next-props)))
    :load-workspace
    (fn [{:keys [state]} workspace-id]
-     (endpoints/call-ajax-orch
-       {:endpoint (endpoints/get-workspace workspace-id)
-        :on-done (fn [{:keys [success? get-parsed-response status-text]}]
-                   (if success?
-                     (let [workspace (get-parsed-response)
-                           protected? (if (get-in workspace ["workspace" "realm"]) true false)]
-                        (swap! state assoc :status :success :protected? protected?))
-                     (swap! state assoc :status :error :message status-text)))}))})
+     (get-workspace workspace-id
+                    (fn [{:keys [success? get-parsed-response status-text]}]
+                      (if success?
+                        (let [workspace (get-parsed-response)
+                              protected? (if (get-in workspace ["workspace" "realm"]) true false)]
+                          (swap! state assoc :status :success :protected? protected?))
+                        (swap! state assoc :status :error :message status-text)))))})
 
 (react/defc BucketBanner
   {:render

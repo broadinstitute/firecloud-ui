@@ -15,6 +15,7 @@
     [org.broadinstitute.firecloud-ui.page.workspace.data.copy-data-workspaces :as copy-data-workspaces]
     [org.broadinstitute.firecloud-ui.page.workspace.data.import-data :as import-data]
     [org.broadinstitute.firecloud-ui.utils :as utils :refer [access-token]]
+    [org.broadinstitute.firecloud-ui.workspace-cache :refer [get-workspace]]
     ))
 
 
@@ -113,14 +114,13 @@
      (react/call :load this))
    :load
    (fn [{:keys [state props]} & [entity-type]]
-     (endpoints/call-ajax-orch
-       {:endpoint (endpoints/get-workspace (:workspace-id props))
-        :on-done (fn [{:keys [success? get-parsed-response status-text]}]
-                   (if success?
-                     (let [workspace ((get-parsed-response) "workspace")]
-                       (swap! state update-in [:server-response] assoc
-                              :locked? (workspace "isLocked")
-                              :this-realm (get-in workspace ["realm" "groupName"])
-                              :initial-entity-type entity-type))
-                     (swap! state update-in [:server-response]
-                       assoc :server-error status-text)))}))})
+     (get-workspace (:workspace-id props)
+                    (fn [{:keys [success? get-parsed-response status-text]}]
+                      (if success?
+                        (let [workspace ((get-parsed-response) "workspace")]
+                          (swap! state update-in [:server-response] assoc
+                                 :locked? (workspace "isLocked")
+                                 :this-realm (get-in workspace ["realm" "groupName"])
+                                 :initial-entity-type entity-type))
+                        (swap! state update-in [:server-response]
+                               assoc :server-error status-text)))))})

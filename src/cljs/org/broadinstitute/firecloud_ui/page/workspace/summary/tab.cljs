@@ -13,7 +13,9 @@
     [org.broadinstitute.firecloud-ui.page.workspace.summary.acl-editor :refer [AclEditor]]
     [org.broadinstitute.firecloud-ui.page.workspace.summary.attribute-editor :as attributes]
     [org.broadinstitute.firecloud-ui.page.workspace.summary.workspace-cloner :refer [WorkspaceCloner]]
-    [org.broadinstitute.firecloud-ui.utils :as utils]))
+    [org.broadinstitute.firecloud-ui.utils :as utils]
+    [org.broadinstitute.firecloud-ui.workspace-cache :refer [get-workspace]]
+    ))
 
 
 (defn- render-tags [tags]
@@ -199,18 +201,17 @@
             (render-main state props refs workspace owner? (:bucket-access? props) submissions-count)]))))
    :load-workspace
    (fn [{:keys [props state]}]
-     (endpoints/call-ajax-orch
-       {:endpoint (endpoints/get-workspace (:workspace-id props))
-        :on-done (fn [{:keys [success? get-parsed-response status-text]}]
-                   (if success?
-                     (let [workspace (get-parsed-response)
-                           attributes (get-in workspace ["workspace" "attributes"])
-                           new-state (update-in @state [:server-response]
-                                       assoc :workspace workspace)
-                           new-state (assoc new-state :attrs-list (vec (dissoc attributes "description")))]
-                       (reset! state new-state))
-                     (swap! state update-in [:server-response]
-                       assoc :server-error status-text)))})
+     (get-workspace (:workspace-id props)
+                    (fn [{:keys [success? get-parsed-response status-text]}]
+                      (if success?
+                        (let [workspace (get-parsed-response)
+                              attributes (get-in workspace ["workspace" "attributes"])
+                              new-state (update-in @state [:server-response]
+                                                   assoc :workspace workspace)
+                              new-state (assoc new-state :attrs-list (vec (dissoc attributes "description")))]
+                          (reset! state new-state))
+                        (swap! state update-in [:server-response]
+                               assoc :server-error status-text))))
      (endpoints/call-ajax-orch
        {:endpoint (endpoints/count-submissions (:workspace-id props))
         :on-done (fn [{:keys [success? status-text get-parsed-response]}]

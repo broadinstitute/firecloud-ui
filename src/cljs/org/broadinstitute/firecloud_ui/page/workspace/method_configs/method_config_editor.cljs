@@ -13,6 +13,7 @@
     [org.broadinstitute.firecloud-ui.page.workspace.method-configs.launch-analysis :as launch]
     [org.broadinstitute.firecloud-ui.page.workspace.method-configs.publish :as publish]
     [org.broadinstitute.firecloud-ui.utils :as utils]
+    [org.broadinstitute.firecloud-ui.workspace-cache :refer [get-workspace]]
     ))
 
 
@@ -247,12 +248,11 @@
    :component-did-mount
    (fn [{:keys [state props refs this]}]
      (react/call :load-validated-method-config this)
-     (endpoints/call-ajax-orch
-       {:endpoint (endpoints/get-workspace (:workspace-id props))
-        :on-done (fn [{:keys [success? get-parsed-response status-text]}]
-                   (if success?
-                     (swap! state assoc :locked? (get-in (get-parsed-response) ["workspace" "isLocked"]))
-                     (swap! state assoc :error status-text)))})
+     (get-workspace (:workspace-id props)
+                    (fn [{:keys [success? get-parsed-response status-text]}]
+                      (if success?
+                        (swap! state assoc :locked? (get-in (get-parsed-response) ["workspace" "isLocked"]))
+                        (swap! state assoc :error status-text))))
      (endpoints/call-ajax-orch
        {:endpoint (endpoints/get-refresh-token-date)
         :on-done (fn [{:keys [success?]}]

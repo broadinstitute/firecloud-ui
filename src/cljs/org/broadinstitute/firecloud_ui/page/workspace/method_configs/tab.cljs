@@ -13,6 +13,7 @@
     [org.broadinstitute.firecloud-ui.page.method-repo.method-config-importer :refer [MethodConfigImporter]]
     [org.broadinstitute.firecloud-ui.page.workspace.method-configs.method-config-editor :refer [MethodConfigEditor]]
     [org.broadinstitute.firecloud-ui.utils :as utils]
+    [org.broadinstitute.firecloud-ui.workspace-cache :refer [get-workspace]]
     ))
 
 
@@ -70,26 +71,19 @@
    :component-did-mount
    (fn [{:keys [this]}]
      (react/call :load this))
-   :component-did-update
-   (fn [{:keys [this state]}]
-     (when (nil? (:server-response @state))
-       (react/call :load this)))
    :load
    (fn [{:keys [props state]}]
-     (endpoints/call-ajax-orch
-       {:endpoint (endpoints/get-workspace (:workspace-id props))
-        :on-done (fn [{:keys [success? get-parsed-response status-text]}]
-                   (if success?
-                     (swap! state assoc :locked? (get-in (get-parsed-response) ["workspace" "isLocked"]))
-                     (swap! state assoc :error status-text))
-                   (swap! state update-in [:load-counter] dec))})
+     (get-workspace (:workspace-id props)
+                    (fn [{:keys [success? get-parsed-response status-text]}]
+                      (if success?
+                        (swap! state assoc :locked? (get-in (get-parsed-response) ["workspace" "isLocked"]))
+                        (swap! state assoc :error status-text))))
      (endpoints/call-ajax-orch
        {:endpoint (endpoints/list-workspace-method-configs (:workspace-id props))
         :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                    (if success?
                      (swap! state assoc :server-response {:configs (vec (get-parsed-response))})
-                     (swap! state assoc :server-response {:error-message status-text}))
-                   (swap! state update-in [:load-counter] dec))}))})
+                     (swap! state assoc :server-response {:error-message status-text})))}))})
 
 
 (react/defc Page
