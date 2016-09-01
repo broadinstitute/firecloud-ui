@@ -84,10 +84,11 @@
                             (style/right-ellipses {} "Please ensure you have the associated .bai or .bam.bai at the same path")]
                            [:div {:style {:flex "1 1 auto" :marginLeft 8 :overflow "hidden"}}
                             (style/left-ellipses {} track-url)
-                            (style/right-ellipses {} "Optional index file not found.")])
+                            (style/right-ellipses {:style {:fontStyle "italic"}} "Optional index file not found.")])
                   [:div {:style {:flex "1 1 auto" :marginLeft 8 :overflow "hidden"}}
                    (style/left-ellipses {} track-url)
-                   (style/left-ellipses {} @index-url)])
+                   ; the following padding because overflow is cutting off italicized text
+                   (style/left-ellipses {:style {:fontStyle "italic" :paddingRight 2}} @index-url)])
                 [:div {:style {:flex "0 0 auto" :alignSelf "flex-start" :cursor "pointer"
                                :margin "-5px -5px 0 0" :padding "0 4px 1px 4px"}
                        :onClick #((:on-remove props) index)}
