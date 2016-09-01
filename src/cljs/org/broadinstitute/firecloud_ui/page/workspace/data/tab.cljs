@@ -60,7 +60,7 @@
 
 (react/defc WorkspaceData
   {:render
-   (fn [{:keys [props state]}]
+   (fn [{:keys [props state refs]}]
      (let [{:keys [workspace-id workspace workspace-error]} props]
        [:div {:style {:padding "1em"}}
         (cond
@@ -92,9 +92,8 @@
                                                                     :reload-data-tab
                                                                     (fn [entity-type]
                                                                       ((:request-refresh props))
-                                                                      (swap! state assoc :entity-type entity-type))}])}]]
+                                                                      (react/call :refresh (@refs "entity-table") entity-type))}])}]]
                           (common/clear-both)])
-              :initial-entity-type (:entity-type @state)
               :on-filter-change #(swap! state assoc :selected-entity-type %)
               :attribute-renderer (fn [maybe-uri]
                                     (if (string? maybe-uri)
