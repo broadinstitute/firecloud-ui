@@ -151,5 +151,6 @@
                    (swap! state assoc :status-code status-code :bucket-access? success?))}))
    :component-did-update
    (fn [{:keys [prev-state state refs]}]
+     ;; when switching to the analysis tab, grab the ref to it so we can access the track picker button
      (when (not= (:analysis-tab prev-state) (@refs ANALYSIS))
        (swap! state assoc :analysis-tab (@refs ANALYSIS))))})

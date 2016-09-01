@@ -114,14 +114,12 @@
          :object (matcher 2)}))))
 
 (defn gcs-uri->download-url [gcs-uri]
-  (let [parsed (parse-gcs-uri gcs-uri)]
-    (when parsed
-      (gcs-object->download-url (:bucket-name parsed) (:object parsed)))))
+  (when-let [parsed (parse-gcs-uri gcs-uri)]
+    (gcs-object->download-url (:bucket-name parsed) (:object parsed))))
 
 (defn gcs-uri->google-url [gcs-uri]
-  (let [parsed (parse-gcs-uri gcs-uri)]
-    (when parsed
-      (gcs-object->google-url (:bucket-name parsed) (:object parsed)))))
+  (when-let [parsed (parse-gcs-uri gcs-uri)]
+    (gcs-object->google-url (:bucket-name parsed) (:object parsed))))
 
 (defn format-date [date & [format]]
   (-> date js/moment (.format (or format "LLL"))))

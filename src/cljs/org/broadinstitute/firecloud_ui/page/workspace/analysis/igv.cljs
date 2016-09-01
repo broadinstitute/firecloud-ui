@@ -24,7 +24,7 @@
 (react/defc IGVContainer
   {:render
    (fn [{:keys []}]
-     [:div {:ref "div"}])
+     [:div {:ref "container"}])
    :component-did-mount
    (fn [{:keys [this]}]
      (react/call :refresh this))
@@ -32,5 +32,5 @@
    (fn [{:keys [this]}]
      (react/call :refresh this))
    :refresh
-   (fn [{:keys [props refs locals]}]
-     (swap! locals assoc :browser (.createBrowser js/igv (@refs "div") (options (:tracks props)))))})
+   (fn [{:keys [props refs]}]
+     (.createBrowser js/igv (@refs "container") (options (:tracks props))))})
