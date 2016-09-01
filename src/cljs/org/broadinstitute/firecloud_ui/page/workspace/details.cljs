@@ -74,7 +74,7 @@
     :else 0))
 
 (react/defc WorkspaceDetails
-  {:refresh-workflow
+  {:refresh-workspace
    (fn [{:keys [props state]}]
      (endpoints/call-ajax-orch
        {:endpoint (endpoints/check-bucket-read-access (:workspace-id props))
@@ -92,7 +92,7 @@
            workspace-id (:workspace-id props)
            {:keys [workspace workspace-error bucket-access?]} @state
            tab (:segment nav-context)
-           refresh #(react/call :refresh-workflow this)]
+           refresh #(react/call :refresh-workspace this)]
        [:div {:style {:margin "0 -1em"}}
         [:div {:style {:margin "-22px 0 2px 0"}}
          [ProtectedBanner (select-keys @state [:workspace :workspace-error])]]
