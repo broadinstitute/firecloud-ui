@@ -13,6 +13,48 @@
     [org.broadinstitute.firecloud-ui.utils :as utils]
     ))
 
+
+(def ^:private project-refresh-interval-ms 10000)
+(def ^:private project-status-creating "Creating")
+
+
+(react/defc PendingProjectControl
+  {:render
+   (fn [{{:keys [project-name]} :props :keys [state]}]
+     [:span {}
+      [:span {:style {:fontWeight "normal"}} "pending: "]
+      [:span {:style {:fontStyle "italic"}} project-name]
+      (when (:busy @state)
+        [comps/AnimatedEllipsis])])
+   :component-did-mount
+   (fn [{:keys [this locals]}]
+     (react/call :-set-timeout this project-refresh-interval-ms
+                 #(react/call :-refresh-status this)))
+   :component-will-unmount
+   (fn [{:keys [this locals]}]
+     (dorun (map (fn [id] (js/clearTimeout id)) (vals (:timeouts @locals)))))
+   :-refresh-status
+   (fn [{{:keys [project-name on-status-change]} :props :keys [this state]}]
+     (swap! state assoc :busy (.getTime (js/Date.)))
+     (endpoints/get-billing-project-status
+      project-name
+      (fn [new-status]
+        (if (and new-status (not= new-status project-status-creating))
+          (do
+            (swap! state dissoc :busy)
+            (on-status-change new-status))
+          ;; Ensure a minimum of 2000ms of animation.
+          (let [request-time (- (.getTime (js/Date.)) (:busy @state))]
+            (react/call :-set-timeout this (max 0 (- 2000 request-time))
+                        #(swap! state dissoc :busy))
+            (react/call :-set-timeout this project-refresh-interval-ms
+                        #(react/call :-refresh-status this)))))))
+   :-set-timeout
+   (fn [{:keys [locals]} ms f]
+     (swap! locals assoc-in [:timeouts f]
+            (js/setTimeout (fn [] (swap! locals update-in [:timeouts] dissoc f) (f)) ms)))})
+
+
 (react/defc BillingProjectTable
   {:reload
    (fn [{:keys [this]}]
@@ -27,10 +69,18 @@
         {:columns [{:header "Project Name" :starting-width 400
                     :as-text #(% "projectName") :sort-by :text
                     :content-renderer
-                    (fn [{:strs [projectName role]}]
-                      (if (= role "Owner")
-                        (style/create-link {:text projectName :onClick #((:on-select props) projectName)})
-                        projectName))}
+                    (fn [{:strs [projectName role status]}]
+                      [:span {}
+                       (cond
+                         (= status project-status-creating)
+                         [PendingProjectControl
+                          {:project-name projectName
+                           :on-status-change #(react/call :-handle-status-change this
+                                                          projectName %)}]
+                         (= role "Owner")
+                         (style/create-link {:text projectName
+                                             :onClick #((:on-select props) projectName)})
+                         :else projectName)])}
                    {:header "Role" :starting-width 100}]
          :toolbar
          (float-right
@@ -48,13 +98,18 @@
      (react/call :load-data this))
    :load-data
    (fn [{:keys [state]}]
-     (endpoints/call-ajax-orch
-       {:endpoint (endpoints/get-billing-projects)
-        :on-done
-        (fn [{:keys [success? get-parsed-response status-text]}]
-          (if success?
-            (swap! state assoc :projects (get-parsed-response))
-            (swap! state assoc :error-message status-text)))}))})
+     (endpoints/get-billing-projects
+      true
+      (fn [err-text projects]
+        (if err-text
+          (swap! state assoc :error-message err-text)
+          (swap! state assoc :projects projects)))))
+   :-handle-status-change
+   (fn [{:keys [state]} project-name new-status]
+     (let [project-index (utils/first-matching-index
+                          #(= (% "projectName") project-name)
+                          (:projects @state))]
+       (swap! state assoc-in [:projects project-index "status"] new-status)))})
 
 
 (react/defc Page

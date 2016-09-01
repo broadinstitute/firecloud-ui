@@ -217,6 +217,9 @@
 (defn index-of [coll item]
   (first (keep-indexed (fn [i x] (when (= item x) i)) coll)))
 
+(defn first-matching-index [pred coll]
+  (first (keep-indexed (fn [i x] (when (pred x) i)) coll)))
+
 (defn sort-match
   "Sort a collection to match the ordering of a given 'target' collection"
   [pattern coll]
