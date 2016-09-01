@@ -113,6 +113,7 @@
                                       :style {:cursor "pointer"}}]
                              [:span {:style {:marginLeft "0.5ex"}} label]]])]
             [overlay/Overlay {:get-anchor-dom-node #(react/find-dom-node (@refs "anchor"))
+                              :anchor-x :right :anchor-y :bottom
                               :dismiss-self #(swap! state dissoc :show-access-level-select?)
                               :content
                               (react/create-element
