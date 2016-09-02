@@ -59,68 +59,53 @@
 
 
 (react/defc WorkspaceData
-  {:refresh
-   (fn [{:keys [state this]} & [entity-type]]
-     (swap! state dissoc :server-response)
-     (react/call :load this entity-type))
-   :render
-   (fn [{:keys [props state this]}]
-     (let [workspace-id (:workspace-id props)
-           server-response (:server-response @state)
-           {:keys [server-error locked? this-realm]} server-response]
+  {:render
+   (fn [{:keys [props state refs]}]
+     (let [{:keys [workspace-id workspace workspace-error]} props]
        [:div {:style {:padding "1em"}}
         (cond
-          server-error
-          (style/create-server-error-message server-error)
-          (nil? locked?)
-          [:div {:style {:textAlign "center"}} [comps/Spinner {:text "Checking workspace..."}]]
+          workspace-error
+          (style/create-server-error-message workspace-error)
+          workspace
+          (let [locked? (workspace "isLocked")
+                this-realm (get-in workspace ["realm" "groupName"])]
+            [EntityTable
+             {:ref "entity-table"
+              :workspace-id workspace-id
+              :toolbar (fn [built-in]
+                         [:div {}
+                          [:div {:style {:float "left"}} built-in]
+                          (when-let [selected-entity-type (:selected-entity-type @state)]
+                            [:a {:style {:textDecoration "none" :float "left" :margin "7px 0 0 1em"}
+                                 :href (str (config/api-url-root) "/cookie-authed/workspaces/"
+                                            (:namespace workspace-id) "/"
+                                            (:name workspace-id) "/entities/" selected-entity-type "/tsv")
+                                 :onClick #(utils/set-access-token-cookie @access-token)
+                                 :target "_blank"}
+                             (str "Download '" selected-entity-type "' data")])
+                          [:div {:style {:float "right" :paddingRight "2em"}}
+                           [comps/Button {:text "Import Data..."
+                                          :disabled? (when locked? "This workspace is locked")
+                                          :onClick #(modal/push-modal
+                                                     [DataImporter {:workspace-id workspace-id
+                                                                    :this-realm this-realm
+                                                                    :reload-data-tab
+                                                                    (fn [entity-type]
+                                                                      ((:request-refresh props))
+                                                                      (react/call :refresh (@refs "entity-table") entity-type))}])}]]
+                          (common/clear-both)])
+              :on-filter-change #(swap! state assoc :selected-entity-type %)
+              :attribute-renderer (fn [maybe-uri]
+                                    (if (string? maybe-uri)
+                                      (if-let [parsed (common/parse-gcs-uri maybe-uri)]
+                                        [GCSFilePreviewLink (assoc parsed :attributes
+                                                              {:style {:direction "rtl" :marginRight "0.5em"
+                                                                       :overflow "hidden" :textOverflow "ellipsis"
+                                                                       :textAlign "left"}})]
+                                        maybe-uri)
+                                      (table-utils/default-render maybe-uri)))}])
           :else
-          [EntityTable
-           {:ref "entity-table"
-            :workspace-id workspace-id
-            :toolbar (fn [built-in]
-                       [:div {}
-                        [:div {:style {:float "left"}} built-in]
-                        (when-let [selected-entity-type (:selected-entity-type @state)]
-                          [:a {:style {:textDecoration "none" :float "left" :margin "7px 0 0 1em"}
-                               :href (str (config/api-url-root) "/cookie-authed/workspaces/"
-                                          (:namespace workspace-id) "/"
-                                          (:name workspace-id) "/entities/" selected-entity-type "/tsv")
-                               :onClick #(utils/set-access-token-cookie @access-token)
-                               :target "_blank"}
-                           (str "Download '" selected-entity-type "' data")])
-                        [:div {:style {:float "right" :paddingRight "2em"}}
-                         [comps/Button {:text "Import Data..."
-                                        :disabled? (when locked? "This workspace is locked")
-                                        :onClick #(modal/push-modal
-                                                   [DataImporter {:workspace-id workspace-id
-                                                                  :this-realm this-realm
-                                                                  :reload-data-tab (partial react/call :refresh this)}])}]]
-                        (common/clear-both)])
-            :initial-entity-type (get-in @state [:server-response :initial-entity-type])
-            :on-filter-change #(swap! state assoc :selected-entity-type %)
-            :attribute-renderer (fn [maybe-uri]
-                                  (if (string? maybe-uri)
-                                    (if-let [parsed (common/parse-gcs-uri maybe-uri)]
-                                      [GCSFilePreviewLink (assoc parsed :attributes
-                                                            {:style {:direction "rtl" :marginRight "0.5em"
-                                                                     :overflow "hidden" :textOverflow "ellipsis"
-                                                                     :textAlign "left"}})]
-                                      maybe-uri)
-                                    (table-utils/default-render maybe-uri)))}])]))
+          [:div {:style {:textAlign "center"}} [comps/Spinner {:text "Checking workspace..."}]])]))
    :component-did-mount
-   (fn [{:keys [this]}]
-     (react/call :load this))
-   :load
-   (fn [{:keys [state props]} & [entity-type]]
-     (endpoints/call-ajax-orch
-       {:endpoint (endpoints/get-workspace (:workspace-id props))
-        :on-done (fn [{:keys [success? get-parsed-response status-text]}]
-                   (if success?
-                     (let [workspace ((get-parsed-response) "workspace")]
-                       (swap! state update-in [:server-response] assoc
-                              :locked? (workspace "isLocked")
-                              :this-realm (get-in workspace ["realm" "groupName"])
-                              :initial-entity-type entity-type))
-                     (swap! state update-in [:server-response]
-                       assoc :server-error status-text)))}))})
+   (fn [{:keys [props]}]
+     ((:request-refresh props)))})

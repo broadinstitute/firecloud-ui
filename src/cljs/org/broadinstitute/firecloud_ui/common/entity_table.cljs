@@ -27,7 +27,21 @@
        (= (set (keys (first attr-value))) #{"entityType" "entityName"})))
 
 (react/defc EntityTable
-  {:get-default-props
+  {:refresh
+   (fn [{:keys [props state]} & [entity-type]]
+     (endpoints/call-ajax-orch
+       {:endpoint (endpoints/get-entity-types (:workspace-id props))
+        :on-done (fn [{:keys [success? get-parsed-response]}]
+                   (if success?
+                     (let [metadata (get-parsed-response)
+                           entity-types (utils/sort-match common/root-entity-types (vec (keys metadata)))]
+                       (swap! state update-in [:server-response] assoc
+                              :entity-metadata metadata
+                              :entity-types entity-types
+                              :selected-entity-type (or entity-type (first entity-types))))
+                     (swap! state update-in [:server-response]
+                            assoc :server-error (get-parsed-response))))}))
+   :get-default-props
    (fn []
      {:empty-message "There are no entities to display."
       :attribute-renderer default-render})
@@ -83,19 +97,8 @@
                      :->row (fn [m]
                               (->> attributes (map #(get-in m ["attributes" %])) (cons m) vec))})]))]))
    :component-did-mount
-   (fn [{:keys [props state]}]
-     (endpoints/call-ajax-orch
-       {:endpoint (endpoints/get-entity-types (:workspace-id props))
-        :on-done (fn [{:keys [success? get-parsed-response]}]
-                   (if success?
-                     (let [metadata (get-parsed-response)
-                           entity-types (utils/sort-match common/root-entity-types (vec (keys metadata)))]
-                       (swap! state update-in [:server-response] assoc
-                              :entity-metadata metadata
-                              :entity-types entity-types
-                              :selected-entity-type (or (:initial-entity-type props) (first entity-types))))
-                     (swap! state update-in [:server-response]
-                            assoc :server-error (get-parsed-response))))}))
+   (fn [{:keys [props this]}]
+     (react/call :refresh this (:initial-entity-type props)))
    :pagination
    (fn [{:keys [props state]} columns]
      (let [{{:keys [entity-types]} :server-response} @state]

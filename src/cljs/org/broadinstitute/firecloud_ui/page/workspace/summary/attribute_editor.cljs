@@ -64,7 +64,7 @@
         (:attrs-list @state))
       (when (:editing? @state)
         [comps/Button {:style :add :text "Add new"
-                       :onClick (fn [e]
+                       :onClick (fn [_]
                                   (swap! state update-in [:attrs-list] conj ["" ""])
                                   (js/setTimeout
                                     #(common/focus-and-select

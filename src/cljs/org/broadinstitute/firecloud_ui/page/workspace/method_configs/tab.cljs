@@ -28,7 +28,8 @@
    :render
    (fn [{:keys [props state]}]
      (let [server-response (:server-response @state)
-           {:keys [configs error-message]} server-response]
+           {:keys [configs error-message]} server-response
+           locked? (get-in props [:workspace "workspace" "isLocked"])]
        (cond
          error-message (style/create-server-error-message error-message)
          configs
@@ -37,7 +38,7 @@
            :toolbar
            (float-right
              [comps/Button {:text "Import Configuration..."
-                            :disabled? (case (:locked? @state)
+                            :disabled? (case locked?
                                          nil "Looking up workspace status..."
                                          true "The workspace is locked"
                                          false)
@@ -70,26 +71,15 @@
    :component-did-mount
    (fn [{:keys [this]}]
      (react/call :load this))
-   :component-did-update
-   (fn [{:keys [this state]}]
-     (when (nil? (:server-response @state))
-       (react/call :load this)))
    :load
    (fn [{:keys [props state]}]
-     (endpoints/call-ajax-orch
-       {:endpoint (endpoints/get-workspace (:workspace-id props))
-        :on-done (fn [{:keys [success? get-parsed-response status-text]}]
-                   (if success?
-                     (swap! state assoc :locked? (get-in (get-parsed-response) ["workspace" "isLocked"]))
-                     (swap! state assoc :error status-text))
-                   (swap! state update-in [:load-counter] dec))})
+     ((:request-refresh props))
      (endpoints/call-ajax-orch
        {:endpoint (endpoints/list-workspace-method-configs (:workspace-id props))
         :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                    (if success?
                      (swap! state assoc :server-response {:configs (vec (get-parsed-response))})
-                     (swap! state assoc :server-response {:error-message status-text}))
-                   (swap! state update-in [:load-counter] dec))}))})
+                     (swap! state assoc :server-response {:error-message status-text})))}))})
 
 
 (react/defc Page
@@ -106,15 +96,14 @@
            selected-method-config-id (common/get-id-from-nav-segment (:segment nav-context))]
        [:div {:style {:padding "1em"}}
         (if selected-method-config-id
-          [MethodConfigEditor {:key selected-method-config-id
-                               :config-id selected-method-config-id
-                               :workspace-id (:workspace-id props)
-                               :bucket-access? (:bucket-access? props)
-                               :on-submission-success (:on-submission-success props)
-                               :on-rename #(nav/navigate (:nav-context props) (str (:namespace selected-method-config-id) ":" %))
-                               :after-delete #(nav/back nav-context)}]
+          [MethodConfigEditor
+           (merge (select-keys props [:workspace-id :bucket-access? :on-submission-success])
+                  {:key selected-method-config-id
+                   :config-id selected-method-config-id
+                   :on-rename #(nav/navigate (:nav-context props) (str (:namespace selected-method-config-id) ":" %))
+                   :after-delete #(nav/back nav-context)})]
           [MethodConfigurationsList
-           {:ref "method-config-list"
-            :nav-context nav-context
-            :workspace-id (:workspace-id props)
-            :on-config-imported #(nav/navigate nav-context %)}])]))})
+           (merge (select-keys props [:workspace-id :workspace :request-refresh])
+                  {:ref "method-config-list"
+                   :nav-context nav-context
+                   :on-config-imported #(nav/navigate nav-context %)})])]))})
