@@ -104,7 +104,7 @@
   (str (config/api-url-root) "/cookie-authed/download/b/" bucket "/o/" object))
 
 (defn gcs-object->google-url [bucket object]
-  (str "https://www.googleapis.com/storage/v1/b/" bucket "/o/" object "?alt=media"))
+  (str "https://www.googleapis.com/storage/v1/b/" bucket "/o/" (js/encodeURIComponent object) "?alt=media"))
 
 (defn parse-gcs-uri [gcs-uri]
   (when (string? gcs-uri)
