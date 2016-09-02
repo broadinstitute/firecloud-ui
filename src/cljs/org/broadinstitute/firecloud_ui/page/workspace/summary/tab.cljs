@@ -216,6 +216,11 @@
                   (when-not (= visible (:sidebar-visible? @state))
                     (swap! state assoc :sidebar-visible? visible))))))
      (.addEventListener js/window "scroll" (:scroll-handler @locals)))
+   :component-did-update
+   (fn [{:keys [prev-props props state]}]
+     (when (not= (:workspace prev-props) (:workspace props))
+       (swap! state assoc :attrs-list
+              (vec (dissoc (get-in props [:workspace "workspace" "attributes"]) "description")))))
    :component-will-unmount
    (fn [{:keys [locals]}]
      (.removeEventListener js/window "scroll" (:scroll-handler @locals)))
