@@ -23,7 +23,7 @@
         (cond workspace-error
               [:div {:style {:color (:exception-red style/colors)}} workspace-error]
               workspace
-              (when (workspace "realm")
+              (when (get-in workspace ["workspace" "realm"])
                 [:div {:style {}}
                  [:div {:style {:height 1 :backgroundColor "#bbb" :marginBottom 2}}]
                  [:div {:style {:outlineTop (str "4px double #ccc")
