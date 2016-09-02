@@ -6,6 +6,7 @@
    [org.broadinstitute.firecloud-ui.common.style :as style]
    [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
    [org.broadinstitute.firecloud-ui.nav :as nav]
+   [org.broadinstitute.firecloud-ui.page.workspace.analysis.tab :as analysis-tab]
    [org.broadinstitute.firecloud-ui.page.workspace.data.tab :as data-tab]
    [org.broadinstitute.firecloud-ui.page.workspace.method-configs.tab :as method-configs-tab]
    [org.broadinstitute.firecloud-ui.page.workspace.monitor.tab :as monitor-tab]
@@ -78,14 +79,16 @@
 
 (def ^:private SUMMARY "Summary")
 (def ^:private DATA "Data")
+(def ^:private ANALYSIS "Analysis")
 (def ^:private CONFIGS "Method Configurations")
 (def ^:private MONITOR "Monitor")
 (defn- tab-string-to-index [tab-string]
   ;; for some reason the more compact "case" isn't working with strings :(
   (cond
     (= tab-string DATA) 1
-    (= tab-string CONFIGS) 2
-    (= tab-string MONITOR) 3
+    (= tab-string ANALYSIS) 2
+    (= tab-string CONFIGS) 3
+    (= tab-string MONITOR) 4
     :else 0))
 
 (react/defc WorkspaceDetails
@@ -116,6 +119,11 @@
                            (react/create-element
                              [data-tab/WorkspaceData {:ref DATA :workspace-id workspace-id}])
                            :onTabRefreshed #(react/call :refresh (@refs DATA))}
+                          {:text ANALYSIS :href (nav/create-href (:nav-context props) ANALYSIS)
+                           :content
+                           (react/create-element
+                             [analysis-tab/Page {:ref ANALYSIS :workspace-id workspace-id}])
+                           :onTabRefreshed #(react/call :refresh (@refs ANALYSIS))}
                           {:text CONFIGS :href (nav/create-href (:nav-context props) CONFIGS)
                            :content
                            (react/create-element
@@ -131,10 +139,18 @@
                              [monitor-tab/Page {:ref MONITOR
                                                 :workspace-id workspace-id
                                                 :nav-context (nav/terminate-when (not= tab MONITOR) nav-context)}])
-                           :onTabRefreshed #(react/call :refresh (@refs MONITOR))}]}]]))
+                           :onTabRefreshed #(react/call :refresh (@refs MONITOR))}]
+                         :toolbar-right
+                         (when-let [analysis-tab (:analysis-tab @state)]
+                           (react/call :get-tracks-button analysis-tab))}]]))
    :component-did-mount
    (fn [{:keys [props state]}]
-    (endpoints/call-ajax-orch
-      {:endpoint (endpoints/check-bucket-read-access (:workspace-id props))
-       :on-done (fn [{:keys [success? status-code]}]
-                    (swap! state assoc :status-code status-code :bucket-access? success?))}))})
+     (endpoints/call-ajax-orch
+       {:endpoint (endpoints/check-bucket-read-access (:workspace-id props))
+        :on-done (fn [{:keys [success? status-code]}]
+                   (swap! state assoc :status-code status-code :bucket-access? success?))}))
+   :component-did-update
+   (fn [{:keys [prev-state state refs]}]
+     ;; when switching to the analysis tab, grab the ref to it so we can access the track picker button
+     (when (not= (:analysis-tab prev-state) (@refs ANALYSIS))
+       (swap! state assoc :analysis-tab (@refs ANALYSIS))))})

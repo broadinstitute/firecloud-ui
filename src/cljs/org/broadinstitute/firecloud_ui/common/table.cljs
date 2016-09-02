@@ -187,7 +187,8 @@
                                                        :display-index
                                                        (map #(select-keys % [:index :display-index])
                                                             (:columns @state))))
-                                   new-order (utils/move column-order source-index target-index)
+                                   ; TODO: fix this screwy logic
+                                   new-order (utils/move column-order source-index (if (> target-index source-index) (dec target-index) target-index))
                                    new-order (map-indexed (fn [i c] (assoc c :display-index i))
                                                           new-order)
                                    new-order (map :display-index (sort-by :index new-order))]

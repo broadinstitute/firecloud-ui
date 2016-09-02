@@ -103,12 +103,23 @@
 (defn gcs-object->download-url [bucket object]
   (str (config/api-url-root) "/cookie-authed/download/b/" bucket "/o/" object))
 
+(defn gcs-object->google-url [bucket object]
+  (str "https://www.googleapis.com/storage/v1/b/" bucket "/o/" object "?alt=media"))
+
 (defn parse-gcs-uri [gcs-uri]
   (when (string? gcs-uri)
     (let [matcher (re-find #"gs://([^/]+)/(.+)" gcs-uri)]
       (when (= 3 (count matcher)) ;; first match will be the whole thing
         {:bucket-name (matcher 1)
          :object (matcher 2)}))))
+
+(defn gcs-uri->download-url [gcs-uri]
+  (when-let [parsed (parse-gcs-uri gcs-uri)]
+    (gcs-object->download-url (:bucket-name parsed) (:object parsed))))
+
+(defn gcs-uri->google-url [gcs-uri]
+  (when-let [parsed (parse-gcs-uri gcs-uri)]
+    (gcs-object->google-url (:bucket-name parsed) (:object parsed))))
 
 (defn format-date [date & [format]]
   (-> date js/moment (.format (or format "LLL"))))
