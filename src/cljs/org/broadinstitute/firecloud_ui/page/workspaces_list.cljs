@@ -141,6 +141,7 @@
           :columns
           [{:sort-by :none :filter-by :none :starting-width row-height-px :resizable? false
             :header [:div {:style {:marginLeft -6}} "Status"]
+            :as-text :status
             :content-renderer (fn [data] [StatusCell {:data data
                                                       :nav-context (:nav-context props)}])}
            {:as-text :name :sort-by :text

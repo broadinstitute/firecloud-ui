@@ -37,6 +37,10 @@
      [table/Table
       {:empty-message "No Workflows"
        :columns [{:header "Data Entity" :starting-width 200
+                  :as-text
+                  (fn [workflow]
+                    (let [entity (workflow "workflowEntity")]
+                      (str (entity "entityName") " (" (entity "entityType") ")")))
                   :content-renderer
                   (fn [workflow]
                     (let [entity (workflow "workflowEntity")

@@ -24,6 +24,7 @@
        :else
        [table/Table
         {:columns [{:header "Project Name" :starting-width 400 :sort-by #(% "projectName")
+                    :as-text #(% "projectName")
                     :content-renderer
                     (fn [{:strs [projectName role]}]
                       (if (= role "Owner")

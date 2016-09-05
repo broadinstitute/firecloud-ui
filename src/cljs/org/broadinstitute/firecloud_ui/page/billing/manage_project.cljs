@@ -90,6 +90,9 @@
                           {:header "Role" :starting-width 100}
                           {:header "Actions" :starting-width 100
                            :filter-by :none :sort-by :none
+                           :as-text
+                           (fn [{:strs [email role]}]
+                             (str "Remove " (clojure.string/lower-case role) " " email))
                            :content-renderer
                            (fn [{:strs [email role]}]
                              (style/create-link {:text "Remove"
