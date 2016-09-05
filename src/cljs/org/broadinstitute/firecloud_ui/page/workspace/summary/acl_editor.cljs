@@ -25,7 +25,7 @@
        (when (:saving? @state)
          [comps/Blocker {:banner "Updating..."}])
        [:div {:style {:padding "0.5em 0" :fontSize "90%"}}
-        [:div {:style {:float "left" :width 400}} "User or Group ID"]
+        [:div {:style {:float "left" :width 400}} "User ID"]
         [:div {:style {:float "right" :width 200 :marginLeft "1em"}} "Access Level"]
         (common/clear-both)]
        (map-indexed
@@ -33,7 +33,7 @@
            [:div {}
             [input/TextField
              {:ref (str "acl-key" i)
-              :predicates [(input/valid-email-or-empty "User or Group ID")]
+              :predicates [(input/valid-email-or-empty "User ID")]
               :style {:float "left" :width 400 :color "black"
                       :backgroundColor (when (:read-only? acl-entry)
                                          (:background-gray style/colors))}
