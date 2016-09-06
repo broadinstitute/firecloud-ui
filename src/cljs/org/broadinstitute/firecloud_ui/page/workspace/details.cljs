@@ -146,6 +146,13 @@
                          :onTabRefreshed #(react/call :refresh (@refs MONITOR))}]
                        :toolbar-right (when-let [analysis-tab (:analysis-tab @state)]
                                         (react/call :get-tracks-button analysis-tab))}]]))
+   :component-did-mount
+   (fn [{:keys [props this]}]
+     (let [nav-context (nav/parse-segment (:nav-context props))
+           tab (:segment nav-context)]
+       ;; These tabs don't request a refresh, so if we nav straight there then we need to kick one off.
+       (when (#{ANALYSIS CONFIGS MONITOR} tab)
+         (react/call :refresh-workspace this))))
    :component-did-update
    (fn [{:keys [prev-state state refs]}]
      ;; when switching to the analysis tab, grab the ref to it so we can access the track picker button
