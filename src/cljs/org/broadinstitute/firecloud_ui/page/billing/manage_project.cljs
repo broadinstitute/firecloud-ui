@@ -83,7 +83,7 @@
                {:header-row-style {:fontWeight nil :fontSize "90%"
                                    :color (:text-light style/colors) :backgroundColor nil}
                 :header-style {:padding "0.5em 0 0.5em 14px"}
-                :row-style {:fontSize "120%" :backgroundColor (:background-gray style/colors)
+                :row-style {:backgroundColor (:background-gray style/colors)
                             :borderRadius 8 :margin "4px 0"}
                 :reorderable-columns? false :resize-tab-color (:line-gray style/colors)
                 :toolbar (float-right
