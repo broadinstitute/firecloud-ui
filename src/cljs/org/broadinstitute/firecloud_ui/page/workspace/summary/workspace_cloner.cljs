@@ -77,7 +77,7 @@
          (endpoints/call-ajax-orch
            {:endpoint (endpoints/clone-workspace (:workspace-id props))
             :payload {:namespace project :name name :attributes attributes :isProtected protected?}
-            :headers {"Content-Type" "application/json"}
+            :headers utils/content-type=json
             :on-done (fn [{:keys [success? get-parsed-response]}]
                        (swap! state dissoc :working?)
                        (if success?

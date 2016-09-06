@@ -119,7 +119,7 @@
          (endpoints/call-ajax-orch
            {:endpoint (endpoints/create-submission (:workspace-id props))
             :payload payload
-            :headers {"Content-Type" "application/json"}
+            :headers utils/content-type=json
             :on-done (fn [{:keys [success? get-parsed-response]}]
                        (swap! state dissoc :launching?)
                        (if success?

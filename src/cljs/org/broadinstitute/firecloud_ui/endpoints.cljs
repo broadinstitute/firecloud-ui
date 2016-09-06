@@ -640,7 +640,7 @@
     {:method :post
     :data (utils/->json-string payload)
     :on-done on-done
-    :headers {"Content-Type" "application/json"}
+    :headers utils/content-type=json
     :canned-response {:status (rand-nth [200 200 500]) :delay-ms (rand-int 2000)}}
     :service-prefix "/register"))
 
@@ -657,7 +657,7 @@
    {:method :post
     :data (utils/->json-string {:jwt token})
     :on-done on-done
-    :headers {"Content-Type" "application/json"}
+    :headers utils/content-type=json
     :canned-response {:status 200 :delay-ms (rand-int 2000)}}))
 
 

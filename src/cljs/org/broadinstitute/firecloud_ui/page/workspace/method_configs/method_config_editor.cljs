@@ -54,7 +54,7 @@
     (endpoints/call-ajax-orch
       {:endpoint (endpoints/update-workspace-method-config workspace-id config)
        :payload new-conf
-       :headers {"Content-Type" "application/json"} ;; TODO - make endpoint take text/plain
+       :headers utils/content-type=json
        :on-done (fn [{:keys [success? get-parsed-response xhr]}]
                   (if-not success?
                     (do (js/alert (str "Exception:\n" (.-statusText xhr)))
@@ -64,7 +64,7 @@
                       (endpoints/call-ajax-orch ;; TODO - make unified call in orchestration
                         {:endpoint (endpoints/rename-workspace-method-config workspace-id config)
                          :payload (select-keys new-conf ["name" "namespace" "workspaceName"])
-                         :headers {"Content-Type" "application/json"}
+                         :headers utils/content-type=json
                          :on-done (fn [{:keys [success? xhr]}]
                                     (swap! state dissoc :blocker)
                                     (if success?
@@ -96,7 +96,7 @@
                     (:namespace method-ref)
                     (:name method-ref)
                     (:snapshotId method-ref))
-        :headers {"Content-Type" "application/json"}
+        :headers utils/content-type=json
         :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                    (if success?
                      (swap! state assoc :loaded-method (get-parsed-response))
@@ -289,7 +289,7 @@
                             (endpoints/call-ajax-orch
                               {:endpoint endpoints/get-inputs-outputs
                                :payload (get-in response ["methodConfiguration" "methodRepoMethod"])
-                               :headers {"Content-Type" "application/json"}
+                               :headers utils/content-type=json
                                :on-done (fn [{:keys [success? get-parsed-response]}]
                                             (if success?
                                               (swap! state assoc :loaded-config response :inputs-outputs (get-parsed-response))
@@ -313,14 +313,14 @@
        (endpoints/call-ajax-orch
          {:endpoint (endpoints/create-template method-ref)
           :payload method-ref
-          :headers {"Content-Type" "application/json"}
+          :headers utils/content-type=json
           :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                      (if success?
                        (let [response (get-parsed-response)]
                          (endpoints/call-ajax-orch
                            {:endpoint endpoints/get-inputs-outputs
                             :payload (response "methodRepoMethod")
-                            :headers {"Content-Type" "application/json"}
+                            :headers utils/content-type=json
                             :on-done (fn [{:keys [success? get-parsed-response]}]
                                        (swap! state dissoc :blocker)
                                        (let [template {"methodConfiguration" (merge response config-namespace+name)}]

@@ -81,7 +81,7 @@
            (swap! state assoc :saving? true)
            (endpoints/call-ajax-orch
              {:endpoint (endpoints/update-workspace-acl (:workspace-id props))
-              :headers {"Content-Type" "application/json"}
+              :headers utils/content-type=json
               :payload filtered-acl
               :on-done (fn [{:keys [success? get-parsed-response]}]
                          (swap! state dissoc :saving?)

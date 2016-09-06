@@ -7,6 +7,7 @@
     [org.broadinstitute.firecloud-ui.common.modal :as modal]
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
+    [org.broadinstitute.firecloud-ui.utils :as utils]
     ))
 
 
@@ -42,7 +43,7 @@
                (swap! state assoc :publishing? true :error nil)
                (endpoints/call-ajax-orch
                  {:endpoint (endpoints/copy-method-config-to-repo workspace-id config)
-                  :headers {"Content-Type" "application/json"}
+                  :headers utils/content-type=json
                   :payload  {:configurationNamespace ns,
                              :configurationName n,
                              :sourceNamespace namespace,

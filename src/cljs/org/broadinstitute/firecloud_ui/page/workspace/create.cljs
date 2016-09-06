@@ -73,7 +73,7 @@
          (endpoints/call-ajax-orch
           {:endpoint (endpoints/create-workspace project name)
            :payload {:namespace project :name name :attributes attributes :isProtected protected?}
-           :headers {"Content-Type" "application/json"}
+           :headers utils/content-type=json
            :on-done (fn [{:keys [success? get-parsed-response]}]
                       (swap! state dissoc :creating-wf)
                       (if success?

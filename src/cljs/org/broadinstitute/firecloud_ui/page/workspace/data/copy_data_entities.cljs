@@ -42,7 +42,7 @@
         :payload {:sourceWorkspace (:selected-workspace-id props)
                   :entityType (:type props)
                   :entityNames (map #(% "name") selected)}
-        :headers {"Content-Type" "application/json"}
+        :headers utils/content-type=json
         :on-done (fn [{:keys [success? get-parsed-response]}]
                    (swap! state dissoc :copying?)
                    (if success?

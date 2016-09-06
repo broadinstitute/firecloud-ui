@@ -89,7 +89,7 @@
                       (endpoints/call-ajax-orch
                         {:endpoint (endpoints/update-workspace-attrs (:workspace-id props))
                          :payload add-update-ops
-                         :headers {"Content-Type" "application/json"}
+                         :headers utils/content-type=json
                          :on-done (fn [{:keys [success? xhr]}]
                                     (swap! state dissoc :updating-attrs?)
                                     (when-not success?
@@ -101,7 +101,7 @@
                    (endpoints/call-ajax-orch
                      {:endpoint (endpoints/update-workspace-attrs (:workspace-id props))
                       :payload del-ops
-                      :headers {"Content-Type" "application/json"}
+                      :headers utils/content-type=json
                       :on-done (fn [{:keys [success? xhr]}]
                                  (swap! state dissoc :deleting-attrs?)
                                  (if-not success?

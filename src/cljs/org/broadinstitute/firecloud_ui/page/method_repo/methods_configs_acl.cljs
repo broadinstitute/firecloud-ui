@@ -110,7 +110,7 @@
            (swap! state assoc :saving? true)
            (endpoints/call-ajax-orch
              {:endpoint (endpoints/persist-agora-method-acl (:selected-entity props))
-              :headers {"Content-Type" "application/json"}
+              :headers utils/content-type=json
               :payload non-empty-acls-w-public
               :on-done (fn [{:keys [success? get-parsed-response]}]
                          (swap! state dissoc :saving?)
