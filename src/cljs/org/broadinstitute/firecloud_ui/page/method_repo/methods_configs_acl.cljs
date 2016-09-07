@@ -62,7 +62,7 @@
                    access-levels)
                  (common/clear-both)])
               (:acl-vec @state))
-            [comps/Button {:text "Add new" :style :add
+            [comps/Button {:text "Add new" :type :add
                            :onClick #(swap! state assoc :acl-vec
                                             (conj (react/call :capture-ui-state this)
                                                   {:user "" :role reader-level}))}]

@@ -51,7 +51,7 @@
             (common/clear-both)])
          (:acl-vec @state))
        [:div {:style {:marginBottom "0.5em"}}
-        [comps/Button {:text "Add new" :style :add
+        [comps/Button {:text "Add new" :type :add
                        :onClick #(swap! state update-in [:acl-vec]
                                         conj {:email "" :accessLevel "READER"})}]]
        (style/create-validation-error-message (:validation-error @state))

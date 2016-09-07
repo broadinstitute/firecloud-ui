@@ -63,7 +63,7 @@
            (common/clear-both)])
         (:attrs-list @state))
       (when (:editing? @state)
-        [comps/Button {:style :add :text "Add new"
+        [comps/Button {:type :add :text "Add new"
                        :onClick (fn [_]
                                   (swap! state update-in [:attrs-list] conj ["" ""])
                                   (js/setTimeout
