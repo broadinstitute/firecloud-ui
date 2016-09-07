@@ -18,7 +18,7 @@
              [modal/OKCancelForm
               {:header "File Details"
                :content
-               (let [{:keys [data error]} (:response @state)
+               (let [{:keys [data error status]} (:response @state)
                      data-size (when data (data "size"))
                      labeled (fn [label & contents]
                                [:div {}
@@ -56,7 +56,10 @@
                   (when error
                     [:div {:style {:marginTop "1em"}}
                      [:span {:style {:color (:exception-red style/colors)}} "Error! "]
-                     "This file was not found."
+                     (case status
+                       404 "This file was not found."
+                       403 "You do not have access to this file."
+                       "See details below.")
                      (if (:show-error-details? @state)
                        [:div {}
                         [:pre {} error]
@@ -72,12 +75,13 @@
              (swap! state assoc :loading? true)
              (endpoints/call-ajax-orch
                {:endpoint (endpoints/get-gcs-stats (:bucket-name props) (:object props))
-                :on-done (fn [{:keys [success? get-parsed-response xhr]}]
+                :on-done (fn [{:keys [success? get-parsed-response xhr status-code]}]
                            (swap! state assoc
                                   :loading? false
                                   :response (if success?
                                               {:data (get-parsed-response)}
-                                              {:error (.-responseText xhr)})))}))})]
+                                              {:error (.-responseText xhr)
+                                               :status status-code})))}))})]
     {:render
      (fn [{:keys [props]}]
        (assert (:bucket-name props) "No bucket name provided")
