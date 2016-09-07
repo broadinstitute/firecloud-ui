@@ -109,7 +109,7 @@
    (when sortOrder
      [:div {:style {:position "absolute" :top "50%" :right 0 :width 16 :transform "translateY(-50%)"}}
       (if (= :asc sortOrder) "↑" "↓")])
-   [:div {:style (merge {:whiteSpace "nowrap" :overflow "hidden" :textOverflow "ellipsis"
+   [:div {:title (:title props) :style (merge {:whiteSpace "nowrap" :overflow "hidden" :textOverflow "ellipsis"
                          :width (str "calc(" (- width (if sortOrder 16 0)) "px - " (:cell-padding-left props) ")")}
                    (:content-container-style props))}
     (:content props)]])
@@ -136,10 +136,13 @@
                  (fn [col]
                    (let [render-content (or (:content-renderer col)
                                           (:as-text col)
+                                          default-render)
+                         render-title (or (:as-text col)
                                           default-render)]
                      (render-cell
                        {:width (:width col)
                         :content (render-content (nth row (:index col)))
+                        :title (render-title (nth row (:index col)))
                         :cell-padding-left (or (:cell-padding-left props) 0)
                         :content-container-style (merge
                                                    {:padding (str "0.6em 0 0.6em " (or (:cell-padding-left props) 0))}

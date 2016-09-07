@@ -248,6 +248,7 @@
                    :filter-by (fn [m]
                                 (clojure.string/join "/" (map m ["namespace" "name" "snapshotId"])))
                    :sort-initial :asc
+                   :as-text (fn [item] (str (item "namespace") "\n" (item "name") "\nSnapshot ID: " (item "snapshotId")))
                    :content-renderer
                    (fn [item]
                      (style/create-link {:text (style/render-entity (item "namespace") (item "name") (item "snapshotId"))
