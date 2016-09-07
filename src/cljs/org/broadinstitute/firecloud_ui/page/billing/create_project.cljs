@@ -105,7 +105,7 @@
              (endpoints/call-ajax-orch
                {:endpoint endpoints/create-billing-project
                 :payload {:projectName name :billingAccount account}
-                :headers {"Content-Type" "application/json"}
+                :headers utils/content-type=json
                 :on-done (fn [{:keys [success? get-parsed-response]}]
                            (swap! state dissoc :creating?)
                            (if success?

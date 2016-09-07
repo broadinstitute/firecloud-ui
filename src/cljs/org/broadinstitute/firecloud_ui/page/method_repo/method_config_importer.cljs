@@ -128,7 +128,7 @@
                         "configurationSnapshotId" (config "snapshotId")
                         "destinationNamespace" namespace
                         "destinationName" name}
-              :headers {"Content-Type" "application/json"}
+              :headers utils/content-type=json
               :on-done (fn [{:keys [success? get-parsed-response]}]
                          (swap! state dissoc :blocking-text)
                          (if success?
@@ -150,7 +150,7 @@
                     (get-in props [:config "namespace"])
                     (get-in props [:config "name"])
                     (get-in props [:config "snapshotId"]))
-        :headers {"Content-Type" "application/json"}
+        :headers utils/content-type=json
         :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                    (if success?
                      (swap! state assoc :loaded-config (get-parsed-response))
@@ -188,7 +188,7 @@
                          "methodNamespace" (get-in props [:method "namespace"])
                          "methodName" (get-in props [:method "name"])
                          "methodVersion" (get-in props [:method "snapshotId"]))
-              :headers {"Content-Type" "application/json"}
+              :headers utils/content-type=json
               :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                          (if-not success?
                            (swap! state assoc :error status-text :blocking-text nil)
@@ -199,7 +199,7 @@
                                            "namespace" namespace
                                            "name" name
                                            "rootEntityType" rootEntityType)
-                                :headers {"Content-Type" "application/json"}
+                                :headers utils/content-type=json
                                 :on-done (fn [{:keys [success? get-parsed-response]}]
                                            (swap! state dissoc :blocking-text)
                                            (if success?
@@ -221,7 +221,7 @@
                     (get-in props [:method "namespace"])
                     (get-in props [:method "name"])
                     (get-in props [:method "snapshotId"]))
-        :headers {"Content-Type" "application/json"}
+        :headers utils/content-type=json
         :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                    (if success?
                      (swap! state assoc :loaded-method (get-parsed-response))

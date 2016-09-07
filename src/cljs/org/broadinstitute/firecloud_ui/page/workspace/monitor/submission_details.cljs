@@ -97,7 +97,7 @@
                        (swap! state assoc :aborting-submission? true)
                        (endpoints/call-ajax-orch
                          {:endpoint (endpoints/abort-submission (:workspace-id props) (:submission-id props))
-                          :headers {"Content-Type" "application/json"}
+                          :headers utils/content-type=json
                           :on-done (fn [{:keys [success? status-text]}]
                                      (swap! state dissoc :aborting-submission?)
                                      (if success?

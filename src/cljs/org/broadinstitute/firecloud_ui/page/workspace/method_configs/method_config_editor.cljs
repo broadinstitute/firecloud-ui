@@ -33,15 +33,15 @@
         method (get-in config ["methodRepoMethod"])
         [name rootEntityType] (get-text refs "confname" "rootentitytype")
         inputs (->> ((:inputs-outputs @state) "inputs")
-                 (map #(% "name"))
-                 (map (juxt identity #(get-text refs (str "in_" %))))
-                 (filter (fn [[k v]] (not (empty? v))))
-                 (into {}))
+                    (map #(% "name"))
+                    (map (juxt identity #(get-text refs (str "in_" %))))
+                    (filter (comp not empty? val))
+                    (into {}))
         outputs (->> ((:inputs-outputs @state) "outputs")
-                  (map #(% "name"))
-                  (map (juxt identity #(get-text refs (str "out_" %))))
-                  (filter (fn [[k v]] (not (empty? v))))
-                  (into {}))
+                     (map #(% "name"))
+                     (map (juxt identity #(get-text refs (str "out_" %))))
+                     (filter (comp not empty? val))
+                     (into {}))
         method-ref (merge method (react/call :get-fields (@refs "methodDetailsViewer")))
         new-conf (assoc config
                    "name" name
@@ -54,7 +54,7 @@
     (endpoints/call-ajax-orch
       {:endpoint (endpoints/update-workspace-method-config workspace-id config)
        :payload new-conf
-       :headers {"Content-Type" "application/json"} ;; TODO - make endpoint take text/plain
+       :headers utils/content-type=json
        :on-done (fn [{:keys [success? get-parsed-response xhr]}]
                   (if-not success?
                     (do (js/alert (str "Exception:\n" (.-statusText xhr)))
@@ -64,7 +64,7 @@
                       (endpoints/call-ajax-orch ;; TODO - make unified call in orchestration
                         {:endpoint (endpoints/rename-workspace-method-config workspace-id config)
                          :payload (select-keys new-conf ["name" "namespace" "workspaceName"])
-                         :headers {"Content-Type" "application/json"}
+                         :headers utils/content-type=json
                          :on-done (fn [{:keys [success? xhr]}]
                                     (swap! state dissoc :blocker)
                                     (if success?
@@ -90,13 +90,13 @@
    (fn [{:keys [this props state]}]
      (react/call :load-agora-method this props state))
    :load-agora-method
-   (fn [{:keys [props state]} method-ref]
+   (fn [{:keys [state]} method-ref]
      (endpoints/call-ajax-orch
        {:endpoint (endpoints/get-agora-method
                     (:namespace method-ref)
                     (:name method-ref)
                     (:snapshotId method-ref))
-        :headers {"Content-Type" "application/json"}
+        :headers utils/content-type=json
         :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                    (if success?
                      (swap! state assoc :loaded-method (get-parsed-response))
@@ -276,6 +276,9 @@
                  (when-not (= visible (:sidebar-visible? @state))
                    (swap! state assoc :sidebar-visible? visible))))))
      (.addEventListener js/window "scroll" (.-onScrollHandler this)))
+   :component-will-unmount
+   (fn [{:keys [this]}]
+     (.removeEventListener js/window "scroll" (.-onScrollHandler this)))
    :load-validated-method-config
    (fn [{:keys [state props]}]
      (endpoints/call-ajax-orch
@@ -286,7 +289,7 @@
                             (endpoints/call-ajax-orch
                               {:endpoint endpoints/get-inputs-outputs
                                :payload (get-in response ["methodConfiguration" "methodRepoMethod"])
-                               :headers {"Content-Type" "application/json"}
+                               :headers utils/content-type=json
                                :on-done (fn [{:keys [success? get-parsed-response]}]
                                             (if success?
                                               (swap! state assoc :loaded-config response :inputs-outputs (get-parsed-response))
@@ -294,40 +297,40 @@
                        (swap! state assoc :error status-text)))}))
    :load-new-method-template
    (fn [{:keys [state refs]} new-snapshot-id]
-     (let [namespace (get-in (:loaded-config @state) ["methodConfiguration" "methodRepoMethod" "methodNamespace"])
-           name (get-in (:loaded-config @state) ["methodConfiguration" "methodRepoMethod" "methodName"])
-           method-ref {"methodNamespace" namespace
-                       "methodName" name
+     (let [[method-namespace method-name] (map (fn [key]
+                                                 (get-in (:loaded-config @state)
+                                                         ["methodConfiguration" "methodRepoMethod" key]))
+                                               ["methodNamespace" "methodName"])
+           config-namespace+name (select-keys (get-in @state [:loaded-config "methodConfiguration"])
+                                              ["namespace" "name"])
+           method-ref {"methodNamespace" method-namespace
+                       "methodName" method-name
                        "methodVersion" new-snapshot-id}]
        (swap! state assoc :blocker "Updating...")
-       (react/call :load-agora-method (@refs "methodDetailsViewer") {:namespace namespace
-                                                                     :name name
+       (react/call :load-agora-method (@refs "methodDetailsViewer") {:namespace method-namespace
+                                                                     :name method-name
                                                                      :snapshotId new-snapshot-id})
        (endpoints/call-ajax-orch
          {:endpoint (endpoints/create-template method-ref)
           :payload method-ref
-          :headers {"Content-Type" "application/json"}
+          :headers utils/content-type=json
           :on-done (fn [{:keys [success? get-parsed-response status-text]}]
-                       (if success?
-                         (let [response (get-parsed-response)]
-                              (endpoints/call-ajax-orch
-                                {:endpoint endpoints/get-inputs-outputs
-                                 :payload (get-in response ["methodRepoMethod"])
-                                 :headers {"Content-Type" "application/json"}
-                                 :on-done (fn [{:keys [success? get-parsed-response]}]
-                                            (swap! state dissoc :blocker)
-                                            (let [template {"methodConfiguration" (assoc response
-                                                                                    "namespace" namespace
-                                                                                    "name" name)}]
-                                              (if success?
-                                                (swap! state assoc :loaded-config (assoc template
-                                                                                    "invalidInputs" {}
-                                                                                    "validInputs" {}
-                                                                                    "invalidOutputs" {}
-                                                                                    "validOutputs" {})
-                                                       :inputs-outputs (get-parsed-response))
-                                                (swap! state assoc :error ((get-parsed-response) "message")))))}))
-                         (swap! state assoc :error status-text)))})))
-   :component-will-unmount
-   (fn [{:keys [this]}]
-     (.removeEventListener js/window "scroll" (.-onScrollHandler this)))})
+                     (if success?
+                       (let [response (get-parsed-response)]
+                         (endpoints/call-ajax-orch
+                           {:endpoint endpoints/get-inputs-outputs
+                            :payload (response "methodRepoMethod")
+                            :headers utils/content-type=json
+                            :on-done (fn [{:keys [success? get-parsed-response]}]
+                                       (swap! state dissoc :blocker)
+                                       (let [template {"methodConfiguration" (merge response config-namespace+name)}]
+                                         (if success?
+                                           (swap! state assoc
+                                                  :loaded-config (assoc template
+                                                                   "invalidInputs" {}
+                                                                   "validInputs" {}
+                                                                   "invalidOutputs" {}
+                                                                   "validOutputs" {})
+                                                  :inputs-outputs (get-parsed-response))
+                                           (swap! state assoc :error ((get-parsed-response) "message")))))}))
+                       (swap! state assoc :error status-text)))})))})

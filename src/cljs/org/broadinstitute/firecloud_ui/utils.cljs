@@ -92,6 +92,9 @@
 (defn get-access-token-cookie []
   (.get goog.net.cookies "FCtoken"))
 
+;; TODO - make this unnecessary
+(def content-type=json {"Content-Type" "application/json"})
+
 (defn ajax [arg-map]
   (let [url (:url arg-map)
         on-done (:on-done arg-map)

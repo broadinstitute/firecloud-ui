@@ -112,7 +112,7 @@
                       :documentation documentation
                       :payload wdl
                       :entityType type}
-            :headers {"Content-Type" "application/json"}
+            :headers utils/content-type=json
             :on-done
             (fn [{:keys [success? get-parsed-response]}]
               (swap! state dissoc :uploading?)
