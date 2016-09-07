@@ -26,17 +26,19 @@
      {:color (:button-blue style/colors)})
    :render
    (fn [{:keys [props]}]
-     (let [{:keys [color icon href disabled? onClick text style class-name]} props]
+     (let [{:keys [color icon href disabled? onClick text style type class-name]} props]
        [:a {:className (or class-name "button")
-            :style {:display "inline-block"
-                    :backgroundColor color
-                    :WebkitFilter (when disabled? "grayscale()")
-                    :cursor (when disabled? "default")
-                    :color "white" :fontWeight 500
-                    :borderRadius 2 :padding (if icon "0.7em" "0.7em 1em")
-                    :fontFamily (when icon "fontIcons")
-                    :fontSize (when icon "80%")
-                    :textDecoration "none"}
+            :style (merge
+                     {:display "inline-block"
+                      :backgroundColor color
+                      :WebkitFilter (when disabled? "grayscale()")
+                      :cursor (when disabled? "default")
+                      :color "white" :fontWeight 500
+                      :borderRadius 2 :padding (if icon "0.7em" "0.7em 1em")
+                      :fontFamily (when icon "fontIcons")
+                      :fontSize (when icon "80%")
+                      :textDecoration "none"}
+                     (if (map? style) style {}))
             :href (or href "javascript:;")
             :onClick (if disabled?
                        #(js/alert (if (string? disabled?) disabled? "This action is disabled"))
@@ -44,7 +46,7 @@
             :onKeyDown (when (and onClick (not disabled?))
                          (common/create-key-handler [:space :enter] onClick))}
         (or text (icons/icon-text icon))
-        (when (= style :add)
+        (when (= type :add)
           [:span {:style {:display "inline-block" :height "1em" :width "1em" :marginLeft "1em"
                           :position "relative"}}
            [:span {:style {:position "absolute" :top "-55%" :fontSize "200%" :fontWeight "normal"}}
