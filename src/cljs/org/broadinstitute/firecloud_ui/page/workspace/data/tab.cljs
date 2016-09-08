@@ -98,10 +98,11 @@
               :attribute-renderer (fn [maybe-uri]
                                     (if (string? maybe-uri)
                                       (if-let [parsed (common/parse-gcs-uri maybe-uri)]
-                                        [GCSFilePreviewLink (assoc parsed :attributes
-                                                              {:style {:direction "rtl" :marginRight "0.5em"
-                                                                       :overflow "hidden" :textOverflow "ellipsis"
-                                                                       :textAlign "left"}})]
+                                        [GCSFilePreviewLink (assoc parsed
+                                                              :workspace-bucket (get-in workspace ["workspace" "bucketName"])
+                                                              :attributes {:style {:direction "rtl" :marginRight "0.5em"
+                                                                                   :overflow "hidden" :textOverflow "ellipsis"
+                                                                                   :textAlign "left"}})]
                                         maybe-uri)
                                       (table-utils/default-render maybe-uri)))}])
           :else

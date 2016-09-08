@@ -84,8 +84,11 @@
                                                :status status-code})))}))})]
     {:render
      (fn [{:keys [props]}]
-       (assert (:bucket-name props) "No bucket name provided")
-       (assert (:object props) "No GCS object provided")
-       [:div (or (:attributes props) {})
-        [:a {:href "javascript:;" :onClick #(modal/push-modal [PreviewDialog props])}
-         (:object props)]])}))
+       (let [{:keys [bucket-name object workspace-bucket]} props]
+         (assert bucket-name "No bucket name provided")
+         (assert object "No GCS object provided")
+         [:div (or (:attributes props) {})
+          [:a {:href "javascript:;" :onClick #(modal/push-modal [PreviewDialog props])}
+           (if (= bucket-name workspace-bucket)
+             object
+             (str "gs://" bucket-name "/" object))]]))}))
