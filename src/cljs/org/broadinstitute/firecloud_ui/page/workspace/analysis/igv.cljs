@@ -13,13 +13,14 @@
                      :bam {:coverageThreshold 0.2
                            :coverageQualityWeight true}}
      :tracks (map-indexed (fn [index {:keys [track-url index-url]}]
-                            {:name (str "Track " (inc index))
-                             :url (common/gcs-uri->google-url track-url)
-                             :indexURL (when (string? @index-url) (common/gcs-uri->google-url @index-url))
-                             :headers {:Authorization (str "Bearer " (utils/get-access-token-cookie))}
-                             :displayMode "EXPANDED"
-                             :height 200
-                             :autoHeight false})
+                            (let [bam? (.endsWith track-url ".bam")]
+                              {:name (str "Track " (inc index))
+                               :url (common/gcs-uri->google-url track-url)
+                               :indexURL (when (string? @index-url) (common/gcs-uri->google-url @index-url))
+                               :headers {:Authorization (str "Bearer " (utils/get-access-token-cookie))}
+                               :displayMode "EXPANDED"
+                               :height (when bam? 200)
+                               :autoHeight (when bam? false)}))
                           tracks)}))
 
 
@@ -31,8 +32,9 @@
    (fn [{:keys [this]}]
      (react/call :refresh this))
    :component-did-update
-   (fn [{:keys [this]}]
-     (react/call :refresh this))
+   (fn [{:keys [props prev-props this]}]
+     (when (not= (:tracks props) (:tracks prev-props))
+       (react/call :refresh this)))
    :refresh
    (fn [{:keys [props refs]}]
      (.createBrowser js/igv (@refs "container") (options (:tracks props))))})
