@@ -9,6 +9,9 @@
     ))
 
 
+(def ^:private tracks-cache (atom {}))
+
+
 (react/defc Page
   {:refresh
    (fn [])
@@ -23,8 +26,11 @@
                            :tracks (:tracks @state)
                            :on-ok #(swap! state assoc :tracks %))]))}])
    :get-initial-state
-   (fn []
-     {:tracks []})
+   (fn [{:keys [props]}]
+     {:tracks (get @tracks-cache (:workspace-id props) [])})
    :render
    (fn [{:keys [state]}]
-     [IGVContainer {:tracks (:tracks @state)}])})
+     [IGVContainer {:tracks (:tracks @state)}])
+   :component-will-unmount
+   (fn [{:keys [props state]}]
+     (swap! tracks-cache assoc (:workspace-id props) (:tracks @state)))})
