@@ -672,7 +672,7 @@
                 (if success?
                   (let [pred (if include-pending?
                                (constantly true)
-                               #(not= (% "creationStatus") "pending"))]
+                               #(not= (% "creationStatus") "Creating"))]
                     (on-done nil (filterv pred (get-parsed-response))))
                   (on-done status-text nil)))})))
 
