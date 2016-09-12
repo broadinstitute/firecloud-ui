@@ -69,10 +69,10 @@
         {:columns [{:header "Project Name" :starting-width 400
                     :as-text #(% "projectName") :sort-by :text
                     :content-renderer
-                    (fn [{:strs [projectName role status]}]
+                    (fn [{:strs [projectName role creationStatus]}]
                       [:span {}
                        (cond
-                         (= status project-status-creating)
+                         (= creationStatus project-status-creating)
                          [PendingProjectControl
                           {:project-name projectName
                            :on-status-change #(react/call :-handle-status-change this
@@ -109,7 +109,7 @@
      (let [project-index (utils/first-matching-index
                           #(= (% "projectName") project-name)
                           (:projects @state))]
-       (swap! state assoc-in [:projects project-index "status"] new-status)))})
+       (swap! state assoc-in [:projects project-index "creationStatus"] new-status)))})
 
 
 (react/defc Page

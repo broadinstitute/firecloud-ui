@@ -670,7 +670,9 @@
                 :mock-data (utils/rand-subset ["broad-dsde-dev" "broad-institute"])}
      :on-done (fn [{:keys [success? status-text get-parsed-response]}]
                 (if success?
-                  (let [pred (if include-pending? (constantly true) #(not= (% "status") "pending"))]
+                  (let [pred (if include-pending?
+                               (constantly true)
+                               #(not= (% "creationStatus") "pending"))]
                     (on-done nil (filterv pred (get-parsed-response))))
                   (on-done status-text nil)))})))
 
@@ -680,7 +682,8 @@
    (fn [err-text projects]
      (if err-text
        (on-done nil)
-       (on-done (get (first (filter #(= project-name (% "projectName")) projects)) "status"))))))
+       (on-done
+        (get (first (filter #(= project-name (% "projectName")) projects)) "creationStatus"))))))
 
 (defn get-billing-accounts []
   {:path (str "/profile/billingAccounts?callback="
