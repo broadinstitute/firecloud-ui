@@ -84,11 +84,11 @@
                    {:header "Role" :starting-width 100}]
          :toolbar
          (float-right
-           (when false ; hidden until implemented
-             [comps/Button {:text "Create New Billing Project"
-                            :onClick (fn []
-                                       (modal/push-modal
-                                         [CreateBillingProjectDialog {:on-success #(react/call :reload this)}]))}]))
+          [comps/Button {:text "Create New Billing Project"
+                         :onClick (fn []
+                                    (modal/push-modal
+                                     [CreateBillingProjectDialog
+                                      {:on-success #(react/call :reload this)}]))}])
          :data (:projects @state)
          :->row (fn [{:strs [role] :as row}]
                   [row
