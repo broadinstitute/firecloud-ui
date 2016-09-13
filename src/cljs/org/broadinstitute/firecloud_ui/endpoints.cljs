@@ -661,10 +661,29 @@
     :canned-response {:status 200 :delay-ms (rand-int 2000)}}))
 
 
-(defn get-billing-projects []
-  {:path "/profile/billing"
-   :method :get
-   :mock-data (utils/rand-subset ["broad-dsde-dev" "broad-institute"])})
+(defn get-billing-projects
+  ([on-done] (get-billing-projects false on-done))
+  ([include-pending? on-done]
+   (call-ajax-orch
+    {:endpoint {:path "/profile/billing"
+                :method :get
+                :mock-data (utils/rand-subset ["broad-dsde-dev" "broad-institute"])}
+     :on-done (fn [{:keys [success? status-text get-parsed-response]}]
+                (if success?
+                  (let [pred (if include-pending?
+                               (constantly true)
+                               #(not= (% "creationStatus") "Creating"))]
+                    (on-done nil (filterv pred (get-parsed-response))))
+                  (on-done status-text nil)))})))
+
+(defn get-billing-project-status [project-name on-done]
+  (get-billing-projects
+   true
+   (fn [err-text projects]
+     (if err-text
+       (on-done nil)
+       (on-done
+        (get (first (filter #(= project-name (% "projectName")) projects)) "creationStatus"))))))
 
 (defn get-billing-accounts []
   {:path (str "/profile/billingAccounts?callback="

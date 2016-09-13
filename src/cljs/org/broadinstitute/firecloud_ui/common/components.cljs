@@ -20,6 +20,26 @@
       (:text props)])})
 
 
+(react/defc AnimatedEllipsis
+  {:get-initial-state
+   (fn []
+     {:dot-count 0})
+   :render
+   (fn [{:keys [state]}]
+     [:span {}
+      (repeat (:dot-count @state) ".")])
+   :component-did-mount
+   (fn [{:keys [this]}]
+     (react/call :-cycle this))
+   :component-will-unmount
+   (fn [{:keys [locals]}]
+     (js/clearTimeout (:-cycle @locals)))
+   :-cycle
+   (fn [{:keys [this state locals]}]
+     (swap! state update-in [:dot-count] #(mod (inc %) 4))
+     (swap! locals assoc :-cycle (js/setTimeout #(react/call :-cycle this) 600)))})
+
+
 (react/defc Button
   {:get-default-props
    (fn []

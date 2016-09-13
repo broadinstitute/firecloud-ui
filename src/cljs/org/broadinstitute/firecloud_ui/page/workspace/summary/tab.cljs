@@ -235,11 +235,9 @@
                             assoc :submissions-count (get-parsed-response))
                      (swap! state update-in [:server-response]
                             assoc :server-error status-text)))})
-     (endpoints/call-ajax-orch
-       {:endpoint (endpoints/get-billing-projects)
-        :on-done (fn [{:keys [success? status-text get-parsed-response]}]
-                   (if success?
-                     (swap! state update-in [:server-response]
-                            assoc :billing-projects (map #(% "projectName") (get-parsed-response)))
-                     (swap! state update-in [:server-response]
-                            assoc :server-error status-text)))}))})
+     (endpoints/get-billing-projects
+      (fn [err-text projects]
+        (if err-text
+          (swap! state update-in [:server-response] assoc :server-error err-text)
+          (swap! state update-in [:server-response]
+                 assoc :billing-projects (map #(% "projectName") projects))))))})

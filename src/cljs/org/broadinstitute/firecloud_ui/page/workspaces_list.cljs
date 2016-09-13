@@ -133,7 +133,8 @@
           :cell-content-style {:padding nil}
           :toolbar (float-right [create/Button {:nav-context (:nav-context props)
                                                 :billing-projects (:billing-projects props)
-                                                :disabled-reason (:disabled-reason props)}] {:marginTop -5})
+                                                :disabled-reason (:disabled-reason props)}]
+                                {:marginTop -5})
           :filter-groups [{:text "All" :pred (constantly true)}
                           {:text "Complete" :pred #(= "Complete" (:status %))}
                           {:text "Running" :pred #(= "Running" (:status %))}
@@ -218,16 +219,14 @@
                                            (get-parsed-response)))
                      (swap! state update-in [:server-response]
                        assoc :error-message status-text)))})
-     (endpoints/call-ajax-orch
-       {:endpoint (endpoints/get-billing-projects)
-        :on-done (fn [{:keys [success? status-text get-parsed-response]}]
-                   (if success?
-                     (let [billing-projects (get-parsed-response)]
-                       (swap! state update-in [:server-response] assoc
-                              :billing-projects (map #(% "projectName") billing-projects)
-                              :disabled-reason (if (empty? billing-projects) :no-billing nil)))
-                     (swap! state update-in [:server-response] assoc
-                            :error-message status-text :disabled-reason :error)))}))})
+     (endpoints/get-billing-projects
+      (fn [err-text projects]
+        (if err-text
+          (swap! state update-in [:server-response] assoc
+                 :error-message err-text :disabled-reason :error)
+          (swap! state update-in [:server-response] assoc
+                 :billing-projects (map #(% "projectName") projects)
+                 :disabled-reason (if (empty? projects) :no-billing nil))))))})
 
 
 (defn- create-breadcrumbs-from-hash [hash]
