@@ -149,6 +149,18 @@
 (defonce pending-calls (atom []))
 
 
+(defn- check-maintenance-mode [status-code status-text]
+  (or (= status-code 502)
+      ;; status code 0 means maintenance mode--unless it's this net::ERR_CONNECTION_REFUSED thing
+      ;; which has a completely empty response, so exclude that.
+      (and (= status-code 0)
+           (not (empty? status-text)))))
+
+(defn- check-server-down [status-code]
+  (or (= 501 status-code)
+      (<= 503 status-code 599)))
+
+
 (defn ajax-orch [path arg-map & {:keys [service-prefix ignore-auth-expiration?] :or {service-prefix "/api"}}]
   (assert (= (subs path 0 1) "/") (str "Path must start with '/': " path))
   (let [on-done (:on-done arg-map)]
@@ -156,11 +168,11 @@
            arg-map :url (str (config/api-url-root) service-prefix path)
            :headers (merge {"Authorization" (str "Bearer " @access-token)}
                            (:headers arg-map))
-           :on-done (fn [{:keys [status-code] :as m}]
+           :on-done (fn [{:keys [status-code status-text] :as m}]
                       (when (and (not @server-down?)  (not @maintenance-mode?))
                         (cond
-                          (contains? #{0 502} status-code) (reset! maintenance-mode? true)
-                          (contains? (set (range 501 600)) status-code) (reset! server-down? true)))
+                          (check-maintenance-mode status-code status-text) (reset! maintenance-mode? true)
+                          (check-server-down status-code) (reset! server-down? true)))
                       ;; Handle auth token expiration
                       (if (and (= status-code 401) (not ignore-auth-expiration?))
                         (do
