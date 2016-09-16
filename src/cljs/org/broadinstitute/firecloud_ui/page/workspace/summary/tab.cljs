@@ -122,7 +122,7 @@
                                                              :on-delete (:on-delete props)}])}]))]))
 
 
-(defn- render-main [state props refs ws owner? bucket-access? submissions-count]
+(defn- render-main [state props refs ws owner? bucket-access? submissions-count library-schema]
   (let [owners (ws "owners")]
     [:div {:style {:flex "1 1 auto" :overflow "hidden"}}
      [:div {:style {:flex "1 1 auto" :display "flex"}}
@@ -180,11 +180,11 @@
    (fn [{:keys [refs state props this]}]
      (let [server-response (:server-response @state)
            {:keys [workspace]} props
-           {:keys [submissions-count billing-projects server-error]} server-response]
+           {:keys [submissions-count billing-projects library-schema library-curator? server-error]} server-response]
        (cond
          server-error
          (style/create-server-error-message server-error)
-         (some nil? [workspace submissions-count billing-projects])
+         (some nil? [workspace submissions-count billing-projects library-schema library-curator?])
          [:div {:style {:textAlign "center" :padding "1em"}}
           [comps/Spinner {:text "Loading workspace..."}]]
          :else
@@ -193,7 +193,7 @@
            [:div {:style {:margin "45px 25px" :display "flex"}}
             (render-overlays state)
             (render-sidebar state props refs this workspace billing-projects owner? writer?)
-            (render-main state props refs workspace owner? (:bucket-access? props) submissions-count)]))))
+            (render-main state props refs workspace owner? (:bucket-access? props) submissions-count library-schema)]))))
    :lock-or-unlock
    (fn [{:keys [props state this]} locked-now?]
      (swap! state assoc :locking? locked-now?)
@@ -242,4 +242,15 @@
         (if err-text
           (swap! state update-in [:server-response] assoc :server-error err-text)
           (swap! state update-in [:server-response]
-                 assoc :billing-projects (map #(% "projectName") projects))))))})
+                 assoc :billing-projects (map #(% "projectName") projects)))))
+     (endpoints/get-library-attributes
+       (fn [{:keys [success? get-parsed-response]}]
+         (if success?
+           (let [response (utils/keywordize-keys (get-parsed-response))]
+             (swap! state update-in [:server-response] assoc :library-schema
+                    (-> response
+                        (assoc :required (map keyword (:required response)))
+                        (assoc :propertyOrder (map keyword (:propertyOrder response))))))
+           (swap! state update-in [:server-response] assoc :server-error "Unable to load library schema"))))
+     (endpoints/get-library-curator-status
+       #(swap! state update-in [:server-response] assoc :library-curator? %)))})
