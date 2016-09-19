@@ -62,12 +62,12 @@
 
 
 (defn- render-sidebar [state props refs this ws billing-projects owner? writer?]
-  (let [locked? (get-in ws ["workspace" "isLocked"])
+  (let [locked? (get-in ws [:workspace :isLocked])
         status (common/compute-status ws)]
     [:div {:style {:flex "0 0 270px" :paddingRight 30}}
      [comps/StatusLabel {:text (str status
                                  (when (= status "Running")
-                                   (str " (" (get-in ws ["workspaceSubmissionStats" "runningSubmissionsCount"]) ")")))
+                                   (str " (" (get-in ws [:workspaceSubmissionStats :runningSubmissionsCount]) ")")))
                          :icon (case status
                                  "Complete" [icons/CompleteIcon {:size 36}]
                                  "Running" [icons/RunningIcon {:size 36}]
@@ -107,8 +107,8 @@
                                                           (swap! state dissoc :cloning?)
                                                           ((:on-clone props) (str namespace ":" name)))
                                             :workspace-id (:workspace-id props)
-                                            :description (get-in ws ["workspace" "attributes" "description"])
-                                            :is-protected? (get-in ws ["workspace" "isProtected"])
+                                            :description (:description ws)
+                                            :is-protected? (get-in ws [:workspace :isProtected])
                                             :billing-projects billing-projects}])}])
        (when-not (and owner? (:editing? @state))
          [comps/SidebarButton {:style :light :margin :top :color :button-blue
@@ -125,7 +125,7 @@
 
 
 (defn- render-main [state props refs ws owner? bucket-access? submissions-count library-schema]
-  (let [owners (ws "owners")]
+  (let [owners (:owners ws)]
     [:div {:style {:flex "1 1 auto" :overflow "hidden"}}
      [:div {:style {:flex "1 1 auto" :display "flex"}}
       [:div {:style {:flex "1 1 50%"}}
@@ -144,19 +144,19 @@
              ")"])])
        (style/create-section-header "Created By")
        (style/create-paragraph
-         [:div {} (get-in ws ["workspace" "createdBy"])]
-         [:div {} (common/format-date (get-in ws ["workspace" "createdDate"]))])]
+         [:div {} (get-in ws [:workspace :createdBy])]
+         [:div {} (common/format-date (get-in ws [:workspace :createdDate]))])]
       [:div {:style {:flex "1 1 50%" :paddingLeft 10}}
        (style/create-section-header "Google Bucket")
        (style/create-paragraph
          (case bucket-access?
            nil [:div {:style {:position "absolute" :marginTop "-1.5em"}}
                 [comps/Spinner {:height "1.5ex"}]]
-           true (style/create-link {:text (get-in ws ["workspace" "bucketName"])
-                                    :href (str "https://console.developers.google.com/storage/browser/" (get-in ws ["workspace" "bucketName"]) "/")
+           true (style/create-link {:text (get-in ws [:workspace :bucketName])
+                                    :href (str "https://console.developers.google.com/storage/browser/" (get-in ws [:workspace :bucketName]) "/")
                                     :title "Click to open the Google Cloud Storage browser for this bucket"
                                     :target "_blank"})
-           false (get-in ws ["workspace" "bucketName"])))
+           false (get-in ws [:workspace :bucketName])))
        (style/create-section-header "Analysis Submissions")
        (style/create-paragraph
          (let [count-all (apply + (vals submissions-count))]
@@ -168,12 +168,13 @@
                  [:li {} (str subs " " status)])])]))]]
      (style/create-section-header "Description")
      (style/create-paragraph
-       (let [description (not-empty (get-in ws ["workspace" "attributes" "description"]))]
+       (let [description (not-empty (get-in ws [:workspace :description]))]
          (cond (:editing? @state) (react/create-element [MarkdownEditor {:ref "description" :initial-text description}])
                description [MarkdownView {:text description}]
                :else [:span {:style {:fontStyle "italic"}} "No description provided"])))
      (attributes/view-attributes state refs)
-     [library/LibraryAttributeViewer {:workspace ws :library-schema library-schema}]]))
+     [library/LibraryAttributeViewer {:library-attributes (not-empty (get-in ws [:workspace :library-attributes]))
+                                      :library-schema library-schema}]]))
 
 (react/defc Summary
   {:get-initial-state
@@ -191,8 +192,8 @@
          [:div {:style {:textAlign "center" :padding "1em"}}
           [comps/Spinner {:text "Loading workspace..."}]]
          :else
-         (let [owner? (= "OWNER" (workspace "accessLevel"))
-               writer? (or owner? (= "WRITER" (workspace "accessLevel")))]
+         (let [owner? (= "OWNER" (:accessLevel workspace))
+               writer? (or owner? (= "WRITER" (:accessLevel workspace)))]
            [:div {:style {:margin "45px 25px" :display "flex"}}
             (render-overlays state)
             (render-sidebar state props refs this workspace billing-projects owner? writer?)
@@ -225,7 +226,7 @@
    (fn [{:keys [prev-props props state]}]
      (when (not= (:workspace prev-props) (:workspace props))
        (swap! state assoc :attrs-list
-              (vec (dissoc (get-in props [:workspace "workspace" "attributes"]) "description")))))
+              (vec (get-in props [:workspace :workspace :workspace-attributes])))))
    :component-will-unmount
    (fn [{:keys [locals]}]
      (.removeEventListener js/window "scroll" (:scroll-handler @locals)))

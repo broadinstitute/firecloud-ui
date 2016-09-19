@@ -28,14 +28,10 @@
 (react/defc LibraryAttributeViewer
   {:render
    (fn [{:keys [props state]}]
-     (let [{:keys [workspace library-schema]} props
+     (let [{:keys [library-attributes library-schema]} props
            display-properties (calculate-display-properties library-schema)
            [above-fold below-fold] (split-fold library-schema display-properties)
-           below-fold (not-empty below-fold)
-           library-attributes (->> (workspace "attributes")
-                                   (keep (fn [[k v]] (when (.startsWith k "library:") [(keyword (subs k 8)) v])))
-                                   (into {})
-                                   not-empty)]
+           below-fold (not-empty below-fold)]
        [:div {}
         (style/create-section-header "Dataset Attributes")
         (style/create-paragraph

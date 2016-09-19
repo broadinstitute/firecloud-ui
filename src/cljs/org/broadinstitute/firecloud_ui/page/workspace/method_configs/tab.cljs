@@ -29,7 +29,7 @@
    (fn [{:keys [props state]}]
      (let [server-response (:server-response @state)
            {:keys [configs error-message]} server-response
-           locked? (get-in props [:workspace "workspace" "isLocked"])]
+           locked? (get-in props [:workspace :workspace :isLocked])]
        (cond
          error-message (style/create-server-error-message error-message)
          configs
