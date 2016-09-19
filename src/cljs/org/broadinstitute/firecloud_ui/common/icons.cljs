@@ -22,7 +22,10 @@
    :warning-triangle "warning"
    :error "error"
    :search "search"
-   :share "share"})
+   :share "share"
+   :library "import_contacts"
+   :publish "publish"
+   :catalog "local_offer"})
 
 (defn icon [attributes key]
   [:span (utils/deep-merge

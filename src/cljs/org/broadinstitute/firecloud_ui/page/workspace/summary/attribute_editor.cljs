@@ -10,14 +10,10 @@
     [org.broadinstitute.firecloud-ui.utils :as utils]
     ))
 
-
-(defn- create-section [& children]
-  [:div {:style {:padding "1em 0 2em 0"}} children])
-
 (defn view-attributes [state refs]
   [:div {}
    (style/create-section-header "Workspace Attributes")
-   (create-section
+   (style/create-paragraph
      (when (or (:saving? @state) (:deleting? @state))
        [comps/Blocker {:banner "Updating..."}])
      [:div {}
@@ -72,7 +68,7 @@
       (when (and (not (:editing? @state))
               (empty? (:attrs-list @state))
               (not (:saving? @state)))
-        (style/create-paragraph [:em {} "There are no attributes to display"]))])])
+        [:em {} "There are no attributes to display"])])])
 
 (defn save-attributes [state props this description]
   (let

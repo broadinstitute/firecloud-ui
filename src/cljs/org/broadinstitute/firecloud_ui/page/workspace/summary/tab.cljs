@@ -12,6 +12,7 @@
     [org.broadinstitute.firecloud-ui.page.workspace.monitor.common :refer [all-success? any-running? any-failed?]]
     [org.broadinstitute.firecloud-ui.page.workspace.summary.acl-editor :refer [AclEditor]]
     [org.broadinstitute.firecloud-ui.page.workspace.summary.attribute-editor :as attributes]
+    [org.broadinstitute.firecloud-ui.page.workspace.summary.library :as library]
     [org.broadinstitute.firecloud-ui.page.workspace.summary.workspace-cloner :refer [WorkspaceCloner]]
     [org.broadinstitute.firecloud-ui.utils :as utils]))
 
@@ -171,7 +172,8 @@
          (cond (:editing? @state) (react/create-element [MarkdownEditor {:ref "description" :initial-text description}])
                description [MarkdownView {:text description}]
                :else [:span {:style {:fontStyle "italic"}} "No description provided"])))
-     (attributes/view-attributes state refs)]))
+     (attributes/view-attributes state refs)
+     [library/LibraryAttributeViewer {:workspace ws :library-schema library-schema}]]))
 
 (react/defc Summary
   {:get-initial-state
