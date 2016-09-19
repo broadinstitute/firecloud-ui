@@ -201,7 +201,7 @@
          (when (:validation-errors @state)
            [:div {:style {:marginBottom "1em"}}
             [:span {:style {:paddingRight "1ex"}}
-             (icons/font-icon {:style {:color (:exception-red style/colors)}}
+             (icons/icon {:style {:color (:exception-red style/colors)}}
                :status-warning-triangle)] "Validation Errors: "
             [:ul {}
              (map (fn [e] [:li {} e]) (:validation-errors @state))]])

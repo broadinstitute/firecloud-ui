@@ -23,7 +23,7 @@
      [:div {}
       (map-indexed
         (fn [i [attr-key attr-value]]
-          [:div {:style {:display "flex" :alignItems "baseline"}}
+          [:div {:style {:display "flex" :alignItems "baseline" :marginBottom "0.75em"}}
            [:div {:style {:flex "35 0 auto" :marginRight "0.5em"}}
             (style/create-text-field
               {:ref (str "key_" i)
@@ -37,7 +37,7 @@
                                 (not (:editing? @state)))
                           {:backgroundColor (:background-gray style/colors)}
                           {:backgroundColor "#fff"})
-                        {:width "100%"})})]
+                        {:width "100%" :marginBottom 0})})]
            [:div {:style {:flex "65 0 auto"}}
             (style/create-text-field
               {:ref (str "val_" i)
@@ -49,21 +49,20 @@
                         (if-not (:editing? @state)
                           {:backgroundColor (:background-gray style/colors)}
                           {:backgroundColor "#fff"})
-                        {:width "100%"})})]
+                        {:width "100%" :marginBottom 0})})]
            (when (:editing? @state)
-             (icons/font-icon
-               {:style {:color "red" :cursor "pointer" :margin "0 0.5em"}
-                :onClick (fn [e]
+             (icons/icon
+               {:style {:color (:exception-red style/colors) :cursor "pointer" :margin "0 0.5em" :alignSelf "center"}
+                :onClick (fn [_]
                            (when (contains? (:reserved-keys @state) i)
                              ;if it's reserved delete i from the reservation list
                              (swap! state update-in [:reserved-keys] utils/delete i))
                            ;delete the item from the list unconditionally
                            (swap! state update-in [:attrs-list] utils/delete i))}
-               :x))
-           (common/clear-both)])
+               :remove))])
         (:attrs-list @state))
       (when (:editing? @state)
-        [comps/Button {:type :add :text "Add new"
+        [comps/Button {:icon :add :text "Add new"
                        :onClick (fn [_]
                                   (swap! state update-in [:attrs-list] conj ["" ""])
                                   (js/setTimeout

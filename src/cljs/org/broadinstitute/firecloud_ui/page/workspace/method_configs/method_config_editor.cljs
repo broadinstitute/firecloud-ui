@@ -113,12 +113,12 @@
        [:div {:style {:lineHeight 1}}
         (when-not editing?
           [comps/SidebarButton {:style :light :color :button-blue
-                                :text "Edit this page" :icon :pencil
+                                :text "Edit this page" :icon :edit
                                 :disabled? (when locked? "The workspace is locked")
                                 :onClick #(swap! state assoc :editing? true)}])
         (when-not editing?
           [comps/SidebarButton {:style :light :color :exception-red :margin :top
-                                :text "Delete" :icon :trash-can
+                                :text "Delete" :icon :delete
                                 :disabled? (when locked? "The workspace is locked")
                                 :onClick #(modal/push-modal
                                            [delete/DeleteDialog {:config config
@@ -134,12 +134,12 @@
 
         (when editing?
           [comps/SidebarButton {:color :success-green
-                                :text "Save" :icon :status-done
+                                :text "Save" :icon :done
                                 :onClick #(do (commit state refs config props)
                                               (stop-editing state))}])
         (when editing?
           [comps/SidebarButton {:color :exception-red :margin :top
-                                :text "Cancel Editing" :icon :x
+                                :text "Cancel Editing" :icon :cancel
                                 :onClick #(stop-editing state)}])]))])
 
 
@@ -153,21 +153,20 @@
                field-value (get (config value-type) field-name)
                error (invalid-values field-name)]
            [:div {}
-            [:div {:style {:float "left" :margin "0 1em 0.5em 0" :padding "0.5em" :verticalAlign "middle"
-                           :backgroundColor (:background-gray style/colors)
-                           :border style/standard-line :borderRadius 2}}
-             (str field-name ": (" (when optional? "optional ") type ")")]
-            (if editing?
-              [:div {:style {:float "left"}}
+            [:div {:style {:display "flex" :alignItems "baseline" :marginBottom "0.5em"}}
+             [:div {:style {:marginRight "1em" :padding "0.5em"
+                            :backgroundColor (:background-gray style/colors)
+                            :border style/standard-line :borderRadius 2}}
+              (str field-name ": (" (when optional? "optional ") type ")")]
+             (when editing?
                (style/create-text-field {:ref (str (if (= value-type "inputs") "in" "out") "_" field-name)
-                                         :defaultValue field-value})]
-              [:div {:style {:float "left" :marginTop "0.5em"}}
-               (or field-value [:span {:style {:fontStyle "italic"}} "No value entered"])
-               (when error
-                 (icons/font-icon {:style {:margin "0.5em 0 0 0.7em" :verticalAlign "middle"
-                                           :color (:exception-red style/colors)}}
-                   :x))])
-            (clear-both)
+                                         :defaultValue field-value}))
+             (when-not editing?
+               (or field-value [:span {:style {:fontStyle "italic"}} "No value entered"]))
+             (when (and error (not editing?))
+               (icons/icon {:style {:margin "0 0 0 0.7em" :alignSelf "center"
+                                    :color (:exception-red style/colors)}}
+                           :error))]
             (when error
               [:div {:style {:padding "0.5em" :marginBottom "0.5em"
                              :backgroundColor (:exception-red style/colors)

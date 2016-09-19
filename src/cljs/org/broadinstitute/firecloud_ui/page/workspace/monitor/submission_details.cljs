@@ -80,7 +80,7 @@
       [:div {}
        (style/create-link {:text "Workflows"
                            :onClick #(swap! state dissoc :selected-workflow)})
-       (icons/font-icon {:style {:verticalAlign "middle" :margin "0 1ex 0 1ex"}} :angle-right)
+       (icons/icon {:style {:verticalAlign "middle" :margin "0 1ex 0 1ex"}} :angle-right)
        [:b {} (:name (:selected-workflow @state))]]
       [:div {:style {:marginTop "1em"}}
        (workflow-details/render

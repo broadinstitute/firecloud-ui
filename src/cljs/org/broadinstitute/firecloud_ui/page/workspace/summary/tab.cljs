@@ -80,25 +80,25 @@
          (if (not (:editing? @state))
            [comps/SidebarButton
             {:style :light :color :button-blue :margin :top
-             :text "Edit" :icon :pencil
+             :text "Edit" :icon :edit
              :onClick #(swap! state assoc
                          :reserved-keys (vec (range 0 (count (:attrs-list @state))))
                          :orig-attrs (:attrs-list @state) :editing? true)}]
            [:div {}
             [comps/SidebarButton
              {:style :light :color :button-blue :margin :top
-              :text "Save" :icon :document
+              :text "Save" :icon :done
               :onClick #(attributes/save-attributes state props this
                           (react/call :get-text (@refs "description")))}]
             [comps/SidebarButton
              {:style :light :color :exception-red :margin :top
-              :text "Cancel Editing" :icon :x
+              :text "Cancel Editing" :icon :cancel
               :onClick #(swap! state assoc
                           :editing? false
                           :attrs-list (:orig-attrs @state))}]]))
        (when-not (:editing? @state)
          [comps/SidebarButton {:style :light :margin :top :color :button-blue
-                               :text "Clone..." :icon :plus
+                               :text "Clone..." :icon :clone
                                :disabled? (when (empty? billing-projects) "No billing projects available")
                                :onClick #(modal/push-modal
                                           [WorkspaceCloner
@@ -111,11 +111,12 @@
                                             :billing-projects billing-projects}])}])
        (when-not (and owner? (:editing? @state))
          [comps/SidebarButton {:style :light :margin :top :color :button-blue
-                               :text (if locked? "Unlock" "Lock") :icon :locked
+                               :text (if locked? "Unlock" "Lock")
+                               :icon (if locked? :unlock :lock)
                                :onClick #(react/call :lock-or-unlock this locked?)}])
        (when-not (and owner? (:editing? @state))
          [comps/SidebarButton {:style :light :margin :top :color :exception-red
-                               :text "Delete" :icon :trash-can
+                               :text "Delete" :icon :delete
                                :disabled? (if locked? "This workspace is locked")
                                :onClick #(modal/push-modal [DeleteDialog
                                                             {:workspace-id (:workspace-id props)

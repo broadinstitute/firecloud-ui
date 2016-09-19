@@ -24,7 +24,7 @@
 (react/defc Paginator
   {:render
    (fn [{:keys [props]}]
-     (let [{:keys [pagination-params num-visible-rows num-total-rows]} props
+     (let [{:keys [pagination-params num-visible-rows num-total-rows width]} props
            {:keys [current-page rows-per-page]} pagination-params
            num-pages (js/Math.ceil (/ num-visible-rows rows-per-page))
            allow-prev (> current-page 1)
@@ -32,30 +32,34 @@
            right-num (min num-visible-rows (* current-page rows-per-page))
            left-num (if (zero? right-num) 0 (inc (* (dec current-page) rows-per-page)))]
        [:div {:style {:border "1px solid #ebebeb" :padding "1em"}}
-        (let [layout-style (if (= :narrow (:width props))
-                             {:textAlign "center" :padding "1ex"}
-                             {:display "inline-block" :width "33.33%"})
+        (let [narrow? (= :narrow width)
+              container (fn [child align]
+                          (if narrow?
+                            [:div {:style {:margin "0.25em 0"}} child]
+                            [:div {:style {:width "33%" :textAlign align}} child]))
               view-component
-              [:div {:style layout-style}
-               [:b {} (str left-num " - " right-num)]
-               (str " of " (pluralize num-visible-rows " result")
+              [:div {:style {:display "inline-flex"}}
+               [:b {:style {:marginRight "1ex"}} (str left-num " - " right-num)]
+               (str "of " (pluralize num-visible-rows " result")
                  (when-not (= num-visible-rows num-total-rows)
                    (str " (filtered from " num-total-rows " total)")))]
               page-component
               (style/create-unselectable
-                :div {:style (merge {:textAlign "center"} layout-style)}
-                [:div {:style {:display "inline-block" :padding "0.55em 0.9em"
+                :div {:style {:display "inline-flex" :alignItems "baseline"}}
+                [:div {:style {:display "inline-flex" :alignItems "baseline"
+                               :padding "0em 0.9em"
                                :color (if allow-prev
                                         (:button-blue style/colors)
                                         (:border-gray style/colors))
                                :cursor (when allow-prev "pointer")}
                        :onClick (when allow-prev #((:on-change props) (update-in pagination-params [:current-page] dec)))}
-                 (icons/font-icon {:style {:fontSize "70%"}} :angle-left)
-                 [:span {:style {:paddingLeft "1em"}} "Prev"]]
-                [:span {}
+                 (icons/icon {:style {:alignSelf "center" :margin "-0.5em 0"}} :angle-left)
+                 "Prev"]
+                [:span {:style {:whiteSpace "nowrap"}}
                  (map (fn [n]
                         (let [selected? (= n current-page)]
-                          [:div {:style {:paddingTop 5 :display "inline-block" :width 29 :height 24
+                          [:div {:style {:textAlign "center"
+                                         :paddingTop 5 :display "inline-block" :width 29 :height 24
                                          :backgroundColor (when selected? (:button-blue style/colors))
                                          :color (if selected? "white" (:button-blue style/colors))
                                          :borderRadius (when selected? "100%")
@@ -63,16 +67,17 @@
                                  :onClick (when-not selected? #((:on-change props) (assoc-in pagination-params [:current-page] n)))}
                            n]))
                    (create-page-range current-page num-pages))]
-                [:div {:style {:display "inline-block" :padding "0.55em 0.9em"
+                [:div {:style {:display "inline-flex" :alignItems "baseline"
+                               :padding "0em 0.9em"
                                :color (if allow-next
                                         (:button-blue style/colors)
                                         (:border-gray style/colors))
                                :cursor (when allow-next "pointer")}
                        :onClick (when allow-next #((:on-change props) (update-in pagination-params [:current-page] inc)))}
-                 [:span {:style {:paddingRight "1em"}} "Next"]
-                 (icons/font-icon {:style {:fontSize "70%"}} :angle-right)])
+                 "Next"
+                 (icons/icon {:style {:alignSelf "center" :margin "-0.5em 0"}} :angle-right)])
               rows-component
-              [:div {:style (merge {:textAlign "right"} layout-style)}
+              [:div {:style {:display "inline-flex" :alignItems "baseline"}}
                "Display"
                (style/create-select
                  {:style {:width 60 :margin "0em 1em"}
@@ -80,9 +85,12 @@
                                                   :current-page 1})}
                  rows-per-page-options)
                "rows per page"]]
-          [:div {:style {:fontSize 13 :lineHeight 1.5 :padding "0px 48px"}}
-           view-component page-component rows-component
-           (common/clear-both)])]))})
+          [:div {:style {:fontSize 13 :lineHeight 1.5 :padding "0 48px"
+                         :display "flex" :flexDirection (if narrow? "column" "row")
+                         :alignItems (if narrow? "center" "baseline")}}
+           (container view-component "left")
+           (container page-component "center")
+           (container rows-component "right")])]))})
 
 
 (defn float-right [component & [style]]

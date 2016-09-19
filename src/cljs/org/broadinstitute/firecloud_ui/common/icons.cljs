@@ -5,30 +5,30 @@
     [org.broadinstitute.firecloud-ui.utils :as utils]
     ))
 
-(def ^:private icon-keys {:activity ""
-                          :angle-left ""
-                          :angle-right ""
-                          :document ""
-                          :gear ""
-                          :information ""
-                          :locked ""
-                          :pencil ""
-                          :plus ""
-                          :remove ""
-                          :search ""
-                          :share ""
-                          :status-done ""
-                          :status-warning ""
-                          :status-warning-triangle ""
-                          :trash-can ""
-                          :view-mode-list ""
-                          :view-mode-tiles ""
-                          :x ""})
+;; From https://design.google.com/icons/
+(def ^:private icon-keys
+  {:angle-left "keyboard_arrow_left"
+   :angle-right "keyboard_arrow_right"
+   :settings "settings"
+   :lock "lock"
+   :unlock "lock_open"
+   :edit "mode_edit"
+   :clone "content_copy"
+   :add "add"
+   :delete "delete"
+   :remove "remove_circle"
+   :done "done"
+   :cancel "cancel"
+   :warning-triangle "warning"
+   :error "error"
+   :search "search"
+   :share "share"})
 
-(defn font-icon [props key]
-  [:span (utils/deep-merge {:style {:fontFamily "fontIcons"}} props) (key icon-keys)])
-
-(defn icon-text [key] (key icon-keys))
+(defn icon [attributes key]
+  [:span (utils/deep-merge
+           {:className "material-icons"}
+           attributes)
+   (icon-keys key)])
 
 (react/defc CompleteIcon
   {:get-default-props
@@ -42,8 +42,8 @@
                      :height (int (* 1.27 (:size props)))
                      :backgroundColor "#fff" :borderRadius "100%"}}
       (style/center {}
-        (font-icon {:style {:color (:color props) :fontSize (int (* 0.5 (:size props)))}}
-          :status-done))])})
+        (icon {:style {:color (:color props) :fontSize (:size props) :marginTop 4}}
+          :done))])})
 
 (react/defc RunningIcon
   {:get-default-props
@@ -77,5 +77,4 @@
    (fn [{:keys [props]}]
      [:span {:style {:display "inline-block" :position "relative" :verticalAlign "middle"
                      :height (:size props) :width (:size props)}}
-      (style/center {}
-        (font-icon {:style {:color "#fff" :fontSize (:size props)}} :status-warning))])})
+      (style/center {} [:span {:style {:color "white" :fontSize (:size props) :fontWeight "500"}} "!"])])})

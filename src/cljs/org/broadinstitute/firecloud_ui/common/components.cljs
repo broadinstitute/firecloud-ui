@@ -46,17 +46,15 @@
      {:color (:button-blue style/colors)})
    :render
    (fn [{:keys [props]}]
-     (let [{:keys [color icon href disabled? onClick text style type class-name]} props]
+     (let [{:keys [color icon href disabled? onClick text style class-name]} props]
        [:a {:className (or class-name "button")
             :style (merge
-                     {:display "inline-block"
+                     {:display "inline-flex" :alignItems "center"
                       :backgroundColor color
                       :WebkitFilter (when disabled? "grayscale()")
                       :cursor (when disabled? "default")
                       :color "white" :fontWeight 500
-                      :borderRadius 2 :padding (if icon "0.7em" "0.7em 1em")
-                      :fontFamily (when icon "fontIcons")
-                      :fontSize (when icon "80%")
+                      :borderRadius 2 :padding (if text "0.7em 1em" "0.4em")
                       :textDecoration "none"}
                      (if (map? style) style {}))
             :href (or href "javascript:;")
@@ -65,12 +63,10 @@
                        onClick)
             :onKeyDown (when (and onClick (not disabled?))
                          (common/create-key-handler [:space :enter] onClick))}
-        (or text (icons/icon-text icon))
-        (when (= type :add)
-          [:span {:style {:display "inline-block" :height "1em" :width "1em" :marginLeft "1em"
-                          :position "relative"}}
-           [:span {:style {:position "absolute" :top "-55%" :fontSize "200%" :fontWeight "normal"}}
-            "+"]])]))})
+        text
+        (some->> icon (icons/icon {:style (if text
+                                            {:fontSize 24 :margin "-0.5em -0.3em -0.5em 0.5em"}
+                                            {:fontSize 20})}))]))})
 
 
 (react/defc Checkbox
@@ -222,7 +218,7 @@
               :onClick (if disabled?
                          #(js/alert (if (string? disabled?) disabled? "This action is disabled"))
                          (:onClick props))}
-        (icons/font-icon {:style {:verticalAlign "middle" :fontSize "135%"}} (:icon props))
+        (icons/icon {:style {:verticalAlign "middle" :fontSize "135%"}} (:icon props))
         [:span {:style {:verticalAlign "middle" :marginLeft "1em"}} (:text props)]]))})
 
 (react/defc EntityDetails
@@ -327,16 +323,16 @@
              ;; method redact is responding with "code" for 401.  TODO: standardize and remove this extra logic
              status-code (or status-code code)]
          (if-let [expected-msg (get-in props [:expect status-code])]
-           [:div {}
+           [:div {:style {:display "flex" :alignItems "center"}}
             [:span {:style {:paddingRight "1ex"}}
-             (icons/font-icon {:style {:color (:exception-red style/colors)}}
-               :status-warning-triangle)]
+             (icons/icon {:style {:color (:exception-red style/colors)}}
+                         :warning-triangle)]
             (str "Error: " expected-msg)]
            [:div {:style {:textAlign "initial"}}
-            [:div {}
+            [:div {:style {:display "flex" :alignItems "center"}}
              [:span {:style {:paddingRight "1ex"}}
-              (icons/font-icon {:style {:color (:exception-red style/colors)}}
-                :status-warning-triangle)]
+              (icons/icon {:style {:color (:exception-red style/colors)}}
+                          :warning-triangle)]
              (str "Error " status-code ": " message)]
             (when timestamp [:div {} "Occurred: " (-> timestamp js/moment (.format "LLL Z"))])
             (when source [:div {} "Source: " source])
@@ -354,23 +350,22 @@
 (react/defc Breadcrumbs
   {:render
    (fn [{:keys [props]}]
-     (let [sep [:span {} " " (icons/font-icon {:style {:fontSize "50%"}} :angle-right) " "]
+     (let [sep (icons/icon {} :angle-right)
            crumbs (filter some? (:crumbs props))]
        (case (count crumbs)
          0 [:div {}]
          1 [:div {} (:text (first crumbs))]
-         [:div {}
+         [:div {:style {:display "flex" :alignItems "center"}}
           (interpose sep
             (map
               (fn [{:keys [text onClick href] :as link-props}]
-                [:span {:style {:fontSize "60%" :verticalAlign "middle" :whiteSpace "pre"}}
+                [:span {:style {:fontSize "60%" :whiteSpace "pre"}}
                  (if (or onClick href)
                    (style/create-link link-props)
                    text)])
               (butlast crumbs)))
           sep
-          [:span {:style {:verticalAlign "middle"}}
-           (:text (last crumbs))]])))})
+          (:text (last crumbs))])))})
 
 
 (react/defc SplitPane

@@ -53,11 +53,11 @@
        [:div {:style {:margin "1em 0"}}
         [:div {:style {:float "left" :width 290 :paddingRight "1em"}}
          [comps/SidebarButton {:style :light :color :button-blue
-                               :text "Permissions..." :icon :gear
+                               :text "Permissions..." :icon :settings
                                :onClick #(modal/push-modal [mca/AgoraPermsEditor {:is-conf config? :selected-entity entity}])}]]
         [:div {:style {:float "left" :width 290}}
          [comps/SidebarButton {:style :light :color :exception-red
-                               :text "Redact" :icon :trash-can
+                               :text "Redact" :icon :delete
                                :onClick #(modal/push-modal [Redactor {:entity entity :config? config?
                                                                       :on-delete (:on-delete props)}])}]]
         (clear-both)])
@@ -306,10 +306,11 @@
    (fn [{:keys [props state refs]}]
      [:div {}
       (if-let [item (:selected-item @state)]
-        [:div {}
+        ;; TODO use breadcrumbs and allow nav
+        [:div {:style {:display "flex" :alignItems "center"}}
          (style/create-link {:text "Methods"
                              :onClick #(swap! state dissoc :selected-item)})
-         (icons/font-icon {:style {:verticalAlign "middle" :margin "0 1ex 0 1ex"}} :angle-right)
+         (icons/icon {} :angle-right)
          [:h2 {:style {:display "inline-block"}} (item "namespace") "/" (item "name")
           [:span {:style {:marginLeft "1ex" :fontWeight "normal"}} "#" (item "snapshotId")]]]
         [:h2 {} "Methods"])
