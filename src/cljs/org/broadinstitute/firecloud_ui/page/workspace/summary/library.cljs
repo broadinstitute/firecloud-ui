@@ -18,12 +18,16 @@
         above-fold-count (if (< required-count 5) required-count 5)]
     (split-at above-fold-count display-properties)))
 
-(defn- render-property [library-schema property-key]
+(defn- render-value [value]
+  (cond (sequential? value) (clojure.string/join ", " value)
+        :else value))
+
+(defn- render-property [library-schema library-attributes property-key]
   [:div {:style {:display "flex" :padding "0.5em 0" :borderBottom (str "2px solid " (:line-gray style/colors))}}
    [:div {:style {:flexBasis "33%" :fontWeight "bold" :paddingRight "2em"}}
     (get-in library-schema [:properties property-key :title])]
    [:div {:style {:flexBasis "67%"}}
-    "TODO"]])
+    (render-value (get library-attributes property-key))]])
 
 (react/defc LibraryAttributeViewer
   {:render
@@ -37,11 +41,11 @@
         (style/create-paragraph
           (if library-attributes
             [:div {}
-             (map (partial render-property library-schema) above-fold)
+             (map (partial render-property library-schema library-attributes) above-fold)
              (when below-fold
                [:div {}
                 (when (:expanded? @state)
-                  (map (partial render-property library-schema) below-fold))
+                  (map (partial render-property library-schema library-attributes) below-fold))
                 [:div {:style {:marginTop "0.5em"}}
                  (style/create-link {:text (if (:expanded? @state) "Collapse" "See more attributes")
                                      :onClick #(swap! state update :expanded? not)})]])]
