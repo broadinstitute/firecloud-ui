@@ -207,8 +207,10 @@
                    (swap! state dissoc :locking?)
                    (react/call :refresh this))}))
    :component-did-mount
-   (fn [{:keys [state refs locals this]}]
+   (fn [{:keys [state refs locals this props]}]
      (react/call :refresh this)
+     (swap! state assoc :attrs-list
+            (vec (dissoc (get-in props [:workspace "workspace" "attributes"]) "description")))
      (swap! locals assoc :scroll-handler
             (fn []
               (when-let [sidebar (@refs "sidebar")]
@@ -227,8 +229,6 @@
    :refresh
    (fn [{:keys [props state]}]
      ((:request-refresh props))
-     (swap! state assoc :attrs-list
-            (vec (dissoc (get-in props [:workspace "workspace" "attributes"]) "description")))
      (endpoints/call-ajax-orch
        {:endpoint (endpoints/count-submissions (:workspace-id props))
         :on-done (fn [{:keys [success? status-text get-parsed-response]}]
