@@ -6,6 +6,7 @@
     [org.broadinstitute.firecloud-ui.common.entity-table :refer [EntityTable]]
     [org.broadinstitute.firecloud-ui.common.modal :as modal]
     [org.broadinstitute.firecloud-ui.common.style :as style]
+    [org.broadinstitute.firecloud-ui.common.table-utils :refer [default-render]]
     [org.broadinstitute.firecloud-ui.page.workspace.analysis.igv-utils :as igv-utils]
     [org.broadinstitute.firecloud-ui.utils :as utils]
     ))
@@ -32,7 +33,7 @@
                         (style/left-ellipses {:style {:marginRight "0.5em"}}
                                              (style/create-link {:text data
                                                                  :onClick #((:on-select props) data)}))
-                        data))}]])})
+                        (default-render data)))}]])})
 
 
 (react/defc Right
