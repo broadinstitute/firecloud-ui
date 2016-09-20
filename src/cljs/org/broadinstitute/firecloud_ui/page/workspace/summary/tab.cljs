@@ -227,6 +227,8 @@
    :refresh
    (fn [{:keys [props state]}]
      ((:request-refresh props))
+     (swap! state assoc :attrs-list
+            (vec (dissoc (get-in props [:workspace "workspace" "attributes"]) "description")))
      (endpoints/call-ajax-orch
        {:endpoint (endpoints/count-submissions (:workspace-id props))
         :on-done (fn [{:keys [success? status-text get-parsed-response]}]
