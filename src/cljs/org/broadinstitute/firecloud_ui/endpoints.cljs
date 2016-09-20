@@ -820,13 +820,10 @@
                                                        :inputHint "Broad internal IDs"}}})}}
     :service-prefix "/schemas"))
 
-(defn get-library-curator-status [on-done]
-  (utils/ajax-orch
-    "/library/user/role/curator"
-    {:method :get
-     :on-done (fn [{:keys [success?]}] (on-done success?))
-     :canned-response
-     {:status 200 :delay-ms (rand-int 2000)}}))
+(def get-library-curator-status
+  {:path "/library/user/role/curator"
+   :method :get
+   :mock-data {:curator true}})
 
 
 (defn get-refresh-token-date []

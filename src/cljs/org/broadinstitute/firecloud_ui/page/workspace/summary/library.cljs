@@ -1,6 +1,10 @@
 (ns org.broadinstitute.firecloud-ui.page.workspace.summary.library
   (:require
     [dmohs.react :as react]
+    [org.broadinstitute.firecloud-ui.common :as common]
+    [org.broadinstitute.firecloud-ui.common.components :as comps]
+    [org.broadinstitute.firecloud-ui.common.input :as input]
+    [org.broadinstitute.firecloud-ui.common.modal :as modal]
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.utils :as utils]))
 
@@ -50,3 +54,102 @@
                  (style/create-link {:text (if (:expanded? @state) "Collapse" "See more attributes")
                                      :onClick #(swap! state update :expanded? not)})]])]
             [:div {:style {:fontStyle "italic"}} "No attributes provided"]))]))})
+
+
+(defn- resolve-hidden [property-key workspace]
+  (case property-key
+    :workspaceId (get-in workspace [:workspace :workspaceId])
+    :workspaceNamespace (get-in workspace [:workspace :namespace])
+    :workspaceName (get-in workspace [:workspace :name])
+    nil))
+
+(react/defc LibraryAttributeForm
+  {:get-initial-state
+   (fn [{:keys [props]}]
+     (let [required (-> props :library-schema :required set)
+           optional (clojure.set/difference (-> props :library-schema :propertyOrder set) required)]
+       {:required-props required
+        :optional-props optional}))
+   :render
+   (fn [{:keys [this]}]
+     [modal/OKCancelForm
+      {:header "Define Dataset Attributes"
+       :content (react/create-element (react/call :form this))
+       :ok-button #(react/call :on-ok this)}])
+   :form
+   (fn [{:keys [props state]}]
+     (let [library-schema (:library-schema props)]
+       [:div {:style {:width "50vw"}}
+        [:div {:style {:maxHeight 400 :overflowY "auto"
+                       :padding "0.5em" :border style/standard-line
+                       :marginBottom "1em"}}
+         (map (fn [property-key]
+                (let [{:keys [hidden title inputHint enum]} (get-in library-schema [:properties property-key])
+                      required? (contains? (:required-props @state) property-key)
+                      pk-str (name property-key)]
+                  (when-not hidden
+                    [:div {}
+                     (style/create-form-label (str title (when required? " (required)")))
+                     (cond enum (style/create-identity-select {:ref pk-str} enum)
+                           required? [input/TextField {:ref pk-str
+                                                       :style {:width "100%"}
+                                                       :placeholder inputHint
+                                                       :predicates [(when required? (input/nonempty pk-str))]}]
+                           :else (style/create-text-field {:ref (name property-key)
+                                                           :style {:width "100%"}
+                                                           :placeholder inputHint}))])))
+              (calculate-display-properties library-schema))]
+        (style/create-validation-error-message (:validation-error @state))]))
+   :on-ok
+   (fn [{:keys [props state refs]}]
+     (let [library-schema (:library-schema props)
+           field-data (doall
+                        (map (fn [property-key]
+                               (let [{:keys [hidden enum]} (get-in library-schema [:properties property-key])
+                                     pk-str (name property-key)
+                                     required? (contains? (:required-props @state) property-key)]
+                                 [property-key
+                                  {:required? required?
+                                   :value (not-empty
+                                            (cond hidden (resolve-hidden property-key (:workspace props))
+                                                  enum (common/get-text refs pk-str)
+                                                  required? (do (input/validate refs pk-str)
+                                                              (input/get-text refs pk-str))
+                                                  :else (common/get-text refs pk-str)))}]))
+                             (:propertyOrder library-schema)))
+           missing-fields (not-empty
+                            (keep (fn [[property-key {:keys [required? value]}]]
+                                    (when (and required? (not value)) property-key))
+                                  field-data))]
+       (if missing-fields
+         (swap! state assoc :validation-error ["Please fill out all required fields"])
+         (let [field-data-map (->> field-data
+                                   (keep (fn [[property-key {:keys [value]}]]
+                                           (when value
+                                             [(name property-key) value])))
+                                   (into {}))]
+           (swap! state dissoc :validation-error)
+           ;; TODO: update properties
+           (utils/cljslog field-data-map)))))})
+
+
+(react/defc CatalogButton
+  {:render
+   (fn [{:keys [props]}]
+     [comps/SidebarButton
+      {:style :light :color :button-blue :margin :top
+       :icon :catalog :text "Catalog Dataset"
+       :onClick #(modal/push-modal
+                  [LibraryAttributeForm props])}])})
+
+
+(react/defc PublishButton
+  {:render
+   (fn [{:keys [props]}]
+     [comps/SidebarButton
+      {:style :light :color :button-blue :margin :top
+       :icon :library :text "Publish in Library"
+       :disabled? (or (:disabled? props)
+                    "Publish not available yet" ;; TODO remove
+                    )
+       :onClick #(utils/log "todo: publish in library")}])})

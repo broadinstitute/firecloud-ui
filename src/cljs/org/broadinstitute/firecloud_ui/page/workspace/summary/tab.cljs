@@ -61,7 +61,7 @@
      [comps/Blocker {:banner (if (:locking? @state) "Unlocking..." "Locking...")}])])
 
 
-(defn- render-sidebar [state props refs this ws billing-projects owner? writer?]
+(defn- render-sidebar [state props refs this ws billing-projects owner? writer? curator?]
   (let [locked? (get-in ws [:workspace :isLocked])
         status (common/compute-status ws)]
     [:div {:style {:flex "0 0 270px" :paddingRight 30}}
@@ -74,9 +74,16 @@
                                  "Exception" [icons/ExceptionIcon {:size 36}])
                          :color (style/color-for-status status)}]
      [:div {:ref "sidebar"}]
-     (style/create-unselectable :div {:style {:position (when-not (:sidebar-visible? @state) "fixed")
-                                              :top (when-not (:sidebar-visible? @state) 0)
-                                              :width 270}}
+     (style/create-unselectable
+       :div {:style {:position (when-not (:sidebar-visible? @state) "fixed")
+                     :top (when-not (:sidebar-visible? @state) 0)
+                     :width 270}}
+       (when-not curator? ;; TODO REMOVE SHIM when-not -> when
+         [library/CatalogButton {:library-schema (get-in @state [:server-response :library-schema])
+                                 :workspace ws}])
+       (when-not curator? ;; TODO REMOVE SHIM when-not -> when
+         [library/PublishButton {:disabled? (when (empty? (get-in ws [:workspace :library-attributes]))
+                                              "Dataset attributes must be created before publishing")}])
        (when (or owner? writer?)
          (if (not (:editing? @state))
            [comps/SidebarButton
@@ -196,7 +203,7 @@
                writer? (or owner? (= "WRITER" (:accessLevel workspace)))]
            [:div {:style {:margin "45px 25px" :display "flex"}}
             (render-overlays state)
-            (render-sidebar state props refs this workspace billing-projects owner? writer?)
+            (render-sidebar state props refs this workspace billing-projects owner? writer? library-curator?)
             (render-main state props refs workspace owner? (:bucket-access? props) submissions-count library-schema)]))))
    :lock-or-unlock
    (fn [{:keys [props state this]} locked-now?]
@@ -256,5 +263,9 @@
                         (assoc :required (map keyword (:required response)))
                         (assoc :propertyOrder (map keyword (:propertyOrder response))))))
            (swap! state update-in [:server-response] assoc :server-error "Unable to load library schema"))))
-     (endpoints/get-library-curator-status
-       #(swap! state update-in [:server-response] assoc :library-curator? %)))})
+     (endpoints/call-ajax-orch
+       {:endpoint endpoints/get-library-curator-status
+        :on-done (fn [{:keys [success? get-parsed-response]}]
+                   (if success?
+                     (swap! state update-in [:server-response] assoc :library-curator? (get (get-parsed-response) "curator"))
+                     (swap! state update-in [:server-response] assoc :server-error "Unable to determine curator status")))}))})
