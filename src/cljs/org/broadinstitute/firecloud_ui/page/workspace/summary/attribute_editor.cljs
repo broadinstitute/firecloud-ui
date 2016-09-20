@@ -72,13 +72,13 @@
 
 (defn save-attributes [state props this description]
   (let
-    [orig-keys (mapv first (:orig-attrs @state))
-     curr-keys (mapv first (:attrs-list @state))
-     curr-vals (mapv second (:attrs-list @state))
-     del-mapv (mapv (fn [k] {:op "RemoveAttribute" :attributeName k})
-                (clojure.set/difference (set orig-keys) (set curr-keys)))
-     up-mapv (mapv (fn [[name attr]] {:op "AddUpdateAttribute" :attributeName name :addUpdateAttribute attr})
-               (conj (:attrs-list @state) ["description" description]))
+    [orig-keys (map (comp name first) (:orig-attrs @state))
+     curr-keys (map (comp name first) (:attrs-list @state))
+     curr-vals (map second (:attrs-list @state))
+     del-map (map (fn [k] {:op "RemoveAttribute" :attributeName k})
+                  (clojure.set/difference (set orig-keys) (set curr-keys)))
+     up-map (mapv (fn [[name attr]] {:op "AddUpdateAttribute" :attributeName name :addUpdateAttribute attr})
+                  (conj (:attrs-list @state) ["description" description]))
      update-orch-fn (fn [add-update-ops]
                       (swap! state assoc :updating-attrs? true)
                       (endpoints/call-ajax-orch
@@ -105,17 +105,17 @@
                                      (swap! state assoc :attrs-list (:orig-attrs @state))
                                      (swap! state dissoc :orig-attrs)
                                      (react/call :load-workspace this))
-                                   (when-not (empty? up-mapv)
-                                     (update-orch-fn up-mapv))))}))]
+                                   (when-not (empty? up-map)
+                                     (update-orch-fn up-map))))}))]
     (cond
       (some empty? curr-keys) (js/alert "Empty attribute keys are not allowed!")
       (some empty? curr-vals) (js/alert "Empty attribute values are not allowed!")
       (not (or (empty? curr-keys) (apply distinct? curr-keys))) (js/alert "Unique keys must be used!")
       :else (do
-              (if (empty? del-mapv)
-                (when-not (empty? up-mapv)
-                  (update-orch-fn up-mapv))
-                (del-orch-fn del-mapv))
+              (if (empty? del-map)
+                (when-not (empty? up-map)
+                  (update-orch-fn up-map))
+                (del-orch-fn del-map))
               (swap! state update-in [:server-response :workspace "workspace" "attributes"] assoc "description" description)
               (swap! state assoc :editing? false)))))
 
