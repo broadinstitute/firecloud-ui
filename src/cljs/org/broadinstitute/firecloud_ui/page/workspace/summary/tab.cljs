@@ -78,10 +78,10 @@
        :div {:style {:position (when-not (:sidebar-visible? @state) "fixed")
                      :top (when-not (:sidebar-visible? @state) 0)
                      :width 270}}
-       (when-not curator? ;; TODO REMOVE SHIM when-not -> when
+       (when false ; curator? TODO commented out until ready
          [library/CatalogButton {:library-schema (get-in @state [:server-response :library-schema])
                                  :workspace ws}])
-       (when-not curator? ;; TODO REMOVE SHIM when-not -> when
+       (when false ; curator? TODO commented out until ready
          [library/PublishButton {:disabled? (when (empty? (get-in ws [:workspace :library-attributes]))
                                               "Dataset attributes must be created before publishing")}])
        (when (or owner? writer?)
@@ -180,8 +180,10 @@
                description [MarkdownView {:text description}]
                :else [:span {:style {:fontStyle "italic"}} "No description provided"])))
      (attributes/view-attributes state refs)
-     [library/LibraryAttributeViewer {:library-attributes (not-empty (get-in ws [:workspace :library-attributes]))
-                                      :library-schema library-schema}]]))
+     ;; TODO commented out until ready
+     ;[library/LibraryAttributeViewer {:library-attributes (not-empty (get-in ws [:workspace :library-attributes]))
+     ;                                 :library-schema library-schema}]
+     ]))
 
 (react/defc Summary
   {:get-initial-state
