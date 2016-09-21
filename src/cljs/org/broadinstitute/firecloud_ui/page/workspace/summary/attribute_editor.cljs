@@ -5,117 +5,71 @@
     [org.broadinstitute.firecloud-ui.common :as common]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
     [org.broadinstitute.firecloud-ui.common.style :as style]
+    [org.broadinstitute.firecloud-ui.common.table :as table]
     [org.broadinstitute.firecloud-ui.common.icons :as icons]
-    [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
     [org.broadinstitute.firecloud-ui.utils :as utils]
     ))
 
-(defn view-attributes [state refs]
-  [:div {}
-   (style/create-section-header "Workspace Attributes")
-   (style/create-paragraph
-     (when (or (:saving? @state) (:deleting? @state))
-       [comps/Blocker {:banner "Updating..."}])
-     [:div {}
-      (map-indexed
-        (fn [i [attr-key attr-value]]
-          [:div {:style {:display "flex" :alignItems "baseline" :marginBottom "0.75em"}}
-           [:div {:style {:flex "35 0 auto" :marginRight "0.5em"}}
-            (style/create-text-field
-              {:ref (str "key_" i)
-               :value attr-key
-               :onChange #(swap! state update-in [:attrs-list i]
-                           assoc 0 (-> % .-target .-value))
-               :disabled (or (not (:editing? @state))
-                           (contains? (:reserved-keys @state) i))
-               :style (merge
-                        (if (or (contains? (:reserved-keys @state) i)
-                                (not (:editing? @state)))
-                          {:backgroundColor (:background-gray style/colors)}
-                          {:backgroundColor "#fff"})
-                        {:width "100%" :marginBottom 0})})]
-           [:div {:style {:flex "65 0 auto"}}
-            (style/create-text-field
-              {:ref (str "val_" i)
-               :value attr-value
-               :onChange #(swap! state update-in [:attrs-list i]
-                           assoc 1 (-> % .-target .-value))
-               :disabled (not (:editing? @state))
-               :style (merge
-                        (if-not (:editing? @state)
-                          {:backgroundColor (:background-gray style/colors)}
-                          {:backgroundColor "#fff"})
-                        {:width "100%" :marginBottom 0})})]
-           (when (:editing? @state)
-             (icons/icon
-               {:style {:color (:exception-red style/colors) :cursor "pointer" :margin "0 0.5em" :alignSelf "center"}
-                :onClick (fn [_]
-                           (when (contains? (:reserved-keys @state) i)
-                             ;if it's reserved delete i from the reservation list
-                             (swap! state update-in [:reserved-keys] utils/delete i))
-                           ;delete the item from the list unconditionally
-                           (swap! state update-in [:attrs-list] utils/delete i))}
-               :remove))])
-        (:attrs-list @state))
-      (when (:editing? @state)
-        [comps/Button {:icon :add :text "Add new"
-                       :onClick (fn [_]
-                                  (swap! state update-in [:attrs-list] conj ["" ""])
-                                  (js/setTimeout
-                                    #(common/focus-and-select
-                                       (->> @state :attrs-list count dec (str "key_") (@refs)))
-                                    0))}])
-      (when (and (not (:editing? @state))
-              (empty? (:attrs-list @state))
-              (not (:saving? @state)))
-        [:em {} "There are no attributes to display"])])])
 
-(defn save-attributes [state props this description]
-  (let
-    [orig-keys (map (comp name first) (:orig-attrs @state))
-     curr-keys (map (comp name first) (:attrs-list @state))
-     curr-vals (map second (:attrs-list @state))
-     del-map (map (fn [k] {:op "RemoveAttribute" :attributeName k})
-                  (clojure.set/difference (set orig-keys) (set curr-keys)))
-     up-map (mapv (fn [[name attr]] {:op "AddUpdateAttribute" :attributeName name :addUpdateAttribute attr})
-                  (conj (:attrs-list @state) ["description" description]))
-     update-orch-fn (fn [add-update-ops]
-                      (swap! state assoc :updating-attrs? true)
-                      (endpoints/call-ajax-orch
-                        {:endpoint (endpoints/update-workspace-attrs (:workspace-id props))
-                         :payload add-update-ops
-                         :headers utils/content-type=json
-                         :on-done (fn [{:keys [success? xhr]}]
-                                    (swap! state dissoc :updating-attrs?)
-                                    (when-not success?
-                                      (js/alert (str "Exception:\n" (.-statusText xhr)))
-                                      (swap! state dissoc :orig-attrs)
-                                      (react/call :load-workspace this)))}))
-     del-orch-fn (fn [del-ops]
-                   (swap! state assoc :deleting-attrs? true)
-                   (endpoints/call-ajax-orch
-                     {:endpoint (endpoints/update-workspace-attrs (:workspace-id props))
-                      :payload del-ops
-                      :headers utils/content-type=json
-                      :on-done (fn [{:keys [success? xhr]}]
-                                 (swap! state dissoc :deleting-attrs?)
-                                 (if-not success?
-                                   (do
-                                     (js/alert (str "Exception:\n" (.-statusText xhr)))
-                                     (swap! state assoc :attrs-list (:orig-attrs @state))
-                                     (swap! state dissoc :orig-attrs)
-                                     (react/call :load-workspace this))
-                                   (when-not (empty? up-map)
-                                     (update-orch-fn up-map))))}))]
-    (cond
-      (some empty? curr-keys) (js/alert "Empty attribute keys are not allowed!")
-      (some empty? curr-vals) (js/alert "Empty attribute values are not allowed!")
-      (not (or (empty? curr-keys) (apply distinct? curr-keys))) (js/alert "Unique keys must be used!")
-      :else (do
-              (if (empty? del-map)
-                (when-not (empty? up-map)
-                  (update-orch-fn up-map))
-                (del-orch-fn del-map))
-              (swap! state update-in [:server-response :workspace "workspace" "attributes"] assoc "description" description)
-              (swap! state assoc :editing? false)))))
-
+(react/defc WorkspaceAttributeViewerEditor
+  {:get-attributes
+   (fn [{:keys [state]}]
+     (into {} (:attributes @state)))
+   :render
+   (fn [{:keys [props state refs]}]
+     (let [{:keys [editing?]} props]
+       [:div {}
+        (style/create-section-header "Workspace Attributes")
+        (style/create-paragraph
+          [:div {}
+           (when editing?
+             [:div {:style {:marginBottom "0.25em"}}
+              [comps/Button {:icon :add :text "Add new"
+                             :onClick (fn [_]
+                                        (swap! state update :attributes conj ["" ""])
+                                        (js/setTimeout
+                                          #(common/focus-and-select
+                                            (->> @state :attributes count dec (str "key_") (@refs)))
+                                          0))}]])
+           [table/Table
+            {:key editing?
+             :reorderable-columns? false :sortable-columns? (not editing?) :filterable? false :pagination :none
+             :columns (if editing?
+                        [{:starting-width 50 :resizable? false :as-text (constantly "Delete")
+                          :content-renderer
+                          (fn [index]
+                            (icons/icon {:style {:color (:exception-red style/colors)
+                                                 :verticalAlign "middle"
+                                                 :cursor "pointer"}
+                                         :onClick #(swap! state update :attributes utils/delete index)}
+                                        :delete))}
+                         {:header "Key" :starting-width 200 :as-text (constantly nil)
+                          :content-renderer
+                          (fn [{:keys [key index]}]
+                            (style/create-text-field {:ref (str "key_" index) :key index
+                                                      :style {:marginBottom 0 :width "100%"}
+                                                      :value (name key)
+                                                      :onChange #(swap! state update-in [:attributes index]
+                                                                        assoc 0 (keyword (-> % .-target .-value)))}))}
+                         {:header "Value" :starting-width 600 :as-text (constantly nil)
+                          :content-renderer
+                          (fn [{:keys [value index]}]
+                            (style/create-text-field {:key index
+                                                      :style {:marginBottom 0 :width "100%"}
+                                                      :value value
+                                                      :onChange #(swap! state update-in [:attributes index]
+                                                                        assoc 1 (-> % .-target .-value))}))}]
+                        [{:header "Key" :starting-width 200 :as-text name}
+                         {:header "Value" :starting-width 600}])
+             :data (if editing?
+                     (map-indexed (fn [index [key value]]
+                                    {:index index :key key :value value})
+                                  (:attributes @state))
+                     (:workspace-attributes props))
+             :->row (if editing?
+                      (juxt :index identity identity)
+                      identity)}]])]))
+   :component-did-update
+   (fn [{:keys [prev-props props state]}]
+     (when (and (not (:editing? prev-props)) (:editing? props))
+       (swap! state assoc :attributes (into [] (:workspace-attributes props)))))})

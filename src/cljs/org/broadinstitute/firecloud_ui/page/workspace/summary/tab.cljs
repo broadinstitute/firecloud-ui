@@ -1,5 +1,6 @@
 (ns org.broadinstitute.firecloud-ui.page.workspace.summary.tab
   (:require
+    [clojure.set :refer [difference]]
     [dmohs.react :as react]
     [org.broadinstitute.firecloud-ui.common :as common]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
@@ -51,6 +52,24 @@
                      (swap! state assoc :server-error (get-parsed-response))))}))})
 
 
+(defn- save-attributes [{:keys [old-attributes new-attributes state workspace-id on-done]}]
+  (let [to-delete (->> (clojure.set/difference (set (keys old-attributes)) (set (keys new-attributes)))
+                       (map (fn [key] {:op "RemoveAttribute" :attributeName key})))
+        to-update (->> new-attributes
+                       (filter (fn [[k v]] (not= v (get old-attributes k))))
+                       (map (fn [[k v]] {:op "AddUpdateAttribute" :attributeName k :addUpdateAttribute v})))]
+    (swap! state assoc :updating-attrs? true)
+    (endpoints/call-ajax-orch
+      {:endpoint (endpoints/update-workspace-attrs workspace-id)
+       :payload (concat to-delete to-update)
+       :headers utils/content-type=json
+       :on-done (fn [{:keys [success? xhr]}]
+                  (swap! state dissoc :updating-attrs? :editing?)
+                  (on-done)
+                  (when-not success?
+                    (js/alert (str "Exception:\n" (.-statusText xhr)))))})))
+
+
 (defn- render-overlays [state]
   [:div {}
    (when (:deleting-attrs? @state)
@@ -89,21 +108,23 @@
            [comps/SidebarButton
             {:style :light :color :button-blue :margin :top
              :text "Edit" :icon :edit
-             :onClick #(swap! state assoc
-                         :reserved-keys (vec (range 0 (count (:attrs-list @state))))
-                         :orig-attrs (:attrs-list @state) :editing? true)}]
+             :onClick #(swap! state assoc :editing? true)}]
            [:div {}
             [comps/SidebarButton
              {:style :light :color :button-blue :margin :top
               :text "Save" :icon :done
-              :onClick #(attributes/save-attributes state props this
-                          (react/call :get-text (@refs "description")))}]
+              :onClick (fn [_]
+                         (save-attributes {:old-attributes (assoc (get-in ws [:workspace :workspace-attributes])
+                                                             :description (get-in ws [:workspace :description]))
+                                           :new-attributes (assoc (react/call :get-attributes (@refs "workspace-attribute-editor"))
+                                                             :description (react/call :get-text (@refs "description")))
+                                           :state state
+                                           :workspace-id (:workspace-id props)
+                                           :on-done #(react/call :refresh this)}))}]
             [comps/SidebarButton
              {:style :light :color :exception-red :margin :top
               :text "Cancel Editing" :icon :cancel
-              :onClick #(swap! state assoc
-                          :editing? false
-                          :attrs-list (:orig-attrs @state))}]]))
+              :onClick #(swap! state dissoc :editing?)}]]))
        (when-not (:editing? @state)
          [comps/SidebarButton {:style :light :margin :top :color :button-blue
                                :text "Clone..." :icon :clone
@@ -131,7 +152,7 @@
                                                              :on-delete (:on-delete props)}])}]))]))
 
 
-(defn- render-main [state props refs ws owner? bucket-access? submissions-count library-schema]
+(defn- render-main [state props ws owner? bucket-access? submissions-count library-schema]
   (let [owners (:owners ws)]
     [:div {:style {:flex "1 1 auto" :overflow "hidden"}}
      [:div {:style {:flex "1 1 auto" :display "flex"}}
@@ -179,7 +200,10 @@
          (cond (:editing? @state) (react/create-element [MarkdownEditor {:ref "description" :initial-text description}])
                description [MarkdownView {:text description}]
                :else [:span {:style {:fontStyle "italic"}} "No description provided"])))
-     (attributes/view-attributes state refs)
+     ;(attributes/view-attributes state refs)
+     [attributes/WorkspaceAttributeViewerEditor {:ref "workspace-attribute-editor"
+                                                 :editing? (:editing? @state)
+                                                 :workspace-attributes (get-in ws [:workspace :workspace-attributes])}]
      ;; TODO commented out until ready
      ;[library/LibraryAttributeViewer {:library-attributes (not-empty (get-in ws [:workspace :library-attributes]))
      ;                                 :library-schema library-schema}]
@@ -206,7 +230,7 @@
            [:div {:style {:margin "45px 25px" :display "flex"}}
             (render-overlays state)
             (render-sidebar state props refs this workspace billing-projects owner? writer? library-curator?)
-            (render-main state props refs workspace owner? (:bucket-access? props) submissions-count library-schema)]))))
+            (render-main state props workspace owner? (:bucket-access? props) submissions-count library-schema)]))))
    :lock-or-unlock
    (fn [{:keys [props state this]} locked-now?]
      (swap! state assoc :locking? locked-now?)
