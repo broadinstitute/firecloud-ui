@@ -207,8 +207,10 @@
                    (swap! state dissoc :locking?)
                    (react/call :refresh this))}))
    :component-did-mount
-   (fn [{:keys [state refs locals this]}]
+   (fn [{:keys [state refs locals this props]}]
      (react/call :refresh this)
+     (swap! state assoc :attrs-list
+            (vec (dissoc (get-in props [:workspace "workspace" "attributes"]) "description")))
      (swap! locals assoc :scroll-handler
             (fn []
               (when-let [sidebar (@refs "sidebar")]
