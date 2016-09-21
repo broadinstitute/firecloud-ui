@@ -70,23 +70,18 @@
                     (js/alert (str "Exception:\n" (.-statusText xhr)))))})))
 
 
-(defn- render-overlays [state]
-  [:div {}
-   (when (:deleting-attrs? @state)
-     [comps/Blocker {:banner "Deleting Attributes..."}])
-   (when (:updating-attrs? @state)
-     [comps/Blocker {:banner "Updating Attributes..."}])
-   (when (contains? @state :locking?)
-     [comps/Blocker {:banner (if (:locking? @state) "Unlocking..." "Locking...")}])])
-
-
-(defn- render-sidebar [state props refs this ws billing-projects owner? writer? curator?]
-  (let [locked? (get-in ws [:workspace :isLocked])
-        status (common/compute-status ws)]
+(defn- render-sidebar [state refs this
+                       {:keys [workspace billing-projects owner? writer? curator? workspace-id on-clone on-delete]}]
+  (let [{:keys [isLocked]
+         {:keys [library-attributes workspace-attributes description isProtected]} :workspace
+         {:keys [runningSubmissionsCount]} :workspaceSubmissionStats} workspace
+        status (common/compute-status workspace)
+        {:keys [sidebar-visible? editing?]
+         {:keys [library-schema]} :server-response} @state]
     [:div {:style {:flex "0 0 270px" :paddingRight 30}}
      [comps/StatusLabel {:text (str status
                                  (when (= status "Running")
-                                   (str " (" (get-in ws [:workspaceSubmissionStats :runningSubmissionsCount]) ")")))
+                                   (str " (" runningSubmissionsCount ")")))
                          :icon (case status
                                  "Complete" [icons/CompleteIcon {:size 36}]
                                  "Running" [icons/RunningIcon {:size 36}]
@@ -94,17 +89,17 @@
                          :color (style/color-for-status status)}]
      [:div {:ref "sidebar"}]
      (style/create-unselectable
-       :div {:style {:position (when-not (:sidebar-visible? @state) "fixed")
-                     :top (when-not (:sidebar-visible? @state) 0)
+       :div {:style {:position (when-not sidebar-visible? "fixed")
+                     :top (when-not sidebar-visible? 0)
                      :width 270}}
        (when false ; curator? TODO commented out until ready
-         [library/CatalogButton {:library-schema (get-in @state [:server-response :library-schema])
-                                 :workspace ws}])
+         [library/CatalogButton {:library-schema library-schema
+                                 :workspace workspace}])
        (when false ; curator? TODO commented out until ready
-         [library/PublishButton {:disabled? (when (empty? (get-in ws [:workspace :library-attributes]))
+         [library/PublishButton {:disabled? (when (empty? library-attributes)
                                               "Dataset attributes must be created before publishing")}])
        (when (or owner? writer?)
-         (if (not (:editing? @state))
+         (if (not editing?)
            [comps/SidebarButton
             {:style :light :color :button-blue :margin :top
              :text "Edit" :icon :edit
@@ -114,18 +109,17 @@
              {:style :light :color :button-blue :margin :top
               :text "Save" :icon :done
               :onClick (fn [_]
-                         (save-attributes {:old-attributes (assoc (get-in ws [:workspace :workspace-attributes])
-                                                             :description (get-in ws [:workspace :description]))
+                         (save-attributes {:old-attributes (assoc workspace-attributes :description description)
                                            :new-attributes (assoc (react/call :get-attributes (@refs "workspace-attribute-editor"))
                                                              :description (react/call :get-text (@refs "description")))
                                            :state state
-                                           :workspace-id (:workspace-id props)
+                                           :workspace-id workspace-id
                                            :on-done #(react/call :refresh this)}))}]
             [comps/SidebarButton
              {:style :light :color :exception-red :margin :top
               :text "Cancel Editing" :icon :cancel
               :onClick #(swap! state dissoc :editing?)}]]))
-       (when-not (:editing? @state)
+       (when-not editing?
          [comps/SidebarButton {:style :light :margin :top :color :button-blue
                                :text "Clone..." :icon :clone
                                :disabled? (when (empty? billing-projects) "No billing projects available")
@@ -133,27 +127,27 @@
                                           [WorkspaceCloner
                                            {:on-success (fn [namespace name]
                                                           (swap! state dissoc :cloning?)
-                                                          ((:on-clone props) (str namespace ":" name)))
-                                            :workspace-id (:workspace-id props)
-                                            :description (:description ws)
-                                            :is-protected? (get-in ws [:workspace :isProtected])
+                                                          (on-clone (str namespace ":" name)))
+                                            :workspace-id workspace-id
+                                            :description description
+                                            :is-protected? isProtected
                                             :billing-projects billing-projects}])}])
-       (when-not (and owner? (:editing? @state))
+       (when-not (and owner? editing?)
          [comps/SidebarButton {:style :light :margin :top :color :button-blue
-                               :text (if locked? "Unlock" "Lock")
-                               :icon (if locked? :unlock :lock)
-                               :onClick #(react/call :lock-or-unlock this locked?)}])
-       (when-not (and owner? (:editing? @state))
+                               :text (if isLocked "Unlock" "Lock")
+                               :icon (if isLocked :unlock :lock)
+                               :onClick #(react/call :lock-or-unlock this isLocked)}])
+       (when-not (and owner? editing?)
          [comps/SidebarButton {:style :light :margin :top :color :exception-red
                                :text "Delete" :icon :delete
-                               :disabled? (if locked? "This workspace is locked")
-                               :onClick #(modal/push-modal [DeleteDialog
-                                                            {:workspace-id (:workspace-id props)
-                                                             :on-delete (:on-delete props)}])}]))]))
+                               :disabled? (if isLocked "This workspace is locked")
+                               :onClick #(modal/push-modal [DeleteDialog {:workspace-id workspace-id
+                                                                          :on-delete on-delete}])}]))]))
 
 
-(defn- render-main [state props ws owner? bucket-access? submissions-count library-schema]
-  (let [owners (:owners ws)]
+(defn- render-main [{:keys [workspace owner? bucket-access? editing? submissions-count library-schema request-refresh workspace-id]}]
+  (let [{:keys [owners]
+         {:keys [createdBy createdDate bucketName description workspace-attributes library-attributes]} :workspace} workspace]
     [:div {:style {:flex "1 1 auto" :overflow "hidden"}}
      [:div {:style {:flex "1 1 auto" :display "flex"}}
       [:div {:style {:flex "1 1 50%"}}
@@ -166,25 +160,24 @@
              " ("
              (style/create-link {:text "Sharing..."
                                  :onClick #(modal/push-modal
-                                            [AclEditor {:workspace-id (:workspace-id props)
-                                                        :update-owners (fn [new-owners]
-                                                                         (swap! state update-in [:server-response :workspace] assoc "owners" new-owners))}])})
+                                            [AclEditor {:workspace-id workspace-id
+                                                        :request-refresh request-refresh}])})
              ")"])])
        (style/create-section-header "Created By")
        (style/create-paragraph
-         [:div {} (get-in ws [:workspace :createdBy])]
-         [:div {} (common/format-date (get-in ws [:workspace :createdDate]))])]
+         [:div {} createdBy]
+         [:div {} (common/format-date createdDate)])]
       [:div {:style {:flex "1 1 50%" :paddingLeft 10}}
        (style/create-section-header "Google Bucket")
        (style/create-paragraph
          (case bucket-access?
            nil [:div {:style {:position "absolute" :marginTop "-1.5em"}}
                 [comps/Spinner {:height "1.5ex"}]]
-           true (style/create-link {:text (get-in ws [:workspace :bucketName])
-                                    :href (str "https://console.developers.google.com/storage/browser/" (get-in ws [:workspace :bucketName]) "/")
+           true (style/create-link {:text bucketName
+                                    :href (str "https://console.developers.google.com/storage/browser/" bucketName "/")
                                     :title "Click to open the Google Cloud Storage browser for this bucket"
                                     :target "_blank"})
-           false (get-in ws [:workspace :bucketName])))
+           false bucketName))
        (style/create-section-header "Analysis Submissions")
        (style/create-paragraph
          (let [count-all (apply + (vals submissions-count))]
@@ -196,16 +189,16 @@
                  [:li {} (str subs " " status)])])]))]]
      (style/create-section-header "Description")
      (style/create-paragraph
-       (let [description (not-empty (get-in ws [:workspace :description]))]
-         (cond (:editing? @state) (react/create-element [MarkdownEditor {:ref "description" :initial-text description}])
+       (let [description (not-empty description)]
+         (cond editing? (react/create-element [MarkdownEditor {:ref "description" :initial-text description}])
                description [MarkdownView {:text description}]
                :else [:span {:style {:fontStyle "italic"}} "No description provided"])))
      ;(attributes/view-attributes state refs)
      [attributes/WorkspaceAttributeViewerEditor {:ref "workspace-attribute-editor"
-                                                 :editing? (:editing? @state)
-                                                 :workspace-attributes (get-in ws [:workspace :workspace-attributes])}]
+                                                 :editing? editing?
+                                                 :workspace-attributes workspace-attributes}]
      ;; TODO commented out until ready
-     ;[library/LibraryAttributeViewer {:library-attributes (not-empty (get-in ws [:workspace :library-attributes]))
+     ;[library/LibraryAttributeViewer {:library-attributes (not-empty library-attributes)
      ;                                 :library-schema library-schema}]
      ]))
 
@@ -215,7 +208,7 @@
      {:sidebar-visible? true})
    :render
    (fn [{:keys [refs state props this]}]
-     (let [server-response (:server-response @state)
+     (let [{:keys [server-response]} @state
            {:keys [workspace]} props
            {:keys [submissions-count billing-projects library-schema library-curator? server-error]} server-response]
        (cond
@@ -228,9 +221,18 @@
          (let [owner? (= "OWNER" (:accessLevel workspace))
                writer? (or owner? (= "WRITER" (:accessLevel workspace)))]
            [:div {:style {:margin "45px 25px" :display "flex"}}
-            (render-overlays state)
-            (render-sidebar state props refs this workspace billing-projects owner? writer? library-curator?)
-            (render-main state props workspace owner? (:bucket-access? props) submissions-count library-schema)]))))
+            (render-sidebar state refs this
+                            (merge (select-keys props [:workspace :workspace-id :on-clone :on-delete])
+                                   (select-keys server-response [:billing-projects :library-curator?])
+                                   {:owner? owner? :writer? writer?}))
+            (render-main (merge (select-keys props [:workspace :workspace-id :bucket-access?])
+                                (select-keys @state [:editing?])
+                                (select-keys server-response [:submissions-count :library-schema])
+                                {:owner? owner? :request-refresh #(react/call :refresh this)}))
+            (when (:updating-attrs? @state)
+              [comps/Blocker {:banner "Updating Attributes..."}])
+            (when (contains? @state :locking?)
+              [comps/Blocker {:banner (if (:locking? @state) "Unlocking..." "Locking...")}])]))))
    :lock-or-unlock
    (fn [{:keys [props state this]} locked-now?]
      (swap! state assoc :locking? locked-now?)
@@ -247,7 +249,7 @@
    (fn [{:keys [state refs locals this props]}]
      (react/call :refresh this)
      (swap! state assoc :attrs-list
-            (vec (dissoc (get-in props [:workspace "workspace" "attributes"]) "description")))
+            (vec (get-in props [:workspace :workspace :workspace-attributes])))
      (swap! locals assoc :scroll-handler
             (fn []
               (when-let [sidebar (@refs "sidebar")]
