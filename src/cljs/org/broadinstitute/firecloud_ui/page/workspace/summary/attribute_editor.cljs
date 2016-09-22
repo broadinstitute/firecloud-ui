@@ -1,7 +1,7 @@
 (ns org.broadinstitute.firecloud-ui.page.workspace.summary.attribute-editor
   (:require
     clojure.set
-    [clojure.string :refer [trim]]
+    [clojure.string :refer [join trim]]
     [dmohs.react :as react]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
     [org.broadinstitute.firecloud-ui.common.style :as style]
@@ -14,12 +14,15 @@
 (react/defc WorkspaceAttributeViewerEditor
   {:get-attributes
    (fn [{:keys [state]}]
-     (if (every? (fn [[k v]]
-                   (let [[tk tv] (map (comp not-empty trim) [k v])]
-                     (and tk tv)))
-                 (:attributes @state))
-       {:success (into {} (:attributes @state))}
-       {:error "Empty keys and values are not allowed."}))
+     (let [{:keys [attributes]} @state
+           duplicates (not-empty (utils/find-duplicates (map key attributes)))
+           any-empty? (some (fn [[k v]]
+                              (let [[ek ev] (map (comp empty? trim) [k v])]
+                                (or ek ev)))
+                            attributes)]
+       (cond duplicates {:error (str "Duplicate keys: " (join ", " duplicates))}
+             any-empty? {:error "Empty keys and values are not allowed."}
+             :else {:success (into {} attributes)})))
    :render
    (fn [{:keys [props state after-update]}]
      (let [{:keys [editing?]} props]

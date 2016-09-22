@@ -232,6 +232,11 @@
 (defn first-matching-index [pred coll]
   (first (keep-indexed (fn [i x] (when (pred x) i)) coll)))
 
+(defn find-duplicates [coll]
+  (for [[elem freq] (frequencies coll)
+        :when (> freq 1)]
+    elem))
+
 (defn sort-match
   "Sort a collection to match the ordering of a given 'target' collection"
   [pattern coll]
