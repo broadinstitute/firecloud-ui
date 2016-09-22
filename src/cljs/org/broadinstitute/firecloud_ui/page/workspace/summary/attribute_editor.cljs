@@ -15,7 +15,7 @@
   {:get-attributes
    (fn [{:keys [state]}]
      (if (every? (fn [[k v]]
-                   (let [[tk tv] (map (comp not-empty trim) [(name k) v])]
+                   (let [[tk tv] (map (comp not-empty trim) [k v])]
                      (and tk tv)))
                  (:attributes @state))
        {:success (into {} (:attributes @state))}
@@ -53,7 +53,7 @@
                             (style/create-text-field {:key index
                                                       :id (when (= index (-> (:attributes @state) count dec)) "focus")
                                                       :style {:marginBottom 0 :width "calc(100% - 2px)"}
-                                                      :value (name key)
+                                                      :value key
                                                       :onChange #(swap! state update-in [:attributes index]
                                                                         assoc 0 (-> % .-target .-value))}))}
                          {:header "Value" :starting-width 600 :as-text (constantly nil)
@@ -77,4 +77,4 @@
    :component-did-update
    (fn [{:keys [prev-props props state]}]
      (when (and (not (:editing? prev-props)) (:editing? props))
-       (swap! state assoc :attributes (into [] (:workspace-attributes props)))))})
+       (swap! state assoc :attributes (mapv (fn [[k v]] [(name k) v]) (:workspace-attributes props)))))})
