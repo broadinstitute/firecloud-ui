@@ -109,12 +109,15 @@
              {:style :light :color :button-blue :margin :top
               :text "Save" :icon :done
               :onClick (fn [_]
-                         (save-attributes {:old-attributes (assoc workspace-attributes :description description)
-                                           :new-attributes (assoc (react/call :get-attributes (@refs "workspace-attribute-editor"))
-                                                             :description (react/call :get-text (@refs "description")))
-                                           :state state
-                                           :workspace-id workspace-id
-                                           :on-done #(react/call :refresh this)}))}]
+                         (let [{:keys [success error]} (react/call :get-attributes (@refs "workspace-attribute-editor"))
+                               new-description (react/call :get-text (@refs "description"))]
+                           (if error
+                             (modal/push-error error)
+                             (save-attributes {:old-attributes (assoc workspace-attributes :description description)
+                                               :new-attributes (assoc success :description new-description)
+                                               :state state
+                                               :workspace-id workspace-id
+                                               :on-done #(react/call :refresh this)}))))}]
             [comps/SidebarButton
              {:style :light :color :exception-red :margin :top
               :text "Cancel Editing" :icon :cancel

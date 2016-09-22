@@ -1,8 +1,8 @@
 (ns org.broadinstitute.firecloud-ui.page.workspace.summary.attribute-editor
   (:require
     clojure.set
+    [clojure.string :refer [trim]]
     [dmohs.react :as react]
-    [org.broadinstitute.firecloud-ui.common :as common]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.common.table :as table]
@@ -14,9 +14,14 @@
 (react/defc WorkspaceAttributeViewerEditor
   {:get-attributes
    (fn [{:keys [state]}]
-     (into {} (:attributes @state)))
+     (if (every? (fn [[k v]]
+                   (let [[tk tv] (map (comp not-empty trim) [(name k) v])]
+                     (and tk tv)))
+                 (:attributes @state))
+       {:success (into {} (:attributes @state))}
+       {:error "Empty keys and values are not allowed."}))
    :render
-   (fn [{:keys [props state refs]}]
+   (fn [{:keys [props state after-update]}]
      (let [{:keys [editing?]} props]
        [:div {}
         (style/create-section-header "Workspace Attributes")
@@ -27,10 +32,8 @@
               [comps/Button {:icon :add :text "Add new"
                              :onClick (fn [_]
                                         (swap! state update :attributes conj ["" ""])
-                                        (js/setTimeout
-                                          #(common/focus-and-select
-                                            (->> @state :attributes count dec (str "key_") (@refs)))
-                                          0))}]])
+                                        ;; have to do this by ID not ref, since the fields are generated within Table
+                                        (after-update #(.focus (.getElementById js/document "focus"))))}]])
            [table/Table
             {:key editing?
              :reorderable-columns? false :sortable-columns? (not editing?) :filterable? false :pagination :none
@@ -47,11 +50,12 @@
                          {:header "Key" :starting-width 200 :as-text (constantly nil)
                           :content-renderer
                           (fn [{:keys [key index]}]
-                            (style/create-text-field {:ref (str "key_" index) :key index
+                            (style/create-text-field {:key index
+                                                      :id (when (= index (-> (:attributes @state) count dec)) "focus")
                                                       :style {:marginBottom 0 :width "calc(100% - 2px)"}
                                                       :value (name key)
                                                       :onChange #(swap! state update-in [:attributes index]
-                                                                        assoc 0 (keyword (-> % .-target .-value)))}))}
+                                                                        assoc 0 (-> % .-target .-value))}))}
                          {:header "Value" :starting-width 600 :as-text (constantly nil)
                           :content-renderer
                           (fn [{:keys [value index]}]

@@ -3,6 +3,7 @@
     [dmohs.react :as react]
     [org.broadinstitute.firecloud-ui.common :as common]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
+    [org.broadinstitute.firecloud-ui.common.icons :as icons]
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.utils :as u]
     ))
@@ -18,13 +19,19 @@
   ;; Forces create-element so the caller can refer to refs in the dialog.
   (react/call :push-modal @instance (react/create-element child)))
 
-
 (declare OKCancelForm)
-
-
 (defn push-ok-cancel-modal [props]
   (react/call :push-modal @instance (react/create-element OKCancelForm props)))
 
+(defn push-error [error-text]
+  (push-ok-cancel-modal
+    {:header [:div {:style {:display "flex" :alignItems "center"
+                            :maxWidth "50vw"}}
+              (icons/icon {:style {:color (:exception-red style/colors)
+                                   :marginRight "0.5em"}} :error)
+              "Error"]
+     :content error-text
+     :show-cancel? false :ok-button "OK"}))
 
 (defn pop-modal []
   (react/call :pop-modal @instance))
@@ -95,7 +102,8 @@
                    :onClick pop-modal
                    :onKeyDown (common/create-key-handler [:space :enter] pop-modal)}
                cancel-text])
-            (cond (fn? ok-button) [comps/Button {:text "OK" :ref "ok-button" :class-name "ok-button" :onClick ok-button}]
+            (cond (string? ok-button) [comps/Button {:text ok-button :ref "ok-button" :class-name "ok-button" :onClick pop-modal}]
+                  (fn? ok-button) [comps/Button {:text "OK" :ref "ok-button" :class-name "ok-button" :onClick ok-button}]
                   (map? ok-button) [comps/Button (merge {:ref "ok-button" :class-name "ok-button"} ok-button)]
                   :else ok-button)])]]))
    :component-did-mount
