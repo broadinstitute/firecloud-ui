@@ -187,10 +187,9 @@
      (let [new? (:new-registration? props)
            update? (:update-registration? props)]
        [:div {:style {:marginTop "2em"}}
-        [:h2 {} (cond
-                   new? "New User Registration"
-                   update? "Update Registration"
-                   :else "Profile")]
+        [:h2 {} (cond new? "New User Registration"
+                      update? "Update Registration"
+                      :else "Profile")]
         [:div {}
          [Form {:ref "form" :parent-nav-context (:nav-context props)
                 :new-registration? (:new-registration? props)}]]
@@ -200,11 +199,11 @@
             [components/ErrorViewer {:error (:server-error @state)}]])
          (when (:validation-errors @state)
            [:div {:style {:marginBottom "1em"}}
-            [:div {:style {:display "flex" :alignItems "center"}}
-             [:span {:style {:paddingRight "1ex"}}
-              (icons/icon {:style {:color (:exception-red style/colors)}}
-                          :warning-triangle)]
-             "Validation Errors: "]
+            (style/create-flexbox {}
+              [:span {:style {:paddingRight "1ex"}}
+               (icons/icon {:style {:color (:exception-red style/colors)}}
+                           :warning-triangle)]
+              "Validation Errors:")
             [:ul {}
              (map (fn [e] [:li {} e]) (:validation-errors @state))]])
          (cond

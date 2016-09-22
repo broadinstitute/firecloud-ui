@@ -307,12 +307,11 @@
      [:div {}
       (if-let [item (:selected-item @state)]
         ;; TODO use breadcrumbs and allow nav
-        [:div {:style {:display "flex" :alignItems "center"}}
-         (style/create-link {:text "Methods"
-                             :onClick #(swap! state dissoc :selected-item)})
-         (icons/icon {} :angle-right)
-         [:h2 {:style {:display "inline-block"}} (item "namespace") "/" (item "name")
-          [:span {:style {:marginLeft "1ex" :fontWeight "normal"}} "#" (item "snapshotId")]]]
+        (style/create-flexbox {}
+          (style/create-link {:text "Methods" :onClick #(swap! state dissoc :selected-item)})
+          (icons/icon {} :angle-right)
+          [:h2 {:style {:display "inline-block"}} (item "namespace") "/" (item "name")
+           [:span {:style {:marginLeft "1ex" :fontWeight "normal"}} "#" (item "snapshotId")]])
         [:h2 {} "Methods"])
       (when (:selected-item @state)
         (let [item-type (:type (:selected-item @state))

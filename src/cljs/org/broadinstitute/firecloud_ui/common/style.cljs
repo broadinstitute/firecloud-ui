@@ -88,6 +88,10 @@
                                    :transform "translate(-50%, -50%)"}})
    children])
 
+(defn create-flexbox [attributes & children]
+  [:div (deep-merge attributes {:style {:display "flex" :alignItems "center"}})
+   children])
+
 (defn left-ellipses [props & children]
   [:div (deep-merge props {:style {:overflow "hidden" :textOverflow "ellipsis" :whiteSpace "nowrap"
                                    :direction "rtl" :textAlign "left"}})

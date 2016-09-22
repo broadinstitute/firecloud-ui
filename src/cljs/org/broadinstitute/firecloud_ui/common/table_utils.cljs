@@ -155,8 +155,7 @@
                         :content-container-style (merge
                                                    {:padding (str "0.6em 0 0.6em " (or (:cell-padding-left props) 0))}
                                                    (:cell-content-style props))})))
-                 (:columns props))
-               (common/clear-both)]))
+                 (:columns props))]))
          (:rows props))]))})
 
 

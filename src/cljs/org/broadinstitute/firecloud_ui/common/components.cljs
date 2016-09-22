@@ -323,17 +323,17 @@
              ;; method redact is responding with "code" for 401.  TODO: standardize and remove this extra logic
              status-code (or status-code code)]
          (if-let [expected-msg (get-in props [:expect status-code])]
-           [:div {:style {:display "flex" :alignItems "center"}}
-            [:span {:style {:paddingRight "1ex"}}
-             (icons/icon {:style {:color (:exception-red style/colors)}}
-                         :warning-triangle)]
-            (str "Error: " expected-msg)]
-           [:div {:style {:textAlign "initial"}}
-            [:div {:style {:display "flex" :alignItems "center"}}
+           (style/create-flexbox {}
              [:span {:style {:paddingRight "1ex"}}
               (icons/icon {:style {:color (:exception-red style/colors)}}
                           :warning-triangle)]
-             (str "Error " status-code ": " message)]
+             (str "Error: " expected-msg))
+           [:div {:style {:textAlign "initial"}}
+            (style/create-flexbox {}
+              [:span {:style {:paddingRight "1ex"}}
+               (icons/icon {:style {:color (:exception-red style/colors)}}
+                           :warning-triangle)]
+              (str "Error " status-code ": " message))
             (when timestamp [:div {} "Occurred: " (-> timestamp js/moment (.format "LLL Z"))])
             (when source [:div {} "Source: " source])
             (when (seq causes)
