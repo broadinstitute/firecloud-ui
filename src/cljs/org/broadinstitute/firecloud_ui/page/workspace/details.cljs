@@ -76,7 +76,9 @@
 (defn- process-workspace [raw-workspace]
   (let [attributes (get-in raw-workspace ["workspace" "attributes"])
         library-attributes (->> attributes
-                                (keep (fn [[k v]] (when (.startsWith k "library:") [(keyword (subs k 8)) v])))
+                                (keep (fn [[k v]]
+                                        (when (.startsWith k "library:")
+                                          [(-> k (clojure.string/split #":" 2) second) v])))
                                 (into {}))
         workspace-attributes (utils/keywordize-keys
                                (apply dissoc attributes "description" (keys library-attributes)))]
