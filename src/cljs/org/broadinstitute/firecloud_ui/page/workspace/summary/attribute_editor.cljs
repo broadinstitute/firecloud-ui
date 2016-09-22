@@ -34,8 +34,9 @@
            [table/Table
             {:key editing?
              :reorderable-columns? false :sortable-columns? (not editing?) :filterable? false :pagination :none
+             :empty-message "No Workspace Attributes defined"
              :columns (if editing?
-                        [{:starting-width 50 :resizable? false :as-text (constantly "Delete")
+                        [{:starting-width 40 :resizable? false :as-text (constantly "Delete")
                           :content-renderer
                           (fn [index]
                             (icons/icon {:style {:color (:exception-red style/colors)
@@ -47,7 +48,7 @@
                           :content-renderer
                           (fn [{:keys [key index]}]
                             (style/create-text-field {:ref (str "key_" index) :key index
-                                                      :style {:marginBottom 0 :width "100%"}
+                                                      :style {:marginBottom 0 :width "calc(100% - 2px)"}
                                                       :value (name key)
                                                       :onChange #(swap! state update-in [:attributes index]
                                                                         assoc 0 (keyword (-> % .-target .-value)))}))}
@@ -55,7 +56,7 @@
                           :content-renderer
                           (fn [{:keys [value index]}]
                             (style/create-text-field {:key index
-                                                      :style {:marginBottom 0 :width "100%"}
+                                                      :style {:marginBottom 0 :width "calc(100% - 2px)"}
                                                       :value value
                                                       :onChange #(swap! state update-in [:attributes index]
                                                                         assoc 1 (-> % .-target .-value))}))}]

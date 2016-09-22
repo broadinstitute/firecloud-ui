@@ -132,12 +132,12 @@
                                             :description description
                                             :is-protected? isProtected
                                             :billing-projects billing-projects}])}])
-       (when-not (and owner? editing?)
+       (when (and owner? (not editing?))
          [comps/SidebarButton {:style :light :margin :top :color :button-blue
                                :text (if isLocked "Unlock" "Lock")
                                :icon (if isLocked :unlock :lock)
                                :onClick #(react/call :lock-or-unlock this isLocked)}])
-       (when-not (and owner? editing?)
+       (when (and owner? (not editing?))
          [comps/SidebarButton {:style :light :margin :top :color :exception-red
                                :text "Delete" :icon :delete
                                :disabled? (if isLocked "This workspace is locked")
@@ -246,10 +246,8 @@
                    (swap! state dissoc :locking?)
                    (react/call :refresh this))}))
    :component-did-mount
-   (fn [{:keys [state refs locals this props]}]
+   (fn [{:keys [state refs locals this]}]
      (react/call :refresh this)
-     (swap! state assoc :attrs-list
-            (vec (get-in props [:workspace :workspace :workspace-attributes])))
      (swap! locals assoc :scroll-handler
             (fn []
               (when-let [sidebar (@refs "sidebar")]
@@ -257,11 +255,6 @@
                   (when-not (= visible (:sidebar-visible? @state))
                     (swap! state assoc :sidebar-visible? visible))))))
      (.addEventListener js/window "scroll" (:scroll-handler @locals)))
-   :component-did-update
-   (fn [{:keys [prev-props props state]}]
-     (when (not= (:workspace prev-props) (:workspace props))
-       (swap! state assoc :attrs-list
-              (vec (get-in props [:workspace :workspace :workspace-attributes])))))
    :component-will-unmount
    (fn [{:keys [locals]}]
      (.removeEventListener js/window "scroll" (:scroll-handler @locals)))
