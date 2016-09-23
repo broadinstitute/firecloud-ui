@@ -67,8 +67,8 @@
           workspace-error
           (style/create-server-error-message workspace-error)
           workspace
-          (let [locked? (workspace "isLocked")
-                this-realm (get-in workspace ["realm" "groupName"])]
+          (let [locked? (get-in workspace [:workspace :isLocked])
+                this-realm (get-in workspace [:workspace :realm :groupName])]
             [EntityTable
              {:ref "entity-table"
               :workspace-id workspace-id
@@ -99,7 +99,7 @@
                                     (if (string? maybe-uri)
                                       (if-let [parsed (common/parse-gcs-uri maybe-uri)]
                                         [GCSFilePreviewLink (assoc parsed
-                                                              :workspace-bucket (get-in workspace ["workspace" "bucketName"])
+                                                              :workspace-bucket (get-in workspace [:workspace :bucketName])
                                                               :attributes {:style {:direction "rtl" :marginRight "0.5em"
                                                                                    :overflow "hidden" :textOverflow "ellipsis"
                                                                                    :textAlign "left"}})]

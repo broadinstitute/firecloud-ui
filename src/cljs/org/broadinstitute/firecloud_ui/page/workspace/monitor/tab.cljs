@@ -32,8 +32,8 @@
                           [:div {}
                            (when (and (= "Done" (submission "status"))
                                       (not (moncommon/all-success? submission)))
-                             (icons/font-icon {:style {:color (:exception-red style/colors)
-                                                       :marginRight 8}} :status-warning))
+                             (icons/icon {:style {:color (:exception-red style/colors)
+                                                  :marginRight 8}} :status-warning))
                            (submission "status")])}
      {:header "Method Configuration" :starting-width 300
       :content-renderer (fn [[namespace name]]

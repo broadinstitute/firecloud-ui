@@ -621,16 +621,16 @@
    (utils/ajax-orch
      "/profile"
      {:on-done on-done
-     :canned-response
-     {:status 200 :delay-ms (rand-int 2000)
-      :responseText
-      (utils/->json-string
-       {:userId "55"
-        :keyValuePairs
-        (map (fn [[k v]] {:key k :value v})
-             {:isRegistrationComplete "1" :name "John Doe" :email "jdoe@example.com"
-              :googleProjectIds ["14" "7"] :institution "Broad Institute"
-              :pi "Jane Doe"})})}}
+      :canned-response
+      {:status 200 :delay-ms (rand-int 2000)
+       :responseText
+       (utils/->json-string
+         {:userId "55"
+          :keyValuePairs
+          (map (fn [[k v]] {:key k :value v})
+               {:isRegistrationComplete "1" :name "John Doe" :email "jdoe@example.com"
+                :googleProjectIds ["14" "7"] :institution "Broad Institute"
+                :pi "Jane Doe"})})}}
      :service-prefix "/register")))
 
 
@@ -638,10 +638,10 @@
   (utils/ajax-orch
     "/profile"
     {:method :post
-    :data (utils/->json-string payload)
-    :on-done on-done
-    :headers utils/content-type=json
-    :canned-response {:status (rand-nth [200 200 500]) :delay-ms (rand-int 2000)}}
+     :data (utils/->json-string payload)
+     :on-done on-done
+     :headers utils/content-type=json
+     :canned-response {:status (rand-nth [200 200 500]) :delay-ms (rand-int 2000)}}
     :service-prefix "/register"))
 
 
@@ -710,6 +710,120 @@
 (defn delete-billing-project-user [{:keys [project-id role user-email]}]
   {:path (str "/billing/" project-id "/" role "/" user-email)
    :method :delete})
+
+(defn get-library-attributes [on-done]
+  (utils/ajax-orch
+    "/library-attributedefinitions-v1"
+    {:method :get
+     :on-done on-done
+     :canned-response
+     {:status 200 :delay-ms (rand-int 2000)
+      :responseText
+      (utils/->json-string
+        {:id "https//api.firecloud.org/schemas/library-attributedefinitions-v1"
+         :$schema "http//json-schema.org/draft-04/schema#"
+         :title "Library attribute definitions, v1"
+         :description "Constraints, facet definitions, and display definitions for FireCloud Library"
+         :type "object"
+         :required ["workspaceId" "workspaceName" "workspaceNamespace" "datasetName" "datasetDescription" "datasetCustodian"
+                    "datasetDepositor" "datasetOwner" "institute" "indication" "numSubjects" "projectName" "datatype"
+                    "dataUseRestriction" "studyDesign" "cellType"]
+         :propertyOrder ["workspaceId" "workspaceName" "workspaceNamespace" "datasetName" "datasetDescription" "datasetCustodian"
+                         "datasetDepositor" "datasetOwner" "institute" "indication" "numSubjects" "projectName" "datatype"
+                         "reference" "dataFileFormats" "technology" "profilingProtocol" "dataUseRestriction"
+                         "dataUseORSPConsentGroupNumber" "dataUseBSPSampleCollectionID" "studyDesign" "cellType" "coverage"
+                         "ethnicity" "primaryDiseaseSite" "broadInternalResearchProjectID" "broadInternalResearchProjectName"
+                         "broadInternalCohortName" "broadInternalSeqProjectNumbers"]
+         :properties {:workspaceId {:type "string"
+                                    :pattern "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
+                                    :hidden true}
+                      :workspaceName {:type "string"
+                                      :hidden true}
+                      :workspaceNamespace {:type "string"
+                                           :hidden true}
+                      :datasetName {:type "string"
+                                    :title "Dataset Name"}
+                      :datasetDescription {:type "string"
+                                           :title "Dataset Description"
+                                           :inputHint "Why this set was collected and what was the criteria for inclusion?"}
+                      :datasetCustodian {:type "string"
+                                         :title "Dataset Custodian"
+                                         :inputHint "e.g. Project Manager"}
+                      :datasetDepositor {:type "string"
+                                         :title "Dataset Depositor"
+                                         :inputHint "e.g. Project Manager"}
+                      :datasetOwner {:type "string"
+                                     :title "Dataset Owner"
+                                     :inputHint "e.g. Prinicipal Investigator"}
+                      :institute {:type "array"
+                                  :items {:type "string"}
+                                  :title "Research Institute"}
+                      :indication {:type "string"
+                                   :title "Cohort Phenotype/Indication"
+                                   :description "The phenotype/indication criteria for being included as a subject in the cohort"}
+                      :numSubjects {:type "integer"
+                                    :minimum 0
+                                    :default 0
+                                    :title "No. of Subjects"
+                                    :description "Dataset Size"
+                                    :inputHint "Number of participants the data maps to"}
+                      :projectName {:type "string"
+                                    :title "Project/s Name"
+                                    :inputHint "e.g. TCGA, TopMed, ExAC ; tag all relevant associated projects"}
+                      :datatype {:type "array"
+                                 :items {:type "string"}
+                                 :title "Data Type/s"
+                                 :inputHint "e.g. Whole Genome, Whole Exome, RNA-Seq ; tag all relevant"}
+                      :reference {:type "string"
+                                  :title "Genome Reference Version"
+                                  :inputHint "e.g. hg19, GRC38;  To which genome build the data was aligned, if relevant"}
+                      :dataFileFormats {:type "array"
+                                        :items {:type "string"}
+                                        :title "Data File Formats"
+                                        :inputHint "e.g. VCF, BAM; Tag all relevant"}
+                      :technology {:type "array"
+                                   :items {:type "string"}
+                                   :title "Profiling Instrument Type"
+                                   :inputHint "e.g. Illumina, 10X"}
+                      :profilingProtocol {:type "array"
+                                          :items {:type "string"}
+                                          :title "Profiling Protocol"}
+                      :dataUseRestriction {:type "string"
+                                           :title "Data Use Restriction"}
+                      :dataUseORSPConsentGroupNumber {:type "string"
+                                                      :title "Data Use Restriction ORSP consent group number"}
+                      :dataUseBSPSampleCollectionID {:type "string"
+                                                     :title "Data Use Restriction BSP Sample Collection ID"}
+                      :studyDesign {:type "string"
+                                    :title "Study Design"
+                                    :inputHint "e.g Case/Control, Trio, Tumor/normal, cases only - somatic,  cases only - germline, controls"}
+                      :cellType {:type "string"
+                                 :title "Cell Type"}
+                      :coverage {:type "string"
+                                 :enum ["0-10X","11x-20x","21x-30x","31x-100x","100x-150x",">150x"]
+                                 :title "Depth of Sequencing Coverage (Average)"}
+                      :ethnicity {:type "array"
+                                  :items {:type "string"}
+                                  :title "Ethnicity"
+                                  :inputHint "e.g. Caucasians, African-americans, Latino,East asians, South Asians, Finnish, Non-Finnish Europeans; check all relevant"}
+                      :primaryDiseaseSite {:type "string"
+                                           :title "Primary Disease Site"}
+                      :broadInternalResearchProjectID {:type "string"
+                                                       :title "Research Project Broad Internal ID"}
+                      :broadInternalResearchProjectName {:type "string"
+                                                         :title "Research Project Broad Internal Name"}
+                      :broadInternalCohortName {:type "string"
+                                                :title "Cohort Name Broad Internal"}
+                      :broadInternalSeqProjectNumbers {:type "array"
+                                                       :items {:type "string"}
+                                                       :title "Seq Project Numbers"
+                                                       :inputHint "Broad internal IDs"}}})}}
+    :service-prefix "/schemas"))
+
+(def get-library-curator-status
+  {:path "/library/user/role/curator"
+   :method :get
+   :mock-data {:curator true}})
 
 
 (defn get-refresh-token-date []

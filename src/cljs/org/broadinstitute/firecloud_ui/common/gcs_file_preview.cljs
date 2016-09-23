@@ -40,8 +40,8 @@
                         " (right-click to download)"]]
                       (when (> data-size 100000000)
                         [:span {:style {:color (:exception-red style/colors) :marginLeft "2ex"}}
-                         (icons/font-icon {:style {:fontSize "100%" :verticalAlign "middle" :marginRight "1ex"}}
-                                          :status-warning-triangle)
+                         (icons/icon {:style {:fontSize "100%" :verticalAlign "middle" :marginRight "1ex"}}
+                                     :warning-triangle)
                          "Warning: Downloading this file may incur a large data egress charge"]))
              (if (:show-details? @state)
                [:div {}

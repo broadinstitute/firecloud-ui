@@ -36,18 +36,18 @@
     (pos? (count (submission "notstarted")))))
 
 (def ^:private success-icon
-  (icons/font-icon {:style {:color (:success-green style/colors) :fontSize 12 :marginRight 4}}
-    :status-done))
+  (icons/icon {:style {:color (:success-green style/colors) :fontSize 12 :marginRight 4}}
+    :done))
 (def ^:private running-icon
-  [:span {:style {:backgroundColor (:running-blue style/colors) :position "relative"
-                  :width 16 :height 16 :display "inline-block" :borderRadius 3
-                  :verticalAlign "middle" :marginTop -4 :marginRight 4}}
-   (style/center {} [icons/RunningIcon {:size 12}])])
+  [:span {:style {:display "inline-flex" :alignItems "center" :justifyContent "center" :verticalAlign "middle"
+                  :backgroundColor (:running-blue style/colors)
+                  :width 16 :height 16 :borderRadius 3 :margin "-4px 4px 0 0"}}
+   [icons/RunningIcon {:size 12}]])
 (def ^:private failure-icon
-  [:span {:style {:backgroundColor (:exception-red style/colors) :position "relative"
-                  :width 16 :height 16 :display "inline-block" :borderRadius 3
-                  :verticalAlign "middle" :marginTop -4 :marginRight 4}}
-   (style/center {} [icons/ExceptionIcon {:size 12}])])
+  [:span {:style {:display "inline-flex" :alignItems "center" :justifyContent "center" :verticalAlign "middle"
+                  :backgroundColor (:exception-red style/colors)
+                  :width 16 :height 16 :borderRadius 3 :margin "-4px 4px 0 0"}}
+   [icons/ExceptionIcon {:size 12}]])
 
 
 (defn icon-for-wf-status [status]

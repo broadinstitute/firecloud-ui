@@ -87,7 +87,7 @@
                             :borderRadius 8 :margin "4px 0"}
                 :reorderable-columns? false :resize-tab-color (:line-gray style/colors)
                 :toolbar (float-right
-                           [comps/Button {:text "Add User..." :type :add
+                           [comps/Button {:text "Add User..." :icon :add
                                           :onClick (fn [_]
                                                      (modal/push-modal
                                                        [AddUserDialog {:project-name (:project-name props)

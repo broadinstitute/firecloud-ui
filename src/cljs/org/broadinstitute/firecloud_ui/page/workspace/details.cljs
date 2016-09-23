@@ -23,7 +23,7 @@
         (cond workspace-error
               [:div {:style {:color (:exception-red style/colors)}} workspace-error]
               workspace
-              (when (get-in workspace ["workspace" "realm"])
+              (when (get-in workspace [:workspace :realm])
                 [:div {:style {}}
                  [:div {:style {:height 1 :backgroundColor "#bbb" :marginBottom 2}}]
                  [:div {:style {:outlineTop (str "4px double #ccc")
@@ -73,6 +73,22 @@
     (= tab-string MONITOR) 4
     :else 0))
 
+(defn- process-workspace [raw-workspace]
+  (let [attributes (get-in raw-workspace ["workspace" "attributes"])
+        library-attributes (->> attributes
+                                (keep (fn [[k v]]
+                                        (when (.startsWith k "library:")
+                                          [(-> k (clojure.string/split #":" 2) second) v])))
+                                (into {}))
+        workspace-attributes (utils/keywordize-keys
+                               (apply dissoc attributes "description" (keys library-attributes)))]
+    (-> (utils/keywordize-keys raw-workspace)
+        (update-in [:workspace] dissoc :attributes)
+        (assoc-in [:workspace :description] (attributes "description"))
+        (assoc-in [:workspace :workspace-attributes] workspace-attributes)
+        (assoc-in [:workspace :library-attributes] library-attributes))))
+
+
 (react/defc WorkspaceDetails
   {:refresh-workspace
    (fn [{:keys [props state]}]
@@ -84,7 +100,7 @@
        {:endpoint (endpoints/get-workspace (:workspace-id props))
         :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                    (if success?
-                     (swap! state assoc :workspace (get-parsed-response))
+                     (swap! state assoc :workspace (process-workspace (get-parsed-response)))
                      (swap! state assoc :workspace-error status-text)))}))
    :render
    (fn [{:keys [props state refs this]}]

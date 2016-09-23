@@ -82,11 +82,11 @@
    (when-let [wf-count (:workflow-count @state)]
      (when (> wf-count (config/workflow-count-warning-threshold))
        [:div {:style {:textAlign "center"}}
-        [:div {:style {:display "inline-block" :margin "1em 0 -1em 0" :padding "0.5em"
+        [:div {:style {:display "inline-flex" :alignItems "center" :margin "1em 0 -1em 0" :padding "0.5em"
                        :backgroundColor "white" :border style/standard-line :borderRadius 3}}
-         (icons/font-icon {:style {:color (:exception-red style/colors) :marginRight 5 :verticalAlign "middle"}}
-           :status-warning-triangle)
-         "Warning: This will launch " wf-count " workflows"]]))
+         (icons/icon {:style {:color (:exception-red style/colors) :marginRight 5 :verticalAlign "middle"}}
+           :warning-triangle)
+         (str "Warning: This will launch " wf-count " workflows")]]))
    (style/create-validation-error-message (:validation-errors @state))
    [comps/ErrorViewer {:error (:launch-server-error @state)}]])
 

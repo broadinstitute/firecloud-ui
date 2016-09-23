@@ -69,7 +69,7 @@
                            "Your link was successful; you will be granted access shortly."]
                 :else [:span {:style {:color (:text-gray style/colors)}} "Not Authorized"])]]])]))
    :component-did-mount
-   (fn [{:keys [this props state refs after-update]}]
+   (fn [{:keys [this props state after-update]}]
      (let [nav-context (nav/parse-segment (:parent-nav-context props))
            segment (:segment nav-context)]
        (if-not (clojure.string/blank? segment)
@@ -84,11 +84,11 @@
                        (str "#" (nav/create-hash (:parent-nav-context props))))))
          (react/call :load-nih-status this))))
    :component-did-update
-   (fn [{:keys [prev-state state refs]}]
+   (fn [{:keys [refs]}]
      (when (@refs "pending-spinner")
        (common/scroll-to-center (-> (@refs "pending-spinner") react/find-dom-node))))
    :load-nih-status
-   (fn [{:keys [props state]}]
+   (fn [{:keys [state]}]
      (endpoints/profile-get-nih-status
       (fn [{:keys [success? status-code status-text get-parsed-response]}]
         (cond
@@ -113,7 +113,7 @@
      (list :firstName :lastName :title :contactEmail :institute :institutionalProgram :programLocationCity
            :programLocationState :programLocationCountry :pi))
    :get-values
-   (fn [{:keys [state refs this]}]
+   (fn [{:keys [state]}]
      (reduce-kv (fn [r k v] (assoc r k (clojure.string/trim v))) {} (:values @state)))
    :validation-errors
    (fn [{:keys [refs this]}]
@@ -187,10 +187,9 @@
      (let [new? (:new-registration? props)
            update? (:update-registration? props)]
        [:div {:style {:marginTop "2em"}}
-        [:h2 {} (cond
-                   new? "New User Registration"
-                   update? "Update Registration"
-                   :else "Profile")]
+        [:h2 {} (cond new? "New User Registration"
+                      update? "Update Registration"
+                      :else "Profile")]
         [:div {}
          [Form {:ref "form" :parent-nav-context (:nav-context props)
                 :new-registration? (:new-registration? props)}]]
@@ -200,9 +199,11 @@
             [components/ErrorViewer {:error (:server-error @state)}]])
          (when (:validation-errors @state)
            [:div {:style {:marginBottom "1em"}}
-            [:span {:style {:paddingRight "1ex"}}
-             (icons/font-icon {:style {:color (:exception-red style/colors)}}
-               :status-warning-triangle)] "Validation Errors: "
+            (style/create-flexbox {}
+              [:span {:style {:paddingRight "1ex"}}
+               (icons/icon {:style {:color (:exception-red style/colors)}}
+                           :warning-triangle)]
+              "Validation Errors:")
             [:ul {}
              (map (fn [e] [:li {} e]) (:validation-errors @state))]])
          (cond
@@ -214,7 +215,7 @@
            [components/Button {:text (if new? "Register" "Save Profile")
                                :onClick #(react/call :save this)}])]]))
    :save
-   (fn [{:keys [this props state refs]}]
+   (fn [{:keys [props state refs]}]
      (swap! state (fn [s] (assoc (dissoc s :server-error :validation-errors) :in-progress? true)))
      (let [values (react/call :get-values (@refs "form"))
            validation-errors (react/call :validation-errors (@refs "form"))]

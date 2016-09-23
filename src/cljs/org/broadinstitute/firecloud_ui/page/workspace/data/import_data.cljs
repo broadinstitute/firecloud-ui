@@ -43,9 +43,9 @@
                        :onClick #(react/call :do-upload this)}])
       (if-let [result (:upload-result @state)]
         (if (:success? result)
-          [:div {:style {:paddingTop "1em"}}
-           (icons/font-icon {:style {:fontSize "200%" :color (:success-green style/colors)}} :status-done)
-           [:span {:style {:margin "-0.5em 0 0 1em"}} "Success!"]]
+          (style/create-flexbox {:style {:justifyContent "center" :paddingTop "1em"}}
+            (icons/icon {:style {:fontSize "200%" :color (:success-green style/colors)}} :done)
+            [:span {:style {:marginLeft "1em"}} "Success!"])
           [:div {:style {:paddingTop "1em"}}
            [comps/ErrorViewer {:error (:error result)}]]))])
    :do-upload

@@ -12,6 +12,7 @@
     [org.broadinstitute.firecloud-ui.page.workspace.monitor.common :refer [all-success? any-running? any-failed?]]
     [org.broadinstitute.firecloud-ui.page.workspace.summary.acl-editor :refer [AclEditor]]
     [org.broadinstitute.firecloud-ui.page.workspace.summary.attribute-editor :as attributes]
+    [org.broadinstitute.firecloud-ui.page.workspace.summary.library :as library]
     [org.broadinstitute.firecloud-ui.page.workspace.summary.workspace-cloner :refer [WorkspaceCloner]]
     [org.broadinstitute.firecloud-ui.utils :as utils]))
 
@@ -60,45 +61,52 @@
      [comps/Blocker {:banner (if (:locking? @state) "Unlocking..." "Locking...")}])])
 
 
-(defn- render-sidebar [state props refs this ws billing-projects owner? writer?]
-  (let [locked? (get-in ws ["workspace" "isLocked"])
+(defn- render-sidebar [state props refs this ws billing-projects owner? writer? curator?]
+  (let [locked? (get-in ws [:workspace :isLocked])
         status (common/compute-status ws)]
     [:div {:style {:flex "0 0 270px" :paddingRight 30}}
      [comps/StatusLabel {:text (str status
                                  (when (= status "Running")
-                                   (str " (" (get-in ws ["workspaceSubmissionStats" "runningSubmissionsCount"]) ")")))
+                                   (str " (" (get-in ws [:workspaceSubmissionStats :runningSubmissionsCount]) ")")))
                          :icon (case status
                                  "Complete" [icons/CompleteIcon {:size 36}]
                                  "Running" [icons/RunningIcon {:size 36}]
                                  "Exception" [icons/ExceptionIcon {:size 36}])
                          :color (style/color-for-status status)}]
      [:div {:ref "sidebar"}]
-     (style/create-unselectable :div {:style {:position (when-not (:sidebar-visible? @state) "fixed")
-                                              :top (when-not (:sidebar-visible? @state) 0)
-                                              :width 270}}
+     (style/create-unselectable
+       :div {:style {:position (when-not (:sidebar-visible? @state) "fixed")
+                     :top (when-not (:sidebar-visible? @state) 0)
+                     :width 270}}
+       (when false ; curator? TODO commented out until ready
+         [library/CatalogButton {:library-schema (get-in @state [:server-response :library-schema])
+                                 :workspace ws}])
+       (when false ; curator? TODO commented out until ready
+         [library/PublishButton {:disabled? (when (empty? (get-in ws [:workspace :library-attributes]))
+                                              "Dataset attributes must be created before publishing")}])
        (when (or owner? writer?)
          (if (not (:editing? @state))
            [comps/SidebarButton
             {:style :light :color :button-blue :margin :top
-             :text "Edit" :icon :pencil
+             :text "Edit" :icon :edit
              :onClick #(swap! state assoc
                          :reserved-keys (vec (range 0 (count (:attrs-list @state))))
                          :orig-attrs (:attrs-list @state) :editing? true)}]
            [:div {}
             [comps/SidebarButton
              {:style :light :color :button-blue :margin :top
-              :text "Save" :icon :document
+              :text "Save" :icon :done
               :onClick #(attributes/save-attributes state props this
                           (react/call :get-text (@refs "description")))}]
             [comps/SidebarButton
              {:style :light :color :exception-red :margin :top
-              :text "Cancel Editing" :icon :x
+              :text "Cancel Editing" :icon :cancel
               :onClick #(swap! state assoc
                           :editing? false
                           :attrs-list (:orig-attrs @state))}]]))
        (when-not (:editing? @state)
          [comps/SidebarButton {:style :light :margin :top :color :button-blue
-                               :text "Clone..." :icon :plus
+                               :text "Clone..." :icon :clone
                                :disabled? (when (empty? billing-projects) "No billing projects available")
                                :onClick #(modal/push-modal
                                           [WorkspaceCloner
@@ -106,24 +114,25 @@
                                                           (swap! state dissoc :cloning?)
                                                           ((:on-clone props) (str namespace ":" name)))
                                             :workspace-id (:workspace-id props)
-                                            :description (get-in ws ["workspace" "attributes" "description"])
-                                            :is-protected? (get-in ws ["workspace" "isProtected"])
+                                            :description (:description ws)
+                                            :is-protected? (get-in ws [:workspace :isProtected])
                                             :billing-projects billing-projects}])}])
        (when-not (and owner? (:editing? @state))
          [comps/SidebarButton {:style :light :margin :top :color :button-blue
-                               :text (if locked? "Unlock" "Lock") :icon :locked
+                               :text (if locked? "Unlock" "Lock")
+                               :icon (if locked? :unlock :lock)
                                :onClick #(react/call :lock-or-unlock this locked?)}])
        (when-not (and owner? (:editing? @state))
          [comps/SidebarButton {:style :light :margin :top :color :exception-red
-                               :text "Delete" :icon :trash-can
+                               :text "Delete" :icon :delete
                                :disabled? (if locked? "This workspace is locked")
                                :onClick #(modal/push-modal [DeleteDialog
                                                             {:workspace-id (:workspace-id props)
                                                              :on-delete (:on-delete props)}])}]))]))
 
 
-(defn- render-main [state props refs ws owner? bucket-access? submissions-count]
-  (let [owners (ws "owners")]
+(defn- render-main [state props refs ws owner? bucket-access? submissions-count library-schema]
+  (let [owners (:owners ws)]
     [:div {:style {:flex "1 1 auto" :overflow "hidden"}}
      [:div {:style {:flex "1 1 auto" :display "flex"}}
       [:div {:style {:flex "1 1 50%"}}
@@ -142,19 +151,19 @@
              ")"])])
        (style/create-section-header "Created By")
        (style/create-paragraph
-         [:div {} (get-in ws ["workspace" "createdBy"])]
-         [:div {} (common/format-date (get-in ws ["workspace" "createdDate"]))])]
+         [:div {} (get-in ws [:workspace :createdBy])]
+         [:div {} (common/format-date (get-in ws [:workspace :createdDate]))])]
       [:div {:style {:flex "1 1 50%" :paddingLeft 10}}
        (style/create-section-header "Google Bucket")
        (style/create-paragraph
          (case bucket-access?
            nil [:div {:style {:position "absolute" :marginTop "-1.5em"}}
                 [comps/Spinner {:height "1.5ex"}]]
-           true (style/create-link {:text (get-in ws ["workspace" "bucketName"])
-                                    :href (str "https://console.developers.google.com/storage/browser/" (get-in ws ["workspace" "bucketName"]) "/")
+           true (style/create-link {:text (get-in ws [:workspace :bucketName])
+                                    :href (str "https://console.developers.google.com/storage/browser/" (get-in ws [:workspace :bucketName]) "/")
                                     :title "Click to open the Google Cloud Storage browser for this bucket"
                                     :target "_blank"})
-           false (get-in ws ["workspace" "bucketName"])))
+           false (get-in ws [:workspace :bucketName])))
        (style/create-section-header "Analysis Submissions")
        (style/create-paragraph
          (let [count-all (apply + (vals submissions-count))]
@@ -166,11 +175,15 @@
                  [:li {} (str subs " " status)])])]))]]
      (style/create-section-header "Description")
      (style/create-paragraph
-       (let [description (not-empty (get-in ws ["workspace" "attributes" "description"]))]
+       (let [description (not-empty (get-in ws [:workspace :description]))]
          (cond (:editing? @state) (react/create-element [MarkdownEditor {:ref "description" :initial-text description}])
                description [MarkdownView {:text description}]
                :else [:span {:style {:fontStyle "italic"}} "No description provided"])))
-     (attributes/view-attributes state refs)]))
+     (attributes/view-attributes state refs)
+     ;; TODO commented out until ready
+     ;[library/LibraryAttributeViewer {:library-attributes (not-empty (get-in ws [:workspace :library-attributes]))
+     ;                                 :library-schema library-schema}]
+     ]))
 
 (react/defc Summary
   {:get-initial-state
@@ -180,20 +193,20 @@
    (fn [{:keys [refs state props this]}]
      (let [server-response (:server-response @state)
            {:keys [workspace]} props
-           {:keys [submissions-count billing-projects server-error]} server-response]
+           {:keys [submissions-count billing-projects library-schema library-curator? server-error]} server-response]
        (cond
          server-error
          (style/create-server-error-message server-error)
-         (some nil? [workspace submissions-count billing-projects])
+         (some nil? [workspace submissions-count billing-projects library-schema library-curator?])
          [:div {:style {:textAlign "center" :padding "1em"}}
           [comps/Spinner {:text "Loading workspace..."}]]
          :else
-         (let [owner? (= "OWNER" (workspace "accessLevel"))
-               writer? (or owner? (= "WRITER" (workspace "accessLevel")))]
+         (let [owner? (= "OWNER" (:accessLevel workspace))
+               writer? (or owner? (= "WRITER" (:accessLevel workspace)))]
            [:div {:style {:margin "45px 25px" :display "flex"}}
             (render-overlays state)
-            (render-sidebar state props refs this workspace billing-projects owner? writer?)
-            (render-main state props refs workspace owner? (:bucket-access? props) submissions-count)]))))
+            (render-sidebar state props refs this workspace billing-projects owner? writer? library-curator?)
+            (render-main state props refs workspace owner? (:bucket-access? props) submissions-count library-schema)]))))
    :lock-or-unlock
    (fn [{:keys [props state this]} locked-now?]
      (swap! state assoc :locking? locked-now?)
@@ -222,7 +235,7 @@
    (fn [{:keys [prev-props props state]}]
      (when (not= (:workspace prev-props) (:workspace props))
        (swap! state assoc :attrs-list
-              (vec (dissoc (get-in props [:workspace "workspace" "attributes"]) "description")))))
+              (vec (get-in props [:workspace :workspace :workspace-attributes])))))
    :component-will-unmount
    (fn [{:keys [locals]}]
      (.removeEventListener js/window "scroll" (:scroll-handler @locals)))
@@ -242,4 +255,19 @@
         (if err-text
           (swap! state update-in [:server-response] assoc :server-error err-text)
           (swap! state update-in [:server-response]
-                 assoc :billing-projects (map #(% "projectName") projects))))))})
+                 assoc :billing-projects (map #(% "projectName") projects)))))
+     (endpoints/get-library-attributes
+       (fn [{:keys [success? get-parsed-response]}]
+         (if success?
+           (let [response (utils/keywordize-keys (get-parsed-response))]
+             (swap! state update-in [:server-response] assoc :library-schema
+                    (-> response
+                        (assoc :required (map keyword (:required response)))
+                        (assoc :propertyOrder (map keyword (:propertyOrder response))))))
+           (swap! state update-in [:server-response] assoc :server-error "Unable to load library schema"))))
+     (endpoints/call-ajax-orch
+       {:endpoint endpoints/get-library-curator-status
+        :on-done (fn [{:keys [success? get-parsed-response]}]
+                   (if success?
+                     (swap! state update-in [:server-response] assoc :library-curator? (get (get-parsed-response) "curator"))
+                     (swap! state update-in [:server-response] assoc :server-error "Unable to determine curator status")))}))})
