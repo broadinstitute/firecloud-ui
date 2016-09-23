@@ -10,12 +10,15 @@
 
 
 (defn- calculate-display-properties [library-schema]
-  (filter (comp not :hidden #(get-in library-schema [:properties %]))
-          (:propertyOrder library-schema)))
+  (->> (:properties library-schema)
+       keys
+       (utils/sort-match (:propertyOrder library-schema))
+       (filter (comp not :hidden #(get-in library-schema [:properties %])))))
 
 (defn- count-required-not-hidden [library-schema]
-  (filter (comp not :hidden #(get-in library-schema [:properties %]))
-          (:required library-schema)))
+  (->> (:required library-schema)
+       (filter (comp not :hidden #(get-in library-schema [:properties %])))
+       count))
 
 (defn- split-fold [library-schema display-properties]
   (let [required-count (count-required-not-hidden library-schema)
@@ -66,10 +69,7 @@
 (react/defc LibraryAttributeForm
   {:get-initial-state
    (fn [{:keys [props]}]
-     (let [required (-> props :library-schema :required set)
-           optional (clojure.set/difference (-> props :library-schema :propertyOrder set) required)]
-       {:required-props required
-        :optional-props optional}))
+     {:required-props (-> props :library-schema :required set)})
    :render
    (fn [{:keys [this]}]
      [modal/OKCancelForm
@@ -102,11 +102,9 @@
         (style/create-validation-error-message (:validation-error @state))]))
    :on-ok
    (fn [{:keys [props state refs]}]
-     (let [library-schema (:library-schema props)
-           field-data (doall
-                        (map (fn [property-key]
-                               (let [{:keys [hidden enum]} (get-in library-schema [:properties property-key])
-                                     pk-str (name property-key)
+     (let [field-data (doall
+                        (map (fn [[property-key {:keys [hidden enum]}]]
+                               (let [pk-str (name property-key)
                                      required? (contains? (:required-props @state) property-key)]
                                  [property-key
                                   {:required? required?
@@ -116,7 +114,7 @@
                                                   required? (do (input/validate refs pk-str)
                                                               (input/get-text refs pk-str))
                                                   :else (common/get-text refs pk-str)))}]))
-                             (:propertyOrder library-schema)))
+                             (-> props :library-schema :properties)))
            missing-fields (not-empty
                             (keep (fn [[property-key {:keys [required? value]}]]
                                     (when (and required? (not value)) property-key))
