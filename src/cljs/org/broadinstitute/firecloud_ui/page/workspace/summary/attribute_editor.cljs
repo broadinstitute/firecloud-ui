@@ -41,6 +41,10 @@
             {:key editing?
              :reorderable-columns? false :sortable-columns? (not editing?) :filterable? false :pagination :none
              :empty-message "No Workspace Attributes defined"
+             :row-style {:borderBottom (str "2px solid " (:line-gray style/colors))}
+             :header-row-style {:borderBottom (str "2px solid " (:line-gray style/colors))
+                                :color (:text-gray style/colors) :backgroundColor "white"}
+             :resize-tab-color (:line-gray style/colors)
              :columns (if editing?
                         [{:starting-width 40 :resizable? false :as-text (constantly "Delete")
                           :content-renderer
@@ -50,7 +54,7 @@
                                                  :cursor "pointer"}
                                          :onClick #(swap! state update :attributes utils/delete index)}
                                         :delete))}
-                         {:header "Key" :starting-width 200 :as-text (constantly nil)
+                         {:header "Key" :starting-width 300 :as-text (constantly nil)
                           :content-renderer
                           (fn [{:keys [key index]}]
                             (style/create-text-field {:key index
@@ -67,7 +71,8 @@
                                                       :value value
                                                       :onChange #(swap! state update-in [:attributes index]
                                                                         assoc 1 (-> % .-target .-value))}))}]
-                        [{:header "Key" :starting-width 200 :as-text name}
+                        [{:header "Key" :starting-width 300 :as-text name
+                          :content-renderer (fn [key] [:b {} (name key)])}
                          {:header "Value" :starting-width 600}])
              :data (if editing?
                      (map-indexed (fn [index [key value]]
