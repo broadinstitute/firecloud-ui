@@ -18,6 +18,8 @@
    :starting-width (or (:starting-width props) 200)
    :as-text #(common/format-date % (:format props))})
 
+(defonce ^:private saved-states (atom {}))
+
 
 ;; Table component with specifiable style and column behaviors.
 ;;
@@ -139,28 +141,30 @@
                    {:backgroundColor (if (even? index) (:background-gray style/colors) "#fff")})})
    :get-initial-state
    (fn [{:keys [props]}]
-     (let [columns (vec (map-indexed (fn [i col]
-                                       {:width (or (:starting-width col) 100)
-                                        :visible? (get col :show-initial? true)
-                                        :index i
-                                        :display-index i})
-                                     (:columns props)))
-           initial-sort-column (or (first (filter #(contains? % :sort-initial)
-                                                  (map merge (:columns props) columns)))
-                                   (when (:always-sort? props)
-                                     (first (map merge (:columns props) columns))))]
-       {:columns columns
-        :dragging? false
-        :filter-group-index (or (:initial-filter-group-index props) 0)
-        :query-params (merge
-                        {:current-page 1 :rows-per-page initial-rows-per-page
-                         :filter-text ""}
-                        (when initial-sort-column
-                          {:sort-column (:index initial-sort-column)
-                           :sort-order (or (:sort-initial initial-sort-column) :asc) ; default needed when forcing sort
-                           :key-fn (if-let [sorter (:sort-by initial-sort-column)]
-                                     (fn [row] (sorter (nth row (:index initial-sort-column))))
-                                     (fn [row] (nth row (:index initial-sort-column))))}))}))
+     (if-let [saved-state (get @saved-states (:state-key props))]
+       saved-state
+       (let [columns (vec (map-indexed (fn [i col]
+                                         {:width (or (:starting-width col) 100)
+                                          :visible? (get col :show-initial? true)
+                                          :index i
+                                          :display-index i})
+                                       (:columns props)))
+             initial-sort-column (or (first (filter #(contains? % :sort-initial)
+                                                    (map merge (:columns props) columns)))
+                                     (when (:always-sort? props)
+                                       (first (map merge (:columns props) columns))))]
+         {:columns columns
+          :dragging? false
+          :filter-group-index (or (:initial-filter-group-index props) 0)
+          :query-params (merge
+                          {:current-page 1 :rows-per-page initial-rows-per-page
+                           :filter-text ""}
+                          (when initial-sort-column
+                            {:sort-column (:index initial-sort-column)
+                             :sort-order (or (:sort-initial initial-sort-column) :asc) ; default needed when forcing sort
+                             :key-fn (if-let [sorter (:sort-by initial-sort-column)]
+                                       (fn [row] (sorter (nth row (:index initial-sort-column))))
+                                       (fn [row] (nth row (:index initial-sort-column))))}))})))
    :render
    (fn [{:keys [this state props refs after-update]}]
      (let [{:keys [filterable? reorderable-columns? toolbar retain-header-on-empty?]} props
@@ -209,7 +213,8 @@
                                    (assoc-in columns [column-index :visible?] visible?)))))})}])])
                  (when filterable?
                    [:div {:style {:float "left" :marginLeft "1em"}}
-                    [table-utils/TextFilter {:on-filter #(swap! state update-in [:query-params]
+                    [table-utils/TextFilter {:initial-text (get-in @state [:query-params :filter-text])
+                                             :on-filter #(swap! state update-in [:query-params]
                                                                 assoc :filter-text % :current-page 1)}]])
                  (when (:filter-groups props)
                    [:div {:style {:float "left" :marginLeft "1em" :marginTop -3}}
@@ -323,6 +328,8 @@
                (not= (:query-params @state) (:query-params prev-state)))
        (react/call :refresh-rows this)))
    :component-will-unmount
-   (fn [{:keys [this]}]
+   (fn [{:keys [props state this]}]
      (.removeEventListener js/window "mousemove" (.-onMouseMoveHandler this))
-     (.removeEventListener js/window "mouseup" (.-onMouseUpHandler this)))})
+     (.removeEventListener js/window "mouseup" (.-onMouseUpHandler this))
+     (when-let [state-key (:state-key props)]
+       (swap! saved-states assoc state-key @state)))})

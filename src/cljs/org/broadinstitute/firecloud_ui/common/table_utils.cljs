@@ -227,10 +227,10 @@
   {:get-initial-state
    (fn [] {:synced true})
    :render
-   (fn [{:keys [state this]}]
+   (fn [{:keys [props state this]}]
      [:div {:style {:display "inline-flex"}}
       (style/create-text-field
-        {:ref "filter-field" :placeholder "Filter"
+        {:ref "filter-field" :placeholder "Filter" :defaultValue (:initial-text props)
          :style {:backgroundColor (if (:synced @state) "#fff" (:tag-background style/colors))
                  :borderRadius "3px 0 0 3px" :marginBottom 0}
          :onKeyDown (common/create-key-handler [:enter] #(react/call :apply-filter this))

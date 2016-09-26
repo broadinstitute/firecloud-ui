@@ -120,7 +120,8 @@
                                 [:div {:style {:padding "1em" :border style/standard-line}}
                                  (map checkbox access-types)])}]))
         [table/Table
-         {:empty-message "No workspaces to display." :retain-header-on-empty? true
+         {:state-key "workspaces_table"
+          :empty-message "No workspaces to display." :retain-header-on-empty? true
           :cell-padding-left nil
           :header-row-style {:fontWeight nil :fontSize "90%"
                              :color (:text-light style/colors) :backgroundColor nil}
