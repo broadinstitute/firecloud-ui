@@ -47,9 +47,10 @@
             {:key editing?
              :reorderable-columns? false :sortable-columns? (not editing?) :filterable? false :pagination :none
              :empty-message "No Workspace Attributes defined"
-             :row-style {:borderBottom (str "2px solid " (:line-gray style/colors))}
+             :row-style {}
+             :always-sort? (not editing?)
              :header-row-style {:borderBottom (str "2px solid " (:line-gray style/colors))
-                                :color (:text-gray style/colors) :backgroundColor "white"}
+                                :backgroundColor "white" :color "black" :fontWeight "bold"}
              :resize-tab-color (:line-gray style/colors)
              :columns (if editing?
                         [{:starting-width 40 :resizable? false :as-text (constantly "Delete")
@@ -77,8 +78,7 @@
                                                       :value value
                                                       :onChange #(swap! state update-in [:attributes index]
                                                                         assoc 1 (-> % .-target .-value))}))}]
-                        [{:header "Key" :starting-width 300 :as-text name
-                          :content-renderer (fn [key] [:b {} (name key)])}
+                        [{:header "Key" :starting-width 300 :as-text name :sort-initial :asc}
                          {:header "Value" :starting-width 600
                           :content-renderer (table-utils/render-gcs-links (:workspace-bucket props))}])
              :data (if editing?
