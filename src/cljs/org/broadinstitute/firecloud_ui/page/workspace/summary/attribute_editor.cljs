@@ -70,7 +70,7 @@
                                                       :value key
                                                       :onChange #(swap! state update-in [:attributes index]
                                                                         assoc 0 (-> % .-target .-value))}))}
-                         {:header "Value" :starting-width 600 :as-text (constantly nil)
+                         {:header "Value" :starting-width :remaining :as-text (constantly nil)
                           :content-renderer
                           (fn [{:keys [value index]}]
                             (style/create-text-field {:key index
@@ -79,7 +79,7 @@
                                                       :onChange #(swap! state update-in [:attributes index]
                                                                         assoc 1 (-> % .-target .-value))}))}]
                         [{:header "Key" :starting-width 300 :as-text name :sort-initial :asc}
-                         {:header "Value" :starting-width 600
+                         {:header "Value" :starting-width :remaining
                           :content-renderer (table-utils/render-gcs-links (:workspace-bucket props))}])
              :data (if editing?
                      (map-indexed (fn [index [key value]]

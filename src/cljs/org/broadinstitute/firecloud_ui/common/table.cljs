@@ -84,7 +84,7 @@
 ;;       :show-initial? (optional, default true)
 ;;         Whether or not to initially show the column.
 ;;       :starting-width (optional, default 100)
-;;         The initial width, which may be resized
+;;         The initial width, which may be resized.  Use :remaining to make it take up the remaining space.
 ;;       :as-text (optional)
 ;;         A function from the column value to a one-line text representation.  Used as a fallback for
 ;;         rendering, filtering, and sorting, and TODO: will be used for exporting tables
@@ -164,7 +164,10 @@
    :render
    (fn [{:keys [this state props refs after-update]}]
      (let [{:keys [filterable? reorderable-columns? toolbar retain-header-on-empty?]} props
-           {:keys [no-data? error]} @state]
+           {:keys [no-data? error]} @state
+           any-width=remaining? (->> (:columns @state)
+                                     (map :width)
+                                     (some (partial = :remaining)))]
        [:div {}
         (when (or filterable? reorderable-columns? toolbar)
           (let [built-in
@@ -222,10 +225,10 @@
             ((or toolbar identity) built-in)))
         [:div {:style {:position "relative"}}
          [comps/DelayedBlocker {:ref "blocker" :banner "Loading..."}]
-         [:div {:style {:overflowX "auto"}}
+         [:div {:style {:overflowX (if any-width=remaining? "hidden" "auto")}}
           [:div {:style {:position "relative"
                          :paddingBottom 10
-                         :minWidth (when-not no-data?
+                         :minWidth (when-not (or no-data? any-width=remaining?)
                                      (->> (react/call :get-ordered-columns this)
                                           (filter :visible?)
                                           (map :width)
