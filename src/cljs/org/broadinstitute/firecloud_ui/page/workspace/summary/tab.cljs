@@ -52,7 +52,7 @@
                      (swap! state assoc :server-error (get-parsed-response))))}))})
 
 
-(defn- save-attributes [{:keys [old-attributes new-attributes state workspace-id on-done]}]
+(defn- save-attributes [{:keys [old-attributes new-attributes state workspace-id request-refresh]}]
   (let [to-delete (->> (clojure.set/difference (set (keys old-attributes)) (set (keys new-attributes)))
                        (map (fn [key] {:op "RemoveAttribute" :attributeName key})))
         to-update (->> new-attributes
@@ -63,11 +63,11 @@
       {:endpoint (endpoints/update-workspace-attrs workspace-id)
        :payload (concat to-delete to-update)
        :headers utils/content-type=json
-       :on-done (fn [{:keys [success? xhr]}]
+       :on-done (fn [{:keys [success? get-parsed-response]}]
                   (swap! state dissoc :updating-attrs? :editing?)
-                  (on-done)
-                  (when-not success?
-                    (js/alert (str "Exception:\n" (.-statusText xhr)))))})))
+                  (if success?
+                    (request-refresh)
+                    (modal/push-error-response (get-parsed-response))))})))
 
 
 (defn- render-sidebar [state refs this
@@ -112,12 +112,12 @@
                          (let [{:keys [success error]} (react/call :get-attributes (@refs "workspace-attribute-editor"))
                                new-description (react/call :get-text (@refs "description"))]
                            (if error
-                             (modal/push-error error)
+                             (modal/push-error-text error)
                              (save-attributes {:old-attributes (assoc workspace-attributes :description description)
                                                :new-attributes (assoc success :description new-description)
                                                :state state
                                                :workspace-id workspace-id
-                                               :on-done #(react/call :refresh this)}))))}]
+                                               :request-refresh #(react/call :refresh this)}))))}]
             [comps/SidebarButton
              {:style :light :color :exception-red :margin :top
               :text "Cancel Editing" :icon :cancel

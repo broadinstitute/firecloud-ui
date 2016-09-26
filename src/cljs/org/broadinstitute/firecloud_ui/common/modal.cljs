@@ -23,15 +23,21 @@
 (defn push-ok-cancel-modal [props]
   (react/call :push-modal @instance (react/create-element OKCancelForm props)))
 
-(defn push-error [error-text]
+
+(defn- push-error [content]
   (push-ok-cancel-modal
-    {:header [:div {:style {:display "flex" :alignItems "center"
-                            :maxWidth "50vw"}}
+    {:header [:div {:style {:display "flex" :alignItems "center"}}
               (icons/icon {:style {:color (:exception-red style/colors)
                                    :marginRight "0.5em"}} :error)
               "Error"]
-     :content error-text
+     :content [:div {:style {:maxWidth "50vw"}} content]
      :show-cancel? false :ok-button "OK"}))
+
+(defn push-error-text [error-text]
+  (push-error error-text))
+
+(defn push-error-response [error-response]
+  (push-error [comps/ErrorViewer {:error error-response}]))
 
 (defn pop-modal []
   (react/call :pop-modal @instance))

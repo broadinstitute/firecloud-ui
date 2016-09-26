@@ -19,9 +19,14 @@
            any-empty? (some (fn [[k v]]
                               (let [[ek ev] (map (comp empty? trim) [k v])]
                                 (or ek ev)))
-                            attributes)]
+                            attributes)
+           with-spaces (->> attributes
+                            (map (comp trim key))
+                            (filter (partial re-find #"\s"))
+                            not-empty)]
        (cond duplicates {:error (str "Duplicate keys: " (join ", " duplicates))}
              any-empty? {:error "Empty keys and values are not allowed."}
+             with-spaces {:error (str "Keys cannot have spaces: " (join ", " with-spaces))}
              :else {:success (into {} attributes)})))
    :render
    (fn [{:keys [props state after-update]}]
