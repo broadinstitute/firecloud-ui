@@ -196,10 +196,10 @@
          (cond editing? (react/create-element [MarkdownEditor {:ref "description" :initial-text description}])
                description [MarkdownView {:text description}]
                :else [:span {:style {:fontStyle "italic"}} "No description provided"])))
-     ;(attributes/view-attributes state refs)
      [attributes/WorkspaceAttributeViewerEditor {:ref "workspace-attribute-editor"
                                                  :editing? editing?
-                                                 :workspace-attributes workspace-attributes}]
+                                                 :workspace-attributes workspace-attributes
+                                                 :workspace-bucket bucketName}]
      ;; TODO commented out until ready
      ;[library/LibraryAttributeViewer {:library-attributes (not-empty library-attributes)
      ;                                 :library-schema library-schema}]

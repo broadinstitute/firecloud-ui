@@ -6,6 +6,7 @@
     [org.broadinstitute.firecloud-ui.common.components :as comps]
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.common.table :as table]
+    [org.broadinstitute.firecloud-ui.common.table-utils :as table-utils]
     [org.broadinstitute.firecloud-ui.common.icons :as icons]
     [org.broadinstitute.firecloud-ui.utils :as utils]
     ))
@@ -78,7 +79,8 @@
                                                                         assoc 1 (-> % .-target .-value))}))}]
                         [{:header "Key" :starting-width 300 :as-text name
                           :content-renderer (fn [key] [:b {} (name key)])}
-                         {:header "Value" :starting-width 600}])
+                         {:header "Value" :starting-width 600
+                          :content-renderer (table-utils/render-gcs-links (:workspace-bucket props))}])
              :data (if editing?
                      (map-indexed (fn [index [key value]]
                                     {:index index :key key :value value})

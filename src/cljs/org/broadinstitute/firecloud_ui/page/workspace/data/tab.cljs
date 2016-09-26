@@ -5,7 +5,6 @@
     goog.net.cookies
     [org.broadinstitute.firecloud-ui.common :as common]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
-    [org.broadinstitute.firecloud-ui.common.gcs-file-preview :refer [GCSFilePreviewLink]]
     [org.broadinstitute.firecloud-ui.common.entity-table :refer [EntityTable]]
     [org.broadinstitute.firecloud-ui.common.modal :as modal]
     [org.broadinstitute.firecloud-ui.common.table-utils :as table-utils]
@@ -95,16 +94,7 @@
                                                                       (react/call :refresh (@refs "entity-table") entity-type))}])}]]
                           (common/clear-both)])
               :on-filter-change #(swap! state assoc :selected-entity-type %)
-              :attribute-renderer (fn [maybe-uri]
-                                    (if (string? maybe-uri)
-                                      (if-let [parsed (common/parse-gcs-uri maybe-uri)]
-                                        [GCSFilePreviewLink (assoc parsed
-                                                              :workspace-bucket (get-in workspace [:workspace :bucketName])
-                                                              :attributes {:style {:direction "rtl" :marginRight "0.5em"
-                                                                                   :overflow "hidden" :textOverflow "ellipsis"
-                                                                                   :textAlign "left"}})]
-                                        maybe-uri)
-                                      (table-utils/default-render maybe-uri)))}])
+              :attribute-renderer (table-utils/render-gcs-links (get-in workspace [:workspace :bucketName]))}])
           :else
           [:div {:style {:textAlign "center"}} [comps/Spinner {:text "Checking workspace..."}]])]))
    :component-did-mount
