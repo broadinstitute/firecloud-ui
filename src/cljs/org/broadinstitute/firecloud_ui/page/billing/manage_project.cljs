@@ -94,7 +94,7 @@
                                                                        :on-add #(react/call :load this)}]))}])
                 :columns [{:header "Email" :starting-width 500}
                           {:header "Role" :starting-width 100 :resizable? false :sort-initial :asc}
-                          {:starting-width 100
+                          {:starting-width :remaining
                            :filter-by :none :sort-by :none :resizable? false
                            :as-text
                            (fn [{:strs [email role]}]

@@ -3,6 +3,7 @@
    [dmohs.react :as react]
    [inflections.core :refer [pluralize]]
    [org.broadinstitute.firecloud-ui.common :as common]
+   [org.broadinstitute.firecloud-ui.common.gcs-file-preview :refer [GCSFilePreviewLink]]
    [org.broadinstitute.firecloud-ui.common.components :as comps]
    [org.broadinstitute.firecloud-ui.common.style :as style]
    [org.broadinstitute.firecloud-ui.common.icons :as icons]
@@ -103,23 +104,27 @@
 
 (defn- render-cell [{:keys [width onResizeMouseDown onSortClick sortOrder] :as props}]
   [:div {:style (merge {:position "relative" :minWidth 10
-                        :flexGrow 0 :flexShrink 0 :flexBasis width}
-                  (:cell-style props))}
-   (when (:onResizeMouseDown props)
+                        :flexGrow (if (= width :remaining) 1 0)
+                        :flexShrink 0
+                        :flexBasis (if (= width :remaining) 0 width)}
+                       (:cell-style props))}
+   (when (and onResizeMouseDown (not= width :remaining))
      [:div {:style {:position "absolute" :width 20 :top 0 :bottom 0 :left (- width 10) :zIndex 1
                     :cursor "col-resize"}
             :onMouseDown onResizeMouseDown
             :onDoubleClick (:onResizeDoubleClick props)}])
    (when onSortClick
-     [:div {:style {:position "absolute" :top 0 :bottom 0 :left 0 :width (if onResizeMouseDown (- width 10) width)
+     [:div {:style {:position "absolute" :top 0 :bottom 0 :left 0 :right (if onResizeMouseDown 10 0)
                     :cursor "pointer"}
             :onClick onSortClick}])
    (when sortOrder
      [:div {:style {:position "absolute" :top "50%" :right 0 :width 16 :transform "translateY(-50%)"}}
       (if (= :asc sortOrder) "↑" "↓")])
-   [:div {:title (:title props) :style (merge {:whiteSpace "nowrap" :overflow "hidden" :textOverflow "ellipsis"
-                         :width (str "calc(" (- width (if sortOrder 16 0)) "px - " (:cell-padding-left props) ")")}
-                   (:content-container-style props))}
+   [:div {:title (:title props)
+          :style (merge {:whiteSpace "nowrap" :overflow "hidden" :textOverflow "ellipsis"}
+                        (when (not= width :remaining)
+                          {:width (str "calc(" (- width (if sortOrder 16 0)) "px - " (:cell-padding-left props) ")")})
+                        (:content-container-style props))}
     (:content props)]])
 
 
@@ -127,6 +132,18 @@
   (cond (map? data) (utils/map-to-string data)
         (sequential? data) (clojure.string/join ", " data)
         :else (str data)))
+
+(defn render-gcs-links [workspace-bucket]
+  (fn [maybe-uri]
+    (if (string? maybe-uri)
+      (if-let [parsed (common/parse-gcs-uri maybe-uri)]
+        [GCSFilePreviewLink (assoc parsed
+                              :workspace-bucket workspace-bucket
+                              :attributes {:style {:direction "rtl" :marginRight "0.5em"
+                                                   :overflow "hidden" :textOverflow "ellipsis"
+                                                   :textAlign "left"}})]
+        maybe-uri)
+      (default-render maybe-uri))))
 
 
 (react/defc Body

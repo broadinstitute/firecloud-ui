@@ -27,11 +27,11 @@
       (when (:busy @state)
         [comps/AnimatedEllipsis])])
    :component-did-mount
-   (fn [{:keys [this locals]}]
+   (fn [{:keys [this]}]
      (react/call :-set-timeout this project-refresh-interval-ms
                  #(react/call :-refresh-status this)))
    :component-will-unmount
-   (fn [{:keys [this locals]}]
+   (fn [{:keys [locals]}]
      (dorun (map (fn [id] (js/clearTimeout id)) (vals (:timeouts @locals)))))
    :-refresh-status
    (fn [{{:keys [project-name on-status-change]} :props :keys [this state]}]
@@ -81,7 +81,7 @@
                          (style/create-link {:text projectName
                                              :onClick #((:on-select props) projectName)})
                          :else projectName)])}
-                   {:header "Role" :starting-width 100}]
+                   {:header "Role" :starting-width :remaining}]
          :toolbar
          (float-right
           [comps/Button {:text "Create New Billing Project"

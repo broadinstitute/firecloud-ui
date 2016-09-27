@@ -87,7 +87,7 @@
                          (swap! state dissoc :saving?)
                          (if success?
                            (do
-                             ((:update-owners props) (map :email (filter #(= "OWNER" (:accessLevel %)) filtered-acl)))
+                             ((:request-refresh props))
                              (modal/pop-modal))
                            (swap! state assoc :save-error (get-parsed-response))))})))))
    :component-did-mount

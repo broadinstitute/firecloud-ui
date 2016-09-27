@@ -25,6 +25,7 @@
 ;;   :pagination (optional, default :internal)
 ;;     Defines how the table is paginated.  Options are:
 ;;       :internal -- data is given via the :data property and client-side pagination is provided
+;;       :none -- don't paginate
 ;;       (fn [query-params callback] ...) -- paginate externally (e.g. server-side) by providing a function
 ;;           that takes the query parameters and sets the data via a callback.
 ;;           query-params structure:
@@ -83,7 +84,7 @@
 ;;       :show-initial? (optional, default true)
 ;;         Whether or not to initially show the column.
 ;;       :starting-width (optional, default 100)
-;;         The initial width, which may be resized
+;;         The initial width, which may be resized.  Use :remaining to make it take up the remaining space.
 ;;       :as-text (optional)
 ;;         A function from the column value to a one-line text representation.  Used as a fallback for
 ;;         rendering, filtering, and sorting, and TODO: will be used for exporting tables
@@ -163,7 +164,10 @@
    :render
    (fn [{:keys [this state props refs after-update]}]
      (let [{:keys [filterable? reorderable-columns? toolbar retain-header-on-empty?]} props
-           {:keys [no-data? error]} @state]
+           {:keys [no-data? error]} @state
+           any-width=remaining? (->> (:columns @state)
+                                     (map :width)
+                                     (some (partial = :remaining)))]
        [:div {}
         (when (or filterable? reorderable-columns? toolbar)
           (let [built-in
@@ -221,10 +225,11 @@
             ((or toolbar identity) built-in)))
         [:div {:style {:position "relative"}}
          [comps/DelayedBlocker {:ref "blocker" :banner "Loading..."}]
-         [:div {:style {:overflowX "auto"}}
+         ;; When using an auto-width column the table ends up ~1px wider than its parent
+         [:div {:style {:overflowX (if any-width=remaining? "hidden" "auto")}}
           [:div {:style {:position "relative"
                          :paddingBottom 10
-                         :minWidth (when-not no-data?
+                         :minWidth (when-not (or no-data? any-width=remaining?)
                                      (->> (react/call :get-ordered-columns this)
                                           (filter :visible?)
                                           (map :width)
@@ -241,13 +246,14 @@
             (assoc props
               :columns (filter :visible? (react/call :get-ordered-columns this))
               :rows (:display-rows @state))]]]]
-        [:div {:style {:paddingTop (:paginator-space props)}}
-         [table-utils/Paginator
-          {:width (:width props)
-           :pagination-params (select-keys (:query-params @state) [:current-page :rows-per-page])
-           :num-visible-rows (:filtered-count @state)
-           :num-total-rows (or (:num-total-rows props) (:grouped-count @state))
-           :on-change #(swap! state update-in [:query-params] merge %)}]]]))
+        (when-not (= (:pagination props) :none)
+          [:div {:style {:paddingTop (:paginator-space props)}}
+           [table-utils/Paginator
+            {:width (:width props)
+             :pagination-params (select-keys (:query-params @state) [:current-page :rows-per-page])
+             :num-visible-rows (:filtered-count @state)
+             :num-total-rows (or (:num-total-rows props) (:grouped-count @state))
+             :on-change #(swap! state update-in [:query-params] merge %)}]])]))
    :get-ordered-columns
    (fn [{:keys [props state]}]
      (vec
@@ -281,7 +287,9 @@
                sorted-rows (if key-fn (sort-by key-fn rows) rows)
                ordered-rows (if (= :desc sort-order) (reverse sorted-rows) sorted-rows)
                ;; realize this sequence so errors can be caught early:
-               clipped-rows (doall (take rows-per-page (drop (* (dec current-page) rows-per-page) ordered-rows)))]
+               clipped-rows (if (= pagination :none)
+                              ordered-rows
+                              (doall (take rows-per-page (drop (* (dec current-page) rows-per-page) ordered-rows))))]
            (react/call :hide (@refs "blocker"))
            (swap! state assoc
                   :grouped-count (count grouped-data)
