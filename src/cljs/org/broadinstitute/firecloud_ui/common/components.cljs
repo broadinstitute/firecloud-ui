@@ -59,7 +59,9 @@
                      (if (map? style) style {}))
             :href (or href "javascript:;")
             :onClick (if disabled?
-                       #(js/alert (if (string? disabled?) disabled? "This action is disabled"))
+                       ;; Have to fully qualify to avoid circular dependency
+                       #(org.broadinstitute.firecloud-ui.common.modal/push-error-text
+                         (if (string? disabled?) disabled? "This action is disabled."))
                        onClick)
             :onKeyDown (when (and onClick (not disabled?))
                          (common/create-key-handler [:space :enter] onClick))}
@@ -83,8 +85,10 @@
        [:label {:style {:cursor (when-not disabled? "pointer")
                         :color (when disabled? (:text-gray style/colors))}
                 :title (when disabled? (:disabled-text props))
-                :onClick (when disabled? #(js/alert (or (:disabled-text props)
-                                                        "This option is not available.")))}
+                :onClick (when disabled?
+                           ;; Have to fully qualify to avoid circular dependency
+                           #(org.broadinstitute.firecloud-ui.common.modal/push-error-text
+                             (or (:disabled-text props) "This option is not available.")))}
         [:input {:type "checkbox" :ref "check"
                  :defaultChecked (:initial-checked? props)
                  :disabled disabled?
@@ -216,7 +220,9 @@
                       :border (when-not heavy? style/standard-line)
                       :borderRadius (when heavy? 4)}
               :onClick (if disabled?
-                         #(js/alert (if (string? disabled?) disabled? "This action is disabled"))
+                         ;; Have to fully qualify to avoid circular dependency
+                         #(org.broadinstitute.firecloud-ui.common.modal/push-error-text
+                           (if (string? disabled?) disabled? "This action is disabled."))
                          (:onClick props))}
         (icons/icon {:style {:verticalAlign "middle" :fontSize "135%"}} (:icon props))
         [:span {:style {:verticalAlign "middle" :marginLeft "1em"}} (:text props)]]))})

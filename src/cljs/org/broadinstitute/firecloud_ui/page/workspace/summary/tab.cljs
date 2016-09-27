@@ -96,7 +96,7 @@
                                  :workspace workspace}])
        (when false ; curator? TODO commented out until ready
          [library/PublishButton {:disabled? (when (empty? library-attributes)
-                                              "Dataset attributes must be created before publishing")}])
+                                              "Dataset attributes must be created before publishing.")}])
        (when (or owner? writer?)
          (if (not editing?)
            [comps/SidebarButton
@@ -124,7 +124,9 @@
        (when-not editing?
          [comps/SidebarButton {:style :light :margin :top :color :button-blue
                                :text "Clone..." :icon :clone
-                               :disabled? (when (empty? billing-projects) "No billing projects available")
+                               :disabled? (when (empty? billing-projects)
+                                            "There are no billing projects available for your account. To create a
+                                            billing project, choose the 'Billing' option from the dropdown in the top right.")
                                :onClick #(modal/push-modal
                                           [WorkspaceCloner
                                            {:on-success (fn [namespace name]
@@ -142,7 +144,7 @@
        (when (and owner? (not editing?))
          [comps/SidebarButton {:style :light :margin :top :color :exception-red
                                :text "Delete" :icon :delete
-                               :disabled? (if isLocked "This workspace is locked")
+                               :disabled? (if isLocked "This workspace is locked.")
                                :onClick #(modal/push-modal [DeleteDialog {:workspace-id workspace-id
                                                                           :on-delete on-delete}])}]))]))
 
@@ -243,8 +245,8 @@
         :on-done (fn [{:keys [success? status-text status-code]}]
                    (when-not success?
                      (if (and (= status-code 409) (not locked-now?))
-                       (js/alert "Could not lock workspace, one or more analyses are currently running")
-                       (js/alert (str "Error: " status-text))))
+                       (modal/push-error-text "Could not lock workspace, one or more analyses are currently running")
+                       (modal/push-error-text (str "Error: " status-text))))
                    (swap! state dissoc :locking?)
                    (react/call :refresh this))}))
    :component-did-mount
