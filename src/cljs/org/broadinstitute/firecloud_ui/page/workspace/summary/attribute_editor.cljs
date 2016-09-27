@@ -64,12 +64,14 @@
                          {:header "Key" :starting-width 300 :as-text (constantly nil)
                           :content-renderer
                           (fn [{:keys [key index]}]
-                            (style/create-text-field {:key index
-                                                      :id (when (= index (-> (:attributes @state) count dec)) "focus")
-                                                      :style {:marginBottom 0 :width "calc(100% - 2px)"}
-                                                      :value key
-                                                      :onChange #(swap! state update-in [:attributes index]
-                                                                        assoc 0 (-> % .-target .-value))}))}
+                            (style/create-text-field (merge
+                                                       {:key index
+                                                        :style {:marginBottom 0 :width "calc(100% - 2px)"}
+                                                        :value key
+                                                        :onChange #(swap! state update-in [:attributes index]
+                                                                          assoc 0 (-> % .-target .-value))}
+                                                       (when (= index (-> (:attributes @state) count dec))
+                                                         {:id "focus"}))))}
                          {:header "Value" :starting-width :remaining :as-text (constantly nil)
                           :content-renderer
                           (fn [{:keys [value index]}]
