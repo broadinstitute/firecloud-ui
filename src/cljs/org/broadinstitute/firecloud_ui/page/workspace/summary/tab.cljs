@@ -72,8 +72,7 @@
 
 (defn- render-sidebar [state refs this
                        {:keys [workspace billing-projects owner? writer? curator? workspace-id on-clone on-delete]}]
-  (let [{:keys [isLocked]
-         {:keys [library-attributes workspace-attributes description isProtected]} :workspace
+  (let [{{:keys [isLocked library-attributes workspace-attributes description isProtected]} :workspace
          {:keys [runningSubmissionsCount]} :workspaceSubmissionStats} workspace
         status (common/compute-status workspace)
         {:keys [sidebar-visible? editing?]
