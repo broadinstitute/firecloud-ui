@@ -225,6 +225,7 @@
             ((or toolbar identity) built-in)))
         [:div {:style {:position "relative"}}
          [comps/DelayedBlocker {:ref "blocker" :banner "Loading..."}]
+         ;; When using an auto-width column the table ends up ~1px wider than its parent
          [:div {:style {:overflowX (if any-width=remaining? "hidden" "auto")}}
           [:div {:style {:position "relative"
                          :paddingBottom 10
