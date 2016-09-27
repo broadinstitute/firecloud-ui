@@ -19,6 +19,10 @@
    :as-text #(common/format-date % (:format props))})
 
 
+(defn- generate-persistence-key [key]
+  (->> key (str @utils/current-user ":") hash str keyword))
+
+
 ;; Table component with specifiable style and column behaviors.
 ;;
 ;; Properties:
@@ -139,7 +143,7 @@
                    {:backgroundColor (if (even? index) (:background-gray style/colors) "#fff")})})
    :get-initial-state
    (fn [{:keys [props]}]
-     (if-let [saved-state (some-> (:state-key props) utils/local-storage-read cljs.reader/read-string)]
+     (if-let [saved-state (some-> (:state-key props) generate-persistence-key utils/local-storage-read cljs.reader/read-string)]
        saved-state
        (let [columns (vec (map-indexed (fn [i col]
                                          {:width (or (:starting-width col) 100)
@@ -330,7 +334,7 @@
        (react/call :refresh-rows this))
      (when (and (:state-key props)
                 (not (:dragging? @state)))
-       (utils/local-storage-write (:state-key props) @state)))
+       (utils/local-storage-write (generate-persistence-key (:state-key props)) @state)))
    :component-will-unmount
    (fn [{:keys [this]}]
      (.removeEventListener js/window "mousemove" (.-onMouseMoveHandler this))

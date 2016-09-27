@@ -464,7 +464,9 @@
      (attempt-auth
       token
       (fn [{:keys [success? status-code get-parsed-response]}]
-        (swap! state assoc :user-email (get-in (get-parsed-response) ["userInfo" "userEmail"]))
+        (let [response (get-parsed-response)]
+          (swap! state assoc :user-email (get-in response ["userInfo" "userEmail"]))
+          (reset! utils/current-user (get-in response ["userInfo" "userSubjectId"])))
         (cond
           (contains? #{0 502} status-code)
           (do (reset! utils/maintenance-mode? true) (swap! state assoc :user-status :error))
