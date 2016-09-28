@@ -4,6 +4,7 @@
       [org.broadinstitute.firecloud-ui.common :as common]
       [org.broadinstitute.firecloud-ui.common.components :as comps]
       [org.broadinstitute.firecloud-ui.common.icons :as icons]
+      [org.broadinstitute.firecloud-ui.common.modal :as modal]
       [org.broadinstitute.firecloud-ui.common.style :as style]
       [org.broadinstitute.firecloud-ui.common.table :as table]
       [org.broadinstitute.firecloud-ui.page.workspace.monitor.common :as moncommon]
@@ -106,7 +107,7 @@
                                      (swap! state dissoc :aborting-submission?)
                                      (if success?
                                        ((:on-abort props))
-                                       (js/alert (str "Error in aborting the job : " status-text))))}))})
+                                       (modal/push-error-text (str "Error in aborting the job : " status-text))))}))})
 
 
 (react/defc Page

@@ -40,7 +40,7 @@
              [comps/Button {:text "Import Configuration..."
                             :disabled? (case locked?
                                          nil "Looking up workspace status..."
-                                         true "The workspace is locked"
+                                         true "This workspace is locked."
                                          false)
                             :onClick #(modal/push-modal
                                        [modal/OKCancelForm

@@ -84,7 +84,7 @@
                              (str "Download '" selected-entity-type "' data")])
                           [:div {:style {:float "right" :paddingRight "2em"}}
                            [comps/Button {:text "Import Data..."
-                                          :disabled? (when locked? "This workspace is locked")
+                                          :disabled? (when locked? "This workspace is locked.")
                                           :onClick #(modal/push-modal
                                                      [DataImporter {:workspace-id workspace-id
                                                                     :this-realm this-realm

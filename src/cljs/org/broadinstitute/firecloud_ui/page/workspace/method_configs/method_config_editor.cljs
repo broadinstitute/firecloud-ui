@@ -57,7 +57,7 @@
        :headers utils/content-type=json
        :on-done (fn [{:keys [success? get-parsed-response xhr]}]
                   (if-not success?
-                    (do (js/alert (str "Exception:\n" (.-statusText xhr)))
+                    (do (modal/push-error-text (str "Exception:\n" (.-statusText xhr)))
                         (swap! state dissoc :blocker))
                     (if (= name (config "name"))
                       (swap! state assoc :loaded-config (get-parsed-response) :blocker nil)
@@ -69,7 +69,7 @@
                                     (swap! state dissoc :blocker)
                                     (if success?
                                       ((:on-rename props) name)
-                                      (js/alert (str "Exception:\n" (.-statusText xhr)))))}))))})))
+                                      (modal/push-error-text (str "Exception:\n" (.-statusText xhr)))))}))))})))
 
 (react/defc MethodDetailsViewer
   {:get-fields
@@ -222,10 +222,10 @@
          (launch/render-button {:workspace-id (:workspace-id props)
                                 :config-id {:namespace (config "namespace") :name (config "name")}
                                 :root-entity-type (config "rootEntityType")
-                                :disabled? (cond (:locked? @state) "This workspace is locked"
+                                :disabled? (cond (:locked? @state) "This workspace is locked."
                                                  (not (:bucket-access? props))
                                                  (str "You do not currently have access"
-                                                      " to the Google Bucket associated with this workspace"))
+                                                      " to the Google Bucket associated with this workspace."))
                                 :force-login? (not (:has-refresh-token? @state))
                                 :after-login #(swap! state assoc :has-refresh-token? true)
                                 :on-success (:on-submission-success props)})])
