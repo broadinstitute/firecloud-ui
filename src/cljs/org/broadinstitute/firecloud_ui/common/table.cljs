@@ -6,6 +6,7 @@
    [org.broadinstitute.firecloud-ui.common.overlay :as overlay]
    [org.broadinstitute.firecloud-ui.common.style :as style]
    [org.broadinstitute.firecloud-ui.common.table-utils :as table-utils]
+   [org.broadinstitute.firecloud-ui.persistence :as persistence]
    [org.broadinstitute.firecloud-ui.utils :as utils]
    ))
 
@@ -17,10 +18,6 @@
   {:header (or (:header props) "Create Date")
    :starting-width (or (:starting-width props) 200)
    :as-text #(common/format-date % (:format props))})
-
-
-(defn- generate-persistence-key [key]
-  (->> key (str @utils/current-user ":") hash str keyword))
 
 
 ;; Table component with specifiable style and column behaviors.
@@ -143,28 +140,29 @@
                    {:backgroundColor (if (even? index) (:background-gray style/colors) "#fff")})})
    :get-initial-state
    (fn [{:keys [props]}]
-     (if-let [saved-state (some-> (:state-key props) generate-persistence-key utils/local-storage-read cljs.reader/read-string)]
-       saved-state
-       (let [columns (vec (map-indexed (fn [i col]
-                                         {:width (or (:starting-width col) 100)
-                                          :visible? (get col :show-initial? true)
-                                          :index i
-                                          :display-index i})
-                                       (:columns props)))
-             initial-sort-column (or (first (filter #(contains? % :sort-initial)
-                                                    (map merge (:columns props) columns)))
-                                     (when (:always-sort? props)
-                                       (first (map merge (:columns props) columns))))]
-         {:columns columns
-          :dragging? false
-          :filter-group-index (or (:initial-filter-group-index props) 0)
-          :query-params (merge
-                          {:current-page 1 :rows-per-page initial-rows-per-page
-                           :filter-text ""}
-                          (when initial-sort-column
-                            {:sort-column (:index initial-sort-column)
-                             ; default needed when forcing sort
-                             :sort-order (or (:sort-initial initial-sort-column) :asc)}))})))
+     (persistence/try-restore
+       {:key (:state-key props)
+        :initial
+        (let [columns (vec (map-indexed (fn [i col]
+                                          {:width (or (:starting-width col) 100)
+                                           :visible? (get col :show-initial? true)
+                                           :index i
+                                           :display-index i})
+                                        (:columns props)))
+              initial-sort-column (or (first (filter #(contains? % :sort-initial)
+                                                     (map merge (:columns props) columns)))
+                                      (when (:always-sort? props)
+                                        (first (map merge (:columns props) columns))))]
+          {:columns columns
+           :dragging? false
+           :filter-group-index (or (:initial-filter-group-index props) 0)
+           :query-params (merge
+                           {:current-page 1 :rows-per-page initial-rows-per-page
+                            :filter-text ""}
+                           (when initial-sort-column
+                             {:sort-column (:index initial-sort-column)
+                              ; default needed when forcing sort
+                              :sort-order (or (:sort-initial initial-sort-column) :asc)}))})}))
    :render
    (fn [{:keys [this state props refs after-update]}]
      (let [{:keys [filterable? reorderable-columns? toolbar retain-header-on-empty?]} props
@@ -334,7 +332,7 @@
        (react/call :refresh-rows this))
      (when (and (:state-key props)
                 (not (:dragging? @state)))
-       (utils/local-storage-write (generate-persistence-key (:state-key props)) @state)))
+       (persistence/save {:key (:state-key props) :state state})))
    :component-will-unmount
    (fn [{:keys [this]}]
      (.removeEventListener js/window "mousemove" (.-onMouseMoveHandler this))
