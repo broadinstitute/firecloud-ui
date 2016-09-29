@@ -58,6 +58,13 @@
     :else (do (utils/log "Unknown workflow status: " status)
             failure-icon)))
 
+(defn icon-for-sub-status [wf-statuses]
+  (cond
+    (contains? wf-statuses "Failed") failure-icon
+    (contains? wf-statuses "Succeeded") success-icon
+    :else (do (utils/log "Unknown submission status")
+            nil)))
+
 (defn icon-for-call-status [status]
   (cond
     (contains? call-success-statuses status) success-icon

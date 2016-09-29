@@ -30,11 +30,9 @@
      {:header "Status" :as-text #(% "status") :sort-by :text
       :content-renderer (fn [submission]
                           [:div {}
-                           (when (and (= "Done" (submission "status"))
-                                      (not (moncommon/all-success? submission)))
-                             (icons/icon {:style {:color (:exception-red style/colors)
-                                                  :marginRight 8}} :status-warning))
-                           (submission "status")])}
+                            (when (= "Done" (submission "status"))
+                              (moncommon/icon-for-sub-status (get-in submission ["workflowStatuses"])))
+                            (submission "status")])}
      {:header "Method Configuration" :starting-width 300
       :content-renderer (fn [[namespace name]]
                           [:div {} namespace "/" name])}
