@@ -66,6 +66,19 @@
     :workspaceName (get-in workspace [:workspace :name])
     nil))
 
+(defn- resolve-field [value {:keys [type items]}]
+  (case type
+    "string" (not-empty value)
+    "integer" (int value)
+    "array" (let [parsed (clojure.string/split value #"\s*,\s*")]
+              (case (:type items)
+                "string" (remove empty? parsed)
+                "integer" (map int parsed)
+                (do (utils/log "unknown array type: " (:type items))
+                    parsed)))
+    (do (utils/log "unknown type: " type)
+        value)))
+
 (react/defc LibraryAttributeForm
   {:get-initial-state
    (fn [{:keys [props]}]
@@ -84,17 +97,27 @@
                        :padding "0.5em" :border style/standard-line
                        :marginBottom "1em"}}
          (map (fn [property-key]
-                (let [{:keys [hidden title inputHint enum]} (get-in library-schema [:properties property-key])
+                (let [{:keys [hidden title inputHint enum type items]} (get-in library-schema [:properties property-key])
                       required? (contains? (:required-props @state) property-key)
                       pk-str (name property-key)]
                   (when-not hidden
                     [:div {}
-                     (style/create-form-label (str title (when required? " (required)")))
+                     (style/create-form-label
+                       [:div {:style {:display "flex" :alignItems "baseline"}}
+                        [:div {:style {:flex "0 0 auto"}}
+                         (str title (when required? " (required)"))]
+                        [:div {:style {:flex "1 1 auto"}}]
+                        (when-not enum
+                          [:div {:style {:flex "0 0 auto"}}
+                           (if (= type "array")
+                             (str "Array of " (:type items) "s")
+                             (clojure.string/capitalize type))])])
                      (cond enum (style/create-identity-select {:ref pk-str} enum)
                            required? [input/TextField {:ref pk-str
                                                        :style {:width "100%"}
                                                        :placeholder inputHint
-                                                       :predicates [(when required? (input/nonempty pk-str))]}]
+                                                       :predicates [(when required? (input/nonempty pk-str))
+                                                                    (when (= type "integer") (input/integer pk-str))]}]
                            :else (style/create-text-field {:ref (name property-key)
                                                            :style {:width "100%"}
                                                            :placeholder inputHint}))])))
@@ -102,25 +125,21 @@
         (style/create-validation-error-message (:validation-error @state))]))
    :on-ok
    (fn [{:keys [props state refs]}]
-     (let [field-data (doall
-                        (map (fn [[property-key {:keys [hidden enum]}]]
+     (let [validation-errors (atom [])
+           field-data (doall
+                        (map (fn [[property-key {:keys [hidden enum] :as property}]]
                                (let [pk-str (name property-key)
                                      required? (contains? (:required-props @state) property-key)]
                                  [property-key
                                   {:required? required?
-                                   :value (not-empty
-                                            (cond hidden (resolve-hidden property-key (:workspace props))
-                                                  enum (common/get-text refs pk-str)
-                                                  required? (do (input/validate refs pk-str)
-                                                              (input/get-text refs pk-str))
-                                                  :else (common/get-text refs pk-str)))}]))
-                             (-> props :library-schema :properties)))
-           missing-fields (not-empty
-                            (keep (fn [[property-key {:keys [required? value]}]]
-                                    (when (and required? (not value)) property-key))
-                                  field-data))]
-       (if missing-fields
-         (swap! state assoc :validation-error ["Please fill out all required fields"])
+                                   :value (cond hidden (resolve-hidden property-key (:workspace props))
+                                                enum (common/get-text refs pk-str)
+                                                required? (do (swap! validation-errors into (input/validate refs pk-str))
+                                                              (resolve-field (input/get-text refs pk-str) property))
+                                                :else (resolve-field (common/get-text refs pk-str) property))}]))
+                             (-> props :library-schema :properties)))]
+       (if-not (empty? @validation-errors)
+         (swap! state assoc :validation-error @validation-errors)
          (let [field-data-map (->> field-data
                                    (keep (fn [[property-key {:keys [value]}]]
                                            (when value

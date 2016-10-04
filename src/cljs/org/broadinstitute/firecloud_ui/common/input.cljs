@@ -53,7 +53,11 @@
 ;; Some premade predicates:
 
 (defn nonempty [field-name]
-  {:test #(not (empty? %)) :message (str field-name " cannot be empty")})
+  {:test (comp not empty?) :message (str field-name " cannot be empty")})
+
+(defn integer [field-name]
+  {:test (partial re-matches #"\-?[0-9]+")
+   :message (str field-name " must be an integer")})
 
 (defn alphanumeric_- [field-name]
   {:test #(re-matches #"[A-Za-z0-9_\-]*" %)
