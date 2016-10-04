@@ -14,6 +14,7 @@
     [org.broadinstitute.firecloud-ui.nav :as nav]
     [org.broadinstitute.firecloud-ui.page.workspace.create :as create]
     [org.broadinstitute.firecloud-ui.page.workspace.details :refer [WorkspaceDetails]]
+    [org.broadinstitute.firecloud-ui.persistence :as persistence]
     [org.broadinstitute.firecloud-ui.utils :as utils]
     ))
 
@@ -94,10 +95,14 @@
    "TCGA Protected Access" #(and (= (config/tcga-namespace) (get-in % ["workspace" "namespace"]))
                                  (get-in % ["workspace" "realm"]))})
 
+(def ^:private persistence-key "workspace-table-types")
+
 (react/defc WorkspaceTable
   {:get-initial-state
    (fn []
-     {:selected-types (->> access-types (map (juxt identity (constantly true))) (into {}))})
+     (persistence/try-restore
+       {:key persistence-key
+        :initial {:selected-types (->> access-types (map (juxt identity (constantly true))) (into {}))}}))
    :render
    (fn [{:keys [props state refs]}]
      (let [max-workspace-name-length (get-max-length get-workspace-name-string (:workspaces props))
@@ -120,7 +125,8 @@
                                 [:div {:style {:padding "1em" :border style/standard-line}}
                                  (map checkbox access-types)])}]))
         [table/Table
-         {:empty-message "No workspaces to display." :retain-header-on-empty? true
+         {:state-key "workspace-table"
+          :empty-message "No workspaces to display." :retain-header-on-empty? true
           :cell-padding-left nil
           :header-row-style {:fontWeight nil :fontSize "90%"
                              :color (:text-light style/colors) :backgroundColor nil}
@@ -185,7 +191,10 @@
                        :protected? (get-in ws ["workspace" "realm"])}
                       (get-workspace-description ws)
                       (ws "accessLevel")
-                      nil]))}]]))})
+                      nil]))}]]))
+   :component-did-update
+   (fn [{:keys [state]}]
+     (persistence/save {:key persistence-key :state state}))})
 
 
 (react/defc WorkspaceList

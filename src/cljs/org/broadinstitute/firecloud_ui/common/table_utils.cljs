@@ -206,18 +206,14 @@
               :onSortClick (when (and (or (:sort-by column)
                                           (:sortable-columns? props))
                                       (not= :none (:sort-by column)))
-                             (fn [e]
+                             (fn [_]
                                (if (= i sort-column)
                                  (case sort-order
                                    :asc (swap! state update-in [:query-params] assoc :sort-order :desc)
                                    :desc (if (:always-sort? props)
                                            (swap! state update-in [:query-params] assoc :sort-order :asc)
-                                           (swap! state update-in [:query-params] dissoc :sort-column :sort-order :key-fn)))
-                                 (swap! state update-in [:query-params] assoc :sort-column i :sort-order :asc
-                                        :key-fn (let [sort-fn (or (:sort-by column) identity)]
-                                                  (if (= sort-fn :text)
-                                                    (fn [row] ((:as-text column) (nth row i)))
-                                                    (fn [row] (sort-fn (nth row i)))))))))
+                                           (swap! state update-in [:query-params] dissoc :sort-column :sort-order)))
+                                 (swap! state update-in [:query-params] assoc :sort-column i :sort-order :asc))))
               :sortOrder (when (= i sort-column) sort-order)})))
        (filter :visible? (react/call :get-ordered-columns this)))
      (common/clear-both)]))
@@ -227,10 +223,10 @@
   {:get-initial-state
    (fn [] {:synced true})
    :render
-   (fn [{:keys [state this]}]
+   (fn [{:keys [props state this]}]
      [:div {:style {:display "inline-flex"}}
       (style/create-text-field
-        {:ref "filter-field" :placeholder "Filter"
+        {:ref "filter-field" :placeholder "Filter" :defaultValue (:initial-text props)
          :style {:backgroundColor (if (:synced @state) "#fff" (:tag-background style/colors))
                  :borderRadius "3px 0 0 3px" :marginBottom 0}
          :onKeyDown (common/create-key-handler [:enter] #(react/call :apply-filter this))

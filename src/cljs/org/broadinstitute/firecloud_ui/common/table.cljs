@@ -6,6 +6,7 @@
    [org.broadinstitute.firecloud-ui.common.overlay :as overlay]
    [org.broadinstitute.firecloud-ui.common.style :as style]
    [org.broadinstitute.firecloud-ui.common.table-utils :as table-utils]
+   [org.broadinstitute.firecloud-ui.persistence :as persistence]
    [org.broadinstitute.firecloud-ui.utils :as utils]
    ))
 
@@ -139,28 +140,29 @@
                    {:backgroundColor (if (even? index) (:background-gray style/colors) "#fff")})})
    :get-initial-state
    (fn [{:keys [props]}]
-     (let [columns (vec (map-indexed (fn [i col]
-                                       {:width (or (:starting-width col) 100)
-                                        :visible? (get col :show-initial? true)
-                                        :index i
-                                        :display-index i})
-                                     (:columns props)))
-           initial-sort-column (or (first (filter #(contains? % :sort-initial)
-                                                  (map merge (:columns props) columns)))
-                                   (when (:always-sort? props)
-                                     (first (map merge (:columns props) columns))))]
-       {:columns columns
-        :dragging? false
-        :filter-group-index (or (:initial-filter-group-index props) 0)
-        :query-params (merge
-                        {:current-page 1 :rows-per-page initial-rows-per-page
-                         :filter-text ""}
-                        (when initial-sort-column
-                          {:sort-column (:index initial-sort-column)
-                           :sort-order (or (:sort-initial initial-sort-column) :asc) ; default needed when forcing sort
-                           :key-fn (if-let [sorter (:sort-by initial-sort-column)]
-                                     (fn [row] (sorter (nth row (:index initial-sort-column))))
-                                     (fn [row] (nth row (:index initial-sort-column))))}))}))
+     (persistence/try-restore
+       {:key (:state-key props)
+        :initial
+        (let [columns (vec (map-indexed (fn [i col]
+                                          {:width (or (:starting-width col) 100)
+                                           :visible? (get col :show-initial? true)
+                                           :index i
+                                           :display-index i})
+                                        (:columns props)))
+              initial-sort-column (or (first (filter #(contains? % :sort-initial)
+                                                     (map merge (:columns props) columns)))
+                                      (when (:always-sort? props)
+                                        (first (map merge (:columns props) columns))))]
+          {:columns columns
+           :dragging? false
+           :filter-group-index (or (:initial-filter-group-index props) 0)
+           :query-params (merge
+                           {:current-page 1 :rows-per-page initial-rows-per-page
+                            :filter-text ""}
+                           (when initial-sort-column
+                             {:sort-column (:index initial-sort-column)
+                              ; default needed when forcing sort
+                              :sort-order (or (:sort-initial initial-sort-column) :asc)}))})}))
    :render
    (fn [{:keys [this state props refs after-update]}]
      (let [{:keys [filterable? reorderable-columns? toolbar retain-header-on-empty?]} props
@@ -209,7 +211,8 @@
                                    (assoc-in columns [column-index :visible?] visible?)))))})}])])
                  (when filterable?
                    [:div {:style {:float "left" :marginLeft "1em"}}
-                    [table-utils/TextFilter {:on-filter #(swap! state update-in [:query-params]
+                    [table-utils/TextFilter {:initial-text (get-in @state [:query-params :filter-text])
+                                             :on-filter #(swap! state update-in [:query-params]
                                                                 assoc :filter-text % :current-page 1)}]])
                  (when (:filter-groups props)
                    [:div {:style {:float "left" :marginLeft "1em" :marginTop -3}}
@@ -265,8 +268,7 @@
      (react/call :show (@refs "blocker"))
      (let [{:keys [pagination data ->row]} props]
        (if (fn? pagination)
-         (pagination (merge (select-keys @state [:filter-group-index])
-                            (dissoc (:query-params @state) :key-fn))
+         (pagination (merge (select-keys @state [:filter-group-index]) (:query-params @state))
                      (fn [{:keys [group-count filtered-count rows error]}]
                        (react/call :hide (@refs "blocker"))
                        (swap! state assoc
@@ -275,7 +277,7 @@
                               :display-rows (map ->row rows)
                               :no-data? (empty? rows)
                               :error error)))
-         (let [{:keys [current-page rows-per-page key-fn sort-order filter-text]} (:query-params @state)
+         (let [{:keys [current-page rows-per-page sort-column sort-order filter-text]} (:query-params @state)
                grouped-data (if-not (:filter-groups props)
                               data
                               (filter (:pred (get-in props [:filter-groups (:filter-group-index @state)]))
@@ -284,7 +286,12 @@
                                (table-utils/filter-data grouped-data ->row (:columns props) txt)
                                grouped-data)
                rows (map ->row filtered-data)
-               sorted-rows (if key-fn (sort-by key-fn rows) rows)
+               sorted-rows (if sort-column
+                             (let [column (nth (:columns props) sort-column)
+                                   key-fn (or (:sort-by column) identity)
+                                   key-fn (if (= key-fn :text) (:as-text column) key-fn)]
+                               (sort-by (fn [row] (key-fn (nth row sort-column))) rows))
+                             rows)
                ordered-rows (if (= :desc sort-order) (reverse sorted-rows) sorted-rows)
                ;; realize this sequence so errors can be caught early:
                clipped-rows (if (= pagination :none)
@@ -315,13 +322,16 @@
      (set! (.-onMouseUpHandler this)
        #(when (:dragging? @state)
          (common/restore-text-selection (:saved-user-select-state @state))
-         (swap! state assoc :dragging? false)))
+         (swap! state dissoc :dragging? :drag-column :mouse-x :saved-user-select-state)))
      (.addEventListener js/window "mouseup" (.-onMouseUpHandler this)))
    :component-did-update
    (fn [{:keys [this prev-props props prev-state state]}]
      (when (or (not= (:data props) (:data prev-props))
                (not= (:query-params @state) (:query-params prev-state)))
-       (react/call :refresh-rows this)))
+       (react/call :refresh-rows this))
+     (when (and (:state-key props)
+                (not (:dragging? @state)))
+       (persistence/save {:key (:state-key props) :state state :except [:display-rows]})))
    :component-will-unmount
    (fn [{:keys [this]}]
      (.removeEventListener js/window "mousemove" (.-onMouseMoveHandler this))

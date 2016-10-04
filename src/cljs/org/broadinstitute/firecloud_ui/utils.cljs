@@ -46,6 +46,9 @@
                         [(keyword k) (if (map? v) (keywordize-keys v) v)])
                     m)))
 
+
+(defonce ^:private current-user (atom nil))
+
 (defn local-storage-write
   ([k v] (local-storage-write k v false))
   ([k v stringify?]

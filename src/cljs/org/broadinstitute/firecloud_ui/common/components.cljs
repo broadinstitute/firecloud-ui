@@ -361,7 +361,7 @@
        (case (count crumbs)
          0 [:div {}]
          1 [:div {} (:text (first crumbs))]
-         [:div {:style {:display "flex" :alignItems "center"}}
+         [:div {:style {:display "flex" :alignItems "center" :flexWrap "wrap"}}
           (interpose sep
             (map
               (fn [{:keys [text onClick href] :as link-props}]
