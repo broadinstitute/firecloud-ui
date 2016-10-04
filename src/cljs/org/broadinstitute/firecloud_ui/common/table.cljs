@@ -288,10 +288,9 @@
                rows (map ->row filtered-data)
                sorted-rows (if sort-column
                              (let [column (nth (:columns props) sort-column)
-                                   key-fn (or (:sort-by column) identity)]
-                               (if (= key-fn :text)
-                                 (sort-by (fn [row] ((:as-text column) (nth row sort-column))) rows)
-                                 (sort-by (fn [row] (key-fn (nth row sort-column))) rows)))
+                                   key-fn (or (:sort-by column) identity)
+                                   key-fn (if (= key-fn :text) (:as-text column) key-fn)]
+                               (sort-by (fn [row] (key-fn (nth row sort-column))) rows))
                              rows)
                ordered-rows (if (= :desc sort-order) (reverse sorted-rows) sorted-rows)
                ;; realize this sequence so errors can be caught early:
