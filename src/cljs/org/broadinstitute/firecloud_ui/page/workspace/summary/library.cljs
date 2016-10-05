@@ -140,35 +140,29 @@
    (fn [{:keys [props state refs]}]
      (swap! state dissoc :validation-error :server-error)
      (let [validation-errors (atom [])
-           field-data (doall
-                        (map (fn [[property-key {:keys [hidden enum] :as property}]]
-                               (let [pk-str (name property-key)
-                                     required? (contains? (:required-props @state) property-key)]
-                                 [property-key
-                                  {:required? required?
-                                   :value (cond hidden (resolve-hidden property-key (:workspace props))
-                                                enum (resolve-enum (common/get-text refs pk-str))
-                                                :else (do (swap! validation-errors into (input/validate refs pk-str))
-                                                          (resolve-field (input/get-text refs pk-str) property)))}]))
-                             (-> props :library-schema :properties)))]
+           field-data (->> props :library-schema :properties
+                           (keep (fn [[property-key {:keys [hidden enum] :as property}]]
+                                   (let [pk-str (name property-key)
+                                         value (cond hidden (resolve-hidden property-key (:workspace props))
+                                                     enum (resolve-enum (common/get-text refs pk-str))
+                                                     :else (do (swap! validation-errors into (input/validate refs pk-str))
+                                                               (resolve-field (input/get-text refs pk-str) property)))]
+                                     (when value
+                                       [(str "library:" pk-str) value]))))
+                           (into {}))]
        (if-not (empty? @validation-errors)
          (swap! state assoc :validation-error @validation-errors)
-         (let [field-data-map (->> field-data
-                                   (keep (fn [[property-key {:keys [value]}]]
-                                           (when value
-                                             [(str "library:" (name property-key)) value])))
-                                   (into {}))]
-           (swap! state assoc :saving? true)
-           (utils/cljslog field-data-map)
-           (endpoints/call-ajax-orch
-             {:endpoint (endpoints/save-library-metadata (:workspace-id props))
-              :payload field-data-map
-              :on-done (fn [{:keys [success? get-parsed-response]}]
-                         (swap! state dissoc :saving?)
-                         (if success?
-                           (do (modal/pop-modal)
-                               ((:request-refresh props)))
-                           (swap! state assoc :server-error (get-parsed-response))))})))))})
+         (do (swap! state assoc :saving? true)
+             (utils/cljslog field-data)
+             (endpoints/call-ajax-orch
+               {:endpoint (endpoints/save-library-metadata (:workspace-id props))
+                :payload field-data
+                :on-done (fn [{:keys [success? get-parsed-response]}]
+                           (swap! state dissoc :saving?)
+                           (if success?
+                             (do (modal/pop-modal)
+                                 ((:request-refresh props)))
+                             (swap! state assoc :server-error (get-parsed-response))))})))))})
 
 
 (react/defc CatalogButton
