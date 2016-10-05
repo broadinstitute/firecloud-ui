@@ -96,9 +96,12 @@
                [comps/Blocker {:banner "Aborting submission ..."}])
              [comps/SidebarButton {:color :button-blue :style :light :margin :top
                                    :text "Abort" :icon :status-warning-triangle
-                                   :onClick #(when (js/confirm "Are you sure?")
-                                              (react/call :abort-submission this))}])
+                                   :onClick (fn [_]
+                                              (modal/push-confirm
+                                                {:text "Are you sure you want to abort this submission?"
+                                                 :on-confirm #(react/call :abort-submission this)}))}])
    :abort-submission (fn [{:keys [props state]}]
+                       (modal/pop-modal)
                        (swap! state assoc :aborting-submission? true)
                        (endpoints/call-ajax-orch
                          {:endpoint (endpoints/abort-submission (:workspace-id props) (:submission-id props))
