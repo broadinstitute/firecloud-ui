@@ -68,6 +68,12 @@
     :workspaceName (get-in workspace [:workspace :name])
     nil))
 
+(def ^:private ENUM_EMPTY_CHOICE "<select an option>")
+
+(defn resolve-enum [value]
+  (when-not (= value ENUM_EMPTY_CHOICE)
+    value))
+
 (defn- resolve-field [value {:keys [type items]}]
   (case type
     "string" (not-empty value)
@@ -118,7 +124,7 @@
                              (str "Array of " (:type items) "s")
                              (clojure.string/capitalize type))])])
                      (if enum
-                       (style/create-identity-select {:ref pk-str} enum)
+                       (style/create-identity-select {:ref pk-str} (cons ENUM_EMPTY_CHOICE enum))
                        [input/TextField {:ref pk-str
                                          :style {:width "100%"}
                                          :placeholder inputHint
@@ -141,7 +147,7 @@
                                  [property-key
                                   {:required? required?
                                    :value (cond hidden (resolve-hidden property-key (:workspace props))
-                                                enum (common/get-text refs pk-str)
+                                                enum (resolve-enum (common/get-text refs pk-str))
                                                 :else (do (swap! validation-errors into (input/validate refs pk-str))
                                                           (resolve-field (input/get-text refs pk-str) property)))}]))
                              (-> props :library-schema :properties)))]
@@ -153,6 +159,7 @@
                                              [(str "library:" (name property-key)) value])))
                                    (into {}))]
            (swap! state assoc :saving? true)
+           (utils/cljslog field-data-map)
            (endpoints/call-ajax-orch
              {:endpoint (endpoints/save-library-metadata (:workspace-id props))
               :payload field-data-map
