@@ -39,6 +39,12 @@
 (defn push-error-response [error-response]
   (push-error [comps/ErrorViewer {:error error-response}]))
 
+(defn push-confirm [{:keys [header text on-confirm]}]
+  (push-ok-cancel-modal
+    {:header (or header "Confirm")
+     :content [:div {:style {:maxWidth 500}} text]
+     :ok-button on-confirm}))
+
 (defn pop-modal []
   (react/call :pop-modal @instance))
 
