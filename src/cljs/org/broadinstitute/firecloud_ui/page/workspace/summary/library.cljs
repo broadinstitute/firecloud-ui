@@ -17,15 +17,6 @@
        (utils/sort-match (:propertyOrder library-schema))
        (filter (comp not :hidden #(get-in library-schema [:properties %])))))
 
-(defn- count-required-not-hidden [library-schema]
-  (->> (:required library-schema)
-       (filter (comp not :hidden #(get-in library-schema [:properties %])))
-       count))
-
-(defn- split-fold [library-schema display-properties]
-  (let [required-count (count-required-not-hidden library-schema)
-        above-fold-count (if (< required-count 5) required-count 5)]
-    (split-at above-fold-count display-properties)))
 
 (defn- render-value [value]
   (cond (sequential? value) (clojure.string/join ", " value)
@@ -42,19 +33,27 @@
   {:render
    (fn [{:keys [props state]}]
      (let [{:keys [library-attributes library-schema]} props
-           display-properties (calculate-display-properties library-schema)
-           [above-fold below-fold] (split-fold library-schema display-properties)
-           below-fold (not-empty below-fold)]
+
+           ;; Shim while saving library attributes isn't working:
+           library-attributes
+           {:datasetName "Test"
+            :datasetDescription "Description"
+            :indication "Test indication"
+            :numSubjects 50}
+
+           primary-properties [:indication :numSubjects :datatype :dataUseRestriction] ;; TODO replace with new field from schema
+           secondary-properties (->> (calculate-display-properties library-schema)
+                                     (remove (partial contains? (set primary-properties))))]
        [:div {}
         (style/create-section-header "Dataset Attributes")
         (style/create-paragraph
           (if library-attributes
             [:div {}
-             (map (partial render-property library-schema library-attributes) above-fold)
-             (when below-fold
+             (map (partial render-property library-schema library-attributes) primary-properties)
+             (when secondary-properties
                [:div {}
                 (when (:expanded? @state)
-                  (map (partial render-property library-schema library-attributes) below-fold))
+                  (map (partial render-property library-schema library-attributes) secondary-properties))
                 [:div {:style {:marginTop "0.5em"}}
                  (style/create-link {:text (if (:expanded? @state) "Collapse" "See more attributes")
                                      :onClick #(swap! state update :expanded? not)})]])]

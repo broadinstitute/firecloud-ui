@@ -203,7 +203,8 @@
                                                  :editing? editing?
                                                  :workspace-attributes workspace-attributes
                                                  :workspace-bucket bucketName}]
-     (when-not (empty? library-attributes)
+     ;; Shim while saving library attributes isn't working:
+     (when-not false ;(empty? library-attributes)
        [library/LibraryAttributeViewer {:library-attributes library-attributes
                                         :library-schema library-schema}])]))
 
