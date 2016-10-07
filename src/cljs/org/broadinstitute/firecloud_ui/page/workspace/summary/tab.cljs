@@ -91,14 +91,15 @@
        :div {:style {:position (when-not sidebar-visible? "fixed")
                      :top (when-not sidebar-visible? 0)
                      :width 270}}
-       (when curator?
+       (when (and curator? owner?)
          [library/CatalogButton {:library-schema library-schema
                                  :workspace workspace
                                  :workspace-id workspace-id
                                  :request-refresh request-refresh}])
-       (when curator?
-         [library/PublishButton {:disabled? (when (empty? library-attributes)
-                                              "Dataset attributes must be created before publishing.")}])
+       (when (and curator? owner?)
+         [library/PublishButton {:disabled? (when false;(empty? library-attributes)
+                                              "Dataset attributes must be created before publishing.")
+                                 :workspace-id workspace-id}])
        (when (or owner? writer?)
          (if (not editing?)
            [comps/SidebarButton
@@ -199,14 +200,14 @@
          (cond editing? (react/create-element [MarkdownEditor {:ref "description" :initial-text description}])
                description [MarkdownView {:text description}]
                :else [:span {:style {:fontStyle "italic"}} "No description provided"])))
-     [attributes/WorkspaceAttributeViewerEditor {:ref "workspace-attribute-editor"
-                                                 :editing? editing?
-                                                 :workspace-attributes workspace-attributes
-                                                 :workspace-bucket bucketName}]
      ;; Shim while saving library attributes isn't working:
      (when-not false ;(empty? library-attributes)
        [library/LibraryAttributeViewer {:library-attributes library-attributes
-                                        :library-schema library-schema}])]))
+                                        :library-schema library-schema}])
+     [attributes/WorkspaceAttributeViewerEditor {:ref "workspace-attribute-editor"
+                                                 :editing? editing?
+                                                 :workspace-attributes workspace-attributes
+                                                 :workspace-bucket bucketName}]]))
 
 (react/defc Summary
   {:get-initial-state

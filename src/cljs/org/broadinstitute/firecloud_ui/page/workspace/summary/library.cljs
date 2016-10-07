@@ -33,14 +33,6 @@
   {:render
    (fn [{:keys [props state]}]
      (let [{:keys [library-attributes library-schema]} props
-
-           ;; Shim while saving library attributes isn't working:
-           library-attributes
-           {:datasetName "Test"
-            :datasetDescription "Description"
-            :indication "Test indication"
-            :numSubjects 50}
-
            primary-properties [:indication :numSubjects :datatype :dataUseRestriction] ;; TODO replace with new field from schema
            secondary-properties (->> (calculate-display-properties library-schema)
                                      (remove (partial contains? (set primary-properties))))]
@@ -101,6 +93,8 @@
    (fn [{:keys [props state]}]
      (let [library-schema (:library-schema props)]
        [:div {:style {:width "50vw"}}
+        (when (:saving? @state)
+          [comps/Blocker {:banner "Submitting library attributes..."}])
         [:div {:style {:maxHeight 400 :overflowY "auto"
                        :padding "0.5em" :border style/standard-line
                        :marginBottom "1em"}}
@@ -120,7 +114,7 @@
                         (when-not enum
                           [:i {:style {:flex "0 0 auto"}}
                            (if (= type "array")
-                             (str "Array of " (:type items) "s")
+                             (str "Comma-separated list of " (:type items) "s")
                              (clojure.string/capitalize type))])])
                      (if enum
                        (style/create-identity-select {:ref pk-str} (cons ENUM_EMPTY_CHOICE enum))
@@ -152,10 +146,10 @@
        (if-not (empty? @validation-errors)
          (swap! state assoc :validation-error @validation-errors)
          (do (swap! state assoc :saving? true)
-             (utils/cljslog field-data)
              (endpoints/call-ajax-orch
                {:endpoint (endpoints/save-library-metadata (:workspace-id props))
                 :payload field-data
+                :headers utils/content-type=json
                 :on-done (fn [{:keys [success? get-parsed-response]}]
                            (swap! state dissoc :saving?)
                            (if success?
@@ -169,18 +163,28 @@
    (fn [{:keys [props]}]
      [comps/SidebarButton
       {:style :light :color :button-blue :margin :top
-       :icon :catalog :text "Catalog Dataset"
+       :icon :catalog :text "Catalog Dataset..."
        :onClick #(modal/push-modal
                   [LibraryAttributeForm props])}])})
 
 
 (react/defc PublishButton
   {:render
-   (fn [{:keys [props]}]
-     [comps/SidebarButton
-      {:style :light :color :button-blue :margin :top
-       :icon :library :text "Publish in Library"
-       :disabled? (or (:disabled? props)
-                    "Publish not available yet" ;; TODO remove
-                    )
-       :onClick #(utils/log "todo: publish in library")}])})
+   (fn [{:keys [props state]}]
+     [:div {}
+      (when (:publishing? @state)
+        [comps/Blocker {:banner "Publishing..."}])
+      [comps/SidebarButton
+       {:style :light :color :button-blue :margin :top
+        :icon :library :text "Publish in Library"
+        :disabled? (:disabled? props)
+        :onClick (fn [_]
+                   (swap! state assoc :publishing? true)
+                   (endpoints/call-ajax-orch
+                     {:endpoint (endpoints/publish-workspace (:workspace-id props))
+                      :on-done (fn [{:keys [success? get-parsed-response]}]
+                                 (swap! state dissoc :publishing?)
+                                 (if success?
+                                   (modal/push-message {:header "Success!"
+                                                        :message "Successfully published to Library"})
+                                   (modal/push-error-response (get-parsed-response))))}))}]])})

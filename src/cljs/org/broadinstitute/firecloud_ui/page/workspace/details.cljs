@@ -78,10 +78,15 @@
         library-attributes (->> attributes
                                 (keep (fn [[k v]]
                                         (when (.startsWith k "library:")
-                                          [(-> k (clojure.string/split #":" 2) second) v])))
+                                          [(-> k (clojure.string/split #":" 2) second keyword) v])))
                                 (into {}))
-        workspace-attributes (utils/keywordize-keys
-                               (apply dissoc attributes "description" (keys library-attributes)))]
+        workspace-attributes (->> attributes
+                                  (keep (fn [[k v]]
+                                          (when-not (or (= k "description")
+                                                        (.startsWith k "library:"))
+                                            [(keyword k) v])))
+                                  (into {}))]
+    (utils/cljslog attributes)
     (-> (utils/keywordize-keys raw-workspace)
         (update-in [:workspace] dissoc :attributes)
         (assoc-in [:workspace :description] (attributes "description"))

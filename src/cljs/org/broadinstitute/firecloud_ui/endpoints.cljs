@@ -824,6 +824,14 @@
   {:path (str "/library/" (ws-path workspace-id) "/metadata")
    :method :put})
 
+(defn publish-workspace [workspace-id]
+  {:path (str "/library/" (ws-path workspace-id) "/published")
+   :method :post})
+
+(defn unpublish-workspace [workspace-id]
+  {:path (str "/library/" (ws-path workspace-id) "/published")
+   :method :delete})
+
 (def get-library-curator-status
   {:path "/library/user/role/curator"
    :method :get
