@@ -91,7 +91,8 @@
        :ok-button #(react/call :on-ok this)}])
    :form
    (fn [{:keys [props state]}]
-     (let [library-schema (:library-schema props)]
+     (let [library-schema (:library-schema props)
+           existing (get-in props [:workspace :workspace :library-attributes])]
        [:div {:style {:width "50vw"}}
         (when (:saving? @state)
           [comps/Blocker {:banner "Submitting library attributes..."}])
@@ -117,11 +118,13 @@
                              (str "Comma-separated list of " (:type items) "s")
                              (clojure.string/capitalize type))])])
                      (if enum
-                       (style/create-identity-select {:ref pk-str} (cons ENUM_EMPTY_CHOICE enum))
+                       (style/create-identity-select {:ref pk-str
+                                                      :defaultValue (get existing property-key ENUM_EMPTY_CHOICE)}
+                                                     (cons ENUM_EMPTY_CHOICE enum))
                        [input/TextField {:ref pk-str
                                          :style {:width "100%"}
                                          :placeholder inputHint
-                                         :defaultValue default
+                                         :defaultValue (get existing property-key default)
                                          :predicates [(when required?
                                                         (input/nonempty pk-str))
                                                       (when (= type "integer")

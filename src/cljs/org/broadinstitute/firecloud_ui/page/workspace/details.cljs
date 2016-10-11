@@ -86,7 +86,6 @@
                                                         (.startsWith k "library:"))
                                             [(keyword k) v])))
                                   (into {}))]
-    (utils/cljslog attributes)
     (-> (utils/keywordize-keys raw-workspace)
         (update-in [:workspace] dissoc :attributes)
         (assoc-in [:workspace :description] (attributes "description"))
