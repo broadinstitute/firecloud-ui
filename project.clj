@@ -12,12 +12,15 @@
                       "*** You did not specify a FIGWHEEL_HOST environment variable.\n"
                       "*** Using the default: " host "\n"
                       "***")))
-      {:websocket-url (str "ws://" host ":3449/figwheel-ws")})))
+      {:websocket-url (str "ws://" host ":80/figwheel-ws")})))
 
 
 (defn- get-figwheel-server-opts []
   (when (inside-container?)
-    {:hawk-options {:watcher :polling}}))
+    {:http-server-root ""
+    :server-hostname "local.broadinstitute.org"
+    :server-port 80
+    :hawk-options {:watcher :polling}}))
 
 
 (defn- with-ns [n] (str "org.broadinstitute.firecloud-ui." n))

@@ -6,9 +6,10 @@ IFS=$'\n\t'
 # without requiring a page reload.
 
 ./script/clean-build-dir.sh
+ln -s target resources
 exec docker run --rm -it \
   -w /work -v "$PWD":/work -v "$HOME"/.m2:/root/.m2 \
   -e FIGWHEEL_HOST="${FIGWHEEL_HOST:-}" \
-  -p 3449:3449 \
+  -p 80:80 \
   clojure \
   rlfe lein do resource, figwheel
