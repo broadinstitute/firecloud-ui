@@ -18,8 +18,8 @@
 (defn- get-figwheel-server-opts []
   (when (inside-container?)
     {:http-server-root ""
-    :server-port 80
-    :hawk-options {:watcher :polling}}))
+     :server-port 80
+     :hawk-options {:watcher :polling}}))
 
 
 (defn- with-ns [n] (str "org.broadinstitute.firecloud-ui." n))
