@@ -18,7 +18,6 @@
 (defn- get-figwheel-server-opts []
   (when (inside-container?)
     {:http-server-root ""
-    :server-hostname "local.broadinstitute.org"
     :server-port 80
     :hawk-options {:watcher :polling}}))
 
