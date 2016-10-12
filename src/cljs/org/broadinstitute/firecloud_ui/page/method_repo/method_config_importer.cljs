@@ -242,17 +242,22 @@
       :else
       [table/Table
        {:columns [{:header "Type" :starting-width 100}
-                  {:header "Item" :starting-width 450
-                   :sort-by (fn [m]
-                              [(m "namespace") (m "name") (int (m "snapshotId"))])
-                   :filter-by (fn [m]
-                                (clojure.string/join "/" (map m ["namespace" "name" "snapshotId"])))
+                  {:header "Namespace" :starting-width 160
+                   :sort-by clojure.string/lower-case
                    :sort-initial :asc
+                   ;;:content-renderer (fn [item] ;; make it open a modal
+                   }
+                  {:header "Name" :starting-width 350
+                   :sort-by (fn [m]  [(clojure.string/lower-case (m "name")) (int (m "snapshotId"))])
+                   :filter-by (fn [m] [(m "name") (int (m "snapshotId"))])
                    :as-text (fn [item] (str (item "namespace") "\n" (item "name") "\nSnapshot ID: " (item "snapshotId")))
                    :content-renderer
                    (fn [item]
-                     (style/create-link {:text (style/render-entity (item "namespace") (item "name") (item "snapshotId"))
-                                         :onClick #((:on-item-selected props) item)}))}
+                     (style/create-link {:text (style/render-name-id (item "name") (item "snapshotId"))
+                                         :onClick #((:on-item-selected props) item)}))
+                   }
+
+
                   {:header "Synopsis" :starting-width 160}
                   (table/date-column {:header "Created"})
                   {:header "Referenced Method" :starting-width 250
@@ -274,6 +279,7 @@
         :data (concat (:methods @state) (:configs @state))
         :->row (fn [item]
                  [(item "entityType")
+                  (item "namespace")
                   item
                   (item "synopsis")
                   (item "createDate")
@@ -292,6 +298,8 @@
          (if success?
            (swap! state assoc :configs (map #(assoc % :type :config) (get-parsed-response)))
            (swap! state assoc :error-message status-text)))})
+    ;; call endpoint to get all namespaces you have owner permissions on
+    ;; then add something so you make it a link so you can open the permissions view on the namespace
     (endpoints/call-ajax-orch
       {:endpoint endpoints/list-methods
        :on-done
