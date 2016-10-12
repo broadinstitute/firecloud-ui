@@ -91,7 +91,7 @@
        :div {:style {:position (when-not sidebar-visible? "fixed")
                      :top (when-not sidebar-visible? 0)
                      :width 270}}
-       (when (and curator? owner?)
+       (when (and curator? writer?)
          [library/CatalogButton {:library-schema library-schema
                                  :workspace workspace
                                  :workspace-id workspace-id

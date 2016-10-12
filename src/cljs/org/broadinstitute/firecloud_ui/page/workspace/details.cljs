@@ -83,7 +83,7 @@
         workspace-attributes (->> attributes
                                   (keep (fn [[k v]]
                                           (when-not (or (= k "description")
-                                                        (.startsWith k "library:"))
+                                                        (utils/contains k ":"))
                                             [(keyword k) v])))
                                   (into {}))]
     (-> (utils/keywordize-keys raw-workspace)
