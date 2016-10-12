@@ -97,7 +97,7 @@
                                  :workspace-id workspace-id
                                  :request-refresh request-refresh}])
        (when (and curator? owner?)
-         [library/PublishButton {:disabled? (when false;(empty? library-attributes)
+         [library/PublishButton {:disabled? (when (empty? library-attributes)
                                               "Dataset attributes must be created before publishing.")
                                  :workspace-id workspace-id}])
        (when (or owner? writer?)
@@ -200,8 +200,7 @@
          (cond editing? (react/create-element [MarkdownEditor {:ref "description" :initial-text description}])
                description [MarkdownView {:text description}]
                :else [:span {:style {:fontStyle "italic"}} "No description provided"])))
-     ;; Shim while saving library attributes isn't working:
-     (when-not false ;(empty? library-attributes)
+     (when-not (empty? library-attributes)
        [library/LibraryAttributeViewer {:library-attributes library-attributes
                                         :library-schema library-schema}])
      [attributes/WorkspaceAttributeViewerEditor {:ref "workspace-attribute-editor"
