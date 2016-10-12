@@ -1,27 +1,6 @@
 (defn- inside-container? []
   (.exists (clojure.java.io/file "/.dockerenv")))
 
-
-(defn- get-figwheel-opts []
-  (when (inside-container?)
-    (let [specified-host (if-let [x (System/getenv "FIGWHEEL_HOST")]
-                           (if (clojure.string/blank? (clojure.string/trim x)) nil x))
-          host (or specified-host "192.168.99.100")]
-      (when (nil? specified-host)
-        (println (str "***\n"
-                      "*** You did not specify a FIGWHEEL_HOST environment variable.\n"
-                      "*** Using the default: " host "\n"
-                      "***")))
-      {:websocket-url (str "ws://" host ":80/figwheel-ws")})))
-
-
-(defn- get-figwheel-server-opts []
-  (when (inside-container?)
-    {:http-server-root ""
-    :server-port 80
-    :hawk-options {:watcher :polling}}))
-
-
 (defn- with-ns [n] (str "org.broadinstitute.firecloud-ui." n))
 
 
@@ -40,13 +19,14 @@
   :profiles {:dev {:dependencies [[binaryage/devtools "0.4.1"]]
                    :cljsbuild
                    {:builds {:client {:source-paths ["src/cljsdev"]
-                                      :figwheel ~(merge {} (get-figwheel-opts))
+                                      :figwheel {:websocket-host :js-client-host}
                                       :compiler
                                       {:main ~(with-ns "dev")
                                        :optimizations :none
                                        :source-map true
                                        :source-map-timestamp true}}}}
-                   :figwheel ~(get-figwheel-server-opts)}
+                   :figwheel {:http-server-root ""
+                              :server-port 80}}
              :deploy {:cljsbuild
                       {:builds {:client {:source-paths ["src/cljsprod"]
                                          :compiler
