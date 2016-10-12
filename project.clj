@@ -1,8 +1,4 @@
-(defn- inside-container? []
-  (.exists (clojure.java.io/file "/.dockerenv")))
-
 (defn- with-ns [n] (str "org.broadinstitute.firecloud-ui." n))
-
 
 (defproject org.broadinstitute/firecloud-ui "0.0.1"
   :dependencies
