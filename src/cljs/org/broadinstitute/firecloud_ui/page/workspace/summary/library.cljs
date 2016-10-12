@@ -39,17 +39,15 @@
        [:div {}
         (style/create-section-header "Dataset Attributes")
         (style/create-paragraph
-          (if library-attributes
-            [:div {}
-             (map (partial render-property library-schema library-attributes) primary-properties)
-             (when secondary-properties
-               [:div {}
-                (when (:expanded? @state)
-                  (map (partial render-property library-schema library-attributes) secondary-properties))
-                [:div {:style {:marginTop "0.5em"}}
-                 (style/create-link {:text (if (:expanded? @state) "Collapse" "See more attributes")
-                                     :onClick #(swap! state update :expanded? not)})]])]
-            [:div {:style {:fontStyle "italic"}} "No attributes provided"]))]))})
+          [:div {}
+           (map (partial render-property library-schema library-attributes) primary-properties)
+           (when secondary-properties
+             [:div {}
+              (when (:expanded? @state)
+                (map (partial render-property library-schema library-attributes) secondary-properties))
+              [:div {:style {:marginTop "0.5em"}}
+               (style/create-link {:text (if (:expanded? @state) "Collapse" "See more attributes")
+                                   :onClick #(swap! state update :expanded? not)})]])])]))})
 
 
 (defn- resolve-hidden [property-key workspace]
