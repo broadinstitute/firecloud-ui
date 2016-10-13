@@ -24,8 +24,6 @@
 (def call-running-statuses #{"NotStarted" "Starting" "Running"})
 (def call-failure-statuses #{"Failed" "Aborted"})
 
-(def google-cloud-context "https://console.cloud.google.com/storage/browser/")
-
 (defn all-success? [submission]
   (and (every? #(contains? wf-success-statuses (% "status")) (submission "workflows"))
     (zero? (count (submission "notstarted")))))
