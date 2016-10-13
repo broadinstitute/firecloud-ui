@@ -24,13 +24,13 @@
     [GCSFilePreviewLink (assoc parsed :attributes {:style {:display "inline"}})]
     (str gcs-uri)))
 
-; extract workflow name from dotted string
+; extract workflow name from dotted string; in anticipation of complexity
 (defn- workflow-name [callName]
   (let [names (string/split callName ".")]
     js/return (first names);
     ))
 
-; extract call name from dotted string
+; extract call name from dotted string; in anticipation of complexity
 (defn- call-name [callName]
   (let [names (string/split callName ".")]
     js/return (rest names);
