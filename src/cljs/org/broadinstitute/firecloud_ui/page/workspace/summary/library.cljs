@@ -189,6 +189,28 @@
                       :on-done (fn [{:keys [success? get-parsed-response]}]
                                  (swap! state dissoc :publishing?)
                                  (if success?
-                                   (modal/push-message {:header "Success!"
-                                                        :message "Successfully published to Library"})
+                                   (do (modal/push-message {:header "Success!"
+                                                            :message "Successfully published to Library"})
+                                       ((:request-refresh props)))
+                                   (modal/push-error-response (get-parsed-response))))}))}]])})
+
+(react/defc UnpublishButton
+  {:render
+   (fn [{:keys [props state]}]
+     [:div {}
+      (when (:unpublishing? @state)
+        [comps/Blocker {:banner "Unpublishing..."}])
+      [comps/SidebarButton
+       {:style :light :color :exception-red :margin :top
+        :icon :library :text "Unpublish"
+        :onClick (fn [_]
+                   (swap! state assoc :unpublishing? true)
+                   (endpoints/call-ajax-orch
+                     {:endpoint (endpoints/unpublish-workspace (:workspace-id props))
+                      :on-done (fn [{:keys [success? get-parsed-response]}]
+                                 (swap! state dissoc :unpublishing?)
+                                 (if success?
+                                   (do (modal/push-message {:header "Success!"
+                                                            :message "Successfully unpublished workspace"})
+                                       ((:request-refresh props)))
                                    (modal/push-error-response (get-parsed-response))))}))}]])})

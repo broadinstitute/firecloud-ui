@@ -71,7 +71,8 @@
 
 
 (defn- render-sidebar [state refs this
-                       {:keys [workspace billing-projects owner? writer? curator? workspace-id on-clone on-delete request-refresh]}]
+                       {:keys [workspace billing-projects owner? writer? curator?
+                               workspace-id on-clone on-delete request-refresh]}]
   (let [{{:keys [isLocked library-attributes workspace-attributes description isProtected]} :workspace
          {:keys [runningSubmissionsCount]} :workspaceSubmissionStats} workspace
         status (common/compute-status workspace)
@@ -97,9 +98,13 @@
                                  :workspace-id workspace-id
                                  :request-refresh request-refresh}])
        (when (and curator? owner?)
-         [library/PublishButton {:disabled? (when (empty? library-attributes)
-                                              "Dataset attributes must be created before publishing.")
-                                 :workspace-id workspace-id}])
+         (if (:published library-attributes)
+           [library/UnpublishButton {:workspace-id workspace-id
+                                     :request-refresh request-refresh}]
+           [library/PublishButton {:disabled? (when (empty? library-attributes)
+                                                "Dataset attributes must be created before publishing.")
+                                   :workspace-id workspace-id
+                                   :request-refresh request-refresh}]))
        (when (or owner? writer?)
          (if (not editing?)
            [comps/SidebarButton
