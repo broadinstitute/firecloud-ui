@@ -13,11 +13,10 @@
     [org.broadinstitute.firecloud-ui.utils :as utils]
     ))
 
-
 (defn- render-date [submission]
   (common/format-date (submission "submissionDate")))
 
-(defn- render-submissions-table [submissions nav-context]
+(defn- render-submissions-table [submissions nav-context bucketName]
   [table/Table
    {:empty-message "There are no analyses to display."
     :columns
@@ -37,7 +36,11 @@
       :content-renderer (fn [[namespace name]]
                           [:div {} namespace "/" name])}
      {:header "Data Entity" :starting-width 220}
-     {:header "Submitted By" :starting-width 220}]
+     {:header "Submitted By" :starting-width 220}
+     {:header "Submission ID" :starting-width 235 
+     :content-renderer (fn [submissionId]
+                          (style/create-link {:text submissionId
+                                              :href (str moncommon/google-cloud-context bucketName "/" submissionId "/")}))}]
     :data submissions
     :->row (fn [x]
              [x
@@ -45,7 +48,8 @@
               [(x "methodConfigurationNamespace") (x "methodConfigurationName")]
               (str (get-in x ["submissionEntity" "entityName"])
                    " (" (get-in x ["submissionEntity" "entityType"]) ")")
-              (x "submitter")])}])
+              (x "submitter")
+              (x "submissionId")])}])
 
 
 (react/defc SubmissionsList
@@ -54,7 +58,7 @@
      (swap! state dissoc :server-response)
      (react/call :load-submissions this))
    :render
-   (fn [{:keys [props state]}]
+   (fn [{:keys [props state]}] 
      (let [server-response (:server-response @state)
            {:keys [submissions error-message]} server-response]
        (cond
@@ -62,7 +66,7 @@
          [:div {:style {:textAlign "center"}} [comps/Spinner {:text "Loading analyses..."}]]
          error-message (style/create-server-error-message error-message)
          :else
-         (render-submissions-table submissions (:nav-context props)))))
+         (render-submissions-table submissions (:nav-context props)(:bucketName props)))))
    :component-did-mount
    (fn [{:keys [this]}]
      (react/call :load-submissions this))
@@ -78,8 +82,9 @@
 
 (react/defc Page
   {:refresh
-   (fn [{:keys [props refs]}]
-     (let [nav-context (nav/parse-segment (:nav-context props))
+   (fn [{:keys [props refs]}] 
+     (let [nav-context (nav/parse-segment (:nav-context props)) 
+           workspace (:workspace props)
            selected-submission-id (not-empty (:segment nav-context))]
        (if selected-submission-id
          (nav/back nav-context)
@@ -87,13 +92,17 @@
    :render
    (fn [{:keys [props]}]
      (let [workspace-id (:workspace-id props)
+           workspace (:workspace props)
            nav-context (nav/parse-segment (:nav-context props))
+           bucketName (get-in workspace [:workspace :bucketName])
            selected-submission-id (not-empty (:segment nav-context))]
        [:div {:style {:padding "1em"}}
         (if selected-submission-id
           [submission-details/Page {:key selected-submission-id
                                     :workspace-id workspace-id
+                                    :bucketName bucketName
                                     :submission-id selected-submission-id}]
           [SubmissionsList {:ref "submissions-list"
                             :workspace-id workspace-id
+                            :bucketName bucketName
                             :nav-context nav-context}])]))})
