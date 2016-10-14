@@ -10,6 +10,7 @@
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
     [org.broadinstitute.firecloud-ui.nav :as nav]
+    [org.broadinstitute.firecloud-ui.page.workspace.monitor.common :as moncommon]
     [org.broadinstitute.firecloud-ui.page.workspace.monitor.common :refer [all-success? any-running? any-failed?]]
     [org.broadinstitute.firecloud-ui.page.workspace.summary.acl-editor :refer [AclEditor]]
     [org.broadinstitute.firecloud-ui.page.workspace.summary.attribute-editor :as attributes]
@@ -178,7 +179,7 @@
            nil [:div {:style {:position "absolute" :marginTop "-1.5em"}}
                 [comps/Spinner {:height "1.5ex"}]]
            true (style/create-link {:text bucketName
-                                    :href (str "https://console.developers.google.com/storage/browser/" bucketName "/")
+                                    :href (str moncommon/google-cloud-context bucketName "/")
                                     :title "Click to open the Google Cloud Storage browser for this bucket"
                                     :target "_blank"})
            false bucketName))
