@@ -245,8 +245,14 @@
                   {:header "Namespace" :starting-width 160
                    :sort-by clojure.string/lower-case
                    :sort-initial :asc
-                   ;;:content-renderer (fn [item] ;; make it open a modal
-                   }
+                   :content-renderer (fn [item]
+                                       (style/create-link {:text (str item)
+                                                           ;; use the permissions modal from methods_configs_acl ??
+                                                           :onClick #(modal/push-modal [modal/OKCancelForm
+                                                                                        {:header (str "Edit  Permissions for Namespace " item)
+                                                                                         :content "Show all the users who have permissions for this namespace. For each user, show the level of their permissions. Should be a dropdown that you can change."
+                                                                                         :ok-button (utils/log "call agora to update permissions!")}])}))}
+                                                          ;; modal ok-button logs when you OPEN the modal ??
                   {:header "Name" :starting-width 350
                    :sort-by (fn [m]  [(clojure.string/lower-case (m "name")) (int (m "snapshotId"))])
                    :filter-by (fn [m] [(m "name") (int (m "snapshotId"))])
