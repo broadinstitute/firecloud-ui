@@ -800,7 +800,7 @@
                       :cellType {:type "string"
                                  :title "Cell Type"}
                       :coverage {:type "string"
-                                 :enum ["0-10X","11x-20x","21x-30x","31x-100x","100x-150x",">150x"]
+                                 :enum ["0-10X" "11x-20x" "21x-30x" "31x-100x" "100x-150x" ">150x"]
                                  :title "Depth of Sequencing Coverage (Average)"}
                       :ethnicity {:type "array"
                                   :items {:type "string"}
@@ -819,6 +819,18 @@
                                                        :title "Seq Project Numbers"
                                                        :inputHint "Broad internal IDs"}}})}}
     :service-prefix "/schemas"))
+
+(defn save-library-metadata [workspace-id]
+  {:path (str "/library/" (ws-path workspace-id) "/metadata")
+   :method :put})
+
+(defn publish-workspace [workspace-id]
+  {:path (str "/library/" (ws-path workspace-id) "/published")
+   :method :post})
+
+(defn unpublish-workspace [workspace-id]
+  {:path (str "/library/" (ws-path workspace-id) "/published")
+   :method :delete})
 
 (def get-library-curator-status
   {:path "/library/user/role/curator"

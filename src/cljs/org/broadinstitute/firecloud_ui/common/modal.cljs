@@ -24,6 +24,12 @@
   (react/call :push-modal @instance (react/create-element OKCancelForm props)))
 
 
+(defn push-message [{:keys [header message]}]
+  (push-ok-cancel-modal
+    {:header (or header "Message")
+     :content [:div {:style {:maxWidth 500}} message]
+     :show-cancel? false :ok-button "OK"}))
+
 (defn- push-error [content]
   (push-ok-cancel-modal
     {:header [:div {:style {:display "flex" :alignItems "center"}}

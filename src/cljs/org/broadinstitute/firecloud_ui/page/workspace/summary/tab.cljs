@@ -71,7 +71,8 @@
 
 
 (defn- render-sidebar [state refs this
-                       {:keys [workspace billing-projects owner? writer? curator? workspace-id on-clone on-delete]}]
+                       {:keys [workspace billing-projects owner? writer? curator?
+                               workspace-id on-clone on-delete request-refresh]}]
   (let [{{:keys [isLocked library-attributes workspace-attributes description isProtected]} :workspace
          {:keys [runningSubmissionsCount]} :workspaceSubmissionStats} workspace
         status (common/compute-status workspace)
@@ -91,12 +92,19 @@
        :div {:style {:position (when-not sidebar-visible? "fixed")
                      :top (when-not sidebar-visible? 0)
                      :width 270}}
-       (when false ; curator? TODO commented out until ready
+       (when (and curator? writer?)
          [library/CatalogButton {:library-schema library-schema
-                                 :workspace workspace}])
-       (when false ; curator? TODO commented out until ready
-         [library/PublishButton {:disabled? (when (empty? library-attributes)
-                                              "Dataset attributes must be created before publishing.")}])
+                                 :workspace workspace
+                                 :workspace-id workspace-id
+                                 :request-refresh request-refresh}])
+       (when (and curator? owner?)
+         (if (:published library-attributes)
+           [library/UnpublishButton {:workspace-id workspace-id
+                                     :request-refresh request-refresh}]
+           [library/PublishButton {:disabled? (when (empty? library-attributes)
+                                                "Dataset attributes must be created before publishing.")
+                                   :workspace-id workspace-id
+                                   :request-refresh request-refresh}]))
        (when (or owner? writer?)
          (if (not editing?)
            [comps/SidebarButton
@@ -116,7 +124,7 @@
                                                :new-attributes (assoc success :description new-description)
                                                :state state
                                                :workspace-id workspace-id
-                                               :request-refresh #(react/call :refresh this)}))))}]
+                                               :request-refresh request-refresh}))))}]
             [comps/SidebarButton
              {:style :light :color :exception-red :margin :top
               :text "Cancel Editing" :icon :cancel
@@ -197,14 +205,13 @@
          (cond editing? (react/create-element [MarkdownEditor {:ref "description" :initial-text description}])
                description [MarkdownView {:text description}]
                :else [:span {:style {:fontStyle "italic"}} "No description provided"])))
+     (when-not (empty? library-attributes)
+       [library/LibraryAttributeViewer {:library-attributes library-attributes
+                                        :library-schema library-schema}])
      [attributes/WorkspaceAttributeViewerEditor {:ref "workspace-attribute-editor"
                                                  :editing? editing?
                                                  :workspace-attributes workspace-attributes
-                                                 :workspace-bucket bucketName}]
-     ;; TODO commented out until ready
-     ;[library/LibraryAttributeViewer {:library-attributes (not-empty library-attributes)
-     ;                                 :library-schema library-schema}]
-     ]))
+                                                 :workspace-bucket bucketName}]]))
 
 (react/defc Summary
   {:get-initial-state
@@ -214,25 +221,26 @@
    (fn [{:keys [refs state props this]}]
      (let [{:keys [server-response]} @state
            {:keys [workspace]} props
-           {:keys [submissions-count billing-projects library-schema library-curator? server-error]} server-response]
+           {:keys [submissions-count billing-projects library-schema curator? server-error]} server-response]
        (cond
          server-error
          (style/create-server-error-message server-error)
-         (some nil? [workspace submissions-count billing-projects library-schema library-curator?])
+         (some nil? [workspace submissions-count billing-projects library-schema curator?])
          [:div {:style {:textAlign "center" :padding "1em"}}
           [comps/Spinner {:text "Loading workspace..."}]]
          :else
          (let [owner? (= "OWNER" (:accessLevel workspace))
-               writer? (or owner? (= "WRITER" (:accessLevel workspace)))]
+               writer? (or owner? (= "WRITER" (:accessLevel workspace)))
+               derived {:owner? owner? :writer? writer? :request-refresh #(react/call :refresh this)}]
            [:div {:style {:margin "45px 25px" :display "flex"}}
             (render-sidebar state refs this
                             (merge (select-keys props [:workspace :workspace-id :on-clone :on-delete])
-                                   (select-keys server-response [:billing-projects :library-curator?])
-                                   {:owner? owner? :writer? writer?}))
+                                   (select-keys server-response [:billing-projects :curator?])
+                                   derived))
             (render-main (merge (select-keys props [:workspace :workspace-id :bucket-access?])
                                 (select-keys @state [:editing?])
                                 (select-keys server-response [:submissions-count :library-schema])
-                                {:owner? owner? :request-refresh #(react/call :refresh this)}))
+                                (select-keys derived [:owner? :request-refresh])))
             (when (:updating-attrs? @state)
               [comps/Blocker {:banner "Updating Attributes..."}])
             (when (contains? @state :locking?)
@@ -292,5 +300,5 @@
        {:endpoint endpoints/get-library-curator-status
         :on-done (fn [{:keys [success? get-parsed-response]}]
                    (if success?
-                     (swap! state update-in [:server-response] assoc :library-curator? (get (get-parsed-response) "curator"))
+                     (swap! state update-in [:server-response] assoc :curator? (get (get-parsed-response) "curator"))
                      (swap! state update-in [:server-response] assoc :server-error "Unable to determine curator status")))}))})

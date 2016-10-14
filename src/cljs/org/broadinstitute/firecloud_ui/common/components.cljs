@@ -335,7 +335,7 @@
                           :warning-triangle)]
              (str "Error: " expected-msg))
            [:div {:style {:textAlign "initial"}}
-            (style/create-flexbox {}
+            (style/create-flexbox {:style {:marginBottom "0.25em"}}
               [:span {:style {:paddingRight "1ex"}}
                (icons/icon {:style {:color (:exception-red style/colors)}}
                            :warning-triangle)]
