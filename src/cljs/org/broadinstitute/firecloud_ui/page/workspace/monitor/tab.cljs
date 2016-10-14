@@ -84,7 +84,6 @@
   {:refresh
    (fn [{:keys [props refs]}] 
      (let [nav-context (nav/parse-segment (:nav-context props)) 
-           workspace (:workspace props)
            selected-submission-id (not-empty (:segment nav-context))]
        (if selected-submission-id
          (nav/back nav-context)
@@ -92,9 +91,8 @@
    :render
    (fn [{:keys [props]}]
      (let [workspace-id (:workspace-id props)
-           workspace (:workspace props)
            nav-context (nav/parse-segment (:nav-context props))
-           bucketName (get-in workspace [:workspace :bucketName])
+           bucketName (get-in (:workspace props) [:workspace :bucketName])
            selected-submission-id (not-empty (:segment nav-context))]
        [:div {:style {:padding "1em"}}
         (if selected-submission-id

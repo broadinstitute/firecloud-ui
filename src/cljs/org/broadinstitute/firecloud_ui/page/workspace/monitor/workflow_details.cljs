@@ -26,15 +26,11 @@
 
 ; extract workflow name from dotted string; in anticipation of complexity
 (defn- workflow-name [callName]
-  (let [names (string/split callName ".")]
-    js/return (first names);
-    ))
+  (first (string/split callName ".")))
 
 ; extract call name from dotted string; in anticipation of complexity
 (defn- call-name [callName]
-  (let [names (string/split callName ".")]
-    js/return (rest names);
-    ))       
+  (str (rest (string/split callName "."))))       
 
 (react/defc IODetail
   {:get-initial-state
@@ -75,11 +71,11 @@
    (fn [{:keys [props state]}]
      [:div {:style {:marginTop "1em"}}
       [:div {:style {:display "inline-block" :marginRight "1em"}} 
-       (let [workflowName (workflow-name (:label props)) callName (call-name (:label props))]
+       (let [workflow-name (workflow-name (:label props)) 
+             call-name (call-name (:label props))]
         (style/create-link {:text (:label props)
-                     :href (str moncommon/google-cloud-context (:bucketName props) "/" (:submission-id props)  "/" workflowName "/" (:workflowId props) "/" callName "/" )
-                    })
-        )]
+          :href (str moncommon/google-cloud-context (:bucketName props) "/" (:submission-id props)  
+                     "/" workflow-name "/" (:workflowId props) "/" call-name "/")}))]
       (style/create-link {:text (if (:expanded @state) "Hide" "Show")
                           :onClick #(swap! state assoc :expanded (not (:expanded @state)))})
       (when (:expanded @state)
@@ -116,8 +112,11 @@
       (create-field "Ended" (moncommon/render-date (workflow "end"))))
     [IODetail {:label "Inputs" :data (workflow "inputs")}]
     [IODetail {:label "Outputs" :data (workflow "outputs")}]]
-      (create-field "Workflow Log" (style/create-link {:text (str moncommon/google-cloud-context bucketName "/" submission-id "/workflow.logs/workflow." (workflow "id") ".log" )
-                                              :href (str moncommon/google-cloud-context bucketName "/" submission-id "/workflow.logs/workflow." (workflow "workflowId") ".log" )}))
+      (create-field "Workflow Log" (style/create-link {:text 
+        (str moncommon/google-cloud-context bucketName "/" submission-id "/workflow.logs/workflow." 
+             (workflow "id") ".log" ) 
+        :href (str moncommon/google-cloud-context bucketName "/" submission-id "/workflow.logs/workflow." 
+                   (workflow "workflowId") ".log" )}))
 
    [:div {:style {:marginTop "1em" :fontWeight 500}} "Calls:"]
    (for [[call data] (workflow "calls")]

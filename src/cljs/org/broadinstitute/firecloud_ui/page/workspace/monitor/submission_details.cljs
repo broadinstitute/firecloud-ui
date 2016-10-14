@@ -67,14 +67,13 @@
                  {:header "Workflow ID" :starting-width 300
                   :content-renderer
                   (fn [workflow]
-                   (let [submission-id (:submission-id props) 
-                         bucketName (:bucketName props)
+                   (let [{:keys [submission-id bucketName]} props
                          inputs (second (second (first (workflow "inputResolutions"))))
-                         inputNames (string/split inputs ".")
-                         workflowName (first inputNames) 
+                         input-names (string/split inputs ".")
+                         workflow-name (first input-names) 
                          workflowId (workflow "workflowId")]
                    (style/create-link {:text workflowId
-                     :href (str moncommon/google-cloud-context bucketName "/" submission-id  "/" workflowName "/" workflowId "/" )
+                     :href (str moncommon/google-cloud-context bucketName "/" submission-id  "/" workflow-name "/" workflowId "/")
                     })))}]
        :filter-groups
        (vec (cons {:text "All" :pred (constantly true)}

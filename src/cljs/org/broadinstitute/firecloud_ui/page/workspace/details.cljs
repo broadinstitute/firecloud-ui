@@ -90,7 +90,7 @@
 
 
 (react/defc WorkspaceDetails
-  {:refresh-workspace 
+  {:refresh-workspace
    (fn [{:keys [props state]}]
      (endpoints/call-ajax-orch
        {:endpoint (endpoints/check-bucket-read-access (:workspace-id props))
@@ -106,7 +106,6 @@
    (fn [{:keys [props state refs this]}]
      (let [nav-context (nav/parse-segment (:nav-context props))
            workspace-id (:workspace-id props)
-           workspace (:workspace props)
            {:keys [workspace workspace-error bucket-access?]} @state
            tab (:segment nav-context)
            refresh #(react/call :refresh-workspace this)]
