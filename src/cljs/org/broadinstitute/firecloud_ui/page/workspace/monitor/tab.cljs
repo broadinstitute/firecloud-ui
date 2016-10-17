@@ -37,10 +37,11 @@
                           [:div {} namespace "/" name])}
      {:header "Data Entity" :starting-width 220}
      {:header "Submitted By" :starting-width 220}
-     {:header "Submission ID" :starting-width 235 
+     {:header "Submission ID" :starting-width 235
      :content-renderer (fn [submissionId]
                           (style/create-link {:text submissionId
-                                              :href (str moncommon/google-cloud-context bucketName "/" submissionId "/")}))}]
+                                              :href (str moncommon/google-cloud-context
+                                                         bucketName "/" submissionId "/")}))}]
     :data submissions
     :->row (fn [x]
              [x
@@ -58,7 +59,7 @@
      (swap! state dissoc :server-response)
      (react/call :load-submissions this))
    :render
-   (fn [{:keys [props state]}] 
+   (fn [{:keys [props state]}]
      (let [server-response (:server-response @state)
            {:keys [submissions error-message]} server-response]
        (cond
@@ -66,7 +67,7 @@
          [:div {:style {:textAlign "center"}} [comps/Spinner {:text "Loading analyses..."}]]
          error-message (style/create-server-error-message error-message)
          :else
-         (render-submissions-table submissions (:nav-context props)(:bucketName props)))))
+         (render-submissions-table submissions (:nav-context props) (:bucketName props)))))
    :component-did-mount
    (fn [{:keys [this]}]
      (react/call :load-submissions this))
@@ -82,8 +83,8 @@
 
 (react/defc Page
   {:refresh
-   (fn [{:keys [props refs]}] 
-     (let [nav-context (nav/parse-segment (:nav-context props)) 
+   (fn [{:keys [props refs]}]
+     (let [nav-context (nav/parse-segment (:nav-context props))
            selected-submission-id (not-empty (:segment nav-context))]
        (if selected-submission-id
          (nav/back nav-context)

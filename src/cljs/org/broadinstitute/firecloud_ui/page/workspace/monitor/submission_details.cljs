@@ -73,8 +73,8 @@
                          workflow-name (first input-names) 
                          workflowId (workflow "workflowId")]
                    (style/create-link {:text workflowId
-                     :href (str moncommon/google-cloud-context bucketName "/" submission-id  "/" workflow-name "/" workflowId "/")
-                    })))}]
+                     :href (str moncommon/google-cloud-context bucketName "/" submission-id  "/"
+                                workflow-name "/" workflowId "/")})))}]
        :filter-groups
        (vec (cons {:text "All" :pred (constantly true)}
               (map (fn [status] {:text status :pred #(= status (% "status"))})
@@ -85,7 +85,7 @@
                  (row "statusLastChangedDate")
                  (row "status")
                  (row "messages")
-                 row ])}])
+                 row])}])
    :render-workflow-details
    (fn [{:keys [state props]}]
      [:div {}
