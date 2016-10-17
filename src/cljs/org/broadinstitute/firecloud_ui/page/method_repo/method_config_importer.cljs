@@ -54,7 +54,11 @@
         [:div {:style {:float "left" :width 290 :paddingRight "1em"}}
          [comps/SidebarButton {:style :light :color :button-blue
                                :text "Permissions..." :icon :settings
-                               :onClick #(modal/push-modal [mca/AgoraPermsEditor {:is-conf config? :selected-entity entity}])}]]
+                               :onClick #(modal/push-modal [mca/AgoraPermsEditor {:save-endpoint (endpoints/persist-agora-method-acl entity)
+                                                                                  :load-endpoint (let [[name nmsp sid] (map entity ["name" "namespace" "snapshotId"])]
+                                                                                                   (endpoints/get-agora-method-acl nmsp name sid config?))
+                                                                                  :label (str (entity "entityType") " " (mca/get-ordered-name entity))
+                                                                                   }])}]]
         [:div {:style {:float "left" :width 290}}
          [comps/SidebarButton {:style :light :color :exception-red
                                :text "Redact" :icon :delete
@@ -243,15 +247,18 @@
       [table/Table
        {:columns [{:header "Type" :starting-width 100}
                   {:header "Namespace" :starting-width 160
-                   :sort-by clojure.string/lower-case
+                   :sort-by (fn [m] [(clojure.string/lower-case (m "namespace"))])
                    :sort-initial :asc
+                   :filter-by (fn [m] (str (m "namespace")))
+                   :as-text (fn [m] (str (m "namespace")))
                    :content-renderer (fn [item]
-                                       (style/create-link {:text (str item)
-                                                           ;; use the permissions modal from methods_configs_acl ??
-                                                           :onClick #(modal/push-modal [modal/OKCancelForm
-                                                                                        {:header (str "Edit  Permissions for Namespace " item)
-                                                                                         :content "Show all the users who have permissions for this namespace. For each user, show the level of their permissions. Should be a dropdown that you can change."
-                                                                                         :ok-button (utils/log "call agora to update permissions!")}])}))}
+                                       (style/create-link {:text (str (item "namespace"))
+                                                           :onClick #(modal/push-modal [mca/AgoraPermsEditor {
+                                                                                                               :save-endpoint (endpoints/persist-agora-method-acl item)
+                                                                                                               :load-endpoint (let [[name nmsp sid] (map item ["name" "namespace" "snapshotId"])]
+                                                                                                                                (endpoints/get-agora-method-acl nmsp name sid config?))
+                                                                                                               :label (str "Namespace  " (item "namespace"))}] ;; how to make this just a namespace
+                                                                       )}))}
                                                           ;; modal ok-button logs when you OPEN the modal ??
                   {:header "Name" :starting-width 350
                    :sort-by (fn [m]  [(clojure.string/lower-case (m "name")) (int (m "snapshotId"))])
@@ -285,7 +292,7 @@
         :data (concat (:methods @state) (:configs @state))
         :->row (fn [item]
                  [(item "entityType")
-                  (item "namespace")
+                  item
                   item
                   (item "synopsis")
                   (item "createDate")
