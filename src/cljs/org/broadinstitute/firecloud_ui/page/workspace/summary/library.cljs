@@ -145,7 +145,7 @@
                                                      :else (do (swap! validation-errors into (input/validate refs pk-str))
                                                                (resolve-field (input/get-text refs pk-str) property)))]
                                      (when value
-                                       [(str "library:" pk-str) value]))))
+                                       [pk-str value]))))
                            (into {}))]
        (if-not (empty? @validation-errors)
          (swap! state assoc :validation-error @validation-errors)
