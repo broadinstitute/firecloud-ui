@@ -70,7 +70,7 @@
                    (let [{:keys [submission-id bucketName]} props
                          inputs (second (second (first (workflow "inputResolutions"))))
                          input-names (string/split inputs ".")
-                         workflow-name (first input-names) 
+                         workflow-name (first input-names)
                          workflowId (workflow "workflowId")]
                    (style/create-link {:text workflowId
                      :href (str moncommon/google-cloud-context bucketName "/" submission-id  "/"
@@ -126,8 +126,8 @@
 
 (react/defc Page
   {:render
-   (fn [{:keys [state props this]}] 
-     (let [server-response (:server-response @state) 
+   (fn [{:keys [state props this]}]
+     (let [server-response (:server-response @state)
            {:keys [submission error-message]} server-response]
        (cond
          (nil? server-response)
