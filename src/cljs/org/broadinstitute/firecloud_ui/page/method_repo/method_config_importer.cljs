@@ -253,10 +253,9 @@
                    :as-text (fn [m] (str (m "namespace")))
                    :content-renderer (fn [item]
                                        (style/create-link {:text (str (item "namespace"))
-                                                           :onClick #(modal/push-modal [mca/AgoraPermsEditor {
+                                                           :onClick #(modal/push-modal [mca/AgoraPermsEditor { ;; update save and load endpoint so that it's for namespace!!
                                                                                                                :save-endpoint (endpoints/persist-agora-method-acl item)
-                                                                                                               :load-endpoint (let [[name nmsp sid] (map item ["name" "namespace" "snapshotId"])]
-                                                                                                                                (endpoints/get-agora-method-acl nmsp name sid config?))
+                                                                                                               :load-endpoint (endpoints/get-agora-namespace-acl (item "namespace") (= :config (:type item)))
                                                                                                                :label (str "Namespace  " (item "namespace"))}] ;; how to make this just a namespace
                                                                        )}))}
                                                           ;; modal ok-button logs when you OPEN the modal ??
