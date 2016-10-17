@@ -30,7 +30,7 @@
 
 ; extract call name from dotted string; in anticipation of complexity
 (defn- call-name [callName]
-  (join '.' (rest (string/split callName "."))))       
+  (string/join '.' (rest (string/split callName "."))))       
 
 (react/defc IODetail
   {:get-initial-state
