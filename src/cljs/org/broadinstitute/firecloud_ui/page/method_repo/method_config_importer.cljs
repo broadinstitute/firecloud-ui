@@ -57,7 +57,7 @@
                                :onClick #(modal/push-modal [mca/AgoraPermsEditor {:save-endpoint (endpoints/persist-agora-method-acl entity)
                                                                                   :load-endpoint (let [[name nmsp sid] (map entity ["name" "namespace" "snapshotId"])]
                                                                                                    (endpoints/get-agora-method-acl nmsp name sid config?))
-                                                                                  :label (str (entity "entityType") " " (mca/get-ordered-name entity))
+                                                                                  :entityType (entity "entityType") :entityName (mca/get-ordered-name entity)
                                                                                    }])}]]
         [:div {:style {:float "left" :width 290}}
          [comps/SidebarButton {:style :light :color :exception-red
@@ -253,10 +253,9 @@
                    :as-text (fn [m] (str (m "namespace")))
                    :content-renderer (fn [item]
                                        (style/create-link {:text (str (item "namespace"))
-                                                           :onClick #(modal/push-modal [mca/AgoraPermsEditor { ;; update save and load endpoint so that it's for namespace!!
-                                                                                                               :save-endpoint (endpoints/persist-agora-method-acl item)
+                                                           :onClick #(modal/push-modal [mca/AgoraPermsEditor { :save-endpoint (endpoints/post-agora-namespace-acl (item "namespace") (= :config (:type item)))
                                                                                                                :load-endpoint (endpoints/get-agora-namespace-acl (item "namespace") (= :config (:type item)))
-                                                                                                               :label (str "Namespace  " (item "namespace"))}] ;; how to make this just a namespace
+                                                                                                               :entityType "Namespace" :entityName (item "namespace")}]
                                                                        )}))}
                                                           ;; modal ok-button logs when you OPEN the modal ??
                   {:header "Name" :starting-width 350
@@ -310,8 +309,6 @@
          (if success?
            (swap! state assoc :configs (map #(assoc % :type :config) (get-parsed-response)))
            (swap! state assoc :error-message status-text)))})
-    ;; call endpoint to get all namespaces you have owner permissions on
-    ;; then add something so you make it a link so you can open the permissions view on the namespace
     (endpoints/call-ajax-orch
       {:endpoint endpoints/list-methods
        :on-done

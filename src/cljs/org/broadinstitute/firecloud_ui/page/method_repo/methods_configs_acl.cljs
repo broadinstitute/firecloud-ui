@@ -30,9 +30,7 @@
   {:render
    (fn [{:keys [props refs state this]}]
      [modal/OKCancelForm
-      {:header
-
-                 (str "Permissions for " (:label props))  ;;(sel-ent "entityType") " " (get-ordered-name sel-ent)))
+      {:header (str "Permissions for " (:entityType props) " " (:entityName props))
        :content
        (react/create-element
          (cond
@@ -75,16 +73,15 @@
              [:span {:style {:paddingLeft "6px" :verticalAlign "middle"}} "Publicly Readable?"]]
             (style/create-validation-error-message (:validation-error @state))
             [comps/ErrorViewer {:error (:save-error @state)}]]
-           (:error @state) (style/create-server-error-message (:error @state))
+           (:error @state) (style/create-server-error-message (cond (= (:error @state) "Forbidden") (str "You are unauthorized to edit this " (clojure.string/lower-case (:entityType props)) ".")
+                                                                    :else (:error @state)))
            :else [comps/Spinner {:text
-                                 (str "Loading Permissions for " (str "Permissions for " (:label props)) "...")}]))
+                                 (str "Loading Permissions for " (:entityType props) " " (:entityName props) "...")}]))
        :ok-button {:text "Save" :onClick #(react/call :persist-acl this)}}])
    :component-did-mount
    (fn [{:keys [props state]}]
      (endpoints/call-ajax-orch
        {:endpoint (:load-endpoint props)
-;;         (let [[name nmsp sid] (map (:selected-entity props) ["name" "namespace" "snapshotId"])]
-;;                     (endpoints/get-agora-method-acl nmsp name sid (:is-conf props)))
         :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                    (if success?
                      (let [response-vec (mapv utils/keywordize-keys (get-parsed-response))
@@ -109,7 +106,6 @@
            (swap! state assoc :saving? true)
            (endpoints/call-ajax-orch
              {:endpoint (:save-endpoint props)
-              ;; (endpoints/persist-agora-method-acl (:selected-entity props))
               :headers utils/content-type=json
               :payload non-empty-acls-w-public
               :on-done (fn [{:keys [success? get-parsed-response]}]
