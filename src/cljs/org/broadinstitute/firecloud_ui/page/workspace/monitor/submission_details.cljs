@@ -1,6 +1,7 @@
 (ns org.broadinstitute.firecloud-ui.page.workspace.monitor.submission-details
     (:require
       [dmohs.react :as react]
+      [clojure.string :as string]
       [org.broadinstitute.firecloud-ui.common :as common]
       [org.broadinstitute.firecloud-ui.common.components :as comps]
       [org.broadinstitute.firecloud-ui.common.icons :as icons]
@@ -63,7 +64,17 @@
                                        (map (fn [message]
                                               [:div {} message])
                                          message-list)])}
-                 {:header "Workflow ID" :starting-width 300}]
+                 {:header "Workflow ID" :starting-width 300
+                  :content-renderer
+                  (fn [workflow]
+                   (let [{:keys [submission-id bucketName]} props
+                         inputs (second (second (first (workflow "inputResolutions"))))
+                         input-names (string/split inputs ".")
+                         workflow-name (first input-names)
+                         workflowId (workflow "workflowId")]
+                   (style/create-link {:text workflowId
+                     :href (str moncommon/google-cloud-context bucketName "/" submission-id  "/"
+                                workflow-name "/" workflowId "/")})))}]
        :filter-groups
        (vec (cons {:text "All" :pred (constantly true)}
               (map (fn [status] {:text status :pred #(= status (% "status"))})
@@ -74,7 +85,7 @@
                  (row "statusLastChangedDate")
                  (row "status")
                  (row "messages")
-                 (row "workflowId")])}])
+                 row])}])
    :render-workflow-details
    (fn [{:keys [state props]}]
      [:div {}
@@ -85,7 +96,7 @@
        [:b {} (:name (:selected-workflow @state))]]
       [:div {:style {:marginTop "1em"}}
        (workflow-details/render
-        (merge (select-keys props [:workspace-id :submission-id])
+        (merge (select-keys props [:workspace-id :submission-id :bucketName])
                {:workflow-id (get-in @state [:selected-workflow :id])}))]])})
 
 
@@ -164,6 +175,7 @@
           [:h2 {:style {:paddingBottom "0.5em"}} "Workflows:"]
           [WorkflowsTable {:workflows (submission "workflows")
                            :workspace-id (:workspace-id props)
+                           :bucketName (:bucketName props)
                            :submission-id (submission "submissionId")}]])))
    :load-details
    (fn [{:keys [props state]}]

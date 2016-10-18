@@ -1,6 +1,7 @@
 (ns org.broadinstitute.firecloud-ui.page.workspace.monitor.workflow-details
   (:require
     [dmohs.react :as react]
+    [clojure.string :as string]
     [org.broadinstitute.firecloud-ui.common :as common]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
     [org.broadinstitute.firecloud-ui.common.gcs-file-preview :refer [GCSFilePreviewLink]]
@@ -23,6 +24,12 @@
     [GCSFilePreviewLink (assoc parsed :attributes {:style {:display "inline"}})]
     (str gcs-uri)))
 
+(defn- workflow-name [callName]
+  (first (string/split callName ".")))
+
+
+(defn- call-name [callName]
+  (string/join "." (rest (string/split callName "."))))
 
 (react/defc IODetail
   {:get-initial-state
@@ -55,7 +62,6 @@
            (create-field name (display-value value)))
          log-map)])))
 
-
 (react/defc CallDetail
   {:get-initial-state
    (fn []
@@ -63,7 +69,12 @@
    :render
    (fn [{:keys [props state]}]
      [:div {:style {:marginTop "1em"}}
-      [:div {:style {:display "inline-block" :marginRight "1em"}} (:label props)]
+      [:div {:style {:display "inline-block" :marginRight "1em"}}
+       (let [workflow-name (workflow-name (:label props))
+             call-name (call-name (:label props))]
+        (style/create-link {:text (:label props)
+          :href (str moncommon/google-cloud-context (:bucketName props) "/" (:submission-id props)
+                     "/" workflow-name "/" (:workflowId props) "/" call-name "/")}))]
       (style/create-link {:text (if (:expanded @state) "Hide" "Show")
                           :onClick #(swap! state assoc :expanded (not (:expanded @state)))})
       (when (:expanded @state)
@@ -85,7 +96,7 @@
           (:data props)))])})
 
 
-(defn- render-workflow-detail [workflow]
+(defn- render-workflow-detail [workflow submission-id bucketName]
   [:div {:style {:padding "1em" :border style/standard-line :borderRadius 4
                  :backgroundColor (:background-gray style/colors)}}
    [:div {}
@@ -100,22 +111,28 @@
       (create-field "Ended" (moncommon/render-date (workflow "end"))))
     [IODetail {:label "Inputs" :data (workflow "inputs")}]
     [IODetail {:label "Outputs" :data (workflow "outputs")}]]
+      (create-field "Workflow Log" (style/create-link {:text
+        (str moncommon/google-cloud-context bucketName "/" submission-id "/workflow.logs/workflow."
+             (workflow "id") ".log" )
+        :href (str moncommon/google-cloud-context bucketName "/" submission-id "/workflow.logs/workflow."
+                   (workflow "workflowId") ".log" )}))
+
    [:div {:style {:marginTop "1em" :fontWeight 500}} "Calls:"]
    (for [[call data] (workflow "calls")]
-     [CallDetail {:label call :data data}])])
+     [CallDetail {:label call :data data :submission-id submission-id :bucketName bucketName :workflowId (workflow "id")}])])
 
 
 (react/defc WorkflowDetails
   {:render
-   (fn [{:keys [state]}]
-     (let [server-response (:server-response @state)]
+   (fn [{:keys [state props]}]
+     (let [server-response (:server-response @state) submission-id (props "submission-id") bucketName (props "bucketName")]
        (cond
          (nil? server-response)
          [:div {} [comps/Spinner {:text "Loading workflow details..."}]]
          (not (:success? server-response))
          (style/create-server-error-message (:response server-response))
-         :else
-         (render-workflow-detail (:response server-response)))))
+         :else 
+         (render-workflow-detail (:response server-response) (:submission-id props) (:bucketName props) ))))
    :component-did-mount
    (fn [{:keys [props state]}]
      (endpoints/call-ajax-orch
@@ -130,4 +147,5 @@
 
 (defn render [props]
   (assert (every? #(contains? props %) #{:workspace-id :submission-id :workflow-id}))
+
   [WorkflowDetails props])

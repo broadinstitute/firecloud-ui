@@ -162,6 +162,7 @@
                          (react/create-element
                            [monitor-tab/Page {:ref MONITOR
                                               :workspace-id workspace-id
+                                              :workspace workspace
                                               :nav-context (nav/terminate-when (not= tab MONITOR) nav-context)}])
                          :onTabRefreshed #(react/call :refresh (@refs MONITOR))}]
                        :toolbar-right (when-let [analysis-tab (:analysis-tab @state)]
