@@ -135,6 +135,9 @@
   (let [unparsed-values (get unparsed-profile "keyValuePairs")]
     (into {} (map (fn [m] [(keyword (m "key")) (m "value")]) unparsed-values))))
 
+(defn workspace-id->string [workspace-id] 
+  (str (:namespace workspace-id) "/" (:name workspace-id)))
+
 (defn get-id-from-nav-segment [segment]
   (when-not (clojure.string/blank? segment)
     (let [[ns n] (clojure.string/split segment #":")]

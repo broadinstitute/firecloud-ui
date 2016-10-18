@@ -331,7 +331,7 @@
        (react/call :refresh-rows this))
      (when (and (:state-key props)
                 (not (:dragging? @state)))
-       (persistence/save {:key (:state-key props) :state state :except [:display-rows]})))
+       (persistence/save {:key (:state-key props) :state state :only [:columns :query-params :filter-group-index]})))
    :component-will-unmount
    (fn [{:keys [this]}]
      (.removeEventListener js/window "mousemove" (.-onMouseMoveHandler this))
