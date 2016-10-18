@@ -563,9 +563,13 @@
        random-data))})
 
 ;; does this need mock data ??
-(defn get-agora-namespace-acl [namespace is-conf]
-  {:path (str "/" (if is-conf "configurations" "methods" ) "/" namespace "/permissions")
+(defn get-agora-namespace-acl [namespace is-conf?]
+  {:path (str "/" (if is-conf? "configurations" "methods" ) "/" namespace "/permissions")
    :method :get})
+
+(defn post-agora-namespace-acl [namespace is-conf?]
+  {:path (str "/" (if is-conf? "configurations" "methods" ) "/" namespace "/permissions")
+   :method :post})
 
 
 (defn delete-agora-entity [config? ns n sid]
