@@ -8,7 +8,11 @@
   (keyword (str "state:" @utils/current-user ":" key)))
 
 (defn save [{:keys [key state except only]}]
-  (utils/local-storage-write (generate-persistence-key key) (apply dissoc (if only (select-keys @state only) @state) except)))
+  (assert (not (and except only)) "Specify EITHER except OR only")
+  (utils/local-storage-write (generate-persistence-key key)
+    (cond except (apply dissoc @state except)
+          only (select-keys @state only)
+          :else @state)))
 
 (defn try-restore [{:keys [key initial]}]
   (if-let [saved-state (some-> key generate-persistence-key utils/local-storage-read cljs.reader/read-string)]
