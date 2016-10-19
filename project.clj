@@ -15,14 +15,13 @@
   :profiles {:dev {:dependencies [[binaryage/devtools "0.4.1"]]
                    :cljsbuild
                    {:builds {:client {:source-paths ["src/cljsdev"]
-                                      :figwheel {:websocket-host :js-client-host}
+                                      :figwheel true
                                       :compiler
                                       {:main ~(with-ns "dev")
                                        :optimizations :none
                                        :source-map true
                                        :source-map-timestamp true}}}}
-                   :figwheel {:http-server-root ""
-                              :server-port 80}}
+                   :figwheel {:http-server-root ""}}
              :deploy {:cljsbuild
                       {:builds {:client {:source-paths ["src/cljsprod"]
                                          :compiler
