@@ -256,7 +256,8 @@
              :pagination-params (select-keys (:query-params @state) [:current-page :rows-per-page])
              :num-visible-rows (:filtered-count @state)
              :num-total-rows (or (:num-total-rows props) (:grouped-count @state))
-             :on-change #(swap! state update-in [:query-params] merge %)}]])]))
+             :on-change #(swap! state update-in [:query-params] merge %)
+             :initial-rows-per-page (get-in @state [:query-params :rows-per-page])}]])]))
    :get-ordered-columns
    (fn [{:keys [props state]}]
      (vec
