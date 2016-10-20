@@ -12,6 +12,15 @@
     ))
 
 
+;; This is a temporary measure for GAWB-1116.
+;; GAWB-1119 should involve removing this function.
+(defn- process-attribute-value [attr-value]
+  (if (and (map? attr-value)
+           (= #{"itemsType" "items"} (set (keys attr-value))))
+    (join ", " (attr-value "items"))
+    attr-value))
+
+
 (react/defc WorkspaceAttributeViewerEditor
   {:get-attributes
    (fn [{:keys [state]}]
@@ -82,7 +91,7 @@
                                                                         assoc 1 (-> % .-target .-value))}))}]
                         [{:header "Key" :starting-width 300 :as-text name :sort-initial :asc}
                          {:header "Value" :starting-width :remaining
-                          :content-renderer (table-utils/render-gcs-links (:workspace-bucket props))}])
+                          :content-renderer (comp (table-utils/render-gcs-links (:workspace-bucket props)) process-attribute-value)}])
              :data (if editing?
                      (map-indexed (fn [index [key value]]
                                     {:index index :key key :value value})
@@ -94,4 +103,6 @@
    :component-did-update
    (fn [{:keys [prev-props props state]}]
      (when (and (not (:editing? prev-props)) (:editing? props))
-       (swap! state assoc :attributes (mapv (fn [[k v]] [(name k) v]) (:workspace-attributes props)))))})
+       (swap! state assoc :attributes
+              (mapv (fn [[k v]] [(name k) (process-attribute-value v)])
+                    (:workspace-attributes props)))))})
