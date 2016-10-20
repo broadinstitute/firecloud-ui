@@ -42,49 +42,49 @@
               [:div {:style {:display "inline-flex"}}
                [:b {:style {:marginRight "1ex"}} (str left-num " - " right-num)]
                (str "of " (pluralize num-visible-rows " result")
-                 (when-not (= num-visible-rows num-total-rows)
-                   (str " (filtered from " num-total-rows " total)")))]
+                    (when-not (= num-visible-rows num-total-rows)
+                      (str " (filtered from " num-total-rows " total)")))]
               page-component
               (style/create-unselectable
-                :div {:style {:display "inline-flex" :alignItems "baseline"}}
-                [:div {:style {:display "inline-flex" :alignItems "baseline"
-                               :padding "0em 0.9em"
-                               :color (if allow-prev
-                                        (:button-blue style/colors)
-                                        (:border-gray style/colors))
-                               :cursor (when allow-prev "pointer")}
-                       :onClick (when allow-prev #((:on-change props) (update-in pagination-params [:current-page] dec)))}
-                 (icons/icon {:style {:alignSelf "center" :margin "-0.5em 0"}} :angle-left)
-                 "Prev"]
-                [:span {:style {:whiteSpace "nowrap"}}
-                 (map (fn [n]
-                        (let [selected? (= n current-page)]
-                          [:div {:style {:textAlign "center"
-                                         :paddingTop 5 :display "inline-block" :width 29 :height 24
-                                         :backgroundColor (when selected? (:button-blue style/colors))
-                                         :color (if selected? "white" (:button-blue style/colors))
-                                         :borderRadius (when selected? "100%")
-                                         :cursor (when-not selected? "pointer")}
-                                 :onClick (when-not selected? #((:on-change props) (assoc-in pagination-params [:current-page] n)))}
-                           n]))
-                   (create-page-range current-page num-pages))]
-                [:div {:style {:display "inline-flex" :alignItems "baseline"
-                               :padding "0em 0.9em"
-                               :color (if allow-next
-                                        (:button-blue style/colors)
-                                        (:border-gray style/colors))
-                               :cursor (when allow-next "pointer")}
-                       :onClick (when allow-next #((:on-change props) (update-in pagination-params [:current-page] inc)))}
-                 "Next"
-                 (icons/icon {:style {:alignSelf "center" :margin "-0.5em 0"}} :angle-right)])
+               :div {:style {:display "inline-flex" :alignItems "baseline"}}
+               [:div {:style {:display "inline-flex" :alignItems "baseline"
+                              :padding "0em 0.9em"
+                              :color (if allow-prev
+                                       (:button-primary style/colors)
+                                       (:border-light style/colors))
+                              :cursor (when allow-prev "pointer")}
+                      :onClick (when allow-prev #((:on-change props) (update-in pagination-params [:current-page] dec)))}
+                (icons/icon {:style {:alignSelf "center" :margin "-0.5em 0"}} :angle-left)
+                "Prev"]
+               [:span {:style {:whiteSpace "nowrap"}}
+                (map (fn [n]
+                       (let [selected? (= n current-page)]
+                         [:div {:style {:textAlign "center"
+                                        :paddingTop 5 :display "inline-block" :width 29 :height 24
+                                        :backgroundColor (when selected? (:button-primary style/colors))
+                                        :color (if selected? "white" (:button-primary style/colors))
+                                        :borderRadius (when selected? "100%")
+                                        :cursor (when-not selected? "pointer")}
+                                :onClick (when-not selected? #((:on-change props) (assoc-in pagination-params [:current-page] n)))}
+                          n]))
+                     (create-page-range current-page num-pages))]
+               [:div {:style {:display "inline-flex" :alignItems "baseline"
+                              :padding "0em 0.9em"
+                              :color (if allow-next
+                                       (:button-primary style/colors)
+                                       (:border-light style/colors))
+                              :cursor (when allow-next "pointer")}
+                      :onClick (when allow-next #((:on-change props) (update-in pagination-params [:current-page] inc)))}
+                "Next"
+                (icons/icon {:style {:alignSelf "center" :margin "-0.5em 0"}} :angle-right)])
               rows-component
               [:div {:style {:display "inline-flex" :alignItems "baseline"}}
                "Display"
                (style/create-select
-                 {:style {:width 60 :margin "0em 1em"}
-                  :onChange #((:on-change props) {:rows-per-page (nth rows-per-page-options (-> % .-target .-value js/parseInt))
-                                                  :current-page 1})}
-                 rows-per-page-options)
+                {:style {:width 60 :margin "0em 1em"}
+                 :onChange #((:on-change props) {:rows-per-page (nth rows-per-page-options (-> % .-target .-value js/parseInt))
+                                                 :current-page 1})}
+                rows-per-page-options)
                "rows per page"]]
           [:div {:style {:fontSize 13 :lineHeight 1.5 :padding "0 48px"
                          :display "flex" :flexDirection (if narrow? "column" "row")
@@ -179,9 +179,9 @@
 (defn render-header [state props this]
   (let [{:keys [sort-column sort-order]} (:query-params @state)]
     [:div {:style (merge
-                    {:display "flex" :fontWeight 500 :fontSize "80%"
-                     :color "#fff" :backgroundColor (:header-darkgray style/colors)}
-                    (:header-row-style props))}
+                   {:display "flex" :fontWeight 500 :fontSize "80%"
+                    :color "#fff" :backgroundColor (:background-dark style/colors)}
+                   (:header-row-style props))}
      (map
        (fn [column]
          (let [i (:index column)
@@ -248,8 +248,8 @@
                            last? (= index (dec (count (:filter-groups props))))]
                        [:div {:style {:float "left" :textAlign "center"
                                       :backgroundColor (if (= index (:selected-index props))
-                                                         (:button-blue style/colors)
-                                                         (:background-gray style/colors))
+                                                         (:button-primary style/colors)
+                                                         (:background-light style/colors))
                                       :color (when (= index (:selected-index props)) "white")
                                       :padding "1ex" :minWidth 50
                                       :marginLeft (when-not first? -1)
@@ -265,7 +265,7 @@
                              (or (:count item)
                                  (count (filter (:pred item) (:data props))))
                              ")")]))
-        (:filter-groups props))
+                   (:filter-groups props))
       (common/clear-both)])})
 
 
@@ -289,7 +289,7 @@
 (react/defc ColumnEditor
   {:render
    (fn [{:keys [props state refs]}]
-     [:div {:style {:border (str "2px solid " (:line-gray style/colors))
+     [:div {:style {:border (str "2px solid " (:line-default style/colors))
                     :padding "1em" :lineHeight "1.5em" :cursor (when (:drag-active @state) "ns-resize")}
             :onMouseMove (when (:drag-index @state)
                            (fn [e]
@@ -297,10 +297,10 @@
                                    y (.-clientY e)
                                    dist (utils/distance (:start-x @state) (:start-y @state) x y)
                                    div-locs (map
-                                              (fn [i] {:index i :y
-                                                       (-> (@refs (str "div" i))
-                                                           .getBoundingClientRect .-top)})
-                                              (range (inc (count (:columns props)))))
+                                             (fn [i] {:index i :y
+                                                      (-> (@refs (str "div" i))
+                                                          .getBoundingClientRect .-top)})
+                                             (range (inc (count (:columns props)))))
                                    closest-div (apply min-key #(js/Math.abs (- y (:y %))) div-locs)]
                                (when (not= (:index closest-div) (:drop-index @state))
                                  (swap! state assoc :drop-index (:index closest-div)))
@@ -313,7 +313,7 @@
       "Show:"
       (let [style {:padding "4px 8px" :marginRight 5 :borderRadius 5
                    :cursor (when-not (:drag-active @state) "pointer")
-                   :backgroundColor (:button-blue style/colors) :color "#fff"}]
+                   :backgroundColor (:button-primary style/colors) :color "#fff"}]
         [:div {:style {:padding "0.5em 0"}}
          [:span {:style style :onClick #((:on-visibility-change props) :all true)} "All"]
          [:span {:style style :onClick #((:on-visibility-change props) :all false)} "None"]])

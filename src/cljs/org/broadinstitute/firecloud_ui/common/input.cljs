@@ -24,14 +24,14 @@
    :render
    (fn [{:keys [state props]}]
      (style/create-text-field
-       (merge {:ref "textfield"
-               :style (merge (or (:style props) {})
-                             (when (:invalid @state)
-                               {:borderColor (:exception-red style/colors)}))
-               :onChange #(do (swap! state dissoc :invalid)
-                           (when-let [x (:onChange props)]
-                             (x %)))}
-              (dissoc props :ref :style :onChange))))})
+      (merge {:ref "textfield"
+              :style (merge (or (:style props) {})
+                            (when (:invalid @state)
+                              {:borderColor (:exception-state style/colors)}))
+              :onChange #(do (swap! state dissoc :invalid)
+                             (when-let [x (:onChange props)]
+                               (x %)))}
+             (dissoc props :ref :style :onChange))))})
 
 (defn get-text [refs & ids]
   (if (= 1 (count ids))

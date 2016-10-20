@@ -52,17 +52,17 @@
      (when (:allow-edit props)
        [:div {:style {:margin "1em 0"}}
         [:div {:style {:float "left" :width 290 :paddingRight "1em"}}
-         [comps/SidebarButton {:style :light :color :button-blue
+         [comps/SidebarButton {:style :light :color :button-primary
                                :text "Permissions..." :icon :settings
                                :onClick #(modal/push-modal [mca/AgoraPermsEditor {:is-conf config? :selected-entity entity}])}]]
         [:div {:style {:float "left" :width 290}}
-         [comps/SidebarButton {:style :light :color :exception-red
+         [comps/SidebarButton {:style :light :color :exception-state
                                :text "Redact" :icon :delete
                                :onClick #(modal/push-modal [Redactor {:entity entity :config? config?
                                                                       :on-delete (:on-delete props)}])}]]
         (clear-both)])
      [:div {:style {:border style/standard-line
-                    :backgroundColor (:background-gray style/colors)
+                    :backgroundColor (:background-light style/colors)
                     :borderRadius 8 :padding "1em" :marginTop "1em"}}
       [:div {:style {:fontSize "120%" :marginBottom "0.5em"}}
        (if workspace-id "Import as:" "Export to Workspace as:")]

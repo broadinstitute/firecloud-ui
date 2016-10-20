@@ -23,7 +23,7 @@
         :else value))
 
 (defn- render-property [library-schema library-attributes property-key]
-  [:div {:style {:display "flex" :padding "0.5em 0" :borderBottom (str "2px solid " (:line-gray style/colors))}}
+  [:div {:style {:display "flex" :padding "0.5em 0" :borderBottom (str "2px solid " (:line-default style/colors))}}
    [:div {:style {:flexBasis "33%" :fontWeight "bold" :paddingRight "2em"}}
     (get-in library-schema [:properties property-key :title])]
    [:div {:style {:flexBasis "67%"}}
@@ -166,7 +166,7 @@
   {:render
    (fn [{:keys [props]}]
      [comps/SidebarButton
-      {:style :light :color :button-blue :margin :top
+      {:style :light :color :button-primary :margin :top
        :icon :catalog :text "Catalog Dataset..."
        :onClick #(modal/push-modal
                   [LibraryAttributeForm props])}])})
@@ -179,7 +179,7 @@
       (when (:publishing? @state)
         [comps/Blocker {:banner "Publishing..."}])
       [comps/SidebarButton
-       {:style :light :color :button-blue :margin :top
+       {:style :light :color :button-primary :margin :top
         :icon :library :text "Publish in Library"
         :disabled? (:disabled? props)
         :onClick (fn [_]
@@ -201,16 +201,16 @@
       (when (:unpublishing? @state)
         [comps/Blocker {:banner "Unpublishing..."}])
       [comps/SidebarButton
-       {:style :light :color :exception-red :margin :top
+       {:style :light :color :exception-state :margin :top
         :icon :library :text "Unpublish"
         :onClick (fn [_]
                    (swap! state assoc :unpublishing? true)
                    (endpoints/call-ajax-orch
-                     {:endpoint (endpoints/unpublish-workspace (:workspace-id props))
-                      :on-done (fn [{:keys [success? get-parsed-response]}]
-                                 (swap! state dissoc :unpublishing?)
-                                 (if success?
-                                   (do (modal/push-message {:header "Success!"
-                                                            :message "Successfully unpublished workspace"})
-                                       ((:request-refresh props)))
-                                   (modal/push-error-response (get-parsed-response))))}))}]])})
+                    {:endpoint (endpoints/unpublish-workspace (:workspace-id props))
+                     :on-done (fn [{:keys [success? get-parsed-response]}]
+                                (swap! state dissoc :unpublishing?)
+                                (if success?
+                                  (do (modal/push-message {:header "Success!"
+                                                           :message "Successfully unpublished workspace"})
+                                      ((:request-refresh props)))
+                                  (modal/push-error-response (get-parsed-response))))}))}]])})

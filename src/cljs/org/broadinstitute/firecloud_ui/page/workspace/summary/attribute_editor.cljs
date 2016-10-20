@@ -35,62 +35,62 @@
        [:div {}
         (style/create-section-header "Workspace Attributes")
         (style/create-paragraph
-          [:div {}
-           (when editing?
-             [:div {:style {:marginBottom "0.25em"}}
-              [comps/Button {:icon :add :text "Add new"
-                             :onClick (fn [_]
-                                        (swap! state update :attributes conj ["" ""])
-                                        ;; have to do this by ID not ref, since the fields are generated within Table
-                                        (after-update #(.focus (.getElementById js/document "focus"))))}]])
-           [table/Table
-            {:key editing?
-             :reorderable-columns? false :sortable-columns? (not editing?) :filterable? false :pagination :none
-             :empty-message "No Workspace Attributes defined"
-             :row-style {}
-             :always-sort? (not editing?)
-             :header-row-style {:borderBottom (str "2px solid " (:line-gray style/colors))
-                                :backgroundColor "white" :color "black" :fontWeight "bold"}
-             :resize-tab-color (:line-gray style/colors)
-             :columns (if editing?
-                        [{:starting-width 40 :resizable? false :as-text (constantly "Delete")
-                          :content-renderer
-                          (fn [index]
-                            (icons/icon {:style {:color (:exception-red style/colors)
-                                                 :verticalAlign "middle"
-                                                 :cursor "pointer"}
-                                         :onClick #(swap! state update :attributes utils/delete index)}
-                                        :delete))}
-                         {:header "Key" :starting-width 300 :as-text (constantly nil)
-                          :content-renderer
-                          (fn [{:keys [key index]}]
-                            (style/create-text-field (merge
-                                                       {:key index
-                                                        :style {:marginBottom 0 :width "calc(100% - 2px)"}
-                                                        :value key
-                                                        :onChange #(swap! state update-in [:attributes index]
-                                                                          assoc 0 (-> % .-target .-value))}
-                                                       (when (= index (-> (:attributes @state) count dec))
-                                                         {:id "focus"}))))}
-                         {:header "Value" :starting-width :remaining :as-text (constantly nil)
-                          :content-renderer
-                          (fn [{:keys [value index]}]
-                            (style/create-text-field {:key index
+         [:div {}
+          (when editing?
+            [:div {:style {:marginBottom "0.25em"}}
+             [comps/Button {:icon :add :text "Add new"
+                            :onClick (fn [_]
+                                       (swap! state update :attributes conj ["" ""])
+                                       ;; have to do this by ID not ref, since the fields are generated within Table
+                                       (after-update #(.focus (.getElementById js/document "focus"))))}]])
+          [table/Table
+           {:key editing?
+            :reorderable-columns? false :sortable-columns? (not editing?) :filterable? false :pagination :none
+            :empty-message "No Workspace Attributes defined"
+            :row-style {}
+            :always-sort? (not editing?)
+            :header-row-style {:borderBottom (str "2px solid " (:line-default style/colors))
+                               :backgroundColor "white" :color "black" :fontWeight "bold"}
+            :resize-tab-color (:line-default style/colors)
+            :columns (if editing?
+                       [{:starting-width 40 :resizable? false :as-text (constantly "Delete")
+                         :content-renderer
+                         (fn [index]
+                           (icons/icon {:style {:color (:exception-state style/colors)
+                                                :verticalAlign "middle"
+                                                :cursor "pointer"}
+                                        :onClick #(swap! state update :attributes utils/delete index)}
+                                       :delete))}
+                        {:header "Key" :starting-width 300 :as-text (constantly nil)
+                         :content-renderer
+                         (fn [{:keys [key index]}]
+                           (style/create-text-field (merge
+                                                     {:key index
                                                       :style {:marginBottom 0 :width "calc(100% - 2px)"}
-                                                      :value value
+                                                      :value key
                                                       :onChange #(swap! state update-in [:attributes index]
-                                                                        assoc 1 (-> % .-target .-value))}))}]
-                        [{:header "Key" :starting-width 300 :as-text name :sort-initial :asc}
-                         {:header "Value" :starting-width :remaining
-                          :content-renderer (table-utils/render-gcs-links (:workspace-bucket props))}])
-             :data (if editing?
-                     (map-indexed (fn [index [key value]]
-                                    {:index index :key key :value value})
-                                  (:attributes @state))
-                     (:workspace-attributes props))
-             :->row (if editing?
-                      (juxt :index identity identity)
-                      identity)}]])]))
+                                                                        assoc 0 (-> % .-target .-value))}
+                                                     (when (= index (-> (:attributes @state) count dec))
+                                                       {:id "focus"}))))}
+                        {:header "Value" :starting-width :remaining :as-text (constantly nil)
+                         :content-renderer
+                         (fn [{:keys [value index]}]
+                           (style/create-text-field {:key index
+                                                     :style {:marginBottom 0 :width "calc(100% - 2px)"}
+                                                     :value value
+                                                     :onChange #(swap! state update-in [:attributes index]
+                                                                       assoc 1 (-> % .-target .-value))}))}]
+                       [{:header "Key" :starting-width 300 :as-text name :sort-initial :asc}
+                        {:header "Value" :starting-width :remaining
+                         :content-renderer (table-utils/render-gcs-links (:workspace-bucket props))}])
+            :data (if editing?
+                    (map-indexed (fn [index [key value]]
+                                   {:index index :key key :value value})
+                                 (:attributes @state))
+                    (:workspace-attributes props))
+            :->row (if editing?
+                     (juxt :index identity identity)
+                     identity)}]])]))
    :component-did-update
    (fn [{:keys [prev-props props state]}]
      (when (and (not (:editing? prev-props)) (:editing? props))

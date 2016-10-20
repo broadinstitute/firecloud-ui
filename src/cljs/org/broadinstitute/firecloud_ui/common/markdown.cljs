@@ -54,7 +54,7 @@
                  (let [selected? (= mode-key mode)]
                    [:span {:style {:border style/standard-line :padding "3px 8px" :cursor "pointer"
                                    :color (when selected? "white")
-                                   :backgroundColor ((if selected? :button-blue :background-gray) style/colors)}
+                                   :backgroundColor ((if selected? :button-primary :background-light) style/colors)}
                            :onClick #(swap! state assoc :mode mode-key)}
                     label]))
            markdown-view [MarkdownView {:text text}]

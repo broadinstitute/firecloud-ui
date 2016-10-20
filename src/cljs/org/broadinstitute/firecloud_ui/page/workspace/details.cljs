@@ -21,7 +21,7 @@
      (let [{:keys [workspace workspace-error]} props]
        [:div {:style {:position "relative"}}
         (cond workspace-error
-              [:div {:style {:color (:exception-red style/colors)}} workspace-error]
+              [:div {:style {:color (:exception-state style/colors)}} workspace-error]
               workspace
               (when (get-in workspace [:workspace :realm])
                 [:div {:style {}}

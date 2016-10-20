@@ -30,37 +30,37 @@
      (let [attribute-keys (apply union (map #(set (keys (% "attributes"))) (:entities props)))
            columns (fn [source?]
                      (into
-                       [{:header "Entity Type" :starting-width 100}
-                        {:header "Entity Name" :starting-width 200
-                         :as-text #(get-in % [1 "name"]) :sort-by :text
-                         :content-renderer
-                         (fn [[index entity]]
-                           (style/create-link {:text (entity "name")
-                                               :onClick #(swap! state update-in [:selected]
-                                                           (if source? conj disj) index)}))}]
-                       (map (fn [k] {:header k :starting-width 100 :show-initial? false
-                                     :content-renderer
-                                     (fn [attr-value]
-                                       (if (and (map? attr-value)
-                                             (= (set (keys attr-value)) #{"entityType" "entityName"}))
-                                         (attr-value "entityName")
-                                         (default-render attr-value)))})
-                         attribute-keys)))
+                      [{:header "Entity Type" :starting-width 100}
+                       {:header "Entity Name" :starting-width 200
+                        :as-text #(get-in % [1 "name"]) :sort-by :text
+                        :content-renderer
+                        (fn [[index entity]]
+                          (style/create-link {:text (entity "name")
+                                              :onClick #(swap! state update-in [:selected]
+                                                               (if source? conj disj) index)}))}]
+                      (map (fn [k] {:header k :starting-width 100 :show-initial? false
+                                    :content-renderer
+                                    (fn [attr-value]
+                                      (if (and (map? attr-value)
+                                               (= (set (keys attr-value)) #{"entityType" "entityName"}))
+                                        (attr-value "entityName")
+                                        (default-render attr-value)))})
+                           attribute-keys)))
            data (fn [source?]
                   (replace
-                    (mapv vector (range) (:entities props))
-                    (if source?
-                      (difference (-> (:entities props) count range set) (:selected @state))
-                      (:selected @state))))
+                   (mapv vector (range) (:entities props))
+                   (if source?
+                     (difference (-> (:entities props) count range set) (:selected @state))
+                     (:selected @state))))
            ->row (fn [[index entity :as item]]
                    (into
-                     [(entity "entityType")
-                      item]
-                     (map (fn [k] (get-in entity ["attributes" k])) attribute-keys)))
+                    [(entity "entityType")
+                     item]
+                    (map (fn [k] (get-in entity ["attributes" k])) attribute-keys)))
            create-table (fn [source?]
                           [:div {:style {:float (if source? "left" "right") :width box-width
                                          :padding "0.5em" :boxSizing "border-box"
-                                         :backgroundColor "#fff" :border (str "1px solid" (:line-gray style/colors))}}
+                                         :backgroundColor "#fff" :border (str "1px solid" (:line-default style/colors))}}
                            [table/Table {:width :narrow
                                          :empty-message ((if source? :left-empty-text :right-empty-text) props)
                                          :columns (columns source?)

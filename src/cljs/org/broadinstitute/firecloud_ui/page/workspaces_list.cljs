@@ -101,8 +101,8 @@
   {:get-initial-state
    (fn []
      (persistence/try-restore
-       {:key persistence-key
-        :initial {:selected-types (->> access-types (map (juxt identity (constantly true))) (into {}))}}))
+      {:key persistence-key
+       :initial {:selected-types (->> access-types (map (juxt identity (constantly true))) (into {}))}}))
    :render
    (fn [{:keys [props state refs]}]
      (let [max-workspace-name-length (get-max-length get-workspace-name-string (:workspaces props))
@@ -122,16 +122,16 @@
                               :dismiss-self #(swap! state dissoc :show-access-level-select?)
                               :content
                               (react/create-element
-                                [:div {:style {:padding "1em" :border style/standard-line}}
-                                 (map checkbox access-types)])}]))
+                               [:div {:style {:padding "1em" :border style/standard-line}}
+                                (map checkbox access-types)])}]))
         [table/Table
          {:state-key "workspace-table"
           :empty-message "No workspaces to display." :retain-header-on-empty? true
           :cell-padding-left nil
           :header-row-style {:fontWeight nil :fontSize "90%"
-                             :color (:text-light style/colors) :backgroundColor nil}
+                             :color (:text-lighter style/colors) :backgroundColor nil}
           :header-style {:padding "0.5em 0 0.5em 14px"}
-          :resizable-columns? true :reorderable-columns? false :resize-tab-color (:line-gray style/colors)
+          :resizable-columns? true :reorderable-columns? false :resize-tab-color (:line-default style/colors)
           :body-style {:fontSize nil :fontWeight nil
                        :borderLeft style/standard-line :borderRight style/standard-line
                        :borderBottom style/standard-line}
@@ -160,8 +160,8 @@
             :content-renderer (fn [description]
                                 [:div {:style {:paddingLeft 14}}
                                  (if description (-> description split-lines first)
-                                   [:span {:style {:fontStyle "italic"}}
-                                    "No description provided"])])}
+                                                 [:span {:style {:fontStyle "italic"}}
+                                                  "No description provided"])])}
            {:header "Access Level" :starting-width 118 :resizable? false
             :sort-by #(case % "OWNER" 0 "WRITER" 1 "READER" 2 "NO ACCESS" 3 4) :sort-initial :asc
             :content-renderer
@@ -169,19 +169,19 @@
               [:div {:style {:paddingLeft 14}}
                (clojure.string/capitalize accessLevel)])}
            {:header (react/create-element
-                      [:span {:ref "anchor"
-                              :style {:cursor "pointer" :padding "0.1em 0.3em" :borderRadius 2 :marginLeft -14
-                                      :border style/standard-line}
-                              :onClick #(swap! state assoc :show-access-level-select? true)}
-                       "Include..."])
+                     [:span {:ref "anchor"
+                             :style {:cursor "pointer" :padding "0.1em 0.3em" :borderRadius 2 :marginLeft -14
+                                     :border style/standard-line}
+                             :onClick #(swap! state assoc :show-access-level-select? true)}
+                      "Include..."])
             :starting-width 68 :resizable? false :sort-by :none}]
           :data (filter
-                  (->> (:selected-types @state)
-                    (keep (fn [[k v]] (when v k)))
-                    (map access-predicates)
-                    (cons (constantly false)) ;; keeps (apply some-fn) from bombing when the list is empty
-                    (apply some-fn))
-                  (:workspaces props))
+                 (->> (:selected-types @state)
+                      (keep (fn [[k v]] (when v k)))
+                      (map access-predicates)
+                      (cons (constantly false)) ;; keeps (apply some-fn) from bombing when the list is empty
+                      (apply some-fn))
+                 (:workspaces props))
           :->row (fn [ws]
                    (let [ws-name (get-workspace-name-string ws)
                          ws-href (let [x (ws "workspace")] (str (x "namespace") ":" (x "name")))
