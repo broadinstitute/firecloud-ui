@@ -73,6 +73,7 @@
        (let [workflow-name (workflow-name (:label props))
              call-name (call-name (:label props))]
         (style/create-link {:text (:label props)
+                            :target "_blank"
           :href (str moncommon/google-cloud-context (:bucketName props) "/" (:submission-id props)
                      "/" workflow-name "/" (:workflowId props) "/" call-name "/")}))]
       (style/create-link {:text (if (:expanded @state) "Hide" "Show")
@@ -114,8 +115,9 @@
       (create-field "Workflow Log" (style/create-link {:text
         (str moncommon/google-cloud-context bucketName "/" submission-id "/workflow.logs/workflow."
              (workflow "id") ".log" )
+        :target "_blank"
         :href (str moncommon/google-cloud-context bucketName "/" submission-id "/workflow.logs/workflow."
-                   (workflow "workflowId") ".log" )}))
+                   (workflow "id") ".log" )}))
 
    [:div {:style {:marginTop "1em" :fontWeight 500}} "Calls:"]
    (for [[call data] (workflow "calls")]

@@ -25,6 +25,7 @@
       :sort-initial :desc
       :content-renderer (fn [submission]
                           (style/create-link {:text (render-date submission)
+                                              :target "_blank"
                                               :href (nav/create-href nav-context (submission "submissionId"))}))}
      {:header "Status" :as-text #(% "status") :sort-by :text
       :content-renderer (fn [submission]
@@ -40,6 +41,7 @@
      {:header "Submission ID" :starting-width 235
      :content-renderer (fn [submissionId]
                           (style/create-link {:text submissionId
+                                              :target "_blank"
                                               :href (str moncommon/google-cloud-context
                                                          bucketName "/" submissionId "/")}))}]
     :data submissions
