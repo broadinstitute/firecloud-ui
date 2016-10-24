@@ -30,7 +30,7 @@
   {:render
    (fn [{:keys [props refs state this]}]
      [modal/OKCancelForm
-      {:header (str "Permissions for " (:entityType props) " " (:entityName props))
+      {:header (str "Permissions for " (:title props))
        :content
        (react/create-element
          (cond
@@ -76,8 +76,9 @@
            (:error @state) (style/create-server-error-message (cond (= (:error @state) "Forbidden") (str "You are unauthorized to edit this " (clojure.string/lower-case (:entityType props)) ".")
                                                                     :else (:error @state)))
            :else [comps/Spinner {:text
-                                 (str "Loading Permissions for " (:entityType props) " " (:entityName props) "...")}]))
-       :ok-button {:text "Save" :onClick #(react/call :persist-acl this)}}])
+                                 (str "Loading Permissions for " (:title props) "...")}])) ;;
+       :ok-button {:text "Save" :onClick #(react/call :persist-acl this)
+                   :disabled? (cond (= (:error @state) "Forbidden") (str "You are unauthorized to edit this " (clojure.string/lower-case (:entityType props)) "."))}}])
    :component-did-mount
    (fn [{:keys [props state]}]
      (endpoints/call-ajax-orch

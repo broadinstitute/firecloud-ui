@@ -58,7 +58,7 @@
                                                                                   :load-endpoint (let [[name nmsp sid] (map entity ["name" "namespace" "snapshotId"])]
                                                                                                    (endpoints/get-agora-method-acl nmsp name sid config?))
                                                                                   :entityType (entity "entityType") :entityName (mca/get-ordered-name entity)
-                                                                                   }])}]]
+                                                                                  :title (str (entity "entityType") " " (mca/get-ordered-name entity))}])}]]
         [:div {:style {:float "left" :width 290}}
          [comps/SidebarButton {:style :light :color :exception-red
                                :text "Redact" :icon :delete
@@ -247,28 +247,24 @@
       [table/Table
        {:columns [{:header "Type" :starting-width 100}
                   {:header "Namespace" :starting-width 160
-                   :sort-by (fn [m] [(clojure.string/lower-case (m "namespace"))])
+                   :sort-by (fn [m] (clojure.string/lower-case (m "namespace")))
                    :sort-initial :asc
-                   :filter-by (fn [m] (str (m "namespace")))
-                   :as-text (fn [m] (str (m "namespace")))
+                   :filter-by :text
+                   :as-text (fn [m] (m "namespace"))
                    :content-renderer (fn [item]
                                        (style/create-link {:text (str (item "namespace"))
                                                            :onClick #(modal/push-modal [mca/AgoraPermsEditor { :save-endpoint (endpoints/post-agora-namespace-acl (item "namespace") (= :config (:type item)))
                                                                                                                :load-endpoint (endpoints/get-agora-namespace-acl (item "namespace") (= :config (:type item)))
-                                                                                                               :entityType "Namespace" :entityName (item "namespace")}]
-                                                                       )}))}
-                                                          ;; modal ok-button logs when you OPEN the modal ??
+                                                                                                               :entityType "Namespace" :entityName (item "namespace")
+                                                                                                               :title (str "Namespace " (item "namespace"))}])}))}
                   {:header "Name" :starting-width 350
                    :sort-by (fn [m]  [(clojure.string/lower-case (m "name")) (int (m "snapshotId"))])
-                   :filter-by (fn [m] [(m "name") (int (m "snapshotId"))])
+                   :filter-by (fn [m] [(m "name") (str (m "snapshotId"))])
                    :as-text (fn [item] (str (item "namespace") "\n" (item "name") "\nSnapshot ID: " (item "snapshotId")))
                    :content-renderer
                    (fn [item]
                      (style/create-link {:text (style/render-name-id (item "name") (item "snapshotId"))
-                                         :onClick #((:on-item-selected props) item)}))
-                   }
-
-
+                                         :onClick #((:on-item-selected props) item)}))}
                   {:header "Synopsis" :starting-width 160}
                   (table/date-column {:header "Created"})
                   {:header "Referenced Method" :starting-width 250
