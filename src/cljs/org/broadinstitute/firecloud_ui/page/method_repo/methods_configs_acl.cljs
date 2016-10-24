@@ -111,7 +111,7 @@
               :on-done (fn [{:keys [success? get-parsed-response]}]
                          (swap! state dissoc :saving?)
                          (if success?
-                           modal/pop-modal
+                           (modal/pop-modal)
                            (swap! state assoc :save-error (get-parsed-response))))})))))
    :capture-ui-state
    (fn [{:keys [state refs]}]
