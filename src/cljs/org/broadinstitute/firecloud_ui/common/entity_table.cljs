@@ -80,7 +80,7 @@
                                                (is-attribute-list? attr-value)
                                                (let [items (map render-list-item (attr-value "items"))]
                                                  (if (empty? items)
-                                                   "Empty list"
+                                                   "0 items"
                                                    (str (count items) " items: " (join ", " items))))
                                                :else ((:attribute-renderer props) attr-value)))})
                                   attributes)
