@@ -81,6 +81,7 @@
             [Table
              (merge props
                     {:key selected-entity-type
+                     :state-key (str (common/workspace-id->string (:workspace-id props)) ":data-tab:" selected-entity-type)
                      :columns columns
                      :retain-header-on-empty? true
                      :always-sort? true
