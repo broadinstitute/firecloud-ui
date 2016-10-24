@@ -73,13 +73,12 @@
              [:span {:style {:paddingLeft "6px" :verticalAlign "middle"}} "Publicly Readable?"]]
             (style/create-validation-error-message (:validation-error @state))
             [comps/ErrorViewer {:error (:save-error @state)}]]
-           (:error @state) (do (def error-message (atom (cond (= (:error @state) "Forbidden") (str "You are unauthorized to edit this " (clojure.string/lower-case (:entityType props)) ".")
-                                                             :else (:error @state))))
-                             (style/create-server-error-message @error-message))
+           (:error @state) (style/create-server-error-message (cond (= (:error @state) "Forbidden") (str "You are unauthorized to edit this " (clojure.string/lower-case (:entityType props)) ".")
+                                 :else (:error @state)))
            :else [comps/Spinner {:text
                                  (str "Loading Permissions for " (:title props) "...")}]))
-       :ok-button {:text "Save" :onClick #(react/call :persist-acl this)
-                   :disabled? (cond (= (:error @state) "Forbidden") @error-message)}}])
+       :ok-button (when (:acl-vec @state) {:text "Save" :onClick #(react/call :persist-acl this)
+                   :disabled? (cond (= (:error @state) "Forbidden") @error-message)})}])
    :component-did-mount
    (fn [{:keys [props state]}]
      (endpoints/call-ajax-orch
