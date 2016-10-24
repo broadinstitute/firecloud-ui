@@ -13,6 +13,7 @@
     [org.broadinstitute.firecloud-ui.page.workspace.method-configs.launch-analysis :as launch]
     [org.broadinstitute.firecloud-ui.page.workspace.method-configs.publish :as publish]
     [org.broadinstitute.firecloud-ui.utils :as utils]
+    [org.broadinstitute.firecloud-ui.config :as gconfig]
     ))
 
 
@@ -221,6 +222,7 @@
         [:div {:style {:float "right"}}
          (launch/render-button {:workspace-id (:workspace-id props)
                                 :config-id {:namespace (config "namespace") :name (config "name")}
+                                :cromwell-version (gconfig/cromwell-version)
                                 :root-entity-type (config "rootEntityType")
                                 :disabled? (cond (:locked? @state) "This workspace is locked."
                                                  (not (:bucket-access? props))
