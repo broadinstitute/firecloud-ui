@@ -21,10 +21,9 @@
 
 ;; for attributes referring to a list of entities
 ;; e.g. sample sets referring to samples
-(defn- is-ref-list? [attr-value]
-  (and (sequential? attr-value)
-       (map? (first attr-value)) ;; we'll just assume homogeneous lists
-       (= (set (keys (first attr-value))) #{"entityType" "entityName"})))
+(defn- is-attribute-list? [attr-value]
+  (and (map? attr-value)
+       (= (set (keys attr-value)) #{"itemsType" "items"})))
 
 (react/defc EntityTable
   {:refresh
@@ -67,14 +66,15 @@
                                            (fn [attr-value]
                                              (cond
                                                (is-single-ref? attr-value) (attr-value "entityName")
-                                               (is-ref-list? attr-value) (map #(% "entityName") attr-value)
+                                               (is-attribute-list? attr-value) (map #(% "entityName") (attr-value "items"))
                                                :else (str attr-value)))
                                            :content-renderer
                                            (fn [attr-value]
                                              (cond
                                                (is-single-ref? attr-value) (attr-value "entityName")
-                                               (is-ref-list? attr-value) (str (count attr-value) " items: "
-                                                                              (join ", " (map #(% "entityName") attr-value)))
+                                               (is-attribute-list? attr-value)
+                                               (let [items (map #(% "entityName") (attr-value "items"))]
+                                                 (str (count items) " items: " (join ", " items)))
                                                :else ((:attribute-renderer props) attr-value)))})
                                   attributes)
                 columns (vec (cons entity-column attr-columns))]
