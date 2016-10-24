@@ -25,6 +25,11 @@
   (and (map? attr-value)
        (= (set (keys attr-value)) #{"itemsType" "items"})))
 
+(defn- render-list-item [item]
+  (if (is-single-ref? item)
+    (item "entityName")
+    item))
+
 (react/defc EntityTable
   {:refresh
    (fn [{:keys [props state]} & [entity-type]]
@@ -66,15 +71,17 @@
                                            (fn [attr-value]
                                              (cond
                                                (is-single-ref? attr-value) (attr-value "entityName")
-                                               (is-attribute-list? attr-value) (map #(% "entityName") (attr-value "items"))
+                                               (is-attribute-list? attr-value) (map render-list-item (attr-value "items"))
                                                :else (str attr-value)))
                                            :content-renderer
                                            (fn [attr-value]
                                              (cond
                                                (is-single-ref? attr-value) (attr-value "entityName")
                                                (is-attribute-list? attr-value)
-                                               (let [items (map #(% "entityName") (attr-value "items"))]
-                                                 (str (count items) " items: " (join ", " items)))
+                                               (let [items (map render-list-item (attr-value "items"))]
+                                                 (if (empty? items)
+                                                   "Empty list"
+                                                   (str (count items) " items: " (join ", " items))))
                                                :else ((:attribute-renderer props) attr-value)))})
                                   attributes)
                 columns (vec (cons entity-column attr-columns))]
