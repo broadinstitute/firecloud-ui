@@ -120,7 +120,7 @@
                {:endpoint (endpoints/get-entities-paginated (:workspace-id props) type
                                                             {"page" current-page
                                                              "pageSize" rows-per-page
-                                                             "filterTerms" (js/encodeURIComponent filter-text)
+                                                             "filterTerms" filter-text
                                                              "sortField" sort-field
                                                              "sortDirection" (name sort-order)})
                 :on-done (fn [{:keys [success? get-parsed-response status-text status-code]}]
