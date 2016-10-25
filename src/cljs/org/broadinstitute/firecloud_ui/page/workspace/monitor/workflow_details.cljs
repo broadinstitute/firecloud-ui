@@ -27,7 +27,6 @@
 (defn- workflow-name [callName]
   (first (string/split callName ".")))
 
-
 (defn- call-name [callName]
   (string/join "." (rest (string/split callName "."))))
 
@@ -74,6 +73,7 @@
              call-name (call-name (:label props))]
         (style/create-link {:text (:label props)
                             :target "_blank"
+                            :style {:color "-webkit-link" :textDecoration "underline"}
           :href (str moncommon/google-cloud-context (:bucketName props) "/" (:submission-id props)
                      "/" workflow-name "/" (:workflowId props) "/" call-name "/")}))]
       (style/create-link {:text (if (:expanded @state) "Hide" "Show")
@@ -101,7 +101,16 @@
   [:div {:style {:padding "1em" :border style/standard-line :borderRadius 4
                  :backgroundColor (:background-gray style/colors)}}
    [:div {}
-    (create-field "Workflow ID" (workflow "id"))
+    (let [calls (workflow "calls")
+          inputs (first (first (workflow "calls")))
+          input-names (string/split inputs ".")
+          workflow-name (first input-names)]
+    (create-field "Workflow ID" (style/create-link {:text (workflow "id")
+                                                    :target "_blank"
+                                                    :style {:color "-webkit-link" :textDecoration "underline"}
+                                                    :href (str moncommon/google-cloud-context
+                                                               bucketName "/" submission-id  "/"
+                                                               workflow-name "/" (workflow "id") "/")})))
     (let [status (workflow "status")]
       (create-field "Status" (moncommon/icon-for-wf-status status) status))
     (when (workflow "submission")
@@ -112,12 +121,13 @@
       (create-field "Ended" (moncommon/render-date (workflow "end"))))
     [IODetail {:label "Inputs" :data (workflow "inputs")}]
     [IODetail {:label "Outputs" :data (workflow "outputs")}]]
+    [:div {:style {:whiteSpace "nowrap"}}
       (create-field "Workflow Log" (style/create-link {:text
-        (str moncommon/google-cloud-context bucketName "/" submission-id "/workflow.logs/workflow."
-             (workflow "id") ".log" )
+        (str "workflow." (workflow "id") ".log" )
+        :style {:marginLeft "0.5em" :color "-webkit-link" :textDecoration "underline"}
         :target "_blank"
         :href (str moncommon/google-cloud-context bucketName "/" submission-id "/workflow.logs/workflow."
-                   (workflow "id") ".log" )}))
+                   (workflow "id") ".log" )}))]
 
    [:div {:style {:marginTop "1em" :fontWeight 500}} "Calls:"]
    (for [[call data] (workflow "calls")]
@@ -127,13 +137,15 @@
 (react/defc WorkflowDetails
   {:render
    (fn [{:keys [state props]}]
-     (let [server-response (:server-response @state) submission-id (props "submission-id") bucketName (props "bucketName")]
+     (let [server-response (:server-response @state)
+           submission-id (props "submission-id")
+           bucketName (props "bucketName")]
        (cond
          (nil? server-response)
          [:div {} [comps/Spinner {:text "Loading workflow details..."}]]
          (not (:success? server-response))
          (style/create-server-error-message (:response server-response))
-         :else 
+         :else
          (render-workflow-detail (:response server-response) (:submission-id props) (:bucketName props) ))))
    :component-did-mount
    (fn [{:keys [props state]}]

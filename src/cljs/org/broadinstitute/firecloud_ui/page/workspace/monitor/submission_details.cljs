@@ -73,6 +73,8 @@
                          workflow-name (first input-names)
                          workflowId (workflow "workflowId")]
                    (style/create-link {:text workflowId
+                                       :target "_blank"
+                                       :style {:color "-webkit-link" :textDecoration "underline"}
                      :href (str moncommon/google-cloud-context bucketName "/" submission-id  "/"
                                 workflow-name "/" workflowId "/")})))}]
        :filter-groups
@@ -169,8 +171,12 @@
              [:div {} (submission "submitter")]
              (let [m (js/moment (submission "submissionDate"))]
                [:div {} (.format m "LLL") " (" (.fromNow m) ")"]))
-           (style/create-section-header "Submission ID")
-           (style/create-paragraph (submission "submissionId"))]
+                (style/create-section-header "Submission ID")
+                (style/create-link {:text (style/create-paragraph (submission "submissionId"))
+                               :target "_blank"
+                               :style {:color "-webkit-link" :textDecoration "underline"}
+                               :href (str moncommon/google-cloud-context
+                                  (:bucketName props) "/" (submission "submissionId") "/")})]
           (common/clear-both)
           [:h2 {:style {:paddingBottom "0.5em"}} "Workflows:"]
           [WorkflowsTable {:workflows (submission "workflows")

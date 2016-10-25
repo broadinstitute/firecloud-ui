@@ -187,6 +187,7 @@
                 [comps/Spinner {:height "1.5ex"}]]
            true (style/create-link {:text bucketName
                                     :href (str moncommon/google-cloud-context bucketName "/")
+                                    :style {:color "-webkit-link" :textDecoration "underline"}
                                     :title "Click to open the Google Cloud Storage browser for this bucket"
                                     :target "_blank"})
            false bucketName))
