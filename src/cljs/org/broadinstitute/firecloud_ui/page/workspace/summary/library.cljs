@@ -63,22 +63,19 @@
   (when-not (= value ENUM_EMPTY_CHOICE)
     value))
 
-;; TODO: replace this once non-string types work
-;(defn- resolve-field [value {:keys [type items]}]
-;  (case type
-;    "string" (not-empty value)
-;    "integer" (int value)
-;    "array" (not-empty
-;              (let [parsed (clojure.string/split value #"\s*,\s*")]
-;                (case (:type items)
-;                  "string" (remove empty? parsed)
-;                  "integer" (map int parsed)
-;                  (do (utils/log "unknown array type: " (:type items))
-;                      parsed))))
-;    (do (utils/log "unknown type: " type)
-;        value)))
-(defn- resolve-field [value _]
-  (not-empty value))
+(defn- resolve-field [value {:keys [type items]}]
+  (case type
+    "string" (not-empty value)
+    "integer" (int value)
+    "array" (not-empty
+              (let [parsed (clojure.string/split value #"\s*,\s*")]
+                (case (:type items)
+                  "string" (remove empty? parsed)
+                  "integer" (map int parsed)
+                  (do (utils/log "unknown array type: " (:type items))
+                      parsed))))
+    (do (utils/log "unknown type: " type)
+        value)))
 
 (react/defc LibraryAttributeForm
   {:get-initial-state
