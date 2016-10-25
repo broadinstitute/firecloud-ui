@@ -77,8 +77,7 @@
                                  :else (:error @state)))
            :else [comps/Spinner {:text
                                  (str "Loading Permissions for " (:title props) "...")}]))
-       :ok-button (when (:acl-vec @state) {:text "Save" :onClick #(react/call :persist-acl this)
-                   :disabled? (cond (= (:error @state) "Forbidden") @error-message)})}])
+       :ok-button (when (:acl-vec @state) {:text "Save" :onClick #(react/call :persist-acl this)})}])
    :component-did-mount
    (fn [{:keys [props state]}]
      (endpoints/call-ajax-orch
