@@ -252,11 +252,12 @@
                    :filter-by :text
                    :as-text (fn [m] (m "namespace"))
                    :content-renderer (fn [item]
-                                       (style/create-link {:text (str (item "namespace"))
+                                       (if (:in-workspace? props) (item "namespace")
+                                         (style/create-link {:text (str (item "namespace"))
                                                            :onClick #(modal/push-modal [mca/AgoraPermsEditor { :save-endpoint (endpoints/post-agora-namespace-acl (item "namespace") (= :config (:type item)))
                                                                                                                :load-endpoint (endpoints/get-agora-namespace-acl (item "namespace") (= :config (:type item)))
                                                                                                                :entityType "Namespace" :entityName (item "namespace")
-                                                                                                               :title (str "Namespace " (item "namespace"))}])}))}
+                                                                                                               :title (str "Namespace " (item "namespace"))}])})))}
                   {:header "Name" :starting-width 350
                    :sort-by (fn [m]  [(clojure.string/lower-case (m "name")) (int (m "snapshotId"))])
                    :filter-by (fn [m] [(m "name") (str (m "snapshotId"))])
@@ -337,5 +338,6 @@
                  :allow-edit (:allow-edit props)
                  :after-import (:after-import props)}]))
       [Table {:ref "table"
+              :in-workspace? (:workspace-id props)
               :hidden? (:selected-item @state)
               :on-item-selected #(swap! state assoc :selected-item %)}]])})
