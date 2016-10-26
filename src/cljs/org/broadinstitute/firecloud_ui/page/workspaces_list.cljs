@@ -84,9 +84,10 @@
 (defn- get-max-length [func workspaces]
   (->> workspaces (map func) (map count) (apply max)))
 
-(def ^:private access-types ["Owner" "Writer" "Reader" "No Access" "TCGA Open Access" "TCGA Protected Access"])
+(def ^:private access-types ["Project Owner" "Owner" "Writer" "Reader" "No Access" "TCGA Open Access" "TCGA Protected Access"])
 (def ^:private access-predicates
-  {"Owner" #(= "OWNER" (% "accessLevel"))
+  {"Project Owner" #(= "PROJECT_OWNER" (% "accessLevel"))
+   "Owner" #(= "OWNER" (% "accessLevel"))
    "Writer" #(= "WRITER" (% "accessLevel"))
    "Reader" #(= "READER" (% "accessLevel"))
    "No Access" #(= "NO ACCESS" (% "accessLevel"))

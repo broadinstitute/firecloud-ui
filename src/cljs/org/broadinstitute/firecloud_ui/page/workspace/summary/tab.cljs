@@ -229,7 +229,7 @@
          [:div {:style {:textAlign "center" :padding "1em"}}
           [comps/Spinner {:text "Loading workspace..."}]]
          :else
-         (let [owner? (= "OWNER" (:accessLevel workspace))
+         (let [owner? (or (= "PROJECT_OWNER" (:accessLevel workspace)) (= "OWNER" (:accessLevel workspace)))
                writer? (or owner? (= "WRITER" (:accessLevel workspace)))
                derived {:owner? owner? :writer? writer? :request-refresh #(react/call :refresh this)}]
            [:div {:style {:margin "45px 25px" :display "flex"}}
