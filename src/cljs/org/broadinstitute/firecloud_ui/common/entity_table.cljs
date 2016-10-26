@@ -19,12 +19,6 @@
   (and (map? attr-value)
        (= (set (keys attr-value)) #{"entityType" "entityName"})))
 
-;; for attributes referring to a list of entities
-;; e.g. sample sets referring to samples
-(defn- is-attribute-list? [attr-value]
-  (and (map? attr-value)
-       (= (set (keys attr-value)) #{"itemsType" "items"})))
-
 (defn- render-list-item [item]
   (if (is-single-ref? item)
     (item "entityName")
@@ -71,14 +65,14 @@
                                            (fn [attr-value]
                                              (cond
                                                (is-single-ref? attr-value) (attr-value "entityName")
-                                               (is-attribute-list? attr-value) (map render-list-item (attr-value "items"))
+                                               (common/attribute-list? attr-value) (map render-list-item (common/attribute-values attr-value))
                                                :else (str attr-value)))
                                            :content-renderer
                                            (fn [attr-value]
                                              (cond
                                                (is-single-ref? attr-value) (attr-value "entityName")
-                                               (is-attribute-list? attr-value)
-                                               (let [items (map render-list-item (attr-value "items"))]
+                                               (common/attribute-list? attr-value)
+                                               (let [items (map render-list-item (common/attribute-values attr-value))]
                                                  (if (empty? items)
                                                    "0 items"
                                                    (str (count items) " items: " (join ", " items))))

@@ -20,6 +20,7 @@
 
 (defn- render-value [value]
   (cond (sequential? value) (clojure.string/join ", " value)
+        (common/attribute-list? value) (clojure.string/join ", " (common/attribute-values value))
         :else value))
 
 (defn- render-property [library-schema library-attributes property-key]
