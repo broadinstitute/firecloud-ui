@@ -204,11 +204,11 @@
         :onClick (fn [_]
                    (swap! state assoc :unpublishing? true)
                    (endpoints/call-ajax-orch
-                    {:endpoint (endpoints/unpublish-workspace (:workspace-id props))
-                     :on-done (fn [{:keys [success? get-parsed-response]}]
-                                (swap! state dissoc :unpublishing?)
-                                (if success?
-                                  (do (modal/push-message {:header "Success!"
-                                                           :message "Successfully unpublished workspace"})
-                                      ((:request-refresh props)))
-                                  (modal/push-error-response (get-parsed-response))))}))}]])})
+                     {:endpoint (endpoints/unpublish-workspace (:workspace-id props))
+                      :on-done (fn [{:keys [success? get-parsed-response]}]
+                                 (swap! state dissoc :unpublishing?)
+                                 (if success?
+                                   (do (modal/push-message {:header "Success!"
+                                                            :message "This dataset is no longer displayed in the Data Library catalog."})
+                                       ((:request-refresh props)))
+                                   (modal/push-error-response (get-parsed-response))))}))}]])})
