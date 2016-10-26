@@ -30,8 +30,7 @@
   {:render
    (fn [{:keys [props refs state this]}]
      [modal/OKCancelForm
-      {:header (let [sel-ent (:selected-entity props)]
-                 (str "Permissions for " (sel-ent "entityType") " " (get-ordered-name sel-ent)))
+      {:header (str "Permissions for " (:title props))
        :content
        (react/create-element
         (cond
@@ -74,18 +73,15 @@
             [:span {:style {:paddingLeft "6px" :verticalAlign "middle"}} "Publicly Readable?"]]
            (style/create-validation-error-message (:validation-error @state))
            [comps/ErrorViewer {:error (:save-error @state)}]]
-          (:error @state) (style/create-server-error-message (:error @state))
+          (:error @state) (style/create-server-error-message (cond (= (:error @state) "Forbidden") (str "You are unauthorized to edit this " (clojure.string/lower-case (:entityType props)) ".")
+                                                                   :else (:error @state)))
           :else [comps/Spinner {:text
-                                (str "Loading Permissions for "
-                                     ((:selected-entity props) "entityType") " "
-                                     (get-ordered-name (:selected-entity props))
-                                     "...")}]))
-       :ok-button {:text "Save" :onClick #(react/call :persist-acl this)}}])
+                                (str "Loading Permissions for " (:title props) "...")}]))
+       :ok-button (when (:acl-vec @state) {:text "Save" :onClick #(react/call :persist-acl this)})}])
    :component-did-mount
    (fn [{:keys [props state]}]
      (endpoints/call-ajax-orch
-      {:endpoint (let [[name nmsp sid] (map (:selected-entity props) ["name" "namespace" "snapshotId"])]
-                   (endpoints/get-agora-method-acl nmsp name sid (:is-conf props)))
+      {:endpoint (:load-endpoint props)
        :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                   (if success?
                     (let [response-vec (mapv utils/keywordize-keys (get-parsed-response))
@@ -109,13 +105,13 @@
                                               (if (:public-status @state) reader-level no-access-level)})]
            (swap! state assoc :saving? true)
            (endpoints/call-ajax-orch
-            {:endpoint (endpoints/persist-agora-method-acl (:selected-entity props))
+            {:endpoint (:save-endpoint props)
              :headers utils/content-type=json
              :payload non-empty-acls-w-public
              :on-done (fn [{:keys [success? get-parsed-response]}]
                         (swap! state dissoc :saving?)
                         (if success?
-                          modal/pop-modal
+                          (modal/pop-modal)
                           (swap! state assoc :save-error (get-parsed-response))))})))))
    :capture-ui-state
    (fn [{:keys [state refs]}]

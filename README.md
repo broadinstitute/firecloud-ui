@@ -37,10 +37,10 @@ Watch files and rebuild whenever a file is saved:
 
 Watch files, rebuild, and reload changes into the running browser window:
 ```
-./script/start-hot-reloader.sh
+./config/start-server.sh
 ```
 
-For this build, you must be viewing the application via HTTP, not HTTPS. HTTPS is not supported by Figwheel. Also, set FIGWHEEL_HOST in your environment to point to your docker machine's IP address so the Figwheel client in the browser can connect to the Figwheel server.
+For this build, you must be viewing the application via HTTP, not HTTPS. HTTPS is not supported by Figwheel.
 
 This can take around 20 seconds to completely start. When ready, it will display the following message:
 ```

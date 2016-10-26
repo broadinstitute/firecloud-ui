@@ -11,7 +11,7 @@
     ))
 
 
-(def ^:private access-levels ["OWNER" "WRITER" "READER" "NO ACCESS"])
+(def ^:private access-levels ["PROJECT_OWNER" "OWNER" "WRITER" "READER" "NO ACCESS"])
 
 
 (defn- render-acl-content [props state this]

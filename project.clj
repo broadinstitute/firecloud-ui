@@ -12,17 +12,17 @@
    [cljsjs/marked "0.3.5-0"]
    ]
   :plugins [[lein-cljsbuild "1.1.2"] [lein-figwheel "0.5.0-5"] [lein-resource "15.10.2"]]
-  :profiles {:dev {:dependencies [[binaryage/devtools "0.4.1"]]
+  :profiles {:dev {:dependencies [[binaryage/devtools "0.8.2"]]
                    :cljsbuild
-                   {:builds {:client {:source-paths ["src/cljsdev"]
-                                      :figwheel {:websocket-host :js-client-host}
+                   {:builds {:client {:preloads [devtools.preload]
+                                      :source-paths ["src/cljsdev"]
+                                      :figwheel true
                                       :compiler
                                       {:main ~(with-ns "dev")
                                        :optimizations :none
                                        :source-map true
                                        :source-map-timestamp true}}}}
-                   :figwheel {:http-server-root ""
-                              :server-port 80}}
+                   :figwheel {:http-server-root ""}}
              :deploy {:cljsbuild
                       {:builds {:client {:source-paths ["src/cljsprod"]
                                          :compiler

@@ -54,7 +54,11 @@
         [:div {:style {:float "left" :width 290 :paddingRight "1em"}}
          [comps/SidebarButton {:style :light :color :button-primary
                                :text "Permissions..." :icon :settings
-                               :onClick #(modal/push-modal [mca/AgoraPermsEditor {:is-conf config? :selected-entity entity}])}]]
+                               :onClick #(modal/push-modal [mca/AgoraPermsEditor {:save-endpoint (endpoints/persist-agora-method-acl entity)
+                                                                                  :load-endpoint (let [[name nmsp sid] (map entity ["name" "namespace" "snapshotId"])]
+                                                                                                   (endpoints/get-agora-method-acl nmsp name sid config?))
+                                                                                  :entityType (entity "entityType") :entityName (mca/get-ordered-name entity)
+                                                                                  :title (str (entity "entityType") " " (mca/get-ordered-name entity))}])}]]
         [:div {:style {:float "left" :width 290}}
          [comps/SidebarButton {:style :light :color :exception-state
                                :text "Redact" :icon :delete
@@ -242,16 +246,29 @@
       :else
       [table/Table
        {:columns [{:header "Type" :starting-width 100}
-                  {:header "Item" :starting-width 450
-                   :sort-by (fn [m]
-                              [(m "namespace") (m "name") (int (m "snapshotId"))])
-                   :filter-by (fn [m]
-                                (clojure.string/join "/" (map m ["namespace" "name" "snapshotId"])))
+                  {:header "Namespace" :starting-width 160
+                   :sort-by (fn [m] (clojure.string/lower-case (m "namespace")))
                    :sort-initial :asc
+                   :filter-by :text
+                   :as-text (fn [m] (m "namespace"))
+                   :content-renderer (fn [item]
+                                       (if (:in-workspace? props)
+                                         (item "namespace")
+                                         (style/create-link
+                                           {:text (str (item "namespace"))
+                                            :onClick #(modal/push-modal
+                                                        [mca/AgoraPermsEditor
+                                                         {:save-endpoint (endpoints/post-agora-namespace-acl (item "namespace") (= :config (:type item)))
+                                                          :load-endpoint (endpoints/get-agora-namespace-acl (item "namespace") (= :config (:type item)))
+                                                          :entityType "Namespace" :entityName (item "namespace")
+                                                          :title (str "Namespace " (item "namespace"))}])})))}
+                  {:header "Name" :starting-width 350
+                   :sort-by (fn [m]  [(clojure.string/lower-case (m "name")) (int (m "snapshotId"))])
+                   :filter-by (fn [m] [(m "name") (str (m "snapshotId"))])
                    :as-text (fn [item] (str (item "namespace") "\n" (item "name") "\nSnapshot ID: " (item "snapshotId")))
                    :content-renderer
                    (fn [item]
-                     (style/create-link {:text (style/render-entity (item "namespace") (item "name") (item "snapshotId"))
+                     (style/create-link {:text (style/render-name-id (item "name") (item "snapshotId"))
                                          :onClick #((:on-item-selected props) item)}))}
                   {:header "Synopsis" :starting-width 160}
                   (table/date-column {:header "Created"})
@@ -274,6 +291,7 @@
         :data (concat (:methods @state) (:configs @state))
         :->row (fn [item]
                  [(item "entityType")
+                  item
                   item
                   (item "synopsis")
                   (item "createDate")
@@ -324,5 +342,6 @@
                  :allow-edit (:allow-edit props)
                  :after-import (:after-import props)}]))
       [Table {:ref "table"
+              :in-workspace? (:workspace-id props)
               :hidden? (:selected-item @state)
               :on-item-selected #(swap! state assoc :selected-item %)}]])})
