@@ -92,12 +92,12 @@
        :div {:style {:position (when-not sidebar-visible? "fixed")
                      :top (when-not sidebar-visible? 0)
                      :width 270}}
-       (when (and curator? writer?)
+       (when (and curator? writer? (not editing?))
          [library/CatalogButton {:library-schema library-schema
                                  :workspace workspace
                                  :workspace-id workspace-id
                                  :request-refresh request-refresh}])
-       (when (and curator? owner?)
+       (when (and curator? owner? (not editing?))
          (if (:published library-attributes)
            [library/UnpublishButton {:workspace-id workspace-id
                                      :request-refresh request-refresh}]
@@ -263,15 +263,19 @@
      (swap! locals assoc :scroll-handler
             (fn []
               (when-let [sidebar (@refs "sidebar")]
-                (let [visible (< (.-scrollY js/window) (.-offsetTop sidebar)) ]
+                (let [visible (< (.-scrollY js/window) (.-offsetTop sidebar))]
                   (when-not (= visible (:sidebar-visible? @state))
                     (swap! state assoc :sidebar-visible? visible))))))
      (.addEventListener js/window "scroll" (:scroll-handler @locals)))
+   :component-did-update
+   (fn [{:keys [locals]}]
+     ((:scroll-handler @locals)))
    :component-will-unmount
    (fn [{:keys [locals]}]
      (.removeEventListener js/window "scroll" (:scroll-handler @locals)))
    :refresh
    (fn [{:keys [props state]}]
+     (swap! state dissoc :server-response)
      ((:request-refresh props))
      (endpoints/call-ajax-orch
        {:endpoint (endpoints/count-submissions (:workspace-id props))
