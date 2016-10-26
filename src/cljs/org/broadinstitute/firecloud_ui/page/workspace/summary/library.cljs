@@ -33,7 +33,7 @@
   {:render
    (fn [{:keys [props state]}]
      (let [{:keys [library-attributes library-schema]} props
-           primary-properties [:indication :numSubjects :datatype :dataUseRestriction] ;; TODO replace with new field from schema
+           primary-properties [:library:indication :library:numSubjects :library:datatype :library:dataUseRestriction] ;; TODO replace with new field from schema
            secondary-properties (->> (calculate-display-properties library-schema)
                                      (remove (partial contains? (set primary-properties))))]
        [:div {}
