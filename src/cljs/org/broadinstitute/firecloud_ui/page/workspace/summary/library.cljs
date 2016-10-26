@@ -20,6 +20,7 @@
 
 (defn- render-value [value]
   (cond (sequential? value) (clojure.string/join ", " value)
+        (common/attribute-list? value) (clojure.string/join ", " (common/attribute-values value))
         :else value))
 
 (defn- render-property [library-schema library-attributes property-key]
@@ -33,7 +34,7 @@
   {:render
    (fn [{:keys [props state]}]
      (let [{:keys [library-attributes library-schema]} props
-           primary-properties [:indication :numSubjects :datatype :dataUseRestriction] ;; TODO replace with new field from schema
+           primary-properties [:library:indication :library:numSubjects :library:datatype :library:dataUseRestriction] ;; TODO replace with new field from schema
            secondary-properties (->> (calculate-display-properties library-schema)
                                      (remove (partial contains? (set primary-properties))))]
        [:div {}
@@ -63,22 +64,19 @@
   (when-not (= value ENUM_EMPTY_CHOICE)
     value))
 
-;; TODO: replace this once non-string types work
-;(defn- resolve-field [value {:keys [type items]}]
-;  (case type
-;    "string" (not-empty value)
-;    "integer" (int value)
-;    "array" (not-empty
-;              (let [parsed (clojure.string/split value #"\s*,\s*")]
-;                (case (:type items)
-;                  "string" (remove empty? parsed)
-;                  "integer" (map int parsed)
-;                  (do (utils/log "unknown array type: " (:type items))
-;                      parsed))))
-;    (do (utils/log "unknown type: " type)
-;        value)))
-(defn- resolve-field [value _]
-  (not-empty value))
+(defn- resolve-field [value {:keys [type items]}]
+  (case type
+    "string" (not-empty value)
+    "integer" (int value)
+    "array" (not-empty
+              (let [parsed (clojure.string/split value #"\s*,\s*")]
+                (case (:type items)
+                  "string" (remove empty? parsed)
+                  "integer" (map int parsed)
+                  (do (utils/log "unknown array type: " (:type items))
+                      parsed))))
+    (do (utils/log "unknown type: " type)
+        value)))
 
 (react/defc LibraryAttributeForm
   {:get-initial-state
@@ -125,7 +123,7 @@
                        [input/TextField {:ref pk-str
                                          :style {:width "100%"}
                                          :placeholder inputHint
-                                         :defaultValue (get existing property-key default)
+                                         :defaultValue (render-value (get existing property-key default))
                                          :predicates [(when required?
                                                         (input/nonempty pk-str))
                                                       (when (= type "integer")

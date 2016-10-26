@@ -98,7 +98,7 @@
                                  :workspace-id workspace-id
                                  :request-refresh request-refresh}])
        (when (and curator? owner? (not editing?))
-         (if (:published library-attributes)
+         (if (:library:published library-attributes)
            [library/UnpublishButton {:workspace-id workspace-id
                                      :request-refresh request-refresh}]
            [library/PublishButton {:disabled? (when (empty? library-attributes)
