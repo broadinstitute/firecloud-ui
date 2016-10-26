@@ -58,7 +58,7 @@
       :row-style (fn [row-index row-data]
                    {:backgroundColor
                     (cond (= (entity->id (first row-data)) (:selected-entity @state)) "yellow"
-                      (even? row-index) (:background-gray style/colors)
+                      (even? row-index) (:background-light style/colors)
                       :else "#fff")})
       :entity-name-renderer (fn [e]
                               (let [entity-id (entity->id e)]
@@ -72,7 +72,7 @@
    (let [disabled (= (:root-entity-type props) (get-in @state [:selected-entity :type]))]
      (style/create-text-field {:placeholder "leave blank for default"
                                :style {:width "100%"
-                                       :backgroundColor (when disabled (:background-gray style/colors))}
+                                       :backgroundColor (when disabled (:background-light style/colors))}
                                :disabled disabled
                                :value (if disabled
                                         "Disabled - selected entity is of root entity type"
@@ -84,8 +84,8 @@
        [:div {:style {:textAlign "center"}}
         [:div {:style {:display "inline-flex" :alignItems "center" :margin "1em 0 -1em 0" :padding "0.5em"
                        :backgroundColor "white" :border style/standard-line :borderRadius 3}}
-         (icons/icon {:style {:color (:exception-red style/colors) :marginRight 5 :verticalAlign "middle"}}
-           :warning-triangle)
+         (icons/icon {:style {:color (:exception-state style/colors) :marginRight 5 :verticalAlign "middle"}}
+                     :warning-triangle)
          (str "Warning: This will launch " wf-count " workflows")]]))
    (style/create-validation-error-message (:validation-errors @state))
    [comps/ErrorViewer {:error (:launch-server-error @state)}]])

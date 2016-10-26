@@ -36,7 +36,7 @@
 (react/defc CompleteIcon
   {:get-default-props
    (fn []
-     {:color (:success-green style/colors)
+     {:color (:success-state style/colors)
       :size 24})
    :render
    (fn [{:keys [props]}]
@@ -51,7 +51,7 @@
 (react/defc RunningIcon
   {:get-default-props
    (fn []
-     {:color (:success-green style/colors)
+     {:color (:success-state style/colors)
       :size 24})
    :render
    (fn [{:keys [props]}]

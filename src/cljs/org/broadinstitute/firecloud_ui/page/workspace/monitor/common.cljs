@@ -38,16 +38,16 @@
     (pos? (count (submission "notstarted")))))
 
 (def ^:private success-icon
-  (icons/icon {:style {:color (:success-green style/colors) :fontSize 12 :marginRight 4}}
-    :done))
+  (icons/icon {:style {:color (:success-state style/colors) :fontSize 12 :marginRight 4}}
+              :done))
 (def ^:private running-icon
   [:span {:style {:display "inline-flex" :alignItems "center" :justifyContent "center" :verticalAlign "middle"
-                  :backgroundColor (:running-blue style/colors)
+                  :backgroundColor (:running-state style/colors)
                   :width 16 :height 16 :borderRadius 3 :margin "-4px 4px 0 0"}}
    [icons/RunningIcon {:size 12}]])
 (def ^:private failure-icon
   [:span {:style {:display "inline-flex" :alignItems "center" :justifyContent "center" :verticalAlign "middle"
-                  :backgroundColor (:exception-red style/colors)
+                  :backgroundColor (:exception-state style/colors)
                   :width 16 :height 16 :borderRadius 3 :margin "-4px 4px 0 0"}}
    [icons/ExceptionIcon {:size 12}]])
 

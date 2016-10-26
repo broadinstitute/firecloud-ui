@@ -24,7 +24,7 @@
 
 ; Temporary replacement for the Broad Logo.
 (defn- text-logo []
-  [:div {:style {:fontSize "32px" :color (:button-blue style/colors) :fontWeight "bold"}}
+  [:div {:style {:fontSize "32px" :color (:button-primary style/colors) :fontWeight "bold"}}
    "FireCloud"])
 
 
@@ -83,14 +83,14 @@
                (fn [{:keys [props state]}]
                  [:a {:href (:href props)
                       :target (:target props)
-                      :style {:color (:footer-text style/colors)
+                      :style {:color (:text-lightest style/colors)
                               :textDecoration (when-not (:hovering? @state) "none")}
                       :onMouseOver #(swap! state assoc :hovering? true)
                       :onMouseOut  #(swap! state assoc :hovering? false)}
                   (:text props)])})]
-    [:div {:style {:borderTop (str "2px solid " (:line-gray style/colors))
+    [:div {:style {:borderTop (str "2px solid " (:line-default style/colors))
                    :padding "1em 25px 2em 25px"
-                   :color (:footer-text style/colors) :fontSize "90%"}}
+                   :color (:text-lightest style/colors) :fontSize "90%"}}
      (when (config/debug?)
        [:div {:style {:float "right"}} [PopUpFooterControl]])
      [:div {:style {:display "block"}}
@@ -129,7 +129,7 @@
      [:a {:href (:href props)
           :style {:padding "1ex" :textDecoration "none"
                   :fontWeight (when (:selected props) "bold")
-                  :color (if (:hovering? @state) (:link-blue style/colors) "black")}
+                  :color (if (:hovering? @state) (:link-active style/colors) "black")}
           :onMouseOver #(swap! state assoc :hovering? true)
           :onMouseOut #(swap! state assoc :hovering? false)}
       (:name props)])})
@@ -186,7 +186,7 @@
            :onClick #(swap! state assoc :show-dropdown? true)
            :style {:display "block"
                    :borderRadius 2
-                   :backgroundColor (:background-gray style/colors)
+                   :backgroundColor (:background-light style/colors)
                    :color "#000" :textDecoration "none"
                    :padding "1ex" :border style/standard-line
                    :minWidth 100}}
@@ -196,22 +196,22 @@
       (when (:show-dropdown? @state)
         (let [DropdownItem
               (react/create-class
-                {:render
-                 (fn [{:keys [props state]}]
-                   [:a {:style {:display "block"
-                                :color "#000" :textDecoration "none" :fontSize "14px"
-                                :padding "1ex 3ex 1ex 1ex"
-                                :backgroundColor (when (:hovering? @state) "#e8f5ff")}
-                        :href (:href props)
-                        :onMouseOver #(swap! state assoc :hovering? true)
-                        :onMouseOut #(swap! state assoc :hovering? false)
-                        :onClick (:dismiss props)}
-                    (:text props)])})]
+               {:render
+                (fn [{:keys [props state]}]
+                  [:a {:style {:display "block"
+                               :color "#000" :textDecoration "none" :fontSize "14px"
+                               :padding "1ex 3ex 1ex 1ex"
+                               :backgroundColor (when (:hovering? @state) "#e8f5ff")}
+                       :href (:href props)
+                       :onMouseOver #(swap! state assoc :hovering? true)
+                       :onMouseOut #(swap! state assoc :hovering? false)
+                       :onClick (:dismiss props)}
+                   (:text props)])})]
           [:div {:style {:textAlign "left" :float "right"
                          :boxShadow "0px 3px 6px 0px rgba(0, 0, 0, 0.15)"
                          :backgroundColor "#fff"
                          :position "absolute" :left 0 :right 0
-                         :border (str "1px solid " (:line-gray style/colors))}}
+                         :border (str "1px solid " (:line-default style/colors))}}
            [DropdownItem {:href "#profile" :text "Profile" :dismiss #(swap! state assoc :show-dropdown? false)}]
            [DropdownItem {:href "#billing" :text "Billing" :dismiss #(swap! state assoc :show-dropdown? false)}]]))])})
 
@@ -349,7 +349,7 @@
           [:div {}
            (text-logo)
            [:div {:style {:padding "40px 0"}}
-            [:div {:style {:color (:exception-red style/colors)}}
+            [:div {:style {:color (:exception-state style/colors)}}
              "Error loading configuration. Please try again later."]]]
           (nil? (:user-status @state))
           [:div {}
@@ -360,13 +360,13 @@
           [:div {}
            (text-logo)
            [:div {:style {:padding "40px 0"}}
-            [:div {:style {:color (:exception-red style/colors)}}
+            [:div {:style {:color (:exception-state style/colors)}}
              "Error getting user information."]]]
           (= :auth-failure (:user-status @state))
           [:div {}
            (text-logo)
            [:div {:style {:padding "40px 0"}}
-            [:div {:style {:color (:exception-red style/colors)}}
+            [:div {:style {:color (:exception-state style/colors)}}
              "Authentication failed."]]]
           (= :not-activated (:user-status @state))
           [:div {}
@@ -389,15 +389,15 @@
      (set! utils/auth-expiration-handler (partial sign-in/show-sign-in-dialog :expired))
      ;; pop up the message only when we start getting 503s, not on every 503
      (add-watch
-       utils/server-down? :server-watcher
-       (fn [_ _ _ down-now?]
-         (when down-now?
-           (show-system-status-dialog false))))
+      utils/server-down? :server-watcher
+      (fn [_ _ _ down-now?]
+        (when down-now?
+          (show-system-status-dialog false))))
      (add-watch
-       utils/maintenance-mode? :server-watcher
-       (fn [_ _ _ maintenance-now?]
-         (when maintenance-now?
-           (show-system-status-dialog true))))
+      utils/maintenance-mode? :server-watcher
+      (fn [_ _ _ maintenance-now?]
+        (when maintenance-now?
+          (show-system-status-dialog true))))
      (modal/set-instance! (@refs "modal"))
      (react/call :load-config this #(react/call :authenticate-user this)))
    :component-will-unmount
@@ -426,8 +426,8 @@
                     ;; If this call fails, it will be caught by the normal handlers, so no need to
                     ;; check for success here.
                     (set! (.. js/window -location -href)
-                      (str (config/api-url-root) "/login?callback="
-                           (js/encodeURIComponent (.. js/window -location -origin)))))}
+                          (str (config/api-url-root) "/login?callback="
+                               (js/encodeURIComponent (.. js/window -location -origin)))))}
         :ignore-auth-expiration? true)
        ;; Note: window.opener can be non-nil even when it wasn't opened with window.open, so be
        ;; careful with this check.

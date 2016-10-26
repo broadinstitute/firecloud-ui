@@ -137,32 +137,32 @@
       :filterable? true
       :cell-padding-left "16px"
       :row-style (fn [index row]
-                   {:backgroundColor (if (even? index) (:background-gray style/colors) "#fff")})})
+                   {:backgroundColor (if (even? index) (:background-light style/colors) "#fff")})})
    :get-initial-state
    (fn [{:keys [props]}]
      (persistence/try-restore
-       {:key (:state-key props)
-        :initial
-        (let [columns (vec (map-indexed (fn [i col]
-                                          {:width (or (:starting-width col) 100)
-                                           :visible? (get col :show-initial? true)
-                                           :index i
-                                           :display-index i})
-                                        (:columns props)))
-              initial-sort-column (or (first (filter #(contains? % :sort-initial)
-                                                     (map merge (:columns props) columns)))
-                                      (when (:always-sort? props)
-                                        (first (map merge (:columns props) columns))))]
-          {:columns columns
-           :dragging? false
-           :filter-group-index (or (:initial-filter-group-index props) 0)
-           :query-params (merge
-                           {:current-page 1 :rows-per-page initial-rows-per-page
-                            :filter-text ""}
-                           (when initial-sort-column
-                             {:sort-column (:index initial-sort-column)
-                              ; default needed when forcing sort
-                              :sort-order (or (:sort-initial initial-sort-column) :asc)}))})}))
+      {:key (:state-key props)
+       :initial
+       (let [columns (vec (map-indexed (fn [i col]
+                                         {:width (or (:starting-width col) 100)
+                                          :visible? (get col :show-initial? true)
+                                          :index i
+                                          :display-index i})
+                                       (:columns props)))
+             initial-sort-column (or (first (filter #(contains? % :sort-initial)
+                                                    (map merge (:columns props) columns)))
+                                     (when (:always-sort? props)
+                                       (first (map merge (:columns props) columns))))]
+         {:columns columns
+          :dragging? false
+          :filter-group-index (or (:initial-filter-group-index props) 0)
+          :query-params (merge
+                         {:current-page 1 :rows-per-page initial-rows-per-page
+                          :filter-text ""}
+                         (when initial-sort-column
+                           {:sort-column (:index initial-sort-column)
+                            ; default needed when forcing sort
+                            :sort-order (or (:sort-initial initial-sort-column) :asc)}))})}))
    :render
    (fn [{:keys [this state props refs after-update]}]
      (let [{:keys [filterable? reorderable-columns? toolbar retain-header-on-empty?]} props
@@ -185,30 +185,30 @@
                         :dismiss-self #(swap! state assoc :reordering-columns? false)
                         :content
                         (react/create-element
-                          table-utils/ColumnEditor
-                          {:columns (react/call :get-ordered-columns this)
-                           :on-reorder
-                           (fn [source-index target-index]
-                             (let [column-order (vec (sort-by
-                                                       :display-index
-                                                       (map #(select-keys % [:index :display-index])
-                                                            (:columns @state))))
-                                   ; TODO: fix this screwy logic
-                                   new-order (utils/move column-order source-index (if (> target-index source-index) (dec target-index) target-index))
-                                   new-order (map-indexed (fn [i c] (assoc c :display-index i))
-                                                          new-order)
-                                   new-order (map :display-index (sort-by :index new-order))]
-                               (swap! state update-in [:columns]
-                                      #(mapv (fn [new-index c] (assoc c :display-index new-index))
-                                             new-order %))))
-                           :on-visibility-change
-                           (fn [column-index visible?]
-                             (swap!
-                               state update-in [:columns]
-                               (fn [columns]
-                                 (if (= :all column-index)
-                                   (mapv #(assoc % :visible? visible?) columns)
-                                   (assoc-in columns [column-index :visible?] visible?)))))})}])])
+                         table-utils/ColumnEditor
+                         {:columns (react/call :get-ordered-columns this)
+                          :on-reorder
+                          (fn [source-index target-index]
+                            (let [column-order (vec (sort-by
+                                                     :display-index
+                                                     (map #(select-keys % [:index :display-index])
+                                                          (:columns @state))))
+                                  ; TODO: fix this screwy logic
+                                  new-order (utils/move column-order source-index (if (> target-index source-index) (dec target-index) target-index))
+                                  new-order (map-indexed (fn [i c] (assoc c :display-index i))
+                                                         new-order)
+                                  new-order (map :display-index (sort-by :index new-order))]
+                              (swap! state update-in [:columns]
+                                     #(mapv (fn [new-index c] (assoc c :display-index new-index))
+                                            new-order %))))
+                          :on-visibility-change
+                          (fn [column-index visible?]
+                            (swap!
+                             state update-in [:columns]
+                             (fn [columns]
+                               (if (= :all column-index)
+                                 (mapv #(assoc % :visible? visible?) columns)
+                                 (assoc-in columns [column-index :visible?] visible?)))))})}])])
                  (when filterable?
                    [:div {:style {:float "left" :marginLeft "1em"}}
                     [table-utils/TextFilter {:initial-text (get-in @state [:query-params :filter-text])
@@ -308,22 +308,22 @@
    (fn [{:keys [this state]}]
      (react/call :refresh-rows this)
      (set! (.-onMouseMoveHandler this)
-       (fn [e]
-         (when (:dragging? @state)
-           (let [current-width (:width (nth (:columns @state) (:drag-column @state)))
-                 new-mouse-x (.-clientX e)
-                 drag-amount (- new-mouse-x (:mouse-x @state))
-                 new-width (+ current-width drag-amount)]
-             (when (and (>= new-width 10) (not (zero? drag-amount)))
-               ;; Update in a single step like this to avoid multiple re-renders
-               (swap! state (fn [s]
-                              (assoc-in (assoc s :mouse-x new-mouse-x)
-                                        [:columns (:drag-column s) :width] new-width))))))))
+           (fn [e]
+             (when (:dragging? @state)
+               (let [current-width (:width (nth (:columns @state) (:drag-column @state)))
+                     new-mouse-x (.-clientX e)
+                     drag-amount (- new-mouse-x (:mouse-x @state))
+                     new-width (+ current-width drag-amount)]
+                 (when (and (>= new-width 10) (not (zero? drag-amount)))
+                   ;; Update in a single step like this to avoid multiple re-renders
+                   (swap! state (fn [s]
+                                  (assoc-in (assoc s :mouse-x new-mouse-x)
+                                            [:columns (:drag-column s) :width] new-width))))))))
      (.addEventListener js/window "mousemove" (.-onMouseMoveHandler this))
      (set! (.-onMouseUpHandler this)
-       #(when (:dragging? @state)
-         (common/restore-text-selection (:saved-user-select-state @state))
-         (swap! state dissoc :dragging? :drag-column :mouse-x :saved-user-select-state)))
+           #(when (:dragging? @state)
+             (common/restore-text-selection (:saved-user-select-state @state))
+             (swap! state dissoc :dragging? :drag-column :mouse-x :saved-user-select-state)))
      (.addEventListener js/window "mouseup" (.-onMouseUpHandler this)))
    :component-did-update
    (fn [{:keys [this prev-props props prev-state state]}]

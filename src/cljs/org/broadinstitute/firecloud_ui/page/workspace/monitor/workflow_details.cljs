@@ -98,7 +98,7 @@
 
 (defn- render-workflow-detail [workflow submission-id bucketName]
   [:div {:style {:padding "1em" :border style/standard-line :borderRadius 4
-                 :backgroundColor (:background-gray style/colors)}}
+                 :backgroundColor (:background-light style/colors)}}
    [:div {}
     (create-field "Workflow ID" (workflow "id"))
     (let [status (workflow "status")]

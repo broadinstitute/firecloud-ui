@@ -37,24 +37,24 @@
           [:div {:style {:fontSize "150%" :marginBottom "1ex"}}
            [comps/Breadcrumbs {:crumbs (:crumbs @state)}]]
           [:div {:style {:backgroundColor "white" :padding "1em"}}
-          (case last-crumb-id
-            :file-import
-            [import-data/Page (select-keys props [:workspace-id :reload-data-tab])]
-            :workspace-import
-            [copy-data-workspaces/Page
-             (assoc (select-keys props [:workspace-id :this-realm :reload-data-tab])
-               :crumbs (drop 2 (:crumbs @state))
-               :add-crumb #(swap! state update-in [:crumbs] conj %)
-               :pop-to-depth #(swap! state update-in [:crumbs] subvec 0 %))]
-            (let [style {:width 240 :margin "auto" :textAlign "center" :cursor "pointer"
-                         :backgroundColor (:button-blue style/colors)
-                         :color "#fff" :padding "1em" :borderRadius 8}]
-              [:div {}
-               [:div {:style style :onClick #(add-crumb :file-import "File")}
-                "Import from file"]
-               [:div {:style {:height "1em"}}]
-               [:div {:style style :onClick #(add-crumb :workspace-import "Choose Workspace")}
-                "Copy from another workspace"]]))]])}])})
+           (case last-crumb-id
+             :file-import
+             [import-data/Page (select-keys props [:workspace-id :reload-data-tab])]
+             :workspace-import
+             [copy-data-workspaces/Page
+              (assoc (select-keys props [:workspace-id :this-realm :reload-data-tab])
+                :crumbs (drop 2 (:crumbs @state))
+                :add-crumb #(swap! state update-in [:crumbs] conj %)
+                :pop-to-depth #(swap! state update-in [:crumbs] subvec 0 %))]
+             (let [style {:width 240 :margin "auto" :textAlign "center" :cursor "pointer"
+                          :backgroundColor (:button-primary style/colors)
+                          :color "#fff" :padding "1em" :borderRadius 8}]
+               [:div {}
+                [:div {:style style :onClick #(add-crumb :file-import "File")}
+                 "Import from file"]
+                [:div {:style {:height "1em"}}]
+                [:div {:style style :onClick #(add-crumb :workspace-import "Choose Workspace")}
+                 "Copy from another workspace"]]))]])}])})
 
 
 (react/defc WorkspaceData

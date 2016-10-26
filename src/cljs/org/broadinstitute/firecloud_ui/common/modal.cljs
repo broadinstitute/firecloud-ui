@@ -32,12 +32,12 @@
 
 (defn- push-error [content]
   (push-ok-cancel-modal
-    {:header [:div {:style {:display "flex" :alignItems "center"}}
-              (icons/icon {:style {:color (:exception-red style/colors)
-                                   :marginRight "0.5em"}} :error)
-              "Error"]
-     :content [:div {:style {:maxWidth "50vw"}} content]
-     :show-cancel? false :ok-button "OK"}))
+   {:header [:div {:style {:display "flex" :alignItems "center"}}
+             (icons/icon {:style {:color (:exception-state style/colors)
+                                  :marginRight "0.5em"}} :error)
+             "Error"]
+    :content [:div {:style {:maxWidth "50vw"}} content]
+    :show-cancel? false :ok-button "OK"}))
 
 (defn push-error-text [error-text]
   (push-error error-text))
@@ -106,7 +106,7 @@
                        :padding "20px 48px 18px"
                        :fontSize "137%" :fontWeight 400 :lineHeight 1}}
          header]
-        [:div {:style {:padding "22px 48px 40px" :backgroundColor (:background-gray style/colors)}}
+        [:div {:style {:padding "22px 48px 40px" :backgroundColor (:background-light style/colors)}}
          content
          (when (or show-cancel? ok-button)
            [:div {:style {:marginTop 40 :textAlign "center"}}
@@ -115,7 +115,7 @@
                    :style {:marginRight (when ok-button 27) :marginTop 2 :padding "0.5em"
                            :display "inline-block"
                            :fontSize "106%" :fontWeight 500 :textDecoration "none"
-                           :color (:button-blue style/colors)}
+                           :color (:button-primary style/colors)}
                    :href "javascript:;"
                    :onClick pop-modal
                    :onKeyDown (common/create-key-handler [:space :enter] pop-modal)}

@@ -15,9 +15,9 @@
 
 
 (defn- color-for-submission [submission]
-  (cond (contains? moncommon/sub-running-statuses (submission "status")) (:running-blue style/colors)
-        (moncommon/all-success? submission) (:success-green style/colors)
-        :else (:exception-red style/colors)))
+  (cond (contains? moncommon/sub-running-statuses (submission "status")) (:running-state style/colors)
+        (moncommon/all-success? submission) (:success-state style/colors)
+        :else (:exception-state style/colors)))
 
 (defn- icon-for-submission [submission]
   (cond (contains? moncommon/sub-running-statuses (submission "status")) [icons/RunningIcon {:size 36}]
@@ -105,23 +105,23 @@
   {:render (fn [{:keys [state this]}]
              (when (:aborting-submission? @state)
                [comps/Blocker {:banner "Aborting submission ..."}])
-             [comps/SidebarButton {:color :button-blue :style :light :margin :top
+             [comps/SidebarButton {:color :button-primary :style :light :margin :top
                                    :text "Abort" :icon :status-warning-triangle
                                    :onClick (fn [_]
                                               (modal/push-confirm
-                                                {:text "Are you sure you want to abort this submission?"
-                                                 :on-confirm #(react/call :abort-submission this)}))}])
+                                               {:text "Are you sure you want to abort this submission?"
+                                                :on-confirm #(react/call :abort-submission this)}))}])
    :abort-submission (fn [{:keys [props state]}]
                        (modal/pop-modal)
                        (swap! state assoc :aborting-submission? true)
                        (endpoints/call-ajax-orch
-                         {:endpoint (endpoints/abort-submission (:workspace-id props) (:submission-id props))
-                          :headers utils/content-type=json
-                          :on-done (fn [{:keys [success? status-text]}]
-                                     (swap! state dissoc :aborting-submission?)
-                                     (if success?
-                                       ((:on-abort props))
-                                       (modal/push-error-text (str "Error in aborting the job : " status-text))))}))})
+                        {:endpoint (endpoints/abort-submission (:workspace-id props) (:submission-id props))
+                         :headers utils/content-type=json
+                         :on-done (fn [{:keys [success? status-text]}]
+                                    (swap! state dissoc :aborting-submission?)
+                                    (if success?
+                                      ((:on-abort props))
+                                      (modal/push-error-text (str "Error in aborting the job : " status-text))))}))})
 
 
 (react/defc Page

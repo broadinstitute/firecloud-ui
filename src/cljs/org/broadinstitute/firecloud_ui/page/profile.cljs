@@ -63,11 +63,11 @@
            [:div {:style {:display "flex" :marginTop "1em"}}
             [:div {:style {:flex "0 0 20ex"}} "dbGaP Authorization:"]
             [:div {:style {:flex "0 0 auto"}}
-              (cond
-                authorized? [:span {:style {:color (:success-green style/colors)}} "Authorized"]
-                pending? [:span {:style {:color (:success-green style/colors)}}
-                           "Your link was successful; you will be granted access shortly."]
-                :else [:span {:style {:color (:text-gray style/colors)}} "Not Authorized"])]]])]))
+             (cond
+               authorized? [:span {:style {:color (:success-state style/colors)}} "Authorized"]
+               pending? [:span {:style {:color (:success-state style/colors)}}
+                         "Your link was successful; you will be granted access shortly."]
+               :else [:span {:style {:color (:text-light style/colors)}} "Not Authorized"])]]])]))
    :component-did-mount
    (fn [{:keys [this props state after-update]}]
      (let [nav-context (nav/parse-segment (:parent-nav-context props))
@@ -201,14 +201,14 @@
            [:div {:style {:marginBottom "1em"}}
             (style/create-flexbox {}
               [:span {:style {:paddingRight "1ex"}}
-               (icons/icon {:style {:color (:exception-red style/colors)}}
+               (icons/icon {:style {:color (:exception-state style/colors)}}
                            :warning-triangle)]
               "Validation Errors:")
             [:ul {}
              (map (fn [e] [:li {} e]) (:validation-errors @state))]])
          (cond
            (:done? @state)
-           [:div {:style {:color (:success-green style/colors)}} "Profile saved!"]
+           [:div {:style {:color (:success-state style/colors)}} "Profile saved!"]
            (:in-progress? @state)
            [components/Spinner {:text "Saving..."}]
            :else
@@ -222,15 +222,15 @@
        (cond
          (nil? validation-errors)
          (endpoints/profile-set
-           values
-           (fn [{:keys [success? get-parsed-response]}]
-             (swap! state (fn [s]
-                            (let [new-state (dissoc s :in-progress? :validation-errors)]
-                              (if-not success?
-                                (assoc new-state :server-error (get-parsed-response))
-                                (let [on-done (or (:on-done props) #(swap! state dissoc :done?))]
-                                  (js/setTimeout on-done 2000)
-                                  (assoc new-state :done? true))))))))
+          values
+          (fn [{:keys [success? get-parsed-response]}]
+            (swap! state (fn [s]
+                           (let [new-state (dissoc s :in-progress? :validation-errors)]
+                             (if-not success?
+                               (assoc new-state :server-error (get-parsed-response))
+                               (let [on-done (or (:on-done props) #(swap! state dissoc :done?))]
+                                 (js/setTimeout on-done 2000)
+                                 (assoc new-state :done? true))))))))
          :else
          (swap! state (fn [s]
                         (let [new-state (dissoc s :in-progress? :done?)]

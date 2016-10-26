@@ -43,7 +43,7 @@
 (react/defc Button
   {:get-default-props
    (fn []
-     {:color (:button-blue style/colors)})
+     {:color (:button-primary style/colors)})
    :render
    (fn [{:keys [props]}]
      (let [{:keys [color icon href disabled? onClick text style class-name]} props]
@@ -83,7 +83,7 @@
    (fn [{:keys [props]}]
      (let [disabled? (:disabled? props)]
        [:label {:style {:cursor (when-not disabled? "pointer")
-                        :color (when disabled? (:text-gray style/colors))}
+                        :color (when disabled? (:text-light style/colors))}
                 :title (when disabled? (:disabled-text props))
                 :onClick (when disabled?
                            ;; Have to fully qualify to avoid circular dependency
@@ -117,7 +117,7 @@
                   (when (or (:active? props) (:hovering? @state))
                     [:div {:style {:position "absolute" :top "-0.5ex" :left 0
                                    :width "100%" :height "0.5ex"
-                                   :backgroundColor (:button-blue style/colors)}}])
+                                   :backgroundColor (:button-primary style/colors)}}])
                   (when (:active? props)
                     [:div {:style {:position "absolute" :bottom -1 :left 0 :width "100%" :height 2
                                    :backgroundColor "white"}}])])})]
@@ -126,7 +126,7 @@
        (let [{:keys [selected-index items toolbar-right]} props]
          [:div {}
           [:div {:style {:display "flex"
-                         :backgroundColor (:background-gray style/colors)
+                         :backgroundColor (:background-light style/colors)
                          :borderTop style/standard-line
                          :borderBottom style/standard-line
                          :padding "0 1.5em"}}
@@ -248,7 +248,7 @@
                                               (:snapshots props))
                 [:span {} ((or render identity) (entity key))])])
            config? (contains? entity "method")]
-       [:div {:style {:backgroundColor (:background-gray style/colors)
+       [:div {:style {:backgroundColor (:background-light style/colors)
                       :borderRadius 8 :border style/standard-line
                       :padding "1em"}}
         (react/call :render-details this make-field entity)
@@ -331,13 +331,13 @@
          (if-let [expected-msg (get-in props [:expect status-code])]
            (style/create-flexbox {}
              [:span {:style {:paddingRight "1ex"}}
-              (icons/icon {:style {:color (:exception-red style/colors)}}
+              (icons/icon {:style {:color (:exception-state style/colors)}}
                           :warning-triangle)]
              (str "Error: " expected-msg))
            [:div {:style {:textAlign "initial"}}
             (style/create-flexbox {:style {:marginBottom "0.25em"}}
               [:span {:style {:paddingRight "1ex"}}
-               (icons/icon {:style {:color (:exception-red style/colors)}}
+               (icons/icon {:style {:color (:exception-state style/colors)}}
                            :warning-triangle)]
               (str "Error " status-code ": " message))
             (when timestamp [:div {} "Occurred: " (-> timestamp js/moment (.format "LLL Z"))])
@@ -391,7 +391,7 @@
          (or left top)]
         [:div {:style {:flex "0 0 10px"
                        :display "flex" :flexDirection (if left "column" "row") :justifyContent "center"
-                       :backgroundColor (:background-gray style/colors)
+                       :backgroundColor (:background-light style/colors)
                        :cursor (if left "ew-resize" "ns-resize")}
                :onMouseDown (fn [e]
                               (swap! state assoc

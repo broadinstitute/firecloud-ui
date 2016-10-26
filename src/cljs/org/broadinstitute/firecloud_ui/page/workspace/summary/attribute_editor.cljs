@@ -58,14 +58,14 @@
              :empty-message "No Workspace Attributes defined"
              :row-style {}
              :always-sort? (not editing?)
-             :header-row-style {:borderBottom (str "2px solid " (:line-gray style/colors))
+             :header-row-style {:borderBottom (str "2px solid " (:line-default style/colors))
                                 :backgroundColor "white" :color "black" :fontWeight "bold"}
-             :resize-tab-color (:line-gray style/colors)
+             :resize-tab-color (:line-default style/colors)
              :columns (if editing?
                         [{:starting-width 40 :resizable? false :as-text (constantly "Delete")
                           :content-renderer
                           (fn [index]
-                            (icons/icon {:style {:color (:exception-red style/colors)
+                            (icons/icon {:style {:color (:exception-state style/colors)
                                                  :verticalAlign "middle"
                                                  :cursor "pointer"}
                                          :onClick #(swap! state update :attributes utils/delete index)}
