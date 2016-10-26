@@ -123,7 +123,7 @@
                        [input/TextField {:ref pk-str
                                          :style {:width "100%"}
                                          :placeholder inputHint
-                                         :defaultValue (get existing property-key default)
+                                         :defaultValue (render-value (get existing property-key default))
                                          :predicates [(when required?
                                                         (input/nonempty pk-str))
                                                       (when (= type "integer")
