@@ -15,13 +15,13 @@
 
 (defn- create-field [label & contents]
   [:div {:style {:paddingBottom "0.25em"}}
-   [:div {:style {:display "inline-block" :width 100}} (str label ":")]
+   [:div {:style {:display "inline-block" :width 130}} (str label ":")]
    contents])
 
 
-(defn- display-value [gcs-uri]
+(defn- display-value [gcs-uri link-label]
   (if-let [parsed (common/parse-gcs-uri gcs-uri)]
-    [GCSFilePreviewLink (assoc parsed :attributes {:style {:display "inline"}})]
+    [GCSFilePreviewLink (assoc parsed :attributes {:style {:display "inline"}} :link-label link-label)]
     (str gcs-uri)))
 
 (defn- workflow-name [callName]
@@ -46,7 +46,7 @@
       (when (:expanded @state)
         [:div {:style {:padding "0.25em 0 0.25em 1em"}}
          (for [[k v] (:data props)]
-           [:div {} k [:span {:style {:margin "0 1em"}} "→"] (display-value v)])])])})
+           [:div {} k [:span {:style {:margin "0 1em"}} "→"] (display-value v nil)])])])})
 
 
 (defn- backend-logs [data]
@@ -54,11 +54,12 @@
     ;; Right now we only ever have a single log, so we should only ever hit the "true" case.
     ;; But in case something changes, I'll leave the general case so the UI doesn't totally bomb.
     (if (= 1 (count log-map))
-      (create-field "JES log" (display-value (first (vals log-map))))
+      (let [log-name (last (string/split (first (vals log-map)) #"/" ))]
+      (create-field "JES log" (display-value (first (vals log-map)) log-name)))
       [:div {:style {:paddingBottom "0.25em"}} "Backend logs:"
        (map
          (fn [[name value]]
-           (create-field name (display-value value)))
+           (create-field name (display-value value nil)))
          log-map)])))
 
 (react/defc CallDetail
@@ -91,8 +92,10 @@
               (create-field "Ended" (moncommon/render-date (data "end")))
               [IODetail {:label "Inputs" :data (data "inputs")}]
               [IODetail {:label "Outputs" :data (data "outputs")}]
-              (create-field "stdout" (display-value (data "stdout")))
-              (create-field "stderr" (display-value (data "stderr")))
+              (let [stdout-name (last (string/split (data "stdout") #"/"))
+                    stderr-name (last (string/split (data "stderr") #"/"))]
+              (create-field "stdout" (display-value (data "stdout") stdout-name))
+              (create-field "stderr" (display-value (data "stderr") stderr-name)))
               (backend-logs data)]])
           (:data props)))])})
 
@@ -121,13 +124,10 @@
       (create-field "Ended" (moncommon/render-date (workflow "end"))))
     [IODetail {:label "Inputs" :data (workflow "inputs")}]
     [IODetail {:label "Outputs" :data (workflow "outputs")}]]
-    [:div {:style {:whiteSpace "nowrap"}}
-      (create-field "Workflow Log" (style/create-link {:text
-        (str "workflow." (workflow "id") ".log" )
-        :style {:marginLeft "0.5em" :color "-webkit-link" :textDecoration "underline"}
-        :target "_blank"
-        :href (str moncommon/google-cloud-context bucketName "/" submission-id "/workflow.logs/workflow."
-                   (workflow "id") ".log" )}))]
+    [:div {:style {:whiteSpace "nowrap" :marginRight "0.5em"}}
+     (let [wlogurl (str "gs://" bucketName "/" submission-id "/workflow.logs/workflow."
+                   (workflow "id") ".log")]
+      (create-field "Workflow Log" (display-value wlogurl (str "workflow." (workflow "id") ".log"))))]
 
    [:div {:style {:marginTop "1em" :fontWeight 500}} "Calls:"]
    (for [[call data] (workflow "calls")]

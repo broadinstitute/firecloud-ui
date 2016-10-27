@@ -86,11 +86,11 @@
 (react/defc GCSFilePreviewLink
   {:render
    (fn [{:keys [props]}]
-     (let [{:keys [bucket-name object workspace-bucket]} props]
+     (let [{:keys [bucket-name object workspace-bucket link-label]} props]
        (assert bucket-name "No bucket name provided")
        (assert object "No GCS object provided")
        [:div (or (:attributes props) {})
         [:a {:href "javascript:;" :onClick #(modal/push-modal [PreviewDialog props])}
          (if (= bucket-name workspace-bucket)
            object
-           (str "gs://" bucket-name "/" object))]]))})
+           (if (some? link-label) (str link-label) (str "gs://" bucket-name "/" object)))]]))})
