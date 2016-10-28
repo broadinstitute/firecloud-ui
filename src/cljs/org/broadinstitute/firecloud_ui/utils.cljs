@@ -78,7 +78,13 @@
  (fn [k r os ns]
    (local-storage-write ::use-live-data? ns true)))
 
-(def access-token (atom nil))
+
+(def google-auth2-instance (atom nil))
+(def ^:private access-token (atom nil))
+
+(defn get-access-token []
+  (-> @google-auth2-instance (.-currentUser) (.get) (.getAuthResponse) (.-access_token)))
+
 
 (defn get-cookie-domain []
   (if (= "local.broadinstitute.org" js/window.location.hostname)
@@ -173,7 +179,7 @@
   (let [on-done (:on-done arg-map)]
     (ajax (assoc
            arg-map :url (str (config/api-url-root) service-prefix path)
-           :headers (merge {"Authorization" (str "Bearer " @access-token)}
+           :headers (merge {"Authorization" (str "Bearer " (get-access-token))}
                            (:headers arg-map))
            :on-done (fn [{:keys [status-code status-text raw-response] :as m}]
                       (when (and (not @server-down?)  (not @maintenance-mode?))

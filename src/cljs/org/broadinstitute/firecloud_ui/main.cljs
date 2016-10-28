@@ -208,7 +208,7 @@
                    :padding "0.6em" :border style/standard-line
                    :minWidth 100}}
        [:div {}
-        (:user-email props)
+        (-> (:auth2 props) (.-currentUser) (.get) (.getBasicProfile) (.getEmail))
         [:div {:style {:display "inline-block" :marginLeft "1em" :fontSize 8}} "▼"]]]
       (when (:show-dropdown? @state)
         (let [DropdownItem
@@ -229,7 +229,9 @@
                          :position "absolute" :width "100%"
                          :border (str "1px solid " (:line-default style/colors))}}
            [DropdownItem {:href "#profile" :text "Profile" :dismiss #(swap! state assoc :show-dropdown? false)}]
-           [DropdownItem {:href "#billing" :text "Billing" :dismiss #(swap! state assoc :show-dropdown? false)}]]))])})
+           [DropdownItem {:href "#billing" :text "Billing" :dismiss #(swap! state assoc :show-dropdown? false)}]
+           [DropdownItem {:href "javascript:;" :text "Sign Out"
+                          :dismiss #(.signOut (:auth2 props))}]]))])})
 
 (react/defc LoggedIn
   {:render
@@ -242,7 +244,7 @@
        [:div {}
         [:div {:style {:width "100%" :borderBottom (str "1px solid " (:line-default style/colors))}}
          [:div {:style {:float "right" :fontSize "70%" :margin "0 0 0.5em 0"}}
-          [AccountDropdown {:user-email (:user-email props)}]
+          [AccountDropdown {:auth2 (:auth2 props)}]
           (common/clear-both)
           (when (= :registered (:registration-status @state))
             [GlobalSubmissionStatus])]
@@ -290,18 +292,53 @@
 
 (react/defc LoggedOut
   {:render
-   (fn [{:keys [props]}]
+   (fn [{:keys [this]}]
      [:div {}
       [:div {:style {:marginBottom "2em"}} (text-logo)]
-      [:div {}
-       [sign-in/Button (select-keys props [:on-login])]]
+      [:div {:onClick #(react/call :.handle-sign-in-click this)}
+       "Sign In"]
+      #_[:div {}
+         [sign-in/Button (select-keys props [:on-login])]]
       [:div {:style {:marginTop "2em" :maxWidth 600}}
        [:div {} [:b {} "New user? FireCloud requires a Google account."]]
        [:div {} "Please use the \"Sign In\" button above to sign-in with your Google Account.
          Once you have successfully signed-in with Google, you will be taken to the FireCloud
          registration page."]]
       [:div {:style {:maxWidth 600 :paddingTop "2em" :fontSize "small"}}
-        [Policy]]])})
+       [Policy]]])
+   :.handle-sign-in-click
+   (fn [{:keys [this props]}]
+     #_(modal/push-modal [:div {} "I don't know what to say."])
+     (let [{:keys [auth2]} props]
+       (-> auth2
+           (.grantOfflineAccess (clj->js {:redirect_uri "postmessage"}))
+           (.then (fn [response]
+                    (utils/log response)
+                    (utils/ajax {:url (str (config/api-url-root) "/handle-oauth-code")
+                                 :method "POST"
+                                 :data (utils/->json-string
+                                        {:code (.-code response)
+                                         :redirectUri (.. js/window -location -origin)})
+                                 :on-done #(react/call :.handle-code-response this %)}))))))
+   :.handle-code-response
+   (fn [{:keys [props]} {:keys [status-code xhr]}]
+     (case status-code
+       ;; All good.
+       204 nil
+       ;; Server is displeased with the state of the user's refresh token. Request another one.
+       200 (-> (:auth2 props)
+               (.grantOfflineAccess (clj->js {:redirect_uri "postmessage"
+                                              :prompt "consent"}))
+               (.then (fn [response]
+                        (utils/log response)
+                        (utils/ajax {:url (str (config/api-url-root) "/handle-oauth-code")
+                                     :method "POST"
+                                     :data (utils/->json-string
+                                            {:code (.-code response)
+                                             :redirectUri (.. js/window -location -origin)})
+                                     :on-done (constantly nil)}))))
+       ;; An error happened.
+       (js/alert "Server authentication failed. Offline jobs may fail with permissions problems. Reload the page to try again.")))})
 
 
 (defn- parse-hash-into-map []
@@ -342,7 +379,8 @@
      (swap! state assoc :root-nav-context (nav/create-nav-context)))
    :get-initial-state
    (fn []
-     {:root-nav-context (nav/create-nav-context)})
+     {:root-nav-context (nav/create-nav-context)
+      :user-status #{}})
    :render
    (fn [{:keys [this state]}]
      [:div {}
@@ -384,17 +422,16 @@
             [:div {:style {:color (:exception-reds style/colors)}}
              "Thank you for registering. Your account is currently inactive.
               You will be contacted via email when your account is activated."]]]
-          (= :logged-in (:user-status @state))
+          (contains? (:user-status @state) :signed-in)
           [LoggedIn {:nav-context (:root-nav-context @state)
-                     :user-email (:user-email @state)}]
-          (= :not-logged-in (:user-status @state))
-          [LoggedOut {:on-login #(react/call :authenticate-with-fresh-token this
-                                             (get % "access_token"))}])]]
+                     :auth2 (:auth2 @state)}]
+          (:auth2 @state)
+          [LoggedOut {:auth2 (:auth2 @state)}])]]
       (footer)
       ;; As low as possible on the page so it will be the frontmost component when displayed.
       [modal/Component {:ref "modal"}]])
    :component-did-mount
-   (fn [{:keys [this state refs]}]
+   (fn [{:keys [this state refs locals]}]
      (set! utils/auth-expiration-handler (partial sign-in/show-sign-in-dialog :expired))
      ;; pop up the message only when we start getting 503s, not on every 503
      (add-watch
@@ -408,7 +445,23 @@
         (when maintenance-now?
           (show-system-status-dialog true))))
      (modal/set-instance! (@refs "modal"))
-     (react/call :load-config this #(react/call :authenticate-user this)))
+     (.. js/gapi
+         (load "auth2"
+               (fn []
+                 (let [auth2 (.. js/gapi -auth2
+                                 (init (clj->js
+                                        {:client_id (config/google-client-id)
+                                         :scope "email profile https://www.googleapis.com/auth/devstorage.full_control https://www.googleapis.com/auth/compute"})))]
+                   (swap! state assoc :auth2 auth2)
+                   (reset! utils/google-auth2-instance auth2)
+                   (-> auth2 (.-currentUser)
+                       (.listen (fn [u]
+                                  (aset js/window "user" u)
+                                  (if (.isSignedIn u)
+                                    (swap! state update :user-status conj :signed-in)
+                                    (swap! state update :user-status disj :signed-in)))))
+                   (aset js/window "auth2" auth2)))))
+     (react/call :load-config this identity))
    :component-will-unmount
    (fn [{:keys [locals]}]
      (.removeEventListener js/window "hashchange" (:hash-change-listener @locals))
