@@ -19,10 +19,13 @@
    contents])
 
 
-(defn- display-value [gcs-uri link-label]
-  (if-let [parsed (common/parse-gcs-uri gcs-uri)]
-    [GCSFilePreviewLink (assoc parsed :attributes {:style {:display "inline"}} :link-label link-label)]
-    (str gcs-uri)))
+(defn- display-value
+  ([gcs-uri] (display-value gcs-uri nil))
+  ([gcs-uri link-label]
+   (if-let [parsed (common/parse-gcs-uri gcs-uri)]
+     [GCSFilePreviewLink (assoc parsed :attributes {:style {:display "inline"}}
+                                       :link-label link-label)]
+     (str gcs-uri))))
 
 (defn- workflow-name [callName]
   (first (string/split callName ".")))
@@ -46,7 +49,7 @@
       (when (:expanded @state)
         [:div {:style {:padding "0.25em 0 0.25em 1em"}}
          (for [[k v] (:data props)]
-           [:div {} k [:span {:style {:margin "0 1em"}} "→"] (display-value v nil)])])])})
+           [:div {} k [:span {:style {:margin "0 1em"}} "→"] (display-value v)])])])})
 
 
 (defn- backend-logs [data]
@@ -59,7 +62,7 @@
       [:div {:style {:paddingBottom "0.25em"}} "Backend logs:"
        (map
          (fn [[name value]]
-           (create-field name (display-value value nil)))
+           (create-field name (display-value value)))
          log-map)])))
 
 (react/defc CallDetail
