@@ -93,4 +93,4 @@
         [:a {:href "javascript:;" :onClick #(modal/push-modal [PreviewDialog props])}
          (if (= bucket-name workspace-bucket)
            object
-           (if (some? link-label) (str link-label) (str "gs://" bucket-name "/" object)))]]))})
+           (if link-label (str link-label) (str "gs://" bucket-name "/" object)))]]))})
