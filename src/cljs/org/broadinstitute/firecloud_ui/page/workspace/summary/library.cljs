@@ -30,26 +30,6 @@
    [:div {:style {:flexBasis "67%"}}
     (render-value (get library-attributes property-key))]])
 
-(react/defc LibraryAttributeViewer
-  {:render
-   (fn [{:keys [props state]}]
-     (let [{:keys [library-attributes library-schema]} props
-           primary-properties [:library:indication :library:numSubjects :library:datatype :library:dataUseRestriction] ;; TODO replace with new field from schema
-           secondary-properties (->> (calculate-display-properties library-schema)
-                                     (remove (partial contains? (set primary-properties))))]
-       [:div {}
-        (style/create-section-header "Dataset Attributes")
-        (style/create-paragraph
-          [:div {}
-           (map (partial render-property library-schema library-attributes) primary-properties)
-           (when secondary-properties
-             [:div {}
-              (when (:expanded? @state)
-                (map (partial render-property library-schema library-attributes) secondary-properties))
-              [:div {:style {:marginTop "0.5em"}}
-               (style/create-link {:text (if (:expanded? @state) "Collapse" "See more attributes")
-                                   :onClick #(swap! state update :expanded? not)})]])])]))})
-
 
 (defn- resolve-hidden [property-key workspace]
   (case property-key
@@ -160,14 +140,41 @@
                              (swap! state assoc :server-error (get-parsed-response))))})))))})
 
 
+(react/defc LibraryAttributeViewer
+  {:render
+   (fn [{:keys [props state]}]
+     (let [{:keys [library-attributes library-schema]} props
+           form-properties (select-keys props [:library-schema :workspace :workspace-id :request-refresh])
+           primary-properties [:library:indication :library:numSubjects :library:datatype :library:dataUseRestriction] ;; TODO replace with new field from schema
+           secondary-properties (->> (calculate-display-properties library-schema)
+                                     (remove (partial contains? (set primary-properties))))]
+       [:div {}
+        (style/create-section-header
+          [:div {}
+           [:span {} "Dataset Attributes"]
+           (when (:can-edit? props)
+             (style/create-link {:style {:fontSize "0.8em" :fontWeight "normal" :marginLeft "1em"}
+                                 :text "Edit..."
+                                 :onClick #(modal/push-modal [LibraryAttributeForm form-properties])}))])
+        (style/create-paragraph
+          [:div {}
+           (map (partial render-property library-schema library-attributes) primary-properties)
+           (when secondary-properties
+             [:div {}
+              (when (:expanded? @state)
+                (map (partial render-property library-schema library-attributes) secondary-properties))
+              [:div {:style {:marginTop "0.5em"}}
+               (style/create-link {:text (if (:expanded? @state) "Collapse" "See more attributes")
+                                   :onClick #(swap! state update :expanded? not)})]])])]))})
+
+
 (react/defc CatalogButton
   {:render
    (fn [{:keys [props]}]
      [comps/SidebarButton
       {:style :light :color :button-primary :margin :top
        :icon :catalog :text "Catalog Dataset..."
-       :onClick #(modal/push-modal
-                  [LibraryAttributeForm props])}])})
+       :onClick #(modal/push-modal [LibraryAttributeForm props])}])})
 
 
 (react/defc PublishButton
@@ -204,11 +211,11 @@
         :onClick (fn [_]
                    (swap! state assoc :unpublishing? true)
                    (endpoints/call-ajax-orch
-                    {:endpoint (endpoints/unpublish-workspace (:workspace-id props))
-                     :on-done (fn [{:keys [success? get-parsed-response]}]
-                                (swap! state dissoc :unpublishing?)
-                                (if success?
-                                  (do (modal/push-message {:header "Success!"
-                                                           :message "Successfully unpublished workspace"})
-                                      ((:request-refresh props)))
-                                  (modal/push-error-response (get-parsed-response))))}))}]])})
+                     {:endpoint (endpoints/unpublish-workspace (:workspace-id props))
+                      :on-done (fn [{:keys [success? get-parsed-response]}]
+                                 (swap! state dissoc :unpublishing?)
+                                 (if success?
+                                   (do (modal/push-message {:header "Success!"
+                                                            :message "This dataset is no longer displayed in the Data Library catalog."})
+                                       ((:request-refresh props)))
+                                   (modal/push-error-response (get-parsed-response))))}))}]])})
