@@ -140,34 +140,40 @@
                    {:backgroundColor (if (even? index) (:background-light style/colors) "#fff")})})
    :get-initial-state
    (fn [{:keys [props]}]
-     (persistence/try-restore
-      {:key (:state-key props)
-       :initial
-       (let [columns (vec (map-indexed (fn [i col]
-                                         {:width (or (:starting-width col) 100)
-                                          :visible? (get col :show-initial? true)
-                                          :index i
-                                          :display-index i})
-                                       (:columns props)))
-             initial-sort-column (or (first (filter #(contains? % :sort-initial)
-                                                    (map merge (:columns props) columns)))
-                                     (when (:always-sort? props)
-                                       (first (map merge (:columns props) columns))))]
-         {:columns columns
-          :dragging? false
-          :filter-group-index (or (:initial-filter-group-index props) 0)
-          :query-params (merge
-                         {:current-page 1 :rows-per-page initial-rows-per-page
-                          :filter-text ""}
-                         (when initial-sort-column
-                           {:sort-column (:index initial-sort-column)
-                            ; default needed when forcing sort
-                            :sort-order (or (:sort-initial initial-sort-column) :asc)}))})}))
+     (let [given-by-header (->> (:columns props)
+                                (map-indexed (fn [index {:keys [header] :as col}]
+                                               [header (assoc col :declared-index index)]))
+                                (into {}))]
+       (merge {:given-columns-by-header given-by-header
+               :dragging? false}
+              (persistence/try-restore
+                {:key (:state-key props)
+                 :initial
+                 (let [column-meta (vec (map (fn [col]
+                                               {:header (:header col)
+                                                :width (or (:starting-width col) 100)
+                                                :visible? (get col :show-initial? true)})
+                                             (:columns props)))
+                       initial-sort-column (or (some->> (:columns props)
+                                                        (filter #(contains? % :sort-initial))
+                                                        first)
+                                               (when (:always-sort? props)
+                                                 (first (:columns props))))]
+                   {:column-meta column-meta
+                    :filter-group-index (get props :initial-filter-group-index 0)
+                    :query-params (merge
+                                    {:current-page 1 :rows-per-page initial-rows-per-page
+                                     :filter-text ""}
+                                    (when initial-sort-column
+                                      {:sort-column (:header initial-sort-column)
+                                       ; default needed when forcing sort
+                                       :sort-order (or (:sort-initial initial-sort-column) :asc)}))})}))))
    :render
    (fn [{:keys [this state props refs after-update]}]
+     (assert (vector? (:column-meta @state)) "column-meta got un-vec'd")
      (let [{:keys [filterable? reorderable-columns? toolbar retain-header-on-empty?]} props
            {:keys [no-data? error]} @state
-           any-width=remaining? (->> (:columns @state)
+           any-width=remaining? (->> (:column-meta @state)
                                      (map :width)
                                      (some (partial = :remaining)))]
        [:div {}
@@ -189,26 +195,12 @@
                          {:columns (react/call :get-ordered-columns this)
                           :on-reorder
                           (fn [source-index target-index]
-                            (let [column-order (vec (sort-by
-                                                     :display-index
-                                                     (map #(select-keys % [:index :display-index])
-                                                          (:columns @state))))
-                                  ; TODO: fix this screwy logic
-                                  new-order (utils/move column-order source-index (if (> target-index source-index) (dec target-index) target-index))
-                                  new-order (map-indexed (fn [i c] (assoc c :display-index i))
-                                                         new-order)
-                                  new-order (map :display-index (sort-by :index new-order))]
-                              (swap! state update-in [:columns]
-                                     #(mapv (fn [new-index c] (assoc c :display-index new-index))
-                                            new-order %))))
+                            (swap! state update :column-meta utils/move source-index target-index))
                           :on-visibility-change
                           (fn [column-index visible?]
-                            (swap!
-                             state update-in [:columns]
-                             (fn [columns]
-                               (if (= :all column-index)
-                                 (mapv #(assoc % :visible? visible?) columns)
-                                 (assoc-in columns [column-index :visible?] visible?)))))})}])])
+                            (if (= :all column-index)
+                              (swap! state update :column-meta #(vec (map merge % (repeat {:visible? visible?}))))
+                              (swap! state assoc-in [:column-meta column-index :visible?] visible?)))})}])])
                  (when filterable?
                    [:div {:style {:float "left" :marginLeft "1em"}}
                     [table-utils/TextFilter {:initial-text (get-in @state [:query-params :filter-text])
@@ -259,11 +251,11 @@
              :on-change #(swap! state update-in [:query-params] merge %)
              :initial-rows-per-page (get-in @state [:query-params :rows-per-page])}]])]))
    :get-ordered-columns
-   (fn [{:keys [props state]}]
-     (vec
-      (sort-by
-       :display-index
-       (map merge (repeat {:starting-width 100}) (:columns props) (:columns @state)))))
+   (fn [{:keys [state]}]
+     (->> (:column-meta @state)
+          (map (fn [{:keys [header] :as column-meta}]
+                 (merge column-meta (get (:given-columns-by-header @state) header))))
+          vec))
    :refresh-rows
    (fn [{:keys [props state refs]}]
      (react/call :show (@refs "blocker"))
@@ -288,10 +280,11 @@
                                grouped-data)
                rows (map ->row filtered-data)
                sorted-rows (if sort-column
-                             (let [column (nth (:columns props) sort-column)
+                             (let [column (get (:given-columns-by-header @state) sort-column)
+                                   column-index (utils/first-matching-index (fn [{:keys [header]}] (= header sort-column)) (:column-meta @state))
                                    key-fn (or (:sort-by column) identity)
                                    key-fn (if (= key-fn :text) (:as-text column) key-fn)]
-                               (sort-by (fn [row] (key-fn (nth row sort-column))) rows))
+                               (sort-by (fn [row] (key-fn (nth row column-index))) rows))
                              rows)
                ordered-rows (if (= :desc sort-order) (reverse sorted-rows) sorted-rows)
                ;; realize this sequence so errors can be caught early:
@@ -310,15 +303,16 @@
      (set! (.-onMouseMoveHandler this)
            (fn [e]
              (when (:dragging? @state)
-               (let [current-width (:width (nth (:columns @state) (:drag-column @state)))
+               (let [{:keys [drag-column mouse-x]} @state
+                     current-width (:width (nth (:column-meta @state) drag-column))
                      new-mouse-x (.-clientX e)
-                     drag-amount (- new-mouse-x (:mouse-x @state))
+                     drag-amount (- new-mouse-x mouse-x)
                      new-width (+ current-width drag-amount)]
                  (when (and (>= new-width 10) (not (zero? drag-amount)))
                    ;; Update in a single step like this to avoid multiple re-renders
-                   (swap! state (fn [s]
-                                  (assoc-in (assoc s :mouse-x new-mouse-x)
-                                            [:columns (:drag-column s) :width] new-width))))))))
+                   (swap! state #(-> %
+                                     (assoc :mouse-x new-mouse-x)
+                                     (assoc-in [:column-meta drag-column :width] new-width))))))))
      (.addEventListener js/window "mousemove" (.-onMouseMoveHandler this))
      (set! (.-onMouseUpHandler this)
            #(when (:dragging? @state)
@@ -332,7 +326,7 @@
        (react/call :refresh-rows this))
      (when (and (:state-key props)
                 (not (:dragging? @state)))
-       (persistence/save {:key (:state-key props) :state state :only [:columns :query-params :filter-group-index]})))
+       (persistence/save {:key (:state-key props) :state state :only [:column-meta :query-params :filter-group-index]})))
    :component-will-unmount
    (fn [{:keys [this]}]
      (.removeEventListener js/window "mousemove" (.-onMouseMoveHandler this))

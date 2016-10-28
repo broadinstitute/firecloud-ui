@@ -167,8 +167,8 @@
                                           default-render)]
                      (render-cell
                        {:width (:width col)
-                        :content (render-content (nth row (:index col)))
-                        :title (render-title (nth row (:index col)))
+                        :content (render-content (nth row (:declared-index col)))
+                        :title (render-title (nth row (:declared-index col)))
                         :cell-padding-left (or (:cell-padding-left props) 0)
                         :content-container-style (merge
                                                    {:padding (str "0.6em 0 0.6em " (or (:cell-padding-left props) 0))}
@@ -183,17 +183,17 @@
                    {:display "flex" :fontWeight 500 :fontSize "80%"
                     :color "#fff" :backgroundColor (:background-dark style/colors)}
                    (:header-row-style props))}
-     (map
-       (fn [column]
-         (let [i (:index column)
+     (map-indexed
+       (fn [index column]
+         (let [{:keys [header width starting-width sort-by]} column
                onResizeMouseDown
                (when (get column :resizable? (:resizable-columns? props))
                  (fn [e]
-                   (swap! state assoc :dragging? true :mouse-x (.-clientX e) :drag-column i
+                   (swap! state assoc :dragging? true :mouse-x (.-clientX e) :drag-column index
                           :saved-user-select-state (common/disable-text-selection))))]
            (render-cell
-             {:width (:width column)
-              :content (:header column)
+             {:width width
+              :content header
               :cell-style (when onResizeMouseDown {:borderRight (str "1px solid " (or (:resize-tab-color props) "#777777"))
                                                    :marginRight -1})
               :cell-padding-left (or (:cell-padding-left props) 0)
@@ -202,20 +202,19 @@
                                                         (or (:cell-padding-left props) 0))}
                                          (:header-style props))
               :onResizeMouseDown onResizeMouseDown
-              :onResizeDoubleClick #(swap! state assoc-in [:columns i :width]
-                                           (:starting-width column))
-              :onSortClick (when (and (or (:sort-by column)
+              :onResizeDoubleClick #(swap! state assoc-in [:column-meta index :width] starting-width)
+              :onSortClick (when (and (or sort-by
                                           (:sortable-columns? props))
-                                      (not= :none (:sort-by column)))
+                                      (not= :none sort-by))
                              (fn [_]
-                               (if (= i sort-column)
+                               (if (= header sort-column)
                                  (case sort-order
-                                   :asc (swap! state update-in [:query-params] assoc :sort-order :desc)
+                                   :asc (swap! state update :query-params assoc :sort-order :desc)
                                    :desc (if (:always-sort? props)
-                                           (swap! state update-in [:query-params] assoc :sort-order :asc)
-                                           (swap! state update-in [:query-params] dissoc :sort-column :sort-order)))
-                                 (swap! state update-in [:query-params] assoc :sort-column i :sort-order :asc))))
-              :sortOrder (when (= i sort-column) sort-order)})))
+                                           (swap! state update :query-params assoc :sort-order :asc)
+                                           (swap! state update :query-params dissoc :sort-column :sort-order)))
+                                 (swap! state update :query-params assoc :sort-column header :sort-order :asc))))
+              :sortOrder (when (= header sort-column) sort-order)})))
        (filter :visible? (react/call :get-ordered-columns this)))
      (common/clear-both)]))
 
@@ -308,7 +307,7 @@
                                (when (and (not (:drag-active @state)) (> dist 5.0))
                                  (swap! state assoc :drag-active true)))))
             :onMouseUp (when (:drag-index @state)
-                         (fn [e]
+                         (fn [_]
                            ((:on-reorder props) (:drag-index @state) (:drop-index @state))
                            (swap! state dissoc :drag-index :drag-active :drop-index)))}
       "Show:"
@@ -334,7 +333,7 @@
                                                  :start-y (.-clientY e)))}]
               [:label {:style {:cursor (when-not (:drag-active @state) "pointer")}}
                [:input {:type "checkbox" :checked visible?
-                        :onChange #((:on-visibility-change props) (:index column) (not visible?))}]
+                        :onChange #((:on-visibility-change props) i (not visible?))}]
                [:span {:style {:paddingLeft "0.5em"}} (:header column)]]])))
        (:columns props))
       (let [i (count (:columns props))]

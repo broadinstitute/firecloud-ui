@@ -86,7 +86,7 @@
                      :columns columns
                      :retain-header-on-empty? true
                      :always-sort? true
-                     :pagination (react/call :pagination this columns)
+                     :pagination (react/call :pagination this)
                      :filter-groups (map (fn [type]
                                            {:text type :count (get-in entity-metadata [type "count"]) :pred (constantly true)})
                                          entity-types)
@@ -102,20 +102,18 @@
    (fn [{:keys [props this]}]
      (react/call :refresh this (:initial-entity-type props)))
    :pagination
-   (fn [{:keys [props state]} columns]
+   (fn [{:keys [props state]}]
      (let [{{:keys [entity-types]} :server-response} @state]
        (fn [{:keys [current-page rows-per-page filter-text sort-column sort-order filter-group-index]} callback]
          (if (empty? entity-types)
            (callback {:group-count 0 :filtered-count 0 :rows []})
-           (let [type (nth entity-types filter-group-index)
-                 sort-field (when (pos? sort-column)
-                              (get-in columns [sort-column :header]))]
+           (let [type (nth entity-types filter-group-index)]
              (endpoints/call-ajax-orch
                {:endpoint (endpoints/get-entities-paginated (:workspace-id props) type
                                                             {"page" current-page
                                                              "pageSize" rows-per-page
                                                              "filterTerms" filter-text
-                                                             "sortField" sort-field
+                                                             "sortField" sort-column
                                                              "sortDirection" (name sort-order)})
                 :on-done (fn [{:keys [success? get-parsed-response status-text status-code]}]
                            (if success?
