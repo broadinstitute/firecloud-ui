@@ -175,7 +175,7 @@
           (let [built-in
                 [:div {:style {:paddingBottom "1em"}}
                  (when reorderable-columns?
-                   [:div {:style {:float "left"}}
+                   [:div {:style {:float "left" :marginRight "1em" :marginTop 2}}
                     [comps/Button {:icon :settings :title-text "Select Columns..."
                                    :ref "col-edit-button"
                                    :onClick #(swap! state assoc :reordering-columns? true)}]
@@ -210,12 +210,12 @@
                                  (mapv #(assoc % :visible? visible?) columns)
                                  (assoc-in columns [column-index :visible?] visible?)))))})}])])
                  (when filterable?
-                   [:div {:style {:float "left" :marginLeft "1em"}}
+                   [:div {:style {:display "inline-block" :marginRight "1em"}}
                     [table-utils/TextFilter {:initial-text (get-in @state [:query-params :filter-text])
                                              :on-filter #(swap! state update-in [:query-params]
                                                                 assoc :filter-text % :current-page 1)}]])
                  (when (:filter-groups props)
-                   [:div {:style {:float "left" :marginLeft "1em" :marginTop -3}}
+                   [:div {:style {:display "inline-block" :marginRight "1em"}}
                     [table-utils/FilterGroupBar
                      (merge (select-keys props [:filter-groups :data])
                             {:selected-index (:filter-group-index @state)
@@ -223,10 +223,9 @@
                                           (swap! state assoc :filter-group-index new-index)
                                           (after-update #(react/call :refresh-rows this))
                                           (when-let [f (:on-filter-change props)]
-                                            (f new-index)))})]])
-                 (common/clear-both)]]
+                                            (f new-index)))})]])]]
             ((or toolbar identity) built-in)))
-        [:div {:style {:position "relative"}}
+        [:div {}
          [comps/DelayedBlocker {:ref "blocker" :banner "Loading..."}]
          ;; When using an auto-width column the table ends up ~1px wider than its parent
          [:div {:style {:overflowX (if any-width=remaining? "hidden" "auto")}}

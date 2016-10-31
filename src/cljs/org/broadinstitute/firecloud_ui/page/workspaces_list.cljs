@@ -255,14 +255,15 @@
    (fn [{:keys [props]}]
      (let [nav-context (nav/parse-segment (:nav-context props))
            selected-ws-id (common/get-id-from-nav-segment (:segment nav-context))]
-       [:div {}
-        [:div {:style {:padding "2em"}}
-         [:span {:style {:fontSize "180%"}}
-          [comps/Breadcrumbs {:crumbs (create-breadcrumbs-from-hash (:hash nav-context))}]]]
+       [:div {:style {:marginTop "2em"}}
         (if selected-ws-id
-          [WorkspaceDetails {:key selected-ws-id
-                             :workspace-id selected-ws-id
-                             :nav-context nav-context
-                             :on-delete #(nav/back nav-context)
-                             :on-clone #(nav/navigate (:nav-context props) %)}]
+          [:div {}
+           [:div {:style {:margin "1em"}}
+            [:span {:style {:fontSize "180%"}}
+             [comps/Breadcrumbs {:crumbs (create-breadcrumbs-from-hash (:hash nav-context))}]]]
+           [WorkspaceDetails {:key selected-ws-id
+                              :workspace-id selected-ws-id
+                              :nav-context nav-context
+                              :on-delete #(nav/back nav-context)
+                              :on-clone #(nav/navigate (:nav-context props) %)}]]
           [WorkspaceList {:nav-context nav-context}])]))})

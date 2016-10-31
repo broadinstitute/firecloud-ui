@@ -154,26 +154,26 @@
        nil
        [:div {:style (merge {:fontSize "80%" :fontWeight 500} (:body-style props))}
         (map-indexed
-          (fn [row-index row]
-            (let [row-style (:row-style props)
-                  row-style (if (fn? row-style) (row-style row-index row) row-style)]
-              [:div {:style (merge {:display "flex" :alignItems "center"} row-style)}
-               (map
-                 (fn [col]
-                   (let [render-content (or (:content-renderer col)
+         (fn [row-index row]
+           (let [row-style (:row-style props)
+                 row-style (if (fn? row-style) (row-style row-index row) row-style)]
+             [:div {:style (merge {:display "flex" :alignItems "center"} row-style)}
+              (map
+               (fn [col]
+                 (let [render-content (or (:content-renderer col)
                                           (:as-text col)
                                           default-render)
-                         render-title (or (:as-text col)
-                                          default-render)]
-                     (render-cell
-                       {:width (:width col)
-                        :content (render-content (nth row (:index col)))
-                        :title (render-title (nth row (:index col)))
-                        :cell-padding-left (or (:cell-padding-left props) 0)
-                        :content-container-style (merge
-                                                   {:padding (str "0.6em 0 0.6em " (or (:cell-padding-left props) 0))}
-                                                   (:cell-content-style props))})))
-                 (:columns props))]))
+                       render-title (or (:as-text col)
+                                        default-render)]
+                   (render-cell
+                    {:width (:width col)
+                     :content (render-content (nth row (:index col)))
+                     :title (render-title (nth row (:index col)))
+                     :cell-padding-left (or (:cell-padding-left props) 0)
+                     :content-container-style (merge
+                                               {:padding (str "0.6em 0 0.6em " (or (:cell-padding-left props) 0))}
+                                               (:cell-content-style props))})))
+               (:columns props))]))
          (:rows props))]))})
 
 
@@ -247,7 +247,7 @@
       (map-indexed (fn [index item]
                      (let [first? (zero? index)
                            last? (= index (dec (count (:filter-groups props))))]
-                       [:div {:style {:float "left" :textAlign "center"
+                       [:div {:style {:display "inline-block" :textAlign "center"
                                       :backgroundColor (if (= index (:selected-index props))
                                                          (:button-primary style/colors)
                                                          (:background-light style/colors))
@@ -266,8 +266,7 @@
                              (or (:count item)
                                  (count (filter (:pred item) (:data props))))
                              ")")]))
-                   (:filter-groups props))
-      (common/clear-both)])})
+                   (:filter-groups props))])})
 
 
 
@@ -291,7 +290,7 @@
   {:render
    (fn [{:keys [props state refs]}]
      [:div {:style {:border (str "2px solid " (:line-default style/colors))
-                    :padding "1em" :lineHeight "1.5em" :cursor (when (:drag-active @state) "ns-resize")}
+                    :padding "1em" :lineHeight "1.5em" :cursor (when (:drag-active @state) "grab")}
             :onMouseMove (when (:drag-index @state)
                            (fn [e]
                              (let [x (.-clientX e)
@@ -324,14 +323,13 @@
            (let [visible? (:visible? column)]
              [:div {:ref (str "div" i)
                     :style {:borderTop (when (= i (:drop-index @state)) "1px solid gray")}}
-              [:img {:src "assets/drag_temp.png"
-                     :style {:height 16 :verticalAlign "middle" :marginRight "1ex"
-                             :cursor "ns-resize"}
-                     :draggable false
-                     :onMouseDown (fn [e] (swap! state assoc
-                                                 :drag-index i
-                                                 :start-x (.-clientX e)
-                                                 :start-y (.-clientY e)))}]
+              (icons/icon {:style {:color (style/colors :text-light) :fontSize 16 :verticalAlign "middle" :marginRight "1ex"
+                                   :cursor "ns-resize"}
+                           :draggable false
+                           :onMouseDown (fn [e] (swap! state assoc
+                                                       :drag-index i
+                                                       :start-x (.-clientX e)
+                                                       :start-y (.-clientY e)))} :reorder)
               [:label {:style {:cursor (when-not (:drag-active @state) "pointer")}}
                [:input {:type "checkbox" :checked visible?
                         :onChange #((:on-visibility-change props) (:index column) (not visible?))}]

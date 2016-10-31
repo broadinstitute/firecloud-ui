@@ -21,14 +21,16 @@
        (when (or (not anchored?) (:position @state))
          [:div {:style {:backgroundColor "rgba(210, 210, 210, 0.4)"
                         :position "absolute" :zIndex 8888
-                        :top 0 :left 0 :right 0 :height (.. js/document -body -offsetHeight)}
+                        :top 0 :left 0 :right 0 :height (.. js/document -body -scrollHeight)}
                 :onKeyDown (common/create-key-handler [:esc] dismiss-self)
                 :onClick dismiss-self}
           [:div {:style (if anchored?
                           {:position "absolute" :backgroundColor "#fff"
                            :top (get-in @state [:position :top])
                            :left (when (= (:anchor-x props) :left) (get-in @state [:position :left]))
-                           :right (when (= (:anchor-x props) :right) (get-in @state [:position :right]))}
+                           :right (when (= (:anchor-x props) :right) (get-in @state [:position :right]))
+                           :maxHeight (- (.. js/window -innerHeight) (get-in @state [:position :top]) 20)
+                           :overflowY "auto"}
                           {:transform "translate(-50%, 0px)" :backgroundColor "#fff"
                            :position "relative" :marginBottom 60
                            :top 60 :left "50%" :width width})

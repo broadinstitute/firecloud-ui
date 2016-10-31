@@ -18,6 +18,7 @@
    :delete "delete"
    :remove "remove_circle"
    :done "done"
+   :done-circle "check_circle"
    :cancel "cancel"
    :warning-triangle "warning"
    :error "error"
@@ -25,7 +26,8 @@
    :share "share"
    :library "import_contacts"
    :publish "publish"
-   :catalog "local_offer"})
+   :catalog "local_offer"
+   :reorder "reorder"})
 
 (defn icon [attributes key]
   [:span (utils/deep-merge
@@ -36,17 +38,13 @@
 (react/defc CompleteIcon
   {:get-default-props
    (fn []
-     {:color (:success-state style/colors)
-      :size 24})
+     {:size 36})
    :render
    (fn [{:keys [props]}]
      [:span {:style {:display "inline-block" :position "relative" :verticalAlign "middle"
-                     :width (int (* 1.27 (:size props)))
-                     :height (int (* 1.27 (:size props)))
-                     :backgroundColor "#fff" :borderRadius "100%"}}
+                     :width (:size props) :height (:size props)}}
       (style/center {}
-        (icon {:style {:color (:color props) :fontSize (:size props) :marginTop 4}}
-          :done))])})
+        (icon {:style {:color "white" :fontSize (:size props) :marginTop 4}} :done-circle))])})
 
 (react/defc RunningIcon
   {:get-default-props
@@ -75,9 +73,9 @@
 (react/defc ExceptionIcon
   {:get-default-props
    (fn []
-     {:size 24})
+     {:size 36})
    :render
    (fn [{:keys [props]}]
      [:span {:style {:display "inline-block" :position "relative" :verticalAlign "middle"
                      :height (:size props) :width (:size props)}}
-      (style/center {} [:span {:style {:color "white" :fontSize (:size props) :fontWeight "500"}} "!"])])})
+      (style/center {} (icon {:style {:color "white" :fontSize (:size props) :marginTop 4}} :warning-triangle))])})
