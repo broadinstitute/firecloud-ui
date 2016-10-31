@@ -185,7 +185,8 @@
                    (:header-row-style props))}
      (map-indexed
        (fn [index column]
-         (let [{:keys [header width starting-width sort-by]} column
+         (let [{:keys [header header-key width starting-width sort-by]} column
+               sort-key (or header-key header)
                onResizeMouseDown
                (when (get column :resizable? (:resizable-columns? props))
                  (fn [e]
@@ -207,14 +208,14 @@
                                           (:sortable-columns? props))
                                       (not= :none sort-by))
                              (fn [_]
-                               (if (= header sort-column)
+                               (if (= sort-key sort-column)
                                  (case sort-order
                                    :asc (swap! state update :query-params assoc :sort-order :desc)
                                    :desc (if (:always-sort? props)
                                            (swap! state update :query-params assoc :sort-order :asc)
                                            (swap! state update :query-params dissoc :sort-column :sort-order)))
-                                 (swap! state update :query-params assoc :sort-column header :sort-order :asc))))
-              :sortOrder (when (= header sort-column) sort-order)})))
+                                 (swap! state update :query-params assoc :sort-column sort-key :sort-order :asc))))
+              :sortOrder (when (= sort-key sort-column) sort-order)})))
        (filter :visible? (react/call :get-ordered-columns this)))
      (common/clear-both)]))
 

@@ -79,6 +79,8 @@
 ;;     Columns have the following properties:
 ;;       :header (optional, default none)
 ;;         The text to display.
+;;       :header-key (optional)
+;;         A serializable identifier for when the header is not persistable
 ;;       :reorderable? (optional, default true)
 ;;         Whether or not the column should be allowed to be reordered.  Unused if :reorderable-columns?
 ;;         is false on the table.
@@ -141,17 +143,17 @@
    :get-initial-state
    (fn [{:keys [props]}]
      (let [given-by-header (->> (:columns props)
-                                (map-indexed (fn [index {:keys [header] :as col}]
-                                               [header (assoc col :declared-index index)]))
+                                (map-indexed (fn [index {:keys [header header-key] :as col}]
+                                               [(or header-key header) (assoc col :declared-index index)]))
                                 (into {}))]
        (merge {:given-columns-by-header given-by-header
                :dragging? false}
               (persistence/try-restore
                 {:key (:state-key props)
                  :initial
-                 (let [column-meta (vec (map (fn [col]
-                                               {:header (:header col)
-                                                :width (or (:starting-width col) 100)
+                 (let [column-meta (vec (map (fn [{:keys [header header-key starting-width] :as col}]
+                                               {:header (or header-key header)
+                                                :width (or starting-width 100)
                                                 :visible? (get col :show-initial? true)})
                                              (:columns props)))
                        initial-sort-column (or (some->> (:columns props)
