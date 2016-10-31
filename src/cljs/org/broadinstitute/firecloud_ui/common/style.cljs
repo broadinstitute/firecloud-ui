@@ -59,6 +59,9 @@
 (defn create-text-field [props]
   [:input (deep-merge {:type "text" :style input-text-style} props)])
 
+(defn create-search-field [props]
+  [:input (deep-merge {:type "search" :style (assoc input-text-style :WebkitAppearance "none")} props)])
+
 (defn create-text-area [props]
   [:textarea (deep-merge {:style input-text-style} props)])
 

@@ -226,18 +226,22 @@
    :render
    (fn [{:keys [props state this]}]
      [:div {:style {:display "inline-flex"}}
-      (style/create-text-field
-        {:ref "filter-field" :placeholder "Filter" :defaultValue (:initial-text props)
-         :style {:backgroundColor (if (:synced @state) "#fff" (:tag-background style/colors))
-                 :borderRadius "3px 0 0 3px" :marginBottom 0}
-         :onKeyDown (common/create-key-handler [:enter] #(react/call :apply-filter this))
-         :onChange #(swap! state assoc :synced false)})
+      (style/create-search-field
+       {:ref "filter-field" :autoSave "true" :results 5 :autofocus "true"
+        :placeholder "Filter" :defaultValue (:initial-text props)
+        :style {:borderRadius "3px 0 0 3px" :marginBottom 0}
+        :onKeyDown (common/create-key-handler [:enter] #(react/call :apply-filter this))
+        :onChange #(swap! state assoc :synced false)})
       [comps/Button {:icon :search :onClick #(react/call :apply-filter this)
                      :style {:borderRadius "0 3px 3px 0"}}]])
    :apply-filter
    (fn [{:keys [state props refs]}]
      (swap! state assoc :synced true)
-     ((:on-filter props) (common/get-text refs "filter-field")))})
+     ((:on-filter props) (common/get-text refs "filter-field")))
+   :component-did-mount
+   (fn [{:keys [refs this]}]
+     (.addEventListener (@refs "filter-field") "search" #(when (= (.-value (.-currentTarget %)) "") (react/call :apply-filter this))))})
+
 
 
 (react/defc FilterGroupBar
