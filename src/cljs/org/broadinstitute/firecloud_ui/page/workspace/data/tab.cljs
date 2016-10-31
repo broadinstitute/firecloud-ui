@@ -13,8 +13,8 @@
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
     [org.broadinstitute.firecloud-ui.page.workspace.data.copy-data-workspaces :as copy-data-workspaces]
     [org.broadinstitute.firecloud-ui.page.workspace.data.import-data :as import-data]
-    [org.broadinstitute.firecloud-ui.utils :as utils :refer [access-token]]
-    ))
+    [org.broadinstitute.firecloud-ui.utils :as utils :refer [access-token]]))
+
 
 
 (react/defc DataImporter
@@ -60,6 +60,7 @@
 (react/defc WorkspaceData
   {:render
    (fn [{:keys [props state refs]}]
+     ;(js* "debugger;")
      (let [{:keys [workspace-id workspace workspace-error]} props]
        [:div {:style {:padding "1em"}}
         (cond
@@ -71,6 +72,7 @@
             [EntityTable
              {:ref "entity-table"
               :workspace-id workspace-id
+              :column-defaults (utils/parse-json-string (get-in workspace [:workspace :workspace-attributes :workspace-column-defaults]))
               :toolbar (fn [built-in]
                          [:div {}
                           [:div {:style {:float "left"}} built-in]

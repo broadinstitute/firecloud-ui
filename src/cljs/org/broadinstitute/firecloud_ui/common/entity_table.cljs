@@ -9,8 +9,8 @@
     [org.broadinstitute.firecloud-ui.common.table :refer [Table]]
     [org.broadinstitute.firecloud-ui.common.table-utils :refer [default-render]]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
-    [org.broadinstitute.firecloud-ui.utils :as utils]
-    ))
+    [org.broadinstitute.firecloud-ui.utils :as utils]))
+
 
 
 ;; for attributes referring to a single other entity
@@ -28,17 +28,17 @@
   {:refresh
    (fn [{:keys [props state]} & [entity-type]]
      (endpoints/call-ajax-orch
-       {:endpoint (endpoints/get-entity-types (:workspace-id props))
-        :on-done (fn [{:keys [success? get-parsed-response]}]
-                   (if success?
-                     (let [metadata (get-parsed-response)
-                           entity-types (utils/sort-match common/root-entity-types (vec (keys metadata)))]
-                       (swap! state update-in [:server-response] assoc
-                              :entity-metadata metadata
-                              :entity-types entity-types
-                              :selected-entity-type (or entity-type (first entity-types))))
-                     (swap! state update-in [:server-response]
-                            assoc :server-error (get-parsed-response))))}))
+      {:endpoint (endpoints/get-entity-types (:workspace-id props))
+       :on-done (fn [{:keys [success? get-parsed-response]}]
+                  (if success?
+                    (let [metadata (get-parsed-response)
+                          entity-types (utils/sort-match common/root-entity-types (vec (keys metadata)))]
+                      (swap! state update-in [:server-response] assoc
+                             :entity-metadata metadata
+                             :entity-types entity-types
+                             :selected-entity-type (or entity-type (first entity-types))))
+                    (swap! state update-in [:server-response]
+                           assoc :server-error (get-parsed-response))))}))
    :get-default-props
    (fn []
      {:empty-message "There are no entities to display."
@@ -82,8 +82,9 @@
             [Table
              (merge props
                     {:key selected-entity-type
-                     :state-key (str (common/workspace-id->string (:workspace-id props)) ":data-tab:" selected-entity-type)
+                     :state-key (str (common/workspace-id->string (:workspace-id props)) ":data:" selected-entity-type)
                      :columns columns
+                     :column-defaults (get (:column-defaults props) selected-entity-type)
                      :retain-header-on-empty? true
                      :always-sort? true
                      :pagination (react/call :pagination this)

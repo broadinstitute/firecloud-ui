@@ -251,3 +251,7 @@
 
 (defn rand-recent-time []
   (.format (.subtract (js/moment (js/Date.)) (rand-int 100000) "seconds")))
+
+
+(defn vec-of-maps-to-map-of-maps [key m]
+  (into {} (map (juxt key identity) m)))
