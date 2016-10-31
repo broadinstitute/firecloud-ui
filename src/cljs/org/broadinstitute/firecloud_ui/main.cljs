@@ -316,7 +316,8 @@
      (swap! locals dissoc :refresh-token-saved?)
      (let [{:keys [auth2 on-change]} props]
        (-> auth2
-           (.grantOfflineAccess (clj->js {:redirect_uri "postmessage"}))
+           (.grantOfflineAccess (clj->js {:redirect_uri "postmessage"
+                                          :prompt "select_account"}))
            (.then (fn [response]
                     (utils/ajax {:url (str (config/api-url-root) "/handle-oauth-code")
                                  :method "POST"
