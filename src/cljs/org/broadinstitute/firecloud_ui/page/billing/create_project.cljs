@@ -25,11 +25,10 @@
                 ; (not permitted in AJAX) we pop up a separate window with a callback to this component's :get-billing-accounts
                 (try
                   (if-let [redirect-url ((utils/parse-json-string (billing-acct-error "message")) "redirect")]
-                    [comps/Button {:text "Click Here To Enable Billing Permissions"
-                                   :onClick #(.. js/window
-                                                 (open redirect-url
-                                                       "Authentication"
-                                                       "menubar=no,toolbar=no,width=500,height=500"))}]
+                    [:div {:style {:textAlign "center"}}
+                     "Billing permissions are not enabled." [:br] [:br]
+                     [comps/Button {:text "Enable Billing Permissions"
+                                    :onClick #(react/call :.enable-billing-permissions this)}]]
                     [comps/ErrorViewer {:error billing-acct-error}])
                   (catch js/Object _ [comps/ErrorViewer {:error billing-acct-error}]))
                 (not billing-accounts) [comps/Spinner {:text "Loading billing accounts..."}]
@@ -70,18 +69,18 @@
                     #(react/call :create-billing-project this))}])
    :component-did-mount
    (fn [{:keys [this]}]
-     (react/call :get-billing-accounts this)
-     ; register a function in the JS window
-     ; this window's child can access the function by calling its window.opener
-     (aset js/window sign-in/handler-fn-name
-           (fn [message]
-             (let [token (get message "access_token")]
-               (reset! utils/access-token token)
-               (utils/set-access-token-cookie token)
-               (react/call :get-billing-accounts this)))))
-   :component-will-unmount
-   (fn []
-     (js-delete js/window sign-in/handler-fn-name))
+     (react/call :get-billing-accounts this))
+   :.enable-billing-permissions
+   (fn [{:keys [this]}]
+     (-> @utils/google-auth2-instance
+         (.grantOfflineAccess (clj->js {:redirect_uri "postmessage"
+                                        :scope "https://www.googleapis.com/auth/cloud-billing"}))
+         (.then (fn [response]
+                  ;; At some point, the access token gets replaced with a new one, but it doesn't
+                  ;; happen right away, so this dummy delay is necessary.
+                  (js/setTimeout
+                   #(react/call :get-billing-accounts this)
+                   1000)))))
    :get-billing-accounts
    (fn [{:keys [state]}]
      (swap! state dissoc :billing-accounts :billing-acct-error)

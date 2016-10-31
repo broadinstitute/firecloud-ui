@@ -186,17 +186,7 @@
                         (cond
                           (check-maintenance-mode status-code status-text) (reset! maintenance-mode? true)
                           (check-server-down status-code) (reset! server-down? true)))
-                      ;; Handle auth token expiration
-                      (if (and (= status-code 401) (not ignore-auth-expiration?))
-                        (do
-                          (swap! pending-calls conj [path arg-map
-                                                     :service-prefix service-prefix
-                                                     :ignore-auth-expiration? true])
-                          (auth-expiration-handler
-                           (fn []
-                             (dorun (map (fn [x] (apply ajax-orch x)) @pending-calls))
-                             (reset! pending-calls []))))
-                        (on-done m)))))))
+                      (on-done m))))))
 
 
 (defn deep-merge [& maps]

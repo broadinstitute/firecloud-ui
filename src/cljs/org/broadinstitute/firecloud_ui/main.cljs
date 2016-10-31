@@ -292,13 +292,12 @@
 
 (react/defc LoggedOut
   {:render
-   (fn [{:keys [this]}]
-     [:div {}
+   (fn [{:keys [this props]}]
+     ;; Google's code complains if the sign-in button goes missing, so we hide this component rather
+     ;; than removing it from the page.
+     [:div {:style {:display (when (:hidden? props) "none")}}
       [:div {:style {:marginBottom "2em"}} (text-logo)]
-      [:div {:onClick #(react/call :.handle-sign-in-click this)}
-       "Sign In"]
-      #_[:div {}
-         [sign-in/Button (select-keys props [:on-login])]]
+      [comps/Button {:text "Sign In" :onClick #(react/call :.handle-sign-in-click this)}]
       [:div {:style {:marginTop "2em" :maxWidth 600}}
        [:div {} [:b {} "New user? FireCloud requires a Google account."]]
        [:div {} "Please use the \"Sign In\" button above to sign-in with your Google Account.
@@ -306,39 +305,29 @@
          registration page."]]
       [:div {:style {:maxWidth 600 :paddingTop "2em" :fontSize "small"}}
        [Policy]]])
+   :component-did-mount
+   (fn [{:keys [props locals]}]
+     (swap! locals assoc :refresh-token-saved? true)
+     (let [{:keys [auth2 on-change]} props]
+       (-> auth2 (.-currentUser)
+           (.listen (fn [u]
+                      (on-change (.isSignedIn u) (:refresh-token-saved? @locals)))))))
    :.handle-sign-in-click
-   (fn [{:keys [this props]}]
-     #_(modal/push-modal [:div {} "I don't know what to say."])
-     (let [{:keys [auth2]} props]
+   (fn [{:keys [props locals]}]
+     (swap! locals dissoc :refresh-token-saved?)
+     (let [{:keys [auth2 on-change]} props]
        (-> auth2
            (.grantOfflineAccess (clj->js {:redirect_uri "postmessage"}))
            (.then (fn [response]
-                    (utils/log response)
                     (utils/ajax {:url (str (config/api-url-root) "/handle-oauth-code")
                                  :method "POST"
                                  :data (utils/->json-string
                                         {:code (.-code response)
                                          :redirectUri (.. js/window -location -origin)})
-                                 :on-done #(react/call :.handle-code-response this %)}))))))
-   :.handle-code-response
-   (fn [{:keys [props]} {:keys [status-code xhr]}]
-     (case status-code
-       ;; All good.
-       204 nil
-       ;; Server is displeased with the state of the user's refresh token. Request another one.
-       200 (-> (:auth2 props)
-               (.grantOfflineAccess (clj->js {:redirect_uri "postmessage"
-                                              :prompt "consent"}))
-               (.then (fn [response]
-                        (utils/log response)
-                        (utils/ajax {:url (str (config/api-url-root) "/handle-oauth-code")
-                                     :method "POST"
-                                     :data (utils/->json-string
-                                            {:code (.-code response)
-                                             :redirectUri (.. js/window -location -origin)})
-                                     :on-done (constantly nil)}))))
-       ;; An error happened.
-       (js/alert "Server authentication failed. Offline jobs may fail with permissions problems. Reload the page to try again.")))})
+                                 :on-done (fn [{:keys [success?]}]
+                                            (when success?
+                                              (swap! locals assoc :refresh-token-saved? true)
+                                              (on-change true true)))}))))))})
 
 
 (defn- parse-hash-into-map []
@@ -373,6 +362,38 @@
                  " for more information."])}))
 
 
+(react/defc RefreshCredentials
+  {:get-initial-state
+   (fn []
+     {:hidden? true})
+   :render
+   (fn [{:keys [this state]}]
+     [:div {:style {:display (when (:hidden? @state) "none")
+                    :padding "1ex 1em" :backgroundColor "#fda" :color "#530" :fontSize "80%"}}
+      "Your offline credentials are missing or out-of-date."
+      " Your workflows may not run correctly until they have been refreshed."
+      " " [:a {:href "javascript:;" :onClick #(react/call :.re-auth this)} "Refresh now..."]])
+   :component-did-mount
+   (fn [{:keys [state]}]
+     (utils/ajax-orch "/refresh-token-status"
+                      {:on-done (fn [{:keys [status-code]}]
+                                  (when (= status-code 200)
+                                    (swap! state dissoc :hidden?)))}))
+   :.re-auth
+   (fn [{:keys [props]}]
+     (-> (:auth2 props)
+         (.grantOfflineAccess (clj->js {:redirect_uri "postmessage"
+                                        :prompt "consent"}))
+         (.then (fn [response]
+                  (utils/log response)
+                  (utils/ajax {:url (str (config/api-url-root) "/handle-oauth-code")
+                               :method "POST"
+                               :data (utils/->json-string
+                                      {:code (.-code response)
+                                       :redirectUri (.. js/window -location -origin)})
+                               :on-done (constantly nil)})))))})
+
+
 (react/defc App
   {:handle-hash-change
    (fn [{:keys [state]}]
@@ -382,10 +403,23 @@
      {:root-nav-context (nav/create-nav-context)
       :user-status #{}})
    :render
-   (fn [{:keys [this state]}]
+   (fn [{:keys [state]}]
      [:div {}
+      (when (and (contains? (:user-status @state) :signed-in)
+                 (contains? (:user-status @state) :refresh-token-saved))
+        (utils/cljslog "Rendering refresh" (:user-status @state))
+        [RefreshCredentials {:auth2 (:auth2 @state)}])
       [:div {:style {:backgroundColor "white" :padding 20}}
        [:div {}
+        (when-let [auth2 (:auth2 @state)]
+          [LoggedOut {:auth2 auth2 :hidden? (contains? (:user-status @state) :signed-in)
+                      :on-change (fn [signed-in? token-saved?]
+                                   (swap! state update :user-status
+                                          #(-> %
+                                               ((if signed-in? conj disj)
+                                                :signed-in)
+                                               ((if token-saved? conj disj)
+                                                :refresh-token-saved))))}])
         (cond
           (nil? (:config-status @state))
           [:div {}
@@ -424,9 +458,7 @@
               You will be contacted via email when your account is activated."]]]
           (contains? (:user-status @state) :signed-in)
           [LoggedIn {:nav-context (:root-nav-context @state)
-                     :auth2 (:auth2 @state)}]
-          (:auth2 @state)
-          [LoggedOut {:auth2 (:auth2 @state)}])]]
+                     :auth2 (:auth2 @state)}])]]
       (footer)
       ;; As low as possible on the page so it will be the frontmost component when displayed.
       [modal/Component {:ref "modal"}]])
@@ -445,23 +477,9 @@
         (when maintenance-now?
           (show-system-status-dialog true))))
      (modal/set-instance! (@refs "modal"))
-     (.. js/gapi
-         (load "auth2"
-               (fn []
-                 (let [auth2 (.. js/gapi -auth2
-                                 (init (clj->js
-                                        {:client_id (config/google-client-id)
-                                         :scope "email profile https://www.googleapis.com/auth/devstorage.full_control https://www.googleapis.com/auth/compute"})))]
-                   (swap! state assoc :auth2 auth2)
-                   (reset! utils/google-auth2-instance auth2)
-                   (-> auth2 (.-currentUser)
-                       (.listen (fn [u]
-                                  (aset js/window "user" u)
-                                  (if (.isSignedIn u)
-                                    (swap! state update :user-status conj :signed-in)
-                                    (swap! state update :user-status disj :signed-in)))))
-                   (aset js/window "auth2" auth2)))))
-     (react/call :load-config this identity))
+     (swap! locals assoc :hash-change-listener (partial react/call :handle-hash-change this))
+     (.addEventListener js/window "hashchange" (:hash-change-listener @locals))
+     (react/call :load-config this #(react/call :.initialize-auth2 this)))
    :component-will-unmount
    (fn [{:keys [locals]}]
      (.removeEventListener js/window "hashchange" (:hash-change-listener @locals))
@@ -478,6 +496,23 @@
                                  (swap! state assoc :config-status :success)
                                  (on-success))
                                (swap! state assoc :config-status :error)))}))
+   :.initialize-auth2
+   (fn [{:keys [state]}]
+     (let [scopes (clojure.string/join
+                   " "
+                   ["email" "profile"
+                    "https://www.googleapis.com/auth/devstorage.full_control"
+                    "https://www.googleapis.com/auth/compute"])]
+       (.. js/gapi
+           (load "auth2"
+                 (fn []
+                   (let [auth2 (.. js/gapi -auth2
+                                   (init (clj->js
+                                          {:client_id (config/google-client-id)
+                                           :scope scopes})))]
+                     (swap! state assoc :auth2 auth2)
+                     (reset! utils/google-auth2-instance auth2)
+                     (aset js/window "auth2" auth2)))))))
    :authenticate-user
    (fn [{:keys [this state]}]
      (if (= (.. js/window -location -hash) sign-in/flow-start-location-hash)
