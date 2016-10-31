@@ -17,8 +17,7 @@
         :canned-response {:status 200 :delay-ms (rand-int 2000)
                           :responseText (if-let [mock-data (:mock-data endpoint)]
                                           (utils/->json-string mock-data))})
-      :endpoint :raw-data :payload)
-    :ignore-auth-expiration? (:ignore-auth-expiration? endpoint)))
+      :endpoint :raw-data :payload)))
 
 
 (defn- ws-path [workspace-id]
@@ -875,5 +874,4 @@
                 "Failed" (rand-int 1000)
                 "Succeeded" (rand-int 1000)
                 "Aborted" (rand-int 1000)
-                "Unknown" (rand-int 1000)}}
-   :ignore-auth-expiration? true})
+                "Unknown" (rand-int 1000)}}})

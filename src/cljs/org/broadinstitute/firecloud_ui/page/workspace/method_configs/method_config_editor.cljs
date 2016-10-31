@@ -228,8 +228,6 @@
                                                  (not (:bucket-access? props))
                                                  (str "You do not currently have access"
                                                       " to the Google Bucket associated with this workspace."))
-                                :force-login? (not (:has-refresh-token? @state))
-                                :after-login #(swap! state assoc :has-refresh-token? true)
                                 :on-success (:on-submission-success props)})])
       (render-main-display this wrapped-config editing? (:inputs-outputs @state) (:methods @state))
       (clear-both)]]))
@@ -241,7 +239,7 @@
       :sidebar-visible? true})
    :render
    (fn [{:keys [this state refs props]}]
-     (cond (and (:loaded-config @state) (contains? @state :locked?) (contains? @state :has-refresh-token?))
+     (cond (and (:loaded-config @state) (contains? @state :locked?))
            (render-display this state refs props)
            (:error @state) (style/create-server-error-message (:error @state))
            :else [:div {:style {:textAlign "center"}} [comps/Spinner {:text "Loading Method Configuration..."}]]))
@@ -254,11 +252,6 @@
                    (if success?
                      (swap! state assoc :locked? (get-in (get-parsed-response false) ["workspace" "isLocked"]))
                      (swap! state assoc :error status-text)))})
-     (endpoints/call-ajax-orch
-       {:endpoint (endpoints/get-refresh-token-date)
-        :on-done (fn [{:keys [success?]}]
-                   ;; login checks validity of the token, so just check for existence
-                   (swap! state assoc :has-refresh-token? success?))})
      (endpoints/call-ajax-orch
        {:endpoint endpoints/list-methods
         :on-done (fn [{:keys [success? get-parsed-response status-text]}]

@@ -4,7 +4,6 @@
    [org.broadinstitute.firecloud-ui.common :as common]
    [org.broadinstitute.firecloud-ui.common.components :as comps]
    [org.broadinstitute.firecloud-ui.common.modal :as modal]
-   [org.broadinstitute.firecloud-ui.common.sign-in :as sign-in]
    [org.broadinstitute.firecloud-ui.common.style :as style]
    [org.broadinstitute.firecloud-ui.config :as config]
    [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
@@ -469,7 +468,6 @@
       [modal/Component {:ref "modal"}]])
    :component-did-mount
    (fn [{:keys [this state refs locals]}]
-     (set! utils/auth-expiration-handler (partial sign-in/show-sign-in-dialog :expired))
      ;; pop up the message only when we start getting 503s, not on every 503
      (add-watch
       utils/server-down? :server-watcher

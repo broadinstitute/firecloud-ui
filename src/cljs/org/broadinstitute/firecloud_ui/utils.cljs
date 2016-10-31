@@ -48,8 +48,6 @@
                     m)))
 
 
-(defonce ^:private current-user (atom nil))
-
 (defn local-storage-write
   ([k v] (local-storage-write k v false))
   ([k v stringify?]
@@ -79,8 +77,7 @@
    (local-storage-write ::use-live-data? ns true)))
 
 
-(def google-auth2-instance (atom nil))
-(def ^:private access-token (atom nil))
+(defonce google-auth2-instance (atom nil))
 
 (defn get-access-token []
   (-> @google-auth2-instance (.-currentUser) (.get) (.getAuthResponse) (.-access_token)))
@@ -154,12 +151,8 @@
             (.send xhr)))))))
 
 
-(defonce auth-expiration-handler nil)
-
-
 (defonce server-down? (atom false))
 (defonce maintenance-mode? (atom false))
-(defonce pending-calls (atom []))
 
 
 (defn- check-maintenance-mode [status-code status-text]
@@ -174,7 +167,7 @@
       (<= 503 status-code 599)))
 
 
-(defn ajax-orch [path arg-map & {:keys [service-prefix ignore-auth-expiration?] :or {service-prefix "/api"}}]
+(defn ajax-orch [path arg-map & {:keys [service-prefix] :or {service-prefix "/api"}}]
   (assert (= (subs path 0 1) "/") (str "Path must start with '/': " path))
   (let [on-done (:on-done arg-map)]
     (ajax (assoc
