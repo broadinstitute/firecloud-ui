@@ -13,6 +13,9 @@
 
 (def ^:private initial-rows-per-page 10)
 
+(defn select-persistence-keys [atom]
+  (select-keys @atom [:column-meta :query-params :filter-group-index]))
+
 
 (defn date-column [props]
   {:header (or (:header props) "Create Date")
@@ -313,7 +316,7 @@
                   :no-data? (empty? clipped-rows))))))
    :component-did-mount
    (fn [{:keys [this state locals]}]
-     (swap! locals assoc :initial-state (select-keys @state [:column-meta :query-params :filter-group-index]))
+     (swap! locals assoc :initial-state (select-persistence-keys @state))
      (react/call :refresh-rows this)
      (set! (.-onMouseMoveHandler this)
            (fn [e]
@@ -341,7 +344,7 @@
        (react/call :refresh-rows this))
      (when (and (:state-key props)
                 (not (:dragging? @state))
-                (not (= (select-keys @state [:column-meta :query-params :filter-group-index]) (:initial-state @locals))))
+                (not (= (select-persistence-keys @state) (:initial-state @locals))))
        (persistence/save {:key (:state-key props) :state state :only [:column-meta :query-params :filter-group-index]})))
    :component-will-unmount
    (fn [{:keys [this]}]
