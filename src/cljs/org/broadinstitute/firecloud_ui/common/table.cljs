@@ -156,7 +156,7 @@
                 :validator (fn [stored-value] (= (set (keys stored-value)) #{:column-meta :filter-group-index :query-params}))
                 :initial
                 (fn [] (let [processed-columns (if-let [defaults (:column-defaults props)]
-                                                 (let [by-header (utils/vec-of-maps-to-map-of-maps :header (:columns props))
+                                                 (let [by-header (utils/index-by :header (:columns props))
                                                        default-showing (->> defaults
                                                                             (replace by-header)
                                                                             (map #(assoc % :show-initial? true)))
