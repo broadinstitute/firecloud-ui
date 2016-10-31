@@ -150,6 +150,13 @@
    :queued (apply + (map workflowCountsByStatus ["Queued" "Launching"]))
    :active (apply + (map workflowCountsByStatus ["Submitted" "Running" "Aborting"]))})
 
+(defn attribute-list? [attr-value]
+  (and (map? attr-value)
+       (= (set (keys attr-value)) #{"itemsType" "items"})))
+
+(defn attribute-values [attribute-list]
+  (attribute-list "items"))
+
 (def root-entity-types ["participant" "sample" "pair" "participant_set" "sample_set" "pair_set"])
 (def singular-type->set-type {"participant" "participant_set"
                               "sample" "sample_set"

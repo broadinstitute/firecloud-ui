@@ -148,12 +148,12 @@
                           {:text "Exception" :pred #(= "Exception" (:status %))}]
           :columns
           [{:sort-by :none :filter-by :none :starting-width row-height-px :resizable? false
-            :header [:div {:style {:marginLeft -6}} "Status"]
+            :header [:div {:style {:marginLeft -6}} "Status"] :header-key "Status"
             :as-text :status
             :content-renderer (fn [data] [StatusCell {:data data
                                                       :nav-context (:nav-context props)}])}
            {:as-text :name :sort-by :text
-            :header [:span {:style {:marginLeft 10}} "Workspace"]
+            :header [:span {:style {:marginLeft 10}} "Workspace"] :header-key "Workspace"
             :starting-width (min 500 (* max-workspace-name-length 10))
             :content-renderer (fn [data] [WorkspaceCell {:data data
                                                          :nav-context (:nav-context props)}])}
@@ -175,7 +175,7 @@
                                      :border style/standard-line}
                              :onClick #(swap! state assoc :show-access-level-select? true)}
                       "Include..."])
-            :starting-width 68 :resizable? false :sort-by :none}]
+            :header-key "Include" :starting-width 68 :resizable? false :sort-by :none}]
           :data (filter
                  (->> (:selected-types @state)
                       (keep (fn [[k v]] (when v k)))

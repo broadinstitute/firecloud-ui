@@ -76,7 +76,7 @@
                             (style/create-text-field (merge
                                                        {:key index
                                                         :style {:marginBottom 0 :width "calc(100% - 2px)"}
-                                                        :value key
+                                                        :defaultValue key
                                                         :onChange #(swap! state update-in [:attributes index]
                                                                           assoc 0 (-> % .-target .-value))}
                                                        (when (= index (-> (:attributes @state) count dec))
@@ -86,7 +86,7 @@
                           (fn [{:keys [value index]}]
                             (style/create-text-field {:key index
                                                       :style {:marginBottom 0 :width "calc(100% - 2px)"}
-                                                      :value value
+                                                      :defaultValue value
                                                       :onChange #(swap! state update-in [:attributes index]
                                                                         assoc 1 (-> % .-target .-value))}))}]
                         [{:header "Key" :starting-width 300 :as-text name :sort-initial :asc}

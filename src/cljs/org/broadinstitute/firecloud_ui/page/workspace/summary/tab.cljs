@@ -92,13 +92,13 @@
        :div {:style {:position (when-not sidebar-visible? "fixed")
                      :top (when-not sidebar-visible? 0)
                      :width 270}}
-       (when (and curator? writer?)
+       (when (and curator? writer? (not editing?))
          [library/CatalogButton {:library-schema library-schema
                                  :workspace workspace
                                  :workspace-id workspace-id
                                  :request-refresh request-refresh}])
-       (when (and curator? owner?)
-         (if (:published library-attributes)
+       (when (and curator? owner? (not editing?))
+         (if (:library:published library-attributes)
            [library/UnpublishButton {:workspace-id workspace-id
                                      :request-refresh request-refresh}]
            [library/PublishButton {:disabled? (when (empty? library-attributes)
@@ -157,7 +157,7 @@
                                                                           :on-delete on-delete}])}]))]))
 
 
-(defn- render-main [{:keys [workspace owner? bucket-access? editing? submissions-count library-schema request-refresh workspace-id]}]
+(defn- render-main [{:keys [workspace curator? owner? bucket-access? editing? submissions-count library-schema request-refresh workspace-id]}]
   (let [{:keys [owners]
          {:keys [createdBy createdDate bucketName description workspace-attributes library-attributes]} :workspace} workspace]
     [:div {:style {:flex "1 1 auto" :overflow "hidden"}}
@@ -187,6 +187,7 @@
                 [comps/Spinner {:height "1.5ex"}]]
            true (style/create-link {:text bucketName
                                     :href (str moncommon/google-cloud-context bucketName "/")
+                                    :style {:color "-webkit-link" :textDecoration "underline"}
                                     :title "Click to open the Google Cloud Storage browser for this bucket"
                                     :target "_blank"})
            false bucketName))
@@ -207,7 +208,11 @@
                :else [:span {:style {:fontStyle "italic"}} "No description provided"])))
      (when-not (empty? library-attributes)
        [library/LibraryAttributeViewer {:library-attributes library-attributes
-                                        :library-schema library-schema}])
+                                        :library-schema library-schema
+                                        :workspace workspace
+                                        :workspace-id workspace-id
+                                        :request-refresh request-refresh
+                                        :can-edit? (and curator? owner? (not editing?))}])
      [attributes/WorkspaceAttributeViewerEditor {:ref "workspace-attribute-editor"
                                                  :editing? editing?
                                                  :workspace-attributes workspace-attributes
@@ -239,7 +244,7 @@
                                    derived))
             (render-main (merge (select-keys props [:workspace :workspace-id :bucket-access?])
                                 (select-keys @state [:editing?])
-                                (select-keys server-response [:submissions-count :library-schema])
+                                (select-keys server-response [:submissions-count :library-schema :curator?])
                                 (select-keys derived [:owner? :request-refresh])))
             (when (:updating-attrs? @state)
               [comps/Blocker {:banner "Updating Attributes..."}])
@@ -263,15 +268,19 @@
      (swap! locals assoc :scroll-handler
             (fn []
               (when-let [sidebar (@refs "sidebar")]
-                (let [visible (< (.-scrollY js/window) (.-offsetTop sidebar)) ]
+                (let [visible (< (.-scrollY js/window) (.-offsetTop sidebar))]
                   (when-not (= visible (:sidebar-visible? @state))
                     (swap! state assoc :sidebar-visible? visible))))))
      (.addEventListener js/window "scroll" (:scroll-handler @locals)))
+   :component-did-update
+   (fn [{:keys [locals]}]
+     ((:scroll-handler @locals)))
    :component-will-unmount
    (fn [{:keys [locals]}]
      (.removeEventListener js/window "scroll" (:scroll-handler @locals)))
    :refresh
    (fn [{:keys [props state]}]
+     (swap! state dissoc :server-response)
      ((:request-refresh props))
      (endpoints/call-ajax-orch
        {:endpoint (endpoints/count-submissions (:workspace-id props))

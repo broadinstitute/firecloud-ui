@@ -40,6 +40,8 @@
      {:header "Submission ID" :starting-width 235
      :content-renderer (fn [submissionId]
                           (style/create-link {:text submissionId
+                                              :target "_blank"
+                                              :style {:color "-webkit-link" :textDecoration "underline"}
                                               :href (str moncommon/google-cloud-context
                                                          bucketName "/" submissionId "/")}))}]
     :data submissions

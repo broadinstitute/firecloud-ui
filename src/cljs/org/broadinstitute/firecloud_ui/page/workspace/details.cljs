@@ -78,7 +78,7 @@
         library-attributes (->> attributes
                                 (keep (fn [[k v]]
                                         (when (.startsWith k "library:")
-                                          [(-> k (clojure.string/split #":" 2) second keyword) v])))
+                                          [(keyword k) v])))
                                 (into {}))
         workspace-attributes (->> attributes
                                   (keep (fn [[k v]]
