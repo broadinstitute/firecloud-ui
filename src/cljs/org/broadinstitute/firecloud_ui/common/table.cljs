@@ -312,7 +312,8 @@
                   :display-rows clipped-rows
                   :no-data? (empty? clipped-rows))))))
    :component-did-mount
-   (fn [{:keys [this state]}]
+   (fn [{:keys [this state locals]}]
+     (swap! locals assoc :initial-state (select-keys @state [:column-meta :query-params :filter-group-index]))
      (react/call :refresh-rows this)
      (set! (.-onMouseMoveHandler this)
            (fn [e]
@@ -334,12 +335,13 @@
              (swap! state dissoc :dragging? :drag-column :mouse-x :saved-user-select-state)))
      (.addEventListener js/window "mouseup" (.-onMouseUpHandler this)))
    :component-did-update
-   (fn [{:keys [this prev-props props prev-state state]}]
+   (fn [{:keys [this prev-props props prev-state state locals]}]
      (when (or (not= (:data props) (:data prev-props))
                (not= (:query-params @state) (:query-params prev-state)))
        (react/call :refresh-rows this))
      (when (and (:state-key props)
-                (not (:dragging? @state)))
+                (not (:dragging? @state))
+                (not (= (select-keys @state [:column-meta :query-params :filter-group-index]) (:initial-state @locals))))
        (persistence/save {:key (:state-key props) :state state :only [:column-meta :query-params :filter-group-index]})))
    :component-will-unmount
    (fn [{:keys [this]}]
