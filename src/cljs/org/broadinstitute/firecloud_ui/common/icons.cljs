@@ -27,7 +27,8 @@
    :library "import_contacts"
    :publish "publish"
    :catalog "local_offer"
-   :reorder "reorder"})
+   :reorder "reorder"
+   :close "close"})
 
 (defn icon [attributes key]
   [:span (utils/deep-merge

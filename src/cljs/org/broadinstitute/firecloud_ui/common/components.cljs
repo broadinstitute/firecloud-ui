@@ -148,10 +148,12 @@
 (react/defc XButton
   {:render
    (fn [{:keys [props]}]
-     [:div {:style {:position "absolute" :top 4 :right 4}}
-      [Button {:icon :x
-               :onClick (:dismiss props)
-               :id (:id props)}]])})
+     [:div {:style {:float "right" :cursor "pointer" :marginRight "-28px"}}
+      [:a {:style {:color (:text-light style/colors)}
+           :href "javascript:;"
+           :onClick (:dismiss props)
+           :id (:id props)}
+       (icons/icon {} :close)]])})
 
 
 ;; TODO: find out if :position "absolute" would work everywhere, or possibly get rid of Blocker entirely
