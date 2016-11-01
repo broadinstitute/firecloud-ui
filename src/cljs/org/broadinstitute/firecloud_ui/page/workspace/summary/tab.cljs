@@ -52,22 +52,17 @@
                      (swap! state assoc :server-error (get-parsed-response))))}))})
 
 
-(defn- save-attributes [{:keys [old-attributes new-attributes state workspace-id request-refresh]}]
-  (let [to-delete (->> (clojure.set/difference (set (keys old-attributes)) (set (keys new-attributes)))
-                       (map (fn [key] {:op "RemoveAttribute" :attributeName key})))
-        to-update (->> new-attributes
-                       (filter (fn [[k v]] (not= v (get old-attributes k))))
-                       (map (fn [[k v]] {:op "AddUpdateAttribute" :attributeName k :addUpdateAttribute v})))]
-    (swap! state assoc :updating-attrs? true)
-    (endpoints/call-ajax-orch
-      {:endpoint (endpoints/update-workspace-attrs workspace-id)
-       :payload (concat to-delete to-update)
-       :headers utils/content-type=json
-       :on-done (fn [{:keys [success? get-parsed-response]}]
-                  (swap! state dissoc :updating-attrs? :editing?)
-                  (if success?
-                    (request-refresh)
-                    (modal/push-error-response (get-parsed-response))))})))
+(defn- save-attributes [{:keys [new-attributes state workspace-id request-refresh]}]
+  (swap! state assoc :updating-attrs? true)
+  (endpoints/call-ajax-orch
+    {:endpoint (endpoints/update-workspace-attrs workspace-id)
+     :payload new-attributes
+     :headers utils/content-type=json
+     :on-done (fn [{:keys [success? get-parsed-response]}]
+                (swap! state dissoc :updating-attrs? :editing?)
+                (if success?
+                  (request-refresh)
+                  (modal/push-error-response (get-parsed-response))))}))
 
 
 (defn- render-sidebar [state refs this
@@ -120,8 +115,7 @@
                                new-description (react/call :get-text (@refs "description"))]
                            (if error
                              (modal/push-error-text error)
-                             (save-attributes {:old-attributes (assoc workspace-attributes :description description)
-                                               :new-attributes (assoc success :description new-description)
+                             (save-attributes {:new-attributes (assoc success :description new-description)
                                                :state state
                                                :workspace-id workspace-id
                                                :request-refresh request-refresh}))))}]
