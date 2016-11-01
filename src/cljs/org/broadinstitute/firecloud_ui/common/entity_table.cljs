@@ -86,6 +86,7 @@
                      :columns columns
                      :retain-header-on-empty? true
                      :always-sort? true
+                     :initial-rows-per-page 20
                      :pagination (react/call :pagination this columns)
                      :filter-groups (map (fn [type]
                                            {:text type :count (get-in entity-metadata [type "count"]) :pred (constantly true)})
