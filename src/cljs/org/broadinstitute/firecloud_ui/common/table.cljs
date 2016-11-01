@@ -346,7 +346,10 @@
 
 
 (react/defc Table
-  {:get-default-props get-default-table-props
+  {:update-query-params
+   (fn [{:keys [state]} new-params]
+     (swap! state update :query-params merge new-params))
+   :get-default-props get-default-table-props
    :get-initial-state get-initial-table-state
    :render render-table
    :get-ordered-columns

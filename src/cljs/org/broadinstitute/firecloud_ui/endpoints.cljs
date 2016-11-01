@@ -24,6 +24,14 @@
 (defn- ws-path [workspace-id]
   (str (:namespace workspace-id) "/" (:name workspace-id)))
 
+(defn list-datasets [from size]
+  {:path (str "/libraries?from=" from "&size=" size)
+   :method :get})
+
+(def search-datasets
+  {:path "/libraries"
+   :method :post })
+
 (def list-workspaces
   {:path "/workspaces"
    :method :get
