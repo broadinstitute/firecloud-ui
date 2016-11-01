@@ -97,9 +97,9 @@
                           :content-renderer
                           (fn [{:keys [key index]}]
                             (style/create-text-field (merge
-                                                       {:key index
+                                                       {:key key ;; ***
                                                         :style {:marginBottom 0 :fontSize "100%" :height 26 :width "calc(100% - 2px)"}
-                                                        :defaultValue key
+                                                        :defaultValue key ;; ***
                                                         :onChange #(swap! state update-in [:attributes index]
                                                                           assoc 0 (-> % .-target .-value))}
                                                        (when (= index (-> (:attributes @state) count dec))
@@ -107,7 +107,7 @@
                          {:header "Value" :starting-width :remaining :as-text (constantly nil) :resizable? false
                           :content-renderer
                           (fn [{:keys [value index]}]
-                            (style/create-text-field {:key index
+                            (style/create-text-field {:key value
                                                       :style {:marginBottom 0 :fontSize "100%" :height 26 :width "calc(100% - 2px)"}
                                                       :defaultValue value
                                                       :onChange #(swap! state update-in [:attributes index]
@@ -116,7 +116,8 @@
                           :content-renderer
                           (fn [{:keys [type index]}]
                             (style/create-identity-select
-                              {:style {:marginBottom 0 :fontSize "100%" :height 26 :width "calc(100% - 2px)"}
+                              {:key type
+                               :style {:marginBottom 0 :fontSize "100%" :height 26 :width "calc(100% - 2px)"}
                                :defaultValue type
                                :onChange #(swap! state update-in [:attributes index]
                                                  assoc 2 (-> % .-target .-value))}
@@ -135,9 +136,14 @@
    :component-did-update
    (fn [{:keys [prev-props props state]}]
      (when (and (not (:editing? prev-props)) (:editing? props))
-       (utils/log "started editing")
        (swap! state assoc :attributes
               (mapv (fn [[k v]]
                       (let [[type str-value] (get-type-and-string-rep v)]
                         [(name k) str-value type]))
                     (:workspace-attributes props)))))})
+
+
+;; *** Using :value instead of :defaultValue causes the text field to re-render on every change, which causes the cursor
+;;     to jump to the end.  But then using :defaultValue causes the classic React-dynamic-content-desync bug, so we have
+;;     to key by the value shown.  Both of these things "shouldn't" happen.  TODO: figure out what's going on and fix it
+
