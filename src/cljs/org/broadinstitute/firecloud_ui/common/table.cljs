@@ -13,8 +13,7 @@
 
 (def ^:private initial-rows-per-page 10)
 
-(defn select-persistence-keys [atom]
-  (select-keys @atom [:column-meta :query-params :filter-group-index]))
+(def persistence-keys #{:column-meta :query-params :filter-group-index})
 
 
 (defn date-column [props]
@@ -153,7 +152,7 @@
                :dragging? false}
               (persistence/try-restore
                {:key (:state-key props)
-                :validator (fn [stored-value] (= (set (keys stored-value)) #{:column-meta :filter-group-index :query-params}))
+                :validator (fn [stored-value] (= (set (keys stored-value)) persistence-keys))
                 :initial
                 (fn [] (let [processed-columns (if-let [defaults (:column-defaults props)]
                                                  (let [by-header (utils/index-by :header (:columns props))
@@ -316,7 +315,7 @@
                   :no-data? (empty? clipped-rows))))))
    :component-did-mount
    (fn [{:keys [this state locals]}]
-     (swap! locals assoc :initial-state (select-persistence-keys @state))
+     (swap! locals assoc :initial-state (select-keys @state persistence-keys))
      (react/call :refresh-rows this)
      (set! (.-onMouseMoveHandler this)
            (fn [e]
@@ -344,7 +343,7 @@
        (react/call :refresh-rows this))
      (when (and (:state-key props)
                 (not (:dragging? @state))
-                (not (= (select-persistence-keys @state) (:initial-state @locals))))
+                (not (= (select-keys @state persistence-keys) (:initial-state @locals))))
        (persistence/save {:key (:state-key props) :state state :only [:column-meta :query-params :filter-group-index]})))
    :component-will-unmount
    (fn [{:keys [this]}]

@@ -60,7 +60,6 @@
 (react/defc WorkspaceData
   {:render
    (fn [{:keys [props state refs]}]
-     ;(js* "debugger;")
      (let [{:keys [workspace-id workspace workspace-error]} props]
        [:div {:style {:padding "1em"}}
         (cond

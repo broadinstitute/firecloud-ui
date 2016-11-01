@@ -29,11 +29,5 @@
 
 
 (defmacro pause
-  "Throws and catches its own exception. Useful with \"Pause On Caught Exception\" option in
-   Chrome."
-  ([expr]
-   (let [result-sym (gensym "result-")]
-     `(let [~result-sym ~expr]
-        (try (throw (js/Error. "pause")) (catch js/Object ~'_))
-        ~result-sym)))
-  ([] `(try (throw (js/Error. "pause")) (catch js/Object ~'_))))
+  "JS debugger statement."
+  `(js* "debugger;"))

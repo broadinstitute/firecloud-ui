@@ -9,7 +9,8 @@
     [org.broadinstitute.firecloud-ui.common.table :refer [Table]]
     [org.broadinstitute.firecloud-ui.common.table-utils :refer [default-render]]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
-    [org.broadinstitute.firecloud-ui.utils :as utils]))
+    [org.broadinstitute.firecloud-ui.utils :as utils]
+    ))
 
 
 
