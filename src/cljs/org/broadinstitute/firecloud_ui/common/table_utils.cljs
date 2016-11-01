@@ -81,7 +81,7 @@
               [:div {:style {:display "inline-flex" :alignItems "baseline"}}
                "Display"
                (style/create-select
-                {:defaultValue (utils/index-of rows-per-page-options (:default-initial-rows-per-page props))
+                {:defaultValue (utils/index-of rows-per-page-options (:initial-rows-per-page props))
                  :style {:width 60 :margin "0em 1em"}
                  :onChange #((:on-change props) {:rows-per-page (nth rows-per-page-options (-> % .-target .-value js/parseInt))
                                                  :current-page 1})}
