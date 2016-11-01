@@ -49,14 +49,13 @@
      (let [{:keys [color icon href disabled? onClick text style class-name]} props]
        [:a {:className (or class-name "button")
             :style (merge
-                     {:display "inline-flex" :alignItems "center"
-                      :backgroundColor color
-                      :WebkitFilter (when disabled? "grayscale()")
-                      :cursor (when disabled? "default")
-                      :color "white" :fontWeight 500
-                      :borderRadius 2 :padding (if text "0.7em 1em" "0.4em")
-                      :textDecoration "none"}
-                     (if (map? style) style {}))
+                    {:display "inline-flex" :alignItems "center"
+                     :backgroundColor (if disabled? (:disabled-state style/colors) color)
+                     :cursor (when disabled? "default")
+                     :color "white" :fontWeight 500
+                     :borderRadius 2 :padding (if text "0.7em 1em" "0.4em")
+                     :textDecoration "none"}
+                    (if (map? style) style {}))
             :href (or href "javascript:;")
             :onClick (if disabled?
                        ;; Have to fully qualify to avoid circular dependency
@@ -210,12 +209,11 @@
            color (cond (keyword? (:color props)) (get style/colors (:color props))
                        :else (:color props))]
        [:div {:style {:fontSize "106%"
-                      :WebkitFilter (when disabled? "grayscale()")
                       :marginTop (when (= margin :top) "1em")
                       :marginBottom (when (= margin :bottom) "1em")
                       :padding "0.7em 0" :textAlign "center"
                       :cursor (if disabled? "default" "pointer")
-                      :backgroundColor (if heavy? color "transparent")
+                      :backgroundColor (if disabled? (:disabled-state style/colors) (if heavy? color "transparent"))
                       :color (if heavy? "#fff" color)
                       :border (when-not heavy? style/standard-line)
                       :borderRadius (when heavy? 4)}

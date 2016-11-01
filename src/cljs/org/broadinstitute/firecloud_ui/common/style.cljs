@@ -10,6 +10,7 @@
              :running-state "#67688a"
              :success-state "#7aac20"
              :exception-state "#e85c46"
+             :disabled-state "#808080"
              :tag-background "#d4ecff"
              :tag-foreground "#2c3c4d"
              :text-light "#666"

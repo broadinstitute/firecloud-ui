@@ -34,10 +34,9 @@
                     "javascript:;"
                     (nav/create-href nav-context href))
             :style {:display "block" :position "relative"
-                    :backgroundColor (style/color-for-status status)
+                    :backgroundColor (if disabled? (:disabled-state style/colors) (style/color-for-status status))
                     :margin "2px 0 2px 2px" :height (- row-height-px 4)
-                    :cursor (when disabled? "default")
-                    :WebkitFilter (when disabled? "grayscale()")}
+                    :cursor (when disabled? "default")}
             :title (when disabled? disabled-text)}
         [:span {:style {:position "absolute" :top 0 :right 0 :bottom 0 :left 0
                         :backgroundColor "rgba(0,0,0,0.2)"}}]
@@ -58,16 +57,15 @@
                     "javascript:;"
                     (nav/create-href nav-context href))
             :style {:display "flex" :alignItems "center"
-                    :backgroundColor color
+                    :backgroundColor (if disabled? (:disabled-state style/colors) color)
                     :color "white" :textDecoration "none"
                     :cursor (when disabled? "default")
-                    :WebkitFilter (when disabled? "grayscale()")
                     :height (- row-height-px 4)
                     :margin "2px 0"}
             :title (when disabled? disabled-text)}
         (when protected?
           [:span {:style {:display "block" :position "relative"}}
-           [:span {:style {:display "block" :position "absolute" :left -16 :top -9
+           [:span {:style {:display "block" :position "absolute" :left -17 :top -9
                            :width (- row-height-px 4) :padding "4px 0"
                            :backgroundColor "white" :color "#666" :fontSize "xx-small"
                            :transform "rotate(-90deg)"}}
