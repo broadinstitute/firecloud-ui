@@ -76,7 +76,7 @@
                                         ;; have to do this by ID not ref, since the fields are generated within Table
                                         (after-update #(.focus (.getElementById js/document "focus"))))}]])
            [table/Table
-            {:key editing?
+            {:key (str editing? (count (:attributes @state)))
              :reorderable-columns? false :sortable-columns? (not editing?) :filterable? false :pagination :none
              :empty-message "No Workspace Attributes defined"
              :row-style {:alignItems "stretch"}
@@ -97,9 +97,8 @@
                           :content-renderer
                           (fn [{:keys [key index]}]
                             (style/create-text-field (merge
-                                                       {:key key ;; ***
-                                                        :style {:marginBottom 0 :fontSize "100%" :height 26 :width "calc(100% - 2px)"}
-                                                        :defaultValue key ;; ***
+                                                       {:style {:marginBottom 0 :fontSize "100%" :height 26 :width "calc(100% - 2px)"}
+                                                        :defaultValue key
                                                         :onChange #(swap! state update-in [:attributes index]
                                                                           assoc 0 (-> % .-target .-value))}
                                                        (when (= index (-> (:attributes @state) count dec))
@@ -107,8 +106,7 @@
                          {:header "Value" :starting-width :remaining :as-text (constantly nil) :resizable? false
                           :content-renderer
                           (fn [{:keys [value index]}]
-                            (style/create-text-field {:key value
-                                                      :style {:marginBottom 0 :fontSize "100%" :height 26 :width "calc(100% - 2px)"}
+                            (style/create-text-field {:style {:marginBottom 0 :fontSize "100%" :height 26 :width "calc(100% - 2px)"}
                                                       :defaultValue value
                                                       :onChange #(swap! state update-in [:attributes index]
                                                                         assoc 1 (-> % .-target .-value))}))}
@@ -116,14 +114,13 @@
                           :content-renderer
                           (fn [{:keys [type index]}]
                             (style/create-identity-select
-                              {:key type
-                               :style {:marginBottom 0 :fontSize "100%" :height 26 :width "calc(100% - 2px)"}
+                              {:style {:marginBottom 0 :fontSize "100%" :height 26 :width "calc(100% - 2px)"}
                                :defaultValue type
                                :onChange #(swap! state update-in [:attributes index]
                                                  assoc 2 (-> % .-target .-value))}
                               ["String" "Number" "List of Strings" "List of Numbers"]))}]
                         [{:header "Key" :starting-width 300 :as-text name :sort-initial :asc}
-                         {:header "Value" :starting-width :remaining
+                         {:header "Value" :starting-width :remaining :as-text process-attribute-value
                           :content-renderer (comp (table-utils/render-gcs-links (:workspace-bucket props)) process-attribute-value)}])
              :data (if editing?
                      (map-indexed (fn [index [key value type]]
@@ -141,9 +138,3 @@
                       (let [[type str-value] (get-type-and-string-rep v)]
                         [(name k) str-value type]))
                     (:workspace-attributes props)))))})
-
-
-;; *** Using :value instead of :defaultValue causes the text field to re-render on every change, which causes the cursor
-;;     to jump to the end.  But then using :defaultValue causes the classic React-dynamic-content-desync bug, so we have
-;;     to key by the value shown.  Both of these things "shouldn't" happen.  TODO: figure out what's going on and fix it
-
