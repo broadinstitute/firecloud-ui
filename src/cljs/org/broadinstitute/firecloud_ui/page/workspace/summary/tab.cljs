@@ -55,7 +55,7 @@
 (defn- save-attributes [{:keys [new-attributes state workspace-id request-refresh]}]
   (swap! state assoc :updating-attrs? true)
   (endpoints/call-ajax-orch
-    {:endpoint (endpoints/update-workspace-attrs workspace-id)
+    {:endpoint (endpoints/set-workspace-attributes workspace-id)
      :payload new-attributes
      :headers utils/content-type=json
      :on-done (fn [{:keys [success? get-parsed-response]}]
@@ -68,7 +68,7 @@
 (defn- render-sidebar [state refs this
                        {:keys [workspace billing-projects owner? writer? curator?
                                workspace-id on-clone on-delete request-refresh]}]
-  (let [{{:keys [isLocked library-attributes workspace-attributes description isProtected]} :workspace
+  (let [{{:keys [isLocked library-attributes description isProtected]} :workspace
          {:keys [runningSubmissionsCount]} :workspaceSubmissionStats} workspace
         status (common/compute-status workspace)
         {:keys [sidebar-visible? editing?]

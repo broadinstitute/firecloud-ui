@@ -12,6 +12,15 @@
     ))
 
 
+(defn- boolean? [x]
+  (or (true? x) (false? x)))
+
+(defn- parse-boolean [attr-value]
+  (if (contains? #{"true" "yes"} (clojure.string/lower-case attr-value))
+    true
+    false))
+
+
 (defn- process-attribute-value [attr-value]
   (if (and (map? attr-value)
            (= #{"itemsType" "items"} (set (keys attr-value))))
@@ -21,6 +30,7 @@
 (defn- get-type-and-string-rep [attr-value]
   (cond (string? attr-value) ["String" attr-value]
         (number? attr-value) ["Number" (str attr-value)]
+        (boolean? attr-value) ["Boolean" (str attr-value)]
         (and (map? attr-value)
              (= #{"itemsType" "items"} (-> attr-value keys set)))
         (let [items (attr-value "items")
@@ -28,16 +38,16 @@
               str-value (join ", " items)]
           (cond (string? first-item) ["List of Strings" str-value]
                 (number? first-item) ["List of Numbers" str-value]
-                :else (do (utils/cljslog "Unknown attribute list type: " first-item)
+                (boolean? first-item) ["List of Booleans" str-value]
+                :else (do (utils/cljslog "Unknown attribute list type:" first-item)
                           ["List of Strings" str-value])))
-        :else (do (utils/cljslog "Unknown attribute type: " attr-value)
+        :else (do (utils/cljslog "Unknown attribute type:" attr-value)
                   ["String" attr-value])))
 
 
 (react/defc WorkspaceAttributeViewerEditor
   {:get-attributes
    (fn [{:keys [state]}]
-     (utils/cljslog (:attributes @state))
      (let [{:keys [attributes]} @state
            duplicates (not-empty (utils/find-duplicates (map first attributes)))
            any-empty? (some (fn [[k v _]]
@@ -53,8 +63,10 @@
                              [key (case type
                                     "String" value
                                     "Number" (js/parseFloat value)
+                                    "Boolean" (parse-boolean value)
                                     "List of Strings" (map trim (split value #","))
                                     "List of Numbers" (map (comp js/parseFloat trim) (split value #","))
+                                    "List of Booleans" (map (comp parse-boolean trim) (split value #","))
                                     value)]))
                       (into {}))]
        (cond duplicates {:error (str "Duplicate keys: " (join ", " duplicates))}
@@ -118,7 +130,7 @@
                                :defaultValue type
                                :onChange #(swap! state update-in [:attributes index]
                                                  assoc 2 (-> % .-target .-value))}
-                              ["String" "Number" "List of Strings" "List of Numbers"]))}]
+                              ["String" "Number" "Boolean" "List of Strings" "List of Numbers" "List of Booleans"]))}]
                         [{:header "Key" :starting-width 300 :as-text name :sort-initial :asc}
                          {:header "Value" :starting-width :remaining :as-text process-attribute-value
                           :content-renderer (comp (table-utils/render-gcs-links (:workspace-bucket props)) process-attribute-value)}])
