@@ -273,6 +273,7 @@
       [:div {:style {:float "left"}}
        (make-field entity "createDate" "Created: " false common/format-date)
        (make-field entity "entityType" "Entity Type: " false)
+       (make-field entity "owners" "Owners: " false (partial clojure.string/join ", "))
        (make-field entity "synopsis" "Synopsis: " false)]
       (common/clear-both)
       [:div {:style {:fontWeight 500 :padding "0.5em 0 0.3em 0"}}
