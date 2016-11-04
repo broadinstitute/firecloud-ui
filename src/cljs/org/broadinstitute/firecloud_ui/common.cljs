@@ -135,6 +135,9 @@
   (let [unparsed-values (get unparsed-profile "keyValuePairs")]
     (into {} (map (fn [m] [(keyword (m "key")) (m "value")]) unparsed-values))))
 
+(defn workspace-id->string [workspace-id] 
+  (str (:namespace workspace-id) "/" (:name workspace-id)))
+
 (defn get-id-from-nav-segment [segment]
   (when-not (clojure.string/blank? segment)
     (let [[ns n] (clojure.string/split segment #":")]
@@ -146,6 +149,13 @@
    :queue-position (or workflowsBeforeNextUserWorkflow 0)
    :queued (apply + (map workflowCountsByStatus ["Queued" "Launching"]))
    :active (apply + (map workflowCountsByStatus ["Submitted" "Running" "Aborting"]))})
+
+(defn attribute-list? [attr-value]
+  (and (map? attr-value)
+       (= (set (keys attr-value)) #{"itemsType" "items"})))
+
+(defn attribute-values [attribute-list]
+  (attribute-list "items"))
 
 (def root-entity-types ["participant" "sample" "pair" "participant_set" "sample_set" "pair_set"])
 (def singular-type->set-type {"participant" "participant_set"

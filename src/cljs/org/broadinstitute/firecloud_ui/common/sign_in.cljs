@@ -59,15 +59,15 @@
                        :padding "20px 48px 18px"
                        :fontSize "137%" :fontWeight 400 :lineHeight 1}}
          (:title props)]
-        [:div {:style {:padding "22px 48px 40px" :backgroundColor (:background-gray style/colors)}}
-          [:div {}
-            (:message props)
-            [:div {:style {:marginTop 20 :textAlign "center"}}
-              [Button {:on-login (fn [message]
-                                   (let [token (get message "access_token")]
-                                     (reset! u/access-token token)
-                                     (u/set-access-token-cookie token)
-                                     (swap! state assoc :success? true)))}]]]]]))
+        [:div {:style {:padding "22px 48px 40px" :backgroundColor (:background-light style/colors)}}
+         [:div {}
+          (:message props)
+          [:div {:style {:marginTop 20 :textAlign "center"}}
+           [Button {:on-login (fn [message]
+                                (let [token (get message "access_token")]
+                                  (reset! u/access-token token)
+                                  (u/set-access-token-cookie token)
+                                  (swap! state assoc :success? true)))}]]]]]))
    :component-did-update
    (fn [{:keys [state props]}]
      (let [{:keys [success?]} @state]

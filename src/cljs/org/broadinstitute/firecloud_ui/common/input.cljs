@@ -13,7 +13,8 @@
    :validate
    (fn [{:keys [props state this]}]
      (let [text (react/call :get-text this)
-           fails (keep (fn [p] (when-not ((:test p) text) (:message p))) (filter some? (:predicates props)))]
+           fails (keep (fn [p] (when-not ((:test p) text) (:message p)))
+                       (filter some? (:predicates props)))]
        (when-not (empty? fails)
          (swap! state assoc :invalid true)
          fails)))
@@ -23,14 +24,14 @@
    :render
    (fn [{:keys [state props]}]
      (style/create-text-field
-       (merge {:ref "textfield"
-               :style (merge (or (:style props) {})
-                             (when (:invalid @state)
-                               {:borderColor (:exception-red style/colors)}))
-               :onChange #(do (swap! state dissoc :invalid)
-                           (when-let [x (:onChange props)]
-                             (x %)))}
-              (dissoc props :ref :style :onChange))))})
+      (merge {:ref "textfield"
+              :style (merge (or (:style props) {})
+                            (when (:invalid @state)
+                              {:borderColor (:exception-state style/colors)}))
+              :onChange #(do (swap! state dissoc :invalid)
+                             (when-let [x (:onChange props)]
+                               (x %)))}
+             (dissoc props :ref :style :onChange))))})
 
 (defn get-text [refs & ids]
   (if (= 1 (count ids))
@@ -53,7 +54,16 @@
 ;; Some premade predicates:
 
 (defn nonempty [field-name]
-  {:test #(not (empty? %)) :message (str field-name " cannot be empty")})
+  {:test (comp not empty?) :message (str field-name " cannot be empty")})
+
+(defn integer [field-name & {:keys [min max]}]
+  (let [parses (partial re-matches #"\-?[0-9]+")
+        in-range #(<= (or min -Infinity) (int %) (or max Infinity))]
+    {:test (every-pred parses in-range)
+     :message (str field-name " must be an integer"
+                   (cond (and min max) (str " between " min " and " max)
+                         min (str " ≥ " min)
+                         max (str " ≤ " max)))}))
 
 (defn alphanumeric_- [field-name]
   {:test #(re-matches #"[A-Za-z0-9_\-]*" %)

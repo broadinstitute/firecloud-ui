@@ -112,12 +112,12 @@
      (let [locked? (:locked? @state)]
        [:div {:style {:lineHeight 1}}
         (when-not editing?
-          [comps/SidebarButton {:style :light :color :button-blue
+          [comps/SidebarButton {:style :light :color :button-primary
                                 :text "Edit this page" :icon :edit
                                 :disabled? (when locked? "The workspace is locked")
                                 :onClick #(swap! state assoc :editing? true)}])
         (when-not editing?
-          [comps/SidebarButton {:style :light :color :exception-red :margin :top
+          [comps/SidebarButton {:style :light :color :exception-state :margin :top
                                 :text "Delete" :icon :delete
                                 :disabled? (when locked? "The workspace is locked")
                                 :onClick #(modal/push-modal
@@ -126,19 +126,19 @@
                                                                  :after-delete (:after-delete props)}])}])
 
         (when-not editing?
-          [comps/SidebarButton {:style :light :color :button-blue :margin :top
+          [comps/SidebarButton {:style :light :color :button-primary :margin :top
                                 :text "Publish" :icon :share
                                 :onClick #(modal/push-modal
                                            [publish/PublishDialog {:config config
                                                                    :workspace-id (:workspace-id props)}])}])
 
         (when editing?
-          [comps/SidebarButton {:color :success-green
+          [comps/SidebarButton {:color :success-state
                                 :text "Save" :icon :done
                                 :onClick #(do (commit state refs config props)
                                               (stop-editing state))}])
         (when editing?
-          [comps/SidebarButton {:color :exception-red :margin :top
+          [comps/SidebarButton {:color :exception-state :margin :top
                                 :text "Cancel Editing" :icon :cancel
                                 :onClick #(stop-editing state)}])]))])
 
@@ -155,7 +155,7 @@
            [:div {}
             [:div {:style {:display "flex" :alignItems "baseline" :marginBottom "0.5em"}}
              [:div {:style {:marginRight "1em" :padding "0.5em"
-                            :backgroundColor (:background-gray style/colors)
+                            :backgroundColor (:background-light style/colors)
                             :border style/standard-line :borderRadius 2}}
               (str field-name ": (" (when optional? "optional ") type ")")]
              (when editing?
@@ -165,11 +165,11 @@
                (or field-value [:span {:style {:fontStyle "italic"}} "No value entered"]))
              (when (and error (not editing?))
                (icons/icon {:style {:margin "0 0 0 0.7em" :alignSelf "center"
-                                    :color (:exception-red style/colors)}}
+                                    :color (:exception-state style/colors)}}
                            :error))]
             (when error
               [:div {:style {:padding "0.5em" :marginBottom "0.5em"
-                             :backgroundColor (:exception-red style/colors)
+                             :backgroundColor (:exception-state style/colors)
                              :display "inline-block"
                              :border style/standard-line :borderRadius 2}}
                error])]))

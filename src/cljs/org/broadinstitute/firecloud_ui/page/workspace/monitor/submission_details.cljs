@@ -1,6 +1,7 @@
 (ns org.broadinstitute.firecloud-ui.page.workspace.monitor.submission-details
     (:require
       [dmohs.react :as react]
+      [clojure.string :as string]
       [org.broadinstitute.firecloud-ui.common :as common]
       [org.broadinstitute.firecloud-ui.common.components :as comps]
       [org.broadinstitute.firecloud-ui.common.icons :as icons]
@@ -14,9 +15,9 @@
 
 
 (defn- color-for-submission [submission]
-  (cond (contains? moncommon/sub-running-statuses (submission "status")) (:running-blue style/colors)
-        (moncommon/all-success? submission) (:success-green style/colors)
-        :else (:exception-red style/colors)))
+  (cond (contains? moncommon/sub-running-statuses (submission "status")) (:running-state style/colors)
+        (moncommon/all-success? submission) (:success-state style/colors)
+        :else (:exception-state style/colors)))
 
 (defn- icon-for-submission [submission]
   (cond (contains? moncommon/sub-running-statuses (submission "status")) [icons/RunningIcon {:size 36}]
@@ -63,7 +64,19 @@
                                        (map (fn [message]
                                               [:div {} message])
                                          message-list)])}
-                 {:header "Workflow ID" :starting-width 300}]
+                 {:header "Workflow ID" :starting-width 300
+                  :content-renderer
+                  (fn [workflow]
+                   (let [{:keys [submission-id bucketName]} props
+                         inputs (second (second (first (workflow "inputResolutions"))))
+                         input-names (string/split inputs ".")
+                         workflow-name (first input-names)
+                         workflowId (workflow "workflowId")]
+                   (style/create-link {:text workflowId
+                                       :target "_blank"
+                                       :style {:color "-webkit-link" :textDecoration "underline"}
+                     :href (str moncommon/google-cloud-context bucketName "/" submission-id  "/"
+                                workflow-name "/" workflowId "/")})))}]
        :filter-groups
        (vec (cons {:text "All" :pred (constantly true)}
               (map (fn [status] {:text status :pred #(= status (% "status"))})
@@ -74,7 +87,7 @@
                  (row "statusLastChangedDate")
                  (row "status")
                  (row "messages")
-                 (row "workflowId")])}])
+                 row])}])
    :render-workflow-details
    (fn [{:keys [state props]}]
      (let [workflows (:workflows props)
@@ -87,34 +100,33 @@
        [:b {} (:name (:selected-workflow @state))]]
       [:div {:style {:marginTop "1em"}}
        (workflow-details/render
-        (merge (select-keys props [:workspace-id :submission-id])
+        (merge (select-keys props [:workspace-id :submission-id :bucketName])
                {:workflow-id (get-in @state [:selected-workflow :id])
                 :submission (:submission props)
                 :workflow-name workflowName}))]]))})
-
 
 
 (react/defc AbortButton
   {:render (fn [{:keys [state this]}]
              (when (:aborting-submission? @state)
                [comps/Blocker {:banner "Aborting submission ..."}])
-             [comps/SidebarButton {:color :button-blue :style :light :margin :top
+             [comps/SidebarButton {:color :button-primary :style :light :margin :top
                                    :text "Abort" :icon :status-warning-triangle
                                    :onClick (fn [_]
                                               (modal/push-confirm
-                                                {:text "Are you sure you want to abort this submission?"
-                                                 :on-confirm #(react/call :abort-submission this)}))}])
+                                               {:text "Are you sure you want to abort this submission?"
+                                                :on-confirm #(react/call :abort-submission this)}))}])
    :abort-submission (fn [{:keys [props state]}]
                        (modal/pop-modal)
                        (swap! state assoc :aborting-submission? true)
                        (endpoints/call-ajax-orch
-                         {:endpoint (endpoints/abort-submission (:workspace-id props) (:submission-id props))
-                          :headers utils/content-type=json
-                          :on-done (fn [{:keys [success? status-text]}]
-                                     (swap! state dissoc :aborting-submission?)
-                                     (if success?
-                                       ((:on-abort props))
-                                       (modal/push-error-text (str "Error in aborting the job : " status-text))))}))})
+                        {:endpoint (endpoints/abort-submission (:workspace-id props) (:submission-id props))
+                         :headers utils/content-type=json
+                         :on-done (fn [{:keys [success? status-text]}]
+                                    (swap! state dissoc :aborting-submission?)
+                                    (if success?
+                                      ((:on-abort props))
+                                      (modal/push-error-text (str "Error in aborting the job : " status-text))))}))})
 
 
 (react/defc Page
@@ -162,13 +174,18 @@
              [:div {} (submission "submitter")]
              (let [m (js/moment (submission "submissionDate"))]
                [:div {} (.format m "LLL") " (" (.fromNow m) ")"]))
-           (style/create-section-header "Submission ID")
-           (style/create-paragraph (submission "submissionId"))]
+                (style/create-section-header "Submission ID")
+                (style/create-link {:text (style/create-paragraph (submission "submissionId"))
+                               :target "_blank"
+                               :style {:color "-webkit-link" :textDecoration "underline"}
+                               :href (str moncommon/google-cloud-context
+                                  (:bucketName props) "/" (submission "submissionId") "/")})]
           (common/clear-both)
           [:h2 {:style {:paddingBottom "0.5em"}} "Workflows:"]
           [WorkflowsTable {:workflows (submission "workflows")
                            :workspace-id (:workspace-id props)
                            :submission submission
+                           :bucketName (:bucketName props)
                            :submission-id (submission "submissionId")}]])))
    :load-details
    (fn [{:keys [props state]}]

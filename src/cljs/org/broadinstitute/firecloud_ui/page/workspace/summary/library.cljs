@@ -6,7 +6,9 @@
     [org.broadinstitute.firecloud-ui.common.input :as input]
     [org.broadinstitute.firecloud-ui.common.modal :as modal]
     [org.broadinstitute.firecloud-ui.common.style :as style]
-    [org.broadinstitute.firecloud-ui.utils :as utils]))
+    [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
+    [org.broadinstitute.firecloud-ui.utils :as utils]
+    ))
 
 
 (defn- calculate-display-properties [library-schema]
@@ -15,48 +17,18 @@
        (utils/sort-match (:propertyOrder library-schema))
        (filter (comp not :hidden #(get-in library-schema [:properties %])))))
 
-(defn- count-required-not-hidden [library-schema]
-  (->> (:required library-schema)
-       (filter (comp not :hidden #(get-in library-schema [:properties %])))
-       count))
-
-(defn- split-fold [library-schema display-properties]
-  (let [required-count (count-required-not-hidden library-schema)
-        above-fold-count (if (< required-count 5) required-count 5)]
-    (split-at above-fold-count display-properties)))
 
 (defn- render-value [value]
   (cond (sequential? value) (clojure.string/join ", " value)
+        (common/attribute-list? value) (clojure.string/join ", " (common/attribute-values value))
         :else value))
 
 (defn- render-property [library-schema library-attributes property-key]
-  [:div {:style {:display "flex" :padding "0.5em 0" :borderBottom (str "2px solid " (:line-gray style/colors))}}
+  [:div {:style {:display "flex" :padding "0.5em 0" :borderBottom (str "2px solid " (:line-default style/colors))}}
    [:div {:style {:flexBasis "33%" :fontWeight "bold" :paddingRight "2em"}}
     (get-in library-schema [:properties property-key :title])]
    [:div {:style {:flexBasis "67%"}}
     (render-value (get library-attributes property-key))]])
-
-(react/defc LibraryAttributeViewer
-  {:render
-   (fn [{:keys [props state]}]
-     (let [{:keys [library-attributes library-schema]} props
-           display-properties (calculate-display-properties library-schema)
-           [above-fold below-fold] (split-fold library-schema display-properties)
-           below-fold (not-empty below-fold)]
-       [:div {}
-        (style/create-section-header "Dataset Attributes")
-        (style/create-paragraph
-          (if library-attributes
-            [:div {}
-             (map (partial render-property library-schema library-attributes) above-fold)
-             (when below-fold
-               [:div {}
-                (when (:expanded? @state)
-                  (map (partial render-property library-schema library-attributes) below-fold))
-                [:div {:style {:marginTop "0.5em"}}
-                 (style/create-link {:text (if (:expanded? @state) "Collapse" "See more attributes")
-                                     :onClick #(swap! state update :expanded? not)})]])]
-            [:div {:style {:fontStyle "italic"}} "No attributes provided"]))]))})
 
 
 (defn- resolve-hidden [property-key workspace]
@@ -65,6 +37,26 @@
     :workspaceNamespace (get-in workspace [:workspace :namespace])
     :workspaceName (get-in workspace [:workspace :name])
     nil))
+
+(def ^:private ENUM_EMPTY_CHOICE "<select an option>")
+
+(defn resolve-enum [value]
+  (when-not (= value ENUM_EMPTY_CHOICE)
+    value))
+
+(defn- resolve-field [value {:keys [type items]}]
+  (case type
+    "string" (not-empty value)
+    "integer" (int value)
+    "array" (not-empty
+              (let [parsed (clojure.string/split value #"\s*,\s*")]
+                (case (:type items)
+                  "string" (remove empty? parsed)
+                  "integer" (map int parsed)
+                  (do (utils/log "unknown array type: " (:type items))
+                      parsed))))
+    (do (utils/log "unknown type: " type)
+        value)))
 
 (react/defc LibraryAttributeForm
   {:get-initial-state
@@ -78,76 +70,152 @@
        :ok-button #(react/call :on-ok this)}])
    :form
    (fn [{:keys [props state]}]
-     (let [library-schema (:library-schema props)]
+     (let [library-schema (:library-schema props)
+           existing (get-in props [:workspace :workspace :library-attributes])]
        [:div {:style {:width "50vw"}}
+        (when (:saving? @state)
+          [comps/Blocker {:banner "Submitting library attributes..."}])
         [:div {:style {:maxHeight 400 :overflowY "auto"
                        :padding "0.5em" :border style/standard-line
                        :marginBottom "1em"}}
          (map (fn [property-key]
-                (let [{:keys [hidden title inputHint enum]} (get-in library-schema [:properties property-key])
+                (let [{:keys [hidden title inputHint enum type items minimum default]} (get-in library-schema [:properties property-key])
                       required? (contains? (:required-props @state) property-key)
                       pk-str (name property-key)]
                   (when-not hidden
                     [:div {}
-                     (style/create-form-label (str title (when required? " (required)")))
-                     (cond enum (style/create-identity-select {:ref pk-str} enum)
-                           required? [input/TextField {:ref pk-str
-                                                       :style {:width "100%"}
-                                                       :placeholder inputHint
-                                                       :predicates [(when required? (input/nonempty pk-str))]}]
-                           :else (style/create-text-field {:ref (name property-key)
-                                                           :style {:width "100%"}
-                                                           :placeholder inputHint}))])))
+                     (style/create-form-label
+                       [:div {:style {:display "flex" :alignItems "baseline"}}
+                        [:div {:style {:flex "0 0 auto"}}
+                         title
+                         (when required?
+                           [:b {:style {:marginLeft "1ex"}} "(required)"])]
+                        [:div {:style {:flex "1 1 auto"}}]
+                        (when-not enum
+                          [:i {:style {:flex "0 0 auto"}}
+                           (if (= type "array")
+                             (str "Comma-separated list of " (:type items) "s")
+                             (clojure.string/capitalize type))])])
+                     (if enum
+                       (style/create-identity-select {:ref pk-str
+                                                      :defaultValue (get existing property-key ENUM_EMPTY_CHOICE)}
+                                                     (cons ENUM_EMPTY_CHOICE enum))
+                       [input/TextField {:ref pk-str
+                                         :style {:width "100%"}
+                                         :placeholder inputHint
+                                         :defaultValue (render-value (get existing property-key default))
+                                         :predicates [(when required?
+                                                        (input/nonempty pk-str))
+                                                      (when (= type "integer")
+                                                        (input/integer pk-str :min minimum))]}])])))
               (calculate-display-properties library-schema))]
-        (style/create-validation-error-message (:validation-error @state))]))
+        (style/create-validation-error-message (:validation-error @state))
+        [comps/ErrorViewer {:error (:server-error @state)}]]))
    :on-ok
    (fn [{:keys [props state refs]}]
-     (let [field-data (doall
-                        (map (fn [[property-key {:keys [hidden enum]}]]
-                               (let [pk-str (name property-key)
-                                     required? (contains? (:required-props @state) property-key)]
-                                 [property-key
-                                  {:required? required?
-                                   :value (not-empty
-                                            (cond hidden (resolve-hidden property-key (:workspace props))
-                                                  enum (common/get-text refs pk-str)
-                                                  required? (do (input/validate refs pk-str)
-                                                              (input/get-text refs pk-str))
-                                                  :else (common/get-text refs pk-str)))}]))
-                             (-> props :library-schema :properties)))
-           missing-fields (not-empty
-                            (keep (fn [[property-key {:keys [required? value]}]]
-                                    (when (and required? (not value)) property-key))
-                                  field-data))]
-       (if missing-fields
-         (swap! state assoc :validation-error ["Please fill out all required fields"])
-         (let [field-data-map (->> field-data
-                                   (keep (fn [[property-key {:keys [value]}]]
-                                           (when value
-                                             [(name property-key) value])))
-                                   (into {}))]
-           (swap! state dissoc :validation-error)
-           ;; TODO: update properties
-           (utils/cljslog field-data-map)))))})
+     (swap! state dissoc :validation-error :server-error)
+     (let [validation-errors (atom [])
+           field-data (->> props :library-schema :properties
+                           (keep (fn [[property-key {:keys [hidden enum] :as property}]]
+                                   (let [pk-str (name property-key)
+                                         value (cond hidden (resolve-hidden property-key (:workspace props))
+                                                     enum (resolve-enum (common/get-text refs pk-str))
+                                                     :else (do (swap! validation-errors into (input/validate refs pk-str))
+                                                               (resolve-field (input/get-text refs pk-str) property)))]
+                                     (when value
+                                       [pk-str value]))))
+                           (into {}))]
+       (if-not (empty? @validation-errors)
+         (swap! state assoc :validation-error @validation-errors)
+         (do (swap! state assoc :saving? true)
+             (endpoints/call-ajax-orch
+               {:endpoint (endpoints/save-library-metadata (:workspace-id props))
+                :payload field-data
+                :headers utils/content-type=json
+                :on-done (fn [{:keys [success? get-parsed-response]}]
+                           (swap! state dissoc :saving?)
+                           (if success?
+                             (do (modal/pop-modal)
+                                 ((:request-refresh props)))
+                             (swap! state assoc :server-error (get-parsed-response))))})))))})
+
+
+(react/defc LibraryAttributeViewer
+  {:render
+   (fn [{:keys [props state]}]
+     (let [{:keys [library-attributes library-schema]} props
+           form-properties (select-keys props [:library-schema :workspace :workspace-id :request-refresh])
+           primary-properties [:library:indication :library:numSubjects :library:datatype :library:dataUseRestriction] ;; TODO replace with new field from schema
+           secondary-properties (->> (calculate-display-properties library-schema)
+                                     (remove (partial contains? (set primary-properties))))]
+       [:div {}
+        (style/create-section-header
+          [:div {}
+           [:span {} "Dataset Attributes"]
+           (when (:can-edit? props)
+             (style/create-link {:style {:fontSize "0.8em" :fontWeight "normal" :marginLeft "1em"}
+                                 :text "Edit..."
+                                 :onClick #(modal/push-modal [LibraryAttributeForm form-properties])}))])
+        (style/create-paragraph
+          [:div {}
+           (map (partial render-property library-schema library-attributes) primary-properties)
+           (when secondary-properties
+             [:div {}
+              (when (:expanded? @state)
+                (map (partial render-property library-schema library-attributes) secondary-properties))
+              [:div {:style {:marginTop "0.5em"}}
+               (style/create-link {:text (if (:expanded? @state) "Collapse" "See more attributes")
+                                   :onClick #(swap! state update :expanded? not)})]])])]))})
 
 
 (react/defc CatalogButton
   {:render
    (fn [{:keys [props]}]
      [comps/SidebarButton
-      {:style :light :color :button-blue :margin :top
-       :icon :catalog :text "Catalog Dataset"
-       :onClick #(modal/push-modal
-                  [LibraryAttributeForm props])}])})
+      {:style :light :color :button-primary :margin :top
+       :icon :catalog :text "Catalog Dataset..."
+       :onClick #(modal/push-modal [LibraryAttributeForm props])}])})
 
 
 (react/defc PublishButton
   {:render
-   (fn [{:keys [props]}]
-     [comps/SidebarButton
-      {:style :light :color :button-blue :margin :top
-       :icon :library :text "Publish in Library"
-       :disabled? (or (:disabled? props)
-                    "Publish not available yet" ;; TODO remove
-                    )
-       :onClick #(utils/log "todo: publish in library")}])})
+   (fn [{:keys [props state]}]
+     [:div {}
+      (when (:publishing? @state)
+        [comps/Blocker {:banner "Publishing..."}])
+      [comps/SidebarButton
+       {:style :light :color :button-primary :margin :top
+        :icon :library :text "Publish in Library"
+        :disabled? (:disabled? props)
+        :onClick (fn [_]
+                   (swap! state assoc :publishing? true)
+                   (endpoints/call-ajax-orch
+                     {:endpoint (endpoints/publish-workspace (:workspace-id props))
+                      :on-done (fn [{:keys [success? get-parsed-response]}]
+                                 (swap! state dissoc :publishing?)
+                                 (if success?
+                                   (do (modal/push-message {:header "Success!"
+                                                            :message "Successfully published to Library"})
+                                       ((:request-refresh props)))
+                                   (modal/push-error-response (get-parsed-response))))}))}]])})
+
+(react/defc UnpublishButton
+  {:render
+   (fn [{:keys [props state]}]
+     [:div {}
+      (when (:unpublishing? @state)
+        [comps/Blocker {:banner "Unpublishing..."}])
+      [comps/SidebarButton
+       {:style :light :color :exception-state :margin :top
+        :icon :library :text "Unpublish"
+        :onClick (fn [_]
+                   (swap! state assoc :unpublishing? true)
+                   (endpoints/call-ajax-orch
+                     {:endpoint (endpoints/unpublish-workspace (:workspace-id props))
+                      :on-done (fn [{:keys [success? get-parsed-response]}]
+                                 (swap! state dissoc :unpublishing?)
+                                 (if success?
+                                   (do (modal/push-message {:header "Success!"
+                                                            :message "This dataset is no longer displayed in the Data Library catalog."})
+                                       ((:request-refresh props)))
+                                   (modal/push-error-response (get-parsed-response))))}))}]])})

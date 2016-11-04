@@ -1,28 +1,28 @@
 (ns org.broadinstitute.firecloud-ui.common.style
   (:require [org.broadinstitute.firecloud-ui.utils :as utils :refer [deep-merge]]))
 
-(def colors {:background-gray "#f4f4f4"
-             :border-gray "#cacaca"
-             :button-blue "#457fd2"
-             :exception-red "#e85c46"
-             :footer-text "#989898"
-             :header-darkgray "#4d4d4d"
-             :link-blue "#6690c5"
-             :line-gray "#e6e6e6"
-             :running-blue "#67688a"
-             :success-green "#7aac20"
+(def colors {:background-light "#f4f4f4"
+             :background-dark "#4d4d4d"
+             :border-light "#cacaca"
+             :button-primary "#457fd2"
+             :link-active "#6690c5"
+             :line-default "#e6e6e6"
+             :running-state "#67688a"
+             :success-state "#7aac20"
+             :exception-state "#e85c46"
              :tag-background "#d4ecff"
              :tag-foreground "#2c3c4d"
-             :text-gray "#666"
-             :text-light "#7f7f7f"})
+             :text-light "#666"
+             :text-lighter "#7f7f7f"
+             :text-lightest "#989898"})
 
-(def standard-line (str "1px solid " (:line-gray colors)))
+(def standard-line (str "1px solid " (:line-default colors)))
 
 (defn color-for-status [status]
   (case status
-    "Complete" (:success-green colors)
-    "Running" (:running-blue colors)
-    "Exception" (:exception-red colors)))
+    "Complete" (:success-state colors)
+    "Running" (:running-state colors)
+    "Exception" (:exception-state colors)))
 
 
 (defn create-section-header [text]
@@ -40,7 +40,7 @@
 (def ^:private input-text-style
   {:backgroundColor "#fff"
    ;; Split out border properties so they can be individually overridden
-   :borderWidth 1 :borderStyle "solid" :borderColor (:border-gray colors) :borderRadius 3
+   :borderWidth 1 :borderStyle "solid" :borderColor (:border-light colors) :borderRadius 3
    :boxSizing "border-box"
    :fontSize "88%"
    :marginBottom "0.75em" :padding "0.5em"})
@@ -48,7 +48,7 @@
 (def ^:private select-style
   {:backgroundColor "#fff"
    ;; Split out border properties so they can be individually overridden
-   :borderWidth 1 :borderStyle "solid" :borderColor (:border-gray colors) :borderRadius 2
+   :borderWidth 1 :borderStyle "solid" :borderColor (:border-light colors) :borderRadius 2
    :color "#000" :height 33 :width "100%" :fontSize "88%"
    :marginBottom "0.75em" :padding "0.33em 0.5em"})
 
@@ -71,15 +71,15 @@
    (map (fn [opt] [:option {:value opt} opt]) options)])
 
 (defn create-server-error-message [message]
-  [:div {:style {:textAlign "center" :color (:exception-red colors)}}
+  [:div {:style {:textAlign "center" :color (:exception-state colors)}}
    message])
 
 (defn create-validation-error-message [fails]
-  [:div {:style {:color (:exception-red colors)}}
+  [:div {:style {:color (:exception-state colors)}}
    (map (fn [fail] [:div {} fail]) fails)])
 
 (defn create-message-well [message]
-  [:div {:style {:textAlign "center" :backgroundColor (:background-gray colors)
+  [:div {:style {:textAlign "center" :backgroundColor (:background-light colors)
                  :padding "1em 0" :borderRadius 8}}
    message])
 
@@ -109,12 +109,17 @@
 
 (defn create-link [{:keys [text] :as attributes}]
   [:a (deep-merge {:href "javascript:;"
-                   :style {:textDecoration "none" :color (:button-blue colors)}}
+                   :style {:textDecoration "none" :color (:button-primary colors)}}
                   (dissoc attributes :text))
    text])
 
-(defn render-entity [namespace name snapshot-id]
+(defn render-name-id [name snapshot-id]
   [:div {}
-   [:span {:style {:fontWeight 500}} namespace "/" name]
+   [:span {:style {:fontWeight 500}} name]
    [:span {:style {:fontWeight 200 :paddingLeft "1em"}} "Snapshot ID: "]
    [:span {:style {:fontWeight 500}} snapshot-id]])
+
+(defn render-entity [namespace name snapshot-id]
+  (render-name-id (str namespace "/" name) snapshot-id))
+
+

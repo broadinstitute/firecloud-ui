@@ -1,27 +1,4 @@
-(defn- inside-container? []
-  (.exists (clojure.java.io/file "/.dockerenv")))
-
-
-(defn- get-figwheel-opts []
-  (when (inside-container?)
-    (let [specified-host (if-let [x (System/getenv "FIGWHEEL_HOST")]
-                           (if (clojure.string/blank? (clojure.string/trim x)) nil x))
-          host (or specified-host "192.168.99.100")]
-      (when (nil? specified-host)
-        (println (str "***\n"
-                      "*** You did not specify a FIGWHEEL_HOST environment variable.\n"
-                      "*** Using the default: " host "\n"
-                      "***")))
-      {:websocket-url (str "ws://" host ":3449/figwheel-ws")})))
-
-
-(defn- get-figwheel-server-opts []
-  (when (inside-container?)
-    {:hawk-options {:watcher :polling}}))
-
-
 (defn- with-ns [n] (str "org.broadinstitute.firecloud-ui." n))
-
 
 (defproject org.broadinstitute/firecloud-ui "0.0.1"
   :dependencies
@@ -35,16 +12,17 @@
    [cljsjs/marked "0.3.5-0"]
    ]
   :plugins [[lein-cljsbuild "1.1.2"] [lein-figwheel "0.5.0-5"] [lein-resource "15.10.2"]]
-  :profiles {:dev {:dependencies [[binaryage/devtools "0.4.1"]]
+  :profiles {:dev {:dependencies [[binaryage/devtools "0.8.2"]]
                    :cljsbuild
-                   {:builds {:client {:source-paths ["src/cljsdev"]
-                                      :figwheel ~(merge {} (get-figwheel-opts))
+                   {:builds {:client {:preloads [devtools.preload]
+                                      :source-paths ["src/cljsdev"]
+                                      :figwheel true
                                       :compiler
                                       {:main ~(with-ns "dev")
                                        :optimizations :none
                                        :source-map true
                                        :source-map-timestamp true}}}}
-                   :figwheel ~(get-figwheel-server-opts)}
+                   :figwheel {:http-server-root ""}}
              :deploy {:cljsbuild
                       {:builds {:client {:source-paths ["src/cljsprod"]
                                          :compiler

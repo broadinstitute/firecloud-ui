@@ -81,17 +81,17 @@
                 [comps/Blocker {:banner "Removing user..."}])
               [table/Table
                {:header-row-style {:fontWeight nil :fontSize "90%"
-                                   :color (:text-light style/colors) :backgroundColor nil}
+                                   :color (:text-lighter style/colors) :backgroundColor nil}
                 :header-style {:padding "0.5em 0 0.5em 14px"}
-                :row-style {:backgroundColor (:background-gray style/colors)
+                :row-style {:backgroundColor (:background-light style/colors)
                             :borderRadius 8 :margin "4px 0"}
-                :reorderable-columns? false :resize-tab-color (:line-gray style/colors)
+                :reorderable-columns? false :resize-tab-color (:line-default style/colors)
                 :toolbar (float-right
-                           [comps/Button {:text "Add User..." :icon :add
-                                          :onClick (fn [_]
-                                                     (modal/push-modal
-                                                       [AddUserDialog {:project-name (:project-name props)
-                                                                       :on-add #(react/call :load this)}]))}])
+                          [comps/Button {:text "Add User..." :icon :add
+                                         :onClick (fn [_]
+                                                    (modal/push-modal
+                                                     [AddUserDialog {:project-name (:project-name props)
+                                                                     :on-add #(react/call :load this)}]))}])
                 :columns [{:header "Email" :starting-width 500}
                           {:header "Role" :starting-width 100 :resizable? false :sort-initial :asc}
                           {:starting-width :remaining
@@ -118,6 +118,6 @@
    (fn [{:keys [props state]}]
      (swap! state dissoc :members :load-error)
      (endpoints/call-ajax-orch
-       {:endpoint (endpoints/list-billing-project-members (:project-name props))
-        :on-done (fn [{:keys [success? get-parsed-response]}]
-                   (swap! state assoc (if success? :members :load-error) (get-parsed-response)))}))})
+      {:endpoint (endpoints/list-billing-project-members (:project-name props))
+       :on-done (fn [{:keys [success? get-parsed-response]}]
+                  (swap! state assoc (if success? :members :load-error) (get-parsed-response)))}))})

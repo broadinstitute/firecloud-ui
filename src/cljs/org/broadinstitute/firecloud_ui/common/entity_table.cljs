@@ -19,12 +19,10 @@
   (and (map? attr-value)
        (= (set (keys attr-value)) #{"entityType" "entityName"})))
 
-;; for attributes referring to a list of entities
-;; e.g. sample sets referring to samples
-(defn- is-ref-list? [attr-value]
-  (and (sequential? attr-value)
-       (map? (first attr-value)) ;; we'll just assume homogeneous lists
-       (= (set (keys (first attr-value))) #{"entityType" "entityName"})))
+(defn- render-list-item [item]
+  (if (is-single-ref? item)
+    (item "entityName")
+    item))
 
 (react/defc EntityTable
   {:refresh
@@ -67,20 +65,24 @@
                                            (fn [attr-value]
                                              (cond
                                                (is-single-ref? attr-value) (attr-value "entityName")
-                                               (is-ref-list? attr-value) (map #(% "entityName") attr-value)
+                                               (common/attribute-list? attr-value) (map render-list-item (common/attribute-values attr-value))
                                                :else (str attr-value)))
                                            :content-renderer
                                            (fn [attr-value]
                                              (cond
                                                (is-single-ref? attr-value) (attr-value "entityName")
-                                               (is-ref-list? attr-value) (str (count attr-value) " items: "
-                                                                              (join ", " (map #(% "entityName") attr-value)))
+                                               (common/attribute-list? attr-value)
+                                               (let [items (map render-list-item (common/attribute-values attr-value))]
+                                                 (if (empty? items)
+                                                   "0 items"
+                                                   (str (count items) " items: " (join ", " items))))
                                                :else ((:attribute-renderer props) attr-value)))})
                                   attributes)
                 columns (vec (cons entity-column attr-columns))]
             [Table
              (merge props
                     {:key selected-entity-type
+                     :state-key (str (common/workspace-id->string (:workspace-id props)) ":data-tab:" selected-entity-type)
                      :columns columns
                      :retain-header-on-empty? true
                      :always-sort? true
@@ -112,7 +114,7 @@
                {:endpoint (endpoints/get-entities-paginated (:workspace-id props) type
                                                             {"page" current-page
                                                              "pageSize" rows-per-page
-                                                             "filterTerms" filter-text
+                                                             "filterTerms" (js/encodeURIComponent filter-text)
                                                              "sortField" sort-field
                                                              "sortDirection" (name sort-order)})
                 :on-done (fn [{:keys [success? get-parsed-response status-text status-code]}]

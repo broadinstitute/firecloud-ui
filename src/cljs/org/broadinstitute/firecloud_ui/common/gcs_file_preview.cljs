@@ -36,10 +36,10 @@
                        [:a {:href (common/gcs-object->download-url (:bucket-name props) (:object props))
                             :target "_blank"}
                         "Open"]
-                       [:span {:style {:fontStyle "italic" :color (:text-gray style/colors)}}
+                       [:span {:style {:fontStyle "italic" :color (:text-light style/colors)}}
                         " (right-click to download)"]]
                       (when (> data-size 100000000)
-                        [:span {:style {:color (:exception-red style/colors) :marginLeft "2ex"}}
+                        [:span {:style {:color (:exception-state style/colors) :marginLeft "2ex"}}
                          (icons/icon {:style {:fontSize "100%" :verticalAlign "middle" :marginRight "1ex"}}
                                      :warning-triangle)
                          "Warning: Downloading this file may incur a large data egress charge"]))
@@ -54,7 +54,7 @@
                                    :onClick #(swap! state assoc :show-details? true)}))])
           (when error
             [:div {:style {:marginTop "1em"}}
-             [:span {:style {:color (:exception-red style/colors)}} "Error! "]
+             [:span {:style {:color (:exception-state style/colors)}} "Error! "]
              (case status
                404 "This file was not found."
                403 "You do not have access to this file."
@@ -73,24 +73,24 @@
    (fn [{:keys [props state]}]
      (swap! state assoc :loading? true)
      (endpoints/call-ajax-orch
-       {:endpoint (endpoints/get-gcs-stats (:bucket-name props) (:object props))
-        :on-done (fn [{:keys [success? get-parsed-response xhr status-code]}]
-                   (swap! state assoc
-                          :loading? false
-                          :response (if success?
-                                      {:data (get-parsed-response)}
-                                      {:error (.-responseText xhr)
-                                       :status status-code})))}))})
+      {:endpoint (endpoints/get-gcs-stats (:bucket-name props) (:object props))
+       :on-done (fn [{:keys [success? get-parsed-response xhr status-code]}]
+                  (swap! state assoc
+                         :loading? false
+                         :response (if success?
+                                     {:data (get-parsed-response)}
+                                     {:error (.-responseText xhr)
+                                      :status status-code})))}))})
 
 
 (react/defc GCSFilePreviewLink
   {:render
    (fn [{:keys [props]}]
-     (let [{:keys [bucket-name object workspace-bucket]} props]
+     (let [{:keys [bucket-name object workspace-bucket link-label]} props]
        (assert bucket-name "No bucket name provided")
        (assert object "No GCS object provided")
        [:div (or (:attributes props) {})
         [:a {:href "javascript:;" :onClick #(modal/push-modal [PreviewDialog props])}
          (if (= bucket-name workspace-bucket)
            object
-           (str "gs://" bucket-name "/" object))]]))})
+           (if link-label (str link-label) (str "gs://" bucket-name "/" object)))]]))})

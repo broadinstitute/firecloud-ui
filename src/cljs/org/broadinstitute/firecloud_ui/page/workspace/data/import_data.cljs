@@ -27,7 +27,7 @@
                              (when file
                                (swap! state assoc :upload-result nil)
                                (set! (.-onload reader)
-                                 #(swap! state assoc :file file :file-contents (.-result reader)))
+                                     #(swap! state assoc :file file :file-contents (.-result reader)))
                                (.readAsText reader (.slice file 0 preview-limit)))))}]
       [comps/Button {:text "Choose file..." :onClick #(-> (@refs "entities") .click)}]
       (when (:file-contents @state)
@@ -44,7 +44,7 @@
       (if-let [result (:upload-result @state)]
         (if (:success? result)
           (style/create-flexbox {:style {:justifyContent "center" :paddingTop "1em"}}
-            (icons/icon {:style {:fontSize "200%" :color (:success-green style/colors)}} :done)
+            (icons/icon {:style {:fontSize "200%" :color (:success-state style/colors)}} :done)
             [:span {:style {:marginLeft "1em"}} "Success!"])
           [:div {:style {:paddingTop "1em"}}
            [comps/ErrorViewer {:error (:error result)}]]))])
@@ -52,13 +52,13 @@
    (fn [{:keys [props state]}]
      (swap! state assoc :loading? true)
      (endpoints/call-ajax-orch
-       {:endpoint (endpoints/import-entities (:workspace-id props))
-        :raw-data (utils/generate-form-data {:entities (:file @state)})
-        :encType "multipart/form-data"
-        :on-done (fn [{:keys [success? xhr get-parsed-response]}]
-                   (swap! state dissoc :loading? :file :file-contents)
-                   (if success?
-                     (do
-                       (swap! state assoc :upload-result {:success? true})
-                       ((:reload-data-tab props) (.-responseText xhr)))
-                     (swap! state assoc :upload-result {:success? false :error (get-parsed-response)})))}))})
+      {:endpoint (endpoints/import-entities (:workspace-id props))
+       :raw-data (utils/generate-form-data {:entities (:file @state)})
+       :encType "multipart/form-data"
+       :on-done (fn [{:keys [success? xhr get-parsed-response]}]
+                  (swap! state dissoc :loading? :file :file-contents)
+                  (if success?
+                    (do
+                      (swap! state assoc :upload-result {:success? true})
+                      ((:reload-data-tab props) (.-responseText xhr)))
+                    (swap! state assoc :upload-result {:success? false :error (get-parsed-response)})))}))})

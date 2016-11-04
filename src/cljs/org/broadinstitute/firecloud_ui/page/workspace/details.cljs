@@ -21,7 +21,7 @@
      (let [{:keys [workspace workspace-error]} props]
        [:div {:style {:position "relative"}}
         (cond workspace-error
-              [:div {:style {:color (:exception-red style/colors)}} workspace-error]
+              [:div {:style {:color (:exception-state style/colors)}} workspace-error]
               workspace
               (when (get-in workspace [:workspace :realm])
                 [:div {:style {}}
@@ -78,10 +78,14 @@
         library-attributes (->> attributes
                                 (keep (fn [[k v]]
                                         (when (.startsWith k "library:")
-                                          [(-> k (clojure.string/split #":" 2) second) v])))
+                                          [(keyword k) v])))
                                 (into {}))
-        workspace-attributes (utils/keywordize-keys
-                               (apply dissoc attributes "description" (keys library-attributes)))]
+        workspace-attributes (->> attributes
+                                  (keep (fn [[k v]]
+                                          (when-not (or (= k "description")
+                                                        (utils/contains k ":"))
+                                            [(keyword k) v])))
+                                  (into {}))]
     (-> (utils/keywordize-keys raw-workspace)
         (update-in [:workspace] dissoc :attributes)
         (assoc-in [:workspace :description] (attributes "description"))
@@ -158,6 +162,7 @@
                          (react/create-element
                            [monitor-tab/Page {:ref MONITOR
                                               :workspace-id workspace-id
+                                              :workspace workspace
                                               :nav-context (nav/terminate-when (not= tab MONITOR) nav-context)}])
                          :onTabRefreshed #(react/call :refresh (@refs MONITOR))}]
                        :toolbar-right (when-let [analysis-tab (:analysis-tab @state)]

@@ -61,44 +61,44 @@
            "No tracks selected"])
         [:div {:style {:marginTop "1em" :overflowY "auto"}}
          (map-indexed
-           (fn [index {:keys [track-url index-url requires-index?] :as track}]
-             (if (= track :dummy)
-               [:div {:ref (str "track" index)
-                      :style {:display "flex" :alignItems "center" :justifyContent "center"
-                              :height 46 :padding "0 4px" :margin "2px 3px"
-                              :border (str "1px dotted " (:line-gray style/colors)) :borderRadius 4}}
-                (style/left-ellipses {} (:drag-url @state))]
-               [:div {:ref (str "track" index)
-                      :style {:display "flex" :alignItems "center" :padding 4 :margin "2px 3px"
-                              :border style/standard-line :borderRadius 4}}
-                (when (> (count tracks) 1)
-                  [:img {:src "assets/drag_temp.png"
-                         :style {:flex "0 0 auto" :height 16 :cursor "ns-resize"}
-                         :draggable false
-                         :onMouseDown #(swap! state assoc :drag-index index :drop-index index :drag-url track-url
-                                              :text-selection (common/disable-text-selection))}])
-                (case @index-url
-                  :pending [:div {} [comps/Spinner {:height "1em" :text "Searching for index file..."}]]
-                  :error (if requires-index?
-                           [:div {:style {:flex "1 1 auto" :marginLeft 8 :color (:exception-red style/colors) :overflow "hidden"}}
-                            (style/right-ellipses {} (str "Unable to find index file for '" track-url "'"))
-                            (style/right-ellipses {} "Please ensure you have the associated .bai or .bam.bai at the same path")]
-                           [:div {:style {:flex "1 1 auto" :marginLeft 8 :overflow "hidden"}}
-                            (style/left-ellipses {} track-url)
-                            (style/right-ellipses {:style {:fontStyle "italic"}} "Optional index file not found.")])
-                  [:div {:style {:flex "1 1 auto" :marginLeft 8 :overflow "hidden"}}
-                   (style/left-ellipses {} track-url)
-                   ; the following padding because overflow is cutting off italicized text
-                   (style/left-ellipses {:style {:fontStyle "italic" :paddingRight 2}} @index-url)])
-                [:div {:style {:flex "0 0 auto" :alignSelf "flex-start" :cursor "pointer"
-                               :margin "-5px -5px 0 0" :padding "0 4px 1px 4px"}
-                       :onClick #((:on-remove props) index)}
-                 "×"]]))
-           (if (:drag-index @state)
-             (-> tracks
-                 (utils/delete (:drag-index @state))
-                 (utils/insert (:drop-index @state) :dummy))
-             tracks))]]))
+          (fn [index {:keys [track-url index-url requires-index?] :as track}]
+            (if (= track :dummy)
+              [:div {:ref (str "track" index)
+                     :style {:display "flex" :alignItems "center" :justifyContent "center"
+                             :height 46 :padding "0 4px" :margin "2px 3px"
+                             :border (str "1px dotted " (:line-default style/colors)) :borderRadius 4}}
+               (style/left-ellipses {} (:drag-url @state))]
+              [:div {:ref (str "track" index)
+                     :style {:display "flex" :alignItems "center" :padding 4 :margin "2px 3px"
+                             :border style/standard-line :borderRadius 4}}
+               (when (> (count tracks) 1)
+                 [:img {:src "assets/drag_temp.png"
+                        :style {:flex "0 0 auto" :height 16 :cursor "ns-resize"}
+                        :draggable false
+                        :onMouseDown #(swap! state assoc :drag-index index :drop-index index :drag-url track-url
+                                             :text-selection (common/disable-text-selection))}])
+               (case @index-url
+                 :pending [:div {} [comps/Spinner {:height "1em" :text "Searching for index file..."}]]
+                 :error (if requires-index?
+                          [:div {:style {:flex "1 1 auto" :marginLeft 8 :color (:exception-state style/colors) :overflow "hidden"}}
+                           (style/right-ellipses {} (str "Unable to find index file for '" track-url "'"))
+                           (style/right-ellipses {} "Please ensure you have the associated .bai or .bam.bai at the same path")]
+                          [:div {:style {:flex "1 1 auto" :marginLeft 8 :overflow "hidden"}}
+                           (style/left-ellipses {} track-url)
+                           (style/right-ellipses {:style {:fontStyle "italic"}} "Optional index file not found.")])
+                 [:div {:style {:flex "1 1 auto" :marginLeft 8 :overflow "hidden"}}
+                  (style/left-ellipses {} track-url)
+                  ; the following padding because overflow is cutting off italicized text
+                  (style/left-ellipses {:style {:fontStyle "italic" :paddingRight 2}} @index-url)])
+               [:div {:style {:flex "0 0 auto" :alignSelf "flex-start" :cursor "pointer"
+                              :margin "-5px -5px 0 0" :padding "0 4px 1px 4px"}
+                      :onClick #((:on-remove props) index)}
+                "×"]]))
+          (if (:drag-index @state)
+            (-> tracks
+                (utils/delete (:drag-index @state))
+                (utils/insert (:drop-index @state) :dummy))
+            tracks))]]))
    :component-did-mount
    (fn [{:keys [props state locals]}]
      (let [mouse-up #(when (:drag-index @state)
@@ -154,5 +154,5 @@
                             :on-remove #(swap! state update-in [:tracks] utils/delete %)}]
              :initial-slider-position 700}]]
           (when (:index-error @state)
-            [:div {:style {:textAlign "center" :color (:exception-red style/colors) :marginTop "1em"}}
+            [:div {:style {:textAlign "center" :color (:exception-state style/colors) :marginTop "1em"}}
              "All .bam tracks must have associated index (.bai) files."])])}])})
