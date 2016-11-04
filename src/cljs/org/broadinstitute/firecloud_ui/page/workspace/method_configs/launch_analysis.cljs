@@ -87,10 +87,11 @@
          (icons/icon {:style {:color (:exception-state style/colors) :marginRight 5 :verticalAlign "middle"}}
                      :warning-triangle)
          (str "Warning: This will launch " wf-count " workflows")]]))
-   [:div {:style {:textAlign "right" :fontSize "80%"}} (style/create-link {:text  (str "Cromwell Version: " (:cromwell-version props))
-                                                                           :target "_blank"
-                                                                           :href
-        (str "https://github.com/broadinstitute/cromwell/releases/tag/" (:cromwell-version props))})]
+   [:div {:style {:textAlign "right" :fontSize "80%"}}
+    (style/create-link {:text  (str "Cromwell Version: " (:cromwell-version props))
+                        :target "_blank"
+                        :href (str "https://github.com/broadinstitute/cromwell/releases/tag/"
+                                   (:cromwell-version props))})]
    (style/create-validation-error-message (:validation-errors @state))
    [comps/ErrorViewer {:error (:launch-server-error @state)}]])
 
