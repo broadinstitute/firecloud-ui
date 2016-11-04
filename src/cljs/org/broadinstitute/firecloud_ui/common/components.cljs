@@ -53,6 +53,7 @@
                      :backgroundColor (if disabled? (:disabled-state style/colors) color)
                      :cursor (when disabled? "default")
                      :color "white" :fontWeight 500
+                     :minHeight "19px" :minWidth "19px"
                      :borderRadius 2 :padding (if text "0.7em 1em" "0.4em")
                      :textDecoration "none"}
                     (if (map? style) style {}))
@@ -193,9 +194,9 @@
   {:render
    (fn [{:keys [props]}]
      [:div {:style {:background (:color props) :color "#fff"
-                    :padding 20 :borderRadius 5 :textAlign "center"}}
+                    :padding "15px 20px" :textAlign "center" :marginBottom "2em"}}
       (:icon props)
-      [:span {:style {:marginLeft "1.5ex" :fontSize "125%" :fontWeight 400
+      [:span {:style {:marginLeft "1em" :fontSize "125%" :fontWeight 400
                       :verticalAlign "middle"}}
        (:text props)]])})
 
@@ -213,19 +214,23 @@
        [:div {:style {:fontSize "106%"
                       :marginTop (when (= margin :top) "1em")
                       :marginBottom (when (= margin :bottom) "1em")
-                      :padding "0.7em 0" :textAlign "center"
+                      :padding "0.7em 20px"
                       :cursor (if disabled? "default" "pointer")
                       :backgroundColor (if disabled? (:disabled-state style/colors) (if heavy? color "transparent"))
                       :color (if heavy? "#fff" color)
                       :border (when-not heavy? style/standard-line)
-                      :borderRadius (when heavy? 4)}
+                      :borderRadius 5
+                      :position "relative"}
               :onClick (if disabled?
                          ;; Have to fully qualify to avoid circular dependency
                          #(org.broadinstitute.firecloud-ui.common.modal/push-error-text
                            (if (string? disabled?) disabled? "This action is disabled."))
                          (:onClick props))}
         (icons/icon {:style {:verticalAlign "middle" :fontSize "135%"}} (:icon props))
-        [:span {:style {:verticalAlign "middle" :marginLeft "1em"}} (:text props)]]))})
+        [:span {:style {:verticalAlign "middle" :marginLeft "1em"
+                        :position "absolute" :left 70 :top 0 :bottom 0
+                        :margin "auto" :height 30 :lineHeight "30px"}}
+         (:text props)]]))})
 
 (react/defc EntityDetails
   {:get-fields
@@ -356,7 +361,7 @@
 (react/defc Breadcrumbs
   {:render
    (fn [{:keys [props]}]
-     (let [sep (icons/icon {} :angle-right)
+     (let [sep (icons/icon {:style {:color (:border-light style/colors)}} :angle-right)
            crumbs (filter some? (:crumbs props))]
        (case (count crumbs)
          0 [:div {}]
