@@ -30,4 +30,5 @@
 
 (defmacro pause
   "JS debugger statement."
+  []
   `(js* "debugger;"))
