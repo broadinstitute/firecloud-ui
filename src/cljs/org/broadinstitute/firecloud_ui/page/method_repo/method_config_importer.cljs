@@ -249,7 +249,6 @@
                   {:header "Namespace" :starting-width 160
                    :sort-by (fn [m] (clojure.string/lower-case (m "namespace")))
                    :sort-initial :asc
-                   :filter-by :text
                    :as-text (fn [m] (m "namespace"))
                    :content-renderer (fn [item]
                                        (if (:in-workspace? props)
