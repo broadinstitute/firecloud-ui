@@ -77,6 +77,8 @@
                  (row "workflowId")])}])
    :render-workflow-details
    (fn [{:keys [state props]}]
+     (let [workflows (:workflows props)
+           workflowName (get-in workflows [0 "workflowEntity" "entityName"])]
      [:div {}
       [:div {}
        (style/create-link {:text "Workflows"
@@ -86,7 +88,9 @@
       [:div {:style {:marginTop "1em"}}
        (workflow-details/render
         (merge (select-keys props [:workspace-id :submission-id])
-               {:workflow-id (get-in @state [:selected-workflow :id])}))]])})
+               {:workflow-id (get-in @state [:selected-workflow :id])
+                :submission (:submission props)
+                :workflow-name workflowName}))]]))})
 
 
 
@@ -164,6 +168,7 @@
           [:h2 {:style {:paddingBottom "0.5em"}} "Workflows:"]
           [WorkflowsTable {:workflows (submission "workflows")
                            :workspace-id (:workspace-id props)
+                           :submission submission
                            :submission-id (submission "submissionId")}]])))
    :load-details
    (fn [{:keys [props state]}]

@@ -115,11 +115,12 @@
                     (aset xhr (name k) v))
                   xhr))
           call-on-done (fn []
-                         (on-done (let [status-code (.-status xhr)]
+                         (on-done (let [status-code (.-status xhr) raw-response (.-responseText xhr)]
                                     {:xhr xhr
                                      :status-code status-code
                                      :success? (<= 200 status-code 299)
                                      :status-text (.-statusText xhr)
+                                     :raw-response raw-response
                                      :get-parsed-response #(parse-json-string
                                                             (.-responseText xhr))})))]
       (when with-credentials?
@@ -171,7 +172,7 @@
            arg-map :url (str (config/api-url-root) service-prefix path)
            :headers (merge {"Authorization" (str "Bearer " @access-token)}
                            (:headers arg-map))
-           :on-done (fn [{:keys [status-code status-text] :as m}]
+           :on-done (fn [{:keys [status-code status-text raw-response] :as m}]
                       (when (and (not @server-down?)  (not @maintenance-mode?))
                         (cond
                           (check-maintenance-mode status-code status-text) (reset! maintenance-mode? true)

@@ -1,6 +1,7 @@
 (ns org.broadinstitute.firecloud-ui.page.workspace.monitor.workflow-details
   (:require
     [dmohs.react :as react]
+    [clojure.browser.dom :as gdom]
     [org.broadinstitute.firecloud-ui.common :as common]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
     [org.broadinstitute.firecloud-ui.common.gcs-file-preview :refer [GCSFilePreviewLink]]
@@ -11,18 +12,27 @@
     [org.broadinstitute.firecloud-ui.utils :as utils]
     ))
 
+(def timingDiagramDrawn (atom false))
 
 (defn- create-field [label & contents]
   [:div {:style {:paddingBottom "0.25em"}}
-   [:div {:style {:display "inline-block" :width 100}} (str label ":")]
+   [:div {:style {:display "inline-block" :width 130}} (str label ":")]
    contents])
-
 
 (defn- display-value [gcs-uri]
   (if-let [parsed (common/parse-gcs-uri gcs-uri)]
     [GCSFilePreviewLink (assoc parsed :attributes {:style {:display "inline"}})]
     (str gcs-uri)))
 
+(defn draw-chart [data workflow-name]
+  (.timingDiagram js/window data workflow-name)
+  (reset! timingDiagramDrawn true))
+
+(defn clear-chart []
+  (when (true? @timingDiagramDrawn) 
+    (try (gdom/remove-children "chart_div") 
+      (catch js/Object e (.log js/console "timing diagram"))))
+  (reset! timingDiagramDrawn false))
 
 (react/defc IODetail
   {:get-initial-state
@@ -42,6 +52,25 @@
          (for [[k v] (:data props)]
            [:div {} k [:span {:style {:margin "0 1em"}} "→"] (display-value v)])])])})
 
+
+(react/defc WorkflowTiming
+  {:get-initial-state
+   (fn []
+     {:expanded false})
+   :render
+   (fn [{:keys [props state]}]
+     [:div {}
+      (create-field
+        (:label props)
+        (if (empty? (:data props))
+          "Not Available"
+          (style/create-link {:text (if (:expanded @state) "Hide" "Show")
+                              :onClick #(swap! state assoc :expanded (not (:expanded @state)))})))
+          [:div {:style {:padding "0.25em 0 0.25em 0"} :id "chart_div"}]
+        (if (:expanded @state)
+          (draw-chart (:data props) (:workflow-name props))
+          (clear-chart))
+      ])})
 
 (defn- backend-logs [data]
   (when-let [log-map (data "backendLogs")]
@@ -85,7 +114,7 @@
           (:data props)))])})
 
 
-(defn- render-workflow-detail [workflow]
+(defn- render-workflow-detail [workflow raw-data workflow-name]
   [:div {:style {:padding "1em" :border style/standard-line :borderRadius 4
                  :backgroundColor (:background-gray style/colors)}}
    [:div {}
@@ -99,7 +128,8 @@
     (when (workflow "end")
       (create-field "Ended" (moncommon/render-date (workflow "end"))))
     [IODetail {:label "Inputs" :data (workflow "inputs")}]
-    [IODetail {:label "Outputs" :data (workflow "outputs")}]]
+    [IODetail {:label "Outputs" :data (workflow "outputs")}]
+    [WorkflowTiming {:label "Workflow Timing" :data raw-data :workflow-name workflow-name}]]
    [:div {:style {:marginTop "1em" :fontWeight 500}} "Calls:"]
    (for [[call data] (workflow "calls")]
      [CallDetail {:label call :data data}])])
@@ -107,7 +137,7 @@
 
 (react/defc WorkflowDetails
   {:render
-   (fn [{:keys [state]}]
+   (fn [{:keys [state props proxy-mappings]}]
      (let [server-response (:server-response @state)]
        (cond
          (nil? server-response)
@@ -115,19 +145,21 @@
          (not (:success? server-response))
          (style/create-server-error-message (:response server-response))
          :else
-         (render-workflow-detail (:response server-response)))))
+         (render-workflow-detail (:response server-response) (:raw-response server-response) (:workflow-name props)))))
    :component-did-mount
    (fn [{:keys [props state]}]
      (endpoints/call-ajax-orch
       {:endpoint
        (endpoints/get-workflow-details
         (:workspace-id props) (:submission-id props) (:workflow-id props))
-       :on-done (fn [{:keys [success? get-parsed-response status-text]}]
+       :on-done (fn [{:keys [success? get-parsed-response status-text raw-response]}]
                   (swap! state assoc :server-response
                          {:success? success?
-                          :response (if success? (get-parsed-response) status-text)}))}))})
+                          :response (if success? (get-parsed-response) status-text)
+                          :raw-response raw-response}))}))})
 
 
 (defn render [props]
   (assert (every? #(contains? props %) #{:workspace-id :submission-id :workflow-id}))
+  (.load js/google "visualization" "1.0" {"packages" ["Timeline"]})
   [WorkflowDetails props])
