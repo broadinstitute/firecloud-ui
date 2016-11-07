@@ -42,7 +42,7 @@
 ;;              :rows <the row data>}
 ;;   :paginator-space (optional, default 24 or unused)
 ;;     A CSS padding value used to separate the table and paginator.
-;;   :initial-rows-per-page (optional, default 10 or unused)
+;;   :initial-rows-per-page (optional, default 20 or unused)
 ;;     The default number of rows to show if the table has a paginator.
 ;;   :resizable-columns? (optional, default true)
 ;;     Fallback value for column resizing.
