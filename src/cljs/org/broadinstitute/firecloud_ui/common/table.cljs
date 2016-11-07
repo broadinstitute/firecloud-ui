@@ -11,7 +11,7 @@
    ))
 
 
-(def ^:private default-initial-rows-per-page 10)
+(def ^:private default-initial-rows-per-page 20)
 
 
 (defn date-column [props]
