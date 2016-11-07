@@ -12,6 +12,16 @@
     ))
 
 
+(def ^:private STRING "String")
+(def ^:private NUMBER "Number")
+(def ^:private BOOLEAN "Boolean")
+(def ^:private LIST_STRING "List of Strings")
+(def ^:private LIST_NUMBER "List of Numbers")
+(def ^:private LIST_BOOLEAN "List of Booleans")
+(def ^:private list-types #{LIST_STRING LIST_NUMBER LIST_BOOLEAN})
+(def ^:private all-types [STRING NUMBER BOOLEAN LIST_STRING LIST_NUMBER LIST_BOOLEAN])
+
+
 (defn- boolean? [x]
   (or (true? x) (false? x)))
 
@@ -28,50 +38,64 @@
     attr-value))
 
 (defn- get-type-and-string-rep [attr-value]
-  (cond (string? attr-value) ["String" attr-value]
-        (number? attr-value) ["Number" (str attr-value)]
-        (boolean? attr-value) ["Boolean" (str attr-value)]
+  (cond (nil? attr-value) [STRING ""]
+        (string? attr-value) [STRING attr-value]
+        (number? attr-value) [NUMBER (str attr-value)]
+        (boolean? attr-value) [BOOLEAN (str attr-value)]
         (and (map? attr-value)
              (= #{"itemsType" "items"} (-> attr-value keys set)))
         (let [items (attr-value "items")
               first-item (first items)
               str-value (join ", " items)]
-          (cond (string? first-item) ["List of Strings" str-value]
-                (number? first-item) ["List of Numbers" str-value]
-                (boolean? first-item) ["List of Booleans" str-value]
+          (cond (string? first-item) [LIST_STRING str-value]
+                (number? first-item) [LIST_NUMBER str-value]
+                (boolean? first-item) [LIST_BOOLEAN str-value]
                 :else (do (utils/cljslog "Unknown attribute list type:" first-item)
-                          ["List of Strings" str-value])))
+                          [LIST_STRING str-value])))
         :else (do (utils/cljslog "Unknown attribute type:" attr-value)
-                  ["String" attr-value])))
+                  [STRING attr-value])))
+
+(defn- valid-number? [string]
+  (re-matches #"-?[0-9]*(?:\.[0-9]*)?" string))
 
 
 (react/defc WorkspaceAttributeViewerEditor
   {:get-attributes
    (fn [{:keys [state]}]
      (let [{:keys [attributes]} @state
-           duplicates (not-empty (utils/find-duplicates (map first attributes)))
-           any-empty? (some (fn [[k v _]]
-                              (let [[ek ev] (map (comp empty? trim) [k v])]
-                                (or ek ev)))
-                            attributes)
-           with-spaces (->> attributes
-                            (map (comp trim first))
+           listified-attributes (map (fn [[key value type]]
+                                       [(trim key)
+                                        (if (contains? list-types type)
+                                          (map trim (split value #","))
+                                          (trim value))
+                                        type])
+                                     attributes)
+           duplicates (not-empty (utils/find-duplicates (map first listified-attributes)))
+           any-empty? (some (fn [[key value _]]
+                              (or (empty? key) (empty? value)))
+                            listified-attributes)
+           with-spaces (->> listified-attributes
+                            (map first)
                             (filter (partial re-find #"\s"))
                             not-empty)
-           typed (->> attributes
+           invalid-numbers (->> listified-attributes
+                                (keep (fn [[key value type]]
+                                        (cond (= type NUMBER) (when-not (valid-number? value) key)
+                                              (= type LIST_NUMBER) (when-not (every? valid-number? value) key))))
+                                not-empty)
+           typed (->> listified-attributes
                       (map (fn [[key value type]]
                              [key (case type
-                                    "String" value
-                                    "Number" (js/parseFloat value)
-                                    "Boolean" (parse-boolean value)
-                                    "List of Strings" (map trim (split value #","))
-                                    "List of Numbers" (map (comp js/parseFloat trim) (split value #","))
-                                    "List of Booleans" (map (comp parse-boolean trim) (split value #","))
+                                    NUMBER (js/parseFloat value)
+                                    BOOLEAN (parse-boolean value)
+                                    LIST_NUMBER (map js/parseFloat value)
+                                    LIST_BOOLEAN (map parse-boolean value)
                                     value)]))
                       (into {}))]
        (cond duplicates {:error (str "Duplicate keys: " (join ", " duplicates))}
              any-empty? {:error "Empty keys and values are not allowed."}
              with-spaces {:error (str "Keys cannot have spaces: " (join ", " with-spaces))}
+             invalid-numbers {:error (str "Invalid number for key(s): " (join ", " invalid-numbers))}
              :else {:success typed})))
    :render
    (fn [{:keys [props state after-update]}]
@@ -130,7 +154,7 @@
                                :defaultValue type
                                :onChange #(swap! state update-in [:attributes index]
                                                  assoc 2 (-> % .-target .-value))}
-                              ["String" "Number" "Boolean" "List of Strings" "List of Numbers" "List of Booleans"]))}]
+                              all-types))}]
                         [{:header "Key" :starting-width 300 :as-text name :sort-initial :asc}
                          {:header "Value" :starting-width :remaining :as-text process-attribute-value
                           :content-renderer (comp (table-utils/render-gcs-links (:workspace-bucket props)) process-attribute-value)}])
