@@ -118,15 +118,15 @@ function timingDiagram(response, workflowName) {
     }
 
     var options = {
-        colors: ['#33178f', '#c5bc12', '#5e8229', '#9a03f8', '#9e4653', '#4ef2ca', '#2dd801', '#3f7b49', '#763097', '#bc8b28', '#cb716f', '#adce53', '#c3768d', '#fdf92a'],
-        height: executionCallsCount * 18 + 60,
+        colors: ['#04E9E7', '#009DF4', '#0201F4', '#01FC01', '#00C400', '#008C00', '#CCAD51', '#2dd801', '#F99200', '#9854C6', '#F800FD', '#BC0000', '#FD0000'],        
         backgroundColor: '#ffffff',
+        height: executionCallsCount * 18 + 60,
         timeline: {
             avoidOverlappingGridLines: false,
             showBarLabels: false,
             rowLabelStyle: { fontName: 'Roboto', fontSize: 12, color: '#333' },   //font-size 10   #603913
             // Although bar labels are unshown, they still affect the height of each row. So make it small.
-            barLabelStyle: { fontName: 'Roboto', fontSize: 7, color: '#333' },    //#603913
+            barLabelStyle: { fontName: 'Roboto', fontSize: 8, color: '#333' },    //#603913
         }
     };
     chart.draw(dataTable, options);

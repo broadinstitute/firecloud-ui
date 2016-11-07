@@ -76,7 +76,7 @@
           "Not Available"
           (style/create-link {:text (if (:expanded @state) "Hide" "Show")
                               :onClick #(swap! state assoc :expanded (not (:expanded @state)))})))
-          [:div {:style {:padding "0.25em 0 0.25em 0"} :id "chart_div"}]
+          [:div {:style {:padding "0.25em 0 0 0"} :id "chart_div"}]
         (if (:expanded @state)
           (draw-chart (:data props) (:workflow-name props))
           (clear-chart))
