@@ -11,7 +11,7 @@
    ))
 
 
-(def ^:private rows-per-page-options [10 25 100 500])
+(def ^:private rows-per-page-options [10 20 100 500])
 
 
 (defn- create-page-range [current-page total-pages]

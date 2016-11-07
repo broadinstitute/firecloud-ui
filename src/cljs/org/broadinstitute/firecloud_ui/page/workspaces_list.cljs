@@ -129,6 +129,7 @@
          {:state-key "workspace-table"
           :empty-message "No workspaces to display." :retain-header-on-empty? true
           :cell-padding-left nil
+          :initial-rows-per-page 10
           :header-row-style {:fontWeight nil :fontSize "90%"
                              :color (:text-lighter style/colors) :backgroundColor nil}
           :header-style {:padding "0.5em 0 0.5em 14px"}
