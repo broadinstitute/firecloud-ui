@@ -42,7 +42,8 @@
                   :as-text
                   (fn [workflow]
                     (let [entity (workflow "workflowEntity")]
-                      (str (entity "entityName") " (" (entity "entityType") ")")))
+                      (str (entity "entityName"))))
+                  :sort-by :text
                   :content-renderer
                   (fn [workflow]
                     (let [entity (workflow "workflowEntity")
@@ -65,6 +66,11 @@
                                               [:div {} message])
                                          message-list)])}
                  {:header "Workflow ID" :starting-width 300
+                  :as-text
+                    (fn [workflow]
+                    (let [workflowId (workflow "workflowId")]
+                      (str workflowId)))
+                  :sort-by :text
                   :content-renderer
                   (fn [workflow]
                    (let [{:keys [submission-id bucketName]} props
