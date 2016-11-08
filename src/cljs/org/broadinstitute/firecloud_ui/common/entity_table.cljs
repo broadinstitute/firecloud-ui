@@ -56,7 +56,7 @@
           :else
           (let [attributes (get-in entity-metadata [selected-entity-type "attributeNames"])
                 attr-col-width (->> attributes count (/ (if (= :narrow (:width props)) 500 1000)) int (min 400) (max 100))
-                entity-column {:header "Entity Name" :starting-width 200
+                entity-column {:header (get-in entity-metadata [selected-entity-type "idName"]) :starting-width 200
                                :as-text #(% "name") :sort-by :text
                                :content-renderer (or (:entity-name-renderer props)
                                                      (fn [entity] (entity "name")))}
