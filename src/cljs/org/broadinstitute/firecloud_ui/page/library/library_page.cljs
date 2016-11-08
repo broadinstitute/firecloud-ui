@@ -33,7 +33,7 @@
                              :borderBottom (str "2px solid " (:border-light style/colors))
                              }
           :header-style {:padding "0.5em 0"}
-          :resizable-columns? false :reorderable-columns? false ;:resize-tab-color (:line-default style/colors)
+          :resizable-columns? false :reorderable-columns? true ;:resize-tab-color (:line-default style/colors)
           :body-style {:fontSize nil :fontWeight nil}
           :row-style {:backgroundColor nil :height 22} ;:height row-height-px :borderTop style/standard-line}
           :cell-content-style {:padding nil
