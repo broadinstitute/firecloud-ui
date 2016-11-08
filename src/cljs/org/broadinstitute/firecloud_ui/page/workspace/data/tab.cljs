@@ -71,7 +71,10 @@
             [EntityTable
              {:ref "entity-table"
               :workspace-id workspace-id
-              :column-defaults (utils/parse-json-string (get-in workspace [:workspace :workspace-attributes :workspace-column-defaults]))
+              :column-defaults (try
+                                 (utils/parse-json-string (get-in workspace [:workspace :workspace-attributes :workspace-column-defaults]))
+                                 (catch js/Object e
+                                   nil))
               :toolbar (fn [built-in]
                          [:div {}
                           [:div {:style {:float "left"}} built-in]
