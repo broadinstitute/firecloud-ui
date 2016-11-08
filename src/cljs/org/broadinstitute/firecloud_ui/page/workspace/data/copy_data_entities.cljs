@@ -20,6 +20,7 @@
         [EntitySelector {:ref "EntitySelector"
                          :left-text (str "Entities in " (:namespace swid) "/" (:name swid))
                          :right-text "To be imported"
+                         :id-name (:id-name props)
                          :entities (:entity-list props)}]
         [:div {:style {:textAlign "center"}}
          (when (:selection-error @state)
@@ -58,6 +59,7 @@
                                             :selected-workspace-id (:selected-workspace-id props)
                                             :entity-list (:entity-list @state)
                                             :type (:type props)
+                                            :id-name (:id-name props)
                                             :reload-data-tab (:reload-data-tab props)}]
        (:server-error @state) [comps/ErrorViewer {:error (:server-error @state)}]
        :else [:div {:style {:textAlign "center"}} [comps/Spinner {:text "Loading entities..."}]]))
@@ -79,7 +81,7 @@
    (fn [{:keys [props state]}]
      (let [selected-type (:text (first (:crumbs props)))]
        (cond
-         selected-type [Page (merge props {:type selected-type})]
+         selected-type [Page (merge props {:type selected-type :id-name (get-in (:entity-types @state) [selected-type "idName"])})]
 
          (:entity-types @state)
          [:div {:style {:textAlign "center"}}

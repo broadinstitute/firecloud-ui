@@ -120,6 +120,7 @@
                                      :status-code status-code
                                      :success? (<= 200 status-code 299)
                                      :status-text (.-statusText xhr)
+                                     :raw-response (.-responseText xhr)
                                      :get-parsed-response #(parse-json-string
                                                             (.-responseText xhr))})))]
       (when with-credentials?
@@ -171,7 +172,7 @@
            arg-map :url (str (config/api-url-root) service-prefix path)
            :headers (merge {"Authorization" (str "Bearer " @access-token)}
                            (:headers arg-map))
-           :on-done (fn [{:keys [status-code status-text] :as m}]
+           :on-done (fn [{:keys [status-code status-text raw-response] :as m}]
                       (when (and (not @server-down?)  (not @maintenance-mode?))
                         (cond
                           (check-maintenance-mode status-code status-text) (reset! maintenance-mode? true)

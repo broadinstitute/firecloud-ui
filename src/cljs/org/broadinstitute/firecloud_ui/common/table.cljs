@@ -11,7 +11,7 @@
     ))
 
 
-(def ^:private initial-rows-per-page 10)
+(def ^:private default-initial-rows-per-page 20)
 
 (def persistence-keys #{:column-meta :query-params :filter-group-index})
 
@@ -43,6 +43,8 @@
 ;;              :rows <the row data>}
 ;;   :paginator-space (optional, default 24 or unused)
 ;;     A CSS padding value used to separate the table and paginator.
+;;   :initial-rows-per-page (optional, default 20 or unused)
+;;     The default number of rows to show if the table has a paginator.
 ;;   :resizable-columns? (optional, default true)
 ;;     Fallback value for column resizing.
 ;;   :resize-tab-color (optional, default gray)
@@ -132,6 +134,7 @@
 (defn- get-default-table-props []
   {:pagination :internal
    :paginator-space 24
+   :initial-rows-per-page default-initial-rows-per-page
    :resizable-columns? true
    :reorderable-columns? true
    :sortable-columns? true
@@ -176,7 +179,7 @@
                   {:column-meta column-meta
                    :filter-group-index (get props :initial-filter-group-index 0)
                    :query-params (merge
-                                  {:current-page 1 :rows-per-page initial-rows-per-page
+                                  {:current-page 1 :rows-per-page (:initial-rows-per-page props)
                                    :filter-text ""}
                                   (when initial-sort-column
                                     {:sort-column (:header initial-sort-column)

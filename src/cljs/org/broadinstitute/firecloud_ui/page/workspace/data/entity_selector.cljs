@@ -30,8 +30,7 @@
      (let [attribute-keys (apply union (map #(set (keys (% "attributes"))) (:entities props)))
            columns (fn [source?]
                      (into
-                      [{:header "Entity Type" :starting-width 100}
-                       {:header "Entity Name" :starting-width 200
+                      [{:header (:id-name props) :starting-width 200
                         :as-text #(get-in % [1 "name"]) :sort-by :text
                         :content-renderer
                         (fn [[index entity]]
@@ -42,7 +41,7 @@
                                     :content-renderer
                                     (fn [attr-value]
                                       (if (and (map? attr-value)
-                                               (= (set (keys attr-value)) #{"entityType" "entityName"}))
+                                               (= (set (keys attr-value)) #{"entityName"}))
                                         (attr-value "entityName")
                                         (default-render attr-value)))})
                            attribute-keys)))
@@ -54,8 +53,7 @@
                      (:selected @state))))
            ->row (fn [[index entity :as item]]
                    (into
-                    [(entity "entityType")
-                     item]
+                    [item]
                     (map (fn [k] (get-in entity ["attributes" k])) attribute-keys)))
            create-table (fn [source?]
                           [:div {:style {:float (if source? "left" "right") :width box-width
