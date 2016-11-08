@@ -40,9 +40,7 @@
       {:empty-message "No Workflows"
        :columns [{:header "Data Entity" :starting-width 200
                   :as-text
-                  (fn [workflow]
-                    (let [entity (workflow "workflowEntity")]
-                      (str (entity "entityName"))))
+                  (fn [workflow] (let [entity (workflow "workflowEntity")] (str (entity "entityName"))))
                   :sort-by :text
                   :content-renderer
                   (fn [workflow]
@@ -67,9 +65,7 @@
                                          message-list)])}
                  {:header "Workflow ID" :starting-width 300
                   :as-text
-                    (fn [workflow]
-                    (let [workflowId (workflow "workflowId")]
-                      (str workflowId)))
+                    (fn [workflow] (let [workflowId (workflow "workflowId")] (str workflowId)))
                   :sort-by :text
                   :content-renderer
                   (fn [workflow]
