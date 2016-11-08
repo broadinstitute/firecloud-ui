@@ -13,8 +13,6 @@
     [org.broadinstitute.firecloud-ui.utils :as utils]
     ))
 
-(def timingDiagramDrawn (atom false))
-
 (defn- create-field [label & contents]
   [:div {:style {:paddingBottom "0.25em"}}
    [:div {:style {:display "inline-block" :width 130}} (str label ":")]
@@ -33,16 +31,6 @@
 
 (defn- call-name [callName]
   (string/join "." (rest (string/split callName "."))))
-
-(defn draw-chart [data workflow-name]
-  (.timingDiagram js/window data workflow-name)
-  (reset! timingDiagramDrawn true))
-
-(defn clear-chart []
-  (when (true? @timingDiagramDrawn) 
-    (try (gdom/remove-children "chart_div") 
-      (catch js/Object e (.log js/console "timing diagram"))))
-  (reset! timingDiagramDrawn false))
 
 (react/defc IODetail
   {:get-initial-state
@@ -75,11 +63,11 @@
         (if (empty? (:data props))
           "Not Available"
           (style/create-link {:text (if (:expanded @state) "Hide" "Show")
-                              :onClick #(swap! state assoc :expanded (not (:expanded @state)))})))
-          [:div {:style {:padding "0.25em 0 0 0"} :id "chart_div"}]
+                              :onClick #(swap! state update :expanded not)})))
+        [:div {:style {:padding "0.25em 0 0 0"} :id "chart_div"}]
         (if (:expanded @state)
-          (draw-chart (:data props) (:workflow-name props))
-          (clear-chart))
+          (.timingDiagram js/window (:data props) (:workflow-name props))
+          (when (.getElementById js/document "chart_div") (gdom/remove-children "chart_div")))
       ])})
 
 (defn- backend-logs [data]

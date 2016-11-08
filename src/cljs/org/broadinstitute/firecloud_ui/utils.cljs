@@ -115,12 +115,12 @@
                     (aset xhr (name k) v))
                   xhr))
           call-on-done (fn []
-                         (on-done (let [status-code (.-status xhr) raw-response (.-responseText xhr)]
+                         (on-done (let [status-code (.-status xhr)]
                                     {:xhr xhr
                                      :status-code status-code
                                      :success? (<= 200 status-code 299)
                                      :status-text (.-statusText xhr)
-                                     :raw-response raw-response
+                                     :raw-response (.-responseText xhr)
                                      :get-parsed-response #(parse-json-string
                                                             (.-responseText xhr))})))]
       (when with-credentials?

@@ -4,7 +4,7 @@
     ))
 
 
-(defn call-ajax-orch [{:keys [endpoint] :as arg-map}] (:raw-data arg-map)
+(defn call-ajax-orch [{:keys [endpoint] :as arg-map}]
   (utils/ajax-orch
     (:path endpoint)
     (dissoc

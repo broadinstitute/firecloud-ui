@@ -120,7 +120,7 @@ function timingDiagram(response, workflowName) {
     var options = {
         colors: ['#04E9E7', '#009DF4', '#0201F4', '#01FC01', '#00C400', '#008C00', '#CCAD51', '#2dd801', '#F99200', '#9854C6', '#F800FD', '#BC0000', '#FD0000'],        
         backgroundColor: '#ffffff',
-        height: executionCallsCount * 18 + 60,
+        height: executionCallsCount * 18 + 85,
         timeline: {
             avoidOverlappingGridLines: false,
             showBarLabels: false,
