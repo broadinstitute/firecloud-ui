@@ -67,8 +67,7 @@
         [:div {:style {:padding "0.25em 0 0 0"} :id "chart_div"}]
         (if (:expanded @state)
           (.timingDiagram js/window (:data props) (:workflow-name props))
-          (when (.getElementById js/document "chart_div") (gdom/remove-children "chart_div")))
-      ])})
+          (when (.getElementById js/document "chart_div") (gdom/remove-children "chart_div")))])})
 
 (defn- backend-logs [data]
   (when-let [log-map (data "backendLogs")]
