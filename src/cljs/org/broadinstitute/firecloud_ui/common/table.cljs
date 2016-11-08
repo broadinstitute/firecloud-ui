@@ -21,8 +21,6 @@
    :starting-width (or (:starting-width props) 200)
    :as-text #(common/format-date % (:format props))})
 
-(declare initial-table-state render-table refresh-table-rows)
-
 ;; Table component with specifiable style and column behaviors.
 ;;
 ;; Properties:
@@ -130,109 +128,60 @@
 ;;     filtering; this value will show up in the paginator.
 ;;   :->row (REQUIRED)
 ;;     A function that takes a data item and returns a vector representing a table row.
-(react/defc Table
-  {:get-default-props
-   (fn []
-     {:pagination :internal
-      :paginator-space 24
-      :resizable-columns? true
-      :reorderable-columns? true
-      :sortable-columns? true
-      :always-sort? false
-      :filterable? true
-      :cell-padding-left "16px"
-      :row-style (fn [index row]
-                   {:backgroundColor (if (even? index) (:background-light style/colors) "#fff")})})
-   :get-initial-state
-   (fn [{:keys [props]}]
-     (let [given-by-header (->> (:columns props)
-                                (map-indexed (fn [index {:keys [header header-key] :as col}]
-                                               [(or header-key header) (assoc col :declared-index index)]))
-                                (into {}))]
-       (merge {:given-columns-by-header given-by-header
-               :dragging? false}
-              (persistence/try-restore
-               {:key (:state-key props)
-                :validator (fn [stored-value] (= (set (keys stored-value)) persistence-keys))
-                :initial #(initial-table-state props)}))))
-   :render render-table
-   :get-ordered-columns
-   (fn [{:keys [state]}]
-     (->> (:column-meta @state)
-          (map (fn [{:keys [header] :as column-meta}]
-                 (merge column-meta (get (:given-columns-by-header @state) header))))
-          vec))
-   :refresh-rows refresh-table-rows
-   :component-did-mount
-   (fn [{:keys [this state locals]}]
-     (swap! locals assoc :initial-state (select-keys @state persistence-keys))
-     (react/call :refresh-rows this)
-     (set! (.-onMouseMoveHandler this)
-           (fn [e]
-             (when (:dragging? @state)
-               (let [{:keys [drag-column mouse-x]} @state
-                     current-width (:width (nth (:column-meta @state) drag-column))
-                     new-mouse-x (.-clientX e)
-                     drag-amount (- new-mouse-x mouse-x)
-                     new-width (+ current-width drag-amount)]
-                 (when (and (>= new-width 10) (not (zero? drag-amount)))
-                   ;; Update in a single step like this to avoid multiple re-renders
-                   (swap! state #(-> %
-                                     (assoc :mouse-x new-mouse-x)
-                                     (assoc-in [:column-meta drag-column :width] new-width))))))))
-     (.addEventListener js/window "mousemove" (.-onMouseMoveHandler this))
-     (set! (.-onMouseUpHandler this)
-           #(when (:dragging? @state)
-             (common/restore-text-selection (:saved-user-select-state @state))
-             (swap! state dissoc :dragging? :drag-column :mouse-x :saved-user-select-state)))
-     (.addEventListener js/window "mouseup" (.-onMouseUpHandler this)))
-   :component-did-update
-   (fn [{:keys [this prev-props props prev-state state locals]}]
-     (when (or (not= (:data props) (:data prev-props))
-               (not= (:query-params @state) (:query-params prev-state)))
-       (react/call :refresh-rows this))
-     (when (and (:state-key props)
-                (not (:dragging? @state))
-                (not (= (select-keys @state persistence-keys) (:initial-state @locals))))
-       (persistence/save {:key (:state-key props) :state state :only [:column-meta :query-params :filter-group-index]})))
-   :component-will-unmount
-   (fn [{:keys [this]}]
-     (.removeEventListener js/window "mousemove" (.-onMouseMoveHandler this))
-     (.removeEventListener js/window "mouseup" (.-onMouseUpHandler this)))})
 
+(defn- get-default-table-props []
+  {:pagination :internal
+   :paginator-space 24
+   :resizable-columns? true
+   :reorderable-columns? true
+   :sortable-columns? true
+   :always-sort? false
+   :filterable? true
+   :cell-padding-left "16px"
+   :row-style (fn [index row]
+                {:backgroundColor (if (even? index) (:background-light style/colors) "#fff")})})
 
-
-(defn- initial-table-state [props]
-  (let [processed-columns (if-let [defaults (:column-defaults props)]
-                            (let [by-header (utils/index-by :header (:columns props))
-                                  default-showing (->> defaults
-                                                       (replace by-header)
-                                                       (map #(assoc % :show-initial? true)))
-                                  default-hiding (as-> by-header $
-                                                       (apply dissoc $ defaults)
-                                                       (vals $)
-                                                       (map #(assoc % :show-initial? false) $))]
-                              (concat default-showing default-hiding))
-                            (:columns props))
-        column-meta (vec (map (fn [{:keys [header header-key starting-width] :as col}]
-                                {:header (or header-key header)
-                                 :width (or starting-width 100)
-                                 :visible? (get col :show-initial? true)})
-                              processed-columns))
-        initial-sort-column (or (some->> (:columns props)
-                                         (filter #(contains? % :sort-initial))
-                                         first)
-                                (when (:always-sort? props)
-                                  (first (:columns props))))]
-    {:column-meta column-meta
-     :filter-group-index (get props :initial-filter-group-index 0)
-     :query-params (merge
-                    {:current-page 1 :rows-per-page initial-rows-per-page
-                     :filter-text ""}
-                    (when initial-sort-column
-                      {:sort-column (:header initial-sort-column)
-                       ; default needed when forcing sort
-                       :sort-order (or (:sort-initial initial-sort-column) :asc)}))}))
+(defn- get-initial-table-state [{:keys [props]}]
+  (merge
+   {:given-columns-by-header (->> (:columns props)
+                                  (map-indexed (fn [index {:keys [header header-key] :as col}]
+                                                 [(or header-key header) (assoc col :declared-index index)]))
+                                  (into {}))
+    :dragging? false}
+   (persistence/try-restore
+    {:key (:state-key props)
+     :validator (fn [stored-value] (= (set (keys stored-value)) persistence-keys))
+     :initial (fn []
+                (let [processed-columns (if-let [defaults (:column-defaults props)]
+                                          (let [by-header (utils/index-by :header (:columns props))
+                                                default-showing (->> defaults
+                                                                     (replace by-header)
+                                                                     (map #(assoc % :show-initial? true)))
+                                                default-hiding (as-> by-header $
+                                                                     (apply dissoc $ defaults)
+                                                                     (vals $)
+                                                                     (map #(assoc % :show-initial? false) $))]
+                                            (concat default-showing default-hiding))
+                                          (:columns props))
+                      column-meta (mapv (fn [{:keys [header header-key starting-width] :as col}]
+                                         {:header (or header-key header)
+                                          :width (or starting-width 100)
+                                          :visible? (get col :show-initial? true)})
+                                       processed-columns)
+                      initial-sort-column (or (some->> (:columns props)
+                                                       (filter #(contains? % :sort-initial))
+                                                       first)
+                                              (when (:always-sort? props)
+                                                (first (:columns props))))]
+                  {:column-meta column-meta
+                   :filter-group-index (get props :initial-filter-group-index 0)
+                   :query-params (merge
+                                  {:current-page 1 :rows-per-page initial-rows-per-page
+                                   :filter-text ""}
+                                  (when initial-sort-column
+                                    {:sort-column (:header initial-sort-column)
+                                     ; default needed when forcing sort
+                                     :sort-order (or (:sort-initial initial-sort-column) :asc)}))}))})))
 
 (defn- render-table [{:keys [this state props refs after-update]}]
   (assert (vector? (:column-meta @state)) "column-meta got un-vec'd")
@@ -356,3 +305,54 @@
                :filtered-count (count filtered-data)
                :display-rows clipped-rows
                :no-data? (empty? clipped-rows))))))
+
+(defn- table-component-did-mount [{:keys [this state locals]}]
+  (swap! locals assoc :initial-state (select-keys @state persistence-keys))
+  (react/call :refresh-rows this)
+  (set! (.-onMouseMoveHandler this)
+        (fn [e]
+          (when (:dragging? @state)
+            (let [{:keys [drag-column mouse-x]} @state
+                  current-width (:width (nth (:column-meta @state) drag-column))
+                  new-mouse-x (.-clientX e)
+                  drag-amount (- new-mouse-x mouse-x)
+                  new-width (+ current-width drag-amount)]
+              (when (and (>= new-width 10) (not (zero? drag-amount)))
+                ;; Update in a single step like this to avoid multiple re-renders
+                (swap! state #(-> %
+                                  (assoc :mouse-x new-mouse-x)
+                                  (assoc-in [:column-meta drag-column :width] new-width))))))))
+  (.addEventListener js/window "mousemove" (.-onMouseMoveHandler this))
+  (set! (.-onMouseUpHandler this)
+        #(when (:dragging? @state)
+          (common/restore-text-selection (:saved-user-select-state @state))
+          (swap! state dissoc :dragging? :drag-column :mouse-x :saved-user-select-state)))
+  (.addEventListener js/window "mouseup" (.-onMouseUpHandler this)))
+
+(defn- table-component-did-update [{:keys [this prev-props props prev-state state locals]}]
+  (when (or (not= (:data props) (:data prev-props))
+            (not= (:query-params @state) (:query-params prev-state)))
+    (react/call :refresh-rows this))
+  (when (and (:state-key props)
+             (not (:dragging? @state))
+             (not (= (select-keys @state persistence-keys) (:initial-state @locals))))
+    (persistence/save {:key (:state-key props) :state state :only [:column-meta :query-params :filter-group-index]})))
+
+
+(react/defc Table
+  {:get-default-props get-default-table-props
+   :get-initial-state get-initial-table-state
+   :render render-table
+   :get-ordered-columns
+   (fn [{:keys [state]}]
+     (->> (:column-meta @state)
+          (map (fn [{:keys [header] :as column-meta}]
+                 (merge column-meta (get (:given-columns-by-header @state) header))))
+          vec))
+   :refresh-rows #(refresh-table-rows %)
+   :component-did-mount table-component-did-mount
+   :component-did-update table-component-did-update
+   :component-will-unmount
+   (fn [{:keys [this]}]
+     (.removeEventListener js/window "mousemove" (.-onMouseMoveHandler this))
+     (.removeEventListener js/window "mouseup" (.-onMouseUpHandler this)))})
