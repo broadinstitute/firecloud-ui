@@ -1,6 +1,7 @@
 (ns org.broadinstitute.firecloud-ui.page.workspace.monitor.workflow-details
   (:require
     [dmohs.react :as react]
+    [clojure.browser.dom :as gdom]
     [clojure.string :as string]
     [org.broadinstitute.firecloud-ui.common :as common]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
@@ -12,12 +13,10 @@
     [org.broadinstitute.firecloud-ui.utils :as utils]
     ))
 
-
 (defn- create-field [label & contents]
   [:div {:style {:paddingBottom "0.25em"}}
    [:div {:style {:display "inline-block" :width 130}} (str label ":")]
    contents])
-
 
 (defn- display-value
   ([gcs-uri] (display-value gcs-uri nil))
@@ -51,6 +50,24 @@
          (for [[k v] (:data props)]
            [:div {} k [:span {:style {:margin "0 1em"}} "→"] (display-value v)])])])})
 
+
+(react/defc WorkflowTiming
+  {:get-initial-state
+   (fn []
+     {:expanded false})
+   :render
+   (fn [{:keys [props state]}]
+     [:div {}
+      (create-field
+        (:label props)
+        (if (empty? (:data props))
+          "Not Available"
+          (style/create-link {:text (if (:expanded @state) "Hide" "Show")
+                              :onClick #(swap! state update :expanded not)})))
+        [:div {:style {:padding "0.25em 0 0 0"} :id "chart_div"}]
+        (if (:expanded @state)
+          (.timingDiagram js/window (:data props) (:workflow-name props))
+          (when (.getElementById js/document "chart_div") (gdom/remove-children "chart_div")))])})
 
 (defn- backend-logs [data]
   (when-let [log-map (data "backendLogs")]
@@ -103,7 +120,8 @@
           (:data props)))])})
 
 
-(defn- render-workflow-detail [workflow submission-id bucketName]
+
+(defn- render-workflow-detail [workflow raw-data workflow-name submission-id bucketName]
   [:div {:style {:padding "1em" :border style/standard-line :borderRadius 4
                  :backgroundColor (:background-light style/colors)}}
    [:div {}
@@ -111,12 +129,13 @@
           inputs (first (first (workflow "calls")))
           input-names (string/split inputs ".")
           workflow-name (first input-names)]
-    (create-field "Workflow ID" (style/create-link {:text (workflow "id")
-                                                    :target "_blank"
-                                                    :style {:color "-webkit-link" :textDecoration "underline"}
-                                                    :href (str moncommon/google-cloud-context
-                                                               bucketName "/" submission-id  "/"
-                                                               workflow-name "/" (workflow "id") "/")})))
+    (create-field "Workflow ID" 
+                  (style/create-link {:text (workflow "id")
+                                      :target "_blank"
+                                      :style {:color "-webkit-link" :textDecoration "underline"}
+                                      :href (str moncommon/google-cloud-context
+                                                 bucketName "/" submission-id  "/"
+                                                 workflow-name "/" (workflow "id") "/")})))
     (let [status (workflow "status")]
       (create-field "Status" (moncommon/icon-for-wf-status status) status))
     (when (workflow "submission")
@@ -126,11 +145,12 @@
     (when (workflow "end")
       (create-field "Ended" (moncommon/render-date (workflow "end"))))
     [IODetail {:label "Inputs" :data (workflow "inputs")}]
-    [IODetail {:label "Outputs" :data (workflow "outputs")}]]
+    [IODetail {:label "Outputs" :data (workflow "outputs")}]
     [:div {:style {:whiteSpace "nowrap" :marginRight "0.5em"}}
      (let [wlogurl (str "gs://" bucketName "/" submission-id "/workflow.logs/workflow."
                    (workflow "id") ".log")]
       (create-field "Workflow Log" (display-value wlogurl (str "workflow." (workflow "id") ".log"))))]
+    [WorkflowTiming {:label "Workflow Timing" :data raw-data :workflow-name workflow-name}]]
 
    [:div {:style {:marginTop "1em" :fontWeight 500}} "Calls:"]
    (for [[call data] (workflow "calls")]
@@ -139,7 +159,8 @@
 
 (react/defc WorkflowDetails
   {:render
-   (fn [{:keys [state props]}]
+
+   (fn [{:keys [state props proxy-mappings]}]
      (let [server-response (:server-response @state)
            submission-id (props "submission-id")
            bucketName (props "bucketName")]
@@ -149,20 +170,22 @@
          (not (:success? server-response))
          (style/create-server-error-message (:response server-response))
          :else
-         (render-workflow-detail (:response server-response) (:submission-id props) (:bucketName props) ))))
+         (render-workflow-detail (:response server-response) (:raw-response server-response) 
+                                 (:workflow-name props) (:submission-id props) (:bucketName props)))))
    :component-did-mount
    (fn [{:keys [props state]}]
      (endpoints/call-ajax-orch
       {:endpoint
        (endpoints/get-workflow-details
         (:workspace-id props) (:submission-id props) (:workflow-id props))
-       :on-done (fn [{:keys [success? get-parsed-response status-text]}]
+       :on-done (fn [{:keys [success? get-parsed-response status-text raw-response]}]
                   (swap! state assoc :server-response
                          {:success? success?
-                          :response (if success? (get-parsed-response) status-text)}))}))})
+                          :response (if success? (get-parsed-response) status-text)
+                          :raw-response raw-response}))}))})
 
 
 (defn render [props]
   (assert (every? #(contains? props %) #{:workspace-id :submission-id :workflow-id}))
-
+  (.load js/google "visualization" "1.0" {"packages" ["Timeline"]})
   [WorkflowDetails props])
