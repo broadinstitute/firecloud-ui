@@ -125,17 +125,10 @@
     :render #(react/create-element Policy %)}])
 
 (defn- get-authenticated-nav-bar-items [state]
-       (if (nil? (:curator? @state))
-         (endpoints/call-ajax-orch
-           {:endpoint endpoints/get-library-curator-status
-            :on-done (fn [{:keys [success? get-parsed-response]}]
-                         (if success?
-                           (swap! state assoc :curator? (get-parsed-response))
-                         ))}))
-       (if (or (nil? (:curator? @state))
-               (not (:curator? @state)))
-         #{:workspaces :methods}
-         #{:library :workspaces :methods}))
+  (if (or (nil? (:curator? @state))
+          (not (:curator? @state)))
+    #{:workspaces :methods}
+    #{:library :workspaces :methods}))
 
 (defn- top-nav-bar-items [state]
   (filter (fn [r] (contains? (get-authenticated-nav-bar-items state) (:key r))) routes))
@@ -163,6 +156,15 @@
             top-nav-bar-items state)
        (when (:show-nih-link-warning? props)
          [nih-link-warning/NihLinkWarning])]])})
+   :component-did-mount
+   (fn [{:keys [state]}]
+     (endpoints/call-ajax-orch
+       {:endpoint endpoints/get-library-curator-status
+        :on-done (fn [{:keys [success? get-parsed-response]}]
+                   (when success?
+                     (swap! state assoc :curator? ((get-parsed-response) "curator"))
+                     ))}))
+   })
 
 
 (react/defc GlobalSubmissionStatus
