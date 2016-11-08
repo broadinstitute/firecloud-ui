@@ -85,7 +85,7 @@
                                 not-empty)
            typed (->> listified-attributes
                       (map (fn [[key value type]]
-                             [key (case type
+                             [key (condp = type
                                     NUMBER (js/parseFloat value)
                                     BOOLEAN (parse-boolean value)
                                     LIST_NUMBER (map js/parseFloat value)
