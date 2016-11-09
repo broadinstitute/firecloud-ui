@@ -14,8 +14,7 @@
   :plugins [[lein-cljsbuild "1.1.2"] [lein-figwheel "0.5.0-5"] [lein-resource "15.10.2"]]
   :profiles {:dev {:dependencies [[binaryage/devtools "0.8.2"]]
                    :cljsbuild
-                   {:builds {:client {:preloads [devtools.preload]
-                                      :source-paths ["src/cljsdev"]
+                   {:builds {:client {:source-paths ["src/cljsdev"]
                                       :figwheel true
                                       :compiler
                                       {:main ~(with-ns "dev")
