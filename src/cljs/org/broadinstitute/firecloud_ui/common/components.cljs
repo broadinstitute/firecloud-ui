@@ -214,22 +214,20 @@
        [:div {:style {:fontSize "106%"
                       :marginTop (when (= margin :top) "1em")
                       :marginBottom (when (= margin :bottom) "1em")
-                      :padding "0.7em 20px"
+                      :padding "0.7em 0"
                       :cursor (if disabled? "default" "pointer")
+                      :display "flex" :flexWrap "nowrap" :alignItems "center"
                       :backgroundColor (if disabled? (:disabled-state style/colors) (if heavy? color "transparent"))
                       :color (if heavy? "#fff" color)
                       :border (when-not heavy? style/standard-line)
-                      :borderRadius 5
-                      :position "relative"}
+                      :borderRadius 5}
               :onClick (if disabled?
                          ;; Have to fully qualify to avoid circular dependency
                          #(org.broadinstitute.firecloud-ui.common.modal/push-error-text
                            (if (string? disabled?) disabled? "This action is disabled."))
                          (:onClick props))}
-        (icons/icon {:style {:verticalAlign "middle" :fontSize "135%"}} (:icon props))
-        [:span {:style {:verticalAlign "middle" :marginLeft "1em"
-                        :position "absolute" :left 70 :top 0 :bottom 0
-                        :margin "auto" :height 30 :lineHeight 30}}
+        (icons/icon {:style {:padding "0 20px" :borderRight style/standard-line}} (:icon props))
+        [:div {:style {:textAlign "center" :margin "auto"}}
          (:text props)]]))})
 
 (react/defc EntityDetails

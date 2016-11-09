@@ -32,7 +32,7 @@
 
 (defn- push-error [content]
   (push-ok-cancel-modal
-   {:header [:div {:style {:display "flex" :alignItems "center"}}
+   {:header [:div {:style {:display "inline-flex" :alignItems "center"}}
              (icons/icon {:style {:color (:exception-state style/colors)
                                   :marginRight "0.5em"}} :error)
              "Error"]
