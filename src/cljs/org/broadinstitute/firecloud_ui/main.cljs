@@ -25,7 +25,7 @@
 ; Temporary replacement for the Broad Logo.
 (defn- text-logo []
   [:div {:style {:display "inline-block"}}
-   [:a {:href "/#workspaces" :style {:fontSize "32px" :color (:button-primary style/colors) :fontWeight "bold" :textDecoration "none" :height 38}}
+   [:a {:href "/#workspaces" :style {:fontSize 32 :color (:button-primary style/colors) :fontWeight "bold" :textDecoration "none" :height 38}}
    "FireCloud"]])
 
 
@@ -201,7 +201,7 @@
                {:render
                 (fn [{:keys [props state]}]
                   [:a {:style {:display "block"
-                               :color "#000" :textDecoration "none" :fontSize "14px"
+                               :color "#000" :textDecoration "none" :fontSize 14
                                :padding "0.6em 1.8em 0.6em 0.6em"
                                :backgroundColor (when (:hovering? @state) "#e8f5ff")}
                        :href (:href props)

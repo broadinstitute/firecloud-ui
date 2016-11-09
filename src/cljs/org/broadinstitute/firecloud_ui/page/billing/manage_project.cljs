@@ -21,7 +21,7 @@
        :get-first-element-dom-node #(react/find-dom-node (@refs "email"))
        :content
        (react/create-element
-         [:div {:style {:width "420px"}}
+         [:div {:style {:width 420}}
           (when (:adding? @state)
             [comps/Blocker {:banner "Adding user..."}])
           [:div {:style {:display "flex"}}

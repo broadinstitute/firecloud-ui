@@ -53,7 +53,7 @@
                      :backgroundColor (if disabled? (:disabled-state style/colors) color)
                      :cursor (when disabled? "default")
                      :color "white" :fontWeight 500
-                     :minHeight "19px" :minWidth "19px"
+                     :minHeight 19 :minWidth 19
                      :borderRadius 2 :padding (if text "0.7em 1em" "0.4em")
                      :textDecoration "none"}
                     (if (map? style) style {}))
@@ -229,7 +229,7 @@
         (icons/icon {:style {:verticalAlign "middle" :fontSize "135%"}} (:icon props))
         [:span {:style {:verticalAlign "middle" :marginLeft "1em"
                         :position "absolute" :left 70 :top 0 :bottom 0
-                        :margin "auto" :height 30 :lineHeight "30px"}}
+                        :margin "auto" :height 30 :lineHeight 30}}
          (:text props)]]))})
 
 (react/defc EntityDetails
@@ -246,7 +246,7 @@
               [:span {:style {:fontWeight 500 :width 100 :display "inline-block" :paddingBottom "0.3em"}} label]
               (if (and editing? dropdown?)
                 (style/create-identity-select {:ref key
-                                               :style {:width "100px"}
+                                               :style {:width 100}
                                                :defaultValue (entity key)
                                                :onChange (when-let [f (:onSnapshotIdChange props)]
                                                            #(f (int (common/get-text refs "snapshotId"))))}
