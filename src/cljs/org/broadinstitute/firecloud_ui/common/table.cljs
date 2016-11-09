@@ -135,7 +135,7 @@
       :sortable-columns? true
       :always-sort? false
       :filterable? true
-      :cell-padding-left 16
+      :cell-padding-left "16px"
       :row-style (fn [index row]
                    {:backgroundColor (if (even? index) (:background-light style/colors) "#fff")})})
    :get-initial-state
