@@ -1,6 +1,4 @@
 - [ ] **Submitter**: Include the JIRA issue number in the PR description
-- [ ] **Submitter**: Make sure Swagger is updated if API changes
-- [ ] **Submitter**: If updating admin endpoints, also update [firecloud-admin-cli](https://github.com/broadinstitute/firecloud-admin-cli)
 - [ ] **Submitter**: Check documentation and code comments. Add explanatory PR comments if helpful.
 - [ ] **Submitter**: JIRA ticket checks:
   * Acceptance criteria exists and is met
@@ -30,6 +28,4 @@
 - [ ] **Submitter**: Squash commits and merge to develop
 - [ ] **Submitter**: Delete branch after merge
 - [ ] **Submitter**: **Test this change works on dev environment after deployment**. YOU own getting it fixed if dev isn't working for ANY reason!
-- [ ] **Submitter**: Verify swagger UI on dev environment still works after deployment
-- [ ] **Submitter**: Inform other teams of any API changes via hipchat and/or email
 - [ ] **Submitter**: Mark JIRA issue as resolved once this checklist is completed
