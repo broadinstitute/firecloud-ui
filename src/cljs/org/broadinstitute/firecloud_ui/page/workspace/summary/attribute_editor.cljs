@@ -15,9 +15,9 @@
 (def ^:private STRING "String")
 (def ^:private NUMBER "Number")
 (def ^:private BOOLEAN "Boolean")
-(def ^:private LIST_STRING "List of Strings")
-(def ^:private LIST_NUMBER "List of Numbers")
-(def ^:private LIST_BOOLEAN "List of Booleans")
+(def ^:private LIST_STRING "List of strings")
+(def ^:private LIST_NUMBER "List of numbers")
+(def ^:private LIST_BOOLEAN "List of booleans")
 (def ^:private list-types #{LIST_STRING LIST_NUMBER LIST_BOOLEAN})
 (def ^:private all-types [STRING NUMBER BOOLEAN LIST_STRING LIST_NUMBER LIST_BOOLEAN])
 
@@ -58,6 +58,9 @@
 (defn- valid-number? [string]
   (re-matches #"-?[0-9]*(?:\.[0-9]*)?" string))
 
+
+(defn- header [text]
+  [:span {:style {:fontSize "120%"}} text])
 
 (react/defc WorkspaceAttributeViewerEditor
   {:get-attributes
@@ -115,7 +118,7 @@
             {:key (str editing? (count (:attributes @state)))
              :reorderable-columns? false :sortable-columns? (not editing?) :filterable? false :pagination :none
              :empty-message "No Workspace Attributes defined"
-             :row-style {:alignItems "stretch"}
+             :row-style {:alignItems "center" :fontSize "120%"}
              :always-sort? (not editing?)
              :header-row-style {:borderBottom (str "2px solid " (:line-default style/colors))
                                 :backgroundColor "white" :color "black" :fontWeight "bold"}
@@ -124,12 +127,12 @@
                         [{:starting-width 40 :resizable? false :as-text (constantly "Delete")
                           :content-renderer
                           (fn [index]
-                            (icons/icon {:style {:color (:exception-state style/colors)
-                                                 :verticalAlign "middle" :height 26
+                            (icons/icon {:style {:color (:text-lightest style/colors)
+                                                 :verticalAlign "middle" :fontSize 22
                                                  :cursor "pointer"}
                                          :onClick #(swap! state update :attributes utils/delete index)}
-                                        :delete))}
-                         {:header "Key" :starting-width 300 :as-text (constantly nil)
+                                        :remove))}
+                         {:header (header "Key") :starting-width 300 :as-text (constantly nil)
                           :content-renderer
                           (fn [{:keys [key index]}]
                             (style/create-text-field (merge
@@ -139,14 +142,14 @@
                                                                           assoc 0 (-> % .-target .-value))}
                                                        (when (= index (-> (:attributes @state) count dec))
                                                          {:id "focus"}))))}
-                         {:header "Value" :starting-width :remaining :as-text (constantly nil) :resizable? false
+                         {:header (header "Value") :starting-width :remaining :as-text (constantly nil) :resizable? false
                           :content-renderer
                           (fn [{:keys [value index]}]
                             (style/create-text-field {:style {:marginBottom 0 :fontSize "100%" :height 26 :width "calc(100% - 2px)"}
                                                       :defaultValue value
                                                       :onChange #(swap! state update-in [:attributes index]
                                                                         assoc 1 (-> % .-target .-value))}))}
-                         {:header "Type" :starting-width 130 :as-text (constantly nil) :resizable? false
+                         {:header (header "Type") :starting-width 150 :as-text (constantly nil) :resizable? false
                           :content-renderer
                           (fn [{:keys [type index]}]
                             (style/create-identity-select
@@ -155,8 +158,8 @@
                                :onChange #(swap! state update-in [:attributes index]
                                                  assoc 2 (-> % .-target .-value))}
                               all-types))}]
-                        [{:header "Key" :starting-width 300 :as-text name :sort-initial :asc}
-                         {:header "Value" :starting-width :remaining :as-text process-attribute-value
+                        [{:header (header "Key") :starting-width 300 :as-text name :sort-initial :asc}
+                         {:header (header "Value") :starting-width :remaining :as-text process-attribute-value
                           :content-renderer (comp (table-utils/render-gcs-links (:workspace-bucket props)) process-attribute-value)}])
              :data (if editing?
                      (map-indexed (fn [index [key value type]]
