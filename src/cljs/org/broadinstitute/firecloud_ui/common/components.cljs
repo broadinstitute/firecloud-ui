@@ -49,14 +49,14 @@
      (let [{:keys [color icon href disabled? onClick text style class-name]} props]
        [:a {:className (or class-name "button")
             :style (merge
-                     {:display "inline-flex" :alignItems "center"
-                      :backgroundColor color
-                      :WebkitFilter (when disabled? "grayscale()")
-                      :cursor (when disabled? "default")
-                      :color "white" :fontWeight 500
-                      :borderRadius 2 :padding (if text "0.7em 1em" "0.4em")
-                      :textDecoration "none"}
-                     (if (map? style) style {}))
+                    {:display "inline-flex" :alignItems "center"
+                     :backgroundColor (if disabled? (:disabled-state style/colors) color)
+                     :cursor (when disabled? "default")
+                     :color "white" :fontWeight 500
+                     :minHeight 19 :minWidth 19
+                     :borderRadius 2 :padding (if text "0.7em 1em" "0.4em")
+                     :textDecoration "none"}
+                    (if (map? style) style {}))
             :href (or href "javascript:;")
             :onClick (if disabled?
                        ;; Have to fully qualify to avoid circular dependency
@@ -149,10 +149,12 @@
 (react/defc XButton
   {:render
    (fn [{:keys [props]}]
-     [:div {:style {:position "absolute" :top 4 :right 4}}
-      [Button {:icon :x
-               :onClick (:dismiss props)
-               :id (:id props)}]])})
+     [:div {:style {:float "right" :marginRight "-28px" :marginTop "-1px"}}
+      [:a {:style {:color (:text-light style/colors)}
+           :href "javascript:;"
+           :onClick (:dismiss props)
+           :id (:id props)}
+       (icons/icon {:style {:fontSize "80%"}} :close)]])})
 
 
 ;; TODO: find out if :position "absolute" would work everywhere, or possibly get rid of Blocker entirely
@@ -192,9 +194,9 @@
   {:render
    (fn [{:keys [props]}]
      [:div {:style {:background (:color props) :color "#fff"
-                    :padding 20 :borderRadius 5 :textAlign "center"}}
+                    :padding "15px 20px" :textAlign "center" :marginBottom "2em"}}
       (:icon props)
-      [:span {:style {:marginLeft "1.5ex" :fontSize "125%" :fontWeight 400
+      [:span {:style {:marginLeft "1em" :fontSize "125%" :fontWeight 400
                       :verticalAlign "middle"}}
        (:text props)]])})
 
@@ -210,22 +212,23 @@
            color (cond (keyword? (:color props)) (get style/colors (:color props))
                        :else (:color props))]
        [:div {:style {:fontSize "106%"
-                      :WebkitFilter (when disabled? "grayscale()")
                       :marginTop (when (= margin :top) "1em")
                       :marginBottom (when (= margin :bottom) "1em")
-                      :padding "0.7em 0" :textAlign "center"
+                      :padding "0.7em 0"
                       :cursor (if disabled? "default" "pointer")
-                      :backgroundColor (if heavy? color "transparent")
+                      :display "flex" :flexWrap "nowrap" :alignItems "center"
+                      :backgroundColor (if disabled? (:disabled-state style/colors) (if heavy? color "transparent"))
                       :color (if heavy? "#fff" color)
                       :border (when-not heavy? style/standard-line)
-                      :borderRadius (when heavy? 4)}
+                      :borderRadius 5}
               :onClick (if disabled?
                          ;; Have to fully qualify to avoid circular dependency
                          #(org.broadinstitute.firecloud-ui.common.modal/push-error-text
                            (if (string? disabled?) disabled? "This action is disabled."))
                          (:onClick props))}
-        (icons/icon {:style {:verticalAlign "middle" :fontSize "135%"}} (:icon props))
-        [:span {:style {:verticalAlign "middle" :marginLeft "1em"}} (:text props)]]))})
+        (icons/icon {:style {:padding "0 20px" :borderRight style/standard-line}} (:icon props))
+        [:div {:style {:textAlign "center" :margin "auto"}}
+         (:text props)]]))})
 
 (react/defc EntityDetails
   {:get-fields
@@ -241,7 +244,7 @@
               [:span {:style {:fontWeight 500 :width 100 :display "inline-block" :paddingBottom "0.3em"}} label]
               (if (and editing? dropdown?)
                 (style/create-identity-select {:ref key
-                                               :style {:width "100px"}
+                                               :style {:width 100}
                                                :defaultValue (entity key)
                                                :onChange (when-let [f (:onSnapshotIdChange props)]
                                                            #(f (int (common/get-text refs "snapshotId"))))}
@@ -357,7 +360,7 @@
 (react/defc Breadcrumbs
   {:render
    (fn [{:keys [props]}]
-     (let [sep (icons/icon {} :angle-right)
+     (let [sep (icons/icon {:style {:color (:border-light style/colors)}} :angle-right)
            crumbs (filter some? (:crumbs props))]
        (case (count crumbs)
          0 [:div {}]

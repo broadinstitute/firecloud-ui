@@ -32,7 +32,7 @@
 
 (defn- push-error [content]
   (push-ok-cancel-modal
-   {:header [:div {:style {:display "flex" :alignItems "center"}}
+   {:header [:div {:style {:display "inline-flex" :alignItems "center"}}
              (icons/icon {:style {:color (:exception-state style/colors)
                                   :marginRight "0.5em"}} :error)
              "Error"]
@@ -96,16 +96,18 @@
 (react/defc OKCancelForm
   {:get-default-props
    (fn []
-     {:show-cancel? true})
+     {:show-cancel? true
+      :show-close? true})
    :render
    (fn [{:keys [props]}]
-     (let [{:keys [header content ok-button show-cancel? cancel-text]} props
+     (let [{:keys [header content ok-button show-cancel? cancel-text show-close?]} props
            cancel-text (or cancel-text "Cancel")]
        [:div {}
         [:div {:style {:borderBottom style/standard-line
                        :padding "20px 48px 18px"
                        :fontSize "137%" :fontWeight 400 :lineHeight 1}}
-         header]
+         header
+         (when show-close? [comps/XButton {:dismiss pop-modal}])]
         [:div {:style {:padding "22px 48px 40px" :backgroundColor (:background-light style/colors)}}
          content
          (when (or show-cancel? ok-button)

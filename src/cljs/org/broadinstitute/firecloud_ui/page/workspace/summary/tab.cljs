@@ -150,8 +150,8 @@
                                :icon (if isLocked :unlock :lock)
                                :onClick #(react/call :lock-or-unlock this isLocked)}])
        (when (and owner? (not editing?))
-         [comps/SidebarButton {:style :light :margin :top :color :exception-state
-                               :text "Delete" :icon :delete
+         [comps/SidebarButton {:style :light :margin :top :color (if isLocked :text-lighter :exception-state)
+                               :text "Delete..." :icon :delete
                                :disabled? (if isLocked "This workspace is locked.")
                                :onClick #(modal/push-modal [DeleteDialog {:workspace-id workspace-id
                                                                           :on-delete on-delete}])}]))]))

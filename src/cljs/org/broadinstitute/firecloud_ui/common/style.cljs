@@ -10,6 +10,7 @@
              :running-state "#67688a"
              :success-state "#7aac20"
              :exception-state "#e85c46"
+             :disabled-state "#dadada"
              :tag-background "#d4ecff"
              :tag-foreground "#2c3c4d"
              :text-light "#666"
@@ -58,6 +59,9 @@
 
 (defn create-text-field [props]
   [:input (deep-merge {:type "text" :style input-text-style} props)])
+
+(defn create-search-field [props]
+  [:input (deep-merge {:type "search" :style (assoc input-text-style :WebkitAppearance "none")} props)])
 
 (defn create-text-area [props]
   [:textarea (deep-merge {:style input-text-style} props)])

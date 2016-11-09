@@ -113,7 +113,6 @@
            {:keys [workspace workspace-error bucket-access?]} @state
            tab (:segment nav-context)
            refresh #(react/call :refresh-workspace this)]
-       [:div {:style {:margin "0 -1em"}}
         [:div {:style {:margin "-22px 0 2px 0"}}
          [ProtectedBanner (select-keys @state [:workspace :workspace-error])]]
         [:div {:style {:margin "-2px 0 2px 0"}}
@@ -166,7 +165,7 @@
                                               :nav-context (nav/terminate-when (not= tab MONITOR) nav-context)}])
                          :onTabRefreshed #(react/call :refresh (@refs MONITOR))}]
                        :toolbar-right (when-let [analysis-tab (:analysis-tab @state)]
-                                        (react/call :get-tracks-button analysis-tab))}]]))
+                                        (react/call :get-tracks-button analysis-tab))}]))
    :component-did-mount
    (fn [{:keys [props this]}]
      (let [nav-context (nav/parse-segment (:nav-context props))

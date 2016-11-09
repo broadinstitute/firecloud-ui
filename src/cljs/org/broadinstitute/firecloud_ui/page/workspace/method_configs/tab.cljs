@@ -37,21 +37,21 @@
           {:empty-message "There are no method configurations to display."
            :toolbar
            (float-right
-             [comps/Button {:text "Import Configuration..."
-                            :disabled? (case locked?
-                                         nil "Looking up workspace status..."
-                                         true "This workspace is locked."
-                                         false)
-                            :onClick #(modal/push-modal
-                                       [modal/OKCancelForm
-                                        {:header "Import Method Configuration"
-                                         :content
-                                         [:div {:style {:backgroundColor "white" :padding "1ex" :width 1000}}
-                                          [MethodConfigImporter {:workspace-id (:workspace-id props)
-                                                                 :after-import (fn [{:keys [config-id]}]
-                                                                                 (modal/pop-modal)
-                                                                                 ((:on-config-imported props) config-id))}]]}])}]
-             {:paddingRight "2em"})
+            [comps/Button {:text "Import Configuration..."
+                           :disabled? (case locked?
+                                        nil "Looking up workspace status..."
+                                        true "This workspace is locked."
+                                        false)
+                           :onClick #(modal/push-modal
+                                      [modal/OKCancelForm
+                                       {:header "Import Method Configuration"
+                                        :content
+                                        [:div {:style {:backgroundColor "white" :padding "1ex" :width 1000}}
+                                         [MethodConfigImporter {:workspace-id (:workspace-id props)
+                                                                :after-import (fn [{:keys [config-id]}]
+                                                                                (modal/pop-modal)
+                                                                                ((:on-config-imported props) config-id))}]]}])}]
+            {:paddingRight "2em"})
            :columns
            [{:header "Name" :starting-width 240 :as-text :name :sort-by :text
              :content-renderer
@@ -75,11 +75,11 @@
    (fn [{:keys [props state]}]
      ((:request-refresh props))
      (endpoints/call-ajax-orch
-       {:endpoint (endpoints/list-workspace-method-configs (:workspace-id props))
-        :on-done (fn [{:keys [success? get-parsed-response status-text]}]
-                   (if success?
-                     (swap! state assoc :server-response {:configs (vec (get-parsed-response))})
-                     (swap! state assoc :server-response {:error-message status-text})))}))})
+      {:endpoint (endpoints/list-workspace-method-configs (:workspace-id props))
+       :on-done (fn [{:keys [success? get-parsed-response status-text]}]
+                  (if success?
+                    (swap! state assoc :server-response {:configs (vec (get-parsed-response))})
+                    (swap! state assoc :server-response {:error-message status-text})))}))})
 
 
 (react/defc Page
