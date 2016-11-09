@@ -40,9 +40,8 @@
       {:empty-message "No Workflows"
        :columns [{:header "Data Entity" :starting-width 200
                   :as-text
-                  (fn [workflow]
-                    (let [entity (workflow "workflowEntity")]
-                      (str (entity "entityName") " (" (entity "entityType") ")")))
+                  (fn [workflow] (get-in workflow ["workflowEntity" "entityName"]))
+                  :sort-by :text
                   :content-renderer
                   (fn [workflow]
                     (let [entity (workflow "workflowEntity")
@@ -65,6 +64,9 @@
                                               [:div {} message])
                                          message-list)])}
                  {:header "Workflow ID" :starting-width 300
+                  :as-text
+                    (fn [workflow] (workflow "workflowId"))
+                  :sort-by :text
                   :content-renderer
                   (fn [workflow]
                    (let [{:keys [submission-id bucketName]} props
