@@ -20,12 +20,13 @@
 
 
 (defn- logo []
-  [:img {:src "assets/broad_logo.png" :style {:height 36}}])
+  [:img {:src "assets/broad_logo.png" :style {:height 38}}])
 
 ; Temporary replacement for the Broad Logo.
 (defn- text-logo []
-  [:div {:style {:fontSize "32px" :color (:button-primary style/colors) :fontWeight "bold"}}
-   "FireCloud"])
+  [:div {:style {:display "inline-block"}}
+   [:a {:href "/#workspaces" :style {:fontSize 32 :color (:button-primary style/colors) :fontWeight "bold" :textDecoration "none" :height 38}}
+   "FireCloud"]])
 
 
 (react/defc PopUpFooterControl
@@ -52,23 +53,23 @@
       [:div {:style {:maxWidth 600 :paddingTop "2em"}}
         [:p {:style {:fontWeight "bold"}} "WARNING NOTICE"]
         [:p {}
-          "You are accessing a US Government web site which may contain information that must be "
-          "protected under the US Privacy Act or other sensitive information and is intended for "
-          "Government authorized use only."]
+          "You are accessing a US Government web site which may contain information that must be
+          protected under the US Privacy Act or other sensitive information and is intended for
+          Government authorized use only."]
         [:p {}
-          "Unauthorized attempts to upload information, change information, or use of this web site "
-          "may result in disciplinary action, civil, and/or criminal penalties. Unauthorized users "
-          "of this website should have no expectation of privacy regarding any communications or "
-          "data processed by this website."]
+          "Unauthorized attempts to upload information, change information, or use of this web site
+          may result in disciplinary action, civil, and/or criminal penalties. Unauthorized users
+          of this website should have no expectation of privacy regarding any communications or
+          data processed by this website."]
         [:p {}
-          "Anyone accessing this website expressly consents to monitoring of their actions and all "
-          "communications or data transiting or stored on related to this website and is advised "
-          "that if such monitoring reveals possible evidence of criminal activity, NIH may provide "
-          "that evidence to law enforcement officials."]
+          "Anyone accessing this website expressly consents to monitoring of their actions and all
+          communications or data transiting or stored on related to this website and is advised
+          that if such monitoring reveals possible evidence of criminal activity, NIH may provide
+          that evidence to law enforcement officials."]
         [:p {:style {:fontWeight "bold"}} "WARNING NOTICE (when accessing controlled data)"]
         [:p {:style {:fontWeight "bold"}}
-          "You are reminded that when accessing controlled access information you are bound by the "
-          "dbGaP TCGA "
+          "You are reminded that when accessing controlled access information you are bound by the
+          dbGaP TCGA "
           [:a {:href "http://cancergenome.nih.gov/pdfs/Data_Use_Certv082014" :target "_blank"}
             "DATA USE CERTIFICATION AGREEMENT (DUCA)"] "."]])})
 
@@ -98,8 +99,7 @@
       spacer
       [Link {:href "#policy" :text "Privacy Policy"}]
       spacer
-      [Link {:href (str  "http://gatkforums.broadinstitute.org/firecloud/discussion/6819/"
-                         "firecloud-terms-of-service#latest")
+      [Link {:href "http://gatkforums.broadinstitute.org/firecloud/discussion/6819/firecloud-terms-of-service#latest"
              :text "Terms of Service" :target "_blank"}]
       spacer
       [Link {:href "http://gatkforums.broadinstitute.org/firecloud" :text "Support"
@@ -127,7 +127,7 @@
   {:render
    (fn [{:keys [props state]}]
      [:a {:href (:href props)
-          :style {:padding "1ex" :textDecoration "none"
+          :style {:padding "1em" :textDecoration "none"
                   :fontWeight (when (:selected props) "bold")
                   :color (if (:hovering? @state) (:link-active style/colors) "black")}
           :onMouseOver #(swap! state assoc :hovering? true)
@@ -138,12 +138,14 @@
 (react/defc TopNavBar
   {:render
    (fn [{:keys [props]}]
-     [:div {:style {:textAlign "right"}}
-      (map (fn [item] [TopNavBarLink {:name (:name item) :href (:href item)
-                                      :selected (= (:selected-item props) (:key item))}])
-           top-nav-bar-items)
-      (when (:show-nih-link-warning? props)
-        [nih-link-warning/NihLinkWarning])])})
+     [:div {}
+      (text-logo)
+      [:div {:style {:display "inline-block" :paddingLeft "1em" :fontSize 18 :height 38 :verticalAlign "baseline"}}
+       (map (fn [item] [TopNavBarLink {:name (:name item) :href (:href item)
+                                       :selected (= (:selected-item props) (:key item))}])
+            top-nav-bar-items)
+       (when (:show-nih-link-warning? props)
+         [nih-link-warning/NihLinkWarning])]])})
 
 
 (react/defc GlobalSubmissionStatus
@@ -152,7 +154,7 @@
      (let [{:keys [status-error status-code status-counts]} @state
            {:keys [queued active queue-position]} status-counts]
        (when-not (= status-code 401) ; to avoid displaying "Workflows: Unauthorized"
-         [:div {:style {:textAlign "right"}}
+         [:div {}
           (str "Workflows: "
                (cond status-error status-error
                      status-counts (str queued " Queued; " active " Active; " queue-position " ahead of yours")
@@ -178,7 +180,7 @@
 (react/defc AccountDropdown
   {:render
    (fn [{:keys [props state]}]
-     [:div {:style {:float "right" :position "relative" :marginBottom "1ex"}}
+     [:div {:style {:float "right" :position "relative" :marginBottom "0.5em"}}
       (when (:show-dropdown? @state)
         [:div {:style {:position "fixed" :top 0 :left 0 :right 0 :bottom 0}
                :onClick #(swap! state assoc :show-dropdown? false)}])
@@ -188,29 +190,28 @@
                    :borderRadius 2
                    :backgroundColor (:background-light style/colors)
                    :color "#000" :textDecoration "none"
-                   :padding "1ex" :border style/standard-line
+                   :padding "0.6em" :border style/standard-line
                    :minWidth 100}}
-       [:div {:style {:display "flex" :justifyContent "space-between" :alignItems "baseline"}}
+       [:div {}
         (:user-email props)
-        [:div {:style {:display "inline-block" :marginLeft "0.5ex" :fontSize 8}} "▼"]]]
+        [:div {:style {:display "inline-block" :marginLeft "1em" :fontSize 8}} "▼"]]]
       (when (:show-dropdown? @state)
         (let [DropdownItem
               (react/create-class
                {:render
                 (fn [{:keys [props state]}]
                   [:a {:style {:display "block"
-                               :color "#000" :textDecoration "none" :fontSize "14px"
-                               :padding "1ex 3ex 1ex 1ex"
+                               :color "#000" :textDecoration "none" :fontSize 14
+                               :padding "0.6em 1.8em 0.6em 0.6em"
                                :backgroundColor (when (:hovering? @state) "#e8f5ff")}
                        :href (:href props)
                        :onMouseOver #(swap! state assoc :hovering? true)
                        :onMouseOut #(swap! state assoc :hovering? false)
                        :onClick (:dismiss props)}
                    (:text props)])})]
-          [:div {:style {:textAlign "left" :float "right"
-                         :boxShadow "0px 3px 6px 0px rgba(0, 0, 0, 0.15)"
+          [:div {:style {:boxShadow "0px 3px 6px 0px rgba(0, 0, 0, 0.15)"
                          :backgroundColor "#fff"
-                         :position "absolute" :left 0 :right 0
+                         :position "absolute" :width "100%"
                          :border (str "1px solid " (:line-default style/colors))}}
            [DropdownItem {:href "#profile" :text "Profile" :dismiss #(swap! state assoc :show-dropdown? false)}]
            [DropdownItem {:href "#billing" :text "Billing" :dismiss #(swap! state assoc :show-dropdown? false)}]]))])})
@@ -224,13 +225,16 @@
                      (= page :status))
          (nav/navigate (:nav-context props) "workspaces"))
        [:div {}
-        [:div {:style {:float "right" :fontSize "70%" :margin "0 1ex 1em 0"}}
-         [AccountDropdown {:user-email (:user-email props)}]
-         (common/clear-both)
+        [:div {:style {:width "100%" :borderBottom (str "1px solid " (:line-default style/colors))}}
+         [:div {:style {:float "right" :fontSize "70%" :margin "0 0 0.5em 0"}}
+          [AccountDropdown {:user-email (:user-email props)}]
+          (common/clear-both)
+          (when (= :registered (:registration-status @state))
+            [GlobalSubmissionStatus])]
          (when (= :registered (:registration-status @state))
-           [GlobalSubmissionStatus])]
-        (text-logo)
-        (common/clear-both)
+           [TopNavBar {:selected-item page
+                       :show-nih-link-warning? (not (contains? #{:status :profile} page))}])
+         (common/clear-both)]
         (case (:registration-status @state)
           nil [:div {:style {:margin "2em 0" :textAlign "center"}}
                [comps/Spinner {:text "Loading user information..."}]]
@@ -240,14 +244,12 @@
                            {:new-registration? true
                             :on-done #(.. js/window -location (reload))})
           :update-registered (profile-page/render
-                           {:update-registration? true
-                            :on-done #(.. js/window -location (reload))})
+                              {:update-registration? true
+                               :on-done #(.. js/window -location (reload))})
           :registered
           (if (and (= page :status) (config/debug?))
             (status-page/render)
             [:div {}
-             [TopNavBar {:selected-item page
-                         :show-nih-link-warning? (not (contains? #{:status :profile} page))}]
              (let [item (first (filter #(= (% :key) page) routes))]
                (if item
                  ((item :render) {:nav-context nav-context})
@@ -271,18 +273,6 @@
                 (swap! state assoc :registration-status :error))))))))})
 
 
-(react/defc RegisterLink
-  {:render
-   (fn [{:keys [state]}]
-     (if-not (:expanded? @state)
-       [:a {:href "javascript:;" :onClick #(swap! state assoc :expanded? true)} "Register"]
-       [:div {:style {:maxWidth 600}}
-        [:div {} [:b {} "FireCloud requires a Google account."]]
-        [:div {} "Please use the \"Sign In\" button above to sign-in with your Google Account."
-         " Once you have successfully signed-in with Google, you will be taken to the FireCloud"
-         " registration page."]]))})
-
-
 (react/defc LoggedOut
   {:render
    (fn [{:keys [props]}]
@@ -290,7 +280,11 @@
       [:div {:style {:marginBottom "2em"}} (text-logo)]
       [:div {}
        [sign-in/Button (select-keys props [:on-login])]]
-      [:div {:style {:marginTop "1em"}} [RegisterLink]]
+      [:div {:style {:marginTop "2em" :maxWidth 600}}
+       [:div {} [:b {} "New user? FireCloud requires a Google account."]]
+       [:div {} "Please use the \"Sign In\" button above to sign-in with your Google Account.
+         Once you have successfully signed-in with Google, you will be taken to the FireCloud
+         registration page."]]
       [:div {:style {:maxWidth 600 :paddingTop "2em" :fontSize "small"}}
         [Policy]]])})
 
@@ -373,8 +367,8 @@
            (text-logo)
            [:div {:style {:padding "40px 0"}}
             [:div {:style {:color (:exception-reds style/colors)}}
-             "Thank you for registering. Your account is currently inactive."
-             " You will be contacted via email when your account is activated."]]]
+             "Thank you for registering. Your account is currently inactive.
+              You will be contacted via email when your account is activated."]]]
           (= :logged-in (:user-status @state))
           [LoggedIn {:nav-context (:root-nav-context @state)
                      :user-email (:user-email @state)}]

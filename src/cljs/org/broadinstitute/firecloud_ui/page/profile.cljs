@@ -1,18 +1,18 @@
 (ns org.broadinstitute.firecloud-ui.page.profile
   (:require
-   cljsjs.moment
-   clojure.string
-   [dmohs.react :as react]
-   [org.broadinstitute.firecloud-ui.common :as common]
-   [org.broadinstitute.firecloud-ui.common.components :as components]
-   [org.broadinstitute.firecloud-ui.common.icons :as icons]
-   [org.broadinstitute.firecloud-ui.common.input :as input]
-   [org.broadinstitute.firecloud-ui.common.style :as style]
-   [org.broadinstitute.firecloud-ui.config :as config]
-   [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
-   [org.broadinstitute.firecloud-ui.nav :as nav]
-   [org.broadinstitute.firecloud-ui.utils :as utils]
-   ))
+    cljsjs.moment
+    clojure.string
+    [dmohs.react :as react]
+    [org.broadinstitute.firecloud-ui.common :as common]
+    [org.broadinstitute.firecloud-ui.common.components :as components]
+    [org.broadinstitute.firecloud-ui.common.icons :as icons]
+    [org.broadinstitute.firecloud-ui.common.input :as input]
+    [org.broadinstitute.firecloud-ui.common.style :as style]
+    [org.broadinstitute.firecloud-ui.config :as config]
+    [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
+    [org.broadinstitute.firecloud-ui.nav :as nav]
+    [org.broadinstitute.firecloud-ui.utils :as utils]
+    ))
 
 
 (defn get-nih-link-href []
@@ -23,7 +23,7 @@
           (str (.-protocol loc) "//" (.-host loc) "/#profile/nih-username-token={token}")))))
 
 (defn is-within-24-hours? [time]
-    (.isBefore (js/moment.) (.add time 24 "hours")))
+  (.isBefore (js/moment.) (.add time 24 "hours")))
 
 (react/defc NihLink
   {:render
@@ -124,49 +124,54 @@
            (:values @state)
            [:div {}
             [:div {:style {:fontWeight "bold" :margin "1em 0 1em 0"}} "* - required fields"]
-            (react/call :render-field this :firstName "First Name" true)
-            (react/call :render-field this :lastName "Last Name" true)
+            (react/call :render-nested-field this :firstName "First Name" true)
+            (react/call :render-nested-field this :lastName "Last Name" true)
             (react/call :render-field this :title "Title" true)
             (react/call :render-field this :contactEmail "Contact Email (to receive FireCloud notifications)" false true)
-            (react/call :render-field this :institute "Institute" true)
-            (react/call :render-field this :institutionalProgram "Institutional Program" true)
+            (react/call :render-nested-field this :institute "Institute" true)
+            (react/call :render-nested-field this :institutionalProgram "Institutional Program" true)
+            (common/clear-both)
             [:div {}
-              [:span {:style {:fontSize "88%"}} "Program Location:"]
-              [:div {}
-                (react/call :render-nested-field this :programLocationCity "City" true)
-                (react/call :render-nested-field this :programLocationState "State/Province" true)
-                (react/call :render-nested-field this :programLocationCountry "Country" true)]]
-                (react/call :render-field this :pi "Principal Investigator/Program Lead" true)
-            [:div {:style {:marginBottom "1em" :fontSize "88%"}} "*NonProfit Status"
+             [:div {:style {:marginTop "0.5em" :fontSize "88%"}} "*Non-Profit Status"]
+             [:div {:style {:fontSize "88%"}}
               (react/call :render-radio-field this :nonProfitStatus "Profit")
-              (react/call :render-radio-field this :nonProfitStatus "Non-Profit")]
+              (react/call :render-radio-field this :nonProfitStatus "Non-Profit")]]
+            (react/call :render-field this :pi "Principal Investigator/Program Lead" true)
+            [:div {}
+             [:div {:style {:fontSize "88%"}} "Program Location:"]
+             [:div {}
+              (react/call :render-nested-field this :programLocationCity "City" true)
+              (react/call :render-nested-field this :programLocationState "State/Province" true)
+              (react/call :render-nested-field this :programLocationCountry "Country" true)]]
+            (common/clear-both)
             (when-not (:new-registration? props)
               [:div {} [NihLink {:parent-nav-context (:parent-nav-context props)}]])]
            :else [components/Spinner {:text "Loading User Profile..."}]))
    :render-radio-field
    (fn [{:keys [state]} key value]
-       [:div {:style {:clear "both" :marginTop "0.167em" :width "30ex"}}
-        [:label {}
-         [:input {:type "radio" :value value :name key
-                  :checked (= (get-in @state [:values key]) value)
-                  :onChange #(swap! state assoc-in [:values key] value)}]
-         value]])
+     [:div {:style {:float "left" :margin "0 1em 0.5em 0" :padding "0.5em 0"}}
+      [:label {}
+       [:input {:type "radio" :value value :name key
+                :checked (= (get-in @state [:values key]) value)
+                :onChange #(swap! state assoc-in [:values key] value)}]
+       value]])
    :render-nested-field
    (fn [{:keys [state]} key label required]
-       [:div {:style {:float "left"}}
-        [:label {}
-         [:div {:style {:marginBottom "0.16667em" :fontSize "88%"}} (str (when required "*") label ":")]]
-        [input/TextField {:style {:marginRight "1em"}
-                          :defaultValue (get-in @state [:values key])
-                          :ref (name key) :placeholder (get-in @state [:values key])
-                          :predicates [(when required (input/nonempty label))]
-                          :onChange #(swap! state assoc-in [:values key] (-> % .-target .-value))}]])
+     [:div {:style {:float "left" :marginBottom "0.5em" :marginTop "0.5em"}}
+      [:label {}
+       [:div {:style {:fontSize "88%"}} (str (when required "*") label ":")]]
+      [input/TextField {:style {:marginRight "1em" :width 200}
+                        :defaultValue (get-in @state [:values key])
+                        :ref (name key) :placeholder (get-in @state [:values key])
+                        :predicates [(when required (input/nonempty label))]
+                        :onChange #(swap! state assoc-in [:values key] (-> % .-target .-value))}]])
    :render-field
    (fn [{:keys [state]} key label required valid-email-or-empty]
-     [:div {:style {:clear "both"}}
+     [:div {:style {:clear "both" :margin "0.5em 0"}}
       [:label {}
        (style/create-form-label (str (when required "*") label ":"))
-       [input/TextField {:defaultValue (get-in @state [:values key])
+       [input/TextField {:style {:width 200}
+                         :defaultValue (get-in @state [:values key])
                          :ref (name key) :placeholder (get-in @state [:values key])
                          :predicates [(when required (input/nonempty label))
                                       (when valid-email-or-empty (input/valid-email-or-empty label))]
@@ -186,7 +191,7 @@
    (fn [{:keys [this props state]}]
      (let [new? (:new-registration? props)
            update? (:update-registration? props)]
-       [:div {:style {:marginTop "2em"}}
+       [:div {:style {:margin "1em 2em"}}
         [:h2 {} (cond new? "New User Registration"
                       update? "Update Registration"
                       :else "Profile")]

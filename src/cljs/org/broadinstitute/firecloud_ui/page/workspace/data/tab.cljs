@@ -72,17 +72,18 @@
              {:ref "entity-table"
               :workspace-id workspace-id
               :toolbar (fn [built-in]
-                         [:div {}
-                          [:div {:style {:float "left"}} built-in]
+                         [:div {:style {:display "flex" :justifyContent "flex-start" :alignItems "baseline"}}
+                          [:div {} built-in]
                           (when-let [selected-entity-type (:selected-entity-type @state)]
-                            [:a {:style {:textDecoration "none" :float "left" :margin "7px 0 0 1em"}
+                            [:a {:style {:textDecoration "none" :margin "7px 0 0 1em"}
                                  :href (str (config/api-url-root) "/cookie-authed/workspaces/"
                                             (:namespace workspace-id) "/"
                                             (:name workspace-id) "/entities/" selected-entity-type "/tsv")
                                  :onClick #(utils/set-access-token-cookie @access-token)
                                  :target "_blank"}
                              (str "Download '" selected-entity-type "' data")])
-                          [:div {:style {:float "right" :paddingRight "2em"}}
+                          [:div {:style {:flexGrow 1}}]
+                          [:div {:style {:paddingRight "2em"}}
                            [comps/Button {:text "Import Data..."
                                           :disabled? (when locked? "This workspace is locked.")
                                           :onClick #(modal/push-modal
@@ -91,8 +92,7 @@
                                                                     :reload-data-tab
                                                                     (fn [entity-type]
                                                                       ((:request-refresh props))
-                                                                      (react/call :refresh (@refs "entity-table") entity-type))}])}]]
-                          (common/clear-both)])
+                                                                      (react/call :refresh (@refs "entity-table") entity-type))}])}]]])
               :on-filter-change #(swap! state assoc :selected-entity-type %)
               :attribute-renderer (table-utils/render-gcs-links (get-in workspace [:workspace :bucketName]))}])
           :else

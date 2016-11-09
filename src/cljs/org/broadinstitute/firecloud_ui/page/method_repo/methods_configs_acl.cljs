@@ -70,7 +70,7 @@
                      :style {:marginLeft "2em" :verticalAlign "middle"}
                      :onChange #(swap! state assoc :public-status (-> (@refs "publicbox") .-checked))
                      :checked (:public-status @state)}]
-            [:span {:style {:paddingLeft "6px" :verticalAlign "middle"}} "Publicly Readable?"]]
+            [:span {:style {:paddingLeft 6 :verticalAlign "middle"}} "Publicly Readable?"]]
            (style/create-validation-error-message (:validation-error @state))
            [comps/ErrorViewer {:error (:save-error @state)}]]
           (:error @state) (style/create-server-error-message (cond (= (:error @state) "Forbidden") (str "You are unauthorized to edit this " (clojure.string/lower-case (:entityType props)) ".")

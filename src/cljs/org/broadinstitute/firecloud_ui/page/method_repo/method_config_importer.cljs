@@ -328,8 +328,7 @@
           (style/create-link {:text "Methods" :onClick #(swap! state dissoc :selected-item)})
           (icons/icon {} :angle-right)
           [:h2 {:style {:display "inline-block"}} (item "namespace") "/" (item "name")
-           [:span {:style {:marginLeft "1ex" :fontWeight "normal"}} "#" (item "snapshotId")]])
-        [:h2 {} "Methods"])
+           [:span {:style {:marginLeft "1ex" :fontWeight "normal"}} "#" (item "snapshotId")]]))
       (when (:selected-item @state)
         (let [item-type (:type (:selected-item @state))
               form (if (= item-type :method) MethodImportForm ConfigImportForm)]
