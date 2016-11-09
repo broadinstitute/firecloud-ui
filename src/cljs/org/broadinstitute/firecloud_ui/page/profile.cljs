@@ -160,7 +160,7 @@
      [:div {:style {:float "left" :marginBottom "0.5em" :marginTop "0.5em"}}
       [:label {}
        [:div {:style {:fontSize "88%"}} (str (when required "*") label ":")]]
-      [input/TextField {:style {:marginRight "1em"}
+      [input/TextField {:style {:marginRight "1em" :width 200}
                         :defaultValue (get-in @state [:values key])
                         :ref (name key) :placeholder (get-in @state [:values key])
                         :predicates [(when required (input/nonempty label))]
@@ -170,7 +170,8 @@
      [:div {:style {:clear "both" :margin "0.5em 0"}}
       [:label {}
        (style/create-form-label (str (when required "*") label ":"))
-       [input/TextField {:defaultValue (get-in @state [:values key])
+       [input/TextField {:style {:width 200}
+                         :defaultValue (get-in @state [:values key])
                          :ref (name key) :placeholder (get-in @state [:values key])
                          :predicates [(when required (input/nonempty label))
                                       (when valid-email-or-empty (input/valid-email-or-empty label))]
@@ -190,7 +191,7 @@
    (fn [{:keys [this props state]}]
      (let [new? (:new-registration? props)
            update? (:update-registration? props)]
-       [:div {:style {:marginTop "2em"}}
+       [:div {:style {:margin "1em 2em"}}
         [:h2 {} (cond new? "New User Registration"
                       update? "Update Registration"
                       :else "Profile")]
