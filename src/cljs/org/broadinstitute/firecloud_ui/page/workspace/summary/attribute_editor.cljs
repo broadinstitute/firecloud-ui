@@ -56,7 +56,7 @@
                   [STRING attr-value])))
 
 (defn- valid-number? [string]
-  (re-matches #"-?[0-9]*(?:\.[0-9]*)?" string))
+  (re-matches #"-?(?:\d*\.)?\d+" string))
 
 
 (defn- header [text]
