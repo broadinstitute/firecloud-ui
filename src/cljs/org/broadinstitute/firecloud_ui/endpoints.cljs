@@ -216,6 +216,10 @@
   {:path (str "/workspaces/" (ws-path workspace-id) "/updateAttributes")
    :method :patch})
 
+(defn set-workspace-attributes [workspace-id]
+  {:path (str "/workspaces/" (ws-path workspace-id) "/setAttributes")
+   :method :patch})
+
 (defn import-entities [workspace-id]
   {:path (str "/workspaces/" (ws-path workspace-id) "/importEntities")
    :method :post

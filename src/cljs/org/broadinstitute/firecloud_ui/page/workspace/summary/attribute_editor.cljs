@@ -1,7 +1,7 @@
 (ns org.broadinstitute.firecloud-ui.page.workspace.summary.attribute-editor
   (:require
     clojure.set
-    [clojure.string :refer [join trim]]
+    [clojure.string :refer [join trim split]]
     [dmohs.react :as react]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
     [org.broadinstitute.firecloud-ui.common.style :as style]
@@ -12,32 +12,94 @@
     ))
 
 
-;; This is a temporary measure for GAWB-1116.
-;; GAWB-1119 should involve removing this function.
+(def ^:private STRING "String")
+(def ^:private NUMBER "Number")
+(def ^:private BOOLEAN "Boolean")
+(def ^:private LIST_STRING "List of strings")
+(def ^:private LIST_NUMBER "List of numbers")
+(def ^:private LIST_BOOLEAN "List of booleans")
+(def ^:private list-types #{LIST_STRING LIST_NUMBER LIST_BOOLEAN})
+(def ^:private all-types [STRING NUMBER BOOLEAN LIST_STRING LIST_NUMBER LIST_BOOLEAN])
+
+
+(defn- boolean? [x]
+  (or (true? x) (false? x)))
+
+(defn- parse-boolean [attr-value]
+  (if (contains? #{"true" "yes"} (clojure.string/lower-case attr-value))
+    true
+    false))
+
+
 (defn- process-attribute-value [attr-value]
   (if (and (map? attr-value)
            (= #{"itemsType" "items"} (set (keys attr-value))))
     (join ", " (attr-value "items"))
     attr-value))
 
+(defn- get-type-and-string-rep [attr-value]
+  (cond (nil? attr-value) [STRING ""]
+        (string? attr-value) [STRING attr-value]
+        (number? attr-value) [NUMBER (str attr-value)]
+        (boolean? attr-value) [BOOLEAN (str attr-value)]
+        (and (map? attr-value)
+             (= #{"itemsType" "items"} (-> attr-value keys set)))
+        (let [items (attr-value "items")
+              first-item (first items)
+              str-value (join ", " items)]
+          (cond (string? first-item) [LIST_STRING str-value]
+                (number? first-item) [LIST_NUMBER str-value]
+                (boolean? first-item) [LIST_BOOLEAN str-value]
+                :else (do (utils/cljslog "Unknown attribute list type:" first-item)
+                          [LIST_STRING str-value])))
+        :else (do (utils/cljslog "Unknown attribute type:" attr-value)
+                  [STRING attr-value])))
+
+(defn- valid-number? [string]
+  (re-matches #"-?(?:\d*\.)?\d+" string))
+
+
+(defn- header [text]
+  [:span {:style {:fontSize "120%"}} text])
 
 (react/defc WorkspaceAttributeViewerEditor
   {:get-attributes
    (fn [{:keys [state]}]
      (let [{:keys [attributes]} @state
-           duplicates (not-empty (utils/find-duplicates (map key attributes)))
-           any-empty? (some (fn [[k v]]
-                              (let [[ek ev] (map (comp empty? trim) [k v])]
-                                (or ek ev)))
-                            attributes)
-           with-spaces (->> attributes
-                            (map (comp trim key))
+           listified-attributes (map (fn [[key value type]]
+                                       [(trim key)
+                                        (if (contains? list-types type)
+                                          (map trim (split value #","))
+                                          (trim value))
+                                        type])
+                                     attributes)
+           duplicates (not-empty (utils/find-duplicates (map first listified-attributes)))
+           any-empty? (some (fn [[key value _]]
+                              (or (empty? key) (empty? value)))
+                            listified-attributes)
+           with-spaces (->> listified-attributes
+                            (map first)
                             (filter (partial re-find #"\s"))
-                            not-empty)]
+                            not-empty)
+           invalid-numbers (->> listified-attributes
+                                (keep (fn [[key value type]]
+                                        (cond (= type NUMBER) (when-not (valid-number? value) key)
+                                              (= type LIST_NUMBER) (when-not (every? valid-number? value) key))))
+                                not-empty)
+           typed (->> listified-attributes
+                      (map (fn [[key value type]]
+                             [key (condp = type
+                                    NUMBER (js/parseFloat value)
+                                    BOOLEAN (parse-boolean value)
+                                    LIST_NUMBER (map js/parseFloat value)
+                                    LIST_BOOLEAN (map parse-boolean value)
+                                    value)]))
+                      (into {}))]
        (cond duplicates {:error (str "Duplicate keys: " (join ", " duplicates))}
              any-empty? {:error "Empty keys and values are not allowed."}
              with-spaces {:error (str "Keys cannot have spaces: " (join ", " with-spaces))}
-             :else {:success (into {} attributes)})))
+             invalid-numbers {:error (str "Invalid number for key(s): " (join ", " invalid-numbers))}
+             :else {:success typed})))
    :render
    (fn [{:keys [props state after-update]}]
      (let [{:keys [editing?]} props]
@@ -53,10 +115,10 @@
                                         ;; have to do this by ID not ref, since the fields are generated within Table
                                         (after-update #(.focus (.getElementById js/document "focus"))))}]])
            [table/Table
-            {:key editing?
+            {:key (str editing? (count (:attributes @state)))
              :reorderable-columns? false :sortable-columns? (not editing?) :filterable? false :pagination :none
              :empty-message "No Workspace Attributes defined"
-             :row-style {}
+             :row-style {:alignItems "center" :fontSize "120%"}
              :always-sort? (not editing?)
              :header-row-style {:borderBottom (str "2px solid " (:line-default style/colors))
                                 :backgroundColor "white" :color "black" :fontWeight "bold"}
@@ -65,44 +127,53 @@
                         [{:starting-width 40 :resizable? false :as-text (constantly "Delete")
                           :content-renderer
                           (fn [index]
-                            (icons/icon {:style {:color (:exception-state style/colors)
-                                                 :verticalAlign "middle"
+                            (icons/icon {:style {:color (:text-lightest style/colors)
+                                                 :verticalAlign "middle" :fontSize 22
                                                  :cursor "pointer"}
                                          :onClick #(swap! state update :attributes utils/delete index)}
-                                        :delete))}
-                         {:header "Key" :starting-width 300 :as-text (constantly nil)
+                                        :remove))}
+                         {:header (header "Key") :starting-width 300 :as-text (constantly nil)
                           :content-renderer
                           (fn [{:keys [key index]}]
                             (style/create-text-field (merge
-                                                       {:key index
-                                                        :style {:marginBottom 0 :width "calc(100% - 2px)"}
+                                                       {:style {:marginBottom 0 :fontSize "100%" :height 26 :width "calc(100% - 2px)"}
                                                         :defaultValue key
                                                         :onChange #(swap! state update-in [:attributes index]
                                                                           assoc 0 (-> % .-target .-value))}
                                                        (when (= index (-> (:attributes @state) count dec))
                                                          {:id "focus"}))))}
-                         {:header "Value" :starting-width :remaining :as-text (constantly nil)
+                         {:header (header "Value") :starting-width :remaining :as-text (constantly nil) :resizable? false
                           :content-renderer
                           (fn [{:keys [value index]}]
-                            (style/create-text-field {:key index
-                                                      :style {:marginBottom 0 :width "calc(100% - 2px)"}
+                            (style/create-text-field {:style {:marginBottom 0 :fontSize "100%" :height 26 :width "calc(100% - 2px)"}
                                                       :defaultValue value
                                                       :onChange #(swap! state update-in [:attributes index]
-                                                                        assoc 1 (-> % .-target .-value))}))}]
-                        [{:header "Key" :starting-width 300 :as-text name :sort-initial :asc}
-                         {:header "Value" :starting-width :remaining
+                                                                        assoc 1 (-> % .-target .-value))}))}
+                         {:header (header "Type") :starting-width 150 :as-text (constantly nil) :resizable? false
+                          :content-renderer
+                          (fn [{:keys [type index]}]
+                            (style/create-identity-select
+                              {:style {:marginBottom 0 :fontSize "100%" :height 26 :width "calc(100% - 2px)"}
+                               :defaultValue type
+                               :onChange #(swap! state update-in [:attributes index]
+                                                 assoc 2 (-> % .-target .-value))}
+                              all-types))}]
+                        [{:header (header "Key") :starting-width 300 :as-text name :sort-initial :asc}
+                         {:header (header "Value") :starting-width :remaining :as-text process-attribute-value
                           :content-renderer (comp (table-utils/render-gcs-links (:workspace-bucket props)) process-attribute-value)}])
              :data (if editing?
-                     (map-indexed (fn [index [key value]]
-                                    {:index index :key key :value value})
+                     (map-indexed (fn [index [key value type]]
+                                    {:index index :key key :value value :type type})
                                   (:attributes @state))
                      (:workspace-attributes props))
              :->row (if editing?
-                      (juxt :index identity identity)
+                      (juxt :index identity identity identity)
                       identity)}]])]))
    :component-did-update
    (fn [{:keys [prev-props props state]}]
      (when (and (not (:editing? prev-props)) (:editing? props))
        (swap! state assoc :attributes
-              (mapv (fn [[k v]] [(name k) (process-attribute-value v)])
+              (mapv (fn [[k v]]
+                      (let [[type str-value] (get-type-and-string-rep v)]
+                        [(name k) str-value type]))
                     (:workspace-attributes props)))))})
