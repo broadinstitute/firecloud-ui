@@ -17,7 +17,7 @@
 (react/defc DatasetsTable
   {
    :render
-   (fn [{:keys [state refs this]}]
+   (fn [{:keys [state this]}]
      (cond
        (:error-message @state) (style/create-server-error-message (:error-message @state))
        :else
@@ -64,7 +64,7 @@
    (fn [{:keys [refs]} new-filter-text]
      (react/call :update-query-params (@refs "table") {:filter-text new-filter-text}))
    :pagination
-   (fn [{:keys [state refs]}]
+   (fn [{:keys [state]}]
      (fn [{:keys [current-page rows-per-page filter-text]} callback]
        (endpoints/call-ajax-orch
          (let [from (* (- current-page 1) rows-per-page)]

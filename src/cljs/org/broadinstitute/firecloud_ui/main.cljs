@@ -153,9 +153,9 @@
       [:div {:style {:display "inline-block" :paddingLeft "1em" :fontSize 18 :height 38 :verticalAlign "baseline"}}
        (map (fn [item] [TopNavBarLink {:name (:name item) :href (:href item)
                                        :selected (= (:selected-item props) (:key item))}])
-            top-nav-bar-items state)
+            (top-nav-bar-items state))
        (when (:show-nih-link-warning? props)
-         [nih-link-warning/NihLinkWarning])]])})
+         [nih-link-warning/NihLinkWarning])]])
    :component-did-mount
    (fn [{:keys [state]}]
      (endpoints/call-ajax-orch
