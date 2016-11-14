@@ -13,6 +13,7 @@
     ))
 
 
+
 ;; for attributes referring to a single other entity
 ;; e.g. samples referring to participants
 (defn- is-single-ref? [attr-value]
@@ -28,17 +29,17 @@
   {:refresh
    (fn [{:keys [props state]} & [entity-type]]
      (endpoints/call-ajax-orch
-       {:endpoint (endpoints/get-entity-types (:workspace-id props))
-        :on-done (fn [{:keys [success? get-parsed-response]}]
-                   (if success?
-                     (let [metadata (get-parsed-response)
-                           entity-types (utils/sort-match common/root-entity-types (vec (keys metadata)))]
-                       (swap! state update-in [:server-response] assoc
-                              :entity-metadata metadata
-                              :entity-types entity-types
-                              :selected-entity-type (or entity-type (first entity-types))))
-                     (swap! state update-in [:server-response]
-                            assoc :server-error (get-parsed-response))))}))
+      {:endpoint (endpoints/get-entity-types (:workspace-id props))
+       :on-done (fn [{:keys [success? get-parsed-response]}]
+                  (if success?
+                    (let [metadata (get-parsed-response)
+                          entity-types (utils/sort-match common/root-entity-types (vec (keys metadata)))]
+                      (swap! state update-in [:server-response] assoc
+                             :entity-metadata metadata
+                             :entity-types entity-types
+                             :selected-entity-type (or entity-type (first entity-types))))
+                    (swap! state update-in [:server-response]
+                           assoc :server-error (get-parsed-response))))}))
    :get-default-props
    (fn []
      {:empty-message "There are no entities to display."
@@ -82,11 +83,12 @@
             [Table
              (merge props
                     {:key selected-entity-type
-                     :state-key (str (common/workspace-id->string (:workspace-id props)) ":data-tab:" selected-entity-type)
+                     :state-key (str (common/workspace-id->string (:workspace-id props)) ":data:" selected-entity-type)
                      :columns columns
+                     :column-defaults (get (:column-defaults props) selected-entity-type)
                      :retain-header-on-empty? true
                      :always-sort? true
-                     :pagination (react/call :pagination this columns)
+                     :pagination (react/call :pagination this)
                      :filter-groups (map (fn [type]
                                            {:text type :count (get-in entity-metadata [type "count"]) :pred (constantly true)})
                                          entity-types)
@@ -102,20 +104,18 @@
    (fn [{:keys [props this]}]
      (react/call :refresh this (:initial-entity-type props)))
    :pagination
-   (fn [{:keys [props state]} columns]
+   (fn [{:keys [props state]}]
      (let [{{:keys [entity-types]} :server-response} @state]
        (fn [{:keys [current-page rows-per-page filter-text sort-column sort-order filter-group-index]} callback]
          (if (empty? entity-types)
            (callback {:group-count 0 :filtered-count 0 :rows []})
-           (let [type (nth entity-types filter-group-index)
-                 sort-field (when (pos? sort-column)
-                              (get-in columns [sort-column :header]))]
+           (let [type (nth entity-types filter-group-index)]
              (endpoints/call-ajax-orch
                {:endpoint (endpoints/get-entities-paginated (:workspace-id props) type
                                                             {"page" current-page
                                                              "pageSize" rows-per-page
                                                              "filterTerms" (js/encodeURIComponent filter-text)
-                                                             "sortField" sort-field
+                                                             "sortField" sort-column
                                                              "sortDirection" (name sort-order)})
                 :on-done (fn [{:keys [success? get-parsed-response status-text status-code]}]
                            (if success?

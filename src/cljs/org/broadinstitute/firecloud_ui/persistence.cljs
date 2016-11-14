@@ -9,12 +9,14 @@
 
 (defn save [{:keys [key state except only]}]
   (assert (not (and except only)) "Specify EITHER except OR only")
-  (utils/local-storage-write (generate-persistence-key key)
+  (utils/local-storage-write
+    (generate-persistence-key key)
     (cond except (apply dissoc @state except)
           only (select-keys @state only)
           :else @state)))
 
-(defn try-restore [{:keys [key initial]}]
-  (if-let [saved-state (some-> key generate-persistence-key utils/local-storage-read cljs.reader/read-string)]
-    saved-state
-    initial))
+(defn try-restore [{:keys [key initial validator]}]
+  (let [saved-state (some-> key generate-persistence-key utils/local-storage-read cljs.reader/read-string)]
+    (if (and validator (some-> saved-state validator))
+      saved-state
+      (initial))))
