@@ -11,7 +11,7 @@
     ))
 
 
-(def ^:private access-levels ["PROJECT_OWNER" "OWNER" "WRITER" "READER" "NO ACCESS"])
+(def ^:private access-levels ["OWNER" "WRITER" "READER" "NO ACCESS"])
 
 
 (defn- render-acl-content [props state this]
@@ -20,42 +20,47 @@
     (let [workspace-id (:workspace-id props)]
       (str "Permissions for " (:namespace workspace-id) "/" (:name workspace-id)))
     :content
-    (react/create-element
-     [:div {}
-      (when (:saving? @state)
-        [comps/Blocker {:banner "Updating..."}])
-      [:div {:style {:padding "0.5em 0" :fontSize "90%"}}
-       [:div {:style {:float "left" :width 400}} "User ID"]
-       [:div {:style {:float "right" :width 200 :marginLeft "1em"}} "Access Level"]
-       (common/clear-both)]
-      (map-indexed
-       (fn [i acl-entry]
-         [:div {}
-          [input/TextField
-           {:ref (str "acl-key" i)
-            :predicates [(input/valid-email-or-empty "User ID")]
-            :style {:float "left" :width 400 :color "black"
-                    :backgroundColor (when (:read-only? acl-entry)
-                                       (:background-light style/colors))}
-            :disabled (:read-only? acl-entry)
-            :spellCheck false
-            :value (:email acl-entry)
-            :onChange #(swap! state assoc-in [:acl-vec i :email] (.. % -target -value))}]
-          (style/create-identity-select
-           {:ref (str "acl-value" i)
-            :style {:float "right" :width 200 :height 33 :marginLeft "1em"}
-            :value (:accessLevel acl-entry)
-            :onChange #(swap! state assoc-in [:acl-vec i :accessLevel]
-                              (.. % -target -value))}
-           access-levels)
-          (common/clear-both)])
-       (:acl-vec @state))
-      [:div {:style {:marginBottom "0.5em"}}
-       [comps/Button {:text "Add new" :icon :add
-                      :onClick #(swap! state update-in [:acl-vec]
-                                       conj {:email "" :accessLevel "READER"})}]]
-      (style/create-validation-error-message (:validation-error @state))
-      [comps/ErrorViewer {:error (:save-error @state)}]])
+    [:div {}
+     (when (:saving? @state)
+       [comps/Blocker {:banner "Updating..."}])
+     [:span {:style {:fontSize "90%"}} "Project Owner(s)"]
+     (map-indexed
+      (fn [i acl-entry]
+        [:div {:style {:padding "0.5em"}}
+         (:email acl-entry)])
+      (filterv #(= (:accessLevel %) "PROJECT_OWNER") (:acl-vec @state)))
+     [:div {:style {:padding "0.5em 0" :fontSize "90%" :marginTop "0.5em"}}
+      [:div {:style {:float "left" :width 400}} "User ID"]
+      [:div {:style {:float "right" :width 200 :marginLeft "1em"}} "Access Level"]
+      (common/clear-both)]
+     (map-indexed
+      (fn [i acl-entry]
+        [:div {}
+         [input/TextField
+          {:ref (str "acl-key" i)
+           :predicates [(input/valid-email-or-empty "User ID")]
+           :style {:float "left" :width 400 :color "black"
+                   :backgroundColor (when (:read-only? acl-entry)
+                                      (:background-light style/colors))}
+           :disabled (:read-only? acl-entry)
+           :spellCheck false
+           :value (:email acl-entry)
+           :onChange #(swap! state assoc-in [:acl-vec i :email] (.. % -target -value))}]
+         (style/create-identity-select
+          {:ref (str "acl-value" i)
+           :style {:float "right" :width 200 :height 33 :marginLeft "1em"}
+           :value (:accessLevel acl-entry)
+           :onChange #(swap! state assoc-in [:acl-vec i :accessLevel]
+                             (.. % -target -value))}
+          access-levels)
+         (common/clear-both)])
+      (filterv #(not= (:accessLevel %) "PROJECT_OWNER") (:acl-vec @state)))
+     [:div {:style {:marginBottom "0.5em"}}
+      [comps/Button {:text "Add new" :icon :add
+                     :onClick #(swap! state update-in [:acl-vec]
+                                      conj {:email "" :accessLevel "READER"})}]]
+     (style/create-validation-error-message (:validation-error @state))
+     [comps/ErrorViewer {:error (:save-error @state)}]]
     :ok-button {:text "Save" :onClick #(react/call :persist-acl this)}}])
 
 (react/defc AclEditor
