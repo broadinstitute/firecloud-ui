@@ -39,10 +39,10 @@
           [:div {:style {:backgroundColor "white" :padding "1em"}}
            (case last-crumb-id
              :file-import
-             [import-data/Page (select-keys props [:workspace-id :reload-data-tab])]
+             [import-data/Page (select-keys props [:workspace-id :reload :import-type])]
              :workspace-import
              [copy-data-workspaces/Page
-              (assoc (select-keys props [:workspace-id :this-realm :reload-data-tab])
+              (assoc (select-keys props [:workspace-id :this-realm :reload])
                 :crumbs (drop 2 (:crumbs @state))
                 :add-crumb #(swap! state update-in [:crumbs] conj %)
                 :pop-to-depth #(swap! state update-in [:crumbs] subvec 0 %))]
@@ -89,7 +89,8 @@
                                           :onClick #(modal/push-modal
                                                      [DataImporter {:workspace-id workspace-id
                                                                     :this-realm this-realm
-                                                                    :reload-data-tab
+                                                                    :import-type "data"
+                                                                    :reload
                                                                     (fn [entity-type]
                                                                       ((:request-refresh props))
                                                                       (react/call :refresh (@refs "entity-table") entity-type))}])}]]])
