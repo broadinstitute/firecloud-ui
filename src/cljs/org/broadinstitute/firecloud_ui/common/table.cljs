@@ -157,9 +157,13 @@
      :initial (fn []
                 (let [processed-columns (if-let [defaults (:column-defaults props)]
                                           (let [by-header (utils/index-by :header (:columns props))
-                                                default-showing (->> defaults
-                                                                     (replace by-header)
-                                                                     (map #(assoc % :show-initial? true)))
+                                                default-showing (try
+                                                                  (doall
+                                                                   (->> defaults
+                                                                        (replace by-header)
+                                                                        (map #(assoc % :show-initial? true))))
+                                                                  (catch :default e
+                                                                    (map #(assoc % :show-initial? true) (:columns props))))
                                                 default-hiding (as-> by-header $
                                                                      (apply dissoc $ defaults)
                                                                      (vals $)
@@ -167,10 +171,10 @@
                                             (concat default-showing default-hiding))
                                           (:columns props))
                       column-meta (mapv (fn [{:keys [header header-key starting-width] :as col}]
-                                         {:header (or header-key header)
-                                          :width (or starting-width 100)
-                                          :visible? (get col :show-initial? true)})
-                                       processed-columns)
+                                          {:header (or header-key header)
+                                           :width (or starting-width 100)
+                                           :visible? (get col :show-initial? true)})
+                                        processed-columns)
                       initial-sort-column (or (some->> (:columns props)
                                                        (filter #(contains? % :sort-initial))
                                                        first)
