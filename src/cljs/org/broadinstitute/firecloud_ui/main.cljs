@@ -174,7 +174,7 @@
        {:endpoint (endpoints/submissions-queue-status)
         :on-done (fn [{:keys [success? status-text status-code get-parsed-response]}]
                    (if success?
-                     (swap! state assoc :status-error nil :status-code nil :status-counts (common/queue-status-counts (get-parsed-response)))
+                     (swap! state assoc :status-error nil :status-code nil :status-counts (common/queue-status-counts (get-parsed-response false)))
                      (swap! state assoc :status-error status-text :status-code status-code :status-counts nil)))}))})
 
 (react/defc AccountDropdown
@@ -259,7 +259,7 @@
      (when (nil? (:registration-status @state))
        (endpoints/profile-get
         (fn [{:keys [success? status-text get-parsed-response]}]
-          (let [parsed-values (when success? (common/parse-profile (get-parsed-response)))]
+          (let [parsed-values (when success? (common/parse-profile (get-parsed-response false)))]
             (cond
               (and success? (>= (int (:isRegistrationComplete parsed-values)) 3))
               (swap! state assoc :registration-status :registered)
@@ -406,7 +406,7 @@
                   :on-done (fn [{:keys [success? get-parsed-response]}]
                              (if success?
                                (do
-                                 (reset! config/config (get-parsed-response))
+                                 (reset! config/config (get-parsed-response false))
                                  (swap! state assoc :config-status :success)
                                  (on-success))
                                (swap! state assoc :config-status :error)))}))
@@ -458,9 +458,10 @@
      (attempt-auth
       token
       (fn [{:keys [success? status-code get-parsed-response]}]
-        (let [response (get-parsed-response)]
-          (swap! state assoc :user-email (get-in response ["userInfo" "userEmail"]))
-          (reset! utils/current-user (get-in response ["userInfo" "userSubjectId"])))
+        (when success?
+          (let [response (get-parsed-response false)]
+            (swap! state assoc :user-email (get-in response ["userInfo" "userEmail"]))
+            (reset! utils/current-user (get-in response ["userInfo" "userSubjectId"]))))
         (cond
           (contains? #{0 502} status-code)
           (do (reset! utils/maintenance-mode? true) (swap! state assoc :user-status :error))

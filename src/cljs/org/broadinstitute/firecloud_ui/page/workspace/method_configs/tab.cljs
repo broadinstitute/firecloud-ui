@@ -78,7 +78,7 @@
       {:endpoint (endpoints/list-workspace-method-configs (:workspace-id props))
        :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                   (if success?
-                    (swap! state assoc :server-response {:configs (vec (get-parsed-response))})
+                    (swap! state assoc :server-response {:configs (vec (get-parsed-response false))})
                     (swap! state assoc :server-response {:error-message status-text})))}))})
 
 

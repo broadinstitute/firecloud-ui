@@ -40,7 +40,7 @@
                      (swap! state dissoc :redacting?)
                      (if success?
                        (do (modal/pop-modal) ((:on-delete props)))
-                       (swap! state assoc :error (get-parsed-response))))})))})
+                       (swap! state assoc :error (get-parsed-response false))))})))})
 
 (defn- create-import-form [state props this entity config? fields]
   (let [{:keys [workspace-id]} props
@@ -138,7 +138,7 @@
                          (if success?
                            (when after-import (after-import {:config-id {:namespace namespace :name name}
                                                              :workspace-id workspace-id}))
-                           (swap! state assoc :server-error (get-parsed-response))))})))))
+                           (swap! state assoc :server-error (get-parsed-response false))))})))))
    :component-did-mount
    (fn [{:keys [props state]}]
      (when-not (:workspace-id props)
@@ -146,7 +146,7 @@
          {:endpoint endpoints/list-workspaces
           :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                      (if success?
-                       (let [ws-list (get-parsed-response)]
+                       (let [ws-list (get-parsed-response false)]
                          (swap! state assoc :workspaces-list ws-list :selected-workspace (first ws-list)))
                        (swap! state assoc :error status-text)))}))
      (endpoints/call-ajax-orch
@@ -157,7 +157,7 @@
         :headers utils/content-type=json
         :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                    (if success?
-                     (swap! state assoc :loaded-config (get-parsed-response))
+                     (swap! state assoc :loaded-config (get-parsed-response false))
                      (swap! state assoc :error status-text)))}))})
 
 
@@ -196,7 +196,7 @@
               :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                          (if-not success?
                            (swap! state assoc :error status-text :blocking-text nil)
-                           (let [template (get-parsed-response)]
+                           (let [template (get-parsed-response false)]
                              (endpoints/call-ajax-orch
                                {:endpoint (endpoints/post-workspace-method-config workspace-id)
                                 :payload (assoc template
@@ -209,7 +209,7 @@
                                            (if success?
                                              (when after-import (after-import {:config-id {:namespace namespace :name name}
                                                                                :workspace-id workspace-id}))
-                                             (swap! state assoc :server-error (get-parsed-response))))}))))})))))
+                                             (swap! state assoc :server-error (get-parsed-response false))))}))))})))))
    :component-did-mount
    (fn [{:keys [props state]}]
      (when-not (:workspace-id props)
@@ -217,7 +217,7 @@
          {:endpoint endpoints/list-workspaces
           :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                      (if success?
-                       (let [ws-list (get-parsed-response)]
+                       (let [ws-list (get-parsed-response false)]
                          (swap! state assoc :workspaces-list ws-list :selected-workspace (first ws-list)))
                        (swap! state assoc :error status-text)))}))
      (endpoints/call-ajax-orch
@@ -228,7 +228,7 @@
         :headers utils/content-type=json
         :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                    (if success?
-                     (swap! state assoc :loaded-method (get-parsed-response))
+                     (swap! state assoc :loaded-method (get-parsed-response false))
                      (swap! state assoc :error status-text)))}))})
 
 
@@ -307,14 +307,14 @@
        :on-done
        (fn [{:keys [success? get-parsed-response status-text]}]
          (if success?
-           (swap! state assoc :configs (map #(assoc % :type :config) (get-parsed-response)))
+           (swap! state assoc :configs (map #(assoc % :type :config) (get-parsed-response false)))
            (swap! state assoc :error-message status-text)))})
     (endpoints/call-ajax-orch
       {:endpoint endpoints/list-methods
        :on-done
        (fn [{:keys [success? get-parsed-response status-text]}]
          (if success?
-           (swap! state assoc :methods (map #(assoc % :type :method) (get-parsed-response)))
+           (swap! state assoc :methods (map #(assoc % :type :method) (get-parsed-response false)))
            (swap! state assoc :error-message status-text)))}))})
 
 

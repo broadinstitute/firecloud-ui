@@ -79,7 +79,7 @@
        {:endpoint (endpoints/list-submissions (:workspace-id props))
         :on-done (fn [{:keys [success? status-text get-parsed-response]}]
                    (swap! state assoc :server-response (if success?
-                                                         {:submissions (get-parsed-response)}
+                                                         {:submissions (get-parsed-response false)}
                                                          {:error-message status-text})))}))})
 
 

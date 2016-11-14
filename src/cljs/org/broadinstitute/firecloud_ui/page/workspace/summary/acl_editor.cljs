@@ -89,7 +89,7 @@
                            (do
                              ((:request-refresh props))
                              (modal/pop-modal))
-                           (swap! state assoc :save-error (get-parsed-response))))})))))
+                           (swap! state assoc :save-error (get-parsed-response false))))})))))
    :component-did-mount
    (fn [{:keys [props state]}]
      (endpoints/call-ajax-orch
@@ -100,5 +100,5 @@
             (swap! state assoc :acl-vec
                    (mapv (fn [[k v]]
                            {:email k :accessLevel v :read-only? true})
-                         (get-parsed-response)))
-            (swap! state assoc :load-error (get-parsed-response))))}))})
+                         (get-parsed-response false)))
+            (swap! state assoc :load-error (get-parsed-response false))))}))})

@@ -104,7 +104,7 @@
        {:endpoint (endpoints/get-workspace (:workspace-id props))
         :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                    (if success?
-                     (swap! state assoc :workspace (process-workspace (get-parsed-response)))
+                     (swap! state assoc :workspace (process-workspace (get-parsed-response false)))
                      (swap! state assoc :workspace-error status-text)))}))
    :render
    (fn [{:keys [props state refs this]}]

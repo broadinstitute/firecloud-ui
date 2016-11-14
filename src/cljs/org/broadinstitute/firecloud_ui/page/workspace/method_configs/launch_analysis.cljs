@@ -108,7 +108,7 @@
        {:endpoint (endpoints/submissions-queue-status)
         :on-done (fn [{:keys [success? status-text get-parsed-response]}]
                    (if success?
-                     (swap! state assoc :queue-status (common/queue-status-counts (get-parsed-response)))
+                     (swap! state assoc :queue-status (common/queue-status-counts (get-parsed-response false)))
                      (swap! state assoc :queue-error status-text)))}))
    :launch
    (fn [{:keys [props state]}]
@@ -128,8 +128,8 @@
             :on-done (fn [{:keys [success? get-parsed-response]}]
                        (swap! state dissoc :launching?)
                        (if success?
-                         (do (modal/pop-modal) ((:on-success props) ((get-parsed-response) "submissionId")))
-                         (swap! state assoc :launch-server-error (get-parsed-response))))}))
+                         (do (modal/pop-modal) ((:on-success props) ((get-parsed-response false) "submissionId")))
+                         (swap! state assoc :launch-server-error (get-parsed-response false))))}))
        (swap! state assoc :validation-errors ["Please select an entity"])))})
 
 

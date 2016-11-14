@@ -32,14 +32,14 @@
       {:endpoint (endpoints/get-entity-types (:workspace-id props))
        :on-done (fn [{:keys [success? get-parsed-response]}]
                   (if success?
-                    (let [metadata (get-parsed-response)
+                    (let [metadata (get-parsed-response false)
                           entity-types (utils/sort-match common/root-entity-types (vec (keys metadata)))]
                       (swap! state update-in [:server-response] assoc
                              :entity-metadata metadata
                              :entity-types entity-types
                              :selected-entity-type (or entity-type (first entity-types))))
                     (swap! state update-in [:server-response]
-                           assoc :server-error (get-parsed-response))))}))
+                           assoc :server-error (get-parsed-response false))))}))
    :get-default-props
    (fn []
      {:empty-message "There are no entities to display."
@@ -120,7 +120,7 @@
                 :on-done (fn [{:keys [success? get-parsed-response status-text status-code]}]
                            (if success?
                              (let [{:strs [results]
-                                    {:strs [unfilteredCount filteredCount]} "resultMetadata"} (get-parsed-response)]
+                                    {:strs [unfilteredCount filteredCount]} "resultMetadata"} (get-parsed-response false)]
                                (callback {:group-count unfilteredCount
                                           :filtered-count filteredCount
                                           :rows results}))

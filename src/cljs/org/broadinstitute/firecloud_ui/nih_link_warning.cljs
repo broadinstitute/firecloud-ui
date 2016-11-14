@@ -45,4 +45,4 @@
       (fn [{:keys [success? get-parsed-response]}]
         ;; Silently fail on errors?
         (when success?
-          (swap! state assoc :status (get-parsed-response))))))})
+          (swap! state assoc :status (get-parsed-response false))))))})

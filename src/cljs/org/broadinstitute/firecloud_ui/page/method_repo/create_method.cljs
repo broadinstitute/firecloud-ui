@@ -117,5 +117,5 @@
            (fn [{:keys [success? get-parsed-response]}]
              (swap! state dissoc :uploading?)
              (if success?
-               (do (modal/pop-modal) ((:on-success props) (get-parsed-response)))
-               (swap! state assoc :upload-error (get-parsed-response))))}))))})
+               (do (modal/pop-modal) ((:on-success props) (get-parsed-response false)))
+               (swap! state assoc :upload-error (get-parsed-response false))))}))))})

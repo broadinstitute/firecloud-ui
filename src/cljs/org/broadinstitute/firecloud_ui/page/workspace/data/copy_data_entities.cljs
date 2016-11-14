@@ -48,7 +48,7 @@
                    (swap! state dissoc :copying?)
                    (if success?
                      ((:reload-data-tab props) (:type props))
-                     (swap! state assoc :server-error (get-parsed-response))))}))})
+                     (swap! state assoc :server-error (get-parsed-response false))))}))})
 
 
 (react/defc Page
@@ -72,8 +72,8 @@
        {:endpoint (endpoints/get-entities-of-type (:selected-workspace-id props) (:type props))
         :on-done (fn [{:keys [success? get-parsed-response]}]
                    (if success?
-                     (swap! state assoc :entity-list (get-parsed-response))
-                     (swap! state assoc :server-error (get-parsed-response))))}))})
+                     (swap! state assoc :entity-list (get-parsed-response false))
+                     (swap! state assoc :server-error (get-parsed-response false))))}))})
 
 
 (react/defc SelectType
@@ -101,4 +101,4 @@
      (endpoints/call-ajax-orch
        {:endpoint (endpoints/get-entity-types (:selected-workspace-id props))
         :on-done (fn [{:keys [success? get-parsed-response]}]
-                   (swap! state assoc (if success? :entity-types :server-error) (get-parsed-response)))}))})
+                   (swap! state assoc (if success? :entity-types :server-error) (get-parsed-response false)))}))})

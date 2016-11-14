@@ -49,7 +49,7 @@
                    (swap! state dissoc :deleting?)
                    (if success?
                      (do (modal/pop-modal) ((:on-delete props)))
-                     (swap! state assoc :server-error (get-parsed-response))))}))})
+                     (swap! state assoc :server-error (get-parsed-response false))))}))})
 
 
 (defn- save-attributes [{:keys [new-attributes state workspace-id request-refresh]}]
@@ -62,7 +62,7 @@
                 (swap! state dissoc :updating-attrs? :editing?)
                 (if success?
                   (request-refresh)
-                  (modal/push-error-response (get-parsed-response))))}))
+                  (modal/push-error-response (get-parsed-response false))))}))
 
 
 (defn- render-sidebar [state refs this
@@ -281,7 +281,7 @@
         :on-done (fn [{:keys [success? status-text get-parsed-response]}]
                    (if success?
                      (swap! state update-in [:server-response]
-                            assoc :submissions-count (get-parsed-response))
+                            assoc :submissions-count (get-parsed-response false))
                      (swap! state update-in [:server-response]
                             assoc :server-error status-text)))})
      (endpoints/get-billing-projects
@@ -293,7 +293,7 @@
      (endpoints/get-library-attributes
        (fn [{:keys [success? get-parsed-response]}]
          (if success?
-           (let [response (utils/keywordize-keys (get-parsed-response))]
+           (let [response (utils/keywordize-keys (get-parsed-response false))]
              (swap! state update-in [:server-response] assoc :library-schema
                     (-> response
                         (assoc :required (map keyword (:required response)))
@@ -303,5 +303,5 @@
        {:endpoint endpoints/get-library-curator-status
         :on-done (fn [{:keys [success? get-parsed-response]}]
                    (if success?
-                     (swap! state update-in [:server-response] assoc :curator? (get (get-parsed-response) "curator"))
+                     (swap! state update-in [:server-response] assoc :curator? (get (get-parsed-response false) "curator"))
                      (swap! state update-in [:server-response] assoc :server-error "Unable to determine curator status")))}))})

@@ -137,7 +137,7 @@
                            (if success?
                              (do (modal/pop-modal)
                                  ((:request-refresh props)))
-                             (swap! state assoc :server-error (get-parsed-response))))})))))})
+                             (swap! state assoc :server-error (get-parsed-response false))))})))))})
 
 
 (react/defc LibraryAttributeViewer
@@ -197,7 +197,7 @@
                                    (do (modal/push-message {:header "Success!"
                                                             :message "Successfully published to Library"})
                                        ((:request-refresh props)))
-                                   (modal/push-error-response (get-parsed-response))))}))}]])})
+                                   (modal/push-error-response (get-parsed-response false))))}))}]])})
 
 (react/defc UnpublishButton
   {:render
@@ -218,4 +218,4 @@
                                    (do (modal/push-message {:header "Success!"
                                                             :message "This dataset is no longer displayed in the Data Library catalog."})
                                        ((:request-refresh props)))
-                                   (modal/push-error-response (get-parsed-response))))}))}]])})
+                                   (modal/push-error-response (get-parsed-response false))))}))}]])})
