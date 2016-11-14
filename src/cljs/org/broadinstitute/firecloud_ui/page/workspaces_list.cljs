@@ -167,7 +167,9 @@
             :content-renderer
             (fn [accessLevel]
               [:div {:style {:paddingLeft 14}}
-               (clojure.string/capitalize accessLevel)])}
+               (if (= accessLevel "PROJECT_OWNER")
+                 "Project Owner"
+                 (clojure.string/capitalize accessLevel))])}
            {:header (react/create-element
                      [:span {:ref "anchor"
                              :style {:cursor "pointer" :padding "0.1em 0.3em" :borderRadius 2 :marginLeft -14
