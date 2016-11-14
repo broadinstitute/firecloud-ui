@@ -17,7 +17,7 @@
 
 
 (defn- entity->id [entity]
-  {:type (entity "entityType") :name (entity "name")})
+  {:type (:entityType entity) :name (:name entity)})
 
 
 (defn- row [label content]
