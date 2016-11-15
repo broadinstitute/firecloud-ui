@@ -69,11 +69,12 @@
        (endpoints/call-ajax-orch
          (let [from (* (- current-page 1) rows-per-page)]
            {:endpoint
+              endpoints/search-datasets
+            :payload
             (cond
-              (nil? filter-text) (endpoints/list-datasets from rows-per-page)
-            :else
-              endpoints/search-datasets)
-            :payload {:searchTerm filter-text :from from :size rows-per-page}
+              (or (nil? filter-text) (= "" filter-text)) {:from from :size rows-per-page}
+              :else
+              {:searchTerm filter-text :from from :size rows-per-page})
             :headers utils/content-type=json
             :on-done
             (fn [{:keys [success? get-parsed-response status-text]}]
