@@ -224,9 +224,9 @@
                            (swap! state assoc-in [:column-meta column-index :visible?] visible?)))})}])])
               (when filterable?
                 [:div {:style {:display "inline-block" :marginRight "1em"}}
-                 [table-utils/TextFilter {:initial-text (get-in @state [:query-params :filter-text])
-                                          :on-filter #(swap! state update-in [:query-params]
-                                                             assoc :filter-text % :current-page 1)}]])
+                 [comps/TextFilter {:initial-text (get-in @state [:query-params :filter-text])
+                                    :on-filter #(swap! state update-in [:query-params]
+                                                       assoc :filter-text % :current-page 1)}]])
               (when (:filter-groups props)
                 [:div {:style {:display "inline-block" :marginRight "1em"}}
                  [table-utils/FilterGroupBar
