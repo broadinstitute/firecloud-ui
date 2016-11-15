@@ -210,7 +210,9 @@
      [attributes/WorkspaceAttributeViewerEditor {:ref "workspace-attribute-editor"
                                                  :editing? editing?
                                                  :workspace-attributes workspace-attributes
-                                                 :workspace-bucket bucketName}]]))
+                                                 :workspace-bucket bucketName
+                                                 :workspace-id workspace-id
+                                                 :request-refresh request-refresh}]]))
 
 (react/defc Summary
   {:get-initial-state
