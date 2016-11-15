@@ -61,7 +61,7 @@
                     (do (modal/push-error-text (str "Exception:\n" (.-statusText xhr)))
                         (swap! state dissoc :blocker))
                     (if (= name (config "name"))
-                      (swap! state assoc :loaded-config (get-parsed-response) :blocker nil)
+                      (swap! state assoc :loaded-config (get-parsed-response false) :blocker nil)
                       (endpoints/call-ajax-orch ;; TODO - make unified call in orchestration
                         {:endpoint (endpoints/rename-workspace-method-config workspace-id config)
                          :payload (select-keys new-conf ["name" "namespace" "workspaceName"])
@@ -100,7 +100,7 @@
         :headers utils/content-type=json
         :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                    (if success?
-                     (swap! state assoc :loaded-method (get-parsed-response))
+                     (swap! state assoc :loaded-method (get-parsed-response false))
                      (swap! state assoc :error status-text)))}))})
 
 
@@ -252,7 +252,7 @@
        {:endpoint (endpoints/get-workspace (:workspace-id props))
         :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                    (if success?
-                     (swap! state assoc :locked? (get-in (get-parsed-response) ["workspace" "isLocked"]))
+                     (swap! state assoc :locked? (get-in (get-parsed-response false) ["workspace" "isLocked"]))
                      (swap! state assoc :error status-text)))})
      (endpoints/call-ajax-orch
        {:endpoint (endpoints/get-refresh-token-date)
@@ -263,7 +263,7 @@
        {:endpoint endpoints/list-methods
         :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                    (if success?
-                     (swap! state assoc :methods (->> (get-parsed-response)
+                     (swap! state assoc :methods (->> (get-parsed-response false)
                                                       (map utils/keywordize-keys)
                                                       (map #(select-keys % [:namespace :name :snapshotId]))
                                                       (group-by (juxt :namespace :name))
@@ -286,15 +286,15 @@
        {:endpoint (endpoints/get-validated-workspace-method-config (:workspace-id props) (:config-id props))
         :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                      (if success?
-                       (let [response (get-parsed-response)]
+                       (let [response (get-parsed-response false)]
                             (endpoints/call-ajax-orch
                               {:endpoint endpoints/get-inputs-outputs
                                :payload (get-in response ["methodConfiguration" "methodRepoMethod"])
                                :headers utils/content-type=json
                                :on-done (fn [{:keys [success? get-parsed-response]}]
                                             (if success?
-                                              (swap! state assoc :loaded-config response :inputs-outputs (get-parsed-response))
-                                              (swap! state assoc :error ((get-parsed-response) "message"))))}))
+                                              (swap! state assoc :loaded-config response :inputs-outputs (get-parsed-response false))
+                                              (swap! state assoc :error ((get-parsed-response false) "message"))))}))
                        (swap! state assoc :error status-text)))}))
    :load-new-method-template
    (fn [{:keys [state refs]} new-snapshot-id]
@@ -317,7 +317,7 @@
           :headers utils/content-type=json
           :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                      (if success?
-                       (let [response (get-parsed-response)]
+                       (let [response (get-parsed-response false)]
                          (endpoints/call-ajax-orch
                            {:endpoint endpoints/get-inputs-outputs
                             :payload (response "methodRepoMethod")
@@ -332,6 +332,6 @@
                                                                    "validInputs" {}
                                                                    "invalidOutputs" {}
                                                                    "validOutputs" {})
-                                                  :inputs-outputs (get-parsed-response))
-                                           (swap! state assoc :error ((get-parsed-response) "message")))))}))
+                                                  :inputs-outputs (get-parsed-response false))
+                                           (swap! state assoc :error ((get-parsed-response false) "message")))))}))
                        (swap! state assoc :error status-text)))})))})

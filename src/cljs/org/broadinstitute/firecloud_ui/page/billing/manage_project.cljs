@@ -55,7 +55,7 @@
                          (if success?
                            (do (modal/pop-modal)
                                ((:on-add props)))
-                           (swap! state assoc :server-error (get-parsed-response))))})))))})
+                           (swap! state assoc :server-error (get-parsed-response false))))})))))})
 
 
 (defn- remove-user [state this data]
@@ -66,7 +66,7 @@
                 (swap! state dissoc :removing?)
                 (if success?
                   (react/call :load this)
-                  (swap! state assoc :remove-error (get-parsed-response))))}))
+                  (swap! state assoc :remove-error (get-parsed-response false))))}))
 
 
 (react/defc BillingProjectManagementPage
@@ -120,4 +120,4 @@
      (endpoints/call-ajax-orch
       {:endpoint (endpoints/list-billing-project-members (:project-name props))
        :on-done (fn [{:keys [success? get-parsed-response]}]
-                  (swap! state assoc (if success? :members :load-error) (get-parsed-response)))}))})
+                  (swap! state assoc (if success? :members :load-error) (get-parsed-response false)))}))})

@@ -56,7 +56,7 @@
      (utils/ajax-orch
       "/nih/status"
       {:on-done (fn [{:keys [success? get-parsed-response]}]
-                  (if (and success? (get (get-parsed-response) "isDbgapAuthorized"))
+                  (if (and success? (get (get-parsed-response false) "isDbgapAuthorized"))
                     (swap! state assoc :protected-option :enabled)
                     (swap! state assoc :protected-option :not-available)))}))
    :create-workspace
@@ -79,7 +79,7 @@
                       (if success?
                         (do (modal/pop-modal)
                           (nav/navigate (:nav-context props) (str project ":" name)))
-                        (swap! state assoc :server-error (get-parsed-response))))}))))})
+                        (swap! state assoc :server-error (get-parsed-response false))))}))))})
 
 
 (react/defc Button

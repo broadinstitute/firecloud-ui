@@ -84,7 +84,7 @@
       {:endpoint (:load-endpoint props)
        :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                   (if success?
-                    (let [response-vec (mapv utils/keywordize-keys (get-parsed-response))
+                    (let [response-vec (mapv utils/keywordize-keys (get-parsed-response false))
                           acl-vec (filterv #(not= "public" (:user %)) response-vec)
                           public-user (first (filter #(= "public" (:user %)) response-vec))
                           public-status (or (:role public-user) no-access-level)]
@@ -112,7 +112,7 @@
                         (swap! state dissoc :saving?)
                         (if success?
                           (modal/pop-modal)
-                          (swap! state assoc :save-error (get-parsed-response))))})))))
+                          (swap! state assoc :save-error (get-parsed-response false))))})))))
    :capture-ui-state
    (fn [{:keys [state refs]}]
      (mapv

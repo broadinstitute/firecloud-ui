@@ -92,7 +92,7 @@
        {:endpoint endpoints/list-workspaces
         :on-done (fn [{:keys [success? status-text get-parsed-response]}]
                    (if success?
-                     (let [all-workspaces (remove-self (:workspace-id props) (get-parsed-response))
+                     (let [all-workspaces (remove-self (:workspace-id props) (get-parsed-response false))
                            filtered-workspaces (filter-workspaces (:this-realm props) all-workspaces)]
                        (swap! state assoc :workspaces filtered-workspaces
                          :num-filtered (- (count all-workspaces) (count filtered-workspaces))))

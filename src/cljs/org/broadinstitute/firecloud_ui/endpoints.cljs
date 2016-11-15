@@ -685,7 +685,7 @@
                   (let [pred (if include-pending?
                                (constantly true)
                                #(not= (% "creationStatus") "Creating"))]
-                    (on-done nil (filterv pred (get-parsed-response))))
+                    (on-done nil (filterv pred (get-parsed-response false))))
                   (on-done status-text nil)))})))
 
 (defn get-billing-project-status [project-name on-done]

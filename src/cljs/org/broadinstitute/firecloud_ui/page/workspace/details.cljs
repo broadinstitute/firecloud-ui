@@ -65,30 +65,27 @@
 (def ^:private CONFIGS "Method Configurations")
 (def ^:private MONITOR "Monitor")
 (defn- tab-string-to-index [tab-string]
-  ;; for some reason the more compact "case" isn't working with strings :(
-  (cond
-    (= tab-string DATA) 1
-    (= tab-string ANALYSIS) 2
-    (= tab-string CONFIGS) 3
-    (= tab-string MONITOR) 4
-    :else 0))
+  (condp = tab-string
+    DATA 1
+    ANALYSIS 2
+    CONFIGS 3
+    MONITOR 4
+    0))
 
 (defn- process-workspace [raw-workspace]
-  (let [attributes (get-in raw-workspace ["workspace" "attributes"])
+  (let [attributes (get-in raw-workspace [:workspace :attributes])
         library-attributes (->> attributes
-                                (keep (fn [[k v]]
-                                        (when (.startsWith k "library:")
-                                          [(keyword k) v])))
+                                (filter (fn [[k _]]
+                                          (.startsWith (name k) "library:")))
                                 (into {}))
         workspace-attributes (->> attributes
-                                  (keep (fn [[k v]]
-                                          (when-not (or (= k "description")
-                                                        (utils/contains k ":"))
-                                            [(keyword k) v])))
+                                  (remove (fn [[k _]]
+                                            (or (= k :description)
+                                                (utils/contains (name k) ":"))))
                                   (into {}))]
-    (-> (utils/keywordize-keys raw-workspace)
-        (update-in [:workspace] dissoc :attributes)
-        (assoc-in [:workspace :description] (attributes "description"))
+    (-> raw-workspace
+        (update :workspace dissoc :attributes)
+        (assoc-in [:workspace :description] (:description attributes))
         (assoc-in [:workspace :workspace-attributes] workspace-attributes)
         (assoc-in [:workspace :library-attributes] library-attributes))))
 

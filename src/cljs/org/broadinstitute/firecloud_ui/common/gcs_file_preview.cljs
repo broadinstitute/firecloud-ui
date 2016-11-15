@@ -78,7 +78,7 @@
                   (swap! state assoc
                          :loading? false
                          :response (if success?
-                                     {:data (get-parsed-response)}
+                                     {:data (get-parsed-response false)}
                                      {:error (.-responseText xhr)
                                       :status status-code})))}))})
 

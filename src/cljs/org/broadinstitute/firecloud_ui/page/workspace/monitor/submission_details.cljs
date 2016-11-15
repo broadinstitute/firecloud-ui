@@ -195,6 +195,6 @@
        {:endpoint (endpoints/get-submission (:workspace-id props) (:submission-id props))
         :on-done (fn [{:keys [success? status-text get-parsed-response]}]
                    (swap! state assoc :server-response (if success?
-                                                         {:submission (get-parsed-response)}
+                                                         {:submission (get-parsed-response false)}
                                                          {:error-message status-text})))}))
    :component-did-mount (fn [{:keys [this]}] (react/call :load-details this))})

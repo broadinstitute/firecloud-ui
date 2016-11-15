@@ -78,7 +78,7 @@
               :toolbar (fn [built-in]
                          [:div {:style {:display "flex" :justifyContent "flex-start" :alignItems "baseline"}}
                           [:div {} built-in]
-                          (when-let [selected-entity-type (:selected-entity-type @state)]
+                          (when-let [selected-entity-type (some-> (:selected-entity-type @state) name)]
                             [:a {:style {:textDecoration "none" :margin "7px 0 0 1em"}
                                  :href (str (config/api-url-root) "/cookie-authed/workspaces/"
                                             (:namespace workspace-id) "/"

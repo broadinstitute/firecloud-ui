@@ -33,8 +33,8 @@
 
 (defn- process-attribute-value [attr-value]
   (if (and (map? attr-value)
-           (= #{"itemsType" "items"} (set (keys attr-value))))
-    (join ", " (attr-value "items"))
+           (= #{:itemsType :items} (set (keys attr-value))))
+    (join ", " (:items attr-value))
     attr-value))
 
 (defn- get-type-and-string-rep [attr-value]
@@ -43,8 +43,8 @@
         (number? attr-value) [NUMBER (str attr-value)]
         (boolean? attr-value) [BOOLEAN (str attr-value)]
         (and (map? attr-value)
-             (= #{"itemsType" "items"} (-> attr-value keys set)))
-        (let [items (attr-value "items")
+             (= #{:itemsType :items} (-> attr-value keys set)))
+        (let [items (:items attr-value)
               first-item (first items)
               str-value (join ", " items)]
           (cond (string? first-item) [LIST_STRING str-value]

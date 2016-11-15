@@ -90,9 +90,9 @@
        :on-done
        (fn [{:keys [success? get-parsed-response]}]
          (if success?
-           (let [accts (get-parsed-response)]
+           (let [accts (get-parsed-response false)]
              (swap! state assoc :billing-accounts accts :selected-account (get (first accts) "accountName")))
-           (swap! state assoc :billing-acct-error (get-parsed-response))))}))
+           (swap! state assoc :billing-acct-error (get-parsed-response false))))}))
    :create-billing-project
    (fn [{:keys [props state refs]}]
      (let [account (:selected-account @state)]
@@ -111,4 +111,4 @@
                           (if success?
                             (do ((:on-success props))
                                 (modal/pop-modal))
-                            (swap! state assoc :server-error (get-parsed-response))))}))))))})
+                            (swap! state assoc :server-error (get-parsed-response false))))}))))))})

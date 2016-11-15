@@ -59,7 +59,7 @@
      (utils/ajax-orch
        "/nih/status"
        {:on-done (fn [{:keys [success? get-parsed-response]}]
-                     (if (and success? (get (get-parsed-response) "isDbgapAuthorized"))
+                     (if (and success? (get (get-parsed-response false) "isDbgapAuthorized"))
                        (swap! state assoc :protected-option :enabled)
                        (swap! state assoc :protected-option :not-available)))}))
    :do-clone
@@ -82,4 +82,4 @@
                        (swap! state dissoc :working?)
                        (if success?
                          (do (modal/pop-modal) ((:on-success props) project name))
-                         (swap! state assoc :error (get-parsed-response))))}))))})
+                         (swap! state assoc :error (get-parsed-response false))))}))))})

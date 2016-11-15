@@ -52,4 +52,4 @@
                               (swap! state dissoc :publishing?)
                               (if success?
                                 (modal/pop-modal)
-                                (swap! state assoc :error (get-parsed-response))))})))}}]))})
+                                (swap! state assoc :error (get-parsed-response false))))})))}}]))})

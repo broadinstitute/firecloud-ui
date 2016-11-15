@@ -225,7 +225,7 @@
                        assoc :workspaces (map
                                            (fn [ws]
                                              (assoc ws :status (common/compute-status ws)))
-                                           (get-parsed-response)))
+                                           (get-parsed-response false)))
                      (swap! state update-in [:server-response]
                        assoc :error-message status-text)))})
      (endpoints/get-billing-projects

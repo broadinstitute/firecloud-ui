@@ -37,8 +37,9 @@
   (js/JSON.stringify (clj->js x)))
 
 
-(defn parse-json-string [x]
-  (js->clj (js/JSON.parse x)))
+(defn parse-json-string
+  ([x] (parse-json-string x false))
+  ([x keywordize-keys?] (js->clj (js/JSON.parse x) :keywordize-keys keywordize-keys?)))
 
 
 (defn keywordize-keys [m]
@@ -121,8 +122,10 @@
                                      :success? (<= 200 status-code 299)
                                      :status-text (.-statusText xhr)
                                      :raw-response (.-responseText xhr)
-                                     :get-parsed-response #(parse-json-string
-                                                            (.-responseText xhr))})))]
+                                     :get-parsed-response
+                                     (fn [& [keywordize-keys?]]
+                                       (parse-json-string (.-responseText xhr)
+                                                          (if (some? keywordize-keys?) keywordize-keys? true)))})))]
       (when with-credentials?
         (set! (.-withCredentials xhr) true))
       (if canned-response-params

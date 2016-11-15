@@ -61,4 +61,4 @@
                     (do
                       (swap! state assoc :upload-result {:success? true})
                       ((:reload-data-tab props) (.-responseText xhr)))
-                    (swap! state assoc :upload-result {:success? false :error (get-parsed-response)})))}))})
+                    (swap! state assoc :upload-result {:success? false :error (get-parsed-response false)})))}))})

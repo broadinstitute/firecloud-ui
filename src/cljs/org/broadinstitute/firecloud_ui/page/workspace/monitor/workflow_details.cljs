@@ -181,7 +181,7 @@
        :on-done (fn [{:keys [success? get-parsed-response status-text raw-response]}]
                   (swap! state assoc :server-response
                          {:success? success?
-                          :response (if success? (get-parsed-response) status-text)
+                          :response (if success? (get-parsed-response false) status-text)
                           :raw-response raw-response}))}))})
 
 

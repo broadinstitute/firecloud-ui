@@ -92,7 +92,7 @@
      (endpoints/profile-get-nih-status
       (fn [{:keys [success? status-code status-text get-parsed-response]}]
         (cond
-          success? (swap! state assoc :nih-status (get-parsed-response))
+          success? (swap! state assoc :nih-status (get-parsed-response false))
           (= status-code 404) (swap! state assoc :nih-status :none)
           :else
           (swap! state assoc :error-message status-text)))))
@@ -181,7 +181,7 @@
      (endpoints/profile-get
       (fn [{:keys [success? status-text get-parsed-response]}]
         (if success?
-          (let [parsed (get-parsed-response)]
+          (let [parsed (get-parsed-response false)]
             (swap! state assoc :values (common/parse-profile parsed)))
           (swap! state assoc :error-message status-text)))))})
 
@@ -232,7 +232,7 @@
             (swap! state (fn [s]
                            (let [new-state (dissoc s :in-progress? :validation-errors)]
                              (if-not success?
-                               (assoc new-state :server-error (get-parsed-response))
+                               (assoc new-state :server-error (get-parsed-response false))
                                (let [on-done (or (:on-done props) #(swap! state dissoc :done?))]
                                  (js/setTimeout on-done 2000)
                                  (assoc new-state :done? true))))))))

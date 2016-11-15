@@ -28,4 +28,4 @@
                         (swap! state dissoc :deleting?)
                         (if success?
                           (do (modal/pop-modal) ((:after-delete props)))
-                          (swap! state assoc :error (get-parsed-response))))}))}}])})
+                          (swap! state assoc :error (get-parsed-response false))))}))}}])})
