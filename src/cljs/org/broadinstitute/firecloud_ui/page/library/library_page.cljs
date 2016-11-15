@@ -10,13 +10,13 @@
     [org.broadinstitute.firecloud-ui.common.table :as table]
     [org.broadinstitute.firecloud-ui.common.table-utils :refer [float-right]]
     [org.broadinstitute.firecloud-ui.nav :as nav]
+    [org.broadinstitute.firecloud-ui.common.table-utils :as table-utils]
     [org.broadinstitute.firecloud-ui.utils :as utils]
     ))
 
 
 (react/defc DatasetsTable
-  {
-   :render
+  {:render
    (fn [{:keys [state this]}]
      (cond
        (:error-message @state) (style/create-server-error-message (:error-message @state))
@@ -30,24 +30,21 @@
           :header-row-style {:fontWeight 500 :fontSize "90%"
                              :backgroundColor nil
                              :color "black"
-                             :borderBottom (str "2px solid " (:border-light style/colors))
-                             }
+                             :borderBottom (str "2px solid " (:border-light style/colors))}
           :header-style {:padding "0.5em 0"}
-          :resizable-columns? false :reorderable-columns? true ;:resize-tab-color (:line-default style/colors)
+          :resizable-columns? false :reorderable-columns? true
           :body-style {:fontSize nil :fontWeight nil}
-          :row-style {:backgroundColor nil :height 22} ;:height row-height-px :borderTop style/standard-line}
+          :row-style {:backgroundColor nil :height 22}
           :cell-content-style {:padding nil
                                :color (:text-light style/colors)
-                               :fontSize "90%"
-                               }
+                               :fontSize "90%"}
           :filterable? false
           :columns [{:header "Dataset Name" :starting-width 300
-                     :sort-by clojure.string/lower-case
-                     :as-text (fn [data] (data "library:datasetDescription"))
+                     :sort-by #(clojure.string/lower-case (% "library:datasetName"))
+                     :as-text #(% "library:datasetDescription")
                      :content-renderer (fn [data]
-                                         [:a {:href (str "#workspaces/"
-                                                         (js/encodeURIComponent (str (data "namespace") ":" (data "name"))))}
-                                          (data "library:datasetName")])}
+                                         (style/create-link {:text (data "library:datasetName")
+                                                             :href(str "#workspaces/" (js/encodeURIComponent (str (data "namespace") ":" (data "name"))))}))}
                     {:header "Phenotype/indication" :starting-width 200
                      :sort-by clojure.string/lower-case}
                     {:header "Data Use Restrictions" :starting-width 200
@@ -55,11 +52,10 @@
                     {:header "# of Participants" :starting-width 150}]
           :pagination (react/call :pagination this)
           :->row (fn [item]
-                   [ item
+                   [item
                     (item "library:indication")
                     (item "library:dataUseRestriction")
-                    (item "library:numSubjects")
-                    ])}]]))
+                    (item "library:numSubjects")])}]]))
    :set-filter-text
    (fn [{:keys [refs]} new-filter-text]
      (react/call :update-query-params (@refs "table") {:filter-text new-filter-text}))
@@ -69,7 +65,7 @@
        (endpoints/call-ajax-orch
          (let [from (* (- current-page 1) rows-per-page)]
            {:endpoint
-              endpoints/search-datasets
+            endpoints/search-datasets
             :payload
             (cond
               (or (nil? filter-text) (= "" filter-text)) {:from from :size rows-per-page}
@@ -86,35 +82,13 @@
                              :rows results}))
                 (callback {:error status-text})))}))))})
 
-
-(react/defc FilterSection
-  {:render
-   (fn [{:keys [props state this]}]
-     [:div {:style {:flex "1 0 auto" :marginRight "1em"}}
-      [:div {:style {:fontWeight 700 :fontSize "125%"}} "Search Filters: "]
-      [:div {:style {:padding "4"}}]
-      [:div {:style {:display "inline-flex" :background (:background-light style/colors) :padding "16px 8px 10px 8px"}}
-       (style/create-text-field
-         {:ref "search-field"
-          :style {:borderRadius "3px 0 0 3px" :marginBottom 0}
-          :onKeyDown (common/create-key-handler [:enter] #(react/call :apply-filter this))
-          })
-       [comps/Button {:icon :search
-                      :onClick #(react/call :apply-filter this)
-                      :style {:borderRadius "0 3px 3px 0"}}]
-       ]]
-     )
-   :apply-filter
-   (fn [{:keys [props refs]}]
-     ((:onFilter props) (common/get-text refs "search-field")
-       ))
-   })
-
-
 (react/defc Page
   {:render
    (fn [{:keys [refs]}]
      [:div {:style {:display "flex" :justifyContent "space-between" :padding "20px 0"}}
-      [FilterSection {:onFilter #(react/call :set-filter-text (@refs "datasets-table") %)}]
-      [DatasetsTable {:ref "datasets-table"}]])
-   })
+      [:div {:style {:flex "1 0 auto" :marginRight "1em"}}
+       [:div {:style {:fontWeight 700 :fontSize "125%"}} "Search Filters: "]
+       [:div {:style {:padding "4"}}]
+       [:div {:style {:display "inline-flex" :background (:background-light style/colors) :padding "16px 8px 10px 8px"}}
+        [comps/TextFilter {:on-filter #(react/call :set-filter-text (@refs "datasets-table") %)}]]]
+      [DatasetsTable {:ref "datasets-table"}]])})

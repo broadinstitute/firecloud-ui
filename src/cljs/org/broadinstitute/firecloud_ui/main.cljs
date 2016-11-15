@@ -124,14 +124,14 @@
    {:key :policy
     :render #(react/create-element Policy %)}])
 
-(defn- get-authenticated-nav-bar-items [state]
-  (if (or (nil? (:curator? @state))
-          (not (:curator? @state)))
+(defn- get-authenticated-nav-bar-items [curator?]
+  (if (or (nil? curator?)
+          (not curator?))
     #{:workspaces :methods}
     #{:library :workspaces :methods}))
 
 (defn- top-nav-bar-items [state]
-  (filter (fn [r] (contains? (get-authenticated-nav-bar-items state) (:key r))) routes))
+  (filter (fn [r] (contains? (get-authenticated-nav-bar-items (:curator? @state)) (:key r))) routes))
 
 (react/defc TopNavBarLink
   {:render
@@ -143,7 +143,6 @@
           :onMouseOver #(swap! state assoc :hovering? true)
           :onMouseOut #(swap! state assoc :hovering? false)}
       (:name props)])})
-
 
 (react/defc TopNavBar
   {:render
@@ -162,10 +161,7 @@
        {:endpoint endpoints/get-library-curator-status
         :on-done (fn [{:keys [success? get-parsed-response]}]
                    (when success?
-                     (swap! state assoc :curator? ((get-parsed-response) "curator"))
-                     ))}))
-   })
-
+                     (swap! state assoc :curator? ((get-parsed-response) "curator"))))}))})
 
 (react/defc GlobalSubmissionStatus
   {:render
