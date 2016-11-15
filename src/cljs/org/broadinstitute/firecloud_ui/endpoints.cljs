@@ -701,8 +701,7 @@
         (get (first (filter #(= project-name (% "projectName")) projects)) "creationStatus"))))))
 
 (defn get-billing-accounts []
-  {:path (str "/profile/billingAccounts?callback="
-           (js/encodeURIComponent (.. js/window -location -origin)))
+  {:path "/profile/billingAccounts"
    :method :get
    :mock-data
    [{:accountName "billingAccounts/00473A-04A1D8-155CAB"

@@ -17,19 +17,14 @@
       {:header "Create Billing Project"
        :content
        (react/create-element
-        (let [{:keys [billing-accounts billing-acct-error]} @state]
+        (let [{:keys [billing-accounts billing-acct-error get-error-details]} @state]
           (cond billing-acct-error
-                ; if the user has not enabled the correct scopes to list billing accounts, the call will return an error
-                ; with a redirect URL in string-encoded JSON format.  Rather than redirecting the browser directly
-                ; (not permitted in AJAX) we pop up a separate window with a callback to this component's :get-billing-accounts
-                (try
-                  (if-let [redirect-url ((utils/parse-json-string (billing-acct-error "message")) "redirect")]
-                    [:div {:style {:textAlign "center"}}
-                     "Billing permissions are not enabled." [:br] [:br]
-                     [comps/Button {:text "Enable Billing Permissions"
-                                    :onClick #(react/call :.enable-billing-permissions this)}]]
-                    [comps/ErrorViewer {:error billing-acct-error}])
-                  (catch js/Object _ [comps/ErrorViewer {:error billing-acct-error}]))
+                (if (= billing-acct-error 403)
+                  [:div {:style {:textAlign "center"}}
+                   "Billing permissions are not enabled." [:br] [:br]
+                   [comps/Button {:text "Enable Billing Permissions"
+                                  :onClick #(react/call :.enable-billing-permissions this)}]]
+                  [comps/ErrorViewer {:error (get-error-details)}])
                 (not billing-accounts) [comps/Spinner {:text "Loading billing accounts..."}]
                 :else
                 (if (empty? billing-accounts)
@@ -82,15 +77,17 @@
                    1000)))))
    :get-billing-accounts
    (fn [{:keys [state]}]
-     (swap! state dissoc :billing-accounts :billing-acct-error)
+     (swap! state dissoc :billing-accounts :billing-acct-error :get-error-details)
      (endpoints/call-ajax-orch
       {:endpoint (endpoints/get-billing-accounts)
        :on-done
-       (fn [{:keys [success? get-parsed-response]}]
+       (fn [{:keys [success? status-code get-parsed-response]}]
          (if success?
            (let [accts (get-parsed-response false)]
              (swap! state assoc :billing-accounts accts :selected-account (get (first accts) "accountName")))
-           (swap! state assoc :billing-acct-error (get-parsed-response false))))}))
+           (swap! state assoc
+                  :billing-acct-error status-code
+                  :get-error-details (partial get-parsed-response false))))}))
    :create-billing-project
    (fn [{:keys [props state refs]}]
      (let [account (:selected-account @state)]
