@@ -79,7 +79,7 @@
                        :padding "0.5em" :border style/standard-line
                        :marginBottom "1em"}}
          (map (fn [property-key]
-                (let [{:keys [hidden title inputHint enum type items minimum default]} (get-in library-schema [:properties property-key])
+                (let [{:keys [hidden title inputHint enum type typeahead items minimum default]} (get-in library-schema [:properties property-key])
                       required? (contains? (:required-props @state) property-key)
                       pk-str (name property-key)]
                   (when-not hidden
@@ -96,18 +96,20 @@
                            (if (= type "array")
                              (str "Comma-separated list of " (:type items) "s")
                              (clojure.string/capitalize type))])])
-                     (if enum
-                       (style/create-identity-select {:ref pk-str
-                                                      :defaultValue (get existing property-key ENUM_EMPTY_CHOICE)}
-                                                     (cons ENUM_EMPTY_CHOICE enum))
-                       [input/TextField {:ref pk-str
-                                         :style {:width "100%"}
-                                         :placeholder inputHint
-                                         :defaultValue (render-value (get existing property-key default))
-                                         :predicates [(when required?
-                                                        (input/nonempty pk-str))
-                                                      (when (= type "integer")
-                                                        (input/integer pk-str :min minimum))]}])])))
+                     (cond
+                       enum (style/create-identity-select {:ref pk-str
+                                                             :defaultValue (get existing property-key ENUM_EMPTY_CHOICE)}
+                                                            (cons ENUM_EMPTY_CHOICE enum))
+                       (= typeahead "ontology") [:select {:ref "duos-typeahead"
+                                                          :style {:width "100%"}}]
+                       :else [input/TextField {:ref pk-str
+                                               :style {:width "100%"}
+                                               :placeholder inputHint
+                                               :defaultValue (render-value (get existing property-key default))
+                                               :predicates [(when required?
+                                                              (input/nonempty pk-str))
+                                                            (when (= type "integer")
+                                                              (input/integer pk-str :min minimum))]}])])))
               (calculate-display-properties library-schema))]
         (style/create-validation-error-message (:validation-error @state))
         [comps/ErrorViewer {:error (:server-error @state)}]]))
@@ -116,10 +118,11 @@
      (swap! state dissoc :validation-error :server-error)
      (let [validation-errors (atom [])
            field-data (->> props :library-schema :properties
-                           (keep (fn [[property-key {:keys [hidden enum] :as property}]]
+                           (keep (fn [[property-key {:keys [hidden enum typeahead] :as property}]]
                                    (let [pk-str (name property-key)
                                          value (cond hidden (resolve-hidden property-key (:workspace props))
                                                      enum (resolve-enum (common/get-text refs pk-str))
+                                                     (= typeahead "ontology") (common/get-text refs "duos-typeahead")
                                                      :else (do (swap! validation-errors into (input/validate refs pk-str))
                                                                (resolve-field (input/get-text refs pk-str) property)))]
                                      (when value
@@ -137,8 +140,33 @@
                            (if success?
                              (do (modal/pop-modal)
                                  ((:request-refresh props)))
-                             (swap! state assoc :server-error (get-parsed-response false))))})))))})
-
+                             (swap! state assoc :server-error (get-parsed-response false))))})))))
+   :component-did-mount (fn [{:keys [props refs library-attributes]}]
+                          (.select2 (js/$ (@refs "duos-typeahead"))
+                                    (clj->js { :ajax { :url (fn [params]
+                                                              (str "https://local.broadinstitute.org:10443/duos-autocomplete/" (aget params "term")))
+                                                       :dataType "json"
+                                                       :delay 250
+                                                       :processResults (fn [data]
+                                                                         (clj->js {:results data}))
+                                                       :data (fn [params]
+                                                               (clj->js {}))}
+                                               :minimumInputLength 1
+                                               :cache true
+                                               :templateResult (fn [obj]
+                                                                 (if (aget obj "loading")
+                                                                   (aget obj "text")
+                                                                   (str "<div style='font-weight: bold'>" (aget obj "label")
+                                                                        "<div style='float: right; font-weight: normal'> DOID: "
+                                                                        (second (clojure.string/split (aget obj "id") #"DOID_")) "</div></div>"
+                                                                        "<div style='font-size: small'> "
+                                                                        (if (not (nil? (aget obj "definition")))
+                                                                          (aget obj "definition") "</div>"))))
+                                               :escapeMarkup (fn [markup] markup)
+                                               :templateSelection (fn [obj] (aget obj "label"))
+                                               :placeholder (clj->js {:id (get library-attributes :library:diseaseOntology)
+                                                                      :label (get (get-in props [:workspace :workspace :library-attributes]) :library:diseaseOntology "select something")})
+                                               })))})
 
 (react/defc LibraryAttributeViewer
   {:render
