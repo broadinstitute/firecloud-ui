@@ -28,7 +28,7 @@
       (fn [i acl-entry]
         [:div {:style {:padding "0.5em"}}
          (:email acl-entry)])
-      (filterv #(= (:accessLevel %) "PROJECT_OWNER") (:acl-vec @state)))
+      (filter #(= (:accessLevel %) "PROJECT_OWNER") (:acl-vec @state)))
      [:div {:style {:padding "0.5em 0" :fontSize "90%" :marginTop "0.5em"}}
       [:div {:style {:float "left" :width 400}} "User ID"]
       [:div {:style {:float "right" :width 200 :marginLeft "1em"}} "Access Level"]
@@ -54,7 +54,7 @@
                              (.. % -target -value))}
           access-levels)
          (common/clear-both)])
-      (filterv #(not= (:accessLevel %) "PROJECT_OWNER") (:acl-vec @state)))
+      (filter #(not= (:accessLevel %) "PROJECT_OWNER") (:acl-vec @state)))
      [:div {:style {:marginBottom "0.5em"}}
       [comps/Button {:text "Add new" :icon :add
                      :onClick #(swap! state update-in [:acl-vec]
