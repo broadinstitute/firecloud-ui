@@ -40,11 +40,11 @@
                                :fontSize "90%"}
           :filterable? false
           :columns [{:header "Dataset Name" :starting-width 300
-                     :sort-by #(clojure.string/lower-case (% "library:datasetName"))
-                     :as-text #(% "library:datasetDescription")
+                     :sort-by #(clojure.string/lower-case (:library:datasetName %))
+                     :as-text #(:library:datasetDescription %)
                      :content-renderer (fn [data]
-                                         (style/create-link {:text (data "library:datasetName")
-                                                             :href(str "#workspaces/" (js/encodeURIComponent (str (data "namespace") ":" (data "name"))))}))}
+                                         (style/create-link {:text (:library:datasetName data)
+                                                             :href(str "#workspaces/" (js/encodeURIComponent (str (:namespace data) ":" (:name data))))}))}
                     {:header "Phenotype/indication" :starting-width 200
                      :sort-by clojure.string/lower-case}
                     {:header "Data Use Restrictions" :starting-width 200
@@ -53,9 +53,9 @@
           :pagination (react/call :pagination this)
           :->row (fn [item]
                    [item
-                    (item "library:indication")
-                    (item "library:dataUseRestriction")
-                    (item "library:numSubjects")])}]]))
+                    (:library:indication item)
+                    (:library:dataUseRestriction item)
+                    (:library:numSubjects item)])}]]))
    :set-filter-text
    (fn [{:keys [refs]} new-filter-text]
      (react/call :update-query-params (@refs "table") {:filter-text new-filter-text}))
