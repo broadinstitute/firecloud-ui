@@ -21,7 +21,7 @@
      (cond
        (:error-message @state) (style/create-server-error-message (:error-message @state))
        :else
-       [:div {:style {:flex "2 0 auto" :marginRight "1em"}}
+       [:div {:style {:flex "1 0 auto" :marginRight "1em"}}
         [:div {:style {:fontWeight 700 :fontSize "125%"}} "Search Results: "
          [:span {:style {:fontWeight 100}} (str (:total @state) " Datasets found")]]
         [:div {:style {:padding "4"}}]
@@ -77,9 +77,9 @@
   {:render
    (fn [{:keys [refs]}]
      [:div {:style {:display "flex" :justifyContent "space-between" :padding "20px 0"}}
-      [:div {:style {:flex "1 0 auto" :marginRight "1em"}}
+      [:div {:style {:flex "0 0 250px" :marginRight "2em"}}
        [:div {:style {:fontWeight 700 :fontSize "125%"}} "Search Filters: "]
-       [:div {:style {:padding "4"}}]
-       [:div {:style {:display "inline-flex" :background (:background-light style/colors) :padding "16px 8px 10px 8px"}}
-        [comps/TextFilter {:on-filter #(react/call :set-filter-text (@refs "datasets-table") %)}]]]
+       [:div {:style {:background (:background-light style/colors) :padding "16px 12px"}}
+        [comps/TextFilter {:width "100%" :placeholder "Search"
+                           :on-filter #(react/call :set-filter-text (@refs "datasets-table") %)}]]]
       [DatasetsTable {:ref "datasets-table"}]])})
