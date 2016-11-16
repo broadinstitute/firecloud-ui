@@ -40,8 +40,8 @@
                                :fontSize "90%"}
           :filterable? false
           :columns [{:header "Dataset Name" :starting-width 300
-                     :sort-by #(clojure.string/lower-case (:library:datasetName %))
-                     :as-text #(:library:datasetDescription %)
+                     :sort-by (comp clojure.string/lower-case :library:datasetName)
+                     :as-text :library:datasetDescription
                      :content-renderer (fn [data]
                                          (style/create-link {:text (:library:datasetName data)
                                                              :href(str "#workspaces/" (js/encodeURIComponent (str (:namespace data) ":" (:name data))))}))}
@@ -51,11 +51,7 @@
                      :sort-by clojure.string/lower-case}
                     {:header "# of Participants" :starting-width 150}]
           :pagination (react/call :pagination this)
-          :->row (fn [item]
-                   [item
-                    (:library:indication item)
-                    (:library:dataUseRestriction item)
-                    (:library:numSubjects item)])}]]))
+          :->row (juxt identity :library:indication :library:dataUseRestriction :library:numSubjects)}]]))
    :set-filter-text
    (fn [{:keys [refs]} new-filter-text]
      (react/call :update-query-params (@refs "table") {:filter-text new-filter-text}))
@@ -64,13 +60,8 @@
      (fn [{:keys [current-page rows-per-page filter-text]} callback]
        (endpoints/call-ajax-orch
          (let [from (* (- current-page 1) rows-per-page)]
-           {:endpoint
-            endpoints/search-datasets
-            :payload
-            (cond
-              (or (nil? filter-text) (= "" filter-text)) {:from from :size rows-per-page}
-              :else
-              {:searchTerm filter-text :from from :size rows-per-page})
+           {:endpoint endpoints/search-datasets
+            :payload {:searchTerm filter-text :from from :size rows-per-page}
             :headers utils/content-type=json
             :on-done
             (fn [{:keys [success? get-parsed-response status-text]}]
