@@ -24,10 +24,6 @@
 (defn- ws-path [workspace-id]
   (str (:namespace workspace-id) "/" (:name workspace-id)))
 
-(def search-datasets
-  {:path "/libraries"
-   :method :post })
-
 (def list-workspaces
   {:path "/workspaces"
    :method :get
@@ -852,6 +848,10 @@
   {:path "/library/user/role/curator"
    :method :get
    :mock-data {:curator true}})
+
+(def search-datasets
+  {:path "/library/search"
+   :method :post })
 
 
 (defn get-refresh-token-date []
