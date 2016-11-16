@@ -360,7 +360,7 @@
                   :on-done (fn [{:keys [success? get-parsed-response]}]
                              (if success?
                                (do
-                                 (reset! config/config (get-parsed-response))
+                                 (reset! config/config (get-parsed-response false))
                                  ((:on-success props)))
                                (swap! state assoc :error true)))}))})
 
