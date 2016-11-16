@@ -75,7 +75,7 @@
             :on-done
             (fn [{:keys [success? get-parsed-response status-text]}]
               (if success?
-                (let [response (get-parsed-response) total (response "total") results (response "results")]
+                (let [{:keys [total results]} (get-parsed-response)]
                   (swap! state assoc :total total)
                   (callback {:group-count total
                              :filtered-count total

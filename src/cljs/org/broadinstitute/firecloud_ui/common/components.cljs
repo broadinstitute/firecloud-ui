@@ -431,22 +431,18 @@
 
 
 (react/defc TextFilter
-  {:get-initial-state
-   (fn [] {:synced true})
-   :render
-   (fn [{:keys [props state this]}]
+  {:render
+   (fn [{:keys [props this]}]
      [:div {:style {:display "inline-flex"}}
       (style/create-search-field
-        {:ref         "filter-field" :autoSave "true" :results 5 :autofocus "true"
+        {:ref "filter-field" :autoSave "true" :results 5 :autofocus "true"
          :placeholder "Filter" :defaultValue (:initial-text props)
-         :style       {:borderRadius "3px 0 0 3px" :marginBottom 0}
-         :onKeyDown   (common/create-key-handler [:enter] #(react/call :apply-filter this))
-         :onChange    #(swap! state assoc :synced false)})
-      [Button {:icon  :search :onClick #(react/call :apply-filter this)
-                     :style {:borderRadius "0 3px 3px 0"}}]])
+         :style {:borderRadius "3px 0 0 3px" :marginBottom 0}
+         :onKeyDown (common/create-key-handler [:enter] #(react/call :apply-filter this))})
+      [Button {:icon :search :onClick #(react/call :apply-filter this)
+               :style {:borderRadius "0 3px 3px 0"}}]])
    :apply-filter
-   (fn [{:keys [state props refs]}]
-     (swap! state assoc :synced true)
+   (fn [{:keys [props refs]}]
      ((:on-filter props) (common/get-text refs "filter-field")))
    :component-did-mount
    (fn [{:keys [refs this]}]

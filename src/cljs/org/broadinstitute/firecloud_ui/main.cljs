@@ -161,7 +161,7 @@
        {:endpoint endpoints/get-library-curator-status
         :on-done (fn [{:keys [success? get-parsed-response]}]
                    (when success?
-                     (swap! state assoc :curator? ((get-parsed-response) "curator"))))}))})
+                     (swap! state assoc :curator? (:curator (get-parsed-response)))))}))})
 
 (react/defc GlobalSubmissionStatus
   {:render
