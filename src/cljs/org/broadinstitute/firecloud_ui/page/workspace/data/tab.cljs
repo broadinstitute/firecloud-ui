@@ -85,13 +85,13 @@
                                             (:namespace workspace-id) "/"
                                             (:name workspace-id) "/entities/" selected-entity-type "/tsv"
                                             "?attributeList="
-                                            (clojure.string/join ","
-                                             (map :header
-                                                  (:column-meta
-                                                   (persistence/try-restore
-                                                    {:key (str (common/workspace-id->string workspace-id) ":data:" selected-entity-type)
-                                                     :validator (constantly true)
-                                                     :initial (constantly {})})))))
+                                            (->> (persistence/try-restore
+                                                  {:key (str (common/workspace-id->string workspace-id) ":data:" selected-entity-type)
+                                                   :initial (constantly {})})
+                                                 :column-meta
+                                                 (filter :visible?)
+                                                 (map :header)
+                                                 (clojure.string/join ",")))
                                  :onClick #(utils/set-access-token-cookie @access-token)
                                  :target "_blank"}
                              (str "Download '" selected-entity-type "' data")])
