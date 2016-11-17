@@ -3,21 +3,19 @@
     [dmohs.react :as react]
     [org.broadinstitute.firecloud-ui.common :as common]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
-    [org.broadinstitute.firecloud-ui.common.icons :as icons]
     [org.broadinstitute.firecloud-ui.common.modal :as modal]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.common.table :as table]
     [org.broadinstitute.firecloud-ui.common.table-utils :refer [float-right]]
     [org.broadinstitute.firecloud-ui.nav :as nav]
-    [org.broadinstitute.firecloud-ui.common.table-utils :as table-utils]
     [org.broadinstitute.firecloud-ui.utils :as utils]
     ))
 
 
 (react/defc DatasetsTable
   {:render
-   (fn [{:keys [state this]}]
+   (fn [{:keys [state this props]}]
      (cond
        (:error-message @state) (style/create-server-error-message (:error-message @state))
        :else
@@ -44,7 +42,7 @@
                      :as-text :library:datasetDescription
                      :content-renderer (fn [data]
                                          (style/create-link {:text (:library:datasetName data)
-                                                             :href(str "#workspaces/" (js/encodeURIComponent (str (:namespace data) ":" (:name data))))}))}
+                                                             :onClick #(react/call :check-access this data props)}))}
                     {:header "Phenotype/indication" :starting-width 200
                      :sort-by clojure.string/lower-case}
                     {:header "Data Use Restrictions" :starting-width 200
@@ -54,7 +52,16 @@
           :->row (juxt identity :library:indication :library:dataUseRestriction :library:numSubjects)}]]))
    :set-filter-text
    (fn [{:keys [refs]} new-filter-text]
-     (react/call :update-query-params (@refs "table") {:filter-text new-filter-text}))
+     (react/call :update-query-params (@refs "table") {:filter-text new-filter-text :current-page 1}))
+   :check-access
+   (fn [this data props]
+     (endpoints/call-ajax-orch
+       {:endpoint (endpoints/check-bucket-read-access {:namespace (:namespace data) :name (:name data)})
+        :on-done (fn [{:keys [success?]}]
+                   (if success?
+                     (nav/navigate (:nav-context props) "workspaces" {:namespace (:namespace data) :name (:name data)})
+                     (modal/push-message {:header "No Access!"
+                                          :message (str "You do not have access to this data set.\n Please contact " (:library:datasetCustodian data) " for access.")})))}))
    :pagination
    (fn [{:keys [state]}]
      (fn [{:keys [current-page rows-per-page filter-text]} callback]
