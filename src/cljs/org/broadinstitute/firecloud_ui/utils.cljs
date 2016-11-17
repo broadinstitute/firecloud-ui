@@ -120,7 +120,6 @@
                                      :status-code status-code
                                      :success? (<= 200 status-code 299)
                                      :status-text (.-statusText xhr)
-                                     :raw-response (.-responseText xhr)
                                      :get-parsed-response #(parse-json-string
                                                             (.-responseText xhr))})))]
       (when with-credentials?
