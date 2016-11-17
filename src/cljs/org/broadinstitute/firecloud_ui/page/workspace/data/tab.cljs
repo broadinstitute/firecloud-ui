@@ -84,7 +84,7 @@
                                  :href (str (config/api-url-root) "/cookie-authed/workspaces/"
                                             (:namespace workspace-id) "/"
                                             (:name workspace-id) "/entities/" selected-entity-type "/tsv"
-                                            "?attributeList="
+                                            "?attributeNames="
                                             (->> (persistence/try-restore
                                                   {:key (str (common/workspace-id->string workspace-id) ":data:" selected-entity-type)
                                                    :initial (constantly {})})
