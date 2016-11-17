@@ -13,8 +13,8 @@
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
     [org.broadinstitute.firecloud-ui.page.workspace.data.copy-data-workspaces :as copy-data-workspaces]
     [org.broadinstitute.firecloud-ui.page.workspace.data.import-data :as import-data]
-    [org.broadinstitute.firecloud-ui.utils :as utils :refer [access-token]]
-    [org.broadinstitute.firecloud-ui.persistence :as persistence]))
+    [org.broadinstitute.firecloud-ui.persistence :as persistence]
+    [org.broadinstitute.firecloud-ui.utils :as utils :refer [access-token]]))
 
 
 

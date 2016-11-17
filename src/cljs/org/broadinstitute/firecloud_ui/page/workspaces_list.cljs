@@ -101,9 +101,7 @@
    (fn []
      (persistence/try-restore
       {:key persistence-key
-       :initial (fn [] {:selected-types (->> access-types
-                                             (map (juxt identity (constantly true)))
-                                             (into {}))})}))
+       :initial (fn [] {:selected-types (reduce (fn [m x] (assoc m x true)) {} access-types)})}))
    :render
    (fn [{:keys [props state refs]}]
      (let [max-workspace-name-length (get-max-length get-workspace-name-string (:workspaces props))
