@@ -25,18 +25,20 @@
 
 (defn- render-property [library-schema library-attributes property-key]
   [:div {:style {:display "flex" :padding "0.5em 0" :borderBottom (str "2px solid " (:line-default style/colors))}}
-   [:div {:style {:flexBasis "33%" :fontWeight "bold" :paddingRight "2em"}}
+   [:div {:style {:flexBasis "40%" :fontWeight "bold" :paddingRight "2em"}}
     (get-in library-schema [:properties property-key :title])]
-   [:div {:style {:flexBasis "67%"}}
-    (render-value (get library-attributes property-key))]])
+   [:div {:style {:flexBasis "60%"}}
+    (render-value (get library-attributes property-key))
+    (if (= property-key :library:diseaseOntology) [:span {:style {:fontStyle "italic"}} (str " (DOID: " (style/url-to-doid (get library-attributes :library:diseaseOntologyDOID)) ")")])]])
 
 
-(defn- resolve-hidden [property-key workspace]
+(defn- resolve-hidden [property-key workspace doid]
   (case property-key
     :workspaceId (get-in workspace [:workspace :workspaceId])
     :workspaceNamespace (get-in workspace [:workspace :namespace])
     :workspaceName (get-in workspace [:workspace :name])
-    nil))
+    nil)
+  :diseaseOntologyDOID doid)
 
 (def ^:private ENUM_EMPTY_CHOICE "<select an option>")
 
@@ -120,9 +122,9 @@
            field-data (->> props :library-schema :properties
                            (keep (fn [[property-key {:keys [hidden enum typeahead] :as property}]]
                                    (let [pk-str (name property-key)
-                                         value (cond hidden (resolve-hidden property-key (:workspace props))
+                                         value (cond hidden (resolve-hidden property-key (:workspace props) (:ontologyDOID @state))
                                                      enum (resolve-enum (common/get-text refs pk-str))
-                                                     (= typeahead "ontology") (common/get-text refs "duos-typeahead")
+                                                     (= typeahead "ontology") (:ontologyText @state)
                                                      :else (do (swap! validation-errors into (input/validate refs pk-str))
                                                                (resolve-field (input/get-text refs pk-str) property)))]
                                      (when value
@@ -141,15 +143,15 @@
                              (do (modal/pop-modal)
                                  ((:request-refresh props)))
                              (swap! state assoc :server-error (get-parsed-response false))))})))))
-   :component-did-mount (fn [{:keys [props refs library-attributes]}]
+   :component-did-mount (fn [{:keys [props refs state library-attributes]}]
                           (.select2 (js/$ (@refs "duos-typeahead"))
-                                    (clj->js { :ajax { :url (fn [params]
-                                                              (str "https://local.broadinstitute.org:10443/duos-autocomplete/" (aget params "term")))
+                                    (clj->js { :ajax { :url (fn [params] ;; fix to use endpoints
+                                                              (endpoints/search-duos-autocomplete (aget params "term")))
                                                        :dataType "json"
                                                        :delay 250
                                                        :processResults (fn [data]
                                                                          (clj->js {:results data}))
-                                                       :data (fn [params]
+                                                       :data (fn [params] ;; don't actually want to send it as a query
                                                                (clj->js {}))}
                                                :minimumInputLength 1
                                                :cache true
@@ -158,22 +160,24 @@
                                                                    (aget obj "text")
                                                                    (str "<div style='font-weight: bold'>" (aget obj "label")
                                                                         "<div style='float: right; font-weight: normal'> DOID: "
-                                                                        (second (clojure.string/split (aget obj "id") #"DOID_")) "</div></div>"
+                                                                        (style/url-to-doid (aget obj "id")) "</div></div>"
                                                                         "<div style='font-size: small'> "
                                                                         (if (not (nil? (aget obj "definition")))
                                                                           (aget obj "definition") "</div>"))))
                                                :escapeMarkup (fn [markup] markup)
-                                               :templateSelection (fn [obj] (aget obj "label"))
-                                               :placeholder (clj->js {:id (get library-attributes :library:diseaseOntology)
-                                                                      :label (get (get-in props [:workspace :workspace :library-attributes]) :library:diseaseOntology "select something")})
-                                               })))})
+                                               :templateSelection (fn [obj]
+                                                                    (swap! state assoc :ontologyText (str (aget obj "label"))) ;; save the ontology text field
+                                                                    (swap! state assoc :ontologyDOID (str (aget obj "id"))) ;; save the ontology doid field
+                                                                    (aget obj "label"))
+                                               :placeholder (clj->js {:id  (get (get-in props [:workspace :workspace :library-attributes]) :library:diseaseOntologyDOID -1 )
+                                                                      :label (get (get-in props [:workspace :workspace :library-attributes]) :library:diseaseOntology "Select a disease ontology.")})})))})
 
 (react/defc LibraryAttributeViewer
   {:render
    (fn [{:keys [props state]}]
      (let [{:keys [library-attributes library-schema]} props
            form-properties (select-keys props [:library-schema :workspace :workspace-id :request-refresh])
-           primary-properties [:library:indication :library:numSubjects :library:datatype :library:dataUseRestriction] ;; TODO replace with new field from schema
+           primary-properties [:library:diseaseOntology :library:numSubjects :library:datatype :library:dataUseRestriction] ;; TODO replace with new field from schema
            secondary-properties (->> (calculate-display-properties library-schema)
                                      (remove (partial contains? (set primary-properties))))]
        [:div {}

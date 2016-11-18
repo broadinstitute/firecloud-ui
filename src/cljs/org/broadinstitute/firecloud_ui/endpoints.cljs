@@ -849,7 +849,6 @@
    :method :get
    :mock-data {:curator true}})
 
-
 (defn get-refresh-token-date []
   {:path "/profile/refreshTokenDate"
    :method :get})
@@ -869,3 +868,9 @@
                 "Aborted" (rand-int 1000)
                 "Unknown" (rand-int 1000)}}
    :ignore-auth-expiration? true})
+
+;; not a like or other endpoints since select2 calls ajax directly
+(defn search-duos-autocomplete [term]
+  ;; str (utils/api-url-root "/duos-autocomplete/" term) ???
+  (str "https://local.broadinstitute.org:10443/duos-autocomplete/" term))
+
