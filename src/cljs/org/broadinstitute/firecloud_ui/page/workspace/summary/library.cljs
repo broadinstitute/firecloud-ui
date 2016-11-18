@@ -28,7 +28,7 @@
    [:div {:style {:flexBasis "33%" :fontWeight "bold" :paddingRight "2em"}}
     (get-in library-schema [:properties property-key :title])]
    [:div {:style {:flexBasis "67%"}}
-    (render-value (get library-attributes property-key))]])
+    (render-value (get library-attributes (keyword (str "library:" property-key))))]])
 
 
 (defn- resolve-hidden [property-key workspace]
@@ -144,10 +144,7 @@
   {:render
    (fn [{:keys [props state]}]
      (let [{:keys [library-attributes library-schema]} props
-           form-properties (select-keys props [:library-schema :workspace :workspace-id :request-refresh])
-           primary-properties [:library:indication :library:numSubjects :library:datatype :library:dataUseRestriction] ;; TODO replace with new field from schema
-           secondary-properties (->> (calculate-display-properties library-schema)
-                                     (remove (partial contains? (set primary-properties))))]
+           form-properties (select-keys props [:library-schema :workspace :workspace-id :request-refresh])]
        [:div {}
         (style/create-section-header
           [:div {}
@@ -158,8 +155,8 @@
                                  :onClick #(modal/push-modal [LibraryAttributeForm form-properties])}))])
         (style/create-paragraph
           [:div {}
-           (map (partial render-property library-schema library-attributes) primary-properties)
-           (when secondary-properties
+           (map (partial render-property library-schema library-attributes) (:primaryProperties library-schema))
+           (when-let [secondary-properties (:secondaryProperties library-schema)]
              [:div {}
               (when (:expanded? @state)
                 (map (partial render-property library-schema library-attributes) secondary-properties))
