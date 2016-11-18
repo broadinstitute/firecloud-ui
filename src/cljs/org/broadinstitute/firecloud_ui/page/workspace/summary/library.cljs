@@ -6,6 +6,7 @@
     [org.broadinstitute.firecloud-ui.common.input :as input]
     [org.broadinstitute.firecloud-ui.common.modal :as modal]
     [org.broadinstitute.firecloud-ui.common.style :as style]
+    [org.broadinstitute.firecloud-ui.config :as config]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
     [org.broadinstitute.firecloud-ui.utils :as utils]
     ))
@@ -59,6 +60,33 @@
                       parsed))))
     (do (utils/log "unknown type: " type)
         value)))
+
+(defn select2-typeahead [placeholder r on-item-selected]
+  (.select2 (js/$ r)
+            (clj->js { :ajax { :url (fn [params]
+                                      (str (config/api-url-root) "/duos-autocomplete/" (aget params "term")))
+                               :dataType "json"
+                               :delay 250
+                               :processResults (fn [data]
+                                                 (clj->js {:results data}))
+                               :data (fn [params] ;; don't actually want to send it as a query
+                                       (clj->js {}))}
+                       :minimumInputLength 1
+                       :cache true
+                       :templateResult (fn [obj]
+                                         (if (aget obj "loading")
+                                           (aget obj "text")
+                                           (str "<div style='font-weight: bold'>" (aget obj "label")
+                                                "<div style='float: right; font-weight: normal'> DOID: "
+                                                (style/url-to-doid (aget obj "id")) "</div></div>"
+                                                "<div style='font-size: small'> "
+                                                (if (not (nil? (aget obj "definition")))
+                                                  (aget obj "definition") "</div>"))))
+                       :escapeMarkup (fn [markup] markup)
+                       :templateSelection (fn [obj]
+                                            (on-item-selected (aget obj "id") (aget obj "label"))
+                                            (aget obj "label"))
+                       :placeholder (clj->js placeholder)})))
 
 (react/defc LibraryAttributeForm
   {:get-initial-state
@@ -143,34 +171,14 @@
                              (do (modal/pop-modal)
                                  ((:request-refresh props)))
                              (swap! state assoc :server-error (get-parsed-response false))))})))))
-   :component-did-mount (fn [{:keys [props refs state library-attributes]}]
-                          (.select2 (js/$ (@refs "duos-typeahead"))
-                                    (clj->js { :ajax { :url (fn [params] ;; fix to use endpoints
-                                                              (endpoints/search-duos-autocomplete (aget params "term")))
-                                                       :dataType "json"
-                                                       :delay 250
-                                                       :processResults (fn [data]
-                                                                         (clj->js {:results data}))
-                                                       :data (fn [params] ;; don't actually want to send it as a query
-                                                               (clj->js {}))}
-                                               :minimumInputLength 1
-                                               :cache true
-                                               :templateResult (fn [obj]
-                                                                 (if (aget obj "loading")
-                                                                   (aget obj "text")
-                                                                   (str "<div style='font-weight: bold'>" (aget obj "label")
-                                                                        "<div style='float: right; font-weight: normal'> DOID: "
-                                                                        (style/url-to-doid (aget obj "id")) "</div></div>"
-                                                                        "<div style='font-size: small'> "
-                                                                        (if (not (nil? (aget obj "definition")))
-                                                                          (aget obj "definition") "</div>"))))
-                                               :escapeMarkup (fn [markup] markup)
-                                               :templateSelection (fn [obj]
-                                                                    (swap! state assoc :ontologyText (str (aget obj "label"))) ;; save the ontology text field
-                                                                    (swap! state assoc :ontologyDOID (str (aget obj "id"))) ;; save the ontology doid field
-                                                                    (aget obj "label"))
-                                               :placeholder (clj->js {:id  (get (get-in props [:workspace :workspace :library-attributes]) :library:diseaseOntologyDOID -1 )
-                                                                      :label (get (get-in props [:workspace :workspace :library-attributes]) :library:diseaseOntology "Select a disease ontology.")})})))})
+   :component-did-mount
+   (fn [{:keys [props state refs]}]
+     (let [attributes (get-in props [:workspace :workspace :library-attributes])]
+       (select2-typeahead {:id  (get attributes :library:diseaseOntologyDOID -1 )
+                           :label (get attributes :library:diseaseOntology "Select a disease ontology.")}
+                          (@refs "duos-typeahead")
+                          (fn [id label]
+                            (swap! state assoc :ontologyText label :ontologyDOID id)))))})
 
 (react/defc LibraryAttributeViewer
   {:render
