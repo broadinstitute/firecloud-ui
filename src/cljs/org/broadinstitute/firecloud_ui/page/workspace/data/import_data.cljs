@@ -52,9 +52,10 @@
    (fn [{:keys [props state]}]
      (swap! state assoc :loading? true)
      (endpoints/call-ajax-orch
-      {:endpoint (if (= "data" (:import-type props))
-                   (endpoints/import-entities (:workspace-id props))
-                   (endpoints/import-attributes (:workspace-id props)))
+      {:endpoint ((if (= "data" (:import-type props))
+                    endpoints/import-entities
+                    endpoints/import-attributes)
+                   (:workspace-id props))
        :raw-data (if (= "data" (:import-type props))
                    (utils/generate-form-data {:entities (:file @state)})
                    (utils/generate-form-data{:attributes (:file @state)}))

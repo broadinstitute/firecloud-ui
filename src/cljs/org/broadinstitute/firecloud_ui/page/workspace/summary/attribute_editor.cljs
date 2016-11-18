@@ -9,11 +9,9 @@
     [org.broadinstitute.firecloud-ui.common.table-utils :as table-utils]
     [org.broadinstitute.firecloud-ui.common.icons :as icons]
     [org.broadinstitute.firecloud-ui.common.modal :as modal]
-    [org.broadinstitute.firecloud-ui.page.workspace.data.tab :as import]
     [org.broadinstitute.firecloud-ui.page.workspace.data.import-data :as import-data]
     [org.broadinstitute.firecloud-ui.utils :as utils :refer [access-token]]
     [org.broadinstitute.firecloud-ui.config :as config]
-    [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
     [org.broadinstitute.firecloud-ui.utils :as utils]
     ))
 
@@ -125,12 +123,18 @@
                               :onClick #(utils/set-access-token-cookie @access-token)
                               :href (str (config/api-url-root) "/cookie-authed/workspaces/"
                                          (:namespace (:workspace-id props)) "/"
-                                         (:name (:workspace-id props)) "/exportAttributes")
+                                         (:name (:workspace-id props)) "/exportAttributesTSV")
                               :style {:marginRight "0.25em"}}]
                [comps/Button {:text "Import Attributes"
-                              :onClick #(modal/push-modal [import-data/Page (merge (select-keys props [:workspace-id])
-                                                                                   {:reload (fn [] )}
-                                                                                   {:import-type "workspace-attributes"})])}]])
+                              :onClick #(modal/push-modal
+                                         [modal/OKCancelForm
+                                          {:header "Import Attributes"
+                                           :show-cancel? false :ok-button {:text "Done" :onClick modal/pop-modal}
+                                           :content [:div {:style {:width 720}}
+                                                     [import-data/Page (merge (select-keys props [:workspace-id])
+                                                                              {:reload (fn [] (modal/pop-modal) ((:request-refresh props)) )}
+                                                                              {:import-type "workspace-attributes"})]]}])}]
+              ])
            [table/Table
             {:key (str editing? (count (:attributes @state)))
              :reorderable-columns? false :sortable-columns? (not editing?) :filterable? false :pagination :none
