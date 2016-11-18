@@ -47,7 +47,7 @@
            (map-indexed
             (fn [i acl-entry]
               (let [disabled? (and (< (count-owners(:acl-vec @state)) 2) (= owner-level (:role acl-entry)))
-                    background (if disabled? (:disabled-state style/colors) (:input-background style/colors))]
+                    background-color (if disabled? (:disabled-state style/colors) (:input-background style/colors))]
                 [:div {}
                  [input/TextField
                   {:ref (str "acl-key" i)
@@ -60,7 +60,7 @@
                    :predicates [(input/valid-email-or-empty "User ID")]}]
                    (style/create-identity-select
                      (merge {:ref (str "acl-value" i)
-                             :style {:float "right" :width column-width :height 33 :backgroundColor background}
+                             :style {:float "right" :width column-width :height 33 :backgroundColor background-color}
                              :defaultValue (:role acl-entry)}
                        (when disabled? {:disabled true}))
                      access-levels)

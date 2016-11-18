@@ -40,7 +40,7 @@
 
 
 (def ^:private input-text-style
-  {:backgroundColor (:input-background colors))
+  {:backgroundColor (:input-background colors)
    ;; Split out border properties so they can be individually overridden
    :borderWidth 1 :borderStyle "solid" :borderColor (:border-light colors) :borderRadius 3
    :boxSizing "border-box"
