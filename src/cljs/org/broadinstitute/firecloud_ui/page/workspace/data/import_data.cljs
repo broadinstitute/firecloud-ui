@@ -56,11 +56,9 @@
                      endpoints/import-entities
                      endpoints/import-attributes)
                     (:workspace-id props))
-        :raw-data (if (= "data" (:import-type props))
-                    (utils/generate-form-data {:entities (:file @state)})
-                    (utils/generate-form-data {:attributes (:file @state)}))
-       :encType "multipart/form-data"
-       :on-done (fn [{:keys [success? xhr get-parsed-response]}]
+        :raw-data (utils/generate-form-data {(if (= "data" (:import-type props)) :entities :attributes) (:file @state)})
+        :encType "multipart/form-data"
+        :on-done (fn [{:keys [success? xhr get-parsed-response]}]
                   (swap! state dissoc :loading? :file :file-contents)
                   (if success?
                     (do
