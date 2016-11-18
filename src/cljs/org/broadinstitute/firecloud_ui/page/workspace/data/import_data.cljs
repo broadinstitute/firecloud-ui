@@ -52,18 +52,13 @@
    (fn [{:keys [props state]}]
      (swap! state assoc :loading? true)
      (endpoints/call-ajax-orch
-      {:endpoint ((if (= "data" (:import-type props))
-                    endpoints/import-entities
-                    endpoints/import-attributes)
-                   (:workspace-id props))
-       :raw-data ((if (= "data" (:import-type props))
-                   utils/generate-form-data
-                   utils/generate-form-data) {:attributes (:file @state)})
+      {:endpoint (endpoints/import-entities (:workspace-id props))
+       :raw-data (utils/generate-form-data {:entities (:file @state)})
        :encType "multipart/form-data"
        :on-done (fn [{:keys [success? xhr get-parsed-response]}]
                   (swap! state dissoc :loading? :file :file-contents)
                   (if success?
                     (do
                       (swap! state assoc :upload-result {:success? true})
-                      ((:reload props) (.-responseText xhr)))
+                      ((:reload-data-tab props) (.-responseText xhr)))
                     (swap! state assoc :upload-result {:success? false :error (get-parsed-response false)})))}))})
