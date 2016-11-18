@@ -29,7 +29,7 @@
        (fn [i acl-entry]
          [:div {:style {:padding "0.5em"}}
           (:email acl-entry)])
-       (filter #(= (:accessLevel %) "PROJECT_OWNER") (:acl-vec @state)))
+       (:project-owner-acl-vec @state))
       [:div {:style {:padding "0.5em 0" :fontSize "90%" :marginTop "0.5em"}}
        [:div {:style {:float "left" :width 400}} "User ID"]
        [:div {:style {:float "right" :width 200 :marginLeft "1em"}} "Access Level"]
@@ -46,19 +46,19 @@
             :disabled (:read-only? acl-entry)
             :spellCheck false
             :value (:email acl-entry)
-            :onChange #(swap! state assoc-in [:acl-vec i :email] (.. % -target -value))}]
+            :onChange #(swap! state assoc-in [:non-project-owner-acl-vec i :email] (.. % -target -value))}]
           (style/create-identity-select
            {:ref (str "acl-value" i)
             :style {:float "right" :width 200 :height 33 :marginLeft "1em"}
             :value (:accessLevel acl-entry)
-            :onChange #(swap! state assoc-in [:acl-vec i :accessLevel]
+            :onChange #(swap! state assoc-in [:non-project-owner-acl-vec i :accessLevel]
                               (.. % -target -value))}
            access-levels)
           (common/clear-both)])
-       (react/call :.get-non-project-owners component))
+       (:non-project-owner-acl-vec @state))
       [:div {:style {:marginBottom "0.5em"}}
        [comps/Button {:text "Add new" :icon :add
-                      :onClick #(swap! state update-in [:acl-vec]
+                      :onClick #(swap! state update-in [:non-project-owner-acl-vec]
                                        conj {:email "" :accessLevel "READER"})}]]
       (style/create-validation-error-message (:validation-error @state))
       [comps/ErrorViewer {:error (:save-error @state)}]])
@@ -67,7 +67,7 @@
 (react/defc AclEditor
   {:render
    (fn [{:keys [props state this]}]
-     (if (:acl-vec @state)
+     (if (or (:non-project-owner-acl-vec @state) (:project-owner-acl-vec @state))
        (render-acl-content props state this)
        [:div {:style {:padding "2em"}}
         (if (:load-error @state)
@@ -76,38 +76,42 @@
    :persist-acl
    (fn [{:keys [props state refs this]}]
      (swap! state dissoc :save-error :validation-error)
-     (let [filtered-acl (->> (:acl-vec @state)
+     (let [filtered-acl (->> (concat (:project-owner-acl-vec @state) (:non-project-owner-acl-vec @state))
                              (map #(dissoc % :read-only?))
                              (map #(update-in % [:email] clojure.string/trim))
                              (filter #(not (empty? (:email %)))))
-           fails (apply input/validate refs (map #(str "acl-key" %) (range (count (react/call :.get-non-project-owners this)))))]
+           fails (apply input/validate refs (map #(str "acl-key" %) (range (count (:non-project-owner-acl-vec @state)))))]
        (if fails
          (swap! state assoc :validation-error fails)
          (do
            (swap! state assoc :saving? true)
            (endpoints/call-ajax-orch
-             {:endpoint (endpoints/update-workspace-acl (:workspace-id props))
-              :headers utils/content-type=json
-              :payload filtered-acl
-              :on-done (fn [{:keys [success? get-parsed-response]}]
-                         (swap! state dissoc :saving?)
-                         (if success?
-                           (do
-                             ((:request-refresh props))
-                             (modal/pop-modal))
-                           (swap! state assoc :save-error (get-parsed-response false))))})))))
+            {:endpoint (endpoints/update-workspace-acl (:workspace-id props))
+             :headers utils/content-type=json
+             :payload filtered-acl
+             :on-done (fn [{:keys [success? get-parsed-response]}]
+                        (swap! state dissoc :saving?)
+                        (if success?
+                          (do
+                            ((:request-refresh props))
+                            (modal/pop-modal))
+                          (swap! state assoc :save-error (get-parsed-response false))))})))))
    :component-did-mount
    (fn [{:keys [props state]}]
      (endpoints/call-ajax-orch
-       {:endpoint (endpoints/get-workspace-acl (:workspace-id props))
-        :on-done
-        (fn [{:keys [success? get-parsed-response]}]
-          (if success?
-            (swap! state assoc :acl-vec
-                   (mapv (fn [[k v]]
-                           {:email k :accessLevel v :read-only? true})
-                         (get-parsed-response false)))
-            (swap! state assoc :load-error (get-parsed-response false))))}))
-   :.get-non-project-owners
-   (fn [{:keys [state]}]
-     (filter #(not= (:accessLevel %) "PROJECT_OWNER") (:acl-vec @state)))})
+      {:endpoint (endpoints/get-workspace-acl (:workspace-id props))
+       :on-done
+       (fn [{:keys [success? get-parsed-response]}]
+         (if success?
+           (swap! state
+                  #(reduce
+                    (fn [state [k v]]
+                      (update state
+                              (if (= v "PROJECT_OWNER")
+                                :project-owner-acl-vec
+                                :non-project-owner-acl-vec)
+                              conj {:email k :accessLevel v :read-only? true}))
+                    (assoc % :project-owner-acl-vec []
+                             :non-project-owner-acl-vec [])
+                    (get-parsed-response false)))
+           (swap! state assoc :load-error (get-parsed-response false))))}))})
