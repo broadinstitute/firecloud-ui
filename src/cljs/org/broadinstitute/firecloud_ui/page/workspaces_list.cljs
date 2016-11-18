@@ -162,6 +162,9 @@
                                  (if description (-> description split-lines first)
                                                  [:span {:style {:fontStyle "italic"}}
                                                   "No description provided"])])}
+           {:header "Last Modified Date" :starting-width 300 :marginLeft 14
+            :content-renderer (fn [date]
+                                [:div {:style {:paddingLeft 14}} (common/format-date date) ])}
            {:header "Access Level" :starting-width 118 :resizable? false
             :sort-by #(case % "OWNER" 0 "WRITER" 1 "READER" 2 "NO ACCESS" 3 4) :sort-initial :asc
             :content-renderer
@@ -192,6 +195,7 @@
                       {:name ws-name :href ws-href :status (:status ws) :disabled? disabled?
                        :protected? (get-in ws ["workspace" "realm"])}
                       (get-workspace-description ws)
+                      (get-in ws ["workspace" "lastModified"])
                       (ws "accessLevel")
                       nil]))}]]))
    :component-did-update
