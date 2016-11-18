@@ -40,7 +40,7 @@
             (common/clear-both)]
            (map-indexed
             (fn [i acl-entry]
-              (let [disabled? (and (< (count-owners(:acl-vec @state)) 2) (= owner-level (:role acl-entry)))
+              (let [disabled? (and (< (count-owners (:acl-vec @state)) 2) (= owner-level (:role acl-entry)))
                     background-color (if disabled? (:disabled-state style/colors) (:input-background style/colors))]
                 [:div {}
                  [input/TextField
@@ -50,20 +50,20 @@
                                               (:background-light style/colors))}
                    :disabled (< i (:count-orig @state))
                    :spellCheck false
-                   :defaultValue (:user acl-entry)
+                   :value (:user acl-entry)
+                   :onChange #(swap! state update-in [:acl-vec i] assoc :user (.. % -target -value))
                    :predicates [(input/valid-email-or-empty "User ID")]}]
                    (style/create-identity-select
                      (merge {:ref (str "acl-value" i)
                              :style {:float "right" :width column-width :height 33 :backgroundColor background-color}
-                             :defaultValue (:role acl-entry)}
+                             :value (:role acl-entry)
+                             :onChange #(swap! state update-in [:acl-vec i] assoc :role (.. % -target -value))}
                        (when disabled? {:disabled true}))
                      access-levels)
                   (common/clear-both)]))
             (:acl-vec @state))
            [comps/Button {:text "Add new" :icon :add
-                          :onClick #(swap! state assoc :acl-vec
-                                           (conj (react/call :capture-ui-state this)
-                                                 {:user "" :role reader-level}))}]
+                          :onClick #(swap! state update :acl-vec conj {:user "" :role reader-level})}]
            [:label {:style {:cursor "pointer"}}
             [:input {:type "checkbox" :ref "publicbox"
                      :style {:marginLeft "2em" :verticalAlign "middle"}
@@ -89,18 +89,18 @@
                           acl-list (remove public-user-pred response)
                           public-user (first (filter public-user-pred response))
                           public-status (or (:role public-user) no-access-level)]
-                      (swap! state assoc :acl-vec (vec acl-list)
+                      (swap! state assoc
+                             :acl-vec (vec acl-list)
                              :public-status (= public-status reader-level)
                              :count-orig (count acl-list)))
                     (swap! state assoc :error status-text)))}))
    :persist-acl
-   (fn [{:keys [props state refs this]}]
+   (fn [{:keys [props state refs]}]
      (swap! state dissoc :validation-error :save-error)
-     (let [acl-vec (react/call :capture-ui-state this)
-           failure (apply input/validate refs (map #(str "acl-key" %) (range (count acl-vec))))]
+     (let [failure (apply input/validate refs (map #(str "acl-key" %) (range (count (:acl-vec @state)))))]
        (if failure
          (swap! state assoc :validation-error failure)
-         (let [non-empty-acls (remove (comp empty? :user) acl-vec)
+         (let [non-empty-acls (remove (comp empty? :user) (:acl-vec @state))
                non-empty-acls-w-public (conj non-empty-acls
                                              {:user "public"
                                               :role (if (:public-status @state) reader-level no-access-level)})]
@@ -113,11 +113,4 @@
                         (swap! state dissoc :saving?)
                         (if success?
                           (modal/pop-modal)
-                          (swap! state assoc :save-error (get-parsed-response false))))})))))
-   :capture-ui-state
-   (fn [{:keys [state refs]}]
-     (mapv
-      (fn [i]
-        {:user (input/get-text refs (str "acl-key" i))
-         :role (.-value (@refs (str "acl-value" i)))})
-      (range (count (:acl-vec @state)))))})
+                          (swap! state assoc :save-error (get-parsed-response false))))})))))})
