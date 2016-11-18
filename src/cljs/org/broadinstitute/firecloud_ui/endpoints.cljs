@@ -227,6 +227,11 @@
    [{:entityName "foo" :entityType "bar" :succeeded false :message "ohno"}
     {:entityName "bar" :entityType "baz" :succeeded true :message "hooray"}]})
 
+(defn import-attributes [workspace-id]
+   {:path (str "/workspaces/" (ws-path workspace-id) "/importAttributesTSV")
+    :method :post})
+
+
 (defn get-entity-types [workspace-id]
   {:path (str "/workspaces/" (ws-path workspace-id) "/entities")
    :method :get
