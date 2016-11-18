@@ -112,10 +112,8 @@
               (create-field "Ended" (moncommon/render-date (data "end")))
               [IODetail {:label "Inputs" :data (data "inputs")}]
               [IODetail {:label "Outputs" :data (data "outputs")}]
-              (let [stdout-name (last (string/split (data "stdout") #"/"))
-                    stderr-name (last (string/split (data "stderr") #"/"))]
-              (create-field "stdout" (display-value (data "stdout") stdout-name))
-              (create-field "stderr" (display-value (data "stderr") stderr-name)))
+              (create-field "stdout" (display-value (data "stdout") (last (string/split (data "stdout") #"/"))))
+              (create-field "stderr" (display-value (data "stderr") (last (string/split (data "stderr") #"/"))))
               (backend-logs data)]])
           (:data props)))])})
 
