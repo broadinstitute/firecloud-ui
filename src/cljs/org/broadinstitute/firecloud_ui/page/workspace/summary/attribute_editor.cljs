@@ -4,10 +4,13 @@
     [clojure.string :refer [join trim split]]
     [dmohs.react :as react]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
+    [org.broadinstitute.firecloud-ui.common.icons :as icons]
+    [org.broadinstitute.firecloud-ui.common.modal :as modal]
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.common.table :as table]
     [org.broadinstitute.firecloud-ui.common.table-utils :as table-utils]
-    [org.broadinstitute.firecloud-ui.common.icons :as icons]
+    [org.broadinstitute.firecloud-ui.config :as config]
+    [org.broadinstitute.firecloud-ui.page.workspace.data.import-data :as import-data]
     [org.broadinstitute.firecloud-ui.utils :as utils]
     ))
 
@@ -107,13 +110,29 @@
         (style/create-section-header "Workspace Attributes")
         (style/create-paragraph
           [:div {}
-           (when editing?
+           (if editing?
              [:div {:style {:marginBottom "0.25em"}}
               [comps/Button {:icon :add :text "Add new"
                              :onClick (fn [_]
                                         (swap! state update :attributes conj ["" ""])
                                         ;; have to do this by ID not ref, since the fields are generated within Table
-                                        (after-update #(.focus (.getElementById js/document "focus"))))}]])
+                                          (after-update #(.focus (.getElementById js/document "focus"))))}]]
+              [:div {:style {:marginBottom "0.25em"}}
+                [comps/Button {:text "Download Attributes"
+                               :onClick #(utils/set-access-token-cookie @utils/access-token)
+                               :href (str (config/api-url-root) "/cookie-authed/workspaces/"
+                                          (:namespace (:workspace-id props)) "/"
+                                          (:name (:workspace-id props)) "/exportAttributesTSV")
+                             :style {:marginRight "0.25em"}}]
+                [comps/Button {:text "Import Attributes"
+                               :onClick #(modal/push-modal
+                                          [modal/OKCancelForm
+                                           {:header "Import Attributes"
+                                            :show-cancel? false :ok-button {:text "Done" :onClick modal/pop-modal}
+                                            :content [:div {:style {:width 720}}
+                                                      [import-data/Page (merge (select-keys props [:workspace-id])
+                                                                               {:reload (fn [] (modal/pop-modal) ((:request-refresh props)) )}
+                                                                               {:import-type "workspace-attributes"})]]}])}]])
            [table/Table
             {:key (str editing? (count (:attributes @state)))
              :reorderable-columns? false :sortable-columns? (not editing?) :filterable? false :pagination :none
