@@ -1,7 +1,7 @@
 (ns org.broadinstitute.firecloud-ui.page.method-repo.methods-configs-acl
   (:require
    [dmohs.react :as react]
-   [clojure.string :refer [trim]]
+   [clojure.string :refer [trim lower-case]]
    [org.broadinstitute.firecloud-ui.common :as common]
    [org.broadinstitute.firecloud-ui.common.components :as comps]
    [org.broadinstitute.firecloud-ui.common.input :as input]
@@ -11,12 +11,6 @@
    [org.broadinstitute.firecloud-ui.utils :as utils]
    ))
 
-
-(defn- get-ordered-name [entity]
-  (clojure.string/join ":"
-    [(entity "namespace")
-     (entity "name")
-     (entity "snapshotId")]))
 
 (def ^:private reader-level "READER")
 (def ^:private owner-level "OWNER")
@@ -53,7 +47,7 @@
                   {:ref (str "acl-key" i)
                    :style {:float "left" :width column-width
                            :backgroundColor (when (< i (:count-orig @state))
-                                            (:background-light style/colors))}
+                                              (:background-light style/colors))}
                    :disabled (< i (:count-orig @state))
                    :spellCheck false
                    :defaultValue (:user acl-entry)
@@ -73,15 +67,16 @@
            [:label {:style {:cursor "pointer"}}
             [:input {:type "checkbox" :ref "publicbox"
                      :style {:marginLeft "2em" :verticalAlign "middle"}
-                     :onChange #(swap! state assoc :public-status (-> (@refs "publicbox") .-checked))
+                     :onChange #(swap! state assoc :public-status (.-checked (@refs "publicbox")))
                      :checked (:public-status @state)}]
             [:span {:style {:paddingLeft 6 :verticalAlign "middle"}} "Publicly Readable?"]]
            (style/create-validation-error-message (:validation-error @state))
            [comps/ErrorViewer {:error (:save-error @state)}]]
-          (:error @state) (style/create-server-error-message (cond (= (:error @state) "Forbidden") (str "You are unauthorized to edit this " (clojure.string/lower-case (:entityType props)) ".")
-                                                                   :else (:error @state)))
-          :else [comps/Spinner {:text
-                                (str "Loading Permissions for " (:title props) "...")}]))
+          (:error @state) (style/create-server-error-message
+                            (if (= (:error @state) "Forbidden")
+                              (str "You are unauthorized to edit this " (lower-case (:entity-type props)) ".")
+                              (:error @state)))
+          :else [comps/Spinner {:text (str "Loading Permissions for " (:title props) "...")}]))
        :ok-button (when (:acl-vec @state) {:text "Save" :onClick #(react/call :persist-acl this)})}])
    :component-did-mount
    (fn [{:keys [props state]}]
@@ -89,13 +84,14 @@
       {:endpoint (:load-endpoint props)
        :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                   (if success?
-                    (let [response-vec (mapv utils/keywordize-keys (get-parsed-response false))
-                          acl-vec (filterv #(not= "public" (:user %)) response-vec)
-                          public-user (first (filter #(= "public" (:user %)) response-vec))
+                    (let [response (get-parsed-response)
+                          public-user-pred (comp #{"public"} :user)
+                          acl-list (remove public-user-pred response)
+                          public-user (first (filter public-user-pred response))
                           public-status (or (:role public-user) no-access-level)]
-                      (swap! state assoc :acl-vec acl-vec
+                      (swap! state assoc :acl-vec (vec acl-list)
                              :public-status (= public-status reader-level)
-                             :count-orig (count acl-vec)))
+                             :count-orig (count acl-list)))
                     (swap! state assoc :error status-text)))}))
    :persist-acl
    (fn [{:keys [props state refs this]}]
@@ -104,10 +100,10 @@
            failure (apply input/validate refs (map #(str "acl-key" %) (range (count acl-vec))))]
        (if failure
          (swap! state assoc :validation-error failure)
-         (let [non-empty-acls (filterv #(not (empty? (:user %))) acl-vec)
+         (let [non-empty-acls (remove (comp empty? :user) acl-vec)
                non-empty-acls-w-public (conj non-empty-acls
-                                             {:user "public" :role
-                                              (if (:public-status @state) reader-level no-access-level)})]
+                                             {:user "public"
+                                              :role (if (:public-status @state) reader-level no-access-level)})]
            (swap! state assoc :saving? true)
            (endpoints/call-ajax-orch
             {:endpoint (:save-endpoint props)
