@@ -853,6 +853,10 @@
    :method :get
    :mock-data {:curator true}})
 
+(def search-datasets
+  {:path "/library/search"
+   :method :post })
+
 
 (defn get-refresh-token-date []
   {:path "/profile/refreshTokenDate"

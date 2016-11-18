@@ -428,3 +428,24 @@
    (fn [{:keys [locals]}]
      (.removeEventListener js/window "mouseup" (:on-mouse-up @locals))
      (.removeEventListener js/window "mousemove" (:on-mouse-move @locals)))})
+
+
+(react/defc TextFilter
+  {:render
+   (fn [{:keys [props this]}]
+     (let [{:keys [initial-text placeholder width]} props]
+       [:div {:style {:display "inline-flex" :width width}}
+        (style/create-search-field
+          {:ref "filter-field" :autoSave "true" :results 5 :autofocus "true"
+           :placeholder (or placeholder "Filter") :defaultValue initial-text
+           :style {:flex "1 0 auto" :borderRadius "3px 0 0 3px" :marginBottom 0}
+           :onKeyDown (common/create-key-handler [:enter] #(react/call :apply-filter this))})
+        [Button {:icon :search :onClick #(react/call :apply-filter this)
+                 :style {:flex "0 0 auto" :borderRadius "0 3px 3px 0"}}]]))
+   :apply-filter
+   (fn [{:keys [props refs]}]
+     ((:on-filter props) (common/get-text refs "filter-field")))
+   :component-did-mount
+   (fn [{:keys [refs this]}]
+     (.addEventListener (@refs "filter-field") "search" #(when (= (.-value (.-currentTarget %)) "") (react/call :apply-filter this))))})
+

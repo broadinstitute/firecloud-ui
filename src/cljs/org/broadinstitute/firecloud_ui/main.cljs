@@ -11,6 +11,7 @@
    [org.broadinstitute.firecloud-ui.nav :as nav]
    [org.broadinstitute.firecloud-ui.nih-link-warning :as nih-link-warning]
    [org.broadinstitute.firecloud-ui.page.billing.billing-management :as billing-management]
+   [org.broadinstitute.firecloud-ui.page.library.library-page :as library-page]
    [org.broadinstitute.firecloud-ui.page.method-repo.method-repo-page :as method-repo]
    [org.broadinstitute.firecloud-ui.page.profile :as profile-page]
    [org.broadinstitute.firecloud-ui.page.status :as status-page]
@@ -111,6 +112,9 @@
     :render #(react/create-element profile-page/Page %)}
    {:key :billing
     :render #(react/create-element billing-management/Page %)}
+   {:key :library :href "#library"
+    :name "Data Library"
+    :render #(react/create-element library-page/Page %)}
    {:key :workspaces :href "#workspaces"
     :name "Workspaces"
     :render #(react/create-element workspaces/Page %)}
@@ -120,8 +124,14 @@
    {:key :policy
     :render #(react/create-element Policy %)}])
 
-(def top-nav-bar-items
-  (filter (fn [r] (contains? #{:workspaces :methods} (:key r))) routes))
+(defn- get-authenticated-nav-bar-items [curator?]
+  (if (or (nil? curator?)
+          (not curator?))
+    #{:workspaces :methods}
+    #{:library :workspaces :methods}))
+
+(defn- top-nav-bar-items [state]
+  (filter (fn [r] (contains? (get-authenticated-nav-bar-items (:curator? @state)) (:key r))) routes))
 
 (react/defc TopNavBarLink
   {:render
@@ -134,19 +144,24 @@
           :onMouseOut #(swap! state assoc :hovering? false)}
       (:name props)])})
 
-
 (react/defc TopNavBar
   {:render
-   (fn [{:keys [props]}]
+   (fn [{:keys [props state]}]
      [:div {}
       (text-logo)
       [:div {:style {:display "inline-block" :paddingLeft "1em" :fontSize 18 :height 38 :verticalAlign "baseline"}}
        (map (fn [item] [TopNavBarLink {:name (:name item) :href (:href item)
                                        :selected (= (:selected-item props) (:key item))}])
-            top-nav-bar-items)
+            (top-nav-bar-items state))
        (when (:show-nih-link-warning? props)
-         [nih-link-warning/NihLinkWarning])]])})
-
+         [nih-link-warning/NihLinkWarning])]])
+   :component-did-mount
+   (fn [{:keys [state]}]
+     (endpoints/call-ajax-orch
+       {:endpoint endpoints/get-library-curator-status
+        :on-done (fn [{:keys [success? get-parsed-response]}]
+                   (when success?
+                     (swap! state assoc :curator? (:curator (get-parsed-response)))))}))})
 
 (react/defc GlobalSubmissionStatus
   {:render
