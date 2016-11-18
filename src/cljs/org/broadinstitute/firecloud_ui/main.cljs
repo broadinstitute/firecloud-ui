@@ -179,7 +179,7 @@
 
 (react/defc AccountDropdown
   {:render
-   (fn [{:keys [props state]}]
+   (fn [{:keys [state]}]
      [:div {:style {:float "right" :position "relative" :marginBottom "0.5em"}}
       (when (:show-dropdown? @state)
         [:div {:style {:position "fixed" :top 0 :left 0 :right 0 :bottom 0}
@@ -193,7 +193,7 @@
                    :padding "0.6em" :border style/standard-line
                    :minWidth 100}}
        [:div {}
-        (:user-email props)
+        (:userEmail @utils/current-user-info)
         [:div {:style {:display "inline-block" :marginLeft "1em" :fontSize 8}} "▼"]]]
       (when (:show-dropdown? @state)
         (let [DropdownItem
@@ -227,7 +227,7 @@
        [:div {}
         [:div {:style {:width "100%" :borderBottom (str "1px solid " (:line-default style/colors))}}
          [:div {:style {:float "right" :fontSize "70%" :margin "0 0 0.5em 0"}}
-          [AccountDropdown {:user-email (:user-email props)}]
+          [AccountDropdown]
           (common/clear-both)
           (when (= :registered (:registration-status @state))
             [GlobalSubmissionStatus])]
@@ -370,8 +370,7 @@
              "Thank you for registering. Your account is currently inactive.
               You will be contacted via email when your account is activated."]]]
           (= :logged-in (:user-status @state))
-          [LoggedIn {:nav-context (:root-nav-context @state)
-                     :user-email (:user-email @state)}]
+          [LoggedIn {:nav-context (:root-nav-context @state)}]
           (= :not-logged-in (:user-status @state))
           [LoggedOut {:on-login #(react/call :authenticate-with-fresh-token this
                                              (get % "access_token"))}])]]
@@ -459,9 +458,7 @@
       token
       (fn [{:keys [success? status-code get-parsed-response]}]
         (when success?
-          (let [response (get-parsed-response false)]
-            (swap! state assoc :user-email (get-in response ["userInfo" "userEmail"]))
-            (reset! utils/current-user (get-in response ["userInfo" "userSubjectId"]))))
+          (reset! utils/current-user-info (:userInfo (get-parsed-response))))
         (cond
           (contains? #{0 502} status-code)
           (do (reset! utils/maintenance-mode? true) (swap! state assoc :user-status :error))

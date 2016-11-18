@@ -48,7 +48,7 @@
                     m)))
 
 
-(defonce ^:private current-user (atom nil))
+(defonce current-user-info (atom nil))
 
 (defn local-storage-write
   ([k v] (local-storage-write k v false))

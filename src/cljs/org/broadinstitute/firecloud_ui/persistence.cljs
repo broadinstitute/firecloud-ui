@@ -5,7 +5,7 @@
 
 
 (defn- generate-persistence-key [key]
-  (keyword (str "state:" @utils/current-user ":" key)))
+  (keyword (str "state:" (:userSubjectId @utils/current-user-info) ":" key)))
 
 (defn save [{:keys [key state except only]}]
   (assert (not (and except only)) "Specify EITHER except OR only")
