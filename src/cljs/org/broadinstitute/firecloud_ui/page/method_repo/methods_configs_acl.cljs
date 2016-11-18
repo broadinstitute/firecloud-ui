@@ -25,6 +25,8 @@
 
 (def ^:private column-width "calc(50% - 4px)")
 
+(defn count-owners [acl-vec]
+  (count (filter #(= (:role %) owner-level) acl-vec)))
 
 (react/defc AgoraPermsEditor
   {:render
@@ -44,22 +46,25 @@
             (common/clear-both)]
            (map-indexed
             (fn [i acl-entry]
-              [:div {}
-               [input/TextField
-                {:ref (str "acl-key" i)
-                 :style {:float "left" :width column-width
-                         :backgroundColor (when (< i (:count-orig @state))
+              (let [disabled? (and (< (count-owners(:acl-vec @state)) 2) (= owner-level (:role acl-entry)))
+                    background (if disabled? (:disabled-state style/colors) (:input-background style/colors))]
+                [:div {}
+                 [input/TextField
+                  {:ref (str "acl-key" i)
+                   :style {:float "left" :width column-width
+                           :backgroundColor (when (< i (:count-orig @state))
                                             (:background-light style/colors))}
-                 :disabled (< i (:count-orig @state))
-                 :spellCheck false
-                 :defaultValue (:user acl-entry)
-                 :predicates [(input/valid-email-or-empty "User ID")]}]
-               (style/create-identity-select
-                {:ref (str "acl-value" i)
-                 :style {:float "right" :width column-width :height 33}
-                 :defaultValue (:role acl-entry)}
-                access-levels)
-               (common/clear-both)])
+                   :disabled (< i (:count-orig @state))
+                   :spellCheck false
+                   :defaultValue (:user acl-entry)
+                   :predicates [(input/valid-email-or-empty "User ID")]}]
+                   (style/create-identity-select
+                     (merge {:ref (str "acl-value" i)
+                             :style {:float "right" :width column-width :height 33 :backgroundColor background}
+                             :defaultValue (:role acl-entry)}
+                       (when disabled? {:disabled true}))
+                     access-levels)
+                  (common/clear-both)]))
             (:acl-vec @state))
            [comps/Button {:text "Add new" :icon :add
                           :onClick #(swap! state assoc :acl-vec
