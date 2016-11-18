@@ -53,7 +53,11 @@
             :value (:accessLevel acl-entry)
             :onChange #(swap! state assoc-in [:non-project-owner-acl-vec i :accessLevel]
                               (.. % -target -value))}
-           access-levels)])
+           access-levels)
+          (when (:pending? acl-entry)
+            [:span {:style {:fontStyle "italic" :color (:text-light style/colors)
+                            :marginLeft "0.5rem" }}
+             "Pending..."])])
        (:non-project-owner-acl-vec @state))
       [:div {:style {:margin "0.5rem 0"}}
        [comps/Button {:text "Add new" :icon :add
@@ -111,7 +115,10 @@
                               (if (= v "PROJECT_OWNER")
                                 :project-owner-acl-vec
                                 :non-project-owner-acl-vec)
-                              conj {:email k :accessLevel v :read-only? true}))
+                              conj {:email k
+                                    :accessLevel (v "accessLevel")
+                                    :pending? (v "pending")
+                                    :read-only? true}))
                     (assoc % :project-owner-acl-vec []
                              :non-project-owner-acl-vec [])
                     (get-parsed-response false)))
