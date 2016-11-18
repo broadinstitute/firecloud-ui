@@ -20,7 +20,7 @@
 (def ^:private column-width "calc(50% - 4px)")
 
 (defn count-owners [acl-vec]
-  (count (filter #(= (:role %) owner-level) acl-vec)))
+  (count (filter (comp #{owner-level} :role) acl-vec)))
 
 (react/defc AgoraPermsEditor
   {:render
