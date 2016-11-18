@@ -120,8 +120,10 @@
                                      :status-code status-code
                                      :success? (<= 200 status-code 299)
                                      :status-text (.-statusText xhr)
-                                     :get-parsed-response #(parse-json-string
-                                                            (.-responseText xhr))})))]
+                                     :get-parsed-response
+                                     (fn [& [keywordize-keys?]]
+                                       (parse-json-string (.-responseText xhr)
+                                                          (if (some? keywordize-keys?) keywordize-keys? true)))})))]
       (when with-credentials?
         (set! (.-withCredentials xhr) true))
       (if canned-response-params
