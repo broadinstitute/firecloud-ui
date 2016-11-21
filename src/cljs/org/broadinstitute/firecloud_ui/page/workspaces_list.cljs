@@ -162,7 +162,8 @@
                                  (if description (-> description split-lines first)
                                                  [:span {:style {:fontStyle "italic"}}
                                                   "No description provided"])])}
-           {:header "Last Modified Date" :starting-width 300 :marginLeft 14
+           {:as-text (fn [date] (common/format-date date))
+            :header "Last Modified Date" :starting-width 300 :marginLeft 14
             :content-renderer (fn [date]
                                 [:div {:style {:paddingLeft 14}} (common/format-date date) ])}
            {:header "Access Level" :starting-width 118 :resizable? false
