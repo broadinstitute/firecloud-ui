@@ -121,5 +121,5 @@
                                     :read-only? true}))
                     (assoc % :project-owner-acl-vec []
                              :non-project-owner-acl-vec [])
-                    (get-parsed-response false)))
+                    ((get-parsed-response false) "acl")))
            (swap! state assoc :load-error (get-parsed-response false))))}))})
