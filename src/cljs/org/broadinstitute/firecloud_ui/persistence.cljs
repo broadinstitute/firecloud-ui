@@ -17,6 +17,7 @@
 
 (defn try-restore [{:keys [key initial validator]}]
   (let [saved-state (some-> key generate-persistence-key utils/local-storage-read cljs.reader/read-string)]
-    (if (and validator (some-> saved-state validator))
+    (if (and saved-state
+             (or (not validator) (some-> saved-state validator)))
       saved-state
       (initial))))
