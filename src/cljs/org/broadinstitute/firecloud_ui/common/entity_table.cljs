@@ -82,9 +82,10 @@
             [Table
              (merge props
                     {:key selected-entity-type
-                     :state-key (str (common/workspace-id->string (:workspace-id props)) ":data" selected-entity-type)
+                     :state-key (when selected-entity-type
+                                  (str (common/workspace-id->string (:workspace-id props)) ":data" selected-entity-type))
                      :columns columns
-                     :column-defaults (get (:column-defaults props) (name selected-entity-type))
+                     :column-defaults (get (:column-defaults props) (some-> selected-entity-type name))
                      :always-sort? true
                      :pagination (react/call :pagination this)
                      :filter-groups (map (fn [type]
