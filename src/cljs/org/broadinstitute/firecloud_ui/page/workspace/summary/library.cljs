@@ -30,7 +30,7 @@
     (get-in library-schema [:properties property-key :title])]
    [:div {:style {:flexBasis "60%"}}
     (render-value (get library-attributes property-key))
-    (if (= (get-in library-schema [:properties property-key :typeahead "ontology"]) "ontology") [:span {:style {:fontStyle "italic"}} (str " (DOID: " (style/url-to-doid (get library-attributes :library:diseaseOntologyDOID)) ")")])]]) ;; TODO: fix this
+    (if (= (get-in library-schema [:properties property-key :typeahead]) "ontology") [:span {:style {:fontStyle "italic"}} (str " (DOID: " (style/url-to-doid (get library-attributes :library:diseaseOntologyDOID)) ")")])]]) ;; TODO: fix this
 
 
 (defn- resolve-hidden [property-key workspace doid]
