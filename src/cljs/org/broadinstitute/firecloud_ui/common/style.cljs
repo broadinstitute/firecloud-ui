@@ -126,6 +126,3 @@
 (defn render-entity [namespace name snapshot-id]
   (render-name-id (str namespace "/" name) snapshot-id))
 
-(defn url-to-doid [url]
-  (second (clojure.string/split url #"DOID_")))
-

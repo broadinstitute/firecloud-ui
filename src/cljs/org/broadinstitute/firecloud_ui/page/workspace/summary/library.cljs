@@ -30,7 +30,9 @@
     (get-in library-schema [:properties property-key :title])]
    [:div {:style {:flexBasis "60%"}}
     (render-value (get library-attributes property-key))
-    (if (= (get-in library-schema [:properties property-key :typeahead]) "ontology") [:span {:style {:fontStyle "italic"}} (str " (DOID: " (style/url-to-doid (get library-attributes :library:diseaseOntologyDOID)) ")")])]]) ;; TODO: fix this
+    (if (= (get-in library-schema [:properties property-key :typeahead]) "ontology")
+      ;; check if it's a doid ontology?
+      [:span {:style {:fontStyle "italic"}} (str " (" (common/url-to-doid (get library-attributes :library:diseaseOntologyDOID)) ")")])]])
 
 
 (defn- resolve-hidden [property-key workspace doid]
@@ -38,8 +40,8 @@
     :workspaceId (get-in workspace [:workspace :workspaceId])
     :workspaceNamespace (get-in workspace [:workspace :namespace])
     :workspaceName (get-in workspace [:workspace :name])
-    nil)
-  :diseaseOntologyDOID doid)
+    :library:diseaseOntologyDOID doid
+    nil))
 
 (def ^:private ENUM_EMPTY_CHOICE "<select an option>")
 
@@ -77,12 +79,11 @@
                                          (if (aget obj "loading")
                                            (aget obj "text")
                                            (str "<div style='font-weight: bold'>" (aget obj "label")
-                                                "<div style='float: right; font-weight: normal'> DOID: "
-                                                (style/url-to-doid (aget obj "id")) "</div></div>"
-                                                "<div style='font-size: small'> "
+                                                "<div style='float: right; font-weight: normal'>"
+                                                (common/url-to-doid (aget obj "id")) "</div></div>"
                                                 (if (not (nil? (aget obj "definition")))
-                                                  (aget obj "definition") "</div>"))))
-                       :escapeMarkup (fn [markup] markup)
+                                                  (str "<div style='font-size: small'> " (aget obj "definition") "</div>")))))
+                       :escapeMarkup identity
                        :templateSelection (fn [obj]
                                             (on-item-selected (aget obj "id") (aget obj "label"))
                                             (aget obj "label"))
