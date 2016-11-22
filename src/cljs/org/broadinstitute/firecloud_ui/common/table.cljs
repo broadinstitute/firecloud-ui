@@ -224,9 +224,9 @@
                            (swap! state assoc-in [:column-meta column-index :visible?] visible?)))})}])])
               (when filterable?
                 [:div {:style {:display "inline-block" :marginRight "1em"}}
-                 [table-utils/TextFilter {:initial-text (get-in @state [:query-params :filter-text])
-                                          :on-filter #(swap! state update-in [:query-params]
-                                                             assoc :filter-text % :current-page 1)}]])
+                 [comps/TextFilter {:initial-text (get-in @state [:query-params :filter-text])
+                                    :on-filter #(swap! state update-in [:query-params]
+                                                       assoc :filter-text % :current-page 1)}]])
               (when (:filter-groups props)
                 [:div {:style {:display "inline-block" :marginRight "1em"}}
                  [table-utils/FilterGroupBar
@@ -346,7 +346,10 @@
 
 
 (react/defc Table
-  {:get-default-props get-default-table-props
+  {:update-query-params
+   (fn [{:keys [state]} new-params]
+     (swap! state update :query-params merge new-params))
+   :get-default-props get-default-table-props
    :get-initial-state get-initial-table-state
    :render render-table
    :get-ordered-columns

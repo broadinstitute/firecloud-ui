@@ -82,9 +82,10 @@
             [Table
              (merge props
                     {:key selected-entity-type
-                     :state-key (str (common/workspace-id->string (:workspace-id props)) ":data" selected-entity-type)
+                     :state-key (when selected-entity-type
+                                  (str (common/workspace-id->string (:workspace-id props)) ":data" selected-entity-type))
                      :columns columns
-                     :column-defaults (get (:column-defaults props) selected-entity-type)
+                     :column-defaults (get (:column-defaults props) (some-> selected-entity-type name))
                      :always-sort? true
                      :pagination (react/call :pagination this)
                      :filter-groups (map (fn [type]
@@ -112,17 +113,17 @@
            (callback {:group-count 0 :filtered-count 0 :rows []})
            (let [type (nth entity-types filter-group-index)]
              (endpoints/call-ajax-orch
-               {:endpoint (endpoints/get-entities-paginated (:workspace-id props) (name type)
-                                                            {"page" current-page
-                                                             "pageSize" rows-per-page
-                                                             "filterTerms" (js/encodeURIComponent filter-text)
-                                                             "sortField" sort-column
-                                                             "sortDirection" (name sort-order)})
-                :on-done (fn [{:keys [success? get-parsed-response status-text status-code]}]
-                           (if success?
-                             (let [{:keys [results]
-                                    {:keys [unfilteredCount filteredCount]} :resultMetadata} (get-parsed-response)]
-                               (callback {:group-count unfilteredCount
-                                          :filtered-count filteredCount
-                                          :rows results}))
-                             (callback {:error (str status-text " (" status-code ")")})))}))))))})
+              {:endpoint (endpoints/get-entities-paginated (:workspace-id props) (name type)
+                                                           {"page" current-page
+                                                            "pageSize" rows-per-page
+                                                            "filterTerms" (js/encodeURIComponent filter-text)
+                                                            "sortField" sort-column
+                                                            "sortDirection" (name sort-order)})
+               :on-done (fn [{:keys [success? get-parsed-response status-text status-code]}]
+                          (if success?
+                            (let [{:keys [results]
+                                   {:keys [unfilteredCount filteredCount]} :resultMetadata} (get-parsed-response)]
+                              (callback {:group-count unfilteredCount
+                                         :filtered-count filteredCount
+                                         :rows results}))
+                            (callback {:error (str status-text " (" status-code ")")})))}))))))})

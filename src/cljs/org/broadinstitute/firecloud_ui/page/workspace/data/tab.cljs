@@ -13,6 +13,7 @@
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
     [org.broadinstitute.firecloud-ui.page.workspace.data.copy-data-workspaces :as copy-data-workspaces]
     [org.broadinstitute.firecloud-ui.page.workspace.data.import-data :as import-data]
+    [org.broadinstitute.firecloud-ui.persistence :as persistence]
     [org.broadinstitute.firecloud-ui.utils :as utils :refer [access-token]]))
 
 
@@ -74,7 +75,7 @@
               :column-defaults (try
                                  (utils/parse-json-string (get-in workspace [:workspace :workspace-attributes :workspace-column-defaults]))
                                  (catch js/Object e
-                                   nil))
+                                   (utils/jslog e) nil))
               :toolbar (fn [built-in]
                          [:div {:style {:display "flex" :justifyContent "flex-start" :alignItems "baseline"}}
                           [:div {} built-in]
@@ -82,7 +83,15 @@
                             [:a {:style {:textDecoration "none" :margin "7px 0 0 1em"}
                                  :href (str (config/api-url-root) "/cookie-authed/workspaces/"
                                             (:namespace workspace-id) "/"
-                                            (:name workspace-id) "/entities/" selected-entity-type "/tsv")
+                                            (:name workspace-id) "/entities/" selected-entity-type "/tsv"
+                                            "?attributeNames="
+                                            (->> (persistence/try-restore
+                                                  {:key (str (common/workspace-id->string workspace-id) ":data:" selected-entity-type)
+                                                   :initial (constantly {})})
+                                                 :column-meta
+                                                 (filter :visible?)
+                                                 (map :header)
+                                                 (clojure.string/join ",")))
                                  :onClick #(utils/set-access-token-cookie @access-token)
                                  :target "_blank"}
                              (str "Download '" selected-entity-type "' data")])
