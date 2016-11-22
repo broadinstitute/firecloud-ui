@@ -16,7 +16,6 @@
     [org.broadinstitute.firecloud-ui.config :as gconfig]
     ))
 
-
 (defn- filter-empty [list]
   (vec (remove blank? (map trim list))))
 
@@ -145,15 +144,16 @@
 
 
 (defn- input-output-list [config value-type invalid-values editing? all-values]
+  (let [vallist (config value-type)]
   (create-section
     [:div {}
      (map
        (fn [m]
          (let [[field-name inputType outputType optional?] (map m ["name" "inputType" "outputType" "optional"])
                type (or inputType outputType)
-               field-value (get (config value-type) field-name)
+               field-value (get vallist field-name "")
                error (invalid-values field-name)]
-           [:div {}
+           [:div {:key field-name}
             [:div {:style {:display "flex" :alignItems "baseline" :marginBottom "0.5em"}}
              [:div {:style {:marginRight "1em" :padding "0.5em"
                             :backgroundColor (:background-light style/colors)
@@ -161,7 +161,7 @@
               (str field-name ": (" (when optional? "optional ") type ")")]
              (when editing?
                (style/create-text-field {:ref (str (if (= value-type "inputs") "in" "out") "_" field-name)
-                                         :defaultValue field-value}))
+                                         :defaultValue field-value }))
              (when-not editing?
                (or field-value [:span {:style {:fontStyle "italic"}} "No value entered"]))
              (when (and error (not editing?))
@@ -174,7 +174,7 @@
                              :display "inline-block"
                              :border style/standard-line :borderRadius 2}}
                error])]))
-       all-values)]))
+       all-values)])))
 
 (defn- render-main-display [this wrapped-config editing? inputs-outputs methods]
   (let [config (get-in wrapped-config ["methodConfiguration"])
