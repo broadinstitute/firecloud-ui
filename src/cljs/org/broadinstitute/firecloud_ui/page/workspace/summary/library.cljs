@@ -30,7 +30,7 @@
     (get-in library-schema [:properties property-key :title])]
    [:div {:style {:flexBasis "60%"}}
     (render-value (get library-attributes property-key))
-    (if (= property-key :library:diseaseOntology) [:span {:style {:fontStyle "italic"}} (str " (DOID: " (style/url-to-doid (get library-attributes :library:diseaseOntologyDOID)) ")")])]])
+    (if (= (get-in library-schema [:properties property-key :typeahead "ontology"]) "ontology") [:span {:style {:fontStyle "italic"}} (str " (DOID: " (style/url-to-doid (get library-attributes :library:diseaseOntologyDOID)) ")")])]]) ;; TODO: fix this
 
 
 (defn- resolve-hidden [property-key workspace doid]
@@ -64,7 +64,7 @@
 (defn select2-typeahead [placeholder r on-item-selected]
   (.select2 (js/$ r)
             (clj->js { :ajax { :url (fn [params]
-                                      (str (config/api-url-root) "/duos-autocomplete/" (aget params "term")))
+                                      (str (config/api-url-root) "/duos/autocomplete/" (aget params "term")))
                                :dataType "json"
                                :delay 250
                                :processResults (fn [data]
@@ -128,9 +128,9 @@
                              (clojure.string/capitalize type))])])
                      (cond
                        enum (style/create-identity-select {:ref pk-str
-                                                             :defaultValue (get existing property-key ENUM_EMPTY_CHOICE)}
-                                                            (cons ENUM_EMPTY_CHOICE enum))
-                       (= typeahead "ontology") [:select {:ref "duos-typeahead"
+                                                           :defaultValue (get existing property-key ENUM_EMPTY_CHOICE)}
+                                                          (cons ENUM_EMPTY_CHOICE enum))
+                       (= typeahead "ontology") [:select {:ref pk-str
                                                           :style {:width "100%"}}]
                        :else [input/TextField {:ref pk-str
                                                :style {:width "100%"}
@@ -173,12 +173,17 @@
                              (swap! state assoc :server-error (get-parsed-response false))))})))))
    :component-did-mount
    (fn [{:keys [props state refs]}]
-     (let [attributes (get-in props [:workspace :workspace :library-attributes])]
-       (select2-typeahead {:id  (get attributes :library:diseaseOntologyDOID -1 )
-                           :label (get attributes :library:diseaseOntology "Select a disease ontology.")}
-                          (@refs "duos-typeahead")
-                          (fn [id label]
-                            (swap! state assoc :ontologyText label :ontologyDOID id)))))})
+     (let
+       [attributes (get-in props [:workspace :workspace :library-attributes])
+        properties (get-in props [:library-schema :properties])]
+       (doseq [[property-key {:keys [typeahead] :as property}] properties]
+                (if (= typeahead "ontology")
+                  (let [pk-str (name property-key)]
+                    (select2-typeahead {:id  (get attributes :library:diseaseOntologyDOID -1 )
+                                        :label (get attributes :library:diseaseOntology "Select a disease ontology.")}
+                                       (@refs pk-str)
+                                       (fn [id label]
+                                         (swap! state assoc :ontologyText label :ontologyDOID id))))))))})
 
 (react/defc LibraryAttributeViewer
   {:render
