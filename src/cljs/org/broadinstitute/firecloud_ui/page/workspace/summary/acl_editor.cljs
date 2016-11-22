@@ -112,7 +112,7 @@
                   #(reduce
                     (fn [state [k v]]
                       (update state
-                              (if (= v "PROJECT_OWNER")
+                              (if (= (v "accessLevel") "PROJECT_OWNER")
                                 :project-owner-acl-vec
                                 :non-project-owner-acl-vec)
                               conj {:email k
