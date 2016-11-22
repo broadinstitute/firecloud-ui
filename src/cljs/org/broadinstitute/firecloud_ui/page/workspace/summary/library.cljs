@@ -191,7 +191,7 @@
    (fn [{:keys [props state]}]
      (let [{:keys [library-attributes library-schema]} props
            form-properties (select-keys props [:library-schema :workspace :workspace-id :request-refresh])
-           primary-properties [:library:numSubjects :library:datatype :library:dataUseRestriction :library:diseaseOntology] ;; TODO replace with new field from schema
+           primary-properties [:library:diseaseOntology :library:indication :library:numSubjects :library:datatype :library:dataUseRestriction] ;; TODO replace with new field from schema
            secondary-properties (->> (calculate-display-properties library-schema)
                                      (remove (partial contains? (set primary-properties))))]
        [:div {}
