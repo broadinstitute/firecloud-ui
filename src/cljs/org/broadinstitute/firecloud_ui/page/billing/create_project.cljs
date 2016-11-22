@@ -66,15 +66,21 @@
      (react/call :get-billing-accounts this))
    :.enable-billing-permissions
    (fn [{:keys [this]}]
-     (-> @utils/google-auth2-instance
-         (.grantOfflineAccess (clj->js {:redirect_uri "postmessage"
-                                        :scope "https://www.googleapis.com/auth/cloud-billing"}))
-         (.then (fn [response]
-                  ;; At some point, the access token gets replaced with a new one, but it doesn't
-                  ;; happen right away, so this dummy delay is necessary.
-                  (js/setTimeout
-                   #(react/call :get-billing-accounts this)
-                   1000)))))
+     (let [old-access-token (utils/get-access-token)]
+       (-> @utils/google-auth2-instance
+           (.grantOfflineAccess (clj->js {:redirect_uri "postmessage"
+                                          :scope "https://www.googleapis.com/auth/cloud-billing"}))
+           (.then (fn [response]
+                    ;; At some point, the access token gets replaced with a new one, but it doesn't
+                    ;; happen right away, so we have to loop.
+                    (js/setTimeout
+                     #(react/call :.continue-with-new-access-token this old-access-token)
+                     100))))))
+   :.continue-with-new-access-token
+   (fn [{:keys [this]} old-access-token]
+     (if-not (= (utils/get-access-token) old-access-token)
+       (react/call :get-billing-accounts this)
+       (js/setTimeout #(react/call :.continue-with-new-access-token this old-access-token) 100)))
    :get-billing-accounts
    (fn [{:keys [state]}]
      (swap! state dissoc :billing-accounts :billing-acct-error :get-error-details)
