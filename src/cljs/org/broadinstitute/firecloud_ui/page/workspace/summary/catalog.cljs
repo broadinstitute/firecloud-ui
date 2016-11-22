@@ -39,34 +39,36 @@
 
 (react/defc Questions
   {:validate
-   (fn [{:keys []}]
-     (utils/log "validating questions")
+   (fn [{:keys [props state]}]
      nil)
    :get-attributes
    (fn [{:keys [state]}]
-     (->> (:attributes @state)
-          (filter (fn [[_ v]] (some? v)))
-          (into {})))
+     (utils/filter-values some? (:attributes @state)))
    :get-initial-state
    (fn [{:keys [props]}]
-     {:attributes
-      (let [{:keys [questions attributes library-schema]} props]
-        (reduce (fn [m k] (assoc m k (get attributes k
-                                          (get-in library-schema [:properties k :default]))))
+     (let [{:keys [questions attributes library-schema]} props]
+       {:attributes
+        (reduce (fn [map prop-key] (assoc map prop-key (get attributes prop-key
+                                                            (get-in library-schema [:properties prop-key :default]))))
                 {}
-                (map (comp keyword :property) questions)))})
+                (map (comp keyword :property) questions))
+        :any-required? (some :required questions)}))
    :render
    (fn [{:keys [props state]}]
      (let [{:keys [library-schema questions enumerate]} props]
        [:div {}
+        (when (:any-required? @state)
+          [:div {:style {:fontWeight "bold" :marginBottom "0.5em"}} "Required attributes in bold"])
         (map-indexed
-          (fn [index {:keys [property required inputHint footerHint]}]
+          (fn [index {:keys [property required inputHint]}]
             (let [property-kwd (keyword property)
-                  {:keys [title type enum items minimum]} (get-in library-schema [:properties property-kwd])]
+                  {:keys [title type enum minimum]} (get-in library-schema [:properties property-kwd])
+                  update-property #(swap! state update :attributes assoc property-kwd (.. % -target -value))]
               [:div {}
-               (when enumerate
-                 (str (inc index) ". "))
-               title
+               [:div {:style {:fontWeight (when required "bold")}}
+                (str
+                  (when enumerate (str (inc index) ". "))
+                  title)]
                (cond enum
                      (if (< (count enum) 4)
                        [:div {:style {:margin "0.75em 0 0.75em 1em"}}
@@ -78,27 +80,28 @@
                                           (when (= enum-val (get (:attributes @state) property-kwd)) {:checked true}))]
                                 [:div {:style {:padding "0 0.4em" :fontWeight "500"}} enum-val]])
                              enum)]
-                       (style/create-identity-select {:ref property
-                                                      :value (get (:attributes @state) property-kwd ENUM_EMPTY_CHOICE)
-                                                      :onChange #(swap! state update :attributes assoc property-kwd (.. % -target -value))}
+                       (style/create-identity-select {:value (get (:attributes @state) property-kwd ENUM_EMPTY_CHOICE)
+                                                      :onChange update-property}
                                                      (cons ENUM_EMPTY_CHOICE enum)))
-
                      (= type "text")
                      (style/create-text-area {:style {:width "100%"}
                                               :value (get (:attributes @state) property-kwd)
-                                              :onChange #(swap! state update :attributes assoc property-kwd (.. % -target -value))
+                                              :onChange update-property
                                               :rows 3})
-
                      :else
-                     [input/TextField {:ref property
-                                       :style {:width "100%"}
-                                       :placeholder inputHint
-                                       :value (render-value (get (:attributes @state) property-kwd))
-                                       :onChange #(swap! state update :attributes assoc property-kwd (.. % -target -value))
-                                       :predicates [(when required
-                                                      (input/nonempty property))
-                                                    (when (= type "integer")
-                                                      (input/integer property :min minimum))]}])]))
+                     (style/create-text-field {:style {:width "100%"}
+                                               :type (case type
+                                                       "date" "date"
+                                                       ;"integer" "number"
+                                                       "text")
+                                               ;:min minimum
+                                               :pattern (when (= type "integer")
+                                                          (if (>= minimum 0)
+                                                            "[0-9]*"
+                                                            "-?[0-9]*"))
+                                               :placeholder inputHint
+                                               :value (get (:attributes @state) property-kwd)
+                                               :onChange update-property}))]))
           questions)]))})
 
 
@@ -126,16 +129,14 @@
               (let [selected (= index (:selected-index @state))]
                 [:div {}
                  [:label {:style {:display "flex" :alignItems "center" :cursor "pointer"}}
-                  [:input (merge
-                            {:type "radio" :style {:cursor "pointer"}
-                             :onClick #(swap! state assoc :selected-index index)}
-                            (when selected {:checked true}))]
+                  [:input (merge {:type "radio" :style {:cursor "pointer"}
+                                  :onClick #(swap! state assoc :selected-index index)}
+                                 (when selected {:checked true}))]
                   [:div {:style {:padding "1em"}} title]]
                  (when selected
                    [:div {:style {:marginBottom "1.5em"}}
-                    [Questions (merge
-                                 (select-keys props [:library-schema :attributes])
-                                 {:ref "questions" :enumerate enumerate :questions questions})]])]))
+                    [Questions (merge (select-keys props [:library-schema :attributes])
+                                      {:ref "questions" :enumerate enumerate :questions questions})]])]))
             (:options switch)))]))})
 
 
@@ -151,12 +152,10 @@
      (let [{:keys [library-schema page-num]} props
            page (get-in library-schema [:wizard page-num])
            {:keys [questions enumerate switch]} page]
-       (cond questions [Questions (merge
-                                    (select-keys props [:library-schema :attributes])
-                                    {:ref "subcomponent" :enumerate enumerate :questions questions})]
-             switch [Options (merge
-                               (select-keys props [:library-schema :attributes])
-                               {:ref "subcomponent" :switch switch})])))})
+       (cond questions [Questions (merge (select-keys props [:library-schema :attributes])
+                                         {:ref "subcomponent" :enumerate enumerate :questions questions})]
+             switch [Options (merge (select-keys props [:library-schema :attributes])
+                                    {:ref "subcomponent" :switch switch})])))})
 
 
 (defn- render-wizard-breadcrumbs [{:keys [library-schema page-num]}]
@@ -193,7 +192,8 @@
         [:div {:style {:padding "22px 24px 40px" :backgroundColor (:background-light style/colors)}}
          [:div {:style {:display "flex" :width 850}}
           (render-wizard-breadcrumbs {:library-schema library-schema :page-num (:page @state)})
-          [:div {:style {:flex "0 0 600px" :maxHeight 400 :padding "1em" :overflow "auto" :border style/standard-line :boxSizing "border-box"}}
+          [:div {:style {:flex "0 0 600px" :maxHeight 400 :padding "1em" :overflow "auto"
+                         :border style/standard-line :boxSizing "border-box"}}
            [WizardPage {:key (:page @state)
                         :ref "wizard-page"
                         :library-schema library-schema
