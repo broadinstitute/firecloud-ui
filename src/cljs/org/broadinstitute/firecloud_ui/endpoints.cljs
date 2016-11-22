@@ -855,11 +855,6 @@
   {:path "/library/search"
    :method :post })
 
-
-(defn get-refresh-token-date []
-  {:path "/profile/refreshTokenDate"
-   :method :get})
-
 (defn submissions-queue-status []
   {:path "/submissions/queueStatus"
    :method :get
