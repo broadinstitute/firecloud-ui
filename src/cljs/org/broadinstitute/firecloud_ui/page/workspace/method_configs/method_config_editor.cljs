@@ -143,38 +143,37 @@
                                 :onClick #(stop-editing state)}])]))])
 
 
-(defn- input-output-list [config value-type invalid-values editing? all-values]
-  (let [vallist (config value-type)]
+(defn- input-output-list [values ref-prefix invalid-values editing? all-values]
   (create-section
-    [:div {}
-     (map
-       (fn [m]
-         (let [[field-name inputType outputType optional?] (map m ["name" "inputType" "outputType" "optional"])
-               type (or inputType outputType)
-               field-value (get vallist field-name "")
-               error (invalid-values field-name)]
-           [:div {:key field-name}
-            [:div {:style {:display "flex" :alignItems "baseline" :marginBottom "0.5em"}}
-             [:div {:style {:marginRight "1em" :padding "0.5em"
-                            :backgroundColor (:background-light style/colors)
-                            :border style/standard-line :borderRadius 2}}
-              (str field-name ": (" (when optional? "optional ") type ")")]
-             (when editing?
-               (style/create-text-field {:ref (str (if (= value-type "inputs") "in" "out") "_" field-name)
-                                         :defaultValue field-value }))
-             (when-not editing?
-               (or field-value [:span {:style {:fontStyle "italic"}} "No value entered"]))
-             (when (and error (not editing?))
-               (icons/icon {:style {:margin "0 0 0 0.7em" :alignSelf "center"
-                                    :color (:exception-state style/colors)}}
-                           :error))]
-            (when error
-              [:div {:style {:padding "0.5em" :marginBottom "0.5em"
-                             :backgroundColor (:exception-state style/colors)
-                             :display "inline-block"
-                             :border style/standard-line :borderRadius 2}}
-               error])]))
-       all-values)])))
+   [:div {}
+    (map
+     (fn [m]
+       (let [[field-name inputType outputType optional?] (map m ["name" "inputType" "outputType" "optional"])
+             type (or inputType outputType)
+             field-value (get values field-name "")
+             error (invalid-values field-name)]
+         [:div {:key field-name}
+          [:div {:style {:display "flex" :alignItems "baseline" :marginBottom "0.5em"}}
+           [:div {:style {:marginRight "1em" :padding "0.5em"
+                          :backgroundColor (:background-light style/colors)
+                          :border style/standard-line :borderRadius 2}}
+            (str field-name ": (" (when optional? "optional ") type ")")]
+           (when editing?
+             (style/create-text-field {:ref (str ref-prefix "_" field-name)
+                                       :defaultValue field-value}))
+           (when-not editing?
+             (or field-value [:span {:style {:fontStyle "italic"}} "No value entered"]))
+           (when (and error (not editing?))
+             (icons/icon {:style {:margin "0 0 0 0.7em" :alignSelf "center"
+                                  :color (:exception-state style/colors)}}
+                         :error))]
+          (when error
+            [:div {:style {:padding "0.5em" :marginBottom "0.5em"
+                           :backgroundColor (:exception-state style/colors)
+                           :display "inline-block"
+                           :border style/standard-line :borderRadius 2}}
+             error])]))
+     all-values)]))
 
 (defn- render-main-display [this wrapped-config editing? inputs-outputs methods]
   (let [config (get-in wrapped-config ["methodConfiguration"])
@@ -206,9 +205,10 @@
                                        root-entity-types)
          [:div {:style {:padding "0.5em 0 1em 0"}} (config "rootEntityType")]))
      (create-section-header "Inputs")
-     (input-output-list config "inputs" invalid-inputs editing? (inputs-outputs "inputs"))
+     (input-output-list (config "inputs") "in" invalid-inputs editing? (inputs-outputs "inputs"))
      (create-section-header "Outputs")
-     (input-output-list config "outputs" invalid-outputs editing? (inputs-outputs "outputs"))]))
+     (input-output-list
+      (config "outputs") "out" invalid-outputs editing? (inputs-outputs "outputs"))]))
 
 (defn- render-display [this state refs props]
   (let [wrapped-config (:loaded-config @state)
