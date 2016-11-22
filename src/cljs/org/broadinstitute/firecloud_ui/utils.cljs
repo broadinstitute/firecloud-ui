@@ -258,8 +258,16 @@
 
 (defn filter-keys [pred m]
   (into (empty m)
-        (filter (fn [[k _]] (pred k)) m)))
+        (filter (comp pred key) m)))
 
 (defn filter-values [pred m]
   (into (empty m)
-        (filter (fn [[_ v]] (pred v)) m)))
+        (filter (comp pred val) m)))
+
+(defn map-keys [f m]
+  (into (empty m)
+        (map (fn [[k v]] [(f k) v]) m)))
+
+(defn map-values [f m]
+  (into (empty m)
+        (map (fn [[k v]] [k (f v)]) m)))

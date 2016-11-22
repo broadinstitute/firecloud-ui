@@ -1,6 +1,6 @@
 (ns org.broadinstitute.firecloud-ui.page.workspace.summary.catalog
   (:require
-    [clojure.string :refer [trim]]
+    [clojure.string :refer [join split trim]]
     [dmohs.react :as react]
     [org.broadinstitute.firecloud-ui.common :as common]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
@@ -18,17 +18,12 @@
               [;; strip off the "library:" from the key
                (let [[_ _ attr] (re-find #"(.*):(.*)" (name k))]
                  (keyword attr))
-               ;; unpack list type
+               ;; unpack lists and convert everything to a string
                (if (map? v)
-                 (:items v)
-                 v)]))
+                 (join ", " (:items v))
+                 (str v))]))
        (into {})))
 
-
-(defn- render-value [value]
-  (cond (sequential? value) (clojure.string/join ", " value)
-        (common/attribute-list? value) (clojure.string/join ", " (common/attribute-values value))
-        :else value))
 
 (def ^:private ENUM_EMPTY_CHOICE "<select an option>")
 
@@ -37,13 +32,41 @@
     value))
 
 
+(defn- parse-attributes [attributes library-schema]
+  (->> attributes
+       (map (fn [[k v]]
+              (let [property (get-in library-schema [:properties k])
+                    {:keys [type items]} property
+                    value (case type
+                            "integer" (int v)
+                            "array" (let [tokens (keep (comp not-empty trim) (split v #","))]
+                                      (case (:type items)
+                                        "integer" (map int tokens)
+                                        tokens))
+                            v)]
+                [k value])))
+       (into {})))
+
+
 (react/defc Questions
   {:validate
-   (fn [{:keys [props state]}]
-     nil)
+   (fn [{:keys [props state this]}]
+     (let [{:keys [questions]} props
+           required-props (->> questions (filter :required) (map (comp keyword :property)))
+           processed-attributes (->> (:attributes @state)
+                                     (utils/map-values (fn [val]
+                                                         (if (string? val)
+                                                           (not-empty (trim val))
+                                                           val)))
+                                     (utils/filter-values some?))
+           missing-props (set (remove processed-attributes required-props))]
+       (set! (.-processed-attributes this) processed-attributes)
+       (when-not (empty? missing-props)
+         (swap! state assoc :invalid-properties missing-props)
+         "Please provide all required attributes")))
    :get-attributes
-   (fn [{:keys [state]}]
-     (utils/filter-values some? (:attributes @state)))
+   (fn [{:keys [props this]}]
+     (parse-attributes (.-processed-attributes this) (:library-schema props)))
    :get-initial-state
    (fn [{:keys [props]}]
      (let [{:keys [questions attributes library-schema]} props]
@@ -63,15 +86,19 @@
           (fn [index {:keys [property required inputHint]}]
             (let [property-kwd (keyword property)
                   {:keys [title type enum minimum]} (get-in library-schema [:properties property-kwd])
+                  error? (contains? (:invalid-properties @state) property-kwd)
+                  colorize (fn [style key] (merge style (when error? {key (:exception-state style/colors)})))
                   update-property #(swap! state update :attributes assoc property-kwd (.. % -target -value))]
               [:div {}
-               [:div {:style {:fontWeight (when required "bold")}}
+               [:div {:style (colorize {:fontWeight (when required "bold")} :color)}
                 (str
                   (when enumerate (str (inc index) ". "))
                   title)]
                (cond enum
                      (if (< (count enum) 4)
-                       [:div {:style {:margin "0.75em 0 0.75em 1em"}}
+                       [:div {:style {:display "inline-block"
+                                      :margin "0.75em 0 0.75em 1em"
+                                      :border (str "1px solid " (if error? (:exception-state style/colors) "transparent"))}}
                         (map (fn [enum-val]
                                [:label {:style {:display "inline-flex" :alignItems "center" :cursor "pointer" :marginRight "2em"}}
                                 [:input (merge
@@ -81,24 +108,21 @@
                                 [:div {:style {:padding "0 0.4em" :fontWeight "500"}} enum-val]])
                              enum)]
                        (style/create-identity-select {:value (get (:attributes @state) property-kwd ENUM_EMPTY_CHOICE)
+                                                      :style (colorize {} :borderColor)
                                                       :onChange update-property}
                                                      (cons ENUM_EMPTY_CHOICE enum)))
                      (= type "text")
-                     (style/create-text-area {:style {:width "100%"}
+                     (style/create-text-area {:style (colorize {:width "100%"} :borderColor)
                                               :value (get (:attributes @state) property-kwd)
                                               :onChange update-property
                                               :rows 3})
                      :else
-                     (style/create-text-field {:style {:width "100%"}
+                     (style/create-text-field {:style (colorize {:width "100%"} :borderColor)
                                                :type (case type
                                                        "date" "date"
-                                                       ;"integer" "number"
+                                                       "integer" "number"
                                                        "text")
-                                               ;:min minimum
-                                               :pattern (when (= type "integer")
-                                                          (if (>= minimum 0)
-                                                            "[0-9]*"
-                                                            "-?[0-9]*"))
+                                               :min minimum
                                                :placeholder inputHint
                                                :value (get (:attributes @state) property-kwd)
                                                :onChange update-property}))]))
@@ -173,10 +197,7 @@
 
 
 (react/defc CatalogWizard
-  {:get-attributes
-   (fn [{:keys [state]}]
-     (:attributes @state))
-   :get-initial-state
+  {:get-initial-state
    (fn [{:keys [props]}]
      {:page 0
       :attributes (get-initial-attributes (:workspace props))})
@@ -199,6 +220,9 @@
                         :library-schema library-schema
                         :page-num (:page @state)
                         :attributes (:attributes @state)}]]]
+         (when-let [error (:validation-error @state)]
+           [:div {:style {:marginTop "1em" :color (:exception-state style/colors) :textAlign "center"}}
+            error])
          [:div {:style {:marginTop 40 :textAlign "center"}}
           [:a {:className "cancel"
                :style {:marginRight 27 :marginTop 2 :padding "0.5em"
@@ -210,7 +234,7 @@
                :onKeyDown (common/create-key-handler [:space :enter] modal/pop-modal)}
            "Cancel"]
           [comps/Button {:text "Previous"
-                         :onClick #(swap! state update :page dec)
+                         :onClick (fn [_] (swap! state #(-> % (update :page dec) (dissoc :validation-error))))
                          :style {:width 80 :marginRight 27}
                          :disabled? (zero? (:page @state))}]
           [comps/Button {:text (if (< (:page @state) (-> library-schema :wizard count dec)) "Next" "Submit")
@@ -218,12 +242,13 @@
                          :style {:width 80}}]]]]))
    :next-page
    (fn [{:keys [props state refs]}]
+     (swap! state dissoc :validation-error)
      (if-let [error-message (react/call :validate (@refs "wizard-page"))]
-       (utils/log error-message)
-       (do (swap! state update :attributes merge (react/call :get-attributes (@refs "wizard-page")))
-           (if (< (:page @state) (-> props :library-schema :wizard count dec))
-             (swap! state update :page inc)
-             (utils/log "TODO: submit")))))})
+       (swap! state assoc :validation-error error-message)
+       (let [new-attributes (merge (:attributes @state) (react/call :get-attributes (@refs "wizard-page")))]
+         (if (< (:page @state) (-> props :library-schema :wizard count dec))
+           (swap! state #(-> % (update :page inc) (assoc :attributes new-attributes)))
+           (utils/cljslog "TODO: submit" new-attributes)))))})
 
 
 (react/defc CatalogButton
