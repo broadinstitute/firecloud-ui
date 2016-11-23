@@ -75,7 +75,7 @@
               :column-defaults (try
                                  (u/parse-json-string (get-in workspace [:workspace :workspace-attributes :workspace-column-defaults]))
                                  (catch js/Object e
-                                   (utils/jslog e) nil))
+                                   (u/jslog e) nil))
               :toolbar (fn [built-in]
                          [:div {:style {:display "flex" :justifyContent "flex-start" :alignItems "baseline"}}
                           [:div {} built-in]
