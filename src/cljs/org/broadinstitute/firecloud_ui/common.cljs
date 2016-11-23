@@ -177,4 +177,5 @@
           :else 1)))
 
 (defn url-to-doid [url]
-   (str "DOID: " (second (clojure.string/split url #"DOID_"))))
+  ;; TODO when we support multiple ontologies, we'll need to look for some string other than "DOID"
+  (str "DOID: " (second (clojure.string/split url #"DOID_"))))
