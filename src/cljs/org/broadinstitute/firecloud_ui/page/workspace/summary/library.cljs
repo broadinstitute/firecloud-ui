@@ -32,7 +32,8 @@
     (render-value (get library-attributes property-key))
     (if (= (get-in library-schema [:properties property-key :typeahead]) "ontology")
       ;; TODO when we support multiple ontology-driven properties, can't hardcode the property name here
-      [:span {:style {:fontStyle "italic"}} (str " (" (common/url-to-doid (get library-attributes :library:diseaseOntologyID)) ")")])]])
+      (if (not (nil? (get library-attributes :library:diseaseOntologyID)))
+        [:span {:style {:fontStyle "italic"}} (str " (" (common/url-to-doid (get library-attributes :library:diseaseOntologyID)) ")")]))]])
 
 
 (defn- resolve-hidden [property-key workspace id]
@@ -63,7 +64,7 @@
     (do (utils/log "unknown type: " type)
         value)))
 
-(defn select2-typeahead [placeholder r on-item-selected]
+(defn select2-typeahead [r on-item-selected]
   (.select2 (js/$ r)
             (clj->js { :ajax { :url (fn [params]
                                       ;; TODO may need a different endpoint when we support multiple ontologies
@@ -76,6 +77,7 @@
                                        (clj->js {}))}
                        :minimumInputLength 1
                        :cache true
+                       :allowClear true
                        :templateResult (fn [obj]
                                          (if (aget obj "loading")
                                            (aget obj "text")
@@ -88,7 +90,9 @@
                        :templateSelection (fn [obj]
                                             (on-item-selected (aget obj "id") (aget obj "label"))
                                             (aget obj "label"))
-                       :placeholder (clj->js placeholder)})))
+                       :placeholder (clj->js {:id nil
+                                              :label "Select a disease ontology."})})))
+
 
 (react/defc LibraryAttributeForm
   {:get-initial-state
@@ -133,7 +137,9 @@
                                                            :defaultValue (get existing property-key ENUM_EMPTY_CHOICE)}
                                                           (cons ENUM_EMPTY_CHOICE enum))
                        (= typeahead "ontology") [:select {:ref pk-str
-                                                          :style {:width "100%"}}]
+                                                          :style {:width "100%"}
+                                                          :defaultValue "no work"} ;; value is really (get :library-attributes :library:diseaseOntologyID)
+                                                [:option {:value "no work"} "WHY"]] ;; the text here should really be (get :library-attributes :library:diseaseOntologyLabel)
                        :else [input/TextField {:ref pk-str
                                                :style {:width "100%"}
                                                :placeholder inputHint
@@ -155,7 +161,7 @@
                                          value (cond hidden (resolve-hidden property-key (:workspace props) (:ontologyID @state))
                                                      enum (resolve-enum (common/get-text refs pk-str))
                                                      ;; TODO when we support multiple ontology-driven properties, can't rely on hardcoded values in state
-                                                     (= typeahead "ontology") (:ontologyText @state)
+                                                     (= typeahead "ontology") (if (not (nil? (:ontologyID @state))) (:ontologyText @state) nil)
                                                      :else (do (swap! validation-errors into (input/validate refs pk-str))
                                                                (resolve-field (input/get-text refs pk-str) property)))]
                                      (when value
@@ -177,14 +183,11 @@
    :component-did-mount
    (fn [{:keys [props state refs]}]
      (let
-       [attributes (get-in props [:workspace :workspace :library-attributes])
-        properties (get-in props [:library-schema :properties])]
+       [properties (get-in props [:library-schema :properties])]
        (doseq [[property-key {:keys [typeahead] :as property}] properties]
                 (if (= typeahead "ontology")
                   (let [pk-str (name property-key)]
-                    (select2-typeahead {:id  (get attributes :library:diseaseOntologyID -1 )
-                                        :label (get attributes :library:diseaseOntologyLabel "Select a disease ontology.")}
-                                       (@refs pk-str)
+                    (select2-typeahead (@refs pk-str)
                                        (fn [id label]
                                          ;; TODO when we support multiple ontology-driven properties, can't hardcode the keys in state or attributes
                                          (swap! state assoc :ontologyText label :ontologyID id))))))))})
@@ -194,7 +197,7 @@
    (fn [{:keys [props state]}]
      (let [{:keys [library-attributes library-schema]} props
            form-properties (select-keys props [:library-schema :workspace :workspace-id :request-refresh])
-           primary-properties [:library:diseaseOntologyLabel :library:indication :library:numSubjects :library:datatype :library:dataUseRestriction] ;; TODO replace with new field from schema
+           primary-properties [:library:diseaseOntologyLabel :library:numSubjects :library:datatype :library:dataUseRestriction] ;; TODO replace with new field from schema
            secondary-properties (->> (calculate-display-properties library-schema)
                                      (remove (partial contains? (set primary-properties))))]
        [:div {}
