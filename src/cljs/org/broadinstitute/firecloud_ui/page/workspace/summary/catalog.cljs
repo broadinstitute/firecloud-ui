@@ -13,16 +13,16 @@
 
 
 (defn- get-initial-attributes [workspace]
-  (->> workspace :workspace :library-attributes
-       (map (fn [[k v]]
-              [;; strip off the "library:" from the key
-               (let [[_ _ attr] (re-find #"(.*):(.*)" (name k))]
-                 (keyword attr))
-               ;; unpack lists and convert everything to a string
-               (if (map? v)
-                 (join ", " (:items v))
-                 (str v))]))
-       (into {})))
+  (utils/map-kv
+    (fn [k v]
+      [;; strip off the "library:" from the key
+       (let [[_ _ attr] (re-find #"(.*):(.*)" (name k))]
+         (keyword attr))
+       ;; unpack lists and convert everything to a string
+       (if (map? v)
+         (join ", " (:items v))
+         (str v))])
+    (get-in workspace [:workspace :library-attributes])))
 
 
 (def ^:private ENUM_EMPTY_CHOICE "<select an option>")
@@ -33,19 +33,19 @@
 
 
 (defn- parse-attributes [attributes library-schema]
-  (->> attributes
-       (map (fn [[k v]]
-              (let [property (get-in library-schema [:properties k])
-                    {:keys [type items]} property
-                    value (case type
-                            "integer" (int v)
-                            "array" (let [tokens (keep (comp not-empty trim) (split v #","))]
-                                      (case (:type items)
-                                        "integer" (map int tokens)
-                                        tokens))
-                            v)]
-                [k value])))
-       (into {})))
+  (utils/map-kv
+    (fn [k v]
+      (let [property (get-in library-schema [:properties k])
+            {:keys [type items]} property
+            value (case type
+                    "integer" (int v)
+                    "array" (let [tokens (keep (comp not-empty trim) (split v #","))]
+                              (case (:type items)
+                                "integer" (map int tokens)
+                                tokens))
+                    v)]
+        [k value]))
+    attributes))
 
 
 (react/defc Questions
@@ -79,28 +79,35 @@
    :render
    (fn [{:keys [props state]}]
      (let [{:keys [library-schema questions enumerate]} props]
-       [:div {}
-        (when (:any-required? @state)
-          [:div {:style {:fontWeight "bold" :marginBottom "0.5em"}} "Required attributes in bold"])
-        (map-indexed
-          (fn [index {:keys [property required inputHint]}]
+       [(if enumerate :ol :div) {}
+        (map
+          (fn [{:keys [property required inputHint]}]
             (let [property-kwd (keyword property)
-                  {:keys [title type enum minimum]} (get-in library-schema [:properties property-kwd])
+                  {:keys [title type enum minimum consentCode]} (get-in library-schema [:properties property-kwd])
                   error? (contains? (:invalid-properties @state) property-kwd)
-                  colorize (fn [style key] (merge style (when error? {key (:exception-state style/colors)})))
+                  colorize (fn [style] (merge style (when error? {:borderColor (:exception-state style/colors)})))
                   update-property #(swap! state update :attributes assoc property-kwd (.. % -target -value))]
-              [:div {}
-               [:div {:style (colorize {:fontWeight (when required "bold")} :color)}
-                (str
-                  (when enumerate (str (inc index) ". "))
-                  title)]
+              [(if enumerate :li :div) {}
+               [:div {}
+                title
+                (when consentCode
+                  (list
+                    " ["
+                    [:abbr {:style {:cursor "help" :whiteSpace "nowrap" :borderBottom "1px dotted"}
+                            :title (get-in library-schema [:consentCodes (keyword consentCode)])}
+                     consentCode]
+                    "]"))
+                (when required
+                  [:span {:style {:fontWeight "bold"
+                                  :color (when error? (:exception-state style/colors))}}
+                   " (required)"])]
                (cond enum
                      (if (< (count enum) 4)
                        [:div {:style {:display "inline-block"
-                                      :margin "0.75em 0 0.75em 1em"
-                                      :border (str "1px solid " (if error? (:exception-state style/colors) "transparent"))}}
+                                      :margin "0.75em 0 0.75em 1em"}}
                         (map (fn [enum-val]
-                               [:label {:style {:display "inline-flex" :alignItems "center" :cursor "pointer" :marginRight "2em"}}
+                               [:label {:style {:display "inline-flex" :alignItems "center" :cursor "pointer" :marginRight "2em"
+                                                :color (when error? (:exception-state style/colors))}}
                                 [:input (merge
                                           {:type "radio" :style {:cursor "pointer"}
                                            :onClick #(swap! state update :attributes assoc property-kwd enum-val)}
@@ -108,16 +115,16 @@
                                 [:div {:style {:padding "0 0.4em" :fontWeight "500"}} enum-val]])
                              enum)]
                        (style/create-identity-select {:value (get (:attributes @state) property-kwd ENUM_EMPTY_CHOICE)
-                                                      :style (colorize {} :borderColor)
+                                                      :style (colorize {})
                                                       :onChange update-property}
                                                      (cons ENUM_EMPTY_CHOICE enum)))
                      (= type "text")
-                     (style/create-text-area {:style (colorize {:width "100%"} :borderColor)
+                     (style/create-text-area {:style (colorize {:width "100%"})
                                               :value (get (:attributes @state) property-kwd)
                                               :onChange update-property
                                               :rows 3})
                      :else
-                     (style/create-text-field {:style (colorize {:width "100%"} :borderColor)
+                     (style/create-text-field {:style (colorize {:width "100%"})
                                                :type (case type
                                                        "date" "date"
                                                        "integer" "number"

@@ -271,3 +271,7 @@
 (defn map-values [f m]
   (into (empty m)
         (map (fn [[k v]] [k (f v)]) m)))
+
+(defn map-kv [f m]
+  (into (empty m)
+        (map (fn [[k v]] (f k v)) m)))
