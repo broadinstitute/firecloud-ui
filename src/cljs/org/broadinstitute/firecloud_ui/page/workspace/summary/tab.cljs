@@ -9,7 +9,6 @@
     [org.broadinstitute.firecloud-ui.common.modal :as modal]
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
-    [org.broadinstitute.firecloud-ui.nav :as nav]
     [org.broadinstitute.firecloud-ui.page.workspace.monitor.common :as moncommon :refer [all-success? any-running? any-failed?]]
     [org.broadinstitute.firecloud-ui.page.workspace.summary.acl-editor :refer [AclEditor]]
     [org.broadinstitute.firecloud-ui.page.workspace.summary.attribute-editor :as attributes]
@@ -18,15 +17,6 @@
     [org.broadinstitute.firecloud-ui.page.workspace.summary.library-view :refer [LibraryView]]
     [org.broadinstitute.firecloud-ui.page.workspace.summary.workspace-cloner :refer [WorkspaceCloner]]
     [org.broadinstitute.firecloud-ui.utils :as utils]))
-
-
-(defn- render-tags [tags]
-  (let [tagstyle {:marginRight 13 :borderRadius 2 :padding "5px 13px"
-                  :backgroundColor (:tag-background style/colors)
-                  :color (:tag-foreground style/colors)
-                  :display "inline-block" :fontSize "94%"}]
-    [:div {}
-     (map (fn [tag] [:span {:style tagstyle} tag]) tags)]))
 
 
 (react/defc DeleteDialog
