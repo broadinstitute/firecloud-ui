@@ -2,11 +2,13 @@
   (:require
     [dmohs.react :as react]
     [clojure.set :refer [union]]
+    [clojure.string :refer [join trim split replace]]
     goog.net.cookies
     [org.broadinstitute.firecloud-ui.common :as common]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
     [org.broadinstitute.firecloud-ui.common.entity-table :refer [EntityTable]]
     [org.broadinstitute.firecloud-ui.common.modal :as modal]
+    [org.broadinstitute.firecloud-ui.common.table :as table]
     [org.broadinstitute.firecloud-ui.common.table-utils :as table-utils]
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.config :as config]
@@ -15,8 +17,6 @@
     [org.broadinstitute.firecloud-ui.page.workspace.data.import-data :as import-data]
     [org.broadinstitute.firecloud-ui.persistence :as persistence]
     [org.broadinstitute.firecloud-ui.utils :as utils :refer [access-token]]))
-
-
 
 (react/defc DataImporter
   {:get-initial-state
@@ -57,12 +57,37 @@
                 [:div {:style style :onClick #(add-crumb :workspace-import "Choose Workspace")}
                  "Copy from another workspace"]]))]])}])})
 
+(react/defc EntityAttributes
+  {:render (fn [{:keys [props state]}]
+      (let [attributes (:attributes props)
+            entity-name (:selected-entity props)]
+      [:div {:style {:maxWidth "25vw" :width (if (nil? attributes) "0" "25vw") :justifyContent "flex-end":flex "0 1 1"}}
+        [:div {:style {:marginLeft "3px"}}
+         (when-not (nil? attributes)
+           [:div {:style {:fontWeight "bold" :color "black" :marginBottom ".5em"}} (str  entity-name " Attributes:" )])
+         (when-not (nil? attributes)
+           [:div {}
+            [table/Table {
+                :ref "entityAttrTable"
+                :reorderable-columns false
+                :width :narrow
+                :pagination :internal
+                :filterable false
+                :header-row-style {:borderBottom (str "2px solid " (:line-default style/colors))
+                                  :backgroundColor "white" :color "black" :fontWeight "bold"}
+                :empty-message "No Entity Attributes defined"
+                :columns [{:header "Attribute" :starting-width 150 :sort-initial :asc}
+                          {:header "Value" :starting-width :remaining}]
+                :data (seq attributes)
+                :->row (fn [x] (let [nkey (str(first x)) name (clojure.string/replace nkey #":" "")] [[name] (val x)]))}]])]]))})
+
 
 (react/defc WorkspaceData
   {:render
    (fn [{:keys [props state refs]}]
      (let [{:keys [workspace-id workspace workspace-error]} props]
-       [:div {:style {:padding "1em"}}
+       [:div {:style {:padding "1em" :display "flex" :justifyContent "flex-start" 
+                      :width (if (nil? (:selected-entity-attributes @state)) "100vw" "75vw") :key (str "attrtbl_" (:selected-entity-attributes @state))}}
         (cond
           workspace-error
           (style/create-server-error-message workspace-error)
@@ -108,9 +133,21 @@
                                                                       ((:request-refresh props))
                                                                       (react/call :refresh (@refs "entity-table") entity-type))}])}]]])
               :on-filter-change #(swap! state assoc :selected-entity-type %)
-              :attribute-renderer (table-utils/render-gcs-links (get-in workspace [:workspace :bucketName]))}])
+              :attribute-renderer (table-utils/render-gcs-links (get-in workspace [:workspace :bucketName]))
+              :entity-name-renderer (fn [e]
+                (let [entity-name (:name e)
+                      attrs (:attributes e)]
+                  (style/create-link
+                    {:text entity-name
+                     :onClick #(swap! state assoc
+                              :selected-entity (if (= entity-name (:selected-entity @state)) nil entity-name)
+                              :selected-entity-attributes (if (= entity-name (:selected-entity @state)) nil attrs))
+                     })))}]
+            )
           :else
-          [:div {:style {:textAlign "center"}} [comps/Spinner {:text "Checking workspace..."}]])]))
+          [:div {:style {:textAlign "center"}} [comps/Spinner {:text "Checking workspace..."}]])
+          [EntityAttributes {:attributes (:selected-entity-attributes @state) :selected-entity (:selected-entity @state)}]]
+       ))
    :component-did-mount
    (fn [{:keys [props]}]
      ((:request-refresh props)))})
