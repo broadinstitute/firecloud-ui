@@ -404,9 +404,11 @@
    :component-did-mount
    (fn [{:keys [state]}]
      (utils/ajax-orch "/refresh-token-status"
-                      {:on-done (fn [{:keys [status-code]}]
-                                  (when (= status-code 200)
-                                    (swap! state dissoc :hidden?)))}))
+                      {:on-done (fn [{:keys [raw-response]}]
+                                  (let [[parsed _]
+                                        (utils/parse-json-string raw-response true false)]
+                                    (when (and parsed (:requiresRefresh parsed))
+                                      (swap! state dissoc :hidden?))))}))
    :.re-auth
    (fn [{:keys [props state]}]
      (-> (:auth2 props)
