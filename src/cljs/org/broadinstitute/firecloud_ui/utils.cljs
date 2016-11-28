@@ -39,15 +39,14 @@
 
 (defn parse-json-string
   ([x] (parse-json-string x false))
-  ([x keywordize-keys?] (js->clj (js/JSON.parse x) :keywordize-keys keywordize-keys?)))
-
-(defn parse-json-string-v2
-  ([x] (parse-json-string-v2 x true))
-  ([x keywordize-keys?]
-   (try
-     [(js->clj (js/JSON.parse x) :keywordize-keys keywordize-keys?) false]
-     (catch js/Object _
-       [nil true]))))
+  ([x keywordize-keys?] (parse-json-string x keywordize-keys? true))
+  ([x keywordize-keys? throw-on-error?]
+   (if throw-on-error?
+     (js->clj (js/JSON.parse x) :keywordize-keys keywordize-keys?)
+     (try
+       [(js->clj (js/JSON.parse x) :keywordize-keys keywordize-keys?) false]
+       (catch js/Object e
+         [nil e])))))
 
 
 (defn keywordize-keys [m]
