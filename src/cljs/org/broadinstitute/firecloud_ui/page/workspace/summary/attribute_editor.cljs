@@ -114,7 +114,7 @@
                   :href (str (config/api-url-root) "/cookie-authed/workspaces/"
                           (:namespace (:workspace-id props)) "/"
                           (:name (:workspace-id props)) "/exportAttributesTSV")
-                  :onClick #(utils/set-access-token-cookie @utils/access-token)
+                  :onClick  #(utils/set-access-token-cookie (utils/get-access-token))
                   :target "_blank"}
               (str "Download Attributes")]
              (if writer?
