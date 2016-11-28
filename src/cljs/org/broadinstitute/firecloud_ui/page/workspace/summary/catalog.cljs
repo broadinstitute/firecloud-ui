@@ -34,14 +34,16 @@
   (utils/map-kv
     (fn [k v]
       (let [property (get-in library-schema [:properties k])
-            {:keys [type items]} property
-            value (case type
-                    "integer" (int v)
-                    "array" (let [tokens (keep (comp not-empty trim) (split v #","))]
-                              (case (:type items)
-                                "integer" (map int tokens)
-                                tokens))
-                    v)]
+            {:keys [type items enum]} property
+            value (if enum
+                    (resolve-enum v)
+                    (case type
+                      "integer" (int v)
+                      "array" (let [tokens (keep (comp not-empty trim) (split v #","))]
+                                (case (:type items)
+                                  "integer" (map int tokens)
+                                  tokens))
+                      v))]
         [k value]))
     attributes))
 
@@ -87,7 +89,7 @@
          error)))
    :get-attributes
    (fn [{:keys [props locals]}]
-     (parse-attributes (:processed-attributes @locals) (:library-schema props)))
+     (utils/cljslog (parse-attributes (:processed-attributes @locals) (:library-schema props))))
    :get-initial-state
    (fn [{:keys [props]}]
      (let [{:keys [questions attributes library-schema]} props
