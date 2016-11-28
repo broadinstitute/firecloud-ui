@@ -4,7 +4,6 @@
    [org.broadinstitute.firecloud-ui.common :as common]
    [org.broadinstitute.firecloud-ui.common.components :as comps]
    [org.broadinstitute.firecloud-ui.common.modal :as modal]
-   [org.broadinstitute.firecloud-ui.common.sign-in :as sign-in]
    [org.broadinstitute.firecloud-ui.common.style :as style]
    [org.broadinstitute.firecloud-ui.config :as config]
    [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
@@ -208,7 +207,7 @@
                    :padding "0.6em" :border style/standard-line
                    :minWidth 100}}
        [:div {}
-        (:user-email props)
+        (-> (:auth2 props) (.-currentUser) (.get) (.getBasicProfile) (.getEmail))
         [:div {:style {:display "inline-block" :marginLeft "1em" :fontSize 8}} "▼"]]]
       (when (:show-dropdown? @state)
         (let [DropdownItem
@@ -229,7 +228,9 @@
                          :position "absolute" :width "100%"
                          :border (str "1px solid " (:line-default style/colors))}}
            [DropdownItem {:href "#profile" :text "Profile" :dismiss #(swap! state assoc :show-dropdown? false)}]
-           [DropdownItem {:href "#billing" :text "Billing" :dismiss #(swap! state assoc :show-dropdown? false)}]]))])})
+           [DropdownItem {:href "#billing" :text "Billing" :dismiss #(swap! state assoc :show-dropdown? false)}]
+           [DropdownItem {:href "javascript:;" :text "Sign Out"
+                          :dismiss #(.signOut (:auth2 props))}]]))])})
 
 (react/defc LoggedIn
   {:render
@@ -242,7 +243,7 @@
        [:div {}
         [:div {:style {:width "100%" :borderBottom (str "1px solid " (:line-default style/colors))}}
          [:div {:style {:float "right" :fontSize "70%" :margin "0 0 0.5em 0"}}
-          [AccountDropdown {:user-email (:user-email props)}]
+          [AccountDropdown {:auth2 (:auth2 props)}]
           (common/clear-both)
           (when (= :registered (:registration-status @state))
             [GlobalSubmissionStatus])]
@@ -290,35 +291,43 @@
 
 (react/defc LoggedOut
   {:render
-   (fn [{:keys [props]}]
-     [:div {}
+   (fn [{:keys [this props]}]
+     ;; Google's code complains if the sign-in button goes missing, so we hide this component rather
+     ;; than removing it from the page.
+     [:div {:style {:display (when (:hidden? props) "none")}}
       [:div {:style {:marginBottom "2em"}} (text-logo)]
-      [:div {}
-       [sign-in/Button (select-keys props [:on-login])]]
+      [comps/Button {:text "Sign In" :onClick #(react/call :.handle-sign-in-click this)}]
       [:div {:style {:marginTop "2em" :maxWidth 600}}
        [:div {} [:b {} "New user? FireCloud requires a Google account."]]
        [:div {} "Please use the \"Sign In\" button above to sign-in with your Google Account.
          Once you have successfully signed-in with Google, you will be taken to the FireCloud
          registration page."]]
       [:div {:style {:maxWidth 600 :paddingTop "2em" :fontSize "small"}}
-        [Policy]]])})
-
-
-(defn- parse-hash-into-map []
-  ;; Transforms the browser navigation hash into a map to make it easier to pass around. Technique
-  ;; stolen from Swagger's authentication flow.
-  (let [hash (nav/get-hash-value)
-        hash (clojure.string/replace hash #"^[?]" "")
-        parts (clojure.string/split hash #"[&=]")
-        parts (map js/decodeURIComponent parts)]
-    (apply assoc {} parts)))
-
-
-(defn- attempt-auth [token on-done]
-  ;; Use basic ajax call here to bypass default ajax-orch failure behavior.
-  (utils/ajax {:url (str (config/api-url-root) "/me")
-               :headers {"Authorization" (str "Bearer " token)}
-               :on-done on-done}))
+       [Policy]]])
+   :component-did-mount
+   (fn [{:keys [props locals]}]
+     (swap! locals assoc :refresh-token-saved? true)
+     (let [{:keys [auth2 on-change]} props]
+       (-> auth2 (.-currentUser)
+           (.listen (fn [u]
+                      (on-change (.isSignedIn u) (:refresh-token-saved? @locals)))))))
+   :.handle-sign-in-click
+   (fn [{:keys [props locals]}]
+     (swap! locals dissoc :refresh-token-saved?)
+     (let [{:keys [auth2 on-change]} props]
+       (-> auth2
+           (.grantOfflineAccess (clj->js {:redirect_uri "postmessage"
+                                          :prompt "select_account"}))
+           (.then (fn [response]
+                    (utils/ajax {:url (str (config/api-url-root) "/handle-oauth-code")
+                                 :method "POST"
+                                 :data (utils/->json-string
+                                        {:code (.-code response)
+                                         :redirectUri (.. js/window -location -origin)})
+                                 :on-done (fn [{:keys [success?]}]
+                                            (when success?
+                                              (swap! locals assoc :refresh-token-saved? true)
+                                              (on-change true true)))}))))))})
 
 
 (defn- show-system-status-dialog [maintenance-mode?]
@@ -336,66 +345,132 @@
                  " for more information."])}))
 
 
+(react/defc ConfigLoader
+  {:render
+   (fn [{:keys [state]}]
+     [:div {:style {:padding "40px 0"}}
+      (if (:error? @state)
+        [:div {:style {:color (:exception-state style/colors)}}
+         "Error loading configuration. Please try again later."]
+        [comps/Spinner {:text "Loading configuration..."}])])
+   :component-did-mount
+   (fn [{:keys [props state]}]
+     ;; Use basic ajax call here to bypass authentication.
+     (utils/ajax {:url "/config.json"
+                  :on-done (fn [{:keys [success? get-parsed-response]}]
+                             (if success?
+                               (do
+                                 (reset! config/config (get-parsed-response false))
+                                 ((:on-success props)))
+                               (swap! state assoc :error true)))}))})
+
+
+(react/defc UserStatus
+  {:render
+   (fn [{:keys [state]}]
+     [:div {:style {:padding "40px 0"}}
+      (case (:error @state)
+        nil [comps/Spinner {:text "Loading user information..."}]
+        :not-active [:div {:style {:color (:exception-reds style/colors)}}
+                     "Thank you for registering. Your account is currently inactive."
+                     " You will be contacted via email when your account is activated."]
+        [:div {:style {:color (:exception-state style/colors)}}
+         "Error loading user information. Please try again later."])])
+   :component-did-mount
+   (fn [{:keys [props state]}]
+     (utils/ajax-orch "/me"
+                      {:on-done (fn [{:keys [success? status-code]}]
+                                  (if success?
+                                    ((:on-success props))
+                                    (case status-code
+                                      403 (swap! state assoc :error :not-active)
+                                      ;; 404 means "not yet registered"
+                                      404 ((:on-success props))
+                                      (swap! state assoc :error true))))}
+                      :service-prefix ""))})
+
+
+(react/defc RefreshCredentials
+  {:get-initial-state
+   (fn []
+     {:hidden? true})
+   :render
+   (fn [{:keys [this state]}]
+     [:div {:style {:display (when (:hidden? @state) "none")
+                    :padding "1ex 1em" :backgroundColor "#fda" :color "#530" :fontSize "80%"}}
+      "Your offline credentials are missing or out-of-date."
+      " Your workflows may not run correctly until they have been refreshed."
+      " " [:a {:href "javascript:;" :onClick #(react/call :.re-auth this)} "Refresh now..."]])
+   :component-did-mount
+   (fn [{:keys [state]}]
+     (utils/ajax-orch "/refresh-token-status"
+                      {:on-done (fn [{:keys [raw-response]}]
+                                  (let [[parsed _]
+                                        (utils/parse-json-string raw-response true false)]
+                                    (when (and parsed (:requiresRefresh parsed))
+                                      (swap! state dissoc :hidden?))))}))
+   :.re-auth
+   (fn [{:keys [props state]}]
+     (-> (:auth2 props)
+         (.grantOfflineAccess (clj->js {:redirect_uri "postmessage"
+                                        :prompt "consent"}))
+         (.then (fn [response]
+                  (utils/ajax {:url (str (config/api-url-root) "/handle-oauth-code")
+                               :method "POST"
+                               :data (utils/->json-string
+                                      {:code (.-code response)
+                                       :redirectUri (.. js/window -location -origin)})
+                               :on-done #(swap! state assoc :hidden? true)})))))})
+
+
 (react/defc App
   {:handle-hash-change
    (fn [{:keys [state]}]
      (swap! state assoc :root-nav-context (nav/create-nav-context)))
    :get-initial-state
    (fn []
-     {:root-nav-context (nav/create-nav-context)})
+     {:root-nav-context (nav/create-nav-context)
+      :user-status #{}})
    :render
    (fn [{:keys [this state]}]
      [:div {}
+      (when (and (contains? (:user-status @state) :signed-in)
+                 (contains? (:user-status @state) :refresh-token-saved))
+        [RefreshCredentials {:auth2 (:auth2 @state)}])
       [:div {:style {:backgroundColor "white" :padding 20}}
        [:div {}
+        (when-let [auth2 (:auth2 @state)]
+          [LoggedOut {:auth2 auth2 :hidden? (contains? (:user-status @state) :signed-in)
+                      :on-change (fn [signed-in? token-saved?]
+                                   (swap! state update :user-status
+                                          #(-> %
+                                               ((if signed-in? conj disj)
+                                                :signed-in)
+                                               ((if token-saved? conj disj)
+                                                :refresh-token-saved))))}])
         (cond
-          (nil? (:config-status @state))
+          (not (:config-loaded? @state))
+          [ConfigLoader {:on-success #(do (swap! state assoc :config-loaded? true)
+                                          (react/call :.initialize-auth2 this))}]
+          (nil? (:auth2 @state))
           [:div {}
            (text-logo)
            [:div {:style {:padding "40px 0"}}
-            [comps/Spinner {:text "Loading configuration..."}]]]
-          (= :error (:config-status @state))
-          [:div {}
-           (text-logo)
-           [:div {:style {:padding "40px 0"}}
-            [:div {:style {:color (:exception-state style/colors)}}
-             "Error loading configuration. Please try again later."]]]
-          (nil? (:user-status @state))
-          [:div {}
-           (text-logo)
-           [:div {:style {:padding "40px 0"}}
-            [comps/Spinner {:text "Loading user data..."}]]]
-          (= :error (:user-status @state))
-          [:div {}
-           (text-logo)
-           [:div {:style {:padding "40px 0"}}
-            [:div {:style {:color (:exception-state style/colors)}}
-             "Error getting user information."]]]
-          (= :auth-failure (:user-status @state))
-          [:div {}
-           (text-logo)
-           [:div {:style {:padding "40px 0"}}
-            [:div {:style {:color (:exception-state style/colors)}}
-             "Authentication failed."]]]
-          (= :not-activated (:user-status @state))
-          [:div {}
-           (text-logo)
-           [:div {:style {:padding "40px 0"}}
-            [:div {:style {:color (:exception-reds style/colors)}}
-             "Thank you for registering. Your account is currently inactive.
-              You will be contacted via email when your account is activated."]]]
-          (= :logged-in (:user-status @state))
+            [comps/Spinner {:text "Loading auth..."}]]]
+          (contains? (:user-status @state) :signed-in)
+          (cond
+            (not (contains? (:user-status @state) :go))
+            [UserStatus {:on-success #(swap! state update :user-status conj :go)}]
+            :else [LoggedIn {:nav-context (:root-nav-context @state)
+                             :auth2 (:auth2 @state)}])
+          (contains? (:user-status @state) :signed-in)
           [LoggedIn {:nav-context (:root-nav-context @state)
-                     :user-email (:user-email @state)}]
-          (= :not-logged-in (:user-status @state))
-          [LoggedOut {:on-login #(react/call :authenticate-with-fresh-token this
-                                             (get % "access_token"))}])]]
+                     :auth2 (:auth2 @state)}])]]
       (footer)
       ;; As low as possible on the page so it will be the frontmost component when displayed.
       [modal/Component {:ref "modal"}]])
    :component-did-mount
-   (fn [{:keys [this state refs]}]
-     (set! utils/auth-expiration-handler (partial sign-in/show-sign-in-dialog :expired))
+   (fn [{:keys [this state refs locals]}]
      ;; pop up the message only when we start getting 503s, not on every 503
      (add-watch
       utils/server-down? :server-watcher
@@ -408,95 +483,29 @@
         (when maintenance-now?
           (show-system-status-dialog true))))
      (modal/set-instance! (@refs "modal"))
-     (react/call :load-config this #(react/call :authenticate-user this)))
+     (swap! locals assoc :hash-change-listener (partial react/call :handle-hash-change this))
+     (.addEventListener js/window "hashchange" (:hash-change-listener @locals)))
    :component-will-unmount
    (fn [{:keys [locals]}]
      (.removeEventListener js/window "hashchange" (:hash-change-listener @locals))
      (remove-watch utils/server-down? :server-watcher)
      (remove-watch utils/maintenance-mode? :server-watcher))
-   :load-config
-   (fn [{:keys [this state]} on-success]
-     ;; Use basic ajax call here to bypass authentication.
-     (utils/ajax {:url "/config.json"
-                  :on-done (fn [{:keys [success? get-parsed-response]}]
-                             (if success?
-                               (do
-                                 (reset! config/config (get-parsed-response false))
-                                 (swap! state assoc :config-status :success)
-                                 (on-success))
-                               (swap! state assoc :config-status :error)))}))
-   :authenticate-user
-   (fn [{:keys [this state]}]
-     (if (= (.. js/window -location -hash) sign-in/flow-start-location-hash)
-       (utils/ajax-orch
-        "/me"
-        {:service-prefix ""
-         :on-done (fn []
-                    ;; If this call fails, it will be caught by the normal handlers, so no need to
-                    ;; check for success here.
-                    (set! (.. js/window -location -href)
-                          (str (config/api-url-root) "/login?callback="
-                               (js/encodeURIComponent (.. js/window -location -origin)))))}
-        :ignore-auth-expiration? true)
-       ;; Note: window.opener can be non-nil even when it wasn't opened with window.open, so be
-       ;; careful with this check.
-       (let [opener (.-opener js/window)
-             sign-in-handler (and opener (aget opener sign-in/handler-fn-name))]
-         (if sign-in-handler
-           ;; This window was used for login. Send the token to the parent. No need to render the
-           ;; UI.
-           (do
-             (sign-in-handler (parse-hash-into-map))
-             (.close js/window))
-           (if-let [token (get (parse-hash-into-map) "access_token")]
-             ;; New access token. Attempt to authenticate with it.
-             (react/call :authenticate-with-fresh-token this token)
-             (let [token (utils/get-access-token-cookie)]
-               (if token
-                 (react/call :authenticate-with-token this token
-                             (fn []
-                               ;; maybe bad cookie, not auth failure
-                               (utils/delete-access-token-cookie)
-                               (swap! state assoc :user-status :not-logged-in))
-                             (fn []
-                               (react/call :handle-successful-auth this token)))
-                 (swap! state assoc :user-status :not-logged-in))))))))
-   :authenticate-with-fresh-token
-   (fn [{:keys [this state]} token]
-     (react/call :authenticate-with-token this token
-                 (fn [] (swap! state assoc :user-status :auth-failure))
+   :.initialize-auth2
+   (fn [{:keys [state]}]
+     (let [scopes (clojure.string/join
+                   " "
+                   ["email" "profile"
+                    "https://www.googleapis.com/auth/devstorage.full_control"
+                    "https://www.googleapis.com/auth/compute"])]
+       (.. js/gapi
+           (load "auth2"
                  (fn []
-                   (utils/set-access-token-cookie token)
-                   (react/call :handle-successful-auth this token))))
-   :authenticate-with-token
-   (fn [{:keys [state]} token on-failure on-success]
-     (attempt-auth
-      token
-      (fn [{:keys [success? status-code get-parsed-response]}]
-        (when success?
-          (let [response (get-parsed-response false)]
-            (swap! state assoc :user-email (get-in response ["userInfo" "userEmail"]))
-            (reset! utils/current-user (get-in response ["userInfo" "userSubjectId"]))))
-        (cond
-          (contains? #{0 502} status-code)
-          (do (reset! utils/maintenance-mode? true) (swap! state assoc :user-status :error))
-          (contains? (set (range 501 600)) status-code)
-          (do (reset! utils/server-down? true) (swap! state assoc :user-status :error))
-          (= 401 status-code)
-          (on-failure)
-          (= 403 status-code)
-          (swap! state assoc :user-status :not-activated)
-          ;; 404 just means not registered
-          (or success? (= status-code 404))
-          (on-success)
-          :else
-          (swap! state assoc :user-status :error)))))
-   :handle-successful-auth
-   (fn [{:keys [this state locals]} token]
-     (reset! utils/access-token token)
-     (swap! locals assoc :hash-change-listener (partial react/call :handle-hash-change this))
-     (.addEventListener js/window "hashchange" (:hash-change-listener @locals))
-     (swap! state assoc :user-status :logged-in :root-nav-context (nav/create-nav-context)))})
+                   (let [auth2 (.. js/gapi -auth2
+                                   (init (clj->js
+                                          {:client_id (config/google-client-id)
+                                           :scope scopes})))]
+                     (swap! state assoc :auth2 auth2)
+                     (reset! utils/google-auth2-instance auth2)))))))})
 
 
 (defn render-application [& [hot-reload?]]

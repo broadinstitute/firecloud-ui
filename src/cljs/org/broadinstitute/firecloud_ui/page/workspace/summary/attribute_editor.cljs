@@ -119,7 +119,7 @@
                                           (after-update #(.focus (.getElementById js/document "focus"))))}]]
               [:div {:style {:marginBottom "0.25em"}}
                 [comps/Button {:text "Download Attributes"
-                               :onClick #(utils/set-access-token-cookie @utils/access-token)
+                               :onClick #(utils/set-access-token-cookie (utils/get-access-token))
                                :href (str (config/api-url-root) "/cookie-authed/workspaces/"
                                           (:namespace (:workspace-id props)) "/"
                                           (:name (:workspace-id props)) "/exportAttributesTSV")

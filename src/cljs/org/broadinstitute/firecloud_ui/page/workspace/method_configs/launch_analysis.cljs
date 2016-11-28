@@ -7,7 +7,6 @@
     [org.broadinstitute.firecloud-ui.common.components :as comps]
     [org.broadinstitute.firecloud-ui.common.icons :as icons]
     [org.broadinstitute.firecloud-ui.common.modal :as modal]
-    [org.broadinstitute.firecloud-ui.common.sign-in :as sign-in]
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.common.entity-table :refer [EntityTable]]
     [org.broadinstitute.firecloud-ui.config :as config]
@@ -136,11 +135,12 @@
 (react/defc LaunchAnalysisButton
   {:render
    (fn [{:keys [props]}]
-     [comps/Button {:text "Launch Analysis..."
-                    :disabled? (:disabled? props)
-                    :onClick #(if (:force-login? props)
-                               (sign-in/show-sign-in-dialog :refresh-token (:after-login props))
-                               (modal/push-modal [Form (select-keys props [:config-id :workspace-id :root-entity-type :on-success :cromwell-version])]))}])})
+     [comps/Button
+      {:text "Launch Analysis..."
+       :disabled? (:disabled? props)
+       :onClick (modal/push-modal
+                 [Form (select-keys props [:config-id :workspace-id
+                                           :root-entity-type :on-success :cromwell-version])])}])})
 
 
 (defn render-button [props]
