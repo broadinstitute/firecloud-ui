@@ -14,7 +14,7 @@
     [org.broadinstitute.firecloud-ui.page.workspace.summary.acl-editor :refer [AclEditor]]
     [org.broadinstitute.firecloud-ui.page.workspace.summary.attribute-editor :as attributes]
     [org.broadinstitute.firecloud-ui.page.workspace.summary.catalog :as catalog]
-    [org.broadinstitute.firecloud-ui.page.workspace.summary.library :as library]
+    [org.broadinstitute.firecloud-ui.page.workspace.summary.publish :as publish]
     [org.broadinstitute.firecloud-ui.page.workspace.summary.library-view :refer [LibraryView]]
     [org.broadinstitute.firecloud-ui.page.workspace.summary.workspace-cloner :refer [WorkspaceCloner]]
     [org.broadinstitute.firecloud-ui.utils :as utils]))
@@ -96,9 +96,9 @@
                                  :request-refresh request-refresh}])
        (when (and curator? owner? (not editing?))
          (if (:library:published library-attributes)
-           [library/UnpublishButton {:workspace-id workspace-id
+           [publish/UnpublishButton {:workspace-id workspace-id
                                      :request-refresh request-refresh}]
-           [library/PublishButton {:disabled? (when (empty? library-attributes)
+           [publish/PublishButton {:disabled? (when (empty? library-attributes)
                                                 "Dataset attributes must be created before publishing.")
                                    :workspace-id workspace-id
                                    :request-refresh request-refresh}]))
