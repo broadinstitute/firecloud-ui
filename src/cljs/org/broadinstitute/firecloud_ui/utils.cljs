@@ -256,6 +256,7 @@
 (defn index-by [key m]
   (into {} (map (juxt key identity) m)))
 
+
 (defn filter-keys [pred m]
   (into (empty m)
         (filter (comp pred key) m)))
@@ -263,6 +264,10 @@
 (defn filter-values [pred m]
   (into (empty m)
         (filter (comp pred val) m)))
+
+(defn filter-kv [pred m]
+  (into (empty m)
+        (filter (fn [[k v]] (pred k v)) m)))
 
 (defn map-keys [f m]
   (into (empty m)

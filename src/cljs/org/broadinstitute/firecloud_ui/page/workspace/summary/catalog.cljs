@@ -4,10 +4,8 @@
     [dmohs.react :as react]
     [org.broadinstitute.firecloud-ui.common :as common]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
-    [org.broadinstitute.firecloud-ui.common.input :as input]
     [org.broadinstitute.firecloud-ui.common.modal :as modal]
     [org.broadinstitute.firecloud-ui.common.style :as style]
-    [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
     [org.broadinstitute.firecloud-ui.utils :as utils]
     ))
 
@@ -48,31 +46,56 @@
     attributes))
 
 
+(defn- validate-required [attributes questions]
+  (let [required-props (->> questions (filter :required) (map (comp keyword :property)))
+        missing-props (set (remove attributes required-props))]
+    (when-not (empty? missing-props)
+      {:error "Please provide all required attributes"
+       :invalid missing-props})))
+
+(defn- validate-numbers [attributes library-schema]
+  (let [numeric-props (->> attributes
+                           (utils/filter-keys #(= "integer" (get-in library-schema [:properties % :type])))
+                           (utils/map-kv (fn [k v]
+                                           [k (merge (select-keys (get-in library-schema [:properties k]) [:minimum :maximum])
+                                                     {:value v})])))
+        invalid-numbers (set (keep (fn [[k {:keys [value minimum maximum] :or {minimum -Infinity maximum Infinity}}]]
+                                     (when-not (and (= value (str (int value)))
+                                                    (<= minimum (int value) maximum))
+                                       k))
+                                   numeric-props))]
+    (when-not (empty? invalid-numbers)
+      {:error "Invalid number"
+       :invalid invalid-numbers})))
+
+
 (react/defc Questions
   {:validate
-   (fn [{:keys [props state this]}]
-     (let [{:keys [questions]} props
-           required-props (->> questions (filter :required) (map (comp keyword :property)))
+   (fn [{:keys [props state locals]}]
+     (let [{:keys [questions library-schema]} props
            processed-attributes (->> (:attributes @state)
                                      (utils/map-values (fn [val]
                                                          (if (string? val)
                                                            (not-empty (trim val))
                                                            val)))
                                      (utils/filter-values some?))
-           missing-props (set (remove processed-attributes required-props))]
-       (set! (.-processed-attributes this) processed-attributes)
-       (when-not (empty? missing-props)
-         (swap! state assoc :invalid-properties missing-props)
-         "Please provide all required attributes")))
+           {:keys [error invalid]} (or (validate-required processed-attributes questions)
+                                       (validate-numbers processed-attributes library-schema))]
+       (swap! locals assoc :processed-attributes processed-attributes)
+       (when error
+         (swap! state assoc :invalid-properties invalid)
+         error)))
    :get-attributes
-   (fn [{:keys [props this]}]
-     (parse-attributes (.-processed-attributes this) (:library-schema props)))
+   (fn [{:keys [props locals]}]
+     (parse-attributes (:processed-attributes @locals) (:library-schema props)))
    :get-initial-state
    (fn [{:keys [props]}]
-     (let [{:keys [questions attributes library-schema]} props]
+     (let [{:keys [questions attributes library-schema]} props
+           prop->string (fn [prop] (if (seq? prop) (join ", " prop) (str prop)))
+           get-prop (fn [prop-key] (prop->string (get attributes prop-key
+                                                      (get-in library-schema [:properties prop-key :default]))))]
        {:attributes
-        (reduce (fn [map prop-key] (assoc map prop-key (get attributes prop-key
-                                                            (get-in library-schema [:properties prop-key :default]))))
+        (reduce (fn [map prop-key] (assoc map prop-key (get-prop prop-key)))
                 {}
                 (map (comp keyword :property) questions))
         :any-required? (some :required questions)}))
