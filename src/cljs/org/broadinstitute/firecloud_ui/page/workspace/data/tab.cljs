@@ -60,7 +60,9 @@
 (react/defc EntityAttributes
   {:render (fn [{:keys [props state]}]
       (let [attributes (:attributes props)
-            entity-name (:selected-entity props)]
+            entity-name (:selected-entity props)
+            entity-type (str (:selected-entity-type props))]
+      (when (not= entity-type ":sample_set")
       [:div {:style {:maxWidth "25vw" :width (if (nil? attributes) "0" "25vw") :justifyContent "flex-end":flex "0 1 1"}}
         [:div {:style {:marginLeft "3px"}}
          (when-not (nil? attributes)
@@ -79,14 +81,17 @@
                 :columns [{:header "Attribute" :starting-width 150 :sort-initial :asc}
                           {:header "Value" :starting-width :remaining}]
                 :data (seq attributes)
-                :->row (fn [x] (let [nkey (str(first x)) name (clojure.string/replace nkey #":" "")] [[name] (val x)]))}]])]]))})
+                :->row (fn [x] (let [nkey (str(first x)) name (clojure.string/replace nkey #":" "")] [[name] (val x)]))}]])]])))})
 
 
 (react/defc WorkspaceData
-  {:render
+  {:get-initial-state
+   (fn[{:keys [state]}] {:selected-entity-type ":participant"})
+
+   :render
    (fn [{:keys [props state refs]}]
      (let [{:keys [workspace-id workspace workspace-error]} props]
-       [:div {:style {:padding "1em" :display "flex" :justifyContent "flex-start" 
+       [:div {:style {:padding "1em" :display "flex" :justifyContent "flex-start"
                       :width (if (nil? (:selected-entity-attributes @state)) "100vw" "75vw") :key (str "attrtbl_" (:selected-entity-attributes @state))}}
         (cond
           workspace-error
@@ -136,17 +141,20 @@
               :attribute-renderer (table-utils/render-gcs-links (get-in workspace [:workspace :bucketName]))
               :entity-name-renderer (fn [e]
                 (let [entity-name (:name e)
-                      attrs (:attributes e)]
+                      attrs (:attributes e)
+                      entity-type (str (:selected-entity-type @state))]
+                  (if (not= entity-type ":sample_set")
                   (style/create-link
                     {:text entity-name
                      :onClick #(swap! state assoc
                               :selected-entity (if (= entity-name (:selected-entity @state)) nil entity-name)
-                              :selected-entity-attributes (if (= entity-name (:selected-entity @state)) nil attrs))
-                     })))}]
+                              :selected-entity-attributes (if (= entity-name (:selected-entity @state)) nil attrs))})
+                  entity-name)))}]
             )
           :else
           [:div {:style {:textAlign "center"}} [comps/Spinner {:text "Checking workspace..."}]])
-          [EntityAttributes {:attributes (:selected-entity-attributes @state) :selected-entity (:selected-entity @state)}]]
+          [EntityAttributes {:attributes (:selected-entity-attributes @state) :selected-entity (:selected-entity @state)
+                             :selected-entity-type (:selected-entity-type @state)}]]
        ))
    :component-did-mount
    (fn [{:keys [props]}]
