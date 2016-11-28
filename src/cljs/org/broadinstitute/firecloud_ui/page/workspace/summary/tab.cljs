@@ -209,6 +209,7 @@
                                         :can-edit? (and curator? owner? (not editing?))}])
      [attributes/WorkspaceAttributeViewerEditor {:ref "workspace-attribute-editor"
                                                  :editing? editing?
+                                                 :writer? writer?
                                                  :workspace-attributes workspace-attributes
                                                  :workspace-bucket bucketName
                                                  :workspace-id workspace-id

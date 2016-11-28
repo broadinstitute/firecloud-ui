@@ -29,6 +29,11 @@
 (defn create-section-header [text]
   [:div {:style {:fontSize "125%" :fontWeight 500}} text])
 
+(defn create-inline [& children]
+  [:div {:style {:display "inline" :margin "17px 0 0.33333em 0" :paddingBottom "2.5em"
+                 :fontSize "70%" :lineHeight 1.5  :fontWeight 100}}
+   children])
+
 (defn create-paragraph [& children]
   [:div {:style {:margin "17px 0 0.33333em 0" :paddingBottom "2.5em"
                  :fontSize "90%" :lineHeight 1.5}}
