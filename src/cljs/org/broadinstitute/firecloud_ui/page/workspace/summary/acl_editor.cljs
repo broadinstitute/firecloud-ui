@@ -73,6 +73,8 @@
               (str "Invite new users to" (:namespace workspace-id) "/" (:name workspace-id)))
     :content (react/create-element
               [:div {}
+               (when (:saving? @state)
+                 [comps/Blocker {:banner "Updating..."}])
                [:div {:style {:padding "0.5rem 0" :fontSize "90%" :marginTop "0.5rem"}}
                 [:div {:style {:display "inline-block" :width 400}} "User ID"]
                 [:div {:style {:display "inline-block" :width 200 :marginLeft "1rem"}} "Access Level"]]
