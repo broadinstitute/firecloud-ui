@@ -44,7 +44,7 @@
                       (common/format-price cost)
                       [:span {:style {:marginLeft "1em"}}
                        [:span {:style {:fontStyle "italic" :color (:text-light style/colors)}}
-                        " (charges to non-US destinations may be higher)"]])
+                        " (non-US destinations may be higher)"]])
              (if (:show-details? @state)
                [:div {}
                 (labeled "Created" (common/format-date (data "timeCreated")))
