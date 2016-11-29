@@ -151,7 +151,7 @@
                                                                           :on-delete on-delete}])}]))]))
 
 
-(defn- render-main [{:keys [workspace curator? owner? bucket-access? editing? submissions-count library-schema request-refresh workspace-id]}]
+(defn- render-main [{:keys [workspace curator? owner? writer? bucket-access? editing? submissions-count library-schema request-refresh workspace-id]}]
   (let [{:keys [owners]
          {:keys [createdBy createdDate bucketName description workspace-attributes library-attributes]} :workspace} workspace]
     [:div {:style {:flex "1 1 auto" :overflow "hidden"}}
@@ -209,6 +209,7 @@
                                         :can-edit? (and curator? owner? (not editing?))}])
      [attributes/WorkspaceAttributeViewerEditor {:ref "workspace-attribute-editor"
                                                  :editing? editing?
+                                                 :writer? writer?
                                                  :workspace-attributes workspace-attributes
                                                  :workspace-bucket bucketName
                                                  :workspace-id workspace-id
@@ -241,7 +242,7 @@
             (render-main (merge (select-keys props [:workspace :workspace-id :bucket-access?])
                                 (select-keys @state [:editing?])
                                 (select-keys server-response [:submissions-count :library-schema :curator?])
-                                (select-keys derived [:owner? :request-refresh])))
+                                (select-keys derived [:owner? :writer? :request-refresh])))
             (when (:updating-attrs? @state)
               [comps/Blocker {:banner "Updating Attributes..."}])
             (when (contains? @state :locking?)
