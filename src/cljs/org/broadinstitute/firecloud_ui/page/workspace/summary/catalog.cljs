@@ -107,7 +107,7 @@
      (let [{:keys [library-schema questions enumerate]} props]
        [(if enumerate :ol :div) {}
         (map
-          (fn [{:keys [property required inputHint]}]
+          (fn [{:keys [property required inputHint renderHint]}]
             (let [property-kwd (keyword property)
                   {:keys [title type enum minimum consentCode]} (get-in library-schema [:properties property-kwd])
                   error? (contains? (:invalid-properties @state) property-kwd)
@@ -144,17 +144,16 @@
                                                       :style (colorize {})
                                                       :onChange update-property}
                                                      (cons ENUM_EMPTY_CHOICE enum)))
-                     (= type "text")
+                     (= renderHint "text")
                      (style/create-text-area {:style (colorize {:width "100%"})
                                               :value (get (:attributes @state) property-kwd)
                                               :onChange update-property
                                               :rows 3})
                      :else
                      (style/create-text-field {:style (colorize {:width "100%"})
-                                               :type (case type
-                                                       "date" "date"
-                                                       "integer" "number"
-                                                       "text")
+                                               :type (cond (= renderHint "date") "date"
+                                                           (= type "integer") "number"
+                                                           :else "text")
                                                :min minimum
                                                :placeholder inputHint
                                                :value (get (:attributes @state) property-kwd)
