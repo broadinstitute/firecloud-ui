@@ -420,6 +420,10 @@
   {:path (str "/workspaces/" (ws-path workspace-id) "/submissions/" submission-id)
    :method :delete})
 
+(defn storage-cost-estimate [workspace-id]
+  {:path (str "/workspaces/" (ws-path workspace-id) "/storageCostEstimate")
+   :method :get})
+
 
 (def list-methods
   {:path "/methods"

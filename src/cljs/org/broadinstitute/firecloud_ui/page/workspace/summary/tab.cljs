@@ -151,7 +151,7 @@
                                                                           :on-delete on-delete}])}]))]))
 
 
-(defn- render-main [{:keys [workspace curator? owner? writer? bucket-access? editing? submissions-count library-schema request-refresh workspace-id]}]
+(defn- render-main [{:keys [workspace curator? owner? writer? reader? bucket-access? editing? submissions-count library-schema request-refresh workspace-id]}]
   (let [{:keys [owners]
          {:keys [createdBy createdDate bucketName description workspace-attributes library-attributes]} :workspace} workspace]
     [:div {:style {:flex "1 1 auto" :overflow "hidden"}}
@@ -185,6 +185,11 @@
                                     :title "Click to open the Google Cloud Storage browser for this bucket"
                                     :target "_blank"})
            false bucketName))
+       (when (not reader?)
+         (list (style/create-section-header "Billing")
+               (style/create-paragraph
+                 [:div {} (str "Total Estimated Storage Fee per month = " storage-cost)]
+                 [:div {:style {:fontSize "80%"}} (str "Note: the billing account associated with " (:namespace workspace-id) " will be charged.")])))
        (style/create-section-header "Analysis Submissions")
        (style/create-paragraph
          (let [count-all (apply + (vals submissions-count))]
@@ -233,7 +238,8 @@
          :else
          (let [owner? (or (= "PROJECT_OWNER" (:accessLevel workspace)) (= "OWNER" (:accessLevel workspace)))
                writer? (or owner? (= "WRITER" (:accessLevel workspace)))
-               derived {:owner? owner? :writer? writer? :request-refresh #(react/call :refresh this)}]
+               reader? (= "READER" (:accessLevel workspace))
+               derived {:owner? owner? :writer? writer? :reader? reader? :request-refresh #(react/call :refresh this)}]
            [:div {:style {:margin "45px 25px" :display "flex"}}
             (render-sidebar state refs this
                             (merge (select-keys props [:workspace :workspace-id :on-clone :on-delete])
@@ -241,8 +247,8 @@
                                    derived))
             (render-main (merge (select-keys props [:workspace :workspace-id :bucket-access?])
                                 (select-keys @state [:editing?])
-                                (select-keys server-response [:submissions-count :library-schema :curator?])
-                                (select-keys derived [:owner? :writer? :request-refresh])))
+                                (select-keys server-response [:submissions-count :library-schema :curator? :storage-cost])
+                                (select-keys derived [:owner? :writer? :reader? :request-refresh])))
             (when (:updating-attrs? @state)
               [comps/Blocker {:banner "Updating Attributes..."}])
             (when (contains? @state :locking?)
@@ -288,11 +294,11 @@
                      (swap! state update-in [:server-response]
                             assoc :server-error status-text)))})
      (endpoints/get-billing-projects
-      (fn [err-text projects]
-        (if err-text
-          (swap! state update-in [:server-response] assoc :server-error err-text)
-          (swap! state update-in [:server-response]
-                 assoc :billing-projects (map #(% "projectName") projects)))))
+       (fn [err-text projects]
+         (if err-text
+           (swap! state update-in [:server-response] assoc :server-error err-text)
+           (swap! state update-in [:server-response]
+                  assoc :billing-projects (map #(% "projectName") projects)))))
      (endpoints/get-library-attributes
        (fn [{:keys [success? get-parsed-response]}]
          (if success?
@@ -307,4 +313,13 @@
         :on-done (fn [{:keys [success? get-parsed-response]}]
                    (if success?
                      (swap! state update-in [:server-response] assoc :curator? (get (get-parsed-response false) "curator"))
-                     (swap! state update-in [:server-response] assoc :server-error "Unable to determine curator status")))}))})
+                     (swap! state update-in [:server-response] assoc :server-error "Unable to determine curator status")))})
+     (let [{:keys [workspace]} props
+           reader? (= "READER" (:accessLevel workspace))]
+       (when (not reader?)
+         (endpoints/call-ajax-orch
+           {:endpoint (endpoints/storage-cost-estimate (:workspace-id props))
+            :on-done (fn [{:keys [success? status-text get-parsed-response]}]
+                       (if success?
+                         (swap! state update-in [:server-response] assoc :storage-cost (get (get-parsed-response false) "estimate"))
+                         (swap! state update-in [:server-response] assoc :storage-cost status-text)))}))))})
