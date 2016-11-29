@@ -111,7 +111,7 @@
           [:div {}
            "Workspace Attributes"
            [:span {:style {:fontSize "initial" :fontWeight "initial"}}
-            [:a {:style {:marginLeft "1em"}
+            [:a {:style {:textDecoration "none" :marginLeft "1em"}
                  :href (str (config/api-url-root) "/cookie-authed/workspaces/"
                             (:namespace (:workspace-id props)) "/"
                             (:name (:workspace-id props)) "/exportAttributesTSV")
