@@ -101,7 +101,7 @@
        :method :get})
 
 (defn update-workspace-acl [workspace-id invite-new?]
-  {:path (str "/workspaces/" (ws-path workspace-id) "/acl?inviteUsersNotFound=" (some? invite-new?))
+  {:path (str "/workspaces/" (ws-path workspace-id) "/acl?inviteUsersNotFound=" (true? invite-new?))
    :method :patch})
 
 (defn clone-workspace [workspace-id]
