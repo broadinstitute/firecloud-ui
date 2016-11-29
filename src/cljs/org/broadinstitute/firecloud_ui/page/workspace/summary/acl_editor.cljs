@@ -14,11 +14,10 @@
 (def ^:private access-levels ["OWNER" "WRITER" "READER" "NO ACCESS"])
 
 
-(defn- render-acl-content [props state component]
+(defn- render-acl-content [workspace-id state persist-acl]
   [modal/OKCancelForm
    {:header
-    (let [workspace-id (:workspace-id props)]
-      (str "Permissions for " (:namespace workspace-id) "/" (:name workspace-id)))
+    (str "Permissions for " (:namespace workspace-id) "/" (:name workspace-id))
     :content
     (react/create-element
      [:div {}
@@ -56,7 +55,7 @@
            access-levels)
           (when (:pending? acl-entry)
             [:span {:style {:fontStyle "italic" :color (:text-light style/colors)
-                            :marginLeft "0.5rem" }}
+                            :marginLeft "0.5rem"}}
              "Pending..."])])
        (:non-project-owner-acl-vec @state))
       [:div {:style {:margin "0.5rem 0"}}
@@ -65,12 +64,11 @@
                                        conj {:email "" :accessLevel "READER"})}]]
       (style/create-validation-error-message (:validation-error @state))
       [comps/ErrorViewer {:error (:save-error @state)}]])
-    :ok-button {:text "Save" :onClick #(react/call :persist-acl component)}}])
+    :ok-button {:text "Save" :onClick persist-acl}}])
 
-(defn- render-invite-offer [props state component]
+(defn- render-invite-offer [workspace-id state persist-acl]
   [modal/OKCancelForm
-   {:header (let [workspace-id (:workspace-id props)]
-              (str "Invite new users to" (:namespace workspace-id) "/" (:name workspace-id)))
+   {:header (str "Invite new users to" (:namespace workspace-id) "/" (:name workspace-id))
     :content (react/create-element
               [:div {}
                (when (:saving? @state)
@@ -88,15 +86,16 @@
                                    :marginLeft "1rem" :marginBottom 0}}
                     (:accessLevel acl-entry)]])
                 (:users-not-found @state))])
-    :ok-button {:text "Invite" :onClick #(react/call :persist-acl component true)}}])
+    :ok-button {:text "Invite" :onClick #(persist-acl true)}}])
 
 (react/defc AclEditor
   {:render
    (fn [{:keys [props state this]}]
      (if (or (:non-project-owner-acl-vec @state) (:project-owner-acl-vec @state))
-       (if (:offering-invites? @state)
-         (render-invite-offer props state this)
-         (render-acl-content props state this))
+       (let [persist-acl #(react/call :persist-acl this %)]
+        (if (:offering-invites? @state)
+          (render-invite-offer (:workspace-id props) state persist-acl)
+          (render-acl-content (:workspace-id props) state persist-acl)))
        [:div {:style {:padding "2em"}}
         (if (:load-error @state)
           (style/create-server-error-message (:load-error @state))
@@ -130,7 +129,7 @@
                             (swap! state assoc :save-error (get-parsed-response false)))))})))))
    :offer-user-invites
    (fn [{:keys [state]} parsed-response]
-     (swap! state assoc :users-not-found (:usersNotFound parsed-response) :offering-invites? true)
+     (swap! state assoc :users-not-found (:usersNotFound parsed-response) :offering-invites? true))
    :component-did-mount
    (fn [{:keys [props state]}]
      (endpoints/call-ajax-orch
