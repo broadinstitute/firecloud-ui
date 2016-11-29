@@ -19,11 +19,12 @@
        :content
        (let [{:keys [data error status]} (:response @state)
              data-size (when data (data "size"))
+             cost (when data (data "estimatedCostUSD"))
              labeled (fn [label & contents]
                        [:div {}
-                        [:div {:style {:display "inline-block" :width 120}} (str label ": ")]
+                        [:div {:style {:display "inline-block" :width 185}} (str label ": ")]
                         contents])]
-         [:div {:style {:width 500 :overflow "auto"}}
+         [:div {:style {:width 700 :overflow "auto"}}
           (labeled "Google Bucket" (:bucket-name props))
           (labeled "Object" (:object props))
           (when (:loading? @state)
@@ -38,12 +39,12 @@
                             :target "_blank"}
                         "Open"]
                        [:span {:style {:fontStyle "italic" :color (:text-light style/colors)}}
-                        " (right-click to download)"]]
-                      (when (> data-size 100000000)
-                        [:span {:style {:color (:exception-state style/colors) :marginLeft "2ex"}}
-                         (icons/icon {:style {:fontSize "100%" :verticalAlign "middle" :marginRight "1ex"}}
-                                     :warning-triangle)
-                         "Warning: Downloading this file may incur a large data egress charge"]))
+                        " (right-click to download)"]])
+             (labeled "Estimated download fee"
+                      (common/format-price cost)
+                      [:span {:style {:marginLeft "1em"}}
+                       [:span {:style {:fontStyle "italic" :color (:text-light style/colors)}}
+                        " (charges to non-US destinations may be higher)"]])
              (if (:show-details? @state)
                [:div {}
                 (labeled "Created" (common/format-date (data "timeCreated")))

@@ -131,6 +131,12 @@
               (loop (/ b 1000) (inc n))))]
     (loop bytes 0)))
 
+(defn format-price [cents]
+  (let [dollars (str "$" (.toFixed (js/parseFloat cents) 2))]
+     (cond
+       (< cents 0.01) "< $0.01"
+       :else dollars)))
+
 (defn parse-profile [unparsed-profile]
   (let [unparsed-values (get unparsed-profile "keyValuePairs")]
     (into {} (map (fn [m] [(keyword (m "key")) (m "value")]) unparsed-values))))
