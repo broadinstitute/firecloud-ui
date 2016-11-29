@@ -119,7 +119,7 @@
                  :target "_blank"}
              (str "Download Attributes")]
             (when writer?
-              [comps/Button {:text "Import Attributes"
+              [comps/Button {:text "Import Attributes..."
                              :style {:float "right" :marginTop -7}
                              :onClick #(modal/push-modal
                                         [modal/OKCancelForm
