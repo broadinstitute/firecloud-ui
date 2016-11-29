@@ -130,8 +130,7 @@
                             (swap! state assoc :save-error (get-parsed-response false)))))})))))
    :offer-user-invites
    (fn [{:keys [state]} parsed-response]
-     (swap! state assoc :users-not-found (:usersNotFound parsed-response))
-     (swap! state assoc :offering-invites? true))
+     (swap! state assoc :users-not-found (:usersNotFound parsed-response) :offering-invites? true)
    :component-did-mount
    (fn [{:keys [props state]}]
      (endpoints/call-ajax-orch
