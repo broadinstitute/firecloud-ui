@@ -108,26 +108,27 @@
      (let [{:keys [editing? writer?]} props]
        [:div {}
         (style/create-section-header
-          [:div {} "Workspace Attributes"
-           (style/create-inline
-             [:a {:style {:textDecoration "none" :margin "7px 0 0 1em"}
-                  :href (str (config/api-url-root) "/cookie-authed/workspaces/"
-                          (:namespace (:workspace-id props)) "/"
-                          (:name (:workspace-id props)) "/exportAttributesTSV")
-                  :onClick  #(utils/set-access-token-cookie (utils/get-access-token))
-                  :target "_blank"}
-              (str "Download Attributes")]
-             (if writer?
-               [comps/Button {:text "Import Attributes"
-                              :style {:float "right"}
-                              :onClick #(modal/push-modal
-                                          [modal/OKCancelForm
-                                           {:header "Import Attributes"
-                                            :show-cancel? false :ok-button {:text "Done" :onClick modal/pop-modal}
-                                            :content [:div {:style {:float "right" :width 720}}
-                                                      [import-data/Page (merge (select-keys props [:workspace-id])
-                                                                          {:reload (fn [] (modal/pop-modal) ((:request-refresh props)))}
-                                                                          {:import-type "workspace-attributes"})]]}])}]))])
+          [:div {}
+           "Workspace Attributes"
+           [:span {:style {:fontSize "initial" :fontWeight "initial"}}
+            [:a {:style {:marginLeft "1em"}
+                 :href (str (config/api-url-root) "/cookie-authed/workspaces/"
+                            (:namespace (:workspace-id props)) "/"
+                            (:name (:workspace-id props)) "/exportAttributesTSV")
+                 :onClick  #(utils/set-access-token-cookie (utils/get-access-token))
+                 :target "_blank"}
+             (str "Download Attributes")]
+            (when writer?
+              [comps/Button {:text "Import Attributes"
+                             :style {:float "right" :marginTop -7}
+                             :onClick #(modal/push-modal
+                                        [modal/OKCancelForm
+                                         {:header "Import Attributes"
+                                          :show-cancel? false :ok-button {:text "Done" :onClick modal/pop-modal}
+                                          :content [:div {:style {:float "right" :width 720}}
+                                                    [import-data/Page (merge (select-keys props [:workspace-id])
+                                                                             {:reload (fn [] (modal/pop-modal) ((:request-refresh props)))}
+                                                                             {:import-type "workspace-attributes"})]]}])}])]])
         (style/create-paragraph
           [:div {}
            (if editing?
