@@ -6,6 +6,7 @@
     [org.broadinstitute.firecloud-ui.common.components :as comps]
     [org.broadinstitute.firecloud-ui.common.modal :as modal]
     [org.broadinstitute.firecloud-ui.common.style :as style]
+    [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
     [org.broadinstitute.firecloud-ui.utils :as utils]
     ))
 
@@ -20,7 +21,7 @@
        (if (map? v)
          (join ", " (:items v))
          (str v))])
-    (get-in workspace [:workspace :library-attributes])))
+    (dissoc (get-in workspace [:workspace :library-attributes]) :library:published)))
 
 
 (def ^:private ENUM_EMPTY_CHOICE "<select an option>")
@@ -89,7 +90,7 @@
          error)))
    :get-attributes
    (fn [{:keys [props locals]}]
-     (utils/cljslog (parse-attributes (:processed-attributes @locals) (:library-schema props))))
+     (parse-attributes (:processed-attributes @locals) (:library-schema props)))
    :get-initial-state
    (fn [{:keys [props]}]
      (let [{:keys [questions attributes library-schema]} props
@@ -237,6 +238,8 @@
    (fn [{:keys [props state this]}]
      (let [{:keys [library-schema]} props]
        [:div {}
+        (when (:submitting? @state)
+          [comps/Blocker {:banner "Submitting..."}])
         [:div {:style {:borderBottom style/standard-line
                        :padding "20px 48px 18px"
                        :fontSize "137%" :fontWeight 400 :lineHeight 1}}
@@ -255,6 +258,7 @@
          (when-let [error (:validation-error @state)]
            [:div {:style {:marginTop "1em" :color (:exception-state style/colors) :textAlign "center"}}
             error])
+         [comps/ErrorViewer {:error (:submit-error @state)}]
          [:div {:style {:marginTop 40 :textAlign "center"}}
           [:a {:className "cancel"
                :style {:marginRight 27 :marginTop 2 :padding "0.5em"
@@ -273,14 +277,28 @@
                          :onClick #(react/call :next-page this)
                          :style {:width 80}}]]]]))
    :next-page
-   (fn [{:keys [props state refs]}]
+   (fn [{:keys [props state refs this]}]
      (swap! state dissoc :validation-error)
      (if-let [error-message (react/call :validate (@refs "wizard-page"))]
        (swap! state assoc :validation-error error-message)
        (let [new-attributes (merge (:attributes @state) (react/call :get-attributes (@refs "wizard-page")))]
          (if (< (:page @state) (-> props :library-schema :wizard count dec))
            (swap! state #(-> % (update :page inc) (assoc :attributes new-attributes)))
-           (utils/cljslog "TODO: submit" new-attributes)))))})
+           (react/call :submit this new-attributes)))))
+   :submit
+   (fn [{:keys [props state]} attributes]
+     (swap! state assoc :submitting? true :submit-error nil)
+     (endpoints/call-ajax-orch
+       {:endpoint (endpoints/save-library-metadata (:workspace-id props))
+        :payload (utils/map-keys (fn [k] (str "library" k))
+                                 attributes)
+        :headers utils/content-type=json
+        :on-done (fn [{:keys [success? get-parsed-response]}]
+                   (swap! state dissoc :submitting?)
+                   (if success?
+                     (do (modal/pop-modal)
+                         ((:request-refresh props)))
+                     (swap! state assoc :submit-error (get-parsed-response false))))}))})
 
 
 (react/defc CatalogButton
