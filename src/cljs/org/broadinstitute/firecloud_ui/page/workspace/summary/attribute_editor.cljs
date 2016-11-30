@@ -110,7 +110,7 @@
         (style/create-section-header
           [:div {}
            "Workspace Attributes"
-           (if-not editing?
+           (when-not editing?
              [:span {:style {:fontSize "initial" :fontWeight "initial"}}
               [:a {:style {:textDecoration "none" :marginLeft "1em"}
                    :href (str (config/api-url-root) "/cookie-authed/workspaces/"
