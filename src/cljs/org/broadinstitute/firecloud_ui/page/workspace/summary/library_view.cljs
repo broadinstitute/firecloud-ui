@@ -16,9 +16,10 @@
         :else value))
 
 (defn- render-library-row [key value]
-  [:div {:style {:display "flex" :padding "0.5em 0" :borderBottom (str "2px solid " (:line-default style/colors))}}
-   [:div {:style {:flexBasis "33%" :fontWeight "bold" :paddingRight "2em"}} key]
-   [:div {:style {:flexBasis "67%"}} value]])
+  (when value
+    [:div {:style {:display "flex" :padding "0.5em 0" :borderBottom (str "2px solid " (:line-default style/colors))}}
+     [:div {:style {:flexBasis "33%" :fontWeight "bold" :paddingRight "2em"}} key]
+     [:div {:style {:flexBasis "67%"}} value]]))
 
 
 (defn- render-property [library-schema library-attributes property-key]
@@ -26,13 +27,6 @@
    (get-in library-schema [:properties property-key :title])
    (render-value (get library-attributes (keyword (str "library" property-key))))))
 
-
-(defn- render-consent-code [[consent-code value] consent-codes]
-  [:div {:style {:display "inline-block" :border style/standard-line :borderRadius 3
-                 :margin "0.2em" :padding "0 0.4em"
-                 :cursor "help"}
-         :title (get consent-codes (keyword consent-code))}
-   (str consent-code ": " value)])
 
 (defn- render-consent-codes [library-schema library-attributes]
   (render-library-row
@@ -45,7 +39,13 @@
                                          (when-let [consent-code (get-consent-code key)]
                                            [consent-code value])))
                                  (sort-by (comp (partial utils/index-of consent-code-order) key)))]
-     [:div {} (map #(render-consent-code % consent-codes) consent-attributes)])))
+     [:div {} (map (fn [[consent-code value]]
+                     [:div {:style {:display "inline-block" :border style/standard-line :borderRadius 3
+                                    :margin "0 0.2em 0.2em 0" :padding "0 0.4em"
+                                    :cursor "help"}
+                            :title (get consent-codes (keyword consent-code))}
+                      (str consent-code ": " value)])
+                   consent-attributes)])))
 
 
 (react/defc LibraryView
