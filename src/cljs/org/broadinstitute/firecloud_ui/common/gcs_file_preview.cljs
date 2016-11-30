@@ -41,7 +41,7 @@
                        [:span {:style {:fontStyle "italic" :color (:text-light style/colors)}}
                         " (right-click to download)"]])
              (labeled "Estimated download fee"
-                      (common/format-price cost)
+                      (if (nil? cost) "Unknown" (common/format-price cost))
                       [:span {:style {:marginLeft "1em"}}
                        [:span {:style {:fontStyle "italic" :color (:text-light style/colors)}}
                         " (non-US destinations may be higher)"]])
