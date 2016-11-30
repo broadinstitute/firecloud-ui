@@ -7,6 +7,7 @@
     [org.broadinstitute.firecloud-ui.common :as common]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
     [org.broadinstitute.firecloud-ui.common.entity-table :refer [EntityTable]]
+    [org.broadinstitute.firecloud-ui.common.gcs-file-preview :refer [GCSFilePreviewLink]]
     [org.broadinstitute.firecloud-ui.common.modal :as modal]
     [org.broadinstitute.firecloud-ui.common.table :as table]
     [org.broadinstitute.firecloud-ui.common.table-utils :as table-utils]
@@ -59,14 +60,16 @@
 
 (react/defc EntityAttributes
   {:render (fn [{:keys [props state]}]
-      (let [attributes (:attributes props)
+      (let [workspace (:workspace props)
+            bucket-name (get-in workspace [:workspace :bucketName])
+            attributes (:attributes props)
             entity-name (:selected-entity props)
             entity-type (str (:selected-entity-type props))]
       (when (not= entity-type ":sample_set")
-      [:div {:style {:maxWidth "25vw" :width (if (nil? attributes) "0" "25vw") :justifyContent "flex-end":flex "0 1 1"}}
-        [:div {:style {:marginLeft "3px"}}
+      [:div {:style {:maxWidth "24vw" :width (if (nil? attributes) "0" "24vw") :justifyContent "flex-end" :flex "0 1 1"}}
+        [:div {:style {:marginLeft ".32em"}}
          (when-not (nil? attributes)
-           [:div {:style {:fontWeight "bold" :color "black" :marginBottom ".5em"}} (str  entity-name " Attributes:" )])
+           [:div {:style {:fontWeight "bold" :color "black" :marginBottom "2.3em"}} (str  entity-name " Attributes:" )])
          (when-not (nil? attributes)
            [:div {}
             [table/Table {
@@ -75,13 +78,21 @@
                 :width :narrow
                 :pagination :internal
                 :filterable false
+                :initial-rows-per-page 100
                 :header-row-style {:borderBottom (str "2px solid " (:line-default style/colors))
                                   :backgroundColor "white" :color "black" :fontWeight "bold"}
                 :empty-message "No Entity Attributes defined"
-                :columns [{:header "Attribute" :starting-width 150 :sort-initial :asc}
-                          {:header "Value" :starting-width :remaining}]
+                :columns [{:header "Attribute" :starting-width 120 :sort-initial :asc}
+                          {:header "Value" :starting-width :remaining
+                           :content-renderer (fn [attr-value]
+                              (if-let [parsed (common/parse-gcs-uri attr-value)]
+                                [GCSFilePreviewLink (assoc parsed :attributes {:style {:display "inline"}}
+                                       :link-label attr-value)]
+                              (str attr-value)))}]
                 :data (seq attributes)
-                :->row (fn [x] (let [nkey (str(first x)) name (clojure.string/replace nkey #":" "")] [[name] (val x)]))}]])]])))})
+                :->row (fn [x] (let [nkey (str(first x)) 
+                                     name (clojure.string/replace nkey #":" "")]
+                                 [[name] (val x)]))}]])]])))})
 
 
 (react/defc WorkspaceData
@@ -91,8 +102,9 @@
    :render
    (fn [{:keys [props state refs]}]
      (let [{:keys [workspace-id workspace workspace-error]} props]
-       [:div {:style {:padding "1em" :display "flex" :justifyContent "flex-start"
-                      :width (if (nil? (:selected-entity-attributes @state)) "100vw" "75vw") :key (str "attrtbl_" (:selected-entity-attributes @state))}}
+       [:div {:style {:padding "1em" :display "flex" :justifyContent "flex-start" :flex "0 1 1"
+                      :width (if (nil? (:selected-entity-attributes @state)) "100vw" "76vw") 
+                      :key (str "attrtbl_" (:selected-entity-attributes @state))}}
         (cond
           workspace-error
           (style/create-server-error-message workspace-error)
@@ -103,40 +115,40 @@
              {:ref "entity-table"
               :workspace-id workspace-id
               :column-defaults (try
-                                 (utils/parse-json-string (get-in workspace [:workspace :workspace-attributes :workspace-column-defaults]))
-                                 (catch js/Object e
-                                   (utils/jslog e) nil))
+                 (utils/parse-json-string (get-in workspace [:workspace :workspace-attributes :workspace-column-defaults]))
+                 (catch js/Object e
+                   (utils/jslog e) nil))
               :toolbar (fn [built-in]
-                         [:div {:style {:display "flex" :justifyContent "flex-start" :alignItems "baseline"}}
-                          [:div {} built-in]
-                          (when-let [selected-entity-type (some-> (:selected-entity-type @state) name)]
-                            [:a {:style {:textDecoration "none" :margin "7px 0 0 1em"}
-                                 :href (str (config/api-url-root) "/cookie-authed/workspaces/"
-                                            (:namespace workspace-id) "/"
-                                            (:name workspace-id) "/entities/" selected-entity-type "/tsv"
-                                            "?attributeNames="
-                                            (->> (persistence/try-restore
-                                                  {:key (str (common/workspace-id->string workspace-id) ":data:" selected-entity-type)
-                                                   :initial (constantly {})})
-                                                 :column-meta
-                                                 (filter :visible?)
-                                                 (map :header)
-                                                 (clojure.string/join ",")))
-                                 :onClick #(utils/set-access-token-cookie @access-token)
-                                 :target "_blank"}
-                             (str "Download '" selected-entity-type "' data")])
-                          [:div {:style {:flexGrow 1}}]
-                          [:div {:style {:paddingRight "2em"}}
-                           [comps/Button {:text "Import Data..."
-                                          :disabled? (when locked? "This workspace is locked.")
-                                          :onClick #(modal/push-modal
-                                                     [DataImporter {:workspace-id workspace-id
-                                                                    :this-realm this-realm
-                                                                    :import-type "data"
-                                                                    :reload
-                                                                    (fn [entity-type]
-                                                                      ((:request-refresh props))
-                                                                      (react/call :refresh (@refs "entity-table") entity-type))}])}]]])
+                 [:div {:style {:display "flex" :justifyContent "flex-start" :alignItems "baseline"}}
+                  [:div {} built-in]
+                  (when-let [selected-entity-type (some-> (:selected-entity-type @state) name)]
+                    [:a {:style {:textDecoration "none" :margin "7px .3em 0 0"}
+                         :href (str (config/api-url-root) "/cookie-authed/workspaces/"
+                                    (:namespace workspace-id) "/"
+                                    (:name workspace-id) "/entities/" selected-entity-type "/tsv"
+                                    "?attributeNames="
+                                    (->> (persistence/try-restore
+                                          {:key (str (common/workspace-id->string workspace-id) ":data:" selected-entity-type)
+                                           :initial (constantly {})})
+                                         :column-meta
+                                         (filter :visible?)
+                                         (map :header)
+                                         (clojure.string/join ",")))
+                         :onClick #(utils/set-access-token-cookie @access-token)
+                         :target "_blank"}
+                     (str "Download '" (clojure.string/replace selected-entity-type ":" "") "' data")])
+                  [:div {:style {:flexGrow 1}}]
+                  [:div {:style {:paddingRight ".5em"}}
+                   [comps/Button {:text "Import Data..."
+                                  :disabled? (when locked? "This workspace is locked.")
+                                  :onClick #(modal/push-modal
+                                             [DataImporter {:workspace-id workspace-id
+                                                            :this-realm this-realm
+                                                            :import-type "data"
+                                                            :reload
+                                                            (fn [entity-type]
+                                                              ((:request-refresh props))
+                                                              (react/call :refresh (@refs "entity-table") entity-type))}])}]]])
               :on-filter-change #(swap! state assoc :selected-entity-type %)
               :attribute-renderer (table-utils/render-gcs-links (get-in workspace [:workspace :bucketName]))
               :entity-name-renderer (fn [e]
