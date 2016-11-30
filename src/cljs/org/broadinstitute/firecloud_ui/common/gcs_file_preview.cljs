@@ -3,7 +3,6 @@
     [dmohs.react :as react]
     [org.broadinstitute.firecloud-ui.common :as common]
     [org.broadinstitute.firecloud-ui.common.components :refer [Spinner]]
-    [org.broadinstitute.firecloud-ui.common.icons :as icons]
     [org.broadinstitute.firecloud-ui.common.modal :as modal]
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
@@ -18,8 +17,8 @@
       {:header "File Details"
        :content
        (let [{:keys [data error status]} (:response @state)
-             data-size (when data (data "size"))
-             cost (when data (data "estimatedCostUSD"))
+             data-size (:size data)
+             cost (:estimatedCostUSD data)
              labeled (fn [label & contents]
                        [:div {}
                         [:div {:style {:display "inline-block" :width 185}} (str label ": ")]
@@ -47,9 +46,9 @@
                         " (non-US destinations may be higher)"]])
              (if (:show-details? @state)
                [:div {}
-                (labeled "Created" (common/format-date (data "timeCreated")))
-                (labeled "Updated" (common/format-date (data "updated")))
-                (labeled "MD5" (data "md5Hash"))
+                (labeled "Created" (common/format-date (:timeCreated data)))
+                (labeled "Updated" (common/format-date (:updated data)))
+                (labeled "MD5" (:md5Hash data))
                 (style/create-link {:text "Collapse"
                                     :onClick #(swap! state dissoc :show-details?)})]
                (style/create-link {:text "More info"
@@ -80,7 +79,7 @@
                   (swap! state assoc
                          :loading? false
                          :response (if success?
-                                     {:data (get-parsed-response false)}
+                                     {:data (get-parsed-response)}
                                      {:error (.-responseText xhr)
                                       :status status-code})))}))})
 
