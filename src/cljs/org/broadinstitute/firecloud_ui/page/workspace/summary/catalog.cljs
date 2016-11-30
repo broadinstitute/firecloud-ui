@@ -7,6 +7,7 @@
     [org.broadinstitute.firecloud-ui.common.modal :as modal]
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
+    [org.broadinstitute.firecloud-ui.page.workspace.summary.library-utils :as library-utils]
     [org.broadinstitute.firecloud-ui.utils :as utils]
     ))
 
@@ -14,9 +15,7 @@
 (defn- get-initial-attributes [workspace]
   (utils/map-kv
     (fn [k v]
-      [;; strip off the "library:" from the key
-       (let [[_ _ attr] (re-find #"(.*):(.*)" (name k))]
-         (keyword attr))
+      [(library-utils/strip-library-prefix k)
        ;; unpack lists and convert everything to a string
        (if (map? v)
          (join ", " (:items v))
