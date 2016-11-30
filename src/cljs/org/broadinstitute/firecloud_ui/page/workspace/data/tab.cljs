@@ -14,8 +14,8 @@
     [org.broadinstitute.firecloud-ui.page.workspace.data.copy-data-workspaces :as copy-data-workspaces]
     [org.broadinstitute.firecloud-ui.page.workspace.data.import-data :as import-data]
     [org.broadinstitute.firecloud-ui.persistence :as persistence]
-    [org.broadinstitute.firecloud-ui.utils :as utils :refer [access-token]]))
-
+    [org.broadinstitute.firecloud-ui.utils :as u]
+    ))
 
 
 (react/defc DataImporter
@@ -73,9 +73,9 @@
              {:ref "entity-table"
               :workspace-id workspace-id
               :column-defaults (try
-                                 (utils/parse-json-string (get-in workspace [:workspace :workspace-attributes :workspace-column-defaults]))
+                                 (u/parse-json-string (get-in workspace [:workspace :workspace-attributes :workspace-column-defaults]))
                                  (catch js/Object e
-                                   (utils/jslog e) nil))
+                                   (u/jslog e) nil))
               :toolbar (fn [built-in]
                          [:div {:style {:display "flex" :justifyContent "flex-start" :alignItems "baseline"}}
                           [:div {} built-in]
@@ -92,7 +92,7 @@
                                                  (filter :visible?)
                                                  (map :header)
                                                  (clojure.string/join ",")))
-                                 :onClick #(utils/set-access-token-cookie @access-token)
+                                 :onClick #(u/set-access-token-cookie (u/get-access-token))
                                  :target "_blank"}
                              (str "Download '" selected-entity-type "' data")])
                           [:div {:style {:flexGrow 1}}]

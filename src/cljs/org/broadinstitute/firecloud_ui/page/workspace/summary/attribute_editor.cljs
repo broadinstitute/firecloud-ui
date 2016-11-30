@@ -105,9 +105,30 @@
              :else {:success typed})))
    :render
    (fn [{:keys [props state after-update]}]
-     (let [{:keys [editing?]} props]
+     (let [{:keys [editing? writer?]} props]
        [:div {}
-        (style/create-section-header "Workspace Attributes")
+        (style/create-section-header
+          [:div {}
+           "Workspace Attributes"
+           [:span {:style {:fontSize "initial" :fontWeight "initial"}}
+            [:a {:style {:textDecoration "none" :marginLeft "1em"}
+                 :href (str (config/api-url-root) "/cookie-authed/workspaces/"
+                            (:namespace (:workspace-id props)) "/"
+                            (:name (:workspace-id props)) "/exportAttributesTSV")
+                 :onClick  #(utils/set-access-token-cookie (utils/get-access-token))
+                 :target "_blank"}
+             (str "Download Attributes")]
+            (when writer?
+              [comps/Button {:text "Import Attributes..."
+                             :style {:float "right" :marginTop -7}
+                             :onClick #(modal/push-modal
+                                        [modal/OKCancelForm
+                                         {:header "Import Attributes"
+                                          :show-cancel? false :ok-button {:text "Done" :onClick modal/pop-modal}
+                                          :content [:div {:style {:float "right" :width 720}}
+                                                    [import-data/Page (merge (select-keys props [:workspace-id])
+                                                                             {:reload (fn [] (modal/pop-modal) ((:request-refresh props)))}
+                                                                             {:import-type "workspace-attributes"})]]}])}])]])
         (style/create-paragraph
           [:div {}
            (if editing?
@@ -116,23 +137,7 @@
                              :onClick (fn [_]
                                         (swap! state update :attributes conj ["" ""])
                                         ;; have to do this by ID not ref, since the fields are generated within Table
-                                          (after-update #(.focus (.getElementById js/document "focus"))))}]]
-              [:div {:style {:marginBottom "0.25em"}}
-                [comps/Button {:text "Download Attributes"
-                               :onClick #(utils/set-access-token-cookie @utils/access-token)
-                               :href (str (config/api-url-root) "/cookie-authed/workspaces/"
-                                          (:namespace (:workspace-id props)) "/"
-                                          (:name (:workspace-id props)) "/exportAttributesTSV")
-                             :style {:marginRight "0.25em"}}]
-                [comps/Button {:text "Import Attributes"
-                               :onClick #(modal/push-modal
-                                          [modal/OKCancelForm
-                                           {:header "Import Attributes"
-                                            :show-cancel? false :ok-button {:text "Done" :onClick modal/pop-modal}
-                                            :content [:div {:style {:width 720}}
-                                                      [import-data/Page (merge (select-keys props [:workspace-id])
-                                                                               {:reload (fn [] (modal/pop-modal) ((:request-refresh props)) )}
-                                                                               {:import-type "workspace-attributes"})]]}])}]])
+                                        (after-update #(.focus (.getElementById js/document "focus"))))}]])
            [table/Table
             {:key (str editing? (count (:attributes @state)))
              :reorderable-columns? false :sortable-columns? (not editing?) :filterable? false :pagination :none

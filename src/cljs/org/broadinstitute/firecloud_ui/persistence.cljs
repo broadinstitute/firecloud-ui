@@ -5,7 +5,8 @@
 
 
 (defn- generate-persistence-key [key]
-  (keyword (str "state:" (:userSubjectId @utils/current-user-info) ":" key)))
+  (let [id (-> @utils/google-auth2-instance (.-currentUser) (.get) (.getBasicProfile) (.getId))]
+    (keyword (str "state:" id ":" key))))
 
 (defn save [{:keys [key state except only]}]
   (assert (not (and except only)) "Specify EITHER except OR only")

@@ -39,7 +39,14 @@
 
 (defn parse-json-string
   ([x] (parse-json-string x false))
-  ([x keywordize-keys?] (js->clj (js/JSON.parse x) :keywordize-keys keywordize-keys?)))
+  ([x keywordize-keys?] (parse-json-string x keywordize-keys? true))
+  ([x keywordize-keys? throw-on-error?]
+   (if throw-on-error?
+     (js->clj (js/JSON.parse x) :keywordize-keys keywordize-keys?)
+     (try
+       [(js->clj (js/JSON.parse x) :keywordize-keys keywordize-keys?) false]
+       (catch js/Object e
+         [nil e])))))
 
 
 (defn keywordize-keys [m]
@@ -47,8 +54,6 @@
                         [(keyword k) (if (map? v) (keywordize-keys v) v)])
                     m)))
 
-
-(defonce current-user-info (atom nil))
 
 (defn local-storage-write
   ([k v] (local-storage-write k v false))
@@ -78,7 +83,12 @@
  (fn [k r os ns]
    (local-storage-write ::use-live-data? ns true)))
 
-(def access-token (atom nil))
+
+(defonce google-auth2-instance (atom nil))
+
+(defn get-access-token []
+  (-> @google-auth2-instance (.-currentUser) (.get) (.getAuthResponse) (.-access_token)))
+
 
 (defn get-cookie-domain []
   (if (= "local.broadinstitute.org" js/window.location.hostname)
@@ -148,12 +158,8 @@
             (.send xhr)))))))
 
 
-(defonce auth-expiration-handler nil)
-
-
 (defonce server-down? (atom false))
 (defonce maintenance-mode? (atom false))
-(defonce pending-calls (atom []))
 
 
 (defn- check-maintenance-mode [status-code status-text]
@@ -168,29 +174,19 @@
       (<= 503 status-code 599)))
 
 
-(defn ajax-orch [path arg-map & {:keys [service-prefix ignore-auth-expiration?] :or {service-prefix "/api"}}]
+(defn ajax-orch [path arg-map & {:keys [service-prefix] :or {service-prefix "/api"}}]
   (assert (= (subs path 0 1) "/") (str "Path must start with '/': " path))
   (let [on-done (:on-done arg-map)]
     (ajax (assoc
            arg-map :url (str (config/api-url-root) service-prefix path)
-           :headers (merge {"Authorization" (str "Bearer " @access-token)}
+           :headers (merge {"Authorization" (str "Bearer " (get-access-token))}
                            (:headers arg-map))
            :on-done (fn [{:keys [status-code status-text raw-response] :as m}]
                       (when (and (not @server-down?)  (not @maintenance-mode?))
                         (cond
                           (check-maintenance-mode status-code status-text) (reset! maintenance-mode? true)
                           (check-server-down status-code) (reset! server-down? true)))
-                      ;; Handle auth token expiration
-                      (if (and (= status-code 401) (not ignore-auth-expiration?))
-                        (do
-                          (swap! pending-calls conj [path arg-map
-                                                     :service-prefix service-prefix
-                                                     :ignore-auth-expiration? true])
-                          (auth-expiration-handler
-                           (fn []
-                             (dorun (map (fn [x] (apply ajax-orch x)) @pending-calls))
-                             (reset! pending-calls []))))
-                        (on-done m)))))))
+                      (on-done m))))))
 
 
 (defn deep-merge [& maps]

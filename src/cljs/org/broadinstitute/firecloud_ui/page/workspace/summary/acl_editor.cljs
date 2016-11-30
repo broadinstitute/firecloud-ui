@@ -48,7 +48,7 @@
           (style/create-identity-select
            {:ref (str "acl-value" i)
             :style {:display "inline-block" :width 200 :height 33 :marginLeft "1rem" :marginBottom 0}
-            :disabled (= (:email acl-entry) (:userEmail @utils/current-user-info))
+            :disabled (= (:email acl-entry) (-> @utils/google-auth2-instance (.-currentUser) (.get) (.getBasicProfile) (.getEmail)))
             :value (:accessLevel acl-entry)
             :onChange #(swap! state assoc-in [:non-project-owner-acl-vec i :accessLevel]
                               (.. % -target -value))}

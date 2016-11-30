@@ -17,8 +17,7 @@
         :canned-response {:status 200 :delay-ms (rand-int 2000)
                           :responseText (if-let [mock-data (:mock-data endpoint)]
                                           (utils/->json-string mock-data))})
-      :endpoint :raw-data :payload)
-    :ignore-auth-expiration? (:ignore-auth-expiration? endpoint)))
+      :endpoint :raw-data :payload)))
 
 
 (defn- ws-path [workspace-id]
@@ -702,8 +701,7 @@
         (get (first (filter #(= project-name (% "projectName")) projects)) "creationStatus"))))))
 
 (defn get-billing-accounts []
-  {:path (str "/profile/billingAccounts?callback="
-           (js/encodeURIComponent (.. js/window -location -origin)))
+  {:path "/profile/billingAccounts"
    :method :get
    :mock-data
    [{:accountName "billingAccounts/00473A-04A1D8-155CAB"
@@ -857,11 +855,6 @@
   {:path "/library/search"
    :method :post })
 
-
-(defn get-refresh-token-date []
-  {:path "/profile/refreshTokenDate"
-   :method :get})
-
 (defn submissions-queue-status []
   {:path "/submissions/queueStatus"
    :method :get
@@ -875,5 +868,4 @@
                 "Failed" (rand-int 1000)
                 "Succeeded" (rand-int 1000)
                 "Aborted" (rand-int 1000)
-                "Unknown" (rand-int 1000)}}
-   :ignore-auth-expiration? true})
+                "Unknown" (rand-int 1000)}}})
