@@ -131,10 +131,10 @@
               (loop (/ b 1000) (inc n))))]
     (loop bytes 0)))
 
-(defn format-price [cents]
-  (let [dollars (str "$" (.toFixed (js/parseFloat cents) 2))]
+(defn format-price [amount]
+  (let [dollars (str "$" (.toFixed (js/parseFloat amount) 2))]
      (cond
-       (< cents 0.01) "< $0.01"
+       (< amount 0.01) "< $0.01"
        :else dollars)))
 
 (defn parse-profile [unparsed-profile]
