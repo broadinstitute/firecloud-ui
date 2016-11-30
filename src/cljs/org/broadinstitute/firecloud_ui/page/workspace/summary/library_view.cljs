@@ -37,11 +37,15 @@
 (defn- render-consent-codes [library-schema library-attributes]
   (render-library-row
    "Structured Data Use Restrictions"
-   (let [consent-attributes (keep (fn [[key value]]
-                                    (when-let [consent-code (get-in library-schema [:properties (library-utils/strip-library-prefix key) :consentCode])]
-                                      [consent-code value]))
-                                  library-attributes)]
-     [:div {} (map #(render-consent-code % (:consentCodes library-schema)) consent-attributes)])))
+   (let [get-consent-code #(get-in library-schema [:properties (library-utils/strip-library-prefix %) :consentCode])
+         consent-codes (:consentCodes library-schema)
+         consent-code-order (get-in library-schema [:display :consentCodes])
+         consent-attributes (->> library-attributes
+                                 (keep (fn [[key value]]
+                                         (when-let [consent-code (get-consent-code key)]
+                                           [consent-code value])))
+                                 (sort-by (comp (partial utils/index-of consent-code-order) key)))]
+     [:div {} (map #(render-consent-code % consent-codes) consent-attributes)])))
 
 
 (react/defc LibraryView
