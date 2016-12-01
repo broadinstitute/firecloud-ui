@@ -138,7 +138,7 @@
      [comps/Button
       {:text "Launch Analysis..."
        :disabled? (:disabled? props)
-       :onClick (modal/push-modal
+       :onClick #(modal/push-modal
                  [Form (select-keys props [:config-id :workspace-id
                                            :root-entity-type :on-success :cromwell-version])])}])})
 
