@@ -16,10 +16,7 @@
   (utils/map-kv
     (fn [k v]
       [(library-utils/strip-library-prefix k)
-       ;; unpack lists and convert everything to a string
-       (if (map? v)
-         (join ", " (:items v))
-         (str v))])
+       (library-utils/unpack-attribute-list v)])
     (dissoc (get-in workspace [:workspace :library-attributes]) :library:published)))
 
 

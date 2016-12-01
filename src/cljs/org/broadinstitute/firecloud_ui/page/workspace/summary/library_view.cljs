@@ -44,7 +44,7 @@
                                     :margin "0 0.2em 0.2em 0" :padding "0 0.4em"
                                     :cursor "help"}
                             :title (get consent-codes (keyword consent-code))}
-                      (str consent-code ": " value)])
+                      (str consent-code ": " (library-utils/unpack-attribute-list value))])
                    consent-attributes)])))
 
 

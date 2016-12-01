@@ -6,3 +6,8 @@
 (defn strip-library-prefix [key]
   (let [[_ _ attr] (re-find #"(.*):(.*)" (name key))]
     (keyword attr)))
+
+(defn unpack-attribute-list [value]
+  (if (map? value)
+    (clojure.string/join ", " (:items value))
+    (str value)))
