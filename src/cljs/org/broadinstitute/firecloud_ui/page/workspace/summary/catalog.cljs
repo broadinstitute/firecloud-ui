@@ -228,10 +228,12 @@
   {:get-initial-state
    (fn [{:keys [props]}]
      {:page 0
-      :attributes (get-initial-attributes (:workspace props))})
+      :initial-attributes (get-initial-attributes (:workspace props))
+      :saved-attributes []})
    :render
    (fn [{:keys [props state this]}]
-     (let [{:keys [library-schema]} props]
+     (let [{:keys [library-schema]} props
+           {:keys [page]} @state]
        [:div {}
         (when (:submitting? @state)
           [comps/Blocker {:banner "Submitting..."}])
@@ -242,14 +244,15 @@
          [comps/XButton {:dismiss modal/pop-modal}]]
         [:div {:style {:padding "22px 24px 40px" :backgroundColor (:background-light style/colors)}}
          [:div {:style {:display "flex" :width 850}}
-          (render-wizard-breadcrumbs {:library-schema library-schema :page-num (:page @state)})
+          (render-wizard-breadcrumbs {:library-schema library-schema :page-num page})
           [:div {:style {:flex "0 0 600px" :maxHeight 400 :padding "1em" :overflow "auto"
                          :border style/standard-line :boxSizing "border-box"}}
-           [WizardPage {:key (:page @state)
+           [WizardPage {:key page
                         :ref "wizard-page"
                         :library-schema library-schema
-                        :page-num (:page @state)
-                        :attributes (:attributes @state)}]]]
+                        :page-num page
+                        :attributes (or (get-in @state [:saved-attributes page])
+                                        (:initial-attributes @state))}]]]
          (when-let [error (:validation-error @state)]
            [:div {:style {:marginTop "1em" :color (:exception-state style/colors) :textAlign "center"}}
             error])
@@ -267,26 +270,28 @@
           [comps/Button {:text "Previous"
                          :onClick (fn [_] (swap! state #(-> % (update :page dec) (dissoc :validation-error))))
                          :style {:width 80 :marginRight 27}
-                         :disabled? (zero? (:page @state))}]
-          [comps/Button {:text (if (< (:page @state) (-> library-schema :wizard count dec)) "Next" "Submit")
+                         :disabled? (zero? page)}]
+          [comps/Button {:text (if (< page (-> library-schema :wizard count dec)) "Next" "Submit")
                          :onClick #(react/call :next-page this)
                          :style {:width 80}}]]]]))
    :next-page
-   (fn [{:keys [props state refs this]}]
+   (fn [{:keys [props state refs this after-update]}]
      (swap! state dissoc :validation-error)
      (if-let [error-message (react/call :validate (@refs "wizard-page"))]
        (swap! state assoc :validation-error error-message)
-       (let [new-attributes (merge (:attributes @state) (react/call :get-attributes (@refs "wizard-page")))]
-         (if (< (:page @state) (-> props :library-schema :wizard count dec))
-           (swap! state #(-> % (update :page inc) (assoc :attributes new-attributes)))
-           (react/call :submit this new-attributes)))))
+       (let [attributes-from-page (react/call :get-attributes (@refs "wizard-page"))]
+         (swap! state update :saved-attributes assoc (:page @state) attributes-from-page)
+         (after-update
+          #(if (< (:page @state) (-> props :library-schema :wizard count dec))
+             (swap! state update :page inc)
+             (react/call :submit this))))))
    :submit
-   (fn [{:keys [props state]} attributes]
+   (fn [{:keys [props state]}]
      (swap! state assoc :submitting? true :submit-error nil)
      (endpoints/call-ajax-orch
        {:endpoint (endpoints/save-library-metadata (:workspace-id props))
         :payload (utils/map-keys (fn [k] (str "library" k))
-                                 attributes)
+                                 (apply merge (:saved-attributes @state)))
         :headers utils/content-type=json
         :on-done (fn [{:keys [success? get-parsed-response]}]
                    (swap! state dissoc :submitting?)
