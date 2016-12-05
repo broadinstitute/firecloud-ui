@@ -94,10 +94,7 @@
       {:endpoint (endpoints/get-billing-accounts)
        :on-done
        (fn [{:keys [success? status-code raw-response]}]
-         (let [[parsed parse-error?] (utils/parse-json-string raw-response false false)
-               [message message-parse-error?] (when (and (not success?) (not parse-error?))
-                                                (utils/parse-json-string
-                                                 (parsed "message") true false))]
+         (let [[parsed parse-error?] (utils/parse-json-string raw-response false false)]
            (cond
              (and success? (not parse-error?))
              (swap! state assoc
