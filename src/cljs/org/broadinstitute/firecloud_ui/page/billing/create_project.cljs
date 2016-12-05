@@ -38,9 +38,21 @@
               [:div {:style {:width 750}}
                (when (:creating? @state)
                  [comps/Blocker {:banner "Creating billing account..."}])
-               [:div {:style {:fontSize "120%" :marginBottom "0.5ex"}}
-                "Select a billing account:"]
-               [:div {:style {:backgroundColor "white" :padding "1em"}}
+               [:div {:style {:fontSize "120%" :margin "1em 0 1em 0"}}
+                "1. Choose a unique name:"]
+               [input/TextField {:ref "name-field"
+                                 :style {:width "100%" :marginBottom 0}
+                                 :predicates [{:test #(re-matches #"[a-z0-9\-]*" %) :message "Name contains invalid characters"}
+                                              {:test #(<= 6 (count %) 30) :message "Name must be 6-30 characters long"}
+                                              {:test #(re-matches #"[a-z]" (first %)) :message "Name must start with a letter"}]}]
+               (style/create-validation-error-message (:validation-errors @state))
+               [:div {:style {:marginBottom "1em"
+                              :color (if (:validation-errors @state) (:exception-state style/colors) (:text-lighter style/colors))
+                              :fontSize "0.8em"}}
+                "Lowercase letters, numbers, and hypens only, 6-30 characters, must start with a letter."]
+               [:div {:style {:fontSize "120%"}}
+                "2. Select a billing account:"]
+               [:div {:style {:backgroundColor "white" :padding "1em" :margin "1em 0 1em 0"}}
                 [table/Table
                  {:columns [{:header "Account Name" :starting-width 300
                              :content-renderer
@@ -58,12 +70,6 @@
                   :->row (fn [{:strs [accountName firecloudHasAccess]}]
                            [[accountName firecloudHasAccess]
                             (if firecloudHasAccess "Yes" "No")])}]]
-               [:div {:style {:fontSize "120%" :margin "1em 0 0.5ex 0"}}
-                "Name:"]
-               [input/TextField {:ref "name-field"
-                                 :style {:width "100%"}
-                                 :predicates [(input/nonempty "Name")]}]
-               (style/create-validation-error-message (:validation-errors @state))
                [comps/ErrorViewer {:error (:server-error @state)}]]))))
        :ok-button (when-not (empty? (:billing-accounts @state))
                     #(react/call :create-billing-project this))}])
@@ -94,7 +100,10 @@
       {:endpoint (endpoints/get-billing-accounts)
        :on-done
        (fn [{:keys [success? status-code raw-response]}]
-         (let [[parsed parse-error?] (utils/parse-json-string raw-response false false)]
+         (let [[parsed parse-error?] (utils/parse-json-string raw-response false false)
+               [message message-parse-error?] (when (and (not success?) (not parse-error?))
+                                                (utils/parse-json-string
+                                                 (parsed "message") true false))]
            (cond
              (and success? (not parse-error?))
              (swap! state assoc
