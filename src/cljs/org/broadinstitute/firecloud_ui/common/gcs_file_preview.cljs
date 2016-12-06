@@ -3,7 +3,6 @@
     [dmohs.react :as react]
     [org.broadinstitute.firecloud-ui.common :as common]
     [org.broadinstitute.firecloud-ui.common.components :refer [Spinner]]
-    [org.broadinstitute.firecloud-ui.common.icons :as icons]
     [org.broadinstitute.firecloud-ui.common.modal :as modal]
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
@@ -18,12 +17,13 @@
       {:header "File Details"
        :content
        (let [{:keys [data error status]} (:response @state)
-             data-size (when data (data "size"))
+             data-size (:size data)
+             cost (:estimatedCostUSD data)
              labeled (fn [label & contents]
                        [:div {}
-                        [:div {:style {:display "inline-block" :width 120}} (str label ": ")]
+                        [:div {:style {:display "inline-block" :width 185}} (str label ": ")]
                         contents])]
-         [:div {:style {:width 500 :overflow "auto"}}
+         [:div {:style {:width 700 :overflow "auto"}}
           (labeled "Google Bucket" (:bucket-name props))
           (labeled "Object" (:object props))
           (when (:loading? @state)
@@ -38,17 +38,17 @@
                             :target "_blank"}
                         "Open"]
                        [:span {:style {:fontStyle "italic" :color (:text-light style/colors)}}
-                        " (right-click to download)"]]
-                      (when (> data-size 100000000)
-                        [:span {:style {:color (:exception-state style/colors) :marginLeft "2ex"}}
-                         (icons/icon {:style {:fontSize "100%" :verticalAlign "middle" :marginRight "1ex"}}
-                                     :warning-triangle)
-                         "Warning: Downloading this file may incur a large data egress charge"]))
+                        " (right-click to download)"]])
+             (labeled "Estimated download fee"
+                      (if (nil? cost) "Unknown" (common/format-price cost))
+                      [:span {:style {:marginLeft "1em"}}
+                       [:span {:style {:fontStyle "italic" :color (:text-light style/colors)}}
+                        " (non-US destinations may be higher)"]])
              (if (:show-details? @state)
                [:div {}
-                (labeled "Created" (common/format-date (data "timeCreated")))
-                (labeled "Updated" (common/format-date (data "updated")))
-                (labeled "MD5" (data "md5Hash"))
+                (labeled "Created" (common/format-date (:timeCreated data)))
+                (labeled "Updated" (common/format-date (:updated data)))
+                (labeled "MD5" (:md5Hash data))
                 (style/create-link {:text "Collapse"
                                     :onClick #(swap! state dissoc :show-details?)})]
                (style/create-link {:text "More info"
@@ -79,7 +79,7 @@
                   (swap! state assoc
                          :loading? false
                          :response (if success?
-                                     {:data (get-parsed-response false)}
+                                     {:data (get-parsed-response)}
                                      {:error (.-responseText xhr)
                                       :status status-code})))}))})
 
