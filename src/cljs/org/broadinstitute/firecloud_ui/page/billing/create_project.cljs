@@ -33,7 +33,7 @@
                (when (:creating? @state)
                  [comps/Blocker {:banner "Creating billing account..."}])
                [:div {:style {:fontSize "120%"}}
-                "1. Choose a unique name:"]
+                "1. Enter a unique name:"]
                [input/TextField {:ref "name-field"
                                  :style {:width "100%" :marginTop "1em" :marginBottom 0}
                                  :predicates [{:test #(re-matches #"[a-z0-9\-]*" %) :message "Name contains invalid characters"}
