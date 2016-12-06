@@ -68,7 +68,7 @@
 
 (defn- render-invite-offer [workspace-id state persist-acl]
   [modal/OKCancelForm
-   {:header (str "Invite new users to" (:namespace workspace-id) "/" (:name workspace-id))
+   {:header (str "Invite new users to " (:namespace workspace-id) "/" (:name workspace-id))
     :content (react/create-element
               [:div {}
                (when (:saving? @state)
