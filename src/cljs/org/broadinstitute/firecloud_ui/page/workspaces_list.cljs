@@ -82,17 +82,24 @@
 (defn- get-max-length [func workspaces]
   (->> workspaces (map func) (map count) (apply max)))
 
-(def ^:private access-types ["Project Owner" "Owner" "Writer" "Reader" "No Access" "TCGA Open Access" "TCGA Protected Access"])
+(def ^:private access-types ["Project Owner" "Owner" "Writer" "Reader" "No Access"])
 (def ^:private access-predicates
   {"Project Owner" #(= "PROJECT_OWNER" (% "accessLevel"))
    "Owner" #(= "OWNER" (% "accessLevel"))
    "Writer" #(= "WRITER" (% "accessLevel"))
    "Reader" #(= "READER" (% "accessLevel"))
    "No Access" #(= "NO ACCESS" (% "accessLevel"))
-   "TCGA Open Access" #(and (= (config/tcga-namespace) (get-in % ["workspace" "namespace"]))
-                            (not (get-in % ["workspace" "realm"])))
-   "TCGA Protected Access" #(and (= (config/tcga-namespace) (get-in % ["workspace" "namespace"]))
-                                 (get-in % ["workspace" "realm"]))})
+   })
+
+(def ^:private realm-types ["non-TCGA" "TCGA Open Access" "TCGA Protected Access"])
+(def ^:private realm-predicates
+ {
+  "non-TCGA" #(not= (config/tcga-namespace) (get-in % ["workspace" "namespace"]))
+  "TCGA Open Access" #(and (= (config/tcga-namespace) (get-in % ["workspace" "namespace"]))
+                           (not (get-in % ["workspace" "realm"])))
+  "TCGA Protected Access" #(and (= (config/tcga-namespace) (get-in % ["workspace" "namespace"]))
+                                (get-in % ["workspace" "realm"]))
+                                })
 
 (def ^:private persistence-key "workspace-table-types")
 
@@ -122,7 +129,9 @@
                               :content
                               (react/create-element
                                [:div {:style {:padding "1em" :border style/standard-line}}
-                                (map checkbox access-types)])}]))
+                                (map checkbox access-types)
+                                [:hr {:style {:size "1px" :noshade true}}]
+                                (map checkbox realm-types)])}]))
         [table/Table
          {:state-key "workspace-table"
           :empty-message "No workspaces to display." :retain-header-on-empty? true
@@ -181,13 +190,17 @@
                              :onClick #(swap! state assoc :show-access-level-select? true)}
                       "Include..."])
             :header-key "Include" :starting-width 68 :resizable? false :sort-by :none}]
-          :data (filter
-                 (->> (:selected-types @state)
-                      (keep (fn [[k v]] (when v k)))
-                      (map access-predicates)
-                      (cons (constantly false)) ;; keeps (apply some-fn) from bombing when the list is empty
-                      (apply some-fn))
-                 (:workspaces props))
+          :data (let [somepred (fn[preds]
+                                (->> (:selected-types @state)
+                                     (keep (fn [[k v]] (when (and v (not (nil? (preds k)))) k)))
+                                     (map preds)
+                                     (cons (constantly false)) ;; keeps (apply some-fn) from bombing when the list is empty
+                                     (apply some-fn)))]
+                  (filter
+                    (every-pred
+                      (somepred access-predicates)
+                      (somepred realm-predicates))
+                    (:workspaces props)))
           :->row (fn [ws]
                    (let [ws-name (get-workspace-name-string ws)
                          ws-href (let [x (ws "workspace")] (str (x "namespace") ":" (x "name")))
