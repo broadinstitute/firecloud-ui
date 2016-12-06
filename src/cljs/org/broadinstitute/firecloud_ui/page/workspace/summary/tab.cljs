@@ -150,55 +150,56 @@
                                :onClick #(modal/push-modal [DeleteDialog {:workspace-id workspace-id
                                                                           :on-delete on-delete}])}]))]))
 
+(defn- render-detail-box [order title & children]
+  [:div {:style {:flexBasis "50%" :order order}}
+   (style/create-section-header title)
+   children])
 
 (defn- render-main [{:keys [workspace curator? owner? writer? reader? bucket-access? editing? submissions-count library-schema request-refresh workspace-id]}]
   (let [{:keys [owners]
          {:keys [createdBy createdDate bucketName description workspace-attributes library-attributes]} :workspace} workspace]
     [:div {:style {:flex "1 1 auto" :overflow "hidden"}}
-     [:div {:style {:flex "1 1 auto" :display "flex"}}
-      [:div {:style {:flex "1 1 50%"}}
-       (style/create-section-header (str "Workspace Owner" (when (> (count owners) 1) "s")))
-       (style/create-paragraph
-         [:div {}
-          (interpose ", " owners)
-          (when owner?
-            [:span {}
-             " ("
-             (style/create-link {:text "Sharing..."
-                                 :onClick #(modal/push-modal
-                                            [AclEditor {:workspace-id workspace-id
-                                                        :request-refresh request-refresh}])})
-             ")"])])
-       (style/create-section-header "Created By")
-       (style/create-paragraph
-         [:div {} createdBy]
-         [:div {} (common/format-date createdDate)])]
-      [:div {:style {:flex "1 1 50%" :paddingLeft 10}}
-       (style/create-section-header "Google Bucket")
-       (style/create-paragraph
-         (case bucket-access?
-           nil [:div {:style {:position "absolute" :marginTop "-1.5em"}}
-                [comps/Spinner {:height "1.5ex"}]]
-           true (style/create-link {:text bucketName
-                                    :href (str moncommon/google-cloud-context bucketName "/")
-                                    :style {:color "-webkit-link" :textDecoration "underline"}
-                                    :title "Click to open the Google Cloud Storage browser for this bucket"
-                                    :target "_blank"})
-           false bucketName))
-       (when (not reader?)
-         (list (style/create-section-header "Billing")
-               (style/create-paragraph
-                 [:div {} (str "Total Estimated Storage Fee per month = " storage-cost)]
-                 [:div {:style {:fontSize "80%"}} (str "Note: the billing account associated with " (:namespace workspace-id) " will be charged.")])))
-       (style/create-section-header "Analysis Submissions")
-       (style/create-paragraph
-         (let [count-all (apply + (vals submissions-count))]
-           [:div {}
-            (str count-all " Submission" (when-not (= 1 count-all) "s"))
-            (when (pos? count-all)
-              [:ul {:style {:marginTop "0"}}
-               (for [[status subs] (sort submissions-count)]
-                 [:li {} (str subs " " status)])])]))]]
+     [:div {:style {:display "flex" :flexWrap "wrap"}}
+      (render-detail-box 1 (str "Workspace Owner" (when (> (count owners) 1) "s"))
+                         (style/create-paragraph
+                              [:div {}
+                               (interpose ", " owners)
+                               (when owner?
+                                 [:span {}
+                                  " ("
+                                  (style/create-link {:text "Sharing..."
+                                                      :onClick #(modal/push-modal
+                                                                  [AclEditor {:workspace-id workspace-id
+                                                                              :request-refresh request-refresh}])})
+                                  ")"])]))
+      (render-detail-box 3 "Created By"
+                         (style/create-paragraph
+                              [:div {} createdBy]
+                              [:div {} (common/format-date createdDate)]))
+      (render-detail-box 2 "Google Bucket"
+                         (style/create-paragraph
+                              (case bucket-access?
+                                nil [:div {:style {:position "absolute" :marginTop "-1.5em"}}
+                                     [comps/Spinner {:height "1.5ex"}]]
+                                true (style/create-link {:text bucketName
+                                                         :href (str moncommon/google-cloud-context bucketName "/")
+                                                         :style {:color "-webkit-link" :textDecoration "underline"}
+                                                         :title "Click to open the Google Cloud Storage browser for this bucket"
+                                                         :target "_blank"})
+                                false bucketName)
+                              (when (not reader?)
+                                [:div {}
+                                 [:div {} (str "Total Estimated Storage Fee per month = " storage-cost)]
+                                 [:div {:style {:fontSize "80%"}} (str "Note: the billing account associated with " (:namespace workspace-id) " will be charged.")]])))
+      (render-detail-box 4 "Analysis Submissions"
+                         (style/create-paragraph
+                              (let [count-all (apply + (vals submissions-count))]
+                                [:div {}
+                                 (str count-all " Submission" (when-not (= 1 count-all) "s"))
+                                 (when (pos? count-all)
+                                   [:ul {:style {:marginTop "0"}}
+                                    (for [[status subs] (sort submissions-count)]
+                                      [:li {} (str subs " " status)])])])))]
      (style/create-section-header "Description")
      (style/create-paragraph
        (let [description (not-empty description)]
