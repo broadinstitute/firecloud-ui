@@ -3,9 +3,9 @@
     [dmohs.react :as react]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
     [org.broadinstitute.firecloud-ui.common.input :as input]
+    [org.broadinstitute.firecloud-ui.common.icons :as icons]
     [org.broadinstitute.firecloud-ui.common.modal :as modal]
     [org.broadinstitute.firecloud-ui.common.style :as style]
-    [org.broadinstitute.firecloud-ui.common.table :as table]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
     [org.broadinstitute.firecloud-ui.utils :as utils]
     ))
@@ -32,38 +32,66 @@
               [:div {:style {:width 750}}
                (when (:creating? @state)
                  [comps/Blocker {:banner "Creating billing account..."}])
-               [:div {:style {:fontSize "120%" :margin "1em 0 1em 0"}}
+               [:div {:style {:fontSize "120%"}}
                 "1. Choose a unique name:"]
                [input/TextField {:ref "name-field"
-                                 :style {:width "100%" :marginBottom 0}
+                                 :style {:width "100%" :marginTop "1em" :marginBottom 0}
                                  :predicates [{:test #(re-matches #"[a-z0-9\-]*" %) :message "Name contains invalid characters"}
                                               {:test #(<= 6 (count %) 30) :message "Name must be 6-30 characters long"}
                                               {:test #(re-matches #"[a-z]" (first %)) :message "Name must start with a letter"}]}]
                (style/create-validation-error-message (:validation-errors @state))
-               [:div {:style {:marginBottom "1em"
+               [:div {:style {:marginBottom "1.5em"
                               :color (if (:validation-errors @state) (:exception-state style/colors) (:text-lighter style/colors))
                               :fontSize "0.8em"}}
                 "Lowercase letters, numbers, and hypens only, 6-30 characters, must start with a letter."]
                [:div {:style {:fontSize "120%"}}
                 "2. Select a billing account:"]
-               [:div {:style {:backgroundColor "white" :padding "1em" :margin "1em 0 1em 0"}}
-                [table/Table
-                 {:columns [{:header "Account Name" :starting-width 300
-                             :content-renderer
-                             (fn [[name has-access]]
-                               (if has-access
-                                 (style/create-link {:text name :onClick #(swap! state assoc :selected-account name)})
-                                 name))}
-                            {:header "Firecloud Access?" :starting-width 150}]
-                  :data billing-accounts
-                  :row-style (fn [row-index [[acct-name _] _]]
-                               {:backgroundColor
-                                (cond (= acct-name (:selected-account @state)) "yellow"
-                                      (even? row-index) (:background-light style/colors)
-                                      :else "#fff")})
-                  :->row (fn [{:strs [accountName firecloudHasAccess]}]
-                           [[accountName firecloudHasAccess]
-                            (if firecloudHasAccess "Yes" "No")])}]]
+               (let [simple-th (fn [text]
+                                 [:th {:style {:textAlign "left" :padding "0 0.5rem"}} text])
+                     simple-td (fn [text]
+                                 [:td {:style {:padding "0 0.5rem" :borderTop style/standard-line}} text])]
+                 [:form {:style {:margin "1em 0 1em 0"}}
+                  [:table {:style {:width "100%" :borderCollapse "collapse"}}
+                   [:thead {} [:tr {}
+                               (simple-th "")
+                               (simple-th "Account Name")
+                               (simple-th "Account ID")
+                               (simple-th "FC Access")
+                               (simple-th "Console")]]
+                   [:tbody {}
+                    (map (fn [account]
+                           [:tr {:style {:borderTop style/standard-line}}
+                            (simple-td [:input {:type "radio" :value (account "accountName")
+                                                :disabled (not (account "firecloudHasAccess"))
+                                                :id (account "accountName")}])
+                            (simple-td [:label {:htmlFor (account "accountName")} (account "displayName")])
+                            (simple-td [:label {:htmlFor (account "accountName")} (account "accountName")])
+                            (simple-td (if (account "firecloudHasAccess") "Yes" "No"))
+                            (simple-td [:a
+                                        {:href (str
+                                                "https://console.developers.google.com/billing/"
+                                                (second (clojure.string/split (account "accountName") #"/")))
+                                         :target "_blank"}
+                                        (icons/icon {:style {:textDecoration "none" :color (:button-primary style/colors)}} :new-window)])])
+                         billing-accounts)]]])
+               #_([:div {:style {:backgroundColor "white" :padding "1em" :margin "1em 0 1em 0"}}
+                   [table/Table
+                    {:columns [{:header "Account Name" :starting-width 300
+                                :content-renderer
+                                (fn [[name has-access]]
+                                  (if has-access
+                                    (style/create-link {:text name :onClick #(swap! state assoc :selected-account name)})
+                                    name))}
+                               {:header "Firecloud Access?" :starting-width 150}]
+                     :data (utils/cljslog billing-accounts)
+                     :row-style (fn [row-index [[acct-name _] _]]
+                                  {:backgroundColor
+                                   (cond (= acct-name (:selected-account @state)) "yellow"
+                                         (even? row-index) (:background-light style/colors)
+                                         :else "#fff")})
+                     :->row (fn [{:strs [accountName firecloudHasAccess]}]
+                              [[accountName firecloudHasAccess]
+                               (if firecloudHasAccess "Yes" "No")])}]])
                [comps/ErrorViewer {:error (:server-error @state)}]]))))
        :ok-button (when-not (empty? (:billing-accounts @state))
                     #(react/call :create-billing-project this))}])
