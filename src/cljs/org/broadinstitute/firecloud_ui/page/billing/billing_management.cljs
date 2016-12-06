@@ -84,22 +84,24 @@
                    {:header "Role" :starting-width :remaining}]
          :toolbar
          (float-right
-          [comps/Button {:text "Create New Billing Project"
-                         :onClick (fn [_]
-                                    (if (-> @utils/google-auth2-instance (.-currentUser) (.get) (.hasGrantedScopes "https://www.googleapis.com/auth/cloud-billing"))
-                                      (modal/push-modal
-                                       [CreateBillingProjectDialog
-                                        {:on-success #(react/call :reload this)}])
-                                      (let [old-access-token (utils/get-access-token)]
-                                        (-> @utils/google-auth2-instance
-                                            (.grantOfflineAccess (clj->js {:redirect_uri "postmessage"
-                                                                           :scope "https://www.googleapis.com/auth/cloud-billing"}))
-                                            (.then (fn [response]
-                                                     ;; At some point, the access token gets replaced with a new one, but it doesn't
-                                                     ;; happen right away, so we have to loop.
-                                                     (js/setTimeout
-                                                      #(react/call :.continue-with-new-access-token this old-access-token)
-                                                      100)))))))}])
+          [comps/Button
+           {:text "Create New Billing Project"
+            :onClick (fn [_]
+                       (if (-> @utils/google-auth2-instance (.-currentUser) (.get) (.hasGrantedScopes "https://www.googleapis.com/auth/cloud-billing"))
+                         (modal/push-modal
+                          [CreateBillingProjectDialog
+                           {:on-success #(react/call :reload this)}])
+                         (let [old-access-token (utils/get-access-token)]
+                           (-> @utils/google-auth2-instance
+                               (.grantOfflineAccess (clj->js {:redirect_uri "postmessage"
+                                                              :scope "https://www.googleapis.com/auth/cloud-billing"
+                                                              :prompt "consent"}))
+                               (.then (fn [response]
+                                        ;; At some point, the access token gets replaced with a new one, but it doesn't
+                                        ;; happen right away, so we have to loop.
+                                        (js/setTimeout
+                                         #(react/call :.continue-with-new-access-token this old-access-token)
+                                         100)))))))}])
          :data (:projects @state)
          :->row (fn [{:strs [role] :as row}]
                   [row

@@ -81,7 +81,8 @@
      (let [old-access-token (utils/get-access-token)]
        (-> @utils/google-auth2-instance
            (.grantOfflineAccess (clj->js {:redirect_uri "postmessage"
-                                          :scope (clojure.string/join " " scopes-needed)}))
+                                          :scope (clojure.string/join " " scopes-needed)
+                                          :prompt "consent"}))
            (.then (fn [response]
                     ;; At some point, the access token gets replaced with a new one, but it doesn't
                     ;; happen right away, so we have to loop.
