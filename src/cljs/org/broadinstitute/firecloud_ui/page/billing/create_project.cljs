@@ -22,12 +22,6 @@
             (not (or billing-accounts error)) [comps/Spinner {:text "Loading billing accounts..."}]
             error
             (case (:code error)
-              :permissions-required
-              [:div {:style {:textAlign "center"}}
-               "Billing permissions are not enabled." [:br] [:br]
-               [comps/Button {:text "Enable Billing Permissions"
-                              :onClick #(react/call :.enable-billing-permissions this
-                                                    (:details error))}]]
               (:unknown :parse-error)
               [:div {:style {:color (:exception-state style/colors)}}
                "Error:" [:br] (:details error)]
@@ -76,24 +70,6 @@
    :component-did-mount
    (fn [{:keys [this]}]
      (react/call :get-billing-accounts this))
-   :.enable-billing-permissions
-   (fn [{:keys [this]} scopes-needed]
-     (let [old-access-token (utils/get-access-token)]
-       (-> @utils/google-auth2-instance
-           (.grantOfflineAccess (clj->js {:redirect_uri "postmessage"
-                                          :scope (clojure.string/join " " scopes-needed)
-                                          :prompt "consent"}))
-           (.then (fn [response]
-                    ;; At some point, the access token gets replaced with a new one, but it doesn't
-                    ;; happen right away, so we have to loop.
-                    (js/setTimeout
-                     #(react/call :.continue-with-new-access-token this old-access-token)
-                     100))))))
-   :.continue-with-new-access-token
-   (fn [{:keys [this]} old-access-token]
-     (if-not (= (utils/get-access-token) old-access-token)
-       (react/call :get-billing-accounts this)
-       (js/setTimeout #(react/call :.continue-with-new-access-token this old-access-token) 100)))
    :get-billing-accounts
    (fn [{:keys [state]}]
      (swap! state dissoc :billing-accounts :error)
@@ -101,24 +77,13 @@
       {:endpoint (endpoints/get-billing-accounts)
        :on-done
        (fn [{:keys [success? status-code raw-response]}]
-         (let [[parsed parse-error?] (utils/parse-json-string raw-response false false)
-               [message message-parse-error?] (when (and (not success?) (not parse-error?))
-                                                (utils/parse-json-string
-                                                 (parsed "message") true false))]
-           (cond
-             (and success? (not parse-error?))
+         (let [[parsed parse-error?] (utils/parse-json-string raw-response false false)]
+           (if (and success? (not parse-error?))
              (swap! state assoc
-                    :billing-accounts parsed :selected-account (get (first parsed) "accountName"))
-             success?
-             (swap! state assoc :error {:code :parse-error :details raw-response})
-             parse-error?
-             (swap! state assoc :error
-                    {:code :unknown :status-code status-code :details raw-response})
-             (and (= status-code 403) (contains? message :requiredScopes))
-             (swap! state assoc :error {:code :permissions-required
-                                        :details (:requiredScopes message)})
-             :else
-             (swap! state assoc :error {:code status-code :details parsed}))))}))
+                    :billing-accounts parsed
+                    :selected-account (get (first parsed) "accountName"))
+             (swap! state assoc
+                    :error {:code status-code :details (if parse-error? raw-response parsed)}))))}))
    :create-billing-project
    (fn [{:keys [props state refs]}]
      (let [account (:selected-account @state)]
