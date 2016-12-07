@@ -1,13 +1,12 @@
 (ns org.broadinstitute.firecloud-ui.page.library.library_page
   (:require
     [dmohs.react :as react]
-    [org.broadinstitute.firecloud-ui.common :as common]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
     [org.broadinstitute.firecloud-ui.common.modal :as modal]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.common.table :as table]
-    [org.broadinstitute.firecloud-ui.common.table-utils :refer [float-right]]
+    [org.broadinstitute.firecloud-ui.common.table-utils :refer [flex-strut]]
     [org.broadinstitute.firecloud-ui.nav :as nav]
     [org.broadinstitute.firecloud-ui.utils :as utils]
     ))
@@ -20,9 +19,6 @@
        (:error-message @state) (style/create-server-error-message (:error-message @state))
        :else
        [:div {:style {:flex "1 0 auto" :marginRight "1em"}}
-        [:div {:style {:fontWeight 700 :fontSize "125%"}} "Search Results: "
-         [:span {:style {:fontWeight 100}} (str (:total @state) " Datasets found")]]
-        [:div {:style {:padding "4"}}]
         [table/Table
          {:ref "table"
           :header-row-style {:fontWeight 500 :fontSize "90%"
@@ -30,13 +26,25 @@
                              :color "black"
                              :borderBottom (str "2px solid " (:border-light style/colors))}
           :header-style {:padding "0.5em 0"}
-          :resizable-columns? false :reorderable-columns? true
+          :resizable-columns? false :filterable? false
+          :reorder-anchor :right
+          :toolbar
+          (fn [{:keys [reorderer]}]
+            [:div {:style {:display "flex" :alignItems "top"}}
+             [:div {:style {:fontWeight 700 :fontSize "125%"}} "Search Results: "
+              [:span {:style {:fontWeight 100}}
+               (let [total (or (:total @state) 0)]
+                 (str total
+                      " Dataset"
+                      (when-not (= 1 total) "s")
+                      " found"))]]
+             flex-strut
+             reorderer])
           :body-style {:fontSize nil :fontWeight nil}
           :row-style {:backgroundColor nil :height 22}
           :cell-content-style {:padding nil
                                :color (:text-light style/colors)
                                :fontSize "90%"}
-          :filterable? false
           :columns [{:header "Dataset Name" :starting-width 300
                      :sort-by (comp clojure.string/lower-case :library:datasetName)
                      :as-text :library:datasetDescription
@@ -54,7 +62,7 @@
    (fn [{:keys [refs]} new-filter-text]
      (react/call :update-query-params (@refs "table") {:filter-text new-filter-text :current-page 1}))
    :check-access
-   (fn [this data props]
+   (fn [data props]
      (endpoints/call-ajax-orch
        {:endpoint (endpoints/check-bucket-read-access {:namespace (:namespace data) :name (:name data)})
         :on-done (fn [{:keys [success?]}]

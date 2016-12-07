@@ -51,6 +51,8 @@
 ;;     Color for the drag-to-resize tab
 ;;   :reorderable-columns? (optional, default true)
 ;;     Controls whether or not columns are reorderable.  When true, a reorder widget is presented
+;;   :reorder-anchor (optional, default :left)
+;;     Which side to anchor the reordering overlay.  Set to :right if placing the widget on the right side.
 ;;   :sortable-columns? (optional, default true)
 ;;     Fallback value for column sorting.
 ;;   :always-sort? (optional, default false)
@@ -140,6 +142,7 @@
    :initial-rows-per-page default-initial-rows-per-page
    :resizable-columns? true
    :reorderable-columns? true
+   :reorder-anchor :left
    :sortable-columns? true
    :always-sort? false
    :filterable? true
@@ -211,6 +214,7 @@
                             [overlay/Overlay
                              {:get-anchor-dom-node #(react/find-dom-node (@refs "col-edit-button"))
                               :dismiss-self #(swap! state assoc :reordering-columns? false)
+                              :anchor-x (:reorder-anchor props)
                               :content
                               (react/create-element
                                 table-utils/ColumnEditor
