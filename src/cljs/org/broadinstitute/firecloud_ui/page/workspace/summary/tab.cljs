@@ -151,7 +151,7 @@
                                                                           :on-delete on-delete}])}]))]))
 
 
-(defn- render-main [{:keys [workspace curator? owner? writer? reader? bucket-access? editing? submissions-count library-schema request-refresh workspace-id]}]
+(defn- render-main [{:keys [workspace curator? owner? writer? reader? bucket-access? editing? submissions-count library-schema request-refresh workspace-id storage-cost]}]
   (let [{:keys [owners]
          {:keys [createdBy createdDate bucketName description workspace-attributes library-attributes]} :workspace} workspace
         render-detail-box (fn [order title & children]
