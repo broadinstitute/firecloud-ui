@@ -25,13 +25,13 @@
 (defn- render-property [library-schema library-attributes property-key]
   (render-library-row
    (get-in library-schema [:properties property-key :title])
-   (render-value (get library-attributes (keyword (str "library" property-key))))))
+   (render-value (get library-attributes property-key))))
 
 
 (defn- render-consent-codes [library-schema library-attributes]
   (render-library-row
    "Structured Data Use Restrictions"
-   (let [get-consent-code #(get-in library-schema [:properties (library-utils/strip-library-prefix %) :consentCode])
+   (let [get-consent-code #(get-in library-schema [:properties % :consentCode])
          consent-codes (:consentCodes library-schema)
          consent-code-order (get-in library-schema [:display :consentCodes])
          consent-attributes (->> library-attributes

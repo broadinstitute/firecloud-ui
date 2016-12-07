@@ -13,10 +13,8 @@
 
 
 (defn- get-initial-attributes [workspace]
-  (utils/map-kv
-    (fn [k v]
-      [(library-utils/strip-library-prefix k)
-       (library-utils/unpack-attribute-list v)])
+  (utils/map-values
+    library-utils/unpack-attribute-list
     (dissoc (get-in workspace [:workspace :library-attributes]) :library:published)))
 
 
@@ -290,8 +288,7 @@
      (swap! state assoc :submitting? true :submit-error nil)
      (endpoints/call-ajax-orch
        {:endpoint (endpoints/save-library-metadata (:workspace-id props))
-        :payload (utils/map-keys (fn [k] (str "library" k))
-                                 (apply merge (:saved-attributes @state)))
+        :payload (apply merge (:saved-attributes @state))
         :headers utils/content-type=json
         :on-done (fn [{:keys [success? get-parsed-response]}]
                    (swap! state dissoc :submitting?)
