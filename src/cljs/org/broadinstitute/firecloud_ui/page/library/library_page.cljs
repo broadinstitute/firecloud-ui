@@ -15,49 +15,45 @@
 (react/defc DatasetsTable
   {:render
    (fn [{:keys [state this props]}]
-     (cond
-       (:error-message @state) (style/create-server-error-message (:error-message @state))
-       :else
-       [:div {:style {:flex "1 0 auto" :marginRight "1em"}}
-        [table/Table
-         {:ref "table"
-          :header-row-style {:fontWeight 500 :fontSize "90%"
-                             :backgroundColor nil
-                             :color "black"
-                             :borderBottom (str "2px solid " (:border-light style/colors))}
-          :header-style {:padding "0.5em 0"}
-          :resizable-columns? false :filterable? false
-          :reorder-anchor :right
-          :toolbar
-          (fn [{:keys [reorderer]}]
-            [:div {:style {:display "flex" :alignItems "top"}}
-             [:div {:style {:fontWeight 700 :fontSize "125%"}} "Search Results: "
-              [:span {:style {:fontWeight 100}}
-               (let [total (or (:total @state) 0)]
-                 (str total
-                      " Dataset"
-                      (when-not (= 1 total) "s")
-                      " found"))]]
-             flex-strut
-             reorderer])
-          :body-style {:fontSize nil :fontWeight nil}
-          :row-style {:backgroundColor nil :height 22}
-          :cell-content-style {:padding nil
-                               :color (:text-light style/colors)
-                               :fontSize "90%"}
-          :columns [{:header "Dataset Name" :starting-width 300
-                     :sort-by (comp clojure.string/lower-case :library:datasetName)
-                     :as-text :library:datasetDescription
-                     :content-renderer (fn [data]
-                                         (style/create-link {:text (:library:datasetName data)
-                                                             :onClick #(react/call :check-access this data props)}))}
-                    {:header "Phenotype/indication" :starting-width 200
-                     :sort-by clojure.string/lower-case}
-                    {:header "Data Use Restrictions" :starting-width 200
-                     :sort-by clojure.string/lower-case}
-                    {:header "# of Participants" :starting-width 150}]
-          :pagination (react/call :pagination this)
-          :->row (juxt identity :library:indication :library:dataUseRestriction :library:numSubjects)}]]))
+     [table/Table
+      {:ref "table"
+       :header-row-style {:fontWeight 500 :fontSize "90%"
+                          :backgroundColor nil
+                          :color "black"
+                          :borderBottom (str "2px solid " (:border-light style/colors))}
+       :header-style {:padding "0.5em 0"}
+       :resizable-columns? false :filterable? false
+       :reorder-anchor :right
+       :toolbar
+       (fn [{:keys [reorderer]}]
+         [:div {:style {:display "flex" :alignItems "top"}}
+          [:div {:style {:fontWeight 700 :fontSize "125%"}} "Search Results: "
+           [:span {:style {:fontWeight 100}}
+            (let [total (or (:total @state) 0)]
+              (str total
+                   " Dataset"
+                   (when-not (= 1 total) "s")
+                   " found"))]]
+          flex-strut
+          reorderer])
+       :body-style {:fontSize nil :fontWeight nil}
+       :row-style {:backgroundColor nil :height 22}
+       :cell-content-style {:padding nil
+                            :color (:text-light style/colors)
+                            :fontSize "90%"}
+       :columns [{:header "Dataset Name" :starting-width 300
+                  :sort-by (comp clojure.string/lower-case :library:datasetName)
+                  :as-text :library:datasetDescription
+                  :content-renderer (fn [data]
+                                      (style/create-link {:text (:library:datasetName data)
+                                                          :onClick #(react/call :check-access this data props)}))}
+                 {:header "Phenotype/indication" :starting-width 200
+                  :sort-by clojure.string/lower-case}
+                 {:header "Data Use Restrictions" :starting-width 200
+                  :sort-by clojure.string/lower-case}
+                 {:header "# of Participants" :starting-width 150}]
+       :pagination (react/call :pagination this)
+       :->row (juxt identity :library:indication :library:dataUseRestriction :library:numSubjects)}])
    :set-filter-text
    (fn [{:keys [refs]} new-filter-text]
      (react/call :update-query-params (@refs "table") {:filter-text new-filter-text :current-page 1}))
@@ -91,10 +87,11 @@
 (react/defc Page
   {:render
    (fn [{:keys [refs]}]
-     [:div {:style {:display "flex" :justifyContent "space-between" :padding "20px 0"}}
+     [:div {:style {:display "flex" :padding "20px 0"}}
       [:div {:style {:flex "0 0 250px" :marginRight "2em"}}
        [:div {:style {:fontWeight 700 :fontSize "125%"}} "Search Filters: "]
        [:div {:style {:background (:background-light style/colors) :padding "16px 12px"}}
         [comps/TextFilter {:width "100%" :placeholder "Search"
                            :on-filter #(react/call :set-filter-text (@refs "datasets-table") %)}]]]
-      [DatasetsTable {:ref "datasets-table"}]])})
+      [:div {:style {:flex "1 1 auto" :overflowX "auto"}}
+       [DatasetsTable {:ref "datasets-table"}]]])})
