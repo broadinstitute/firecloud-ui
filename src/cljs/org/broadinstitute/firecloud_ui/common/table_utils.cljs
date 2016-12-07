@@ -222,7 +222,7 @@
 (react/defc FilterGroupBar
   {:render
    (fn [{:keys [props]}]
-     [:div {:style {:display "inline-block"}}
+     [:div {}
       (map-indexed (fn [index item]
                      (let [first? (zero? index)
                            last? (= index (dec (count (:filter-groups props))))]
@@ -317,3 +317,20 @@
       (let [i (count (:columns props))]
         [:div {:ref (str "div" i)
                :style {:borderTop (when (= i (:drop-index @state)) "1px solid gray")}}])])})
+
+
+(defn default-toolbar-layout
+  "Takes any number of additional toolbar components and adds them to the line.
+  Each element is given a 1em right margin for spacing."
+  [& extras]
+  (fn [{:keys [reorderer filter filter-groups]}]
+    (let [layout (fn [item] [:div {:style {:marginRight "1em"}}] item)]
+      [:div {:style {:display "flex" :alignItems "center" :marginBottom "1em"}}
+       (map #(some-> % layout) (concat [reorderer filter filter-groups] extras))])))
+
+(def flex-strut [:div {:style {:flexGrow 1}}])
+
+(defn add-right
+  "Takes a single component and adds it to the line, right justified."
+  [component]
+  (default-toolbar-layout flex-strut component))

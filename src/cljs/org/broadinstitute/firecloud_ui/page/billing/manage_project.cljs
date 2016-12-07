@@ -7,7 +7,7 @@
     [org.broadinstitute.firecloud-ui.common.modal :as modal]
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.common.table :as table]
-    [org.broadinstitute.firecloud-ui.common.table-utils :refer [float-right]]
+    [org.broadinstitute.firecloud-ui.common.table-utils :refer [add-right]]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
     [org.broadinstitute.firecloud-ui.utils :as utils]
     ))
@@ -86,7 +86,7 @@
                 :row-style {:backgroundColor (:background-light style/colors)
                             :borderRadius 8 :margin "4px 0"}
                 :reorderable-columns? false :resize-tab-color (:line-default style/colors)
-                :toolbar (float-right
+                :toolbar (add-right
                           [comps/Button {:text "Add User..." :icon :add
                                          :onClick (fn [_]
                                                     (modal/push-modal
