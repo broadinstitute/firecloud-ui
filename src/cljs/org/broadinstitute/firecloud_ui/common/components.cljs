@@ -449,3 +449,10 @@
    (fn [{:keys [refs this]}]
      (.addEventListener (@refs "filter-field") "search" #(when (= (.-value (.-currentTarget %)) "") (react/call :apply-filter this))))})
 
+(react/defc PHIWarning
+  {:render
+   (fn [{:keys [props]}]
+     [:div {:style {:fontWeight "bold" :fontSize "106%" :marginBottom ".5em"}}
+       [:img {:src "assets/Warning.svg" :style {:verticalAlign "middle" :marginRight ".32em"}}]
+          "FireCloud is not intended to host personally identifiable information. Do not use any patient identifier, including name, social security number, or medical record number."])})
+
