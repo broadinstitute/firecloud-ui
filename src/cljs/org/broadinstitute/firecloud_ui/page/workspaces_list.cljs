@@ -120,7 +120,7 @@
                               [:label {:style {:cursor "pointer"}}
                                [:input {:type "checkbox"
                                         :checked (or (nil? stateval) stateval)
-                                        :onChange #(swap! state update-in [:selected-types label] not)
+                                        :onChange #(swap! state update-in [:selected-types label] false?)
                                         :style {:cursor "pointer"}}]
                                [:span {:style {:marginLeft "0.5ex"}} label]]]))]
             [overlay/Overlay {:get-anchor-dom-node #(react/find-dom-node (@refs "anchor"))
@@ -191,8 +191,8 @@
                       "Include..."])
             :header-key "Include" :starting-width 68 :resizable? false :sort-by :none}]
           :data (let [somepred (fn[preds]
-                                (->> (merge (assoc-in preds [(keys preds)] true) (:selected-types @state))
-                                     (keep (fn [[k v]] (when (and v (not (nil? (preds k)))) k)))
+                                (->> (merge preds (:selected-types @state))
+                                     (keep (fn [[k v]] (when (and (not (false? v)) (some? (preds k))) k)))
                                      (map preds)
                                      (cons (constantly false)) ;; keeps (apply some-fn) from bombing when the list is empty
                                      (apply some-fn)))]
