@@ -83,7 +83,7 @@
                                                " and request access for the "
                                                (:namespace data) "/" (:name data) " workspace."])})))}))
    :pagination
-   (fn [{:keys [state]}]
+   (fn [{:keys [this state]}]
      (fn [{:keys [current-page rows-per-page filter-text]} callback]
        (endpoints/call-ajax-orch
          (let [from (* (- current-page 1) rows-per-page)]
@@ -125,7 +125,15 @@
                    {:v VERSION
                     :search-text ""})
         :validator (comp (partial = VERSION) :v)}))
-   :render
+   :component-did-mount
+   (fn [{:keys [state]}]
+     (endpoints/get-library-attributes
+       (fn [{:keys [success? get-parsed-response]}]
+         (if success?
+           (let [response (get-parsed-response)]
+             (swap! state assoc
+                    :library-attributes (:properties response)
+                    :aggregates (keep (fn [[k {:keys [aggregate title]}]] (when aggregate {:name k :title title})) (:properties response))))))))   :render
    (fn [{:keys [state]}]
      [:div {:style {:display "flex" :marginTop "2em"}}
       [:div {:style {:flex "0 0 250px" :marginRight "2em"}}
