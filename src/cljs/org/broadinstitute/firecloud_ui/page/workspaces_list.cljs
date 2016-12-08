@@ -116,13 +116,14 @@
        [:div {}
         (when (:show-access-level-select? @state)
           (let [checkbox (fn [label]
-                           [:div {}
-                            [:label {:style {:cursor "pointer"}}
-                             [:input {:type "checkbox"
-                                      :checked (get (:selected-types @state) label)
-                                      :onChange #(swap! state update-in [:selected-types label] not)
-                                      :style {:cursor "pointer"}}]
-                             [:span {:style {:marginLeft "0.5ex"}} label]]])]
+                           (let [stateval (get (:selected-types @state) label)]
+                             [:div {}
+                              [:label {:style {:cursor "pointer"}}
+                               [:input {:type "checkbox"
+                                        :checked (or (nil? stateval) stateval)
+                                        :onChange #(swap! state update-in [:selected-types label] not)
+                                        :style {:cursor "pointer"}}]
+                               [:span {:style {:marginLeft "0.5ex"}} label]]]))]
             [overlay/Overlay {:get-anchor-dom-node #(react/find-dom-node (@refs "anchor"))
                               :anchor-x :right :anchor-y :bottom
                               :dismiss-self #(swap! state dissoc :show-access-level-select?)
@@ -191,7 +192,7 @@
                       "Include..."])
             :header-key "Include" :starting-width 68 :resizable? false :sort-by :none}]
           :data (let [somepred (fn[preds]
-                                (->> (:selected-types @state)
+                                (->> (merge (assoc-in preds [(keys preds)] true) (:selected-types @state))
                                      (keep (fn [[k v]] (when (and v (not (nil? (preds k)))) k)))
                                      (map preds)
                                      (cons (constantly false)) ;; keeps (apply some-fn) from bombing when the list is empty
