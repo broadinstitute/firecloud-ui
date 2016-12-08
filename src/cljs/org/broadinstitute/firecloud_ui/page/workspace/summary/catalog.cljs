@@ -108,7 +108,7 @@
                   colorize (fn [style] (merge style (when error? {:borderColor (:exception-state style/colors)})))
                   update-property #(swap! state update :attributes assoc property-kwd (.. % -target -value))]
               [(if enumerate :li :div) {}
-               [:div {}
+               [:div {:style {:marginBottom 2}}
                 title
                 (when consentCode
                   (list
