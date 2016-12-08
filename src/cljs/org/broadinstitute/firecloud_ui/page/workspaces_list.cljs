@@ -93,13 +93,12 @@
 
 (def ^:private realm-types ["non-TCGA" "TCGA Open Access" "TCGA Protected Access"])
 (def ^:private realm-predicates
- {
-  "non-TCGA" #(not= (config/tcga-namespace) (get-in % ["workspace" "namespace"]))
+ {"non-TCGA" #(not= (config/tcga-namespace) (get-in % ["workspace" "namespace"]))
   "TCGA Open Access" #(and (= (config/tcga-namespace) (get-in % ["workspace" "namespace"]))
                            (not (get-in % ["workspace" "realm"])))
   "TCGA Protected Access" #(and (= (config/tcga-namespace) (get-in % ["workspace" "namespace"]))
                                 (get-in % ["workspace" "realm"]))
-                                })
+  })
 
 (def ^:private persistence-key "workspace-table-types")
 
