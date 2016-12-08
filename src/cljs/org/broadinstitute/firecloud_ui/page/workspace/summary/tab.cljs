@@ -251,7 +251,8 @@
          :else
          (let [owner? (or (= "PROJECT_OWNER" (:accessLevel workspace)) (= "OWNER" (:accessLevel workspace)))
                writer? (or owner? (= "WRITER" (:accessLevel workspace)))
-               derived {:owner? owner? :writer? writer? :reader? (reader? (:workspace props)) :request-refresh #(react/call :refresh this)}]
+               derived {:owner? owner? :writer? writer? :reader? (reader? (:workspace props))
+                        :request-refresh #(react/call :refresh this)}]
            [:div {:style {:margin "45px 25px" :display "flex"}}
             (render-sidebar state refs this
                             (merge (select-keys props [:workspace :workspace-id :on-clone :on-delete])
