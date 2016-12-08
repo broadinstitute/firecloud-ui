@@ -37,6 +37,9 @@
          [:div {:style {:position "relative" :minWidth 500}}
           [:div {:style {:fontSize "150%" :marginBottom "1ex"}}
            [comps/Breadcrumbs {:crumbs (:crumbs @state)}]]
+          [:div {:style {:fontWeight "bold" :fontSize "106%"}}
+            [:img {:src "assets/Warning.svg" :style {:verticalAlign "middle" :marginRight ".32em"}}]
+            (str "FireCloud is not intended to host personally identifiable information. Do not use any patient identifier, including name, social security number, or medical record number.")]
           [:div {:style {:backgroundColor "white" :padding "1em"}}
            (case last-crumb-id
              :file-import

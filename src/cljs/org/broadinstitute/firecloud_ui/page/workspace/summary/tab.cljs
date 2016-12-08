@@ -193,7 +193,13 @@
             (when (pos? count-all)
               [:ul {:style {:marginTop "0"}}
                (for [[status subs] (sort submissions-count)]
-                 [:li {} (str subs " " status)])])]))]]
+                 [:li {} (str subs " " status)])])]))
+       ]]
+    (when editing? (style/create-paragraph
+      [:div {:style {:fontWeight "bold" :fontSize "106%"}}
+       [:img {:src "assets/Warning.svg" :style {:verticalAlign "middle" :marginRight ".32em"}}]
+          "FireCloud is not intended to host personally identifiable information. Do not use any patient identifier, including name, social security number, or medical record number."]))
+
      (style/create-section-header "Description")
      (style/create-paragraph
        (let [description (not-empty description)]
