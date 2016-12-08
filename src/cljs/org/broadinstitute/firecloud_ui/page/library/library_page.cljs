@@ -126,6 +126,22 @@
                    {:v VERSION
                     :search-text ""})
         :validator (comp (partial = VERSION) :v)}))
+   :component-did-mount
+   (fn [{:keys [state]}]
+     (endpoints/get-library-attributes
+       (fn [{:keys [success? get-parsed-response]}]
+         (if success?
+           (let [response (get-parsed-response)]
+             (swap! state assoc
+                    :library-attributes (:properties response)
+                    :aggregates (keep (fn [[k {:keys [aggregate title]}]] (when aggregate {:name k :title title})) (:properties response))))))))   :render
+   (fn [{:keys [state]}]
+     [:div {:style {:display "flex" :marginTop "2em"}}
+      [:div {:style {:flex "0 0 250px" :marginRight "2em"}}
+       [SearchSection {:search-text (:search-text @state)
+                       :on-filter #(swap! state assoc :search-text %)}]]
+      [:div {:style {:flex "1 1 auto" :overflowX "auto"}}
+       [DatasetsTable {:search-text (:search-text @state)}]]])
    :component-did-update
    (fn [{:keys [state]}]
      (persistence/save {:key PERSISTENCE-KEY :state state}))})
