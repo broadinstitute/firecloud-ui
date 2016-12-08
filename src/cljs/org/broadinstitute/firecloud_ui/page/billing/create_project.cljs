@@ -74,24 +74,6 @@
                                          :target "_blank"}
                                         (icons/icon {:style {:textDecoration "none" :color (:button-primary style/colors)}} :new-window)])])
                          billing-accounts)]]])
-               #_([:div {:style {:backgroundColor "white" :padding "1em" :margin "1em 0 1em 0"}}
-                   [table/Table
-                    {:columns [{:header "Account Name" :starting-width 300
-                                :content-renderer
-                                (fn [[name has-access]]
-                                  (if has-access
-                                    (style/create-link {:text name :onClick #(swap! state assoc :selected-account name)})
-                                    name))}
-                               {:header "Firecloud Access?" :starting-width 150}]
-                     :data (utils/cljslog billing-accounts)
-                     :row-style (fn [row-index [[acct-name _] _]]
-                                  {:backgroundColor
-                                   (cond (= acct-name (:selected-account @state)) "yellow"
-                                         (even? row-index) (:background-light style/colors)
-                                         :else "#fff")})
-                     :->row (fn [{:strs [accountName firecloudHasAccess]}]
-                              [[accountName firecloudHasAccess]
-                               (if firecloudHasAccess "Yes" "No")])}]])
                [comps/ErrorViewer {:error (:server-error @state)}]]))))
        :ok-button (when-not (empty? (:billing-accounts @state))
                     #(react/call :create-billing-project this))}])
