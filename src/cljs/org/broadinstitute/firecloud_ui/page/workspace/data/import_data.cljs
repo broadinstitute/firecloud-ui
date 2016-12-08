@@ -29,7 +29,6 @@
                                (set! (.-onload reader)
                                      #(swap! state assoc :file file :file-contents (.-result reader)))
                                (.readAsText reader (.slice file 0 preview-limit)))))}]
-      [comps/PHIWarning]
       [comps/Button {:text "Choose file..." :onClick #(-> (@refs "entities") .click)}]
       (when (:file-contents @state)
         [:div {:style {:margin "0.5em 2em" :padding "0.5em" :border style/standard-line}}
