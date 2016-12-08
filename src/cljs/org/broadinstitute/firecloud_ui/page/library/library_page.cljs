@@ -67,31 +67,50 @@
                      (modal/push-message {:header "No Access!"
                                           :message (str "You do not have access to this data set.\n Please contact " (:library:datasetCustodian data) " for access.")})))}))
    :pagination
-   (fn [{:keys [state]}]
+   (fn [{:keys [this state]}]
      (fn [{:keys [current-page rows-per-page filter-text]} callback]
        (endpoints/call-ajax-orch
          (let [from (* (- current-page 1) rows-per-page)]
            {:endpoint endpoints/search-datasets
-            :payload {:searchTerm filter-text :from from :size rows-per-page}
+            :payload {:searchTerm filter-text :from from :size rows-per-page :fieldAggregations (map (fn [{:keys [name]}] (name name)) (:aggregates props))}
             :headers utils/content-type=json
             :on-done
             (fn [{:keys [success? get-parsed-response status-text]}]
               (if success?
-                (let [{:keys [total results]} (get-parsed-response)]
+                (let [{:keys [total results aggregations]} (get-parsed-response)]
                   (swap! state assoc :total total)
                   (callback {:group-count total
                              :filtered-count total
-                             :rows results}))
+                             :rows results})
+                  (react/call :update-aggregates this aggregations))
                 (callback {:error status-text})))}))))})
 
 (react/defc Page
-  {:render
-   (fn [{:keys [refs]}]
+  {:component-did-mount
+   (fn [{:keys [state]}]
+     (endpoints/get-library-attributes
+       (fn [{:keys [success? get-parsed-response]}]
+         (if success?
+           (let [response (get-parsed-response)]
+             (swap! state assoc
+                    :library-attributes (:properties response)
+                    :aggregates (keep (fn [[k {:keys [aggregate title]}]] (when aggregate {:name k :title title})) (:properties response))))))))
+   :render
+   (fn [{:keys [state refs]}]
      [:div {:style {:display "flex" :padding "20px 0"}}
       [:div {:style {:flex "0 0 250px" :marginRight "2em"}}
        [:div {:style {:fontWeight 700 :fontSize "125%"}} "Search Filters: "]
        [:div {:style {:background (:background-light style/colors) :padding "16px 12px"}}
         [comps/TextFilter {:width "100%" :placeholder "Search"
-                           :on-filter #(react/call :set-filter-text (@refs "datasets-table") %)}]]]
-      [:div {:style {:flex "1 1 auto" :overflowX "auto"}}
-       [DatasetsTable {:ref "datasets-table"}]]])})
+                           :on-filter #(react/call :set-filter-text (@refs "datasets-table") %)}]
+        (map
+          (fn [{:keys [name title]}]
+            [comps/FacetFilter {:ref name
+                                :name name
+                                :title title
+                                ;:on-change #(react/call :set-filter-facet (@refs "datasets-table") %)
+                                }])
+          (:aggregates (utils/cljslog @state)))]
+       [:div {:style {:flex "1 1 auto" :overflowX "auto"}}
+        [DatasetsTable {:ref "datasets-table" :aggregates (:aggregates @state)
+                        :on-filter #(react/call :set-filter-text (@refs "datasets-table") %)}]]]])})
