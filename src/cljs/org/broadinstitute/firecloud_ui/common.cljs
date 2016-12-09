@@ -140,7 +140,7 @@
   (let [unparsed-values (get unparsed-profile "keyValuePairs")]
     (into {} (map (fn [m] [(keyword (m "key")) (m "value")]) unparsed-values))))
 
-(defn workspace-id->string [workspace-id] 
+(defn workspace-id->string [workspace-id]
   (str (:namespace workspace-id) "/" (:name workspace-id)))
 
 (defn get-id-from-nav-segment [segment]
@@ -180,3 +180,7 @@
           (count (get-in entity ["attributes" (set-type->membership-attribute entity-type)]))
           ;; something nonsensical has been selected, submission will probably fail anyway:
           :else 1)))
+
+(defn url-to-doid [url]
+  ;; TODO when we support multiple ontologies, we'll need to look for some string other than "DOID"
+  (str "DOID: " (second (clojure.string/split url #"DOID_"))))

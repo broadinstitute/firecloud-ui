@@ -126,4 +126,3 @@
 (defn render-entity [namespace name snapshot-id]
   (render-name-id (str namespace "/" name) snapshot-id))
 
-

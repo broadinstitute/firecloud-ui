@@ -6,6 +6,7 @@
     [org.broadinstitute.firecloud-ui.common.input :as input]
     [org.broadinstitute.firecloud-ui.common.modal :as modal]
     [org.broadinstitute.firecloud-ui.common.style :as style]
+    [org.broadinstitute.firecloud-ui.config :as config]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
     [org.broadinstitute.firecloud-ui.utils :as utils]
     ))
@@ -25,17 +26,22 @@
 
 (defn- render-property [library-schema library-attributes property-key]
   [:div {:style {:display "flex" :padding "0.5em 0" :borderBottom (str "2px solid " (:line-default style/colors))}}
-   [:div {:style {:flexBasis "33%" :fontWeight "bold" :paddingRight "2em"}}
+   [:div {:style {:flexBasis "40%" :fontWeight "bold" :paddingRight "2em"}}
     (get-in library-schema [:properties property-key :title])]
-   [:div {:style {:flexBasis "67%"}}
-    (render-value (get library-attributes property-key))]])
+   [:div {:style {:flexBasis "60%"}}
+    (render-value (get library-attributes property-key))
+    (if (= (get-in library-schema [:properties property-key :typeahead]) "ontology")
+      ;; TODO when we support multiple ontology-driven properties, can't hardcode the property name here
+      (if (not (nil? (get library-attributes :library:diseaseOntologyID)))
+        [:span {:style {:fontStyle "italic"}} (str " (" (common/url-to-doid (get library-attributes :library:diseaseOntologyID)) ")")]))]])
 
 
-(defn- resolve-hidden [property-key workspace]
+(defn- resolve-hidden [property-key workspace id]
   (case property-key
     :workspaceId (get-in workspace [:workspace :workspaceId])
     :workspaceNamespace (get-in workspace [:workspace :namespace])
     :workspaceName (get-in workspace [:workspace :name])
+    :library:diseaseOntologyID id
     nil))
 
 (def ^:private ENUM_EMPTY_CHOICE "<select an option>")
@@ -58,6 +64,36 @@
     (do (utils/log "unknown type: " type)
         value)))
 
+(defn select2-typeahead [r on-item-selected]
+  (.select2 (js/$ r)
+            (clj->js { :ajax { :url (fn [params]
+                                      ;; TODO may need a different endpoint when we support multiple ontologies
+                                      (str (config/api-url-root) "/duos/autocomplete/" (aget params "term")))
+                               :dataType "json"
+                               :delay 250
+                               :processResults (fn [data]
+                                                 (clj->js {:results data}))
+                               :data (fn [params] ;; don't actually want to send it as a query
+                                       (clj->js {}))}
+                       :minimumInputLength 1
+                       :cache true
+                       :allowClear true
+                       :templateResult (fn [obj]
+                                         (if (aget obj "loading")
+                                           (aget obj "text")
+                                           (str "<div style='font-weight: bold'>" (aget obj "label")
+                                                "<div style='float: right; font-weight: normal'>"
+                                                (common/url-to-doid (aget obj "id")) "</div></div>"
+                                                (if (not (nil? (aget obj "definition")))
+                                                  (str "<div style='font-size: small'> " (aget obj "definition") "</div>")))))
+                       :escapeMarkup identity
+                       :templateSelection (fn [obj]
+                                            (on-item-selected (aget obj "id") (aget obj "label"))
+                                            (aget obj "label"))
+                       :placeholder (clj->js {:id nil
+                                              :label "Select a disease ontology."})})))
+
+
 (react/defc LibraryAttributeForm
   {:get-initial-state
    (fn [{:keys [props]}]
@@ -79,7 +115,7 @@
                        :padding "0.5em" :border style/standard-line
                        :marginBottom "1em"}}
          (map (fn [property-key]
-                (let [{:keys [hidden title inputHint enum type items minimum default]} (get-in library-schema [:properties property-key])
+                (let [{:keys [hidden title inputHint enum type typeahead items minimum default]} (get-in library-schema [:properties property-key])
                       required? (contains? (:required-props @state) property-key)
                       pk-str (name property-key)]
                   (when-not hidden
@@ -96,18 +132,22 @@
                            (if (= type "array")
                              (str "Comma-separated list of " (:type items) "s")
                              (clojure.string/capitalize type))])])
-                     (if enum
-                       (style/create-identity-select {:ref pk-str
-                                                      :defaultValue (get existing property-key ENUM_EMPTY_CHOICE)}
-                                                     (cons ENUM_EMPTY_CHOICE enum))
-                       [input/TextField {:ref pk-str
-                                         :style {:width "100%"}
-                                         :placeholder inputHint
-                                         :defaultValue (render-value (get existing property-key default))
-                                         :predicates [(when required?
-                                                        (input/nonempty pk-str))
-                                                      (when (= type "integer")
-                                                        (input/integer pk-str :min minimum))]}])])))
+                     (cond
+                       enum (style/create-identity-select {:ref pk-str
+                                                           :defaultValue (get existing property-key ENUM_EMPTY_CHOICE)}
+                                                          (cons ENUM_EMPTY_CHOICE enum))
+                       (= typeahead "ontology") [:select {:ref pk-str
+                                                          :style {:width "100%"}
+                                                          :defaultValue "no work"} ;; value is really (get :library-attributes :library:diseaseOntologyID)
+                                                [:option {:value "no work"} "WHY"]] ;; the text here should really be (get :library-attributes :library:diseaseOntologyLabel)
+                       :else [input/TextField {:ref pk-str
+                                               :style {:width "100%"}
+                                               :placeholder inputHint
+                                               :defaultValue (render-value (get existing property-key default))
+                                               :predicates [(when required?
+                                                              (input/nonempty pk-str))
+                                                            (when (= type "integer")
+                                                              (input/integer pk-str :min minimum))]}])])))
               (calculate-display-properties library-schema))]
         (style/create-validation-error-message (:validation-error @state))
         [comps/ErrorViewer {:error (:server-error @state)}]]))
@@ -116,10 +156,12 @@
      (swap! state dissoc :validation-error :server-error)
      (let [validation-errors (atom [])
            field-data (->> props :library-schema :properties
-                           (keep (fn [[property-key {:keys [hidden enum] :as property}]]
+                           (keep (fn [[property-key {:keys [hidden enum typeahead] :as property}]]
                                    (let [pk-str (name property-key)
-                                         value (cond hidden (resolve-hidden property-key (:workspace props))
+                                         value (cond hidden (resolve-hidden property-key (:workspace props) (:ontologyID @state))
                                                      enum (resolve-enum (common/get-text refs pk-str))
+                                                     ;; TODO when we support multiple ontology-driven properties, can't rely on hardcoded values in state
+                                                     (= typeahead "ontology") (if (not (nil? (:ontologyID @state))) (:ontologyText @state) nil)
                                                      :else (do (swap! validation-errors into (input/validate refs pk-str))
                                                                (resolve-field (input/get-text refs pk-str) property)))]
                                      (when value
@@ -137,15 +179,25 @@
                            (if success?
                              (do (modal/pop-modal)
                                  ((:request-refresh props)))
-                             (swap! state assoc :server-error (get-parsed-response false))))})))))})
-
+                             (swap! state assoc :server-error (get-parsed-response false))))})))))
+   :component-did-mount
+   (fn [{:keys [props state refs]}]
+     (let
+       [properties (get-in props [:library-schema :properties])]
+       (doseq [[property-key {:keys [typeahead] :as property}] properties]
+                (if (= typeahead "ontology")
+                  (let [pk-str (name property-key)]
+                    (select2-typeahead (@refs pk-str)
+                                       (fn [id label]
+                                         ;; TODO when we support multiple ontology-driven properties, can't hardcode the keys in state or attributes
+                                         (swap! state assoc :ontologyText label :ontologyID id))))))))})
 
 (react/defc LibraryAttributeViewer
   {:render
    (fn [{:keys [props state]}]
      (let [{:keys [library-attributes library-schema]} props
            form-properties (select-keys props [:library-schema :workspace :workspace-id :request-refresh])
-           primary-properties [:library:indication :library:numSubjects :library:datatype :library:dataUseRestriction] ;; TODO replace with new field from schema
+           primary-properties [:library:diseaseOntologyLabel :library:numSubjects :library:datatype :library:dataUseRestriction] ;; TODO replace with new field from schema
            secondary-properties (->> (calculate-display-properties library-schema)
                                      (remove (partial contains? (set primary-properties))))]
        [:div {}
