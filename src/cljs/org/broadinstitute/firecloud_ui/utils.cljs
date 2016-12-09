@@ -50,9 +50,9 @@
 
 
 (defn keywordize-keys [m]
-      (into {} (map (fn [[k v]]
-                        [(keyword k) (if (map? v) (keywordize-keys v) v)])
-                    m)))
+  (into {} (map (fn [[k v]]
+                  [(keyword k) (if (map? v) (keywordize-keys v) v)])
+                m)))
 
 
 (defn local-storage-write
@@ -255,3 +255,28 @@
 
 (defn index-by [key m]
   (into {} (map (juxt key identity) m)))
+
+
+(defn filter-keys [pred m]
+  (into (empty m)
+        (filter (comp pred key) m)))
+
+(defn filter-values [pred m]
+  (into (empty m)
+        (filter (comp pred val) m)))
+
+(defn filter-kv [pred m]
+  (into (empty m)
+        (filter (fn [[k v]] (pred k v)) m)))
+
+(defn map-keys [f m]
+  (into (empty m)
+        (map (fn [[k v]] [(f k) v]) m)))
+
+(defn map-values [f m]
+  (into (empty m)
+        (map (fn [[k v]] [k (f v)]) m)))
+
+(defn map-kv [f m]
+  (into (empty m)
+        (map (fn [[k v]] (f k v)) m)))

@@ -49,7 +49,7 @@
      (let [{:keys [color icon href disabled? onClick text style class-name]} props]
        [:a {:className (or class-name "button")
             :style (merge
-                    {:display "inline-flex" :alignItems "center"
+                    {:display "inline-flex" :alignItems "center" :justifyContent "center"
                      :backgroundColor (if disabled? (:disabled-state style/colors) color)
                      :cursor (when disabled? "default")
                      :color "white" :fontWeight 500

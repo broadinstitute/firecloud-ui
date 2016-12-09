@@ -9,22 +9,14 @@
     [org.broadinstitute.firecloud-ui.common.modal :as modal]
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
-    [org.broadinstitute.firecloud-ui.nav :as nav]
     [org.broadinstitute.firecloud-ui.page.workspace.monitor.common :as moncommon :refer [all-success? any-running? any-failed?]]
     [org.broadinstitute.firecloud-ui.page.workspace.summary.acl-editor :refer [AclEditor]]
     [org.broadinstitute.firecloud-ui.page.workspace.summary.attribute-editor :as attributes]
-    [org.broadinstitute.firecloud-ui.page.workspace.summary.library :as library]
+    [org.broadinstitute.firecloud-ui.page.workspace.summary.catalog :as catalog]
+    [org.broadinstitute.firecloud-ui.page.workspace.summary.publish :as publish]
+    [org.broadinstitute.firecloud-ui.page.workspace.summary.library-view :refer [LibraryView]]
     [org.broadinstitute.firecloud-ui.page.workspace.summary.workspace-cloner :refer [WorkspaceCloner]]
     [org.broadinstitute.firecloud-ui.utils :as utils]))
-
-
-(defn- render-tags [tags]
-  (let [tagstyle {:marginRight 13 :borderRadius 2 :padding "5px 13px"
-                  :backgroundColor (:tag-background style/colors)
-                  :color (:tag-foreground style/colors)
-                  :display "inline-block" :fontSize "94%"}]
-    [:div {}
-     (map (fn [tag] [:span {:style tagstyle} tag]) tags)]))
 
 
 (react/defc DeleteDialog
@@ -88,15 +80,15 @@
                      :top (when-not sidebar-visible? 0)
                      :width 270}}
        (when (and curator? writer? (not editing?))
-         [library/CatalogButton {:library-schema library-schema
+         [catalog/CatalogButton {:library-schema library-schema
                                  :workspace workspace
                                  :workspace-id workspace-id
                                  :request-refresh request-refresh}])
        (when (and curator? owner? (not editing?))
          (if (:library:published library-attributes)
-           [library/UnpublishButton {:workspace-id workspace-id
+           [publish/UnpublishButton {:workspace-id workspace-id
                                      :request-refresh request-refresh}]
-           [library/PublishButton {:disabled? (when (empty? library-attributes)
+           [publish/PublishButton {:disabled? (when (empty? library-attributes)
                                                 "Dataset attributes must be created before publishing.")
                                    :workspace-id workspace-id
                                    :request-refresh request-refresh}]))
@@ -219,12 +211,12 @@
                description [MarkdownView {:text description}]
                :else [:span {:style {:fontStyle "italic"}} "No description provided"])))
      (when-not (empty? library-attributes)
-       [library/LibraryAttributeViewer {:library-attributes library-attributes
-                                        :library-schema library-schema
-                                        :workspace workspace
-                                        :workspace-id workspace-id
-                                        :request-refresh request-refresh
-                                        :can-edit? (and curator? owner? (not editing?))}])
+       [LibraryView {:library-attributes library-attributes
+                     :library-schema library-schema
+                     :workspace workspace
+                     :workspace-id workspace-id
+                     :request-refresh request-refresh
+                     :can-edit? (and curator? owner? (not editing?))}])
      [attributes/WorkspaceAttributeViewerEditor {:ref "workspace-attribute-editor"
                                                  :editing? editing?
                                                  :writer? writer?
@@ -305,31 +297,29 @@
        {:endpoint (endpoints/count-submissions (:workspace-id props))
         :on-done (fn [{:keys [success? status-text get-parsed-response]}]
                    (if success?
-                     (swap! state update-in [:server-response]
-                            assoc :submissions-count (get-parsed-response false))
-                     (swap! state update-in [:server-response]
-                            assoc :server-error status-text)))})
+                     (swap! state update :server-response assoc :submissions-count (get-parsed-response false))
+                     (swap! state update :server-response assoc :server-error status-text)))})
      (endpoints/get-billing-projects
-       (fn [err-text projects]
-         (if err-text
-           (swap! state update-in [:server-response] assoc :server-error err-text)
-           (swap! state update-in [:server-response]
-                  assoc :billing-projects (map #(% "projectName") projects)))))
+      (fn [err-text projects]
+        (if err-text
+          (swap! state update :server-response assoc :server-error err-text)
+          (swap! state update :server-response
+                 assoc :billing-projects (map #(% "projectName") projects)))))
      (endpoints/get-library-attributes
        (fn [{:keys [success? get-parsed-response]}]
          (if success?
-           (let [response (utils/keywordize-keys (get-parsed-response false))]
-             (swap! state update-in [:server-response] assoc :library-schema
+           (let [response (get-parsed-response)]
+             (swap! state update :server-response assoc :library-schema
                     (-> response
-                        (assoc :required (map keyword (:required response)))
-                        (assoc :propertyOrder (map keyword (:propertyOrder response))))))
-           (swap! state update-in [:server-response] assoc :server-error "Unable to load library schema"))))
+                        (update-in [:display :primary] (partial map keyword))
+                        (update-in [:display :secondary] (partial map keyword)))))
+           (swap! state update :server-response assoc :server-error "Unable to load library schema"))))
      (endpoints/call-ajax-orch
        {:endpoint endpoints/get-library-curator-status
         :on-done (fn [{:keys [success? get-parsed-response]}]
                    (if success?
-                     (swap! state update-in [:server-response] assoc :curator? (get (get-parsed-response false) "curator"))
-                     (swap! state update-in [:server-response] assoc :server-error "Unable to determine curator status")))})
+                     (swap! state update :server-response assoc :curator? (:curator (get-parsed-response)))
+                     (swap! state update :server-response assoc :server-error "Unable to determine curator status")))})
      (when (not (reader? (:workspace props)))
        (endpoints/call-ajax-orch
          {:endpoint (endpoints/storage-cost-estimate (:workspace-id props))
