@@ -119,7 +119,7 @@
                              [:div {}
                               [:label {:style {:cursor "pointer"}}
                                [:input {:type "checkbox"
-                                        :checked (or (nil? stateval) stateval)
+                                        :checked (not (false? stateval))
                                         :onChange #(swap! state update-in [:selected-types label] false?)
                                         :style {:cursor "pointer"}}]
                                [:span {:style {:marginLeft "0.5ex"}} label]]]))]
