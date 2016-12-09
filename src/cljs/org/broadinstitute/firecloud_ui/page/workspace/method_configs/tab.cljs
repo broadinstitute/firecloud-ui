@@ -7,7 +7,7 @@
     [org.broadinstitute.firecloud-ui.common.modal :as modal]
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.common.table :as table]
-    [org.broadinstitute.firecloud-ui.common.table-utils :refer [float-right]]
+    [org.broadinstitute.firecloud-ui.common.table-utils :refer [add-right]]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
     [org.broadinstitute.firecloud-ui.nav :as nav]
     [org.broadinstitute.firecloud-ui.page.method-repo.method-config-importer :refer [MethodConfigImporter]]
@@ -36,7 +36,7 @@
          [table/Table
           {:empty-message "There are no method configurations to display."
            :toolbar
-           (float-right
+           (add-right
             [comps/Button {:text "Import Configuration..."
                            :disabled? (case locked?
                                         nil "Looking up workspace status..."
@@ -50,8 +50,7 @@
                                          [MethodConfigImporter {:workspace-id (:workspace-id props)
                                                                 :after-import (fn [{:keys [config-id]}]
                                                                                 (modal/pop-modal)
-                                                                                ((:on-config-imported props) config-id))}]]}])}]
-            {:paddingRight "2em"})
+                                                                                ((:on-config-imported props) config-id))}]]}])}])
            :columns
            [{:header "Name" :starting-width 240 :as-text :name :sort-by :text
              :content-renderer

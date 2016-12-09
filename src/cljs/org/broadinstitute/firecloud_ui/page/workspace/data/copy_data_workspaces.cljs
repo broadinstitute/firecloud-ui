@@ -6,6 +6,7 @@
     [org.broadinstitute.firecloud-ui.common :as common]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
     [org.broadinstitute.firecloud-ui.common.table :as table]
+    [org.broadinstitute.firecloud-ui.common.table-utils :refer [default-toolbar-layout]]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.page.workspace.data.copy-data-entities :as copy-data-entities]
@@ -30,16 +31,11 @@
                   {:header "Access Level" :starting-width 106}
                   {:header "Protected" :starting-width 86
                    :content-renderer #(if % "Yes" "No")}]
-        :toolbar (fn [built-in]
-                   [:div {}
-                    [:div {:style {:float "left"}} built-in]
-                    (let [num (:num-filtered props)]
-                      (when (pos? num)
-                        [:div {:style {:float "left" :margin "7px 0 0 1em"}}
-                         (str
-                           (:num-filtered props)
-                           " workspace(s) unavailable because they contain protected data.")]))
-                    (common/clear-both)])
+        :toolbar (default-toolbar-layout
+                  (let [num (:num-filtered props)]
+                    (when (pos? num)
+                      (str (:num-filtered props)
+                           " workspace(s) unavailable because they contain protected data."))))
         :data (:workspaces props)
         :->row (fn [ws]
                  [(get-in ws ["workspace" "namespace"])
