@@ -7,6 +7,7 @@
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.common.table :as table]
     [org.broadinstitute.firecloud-ui.common.table-utils :refer [flex-strut]]
+    [org.broadinstitute.firecloud-ui.config :as config]
     [org.broadinstitute.firecloud-ui.nav :as nav]
     [org.broadinstitute.firecloud-ui.persistence :as persistence]
     [org.broadinstitute.firecloud-ui.utils :as utils]
@@ -65,14 +66,20 @@
        (when-not (= current-search-text new-search-text)
          (react/call :update-query-params (@refs "table") {:filter-text new-search-text}))))
    :check-access
-   (fn [data props]
+   (fn [{:keys [state]} data props]
+     (utils/cljslog data)
+     (utils/cljslog props)
      (endpoints/call-ajax-orch
-       {:endpoint (endpoints/check-bucket-read-access {:namespace (:namespace data) :name (:name data)})
+       {:endpoint (endpoints/get-workspace {:namespace (:namespace data) :name (:name data)})
         :on-done (fn [{:keys [success?]}]
                    (if success?
                      (nav/navigate (:nav-context props) "workspaces" {:namespace (:namespace data) :name (:name data)})
-                     (modal/push-message {:header "No Access!"
-                                          :message (str "You do not have access to this data set.\n Please contact " (:library:datasetCustodian data) " for access.")})))}))
+                     (modal/push-message {:header "Request Access"
+                                          :message (if (= (config/tcga-namespace) (get-in % ["workspace" "namespace"]))
+                                                       "To access to TCGA protected data please apply for access via dbGAP [link to XX]. After dbGAP approves your application please link you eRA-Commons ID in your FireCloud profile page ."
+                                                       (str "Please contact : " (:library:datasetCustodian data) ", [contact email] and request access for " (:namespace data) "/" (:name data) " workspace.")
+                                                    )
+                                          })))}))
    :pagination
    (fn [{:keys [state]}]
      (fn [{:keys [current-page rows-per-page filter-text]} callback]
