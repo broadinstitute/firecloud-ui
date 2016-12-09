@@ -209,7 +209,7 @@
                [:ul {:style {:marginTop "0"}}
                 (for [[status subs] (sort submissions-count)]
                  [:li {} (str subs " " status)])])]))]]
-       ]]
+
     (when editing? common/PHI-warning)
 
      (style/create-section-header "Description")
