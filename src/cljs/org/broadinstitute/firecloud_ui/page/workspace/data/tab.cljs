@@ -37,7 +37,7 @@
          [:div {:style {:position "relative" :minWidth 500}}
           [:div {:style {:fontSize "150%" :marginBottom "1ex"}}
            [comps/Breadcrumbs {:crumbs (:crumbs @state)}]]
-          (do common/PHI-warning)
+          common/PHI-warning
           [:div {:style {:backgroundColor "white" :padding "1em"}}
            (case last-crumb-id
              :file-import

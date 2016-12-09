@@ -195,7 +195,7 @@
                (for [[status subs] (sort submissions-count)]
                  [:li {} (str subs " " status)])])]))
        ]]
-    (when editing? (do common/PHI-warning))
+    (when editing? common/PHI-warning)
 
      (style/create-section-header "Description")
      (style/create-paragraph
