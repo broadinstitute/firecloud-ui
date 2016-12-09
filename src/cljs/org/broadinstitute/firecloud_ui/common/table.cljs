@@ -352,7 +352,10 @@
 
 
 (react/defc Table
-  {:update-query-params
+  {:get-query-params
+   (fn [{:keys [state]}]
+     (:query-params @state))
+   :update-query-params
    (fn [{:keys [state]} new-params]
      (swap! state update :query-params merge new-params))
    :get-default-props get-default-table-props
