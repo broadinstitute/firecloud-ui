@@ -1,6 +1,7 @@
 (ns org.broadinstitute.firecloud-ui.page.library.library_page
   (:require
     [dmohs.react :as react]
+    [org.broadinstitute.firecloud-ui.common :as common]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
     [org.broadinstitute.firecloud-ui.common.modal :as modal]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
@@ -51,7 +52,7 @@
                   :as-text :library:datasetDescription
                   :content-renderer (fn [data]
                                       (style/create-link {:text (:library:datasetName data)
-                                                          :onClick #(react/call :check-access this data props)}))}
+                                                          :onClick #(react/call :check-access this data)}))}
                  {:header "Phenotype/indication" :starting-width 200
                   :sort-by clojure.string/lower-case}
                  {:header "Data Use Restrictions" :starting-width 200
@@ -66,20 +67,21 @@
        (when-not (= current-search-text new-search-text)
          (react/call :update-query-params (@refs "table") {:filter-text new-search-text}))))
    :check-access
-   (fn [{:keys [state]} data props]
-     (utils/cljslog data)
-     (utils/cljslog props)
+   (fn [{:keys [props]} data]
      (endpoints/call-ajax-orch
-       {:endpoint (endpoints/get-workspace {:namespace (:namespace data) :name (:name data)})
+       {:endpoint (endpoints/check-bucket-read-access (common/row->workspace-id data))
         :on-done (fn [{:keys [success?]}]
                    (if success?
-                     (nav/navigate (:nav-context props) "workspaces" {:namespace (:namespace data) :name (:name data)})
+                     (nav/navigate (:nav-context props) "workspaces" (common/row->workspace-id data))
                      (modal/push-message {:header "Request Access"
-                                          :message (if (= (config/tcga-namespace) (get-in % ["workspace" "namespace"]))
-                                                       "To access to TCGA protected data please apply for access via dbGAP [link to XX]. After dbGAP approves your application please link you eRA-Commons ID in your FireCloud profile page ."
-                                                       (str "Please contact : " (:library:datasetCustodian data) ", [contact email] and request access for " (:namespace data) "/" (:name data) " workspace.")
-                                                    )
-                                          })))}))
+                                          :message
+                                            (if (= (config/tcga-namespace) (:namespace data))
+                                             [:span {}
+                                               "For access to TCGA protected data please apply for access via dbGaP [instructions can be found "
+                                               [:a {:href "https://wiki.nci.nih.gov/display/TCGA/Application+Process" :target "_blank"} "here"]
+                                               "]. After dbGaP approves your application please link your eRA Commons ID in your FireCloud profile page."]
+                                             (str "Please contact " (:library:datasetCustodian data) " and request access for the "
+                                               (:namespace data) "/" (:name data) " workspace."))})))}))
    :pagination
    (fn [{:keys [state]}]
      (fn [{:keys [current-page rows-per-page filter-text]} callback]
