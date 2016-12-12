@@ -46,6 +46,7 @@
                 "Lowercase letters, numbers, and hypens only, 6-30 characters, must start with a letter."]
                [:div {:style {:fontSize "120%"}}
                 "2. Select a billing account:"]
+               [:div {:style {:fontSize "80%" :fontStyle "italic"}} "To grant FireCloud access to an account, enter its console and add billing@firecloud.org as a Billing Administrator."]
                (let [simple-th (fn [text]
                                  [:th {:style {:textAlign "left" :padding "0 0.5rem"}} text])
                      simple-td (fn [text]
@@ -63,7 +64,10 @@
                            [:tr {:style {:borderTop style/standard-line}}
                             (simple-td [:input {:type "radio" :value (account "accountName")
                                                 :disabled (not (account "firecloudHasAccess"))
-                                                :id (account "accountName")}])
+                                                :id (account "accountName")
+                                                :onChange (fn [event]
+                                                            (when (aget event "target" "checked")
+                                                              (swap! state assoc :selected-account (account "accountName"))))}])
                             (simple-td [:label {:htmlFor (account "accountName")} (account "displayName")])
                             (simple-td [:label {:htmlFor (account "accountName")} (account "accountName")])
                             (simple-td (if (account "firecloudHasAccess") "Yes" "No"))
@@ -91,7 +95,7 @@
            (if (and success? (not parse-error?))
              (swap! state assoc
                     :billing-accounts parsed
-                    :selected-account (get (first parsed) "accountName"))
+                    :selected-account nil)
              (swap! state assoc
                     :error {:code status-code :details (if parse-error? raw-response parsed)}))))}))
    :create-billing-project
