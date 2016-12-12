@@ -145,8 +145,14 @@
                                               :value (get (:attributes @state) property-kwd)
                                               :onChange update-property
                                               :rows 3})
-                     (= typeahead "ontology") (style/create-text-field
-                                                {:ref property-kwd :className "typeahead" :placeholder "Select an ontology." :style {:width "100%"}})
+                     (= typeahead "ontology")
+                     (style/create-text-field {:ref property-kwd
+                                               :className "typeahead"
+                                               :placeholder "Select an ontology."
+                                               :style {:width "100%"}
+                                               :value (get (:attributes @state) property-kwd)
+                                               :onChange update-property ;; when I tried this, it would only save the text string I typed (not the full word it autocompleted to
+                                               })
                      :else
                      (style/create-text-field {:style (colorize {:width "100%"})
                                                :type (cond (= renderHint "date") "date"
@@ -167,15 +173,15 @@
                         :queryTokenizer js/Bloodhound.tokenizers.whitespace
                         :remote (clj->js {:url (str (config/api-url-root) "/duos/autocomplete/%QUERY")
                                           :wildcard "%QUERY"})}))
-           existing-ontology (get-in props [:workspace :workspace :library-attributes :library:diseaseOntologyLabel])]
-       (.typeahead (js/$ (@refs "library:diseaseOntologyLabel")) ;; .typeahead should be ref pk-str? if typeahead = ontology ??
+           existing-ontology (get-in props [:workspace :workspace :library-attributes :library:diseaseOntologyLabel])
+           property-kwd (@refs "library:diseaseOntologyLabel")] ;; fix this
+       (.typeahead (js/$ property-kwd) ;;
                    (clj->js {:highlight true
                              :hint true
                              :minLength 1})
                    (clj->js
                      {:source options
                       :display (fn [result]
-                                 (swap! state assoc :ontologyId (aget result "id"))
                                  (aget result "label"))
                       :templates (clj->js
                                    {:empty "<div> unable to find any matches to the current query </div>"
@@ -183,13 +189,21 @@
                                     (fn [result]
                                       (str "<div style='font-weight: bold; line-height: 1.5em;'>" (aget result "label")
                                            "<div style='float: right; font-weight: normal'>"
-;;                                            (common/url-to-doid (aget result "id"))
+;;                                            (common/url-to-doid (aget result "id")) ;; fix this
                                            (aget result "id") "</div></div>"
                                            (if (not (nil? (aget result "definition")))
                                              (str "<div style='font-size: small'> " (aget result "definition") "</div>"))))})}))
-       (if (not (nil? existing-ontology)) (.typeahead (js/$ (@refs "library:diseaseOntologyLabel")) "val" existing-ontology)))) ;; show saved ontology instead of "select an ontology"
-   })
-
+       ;; make sure that when you clear it, you don't save anythign
+       (.bind (js/$ property-kwd)
+              ;; get this to work properly
+              "typeahead:select"
+              (fn [ev suggestion]
+                (utils/log (str "selecting from typeahead " (aget suggestion "label")))
+                (.typeahead (js/$ property-kwd) "val" (aget suggestion "label")) ;; I tried updating the value here so that the onChange would work... but it doesn't
+                (swap! state update :attributes assoc property-kwd (aget suggestion "label"))
+                (swap! state update :attributes assoc "library:diseaseOntologyID" (aget suggestion "id"))
+                (.trigger (js/$ property-kwd) "change")
+                ))))})
 
 (react/defc Options
   {:validate
