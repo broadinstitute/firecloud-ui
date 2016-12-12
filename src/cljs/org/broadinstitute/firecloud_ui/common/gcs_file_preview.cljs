@@ -26,7 +26,11 @@
          [:div {:style {:width 700 :overflow "auto"}}
           (labeled "Google Bucket" (:bucket-name props))
           (labeled "Object" (:object props))
-          (when (:loading? @state)
+          [:div {:style {:marginTop "1em"}}
+           (if (> data-size 1800) "Last 1800 lines of log are shown. Use the link below to view the full log" "Log")
+           [:div {:style {:marginTop "1em" :whiteSpace "pre-wrap" :fontFamily "monospace" :fontSize "90%" :overflow "auto" :maxHeight 200
+                          :backgroundColor "#fff" :padding "1em" :borderRadius 8}} (:preview @state)]]
+          (when (:loading? state)
             [Spinner {:text "Getting file info..."}])
           (when data
             [:div {:style {:marginTop "1em"}}
@@ -73,6 +77,7 @@
    :component-did-mount
    (fn [{:keys [props state]}]
      (swap! state assoc :loading? true)
+     (swap! state assoc :preview "NO")
      (endpoints/call-ajax-orch
       {:endpoint (endpoints/get-gcs-stats (:bucket-name props) (:object props))
        :on-done (fn [{:keys [success? get-parsed-response xhr status-code]}]
@@ -81,7 +86,16 @@
                          :response (if success?
                                      {:data (get-parsed-response)}
                                      {:error (.-responseText xhr)
-                                      :status status-code})))}))})
+                                      :status status-code})))})
+     (utils/ajax {:url (str "https://www.googleapis.com/storage/v1/b/"
+                            (:bucket-name props)
+                            "/o/"
+                            (js/encodeURIComponent (:object props))
+                            "?alt=media")
+                  :headers {"Authorization" (str "Bearer " (utils/get-access-token))
+                            "Range" "bytes=-1800"}
+                  :on-done (fn [{:keys [success? status-text raw-response]}]
+                             (swap! state assoc :preview raw-response))}))})
 
 
 (react/defc GCSFilePreviewLink
