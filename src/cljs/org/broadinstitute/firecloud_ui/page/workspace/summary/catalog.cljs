@@ -1,15 +1,16 @@
 (ns org.broadinstitute.firecloud-ui.page.workspace.summary.catalog
   (:require
+    [cljsjs.typeahead-bundle]
     [clojure.string :refer [join split trim]]
     [dmohs.react :as react]
     [org.broadinstitute.firecloud-ui.common :as common]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
     [org.broadinstitute.firecloud-ui.common.modal :as modal]
     [org.broadinstitute.firecloud-ui.common.style :as style]
+    [org.broadinstitute.firecloud-ui.config :as config]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
     [org.broadinstitute.firecloud-ui.page.workspace.summary.library-utils :as library-utils]
-    [org.broadinstitute.firecloud-ui.utils :as utils]
-    ))
+    [org.broadinstitute.firecloud-ui.utils :as utils]    ))
 
 
 (defn- get-initial-attributes [workspace]
@@ -144,7 +145,8 @@
                                               :value (get (:attributes @state) property-kwd)
                                               :onChange update-property
                                               :rows 3})
-                     (= typeahead "ontology") ("RAHRAHRAH")
+                     (= typeahead "ontology") (style/create-text-field
+                                                {:ref property-kwd :className "typeahead" :placeholder "Select an ontology." :style {:width "100%"}})
                      :else
                      (style/create-text-field {:style (colorize {:width "100%"})
                                                :type (cond (= renderHint "date") "date"
@@ -156,7 +158,37 @@
                                                :placeholder inputHint
                                                :value (get (:attributes @state) property-kwd)
                                                :onChange update-property}))]))
-          questions)]))})
+          questions)]))
+   :component-did-mount
+   (fn [{:keys [props state refs]}]
+     (let [options (js/Bloodhound.
+                     (clj->js
+                       {:datumTokenizer js/Bloodhound.tokenizers.whitespace
+                        :queryTokenizer js/Bloodhound.tokenizers.whitespace
+                        :remote (clj->js {:url (str (config/api-url-root) "/duos/autocomplete/%QUERY")
+                                          :wildcard "%QUERY"})}))
+           existing-ontology (get-in props [:workspace :workspace :library-attributes :library:diseaseOntologyLabel])]
+       (.typeahead (js/$ (@refs "library:diseaseOntologyLabel")) ;; .typeahead should be ref pk-str? if typeahead = ontology ??
+                   (clj->js {:highlight true
+                             :hint true
+                             :minLength 1})
+                   (clj->js
+                     {:source options
+                      :display (fn [result]
+                                 (swap! state assoc :ontologyId (aget result "id"))
+                                 (aget result "label"))
+                      :templates (clj->js
+                                   {:empty "<div> unable to find any matches to the current query </div>"
+                                    :suggestion
+                                    (fn [result]
+                                      (str "<div style='font-weight: bold; line-height: 1.5em;'>" (aget result "label")
+                                           "<div style='float: right; font-weight: normal'>"
+;;                                            (common/url-to-doid (aget result "id"))
+                                           (aget result "id") "</div></div>"
+                                           (if (not (nil? (aget result "definition")))
+                                             (str "<div style='font-size: small'> " (aget result "definition") "</div>"))))})}))
+       (if (not (nil? existing-ontology)) (.typeahead (js/$ (@refs "library:diseaseOntologyLabel")) "val" existing-ontology)))) ;; show saved ontology instead of "select an ontology"
+   })
 
 
 (react/defc Options
