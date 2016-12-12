@@ -3,6 +3,8 @@
     [dmohs.react :as react]
     [org.broadinstitute.firecloud-ui.common :as common]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
+    [org.broadinstitute.firecloud-ui.common.input :as input]
+    [org.broadinstitute.firecloud-ui.common.modal :as modal]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.common.table :as table]
@@ -114,6 +116,133 @@
                           :on-filter (:on-filter props)}]]])})
 
 
+(react/defc FacetCheckboxes
+  {:render
+    (fn [{:keys [props state]}]
+      [:div {}
+      (map
+        (fn [m]
+          [:div {:style {:paddingTop "5"}}
+            [comps/Checkbox {:label (:key m)}]
+            [:div {:style {:fontSize "80%" :fontWeight "normal" :float "right"}}
+              [:span {:style {
+                  :display "inline-block"
+                  :minWidth "10px"
+                  :padding "3px 7px"
+                  :color "#fff"
+                  :fontWeight "bold"
+                  :textAlign "center"
+                  :whiteSpace "nowrap"
+                  :verticalAlign "middle"
+                  :backgroundColor "#aaa"
+                  :borderRadius "3px"
+                }} (:doc_count m)]]]
+        )
+        (take 5 (:buckets props))
+      )
+      ;; I think we should just hide those > 5 and show when we click on the more link.
+      (when-let [size (count (:buckets props))]
+        (if (> size 5) [:div {:style {:paddingTop "5"}} (- size 5) " more..."]))]
+    )
+  }
+)
+
+
+;; See http://leaverou.github.io/multirange/ for a better idea.
+;; Aggregate values for this facet are not useful and instead we need to
+;; iterate over the full result set and pull out the ones we want.
+;; This is likely because they are not indexed yet!!!
+(react/defc FacetSlider
+  {:render
+   (fn [{:keys [props state]}]
+     (let [term (:term props)
+           results (:results props)
+           counts (map (fn [m] (term m)) results)
+           max-count (apply max counts)]
+       [:div {:style {:paddingTop "5"}}
+         [:input {:type "range" :multiple "true" :value (str "0," max-count) :onChange (fn [])}]]
+     )
+    )
+  }
+)
+
+;; TODO: Need to deal with making this an autocomplete solely on the values inside the bucket.
+(react/defc FacetAutocomplete
+  {:render
+    (fn [{:keys [props state]}]
+      (let [buckets (:buckets props)
+            values (get-in buckets [key])]
+        [input/TextField {}]
+      )
+    )
+  }
+)
+
+;; TODO: Styling to match layout model.
+;; TODO: OnChange handler to swap state and filter dataset-table based on filter selection
+;; TODO: OnChange handler for the "clear" link to swap state on facet and trigger filter on data-set table
+;; TODO: error case for loading content
+;; TODO: Deal with sorting
+;; TODO: Deal with linking the "XX more ..." text
+(react/defc Facet
+  {:render
+   (fn [{:keys [props state]}]
+     ;(utils/cljslog "aggregate-field" (:aggregate-field props))
+      (let [k (first (keys (:aggregate-field props)))
+            m (k (:aggregate-field props))
+            title (:title m)
+            render-hint (get-in m [:aggregate :renderHint])
+            buckets (get-in (:aggregations @state) [0 :results :buckets])]
+        ;(utils/cljslog "render-hint" render-hint)
+        [:div {:style {:fontSize "80%"}}
+          [:div {:style {:fontWeight "bold"}} title
+            [:div {:style {:fontSize "80%" :fontWeight "normal" :float "right"}} "Clear"]]
+            (if-not (:aggregations @state)
+              "loading..."
+              (cond
+                (= render-hint "checkbox") [FacetCheckboxes {:buckets buckets}]
+                (= render-hint "slider") [FacetSlider {:term k :results (:results @state)}]
+                (= render-hint "text") [FacetAutocomplete {:buckets buckets}]
+              )
+            )
+            [:div {:style {:padding "5 0 5 0"}} [:hr {}]]
+        ]
+      )
+    )
+    :component-did-mount
+    (fn [{:keys [props state]}]
+       (let [k (first (keys (:aggregate-field props)))]
+         (endpoints/call-ajax-orch
+           {:endpoint endpoints/search-datasets
+            :payload {"fieldAggregations" [k]}
+            :headers utils/content-type=json
+            :on-done
+            (fn [{:keys [success? get-parsed-response status-text]}]
+              (if success?
+                (let [{:keys [results aggregations]} (get-parsed-response)]
+                  (swap! state assoc :results results :aggregations aggregations)
+                 )
+               )
+             )
+           }
+         )
+       )
+    )
+  }
+)
+
+
+(react/defc FacetSection
+  {:render
+    (fn [{:keys [refs props]}]
+      (let [aggregate-fields (:aggregate-fields props)]
+        ; (utils/cljslog "aggregate-fields" aggregate-fields)
+        [:div {:style {:background (:background-light style/colors) :padding "16px 12px"}}
+            (map
+              (fn [m] [Facet {:aggregate-field m}])
+              aggregate-fields)]))})
+
+
 (def ^:private PERSISTENCE-KEY "library-page")
 (def ^:private VERSION 1)
 
@@ -134,12 +263,16 @@
            (let [response (get-parsed-response)]
              (swap! state assoc
                     :library-attributes (:properties response)
-                    :aggregates (keep (fn [[k {:keys [aggregate title]}]] (when aggregate {:name k :title title})) (:properties response))))))))   :render
-   (fn [{:keys [state]}]
+                    :aggregate-fields (utils/cljslog (keep (fn [[k m]] (when (:aggregate m) {k m})) (:properties response)))))))))
+   :render
+   (fn [{:keys [refs state]}]
      [:div {:style {:display "flex" :marginTop "2em"}}
       [:div {:style {:flex "0 0 250px" :marginRight "2em"}}
        [SearchSection {:search-text (:search-text @state)
-                       :on-filter #(swap! state assoc :search-text %)}]]
+                       :on-filter #(swap! state assoc :search-text %)}]
+       [FacetSection {:aggregate-fields (:aggregate-fields @state)
+                      ;:on-change #(react/call :set-filter-text (@refs "datasets-table") %)
+                      }]]
       [:div {:style {:flex "1 1 auto" :overflowX "auto"}}
        [DatasetsTable {:search-text (:search-text @state)}]]])
    :component-did-update
