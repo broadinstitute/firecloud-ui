@@ -103,7 +103,7 @@
         (map
           (fn [{:keys [property required inputHint renderHint editable]}]
             (let [property-kwd (keyword property)
-                  {:keys [title type enum minimum consentCode]} (get-in library-schema [:properties property-kwd])
+                  {:keys [title type typeahead enum minimum consentCode]} (get-in library-schema [:properties property-kwd])
                   error? (contains? (:invalid-properties @state) property-kwd)
                   colorize (fn [style] (merge style (when error? {:borderColor (:exception-state style/colors)})))
                   update-property #(swap! state update :attributes assoc property-kwd (.. % -target -value))
@@ -144,6 +144,7 @@
                                               :value (get (:attributes @state) property-kwd)
                                               :onChange update-property
                                               :rows 3})
+                     (= typeahead "ontology") ("RAHRAHRAH")
                      :else
                      (style/create-text-field {:style (colorize {:width "100%"})
                                                :type (cond (= renderHint "date") "date"
