@@ -3,7 +3,6 @@
     [dmohs.react :as react]
     [org.broadinstitute.firecloud-ui.common :as common]
     [org.broadinstitute.firecloud-ui.common.components :refer [Spinner]]
-    [org.broadinstitute.firecloud-ui.common.icons :as icons]
     [org.broadinstitute.firecloud-ui.common.modal :as modal]
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
@@ -18,15 +17,20 @@
       {:header "File Details"
        :content
        (let [{:keys [data error status]} (:response @state)
-             data-size (when data (data "size"))
+             data-size (:size data)
+             cost (:estimatedCostUSD data)
              labeled (fn [label & contents]
                        [:div {}
-                        [:div {:style {:display "inline-block" :width 120}} (str label ": ")]
+                        [:div {:style {:display "inline-block" :width 185}} (str label ": ")]
                         contents])]
-         [:div {:style {:width 500 :overflow "auto"}}
+         [:div {:style {:width 700 :overflow "auto"}}
           (labeled "Google Bucket" (:bucket-name props))
           (labeled "Object" (:object props))
-          (when (:loading? @state)
+          [:div {:style {:marginTop "1em"}}
+           (if (> data-size 1800) "Last 1800 lines of log are shown. Use the link below to view the full log" "Log")
+           [:div {:style {:marginTop "1em" :whiteSpace "pre-wrap" :fontFamily "monospace" :fontSize "90%" :overflow "auto" :maxHeight 200
+                          :backgroundColor "#fff" :padding "1em" :borderRadius 8}} (:preview @state)]]
+          (when (:loading? state)
             [Spinner {:text "Getting file info..."}])
           (when data
             [:div {:style {:marginTop "1em"}}
@@ -38,17 +42,17 @@
                             :target "_blank"}
                         "Open"]
                        [:span {:style {:fontStyle "italic" :color (:text-light style/colors)}}
-                        " (right-click to download)"]]
-                      (when (> data-size 100000000)
-                        [:span {:style {:color (:exception-state style/colors) :marginLeft "2ex"}}
-                         (icons/icon {:style {:fontSize "100%" :verticalAlign "middle" :marginRight "1ex"}}
-                                     :warning-triangle)
-                         "Warning: Downloading this file may incur a large data egress charge"]))
+                        " (right-click to download)"]])
+             (labeled "Estimated download fee"
+                      (if (nil? cost) "Unknown" (common/format-price cost))
+                      [:span {:style {:marginLeft "1em"}}
+                       [:span {:style {:fontStyle "italic" :color (:text-light style/colors)}}
+                        " (non-US destinations may be higher)"]])
              (if (:show-details? @state)
                [:div {}
-                (labeled "Created" (common/format-date (data "timeCreated")))
-                (labeled "Updated" (common/format-date (data "updated")))
-                (labeled "MD5" (data "md5Hash"))
+                (labeled "Created" (common/format-date (:timeCreated data)))
+                (labeled "Updated" (common/format-date (:updated data)))
+                (labeled "MD5" (:md5Hash data))
                 (style/create-link {:text "Collapse"
                                     :onClick #(swap! state dissoc :show-details?)})]
                (style/create-link {:text "More info"
@@ -73,15 +77,25 @@
    :component-did-mount
    (fn [{:keys [props state]}]
      (swap! state assoc :loading? true)
+     (swap! state assoc :preview "NO")
      (endpoints/call-ajax-orch
       {:endpoint (endpoints/get-gcs-stats (:bucket-name props) (:object props))
        :on-done (fn [{:keys [success? get-parsed-response xhr status-code]}]
                   (swap! state assoc
                          :loading? false
                          :response (if success?
-                                     {:data (get-parsed-response false)}
+                                     {:data (get-parsed-response)}
                                      {:error (.-responseText xhr)
-                                      :status status-code})))}))})
+                                      :status status-code})))})
+     (utils/ajax {:url (str "https://www.googleapis.com/storage/v1/b/"
+                            (:bucket-name props)
+                            "/o/"
+                            (js/encodeURIComponent (:object props))
+                            "?alt=media")
+                  :headers {"Authorization" (str "Bearer " (utils/get-access-token))
+                            "Range" "bytes=-1800"}
+                  :on-done (fn [{:keys [success? status-text raw-response]}]
+                             (swap! state assoc :preview raw-response))}))})
 
 
 (react/defc GCSFilePreviewLink
