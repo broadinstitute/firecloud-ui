@@ -101,12 +101,13 @@
      (let [{:keys [library-schema questions enumerate]} props]
        [(if enumerate :ol :div) {}
         (map
-          (fn [{:keys [property required inputHint renderHint]}]
+          (fn [{:keys [property required inputHint renderHint editable]}]
             (let [property-kwd (keyword property)
                   {:keys [title type enum minimum consentCode]} (get-in library-schema [:properties property-kwd])
                   error? (contains? (:invalid-properties @state) property-kwd)
                   colorize (fn [style] (merge style (when error? {:borderColor (:exception-state style/colors)})))
-                  update-property #(swap! state update :attributes assoc property-kwd (.. % -target -value))]
+                  update-property #(swap! state update :attributes assoc property-kwd (.. % -target -value))
+                  disabled? (false? editable)]
               [(if enumerate :li :div) {}
                [:div {:style {:marginBottom 2}}
                 title
@@ -149,6 +150,7 @@
                                                            (= type "integer") "number"
                                                            :else "text")
                                                :min minimum
+                                               :disabled disabled?
                                                :placeholder inputHint
                                                :value (get (:attributes @state) property-kwd)
                                                :onChange update-property}))]))

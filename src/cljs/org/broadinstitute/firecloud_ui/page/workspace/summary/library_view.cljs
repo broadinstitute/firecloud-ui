@@ -25,7 +25,8 @@
 (defn- render-property [library-schema library-attributes property-key]
   (render-library-row
    (get-in library-schema [:properties property-key :title])
-   (render-value (get library-attributes property-key))))
+   (render-value 
+    (or (get library-attributes property-key) (get-in library-schema [:properties property-key :default])))))
 
 
 (defn- render-consent-codes [library-schema library-attributes]
