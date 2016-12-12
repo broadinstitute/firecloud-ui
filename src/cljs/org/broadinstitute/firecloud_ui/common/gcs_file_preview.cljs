@@ -27,9 +27,10 @@
           (labeled "Google Bucket" (:bucket-name props))
           (labeled "Object" (:object props))
           [:div {:style {:marginTop "1em"}}
-           (if (> data-size 1800) "Last 1800 lines of log are shown. Use the link below to view the full log" "Log")
-           [:div {:style {:marginTop "1em" :whiteSpace "pre-wrap" :fontFamily "monospace" :fontSize "90%" :overflow "auto" :maxHeight 200
-                          :backgroundColor "#fff" :padding "1em" :borderRadius 8}} (:preview @state)]]
+           (if (> data-size 1800) (str "Last " (:previewLineCount @state) " lines of log are shown. Use the link below to view the full log.") "Log:")
+           (react/create-element
+             [:div {:ref "preview" :style {:marginTop "1em" :whiteSpace "pre-wrap" :fontFamily "monospace" :fontSize "90%" :overflow "auto" :maxHeight 206
+                                           :backgroundColor "#fff" :padding "1em" :borderRadius 8}} (str (if (> data-size 1800) "...") (:preview @state))])]
           (when (:loading? state)
             [Spinner {:text "Getting file info..."}])
           (when data
@@ -75,27 +76,29 @@
        :show-cancel? false
        :ok-button {:text "Done" :onClick modal/pop-modal}}])
    :component-did-mount
-   (fn [{:keys [props state]}]
+   (fn [{:keys [props state refs after-update]}]
      (swap! state assoc :loading? true)
-     (swap! state assoc :preview "NO")
      (endpoints/call-ajax-orch
-      {:endpoint (endpoints/get-gcs-stats (:bucket-name props) (:object props))
-       :on-done (fn [{:keys [success? get-parsed-response xhr status-code]}]
-                  (swap! state assoc
-                         :loading? false
-                         :response (if success?
-                                     {:data (get-parsed-response)}
-                                     {:error (.-responseText xhr)
-                                      :status status-code})))})
+       {:endpoint (endpoints/get-gcs-stats (:bucket-name props) (:object props))
+        :on-done (fn [{:keys [success? get-parsed-response xhr status-code]}]
+                   (swap! state assoc
+                          :loading? false
+                          :response (if success?
+                                      {:data (get-parsed-response)}
+                                      {:error (.-responseText xhr)
+                                       :status status-code})))})
      (utils/ajax {:url (str "https://www.googleapis.com/storage/v1/b/"
                             (:bucket-name props)
                             "/o/"
                             (js/encodeURIComponent (:object props))
                             "?alt=media")
-                  :headers {"Authorization" (str "Bearer " (utils/get-access-token))
-                            "Range" "bytes=-1800"}
+                  :headers {"Authorization" (str "Bearer " (utils/get-access-token))  "Range" "bytes=-1800"}
                   :on-done (fn [{:keys [success? status-text raw-response]}]
-                             (swap! state assoc :preview raw-response))}))})
+                             (swap! state assoc :preview raw-response)
+                             (swap! state assoc :previewLineCount (count (clojure.string/split raw-response #"\n+")))
+                             (after-update
+                               (fn []
+                                 (aset (@refs "preview") "scrollTop" (aget (@refs "preview") "scrollHeight")))))}))})
 
 
 (react/defc GCSFilePreviewLink
