@@ -1,6 +1,7 @@
 (ns org.broadinstitute.firecloud-ui.page.billing.create-project
   (:require
     [dmohs.react :as react]
+    clojure.string
     [org.broadinstitute.firecloud-ui.common.components :as comps]
     [org.broadinstitute.firecloud-ui.common.input :as input]
     [org.broadinstitute.firecloud-ui.common.icons :as icons]
@@ -36,9 +37,9 @@
                 "1. Enter a unique name:"]
                [input/TextField {:ref "name-field"
                                  :style {:width "100%" :marginTop "1em" :marginBottom 0}
-                                 :predicates [{:test #(re-matches #"[a-z0-9\-]*" %) :message "Name contains invalid characters"}
-                                              {:test #(<= 6 (count %) 30) :message "Name must be 6-30 characters long"}
-                                              {:test #(re-matches #"[a-z]" (first %)) :message "Name must start with a letter"}]}]
+                                 :predicates [{:test #(<= 6 (count %) 30) :message "Name must be 6-30 characters long"}
+                                              {:test #(re-matches #"[a-z0-9\-]*" %) :message "Name contains invalid characters"}
+                                              {:test #(and (not (clojure.string/blank? %)) (re-matches #"[a-z]" (first %))) :message "Name must start with a letter"}]}]
                (style/create-validation-error-message (:validation-errors @state))
                [:div {:style {:marginBottom "1.5em"
                               :color (if (:validation-errors @state) (:exception-state style/colors) (:text-lighter style/colors))
@@ -49,8 +50,9 @@
                [:div {:style {:fontSize "80%" :fontStyle "italic"}} "To grant FireCloud access to an account, enter its console and add billing@firecloud.org as a Billing Administrator."]
                (let [simple-th (fn [text]
                                  [:th {:style {:textAlign "left" :padding "0 0.5rem"}} text])
-                     simple-td (fn [text]
-                                 [:td {:style {:padding "0 0.5rem" :borderTop style/standard-line}} text])]
+                     simple-td (fn [for text]
+                                 [:td {:style {:borderTop style/standard-line}}
+                                  [:label {:htmlFor for :style {:display "block" :padding "0 0.5rem"}} text]])]
                  [:form {:style {:margin "1em 0 1em 0"}}
                   [:table {:style {:width "100%" :borderCollapse "collapse"}}
                    [:thead {} [:tr {}
@@ -62,22 +64,25 @@
                    [:tbody {}
                     (map (fn [account]
                            [:tr {:style {:borderTop style/standard-line}}
-                            (simple-td [:input {:type "radio" :value (account "accountName")
-                                                :disabled (not (account "firecloudHasAccess"))
-                                                :id (account "accountName")
-                                                :onChange (fn [event]
-                                                            (when (aget event "target" "checked")
-                                                              (swap! state assoc :selected-account (account "accountName"))))}])
-                            (simple-td [:label {:htmlFor (account "accountName")} (account "displayName")])
-                            (simple-td [:label {:htmlFor (account "accountName")} (account "accountName")])
-                            (simple-td (if (account "firecloudHasAccess") "Yes" "No"))
-                            (simple-td [:a
-                                        {:href (str
-                                                "https://console.developers.google.com/billing/"
-                                                (second (clojure.string/split (account "accountName") #"/")))
-                                         :target "_blank"}
-                                        (icons/icon {:style {:textDecoration "none" :color (:button-primary style/colors)}} :new-window)])])
-                         billing-accounts)]]])
+                            [:td {:style {:borderTop style/standard-line}}
+                             [:input {:type "radio" :value (account "accountName")
+                                      :disabled (not (account "firecloudHasAccess"))
+                                      :id (account "accountName")
+                                      :onChange (fn [event]
+                                                  (when (aget event "target" "checked")
+                                                    (swap! state assoc :selected-account (account "accountName"))))}]]
+                            (simple-td (account "accountName") (account "displayName"))
+                            (simple-td (account "accountName") (account "accountName"))
+                            (simple-td (account "accountName") (if (account "firecloudHasAccess") "Yes" "No"))
+                            [:td {:style {:borderTop style/standard-line}}
+                             [:a
+                              {:href (str
+                                      "https://console.developers.google.com/billing/"
+                                      (second (clojure.string/split (account "accountName") #"/")))
+                               :target "_blank"}
+                              (icons/icon {:style {:textDecoration "none" :color (:button-primary style/colors)}} :new-window)]]])
+                         billing-accounts)]]
+                  (style/create-validation-error-message (:account-errors @state))])
                [comps/ErrorViewer {:error (:server-error @state)}]]))))
        :ok-button (when-not (empty? (:billing-accounts @state))
                     #(react/call :create-billing-project this))}])
@@ -101,11 +106,13 @@
    :create-billing-project
    (fn [{:keys [props state refs]}]
      (let [account (:selected-account @state)]
-       (if-not account
-         (swap! state assoc :validation-errors ["Please select a billing account"])
-         (let [[name & fails] (input/get-and-validate refs "name-field")]
-           (swap! state assoc :validation-errors fails)
-           (when-not fails
+       (when-not account
+         (swap! state assoc :account-errors ["Please select a billing account"]))
+       (let [[name & fails] (input/get-and-validate refs "name-field")]
+         (swap! state assoc :validation-errors fails)
+         (when-not (and fails (not account))
+           (do
+             (js* "debugger;")
              (swap! state assoc :creating? true)
              (endpoints/call-ajax-orch
               {:endpoint endpoints/create-billing-project
