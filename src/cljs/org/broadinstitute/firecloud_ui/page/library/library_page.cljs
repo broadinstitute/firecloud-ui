@@ -77,9 +77,9 @@
                                           :message
                                             (if (= (config/tcga-namespace) (:namespace data))
                                              [:span {}
-                                               "For access to TCGA protected data please apply for access via dbGaP [instructions can be found "
-                                               [:a {:href "https://wiki.nci.nih.gov/display/TCGA/Application+Process" :target "_blank"} "here"]
-                                               "]. After dbGaP approves your application please link your eRA Commons ID in your FireCloud profile page."]
+                                               [:p {} "For access to TCGA protected data please apply for access via dbGaP [instructions can be found "
+                                               [:a {:href "https://wiki.nci.nih.gov/display/TCGA/Application+Process" :target "_blank"} "here"] "]." ]
+                                               [:p {} "After dbGaP approves your application please link your eRA Commons ID in your FireCloud profile page."]]
                                              [:span {}
                                              "Please contact " [:a {:target "_blank" :href (str "mailto:" (:library:contactEmail data))} (str (:library:datasetCustodian data) " <" (:library:contactEmail data) ">")]
                                                " and request access for the "
