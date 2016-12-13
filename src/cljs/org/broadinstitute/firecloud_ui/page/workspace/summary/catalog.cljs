@@ -150,8 +150,8 @@
                                                :className "typeahead"
                                                :placeholder "Select an ontology."
                                                :style {:width "100%"}
-                                               :value (get (:attributes @state) property-kwd)
-                                               :onChange update-property ;; when I tried this, it would only save the text string I typed (not the full word it autocompleted to
+                                               :value (get (:attributes @state) property-kwd nil)
+                                               :onChange update-property
                                                })
                      :else
                      (style/create-text-field {:style (colorize {:width "100%"})
@@ -163,6 +163,7 @@
                                                :disabled disabled?
                                                :placeholder inputHint
                                                :value (get (:attributes @state) property-kwd)
+
                                                :onChange update-property}))]))
           questions)]))
    :component-did-mount
@@ -187,23 +188,14 @@
                                    {:empty "<div> unable to find any matches to the current query </div>"
                                     :suggestion
                                     (fn [result]
-                                      (str "<div style='font-weight: bold; line-height: 1.5em;'>" (aget result "label")
-                                           "<div style='float: right; font-weight: normal'>"
-;;                                            (common/url-to-doid (aget result "id")) ;; fix this
-                                           (aget result "id") "</div></div>"
-                                           (if (not (nil? (aget result "definition")))
-                                             (str "<div style='font-size: small'> " (aget result "definition") "</div>"))))})}))
-       ;; make sure that when you clear it, you don't save anythign
+                                      (str "<div> <div style='font-weight: bold; line-height: 1.5em;'>" (aget result "label")
+                                           "</div><div>" (aget result "id") "</div>"
+                                           "<div style='font-size: small; font-style: italic'> " (aget result "definition") "</div></div>"))})}))
        (.bind (js/$ property-kwd)
-              ;; get this to work properly
               "typeahead:select"
               (fn [ev suggestion]
                 (utils/log (str "selecting from typeahead " (aget suggestion "label")))
-                (.typeahead (js/$ property-kwd) "val" (aget suggestion "label")) ;; I tried updating the value here so that the onChange would work... but it doesn't
-                (swap! state update :attributes assoc property-kwd (aget suggestion "label"))
-                (swap! state update :attributes assoc "library:diseaseOntologyID" (aget suggestion "id"))
-                (.trigger (js/$ property-kwd) "change")
-                ))))})
+                (swap! state update :attributes assoc :library:diseaseOntologyLabel (aget suggestion "label") :library:diseaseOntologyID (aget suggestion "id"))))))})
 
 (react/defc Options
   {:validate
