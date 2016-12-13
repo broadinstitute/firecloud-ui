@@ -28,7 +28,8 @@
 
 (defn call-external-object-method
   "Call an external object's method by name, since a normal call will get renamed during
-   advanced compilation and cause an error."
+   advanced compilation and cause an error.
+   DEPRECATED: this is what js-invoke is for"
   [obj method-name & args]
   (apply (.bind (aget obj (name method-name)) obj) args))
 
@@ -84,10 +85,26 @@
    (local-storage-write ::use-live-data? ns true)))
 
 
+(defonce ^:private user-listeners (atom {}))
+(defn add-user-listener [k on-change]
+  (swap! user-listeners assoc k on-change))
+(defn remove-user-listener [k]
+  (swap! user-listeners dissoc k))
+
+
 (defonce google-auth2-instance (atom nil))
+(defn set-google-auth2-instance! [instance]
+  (reset! google-auth2-instance instance)
+  (-> instance
+      (aget "currentUser")
+      (js-invoke
+       "listen" (fn [u]
+                  (doseq [[_ on-change] @user-listeners]
+                    (on-change u))))))
 
 (defn get-access-token []
-  (-> @google-auth2-instance (.-currentUser) (.get) (.getAuthResponse) (.-access_token)))
+  (-> @google-auth2-instance
+      (aget "currentUser") (js-invoke "get") (js-invoke "getAuthResponse") (aget "access_token")))
 
 
 (defn get-cookie-domain []
