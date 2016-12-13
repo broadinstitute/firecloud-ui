@@ -194,7 +194,6 @@
        (.bind (js/$ property-kwd)
               "typeahead:select"
               (fn [ev suggestion]
-                (utils/log (str "selecting from typeahead " (aget suggestion "label")))
                 (swap! state update :attributes assoc :library:diseaseOntologyLabel (aget suggestion "label") :library:diseaseOntologyID (aget suggestion "id"))))))})
 
 (react/defc Options
