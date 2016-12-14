@@ -9,7 +9,7 @@
     [org.broadinstitute.firecloud-ui.utils :as utils]
     ))
 
-(def ^:private preview-byte-count 1800)
+(def ^:private preview-byte-count 20000)
 
 (react/defc PreviewDialog
   {:render
