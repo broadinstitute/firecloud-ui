@@ -28,7 +28,8 @@
 
 (defn call-external-object-method
   "Call an external object's method by name, since a normal call will get renamed during
-   advanced compilation and cause an error."
+   advanced compilation and cause an error.
+   DEPRECATED: this is what js-invoke is for"
   [obj method-name & args]
   (apply (.bind (aget obj (name method-name)) obj) args))
 
@@ -50,9 +51,9 @@
 
 
 (defn keywordize-keys [m]
-      (into {} (map (fn [[k v]]
-                        [(keyword k) (if (map? v) (keywordize-keys v) v)])
-                    m)))
+  (into {} (map (fn [[k v]]
+                  [(keyword k) (if (map? v) (keywordize-keys v) v)])
+                m)))
 
 
 (defn local-storage-write
@@ -84,10 +85,26 @@
    (local-storage-write ::use-live-data? ns true)))
 
 
+(defonce ^:private user-listeners (atom {}))
+(defn add-user-listener [k on-change]
+  (swap! user-listeners assoc k on-change))
+(defn remove-user-listener [k]
+  (swap! user-listeners dissoc k))
+
+
 (defonce google-auth2-instance (atom nil))
+(defn set-google-auth2-instance! [instance]
+  (reset! google-auth2-instance instance)
+  (-> instance
+      (aget "currentUser")
+      (js-invoke
+       "listen" (fn [u]
+                  (doseq [[_ on-change] @user-listeners]
+                    (on-change u))))))
 
 (defn get-access-token []
-  (-> @google-auth2-instance (.-currentUser) (.get) (.getAuthResponse) (.-access_token)))
+  (-> @google-auth2-instance
+      (aget "currentUser") (js-invoke "get") (js-invoke "getAuthResponse") (aget "access_token")))
 
 
 (defn get-cookie-domain []
@@ -255,3 +272,28 @@
 
 (defn index-by [key m]
   (into {} (map (juxt key identity) m)))
+
+
+(defn filter-keys [pred m]
+  (into (empty m)
+        (filter (comp pred key) m)))
+
+(defn filter-values [pred m]
+  (into (empty m)
+        (filter (comp pred val) m)))
+
+(defn filter-kv [pred m]
+  (into (empty m)
+        (filter (fn [[k v]] (pred k v)) m)))
+
+(defn map-keys [f m]
+  (into (empty m)
+        (map (fn [[k v]] [(f k) v]) m)))
+
+(defn map-values [f m]
+  (into (empty m)
+        (map (fn [[k v]] [k (f v)]) m)))
+
+(defn map-kv [f m]
+  (into (empty m)
+        (map (fn [[k v]] (f k v)) m)))
