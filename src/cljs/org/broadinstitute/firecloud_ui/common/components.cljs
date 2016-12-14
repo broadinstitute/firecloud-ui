@@ -506,7 +506,7 @@
                                          (.focus (get-first)))))))))})
 
 (defn push-ok-cancel-modal [props]
-  (modal/push-modal (react/create-element OKCancelForm props)))
+  (modal/push-modal [OKCancelForm props]))
 
 (defn push-message [{:keys [header message]}]
   (push-ok-cancel-modal
