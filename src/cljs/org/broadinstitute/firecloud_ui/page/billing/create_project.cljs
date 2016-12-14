@@ -112,7 +112,6 @@
          (swap! state assoc :validation-errors fails)
          (when-not (and fails (not account))
            (do
-             (js* "debugger;")
              (swap! state assoc :creating? true)
              (endpoints/call-ajax-orch
               {:endpoint endpoints/create-billing-project
