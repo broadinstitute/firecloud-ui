@@ -27,12 +27,15 @@
           (labeled "Google Bucket" (:bucket-name props))
           (labeled "Object" (:object props))
           [:div {:style {:marginTop "1em"}}
-           (if (> data-size 1800) (str "Last " (:previewLineCount @state) " lines of log are shown. Use the link below to view the full log.") "Log:")
+           (if (> data-size preview-byte-count) (str "Last " (:preview-line-count @state)
+                                       " lines of log are shown. Use the link below to view the full log.") "Log:")
+           ;; The max-height of 206 looks random, but it's so that the top line of the log preview is half cut-off
+           ;; to hint to the user that they should scroll up.
            (react/create-element
              [:div {:ref "preview" :style {:marginTop "1em" :whiteSpace "pre-wrap" :fontFamily "monospace"
-                                           :fontSize "90%" :overflow "auto" :maxHeight 206
+                                           :fontSize "90%" :overflowY "auto" :maxHeight 206
                                            :backgroundColor "#fff" :padding "1em" :borderRadius 8}}
-              (str (if (> data-size 1800) "...") (:preview @state))])]
+              (str (if (> data-size preview-byte-count) "...") (:preview @state))])]
           (when (:loading? @state)
             [Spinner {:text "Getting file info..."}])
           (when data
@@ -91,14 +94,17 @@
                                       :status status-code})))})
      (utils/ajax {:url (str "https://www.googleapis.com/storage/v1/b/" (:bucket-name props) "/o/"
                             (js/encodeURIComponent (:object props)) "?alt=media")
-                  :headers {"Authorization" (str "Bearer " (utils/get-access-token))  "Range" "bytes=-1800"}
+                  :headers {"Authorization" (str "Bearer " (utils/get-access-token))
+                            "Range" (str "bytes=-" preview-byte-count)}
                   :on-done (fn [{:keys [success? status-text raw-response]}]
-                             (swap! state assoc :preview raw-response)
-                             (swap! state assoc :previewLineCount (count (clojure.string/split raw-response #"\n+")))
+                             (swap! state assoc :preview raw-response
+                                    :preview-line-count (count (clojure.string/split raw-response #"\n+")))
                              (after-update
                                (fn []
                                  (aset (@refs "preview") "scrollTop" (aget (@refs "preview") "scrollHeight")))))}))})
 
+
+(def preview-byte-count 1800)
 
 (react/defc GCSFilePreviewLink
   {:render
