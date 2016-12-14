@@ -118,7 +118,7 @@
      {:tracks (vec (:tracks props))})
    :render
    (fn [{:keys [props state]}]
-     [modal/OKCancelForm
+     [comps/OKCancelForm
       {:header "Select IGV Tracks"
        :ok-button {:text "Load"
                    :onClick

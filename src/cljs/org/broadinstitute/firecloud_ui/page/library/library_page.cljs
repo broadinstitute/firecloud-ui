@@ -3,7 +3,6 @@
     [dmohs.react :as react]
     [org.broadinstitute.firecloud-ui.common :as common]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
-    [org.broadinstitute.firecloud-ui.common.modal :as modal]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.common.table :as table]
@@ -73,7 +72,7 @@
         :on-done (fn [{:keys [success?]}]
                    (if success?
                      (nav/navigate (:nav-context props) "workspaces" (common/row->workspace-id data))
-                     (modal/push-message {:header "Request Access"
+                     (comps/push-message {:header "Request Access"
                                           :message
                                             (if (= (config/tcga-namespace) (:namespace data))
                                              [:span {}

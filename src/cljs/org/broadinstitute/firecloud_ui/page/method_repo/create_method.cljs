@@ -15,7 +15,7 @@
 (react/defc CreateMethodDialog
   {:render
    (fn [{:keys [state refs this]}]
-     [modal/OKCancelForm
+     [comps/OKCancelForm
       {:header "Create New Method"
        :get-first-element-dom-node #(react/find-dom-node (@refs "namespace"))
        :get-last-element-dom-node #(react/find-dom-node (@refs "ok-button"))

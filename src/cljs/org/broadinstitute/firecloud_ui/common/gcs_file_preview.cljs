@@ -2,7 +2,7 @@
   (:require
     [dmohs.react :as react]
     [org.broadinstitute.firecloud-ui.common :as common]
-    [org.broadinstitute.firecloud-ui.common.components :refer [Spinner]]
+    [org.broadinstitute.firecloud-ui.common.components :as comps :refer [Spinner]]
     [org.broadinstitute.firecloud-ui.common.modal :as modal]
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
@@ -14,7 +14,7 @@
 (react/defc PreviewDialog
   {:render
    (fn [{:keys [props state]}]
-     [modal/OKCancelForm
+     [comps/OKCancelForm
       {:header "File Details"
        :content
        (let [{:keys [data error status]} (:response @state)

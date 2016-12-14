@@ -338,7 +338,7 @@
 
 
 (defn- show-system-status-dialog [maintenance-mode?]
-  (modal/push-ok-cancel-modal
+  (comps/push-ok-cancel-modal
     {:header (if maintenance-mode? "Maintenance Mode" "Server Unavailable")
      :show-cancel? false
      :content (if maintenance-mode?

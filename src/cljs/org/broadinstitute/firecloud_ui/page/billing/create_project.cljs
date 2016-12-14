@@ -13,7 +13,7 @@
 (react/defc CreateBillingProjectDialog
   {:render
    (fn [{:keys [state this]}]
-     [modal/OKCancelForm
+     [comps/OKCancelForm
       {:header "Create Billing Project"
        :content
        (react/create-element

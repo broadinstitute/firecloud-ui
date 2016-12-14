@@ -57,7 +57,7 @@
        :headers utils/content-type=json
        :on-done (fn [{:keys [success? get-parsed-response xhr]}]
                   (if-not success?
-                    (do (modal/push-error-text (str "Exception:\n" (.-statusText xhr)))
+                    (do (comps/push-error-text (str "Exception:\n" (.-statusText xhr)))
                         (swap! state dissoc :blocker))
                     (if (= name (config "name"))
                       (swap! state assoc :loaded-config (get-parsed-response false) :blocker nil)
@@ -69,7 +69,8 @@
                                     (swap! state dissoc :blocker)
                                     (if success?
                                       ((:on-rename props) name)
-                                      (modal/push-error-text (str "Exception:\n" (.-statusText xhr)))))}))))})))
+                                      (comps/push-error-text
+                                       (str "Exception:\n" (.-statusText xhr)))))}))))})))
 
 (react/defc MethodDetailsViewer
   {:get-fields

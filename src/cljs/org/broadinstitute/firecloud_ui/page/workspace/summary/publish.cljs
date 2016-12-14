@@ -2,7 +2,6 @@
   (:require
     [dmohs.react :as react]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
-    [org.broadinstitute.firecloud-ui.common.modal :as modal]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
     [org.broadinstitute.firecloud-ui.utils :as utils]
     ))
@@ -25,10 +24,12 @@
                       :on-done (fn [{:keys [success? get-parsed-response]}]
                                  (swap! state dissoc :publishing?)
                                  (if success?
-                                   (do (modal/push-message {:header "Success!"
-                                                            :message "Successfully published to Library"})
+                                   (do (comps/push-message
+                                        {:header "Success!"
+                                         :message "Successfully published to Library"})
                                        ((:request-refresh props)))
-                                   (modal/push-error-response (get-parsed-response false))))}))}]])})
+                                   (comps/push-error-response
+                                    (get-parsed-response false))))}))}]])})
 
 (react/defc UnpublishButton
   {:render
@@ -46,7 +47,9 @@
                       :on-done (fn [{:keys [success? get-parsed-response]}]
                                  (swap! state dissoc :unpublishing?)
                                  (if success?
-                                   (do (modal/push-message {:header "Success!"
-                                                            :message "This dataset is no longer displayed in the Data Library catalog."})
+                                   (do (comps/push-message
+                                        {:header "Success!"
+                                         :message "This dataset is no longer displayed in the Data Library catalog."})
                                        ((:request-refresh props)))
-                                   (modal/push-error-response (get-parsed-response false))))}))}]])})
+                                   (comps/push-error-response
+                                    (get-parsed-response false))))}))}]])})
