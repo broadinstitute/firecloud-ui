@@ -9,6 +9,7 @@
     [org.broadinstitute.firecloud-ui.utils :as utils]
     ))
 
+(def ^:private preview-byte-count 1800)
 
 (react/defc PreviewDialog
   {:render
@@ -104,7 +105,6 @@
                                  (aset (@refs "preview") "scrollTop" (aget (@refs "preview") "scrollHeight")))))}))})
 
 
-(def preview-byte-count 1800)
 
 (react/defc GCSFilePreviewLink
   {:render
