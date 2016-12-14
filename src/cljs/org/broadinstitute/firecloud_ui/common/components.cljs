@@ -62,7 +62,6 @@
                     (if (map? style) style {}))
             :href (or href "javascript:;")
             :onClick (if disabled?
-                       ;; Have to fully qualify to avoid circular dependency
                        #(push-error-text
                          (if (string? disabled?) disabled? "This action is disabled."))
                        onClick)
@@ -89,7 +88,6 @@
                         :color (when disabled? (:text-light style/colors))}
                 :title (when disabled? (:disabled-text props))
                 :onClick (when disabled?
-                           ;; Have to fully qualify to avoid circular dependency
                            #(push-error-text
                              (or (:disabled-text props) "This option is not available.")))}
         [:input {:type "checkbox" :ref "check"
