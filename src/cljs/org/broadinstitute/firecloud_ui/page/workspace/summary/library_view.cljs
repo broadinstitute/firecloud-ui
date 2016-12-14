@@ -11,12 +11,11 @@
 
 
 (defn- render-value [value]
-  ;; figure out what to do with typeahead?
   (cond (sequential? value) (clojure.string/join ", " value)
         (common/attribute-list? value) (clojure.string/join ", " (common/attribute-values value))
         :else value))
 
-(defn- render-library-row [key value doid] ;; doid
+(defn- render-library-row [key value doid]
   (when value
     [:div {:style {:display "flex" :padding "0.5em 0" :borderBottom (str "2px solid " (:line-default style/colors))}}
      [:div {:style {:flexBasis "33%" :fontWeight "bold" :paddingRight "2em"}} key]

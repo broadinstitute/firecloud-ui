@@ -10,7 +10,8 @@
     [org.broadinstitute.firecloud-ui.config :as config]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
     [org.broadinstitute.firecloud-ui.page.workspace.summary.library-utils :as library-utils]
-    [org.broadinstitute.firecloud-ui.utils :as utils]    ))
+    [org.broadinstitute.firecloud-ui.utils :as utils]
+    ))
 
 
 (defn- get-initial-attributes [workspace]
@@ -148,11 +149,10 @@
                      (= typeahead "ontology")
                      (style/create-text-field {:ref property-kwd
                                                :className "typeahead"
-                                               :placeholder "Select an ontology."
+                                               :placeholder "Select an ontology value."
                                                :style {:width "100%"}
                                                :value (get (:attributes @state) property-kwd nil)
-                                               :onChange update-property
-                                               })
+                                               :onChange update-property})
                      :else
                      (style/create-text-field {:style (colorize {:width "100%"})
                                                :type (cond (= renderHint "date") "date"
@@ -168,33 +168,38 @@
           questions)]))
    :component-did-mount
    (fn [{:keys [props state refs]}]
-     (let [options (js/Bloodhound.
-                     (clj->js
-                       {:datumTokenizer js/Bloodhound.tokenizers.whitespace
-                        :queryTokenizer js/Bloodhound.tokenizers.whitespace
-                        :remote (clj->js {:url (str (config/api-url-root) "/duos/autocomplete/%QUERY")
-                                          :wildcard "%QUERY"})}))
-           existing-ontology (get-in props [:workspace :workspace :library-attributes :library:diseaseOntologyLabel])
-           property-kwd (@refs "library:diseaseOntologyLabel")] ;; fix this
-       (.typeahead (js/$ property-kwd) ;;
-                   (clj->js {:highlight true
-                             :hint true
-                             :minLength 1})
-                   (clj->js
-                     {:source options
-                      :display (fn [result]
-                                 (aget result "label"))
-                      :templates (clj->js
-                                   {:empty "<div> unable to find any matches to the current query </div>"
-                                    :suggestion
-                                    (fn [result]
-                                      (str "<div> <div style='font-weight: bold; line-height: 1.5em;'>" (aget result "label")
-                                           "</div><div>" (aget result "id") "</div>"
-                                           "<div style='font-size: small; font-style: italic'> " (aget result "definition") "</div></div>"))})}))
-       (.bind (js/$ property-kwd)
-              "typeahead:select"
-              (fn [ev suggestion]
-                (swap! state update :attributes assoc :library:diseaseOntologyLabel (aget suggestion "label") :library:diseaseOntologyID (aget suggestion "id"))))))})
+     (let [{:keys [library-schema questions]} props]
+       (doseq [{:keys [property]} questions]
+         (let [property-kwd (keyword property)
+               {:keys [typeahead]} (get-in library-schema [:properties property-kwd])
+               options  (js/Bloodhound. (clj->js
+                                          {:datumTokenizer js/Bloodhound.tokenizers.whitespace
+                                           :queryTokenizer js/Bloodhound.tokenizers.whitespace
+                                           :remote (clj->js {:url (str (config/api-url-root) "/duos/autocomplete/%QUERY")
+                                                             :wildcard "%QUERY"})}))]
+             (if (= typeahead "ontology")
+               (do (utils/log (str " here: " property-kwd " vs property " property))
+                 (.typeahead (js/$ property) ;; is this right?
+                             (clj->js {:highlight true
+                                       :hint true
+                                       :minLength 1})
+                             (clj->js
+                               {:source options
+                                :display (fn [result]
+                                           (aget result "label"))
+                                :templates (clj->js
+                                             {:empty "<div> unable to find any matches to the current query </div>"
+                                              :suggestion
+                                              (fn [result]
+                                                (str "<div> <div style='font-weight: bold; line-height: 1.5em;'>" (aget result "label")
+                                                     "</div><div>" (aget result "id") "</div>"
+                                                     "<div style='font-size: small; font-style: italic'> " (aget result "definition") "</div></div>"))})}))
+             (.bind (js/$ property-kwd)
+                  "typeahead:select"
+                  (fn [ev suggestion]
+                    (swap! state update :attributes assoc property-kwd (aget suggestion "label")
+                           :library:diseaseOntologyID (aget suggestion "id"))))))))))})
+
 
 (react/defc Options
   {:validate
