@@ -15,7 +15,8 @@
              :tag-foreground "#2c3c4d"
              :text-light "#666"
              :text-lighter "#7f7f7f"
-             :text-lightest "#989898"})
+             :text-lightest "#989898"
+             :input-background "#fff"})
 
 (def standard-line (str "1px solid " (:line-default colors)))
 
@@ -39,7 +40,7 @@
 
 
 (def ^:private input-text-style
-  {:backgroundColor "#fff"
+  {:backgroundColor (:input-background colors)
    ;; Split out border properties so they can be individually overridden
    :borderWidth 1 :borderStyle "solid" :borderColor (:border-light colors) :borderRadius 3
    :boxSizing "border-box"
@@ -47,7 +48,7 @@
    :marginBottom "0.75em" :padding "0.5em"})
 
 (def ^:private select-style
-  {:backgroundColor "#fff"
+  {:backgroundColor (:input-background colors)
    ;; Split out border properties so they can be individually overridden
    :borderWidth 1 :borderStyle "solid" :borderColor (:border-light colors) :borderRadius 2
    :color "#000" :height 33 :width "100%" :fontSize "88%"
@@ -125,5 +126,3 @@
 
 (defn render-entity [namespace name snapshot-id]
   (render-name-id (str namespace "/" name) snapshot-id))
-
-

@@ -42,6 +42,13 @@
                        (do (modal/pop-modal) ((:on-delete props)))
                        (swap! state assoc :error (get-parsed-response false))))})))})
 
+
+(defn- get-ordered-name [entity]
+  (clojure.string/join ":"
+                       [(entity "namespace")
+                        (entity "name")
+                        (entity "snapshotId")]))
+
 (defn- create-import-form [state props this entity config? fields]
   (let [{:keys [workspace-id]} props
         workspaces-list (:workspaces-list @state)]
@@ -57,8 +64,8 @@
                                :onClick #(modal/push-modal [mca/AgoraPermsEditor {:save-endpoint (endpoints/persist-agora-method-acl entity)
                                                                                   :load-endpoint (let [[name nmsp sid] (map entity ["name" "namespace" "snapshotId"])]
                                                                                                    (endpoints/get-agora-method-acl nmsp name sid config?))
-                                                                                  :entityType (entity "entityType") :entityName (mca/get-ordered-name entity)
-                                                                                  :title (str (entity "entityType") " " (mca/get-ordered-name entity))}])}]]
+                                                                                  :entity-type (entity "entityType")
+                                                                                  :title (str (entity "entityType") " " (get-ordered-name entity))}])}]]
         [:div {:style {:float "left" :width 290}}
          [comps/SidebarButton {:style :light :color :exception-state
                                :text "Redact" :icon :delete
@@ -259,7 +266,7 @@
                                                         [mca/AgoraPermsEditor
                                                          {:save-endpoint (endpoints/post-agora-namespace-acl (item "namespace") (= :config (:type item)))
                                                           :load-endpoint (endpoints/get-agora-namespace-acl (item "namespace") (= :config (:type item)))
-                                                          :entityType "Namespace" :entityName (item "namespace")
+                                                          :entity-type "Namespace"
                                                           :title (str "Namespace " (item "namespace"))}])})))}
                   {:header "Name" :starting-width 350
                    :sort-by (fn [m]  [(clojure.string/lower-case (m "name")) (int (m "snapshotId"))])
