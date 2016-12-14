@@ -178,8 +178,8 @@
                                            :remote (clj->js {:url (str (config/api-url-root) "/duos/autocomplete/%QUERY")
                                                              :wildcard "%QUERY"})}))]
              (if (= typeahead "ontology")
-               (do (utils/log (str " here: " property-kwd " vs property " property))
-                 (.typeahead (js/$ property) ;; is this right?
+               (do
+                 (.typeahead (js/$ (@refs property)) ;; is this right?
                              (clj->js {:highlight true
                                        :hint true
                                        :minLength 1})
@@ -194,11 +194,11 @@
                                                 (str "<div> <div style='font-weight: bold; line-height: 1.5em;'>" (aget result "label")
                                                      "</div><div>" (aget result "id") "</div>"
                                                      "<div style='font-size: small; font-style: italic'> " (aget result "definition") "</div></div>"))})}))
-             (.bind (js/$ property-kwd)
-                  "typeahead:select"
-                  (fn [ev suggestion]
-                    (swap! state update :attributes assoc property-kwd (aget suggestion "label")
-                           :library:diseaseOntologyID (aget suggestion "id"))))))))))})
+                 (.bind (js/$ (@refs property))
+                        "typeahead:select"
+                        (fn [ev suggestion]
+                          (swap! state update :attributes assoc property-kwd (aget suggestion "label")
+                                 :library:diseaseOntologyID (aget suggestion "id"))))))))))})
 
 
 (react/defc Options
