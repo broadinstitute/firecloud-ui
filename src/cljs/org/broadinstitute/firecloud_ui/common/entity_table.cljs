@@ -1,7 +1,7 @@
 (ns org.broadinstitute.firecloud-ui.common.entity-table
   (:require
     [clojure.set :refer [union]]
-    [clojure.string :refer [join]]
+    clojure.string
     [dmohs.react :as react]
     [org.broadinstitute.firecloud-ui.common :as common]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
@@ -48,7 +48,7 @@
    (fn [{:keys [props state this]}]
      (let [{:keys [server-response]} @state
            {:keys [server-error entity-metadata entity-types selected-entity-type]} server-response]
-       [:div {:style {:maxWidth "97%"}}
+       [:div {:style {:flexGrow 1}}
         (when (:loading-entities? @state)
           [comps/Blocker {:banner "Loading entities..."}])
         (cond
@@ -70,18 +70,23 @@
                                            :content-renderer
                                            (fn [attr-value]
                                              (cond
-                                               (is-single-ref? attr-value) (if (:linked-entity-renderer props) ((:linked-entity-renderer props) attr-value) (:entityName attr-value))
+                                               (is-single-ref? attr-value)
+                                               (if (:linked-entity-renderer props)
+                                                 ((:linked-entity-renderer props) attr-value)
+                                                 (:entityName attr-value))
                                                (common/attribute-list? attr-value)
                                                (let [items (map render-list-item (common/attribute-values attr-value))]
                                                  (if (empty? items)
-                                                    (cond (= (str selected-entity-type) ":sample_set") "0 samples"
-                                                          (= (str selected-entity-type) ":pair_set") "0 pairs"
-                                                          (= (str selected-entity-type) ":participant_set") "0 participants"
-                                                          :else  "0 items")
-                                                    (cond (= (str selected-entity-type) ":sample_set") (str (count items) " samples")
-                                                          (= (str selected-entity-type) ":pair_set") (str (count items) " pairs")
-                                                          (= (str selected-entity-type) ":participant_set") (str (count items) " participants")
-                                                          :else (str (count items) " items: " (join ", " items)))))
+                                                   (case (str selected-entity-type)
+                                                     ":sample_set" "0 samples"
+                                                     ":pair_set" "0 pairs"
+                                                     ":participant_set" "0 participants"
+                                                     "0 items")
+                                                   (case (str selected-entity-type)
+                                                     ":sample_set" (str (count items) " samples")
+                                                     ":pair_set" (str (count items) " pairs")
+                                                     ":participant_set" (str (count items) " participants")
+                                                     (str (count items) " items: " (clojure.string/join ", " items)))))
                                                :else ((:attribute-renderer props) attr-value)))})
                                   attributes)
                 columns (vec (cons entity-column attr-columns))]
