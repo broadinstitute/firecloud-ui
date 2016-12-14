@@ -307,10 +307,13 @@
    :component-did-mount
    (fn [{:keys [props locals]}]
      (swap! locals assoc :refresh-token-saved? true)
-     (let [{:keys [auth2 on-change]} props]
-       (-> auth2 (.-currentUser)
-           (.listen (fn [u]
-                      (on-change (.isSignedIn u) (:refresh-token-saved? @locals)))))))
+     (let [{:keys [on-change]} props]
+       (utils/add-user-listener
+        ::logged-out
+        #(on-change (js-invoke % "isSignedIn") (:refresh-token-saved? @locals)))))
+   :component-will-unmount
+   (fn [{:keys [props locals]}]
+     (utils/remove-user-listener ::logged-out))
    :.handle-sign-in-click
    (fn [{:keys [props locals]}]
      (swap! locals dissoc :refresh-token-saved?)
@@ -327,7 +330,11 @@
                                  :on-done (fn [{:keys [success?]}]
                                             (when success?
                                               (swap! locals assoc :refresh-token-saved? true)
-                                              (on-change true true)))}))))))})
+                                              (let [signed-in? (-> auth2
+                                                                   (aget "currentUser")
+                                                                   (js-invoke "get")
+                                                                   (js-invoke "isSignedIn"))]
+                                                (on-change signed-in? true))))}))))))})
 
 
 (defn- show-system-status-dialog [maintenance-mode?]
@@ -505,7 +512,7 @@
                                           {:client_id (config/google-client-id)
                                            :scope scopes})))]
                      (swap! state assoc :auth2 auth2)
-                     (reset! utils/google-auth2-instance auth2)))))))})
+                     (utils/set-google-auth2-instance! auth2)))))))})
 
 
 (defn render-application [& [hot-reload?]]
