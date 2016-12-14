@@ -147,6 +147,7 @@
                      :else
                      (style/create-text-field {:style (colorize {:width "100%"})
                                                :type (cond (= renderHint "date") "date"
+                                                           (= renderHint "email") "email"
                                                            (= type "integer") "number"
                                                            :else "text")
                                                :min minimum
