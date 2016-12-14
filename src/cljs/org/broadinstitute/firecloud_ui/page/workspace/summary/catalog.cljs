@@ -171,7 +171,7 @@
      (let [{:keys [library-schema questions]} props]
        (doseq [{:keys [property]} questions]
          (let [property-kwd (keyword property)
-               {:keys [typeahead]} (get-in library-schema [:properties property-kwd])
+               {:keys [typeahead relatedID]} (get-in library-schema [:properties property-kwd])
                options  (js/Bloodhound. (clj->js
                                           {:datumTokenizer js/Bloodhound.tokenizers.whitespace
                                            :queryTokenizer js/Bloodhound.tokenizers.whitespace
@@ -179,7 +179,7 @@
                                                              :wildcard "%QUERY"})}))]
              (if (= typeahead "ontology")
                (do
-                 (.typeahead (js/$ (@refs property)) ;; is this right?
+                 (.typeahead (js/$ (@refs property))
                              (clj->js {:highlight true
                                        :hint true
                                        :minLength 1})
@@ -197,8 +197,7 @@
                  (.bind (js/$ (@refs property))
                         "typeahead:select"
                         (fn [ev suggestion]
-                          (swap! state update :attributes assoc property-kwd (aget suggestion "label")
-                                 :library:diseaseOntologyID (aget suggestion "id"))))))))))})
+                          (swap! state update :attributes assoc property-kwd (aget suggestion "label") (keyword relatedID) (aget suggestion "id"))))))))))})
 
 
 (react/defc Options
