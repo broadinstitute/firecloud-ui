@@ -28,7 +28,8 @@
    (get-in library-schema [:properties property-key :title])
    (render-value
     (or (get library-attributes property-key) (get-in library-schema [:properties property-key :default])))
-    (if (= (get-in library-schema [:properties property-key :typeahead]) "ontology") (get library-attributes :library:diseaseOntologyID) nil)))
+    (if (= (get-in library-schema [:properties property-key :typeahead]) "ontology")
+      (get library-attributes (keyword (get-in library-schema [:properties property-key :relatedID]))) nil)))
 
 
 (defn- render-consent-codes [library-schema library-attributes]
