@@ -35,7 +35,7 @@
 (defn- is-entity-set? [entity-type]
   (or (= entity-type "sample_set") (= entity-type "pair_set") (= entity-type "participant_set") false))
 
-(defn- get-entity-attrs [entity-name entity-type workspace-id state]
+(defn- get-entity-attrs [entity-name entity-type workspace-id udpate-main]
   (when (and (some? entity-name) (some? entity-type))
     (endpoints/call-ajax-orch
      {:endpoint (endpoints/get-entity workspace-id entity-type entity-name)
@@ -47,9 +47,9 @@
                                    "sample_set" (:items (:samples attrs))
                                    "pair_set" (:items (:pairs attrs))
                                    "participant_set" (:items (:participants attrs)))]
-                       (swap! state assoc :attr-list items :loading-attributes false))
-                     (swap! state assoc :attr-list (:attributes (get-parsed-response true)) :loading-attributes false))
-                   (swap! state assoc :server-error (get-parsed-response false) :loading-attributes false)))})))
+                       (udpate-main :attr-list items :loading-attributes false))
+                     (udpate-main :attr-list (:attributes (get-parsed-response true)) :loading-attributes false))
+                   (udpate-main :server-error (get-parsed-response false) :loading-attributes false)))})))
 
 (react/defc DataImporter
   {:get-initial-state
@@ -133,22 +133,24 @@
                             (if (map? x) ;map is a sample_set or pair_set or participant_set
                               (let [item (str (:entityName x))
                                     last-entity (str (:selected-entity @state))
-                                    item-type (clojure.string/lower-case (get-column-name entity-type))]
+                                    item-type (clojure.string/lower-case (get-column-name entity-type))
+                                    update-main (:update-main props)]
                                 [(style/create-link
                                   {:text item
                                    :onClick
                                    #(if (= item last-entity)
-                                      (swap! (:mainState props) assoc :current-entity-type nil :attr-list nil
-                                             :selected-entity nil :loading-attributes false)
-                                      (do (swap! (:mainState props) assoc :current-entity-type item-type :attr-list nil
-                                                 :loading-attributes true :selected-entity item)
-                                          (get-entity-attrs item item-type (:workspace-id props) (:mainState props))))})])
+                                      (update-main :current-entity-type nil :attr-list nil
+                                                  :selected-entity nil :loading-attributes false)
+                                      (do (update-main :current-entity-type item-type :attr-list nil
+                                                      :loading-attributes true :selected-entity item)
+                                          (get-entity-attrs item item-type (:workspace-id props) update-main)))})])
                               (let [nkey (str (first x))
                                     last-entity (str (:selected-entity @state))
                                     last-entity-type (str :current-entity-type @state)
                                     name (clojure.string/replace nkey #":" "")
                                     item (val x)
-                                    entity-type (str (:entityType item))]
+                                    entity-type (str (:entityType item))
+                                    update-main (:update-main props)]
                                 [[name] (cond
                                           (entity-table/is-single-ref? item)
                                           (do
@@ -157,13 +159,13 @@
                                                {:text entity-name :title entity-name
                                                 :onClick
                                                 #(if (and (= entity-name last-entity) (= entity-type last-entity-type))
-                                                   (swap! (:mainState props) assoc :current-entity-type nil :attr-list nil
+                                                   (update-main :current-entity-type nil :attr-list nil
                                                           :selected-entity nil :loading-attributes false)
-                                                   (do (swap! (:mainState props) assoc :current-entity-type entity-type
+                                                   (do (update-main :current-entity-type entity-type
                                                               :attr-list nil :loading-attributes true
                                                               :selected-entity entity-name)
                                                        (get-entity-attrs entity-name entity-type
-                                                                         (:workspace-id props) (:mainState props))))})
+                                                                         (:workspace-id props) update-main)))})
                                               (:entityName item)))
                                           (common/attribute-list? item)
                                           (let [items (map render-list-item (common/attribute-values item))]
@@ -178,7 +180,7 @@
    (fn [_] {:selected-entity-type nil :attr-list nil :current-entity-type nil
             :loading-attributes false})
    :render
-   (fn [{:keys [props state refs]}]
+   (fn [{:keys [props state refs this]}]
      (let [{:keys [workspace-id workspace workspace-error]} props]
        [:div {:style {:padding "1em" :display "flex"}}
         (when (:loading-attributes @state)
@@ -244,7 +246,7 @@
                                                                  :selected-entity nil :loading-attributes false)
                                                           (do (swap! state assoc :current-entity-type entity-type :attr-list nil
                                                                      :loading-attributes true :selected-entity entity-name)
-                                                              (get-entity-attrs entity-name entity-type (:workspace-id props) state)))})
+                                                              (get-entity-attrs entity-name entity-type (:workspace-id props) (:update-state this))))})
                                             entity-name)))
               :entity-name-renderer (fn [e]
                                       (let [entity-name (str (:name e))
@@ -258,7 +260,7 @@
                                                              :selected-entity nil :loading-attributes false)
                                                       (do (swap! state assoc :current-entity-type entity-type :attr-list nil
                                                                  :loading-attributes true :selected-entity entity-name)
-                                                          (get-entity-attrs entity-name entity-type (:workspace-id props) state)))
+                                                          (get-entity-attrs entity-name entity-type (:workspace-id props) (:update-state this))))
                                           })))}])
           :else
           [:div {:style {:textAlign "center"}} [comps/Spinner {:text "Checking workspace..."}]])
@@ -267,8 +269,10 @@
               entityName (:selected-entity @state)
               attributes (:attr-list @state)]
           [EntityAttributes {:workspace-id workspaceId :entity-type entityType :entity-name entityName
-                             :attr-list attributes :mainState state}])]
-       ))
+                             :attr-list attributes :update-main (partial react/call :update-state this)}])]))
    :component-did-mount
    (fn [{:keys [props]}]
-     ((:request-refresh props)))})
+     ((:request-refresh props)))
+   :update-state
+   (fn [{:keys [state]} & args]
+     (apply swap! state assoc args))})
