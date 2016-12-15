@@ -150,7 +150,7 @@
                                     item (val x)
                                     entity-type (str (:entityType item))]
                                 [[name] (cond
-                                          (is-single-ref? item)
+                                          (entity-table/is-single-ref? item)
                                           (do
                                             (if (map? item)
                                               (style/create-link
