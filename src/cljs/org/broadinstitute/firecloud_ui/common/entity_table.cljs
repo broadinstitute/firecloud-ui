@@ -16,7 +16,7 @@
 
 ;; for attributes referring to a single other entity
 ;; e.g. samples referring to participants
-(defn- is-single-ref? [attr-value]
+(defn is-single-ref? [attr-value]
   (and (map? attr-value)
        (= (set (keys attr-value)) #{:entityType :entityName})))
 
@@ -71,8 +71,8 @@
                                            (fn [attr-value]
                                              (cond
                                                (is-single-ref? attr-value)
-                                               (if (:linked-entity-renderer props)
-                                                 ((:linked-entity-renderer props) attr-value)
+                                               (if-let [renderer (:linked-entity-renderer props)]
+                                                 (renderer attr-value)
                                                  (:entityName attr-value))
                                                (common/attribute-list? attr-value)
                                                (let [items (map render-list-item (common/attribute-values attr-value))]
@@ -100,7 +100,9 @@
                      :always-sort? true
                      :pagination (react/call :pagination this)
                      :filter-groups (map (fn [type]
-                                           {:text (name type) :count (get-in entity-metadata [type :count]) :pred (constantly true)})
+                                           {:text (name type)
+                                            :count (get-in entity-metadata [type :count])
+                                            :pred (constantly true)})
                                          entity-types)
                      :initial-filter-group-index (utils/index-of entity-types selected-entity-type)
                      :on-filter-change (fn [index]

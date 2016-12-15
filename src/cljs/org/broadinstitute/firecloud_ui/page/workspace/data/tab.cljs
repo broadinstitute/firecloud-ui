@@ -6,7 +6,7 @@
     goog.net.cookies
     [org.broadinstitute.firecloud-ui.common :as common]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
-    [org.broadinstitute.firecloud-ui.common.entity-table :refer [EntityTable]]
+    [org.broadinstitute.firecloud-ui.common.entity-table :as entity-table :refer [EntityTable]]
     [org.broadinstitute.firecloud-ui.common.gcs-file-preview :refer [GCSFilePreviewLink]]
     [org.broadinstitute.firecloud-ui.common.modal :as modal]
     [org.broadinstitute.firecloud-ui.common.table :as table]
@@ -20,13 +20,8 @@
     [org.broadinstitute.firecloud-ui.utils :as u]
     ))
 
-;; for attributes referring to a single other entity
-(defn- is-single-ref? [attr-value]
-  (and (map? attr-value)
-       (= (set (keys attr-value)) #{:entityType :entityName})))
-
 (defn- render-list-item [item]
-  (if (is-single-ref? item)
+  (if (entity-table/is-single-ref? item)
     (:entityName item)
     item))
 
@@ -125,7 +120,7 @@
                           :width :narrow
                           :pagination :none
                           :filterable? false
-                          :initial-rows-per-page 100
+                          :initial-rows-per-page 500
                           :always-sort? true
                           :header-row-style {:borderBottom (str "2px solid " (:line-default style/colors))
                                              :backgroundColor "white" :color "black" :fontWeight "bold"}
@@ -135,7 +130,7 @@
                           :data (seq attributes)
                           :->row
                           (fn [x]
-                            (if (map? x)   ;;map is a sample_set or pair_set or participant_set
+                            (if (map? x) ;map is a sample_set or pair_set or participant_set
                               (let [item (str (:entityName x))
                                     last-entity (str (:selected-entity @state))
                                     item-type (clojure.string/lower-case (get-column-name entity-type))]
