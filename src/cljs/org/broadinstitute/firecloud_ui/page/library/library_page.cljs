@@ -33,7 +33,7 @@
        :toolbar
        (fn [{:keys [reorderer]}]
          [:div {:style {:display "flex" :alignItems "top"}}
-          [:div {:style {:fontWeight 700 :fontSize 20 :marginBottom "1em"}} "Search Results: "
+          [:div {:style {:fontWeight 700 :fontSize "125%" :marginBottom "1em"}} "Search Results: "
            [:span {:style {:fontWeight 100}}
             (let [total (or (:total @state) 0)]
               (str total
@@ -42,7 +42,7 @@
                    " found"))]]
           flex-strut
           reorderer])
-       :body-style {:fontSize 14 :fontWeight nil :marginTop 4
+       :body-style {:fontSize "87.5%" :fontWeight nil :marginTop 4
                     :color (:text-light style/colors)}
        :row-style {:backgroundColor nil :height 20}
        :cell-content-style {:padding nil}
@@ -106,7 +106,7 @@
   {:render
    (fn [{:keys [props]}]
      [:div {}
-      [:div {:style {:fontWeight 700 :fontSize 20 :marginBottom "1em"}} "Search Filters:"]
+      [:div {:style {:fontWeight 700 :fontSize "125%" :marginBottom "1em"}} "Search Filters:"]
       [:div {:style {:background (:background-light style/colors) :padding "16px 12px"}}
        [comps/TextFilter {:ref "text-filter"
                           :initial-text (:search-text props)
