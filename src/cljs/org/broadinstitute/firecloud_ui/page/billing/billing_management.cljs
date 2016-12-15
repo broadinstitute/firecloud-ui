@@ -86,13 +86,13 @@
          (add-right
           [comps/Button
            {:text "Create New Billing Project"
-            :onClick (fn [_]
+            :onClick (fn [{:keys [this]}]
                        (if (-> @utils/google-auth2-instance (aget "currentUser") (js-invoke "get")
                                (js-invoke "hasGrantedScopes" "https://www.googleapis.com/auth/cloud-billing"))
                          (modal/push-modal
                           [CreateBillingProjectDialog
                            {:on-success #(react/call :reload this)}])
-                         (fn [{:keys [this]} scopes-needed]
+                         (do
                            (utils/add-user-listener
                             ::billing
                             (fn [_]
@@ -103,7 +103,7 @@
                            (js-invoke
                             @utils/google-auth2-instance
                             "grantOfflineAccess"
-                            (clj->js {:redirect_uri "postmessage" :scope (clojure.string/join " " scopes-needed)})))))}])
+                            (clj->js {:redirect_uri "postmessage" :scope "https://www.googleapis.com/auth/cloud-billing"})))))}])
          :data (:projects @state)
          :->row (fn [{:strs [role] :as row}]
                   [row
