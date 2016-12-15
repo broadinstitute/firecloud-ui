@@ -123,7 +123,7 @@
                 [comps/Button {:text "Import Attributes..."
                                :style {:float "right" :marginTop -7}
                                :onClick #(modal/push-modal
-                                           [modal/OKCancelForm
+                                           [comps/OKCancelForm
                                             {:header "Import Attributes"
                                              :show-cancel? false :ok-button {:text "Done" :onClick modal/pop-modal}
                                              :content [:div {:style {:float "right" :width 720}}

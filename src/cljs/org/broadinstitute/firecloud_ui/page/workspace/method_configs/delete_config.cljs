@@ -9,7 +9,7 @@
 (react/defc DeleteDialog
   {:render
    (fn [{:keys [props state]}]
-     [modal/OKCancelForm
+     [comps/OKCancelForm
       {:header "Confirm Delete"
        :content
        [:div {:style {:width 500}}

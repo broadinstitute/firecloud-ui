@@ -19,7 +19,7 @@
       :protected-option :not-loaded})
    :render
    (fn [{:keys [props state refs this]}]
-     [modal/OKCancelForm
+     [comps/OKCancelForm
       {:header "Create New Workspace"
        :ok-button {:text "Create Workspace" :onClick #(react/call :create-workspace this)}
        :get-first-element-dom-node #(@refs "project")
