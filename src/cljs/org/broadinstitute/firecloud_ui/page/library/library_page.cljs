@@ -32,7 +32,7 @@
        :toolbar
        (fn [{:keys [reorderer]}]
          [:div {:style {:display "flex" :alignItems "top"}}
-          [:div {:style {:fontWeight 700 :fontSize "125%"}} "Search Results: "
+          [:div {:style {:fontWeight 700 :fontSize "125%" :marginBottom "1em"}} "Search Results: "
            [:span {:style {:fontWeight 100}}
             (let [total (or (:total @state) 0)]
               (str total
@@ -41,22 +41,21 @@
                    " found"))]]
           flex-strut
           reorderer])
-       :body-style {:fontSize nil :fontWeight nil}
-       :row-style {:backgroundColor nil :height 22}
-       :cell-content-style {:padding nil
-                            :color (:text-light style/colors)
-                            :fontSize "90%"}
-       :columns [{:header "Dataset Name" :starting-width 300
+       :body-style {:fontSize "87.5%" :fontWeight nil :marginTop 4
+                    :color (:text-light style/colors)}
+       :row-style {:backgroundColor nil :height 20}
+       :cell-content-style {:padding nil}
+       :columns [{:header "Dataset Name" :starting-width 250
                   :sort-by (comp clojure.string/lower-case :library:datasetName)
                   :as-text :library:datasetDescription
                   :content-renderer (fn [data]
                                       (style/create-link {:text (:library:datasetName data)
                                                           :onClick #(react/call :check-access this data)}))}
-                 {:header "Phenotype/indication" :starting-width 200
+                 {:header "Phenotype/indication" :starting-width 180
                   :sort-by clojure.string/lower-case}
-                 {:header "Data Use Restrictions" :starting-width 200
+                 {:header "Data Use Restrictions" :starting-width 180
                   :sort-by clojure.string/lower-case}
-                 {:header "# of Participants" :starting-width 150}]
+                 {:header "# of Participants" :starting-width 100}]
        :pagination (react/call :pagination this)
        :->row (juxt identity :library:indication :library:dataUseRestriction :library:numSubjects)}])
    :component-will-receive-props
@@ -106,7 +105,7 @@
   {:render
    (fn [{:keys [props]}]
      [:div {}
-      [:div {:style {:fontWeight 700 :fontSize "125%"}} "Search Filters:"]
+      [:div {:style {:fontWeight 700 :fontSize "125%" :marginBottom "1em"}} "Search Filters:"]
       [:div {:style {:background (:background-light style/colors) :padding "16px 12px"}}
        [comps/TextFilter {:ref "text-filter"
                           :initial-text (:search-text props)
@@ -128,7 +127,7 @@
         :validator (comp (partial = VERSION) :v)}))
    :render
    (fn [{:keys [state]}]
-     [:div {:style {:display "flex" :padding "20px 0"}}
+     [:div {:style {:display "flex" :marginTop "2em"}}
       [:div {:style {:flex "0 0 250px" :marginRight "2em"}}
        [SearchSection {:search-text (:search-text @state)
                        :on-filter #(swap! state assoc :search-text %)}]]
