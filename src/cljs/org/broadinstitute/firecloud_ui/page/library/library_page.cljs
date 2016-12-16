@@ -121,7 +121,8 @@
     (fn [{:keys [props state]}]
       (let [size (count (:buckets props))
             title (:title props)]
-        [:div {:style {:fontWeight "bold" :paddingBottom "1em"}} title
+        [:div {:style {:fontWeight "bold" :paddingBottom "1em"}}
+          [:hr {}] title
           [:div {:style {:fontSize "80%" :fontWeight "normal" :float "right"}}
             (style/create-link {:text "Clear" :onClick #(swap! state assoc :expanded? false)})]
           [:div {:style {:paddingTop "1em" :fontWeight "normal"}}
@@ -161,27 +162,22 @@
 )
 
 
-;; See http://leaverou.github.io/multirange/ for a better idea.
-;; Aggregate values for this facet are not useful and instead we need to
-;; iterate over the full result set and pull out the ones we want.
-;; TODO: This is likely because they are not indexed yet!!!
+;; See GAWB-978 for slider implementation story
 ;; TODO: "Clear" link should reset the slider and reset the data tables search
-(react/defc FacetSlider
-  {:render
-   (fn [{:keys [props state]}]
-     (let [term (:term props)
-           results (:results props)
-           counts (map (fn [m] (term m)) results)
-           max-count (apply max counts)
-           title (:title props)]
-           [:div {:style {:fontWeight "bold" :paddingBottom "1em"}} title
-             [:div {:style {:fontSize "80%" :fontWeight "normal" :float "right"}}
-               (style/create-link {:text "Clear" :onClick #(swap! state assoc :expanded? false)})]
-               [:div {:style {:paddingTop "1em" :fontWeight "normal"}}
-                 [:input {:ref "slider" :type "range" :multiple "true" :min 0 :max max-count :onChange (fn[])}]]])
-    )
-  }
-)
+;; TODO: Look at where the data is, once indexing is taking place, the values should come from `buckets`, not `results`
+; (react/defc FacetSlider
+;   {:render
+;    (fn [{:keys [props state]}]
+;      (let [term (:term props)
+;            results (:results props)
+;            counts (map (fn [m] (term m)) results)
+;            max-count (apply max counts)
+;            title (:title props)]
+;            [:div {:style {:fontWeight "bold" :paddingBottom "1em"}} title
+;              [:div {:style {:fontSize "80%" :fontWeight "normal" :float "right"}}
+;                (style/create-link {:text "Clear" :onClick #(swap! state assoc :expanded? false)})]
+;                [:div {:style {:paddingTop "1em" :fontWeight "normal"}}
+;                  [:input {:ref "slider" :type "range" :multiple "true" :min 0 :max max-count :onChange (fn[])}]]]))})
 
 ;; TODO: Need to deal with making this an autocomplete solely on the values inside the bucket.
 ;; TODO: "Clear" link should empty out the input value and reset the data tables search
@@ -191,11 +187,12 @@
       (let [buckets (:buckets props)
             values (get-in buckets [key])
             title (:title props)]
-            [:div {:style {:fontWeight "bold" :paddingBottom "1em"}} title
+            [:div {:style {:fontWeight "bold" :paddingBottom "1em" :paddingTop "1em"}}
+              [:hr {}] title
               [:div {:style {:fontSize "80%" :fontWeight "normal" :float "right"}}
                 (style/create-link {:text "Clear" :onClick #(swap! state assoc :expanded? false)})]
-                [:div {:style {:paddingTop "1em" :fontWeight "normal"}}
-                  [input/TextField {:style {:width "100%"}}]]]
+              [:div {:style {:paddingTop "1em" :fontWeight "normal"}}
+                [input/TextField {:style {:width "100%"}}]]]
       )
     )
   }
@@ -220,15 +217,14 @@
           (if-not (:aggregations @state)
             "loading..."
             (cond
-              (= render-hint "checkbox") [FacetCheckboxes {:title title :buckets buckets}]
-              (= render-hint "slider") [FacetSlider {:title title :term k :results (:results @state)}]
               (= render-hint "text") [FacetAutocomplete {:title title :buckets buckets}]
+              (= render-hint "checkbox") [FacetCheckboxes {:title title :buckets buckets}]
+              ;(= render-hint "slider") [FacetSlider {:title title :term k :results (:results @state)}]
             )
           )
-          [:div {:style {:padding "5 0 5 0"}} [:hr {}]]
         ]
       )
-    )
+   )
    :component-did-mount
    (fn [{:keys [props state]}]
      (let [k (first (keys (:aggregate-field props)))]
