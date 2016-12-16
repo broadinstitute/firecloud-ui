@@ -116,11 +116,15 @@
                           :on-filter (:on-filter props)}]]])})
 
 
+;; TODO: "Clear" link should reset the checkboxes to unchecked and reset the data tables search
 (react/defc FacetCheckboxes
   {:render
     (fn [{:keys [props state]}]
-      (let [size (count (:buckets props))]
-        [:div {}
+      (let [size (count (:buckets props))
+            title (:title props)]
+        [:div {:style {:fontWeight "bold" :paddingBottom "1em"}} title
+          [:div {:style {:fontSize "80%" :fontWeight "normal" :float "right"}}
+            (style/create-link {:text "Clear" :onClick #(swap! state assoc :expanded? false)})]
           (map
             (fn [m]
               [:div {:style {:paddingTop "5"}}
@@ -160,26 +164,35 @@
 ;; Aggregate values for this facet are not useful and instead we need to
 ;; iterate over the full result set and pull out the ones we want.
 ;; TODO: This is likely because they are not indexed yet!!!
+;; TODO: "Clear" link should reset the slider and reset the data tables search
 (react/defc FacetSlider
   {:render
    (fn [{:keys [props state]}]
      (let [term (:term props)
            results (:results props)
            counts (map (fn [m] (term m)) results)
-           max-count (apply max counts)]
-       [:div {:style {:paddingTop "5"}}
-        [:input {:ref "slider" :type "range" :multiple "true" :min 0 :max max-count :onChange (fn[])}]])
+           max-count (apply max counts)
+           title (:title props)]
+           [:div {:style {:fontWeight "bold" :paddingBottom "1em"}} title
+             [:div {:style {:fontSize "80%" :fontWeight "normal" :float "right"}}
+               (style/create-link {:text "Clear" :onClick #(swap! state assoc :expanded? false)})]
+               [:input {:ref "slider" :type "range" :multiple "true" :min 0 :max max-count :onChange (fn[])}]])
     )
   }
 )
 
 ;; TODO: Need to deal with making this an autocomplete solely on the values inside the bucket.
+;; TODO: "Clear" link should empty out the input value and reset the data tables search
 (react/defc FacetAutocomplete
   {:render
     (fn [{:keys [props state]}]
       (let [buckets (:buckets props)
-            values (get-in buckets [key])]
-        [input/TextField {:style {:width "100%"}}]
+            values (get-in buckets [key])
+            title (:title props)]
+            [:div {:style {:fontWeight "bold" :paddingBottom "1em"}} title
+              [:div {:style {:fontSize "80%" :fontWeight "normal" :float "right"}}
+                (style/create-link {:text "Clear" :onClick #(swap! state assoc :expanded? false)})]
+                [input/TextField {:style {:width "100%"}}]]
       )
     )
   }
@@ -187,7 +200,6 @@
 
 ;; TODO: Styling to match layout model.
 ;; TODO: OnChange handler to swap state and filter dataset-table based on filter selection
-;; TODO: OnChange handler for the "clear" link to swap state on facet and trigger filter on data-set table
 ;; TODO: error case for loading content
 ;; TODO: Deal with sorting
 ;; TODO: Advanced Search feature for DUR filter
@@ -202,39 +214,37 @@
             buckets (get-in (:aggregations @state) [0 :results :buckets])]
         ;(utils/cljslog "render-hint" render-hint)
         [:div {:style {:fontSize "80%"}}
-          [:div {:style {:fontWeight "bold" :paddingBottom "1em"}} title
-            [:div {:style {:fontSize "80%" :fontWeight "normal" :float "right"}} "Clear"]]
-            (if-not (:aggregations @state)
-              "loading..."
-              (cond
-                (= render-hint "checkbox") [FacetCheckboxes {:buckets buckets}]
-                (= render-hint "slider") [FacetSlider {:term k :results (:results @state)}]
-                (= render-hint "text") [FacetAutocomplete {:buckets buckets}]
-              )
+          (if-not (:aggregations @state)
+            "loading..."
+            (cond
+              (= render-hint "checkbox") [FacetCheckboxes {:title title :buckets buckets}]
+              (= render-hint "slider") [FacetSlider {:title title :term k :results (:results @state)}]
+              (= render-hint "text") [FacetAutocomplete {:title title :buckets buckets}]
             )
-            [:div {:style {:padding "5 0 5 0"}} [:hr {}]]
+          )
+          [:div {:style {:padding "5 0 5 0"}} [:hr {}]]
         ]
       )
     )
-    :component-did-mount
-    (fn [{:keys [props state]}]
-       (let [k (first (keys (:aggregate-field props)))]
-         (endpoints/call-ajax-orch
-           {:endpoint endpoints/search-datasets
-            :payload {"fieldAggregations" [k]}
-            :headers utils/content-type=json
-            :on-done
-            (fn [{:keys [success? get-parsed-response status-text]}]
-              (if success?
-                (let [{:keys [results aggregations]} (get-parsed-response)]
-                  (swap! state assoc :results results :aggregations aggregations)
-                 )
-               )
-             )
-           }
-         )
+   :component-did-mount
+   (fn [{:keys [props state]}]
+     (let [k (first (keys (:aggregate-field props)))]
+       (endpoints/call-ajax-orch
+         {:endpoint endpoints/search-datasets
+          :payload {"fieldAggregations" [k]}
+          :headers utils/content-type=json
+          :on-done
+          (fn [{:keys [success? get-parsed-response status-text]}]
+            (if success?
+              (let [{:keys [results aggregations]} (get-parsed-response)]
+                (swap! state assoc :results results :aggregations aggregations)
+              )
+            )
+          )
+         }
        )
-    )
+     )
+   )
   }
 )
 
