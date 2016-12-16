@@ -147,12 +147,19 @@
                                               :onChange update-property
                                               :rows 3})
                      (= typeahead "ontology")
-                     (style/create-text-field {:ref property-kwd
-                                               :className "typeahead"
-                                               :placeholder "Select an ontology value."
-                                               :style {:width "100%"}
-                                               :value (get (:attributes @state) property-kwd nil)
-                                               :onChange update-property})
+                     (let [relatedID (library-utils/get-related-id (:attributes @state) library-schema property-kwd
+                                    (library-utils/get-related-id (:attributes props) library-schema property-kwd nil))
+                           value (get (:attributes @state) property-kwd)]
+                       [:div {}
+                        (style/create-text-field {:ref property-kwd
+                                                  :className "typeahead"
+                                                  :placeholder "Select an ontology value."
+                                                  :style {:width "100%" :marginBottom "0px"}})
+                        (style/create-link {:text "Clear Selection"
+                                            :onClick #(swap! state update :attributes assoc property-kwd nil relatedID nil)})
+                           (if (not (or (nil? value) (nil? relatedID)))
+                             [:div {:style {:fontWeight "bold" :marginBottom ".75em"}}
+                              value [:span {:style {:float "right"}} relatedID]])])
                      :else
                      (style/create-text-field {:style (colorize {:width "100%"})
                                                :type (cond (= renderHint "date") "date"

@@ -7,3 +7,6 @@
   (if (map? value)
     (clojure.string/join ", " (:items value))
     (str value)))
+
+(defn get-related-id [attributes library-schema property-key default]
+  (get attributes (keyword (get-in library-schema [:properties property-key :relatedID])) default))
