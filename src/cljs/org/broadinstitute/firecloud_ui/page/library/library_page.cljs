@@ -124,7 +124,7 @@
         [:div {:style {:fontWeight "bold" :paddingBottom "1em"}} title
           [:div {:style {:fontSize "80%" :fontWeight "normal" :float "right"}}
             (style/create-link {:text "Clear" :onClick #(swap! state assoc :expanded? false)})]
-          [:div {:style {:paddingTop "1em"}}
+          [:div {:style {:paddingTop "1em" :fontWeight "normal"}}
             (map
               (fn [m]
                 [:div {:style {:paddingTop "5"}}
@@ -177,7 +177,7 @@
            [:div {:style {:fontWeight "bold" :paddingBottom "1em"}} title
              [:div {:style {:fontSize "80%" :fontWeight "normal" :float "right"}}
                (style/create-link {:text "Clear" :onClick #(swap! state assoc :expanded? false)})]
-               [:div {:style {:paddingTop "1em"}}
+               [:div {:style {:paddingTop "1em" :fontWeight "normal"}}
                  [:input {:ref "slider" :type "range" :multiple "true" :min 0 :max max-count :onChange (fn[])}]]])
     )
   }
@@ -194,7 +194,7 @@
             [:div {:style {:fontWeight "bold" :paddingBottom "1em"}} title
               [:div {:style {:fontSize "80%" :fontWeight "normal" :float "right"}}
                 (style/create-link {:text "Clear" :onClick #(swap! state assoc :expanded? false)})]
-                [:div {:style {:paddingTop "1em"}}
+                [:div {:style {:paddingTop "1em" :fontWeight "normal"}}
                   [input/TextField {:style {:width "100%"}}]]]
       )
     )
