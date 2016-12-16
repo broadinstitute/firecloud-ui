@@ -85,7 +85,7 @@
                                                " and request access for the "
                                                (:namespace data) "/" (:name data) " workspace."])})))}))
    :pagination
-   (fn [{:keys [this state]}]
+   (fn [{:keys [state]}]
      (fn [{:keys [current-page rows-per-page filter-text]} callback]
        (endpoints/call-ajax-orch
          (let [from (* (- current-page 1) rows-per-page)]
@@ -124,34 +124,36 @@
         [:div {:style {:fontWeight "bold" :paddingBottom "1em"}} title
           [:div {:style {:fontSize "80%" :fontWeight "normal" :float "right"}}
             (style/create-link {:text "Clear" :onClick #(swap! state assoc :expanded? false)})]
-          (map
-            (fn [m]
+          [:div {:style {:paddingTop "1em"}}
+            (map
+              (fn [m]
+                [:div {:style {:paddingTop "5"}}
+                  [comps/Checkbox {:label (:key m)}]
+                  [:div {:style {:fontSize "80%" :fontWeight "normal" :float "right"}}
+                    [:span {:style {
+                        :display "inline-block"
+                        :minWidth "10px"
+                        :padding "3px 7px"
+                        :color "#fff"
+                        :fontWeight "bold"
+                        :textAlign "center"
+                        :whiteSpace "nowrap"
+                        :verticalAlign "middle"
+                        :backgroundColor "#aaa"
+                        :borderRadius "3px"
+                      }} (:doc_count m)]]]
+              )
+              (if (:expanded? @state)
+                (:buckets props)
+                (take 5 (:buckets props))
+              )
+            )
+            (if (and (not (:expanded? @state)) (> size 5))
               [:div {:style {:paddingTop "5"}}
-                [comps/Checkbox {:label (:key m)}]
-                [:div {:style {:fontSize "80%" :fontWeight "normal" :float "right"}}
-                  [:span {:style {
-                      :display "inline-block"
-                      :minWidth "10px"
-                      :padding "3px 7px"
-                      :color "#fff"
-                      :fontWeight "bold"
-                      :textAlign "center"
-                      :whiteSpace "nowrap"
-                      :verticalAlign "middle"
-                      :backgroundColor "#aaa"
-                      :borderRadius "3px"
-                    }} (:doc_count m)]]]
+                (style/create-link {:text (str (- size 5) " more...") :onClick #(swap! state assoc :expanded? true)})
+              ]
             )
-            (if (:expanded? @state)
-              (:buckets props)
-              (take 5 (:buckets props))
-            )
-          )
-          (if (and (not (:expanded? @state)) (> size 5))
-            [:div {:style {:paddingTop "5"}}
-              (style/create-link {:text (str (- size 5) " more...") :onClick #(swap! state assoc :expanded? true)})
-            ]
-          )
+          ]
         ]
       )
     )
@@ -175,7 +177,8 @@
            [:div {:style {:fontWeight "bold" :paddingBottom "1em"}} title
              [:div {:style {:fontSize "80%" :fontWeight "normal" :float "right"}}
                (style/create-link {:text "Clear" :onClick #(swap! state assoc :expanded? false)})]
-               [:input {:ref "slider" :type "range" :multiple "true" :min 0 :max max-count :onChange (fn[])}]])
+               [:div {:style {:paddingTop "1em"}}
+                 [:input {:ref "slider" :type "range" :multiple "true" :min 0 :max max-count :onChange (fn[])}]]])
     )
   }
 )
@@ -191,7 +194,8 @@
             [:div {:style {:fontWeight "bold" :paddingBottom "1em"}} title
               [:div {:style {:fontSize "80%" :fontWeight "normal" :float "right"}}
                 (style/create-link {:text "Clear" :onClick #(swap! state assoc :expanded? false)})]
-                [input/TextField {:style {:width "100%"}}]]
+                [:div {:style {:paddingTop "1em"}}
+                  [input/TextField {:style {:width "100%"}}]]]
       )
     )
   }
