@@ -147,19 +147,20 @@
                                               :onChange update-property
                                               :rows 3})
                      (= typeahead "ontology")
-                     (let [relatedID (library-utils/get-related-id (:attributes @state) library-schema property-kwd
-                                    (library-utils/get-related-id (:attributes props) library-schema property-kwd nil))
-                           value (get (:attributes @state) property-kwd)]
-                       [:div {}
-                        (style/create-text-field {:ref property-kwd
-                                                  :className "typeahead"
-                                                  :placeholder "Select an ontology value."
-                                                  :style {:width "100%" :marginBottom "0px"}})
-                        (style/create-link {:text "Clear Selection"
-                                            :onClick #(swap! state update :attributes assoc property-kwd nil relatedID nil)})
-                           (if (not (or (nil? value) (nil? relatedID)))
-                             [:div {:style {:fontWeight "bold" :marginBottom ".75em"}}
-                              value [:span {:style {:float "right"}} relatedID]])])
+                     [:div {}
+                      (style/create-text-field {:ref property-kwd
+                                                :className "typeahead"
+                                                :placeholder "Select an ontology value."
+                                                :style {:width "100%" :marginBottom "0px"}})
+                      (let [relatedID (library-utils/get-related-id (:attributes @state) library-schema property-kwd
+                                                                      (library-utils/get-related-id (:attributes props) library-schema property-kwd nil))
+                            value (get (:attributes @state) property-kwd)]
+                        (if (not (or (nil? value) (nil? relatedID)))
+                          [:div {:style {:fontWeight "bold" :marginBottom ".75em"}}
+                           value [:span {:style {:float "right"}} relatedID]
+                           [:div {:style {:fontWeight "normal"}}
+                            (style/create-link {:text "Clear Selection"
+                                                :onClick #(swap! state update :attributes assoc property-kwd nil relatedID nil)})]]))]
                      :else
                      (style/create-text-field {:style (colorize {:width "100%"})
                                                :type (cond (= renderHint "date") "date"
