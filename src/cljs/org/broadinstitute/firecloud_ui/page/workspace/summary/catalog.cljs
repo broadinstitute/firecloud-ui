@@ -155,7 +155,6 @@
                       (let [relatedID (library-utils/get-related-id (:attributes @state) library-schema property-kwd
                                                                       (library-utils/get-related-id (:attributes props) library-schema property-kwd nil))
                             value (get (:attributes @state) property-kwd)]
-                        (utils/log relatedID)
                         (if (not (and (nil? value) (nil? relatedID)))
                           [:div {:style {:fontWeight "bold" :marginBottom ".75em"}}
                            value [:span {:style {:fontWeight "normal" :fontSize "small" :float "right"}} relatedID]
@@ -192,7 +191,7 @@
                  (.typeahead (js/$ (@refs property))
                              (clj->js {:highlight true
                                        :hint true
-                                       :minLength 1})
+                                       :minLength 3})
                              (clj->js
                                {:source options
                                 :display (fn [result]
