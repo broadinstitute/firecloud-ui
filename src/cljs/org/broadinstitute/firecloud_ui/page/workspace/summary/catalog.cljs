@@ -155,12 +155,14 @@
                       (let [relatedID (library-utils/get-related-id (:attributes @state) library-schema property-kwd
                                                                       (library-utils/get-related-id (:attributes props) library-schema property-kwd nil))
                             value (get (:attributes @state) property-kwd)]
-                        (if (not (or (nil? value) (nil? relatedID)))
+                        (utils/log relatedID)
+                        (if (not (and (nil? value) (nil? relatedID)))
                           [:div {:style {:fontWeight "bold" :marginBottom ".75em"}}
-                           value [:span {:style {:float "right"}} relatedID]
+                           value [:span {:style {:fontWeight "normal" :fontSize "small" :float "right"}} relatedID]
                            [:div {:style {:fontWeight "normal"}}
                             (style/create-link {:text "Clear Selection"
-                                                :onClick #(swap! state update :attributes assoc property-kwd nil relatedID nil)})]]))]
+                                                :onClick #(swap! state update :attributes assoc property-kwd nil
+                                                                 (library-utils/get-related-id-keyword library-schema property-kwd) nil)})]]))]
                      :else
                      (style/create-text-field {:style (colorize {:width "100%"})
                                                :type (cond (= renderHint "date") "date"
@@ -199,9 +201,9 @@
                                              {:empty "<div> unable to find any matches to the current query </div>"
                                               :suggestion
                                               (fn [result]
-                                                (str "<div> <div style='font-weight: bold; line-height: 1.5em;'>" (aget result "label")
-                                                     "</div><div>" (aget result "id") "</div>"
-                                                     "<div style='font-size: small; font-style: italic'> " (aget result "definition") "</div></div>"))})}))
+                                                (str "<div> <div style='line-height: 1.5em;'>" (aget result "label")
+                                                     "<small style='float: right;'>" (aget result "id") "</small></div>"
+                                                     "<small style='font-style: italic;'> " (aget result "definition") "</small></div>"))})}))
                  (.bind (js/$ (@refs property))
                         "typeahead:select"
                         (fn [ev suggestion]

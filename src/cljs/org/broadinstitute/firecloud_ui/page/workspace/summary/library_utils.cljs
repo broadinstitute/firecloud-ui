@@ -8,5 +8,8 @@
     (clojure.string/join ", " (:items value))
     (str value)))
 
+(defn get-related-id-keyword [library-schema property-key]
+  (keyword (get-in library-schema [:properties property-key :relatedID])))
+
 (defn get-related-id [attributes library-schema property-key default]
-  (get attributes (keyword (get-in library-schema [:properties property-key :relatedID])) default))
+  (get attributes (get-related-id-keyword library-schema property-key) default))
