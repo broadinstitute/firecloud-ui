@@ -16,7 +16,7 @@
    (fn [{:keys [props state refs]}]
      (let [{:keys [workspace-id config]} props
            {:strs [namespace name]} config]
-       [modal/OKCancelForm
+       [comps/OKCancelForm
         {:header "Publish Method Configuration"
          :get-first-element-dom-node #(react/call :access-field (@refs "mcNamespace"))
          :content

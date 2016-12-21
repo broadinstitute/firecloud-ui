@@ -16,7 +16,7 @@
      {:selected-project (first (:billing-projects props))})
    :render
    (fn [{:keys [props refs state this]}]
-     [modal/OKCancelForm
+     [comps/OKCancelForm
       {:header "Clone Workspace to:"
        :ok-button {:text "Clone" :onClick #(react/call :do-clone this)}
        :get-first-element-dom-node #(@refs "project")

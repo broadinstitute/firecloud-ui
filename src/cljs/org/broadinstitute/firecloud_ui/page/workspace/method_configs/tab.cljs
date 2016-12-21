@@ -43,7 +43,7 @@
                                         true "This workspace is locked."
                                         false)
                            :onClick #(modal/push-modal
-                                      [modal/OKCancelForm
+                                      [comps/OKCancelForm
                                        {:header "Import Method Configuration"
                                         :content
                                         [:div {:style {:backgroundColor "white" :padding "1ex" :width 1000}}

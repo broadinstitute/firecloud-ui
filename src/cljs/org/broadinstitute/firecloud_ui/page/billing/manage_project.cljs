@@ -15,7 +15,7 @@
 (react/defc AddUserDialog
   {:render
    (fn [{:keys [props state this refs]}]
-     [modal/OKCancelForm
+     [comps/OKCancelForm
       {:header (str "Add user to " (:project-name props))
        :ok-button #(react/call :add-user this)
        :get-first-element-dom-node #(react/find-dom-node (@refs "email"))

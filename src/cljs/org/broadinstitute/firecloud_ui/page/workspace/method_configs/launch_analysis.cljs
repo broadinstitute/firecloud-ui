@@ -97,7 +97,7 @@
 (react/defc Form
   {:render
    (fn [{:keys [props state this]}]
-     [modal/OKCancelForm
+     [comps/OKCancelForm
       {:header "Launch Analysis"
        :content (render-form state props)
        :ok-button {:text "Launch" :disabled? (:disabled? props) :onClick #(react/call :launch this)}}])

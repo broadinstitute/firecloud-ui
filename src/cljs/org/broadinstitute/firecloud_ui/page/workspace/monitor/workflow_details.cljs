@@ -185,5 +185,4 @@
 
 (defn render [props]
   (assert (every? #(contains? props %) #{:workspace-id :submission-id :workflow-id}))
-  (.load js/google "visualization" "1.0" {"packages" ["Timeline"]})
   [WorkflowDetails props])

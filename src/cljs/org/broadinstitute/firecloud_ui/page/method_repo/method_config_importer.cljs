@@ -19,7 +19,7 @@
 (react/defc Redactor
   {:render
    (fn [{:keys [props state this]}]
-     [modal/OKCancelForm
+     [comps/OKCancelForm
       {:header "Confirm redaction"
        :content
        [:div {:style {:width 500}}

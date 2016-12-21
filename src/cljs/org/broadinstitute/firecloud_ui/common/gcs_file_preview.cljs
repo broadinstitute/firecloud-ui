@@ -2,18 +2,19 @@
   (:require
     [dmohs.react :as react]
     [org.broadinstitute.firecloud-ui.common :as common]
-    [org.broadinstitute.firecloud-ui.common.components :refer [Spinner]]
+    [org.broadinstitute.firecloud-ui.common.components :as comps :refer [Spinner]]
     [org.broadinstitute.firecloud-ui.common.modal :as modal]
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
     [org.broadinstitute.firecloud-ui.utils :as utils]
     ))
 
+(def ^:private preview-byte-count 20000)
 
 (react/defc PreviewDialog
   {:render
    (fn [{:keys [props state]}]
-     [modal/OKCancelForm
+     [comps/OKCancelForm
       {:header "File Details"
        :content
        (let [{:keys [data error status]} (:response @state)
@@ -26,6 +27,16 @@
          [:div {:style {:width 700 :overflow "auto"}}
           (labeled "Google Bucket" (:bucket-name props))
           (labeled "Object" (:object props))
+          [:div {:style {:marginTop "1em"}}
+           (if (> data-size preview-byte-count) (str "Last " (:preview-line-count @state)
+                                       " lines of log are shown. Use the link below to view the full log.") "Log:")
+           ;; The max-height of 206 looks random, but it's so that the top line of the log preview is half cut-off
+           ;; to hint to the user that they should scroll up.
+           (react/create-element
+             [:div {:ref "preview" :style {:marginTop "1em" :whiteSpace "pre-wrap" :fontFamily "monospace"
+                                           :fontSize "90%" :overflowY "auto" :maxHeight 206
+                                           :backgroundColor "#fff" :padding "1em" :borderRadius 8}}
+              (str (if (> data-size preview-byte-count) "...") (:preview @state))])]
           (when (:loading? @state)
             [Spinner {:text "Getting file info..."}])
           (when data
@@ -71,7 +82,7 @@
        :show-cancel? false
        :ok-button {:text "Done" :onClick modal/pop-modal}}])
    :component-did-mount
-   (fn [{:keys [props state]}]
+   (fn [{:keys [props state refs after-update]}]
      (swap! state assoc :loading? true)
      (endpoints/call-ajax-orch
       {:endpoint (endpoints/get-gcs-stats (:bucket-name props) (:object props))
@@ -81,7 +92,18 @@
                          :response (if success?
                                      {:data (get-parsed-response)}
                                      {:error (.-responseText xhr)
-                                      :status status-code})))}))})
+                                      :status status-code})))})
+     (utils/ajax {:url (str "https://www.googleapis.com/storage/v1/b/" (:bucket-name props) "/o/"
+                            (js/encodeURIComponent (:object props)) "?alt=media")
+                  :headers {"Authorization" (str "Bearer " (utils/get-access-token))
+                            "Range" (str "bytes=-" preview-byte-count)}
+                  :on-done (fn [{:keys [success? status-text raw-response]}]
+                             (swap! state assoc :preview raw-response
+                                    :preview-line-count (count (clojure.string/split raw-response #"\n+")))
+                             (after-update
+                               (fn []
+                                 (aset (@refs "preview") "scrollTop" (aget (@refs "preview") "scrollHeight")))))}))})
+
 
 
 (react/defc GCSFilePreviewLink
