@@ -15,7 +15,7 @@
 
 
 (defn- render-acl-content [workspace-id state persist-acl]
-  [modal/OKCancelForm
+  [comps/OKCancelForm
    {:header
     (str "Permissions for " (:namespace workspace-id) "/" (:name workspace-id))
     :content
@@ -67,7 +67,7 @@
     :ok-button {:text "Save" :onClick persist-acl}}])
 
 (defn- render-invite-offer [workspace-id state persist-acl]
-  [modal/OKCancelForm
+  [comps/OKCancelForm
    {:header (str "Invite new users to " (:namespace workspace-id) "/" (:name workspace-id))
     :content (react/create-element
               [:div {}

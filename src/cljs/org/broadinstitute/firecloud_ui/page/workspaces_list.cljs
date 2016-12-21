@@ -8,7 +8,7 @@
     [org.broadinstitute.firecloud-ui.common.overlay :as overlay]
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.common.table :as table]
-    [org.broadinstitute.firecloud-ui.common.table-utils :refer [float-right]]
+    [org.broadinstitute.firecloud-ui.common.table-utils :as table-utils]
     [org.broadinstitute.firecloud-ui.config :as config]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
     [org.broadinstitute.firecloud-ui.nav :as nav]
@@ -82,17 +82,23 @@
 (defn- get-max-length [func workspaces]
   (->> workspaces (map func) (map count) (apply max)))
 
-(def ^:private access-types ["Project Owner" "Owner" "Writer" "Reader" "No Access" "TCGA Open Access" "TCGA Protected Access"])
+(def ^:private access-types ["Project Owner" "Owner" "Writer" "Reader" "No Access"])
 (def ^:private access-predicates
   {"Project Owner" #(= "PROJECT_OWNER" (% "accessLevel"))
    "Owner" #(= "OWNER" (% "accessLevel"))
    "Writer" #(= "WRITER" (% "accessLevel"))
    "Reader" #(= "READER" (% "accessLevel"))
    "No Access" #(= "NO ACCESS" (% "accessLevel"))
-   "TCGA Open Access" #(and (= (config/tcga-namespace) (get-in % ["workspace" "namespace"]))
-                            (not (get-in % ["workspace" "realm"])))
-   "TCGA Protected Access" #(and (= (config/tcga-namespace) (get-in % ["workspace" "namespace"]))
-                                 (get-in % ["workspace" "realm"]))})
+   })
+
+(def ^:private realm-types ["non-TCGA" "TCGA Open Access" "TCGA Protected Access"])
+(def ^:private realm-predicates
+ {"non-TCGA" #(not= (config/tcga-namespace) (get-in % ["workspace" "namespace"]))
+  "TCGA Open Access" #(and (= (config/tcga-namespace) (get-in % ["workspace" "namespace"]))
+                           (not (get-in % ["workspace" "realm"])))
+  "TCGA Protected Access" #(and (= (config/tcga-namespace) (get-in % ["workspace" "namespace"]))
+                                (get-in % ["workspace" "realm"]))
+  })
 
 (def ^:private persistence-key "workspace-table-types")
 
@@ -109,20 +115,23 @@
        [:div {}
         (when (:show-access-level-select? @state)
           (let [checkbox (fn [label]
-                           [:div {}
-                            [:label {:style {:cursor "pointer"}}
-                             [:input {:type "checkbox"
-                                      :checked (get (:selected-types @state) label)
-                                      :onChange #(swap! state update-in [:selected-types label] not)
-                                      :style {:cursor "pointer"}}]
-                             [:span {:style {:marginLeft "0.5ex"}} label]]])]
+                           (let [stateval (get (:selected-types @state) label)]
+                             [:div {}
+                              [:label {:style {:cursor "pointer"}}
+                               [:input {:type "checkbox"
+                                        :checked (not (false? stateval))
+                                        :onChange #(swap! state update-in [:selected-types label] false?)
+                                        :style {:cursor "pointer"}}]
+                               [:span {:style {:marginLeft "0.5ex"}} label]]]))]
             [overlay/Overlay {:get-anchor-dom-node #(react/find-dom-node (@refs "anchor"))
                               :anchor-x :right :anchor-y :bottom
                               :dismiss-self #(swap! state dissoc :show-access-level-select?)
                               :content
                               (react/create-element
                                [:div {:style {:padding "1em" :border style/standard-line}}
-                                (map checkbox access-types)])}]))
+                                (map checkbox access-types)
+                                [:hr {:style {:size "1px" :noshade true}}]
+                                (map checkbox realm-types)])}]))
         [table/Table
          {:state-key "workspace-table"
           :empty-message "No workspaces to display." :retain-header-on-empty? true
@@ -137,10 +146,8 @@
                        :borderBottom style/standard-line}
           :row-style {:height row-height-px :borderTop style/standard-line}
           :cell-content-style {:padding nil}
-          :toolbar (float-right [create/Button {:nav-context (:nav-context props)
-                                                :billing-projects (:billing-projects props)
-                                                :disabled-reason (:disabled-reason props)}]
-                                {:marginTop -5})
+          :toolbar (table-utils/add-right
+                    [create/Button (select-keys props [:nav-context :billing-projects :disabled-reason])])
           :filter-groups [{:text "All" :pred (constantly true)}
                           {:text "Complete" :pred #(= "Complete" (:status %))}
                           {:text "Running" :pred #(= "Running" (:status %))}
@@ -181,13 +188,17 @@
                              :onClick #(swap! state assoc :show-access-level-select? true)}
                       "Include..."])
             :header-key "Include" :starting-width 68 :resizable? false :sort-by :none}]
-          :data (filter
-                 (->> (:selected-types @state)
-                      (keep (fn [[k v]] (when v k)))
-                      (map access-predicates)
-                      (cons (constantly false)) ;; keeps (apply some-fn) from bombing when the list is empty
-                      (apply some-fn))
-                 (:workspaces props))
+          :data (let [somepred (fn[preds]
+                                (->> (merge preds (:selected-types @state))
+                                     (keep (fn [[k v]] (when (and (not (false? v)) (some? (preds k))) k)))
+                                     (map preds)
+                                     (cons (constantly false)) ;; keeps (apply some-fn) from bombing when the list is empty
+                                     (apply some-fn)))]
+                  (filter
+                    (every-pred
+                      (somepred access-predicates)
+                      (somepred realm-predicates))
+                    (:workspaces props)))
           :->row (fn [ws]
                    (let [ws-name (get-workspace-name-string ws)
                          ws-href (let [x (ws "workspace")] (str (x "namespace") ":" (x "name")))

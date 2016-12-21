@@ -127,7 +127,7 @@
           inputs (first (first (workflow "calls")))
           input-names (string/split inputs ".")
           workflow-name (first input-names)]
-    (create-field "Workflow ID" 
+    (create-field "Workflow ID"
                   (style/create-link {:text (workflow "id")
                                       :target "_blank"
                                       :style {:color "-webkit-link" :textDecoration "underline"}
@@ -142,7 +142,7 @@
       (create-field "Started" (moncommon/render-date (workflow "start"))))
     (when (workflow "end")
       (create-field "Ended" (moncommon/render-date (workflow "end"))))
-    [IODetail {:label "Inputs" :data (workflow "inputs")}]
+    [IODetail {:label "Inputs" :data (utils/parse-json-string (get-in workflow ["submittedFiles", "inputs"]))}]
     [IODetail {:label "Outputs" :data (workflow "outputs")}]
     [:div {:style {:whiteSpace "nowrap" :marginRight "0.5em"}}
      (let [wlogurl (str "gs://" bucketName "/" submission-id "/workflow.logs/workflow."
@@ -168,7 +168,7 @@
          (not (:success? server-response))
          (style/create-server-error-message (:response server-response))
          :else
-         (render-workflow-detail (:response server-response) (:raw-response server-response) 
+         (render-workflow-detail (:response server-response) (:raw-response server-response)
                                  (:workflow-name props) (:submission-id props) (:bucketName props)))))
    :component-did-mount
    (fn [{:keys [props state]}]
@@ -185,5 +185,4 @@
 
 (defn render [props]
   (assert (every? #(contains? props %) #{:workspace-id :submission-id :workflow-id}))
-  (.load js/google "visualization" "1.0" {"packages" ["Timeline"]})
   [WorkflowDetails props])

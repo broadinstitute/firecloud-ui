@@ -51,6 +51,8 @@
 ;;     Color for the drag-to-resize tab
 ;;   :reorderable-columns? (optional, default true)
 ;;     Controls whether or not columns are reorderable.  When true, a reorder widget is presented
+;;   :reorder-anchor (optional, default :left)
+;;     Which side to anchor the reordering overlay.  Set to :right if placing the widget on the right side.
 ;;   :sortable-columns? (optional, default true)
 ;;     Fallback value for column sorting.
 ;;   :always-sort? (optional, default false)
@@ -72,8 +74,11 @@
 ;;     Style to apply to the header row.  When omitted, style is a dark gray background with bold white text
 ;;   :toolbar (optional)
 ;;     Use to provide more items in the toolbar, along with the filterer and column reorderer (if present).
-;;     This value should be a function that takes the "built-in" toolbar as a parameter, and returns an
-;;     HTML element.  If this property is not supplied, the built-in toolbar is placed as normal.
+;;     This value should be a function that takes the built-in elements as a map:
+;;     {:reorderer <column reorder component>
+;;      :filterer <filter component>
+;;      :filter-groups <filter group component>}
+;;     and returns a DOM element to be used for the toolbar.  See table-utils for more.
 ;;   :width (optional, default normal)
 ;;     Specify :width :narrow to make the paginator layout in a narrow width friendly way.  Any other value
 ;;     (including none) corresponds to the normal layout
@@ -137,6 +142,7 @@
    :initial-rows-per-page default-initial-rows-per-page
    :resizable-columns? true
    :reorderable-columns? true
+   :reorder-anchor :left
    :sortable-columns? true
    :always-sort? false
    :filterable? true
@@ -199,45 +205,45 @@
                                   (some (partial = :remaining)))]
     [:div {}
      (when (or filterable? reorderable-columns? toolbar)
-       (let [built-in
-             [:div {:style {:paddingBottom "1em"}}
-              (when reorderable-columns?
-                [:div {:style {:float "left" :marginRight "1em" :marginTop 2}}
-                 [comps/Button {:icon :settings :title-text "Select Columns..."
-                                :ref "col-edit-button"
-                                :onClick #(swap! state assoc :reordering-columns? true)}]
-                 (when (:reordering-columns? @state)
-                   [overlay/Overlay
-                    {:get-anchor-dom-node #(react/find-dom-node (@refs "col-edit-button"))
-                     :dismiss-self #(swap! state assoc :reordering-columns? false)
-                     :content
-                     (react/create-element
-                      table-utils/ColumnEditor
-                      {:columns (react/call :get-ordered-columns this)
-                       :on-reorder
-                       (fn [source-index target-index]
-                         (swap! state update :column-meta utils/move source-index target-index))
-                       :on-visibility-change
-                       (fn [column-index visible?]
-                         (if (= :all column-index)
-                           (swap! state update :column-meta #(vec (map merge % (repeat {:visible? visible?}))))
-                           (swap! state assoc-in [:column-meta column-index :visible?] visible?)))})}])])
-              (when filterable?
-                [:div {:style {:display "inline-block" :marginRight "1em"}}
-                 [comps/TextFilter {:initial-text (get-in @state [:query-params :filter-text])
-                                    :on-filter #(swap! state update-in [:query-params]
-                                                       assoc :filter-text % :current-page 1)}]])
-              (when (:filter-groups props)
-                [:div {:style {:display "inline-block" :marginRight "1em"}}
-                 [table-utils/FilterGroupBar
-                  (merge (select-keys props [:filter-groups :data])
-                         {:selected-index (:filter-group-index @state)
-                          :on-change (fn [new-index]
-                                       (swap! state assoc :filter-group-index new-index)
-                                       (after-update #(react/call :refresh-rows this))
-                                       (when-let [f (:on-filter-change props)]
-                                         (f new-index)))})]])]]
-         ((or toolbar identity) built-in)))
+       (let [reorderer (when reorderable-columns?
+                         [:div {:style {:marginRight "1em"}}
+                          [comps/Button {:icon :settings :title-text "Select Columns..."
+                                         :ref "col-edit-button"
+                                         :onClick #(swap! state assoc :reordering-columns? true)}]
+                          (when (:reordering-columns? @state)
+                            [overlay/Overlay
+                             {:get-anchor-dom-node #(react/find-dom-node (@refs "col-edit-button"))
+                              :dismiss-self #(swap! state assoc :reordering-columns? false)
+                              :anchor-x (:reorder-anchor props)
+                              :content
+                              (react/create-element
+                                table-utils/ColumnEditor
+                                {:columns (react/call :get-ordered-columns this)
+                                 :on-reorder
+                                 (fn [source-index target-index]
+                                   (swap! state update :column-meta utils/move source-index target-index))
+                                 :on-visibility-change
+                                 (fn [column-index visible?]
+                                   (if (= :all column-index)
+                                     (swap! state update :column-meta #(vec (map merge % (repeat {:visible? visible?}))))
+                                     (swap! state assoc-in [:column-meta column-index :visible?] visible?)))})}])])
+             filter (when filterable?
+                      [:div {:style {:marginRight "1em"}}
+                       [comps/TextFilter {:initial-text (get-in @state [:query-params :filter-text])
+                                          :on-filter #(swap! state update-in [:query-params]
+                                                             assoc :filter-text % :current-page 1)}]])
+             filter-groups (when (:filter-groups props)
+                             [:div {:style {:marginRight "1em"}}
+                              [table-utils/FilterGroupBar
+                               (merge (select-keys props [:filter-groups :data])
+                                      {:selected-index (:filter-group-index @state)
+                                       :on-change (fn [new-index]
+                                                    (swap! state assoc :filter-group-index new-index)
+                                                    (after-update #(react/call :refresh-rows this))
+                                                    (when-let [f (:on-filter-change props)]
+                                                      (f new-index)))})]])
+             params {:reorderer reorderer :filter filter :filter-groups filter-groups}]
+         ((or toolbar (table-utils/default-toolbar-layout)) params)))
      [:div {}
       [comps/DelayedBlocker {:ref "blocker" :banner "Loading..."}]
       ;; When using an auto-width column the table ends up ~1px wider than its parent
@@ -346,7 +352,10 @@
 
 
 (react/defc Table
-  {:update-query-params
+  {:get-query-params
+   (fn [{:keys [state]}]
+     (:query-params @state))
+   :update-query-params
    (fn [{:keys [state]} new-params]
      (swap! state update :query-params merge new-params))
    :get-default-props get-default-table-props

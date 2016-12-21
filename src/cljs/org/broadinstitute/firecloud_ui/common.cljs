@@ -3,6 +3,8 @@
    [dmohs.react :as react]
    [org.broadinstitute.firecloud-ui.utils :as utils]
    [org.broadinstitute.firecloud-ui.config :as config]
+   [org.broadinstitute.firecloud-ui.common.icons :as icons]
+   [org.broadinstitute.firecloud-ui.common.style :as style]
    ))
 
 
@@ -131,9 +133,17 @@
               (loop (/ b 1000) (inc n))))]
     (loop bytes 0)))
 
+(defn format-price [amount]
+  (if (< amount 0.01)
+    "< $0.01"
+    (str "$" (.toFixed (js/parseFloat amount) 2))))
+
 (defn parse-profile [unparsed-profile]
   (let [unparsed-values (get unparsed-profile "keyValuePairs")]
     (into {} (map (fn [m] [(keyword (m "key")) (m "value")]) unparsed-values))))
+
+(defn row->workspace-id [row]
+  (select-keys row [:namespace :name]))
 
 (defn workspace-id->string [workspace-id] 
   (str (:namespace workspace-id) "/" (:name workspace-id)))
@@ -175,3 +185,11 @@
           (count (get-in entity ["attributes" (set-type->membership-attribute entity-type)]))
           ;; something nonsensical has been selected, submission will probably fail anyway:
           :else 1)))
+
+
+(def PHI-warning
+  [:div {:style {:fontWeight "bold" :fontSize "106%" :marginBottom ".5em"}}
+    (icons/icon {:style {:fontSize 48 :color (:exception-state style/colors) :marginRight ".15em"
+                         :verticalAlign "middle"}} :warning-triangle)
+    "FireCloud is not intended to host personally identifiable information. Do not use any patient identifier, including name, social security number, or medical record number."])
+

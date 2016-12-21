@@ -5,7 +5,7 @@
     [org.broadinstitute.firecloud-ui.common.modal :as modal]
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.common.table :as table]
-    [org.broadinstitute.firecloud-ui.common.table-utils :refer [float-right]]
+    [org.broadinstitute.firecloud-ui.common.table-utils :refer [add-right]]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
     [org.broadinstitute.firecloud-ui.nav :as nav]
     [org.broadinstitute.firecloud-ui.page.billing.create-project :refer [CreateBillingProjectDialog]]
@@ -83,12 +83,27 @@
                          :else projectName)])}
                    {:header "Role" :starting-width :remaining}]
          :toolbar
-         (float-right
-          [comps/Button {:text "Create New Billing Project"
-                         :onClick (fn []
-                                    (modal/push-modal
-                                     [CreateBillingProjectDialog
-                                      {:on-success #(react/call :reload this)}]))}])
+         (add-right
+          [comps/Button
+           {:text "Create New Billing Project"
+            :onClick (fn [{:keys [this]}]
+                       (if (-> @utils/google-auth2-instance (aget "currentUser") (js-invoke "get")
+                               (js-invoke "hasGrantedScopes" "https://www.googleapis.com/auth/cloud-billing"))
+                         (modal/push-modal
+                          [CreateBillingProjectDialog
+                           {:on-success #(react/call :reload this)}])
+                         (do
+                           (utils/add-user-listener
+                            ::billing
+                            (fn [_]
+                              (utils/remove-user-listener ::billing)
+                              (modal/push-modal
+                               [CreateBillingProjectDialog
+                                {:on-success #(react/call :reload this)}])))
+                           (js-invoke
+                            @utils/google-auth2-instance
+                            "grantOfflineAccess"
+                            (clj->js {:redirect_uri "postmessage" :scope "https://www.googleapis.com/auth/cloud-billing"})))))}])
          :data (:projects @state)
          :->row (fn [{:strs [role] :as row}]
                   [row

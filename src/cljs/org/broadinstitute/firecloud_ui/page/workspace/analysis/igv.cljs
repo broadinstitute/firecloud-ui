@@ -17,7 +17,7 @@
                               {:name (str "Track " (inc index))
                                :url (common/gcs-uri->google-url track-url)
                                :indexURL (when (string? @index-url) (common/gcs-uri->google-url @index-url))
-                               :headers {:Authorization (str "Bearer " (utils/get-access-token-cookie))}
+                               :headers {:Authorization (str "Bearer " (utils/get-access-token))}
                                :displayMode "EXPANDED"
                                :height (when bam? 200)
                                :autoHeight (when bam? false)}))
