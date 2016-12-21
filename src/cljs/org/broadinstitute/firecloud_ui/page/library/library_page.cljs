@@ -119,62 +119,50 @@
 ;; TODO: "Clear" link should reset the checkboxes to unchecked and reset the data tables search
 (react/defc FacetCheckboxes
   {:render
-    (fn [{:keys [props this state]}]
-      (let [size (:numOtherDocs props)
-            title (:title props)]
-        [:div {:style {:fontWeight "bold" :paddingBottom "1em"}}
-          [:hr {}] title
-          [:div {:style {:fontSize "80%" :fontWeight "normal" :float "right"}}
-            (style/create-link {:text "Clear" :onClick #(swap! state assoc :expanded? false)})]
-          [:div {:style {:paddingTop "1em" :fontWeight "normal"}}
-            (map
-              (fn [m]
-                [:div {:style {:paddingTop "5"}}
-                  [comps/Checkbox {:label (:key m)
-                                   :onChange #(react/call :update-selected this (:key m) %)}]
-                  [:div {:style {:fontSize "80%" :fontWeight "normal" :float "right"}}
-                    [:span {:style {
-                        :display "inline-block"
-                        :minWidth "10px"
-                        :padding "3px 7px"
-                        :color "#fff"
-                        :fontWeight "bold"
-                        :textAlign "center"
-                        :whiteSpace "nowrap"
-                        :verticalAlign "middle"
-                        :backgroundColor "#aaa"
-                        :borderRadius "3px"
-                      }} (:doc_count m)]]]
-              )
-              (if (:expanded? @state)
-                (:buckets props)
-                (take 5 (:buckets props))
-              )
-            )
-            (if (and (not (:expanded? @state)) (> size 5))
-              [:div {:style {:paddingTop "5"}}
-               ;; do something else here?
-                (style/create-link {:text (str (- size 5) " more...") :onClick #(swap! state assoc :expanded? true)})
-              ]
-            )
-          ]
-        ]
-      )
-    )
+   (fn [{:keys [props this state]}]
+     (let [size (:numOtherDocs props)
+           title (:title props)]
+       [:div {:style {:fontWeight "bold" :paddingBottom "1em"}}
+        [:hr {}] title
+        [:div {:style {:fontSize "80%" :fontWeight "normal" :float "right"}}
+         (style/create-link {:text "Clear" :onClick #(swap! state assoc :expanded? false)})]
+        [:div {:style {:paddingTop "1em" :fontWeight "normal"}}
+         (map
+           (fn [m]
+             [:div {:style {:paddingTop "5"}}
+              [comps/Checkbox {:label (:key m)
+                               :initial-checked? (contains? (:selected-items props) (:key m))
+                               :onChange #(react/call :update-selected this (:key m) %)}]
+              [:div {:style {:fontSize "80%" :fontWeight "normal" :float "right"}}
+               [:span {:style {
+                               :display "inline-block"
+                               :minWidth "10px"
+                               :padding "3px 7px"
+                               :color "#fff"
+                               :fontWeight "bold"
+                               :textAlign "center"
+                               :whiteSpace "nowrap"
+                               :verticalAlign "middle"
+                               :backgroundColor "#aaa"
+                               :borderRadius "3px"
+                               }} (:doc_count m)]]])
+           (if (:expanded? @state)
+             (:buckets props)
+             (take 5 (:buckets props))))
+         (if (and (not (:expanded? @state)) (> size 5))
+           [:div {:style {:paddingTop "5"}}
+            ;; do something else here?
+            (style/create-link {:text (str (- size 5) " more...") :onClick #(swap! state assoc :expanded? true)})])]]))
    :component-did-mount
-   (fn [{:keys [state]}]
-     (swap! state assoc :selected-items #{}))
+   (fn [{:keys [state props]}]
+     (swap! state assoc :selected-items (or (:selected-items props) #{})))
    :update-selected
-   (fn [{:keys [state]} name checked?]
-     (if checked?
-       (swap! state assoc :selected-items (conj (:selected-items @state) name)) ;; (conj (set (:selected-items @state)) name))
-       (swap! state assoc :selected-items (disj (:selected-items @state) name))) ;; (disj (set (:selected-items @state)) name)))
-     )
-   :component-did-update
-   (fn [{:keys [state props refs]}]
-     (react/call :update-filter (:page @refs) (:title props) (:selected-items @state)))
-  }
-)
+   (fn [{:keys [state props]} name checked?]
+     (let [updated-items (if checked?
+                           (conj (:selected-items @state) name)
+                           (disj (:selected-items @state) name))]
+       (swap! state assoc :selected-items updated-items)
+       ((:callback-function props) (:field props) updated-items)))})
 
 
 ;; See GAWB-978 for slider implementation story
@@ -221,25 +209,24 @@
 (react/defc Facet
   {:render
    (fn [{:keys [props state]}]
-     ;(utils/cljslog "aggregate-field" (:aggregate-field props))
       (let [k (first (keys (:aggregate-field props)))
             m (k (:aggregate-field props))
             title (:title m)
             render-hint (get-in m [:aggregate :renderHint])
             buckets (get-in (:aggregations @state) [0 :results :buckets])]
-        ;(utils/cljslog "render-hint" render-hint)
         [:div {:style {:fontSize "80%"}}
           (if-not (:aggregations @state)
             "loading..."
             (cond
-              (= render-hint "text") [FacetAutocomplete {:title title :buckets buckets}]
-              (= render-hint "checkbox") [FacetCheckboxes {:title title :buckets buckets}]
+              (= render-hint "text") [FacetAutocomplete {:title title :buckets buckets}] ;; add page ref here?
+              (= render-hint "checkbox") [FacetCheckboxes
+                                          {:title title
+                                           :buckets buckets
+                                           :field k
+                                           :selected-items (:selected-items props)
+                                           :callback-function (:callback-function props)}]
               ;(= render-hint "slider") [FacetSlider {:title title :term k :results (:results @state)}]
-            )
-          )
-        ]
-      )
-   )
+            ))]))
    :component-did-mount
    (fn [{:keys [props state]}]
      (let [k (first (keys (:aggregate-field props)))]
@@ -251,43 +238,36 @@
           (fn [{:keys [success? get-parsed-response status-text]}]
             (if success?
               (let [{:keys [results aggregations]} (get-parsed-response)]
-                (swap! state assoc :results results :aggregations aggregations)
-              )
-            )
-          )
-         }
-       )
-     )
-   )
-   ;:component-did-update
-   ;(fn [{:keys [props state]}]
-   ;  (utils/log ))
-  }
-)
+                (swap! state assoc :results results :aggregations aggregations))))})))})
 
 
 (react/defc FacetSection
   {:render
-    (fn [{:keys [props]}]
-      (let [aggregate-fields (:aggregate-fields props)]
-        ; (utils/cljslog "aggregate-fields" aggregate-fields)
-        [:div {:style {:background (:background-light style/colors) :padding "16px 12px"}}
-            (map
-              (fn [m] [Facet {:aggregate-field m}])
-              aggregate-fields)]))})
+   (fn [{:keys [props]}]
+     (let [aggregate-fields (:aggregate-fields props)]
+       [:div {:style {:background (:background-light style/colors) :padding "16px 12px"}}
+        (map
+          (fn [m] [Facet {:aggregate-field m
+                          :selected-items (get-in props [:facet-filters (first (keys m))])
+                          :callback-function (:callback-function props)}]) ;;
+          aggregate-fields)]))})
 
 
 (def ^:private PERSISTENCE-KEY "library-page")
 (def ^:private VERSION 1)
 
 (react/defc Page
-  {:get-initial-state
+  {:update-filter
+   (fn [{:keys [state]} facet-name facet-list]
+     (swap! state assoc-in [:facet-filters] {facet-name facet-list}))
+   :get-initial-state
    (fn []
      (persistence/try-restore
        {:key PERSISTENCE-KEY
         :initial (fn []
                    {:v VERSION
-                    :search-text ""})
+                    :search-text ""
+                    :facet-filters {}})
         :validator (comp (partial = VERSION) :v)}))
    :component-did-mount
    (fn [{:keys [state]}]
@@ -299,12 +279,15 @@
                     :library-attributes (:properties response)
                     :aggregate-fields (keep (fn [[k m]] (when (:aggregate m) {k m})) (:properties response))))))))
    :render
-   (fn [{:keys [refs state]}]
+   (fn [{:keys [this state]}]
      [:div {:style {:display "flex" :marginTop "2em"}}
       [:div {:style {:flex "0 0 250px" :marginRight "2em"}}
        [SearchSection {:search-text (:search-text @state)
                        :on-filter #(swap! state assoc :search-text %)}]
-       [FacetSection {:aggregate-fields (:aggregate-fields @state)}]]
+       [FacetSection {:aggregate-fields (:aggregate-fields @state)
+                      :facet-filters (:facet-filters @state)
+                      :callback-function (fn [facet-name facet-list]
+                                           (react/call :update-filter this facet-name facet-list))}]]
       [:div {:style {:flex "1 1 auto" :overflowX "auto"}}
        [DatasetsTable {:search-text (:search-text @state)}]]])
    :component-did-update
