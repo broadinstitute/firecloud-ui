@@ -82,7 +82,7 @@
      {:initial-checked? false
       :disabled? false})
    :render
-   (fn [{:keys [props]}]
+   (fn [{:keys [props this]}]
      (let [disabled? (:disabled? props)]
        [:label {:style {:cursor (when-not disabled? "pointer")
                         :color (when disabled? (:text-light style/colors))}
@@ -93,7 +93,8 @@
         [:input {:type "checkbox" :ref "check"
                  :defaultChecked (:initial-checked? props)
                  :disabled disabled?
-                 :style {:cursor (when-not disabled? "pointer")}}]
+                 :style {:cursor (when-not disabled? "pointer")}
+                 :onChange #((:onChange props) (react/call :checked? this))}]
         [:span {:style {:marginLeft "0.5ex"}} (:label props)]]))})
 
 

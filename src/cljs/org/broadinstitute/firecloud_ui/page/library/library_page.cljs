@@ -85,7 +85,7 @@
                                                " and request access for the "
                                                (:namespace data) "/" (:name data) " workspace."])})))}))
    :pagination
-   (fn [{:keys [state]}]
+   (fn [{:keys [this state props]}]
      (fn [{:keys [current-page rows-per-page filter-text]} callback]
        (endpoints/call-ajax-orch
          (let [from (* (- current-page 1) rows-per-page)]
@@ -119,8 +119,8 @@
 ;; TODO: "Clear" link should reset the checkboxes to unchecked and reset the data tables search
 (react/defc FacetCheckboxes
   {:render
-    (fn [{:keys [props state]}]
-      (let [size (count (:buckets props))
+    (fn [{:keys [props this state]}]
+      (let [size (:numOtherDocs props)
             title (:title props)]
         [:div {:style {:fontWeight "bold" :paddingBottom "1em"}}
           [:hr {}] title
@@ -130,7 +130,8 @@
             (map
               (fn [m]
                 [:div {:style {:paddingTop "5"}}
-                  [comps/Checkbox {:label (:key m)}]
+                  [comps/Checkbox {:label (:key m)
+                                   :onChange #(react/call :update-selected this (:key m) %)}]
                   [:div {:style {:fontSize "80%" :fontWeight "normal" :float "right"}}
                     [:span {:style {
                         :display "inline-block"
@@ -152,6 +153,7 @@
             )
             (if (and (not (:expanded? @state)) (> size 5))
               [:div {:style {:paddingTop "5"}}
+               ;; do something else here?
                 (style/create-link {:text (str (- size 5) " more...") :onClick #(swap! state assoc :expanded? true)})
               ]
             )
@@ -159,6 +161,18 @@
         ]
       )
     )
+   :component-did-mount
+   (fn [{:keys [state]}]
+     (swap! state assoc :selected-items #{}))
+   :update-selected
+   (fn [{:keys [state]} name checked?]
+     (if checked?
+       (swap! state assoc :selected-items (conj (:selected-items @state) name)) ;; (conj (set (:selected-items @state)) name))
+       (swap! state assoc :selected-items (disj (:selected-items @state) name))) ;; (disj (set (:selected-items @state)) name)))
+     )
+   :component-did-update
+   (fn [{:keys [state props refs]}]
+     (react/call :update-filter (:page @refs) (:title props) (:selected-items @state)))
   }
 )
 
@@ -245,6 +259,9 @@
        )
      )
    )
+   ;:component-did-update
+   ;(fn [{:keys [props state]}]
+   ;  (utils/log ))
   }
 )
 
@@ -292,6 +309,7 @@
        [DatasetsTable {:search-text (:search-text @state)}]]])
    :component-did-update
    (fn [{:keys [state]}]
+     ;; call component-will-receive-props on table?
      (persistence/save {:key PERSISTENCE-KEY :state state}))})
    :component-did-mount
    (fn [{:keys [state]}]
