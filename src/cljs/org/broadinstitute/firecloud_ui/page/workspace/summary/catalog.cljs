@@ -153,9 +153,9 @@
                                                 :placeholder "Select an ontology value."
                                                 :style {:width "100%" :marginBottom "0px"}})
                       (let [relatedID (library-utils/get-related-id (:attributes @state) library-schema property-kwd
-                                                                      (library-utils/get-related-id (:attributes props) library-schema property-kwd nil))
+                                                                    (library-utils/get-related-id (:attributes props) library-schema property-kwd nil))
                             value (get (:attributes @state) property-kwd)]
-                        (if (not (and (nil? value) (nil? relatedID)))
+                        (if (not (or (nil? value) (nil? relatedID)))
                           [:div {:style {:fontWeight "bold" :marginBottom ".75em"}}
                            value [:span {:style {:fontWeight "normal" :fontSize "small" :float "right"}} relatedID]
                            [:div {:style {:fontWeight "normal"}}
