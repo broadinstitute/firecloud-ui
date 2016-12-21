@@ -80,28 +80,28 @@
               :toolbar
               (table-utils/default-toolbar-layout
                 (when-let [selected-entity-type (some-> (:selected-entity-type @state) name)]
-                  [:form {:target "_blank"
-                          :id "tsvdownloadform"
-                          :method "post"
-                          :action (str (config/api-url-root) "/cookie-authed/workspaces/"
-                                     (:namespace workspace-id) "/"
-                                     (:name workspace-id) "/entities/" selected-entity-type "/tsv")}
-                    [:input {:type "hidden"
-                             :name "FCtoken"
-                             :value (u/get-access-token)}]
+                  (react/create-element
+                   [:form {:target "_blank"
+                           :ref "form"
+                           :method "post"
+                           :action (str (config/api-url-root) "/cookie-authed/workspaces/"
+                                        (:namespace workspace-id) "/"
+                                        (:name workspace-id) "/entities/" selected-entity-type "/tsv")}
                     [:input {:type "hidden"
                              :name "attributeNames"
                              :value (->> (persistence/try-restore
-                                           {:key (str (common/workspace-id->string workspace-id) ":data:" selected-entity-type)
-                                            :initial (constantly {})})
+                                          {:key (str (common/workspace-id->string
+                                                      workspace-id) ":data:" selected-entity-type)
+                                           :initial (constantly {})})
                                          :column-meta
                                          (filter :visible?)
                                          (map :header)
                                          (clojure.string/join ","))}]
                     [:a {:style {:textDecoration "none" :marginLeft "1em"}
                          :href "javascript:;"
-                         :onClick #(.submit (.getElementById js/document "tsvdownloadform"))}
-                     (str "Download '" selected-entity-type "' data")]])
+                         :onClick (fn []
+                                    (.submit (@refs "form")))}
+                     (str "Download '" selected-entity-type "' data")]]))
                 [:div {:style {:flexGrow 1}}]
                 [:div {:style {:paddingRight "2em"}}
                  [comps/Button {:text "Import Data..."
