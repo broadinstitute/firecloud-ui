@@ -17,7 +17,9 @@
           :else @state)))
 
 (defn try-restore [{:keys [key initial validator]}]
-  (let [saved-state (some-> key generate-persistence-key utils/local-storage-read cljs.reader/read-string)]
+  (initial)
+  ;; FIXME: actual logic is disabled pending fix for new columns not showing up
+  #_(let [saved-state (some-> key generate-persistence-key utils/local-storage-read cljs.reader/read-string)]
     (if (and saved-state
              (or (not validator) (some-> saved-state validator)))
       saved-state
