@@ -35,7 +35,7 @@
 (defn- is-entity-set? [entity-type]
   (or (= entity-type "sample_set") (= entity-type "pair_set") (= entity-type "participant_set") false))
 
-(defn- get-entity-attrs [entity-name entity-type workspace-id udpate-main]
+(defn- get-entity-attrs [entity-name entity-type workspace-id update-main]
   (when (and (some? entity-name) (some? entity-type))
     (endpoints/call-ajax-orch
      {:endpoint (endpoints/get-entity workspace-id entity-type entity-name)
@@ -47,9 +47,9 @@
                                    "sample_set" (:items (:samples attrs))
                                    "pair_set" (:items (:pairs attrs))
                                    "participant_set" (:items (:participants attrs)))]
-                       (udpate-main :attr-list items :loading-attributes false))
-                     (udpate-main :attr-list (:attributes (get-parsed-response true)) :loading-attributes false))
-                   (udpate-main :server-error (get-parsed-response false) :loading-attributes false)))})))
+                       (update-main :attr-list items :loading-attributes false))
+                     (update-main :attr-list (:attributes (get-parsed-response true)) :loading-attributes false))
+                   (update-main :server-error (get-parsed-response false) :loading-attributes false)))})))
 
 (react/defc DataImporter
   {:get-initial-state
@@ -108,7 +108,7 @@
                                                                        :attributes {:style {:display "inline"}}
                                                                        :link-label attr-value)]
                                                  attr-value))}]]
-       [:div {:style {:flexBasis (if attributes "20%" 0) :ref "entity-attributes-list"}}
+       [:div {:style {:width (if attributes "30%" 0) :ref "entity-attributes-list"}}
         [:div {:style {:marginLeft ".38em"}}
          (when (some? attributes)
            [:div {:style {:fontWeight "bold" :padding "0.7em 0" :marginBottom "1em"}}
@@ -246,7 +246,7 @@
                                                                  :selected-entity nil :loading-attributes false)
                                                           (do (swap! state assoc :current-entity-type entity-type :attr-list nil
                                                                      :loading-attributes true :selected-entity entity-name)
-                                                              (get-entity-attrs entity-name entity-type (:workspace-id props) (:update-state this))))})
+                                                              (get-entity-attrs entity-name entity-type (:workspace-id props) (partial react/call :update-state this))))})
                                             entity-name)))
               :entity-name-renderer (fn [e]
                                       (let [entity-name (str (:name e))
@@ -260,7 +260,7 @@
                                                              :selected-entity nil :loading-attributes false)
                                                       (do (swap! state assoc :current-entity-type entity-type :attr-list nil
                                                                  :loading-attributes true :selected-entity entity-name)
-                                                          (get-entity-attrs entity-name entity-type (:workspace-id props) (:update-state this))))
+                                                          (get-entity-attrs entity-name entity-type (:workspace-id props) (partial react/call :update-state this))))
                                           })))}])
           :else
           [:div {:style {:textAlign "center"}} [comps/Spinner {:text "Checking workspace..."}]])
