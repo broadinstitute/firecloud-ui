@@ -93,8 +93,9 @@
 
 (react/defc EntityAttributes
   {:render
-   (fn [{:keys [state props]}]
-     (let [entity-type (:entity-type props)
+   (fn [{:keys [props]}]
+     (let [update-main (:update-main props)
+           entity-type (:entity-type props)
            entity-name (:entity-name props)
            attributes (:attr-list props)
            item-column-name (get-column-name entity-type)
@@ -102,12 +103,20 @@
                         :as-text (fn [x] (:entityName x)) :content-renderer (fn [x] x)}]
            singleColumns [{:header "Attribute" :starting-width 120 :sort-initial :asc}
                           {:header "Value" :starting-width :remaining
+                           :as-text :name :sort-by :text
                            :content-renderer (fn [attr-value]
                                                (if-let [parsed (common/parse-gcs-uri attr-value)]
                                                  [GCSFilePreviewLink (assoc parsed
                                                                        :attributes {:style {:display "inline"}}
                                                                        :link-label attr-value)]
-                                                 attr-value))}]]
+                                                 attr-value))}]
+           item-link (fn [item-type item-name]
+                       (style/create-link
+                        {:text item-name
+                         :onClick
+                         #(do (update-main :current-entity-type item-type :attr-list nil
+                                           :loading-attributes true :selected-entity item-name)
+                              (get-entity-attrs item-name item-type (:workspace-id props) update-main))}))]
        [:div {:style {:width (if attributes "30%" 0) :ref "entity-attributes-list"}}
         [:div {:style {:marginLeft ".38em"}}
          (when (some? attributes)
@@ -130,49 +139,23 @@
                           :data (seq attributes)
                           :->row
                           (fn [x]
-                            (if (map? x) ;map is a sample_set or pair_set or participant_set
-                              (let [item (str (:entityName x))
-                                    last-entity (str (:selected-entity @state))
-                                    item-type (clojure.string/lower-case (get-column-name entity-type))
-                                    update-main (:update-main props)]
-                                [(style/create-link
-                                  {:text item
-                                   :onClick
-                                   #(if (= item last-entity)
-                                      (update-main :current-entity-type nil :attr-list nil
-                                                  :selected-entity nil :loading-attributes false)
-                                      (do (update-main :current-entity-type item-type :attr-list nil
-                                                      :loading-attributes true :selected-entity item)
-                                          (get-entity-attrs item item-type (:workspace-id props) update-main)))})])
-                              (let [nkey (str (first x))
-                                    last-entity (str (:selected-entity @state))
-                                    last-entity-type (str :current-entity-type @state)
-                                    name (clojure.string/replace nkey #":" "")
-                                    item (val x)
-                                    entity-type (str (:entityType item))
-                                    update-main (:update-main props)]
-                                [[name] (cond
-                                          (entity-table/is-single-ref? item)
-                                          (do
-                                            (if (map? item)
-                                              (style/create-link
-                                               {:text entity-name :title entity-name
-                                                :onClick
-                                                #(if (and (= entity-name last-entity) (= entity-type last-entity-type))
-                                                   (update-main :current-entity-type nil :attr-list nil
-                                                          :selected-entity nil :loading-attributes false)
-                                                   (do (update-main :current-entity-type entity-type
-                                                              :attr-list nil :loading-attributes true
-                                                              :selected-entity entity-name)
-                                                       (get-entity-attrs entity-name entity-type
-                                                                         (:workspace-id props) update-main)))})
-                                              (:entityName item)))
-                                          (common/attribute-list? item)
-                                          (let [items (map render-list-item (common/attribute-values item))]
-                                            (if (empty? items)
-                                              "0 items"
-                                              (str (count items) " items: " (clojure.string/join ", " items))))
-                                          :else item)])))}]])]]))})
+                            (cond
+                              (map? x)                      ; x is a member of a set
+                              [(item-link (:entityType x) (:entityName x))]
+                              (map? (last x))               ; x is a set
+                              (let [item-type (:entityType (last x))]
+                                [item-type
+                                 (item-link item-type (:entityName (last x)))])
+                              :else
+                              (let [name (name (first x))
+                                    item (last x)]
+                                [name
+                                 (if (common/attribute-list? item)
+                                   (let [items (map render-list-item (common/attribute-values item))]
+                                     (if (empty? items)
+                                       "0 items"
+                                       (str (count items) " items: " (clojure.string/join ", " items))))
+                                   item)])))}]])]]))})
 
 
 (react/defc WorkspaceData
