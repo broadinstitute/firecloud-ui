@@ -1,7 +1,7 @@
 (ns org.broadinstitute.firecloud-ui.common.entity-table
   (:require
     [clojure.set :refer [union]]
-    [clojure.string :refer [join]]
+    clojure.string
     [dmohs.react :as react]
     [org.broadinstitute.firecloud-ui.common :as common]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
@@ -16,7 +16,7 @@
 
 ;; for attributes referring to a single other entity
 ;; e.g. samples referring to participants
-(defn- is-single-ref? [attr-value]
+(defn is-single-ref? [attr-value]
   (and (map? attr-value)
        (= (set (keys attr-value)) #{:entityType :entityName})))
 
@@ -48,7 +48,7 @@
    (fn [{:keys [props state this]}]
      (let [{:keys [server-response]} @state
            {:keys [server-error entity-metadata entity-types selected-entity-type]} server-response]
-       [:div {}
+       [:div {:style {:flex "1" :width 0}}
         (when (:loading-entities? @state)
           [comps/Blocker {:banner "Loading entities..."}])
         (cond
@@ -70,12 +70,23 @@
                                            :content-renderer
                                            (fn [attr-value]
                                              (cond
-                                               (is-single-ref? attr-value) (:entityName attr-value)
+                                               (is-single-ref? attr-value)
+                                               (if-let [renderer (:linked-entity-renderer props)]
+                                                 (renderer attr-value)
+                                                 (:entityName attr-value))
                                                (common/attribute-list? attr-value)
                                                (let [items (map render-list-item (common/attribute-values attr-value))]
                                                  (if (empty? items)
-                                                   "0 items"
-                                                   (str (count items) " items: " (join ", " items))))
+                                                   (case (str selected-entity-type)
+                                                     ":sample_set" "0 samples"
+                                                     ":pair_set" "0 pairs"
+                                                     ":participant_set" "0 participants"
+                                                     "0 items")
+                                                   (case (str selected-entity-type)
+                                                     ":sample_set" (str (count items) " samples")
+                                                     ":pair_set" (str (count items) " pairs")
+                                                     ":participant_set" (str (count items) " participants")
+                                                     (str (count items) " items: " (clojure.string/join ", " items)))))
                                                :else ((:attribute-renderer props) attr-value)))})
                                   attributes)
                 columns (vec (cons entity-column attr-columns))]
@@ -89,7 +100,9 @@
                      :always-sort? true
                      :pagination (react/call :pagination this)
                      :filter-groups (map (fn [type]
-                                           {:text (name type) :count (get-in entity-metadata [type :count]) :pred (constantly true)})
+                                           {:text (name type)
+                                            :count (get-in entity-metadata [type :count])
+                                            :pred (constantly true)})
                                          entity-types)
                      :initial-filter-group-index (utils/index-of entity-types selected-entity-type)
                      :on-filter-change (fn [index]
