@@ -60,12 +60,17 @@
                  {:header "# of Participants" :starting-width 100}]
        :pagination (react/call :pagination this)
        :->row (juxt identity :library:indication :library:dataUseRestriction :library:numSubjects)}])
-   :component-will-receive-props
-   (fn [{:keys [next-props refs]}]
-     (let [current-search-text (:filter-text (react/call :get-query-params (@refs "table")))
-           new-search-text (:search-text next-props)]
-       (when-not (= current-search-text new-search-text)
-         (react/call :update-query-params (@refs "table") {:filter-text new-search-text}))))
+   ;:component-will-receive-props
+   ;(utils/log "next-props in component will receive props")
+   ;(utils/cljslog (:facet-filters next-props))
+   ;(let [current-search-text (:filter-text (react/call :get-query-params (@refs "table")))
+   ;     new-search-text (:search-text next-props)]
+   ; (when-not (= current-search-text new-search-text)
+   ;   (react/call :update-query-params (@refs "table") {:filter-text new-search-text})))
+   :execute-search
+   (fn [{:keys [props refs]}]
+     (utils/cljslog (:search-text props))
+     (react/call :execute-search (@refs "table")))
    :check-access
    (fn [{:keys [props]} data]
      (endpoints/call-ajax-orch
@@ -86,11 +91,19 @@
                                                (:namespace data) "/" (:name data) " workspace."])})))}))
    :pagination
    (fn [{:keys [this state props]}]
-     (fn [{:keys [current-page rows-per-page filter-text]} callback]
+     ;(utils/cljslog (:facet-filters props))
+     ;(utils/cljslog "pagination search text first line "(:search-text props))
+     (fn [{:keys [current-page rows-per-page]} callback]
        (endpoints/call-ajax-orch
          (let [from (* (- current-page 1) rows-per-page)]
            {:endpoint endpoints/search-datasets
-            :payload {:searchTerm filter-text :from from :size rows-per-page :fieldAggregations (map (fn [{:keys [name]}] (name name)) (:aggregates props))}
+            :payload {:searchString (utils/cljslog (:search-text props))
+                      :filters (utils/map-kv (fn [k v]
+                                               [(name k) v])
+                                             (:facet-filters props))
+                      :from from
+                      :size rows-per-page
+                      :fieldAggregations (map (fn [{:keys [name]}] (name name)) (:aggregates props))}
             :headers utils/content-type=json
             :on-done
             (fn [{:keys [success? get-parsed-response status-text]}]
@@ -100,8 +113,10 @@
                   (callback {:group-count total
                              :filtered-count total
                              :rows results})
-                  (react/call :update-aggregates this aggregations))
-                (callback {:error status-text})))}))))})
+                  ;(react/call :update-aggregates this aggregations)
+                   )
+                (callback {:error status-text})))})))
+     )})
 
 
 (react/defc SearchSection
@@ -259,7 +274,7 @@
 (react/defc Page
   {:update-filter
    (fn [{:keys [state]} facet-name facet-list]
-     (swap! state assoc-in [:facet-filters] {facet-name facet-list}))
+     (swap! state assoc-in [:facet-filters facet-name] facet-list))
    :get-initial-state
    (fn []
      (persistence/try-restore
@@ -290,10 +305,6 @@
                                            (react/call :update-filter this facet-name facet-list))}]]
       [:div {:style {:flex "1 1 auto" :overflowX "auto"}}
        [DatasetsTable {:search-text (:search-text @state)}]]])
-   :component-did-update
-   (fn [{:keys [state]}]
-     ;; call component-will-receive-props on table?
-     (persistence/save {:key PERSISTENCE-KEY :state state}))})
    :component-did-mount
    (fn [{:keys [state]}]
      (endpoints/get-library-attributes
@@ -323,3 +334,7 @@
        [:div {:style {:flex "1 1 auto" :overflowX "auto"}}
         [DatasetsTable {:ref "datasets-table" :aggregates (:aggregates @state)
                         :on-filter #(react/call :set-filter-text (@refs "datasets-table") %)}]]]])})
+   :component-did-update
+   (fn [{:keys [state refs]}]
+     (persistence/save {:key PERSISTENCE-KEY :state state})
+     (react/call :execute-search ( @refs "dataset-table")))})
