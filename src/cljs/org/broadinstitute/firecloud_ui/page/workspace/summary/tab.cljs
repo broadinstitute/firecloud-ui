@@ -22,7 +22,7 @@
 (react/defc DeleteDialog
   {:render
    (fn [{:keys [state this]}]
-     [modal/OKCancelForm
+     [comps/OKCancelForm
        {:header "Confirm Delete"
         :content
         [:div {}
@@ -54,7 +54,7 @@
                 (swap! state dissoc :updating-attrs? :editing?)
                 (if success?
                   (request-refresh)
-                  (modal/push-error-response (get-parsed-response false))))}))
+                  (comps/push-error-response (get-parsed-response false))))}))
 
 
 (defn- render-sidebar [state refs this
@@ -106,7 +106,7 @@
                          (let [{:keys [success error]} (react/call :get-attributes (@refs "workspace-attribute-editor"))
                                new-description (react/call :get-text (@refs "description"))]
                            (if error
-                             (modal/push-error-text error)
+                             (comps/push-error-text error)
                              (save-attributes {:new-attributes (assoc success :description new-description)
                                                :state state
                                                :workspace-id workspace-id
@@ -269,8 +269,9 @@
         :on-done (fn [{:keys [success? status-text status-code]}]
                    (when-not success?
                      (if (and (= status-code 409) (not locked-now?))
-                       (modal/push-error-text "Could not lock workspace, one or more analyses are currently running")
-                       (modal/push-error-text (str "Error: " status-text))))
+                       (comps/push-error-text
+                        "Could not lock workspace, one or more analyses are currently running")
+                       (comps/push-error-text (str "Error: " status-text))))
                    (swap! state dissoc :locking?)
                    (react/call :refresh this))}))
    :component-did-mount

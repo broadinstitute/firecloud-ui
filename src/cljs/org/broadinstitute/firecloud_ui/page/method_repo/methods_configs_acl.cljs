@@ -29,7 +29,7 @@
 (react/defc AgoraPermsEditor
   {:render
    (fn [{:keys [props refs state this]}]
-     [modal/OKCancelForm
+     [comps/OKCancelForm
       {:header (str "Permissions for " (:title props))
        :content
        (react/create-element

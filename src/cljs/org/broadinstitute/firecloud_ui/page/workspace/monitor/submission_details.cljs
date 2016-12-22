@@ -115,7 +115,7 @@
              [comps/SidebarButton {:color :button-primary :style :light :margin :top
                                    :text "Abort" :icon :status-warning-triangle
                                    :onClick (fn [_]
-                                              (modal/push-confirm
+                                              (comps/push-confirm
                                                {:text "Are you sure you want to abort this submission?"
                                                 :on-confirm #(react/call :abort-submission this)}))}])
    :abort-submission (fn [{:keys [props state]}]
@@ -128,7 +128,8 @@
                                     (swap! state dissoc :aborting-submission?)
                                     (if success?
                                       ((:on-abort props))
-                                      (modal/push-error-text (str "Error in aborting the job : " status-text))))}))})
+                                      (comps/push-error-text
+                                       (str "Error in aborting the job : " status-text))))}))})
 
 
 (react/defc Page

@@ -5,10 +5,13 @@
     [org.broadinstitute.firecloud-ui.common :as common]
     [org.broadinstitute.firecloud-ui.common.codemirror :refer [CodeMirror]]
     [org.broadinstitute.firecloud-ui.common.icons :as icons]
+    [org.broadinstitute.firecloud-ui.common.modal :as modal]
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.utils :as utils]
     ))
 
+
+(declare push-error-text)
 
 (react/defc Spinner
   {:render
@@ -59,8 +62,7 @@
                     (if (map? style) style {}))
             :href (or href "javascript:;")
             :onClick (if disabled?
-                       ;; Have to fully qualify to avoid circular dependency
-                       #(org.broadinstitute.firecloud-ui.common.modal/push-error-text
+                       #(push-error-text
                          (if (string? disabled?) disabled? "This action is disabled."))
                        onClick)
             :onKeyDown (when (and onClick (not disabled?))
@@ -86,8 +88,7 @@
                         :color (when disabled? (:text-light style/colors))}
                 :title (when disabled? (:disabled-text props))
                 :onClick (when disabled?
-                           ;; Have to fully qualify to avoid circular dependency
-                           #(org.broadinstitute.firecloud-ui.common.modal/push-error-text
+                           #(push-error-text
                              (or (:disabled-text props) "This option is not available.")))}
         [:input {:type "checkbox" :ref "check"
                  :defaultChecked (:initial-checked? props)
@@ -222,8 +223,7 @@
                       :border (when-not heavy? style/standard-line)
                       :borderRadius 5}
               :onClick (if disabled?
-                         ;; Have to fully qualify to avoid circular dependency
-                         #(org.broadinstitute.firecloud-ui.common.modal/push-error-text
+                         #(push-error-text
                            (if (string? disabled?) disabled? "This action is disabled."))
                          (:onClick props))}
         (icons/icon {:style {:padding "0 20px" :borderRight style/standard-line}} (:icon props))
@@ -449,3 +449,86 @@
    (fn [{:keys [refs this]}]
      (.addEventListener (@refs "filter-field") "search" #(when (= (.-value (.-currentTarget %)) "") (react/call :apply-filter this))))})
 
+
+(react/defc OKCancelForm
+  {:get-default-props
+   (fn []
+     {:show-cancel? true
+      :show-close? true})
+   :render
+   (fn [{:keys [props]}]
+     (let [{:keys [header content ok-button show-cancel? cancel-text show-close?]} props
+           cancel-text (or cancel-text "Cancel")]
+       [:div {}
+        [:div {:style {:borderBottom style/standard-line
+                       :padding "20px 48px 18px"
+                       :fontSize "137%" :fontWeight 400 :lineHeight 1}}
+         header
+         (when show-close? [XButton {:dismiss modal/pop-modal}])]
+        [:div {:style {:padding "22px 48px 40px" :backgroundColor (:background-light style/colors)}}
+         content
+         (when (or show-cancel? ok-button)
+           [:div {:style {:marginTop 40 :textAlign "center"}}
+            (when show-cancel?
+              [:a {:className "cancel"
+                   :style {:marginRight (when ok-button 27) :marginTop 2 :padding "0.5em"
+                           :display "inline-block"
+                           :fontSize "106%" :fontWeight 500 :textDecoration "none"
+                           :color (:button-primary style/colors)}
+                   :href "javascript:;"
+                   :onClick modal/pop-modal
+                   :onKeyDown (common/create-key-handler [:space :enter] modal/pop-modal)}
+               cancel-text])
+            (cond (string? ok-button) [Button {:text ok-button :ref "ok-button" :class-name "ok-button" :onClick modal/pop-modal}]
+              (fn? ok-button) [Button {:text "OK" :ref "ok-button" :class-name "ok-button" :onClick ok-button}]
+              (map? ok-button) [Button (merge {:ref "ok-button" :class-name "ok-button"} ok-button)]
+              :else ok-button)])]]))
+   :component-did-mount
+   (fn [{:keys [props refs]}]
+     (when-let [get-first (:get-first-element-dom-node props)]
+       (common/focus-and-select (get-first))
+       (when-let [get-last (or (:get-last-element-dom-node props)
+                               #(react/find-dom-node (@refs "ok-button")))]
+         (.addEventListener
+          (get-first) "keydown"
+          (common/create-key-handler [:tab] #(.-shiftKey %)
+                                     (fn [e] (.preventDefault e)
+                                       (when (:cycle-focus? props)
+                                         (.focus (get-last))))))
+         (.addEventListener
+          (get-last)
+          "keydown"
+          (common/create-key-handler [:tab] #(not (.-shiftKey %))
+                                     (fn [e] (.preventDefault e)
+                                       (when (:cycle-focus? props)
+                                         (.focus (get-first)))))))))})
+
+(defn push-ok-cancel-modal [props]
+  (modal/push-modal [OKCancelForm props]))
+
+(defn push-message [{:keys [header message]}]
+  (push-ok-cancel-modal
+    {:header (or header "Message")
+     :content [:div {:style {:maxWidth 500}} message]
+     :show-cancel? false :ok-button "OK"}))
+
+(defn- push-error [content]
+  (push-ok-cancel-modal
+   {:header [:div {:style {:display "inline-flex" :alignItems "center"}}
+             (icons/icon {:style {:color (:exception-state style/colors)
+                                  :marginRight "0.5em"}} :error)
+             "Error"]
+    :content [:div {:style {:maxWidth "50vw"}} content]
+    :show-cancel? false :ok-button "OK"}))
+
+(defn push-error-text [error-text]
+  (push-error error-text))
+
+(defn push-error-response [error-response]
+  (push-error [ErrorViewer {:error error-response}]))
+
+(defn push-confirm [{:keys [header text on-confirm]}]
+  (push-ok-cancel-modal
+    {:header (or header "Confirm")
+     :content [:div {:style {:maxWidth 500}} text]
+     :ok-button on-confirm}))

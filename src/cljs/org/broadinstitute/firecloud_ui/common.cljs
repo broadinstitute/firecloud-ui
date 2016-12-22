@@ -142,6 +142,9 @@
   (let [unparsed-values (get unparsed-profile "keyValuePairs")]
     (into {} (map (fn [m] [(keyword (m "key")) (m "value")]) unparsed-values))))
 
+(defn row->workspace-id [row]
+  (select-keys row [:namespace :name]))
+
 (defn workspace-id->string [workspace-id] 
   (str (:namespace workspace-id) "/" (:name workspace-id)))
 

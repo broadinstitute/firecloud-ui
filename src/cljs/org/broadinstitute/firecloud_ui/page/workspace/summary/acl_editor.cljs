@@ -15,7 +15,7 @@
 
 
 (defn- render-acl-content [props state component]
-  [modal/OKCancelForm
+  [comps/OKCancelForm
    {:header
     (let [workspace-id (:workspace-id props)]
       (str "Permissions for " (:namespace workspace-id) "/" (:name workspace-id)))

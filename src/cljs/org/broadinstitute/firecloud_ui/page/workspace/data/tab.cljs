@@ -58,7 +58,7 @@
                 :onClick #(swap! state update-in [:crumbs] (comp vec (partial take 1)))}]})
    :render
    (fn [{:keys [state props]}]
-     [modal/OKCancelForm
+     [comps/OKCancelForm
       {:header "Import Data"
        :show-cancel? false :ok-button {:text "Done" :onClick modal/pop-modal}
        :content
