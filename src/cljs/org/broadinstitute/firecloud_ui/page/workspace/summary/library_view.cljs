@@ -28,8 +28,8 @@
    (get-in library-schema [:properties property-key :title])
    (render-value
     (or (get library-attributes property-key) (get-in library-schema [:properties property-key :default])))
-    (if (= (get-in library-schema [:properties property-key :typeahead]) "ontology")
-      (library-utils/get-related-id library-attributes library-schema property-key nil))))
+    nil))
+
 
 
 (defn- render-consent-codes [library-schema library-attributes]
