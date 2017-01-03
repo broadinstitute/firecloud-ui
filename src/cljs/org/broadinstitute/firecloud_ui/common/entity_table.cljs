@@ -48,7 +48,7 @@
    (fn [{:keys [props state this]}]
      (let [{:keys [server-response]} @state
            {:keys [server-error entity-metadata entity-types selected-entity-type]} server-response]
-       [:div {:style {:flex "1" :width 0}}
+       [:div {}
         (when (:loading-entities? @state)
           [comps/Blocker {:banner "Loading entities..."}])
         (cond

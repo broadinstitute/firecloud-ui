@@ -174,77 +174,77 @@
           workspace
           (let [locked? (get-in workspace [:workspace :isLocked])
                 this-realm (get-in workspace [:workspace :realm :groupName])]
-            [EntityTable
-             {:ref "entity-table"
-              :workspace-id workspace-id
-              :column-defaults (try
-                                 (u/parse-json-string (get-in workspace [:workspace :workspace-attributes
-                                                                         :workspace-column-defaults]))
-                                 (catch js/Object e
-                                   (u/jslog e) nil))
-              :toolbar (fn [built-in]
-                         (let [layout (fn [item] [:div {:style {:marginRight "1em"}}] item)]
-                           [:div {:style {:display "flex" :alignItems "center" :marginBottom "1em"}}
-                            (map layout (vals built-in))
-                            (when-let [selected-entity-type (some-> (:selected-entity-type @state) name)]
-                              [:a {:style {:textDecoration "none" :margin "7px .3em 0 0"}
-                                   :href (str (config/api-url-root) "/cookie-authed/workspaces/"
-                                              (:namespace workspace-id) "/"
-                                              (:name workspace-id) "/entities/" selected-entity-type "/tsv"
-                                              "?attributeNames="
-                                              (->> (persistence/try-restore
-                                                    {:key (str (common/workspace-id->string workspace-id) ":data:" selected-entity-type)
-                                                     :initial (constantly {})})
-                                                   :column-meta
-                                                   (filter :visible?)
-                                                   (map :header)
-                                                   (clojure.string/join ",")))
-                                   :onClick #(u/set-access-token-cookie (u/get-access-token))
-                                   :target "_blank"}
-                               (str "Download '" (clojure.string/replace selected-entity-type ":" "") "' data")])
-                            [:div {:style {:flexGrow 1}}]
-                            [:div {:style {:paddingRight ".5em"}}
-                             [comps/Button {:text "Import Data..."
-                                            :disabled? (when locked? "This workspace is locked.")
-                                            :onClick #(modal/push-modal
-                                                       [DataImporter {:workspace-id workspace-id
-                                                                      :this-realm this-realm
-                                                                      :import-type "data"
-                                                                      :reload
-                                                                      (fn [entity-type]
-                                                                        ((:request-refresh props))
-                                                                        (react/call :refresh (@refs "entity-table") entity-type))}])}]]]))
-              :on-filter-change #(swap! state assoc :selected-entity-type % :selected-entity nil :attr-list nil)
-              :attribute-renderer (table-utils/render-gcs-links (get-in workspace [:workspace :bucketName]))
-              :linked-entity-renderer (fn [e]
-                                        (let [entity-name (str (:entityName e))
-                                              entity-type (str (:entityType e))
-                                              last-entity (str (:selected-entity @state))
-                                              last-entity-type (:current-entity-type @state)]
-                                          (if (map? e)
-                                            (style/create-link
-                                             {:text entity-name
-                                              :onClick #(if (and (= entity-name last-entity) (= entity-type last-entity-type))
-                                                          (swap! state assoc :current-entity-type nil :attr-list nil
-                                                                 :selected-entity nil :loading-attributes false)
-                                                          (do (swap! state assoc :current-entity-type entity-type :attr-list nil
-                                                                     :loading-attributes true :selected-entity entity-name)
-                                                              (get-entity-attrs entity-name entity-type (:workspace-id props) (partial react/call :update-state this))))})
-                                            entity-name)))
-              :entity-name-renderer (fn [e]
-                                      (let [entity-name (str (:name e))
-                                            entity-type (str (:entityType e))
-                                            last-entity (str (:selected-entity @state))
-                                            last-entity-type (:current-entity-type @state)]
-                                        (style/create-link
-                                         {:text entity-name
-                                          :onClick #(if (and (= entity-name last-entity) (= entity-type last-entity-type))
-                                                      (swap! state assoc :current-entity-type nil :attr-list nil
-                                                             :selected-entity nil :loading-attributes false)
-                                                      (do (swap! state assoc :current-entity-type entity-type :attr-list nil
-                                                                 :loading-attributes true :selected-entity entity-name)
-                                                          (get-entity-attrs entity-name entity-type (:workspace-id props) (partial react/call :update-state this))))
-                                          })))}])
+            [:div {:style {:flex "1" :width 0}}
+             [EntityTable
+              {:ref "entity-table"
+               :workspace-id workspace-id
+               :column-defaults (try
+                                  (u/parse-json-string (get-in workspace [:workspace :workspace-attributes
+                                                                          :workspace-column-defaults]))
+                                  (catch js/Object e
+                                    (u/jslog e) nil))
+               :toolbar (fn [built-in]
+                          (let [layout (fn [item] [:div {:style {:marginRight "1em"}}] item)]
+                            [:div {:style {:display "flex" :alignItems "center" :marginBottom "1em"}}
+                             (map layout (vals built-in))
+                             (when-let [selected-entity-type (some-> (:selected-entity-type @state) name)]
+                               [:a {:style {:textDecoration "none" :margin "7px .3em 0 0"}
+                                    :href (str (config/api-url-root) "/cookie-authed/workspaces/"
+                                               (:namespace workspace-id) "/"
+                                               (:name workspace-id) "/entities/" selected-entity-type "/tsv"
+                                               "?attributeNames="
+                                               (->> (persistence/try-restore
+                                                     {:key (str (common/workspace-id->string workspace-id) ":data:" selected-entity-type)
+                                                      :initial (constantly {})})
+                                                    :column-meta
+                                                    (filter :visible?)
+                                                    (map :header)
+                                                    (clojure.string/join ",")))
+                                    :onClick #(u/set-access-token-cookie (u/get-access-token))
+                                    :target "_blank"}
+                                (str "Download '" (clojure.string/replace selected-entity-type ":" "") "' data")])
+                             [:div {:style {:flexGrow 1}}]
+                             [:div {:style {:paddingRight ".5em"}}
+                              [comps/Button {:text "Import Data..."
+                                             :disabled? (when locked? "This workspace is locked.")
+                                             :onClick #(modal/push-modal
+                                                        [DataImporter {:workspace-id workspace-id
+                                                                       :this-realm this-realm
+                                                                       :import-type "data"
+                                                                       :reload
+                                                                       (fn [entity-type]
+                                                                         ((:request-refresh props))
+                                                                         (react/call :refresh (@refs "entity-table") entity-type))}])}]]]))
+               :on-filter-change #(swap! state assoc :selected-entity-type % :selected-entity nil :attr-list nil)
+               :attribute-renderer (table-utils/render-gcs-links (get-in workspace [:workspace :bucketName]))
+               :linked-entity-renderer (fn [e]
+                                         (let [entity-name (str (:entityName e))
+                                               entity-type (str (:entityType e))
+                                               last-entity (str (:selected-entity @state))
+                                               last-entity-type (:current-entity-type @state)]
+                                           (if (map? e)
+                                             (style/create-link
+                                              {:text entity-name
+                                               :onClick #(if (and (= entity-name last-entity) (= entity-type last-entity-type))
+                                                           (swap! state assoc :current-entity-type nil :attr-list nil
+                                                                  :selected-entity nil :loading-attributes false)
+                                                           (do (swap! state assoc :current-entity-type entity-type :attr-list nil
+                                                                      :loading-attributes true :selected-entity entity-name)
+                                                               (get-entity-attrs entity-name entity-type (:workspace-id props) (partial react/call :update-state this))))})
+                                             entity-name)))
+               :entity-name-renderer (fn [e]
+                                       (let [entity-name (str (:name e))
+                                             entity-type (str (:entityType e))
+                                             last-entity (str (:selected-entity @state))
+                                             last-entity-type (:current-entity-type @state)]
+                                         (style/create-link
+                                          {:text entity-name
+                                           :onClick #(if (and (= entity-name last-entity) (= entity-type last-entity-type))
+                                                       (swap! state assoc :current-entity-type nil :attr-list nil
+                                                              :selected-entity nil :loading-attributes false)
+                                                       (do (swap! state assoc :current-entity-type entity-type :attr-list nil
+                                                                  :loading-attributes true :selected-entity entity-name)
+                                                           (get-entity-attrs entity-name entity-type (:workspace-id props) (partial react/call :update-state this))))})))}]])
           :else
           [:div {:style {:textAlign "center"}} [comps/Spinner {:text "Checking workspace..."}]])
         (let [workspaceId (:workspace-id props)
