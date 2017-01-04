@@ -324,7 +324,10 @@
      (when (not (reader? (:workspace props)))
        (endpoints/call-ajax-orch
          {:endpoint (endpoints/storage-cost-estimate (:workspace-id props))
-          :on-done (fn [{:keys [success? status-text get-parsed-response]}]
-                     (if success?
-                       (swap! state update-in [:server-response] assoc :storage-cost (get (get-parsed-response false) "estimate"))
-                       (swap! state update-in [:server-response] assoc :storage-cost status-text)))})))})
+          :on-done (fn [{:keys [success? status-text raw-response]}]
+                     (let [[response parse-error?] (utils/parse-json-string raw-response false false)]
+                       (swap! state update-in [:server-response] assoc :storage-cost
+                              (if parse-error?
+                                (str "Error parsing JSON response with status: " status-text)
+                                (let [key (if success? "estimate" "message")]
+                                  (get response key (str "Error: \"" key "\" not found in JSON response with status: " status-text)))))))})))})
