@@ -69,7 +69,6 @@
    ;   (react/call :update-query-params (@refs "table") {:filter-text new-search-text})))
    :execute-search
    (fn [{:keys [props refs]}]
-     (utils/cljslog (:search-text props))
      (react/call :execute-search (@refs "table")))
    :check-access
    (fn [{:keys [props]} data]
@@ -91,7 +90,8 @@
                                                (:namespace data) "/" (:name data) " workspace."])})))}))
    :pagination
    (fn [{:keys [this state props]}]
-     ;(utils/cljslog (:facet-filters props))
+     ;(utils/cljslog "the props: " props);(:facet-filters props))
+     ;(utils/cljslog  (keys (:aggregate-fields props)))
      ;(utils/cljslog "pagination search text first line "(:search-text props))
      (fn [{:keys [current-page rows-per-page]} callback]
        (endpoints/call-ajax-orch
@@ -103,7 +103,7 @@
                                              (:facet-filters props))
                       :from from
                       :size rows-per-page
-                      :fieldAggregations (map (fn [{:keys [name]}] (name name)) (:aggregates props))}
+                      :fieldAggregations (:aggregate-fields props)}
             :headers utils/content-type=json
             :on-done
             (fn [{:keys [success? get-parsed-response status-text]}]
@@ -114,7 +114,7 @@
                              :filtered-count total
                              :rows results})
                   ;(react/call :update-aggregates this aggregations)
-                   )
+                  ((:callback-function props) aggregations))
                 (callback {:error status-text})))})))
      )})
 
@@ -199,22 +199,25 @@
 
 ;; TODO: Need to deal with making this an autocomplete solely on the values inside the bucket.
 ;; TODO: "Clear" link should empty out the input value and reset the data tables search
-(react/defc FacetAutocomplete
-  {:render
-    (fn [{:keys [props state]}]
-      (let [buckets (:buckets props)
-            values (get-in buckets [key])
-            title (:title props)]
-            [:div {:style {:fontWeight "bold" :paddingBottom "1em" :paddingTop "1em"}}
-              [:hr {}] title
-              [:div {:style {:fontSize "80%" :fontWeight "normal" :float "right"}}
-                (style/create-link {:text "Clear" :onClick #(swap! state assoc :expanded? false)})]
-              [:div {:style {:paddingTop "1em" :fontWeight "normal"}}
-                [input/TextField {:style {:width "100%"}}]]]
-      )
-    )
-  }
-)
+;(react/defc FacetAutocomplete
+;  {:render
+;    (fn [{:keys [props state]}]
+;      (let [buckets (:buckets props)
+;            values (get-in buckets [key])
+;            title (:title props)]
+;            [:div {:style {:fontWeight "bold" :paddingBottom "1em" :paddingTop "1em"}}
+;              [:hr {}] title
+;              [:div {:style {:fontSize "80%" :fontWeight "normal" :float "right"}}
+;                (style/create-link {:text "Clear" :onClick #(swap! state assoc :expanded? false)})]
+;              [:div {:style {:paddingTop "1em" :fontWeight "normal"}}
+;                [input/TextField {:style {:width "100%"}}]]]
+;      )
+;    )
+;  }
+;)
+
+(defn get-aggregations-for-property [agg-name aggregates]
+  (first (keep (fn [m] (when (= (:field m) (name agg-name)) (:results m))) aggregates)))
 
 ;; TODO: Styling to match layout model.
 ;; TODO: OnChange handler to swap state and filter dataset-table based on filter selection
@@ -224,48 +227,42 @@
 (react/defc Facet
   {:render
    (fn [{:keys [props state]}]
-      (let [k (first (keys (:aggregate-field props)))
-            m (k (:aggregate-field props))
-            title (:title m)
-            render-hint (get-in m [:aggregate :renderHint])
-            buckets (get-in (:aggregations @state) [0 :results :buckets])]
+     (let [k (:aggregate-field props)
+           properties (:aggregate-properties props)
+           title (:title properties)
+           render-hint (get-in properties [:aggregate :renderHint])
+           aggregations (get-aggregations-for-property k (:aggregates props))]
         [:div {:style {:fontSize "80%"}}
-          (if-not (:aggregations @state)
-            "loading..."
-            (cond
-              (= render-hint "text") [FacetAutocomplete {:title title :buckets buckets}] ;; add page ref here?
+         (cond
+              ;(= render-hint "text") [FacetAutocomplete {:title title :buckets buckets}] ;; add page ref here?
               (= render-hint "checkbox") [FacetCheckboxes
                                           {:title title
-                                           :buckets buckets
+                                           :numOtherDocs (:numOtherDocs aggregations)
+                                           :buckets (:buckets aggregations)
                                            :field k
                                            :selected-items (:selected-items props)
                                            :callback-function (:callback-function props)}]
               ;(= render-hint "slider") [FacetSlider {:title title :term k :results (:results @state)}]
-            ))]))
-   :component-did-mount
-   (fn [{:keys [props state]}]
-     (let [k (first (keys (:aggregate-field props)))]
-       (endpoints/call-ajax-orch
-         {:endpoint endpoints/search-datasets
-          :payload {"fieldAggregations" [k]}
-          :headers utils/content-type=json
-          :on-done
-          (fn [{:keys [success? get-parsed-response status-text]}]
-            (if success?
-              (let [{:keys [results aggregations]} (get-parsed-response)]
-                (swap! state assoc :results results :aggregations aggregations))))})))})
+            )]))})
 
 
 (react/defc FacetSection
-  {:render
-   (fn [{:keys [props]}]
-     (let [aggregate-fields (:aggregate-fields props)]
-       [:div {:style {:background (:background-light style/colors) :padding "16px 12px"}}
-        (map
-          (fn [m] [Facet {:aggregate-field m
-                          :selected-items (get-in props [:facet-filters (first (keys m))])
-                          :callback-function (:callback-function props)}]) ;;
-          aggregate-fields)]))})
+  {:update-aggregates
+   (fn [{:keys [state]} aggregate-data]
+     (swap! state assoc :aggregates aggregate-data))
+   :render
+   (fn [{:keys [props state]}]
+     (if-not (:aggregates @state)
+       [:div {:style {:fontSize "80%"}} "loading..."]
+       (let [aggregate-fields (:aggregate-fields props)]
+         [:div {:style {:background (:background-light style/colors) :padding "16px 12px"}}
+          (map
+            (fn [m] [Facet {:aggregate-field m
+                            :aggregate-properties (m (:aggregate-properties props))
+                            :aggregates (:aggregates @state)
+                            :selected-items (get-in props [:facet-filters m])
+                            :callback-function (:callback-function props)}])
+            aggregate-fields)])))})
 
 
 (def ^:private PERSISTENCE-KEY "library-page")
@@ -292,49 +289,27 @@
            (let [response (get-parsed-response)]
              (swap! state assoc
                     :library-attributes (:properties response)
-                    :aggregate-fields (keep (fn [[k m]] (when (:aggregate m) {k m})) (:properties response))))))))
+                    :aggregate-fields (keep (fn [[k m]] (when (:aggregate m) k)) (:properties response))))))))
    :render
-   (fn [{:keys [this state]}]
+   (fn [{:keys [this refs state]}]
      [:div {:style {:display "flex" :marginTop "2em"}}
       [:div {:style {:flex "0 0 250px" :marginRight "2em"}}
        [SearchSection {:search-text (:search-text @state)
                        :on-filter #(swap! state assoc :search-text %)}]
-       [FacetSection {:aggregate-fields (:aggregate-fields @state)
+       [FacetSection {:ref "facets"
+                      :aggregate-fields (:aggregate-fields @state)
+                      :aggregate-properties (:library-attributes @state)
                       :facet-filters (:facet-filters @state)
                       :callback-function (fn [facet-name facet-list]
                                            (react/call :update-filter this facet-name facet-list))}]]
       [:div {:style {:flex "1 1 auto" :overflowX "auto"}}
-       [DatasetsTable {:search-text (:search-text @state)}]]])
-   :component-did-mount
-   (fn [{:keys [state]}]
-     (endpoints/get-library-attributes
-       (fn [{:keys [success? get-parsed-response]}]
-         (if success?
-           (let [response (get-parsed-response)]
-             (swap! state assoc
-                    :library-attributes (:properties response)
-                    :aggregates (keep (fn [[k {:keys [aggregate title]}]] (when aggregate {:name k :title title})) (:properties response))))))))
-   :render
-   (fn [{:keys [state refs]}]
-     [:div {:style {:display "flex" :marginTop "2em"}}
-     ;[:div {:style {:display "flex" :padding "20px 0"}}
-      [:div {:style {:flex "0 0 250px" :marginRight "2em"}}
-       [:div {:style {:fontWeight 700 :fontSize "125%"}} "Search Filters: "]
-       [:div {:style {:background (:background-light style/colors) :padding "16px 12px"}}
-        [comps/TextFilter {:width "100%" :placeholder "Search"
-                           :on-filter #(react/call :set-filter-text (@refs "datasets-table") %)}]
-        (map
-          (fn [{:keys [name title]}]
-            [comps/FacetFilter {:ref name
-                                :name name
-                                :title title
-                                ;:on-change #(react/call :set-filter-facet (@refs "datasets-table") %)
-                                }])
-          (:aggregates (utils/cljslog @state)))]
-       [:div {:style {:flex "1 1 auto" :overflowX "auto"}}
-        [DatasetsTable {:ref "datasets-table" :aggregates (:aggregates @state)
-                        :on-filter #(react/call :set-filter-text (@refs "datasets-table") %)}]]]])})
+       [DatasetsTable {:ref "dataset-table"
+                       :search-text (:search-text @state)
+                       :facet-filters (:facet-filters @state)
+                       :aggregate-fields (:aggregate-fields @state)
+                       :callback-function (fn [aggregates]
+                                            (react/call :update-aggregates (@refs "facets") aggregates))}]]])
    :component-did-update
    (fn [{:keys [state refs]}]
      (persistence/save {:key PERSISTENCE-KEY :state state})
-     (react/call :execute-search ( @refs "dataset-table")))})
+     (react/call :execute-search (@refs "dataset-table")))})
