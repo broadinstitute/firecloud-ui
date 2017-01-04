@@ -71,3 +71,16 @@ SomeThirdPartyLibraryThatTakesADomNode(myDiv)
 ```
 
 React Elements may not be substituted for DOM nodes in these cases. You must use a `ref` (see React's documentation) to obtain access to the DOM node once React has rendered it into the browser window.
+
+### State Set -> Read is Unreliable
+
+[State updates may be asynchronous](https://facebook.github.io/react/docs/state-and-lifecycle.html#state-updates-may-be-asynchronous), meaning that `state` will not contain new values when set, but instead will have those values after the re-render. For example:
+
+```clojure
+(swap! state assoc :foo 17)
+(get @state :foo) ; <- :foo is not 17 here!
+```
+
+### Avoid Infinite Loops
+
+Changing state causes a re-render. If you change state in a lifecycle method such as `component-did-update`, this will re-render, which will call `component-did-update` again, resulting in a loop.
