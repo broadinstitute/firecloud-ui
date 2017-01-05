@@ -35,6 +35,7 @@
          :filterable? true
          :reorder-anchor :right
          :reorder-style {:width "400px" :whiteSpace "nowrap" :overflow "hidden" :textOverflow "ellipsis"}
+         :reorder-prefix "Columns"
          :toolbar
          (fn [{:keys [reorderer]}]
            [:div {:style {:display "flex" :alignItems "top"}}

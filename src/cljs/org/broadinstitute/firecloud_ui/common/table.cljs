@@ -55,6 +55,8 @@
 ;;     Which side to anchor the reordering overlay.  Set to :right if placing the widget on the right side.
 ;;   :reorder-style (optional, no default style)
 ;;     Applies style properties to the displayed columns in the reorder widget
+;;   :reorder-prefix (optional, nil)
+;;     Prefixes the widget with the provided text
 ;;   :sortable-columns? (optional, default true)
 ;;     Fallback value for column sorting.
 ;;   :always-sort? (optional, default false)
@@ -209,6 +211,9 @@
      (when (or filterable? reorderable-columns? toolbar)
        (let [reorderer (when reorderable-columns?
                          [:div {:style {:marginRight "1em"}}
+                          (when-let [prefix (:reorder-prefix props)]
+                            [:div {:style {:display "inline" :cursor "pointer" :marginRight ".5em"}
+                                   :onClick #(swap! state assoc :reordering-columns? true)} prefix])
                           [comps/Button {:icon :settings :title-text "Select Columns..."
                                          :ref "col-edit-button"
                                          :onClick #(swap! state assoc :reordering-columns? true)}]
