@@ -24,7 +24,6 @@
            extra-columns (dissoc attributes :library:datasetName :library:indication :library:dataUseRestriction :library:numSubjects)
            titled-columns (filter (fn [[k m]] (contains? m :title)) extra-columns)
            extra-column-keys (keys titled-columns)]
-      ;  (utils/cljslog titled-columns)
        [table/Table
         {:ref "table" :state-key "library-table"
          :header-row-style {:fontWeight 500 :fontSize "90%"
@@ -35,6 +34,7 @@
          :resizable-columns? true
          :filterable? true
          :reorder-anchor :right
+         :reorder-style {:width "400px" :whiteSpace "nowrap" :overflow "hidden" :textOverflow "ellipsis"}
          :toolbar
          (fn [{:keys [reorderer]}]
            [:div {:style {:display "flex" :alignItems "top"}}
@@ -51,7 +51,8 @@
                       :color (:text-light style/colors)}
          :row-style {:backgroundColor nil :height 20 :padding "0 0 0.5em 1em"}
          :cell-content-style {:padding nil}
-         :columns (concat [{:header (:title (:library:datasetName attributes)) :starting-width 250 :show-initial? true
+         :columns (concat
+                   [{:header (:title (:library:datasetName attributes)) :starting-width 250 :show-initial? true
                     :sort-by (comp clojure.string/lower-case :library:datasetName)
                     :as-text :library:datasetDescription
                     :content-renderer (fn [data]
@@ -62,7 +63,7 @@
                    {:header (:title (:library:dataUseRestriction attributes)) :starting-width 180 :show-initial? true
                     :sort-by clojure.string/lower-case}
                    {:header (:title (:library:numSubjects attributes)) :starting-width 100 :show-initial? true}]
-                   (map (fn [keyname] {:header (:title (keyname attributes)) :show-initial? false}) extra-column-keys))
+                   (map (fn [keyname] {:header (:title (keyname attributes)) :starting-width 180 :show-initial? false}) extra-column-keys))
          :pagination (react/call :pagination this)
          :->row (fn [data]
                   (cons data
