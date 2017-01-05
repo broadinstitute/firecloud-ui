@@ -60,16 +60,11 @@
                  {:header "# of Participants" :starting-width 100}]
        :pagination (react/call :pagination this)
        :->row (juxt identity :library:indication :library:dataUseRestriction :library:numSubjects)}])
-   ;:component-will-receive-props
-   ;(utils/log "next-props in component will receive props")
-   ;(utils/cljslog (:facet-filters next-props))
-   ;(let [current-search-text (:filter-text (react/call :get-query-params (@refs "table")))
-   ;     new-search-text (:search-text next-props)]
-   ; (when-not (= current-search-text new-search-text)
-   ;   (react/call :update-query-params (@refs "table") {:filter-text new-search-text})))
    :execute-search
-   (fn [{:keys [props refs]}]
-     (react/call :execute-search (@refs "table")))
+   (fn [{:keys [props state refs]}]
+     (if (= (:current-page (react/call :get-query-params (@refs "table"))) 1)
+       (react/call :execute-search (@refs "table"))
+       (react/call :update-query-params (@refs "table") {:current-page 1})))
    :check-access
    (fn [{:keys [props]} data]
      (endpoints/call-ajax-orch
@@ -88,22 +83,26 @@
                                              "Please contact " [:a {:target "_blank" :href (str "mailto:" (:library:contactEmail data))} (str (:library:datasetCustodian data) " <" (:library:contactEmail data) ">")]
                                                " and request access for the "
                                                (:namespace data) "/" (:name data) " workspace."])})))}))
+
+   :build-aggregate-fields
+   (fn [{:keys [props]}]
+     (reduce
+     (fn [results field] (assoc results field (if (contains? (:expanded-aggregates props) field ) 0 5)))
+     {}
+   (:aggregate-fields props)))
    :pagination
    (fn [{:keys [this state props]}]
-     ;(utils/cljslog "the props: " props);(:facet-filters props))
-     ;(utils/cljslog  (keys (:aggregate-fields props)))
-     ;(utils/cljslog "pagination search text first line "(:search-text props))
      (fn [{:keys [current-page rows-per-page]} callback]
        (endpoints/call-ajax-orch
          (let [from (* (- current-page 1) rows-per-page)]
            {:endpoint endpoints/search-datasets
-            :payload {:searchString (utils/cljslog (:search-text props))
+            :payload {:searchString (:search-text props)
                       :filters (utils/map-kv (fn [k v]
                                                [(name k) v])
                                              (:facet-filters props))
                       :from from
                       :size rows-per-page
-                      :fieldAggregations (:aggregate-fields props)}
+                      :fieldAggregations (if (= 1 current-page) (react/call :build-aggregate-fields this) {})}
             :headers utils/content-type=json
             :on-done
             (fn [{:keys [success? get-parsed-response status-text]}]
@@ -113,8 +112,8 @@
                   (callback {:group-count total
                              :filtered-count total
                              :rows results})
-                  ;(react/call :update-aggregates this aggregations)
-                  ((:callback-function props) aggregations))
+                  (when (= 1 current-page)
+                    ((:callback-function props) aggregations)))
                 (callback {:error status-text})))})))
      )})
 
@@ -140,14 +139,20 @@
        [:div {:style {:fontWeight "bold" :paddingBottom "1em"}}
         [:hr {}] title
         [:div {:style {:fontSize "80%" :fontWeight "normal" :float "right"}}
-         (style/create-link {:text "Clear" :onClick #(swap! state assoc :expanded? false)})]
+         (style/create-link {:text "Clear" :onClick #(react/call :clear-all this)})] ;#(swap! state assoc :expanded? false)})]
         [:div {:style {:paddingTop "1em" :fontWeight "normal"}}
          (map
            (fn [m]
              [:div {:style {:paddingTop "5"}}
-              [comps/Checkbox {:label (:key m)
-                               :initial-checked? (contains? (:selected-items props) (:key m))
-                               :onChange #(react/call :update-selected this (:key m) %)}]
+              [:label {}
+               [:input {:type "checkbox"
+                        :checked (contains? (:selected-items props) (:key m))
+                        :onChange (fn [e] (react/call :update-selected this (:key m) (.-checked (.-target e))))}]
+               (:key m)]
+              ;[comps/Checkbox {:label (:key m)
+              ;                 :initial-checked? (contains? (:selected-items props) (:key m))
+              ;                 ;:checked-value (contains? (:selected-items props) (:key m)) ; this doesn't worked if you use the name :checked
+              ;                 :onChange #(react/call :update-selected this (:key m) %)}]
               [:div {:style {:fontSize "80%" :fontWeight "normal" :float "right"}}
                [:span {:style {
                                :display "inline-block"
@@ -161,16 +166,28 @@
                                :backgroundColor "#aaa"
                                :borderRadius "3px"
                                }} (:doc_count m)]]])
-           (if (:expanded? @state)
+           ;(if (:expanded? @state)
              (:buckets props)
-             (take 5 (:buckets props))))
-         (if (and (not (:expanded? @state)) (> size 5))
-           [:div {:style {:paddingTop "5"}}
+             ;(take 5 (:buckets props)))
+           )
+         [:div {:style {:paddingTop "5"}}
+          (if (:expanded? @state)
             ;; do something else here?
-            (style/create-link {:text (str (- size 5) " more...") :onClick #(swap! state assoc :expanded? true)})])]]))
+            (style/create-link {:text " less..." :onClick #(react/call :update-expanded this false)})
+            (when (> size 0) (style/create-link {:text (str size " more...") :onClick #(react/call :update-expanded this true)})))
+          ]]]))
    :component-did-mount
    (fn [{:keys [state props]}]
+     (swap! state assoc :expanded? (:expanded? props))
      (swap! state assoc :selected-items (or (:selected-items props) #{})))
+   :clear-all
+   (fn [{:keys [props state]}]
+     (swap! state assoc :selected-items #{})
+     ((:callback-function props) (:field props) #{}))
+   :update-expanded
+   (fn [{:keys [state props]} newValue]
+     (swap! state assoc :expanded? newValue)
+     ((:expanded-callback-function props) (:field props) newValue))
    :update-selected
    (fn [{:keys [state props]} name checked?]
      (let [updated-items (if checked?
@@ -226,7 +243,7 @@
 ;; TODO: Advanced Search feature for DUR filter
 (react/defc Facet
   {:render
-   (fn [{:keys [props state]}]
+   (fn [{:keys [props]}]
      (let [k (:aggregate-field props)
            properties (:aggregate-properties props)
            title (:title properties)
@@ -234,16 +251,20 @@
            aggregations (get-aggregations-for-property k (:aggregates props))]
         [:div {:style {:fontSize "80%"}}
          (cond
-              ;(= render-hint "text") [FacetAutocomplete {:title title :buckets buckets}] ;; add page ref here?
-              (= render-hint "checkbox") [FacetCheckboxes
-                                          {:title title
-                                           :numOtherDocs (:numOtherDocs aggregations)
-                                           :buckets (:buckets aggregations)
-                                           :field k
-                                           :selected-items (:selected-items props)
-                                           :callback-function (:callback-function props)}]
-              ;(= render-hint "slider") [FacetSlider {:title title :term k :results (:results @state)}]
-            )]))})
+           ;(= render-hint "text") [FacetAutocomplete {:title title :buckets buckets}] ;; add page ref here?
+           ;(or (= render-hint "text")
+           (= render-hint "checkbox") [FacetCheckboxes
+                                       {:title title
+                                        :numOtherDocs (:numOtherDocs aggregations)
+                                        :buckets (:buckets aggregations)
+                                        :field k
+                                        :expanded? (:expanded? props)
+                                        :selected-items (:selected-items props)
+                                        :callback-function (:callback-function props)
+                                        :expanded-callback-function (:expanded-callback-function props)}]
+           ;(= render-hint "slider") [FacetSlider {:title title :term k :results (:results @state)}]
+           ;)
+           )]))})
 
 
 (react/defc FacetSection
@@ -257,11 +278,13 @@
        (let [aggregate-fields (:aggregate-fields props)]
          [:div {:style {:background (:background-light style/colors) :padding "16px 12px"}}
           (map
-            (fn [m] [Facet {:aggregate-field m
-                            :aggregate-properties (m (:aggregate-properties props))
+            (fn [prop-name] [Facet {:aggregate-field prop-name
+                            :aggregate-properties (prop-name (:aggregate-properties props))
                             :aggregates (:aggregates @state)
-                            :selected-items (get-in props [:facet-filters m])
-                            :callback-function (:callback-function props)}])
+                            :expanded? (contains? (:expanded-aggregates props) prop-name)
+                            :selected-items (get-in props [:facet-filters prop-name])
+                            :callback-function (:callback-function props)
+                            :expanded-callback-function (:expanded-callback-function props)}])
             aggregate-fields)])))})
 
 
@@ -272,6 +295,11 @@
   {:update-filter
    (fn [{:keys [state]} facet-name facet-list]
      (swap! state assoc-in [:facet-filters facet-name] facet-list))
+   :set-expanded-aggregate
+   (fn [{:keys [state]} facet-name expanded?]
+     (if expanded?
+       (swap! state update :expanded-aggregates conj facet-name)
+       (swap! state update :expanded-aggregates disj facet-name)))
    :get-initial-state
    (fn []
      (persistence/try-restore
@@ -279,7 +307,8 @@
         :initial (fn []
                    {:v VERSION
                     :search-text ""
-                    :facet-filters {}})
+                    :facet-filters {}
+                    :expanded-aggregates #{}})
         :validator (comp (partial = VERSION) :v)}))
    :component-did-mount
    (fn [{:keys [state]}]
@@ -300,15 +329,20 @@
                       :aggregate-fields (:aggregate-fields @state)
                       :aggregate-properties (:library-attributes @state)
                       :facet-filters (:facet-filters @state)
+                      :expanded-aggregates (:expanded-aggregates @state)
                       :callback-function (fn [facet-name facet-list]
-                                           (react/call :update-filter this facet-name facet-list))}]]
+                                           (react/call :update-filter this facet-name facet-list))
+                      :expanded-callback-function (fn [field newValue]
+                                                    (react/call :set-expanded-aggregate this field newValue))}]]
       [:div {:style {:flex "1 1 auto" :overflowX "auto"}}
        [DatasetsTable {:ref "dataset-table"
                        :search-text (:search-text @state)
                        :facet-filters (:facet-filters @state)
                        :aggregate-fields (:aggregate-fields @state)
+                       :expanded-aggregates (:expanded-aggregates @state)
                        :callback-function (fn [aggregates]
-                                            (react/call :update-aggregates (@refs "facets") aggregates))}]]])
+                                            (react/call :update-aggregates (@refs "facets") aggregates))
+                       }]]])
    :component-did-update
    (fn [{:keys [state refs]}]
      (persistence/save {:key PERSISTENCE-KEY :state state})
