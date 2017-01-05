@@ -81,6 +81,31 @@ React Elements may not be substituted for DOM nodes in these cases. You must use
 (get @state :foo) ; <- :foo is not 17 here!
 ```
 
+So, instead of:
+```clojure
+(swap! state assoc :foo (bar ...))
+(some-func (:foo @state))
+```
+
+try:
+```clojure
+(let [new-value (bar ...)]
+  (swap! state assoc :foo new-value)
+  (some-func new-value))
+```
+
+Instead of:
+```clojure
+(react/call :some-state-modifying-method this)
+(some-func (:some-key @state))
+```
+
+try:
+```clojure
+(react/call :some-state-modifying-method this)
+(after-update #(some-func (:some-key @state))))
+```
+
 ### Avoid Infinite Loops
 
 Changing state causes a re-render. If you change state in a lifecycle method such as `component-did-update`, this will re-render, which will call `component-did-update` again, resulting in a loop.
