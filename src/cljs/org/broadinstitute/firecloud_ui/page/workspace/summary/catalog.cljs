@@ -103,13 +103,12 @@
      (let [{:keys [library-schema questions enumerate]} props]
        [(if enumerate :ol :div) {}
         (map
-          (fn [{:keys [property required hidden inputHint renderHint editable]}]
+          (fn [{:keys [property required hidden inputHint renderHint]}]
             (let [property-kwd (keyword property)
                   {:keys [title type typeahead enum minimum consentCode]} (get-in library-schema [:properties property-kwd])
                   error? (contains? (:invalid-properties @state) property-kwd)
                   colorize (fn [style] (merge style (when error? {:borderColor (:exception-state style/colors)})))
-                  update-property #(swap! state update :attributes assoc property-kwd (.. % -target -value))
-                  disabled? (false? editable)]
+                  update-property #(swap! state update :attributes assoc property-kwd (.. % -target -value))]
               (if (not hidden)
                 [(if enumerate :li :div) {}
                  [:div {:style {:marginBottom 2}}
@@ -172,7 +171,6 @@
                                                              (= type "integer") "number"
                                                              :else "text")
                                                  :min minimum
-                                                 :disabled disabled?
                                                  :placeholder inputHint
                                                  :value (get (:attributes @state) property-kwd)
 
@@ -181,6 +179,12 @@
    :component-did-mount
    (fn [{:keys [props state refs]}]
      (let [{:keys [library-schema questions]} props]
+        (let [versions (get-in library-schema [:versions])]
+          (mapv (fn [version]
+                  (let [currentVersion (get-in library-schema [:properties (keyword version) :current])]
+                    (utils/log currentVersion)
+                    (swap! state update :attributes assoc (keyword version) currentVersion))) ;;js/parseInt should work?
+            versions))
        (doseq [{:keys [property]} questions]
          (let [property-kwd (keyword property)
                {:keys [typeahead relatedID relatedLabel]} (get-in library-schema [:properties property-kwd])
@@ -344,6 +348,7 @@
              (react/call :submit this))))))
    :submit
    (fn [{:keys [props state]}]
+
      (swap! state assoc :submitting? true :submit-error nil)
      (endpoints/call-ajax-orch
        {:endpoint (endpoints/save-library-metadata (:workspace-id props))

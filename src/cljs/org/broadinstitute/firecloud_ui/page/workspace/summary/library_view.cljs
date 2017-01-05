@@ -15,21 +15,17 @@
         (common/attribute-list? value) (clojure.string/join ", " (common/attribute-values value))
         :else value))
 
-(defn- render-library-row [key value doid]
+(defn- render-library-row [key value]
   (when value
     [:div {:style {:display "flex" :padding "0.5em 0" :borderBottom (str "2px solid " (:line-default style/colors))}}
      [:div {:style {:flexBasis "33%" :fontWeight "bold" :paddingRight "2em"}} key]
-     [:div {:style {:flexBasis "67%"}} value
-      (if (not (nil? doid)) [:span {:style {:fontStyle "italic"}} (str " (" doid ")")])]]))
+     [:div {:style {:flexBasis "67%"}} value]]))
 
 
 (defn- render-property [library-schema library-attributes property-key]
   (render-library-row
    (get-in library-schema [:properties property-key :title])
-   (render-value
-    (or (get library-attributes property-key) (get-in library-schema [:properties property-key :default])))
-    nil))
-
+   (render-value (get library-attributes property-key))))
 
 
 (defn- render-consent-codes [library-schema library-attributes]
@@ -49,7 +45,7 @@
                                     :cursor "help"}
                             :title (get consent-codes (keyword consent-code))}
                       (str consent-code ": " (library-utils/unpack-attribute-list value))])
-                   consent-attributes)]) nil))
+                   consent-attributes)])))
 
 
 (react/defc LibraryView
