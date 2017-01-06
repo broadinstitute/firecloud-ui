@@ -26,9 +26,6 @@
 (def ^:private all-types [STRING NUMBER BOOLEAN LIST_STRING LIST_NUMBER LIST_BOOLEAN])
 
 
-(defn- boolean? [x]
-  (or (true? x) (false? x)))
-
 (defn- parse-boolean [attr-value]
   (if (contains? #{"true" "yes"} (clojure.string/lower-case attr-value))
     true
