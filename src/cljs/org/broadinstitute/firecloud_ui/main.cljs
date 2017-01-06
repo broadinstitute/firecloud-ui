@@ -515,5 +515,8 @@
                      (utils/set-google-auth2-instance! auth2)))))))})
 
 
-(defn render-application [& [hot-reload?]]
-  (react/render (react/create-element App) (.. js/document (getElementById "app")) nil hot-reload?))
+(defn render-application []
+  (react/render (react/create-element App) (.. js/document (getElementById "app"))))
+
+
+(render-application)
