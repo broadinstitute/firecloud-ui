@@ -183,7 +183,7 @@
      (let [{:keys [library-schema questions]} props]
         (let [versions (get-in library-schema [:versions])]
           (mapv (fn [version]
-                  (let [currentVersion (get-in library-schema [:properties (keyword version) :current])]
+                  (let [currentVersion (get-in library-schema [:properties (keyword version) :default])]
                     (swap! state update :attributes assoc (keyword version) currentVersion)))
             versions))
        (doseq [{:keys [property]} questions]
