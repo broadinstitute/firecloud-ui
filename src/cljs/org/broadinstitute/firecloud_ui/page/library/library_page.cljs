@@ -21,9 +21,8 @@
    :render
    (fn [{:keys [state this props]}]
      (let [attributes (:library-attributes props)
-           extra-columns (dissoc attributes :library:datasetName :library:indication :library:dataUseRestriction :library:numSubjects)
-           titled-columns (filter (fn [[k m]] (contains? m :title)) extra-columns)
-           extra-column-keys (keys titled-columns)]
+           search-result-columns (:search-result-columns props)
+           extra-columns (subvec search-result-columns 4)]
        [table/Table
         {:ref "table" :state-key "library-table"
          :header-row-style {:fontWeight 500 :fontSize "90%"
@@ -34,7 +33,7 @@
          :resizable-columns? true
          :filterable? true
          :reorder-anchor :right
-         :reorder-style {:width "400px" :whiteSpace "nowrap" :overflow "hidden" :textOverflow "ellipsis"}
+         :reorder-style {:width "300px" :whiteSpace "nowrap" :overflow "hidden" :textOverflow "ellipsis"}
          :reorder-prefix "Columns"
          :toolbar
          (fn [{:keys [reorderer]}]
@@ -64,13 +63,16 @@
                    {:header (:title (:library:dataUseRestriction attributes)) :starting-width 180 :show-initial? true
                     :sort-by clojure.string/lower-case}
                    {:header (:title (:library:numSubjects attributes)) :starting-width 100 :show-initial? true}]
-                   (map (fn [keyname] {:header (:title (keyname attributes)) :starting-width 180 :show-initial? false}) extra-column-keys))
+                   (map
+                    (fn [keyname]
+                      {:header (:title ((keyword keyname) attributes)) :starting-width 180 :show-initial? false})
+                    extra-columns))
          :pagination (react/call :pagination this)
          :->row (fn [data]
                   (cons data
-                        (map #(% data)
+                        (map #((keyword %) data)
                              (concat [:library:indication :library:dataUseRestriction :library:numSubjects]
-                                     extra-column-keys))))}]))
+                                     extra-columns))))}]))
    :component-will-receive-props
    (fn [{:keys [next-props refs]}]
      (let [current-search-text (:filter-text (react/call :get-query-params (@refs "table")))
@@ -145,7 +147,8 @@
          (if success?
            (let [response (get-parsed-response)]
              (swap! state assoc
-                    :library-attributes (:properties response)))))))
+                    :library-attributes (:properties response)
+                    :search-result-columns (:searchResultColumns response)))))))
    :render
    (fn [{:keys [state]}]
      [:div {:style {:display "flex" :marginTop "2em"}}
@@ -154,7 +157,8 @@
                        :on-filter #(swap! state assoc :search-text %)}]]
       [:div {:style {:flex "1 1 auto" :overflowX "auto"}}
        [DatasetsTable {:search-text (:search-text @state)
-                       :library-attributes (:library-attributes @state)}]]])
+                       :library-attributes (:library-attributes @state)
+                       :search-result-columns (:search-result-columns @state)}]]])
    :component-did-update
    (fn [{:keys [state]}]
      (persistence/save {:key PERSISTENCE-KEY :state state}))})
