@@ -59,7 +59,9 @@
                                            [k (merge (select-keys (get-in library-schema [:properties k]) [:minimum :maximum])
                                                      {:value v})])))
         invalid-numbers (set (keep (fn [[k {:keys [value minimum maximum] :or {minimum -Infinity maximum Infinity}}]]
-                                     (when-not (and (= value (str (int value)))
+                                     (when-not (and (or
+                                                      (= value (str (int value)))
+                                                      (= value (int value)))
                                                     (<= minimum (int value) maximum))
                                        k))
                                    numeric-props))]
@@ -103,13 +105,12 @@
      (let [{:keys [library-schema questions enumerate]} props]
        [(if enumerate :ol :div) {}
         (map
-          (fn [{:keys [property required hidden inputHint renderHint editable]}]
+          (fn [{:keys [property required hidden inputHint renderHint]}]
             (let [property-kwd (keyword property)
                   {:keys [title type typeahead enum minimum consentCode]} (get-in library-schema [:properties property-kwd])
                   error? (contains? (:invalid-properties @state) property-kwd)
                   colorize (fn [style] (merge style (when error? {:borderColor (:exception-state style/colors)})))
-                  update-property #(swap! state update :attributes assoc property-kwd (.. % -target -value))
-                  disabled? (false? editable)]
+                  update-property #(swap! state update :attributes assoc property-kwd (.. % -target -value))]
               (if (not hidden)
                 [(if enumerate :li :div) {}
                  [:div {:style {:marginBottom 2}}
@@ -172,7 +173,6 @@
                                                              (= type "integer") "number"
                                                              :else "text")
                                                  :min minimum
-                                                 :disabled disabled?
                                                  :placeholder inputHint
                                                  :value (get (:attributes @state) property-kwd)
 
@@ -181,6 +181,11 @@
    :component-did-mount
    (fn [{:keys [props state refs]}]
      (let [{:keys [library-schema questions]} props]
+        (let [versions (get-in library-schema [:versions])]
+          (mapv (fn [version]
+                  (let [currentVersion (get-in library-schema [:properties (keyword version) :default])]
+                    (swap! state update :attributes assoc (keyword version) currentVersion)))
+            versions))
        (doseq [{:keys [property]} questions]
          (let [property-kwd (keyword property)
                {:keys [typeahead relatedID relatedLabel]} (get-in library-schema [:properties property-kwd])
