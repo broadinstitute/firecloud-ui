@@ -1,5 +1,6 @@
 (ns org.broadinstitute.firecloud-ui.page.library.library_page
   (:require
+    [clojure.set]
     [dmohs.react :as react]
     [org.broadinstitute.firecloud-ui.common :as common]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
@@ -21,7 +22,7 @@
    (fn [{:keys [refs]} new-filter-text]
      (react/call :update-query-params (@refs "table") {:filter-text new-filter-text :current-page 1}))
    :render
-   (fn [{:keys [state this props]}]
+   (fn [{:keys [state this]}]
      [table/Table
       {:ref "table" :state-key "library-table"
        :header-row-style {:fontWeight 500 :fontSize "90%"
@@ -61,7 +62,7 @@
        :pagination (react/call :pagination this)
        :->row (juxt identity :library:indication :library:dataUseRestriction :library:numSubjects)}])
    :execute-search
-   (fn [{:keys [props state refs]}]
+   (fn [{:keys [refs]}]
      (if (= (:current-page (react/call :get-query-params (@refs "table"))) 1)
        (react/call :execute-search (@refs "table"))
        (react/call :update-query-params (@refs "table") {:current-page 1})))
@@ -83,7 +84,6 @@
                                              "Please contact " [:a {:target "_blank" :href (str "mailto:" (:library:contactEmail data))} (str (:library:datasetCustodian data) " <" (:library:contactEmail data) ">")]
                                                " and request access for the "
                                                (:namespace data) "/" (:name data) " workspace."])})))}))
-
    :build-aggregate-fields
    (fn [{:keys [props]}]
      (reduce
@@ -114,9 +114,7 @@
                              :rows results})
                   (when (= 1 current-page)
                     ((:callback-function props) aggregations)))
-                (callback {:error status-text})))})))
-     )})
-
+                (callback {:error status-text})))}))))})
 
 (react/defc SearchSection
   {:render
@@ -129,17 +127,19 @@
                           :width "100%" :placeholder "Search"
                           :on-filter (:on-filter props)}]]])})
 
-
-;; TODO: "Clear" link should reset the checkboxes to unchecked and reset the data tables search
 (react/defc FacetCheckboxes
   {:render
-   (fn [{:keys [props this state]}]
+   (fn [{:keys [props this]}]
      (let [size (:numOtherDocs props)
-           title (:title props)]
+           title (:title props)
+           all-buckets (mapv
+                         (fn [{:keys [key]}] key)  (:buckets props))
+           hidden-items (clojure.set/difference (:selected-items props) (set all-buckets))
+           hidden-items-formatted (mapv (fn [item] {:key item}) hidden-items)]
        [:div {:style {:fontWeight "bold" :paddingBottom "1em"}}
         [:hr {}] title
         [:div {:style {:fontSize "80%" :fontWeight "normal" :float "right"}}
-         (style/create-link {:text "Clear" :onClick #(react/call :clear-all this)})] ;#(swap! state assoc :expanded? false)})]
+         (style/create-link {:text "Clear" :onClick #(react/call :clear-all this)})]
         [:div {:style {:paddingTop "1em" :fontWeight "normal"}}
          (map
            (fn [m]
@@ -149,10 +149,7 @@
                         :checked (contains? (:selected-items props) (:key m))
                         :onChange (fn [e] (react/call :update-selected this (:key m) (.-checked (.-target e))))}]
                (:key m)]
-              ;[comps/Checkbox {:label (:key m)
-              ;                 :initial-checked? (contains? (:selected-items props) (:key m))
-              ;                 ;:checked-value (contains? (:selected-items props) (:key m)) ; this doesn't worked if you use the name :checked
-              ;                 :onChange #(react/call :update-selected this (:key m) %)}]
+              (when (contains? m :doc_count)
               [:div {:style {:fontSize "80%" :fontWeight "normal" :float "right"}}
                [:span {:style {
                                :display "inline-block"
@@ -165,82 +162,30 @@
                                :verticalAlign "middle"
                                :backgroundColor "#aaa"
                                :borderRadius "3px"
-                               }} (:doc_count m)]]])
-           ;(if (:expanded? @state)
-             (:buckets props)
-             ;(take 5 (:buckets props)))
-           )
+                               }} (:doc_count m)]])])
+           (concat (:buckets props) hidden-items-formatted))
          [:div {:style {:paddingTop "5"}}
-          (if (:expanded? @state)
-            ;; do something else here?
-            (style/create-link {:text " less..." :onClick #(react/call :update-expanded this false)})
-            (when (> size 0) (style/create-link {:text (str size " more...") :onClick #(react/call :update-expanded this true)})))
-          ]]]))
-   :component-did-mount
-   (fn [{:keys [state props]}]
-     (swap! state assoc :expanded? (:expanded? props))
-     (swap! state assoc :selected-items (or (:selected-items props) #{})))
+          (if (:expanded? props)
+            (when (> (count (:buckets props)) 5) (style/create-link {:text " less..." :onClick #(react/call :update-expanded this false)}))
+            (when (> size 0) (style/create-link {:text (str size " more...") :onClick #(react/call :update-expanded this true)})))]]]))
    :clear-all
-   (fn [{:keys [props state]}]
-     (swap! state assoc :selected-items #{})
+   (fn [{:keys [props]}]
      ((:callback-function props) (:field props) #{}))
    :update-expanded
-   (fn [{:keys [state props]} newValue]
-     (swap! state assoc :expanded? newValue)
+   (fn [{:keys [props]} newValue]
      ((:expanded-callback-function props) (:field props) newValue))
    :update-selected
-   (fn [{:keys [state props]} name checked?]
+   (fn [{:keys [props]} name checked?]
      (let [updated-items (if checked?
-                           (conj (:selected-items @state) name)
-                           (disj (:selected-items @state) name))]
-       (swap! state assoc :selected-items updated-items)
+                           (conj (:selected-items props) name)
+                           (disj (:selected-items props) name))]
        ((:callback-function props) (:field props) updated-items)))})
-
-
-;; See GAWB-978 for slider implementation story
-;; TODO: "Clear" link should reset the slider and reset the data tables search
-;; TODO: Look at where the data is, once indexing is taking place, the values should come from `buckets`, not `results`
-; (react/defc FacetSlider
-;   {:render
-;    (fn [{:keys [props state]}]
-;      (let [term (:term props)
-;            results (:results props)
-;            counts (map (fn [m] (term m)) results)
-;            max-count (apply max counts)
-;            title (:title props)]
-;            [:div {:style {:fontWeight "bold" :paddingBottom "1em"}} title
-;              [:div {:style {:fontSize "80%" :fontWeight "normal" :float "right"}}
-;                (style/create-link {:text "Clear" :onClick #(swap! state assoc :expanded? false)})]
-;                [:div {:style {:paddingTop "1em" :fontWeight "normal"}}
-;                  [:input {:ref "slider" :type "range" :multiple "true" :min 0 :max max-count :onChange (fn[])}]]]))})
-
-;; TODO: Need to deal with making this an autocomplete solely on the values inside the bucket.
-;; TODO: "Clear" link should empty out the input value and reset the data tables search
-;(react/defc FacetAutocomplete
-;  {:render
-;    (fn [{:keys [props state]}]
-;      (let [buckets (:buckets props)
-;            values (get-in buckets [key])
-;            title (:title props)]
-;            [:div {:style {:fontWeight "bold" :paddingBottom "1em" :paddingTop "1em"}}
-;              [:hr {}] title
-;              [:div {:style {:fontSize "80%" :fontWeight "normal" :float "right"}}
-;                (style/create-link {:text "Clear" :onClick #(swap! state assoc :expanded? false)})]
-;              [:div {:style {:paddingTop "1em" :fontWeight "normal"}}
-;                [input/TextField {:style {:width "100%"}}]]]
-;      )
-;    )
-;  }
-;)
 
 (defn get-aggregations-for-property [agg-name aggregates]
   (first (keep (fn [m] (when (= (:field m) (name agg-name)) (:results m))) aggregates)))
 
 ;; TODO: Styling to match layout model.
-;; TODO: OnChange handler to swap state and filter dataset-table based on filter selection
 ;; TODO: error case for loading content
-;; TODO: Deal with sorting
-;; TODO: Advanced Search feature for DUR filter
 (react/defc Facet
   {:render
    (fn [{:keys [props]}]
@@ -251,8 +196,6 @@
            aggregations (get-aggregations-for-property k (:aggregates props))]
         [:div {:style {:fontSize "80%"}}
          (cond
-           ;(= render-hint "text") [FacetAutocomplete {:title title :buckets buckets}] ;; add page ref here?
-           ;(or (= render-hint "text")
            (= render-hint "checkbox") [FacetCheckboxes
                                        {:title title
                                         :numOtherDocs (:numOtherDocs aggregations)
@@ -261,11 +204,7 @@
                                         :expanded? (:expanded? props)
                                         :selected-items (:selected-items props)
                                         :callback-function (:callback-function props)
-                                        :expanded-callback-function (:expanded-callback-function props)}]
-           ;(= render-hint "slider") [FacetSlider {:title title :term k :results (:results @state)}]
-           ;)
-           )]))})
-
+                                        :expanded-callback-function (:expanded-callback-function props)}])]))})
 
 (react/defc FacetSection
   {:update-aggregates
@@ -286,7 +225,6 @@
                             :callback-function (:callback-function props)
                             :expanded-callback-function (:expanded-callback-function props)}])
             aggregate-fields)])))})
-
 
 (def ^:private PERSISTENCE-KEY "library-page")
 (def ^:private VERSION 1)
@@ -341,8 +279,7 @@
                        :aggregate-fields (:aggregate-fields @state)
                        :expanded-aggregates (:expanded-aggregates @state)
                        :callback-function (fn [aggregates]
-                                            (react/call :update-aggregates (@refs "facets") aggregates))
-                       }]]])
+                                            (react/call :update-aggregates (@refs "facets") aggregates))}]]])
    :component-did-update
    (fn [{:keys [state refs]}]
      (persistence/save {:key PERSISTENCE-KEY :state state})

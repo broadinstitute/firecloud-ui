@@ -361,7 +361,7 @@
    :get-default-props get-default-table-props
    :get-initial-state get-initial-table-state
    :render render-table
-   :execute-search table-component-did-update
+   :execute-search (fn [{:keys [this]}] (react/call :refresh-rows this))
    :get-ordered-columns
    (fn [{:keys [state]}]
      (->> (:column-meta @state)
