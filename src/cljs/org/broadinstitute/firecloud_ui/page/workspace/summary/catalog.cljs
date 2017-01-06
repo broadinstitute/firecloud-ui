@@ -348,7 +348,6 @@
              (react/call :submit this))))))
    :submit
    (fn [{:keys [props state]}]
-
      (swap! state assoc :submitting? true :submit-error nil)
      (endpoints/call-ajax-orch
        {:endpoint (endpoints/save-library-metadata (:workspace-id props))
