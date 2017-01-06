@@ -182,8 +182,7 @@
         (let [versions (get-in library-schema [:versions])]
           (mapv (fn [version]
                   (let [currentVersion (get-in library-schema [:properties (keyword version) :current])]
-                    (utils/log currentVersion)
-                    (swap! state update :attributes assoc (keyword version) currentVersion))) ;;js/parseInt should work?
+                    (swap! state update :attributes assoc (keyword version) (str currentVersion))))
             versions))
        (doseq [{:keys [property]} questions]
          (let [property-kwd (keyword property)
