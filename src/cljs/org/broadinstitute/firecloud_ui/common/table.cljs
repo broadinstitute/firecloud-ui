@@ -157,44 +157,55 @@
                                                  [(or header-key header) (assoc col :declared-index index)]))
                                   (into {}))
     :dragging? false}
-   (persistence/try-restore
-    {:key (:state-key props)
-     :validator (fn [stored-value] (= (set (keys stored-value)) persistence-keys))
-     :initial (fn []
-                (let [processed-columns (if-let [defaults (:column-defaults props)]
-                                          (let [by-header (utils/index-by :header (:columns props))
-                                                default-showing (try
-                                                                  (doall
-                                                                   (->> defaults
-                                                                        (replace by-header)
-                                                                        (map #(assoc % :show-initial? true))))
-                                                                  (catch :default e
-                                                                    (map #(assoc % :show-initial? true) (:columns props))))
-                                                default-hiding (as-> by-header $
-                                                                     (apply dissoc $ defaults)
-                                                                     (vals $)
-                                                                     (map #(assoc % :show-initial? false) $))]
-                                            (concat default-showing default-hiding))
-                                          (:columns props))
-                      column-meta (mapv (fn [{:keys [header header-key starting-width] :as col}]
-                                          {:header (or header-key header)
-                                           :width (or starting-width 100)
-                                           :visible? (get col :show-initial? true)})
-                                        processed-columns)
-                      initial-sort-column (or (some->> (:columns props)
-                                                       (filter #(contains? % :sort-initial))
-                                                       first)
-                                              (when (:always-sort? props)
-                                                (first (:columns props))))]
-                  {:column-meta column-meta
-                   :filter-group-index (get props :initial-filter-group-index 0)
-                   :query-params (merge
-                                  {:current-page 1 :rows-per-page (:initial-rows-per-page props)
-                                   :filter-text ""}
-                                  (when initial-sort-column
-                                    {:sort-column (:header initial-sort-column)
-                                     ; default needed when forcing sort
-                                     :sort-order (or (:sort-initial initial-sort-column) :asc)}))}))})))
+   (let [restored
+         (persistence/try-restore
+          {:key (:state-key props)
+           :validator (fn [stored-value] (= (set (keys stored-value)) persistence-keys))
+           :initial (fn []
+                      (let [processed-columns (if-let [defaults (:column-defaults props)]
+                                                (let [by-header (utils/index-by :header (:columns props))
+                                                      default-showing (try
+                                                                        (doall
+                                                                         (->> defaults
+                                                                              (replace by-header)
+                                                                              (map #(assoc % :show-initial? true))))
+                                                                        (catch :default e
+                                                                          (map #(assoc % :show-initial? true) (:columns props))))
+                                                      default-hiding (as-> by-header $
+                                                                           (apply dissoc $ defaults)
+                                                                           (vals $)
+                                                                           (map #(assoc % :show-initial? false) $))]
+                                                  (concat default-showing default-hiding))
+                                                (:columns props))
+                            column-meta (mapv (fn [{:keys [header header-key starting-width] :as col}]
+                                                {:header (or header-key header)
+                                                 :width (or starting-width 100)
+                                                 :visible? (get col :show-initial? true)})
+                                              processed-columns)
+                            initial-sort-column (or (some->> (:columns props)
+                                                             (filter #(contains? % :sort-initial))
+                                                             first)
+                                                    (when (:always-sort? props)
+                                                      (first (:columns props))))]
+                        {:column-meta column-meta
+                         :filter-group-index (get props :initial-filter-group-index 0)
+                         :query-params (merge
+                                        {:current-page 1 :rows-per-page (:initial-rows-per-page props)
+                                         :filter-text ""}
+                                        (when initial-sort-column
+                                          {:sort-column (:header initial-sort-column)
+                                           ; default needed when forcing sort
+                                           :sort-order (or (:sort-initial initial-sort-column) :asc)}))}))})]
+
+     (update restored :column-meta
+             (fn [cols]
+               (let [headers-restored (set (map :header cols))
+                     col-headers (map :header (:columns props))
+                     unmentioned-headers (set (remove #(contains? headers-restored %) col-headers))
+                     unmentioned-cols (map #(assoc % :width 100 :visible? true)
+                                           (map #(select-keys % [:header])
+                                                (filter #(contains? unmentioned-headers (:header %)) (:columns props))))]
+                 (vec (concat cols unmentioned-cols))))))))
 
 (defn- render-table [{:keys [this state props refs after-update]}]
   (assert (vector? (:column-meta @state)) "column-meta got un-vec'd")
