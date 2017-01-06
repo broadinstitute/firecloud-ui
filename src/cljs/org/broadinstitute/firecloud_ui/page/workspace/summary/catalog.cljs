@@ -59,7 +59,9 @@
                                            [k (merge (select-keys (get-in library-schema [:properties k]) [:minimum :maximum])
                                                      {:value v})])))
         invalid-numbers (set (keep (fn [[k {:keys [value minimum maximum] :or {minimum -Infinity maximum Infinity}}]]
-                                     (when-not (and (= value (str (int value)))
+                                     (when-not (and (or
+                                                      (= value (str (int value)))
+                                                      (= value (int value)))
                                                     (<= minimum (int value) maximum))
                                        k))
                                    numeric-props))]
@@ -182,7 +184,7 @@
         (let [versions (get-in library-schema [:versions])]
           (mapv (fn [version]
                   (let [currentVersion (get-in library-schema [:properties (keyword version) :current])]
-                    (swap! state update :attributes assoc (keyword version) (str currentVersion))))
+                    (swap! state update :attributes assoc (keyword version) currentVersion)))
             versions))
        (doseq [{:keys [property]} questions]
          (let [property-kwd (keyword property)
