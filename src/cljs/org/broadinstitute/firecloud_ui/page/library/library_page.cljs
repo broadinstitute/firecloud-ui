@@ -156,9 +156,11 @@
        [SearchSection {:search-text (:search-text @state)
                        :on-filter #(swap! state assoc :search-text %)}]]
       [:div {:style {:flex "1 1 auto" :overflowX "auto"}}
-       [DatasetsTable {:search-text (:search-text @state)
-                       :library-attributes (:library-attributes @state)
-                       :search-result-columns (:search-result-columns @state)}]]])
+       (when
+         (and (:library-attributes @state) (:search-result-columns @state))
+         [DatasetsTable {:search-text (:search-text @state)
+                         :library-attributes (:library-attributes @state)
+                         :search-result-columns (:search-result-columns @state)}])]])
    :component-did-update
    (fn [{:keys [state]}]
      (persistence/save {:key PERSISTENCE-KEY :state state}))})
