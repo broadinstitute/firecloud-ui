@@ -1,6 +1,5 @@
 (ns org.broadinstitute.firecloud-ui.page.workspace.summary.catalog
   (:require
-    [cljsjs.typeahead-bundle]
     [clojure.string :refer [join split trim]]
     [dmohs.react :as react]
     [org.broadinstitute.firecloud-ui.common :as common]

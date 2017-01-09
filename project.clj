@@ -10,7 +10,6 @@
    [cljsjs/moment "2.9.0-3"]
    [cljsjs/codemirror "5.10.0-0"]
    [cljsjs/marked "0.3.5-0"]
-   [cljsjs/typeahead-bundle "0.11.1-2"]
    ]
   :plugins [[lein-cljsbuild "1.1.2"] [lein-figwheel "0.5.0-5"] [lein-resource "15.10.2"]]
   :profiles {:dev {:dependencies [[binaryage/devtools "0.8.2"]]
