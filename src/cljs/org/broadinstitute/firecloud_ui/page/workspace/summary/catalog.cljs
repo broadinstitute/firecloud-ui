@@ -1,11 +1,13 @@
 (ns org.broadinstitute.firecloud-ui.page.workspace.summary.catalog
   (:require
+    [cljsjs.typeahead-bundle]
     [clojure.string :refer [join split trim]]
     [dmohs.react :as react]
     [org.broadinstitute.firecloud-ui.common :as common]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
     [org.broadinstitute.firecloud-ui.common.modal :as modal]
     [org.broadinstitute.firecloud-ui.common.style :as style]
+    [org.broadinstitute.firecloud-ui.config :as config]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
     [org.broadinstitute.firecloud-ui.page.workspace.summary.library-utils :as library-utils]
     [org.broadinstitute.firecloud-ui.utils :as utils]
@@ -57,7 +59,9 @@
                                            [k (merge (select-keys (get-in library-schema [:properties k]) [:minimum :maximum])
                                                      {:value v})])))
         invalid-numbers (set (keep (fn [[k {:keys [value minimum maximum] :or {minimum -Infinity maximum Infinity}}]]
-                                     (when-not (and (= value (str (int value)))
+                                     (when-not (and (or
+                                                      (= value (str (int value)))
+                                                      (= value (int value)))
                                                     (<= minimum (int value) maximum))
                                        k))
                                    numeric-props))]
@@ -101,62 +105,119 @@
      (let [{:keys [library-schema questions enumerate]} props]
        [(if enumerate :ol :div) {}
         (map
-          (fn [{:keys [property required inputHint renderHint editable]}]
+          (fn [{:keys [property required hidden inputHint renderHint]}]
             (let [property-kwd (keyword property)
-                  {:keys [title type enum minimum consentCode]} (get-in library-schema [:properties property-kwd])
+                  {:keys [title type typeahead enum minimum consentCode]} (get-in library-schema [:properties property-kwd])
                   error? (contains? (:invalid-properties @state) property-kwd)
                   colorize (fn [style] (merge style (when error? {:borderColor (:exception-state style/colors)})))
-                  update-property #(swap! state update :attributes assoc property-kwd (.. % -target -value))
-                  disabled? (false? editable)]
-              [(if enumerate :li :div) {}
-               [:div {:style {:marginBottom 2}}
-                title
-                (when consentCode
-                  (list
-                    " ["
-                    [:abbr {:style {:cursor "help" :whiteSpace "nowrap" :borderBottom "1px dotted"}
-                            :title (get-in library-schema [:consentCodes (keyword consentCode)])}
-                     consentCode]
-                    "]"))
-                (when required
-                  [:span {:style {:fontWeight "bold"
-                                  :color (when error? (:exception-state style/colors))}}
-                   " (required)"])]
-               (cond enum
-                     (if (< (count enum) 4)
-                       [:div {:style {:display "inline-block"
-                                      :margin "0.75em 0 0.75em 1em"}}
-                        (map (fn [enum-val]
-                               [:label {:style {:display "inline-flex" :alignItems "center" :cursor "pointer" :marginRight "2em"
-                                                :color (when error? (:exception-state style/colors))}}
-                                [:input (merge
-                                          {:type "radio" :style {:cursor "pointer"}
-                                           :onClick #(swap! state update :attributes assoc property-kwd enum-val)}
-                                          (when (= enum-val (get (:attributes @state) property-kwd)) {:checked true}))]
-                                [:div {:style {:padding "0 0.4em" :fontWeight "500"}} enum-val]])
-                             enum)]
-                       (style/create-identity-select {:value (get (:attributes @state) property-kwd ENUM_EMPTY_CHOICE)
-                                                      :style (colorize {})
-                                                      :onChange update-property}
-                                                     (cons ENUM_EMPTY_CHOICE enum)))
-                     (= renderHint "text")
-                     (style/create-text-area {:style (colorize {:width "100%"})
-                                              :value (get (:attributes @state) property-kwd)
-                                              :onChange update-property
-                                              :rows 3})
-                     :else
-                     (style/create-text-field {:style (colorize {:width "100%"})
-                                               :type (cond (= renderHint "date") "date"
-                                                           (= renderHint "email") "email"
-                                                           (= type "integer") "number"
-                                                           :else "text")
-                                               :min minimum
-                                               :disabled disabled?
-                                               :placeholder inputHint
-                                               :value (get (:attributes @state) property-kwd)
-                                               :onChange update-property}))]))
-          questions)]))})
+                  update-property #(swap! state update :attributes assoc property-kwd (.. % -target -value))]
+              (if (not hidden)
+                [(if enumerate :li :div) {}
+                 [:div {:style {:marginBottom 2}}
+                  title
+                  (when consentCode
+                    (list
+                      " ["
+                      [:abbr {:style {:cursor "help" :whiteSpace "nowrap" :borderBottom "1px dotted"}
+                              :title (get-in library-schema [:consentCodes (keyword consentCode)])}
+                       consentCode]
+                      "]"))
+                  (when required
+                    [:span {:style {:fontWeight "bold"
+                                    :color (when error? (:exception-state style/colors))}}
+                     " (required)"])]
+                   (cond enum
+                       (if (< (count enum) 4)
+                         [:div {:style {:display "inline-block"
+                                        :margin "0.75em 0 0.75em 1em"}}
+                          (map (fn [enum-val]
+                                 [:label {:style {:display "inline-flex" :alignItems "center" :cursor "pointer" :marginRight "2em"
+                                                  :color (when error? (:exception-state style/colors))}}
+                                  [:input (merge
+                                            {:type "radio" :style {:cursor "pointer"}
+                                             :onClick #(swap! state update :attributes assoc property-kwd enum-val)}
+                                            (when (= enum-val (get (:attributes @state) property-kwd)) {:checked true}))]
+                                  [:div {:style {:padding "0 0.4em" :fontWeight "500"}} enum-val]])
+                               enum)]
+                         (style/create-identity-select {:value (get (:attributes @state) property-kwd ENUM_EMPTY_CHOICE)
+                                                        :style (colorize {})
+                                                        :onChange update-property}
+                                                       (cons ENUM_EMPTY_CHOICE enum)))
+                       (= renderHint "text")
+                       (style/create-text-area {:style (colorize {:width "100%"})
+                                                :value (get (:attributes @state) property-kwd)
+                                                :onChange update-property
+                                                :rows 3})
+                       (= typeahead "ontology")
+                       [:div {}
+                        (style/create-text-field {:ref property-kwd
+                                                  :className "typeahead"
+                                                  :placeholder "Select an ontology value."
+                                                  :style {:width "100%" :marginBottom "0px"}
+                                                  :value (get (:attributes @state) property-kwd)
+                                                  :onChange update-property})
+                        (let [relatedID (library-utils/get-related-value (:attributes @state) library-schema property-kwd true)
+                              relatedLabel (library-utils/get-related-value (:attributes @state) library-schema property-kwd false)]
+                          (if (not (or (clojure.string/blank? relatedID) (clojure.string/blank? relatedLabel)))
+                            [:div {:style {:fontWeight "bold" :marginBottom ".75em"}}
+                             relatedLabel [:span {:style {:fontWeight "normal" :fontSize "small" :float "right"}} relatedID]
+                             [:div {:style {:fontWeight "normal"}}
+                              (style/create-link {:text "Clear Selection"
+                                                  :onClick #(swap! state update :attributes assoc
+                                                                   (library-utils/get-related-label-keyword library-schema property-kwd) nil
+                                                                   (library-utils/get-related-id-keyword library-schema property-kwd) nil)})]]))]
+                       :else
+                       (style/create-text-field {:style (colorize {:width "100%"})
+                                                 :type (cond (= renderHint "date") "date"
+                                                             (= renderHint "email") "email"
+                                                             (= type "integer") "number"
+                                                             :else "text")
+                                                 :min minimum
+                                                 :placeholder inputHint
+                                                 :value (get (:attributes @state) property-kwd)
 
+                                                 :onChange update-property}))])))
+          questions)]))
+   :component-did-mount
+   (fn [{:keys [props state refs]}]
+     (let [{:keys [library-schema questions]} props]
+        (let [versions (get-in library-schema [:versions])]
+          (mapv (fn [version]
+                  (let [currentVersion (get-in library-schema [:properties (keyword version) :default])]
+                    (swap! state update :attributes assoc (keyword version) currentVersion)))
+            versions))
+       (doseq [{:keys [property]} questions]
+         (let [property-kwd (keyword property)
+               {:keys [typeahead relatedID relatedLabel]} (get-in library-schema [:properties property-kwd])
+               options  (js/Bloodhound. (clj->js
+                                          {:datumTokenizer js/Bloodhound.tokenizers.whitespace
+                                           :queryTokenizer js/Bloodhound.tokenizers.whitespace
+                                           :remote (clj->js {:url (str (config/api-url-root) "/duos/autocomplete/%QUERY")
+                                                             :wildcard "%QUERY"})}))]
+             (if (= typeahead "ontology")
+               (do
+                 (.typeahead (js/$ (@refs property))
+                             (clj->js {:highlight true
+                                       :hint true
+                                       :minLength 3})
+                             (clj->js
+                               {:source options
+                                :display (fn [result]
+                                           (aget result "label"))
+                                :templates (clj->js
+                                             {:empty "<div> unable to find any matches to the current query </div>"
+                                              :suggestion
+                                              (fn [result]
+                                                (str "<div> <div style='line-height: 1.5em;'>" (aget result "label")
+                                                     "<small style='float: right;'>" (aget result "id") "</small></div>"
+                                                     "<small style='font-style: italic;'> " (aget result "definition") "</small></div>"))})}))
+                 (.bind (js/$ (@refs property))
+                        "typeahead:select"
+                        (fn [ev suggestion]
+                          (swap! state update :attributes assoc
+                                 property-kwd (aget suggestion "label")
+                                 (keyword relatedLabel) (aget suggestion "label")
+                                 (keyword relatedID) (aget suggestion "id"))))))))))})
 
 (react/defc Options
   {:validate
