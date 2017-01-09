@@ -785,6 +785,10 @@
   {:path "/library/search"
    :method :post })
 
+(def autocomplete-library-search
+  {:path "/library/suggest"
+   :method :post })
+
 (defn submissions-queue-status []
   {:path "/submissions/queueStatus"
    :method :get
