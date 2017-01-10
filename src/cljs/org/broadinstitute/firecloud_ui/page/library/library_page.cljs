@@ -137,40 +137,45 @@
      [:div {}
       [:div {:style {:fontWeight 700 :fontSize "125%" :marginBottom "1em"}} "Search Filters:"]
       [:div {:style {:background (:background-light style/colors) :padding "16px 12px"}}
-;;        [comps/TextFilter {:on-filter (:on-filter props) :width "100%" :initial-text
+       ;;        [comps/TextFilter {:on-filter (:on-filter props) :width "100%" :initial-text
        (style/create-text-field {:ref "text-filter"
-;;                                  :value (:search-text props)
+                                 ;;                                  :value (:search-text props)
                                  :style {:width "100%"}
                                  :placeholder "Search"
-;;                                  :onChange (:on-filter props)
+                                 ;;                                  :onChange (:on-filter props)
                                  :className "typeahead"})]])
    :component-did-mount
    (fn [{:keys [props state refs]}]
-     (let [options (js/Bloodhound. (clj->js
-                                     {:datumTokenizer js/Bloodhound.tokenizers.whitespace
-                                      :queryTokenizer js/Bloodhound.tokenizers.whitespace
-                                      :remote (clj->js { ;; TODO: fix
-                                                         :url "https://local.broadinstitute.org:10443/api/library/suggest"
-                                                         :prepare (fn [query settings]
-                                                                    (clj->js
-                                                                    (assoc settings :headers (str "Authorization: Bearer " (utils/cljslog (utils/get-access-token))))))
-                                                         :ajax (clj->js { :type "POST"
-;;                                                                           :wildcard "%QUERY"
-                                                                          :data (clj->js
-                                                                                  {:searchString "%QUERY"
-                                                                                   :filters {}
-                                                                                   :from 0
-                                                                                   :size 10})})
-;;                                                                           :beforeSend (fn[function(jqXHR,settings){ settings.data+="&q="+$('.tt-input').typeahead('val');},
-;;             complete:function(jqXHR,textStatus){
+     (let [options (js/Bloodhound.
+                     (clj->js
+                       {:datumTokenizer js/Bloodhound.tokenizers.whitespace
+                        :queryTokenizer js/Bloodhound.tokenizers.whitespace
+                        :remote (clj->js {;; TODO: fix
+                                          :url "https://local.broadinstitute.org:10443/api/library/suggest"
+                                          :prepare (fn [query settings]
+                                                     (utils/log (clj->js (assoc (js->clj settings)
+                                                                           :headers (clj->js {:Authorization (str "Bearer " (utils/get-access-token))
+                                                                                              :Content-Type "application/json; charset=UTF-8"})
+                                                                           :type "POST"
+                                                                           :contentType "application/json; charset=UTF-8\""
+                                                                           :processData false
+                                                                           ;; send data properly ???
+                                                                           :data (utils/log
+                                                                                   (clj->js
+                                                                                   ;(utils/->json-string
+                                                                                     {:searchString query
+                                                                                      :filters (clj->js {})
+                                                                                      ;:filters {}
+                                                                                      :from 0
+                                                                                      :size 10})
+                                                                                   )))))})}))]
 
-                                                         })}))]
        (.typeahead (js/$ (@refs "text-filter")) ;; should this just be (refs this) ??
-                             (clj->js {:highlight true
-                                       :hint true
-                                       :minLength 3})
-                             (clj->js
-                               {:source options}))))})
+                   (clj->js {:highlight true
+                             :hint true
+                             :minLength 3})
+                   (clj->js
+                     {:source options}))))})
 
 (react/defc FacetCheckboxes
   {:render
