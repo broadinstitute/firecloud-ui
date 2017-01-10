@@ -136,21 +136,22 @@
                          (fn [{:keys [key]}] key)  (:buckets props))
            hidden-items (clojure.set/difference (:selected-items props) (set all-buckets))
            hidden-items-formatted (mapv (fn [item] {:key item}) hidden-items)]
-       [:div {:style {:fontWeight "bold" :paddingBottom "1em"}}
-        [:hr {}] title
-        [:div {:style {:fontSize "80%" :fontWeight "normal" :float "right"}}
+       [:div {:style {:paddingBottom "1em"}}
+        [:hr {}]
+        [:span {:style {:fontWeight "bold"}} title]
+        [:div {:style {:fontSize "80%" :float "right"}}
          (style/create-link {:text "Clear" :onClick #(react/call :clear-all this)})]
-        [:div {:style {:paddingTop "1em" :fontWeight "normal"}}
+        [:div {:style {:paddingTop "1em"}}
          (map
            (fn [m]
              [:div {:style {:paddingTop "5"}}
-              [:label {}
+              [:label {:style {:width "calc(100% - 30px)" :display "inline-block" :textOverflow "ellipsis" :overflow "hidden" :whiteSpace "nowrap"} :title (:key m) }
                [:input {:type "checkbox"
                         :checked (contains? (:selected-items props) (:key m))
                         :onChange (fn [e] (react/call :update-selected this (:key m) (.-checked (.-target e))))}]
                (:key m)]
               (when (contains? m :doc_count)
-              [:div {:style {:fontSize "80%" :fontWeight "normal" :float "right"}}
+              [:div {:style {:width 24 :fontSize "80%" :fontWeight "normal" :float "right"}}
                [:span {:style {
                                :display "inline-block"
                                :minWidth "10px"
@@ -167,7 +168,7 @@
          [:div {:style {:paddingTop "5"}}
           (if (:expanded? props)
             (when (> (count (:buckets props)) 5) (style/create-link {:text " less..." :onClick #(react/call :update-expanded this false)}))
-            (when (> size 0) (style/create-link {:text (str size " more...") :onClick #(react/call :update-expanded this true)})))]]]))
+            (when (> size 0) (style/create-link {:text " more..." :onClick #(react/call :update-expanded this true)})))]]]))
    :clear-all
    (fn [{:keys [props]}]
      ((:callback-function props) (:field props) #{}))
@@ -194,7 +195,7 @@
            title (:title properties)
            render-hint (get-in properties [:aggregate :renderHint])
            aggregations (get-aggregations-for-property k (:aggregates props))]
-        [:div {:style {:fontSize "80%"}}
+
          (cond
            (= render-hint "checkbox") [FacetCheckboxes
                                        {:title title
@@ -204,7 +205,7 @@
                                         :expanded? (:expanded? props)
                                         :selected-items (:selected-items props)
                                         :callback-function (:callback-function props)
-                                        :expanded-callback-function (:expanded-callback-function props)}])]))})
+                                        :expanded-callback-function (:expanded-callback-function props)}])))})
 
 (react/defc FacetSection
   {:update-aggregates
@@ -212,16 +213,16 @@
      (swap! state assoc :aggregates aggregate-data))
    :render
    (fn [{:keys [props state]}]
-     (if-not (:aggregates @state)
+     (if (empty? (:aggregates @state))
        [:div {:style {:fontSize "80%"}} "loading..."]
        (let [aggregate-fields (:aggregate-fields props)]
-         [:div {:style {:background (:background-light style/colors) :padding "16px 12px"}}
+         [:div {:style {:fontSize "80%" :background (:background-light style/colors) :padding "16px 12px"}}
           (map
             (fn [prop-name] [Facet {:aggregate-field prop-name
                             :aggregate-properties (prop-name (:aggregate-properties props))
                             :aggregates (:aggregates @state)
                             :expanded? (contains? (:expanded-aggregates props) prop-name)
-                            :selected-items (get-in props [:facet-filters prop-name])
+                            :selected-items (set (get-in props [:facet-filters prop-name]))
                             :callback-function (:callback-function props)
                             :expanded-callback-function (:expanded-callback-function props)}])
             aggregate-fields)])))})
@@ -260,7 +261,7 @@
    :render
    (fn [{:keys [this refs state]}]
      [:div {:style {:display "flex" :marginTop "2em"}}
-      [:div {:style {:flex "0 0 250px" :marginRight "2em"}}
+      [:div {:style {:width "20%" :minWidth 250 :marginRight "2em"}}
        [SearchSection {:search-text (:search-text @state)
                        :on-filter #(swap! state assoc :search-text %)}]
        [FacetSection {:ref "facets"
