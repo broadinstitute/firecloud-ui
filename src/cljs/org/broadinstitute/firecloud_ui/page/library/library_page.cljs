@@ -75,21 +75,21 @@
                      (nav/navigate (:nav-context props) "workspaces" (common/row->workspace-id data))
                      (comps/push-message {:header "Request Access"
                                           :message
-                                            (if (= (config/tcga-namespace) (:namespace data))
-                                             [:span {}
-                                               [:p {} "For access to TCGA protected data please apply for access via dbGaP [instructions can be found "
-                                               [:a {:href "https://wiki.nci.nih.gov/display/TCGA/Application+Process" :target "_blank"} "here"] "]." ]
-                                               [:p {} "After dbGaP approves your application please link your eRA Commons ID in your FireCloud profile page."]]
-                                             [:span {}
+                                          (if (= (config/tcga-namespace) (:namespace data))
+                                            [:span {}
+                                             [:p {} "For access to TCGA protected data please apply for access via dbGaP [instructions can be found "
+                                              [:a {:href "https://wiki.nci.nih.gov/display/TCGA/Application+Process" :target "_blank"} "here"] "]." ]
+                                             [:p {} "After dbGaP approves your application please link your eRA Commons ID in your FireCloud profile page."]]
+                                            [:span {}
                                              "Please contact " [:a {:target "_blank" :href (str "mailto:" (:library:contactEmail data))} (str (:library:datasetCustodian data) " <" (:library:contactEmail data) ">")]
-                                               " and request access for the "
-                                               (:namespace data) "/" (:name data) " workspace."])})))}))
+                                             " and request access for the "
+                                             (:namespace data) "/" (:name data) " workspace."])})))}))
    :build-aggregate-fields
    (fn [{:keys [props]}]
      (reduce
-     (fn [results field] (assoc results field (if (contains? (:expanded-aggregates props) field ) 0 5)))
-     {}
-   (:aggregate-fields props)))
+       (fn [results field] (assoc results field (if (contains? (:expanded-aggregates props) field ) 0 5)))
+       {}
+       (:aggregate-fields props)))
    :pagination
    (fn [{:keys [this state props]}]
      (fn [{:keys [current-page rows-per-page]} callback]
@@ -122,40 +122,45 @@
      [:div {}
       [:div {:style {:fontWeight 700 :fontSize "125%" :marginBottom "1em"}} "Search Filters:"]
       [:div {:style {:background (:background-light style/colors) :padding "16px 12px"}}
-;;        [comps/TextFilter {:on-filter (:on-filter props) :width "100%" :initial-text
+       ;;        [comps/TextFilter {:on-filter (:on-filter props) :width "100%" :initial-text
        (style/create-text-field {:ref "text-filter"
-;;                                  :value (:search-text props)
+                                 ;;                                  :value (:search-text props)
                                  :style {:width "100%"}
                                  :placeholder "Search"
-;;                                  :onChange (:on-filter props)
+                                 ;;                                  :onChange (:on-filter props)
                                  :className "typeahead"})]])
    :component-did-mount
    (fn [{:keys [props state refs]}]
-     (let [options (js/Bloodhound. (clj->js
-                                     {:datumTokenizer js/Bloodhound.tokenizers.whitespace
-                                      :queryTokenizer js/Bloodhound.tokenizers.whitespace
-                                      :remote (clj->js { ;; TODO: fix
-                                                         :url "https://local.broadinstitute.org:10443/api/library/suggest"
-                                                         :prepare (fn [query settings]
-                                                                    (clj->js
-                                                                    (assoc settings :headers (str "Authorization: Bearer " (utils/cljslog (utils/get-access-token))))))
-                                                         :ajax (clj->js { :type "POST"
-;;                                                                           :wildcard "%QUERY"
-                                                                          :data (clj->js
-                                                                                  {:searchString "%QUERY"
-                                                                                   :filters {}
-                                                                                   :from 0
-                                                                                   :size 10})})
-;;                                                                           :beforeSend (fn[function(jqXHR,settings){ settings.data+="&q="+$('.tt-input').typeahead('val');},
-;;             complete:function(jqXHR,textStatus){
+     (let [options (js/Bloodhound.
+                     (clj->js
+                       {:datumTokenizer js/Bloodhound.tokenizers.whitespace
+                        :queryTokenizer js/Bloodhound.tokenizers.whitespace
+                        :remote (clj->js {;; TODO: fix
+                                          :url "https://local.broadinstitute.org:10443/api/library/suggest"
+                                          :prepare (fn [query settings]
+                                                     (utils/log (clj->js (assoc (js->clj settings)
+                                                                           :headers (clj->js {:Authorization (str "Bearer " (utils/get-access-token))
+                                                                                              :Content-Type "application/json; charset=UTF-8"})
+                                                                           :type "POST"
+                                                                           :contentType "application/json; charset=UTF-8\""
+                                                                           :processData false
+                                                                           ;; send data properly ???
+                                                                           :data (utils/log
+                                                                                   (clj->js
+                                                                                   ;(utils/->json-string
+                                                                                     {:searchString query
+                                                                                      :filters (clj->js {})
+                                                                                      ;:filters {}
+                                                                                      :from 0
+                                                                                      :size 10})
+                                                                                   )))))})}))]
 
-                                                         })}))]
        (.typeahead (js/$ (@refs "text-filter")) ;; should this just be (refs this) ??
-                             (clj->js {:highlight true
-                                       :hint true
-                                       :minLength 3})
-                             (clj->js
-                               {:source options}))))})
+                   (clj->js {:highlight true
+                             :hint true
+                             :minLength 3})
+                   (clj->js
+                     {:source options}))))})
 
 (react/defc FacetCheckboxes
   {:render
@@ -180,19 +185,19 @@
                         :onChange (fn [e] (react/call :update-selected this (:key m) (.-checked (.-target e))))}]
                (:key m)]
               (when (contains? m :doc_count)
-              [:div {:style {:fontSize "80%" :fontWeight "normal" :float "right"}}
-               [:span {:style {
-                               :display "inline-block"
-                               :minWidth "10px"
-                               :padding "3px 7px"
-                               :color "#fff"
-                               :fontWeight "bold"
-                               :textAlign "center"
-                               :whiteSpace "nowrap"
-                               :verticalAlign "middle"
-                               :backgroundColor "#aaa"
-                               :borderRadius "3px"
-                               }} (:doc_count m)]])])
+                [:div {:style {:fontSize "80%" :fontWeight "normal" :float "right"}}
+                 [:span {:style {
+                                 :display "inline-block"
+                                 :minWidth "10px"
+                                 :padding "3px 7px"
+                                 :color "#fff"
+                                 :fontWeight "bold"
+                                 :textAlign "center"
+                                 :whiteSpace "nowrap"
+                                 :verticalAlign "middle"
+                                 :backgroundColor "#aaa"
+                                 :borderRadius "3px"
+                                 }} (:doc_count m)]])])
            (concat (:buckets props) hidden-items-formatted))
          [:div {:style {:paddingTop "5"}}
           (if (:expanded? props)
@@ -224,17 +229,17 @@
            title (:title properties)
            render-hint (get-in properties [:aggregate :renderHint])
            aggregations (get-aggregations-for-property k (:aggregates props))]
-        [:div {:style {:fontSize "80%"}}
-         (cond
-           (= render-hint "checkbox") [FacetCheckboxes
-                                       {:title title
-                                        :numOtherDocs (:numOtherDocs aggregations)
-                                        :buckets (:buckets aggregations)
-                                        :field k
-                                        :expanded? (:expanded? props)
-                                        :selected-items (:selected-items props)
-                                        :callback-function (:callback-function props)
-                                        :expanded-callback-function (:expanded-callback-function props)}])]))})
+       [:div {:style {:fontSize "80%"}}
+        (cond
+          (= render-hint "checkbox") [FacetCheckboxes
+                                      {:title title
+                                       :numOtherDocs (:numOtherDocs aggregations)
+                                       :buckets (:buckets aggregations)
+                                       :field k
+                                       :expanded? (:expanded? props)
+                                       :selected-items (:selected-items props)
+                                       :callback-function (:callback-function props)
+                                       :expanded-callback-function (:expanded-callback-function props)}])]))})
 
 (react/defc FacetSection
   {:update-aggregates
@@ -248,12 +253,12 @@
          [:div {:style {:background (:background-light style/colors) :padding "16px 12px"}}
           (map
             (fn [prop-name] [Facet {:aggregate-field prop-name
-                            :aggregate-properties (prop-name (:aggregate-properties props))
-                            :aggregates (:aggregates @state)
-                            :expanded? (contains? (:expanded-aggregates props) prop-name)
-                            :selected-items (get-in props [:facet-filters prop-name])
-                            :callback-function (:callback-function props)
-                            :expanded-callback-function (:expanded-callback-function props)}])
+                                    :aggregate-properties (prop-name (:aggregate-properties props))
+                                    :aggregates (:aggregates @state)
+                                    :expanded? (contains? (:expanded-aggregates props) prop-name)
+                                    :selected-items (get-in props [:facet-filters prop-name])
+                                    :callback-function (:callback-function props)
+                                    :expanded-callback-function (:expanded-callback-function props)}])
             aggregate-fields)])))})
 
 (def ^:private PERSISTENCE-KEY "library-page")
