@@ -29,8 +29,11 @@
          (when (:server-error @state)
            [:div {:style {:marginTop "0.5em"}}
             [comps/ErrorViewer {:error (:server-error @state)}]])
-         [:div {:style {:marginTop "1em"}}
-          [comps/Button {:text "Copy"
+         [:div {:style {:display "inline-flex" :marginTop "1em"}}
+           [comps/Button {:text "Done"
+                          :style {:marginRight 20}
+                          :onClick (:done props) }]
+           [comps/Button {:text "Copy"
                          :onClick #(let [selected (react/call :get-selected-entities (@refs "EntitySelector"))]
                                      (if (empty? selected)
                                        (swap! state assoc :selection-error true)
@@ -60,7 +63,8 @@
                                             :entity-list (:entity-list @state)
                                             :type (:type props)
                                             :id-name (:id-name props)
-                                            :reload-data-tab (:reload-data-tab props)}]
+                                            :reload-data-tab (:reload-data-tab props)
+                                            :done (:done props)}]
        (:server-error @state) [comps/ErrorViewer {:error (:server-error @state)}]
        :else [:div {:style {:textAlign "center"}} [comps/Spinner {:text "Loading entities..."}]]))
    :component-did-mount

@@ -68,7 +68,8 @@
                                          :selected-workspace-id (workspace->id selected-workspace)
                                          :crumbs (rest (:crumbs props))
                                          :add-crumb (:add-crumb props)
-                                         :reload-data-tab (:reload-data-tab props)}]
+                                         :reload-data-tab (:reload-data-tab props)
+                                         :done (:done props)}]
          (:workspaces @state)
          [WorkspaceList {:workspaces (:workspaces @state)
                          :num-filtered (:num-filtered @state)

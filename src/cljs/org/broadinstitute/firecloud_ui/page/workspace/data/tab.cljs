@@ -80,7 +80,8 @@
               (assoc (select-keys props [:workspace-id :this-realm :reload])
                 :crumbs (drop 2 (:crumbs @state))
                 :add-crumb #(swap! state update-in [:crumbs] conj %)
-                :pop-to-depth #(swap! state update-in [:crumbs] subvec 0 %))]
+                :pop-to-depth #(swap! state update-in [:crumbs] subvec 0 %)
+                :done (fn [] (modal/pop-modal)))]
              (let [style {:width 240 :margin "auto" :textAlign "center" :cursor "pointer"
                           :backgroundColor (:button-primary style/colors)
                           :color "#fff" :padding "1em" :borderRadius 8}]
