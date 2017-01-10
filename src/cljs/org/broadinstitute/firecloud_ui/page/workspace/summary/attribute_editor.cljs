@@ -125,8 +125,8 @@
                                :onClick #(modal/push-modal
                                            [comps/OKCancelForm
                                             {:header "Import Attributes"
-                                             :show-cancel? false :ok-button {:text "Done" :onClick modal/pop-modal}
-                                             :content [:div {:style {:float "right" :width 720}}
+                                             :show-cancel? false
+                                             :content [:div {:style {:width 720 :backgroundColor "white" :padding "1em"}}
                                                        [import-data/Page (merge (select-keys props [:workspace-id])
                                                                            {:reload (fn [] (modal/pop-modal) ((:request-refresh props)))}
                                                                            {:import-type "workspace-attributes"})]]}])}])])])

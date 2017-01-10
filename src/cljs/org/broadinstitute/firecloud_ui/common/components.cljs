@@ -479,10 +479,11 @@
                    :onClick modal/pop-modal
                    :onKeyDown (common/create-key-handler [:space :enter] modal/pop-modal)}
                cancel-text])
+            (when ok-button
             (cond (string? ok-button) [Button {:text ok-button :ref "ok-button" :class-name "ok-button" :onClick modal/pop-modal}]
               (fn? ok-button) [Button {:text "OK" :ref "ok-button" :class-name "ok-button" :onClick ok-button}]
               (map? ok-button) [Button (merge {:ref "ok-button" :class-name "ok-button"} ok-button)]
-              :else ok-button)])]]))
+              :else ok-button))])]]))
    :component-did-mount
    (fn [{:keys [props refs]}]
      (when-let [get-first (:get-first-element-dom-node props)]

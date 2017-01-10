@@ -60,14 +60,14 @@
    (fn [{:keys [state props]}]
      [comps/OKCancelForm
       {:header "Import Data"
-       :show-cancel? false :ok-button {:text "Done" :onClick modal/pop-modal}
+       :show-cancel? false
        :content
        (let [last-crumb-id (:id (second (:crumbs @state)))
              add-crumb (fn [id text]
                          (swap! state update-in [:crumbs] conj
                                 {:id id :text text
                                  :onClick #(swap! state update-in [:crumbs] (comp vec (partial take 2)))}))]
-         [:div {:style {:position "relative" :minWidth 500}}
+         [:div {:style {:position "relative" :width 720}}
           [:div {:style {:fontSize "150%" :marginBottom "1ex"}}
            [comps/Breadcrumbs {:crumbs (:crumbs @state)}]]
           common/PHI-warning
