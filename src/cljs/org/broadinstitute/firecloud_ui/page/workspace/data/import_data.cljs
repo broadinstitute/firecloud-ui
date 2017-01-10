@@ -40,7 +40,7 @@
             [:em {} "(file truncated for preview)"])]])
       (when (and (:file @state) (not (:upload-result @state)))
         [:div {:style {:display "inline-flex" }}
-         [comps/Button {:text "Cancel"
+         [comps/Button {:text "Done"
                         :onClick (:cancel props)
                         :style {:marginRight 20}}]
          [comps/Button {:text "Upload"
