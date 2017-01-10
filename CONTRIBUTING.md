@@ -6,6 +6,9 @@ For ClojureScript code, we follow the [Clojure Style Guide](https://github.com/b
 
 In Atom, the Lisp Paredit package formats code correctly. In IntelliJ, the Cursive plugin formats code correctly with a few configuration changes.
 
+Note: To correctly format `dmohs.react/defc` in Cursive, right-click on any usage of that symbol and tell Cursive to resolve it as a `def`. See screenshot below:
+![resolve defc as def](https://cloud.githubusercontent.com/assets/22642695/21731936/f7e5a17c-d424-11e6-973b-bf5897bbf833.png)
+
 ### Source Code Layout & Organization
 
 Where feasible, avoid making lines longer than 100 characters. We feel the 80-character limit in the style guide is more restrictive than necessary.
@@ -109,3 +112,8 @@ try:
 ### Avoid Infinite Loops
 
 Changing state causes a re-render. If you change state in a lifecycle method such as `component-did-update`, this will re-render, which will call `component-did-update` again, resulting in a loop.
+
+## Tooling Notes
+
+When doing UI development, Chrome's caching just gets in the way. We recommending disabling it when devtools is open (via devtools settings):
+![disable cache image](https://cloud.githubusercontent.com/assets/1545444/21811560/1a1772c4-d71e-11e6-80bf-4ac3ce28e187.png)

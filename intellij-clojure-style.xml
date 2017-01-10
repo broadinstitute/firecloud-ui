@@ -4,7 +4,6 @@
   :cursive.formatting/align-maps false
   :cursive.formatting/comment-align-column 0
   :cursive.formatting/one-space-lists true
-  :org.broadinstitute.firecloud-ui.common.style/create-flexbox :only-indent
 }</ClojureCodeStyleSettings>
   <codeStyleSettings language="Clojure">
     <indentOptions>
