@@ -93,28 +93,29 @@
    :pagination
    (fn [{:keys [this state props]}]
      (fn [{:keys [current-page rows-per-page]} callback]
-       (endpoints/call-ajax-orch
-         (let [from (* (- current-page 1) rows-per-page)]
-           {:endpoint endpoints/search-datasets
-            :payload {:searchString (:search-text props)
-                      :filters (utils/map-kv (fn [k v]
-                                               [(name k) v])
-                                             (:facet-filters props))
-                      :from from
-                      :size rows-per-page
-                      :fieldAggregations (if (= 1 current-page) (react/call :build-aggregate-fields this) {})}
-            :headers utils/content-type=json
-            :on-done
-            (fn [{:keys [success? get-parsed-response status-text]}]
-              (if success?
-                (let [{:keys [total results aggregations]} (get-parsed-response)]
-                  (swap! state assoc :total total)
-                  (callback {:group-count total
-                             :filtered-count total
-                             :rows results})
-                  (when (= 1 current-page)
-                    ((:callback-function props) aggregations)))
-                (callback {:error status-text})))}))))})
+       (when-not (empty? (:aggregate-fields props))
+         (endpoints/call-ajax-orch
+           (let [from (* (- current-page 1) rows-per-page)]
+             {:endpoint endpoints/search-datasets
+              :payload {:searchString (:search-text props)
+                        :filters (utils/map-kv (fn [k v]
+                                                 [(name k) v])
+                                               (:facet-filters props))
+                        :from from
+                        :size rows-per-page
+                        :fieldAggregations (if (= 1 current-page) (react/call :build-aggregate-fields this) {})}
+              :headers utils/content-type=json
+              :on-done
+              (fn [{:keys [success? get-parsed-response status-text]}]
+                (if success?
+                  (let [{:keys [total results aggregations]} (get-parsed-response)]
+                    (swap! state assoc :total total)
+                    (callback {:group-count total
+                               :filtered-count total
+                               :rows results})
+                    (when (= 1 current-page)
+                      ((:callback-function props) aggregations)))
+                  (callback {:error status-text})))})))))})
 
 (react/defc SearchSection
   {:render
@@ -228,7 +229,7 @@
             aggregate-fields)])))})
 
 (def ^:private PERSISTENCE-KEY "library-page")
-(def ^:private VERSION 1)
+(def ^:private VERSION 2)
 
 (react/defc Page
   {:update-filter
