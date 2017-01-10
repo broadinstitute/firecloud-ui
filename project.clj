@@ -15,18 +15,21 @@
   :profiles {:dev
              {:dependencies [[binaryage/devtools "0.8.3"]]
               :target-path "resources/public"
-              :clean-targets ^{:protect false} ["resources/public"]
+              :clean-targets ^{:protect false} [:target-path]
               :cljsbuild
               {:builds
                {:client
-                {:figwheel true
+                {:source-paths ["src/cljstest"]
+                 :figwheel true
                  :compiler
-                 {:optimizations :none
+                 {;; Use this namespace (which requires main) so that testing is readily available
+                  ;; in all dev builds.
+                  :main ~(with-ns "testrunner")
+                  :optimizations :none
                   :output-dir "resources/public/build"
                   :asset-path "build"
                   :output-to "resources/public/compiled.js"
                   :source-map true
-                  :source-map-timestamp true
                   :preloads [devtools.preload]
                   :external-config {:devtools/config {:features-to-install
                                                       [:formatters :hints]}}}}}}}
