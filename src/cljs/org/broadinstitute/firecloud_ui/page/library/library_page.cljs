@@ -135,25 +135,20 @@
                      (clj->js
                        {:datumTokenizer js/Bloodhound.tokenizers.whitespace
                         :queryTokenizer js/Bloodhound.tokenizers.whitespace
-                        :remote (clj->js {;; TODO: fix
-                                          :url "https://local.broadinstitute.org:10443/api/library/suggest"
-                                          :prepare (fn [query settings]
-                                                     (utils/log (clj->js (assoc (js->clj settings)
-                                                                           :headers (clj->js {:Authorization (str "Bearer " (utils/get-access-token))
-                                                                                              :Content-Type "application/json; charset=UTF-8"})
-                                                                           :type "POST"
-                                                                           :contentType "application/json; charset=UTF-8\""
-                                                                           :processData false
-                                                                           ;; send data properly ???
-                                                                           :data (utils/log
-                                                                                   (clj->js
-                                                                                   ;(utils/->json-string
-                                                                                     {:searchString query
-                                                                                      :filters (clj->js {})
-                                                                                      ;:filters {}
-                                                                                      :from 0
-                                                                                      :size 10})
-                                                                                   )))))})}))]
+                        :remote {:url "https://local.broadinstitute.org:10443/api/library/suggest" ;; TODO fix
+                                 :prepare (fn [query settings]
+                                            (clj->js
+                                              (assoc (js->clj settings)
+                                                :headers {:Authorization (str "Bearer " (utils/get-access-token))}
+                                                :type "POST"
+                                                :contentType "application/json; charset=UTF-8"
+                                                :data (utils/->json-string
+                                                        {:searchString query
+                                                         :filters {} ;; TODO: populate with current filters
+                                                         :from 0
+                                                         :size 10}
+                                                         )))
+                   )}}))]
 
        (.typeahead (js/$ (@refs "text-filter")) ;; should this just be (refs this) ??
                    (clj->js {:highlight true
