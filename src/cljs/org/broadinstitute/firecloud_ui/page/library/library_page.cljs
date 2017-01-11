@@ -78,7 +78,8 @@
                                      extra-columns))))}]))
    :execute-search
    (fn [{:keys [refs]}]
-     (if (= (:current-page (react/call :get-query-params (@refs "table"))) 1)
+     (when (and (not (nil? (@refs "table")))
+                (= (:current-page (react/call :get-query-params (@refs "table"))) 1))
        (react/call :execute-search (@refs "table"))
        (react/call :update-query-params (@refs "table") {:current-page 1})))
    :check-access
@@ -273,16 +274,8 @@
            (let [response (get-parsed-response)]
              (swap! state assoc
                     :library-attributes (:properties response)
+                    :aggregate-fields (keep (fn [[k m]] (when (:aggregate m) k)) (:properties response))
                     :search-result-columns (:searchResultColumns response)))))))
-   :render
-   (fn [{:keys [state]}]
-     (endpoints/get-library-attributes
-       (fn [{:keys [success? get-parsed-response]}]
-         (if success?
-           (let [response (get-parsed-response)]
-             (swap! state assoc
-                    :library-attributes (:properties response)
-                    :aggregate-fields (keep (fn [[k m]] (when (:aggregate m) k)) (:properties response))))))))
    :render
    (fn [{:keys [this refs state]}]
      [:div {:style {:display "flex" :marginTop "2em"}}
@@ -302,6 +295,8 @@
        (when
          (and (:library-attributes @state) (:search-result-columns @state))
          [DatasetsTable {:ref "dataset-table"
+                         :library-attributes (:library-attributes @state)
+                         :search-result-columns (:search-result-columns @state)
                          :search-text (:search-text @state)
                          :facet-filters (:facet-filters @state)
                          :aggregate-fields (:aggregate-fields @state)
