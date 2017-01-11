@@ -34,7 +34,8 @@
                             :borderBottom (str "2px solid " (:border-light style/colors))}
          :header-style {:padding "0.5em 0 0.5em 1em"}
          :resizable-columns? true
-         :filterable? true
+         :sortable-columns? false
+         :filterable? false
          :reorder-anchor :right
          :reorder-style {:width "300px" :whiteSpace "nowrap" :overflow "hidden" :textOverflow "ellipsis"}
          :reorder-prefix "Columns"
@@ -56,15 +57,12 @@
          :cell-content-style {:padding nil}
          :columns (concat
                    [{:header (:title (:library:datasetName attributes)) :starting-width 250 :show-initial? true
-                    :sort-by (comp clojure.string/lower-case :library:datasetName)
                     :as-text :library:datasetDescription
                     :content-renderer (fn [data]
                                         (style/create-link {:text (:library:datasetName data)
                                                             :onClick #(react/call :check-access this data)}))}
-                   {:header (:title (:library:indication attributes)) :starting-width 180 :show-initial? true
-                    :sort-by clojure.string/lower-case}
-                   {:header (:title (:library:dataUseRestriction attributes)) :starting-width 180 :show-initial? true
-                    :sort-by clojure.string/lower-case}
+                   {:header (:title (:library:indication attributes)) :starting-width 180 :show-initial? true}
+                   {:header (:title (:library:dataUseRestriction attributes)) :starting-width 180 :show-initial? true}
                    {:header (:title (:library:numSubjects attributes)) :starting-width 100 :show-initial? true}]
                    (map
                     (fn [keyname]
