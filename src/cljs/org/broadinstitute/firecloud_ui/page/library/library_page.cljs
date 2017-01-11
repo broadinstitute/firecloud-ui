@@ -76,10 +76,9 @@
                                      extra-columns))))}]))
    :execute-search
    (fn [{:keys [refs]}]
-     (when (and (not (nil? (@refs "table")))
-                (= (:current-page (react/call :get-query-params (@refs "table"))) 1))
-       (react/call :execute-search (@refs "table"))
-       (react/call :update-query-params (@refs "table") {:current-page 1})))
+     (when (not (nil? (@refs "table")))
+       (react/call :update-query-params (@refs "table") {:current-page 1})
+       (react/call :execute-search (@refs "table"))))
    :check-access
    (fn [{:keys [props]} data]
      (endpoints/call-ajax-orch
@@ -101,9 +100,9 @@
    :build-aggregate-fields
    (fn [{:keys [props]}]
      (reduce
-     (fn [results field] (assoc results field (if (contains? (:expanded-aggregates props) field ) 0 5)))
-     {}
-   (:aggregate-fields props)))
+       (fn [results field] (assoc results field (if (contains? (:expanded-aggregates props) field) 0 5)))
+       {}
+       (:aggregate-fields props)))
    :pagination
    (fn [{:keys [this state props]}]
      (fn [{:keys [current-page rows-per-page]} callback]
@@ -148,7 +147,7 @@
      (let [size (:numOtherDocs props)
            title (:title props)
            all-buckets (mapv
-                         (fn [{:keys [key]}] key)  (:buckets props))
+                         (fn [{:keys [key]}] key) (:buckets props))
            hidden-items (clojure.set/difference (:selected-items props) (set all-buckets))
            hidden-items-formatted (mapv (fn [item] {:key item}) hidden-items)]
        [:div {:style {:paddingBottom "1em"}}
@@ -158,27 +157,15 @@
          (style/create-link {:text "Clear" :onClick #(react/call :clear-all this)})]
         [:div {:style {:paddingTop "1em"}}
          (map
-           (fn [m]
+           (fn [item]
              [:div {:style {:paddingTop "5"}}
-              [:label {:style {:width "calc(100% - 30px)" :display "inline-block" :textOverflow "ellipsis" :overflow "hidden" :whiteSpace "nowrap"} :title (:key m) }
+              [:label {:style {:width "calc(100% - 30px)" :display "inline-block" :textOverflow "ellipsis" :overflow "hidden" :whiteSpace "nowrap"} :title (:key item)}
                [:input {:type "checkbox"
-                        :checked (contains? (:selected-items props) (:key m))
-                        :onChange (fn [e] (react/call :update-selected this (:key m) (.-checked (.-target e))))}]
-               (:key m)]
-              (when (contains? m :doc_count)
-              [:div {:style {:width 24 :fontSize "80%" :fontWeight "normal" :float "right"}}
-               [:span {:style {
-                               :display "inline-block"
-                               :minWidth "10px"
-                               :padding "3px 7px"
-                               :color "#fff"
-                               :fontWeight "bold"
-                               :textAlign "center"
-                               :whiteSpace "nowrap"
-                               :verticalAlign "middle"
-                               :backgroundColor "#aaa"
-                               :borderRadius "3px"
-                               }} (:doc_count m)]])])
+                        :checked (contains? (:selected-items props) (:key item))
+                        :onChange (fn [e] (react/call :update-selected this (:key item) (.-checked (.-target e))))}]
+               (:key item)]
+              (when (contains? item :doc_count)
+                (style/render-count (:doc_count item)))])
            (concat (:buckets props) hidden-items-formatted))
          [:div {:style {:paddingTop "5"}}
           (if (:expanded? props)
@@ -200,8 +187,6 @@
 (defn get-aggregations-for-property [agg-name aggregates]
   (first (keep (fn [m] (when (= (:field m) (name agg-name)) (:results m))) aggregates)))
 
-;; TODO: Styling to match layout model.
-;; TODO: error case for loading content
 (react/defc Facet
   {:render
    (fn [{:keys [props]}]
@@ -211,16 +196,16 @@
            render-hint (get-in properties [:aggregate :renderHint])
            aggregations (get-aggregations-for-property k (:aggregates props))]
 
-         (cond
-           (= render-hint "checkbox") [FacetCheckboxes
-                                       {:title title
-                                        :numOtherDocs (:numOtherDocs aggregations)
-                                        :buckets (:buckets aggregations)
-                                        :field k
-                                        :expanded? (:expanded? props)
-                                        :selected-items (:selected-items props)
-                                        :callback-function (:callback-function props)
-                                        :expanded-callback-function (:expanded-callback-function props)}])))})
+       (cond
+         (= render-hint "checkbox") [FacetCheckboxes
+                                     {:title title
+                                      :numOtherDocs (:numOtherDocs aggregations)
+                                      :buckets (:buckets aggregations)
+                                      :field k
+                                      :expanded? (:expanded? props)
+                                      :selected-items (:selected-items props)
+                                      :callback-function (:callback-function props)
+                                      :expanded-callback-function (:expanded-callback-function props)}])))})
 
 (react/defc FacetSection
   {:update-aggregates
@@ -234,12 +219,12 @@
          [:div {:style {:fontSize "80%" :background (:background-light style/colors) :padding "16px 12px"}}
           (map
             (fn [prop-name] [Facet {:aggregate-field prop-name
-                            :aggregate-properties (prop-name (:aggregate-properties props))
-                            :aggregates (:aggregates @state)
-                            :expanded? (contains? (:expanded-aggregates props) prop-name)
-                            :selected-items (set (get-in props [:facet-filters prop-name]))
-                            :callback-function (:callback-function props)
-                            :expanded-callback-function (:expanded-callback-function props)}])
+                                    :aggregate-properties (prop-name (:aggregate-properties props))
+                                    :aggregates (:aggregates @state)
+                                    :expanded? (contains? (:expanded-aggregates props) prop-name)
+                                    :selected-items (set (get-in props [:facet-filters prop-name]))
+                                    :callback-function (:callback-function props)
+                                    :expanded-callback-function (:expanded-callback-function props)}])
             aggregate-fields)])))})
 
 (def ^:private PERSISTENCE-KEY "library-page")

@@ -82,7 +82,7 @@
      {:initial-checked? false
       :disabled? false})
    :render
-   (fn [{:keys [props this]}]
+   (fn [{:keys [props]}]
      (let [disabled? (:disabled? props)]
        [:label {:style {:cursor (when-not disabled? "pointer")
                         :color (when disabled? (:text-light style/colors))}
@@ -93,8 +93,7 @@
         [:input {:type "checkbox" :ref "check"
                  :defaultChecked (:initial-checked? props)
                  :disabled disabled?
-                 :style {:cursor (when-not disabled? "pointer")}
-                 :onChange #((:onChange props) (react/call :checked? this))}]
+                 :style {:cursor (when-not disabled? "pointer")}}]
         [:span {:style {:marginLeft "0.5ex"}} (:label props)]]))})
 
 
@@ -449,35 +448,6 @@
    :component-did-mount
    (fn [{:keys [refs this]}]
      (.addEventListener (@refs "filter-field") "search" #(when (= (.-value (.-currentTarget %)) "") (react/call :apply-filter this))))})
-
-(react/defc FacetFilter
-  {:render
-   (fn [{:keys [props state]}]
-     [:div (:title props)]
-     [:div ;{:style {:display "flex" :justifyContent "space-between"}}
-      (map
-        (fn [{:keys [key doc_count]}]
-          ([Checkbox
-            {;:ref key
-             :label key
-             }]
-           [:span {:style {:background (:background-light style/colors)  :alignItems "right" }} doc_count]))
-        (:buckets @state))])
-
-   ;:get-checked
-   ;(fn [] )
-   ;:apply-filter
-   ;(fn [{:keys [props refs]}]
-   ;  ((:on-filter props) {this (react/call :get-checked-list this)}))
-   ;:update-from-results
-   ;(fn [{:keys [props state]} aggdata]
-   ;  ;; diff between update and assoc?
-   ;  (swap! state assoc :buckets (:buckets (:results aggdata)) :other_docs (:numOtherDocs (:results aggdata))))
-   ;:component-did-mount
-   ;(fn [{:keys [refs this]}]
-   ;  (.addEventListener (@refs "filter-field") "search" #(when (= (.-value (.-currentTarget %)) "") (react/call :apply-filter this))))
-
-   })
 
 
 (react/defc OKCancelForm
