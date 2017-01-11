@@ -76,9 +76,8 @@
                                      extra-columns))))}]))
    :execute-search
    (fn [{:keys [refs]}]
-     (when (not (nil? (@refs "table")))
-       (react/call :update-query-params (@refs "table") {:current-page 1})
-       (react/call :execute-search (@refs "table"))))
+     (react/call :update-query-params (@refs "table") {:current-page 1})
+     (react/call :execute-search (@refs "table")))
    :check-access
    (fn [{:keys [props]} data]
      (endpoints/call-ajax-orch
