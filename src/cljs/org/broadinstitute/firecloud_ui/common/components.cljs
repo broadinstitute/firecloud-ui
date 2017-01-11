@@ -449,6 +449,46 @@
    (fn [{:keys [refs this]}]
      (.addEventListener (@refs "filter-field") "search" #(when (= (.-value (.-currentTarget %)) "") (react/call :apply-filter this))))})
 
+(react/defc AutocompleteFilter
+  {:render
+   (fn [{:keys [props this]}]
+     (let [{:keys [initial-text placeholder width]} props]
+       [:div {:style {:display "inline-flex" :width width}}
+        (style/create-text-field
+          {:ref "autocomplete-filter-field" :autoSave "true" :results 5 :autofocus "true"
+           :placeholder (or placeholder "Filter") :defaultValue initial-text
+           :style {:flex "1 0 auto" :borderRadius "3px 0 0 3px" :marginBottom 0}
+           :className "typeahead" :onKeyDown (common/create-key-handler [:enter] #(react/call :apply-filter this))})
+
+        ;; do we want this button
+        [Button {:icon :search :onClick #(react/call :apply-filter this)
+                 :style {:flex "0 0 auto" :borderRadius "0 3px 3px 0"}}]]))
+   :apply-filter
+   (fn [{:keys [props refs]}]
+     ((:on-filter props) (common/get-text refs "autocomplete-filter-field")))
+
+   :component-did-mount
+   (fn [{:keys [refs props this]}]
+     (let [options (js/Bloodhound.
+                     (clj->js
+                       {:datumTokenizer js/Bloodhound.tokenizers.whitespace
+                        :queryTokenizer js/Bloodhound.tokenizers.whitespace
+                        :remote (clj->js (:bloodhoundInfo props))}))]
+       (.typeahead (js/$ (@refs "autocomplete-filter-field"))
+                   (clj->js
+                     {:hint true
+                      :minLength 1})
+                   (clj->js
+                     {:source options
+                      :display (:typeaheadDisplay props)
+                      :templates
+                      (clj->js
+                        {:empty "<div style='padding: 0.5em;'> Unable to find any matches to the current query </div>"
+                         :suggestion (:typeaheadSuggestionTemplate props)})})))
+     )})
+     ;; isntead of this, should we be binding the event to autocomplete selected ??
+     ;(.addEventListener (@refs "autocomplete-filter-field") "search" #(when (= (.-value (.-currentTarget %)) "") (react/call :apply-filter this))))})
+
 
 (react/defc OKCancelForm
   {:get-default-props

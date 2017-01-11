@@ -137,40 +137,49 @@
      [:div {}
       [:div {:style {:fontWeight 700 :fontSize "125%" :marginBottom "1em"}} "Search Filters:"]
       [:div {:style {:background (:background-light style/colors) :padding "16px 12px"}}
-       ;;        [comps/TextFilter {:on-filter (:on-filter props) :width "100%" :initial-text
-       (style/create-text-field {:ref "text-filter"
-                                 ;;                                  :value (:search-text props)
-                                 :style {:width "100%"}
-                                 :placeholder "Search"
-                                 ;;                                  :onChange (:on-filter props)
-                                 :className "typeahead"})]])
-   :component-did-mount
-   (fn [{:keys [props state refs]}]
-     (let [options (js/Bloodhound.
-                     (clj->js
-                       {:datumTokenizer js/Bloodhound.tokenizers.whitespace
-                        :queryTokenizer js/Bloodhound.tokenizers.whitespace
-                        :remote {:url "https://local.broadinstitute.org:10443/api/library/suggest" ;; TODO fix
-                                 :prepare (fn [query settings]
-                                            (clj->js
-                                              (assoc (js->clj settings)
-                                                :headers {:Authorization (str "Bearer " (utils/get-access-token))}
-                                                :type "POST"
-                                                :contentType "application/json; charset=UTF-8"
-                                                :data (utils/->json-string
-                                                        {:searchString query
-                                                         :filters {} ;; TODO: populate with current filters
-                                                         :from 0
-                                                         :size 10}
-                                                         )))
-                   )}}))]
+       [comps/AutocompleteFilter
+        {:on-filter (:on-filter props)
+         :width "100%"
+         :initial-text (:search-text props)
+         :ref "text-filter"
+         :placeholder "Search"
+         :bloodhoundInfo {:url "https://local.broadinstitute.org:10443/api/library/suggest" ;; TODO fix
+                          :cache false
+                          :transform (fn [response]
+                                       (clj->js
+                                         (mapv (fn [string]
+                                                 (clj->js {:value string}))
+                                               (aget response "results"))))
+                          :prepare (fn [query settings]
+                                      (clj->js
+                                        (assoc (js->clj settings)
+                                          :headers {:Authorization (str "Bearer " (utils/get-access-token))}
+                                          :type "POST"
+                                          :contentType "application/json; charset=UTF-8"
+                                          :data (utils/->json-string
+                                                  {:searchString query
+                                                   :filters {} ;; TODO: populate with current filters
+                                                   :from 0
+                                                   :size 10}))))}
+         :typeaheadDisplay (fn [result]
+                             (clojure.string/replace (aget result "value") #"<strong class='es-highlight'>|</strong>" ""))
+         :typeaheadSuggestionTemplate (fn [result]
+                                        (str "<div>" (aget result "value") "</div>"))
+         }]]])
+       ;(style/create-text-field {
+       ;                          :on-filter (:on-filter props)
+       ;                          :width "100%"
+       ;                          :initial-text (:search-text props)
+       ;                          :ref "library-filter-field"
+       ;                          :placeholder "Search"
+       ;                          :className "typeahead"})
 
-       (.typeahead (js/$ (@refs "text-filter")) ;; should this just be (refs this) ??
-                   (clj->js {:highlight true
-                             :hint true
-                             :minLength 3})
-                   (clj->js
-                     {:source options}))))})
+   ;:component-did-mount
+
+
+      ;; right elipsis ??
+
+      })
 
 (react/defc FacetCheckboxes
   {:render
