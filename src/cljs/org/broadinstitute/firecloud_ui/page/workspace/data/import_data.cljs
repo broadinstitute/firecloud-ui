@@ -14,7 +14,7 @@
 
 (react/defc Page
   {:render
-   (fn [{:keys [state refs this]}]
+   (fn [{:keys [state props refs this]}]
      [:div {:style {:textAlign "center"}}
       (when (:loading? @state)
         [comps/Blocker {:banner "Uploading file..."}])
@@ -41,7 +41,7 @@
       (when (and (:file @state) (not (:upload-result @state)))
         [:div {:style {:display "inline-flex" }}
          [comps/Button {:text "Done"
-                        :onClick (:cancel props)
+                        :onClick (:cancel sbt props)
                         :style {:marginRight 20}}]
          [comps/Button {:text "Upload"
                         :onClick #(react/call :do-upload this)}]])
