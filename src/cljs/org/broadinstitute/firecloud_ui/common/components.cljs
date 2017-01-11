@@ -457,37 +457,41 @@
         (style/create-text-field
           {:ref "autocomplete-filter-field" :autoSave "true" :results 5 :autofocus "true"
            :placeholder (or placeholder "Filter") :defaultValue initial-text
-           :style {:flex "1 0 auto" :borderRadius "3px 0 0 3px" :marginBottom 0}
+           :style {:flex "1 0 auto" :width width :borderRadius "3px 0 0 3px" :marginBottom 0}
            :className "typeahead" :onKeyDown (common/create-key-handler [:enter] #(react/call :apply-filter this))})
-
-        ;; do we want this button
         [Button {:icon :search :onClick #(react/call :apply-filter this)
                  :style {:flex "0 0 auto" :borderRadius "0 3px 3px 0"}}]]))
    :apply-filter
    (fn [{:keys [props refs]}]
-     ((:on-filter props) (common/get-text refs "autocomplete-filter-field")))
-
+     (utils/cljslog "here in apply filter")
+     ((:on-filter props) (utils/cljslog (common/get-text refs "autocomplete-filter-field"))))
    :component-did-mount
-   (fn [{:keys [refs props this]}]
+   (fn [{:keys [this refs props]}]
      (let [options (js/Bloodhound.
                      (clj->js
                        {:datumTokenizer js/Bloodhound.tokenizers.whitespace
                         :queryTokenizer js/Bloodhound.tokenizers.whitespace
-                        :remote (clj->js (:bloodhoundInfo props))}))]
+                        :remote (clj->js
+                                  ;; are there any other things we can take out of bloodhoundInfo from props ??
+                                  (utils/deep-merge {:cache false} (:bloodhoundInfo props)))}))]
        (.typeahead (js/$ (@refs "autocomplete-filter-field"))
                    (clj->js
                      {:hint true
+                      ;; TODO: allow for people to edit these, add the highlight option
                       :minLength 1})
                    (clj->js
                      {:source options
                       :display (:typeaheadDisplay props)
                       :templates
                       (clj->js
-                        {:empty "<div style='padding: 0.5em;'> Unable to find any matches to the current query </div>"
+                        {:empty "<div style='font-size:small; padding: 0.5em;'> Unable to find any matches to the current query </div>"
                          :suggestion (:typeaheadSuggestionTemplate props)})})))
+     (.bind (js/$ (@refs "autocomplete-filter-field"))
+            "typeahead:select"
+            (fn [ev suggestion]
+              ;; TODO: fix -- this doesn't seem to actually be hitting the apply filter
+              #(react/call :apply-filter this)))
      )})
-     ;; isntead of this, should we be binding the event to autocomplete selected ??
-     ;(.addEventListener (@refs "autocomplete-filter-field") "search" #(when (= (.-value (.-currentTarget %)) "") (react/call :apply-filter this))))})
 
 
 (react/defc OKCancelForm

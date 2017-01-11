@@ -143,8 +143,7 @@
          :initial-text (:search-text props)
          :ref "text-filter"
          :placeholder "Search"
-         :bloodhoundInfo {:url "https://local.broadinstitute.org:10443/api/library/suggest" ;; TODO fix
-                          :cache false
+         :bloodhoundInfo {:url "https://local.broadinstitute.org:10443/api/library/suggest" ;; TODO: use variable
                           :transform (fn [response]
                                        (clj->js
                                          (mapv (fn [string]
@@ -158,28 +157,17 @@
                                           :contentType "application/json; charset=UTF-8"
                                           :data (utils/->json-string
                                                   {:searchString query
-                                                   :filters {} ;; TODO: populate with current filters
+                                                   :filters (utils/map-kv (fn [k v]
+                                                                            [(name k) v])
+                                                                          (:facet-filters props)) ;; TODO: fix
+                                                                          ;; facet filters are only updated upon refresh of the page
                                                    :from 0
                                                    :size 10}))))}
          :typeaheadDisplay (fn [result]
                              (clojure.string/replace (aget result "value") #"<strong class='es-highlight'>|</strong>" ""))
          :typeaheadSuggestionTemplate (fn [result]
-                                        (str "<div>" (aget result "value") "</div>"))
-         }]]])
-       ;(style/create-text-field {
-       ;                          :on-filter (:on-filter props)
-       ;                          :width "100%"
-       ;                          :initial-text (:search-text props)
-       ;                          :ref "library-filter-field"
-       ;                          :placeholder "Search"
-       ;                          :className "typeahead"})
-
-   ;:component-did-mount
-
-
-      ;; right elipsis ??
-
-      })
+                                        ;; TODO: fix -- can't actually get overflow to make ellipses because there's no space??
+                                        (str "<div style='textOverflow: ellipsis; overflow: hidden; font-size: smaller;'>" (aget result "value") "</div>"))}]]])})
 
 (react/defc FacetCheckboxes
   {:render
@@ -302,6 +290,7 @@
      [:div {:style {:display "flex" :marginTop "2em"}}
       [:div {:style {:width "20%" :minWidth 250 :marginRight "2em"}}
        [SearchSection {:search-text (:search-text @state)
+                       :facet-filters (:facet-filters @state)
                        :on-filter #(swap! state assoc :search-text %)}]
        [FacetSection (merge
                       {:ref "facets"
