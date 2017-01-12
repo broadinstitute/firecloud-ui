@@ -130,7 +130,6 @@
                                                        [:div {:style {:backgroundColor"white" :padding "1em"}}
                                                         [import-data/Page (merge (select-keys props [:workspace-id])
                                                                             {:reload (fn [] (modal/pop-modal) ((:request-refresh props)))}
-                                                                            {:cancel (fn [] (modal/pop-modal))}
                                                                             {:import-type "workspace-attributes"})]]]}])}])])])
         (style/create-paragraph
           [:div {}

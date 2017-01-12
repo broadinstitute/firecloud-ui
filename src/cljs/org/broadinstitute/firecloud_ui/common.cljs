@@ -188,6 +188,7 @@
 
 (def PHI-warning
   [:div {:style {:display "inline-flex" :marginBottom ".5em" :marginLeft ".3em"}}
-   [:div {} (icons/icon {:style {:fontSize 28 :color (:exception-state style/colors) :marginRight ".26em"
-                                 :verticalAlign "middle"}} :warning-triangle)]
-   [:span {:style {:fontWeight "bold" :fontSize "98%" :marginTop ".18a em"}} "FireCloud is not intended to host personally identifiable information. Do not use any patient identifier, including name, social security number, or medical record number."]])
+    (icons/icon {:style {:fontSize 28 :color (:exception-state style/colors) :marginRight ".26em"
+                         :verticalAlign "middle"}} :warning-triangle)
+    [:span {:style {:fontWeight "bold" :fontSize "98%" :marginTop ".18em"}}
+      "FireCloud is not intended to host personally identifiable information. Do not use any patient identifier, including name, social security number, or medical record number."]])

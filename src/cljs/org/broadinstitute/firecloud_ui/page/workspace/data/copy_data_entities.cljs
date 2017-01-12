@@ -60,8 +60,7 @@
                                             :entity-list (:entity-list @state)
                                             :type (:type props)
                                             :id-name (:id-name props)
-                                            :reload-data-tab (:reload-data-tab props)
-                                            :done (:done props)}]
+                                            :reload-data-tab (:reload-data-tab props)}]
        (:server-error @state) [comps/ErrorViewer {:error (:server-error @state)}]
        :else [:div {:style {:textAlign "center"}} [comps/Spinner {:text "Loading entities..."}]]))
    :component-did-mount
