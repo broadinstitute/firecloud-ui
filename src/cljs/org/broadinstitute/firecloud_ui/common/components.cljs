@@ -451,22 +451,16 @@
 
 (react/defc AutocompleteFilter
   {:render
-   (fn [{:keys [props this]}]
+   (fn [{:keys [props]}]
      (let [{:keys [initial-text placeholder width]} props]
        [:div {:style {:display "inline-flex" :width width}}
         (style/create-text-field
           {:ref "autocomplete-filter-field" :autoSave "true" :results 5 :autofocus "true"
            :placeholder (or placeholder "Filter") :defaultValue initial-text
            :style {:flex "1 0 auto" :width width :borderRadius "3px 0 0 3px" :marginBottom 0}
-           :className "typeahead" :onKeyDown (common/create-key-handler [:enter] #(react/call :apply-filter this))})
-        [Button {:icon :search :onClick #(react/call :apply-filter this)
-                 :style {:flex "0 0 auto" :borderRadius "0 3px 3px 0"}}]]))
-   :apply-filter
-   (fn [{:keys [props refs]}]
-     (utils/cljslog "here in apply filter")
-     ((:on-filter props) (utils/cljslog (common/get-text refs "autocomplete-filter-field"))))
+           :className "typeahead" })]))
    :component-did-mount
-   (fn [{:keys [this refs props]}]
+   (fn [{:keys [refs props]}]
      (let [options (js/Bloodhound.
                      (clj->js
                        {:datumTokenizer js/Bloodhound.tokenizers.whitespace
@@ -477,7 +471,7 @@
        (.typeahead (js/$ (@refs "autocomplete-filter-field"))
                    (clj->js
                      {:hint true
-                      ;; TODO: allow for people to edit these, add the highlight option
+                      ;; could do a deep merge here so people could add things (ex, set highlight to true)
                       :minLength 1})
                    (clj->js
                      {:source options
@@ -489,9 +483,7 @@
      (.bind (js/$ (@refs "autocomplete-filter-field"))
             "typeahead:select"
             (fn [ev suggestion]
-              ;; TODO: fix -- this doesn't seem to actually be hitting the apply filter
-              #(react/call :apply-filter this)))
-     )})
+              ((:on-filter props) ((:typeaheadDisplay props) suggestion)))))})
 
 
 (react/defc OKCancelForm

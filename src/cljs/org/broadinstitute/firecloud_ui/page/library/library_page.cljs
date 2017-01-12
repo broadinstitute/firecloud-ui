@@ -143,12 +143,13 @@
          :initial-text (:search-text props)
          :ref "text-filter"
          :placeholder "Search"
-         :bloodhoundInfo {:url "https://local.broadinstitute.org:10443/api/library/suggest" ;; TODO: use variable
+         :bloodhoundInfo {:url (str (config/api-url-root) "/api/library/suggest")
                           :transform (fn [response]
                                        (clj->js
-                                         (mapv (fn [string]
-                                                 (clj->js {:value string}))
-                                               (aget response "results"))))
+                                         (mapv
+                                           (fn [string]
+                                             {:value string})
+                                           (aget response "results"))))
                           :prepare (fn [query settings]
                                       (clj->js
                                         (assoc (js->clj settings)
@@ -157,16 +158,16 @@
                                           :contentType "application/json; charset=UTF-8"
                                           :data (utils/->json-string
                                                   {:searchString query
-                                                   :filters (utils/map-kv (fn [k v]
-                                                                            [(name k) v])
-                                                                          (:facet-filters props)) ;; TODO: fix
-                                                                          ;; facet filters are only updated upon refresh of the page
+                                                   :filters (utils/map-kv
+                                                              (fn [k v]
+                                                                [(name k) v])
+                                                              (:facet-filters props)) ;; TODO: get this working
+                                                                                      ;; facet filters are only updated upon refresh of the page
                                                    :from 0
                                                    :size 10}))))}
          :typeaheadDisplay (fn [result]
                              (clojure.string/replace (aget result "value") #"<strong class='es-highlight'>|</strong>" ""))
          :typeaheadSuggestionTemplate (fn [result]
-                                        ;; TODO: fix -- can't actually get overflow to make ellipses because there's no space??
                                         (str "<div style='textOverflow: ellipsis; overflow: hidden; font-size: smaller;'>" (aget result "value") "</div>"))}]]])})
 
 (react/defc FacetCheckboxes
