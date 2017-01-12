@@ -199,7 +199,7 @@
 
      (update restored :column-meta
              (fn [cols]
-               (let [headers-restored (set (map :header cols))
+               (let [headers-restored (set (map #(or (:header-key %) (:header %)) cols))
                      col-headers (map :header (:columns props))
                      unmentioned-headers (set (remove #(contains? headers-restored %) col-headers))
                      unmentioned-cols (map #(assoc % :width 100 :visible? true)
