@@ -238,7 +238,7 @@
              filter (when filterable?
                       [:div {:style {:marginRight "1em"}}
                        [comps/TextFilter {:initial-text (get-in @state [:query-params :filter-text])
-                                          :on-filter #(swap! state update-in [:query-params]
+                                          :on-filter #(swap! state update :query-params
                                                              assoc :filter-text % :current-page 1)}]])
              filter-groups (when (:filter-groups props)
                              [:div {:style {:marginRight "1em"}}
@@ -282,7 +282,7 @@
           :pagination-params (select-keys (:query-params @state) [:current-page :rows-per-page])
           :num-visible-rows (:filtered-count @state)
           :num-total-rows (or (:num-total-rows props) (:grouped-count @state))
-          :on-change #(swap! state update-in [:query-params] merge %)
+          :on-change #(swap! state update :query-params merge %)
           :initial-rows-per-page (get-in @state [:query-params :rows-per-page])}]])]))
 
 (defn- refresh-table-rows [{:keys [props state refs]}]

@@ -24,11 +24,11 @@
 (react/defc Component
   {:push-modal
    (fn [{:keys [state]} child]
-     (swap! state update-in [:stack] conj child))
+     (swap! state update :stack conj child))
    :pop-modal
    (fn [{:keys [state]}]
      (when-not (empty? (:stack @state))
-       (swap! state update-in [:stack] pop)))
+       (swap! state update :stack pop)))
    :get-initial-state
    (fn []
      {:stack []})

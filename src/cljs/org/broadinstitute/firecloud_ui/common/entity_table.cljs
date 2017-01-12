@@ -107,7 +107,7 @@
                      :initial-filter-group-index (utils/index-of entity-types selected-entity-type)
                      :on-filter-change (fn [index]
                                          (let [type (nth entity-types index)]
-                                           (swap! state update-in [:server-response] assoc :selected-entity-type type)
+                                           (swap! state update :server-response assoc :selected-entity-type type)
                                            (when-let [func (:on-filter-change props)]
                                              (func type))))
                      :->row (fn [m]

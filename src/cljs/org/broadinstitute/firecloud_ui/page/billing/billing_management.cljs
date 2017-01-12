@@ -52,7 +52,7 @@
    :-set-timeout
    (fn [{:keys [locals]} ms f]
      (swap! locals assoc-in [:timeouts f]
-            (js/setTimeout (fn [] (swap! locals update-in [:timeouts] dissoc f) (f)) ms)))})
+            (js/setTimeout (fn [] (swap! locals update :timeouts dissoc f) (f)) ms)))})
 
 
 (react/defc BillingProjectTable
