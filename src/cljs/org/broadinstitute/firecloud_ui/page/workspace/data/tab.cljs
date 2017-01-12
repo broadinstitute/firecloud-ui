@@ -55,7 +55,7 @@
   {:get-initial-state
    (fn [{:keys [state]}]
      {:crumbs [{:text "Choose Source"
-                :onClick #(swap! state update-in [:crumbs] (comp vec (partial take 1)))}]})
+                :onClick #(swap! state update :crumbs (comp vec (partial take 1)))}]})
    :render
    (fn [{:keys [state props]}]
      [comps/OKCancelForm
@@ -63,9 +63,9 @@
        :content
        (let [last-crumb-id (:id (second (:crumbs @state)))
              add-crumb (fn [id text]
-                         (swap! state update-in [:crumbs] conj
+                         (swap! state update :crumbs conj
                                 {:id id :text text
-                                 :onClick #(swap! state update-in [:crumbs] (comp vec (partial take 2)))}))]
+                                 :onClick #(swap! state update :crumbs (comp vec (partial take 2)))}))]
          [:div {:style {:position "relative" :width 720}}
           [:div {:style {:fontSize "150%" :marginBottom "1ex"}}
            [comps/Breadcrumbs {:crumbs (:crumbs @state)}]]
@@ -73,13 +73,13 @@
           [:div {:style {:backgroundColor "white" :padding "1em"}}
            (case last-crumb-id
              :file-import
-             [import-data/Page (merge (select-keys props [:workspace-id :reload :import-type]) {:cancel (fn [] (modal/pop-modal))})]
+             [import-data/Page (select-keys props [:workspace-id :reload :import-type])]
              :workspace-import
              [copy-data-workspaces/Page
               (assoc (select-keys props [:workspace-id :this-realm :reload])
                 :crumbs (drop 2 (:crumbs @state))
-                :add-crumb #(swap! state update-in [:crumbs] conj %)
-                :pop-to-depth #(swap! state update-in [:crumbs] subvec 0 %)
+                :add-crumb #(swap! state update :crumbs conj %)
+                :pop-to-depth #(swap! state update :crumbs subvec 0 %)
                 :done (fn [] (modal/pop-modal)))]
              (let [style {:width 240 :margin "auto" :textAlign "center" :cursor "pointer"
                           :backgroundColor (:button-primary style/colors)
