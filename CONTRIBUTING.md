@@ -137,7 +137,7 @@ Changing state causes a re-render. If you update state in a lifecycle method, th
 5. state change starts re-render
 6. ...
 
-So, avoid changing states inside of lifecycle methods.
+So: some lifecycle methods are automatically called every render. Avoid changing state inside of them.
 
 ## Tooling Notes
 
