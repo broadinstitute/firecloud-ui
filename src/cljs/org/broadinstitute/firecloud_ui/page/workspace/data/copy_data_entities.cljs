@@ -29,8 +29,8 @@
          (when (:server-error @state)
            [:div {:style {:marginTop "0.5em"}}
             [comps/ErrorViewer {:error (:server-error @state)}]])
-         [:div {:style {:display "inline-flex" :marginTop "1em"}}
-           [comps/Button {:text "Copy"
+         [:div {:style {:marginTop "1em"}}
+          [comps/Button {:text "Copy"
                          :onClick #(let [selected (react/call :get-selected-entities (@refs "EntitySelector"))]
                                      (if (empty? selected)
                                        (swap! state assoc :selection-error true)
