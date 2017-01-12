@@ -59,9 +59,7 @@
    :render
    (fn [{:keys [state props]}]
      [comps/OKCancelForm
-      {:header "Import Data"
-       :show-cancel? true
-       :cancel-text "Close"
+      {:header "Import Data" :show-cancel? true :cancel-text "Close"
        :content
        (let [last-crumb-id (:id (second (:crumbs @state)))
              add-crumb (fn [id text]

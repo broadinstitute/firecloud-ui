@@ -39,8 +39,8 @@
           (when (> (.-size (:file @state)) preview-limit)
             [:em {} "(file truncated for preview)"])]])
       (when (and (:file @state) (not (:upload-result @state)))
-         [comps/Button {:text "Upload"
-                        :onClick #(react/call :do-upload this)}])
+        [comps/Button {:text "Upload"
+                       :onClick #(react/call :do-upload this)}])
       (if-let [result (:upload-result @state)]
         (if (:success? result)
           (style/create-flexbox {:style {:justifyContent "center" :paddingTop "1em"}}
