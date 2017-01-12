@@ -2,33 +2,49 @@
 
 ## ClojureScript Style Conventions
 
-For ClojureScript code, we follow the [Clojure Style Guide](https://github.com/bbatsov/clojure-style-guide) with exceptions noted here (subsections correspond to those in the Clojure Style Guide).
+For ClojureScript code, we follow the [Clojure Style Guide](https://github.com/bbatsov/clojure-style-guide) with exceptions noted here.
 
-**On code formatting:** In Atom, the Lisp Paredit package formats code correctly. In IntelliJ, the Cursive plugin formats code correctly with a few configuration changes.
+### Styling in editors
 
-**When using Cursive:** To correctly format `dmohs.react/defc`, put your cursor over any usage of that symbol, press option-return (_Show Intention Actions_), and tell Cursive to resolve it as a `def`. See screenshot below:
+**Atom**  
+The [**Lisp Paredit**](https://atom.io/packages/lisp-paredit) package formats code correctly.
 
-![resolve defc as def](https://cloud.githubusercontent.com/assets/22642695/21731936/f7e5a17c-d424-11e6-973b-bf5897bbf833.png)
+**IntelliJ**  
+The [**Cursive**](https://cursive-ide.com) plugin formats code correctly (after a few configuration changes), but is not free.  
+Correct cursive settings are included in this repo in importable form, in the file [`IntelliJ-clojure-style.xml`](IntelliJ-clojure-style.xml).  
+The first time you encounter a `defc`, you must manually tell Cursive how to format it:  
 
-### Source Code Layout & Organization
+1. Highlight any usage of that symbol  
+2. Run the IntelliJ command _Show Intention Actions_ (Mac default Option + Return)  
+3. Select _Resolve as..._  
+4. Select _def_
 
-Where feasible, avoid making lines longer than 100 characters. We feel the 80-character limit in the style guide is more restrictive than necessary.
+<img src="https://cloud.githubusercontent.com/assets/22642695/21731936/f7e5a17c-d424-11e6-973b-bf5897bbf833.png" title="resolve defc as def" width="458"/>
 
-While shorter functions are preferred, we do not adhere to the guide's suggestion: "Avoid functions longer than 10 LOC (lines of code). Ideally, most functions will be shorter than 5 LOC."
+### Source code layout & organization
+
+We feel the 80-character line length limit in the style guide is more restrictive than necessary. Where feasible, avoid making lines longer than 100 characters.
+
+We do not strictly adhere to the guide's suggestion to keep functions under 10 lines of code. In general, however, shorter functions are preferred.
 
 ## DOM Node (HTML) Conventions
 
-Prefer "rem" units over "em", "ex", "px", etc. for size values since these adjust according the user's selected font size and are generally easier to reason about.
+We prefer `rem` units over `em`, `ex`, `px`, etc. for size values, since these adjust with the user's selected font size.
 
 ## React Conventions
 
-We use React components to encapsulate the style and behavior of individual page elements, then compose these components together to create a complete UI. We do not generally use separate CSS files for the [reasons outlined in this slide deck](https://speakerdeck.com/vjeux/react-css-in-js).
+### Styles
 
-### Avoid Passing State
+We avoid using CSS files. Instead, we use React components to describe the style and behavior of individual page elements, then combine these components to create the complete UI.
 
-A component's state is considered private to that component. Do not pass the `state` atom to another component.
+Our reasons for this are [outlined in this slide deck](https://speakerdeck.com/vjeux/react-css-in-js).
 
-DO NOT DO THIS:
+### Avoid passing state
+
+A React component's state is considered private to that component. Do not pass the `state` atom to another component.
+
+Avoid this:
+
 ```clojure
 (r/defc Foo ...)
 
@@ -39,6 +55,7 @@ DO NOT DO THIS:
 ```
 
 Instead, do something like this:
+
 ```clojure
 (r/defc Foo ...)
 
@@ -48,7 +65,7 @@ Instead, do something like this:
      [Foo {:handle-some-action (fn [value] (swap! state ...))}])})
 ```
 
-### React Elements are not DOM Nodes
+### React elements are not DOM nodes
 
 ```clojure
 (r/defc Foo
@@ -56,66 +73,74 @@ Instead, do something like this:
    (fn []
      [:div {}
 ;;   ^ This is not a real <div> element. It is a vector that will be
-;;     turned into a React Element by the function that calls `render`
+;;     turned into a React element by the function that calls `render`
 ;;     on this component.
       (r/create-element :div {})])})
 ;;     ^ Likewise, this is not a real <div> either. This creates a
-;;       React Element directly.
+;;       React element directly.
 ```
 
-In JavaScript, you can do things like:
+In non-React JavaScript, you can do things like:
+
 ```javascript
 var myDiv = document.createElement('div', ...);
-myDiv.focus()
+myDiv.focus();
 ```
 or
+
 ```javascript
 var myDiv = document.createElement('div', ...);
-SomeThirdPartyLibraryThatTakesADomNode(myDiv)
+SomeThirdPartyLibraryThatTakesADomNode(myDiv);
 ```
 
-React Elements may not be substituted for DOM nodes in these cases. You must use a `ref` (see React's documentation) to obtain access to the DOM node once React has rendered it into the browser window.
+In situations where a method operates on a DOM node, React elements may not be substituted. You must use a `ref` ([see React's documentation](https://facebook.github.io/react/docs/refs-and-the-dom.html)) to obtain access to the DOM node once React has rendered it into the browser window.
 
-### Set State → Read State: It Doesn't Work the Way You Think It Should
+### Set state → read state: It doesn't work the way you think it should
 
-[State updates may be asynchronous](https://facebook.github.io/react/docs/state-and-lifecycle.html#state-updates-may-be-asynchronous), meaning that `state` will not contain new values when set, but instead will have those values after the re-render. For example:
+[State updates are not immediate](https://facebook.github.io/react/docs/state-and-lifecycle.html#state-updates-may-be-asynchronous), meaning that `state` will not immediately contain a new value after you set it, but instead will have that value after the next re-render. For example:
 
 ```clojure
 (swap! state assoc :foo 17)
-(get @state :foo) ; <- :foo is not 17 here!
+(get @state :foo) ; <- :foo has yet to be changed to 17 here!
 ```
 
-So, instead of:
+So, instead of immediately reading a value back from state:
+
 ```clojure
 (swap! state assoc :foo (bar ...))
 (some-func (:foo @state))
 ```
 
-try:
+use the new value directly:
+
 ```clojure
 (let [new-value (bar ...)]
   (swap! state assoc :foo new-value)
   (some-func new-value))
 ```
 
-Instead of:
-```clojure
-(react/call :some-state-modifying-method this)
-(some-func (:some-key @state))
-```
+or wait until after the re-render:
 
-try:
 ```clojure
 (react/call :some-state-modifying-method this)
 (after-update #(some-func (:some-key @state))))
 ```
 
-### Avoid Infinite Loops
+### Avoid infinite loops
 
-Changing state causes a re-render. If you change state in a lifecycle method such as `component-did-update`, this will re-render, which will call `component-did-update` again, resulting in a loop.
+Changing state causes a re-render. If you update state in a lifecycle method, this can lead to a loop:
+
+1. state changes in `component-did-update`
+2. state change starts re-render
+3. re-render calls `component-did-update`
+4. state changes in `component-did-update`
+5. state change starts re-render
+6. ...
+
+So, avoid changing states inside of lifecycle methods.
 
 ## Tooling Notes
 
-When doing UI development, Chrome's caching just gets in the way. We recommending disabling it when devtools is open (via devtools settings):
+When doing UI development, Chrome's caching gets in the way. We recommending disabling it when devtools is open (via devtools settings):
 
 ![disable cache image](https://cloud.githubusercontent.com/assets/1545444/21811560/1a1772c4-d71e-11e6-80bf-4ac3ce28e187.png)
