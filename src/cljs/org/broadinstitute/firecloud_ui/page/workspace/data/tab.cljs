@@ -60,7 +60,8 @@
    (fn [{:keys [state props]}]
      [comps/OKCancelForm
       {:header "Import Data"
-       :show-cancel? false
+       :show-cancel? true
+       :cancel-text "Close"
        :content
        (let [last-crumb-id (:id (second (:crumbs @state)))
              add-crumb (fn [id text]
@@ -74,7 +75,7 @@
           [:div {:style {:backgroundColor "white" :padding "1em"}}
            (case last-crumb-id
              :file-import
-             [import-data/Page (select-keys props [:workspace-id :reload :import-type])]
+             [import-data/Page (merge (select-keys props [:workspace-id :reload :import-type]) {:cancel (fn [] (modal/pop-modal))})]
              :workspace-import
              [copy-data-workspaces/Page
               (assoc (select-keys props [:workspace-id :this-realm :reload])

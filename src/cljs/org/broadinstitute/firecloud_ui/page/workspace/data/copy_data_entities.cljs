@@ -30,9 +30,6 @@
            [:div {:style {:marginTop "0.5em"}}
             [comps/ErrorViewer {:error (:server-error @state)}]])
          [:div {:style {:display "inline-flex" :marginTop "1em"}}
-           [comps/Button {:text "Done"
-                          :style {:marginRight 20}
-                          :onClick (:done props) }]
            [comps/Button {:text "Copy"
                          :onClick #(let [selected (react/call :get-selected-entities (@refs "EntitySelector"))]
                                      (if (empty? selected)

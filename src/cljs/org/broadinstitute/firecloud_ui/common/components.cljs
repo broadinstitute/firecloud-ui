@@ -468,10 +468,10 @@
         [:div {:style {:padding "22px 48px 40px" :backgroundColor (:background-light style/colors)}}
          content
          (when (or show-cancel? ok-button)
-           [:div {:style {:marginTop 40 :textAlign "center"}}
+           [:div {:style {:marginTop (if ok-button 40 25) :textAlign "center"}}
             (when show-cancel?
               [:a {:className "cancel"
-                   :style {:marginRight (when ok-button 27) :marginTop 2 :padding "0.5em"
+                   :style {:marginRight (when ok-button 27) :marginTop 2
                            :display "inline-block"
                            :fontSize "106%" :fontWeight 500 :textDecoration "none"
                            :color (:button-primary style/colors)}

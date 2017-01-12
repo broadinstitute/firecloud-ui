@@ -3,6 +3,7 @@
     clojure.set
     [clojure.string :refer [join trim split]]
     [dmohs.react :as react]
+    [org.broadinstitute.firecloud-ui.common :as common]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
     [org.broadinstitute.firecloud-ui.common.icons :as icons]
     [org.broadinstitute.firecloud-ui.common.modal :as modal]
@@ -114,8 +115,8 @@
              [:span {:style {:fontSize "initial" :fontWeight "initial"}}
               [:a {:style {:textDecoration "none" :marginLeft "1em"}
                    :href (str (config/api-url-root) "/cookie-authed/workspaces/"
-                           (:namespace (:workspace-id props)) "/"
-                           (:name (:workspace-id props)) "/exportAttributesTSV")
+                              (:namespace (:workspace-id props)) "/"
+                              (:name (:workspace-id props)) "/exportAttributesTSV")
                    :onClick  #(utils/set-access-token-cookie (utils/get-access-token))
                    :target "_blank"}
                (str "Download Attributes")]
@@ -125,12 +126,15 @@
                                :onClick #(modal/push-modal
                                            [comps/OKCancelForm
                                             {:header "Import Attributes"
-                                             :show-cancel? false
-                                             :content [:div {:style {:width 720 :backgroundColor "white" :padding "1em"}}
-                                                       [import-data/Page (merge (select-keys props [:workspace-id])
-                                                                           {:reload (fn [] (modal/pop-modal) ((:request-refresh props)))}
-                                                                           {:cancel (fn [] (modal/pop-modal))}
-                                                                           {:import-type "workspace-attributes"})]]}])}])])])
+                                             :show-cancel? true
+                                             :cancel-text "Close"
+                                             :content [:div {:style {:width 720}}
+                                                       common/PHI-warning
+                                                       [:div {:style {:backgroundColor"white" :padding "1em"}}
+                                                        [import-data/Page (merge (select-keys props [:workspace-id])
+                                                                                {:reload (fn [] (modal/pop-modal) ((:request-refresh props)))}
+                                                                                {:cancel (fn [] (modal/pop-modal))}
+                                                                                {:import-type "workspace-attributes"})]]]}])}])])])
         (style/create-paragraph
           [:div {}
            (if editing?
