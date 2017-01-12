@@ -4,16 +4,17 @@
 
 For ClojureScript code, we follow the [Clojure Style Guide](https://github.com/bbatsov/clojure-style-guide) with exceptions noted here (subsections correspond to those in the Clojure Style Guide).
 
-In Atom, the Lisp Paredit package formats code correctly. In IntelliJ, the Cursive plugin formats code correctly with a few configuration changes.
+**On code formatting:** In Atom, the Lisp Paredit package formats code correctly. In IntelliJ, the Cursive plugin formats code correctly with a few configuration changes.
 
-Note: To correctly format `dmohs.react/defc` in Cursive, right-click on any usage of that symbol and tell Cursive to resolve it as a `def`. See screenshot below:
+**When using Cursive:** To correctly format `dmohs.react/defc`, put your cursor over any usage of that symbol, press option-return (_Show Intention Actions_), and tell Cursive to resolve it as a `def`. See screenshot below:
+
 ![resolve defc as def](https://cloud.githubusercontent.com/assets/22642695/21731936/f7e5a17c-d424-11e6-973b-bf5897bbf833.png)
 
 ### Source Code Layout & Organization
 
 Where feasible, avoid making lines longer than 100 characters. We feel the 80-character limit in the style guide is more restrictive than necessary.
 
-While shorter functions are preferred, we do not adhere to the guide's suggestion, "Avoid functions longer than 10 LOC (lines of code). Ideally, most functions will be shorter than 5 LOC."
+While shorter functions are preferred, we do not adhere to the guide's suggestion: "Avoid functions longer than 10 LOC (lines of code). Ideally, most functions will be shorter than 5 LOC."
 
 ## DOM Node (HTML) Conventions
 
@@ -75,7 +76,7 @@ SomeThirdPartyLibraryThatTakesADomNode(myDiv)
 
 React Elements may not be substituted for DOM nodes in these cases. You must use a `ref` (see React's documentation) to obtain access to the DOM node once React has rendered it into the browser window.
 
-### State Set -> Read is Unreliable
+### Set State → Read State: It Doesn't Work the Way You Think It Should
 
 [State updates may be asynchronous](https://facebook.github.io/react/docs/state-and-lifecycle.html#state-updates-may-be-asynchronous), meaning that `state` will not contain new values when set, but instead will have those values after the re-render. For example:
 
@@ -116,4 +117,5 @@ Changing state causes a re-render. If you change state in a lifecycle method suc
 ## Tooling Notes
 
 When doing UI development, Chrome's caching just gets in the way. We recommending disabling it when devtools is open (via devtools settings):
+
 ![disable cache image](https://cloud.githubusercontent.com/assets/1545444/21811560/1a1772c4-d71e-11e6-80bf-4ac3ce28e187.png)
