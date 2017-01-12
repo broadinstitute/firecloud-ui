@@ -293,7 +293,9 @@
          (when (get column :reorderable? true)
            (let [visible? (:visible? column)]
              [:div {:ref (str "div" i)
-                    :style {:borderTop (when (= i (:drop-index @state)) "1px solid gray")}}
+                    :style (merge
+                            {:borderTop (when (= i (:drop-index @state)) "1px solid gray")}
+                            (:reorder-style props))}
               (icons/icon {:style {:color (style/colors :text-light) :fontSize 16 :verticalAlign "middle" :marginRight "1ex"
                                    :cursor "ns-resize"}
                            :draggable false
@@ -304,7 +306,7 @@
               [:label {:style {:cursor (when-not (:drag-active @state) "pointer")}}
                [:input {:type "checkbox" :checked visible?
                         :onChange #((:on-visibility-change props) i (not visible?))}]
-               [:span {:style {:paddingLeft "0.5em"}} (:header column)]]])))
+               [:span {:style {:paddingLeft "0.5em"} :title (:header column)} (:header column)]]])))
        (:columns props))
       (let [i (count (:columns props))]
         [:div {:ref (str "div" i)
