@@ -710,7 +710,11 @@
    (call-ajax-orch
     {:endpoint {:path "/profile/billing"
                 :method :get
-                :mock-data (utils/rand-subset ["broad-dsde-dev" "broad-institute"])}
+                :mock-data (utils/rand-subset
+                            [{"projectName" "broad-dsde-dev" "role" "User"
+                              "creationStatus" "Ready"}
+                             {"projectName" "broad-institute" "role" "User"
+                              "creationStatus" "Ready"}])}
      :on-done (fn [{:keys [success? status-text get-parsed-response]}]
                 (if success?
                   (let [pred (if include-pending?
