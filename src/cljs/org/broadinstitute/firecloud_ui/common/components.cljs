@@ -460,7 +460,7 @@
            :style {:flex "1 0 auto" :width width :borderRadius "3px 0 0 3px" :marginBottom 0}
            :className "typeahead" })]))
    :component-will-receive-props
-   (fn [{:keys [next-props props locals]}]
+   (fn [{:keys [locals]}]
      (let [bi (:bloodhoundInstance @locals)]
            (.initialize bi true)))
    :component-did-mount
@@ -473,7 +473,6 @@
        (.typeahead (js/$ (@refs "autocomplete-filter-field"))
                    (clj->js
                      {:hint true
-                      ;; could do a deep merge here so people could add things (ex, set highlight to true)
                       :minLength 1})
                    (clj->js
                      {:source options
