@@ -132,8 +132,14 @@
                   (callback {:error status-text})))})))))})
 
 (react/defc SearchSection
-  {:render
+  {:get-filters
    (fn [{:keys [props]}]
+     (utils/map-kv
+       (fn [k v]
+         [(name k) v])
+       (:facet-filters props)))
+   :render
+   (fn [{:keys [props this]}]
      [:div {}
       [:div {:style {:fontWeight 700 :fontSize "125%" :marginBottom "1em"}} "Search Filters:"]
       [:div {:style {:background (:background-light style/colors) :padding "16px 12px"}}
@@ -143,6 +149,7 @@
          :initial-text (:search-text props)
          :ref "text-filter"
          :placeholder "Search"
+         :facet-filters (:facet-filters props)
          :bloodhoundInfo {:url (str (config/api-url-root) "/api/library/suggest")
                           :transform (fn [response]
                                        (clj->js
@@ -150,6 +157,7 @@
                                            (fn [string]
                                              {:value string})
                                            (aget response "results"))))
+                          :cache false
                           :prepare (fn [query settings]
                                       (clj->js
                                         (assoc (js->clj settings)
@@ -158,11 +166,7 @@
                                           :contentType "application/json; charset=UTF-8"
                                           :data (utils/->json-string
                                                   {:searchString query
-                                                   :filters (utils/map-kv
-                                                              (fn [k v]
-                                                                [(name k) v])
-                                                              (:facet-filters props)) ;; TODO: get this working
-                                                                                      ;; facet filters are only updated upon refresh of the page
+                                                   :filters (react/call :get-filters this)
                                                    :from 0
                                                    :size 10}))))}
          :typeaheadDisplay (fn [result]

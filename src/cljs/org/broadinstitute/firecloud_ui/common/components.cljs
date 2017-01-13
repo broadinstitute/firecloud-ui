@@ -459,15 +459,17 @@
            :placeholder (or placeholder "Filter") :defaultValue initial-text
            :style {:flex "1 0 auto" :width width :borderRadius "3px 0 0 3px" :marginBottom 0}
            :className "typeahead" })]))
+   :component-will-receive-props
+   (fn [{:keys [next-props props locals]}]
+     (let [bi (:bloodhoundInstance @locals)]
+           (.initialize bi true)))
    :component-did-mount
-   (fn [{:keys [refs props]}]
+   (fn [{:keys [refs props locals]}]
      (let [options (js/Bloodhound.
                      (clj->js
                        {:datumTokenizer js/Bloodhound.tokenizers.whitespace
                         :queryTokenizer js/Bloodhound.tokenizers.whitespace
-                        :remote (clj->js
-                                  ;; are there any other things we can take out of bloodhoundInfo from props ??
-                                  (utils/deep-merge {:cache false} (:bloodhoundInfo props)))}))]
+                        :remote (clj->js (:bloodhoundInfo props))}))]
        (.typeahead (js/$ (@refs "autocomplete-filter-field"))
                    (clj->js
                      {:hint true
@@ -479,7 +481,8 @@
                       :templates
                       (clj->js
                         {:empty "<div style='font-size:small; padding: 0.5em;'> Unable to find any matches to the current query </div>"
-                         :suggestion (:typeaheadSuggestionTemplate props)})})))
+                         :suggestion (:typeaheadSuggestionTemplate props)})}))
+       (swap! locals assoc :bloodhoundInstance options))
      (.bind (js/$ (@refs "autocomplete-filter-field"))
             "typeahead:select"
             (fn [ev suggestion]
