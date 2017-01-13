@@ -206,9 +206,11 @@
                (let [headers-restored (set (map #(or (:header-key %) (:header %)) cols))
                      col-headers (map #(or (:header-key %) (:header %)) (:columns props))
                      unmentioned-headers (set (remove #(contains? headers-restored %) col-headers))
-                     unmentioned-cols (map #(assoc % :width 100 :visible? true)
-                                           (map #(select-keys % [:header])
-                                                (filter #(contains? unmentioned-headers (:header %)) (:columns props))))]
+                     unmentioned-cols (->> (:columns props)
+                                           (filter #(contains? unmentioned-headers (:header %)))
+                                           (map #(select-keys % [:header]))
+                                           (map #(assoc % :width 100 :visible? true)))]
+
                  (vec (concat cols unmentioned-cols))))))))
 
 (defn- render-table [{:keys [this state props refs after-update]}]
