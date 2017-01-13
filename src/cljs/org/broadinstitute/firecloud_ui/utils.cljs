@@ -120,6 +120,9 @@
     (.set goog.net.cookies "FCtoken" token -1 "/" (get-cookie-domain))
     (delete-access-token-cookie)))
 
+(defn get-access-token-cookie []
+  (.get goog.net.cookies "FCtoken"))
+
 ;; TODO - make this unnecessary
 (def content-type=json {"Content-Type" "application/json"})
 

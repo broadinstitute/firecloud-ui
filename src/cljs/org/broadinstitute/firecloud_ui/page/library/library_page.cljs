@@ -20,59 +20,44 @@
      (react/call :update-query-params (@refs "table") {:filter-text new-filter-text :current-page 1}))
    :render
    (fn [{:keys [state this props]}]
-     (let [attributes (:library-attributes props)
-           search-result-columns (:search-result-columns props)
-           extra-columns (subvec search-result-columns 4)]
-       [table/Table
-        {:ref "table" :state-key "library-table"
-         :header-row-style {:fontWeight 500 :fontSize "90%"
-                            :backgroundColor nil
-                            :color "black"
-                            :borderBottom (str "2px solid " (:border-light style/colors))}
-         :header-style {:padding "0.5em 0 0.5em 1em"}
-         :resizable-columns? true
-         :filterable? true
-         :reorder-anchor :right
-         :reorder-style {:width "300px" :whiteSpace "nowrap" :overflow "hidden" :textOverflow "ellipsis"}
-         :reorder-prefix "Columns"
-         :toolbar
-         (fn [{:keys [reorderer]}]
-           [:div {:style {:display "flex" :alignItems "top"}}
-            [:div {:style {:fontWeight 700 :fontSize "125%" :marginBottom "1em"}} "Search Results: "
-             [:span {:style {:fontWeight 100}}
-              (let [total (or (:total @state) 0)]
-                (str total
-                     " Dataset"
-                     (when-not (= 1 total) "s")
-                     " found"))]]
-            flex-strut
-            reorderer])
-         :body-style {:fontSize "87.5%" :fontWeight nil :marginTop 4
-                      :color (:text-light style/colors)}
-         :row-style {:backgroundColor nil :height 20 :padding "0 0 0.5em 1em"}
-         :cell-content-style {:padding nil}
-         :columns (concat
-                   [{:header (:title (:library:datasetName attributes)) :starting-width 250 :show-initial? true
-                    :sort-by (comp clojure.string/lower-case :library:datasetName)
-                    :as-text :library:datasetDescription
-                    :content-renderer (fn [data]
-                                        (style/create-link {:text (:library:datasetName data)
-                                                            :onClick #(react/call :check-access this data)}))}
-                   {:header (:title (:library:indication attributes)) :starting-width 180 :show-initial? true
-                    :sort-by clojure.string/lower-case}
-                   {:header (:title (:library:dataUseRestriction attributes)) :starting-width 180 :show-initial? true
-                    :sort-by clojure.string/lower-case}
-                   {:header (:title (:library:numSubjects attributes)) :starting-width 100 :show-initial? true}]
-                   (map
-                    (fn [keyname]
-                      {:header (:title ((keyword keyname) attributes)) :starting-width 180 :show-initial? false})
-                    extra-columns))
-         :pagination (react/call :pagination this)
-         :->row (fn [data]
-                  (cons data
-                        (map #((keyword %) data)
-                             (concat [:library:indication :library:dataUseRestriction :library:numSubjects]
-                                     extra-columns))))}]))
+     [table/Table
+      {:ref "table" :state-key "library-table"
+       :header-row-style {:fontWeight 500 :fontSize "90%"
+                          :backgroundColor nil
+                          :color "black"
+                          :borderBottom (str "2px solid " (:border-light style/colors))}
+       :header-style {:padding "0.5em 0"}
+       :resizable-columns? false :filterable? false
+       :reorder-anchor :right
+       :toolbar
+       (fn [{:keys [reorderer]}]
+         [:div {:style {:display "flex" :alignItems "top"}}
+          [:div {:style {:fontWeight 700 :fontSize "125%" :marginBottom "1em"}} "Search Results: "
+           [:span {:style {:fontWeight 100}}
+            (let [total (or (:total @state) 0)]
+              (str total
+                   " Dataset"
+                   (when-not (= 1 total) "s")
+                   " found"))]]
+          flex-strut
+          reorderer])
+       :body-style {:fontSize "87.5%" :fontWeight nil :marginTop 4
+                    :color (:text-light style/colors)}
+       :row-style {:backgroundColor nil :height 20}
+       :cell-content-style {:padding nil}
+       :columns [{:header "Dataset Name" :starting-width 250
+                  :sort-by (comp clojure.string/lower-case :library:datasetName)
+                  :as-text :library:datasetDescription
+                  :content-renderer (fn [data]
+                                      (style/create-link {:text (:library:datasetName data)
+                                                          :onClick #(react/call :check-access this data)}))}
+                 {:header "Phenotype/indication" :starting-width 180
+                  :sort-by clojure.string/lower-case}
+                 {:header "Data Use Restrictions" :starting-width 180
+                  :sort-by clojure.string/lower-case}
+                 {:header "# of Participants" :starting-width 100}]
+       :pagination (react/call :pagination this)
+       :->row (juxt identity :library:indication :library:dataUseRestriction :library:numSubjects)}])
    :component-will-receive-props
    (fn [{:keys [next-props refs]}]
      (let [current-search-text (:filter-text (react/call :get-query-params (@refs "table")))
@@ -140,15 +125,6 @@
                    {:v VERSION
                     :search-text ""})
         :validator (comp (partial = VERSION) :v)}))
-   :component-did-mount
-   (fn [{:keys [state]}]
-     (endpoints/get-library-attributes
-       (fn [{:keys [success? get-parsed-response]}]
-         (if success?
-           (let [response (get-parsed-response)]
-             (swap! state assoc
-                    :library-attributes (:properties response)
-                    :search-result-columns (:searchResultColumns response)))))))
    :render
    (fn [{:keys [state]}]
      [:div {:style {:display "flex" :marginTop "2em"}}
@@ -156,11 +132,7 @@
        [SearchSection {:search-text (:search-text @state)
                        :on-filter #(swap! state assoc :search-text %)}]]
       [:div {:style {:flex "1 1 auto" :overflowX "auto"}}
-       (when
-         (and (:library-attributes @state) (:search-result-columns @state))
-         [DatasetsTable {:search-text (:search-text @state)
-                         :library-attributes (:library-attributes @state)
-                         :search-result-columns (:search-result-columns @state)}])]])
+       [DatasetsTable {:search-text (:search-text @state)}]]])
    :component-did-update
    (fn [{:keys [state]}]
      (persistence/save {:key PERSISTENCE-KEY :state state}))})

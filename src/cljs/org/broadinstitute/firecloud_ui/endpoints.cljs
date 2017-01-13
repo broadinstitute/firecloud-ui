@@ -247,30 +247,6 @@
            :attributes {}})
      (range (rand-int 20)))})
 
-(defn get-entity [workspace-id type entity-name]
-  {:path (str "/workspaces/" (ws-path workspace-id) "/entities/" type "/" entity-name)
-   :method :get
-   :mock-data
-     {:entityType "sample"
-        :name "HCC_4532"
-        :attributes {:participant {:entityType "participant" :entityName (str "subject_" (rand-int 1000))}}
-        :sample_type "tumor"
-        :ref_fasta "gs://cancer-exome-pipeline-demo-data/Homo_sapiens_assembly19.fasta"
-        :ref_dict "gs://cancer-exome-pipeline-demo-data/Homo_sapiens_assembly19.dict"
-        :ref_intervals "gs://cancer-exome-pipeline-demo-data/panel_100_genes.interval_list"
-        :ref_ann "gs://cancer-exome-pipeline-demo-data/Homo_sapiens_assembly19.fasta.64.ann"
-        :dna "gs://fc-d1f53ee4-4abe-4de0-91b2-597a609deddc/inDNA"
-        :ref_sa "gs://cancer-exome-pipeline-demo-data/Homo_sapiens_assembly19.fasta.64.sa"
-        :fastq2 "gs://cancer-exome-pipeline-demo-data/HCC1143.100_gene_250bp_pad_2.fastq"
-        :library "test_library"
-        :strip_unpaired "TRUE"
-        :sample "HCC_4532"
-        :ref_bwt "gs://cancer-exome-pipeline-demo-data/Homo_sapiens_assembly19.fasta.64.bwt"
-        :platform "illumina"
-        :bai "gs://cancer-exome-pipeline-demo-data/HCC1143.100_gene_250bp_pad.bai"
-        :bam "gs://cancer-exome-pipeline-demo-data/HCC1143.100_gene_250bp_pad.bam"
-        :ref_pac "gs://cancer-exome-pipeline-demo-data/Homo_sapiens_assembly19.fasta.64.pac"}})
-
 (defn get-entities-paginated [workspace-id type query-parameters]
   (assert (= #{"page" "pageSize" "sortField" "sortDirection" "filterTerms"}
              (set (keys query-parameters)))
@@ -710,11 +686,7 @@
    (call-ajax-orch
     {:endpoint {:path "/profile/billing"
                 :method :get
-                :mock-data (utils/rand-subset
-                            [{"projectName" "broad-dsde-dev" "role" "User"
-                              "creationStatus" "Ready"}
-                             {"projectName" "broad-institute" "role" "User"
-                              "creationStatus" "Ready"}])}
+                :mock-data (utils/rand-subset ["broad-dsde-dev" "broad-institute"])}
      :on-done (fn [{:keys [success? status-text get-parsed-response]}]
                 (if success?
                   (let [pred (if include-pending?

@@ -28,8 +28,7 @@
    :publish "publish"
    :catalog "local_offer"
    :reorder "reorder"
-   :close "close"
-   :new-window "open_in_new"})
+   :close "close"})
 
 (defn icon [attributes key]
   [:span (utils/deep-merge
