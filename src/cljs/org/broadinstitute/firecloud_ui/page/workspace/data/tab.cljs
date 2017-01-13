@@ -193,6 +193,9 @@
                                                     (:namespace workspace-id) "/"
                                                     (:name workspace-id) "/entities/" selected-entity-type "/tsv")}
                                 [:input {:type "hidden"
+                                         :name "FCtoken"
+                                         :value (u/get-access-token)}]
+                                [:input {:type "hidden"
                                          :name "attributeNames"
                                          :value (->> (persistence/try-restore
                                                       {:key (str (common/workspace-id->string
