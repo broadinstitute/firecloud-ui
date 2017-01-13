@@ -257,7 +257,7 @@
              (swap! state assoc
                     :library-attributes properties
                     :aggregate-fields (->> properties (utils/filter-values :aggregate) keys)
-                    :search-result-columns (map keyword searchResultColumns)))))))
+                    :search-result-columns (mapv keyword searchResultColumns)))))))
    :render
    (fn [{:keys [this refs state]}]
      [:div {:style {:display "flex" :marginTop "2em"}}
