@@ -202,7 +202,7 @@
                 (for [[status subs] (sort submissions-count)]
                  [:li {} (str subs " " status)])])])))]
 
-    (when editing? common/PHI-warning)
+    (when editing? [:div {:style {:marginBottom "10px"}} common/PHI-warning])
 
      (style/create-section-header "Description")
      (style/create-paragraph

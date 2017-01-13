@@ -3,6 +3,7 @@
     clojure.set
     [clojure.string :refer [join trim split]]
     [dmohs.react :as react]
+    [org.broadinstitute.firecloud-ui.common :as common]
     [org.broadinstitute.firecloud-ui.common.components :as comps]
     [org.broadinstitute.firecloud-ui.common.icons :as icons]
     [org.broadinstitute.firecloud-ui.common.modal :as modal]
@@ -124,12 +125,12 @@
                                :style {:float "right" :marginTop -7}
                                :onClick #(modal/push-modal
                                            [comps/OKCancelForm
-                                            {:header "Import Attributes"
-                                             :show-cancel? false :ok-button {:text "Done" :onClick modal/pop-modal}
-                                             :content [:div {:style {:float "right" :width 720}}
-                                                       [import-data/Page (merge (select-keys props [:workspace-id])
-                                                                           {:reload (fn [] (modal/pop-modal) ((:request-refresh props)))}
-                                                                           {:import-type "workspace-attributes"})]]}])}])])])
+                                            {:header "Import Attributes" :show-cancel? true :cancel-text "Close"
+                                             :content [:div {:style {:width 720}} common/PHI-warning
+                                                       [:div {:style {:backgroundColor"white" :padding "1em"}}
+                                                        [import-data/Page (merge (select-keys props [:workspace-id])
+                                                                            {:reload (fn [] (modal/pop-modal) ((:request-refresh props)))}
+                                                                            {:import-type "workspace-attributes"})]]]}])}])])])
         (style/create-paragraph
           [:div {}
            (if editing?

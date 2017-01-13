@@ -79,39 +79,34 @@
                                    (u/jslog e) nil))
               :toolbar
               (table-utils/default-toolbar-layout
-               (when-let [selected-entity-type (some-> (:selected-entity-type @state) name)]
-                 [:form {:target "_blank"
-                         :method "post"
-                         :action (str (config/api-url-root) "/cookie-authed/workspaces/"
-                                      (:namespace workspace-id) "/"
-                                      (:name workspace-id) "/entities/" selected-entity-type "/tsv")}
-                  [:input {:type "hidden"
-                           :name "attributeNames"
-                           :value (->> (persistence/try-restore
-                                        {:key (str (common/workspace-id->string
-                                                    workspace-id) ":data:" selected-entity-type)
-                                         :initial (constantly {})})
+                (when-let [selected-entity-type (some-> (:selected-entity-type @state) name)]
+                  [:a {:style {:textDecoration "none" :marginLeft "1em"}
+                       :href (str (config/api-url-root) "/cookie-authed/workspaces/"
+                                  (:namespace workspace-id) "/"
+                                  (:name workspace-id) "/entities/" selected-entity-type "/tsv"
+                                  "?attributeNames="
+                                  (->> (persistence/try-restore
+                                         {:key (str (common/workspace-id->string workspace-id) ":data:" selected-entity-type)
+                                          :initial (constantly {})})
                                        :column-meta
                                        (filter :visible?)
                                        (map :header)
-                                       (clojure.string/join ","))}]
-                  [:input {:style {:border "none" :backgroundColor "transparent" :cursor "pointer"
-                                   :color (:button-primary style/colors) :fontSize "inherit" :fontFamily "inherit"
-                                   :padding 0 :marginLeft "1em"}
-                           :type "submit"
-                           :value (str "Download '" selected-entity-type "' data")}]])
-               [:div {:style {:flexGrow 1}}]
-               [:div {:style {:paddingRight "2em"}}
-                [comps/Button {:text "Import Data..."
-                               :disabled? (when locked? "This workspace is locked.")
-                               :onClick #(modal/push-modal
-                                          [DataImporter {:workspace-id workspace-id
-                                                         :this-realm this-realm
-                                                         :import-type "data"
-                                                         :reload
-                                                         (fn [entity-type]
-                                                           ((:request-refresh props))
-                                                           (react/call :refresh (@refs "entity-table") entity-type))}])}]])
+                                       (clojure.string/join ",")))
+                       :onClick #(u/set-access-token-cookie (u/get-access-token))
+                       :target "_blank"}
+                   (str "Download '" selected-entity-type "' data")])
+                [:div {:style {:flexGrow 1}}]
+                [:div {:style {:paddingRight "2em"}}
+                 [comps/Button {:text "Import Data..."
+                                :disabled? (when locked? "This workspace is locked.")
+                                :onClick #(modal/push-modal
+                                           [DataImporter {:workspace-id workspace-id
+                                                          :this-realm this-realm
+                                                          :import-type "data"
+                                                          :reload
+                                                          (fn [entity-type]
+                                                            ((:request-refresh props))
+                                                            (react/call :refresh (@refs "entity-table") entity-type))}])}]])
               :on-filter-change #(swap! state assoc :selected-entity-type %)
               :attribute-renderer (table-utils/render-gcs-links (get-in workspace [:workspace :bucketName]))}])
           :else

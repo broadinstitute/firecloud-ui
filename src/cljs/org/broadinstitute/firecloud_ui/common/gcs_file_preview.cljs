@@ -28,8 +28,9 @@
           (labeled "Google Bucket" (:bucket-name props))
           (labeled "Object" (:object props))
           [:div {:style {:marginTop "1em"}}
-           (if (> data-size preview-byte-count) (str "Last " (:preview-line-count @state)
-                                       " lines of log are shown. Use the link below to view the full log.") "Log:")
+           [:div {} "Previews for some filetypes may be unsupported. "]
+           (when (> data-size preview-byte-count) (str "Last " (:preview-line-count @state)
+                                                       " lines are shown. Use link below to view entire file."))
            ;; The max-height of 206 looks random, but it's so that the top line of the log preview is half cut-off
            ;; to hint to the user that they should scroll up.
            (react/create-element
