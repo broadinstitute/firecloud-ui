@@ -134,10 +134,7 @@
 (react/defc SearchSection
   {:get-filters
    (fn [{:keys [props]}]
-     (utils/map-kv
-       (fn [k v]
-         [(name k) v])
-       (:facet-filters props)))
+     (utils/map-keys name (:facet-filters props)))
    :render
    (fn [{:keys [props this]}]
      [:div {}
@@ -152,11 +149,9 @@
          :facet-filters (:facet-filters props)
          :bloodhoundInfo {:url (str (config/api-url-root) "/api/library/suggest")
                           :transform (fn [response]
-                                       (clj->js
-                                         (mapv
-                                           (fn [string]
-                                             {:value string})
-                                           (aget response "results"))))
+                                       (clj->js (mapv (fn [string]
+                                                        {:value string})
+                                                      (aget response "results"))))
                           :cache false
                           :prepare (fn [query settings]
                                       (clj->js

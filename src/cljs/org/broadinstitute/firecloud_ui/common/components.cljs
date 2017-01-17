@@ -453,9 +453,20 @@
   {:apply-filter
    (fn [{:keys [props refs]}]
      ((:on-filter props) (common/get-text refs "autocomplete-filter-field")))
+   :render
+   (fn [{:keys [props]}]
+     (let [{:keys [initial-text placeholder width]} props]
+       [:div {:style {:display "inline-flex" :width width}}
+        (style/create-search-field
+          {:ref "autocomplete-filter-field" :autoSave "true" :results 5 :autofocus "true"
+           :placeholder (or placeholder "Filter") :defaultValue initial-text
+           :style {:flex "1 0 auto" :width width :borderRadius 3 :marginBottom 0}
+           :className "typeahead"})]))
    :component-did-mount
    (fn [{:keys [refs props locals this]}]
-     (.addEventListener (@refs "autocomplete-filter-field") "search" #(when (= (.-value (.-currentTarget %)) "") (react/call :apply-filter this)))
+     (.addEventListener (@refs "autocomplete-filter-field") "search"
+                        #(when (= (.-value (.-currentTarget %)) "")
+                           (react/call :apply-filter this)))
      (let [options (js/Bloodhound.
                      (clj->js
                        {:datumTokenizer js/Bloodhound.tokenizers.whitespace
@@ -480,17 +491,7 @@
    :component-will-receive-props
    (fn [{:keys [locals]}]
      (let [bi (:bloodhoundInstance @locals)]
-       (.initialize bi true)))
-   :render
-   (fn [{:keys [props]}]
-     (let [{:keys [initial-text placeholder width]} props]
-       [:div {:style {:display "inline-flex" :width width}}
-        ;(style/create-text-field
-        (style/create-search-field
-          {:ref "autocomplete-filter-field" :autoSave "true" :results 5 :autofocus "true"
-           :placeholder (or placeholder "Filter") :defaultValue initial-text
-           :style {:flex "1 0 auto" :width width :borderRadius "3px 3px 3px 3px" :marginBottom 0}
-           :className "typeahead"})]))})
+       (.initialize bi true)))})
 
 
 (react/defc OKCancelForm
