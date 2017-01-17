@@ -149,9 +149,7 @@
          :facet-filters (:facet-filters props)
          :bloodhoundInfo {:url (str (config/api-url-root) "/api/library/suggest")
                           :transform (fn [response]
-                                       (clj->js (mapv (fn [string]
-                                                        {:value string})
-                                                      (aget response "results"))))
+                                       (clj->js (mapv (partial hash-map :value) (aget response "results"))))
                           :cache false
                           :prepare (fn [query settings]
                                       (clj->js
