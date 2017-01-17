@@ -454,14 +454,14 @@
    (fn [{:keys [props refs]}]
      ((:on-filter props) (common/get-text refs "autocomplete-filter-field")))
    :render
-   (fn [{:keys [props]}]
+   (fn [{:keys [props this]}]
      (let [{:keys [initial-text placeholder width]} props]
        [:div {:style {:display "inline-flex" :width width}}
         (style/create-search-field
           {:ref "autocomplete-filter-field" :autoSave "true" :results 5 :autofocus "true"
            :placeholder (or placeholder "Filter") :defaultValue initial-text
            :style {:flex "1 0 auto" :width width :borderRadius 3 :marginBottom 0}
-           :className "typeahead"})]))
+           :className "typeahead" :onKeyDown (common/create-key-handler [:enter] #(react/call :apply-filter this))})]))
    :component-did-mount
    (fn [{:keys [refs props locals this]}]
      (.addEventListener (@refs "autocomplete-filter-field") "search"
@@ -475,7 +475,7 @@
        (.typeahead (js/$ (@refs "autocomplete-filter-field"))
                    (clj->js
                      {:hint true
-                      :minLength 1})
+                      :minLength 3})
                    (clj->js
                      {:source options
                       :display (:typeaheadDisplay props)
