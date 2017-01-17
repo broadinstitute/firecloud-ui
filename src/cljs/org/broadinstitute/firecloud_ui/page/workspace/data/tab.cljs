@@ -187,21 +187,29 @@
                             [:div {:style {:display "flex" :alignItems "center" :marginBottom "1em"}}
                              (map layout (vals built-in))
                              (when-let [selected-entity-type (some-> (:selected-entity-type @state) name)]
-                               [:a {:style {:textDecoration "none" :margin "7px .3em 0 0"}
-                                    :href (str (config/api-url-root) "/cookie-authed/workspaces/"
-                                               (:namespace workspace-id) "/"
-                                               (:name workspace-id) "/entities/" selected-entity-type "/tsv"
-                                               "?attributeNames="
-                                               (->> (persistence/try-restore
-                                                     {:key (str (common/workspace-id->string workspace-id) ":data:" selected-entity-type)
-                                                      :initial (constantly {})})
-                                                    :column-meta
-                                                    (filter :visible?)
-                                                    (map :header)
-                                                    (clojure.string/join ",")))
-                                    :onClick #(u/set-access-token-cookie (u/get-access-token))
-                                    :target "_blank"}
-                                (str "Download '" (clojure.string/replace selected-entity-type ":" "") "' data")])
+                               [:form {:target "_blank"
+                                       :method "POST"
+                                       :action (str (config/api-url-root) "/cookie-authed/workspaces/"
+                                                    (:namespace workspace-id) "/"
+                                                    (:name workspace-id) "/entities/" selected-entity-type "/tsv")}
+                                [:input {:type "hidden"
+                                         :name "FCtoken"
+                                         :value (u/get-access-token)}]
+                                [:input {:type "hidden"
+                                         :name "attributeNames"
+                                         :value (->> (persistence/try-restore
+                                                      {:key (str (common/workspace-id->string
+                                                                  workspace-id) ":data:" selected-entity-type)
+                                                       :initial (constantly {})})
+                                                     :column-meta
+                                                     (filter :visible?)
+                                                     (map :header)
+                                                     (clojure.string/join ","))}]
+                                [:input {:style {:border "none" :backgroundColor "transparent" :cursor "pointer"
+                                                 :color (:button-primary style/colors) :fontSize "inherit" :fontFamily "inherit"
+                                                 :padding 0 :marginLeft "1em"}
+                                         :type "submit"
+                                         :value (str "Download '" selected-entity-type "' data")}]])
                              [:div {:style {:flexGrow 1}}]
                              [:div {:style {:paddingRight ".5em"}}
                               [comps/Button {:text "Import Data..."
