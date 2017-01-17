@@ -128,16 +128,15 @@
 
 (defn render-count [count]
   [:div {:style {:width 24 :fontSize "80%" :fontWeight "normal" :float "right"}}
-   [:span {:style {
-                  :display "inline-block"
-                  :minWidth "10px"
-                  :padding "3px 7px"
-                  :color "#fff"
-                  :fontWeight "bold"
-                  :textAlign "center"
-                  :whiteSpace "nowrap"
-                  :verticalAlign "middle"
-                  :backgroundColor "#aaa"
-                  :borderRadius "3px"
-                  }} count]])
+   [:span {:style {:display "inline-block"
+                   :minWidth "10px"
+                   :padding "3px 7px"
+                   :color "#fff"
+                   :fontWeight "bold"
+                   :textAlign "center"
+                   :whiteSpace "nowrap"
+                   :verticalAlign "middle"
+                   :backgroundColor "#aaa"
+                   :borderRadius "3px"}}
+    count]])
 

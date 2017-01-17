@@ -35,7 +35,7 @@
                         :content-renderer
                         (fn [[index entity]]
                           (style/create-link {:text (entity "name")
-                                              :onClick #(swap! state update-in [:selected]
+                                              :onClick #(swap! state update :selected
                                                                (if source? conj disj) index)}))}]
                       (map (fn [k] {:header k :starting-width 100 :show-initial? false
                                     :content-renderer

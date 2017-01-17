@@ -239,19 +239,19 @@
        {:endpoint endpoints/list-workspaces
         :on-done (fn [{:keys [success? status-text get-parsed-response]}]
                    (if success?
-                     (swap! state update-in [:server-response]
+                     (swap! state update :server-response
                        assoc :workspaces (map
                                            (fn [ws]
                                              (assoc ws :status (common/compute-status ws)))
                                            (get-parsed-response false)))
-                     (swap! state update-in [:server-response]
+                     (swap! state update :server-response
                        assoc :error-message status-text)))})
      (endpoints/get-billing-projects
       (fn [err-text projects]
         (if err-text
-          (swap! state update-in [:server-response] assoc
+          (swap! state update :server-response assoc
                  :error-message err-text :disabled-reason :error)
-          (swap! state update-in [:server-response] assoc
+          (swap! state update :server-response assoc
                  :billing-projects (map #(% "projectName") projects)
                  :disabled-reason (if (empty? projects) :no-billing nil))))))})
 

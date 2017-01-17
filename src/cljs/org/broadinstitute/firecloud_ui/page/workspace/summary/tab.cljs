@@ -326,5 +326,5 @@
          {:endpoint (endpoints/storage-cost-estimate (:workspace-id props))
           :on-done (fn [{:keys [success? status-text get-parsed-response]}]
                      (if success?
-                       (swap! state update-in [:server-response] assoc :storage-cost (get (get-parsed-response false) "estimate"))
-                       (swap! state update-in [:server-response] assoc :storage-cost status-text)))})))})
+                       (swap! state update :server-response assoc :storage-cost (get (get-parsed-response false) "estimate"))
+                       (swap! state update :server-response assoc :storage-cost status-text)))})))})

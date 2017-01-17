@@ -39,7 +39,7 @@
      (js/clearTimeout (:-cycle @locals)))
    :-cycle
    (fn [{:keys [this state locals]}]
-     (swap! state update-in [:dot-count] #(mod (inc %) 4))
+     (swap! state update :dot-count #(mod (inc %) 4))
      (swap! locals assoc :-cycle (js/setTimeout #(react/call :-cycle this) 600)))})
 
 

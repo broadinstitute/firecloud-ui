@@ -148,7 +148,7 @@
                                                 :onChange update-property
                                                 :rows 3})
                        (= typeahead "ontology")
-                       [:div {}
+                       [:div {:style {:marginBottom "0.75em"}}
                         (style/create-text-field {:ref property-kwd
                                                   :className "typeahead"
                                                   :placeholder "Select an ontology value."
@@ -158,7 +158,7 @@
                         (let [relatedID (library-utils/get-related-value (:attributes @state) library-schema property-kwd true)
                               relatedLabel (library-utils/get-related-value (:attributes @state) library-schema property-kwd false)]
                           (if (not (or (clojure.string/blank? relatedID) (clojure.string/blank? relatedLabel)))
-                            [:div {:style {:fontWeight "bold" :marginBottom ".75em"}}
+                            [:div {:style {:fontWeight "bold"}}
                              relatedLabel [:span {:style {:fontWeight "normal" :fontSize "small" :float "right"}} relatedID]
                              [:div {:style {:fontWeight "normal"}}
                               (style/create-link {:text "Clear Selection"
@@ -180,11 +180,6 @@
    :component-did-mount
    (fn [{:keys [props state refs]}]
      (let [{:keys [library-schema questions]} props]
-        (let [versions (get-in library-schema [:versions])]
-          (mapv (fn [version]
-                  (let [currentVersion (get-in library-schema [:properties (keyword version) :default])]
-                    (swap! state update :attributes assoc (keyword version) currentVersion)))
-            versions))
        (doseq [{:keys [property]} questions]
          (let [property-kwd (keyword property)
                {:keys [typeahead relatedID relatedLabel]} (get-in library-schema [:properties property-kwd])
@@ -288,9 +283,16 @@
 (react/defc CatalogWizard
   {:get-initial-state
    (fn [{:keys [props]}]
-     {:page 0
-      :initial-attributes (get-initial-attributes (:workspace props))
-      :saved-attributes []})
+     (let [{:keys [library-schema]} props
+           {:keys [versions]} library-schema]
+       {:page 0
+        :initial-attributes (get-initial-attributes (:workspace props))
+        :version-attributes (->> versions
+                                 (map keyword)
+                                 (map (fn [version]
+                                        [version (get-in library-schema [:properties version :default])]))
+                                 (into {}))
+        :attributes-from-pages []}))
    :render
    (fn [{:keys [props state this]}]
      (let [{:keys [library-schema]} props
@@ -312,7 +314,7 @@
                         :ref "wizard-page"
                         :library-schema library-schema
                         :page-num page
-                        :attributes (or (get-in @state [:saved-attributes page])
+                        :attributes (or (get-in @state [:attributes-from-pages page])
                                         (:initial-attributes @state))}]]]
          (when-let [error (:validation-error @state)]
            [:div {:style {:marginTop "1em" :color (:exception-state style/colors) :textAlign "center"}}
@@ -341,7 +343,7 @@
      (if-let [error-message (react/call :validate (@refs "wizard-page"))]
        (swap! state assoc :validation-error error-message)
        (let [attributes-from-page (react/call :get-attributes (@refs "wizard-page"))]
-         (swap! state update :saved-attributes assoc (:page @state) attributes-from-page)
+         (swap! state update :attributes-from-pages assoc (:page @state) attributes-from-page)
          (after-update
           #(if (< (:page @state) (-> props :library-schema :wizard count dec))
              (swap! state update :page inc)
@@ -351,7 +353,7 @@
      (swap! state assoc :submitting? true :submit-error nil)
      (endpoints/call-ajax-orch
        {:endpoint (endpoints/save-library-metadata (:workspace-id props))
-        :payload (apply merge (:saved-attributes @state))
+        :payload (apply merge (:version-attributes @state) (:attributes-from-pages @state))
         :headers utils/content-type=json
         :on-done (fn [{:keys [success? get-parsed-response]}]
                    (swap! state dissoc :submitting?)
