@@ -450,21 +450,12 @@
      (.addEventListener (@refs "filter-field") "search" #(when (= (.-value (.-currentTarget %)) "") (react/call :apply-filter this))))})
 
 (react/defc AutocompleteFilter
-  {:render
-   (fn [{:keys [props]}]
-     (let [{:keys [initial-text placeholder width]} props]
-       [:div {:style {:display "inline-flex" :width width}}
-        (style/create-text-field
-          {:ref "autocomplete-filter-field" :autoSave "true" :results 5 :autofocus "true"
-           :placeholder (or placeholder "Filter") :defaultValue initial-text
-           :style {:flex "1 0 auto" :width width :borderRadius "3px 0 0 3px" :marginBottom 0}
-           :className "typeahead" })]))
-   :component-will-receive-props
-   (fn [{:keys [locals]}]
-     (let [bi (:bloodhoundInstance @locals)]
-           (.initialize bi true)))
+  {:apply-filter
+   (fn [{:keys [props refs]}]
+     ((:on-filter props) (common/get-text refs "autocomplete-filter-field")))
    :component-did-mount
-   (fn [{:keys [refs props locals]}]
+   (fn [{:keys [refs props locals this]}]
+     (.addEventListener (@refs "autocomplete-filter-field") "search" #(when (= (.-value (.-currentTarget %)) "") (react/call :apply-filter this)))
      (let [options (js/Bloodhound.
                      (clj->js
                        {:datumTokenizer js/Bloodhound.tokenizers.whitespace
@@ -485,7 +476,21 @@
      (.bind (js/$ (@refs "autocomplete-filter-field"))
             "typeahead:select"
             (fn [ev suggestion]
-              ((:on-filter props) ((:typeaheadDisplay props) suggestion)))))})
+              ((:on-filter props) ((:typeaheadDisplay props) suggestion)))))
+   :component-will-receive-props
+   (fn [{:keys [locals]}]
+     (let [bi (:bloodhoundInstance @locals)]
+       (.initialize bi true)))
+   :render
+   (fn [{:keys [props]}]
+     (let [{:keys [initial-text placeholder width]} props]
+       [:div {:style {:display "inline-flex" :width width}}
+        ;(style/create-text-field
+        (style/create-search-field
+          {:ref "autocomplete-filter-field" :autoSave "true" :results 5 :autofocus "true"
+           :placeholder (or placeholder "Filter") :defaultValue initial-text
+           :style {:flex "1 0 auto" :width width :borderRadius "3px 3px 3px 3px" :marginBottom 0}
+           :className "typeahead"})]))})
 
 
 (react/defc OKCancelForm
