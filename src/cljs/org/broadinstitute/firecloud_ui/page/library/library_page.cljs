@@ -149,7 +149,8 @@
          :facet-filters (:facet-filters props)
          :bloodhoundInfo {:url (str (config/api-url-root) "/api/library/suggest")
                           :transform (fn [response]
-                                       (clj->js (mapv (partial hash-map :value) (aget response "results"))))
+                                       (clj->js
+                                         (mapv (partial hash-map :value) (aget response "results"))))
                           :cache false
                           :prepare (fn [query settings]
                                       (clj->js
@@ -163,7 +164,7 @@
                                                    :from 0
                                                    :size 10}))))}
          :typeaheadDisplay (fn [result]
-                             (clojure.string/replace (aget result "value") #"<strong class='es-highlight'>|</strong>" ""))
+                             (.text (js/$ (str "<div>" (aget result "value") "</div>"))))
          :typeaheadSuggestionTemplate (fn [result]
                                         (str "<div style='textOverflow: ellipsis; overflow: hidden; font-size: smaller;'>" (aget result "value") "</div>"))}]]])})
 

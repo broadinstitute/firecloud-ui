@@ -471,7 +471,7 @@
                      (clj->js
                        {:datumTokenizer js/Bloodhound.tokenizers.whitespace
                         :queryTokenizer js/Bloodhound.tokenizers.whitespace
-                        :remote (clj->js (:bloodhoundInfo props))}))]
+                        :remote (:bloodhoundInfo props)}))]
        (.typeahead (js/$ (@refs "autocomplete-filter-field"))
                    (clj->js
                      {:hint true
@@ -480,9 +480,8 @@
                      {:source options
                       :display (:typeaheadDisplay props)
                       :templates
-                      (clj->js
                         {:empty "<div style='font-size:small; padding: 0.5em;'> Unable to find any matches to the current query </div>"
-                         :suggestion (:typeaheadSuggestionTemplate props)})}))
+                         :suggestion (:typeaheadSuggestionTemplate props)}}))
        (swap! locals assoc :bloodhoundInstance options))
      (.bind (js/$ (@refs "autocomplete-filter-field"))
             "typeahead:select"
