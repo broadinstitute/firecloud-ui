@@ -168,17 +168,14 @@
            :initial (fn []
                       (let [processed-columns (if-let [defaults (:column-defaults props)]
                                                 (let [by-header (utils/index-by :header (:columns props))
-                                                      default-showing (try
-                                                                        (doall
-                                                                         (->> defaults
-                                                                              (replace by-header)
-                                                                              (map #(assoc % :show-initial? true))))
-                                                                        (catch :default e
-                                                                          (map #(assoc % :show-initial? true) (:columns props))))
-                                                      default-hiding (as-> by-header $
-                                                                           (apply dissoc $ defaults)
-                                                                           (vals $)
-                                                                           (map #(assoc % :show-initial? false) $))]
+                                                      default-showing (doall
+                                                                       (->> (defaults "shown")
+                                                                            (replace by-header)
+                                                                            (map #(assoc % :show-initial? true))))
+                                                      default-hiding (doall
+                                                                      (->> (defaults "hidden")
+                                                                           (replace by-header)
+                                                                           (map #(assoc % :show-initial? false))))]
                                                   (concat default-showing default-hiding))
                                                 (:columns props))
                             column-meta (mapv (fn [{:keys [header header-key starting-width] :as col}]
