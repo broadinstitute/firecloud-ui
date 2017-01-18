@@ -40,7 +40,8 @@
          :toolbar
          (fn [{:keys [reorderer]}]
            [:div {:style {:display "flex" :alignItems "top"}}
-            [:div {:style {:fontWeight 700 :fontSize "125%" :marginBottom "1em"}} "Search Results: "
+            [:div {:style {:fontWeight 700 :fontSize "112%" :marginBottom "1em"}}
+             "Search Results: "
              [:span {:style {:fontWeight 100}}
               (let [total (or (:total @state) 0)]
                 (str total
@@ -138,7 +139,7 @@
    :render
    (fn [{:keys [props this]}]
      [:div {}
-      [:div {:style {:fontWeight 700 :fontSize "125%" :marginBottom "1em"}} "Search Filters:"]
+      [:div {:style {:fontWeight 700 :fontSize "112%" :marginBottom "1em"}} "Search Filters:"]
       [:div {:style {:background (:background-light style/colors) :padding "16px 12px"}}
        [comps/AutocompleteFilter
         {:on-filter (:on-filter props)
@@ -191,7 +192,7 @@
                [:input {:type "checkbox"
                         :checked (contains? (:selected-items props) key)
                         :onChange #(react/call :update-selected this key (.. % -target -checked))}]
-               key]
+               [:span {:style {:marginLeft "0.3em"}} key]]
               (some-> doc_count style/render-count)])
            (concat (:buckets props) hidden-items-formatted))
          [:div {:style {:paddingTop "5"}}
@@ -243,7 +244,7 @@
      (if (empty? (:aggregates @state))
        [:div {:style {:fontSize "80%"}} "loading..."]
        (let [aggregate-fields (:aggregate-fields props)]
-         [:div {:style {:fontSize "80%" :background (:background-light style/colors) :padding "16px 12px"}}
+         [:div {:style {:fontSize "85%" :background (:background-light style/colors) :padding "16px 12px"}}
           (map
             (fn [prop-name] [Facet {:aggregate-field prop-name
                                     :aggregate-properties (prop-name (:aggregate-properties props))
