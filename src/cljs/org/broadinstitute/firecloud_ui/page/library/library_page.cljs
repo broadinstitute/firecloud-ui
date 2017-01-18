@@ -132,15 +132,41 @@
                   (callback {:error status-text})))})))))})
 
 (react/defc SearchSection
-  {:render
+  {:get-filters
    (fn [{:keys [props]}]
+     (utils/map-keys name (:facet-filters props)))
+   :render
+   (fn [{:keys [props this]}]
      [:div {}
       [:div {:style {:fontWeight 700 :fontSize "125%" :marginBottom "1em"}} "Search Filters:"]
       [:div {:style {:background (:background-light style/colors) :padding "16px 12px"}}
-       [comps/TextFilter {:ref "text-filter"
-                          :initial-text (:search-text props)
-                          :width "100%" :placeholder "Search"
-                          :on-filter (:on-filter props)}]]])})
+       [comps/AutocompleteFilter
+        {:on-filter (:on-filter props)
+         :width "100%"
+         :initial-text (:search-text props)
+         :ref "text-filter"
+         :placeholder "Search"
+         :facet-filters (:facet-filters props)
+         :bloodhoundInfo {:url (str (config/api-url-root) "/api/library/suggest")
+                          :transform (fn [response]
+                                       (clj->js
+                                         (mapv (partial hash-map :value) (aget response "results"))))
+                          :cache false
+                          :prepare (fn [query settings]
+                                      (clj->js
+                                        (assoc (js->clj settings)
+                                          :headers {:Authorization (str "Bearer " (utils/get-access-token))}
+                                          :type "POST"
+                                          :contentType "application/json; charset=UTF-8"
+                                          :data (utils/->json-string
+                                                  {:searchString query
+                                                   :filters (react/call :get-filters this)
+                                                   :from 0
+                                                   :size 10}))))}
+         :typeaheadDisplay (fn [result]
+                             (.text (js/$ (str "<div>" (aget result "value") "</div>"))))
+         :typeaheadSuggestionTemplate (fn [result]
+                                        (str "<div style='textOverflow: ellipsis; overflow: hidden; font-size: smaller;'>" (aget result "value") "</div>"))}]]])})
 
 (react/defc FacetCheckboxes
   {:render
@@ -263,6 +289,7 @@
      [:div {:style {:display "flex" :marginTop "2em"}}
       [:div {:style {:width "20%" :minWidth 250 :marginRight "2em"}}
        [SearchSection {:search-text (:search-text @state)
+                       :facet-filters (:facet-filters @state)
                        :on-filter #(swap! state assoc :search-text %)}]
        [FacetSection (merge
                       {:ref "facets"

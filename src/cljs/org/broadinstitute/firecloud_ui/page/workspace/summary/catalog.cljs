@@ -187,7 +187,8 @@
                                           {:datumTokenizer js/Bloodhound.tokenizers.whitespace
                                            :queryTokenizer js/Bloodhound.tokenizers.whitespace
                                            :remote (clj->js {:url (str (config/api-url-root) "/duos/autocomplete/%QUERY")
-                                                             :wildcard "%QUERY"})}))]
+                                                             :wildcard "%QUERY"
+                                                             :cache false})}))]
              (if (= typeahead "ontology")
                (do
                  (.typeahead (js/$ (@refs property))
