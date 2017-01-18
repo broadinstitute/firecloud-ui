@@ -50,7 +50,7 @@
   {:backgroundColor "#fff"
    ;; Split out border properties so they can be individually overridden
    :borderWidth 1 :borderStyle "solid" :borderColor (:border-light colors) :borderRadius 2
-   :color "#000" :height 33 :width "100%" :fontSize "88%"
+   :height 33 :width "100%" :fontSize "88%"
    :marginBottom "0.75em" :padding "0.33em 0.5em"})
 
 

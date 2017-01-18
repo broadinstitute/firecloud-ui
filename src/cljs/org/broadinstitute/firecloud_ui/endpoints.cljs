@@ -99,8 +99,8 @@
       {:path (str "/workspaces/" (ws-path workspace-id) "/checkBucketReadAccess")
        :method :get})
 
-(defn update-workspace-acl [workspace-id]
-  {:path (str "/workspaces/" (ws-path workspace-id) "/acl")
+(defn update-workspace-acl [workspace-id invite-new?]
+  {:path (str "/workspaces/" (ws-path workspace-id) "/acl?inviteUsersNotFound=" (true? invite-new?))
    :method :patch})
 
 (defn clone-workspace [workspace-id]
