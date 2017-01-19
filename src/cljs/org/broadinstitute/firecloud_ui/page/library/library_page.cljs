@@ -140,7 +140,7 @@
      (utils/map-keys name (:facet-filters props)))
    :render
    (fn [{:keys [props this]}]
-     [:div {:style {:background (:background-light style/colors) :padding "16px 12px" :marginTop -16}}
+     [:div {:style {:padding "16px 12px 0 12px"}}
       [comps/AutocompleteFilter
        {:on-filter (:on-filter props)
         :width "100%"
@@ -244,7 +244,7 @@
      (if (empty? (:aggregates @state))
        [:div {:style {:fontSize "80%"}} "loading..."]
        (let [aggregate-fields (:aggregate-fields props)]
-         [:div {:style {:fontSize "85%" :background (:background-light style/colors) :padding "16px 12px"}}
+         [:div {:style {:fontSize "85%" :padding "16px 12px"}}
           (map
             (fn [prop-name] [Facet {:aggregate-field prop-name
                                     :aggregate-properties (prop-name (:aggregate-properties props))
@@ -288,7 +288,9 @@
    :render
    (fn [{:keys [this refs state]}]
      [:div {:style {:display "flex" :marginTop "2em"}}
-      [:div {:style {:width "20%" :minWidth 250 :marginRight "2em"}}
+      [:div {:style {:width "20%" :minWidth 250 :marginRight "2em"
+                     :background (:background-light style/colors)
+                     :border style/standard-line}}
        [SearchSection {:search-text (:search-text @state)
                        :facet-filters (:facet-filters @state)
                        :on-filter #(swap! state assoc :search-text %)}]
