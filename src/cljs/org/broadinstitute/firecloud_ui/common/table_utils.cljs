@@ -281,13 +281,17 @@
                          (fn [_]
                            ((:on-reorder props) (:drag-index @state) (:drop-index @state))
                            (swap! state dissoc :drag-index :drag-active :drop-index)))}
+      [:div {:style {:display "flex" :marginBottom "0.5em" :justifyContent "space-between"
+                     :padding "4px 8px" :borderRadius 5 :cursor "pointer" :border "1px gray solid"}
+             :onClick (:reset-state props)}
+       [:span {:style {:fontSize 14 :flexGrow 1}} "Reset Columns"]
+       (icons/icon {:style {:fontSize 18 :lineHeight "inherit"}} :reset)]
       "Show:"
-      (let [style {:padding "4px 8px" :marginRight 5 :borderRadius 5
-                   :cursor (when-not (:drag-active @state) "pointer")
-                   :backgroundColor (:button-primary style/colors) :color "#fff"}]
+      (let [style {:width "4rem" :padding "4px 8px" :marginRight "0.5rem" :borderRadius 5
+                   :cursor (when-not (:drag-active @state) "pointer")}]
         [:div {:style {:padding "0.5em 0"}}
-         [:span {:style style :onClick #((:on-visibility-change props) :all true)} "All"]
-         [:span {:style style :onClick #((:on-visibility-change props) :all false)} "None"]])
+         [comps/Button {:style style :onClick #((:on-visibility-change props) :all true) :text "All"}]
+         [comps/Button {:style style :onClick #((:on-visibility-change props) :all false) :text "None"}]])
       (map-indexed
        (fn [i column]
          (when (get column :reorderable? true)

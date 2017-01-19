@@ -22,3 +22,7 @@
              (or (not validator) (some-> saved-state validator)))
       saved-state
       (initial))))
+
+(defn delete [key]
+  (utils/local-storage-remove
+   (generate-persistence-key key)))

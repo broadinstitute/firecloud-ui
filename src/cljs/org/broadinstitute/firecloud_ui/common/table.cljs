@@ -154,6 +154,39 @@
    :row-style (fn [index row]
                 {:backgroundColor (if (even? index) (:background-light style/colors) "#fff")})})
 
+(defn- restore-table-state [props]
+  (let [processed-columns (if-let [defaults (:column-defaults props)]
+                            (let [by-header (utils/index-by :header (:columns props))
+                                  default-showing (doall
+                                                   (->> (defaults "shown")
+                                                        (replace by-header)
+                                                        (map #(assoc % :show-initial? true))))
+                                  default-hiding (doall
+                                                  (->> (defaults "hidden")
+                                                       (replace by-header)
+                                                       (map #(assoc % :show-initial? false))))]
+                              (concat default-showing default-hiding))
+                            (:columns props))
+        column-meta (mapv (fn [{:keys [header header-key starting-width] :as col}]
+                            {:header (or header-key header)
+                             :width (or starting-width 100)
+                             :visible? (get col :show-initial? true)})
+                          processed-columns)
+        initial-sort-column (or (some->> (:columns props)
+                                         (filter #(contains? % :sort-initial))
+                                         first)
+                                (when (:always-sort? props)
+                                  (first (:columns props))))]
+    {:column-meta column-meta
+     :filter-group-index (get props :initial-filter-group-index 0)
+     :query-params (merge
+                    {:current-page 1 :rows-per-page (:initial-rows-per-page props)
+                     :filter-text ""}
+                    (when initial-sort-column
+                      {:sort-column (:header initial-sort-column)
+                       ; default needed when forcing sort
+                       :sort-order (or (:sort-initial initial-sort-column) :asc)}))}))
+
 (defn- get-initial-table-state [{:keys [props]}]
   (merge
    {:given-columns-by-header (->> (:columns props)
@@ -165,38 +198,7 @@
          (persistence/try-restore
           {:key (:state-key props)
            :validator (fn [stored-value] (= (set (keys stored-value)) persistence-keys))
-           :initial (fn []
-                      (let [processed-columns (if-let [defaults (:column-defaults props)]
-                                                (let [by-header (utils/index-by :header (:columns props))
-                                                      default-showing (doall
-                                                                       (->> (defaults "shown")
-                                                                            (replace by-header)
-                                                                            (map #(assoc % :show-initial? true))))
-                                                      default-hiding (doall
-                                                                      (->> (defaults "hidden")
-                                                                           (replace by-header)
-                                                                           (map #(assoc % :show-initial? false))))]
-                                                  (concat default-showing default-hiding))
-                                                (:columns props))
-                            column-meta (mapv (fn [{:keys [header header-key starting-width] :as col}]
-                                                {:header (or header-key header)
-                                                 :width (or starting-width 100)
-                                                 :visible? (get col :show-initial? true)})
-                                              processed-columns)
-                            initial-sort-column (or (some->> (:columns props)
-                                                             (filter #(contains? % :sort-initial))
-                                                             first)
-                                                    (when (:always-sort? props)
-                                                      (first (:columns props))))]
-                        {:column-meta column-meta
-                         :filter-group-index (get props :initial-filter-group-index 0)
-                         :query-params (merge
-                                        {:current-page 1 :rows-per-page (:initial-rows-per-page props)
-                                         :filter-text ""}
-                                        (when initial-sort-column
-                                          {:sort-column (:header initial-sort-column)
-                                           ; default needed when forcing sort
-                                           :sort-order (or (:sort-initial initial-sort-column) :asc)}))}))})]
+           :initial #(restore-table-state props)})]
 
      (update restored :column-meta
              (fn [cols]
@@ -234,17 +236,22 @@
                               :anchor-x (:reorder-anchor props)
                               :content
                               (react/create-element
-                                table-utils/ColumnEditor
-                                {:columns (react/call :get-ordered-columns this)
-                                 :on-reorder
-                                 (fn [source-index target-index]
-                                   (swap! state update :column-meta utils/move source-index target-index))
-                                 :on-visibility-change
-                                 (fn [column-index visible?]
-                                   (if (= :all column-index)
-                                     (swap! state update :column-meta #(vec (map merge % (repeat {:visible? visible?}))))
-                                     (swap! state assoc-in [:column-meta column-index :visible?] visible?)))
-                                 :reorder-style (:reorder-style props)})}])])
+                               table-utils/ColumnEditor
+                               {:columns (react/call :get-ordered-columns this)
+                                :on-reorder
+                                (fn [source-index target-index]
+                                  (swap! state update :column-meta utils/move source-index target-index))
+                                :on-visibility-change
+                                (fn [column-index visible?]
+                                  (if (= :all column-index)
+                                    (swap! state update :column-meta #(vec (map merge % (repeat {:visible? visible?}))))
+                                    (swap! state assoc-in [:column-meta column-index :visible?] visible?)))
+                                :reorder-style (:reorder-style props)
+                                :reset-state (fn []
+                                               (persistence/delete (:state-key props))
+                                               (swap! state merge
+                                                      (get-initial-table-state {:props props})
+                                                      {:reordering-columns? false}))})}])])
              filter (when filterable?
                       [:div {:style {:marginRight "1em"}}
                        [comps/TextFilter {:initial-text (get-in @state [:query-params :filter-text])
