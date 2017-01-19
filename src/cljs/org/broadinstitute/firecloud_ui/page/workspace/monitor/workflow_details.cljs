@@ -96,7 +96,7 @@
                             :target "_blank"
                             :style {:color "-webkit-link" :textDecoration "underline"}
           :href (str moncommon/google-cloud-context (:bucketName props) "/" (:submission-id props)
-                     "/" workflow-name "/" (:workflowId props) "/" call-name "/")}))]
+                     "/" workflow-name "/" (:workflowId props) "/call-" call-name "/")}))]
       (style/create-link {:text (if (:expanded @state) "Hide" "Show")
                           :onClick #(swap! state assoc :expanded (not (:expanded @state)))})
       (when (:expanded @state)
