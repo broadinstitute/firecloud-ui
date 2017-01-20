@@ -34,14 +34,17 @@
          :resizable-columns? true
          :sortable-columns? false
          :filterable? false
+         :resize-tab-color (:border-light style/colors)
          :reorder-anchor :right
          :reorder-style {:width "300px" :whiteSpace "nowrap" :overflow "hidden" :textOverflow "ellipsis"}
          :reorder-prefix "Columns"
          :toolbar
          (fn [{:keys [reorderer]}]
            [:div {:style {:display "flex" :alignItems "top"}}
-            [:div {:style {:fontWeight 700 :fontSize "125%" :marginBottom "1em"}} "Search Results: "
-             [:span {:style {:fontWeight 100}}
+            [:div {:style {:fontSize "112%" :marginBottom "1em"}}
+             [:span {:style {:fontWeight 700 :color (:text-light style/colors) :marginRight "0.5rem"}}
+              "Matching Cohorts"]
+             [:span {:style {:fontSize "80%"}}
               (let [total (or (:total @state) 0)]
                 (str total
                      " Dataset"
@@ -137,36 +140,34 @@
      (utils/map-keys name (:facet-filters props)))
    :render
    (fn [{:keys [props this]}]
-     [:div {}
-      [:div {:style {:fontWeight 700 :fontSize "125%" :marginBottom "1em"}} "Search Filters:"]
-      [:div {:style {:background (:background-light style/colors) :padding "16px 12px"}}
-       [comps/AutocompleteFilter
-        {:on-filter (:on-filter props)
-         :width "100%"
-         :initial-text (:search-text props)
-         :ref "text-filter"
-         :placeholder "Search"
-         :facet-filters (:facet-filters props)
-         :bloodhoundInfo {:url (str (config/api-url-root) "/api/library/suggest")
-                          :transform (fn [response]
-                                       (clj->js
-                                         (mapv (partial hash-map :value) (aget response "results"))))
-                          :cache false
-                          :prepare (fn [query settings]
+     [:div {:style {:padding "16px 12px 0 12px"}}
+      [comps/AutocompleteFilter
+       {:on-filter (:on-filter props)
+        :width "100%"
+        :initial-text (:search-text props)
+        :ref "text-filter"
+        :placeholder "Search"
+        :facet-filters (:facet-filters props)
+        :bloodhoundInfo {:url (str (config/api-url-root) "/api/library/suggest")
+                         :transform (fn [response]
                                       (clj->js
-                                        (assoc (js->clj settings)
-                                          :headers {:Authorization (str "Bearer " (utils/get-access-token))}
-                                          :type "POST"
-                                          :contentType "application/json; charset=UTF-8"
-                                          :data (utils/->json-string
-                                                  {:searchString query
-                                                   :filters (react/call :get-filters this)
-                                                   :from 0
-                                                   :size 10}))))}
-         :typeaheadDisplay (fn [result]
-                             (.text (js/$ (str "<div>" (aget result "value") "</div>"))))
-         :typeaheadSuggestionTemplate (fn [result]
-                                        (str "<div style='textOverflow: ellipsis; overflow: hidden; font-size: smaller;'>" (aget result "value") "</div>"))}]]])})
+                                       (mapv (partial hash-map :value) (aget response "results"))))
+                         :cache false
+                         :prepare (fn [query settings]
+                                    (clj->js
+                                     (assoc (js->clj settings)
+                                       :headers {:Authorization (str "Bearer " (utils/get-access-token))}
+                                       :type "POST"
+                                       :contentType "application/json; charset=UTF-8"
+                                       :data (utils/->json-string
+                                              {:searchString query
+                                               :filters (react/call :get-filters this)
+                                               :from 0
+                                               :size 10}))))}
+        :typeaheadDisplay (fn [result]
+                            (.text (js/$ (str "<div>" (aget result "value") "</div>"))))
+        :typeaheadSuggestionTemplate (fn [result]
+                                       (str "<div style='textOverflow: ellipsis; overflow: hidden; font-size: smaller;'>" (aget result "value") "</div>"))}]])})
 
 (react/defc FacetCheckboxes
   {:render
@@ -191,7 +192,7 @@
                [:input {:type "checkbox"
                         :checked (contains? (:selected-items props) key)
                         :onChange #(react/call :update-selected this key (.. % -target -checked))}]
-               key]
+               [:span {:style {:marginLeft "0.3em"}} key]]
               (some-> doc_count style/render-count)])
            (concat (:buckets props) hidden-items-formatted))
          [:div {:style {:paddingTop "5"}}
@@ -243,7 +244,7 @@
      (if (empty? (:aggregates @state))
        [:div {:style {:fontSize "80%"}} "loading..."]
        (let [aggregate-fields (:aggregate-fields props)]
-         [:div {:style {:fontSize "80%" :background (:background-light style/colors) :padding "16px 12px"}}
+         [:div {:style {:fontSize "85%" :padding "16px 12px"}}
           (map
             (fn [prop-name] [Facet {:aggregate-field prop-name
                                     :aggregate-properties (prop-name (:aggregate-properties props))
@@ -287,7 +288,9 @@
    :render
    (fn [{:keys [this refs state]}]
      [:div {:style {:display "flex" :marginTop "2em"}}
-      [:div {:style {:width "20%" :minWidth 250 :marginRight "2em"}}
+      [:div {:style {:width "20%" :minWidth 250 :marginRight "2em"
+                     :background (:background-light style/colors)
+                     :border style/standard-line}}
        [SearchSection {:search-text (:search-text @state)
                        :facet-filters (:facet-filters @state)
                        :on-filter #(swap! state assoc :search-text %)}]
