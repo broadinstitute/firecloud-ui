@@ -30,7 +30,7 @@
                                (set! (.-onload reader)
                                      #(swap! state assoc :file file :file-contents (.-result reader)))
                                (.readAsText reader (.slice file 0 preview-limit)))))}]
-      [:p {:style {:marginTop "0em"}} "For more information, see our "
+      [:div {:style {:marginBottom "0.8em"}} "For more information, see our "
        [:a {:href (config/user-guide-url) :target "_blank"} "user guide"] "."]
       [comps/Button {:text "Choose file..." :onClick #(-> (@refs "entities") .click)}]
       (when (:file-contents @state)
