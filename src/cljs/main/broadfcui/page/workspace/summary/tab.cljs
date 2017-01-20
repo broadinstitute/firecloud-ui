@@ -143,8 +143,8 @@
                                                                           :on-delete on-delete}])}]))]))
 
 
-(defn- render-main [{:keys [workspace curator? owner? writer? reader? bucket-access? editing? submissions-count
-                            library-schema request-refresh workspace-id storage-cost]}]
+(defn- render-main [{:keys [workspace curator? owner? writer? reader? can-share? bucket-access? editing? submissions-count
+                            user-access-level library-schema request-refresh workspace-id storage-cost]}]
   (let [{:keys [owners]
          {:keys [createdBy createdDate bucketName description workspace-attributes library-attributes]} :workspace} workspace
         render-detail-box (fn [order title & children]
@@ -159,12 +159,13 @@
         (style/create-paragraph
           [:div {}
            (interpose ", " owners)
-           (when owner?
+           (when can-share?
              [:span {}
               " ("
               (style/create-link {:text "Sharing..."
                                   :onClick #(modal/push-modal
                                               [AclEditor {:workspace-id workspace-id
+                                                          :user-access-level user-access-level
                                                           :request-refresh request-refresh}])})
               ")"])]))
       (render-detail-box
@@ -246,8 +247,10 @@
          :else
          (let [owner? (or (= "PROJECT_OWNER" (:accessLevel workspace)) (= "OWNER" (:accessLevel workspace)))
                writer? (or owner? (= "WRITER" (:accessLevel workspace)))
+               can-share? (:canShare workspace)
+               user-access-level (:accessLevel workspace)
                derived {:owner? owner? :writer? writer? :reader? (reader? (:workspace props))
-                        :request-refresh #(react/call :refresh this)}]
+                        :can-share? can-share? :user-access-level user-access-level :request-refresh #(react/call :refresh this)}]
            [:div {:style {:margin "45px 25px" :display "flex"}}
             (render-sidebar state refs this
                             (merge (select-keys props [:workspace :workspace-id :on-clone :on-delete])

@@ -14,7 +14,7 @@
 (def ^:private access-levels ["OWNER" "WRITER" "READER" "NO ACCESS"])
 
 
-(defn- render-acl-content [workspace-id state persist-acl]
+(defn- render-acl-content [workspace-id user-access-level state persist-acl]
   [comps/OKCancelForm
    {:header
     (str "Permissions for " (:namespace workspace-id) "/" (:name workspace-id))
@@ -23,10 +23,10 @@
      [:div {}
       (when (:saving? @state)
         [comps/Blocker {:banner "Updating..."}])
-      [:div {:style {:padding "0.5rem 0" :fontSize "90%"}} "Project Owner(s)"]
+      [:div {:style {:padding "0.5rem 0" :fontSize "90%"}} "Billing Project Owner(s)"]
       (map-indexed
        (fn [i acl-entry]
-         [:div {:style {:padding "0.5rem 0" :borderTop style/standard-line}}
+         [:div {:style {:padding "0.5rem 0" :fontSize "90%" :borderTop style/standard-line}}
           (:email acl-entry)])
        (:project-owner-acl-vec @state))
       [:div {:style {:padding "0.5rem 0" :fontSize "90%" :marginTop "0.5rem"}}
@@ -48,7 +48,8 @@
           (style/create-identity-select
            {:ref (str "acl-value" i)
             :style {:display "inline-block" :width 200 :height 33 :marginLeft "1rem" :marginBottom 0}
-            :disabled (= (:email acl-entry) (-> @utils/google-auth2-instance (.-currentUser) (.get) (.getBasicProfile) (.getEmail)))
+            :disabled (or (> (.indexOf (to-array access-levels) user-access-level) (.indexOf (to-array access-levels) (:accessLevel acl-entry)))
+                          (= (:email acl-entry) (-> @utils/google-auth2-instance (.-currentUser) (.get) (.getBasicProfile) (.getEmail))))
             :value (:accessLevel acl-entry)
             :onChange #(swap! state assoc-in [:non-project-owner-acl-vec i :accessLevel]
                               (.. % -target -value))}
@@ -95,7 +96,7 @@
        (let [persist-acl #(react/call :persist-acl this %)]
         (if (:offering-invites? @state)
           (render-invite-offer (:workspace-id props) state persist-acl)
-          (render-acl-content (:workspace-id props) state persist-acl)))
+          (render-acl-content (:workspace-id props) (:user-access-level props) state persist-acl)))
        [:div {:style {:padding "2em"}}
         (if (:load-error @state)
           (style/create-server-error-message (:load-error @state))
