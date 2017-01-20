@@ -6,5 +6,5 @@
    broadfcuitest.utils
    ))
 
-(defn run-all-tests []
+(defn ^:export run-all-tests []
   (cljs.test/run-tests 'broadfcuitest.config))
