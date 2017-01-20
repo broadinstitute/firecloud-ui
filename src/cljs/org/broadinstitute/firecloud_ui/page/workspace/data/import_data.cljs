@@ -7,6 +7,7 @@
     [org.broadinstitute.firecloud-ui.common.style :as style]
     [org.broadinstitute.firecloud-ui.endpoints :as endpoints]
     [org.broadinstitute.firecloud-ui.utils :as utils]
+    [org.broadinstitute.firecloud-ui.config :as config]
     ))
 
 
@@ -29,6 +30,8 @@
                                (set! (.-onload reader)
                                      #(swap! state assoc :file file :file-contents (.-result reader)))
                                (.readAsText reader (.slice file 0 preview-limit)))))}]
+      [:p {:style {:marginTop "0em"}} "For more information, see our "
+       [:a {:href (config/user-guide-url) :target "_blank"} "user guide"] "."]
       [comps/Button {:text "Choose file..." :onClick #(-> (@refs "entities") .click)}]
       (when (:file-contents @state)
         [:div {:style {:margin "0.5em 2em" :padding "0.5em" :border style/standard-line}}
