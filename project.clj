@@ -1,5 +1,3 @@
-(defn- with-ns [n] (str "org.broadinstitute.firecloud-ui." n))
-
 (defproject org.broadinstitute/firecloud-ui "0.0.1"
   :dependencies
   [
@@ -19,12 +17,12 @@
               :cljsbuild
               {:builds
                {:client
-                {:source-paths ["src/cljstest"]
+                {:source-paths ["src/cljs/test"]
                  :figwheel true
                  :compiler
                  {;; Use this namespace (which requires main) so that testing is readily available
                   ;; in all dev builds.
-                  :main ~(with-ns "testrunner")
+                  :main "broadfcuitest.testrunner"
                   :optimizations :none
                   :output-dir "resources/public/build"
                   :asset-path "build"
@@ -40,7 +38,8 @@
                                           ;; out.
                                           :optimizations :simple
                                           :pretty-print false}}}}}}
-  :cljsbuild {:builds {:client {:source-paths ["src/cljs"] :compiler {:main ~(with-ns "main")}}}}
+  :cljsbuild {:builds {:client {:source-paths ["src/cljs/main"]
+                                :compiler {:main "broadfcui.main"}}}}
   :resource {:resource-paths ["src/static"]
              :excludes [#".*\.DS_Store"]
              :skip-stencil [#"src/static/assets/.*"]

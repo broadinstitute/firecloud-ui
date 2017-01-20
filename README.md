@@ -43,7 +43,7 @@ To connect, reload the browser window. The prompt should appear less than ten se
 To run all tests, enter this at the Figwheel REPL:
 
 ```clojure
-(org.broadinstitute.firecloud-ui.testrunner/run-all-tests)
+(broadfcui.testrunner/run-all-tests)
 ```
 
 Check the JavaScript console for test output.
