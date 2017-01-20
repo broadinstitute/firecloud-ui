@@ -11,3 +11,4 @@
 (defn workflow-count-warning-threshold [] (get @config "workflowCountWarningThreshold" 100))
 (defn submission-status-refresh [] (get @config "submissionStatusRefresh" 60000)) ;; milliseconds
 (defn cromwell-version [] (get @config "cromwellVersion" "n/a"))
+(defn user-guide-url [] (get @config "userGuideUrl"))
