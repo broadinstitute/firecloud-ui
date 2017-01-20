@@ -1,0 +1,10 @@
+services:
+  - docker
+
+sudo: false
+
+script:
+  - scripts/test.sh
+
+# This isn't used, but makes slightly more sense than ruby, the default.
+language: java
