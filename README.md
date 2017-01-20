@@ -40,10 +40,10 @@ To connect, reload the browser window. The prompt should appear less than ten se
 
 ## Testing
 
-To run all tests, enter this at the Figwheel REPL:
+To run all tests, enter this at the JavaScript console:
 
-```clojure
-(broadfcui.testrunner/run-all-tests)
+```javascript
+broadfcuitest.testrunner.run_all_tests()
 ```
 
 Check the JavaScript console for test output.
