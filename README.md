@@ -2,7 +2,7 @@
 
 FireCloud user interface for web browsers.
 
-https://firecloud.dsde-prod.broadinstitute.org/
+https://portal.firecloud.org
 
 ## Technologies
 
