@@ -45,15 +45,17 @@
               :spellCheck false
               :value (:email acl-entry)
               :onChange #(swap! state assoc-in [:non-project-owner-acl-vec i :email] (.. % -target -value))}])
-          (style/create-identity-select
-           {:ref (str "acl-value" i)
-            :style {:display "inline-block" :width 200 :height 33 :marginLeft "1rem" :marginBottom 0}
-            :disabled (or (> (.indexOf (to-array access-levels) user-access-level) (.indexOf (to-array access-levels) (:accessLevel acl-entry)))
-                          (= (:email acl-entry) (-> @utils/google-auth2-instance (.-currentUser) (.get) (.getBasicProfile) (.getEmail))))
-            :value (:accessLevel acl-entry)
-            :onChange #(swap! state assoc-in [:non-project-owner-acl-vec i :accessLevel]
-                              (.. % -target -value))}
-           access-levels)
+          (let [available-access-levels (filter #(>= (.indexOf (to-array access-levels) %) (.indexOf (to-array access-levels) user-access-level)) access-levels)
+                disabled? (or (> (.indexOf (to-array access-levels) user-access-level) (.indexOf (to-array access-levels) (:accessLevel acl-entry)))
+                              (= (:email acl-entry) (-> @utils/google-auth2-instance (.-currentUser) (.get) (.getBasicProfile) (.getEmail))))]
+            (style/create-identity-select
+             {:ref (str "acl-value" i)
+              :style {:display "inline-block" :width 200 :height 33 :marginLeft "1rem" :marginBottom 0}
+              :disabled disabled?
+              :value (:accessLevel acl-entry)
+              :onChange #(swap! state assoc-in [:non-project-owner-acl-vec i :accessLevel]
+                                (.. % -target -value))}
+             (if disabled? access-levels available-access-levels)))
           (when (:pending? acl-entry)
             [:span {:style {:fontStyle "italic" :color (:text-light style/colors)
                             :marginLeft "0.5rem"}}
