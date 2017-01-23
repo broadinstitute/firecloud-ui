@@ -99,8 +99,8 @@
       {:path (str "/workspaces/" (ws-path workspace-id) "/checkBucketReadAccess")
        :method :get})
 
-(defn update-workspace-acl [workspace-id]
-  {:path (str "/workspaces/" (ws-path workspace-id) "/acl")
+(defn update-workspace-acl [workspace-id invite-new?]
+  {:path (str "/workspaces/" (ws-path workspace-id) "/acl?inviteUsersNotFound=" (true? invite-new?))
    :method :patch})
 
 (defn clone-workspace [workspace-id]
@@ -710,7 +710,11 @@
    (call-ajax-orch
     {:endpoint {:path "/profile/billing"
                 :method :get
-                :mock-data (utils/rand-subset ["broad-dsde-dev" "broad-institute"])}
+                :mock-data (utils/rand-subset
+                            [{"projectName" "broad-dsde-dev" "role" "User"
+                              "creationStatus" "Ready"}
+                             {"projectName" "broad-institute" "role" "User"
+                              "creationStatus" "Ready"}])}
      :on-done (fn [{:keys [success? status-text get-parsed-response]}]
                 (if success?
                   (let [pred (if include-pending?

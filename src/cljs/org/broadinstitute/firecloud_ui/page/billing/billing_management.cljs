@@ -52,7 +52,7 @@
    :-set-timeout
    (fn [{:keys [locals]} ms f]
      (swap! locals assoc-in [:timeouts f]
-            (js/setTimeout (fn [] (swap! locals update-in [:timeouts] dissoc f) (f)) ms)))})
+            (js/setTimeout (fn [] (swap! locals update :timeouts dissoc f) (f)) ms)))})
 
 
 (react/defc BillingProjectTable
@@ -86,7 +86,7 @@
          (add-right
           [comps/Button
            {:text "Create New Billing Project"
-            :onClick (fn [{:keys [this]}]
+            :onClick (fn []
                        (if (-> @utils/google-auth2-instance (aget "currentUser") (js-invoke "get")
                                (js-invoke "hasGrantedScopes" "https://www.googleapis.com/auth/cloud-billing"))
                          (modal/push-modal

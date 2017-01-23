@@ -202,7 +202,7 @@
                 (for [[status subs] (sort submissions-count)]
                  [:li {} (str subs " " status)])])])))]
 
-    (when editing? common/PHI-warning)
+    (when editing? [:div {:style {:marginBottom "10px"}} common/PHI-warning])
 
      (style/create-section-header "Description")
      (style/create-paragraph
@@ -326,7 +326,7 @@
          {:endpoint (endpoints/storage-cost-estimate (:workspace-id props))
           :on-done (fn [{:keys [success? status-text raw-response]}]
                      (let [[response parse-error?] (utils/parse-json-string raw-response false false)]
-                       (swap! state update-in [:server-response] assoc :storage-cost
+                       (swap! state update :server-response assoc :storage-cost
                               (if parse-error?
                                 (str "Error parsing JSON response with status: " status-text)
                                 (let [key (if success? "estimate" "message")]

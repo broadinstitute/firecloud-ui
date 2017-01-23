@@ -55,19 +55,18 @@
   {:get-initial-state
    (fn [{:keys [state]}]
      {:crumbs [{:text "Choose Source"
-                :onClick #(swap! state update-in [:crumbs] (comp vec (partial take 1)))}]})
+                :onClick #(swap! state update :crumbs (comp vec (partial take 1)))}]})
    :render
    (fn [{:keys [state props]}]
      [comps/OKCancelForm
-      {:header "Import Data"
-       :show-cancel? false :ok-button {:text "Done" :onClick modal/pop-modal}
+      {:header "Import Data" :show-cancel? true :cancel-text "Close"
        :content
        (let [last-crumb-id (:id (second (:crumbs @state)))
              add-crumb (fn [id text]
-                         (swap! state update-in [:crumbs] conj
+                         (swap! state update :crumbs conj
                                 {:id id :text text
-                                 :onClick #(swap! state update-in [:crumbs] (comp vec (partial take 2)))}))]
-         [:div {:style {:position "relative" :minWidth 500}}
+                                 :onClick #(swap! state update :crumbs (comp vec (partial take 2)))}))]
+         [:div {:style {:position "relative" :width 720}}
           [:div {:style {:fontSize "150%" :marginBottom "1ex"}}
            [comps/Breadcrumbs {:crumbs (:crumbs @state)}]]
           common/PHI-warning
@@ -79,8 +78,8 @@
              [copy-data-workspaces/Page
               (assoc (select-keys props [:workspace-id :this-realm :reload])
                 :crumbs (drop 2 (:crumbs @state))
-                :add-crumb #(swap! state update-in [:crumbs] conj %)
-                :pop-to-depth #(swap! state update-in [:crumbs] subvec 0 %))]
+                :add-crumb #(swap! state update :crumbs conj %)
+                :pop-to-depth #(swap! state update :crumbs subvec 0 %))]
              (let [style {:width 240 :margin "auto" :textAlign "center" :cursor "pointer"
                           :backgroundColor (:button-primary style/colors)
                           :color "#fff" :padding "1em" :borderRadius 8}]
@@ -188,21 +187,29 @@
                             [:div {:style {:display "flex" :alignItems "center" :marginBottom "1em"}}
                              (map layout (vals built-in))
                              (when-let [selected-entity-type (some-> (:selected-entity-type @state) name)]
-                               [:a {:style {:textDecoration "none" :margin "7px .3em 0 0"}
-                                    :href (str (config/api-url-root) "/cookie-authed/workspaces/"
-                                               (:namespace workspace-id) "/"
-                                               (:name workspace-id) "/entities/" selected-entity-type "/tsv"
-                                               "?attributeNames="
-                                               (->> (persistence/try-restore
-                                                     {:key (str (common/workspace-id->string workspace-id) ":data:" selected-entity-type)
-                                                      :initial (constantly {})})
-                                                    :column-meta
-                                                    (filter :visible?)
-                                                    (map :header)
-                                                    (clojure.string/join ",")))
-                                    :onClick #(u/set-access-token-cookie (u/get-access-token))
-                                    :target "_blank"}
-                                (str "Download '" (clojure.string/replace selected-entity-type ":" "") "' data")])
+                               [:form {:target "_blank"
+                                       :method "POST"
+                                       :action (str (config/api-url-root) "/cookie-authed/workspaces/"
+                                                    (:namespace workspace-id) "/"
+                                                    (:name workspace-id) "/entities/" selected-entity-type "/tsv")}
+                                [:input {:type "hidden"
+                                         :name "FCtoken"
+                                         :value (u/get-access-token)}]
+                                [:input {:type "hidden"
+                                         :name "attributeNames"
+                                         :value (->> (persistence/try-restore
+                                                      {:key (str (common/workspace-id->string
+                                                                  workspace-id) ":data:" selected-entity-type)
+                                                       :initial (constantly {})})
+                                                     :column-meta
+                                                     (filter :visible?)
+                                                     (map :header)
+                                                     (clojure.string/join ","))}]
+                                [:input {:style {:border "none" :backgroundColor "transparent" :cursor "pointer"
+                                                 :color (:button-primary style/colors) :fontSize "inherit" :fontFamily "inherit"
+                                                 :padding 0 :marginLeft "1em"}
+                                         :type "submit"
+                                         :value (str "Download '" selected-entity-type "' data")}]])
                              [:div {:style {:flexGrow 1}}]
                              [:div {:style {:paddingRight ".5em"}}
                               [comps/Button {:text "Import Data..."

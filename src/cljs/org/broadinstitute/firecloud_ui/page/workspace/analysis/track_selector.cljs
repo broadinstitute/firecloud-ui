@@ -145,13 +145,13 @@
                                          (igv-utils/find-index-file {:track-url track-url
                                                                      :on-success #(reset! index-atom %)
                                                                      :on-error #(reset! index-atom :error)})
-                                         (swap! state update-in [:tracks] conj
+                                         (swap! state update :tracks conj
                                                 {:track-url track-url :index-url index-atom
                                                  :requires-index? (.endsWith track-url ".bam")})))}]
              :right [Right {:tracks (:tracks @state)
                             :reorder (fn [start-index end-index]
-                                       (swap! state update-in [:tracks] utils/move start-index end-index))
-                            :on-remove #(swap! state update-in [:tracks] utils/delete %)}]
+                                       (swap! state update :tracks utils/move start-index end-index))
+                            :on-remove #(swap! state update :tracks utils/delete %)}]
              :initial-slider-position 700}]]
           (when (:index-error @state)
             [:div {:style {:textAlign "center" :color (:exception-state style/colors) :marginTop "1em"}}

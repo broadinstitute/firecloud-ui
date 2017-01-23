@@ -39,7 +39,7 @@
      (js/clearTimeout (:-cycle @locals)))
    :-cycle
    (fn [{:keys [this state locals]}]
-     (swap! state update-in [:dot-count] #(mod (inc %) 4))
+     (swap! state update :dot-count #(mod (inc %) 4))
      (swap! locals assoc :-cycle (js/setTimeout #(react/call :-cycle this) 600)))})
 
 
@@ -449,6 +449,49 @@
    (fn [{:keys [refs this]}]
      (.addEventListener (@refs "filter-field") "search" #(when (= (.-value (.-currentTarget %)) "") (react/call :apply-filter this))))})
 
+(react/defc AutocompleteFilter
+  {:apply-filter
+   (fn [{:keys [props refs]}]
+     ((:on-filter props) (common/get-text refs "autocomplete-filter-field")))
+   :render
+   (fn [{:keys [props this]}]
+     (let [{:keys [initial-text placeholder width]} props]
+       [:div {:style {:display "inline-flex" :width width}}
+        (style/create-search-field
+          {:ref "autocomplete-filter-field" :autoSave "true" :results 5 :autofocus "true"
+           :placeholder (or placeholder "Filter") :defaultValue initial-text
+           :style {:flex "1 0 auto" :width width :borderRadius 3 :marginBottom 0}
+           :className "typeahead" :onKeyDown (common/create-key-handler [:enter] #(react/call :apply-filter this))})]))
+   :component-did-mount
+   (fn [{:keys [refs props locals this]}]
+     (.addEventListener (@refs "autocomplete-filter-field") "search"
+                        #(when (= (.-value (.-currentTarget %)) "")
+                           (react/call :apply-filter this)))
+     (let [options (js/Bloodhound.
+                     (clj->js
+                       {:datumTokenizer js/Bloodhound.tokenizers.whitespace
+                        :queryTokenizer js/Bloodhound.tokenizers.whitespace
+                        :remote (:bloodhoundInfo props)}))]
+       (.typeahead (js/$ (@refs "autocomplete-filter-field"))
+                   (clj->js
+                     {:hint true
+                      :minLength 3})
+                   (clj->js
+                     {:source options
+                      :display (:typeaheadDisplay props)
+                      :templates
+                        {:empty "<div style='font-size:small; padding: 0.5em;'> Unable to find any matches to the current query </div>"
+                         :suggestion (:typeaheadSuggestionTemplate props)}}))
+       (swap! locals assoc :bloodhoundInstance options))
+     (.bind (js/$ (@refs "autocomplete-filter-field"))
+            "typeahead:select"
+            (fn [ev suggestion]
+              ((:on-filter props) ((:typeaheadDisplay props) suggestion)))))
+   :component-will-receive-props
+   (fn [{:keys [locals]}]
+     (let [bi (:bloodhoundInstance @locals)]
+       (.initialize bi true)))})
+
 
 (react/defc OKCancelForm
   {:get-default-props
@@ -468,10 +511,10 @@
         [:div {:style {:padding "22px 48px 40px" :backgroundColor (:background-light style/colors)}}
          content
          (when (or show-cancel? ok-button)
-           [:div {:style {:marginTop 40 :textAlign "center"}}
+           [:div {:style {:marginTop (if ok-button 40 25) :textAlign "center"}}
             (when show-cancel?
               [:a {:className "cancel"
-                   :style {:marginRight (when ok-button 27) :marginTop 2 :padding "0.5em"
+                   :style {:marginRight (when ok-button 27) :marginTop 2
                            :display "inline-block"
                            :fontSize "106%" :fontWeight 500 :textDecoration "none"
                            :color (:button-primary style/colors)}
@@ -479,10 +522,11 @@
                    :onClick modal/pop-modal
                    :onKeyDown (common/create-key-handler [:space :enter] modal/pop-modal)}
                cancel-text])
+            (when ok-button
             (cond (string? ok-button) [Button {:text ok-button :ref "ok-button" :class-name "ok-button" :onClick modal/pop-modal}]
               (fn? ok-button) [Button {:text "OK" :ref "ok-button" :class-name "ok-button" :onClick ok-button}]
               (map? ok-button) [Button (merge {:ref "ok-button" :class-name "ok-button"} ok-button)]
-              :else ok-button)])]]))
+              :else ok-button))])]]))
    :component-did-mount
    (fn [{:keys [props refs]}]
      (when-let [get-first (:get-first-element-dom-node props)]

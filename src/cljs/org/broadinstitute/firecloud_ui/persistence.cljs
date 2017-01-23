@@ -20,5 +20,5 @@
   (let [saved-state (some-> key generate-persistence-key utils/local-storage-read cljs.reader/read-string)]
     (if (and saved-state
              (or (not validator) (some-> saved-state validator)))
-      (assoc saved-state :column-meta (:column-meta (initial))) ; FIXME: :column-meta is disabled pending fix for new columns not showing up
+      saved-state
       (initial))))
