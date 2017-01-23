@@ -282,7 +282,8 @@
                            ((:on-reorder props) (:drag-index @state) (:drop-index @state))
                            (swap! state dissoc :drag-index :drag-active :drop-index)))}
       [:div {:style {:display "flex" :marginBottom "0.5em" :justifyContent "space-between"
-                     :padding "4px 8px" :borderRadius 5 :cursor "pointer" :border "1px gray solid"}
+                     :padding "4px 8px" :borderRadius 5 :cursor "pointer"
+                     :border style/standard-line :backgroundColor (:background-light style/colors)}
              :onClick (:reset-state props)}
        [:span {:style {:fontSize 14 :flexGrow 1}} "Reset Columns"]
        (icons/icon {:style {:fontSize 18 :lineHeight "inherit"}} :reset)]
