@@ -45,8 +45,9 @@
               :spellCheck false
               :value (:email acl-entry)
               :onChange #(swap! state assoc-in [:non-project-owner-acl-vec i :email] (.. % -target -value))}])
-          (let [available-access-levels (filter #(>= (.indexOf (to-array access-levels) %) (.indexOf (to-array access-levels) user-access-level)) access-levels)
-                disabled? (or (> (.indexOf (to-array access-levels) user-access-level) (.indexOf (to-array access-levels) (:accessLevel acl-entry)))
+          (let [user-access-level-idnex (.indexOf (to-array access-levels) user-access-level)
+                available-access-levels (subvec access-levels user-access-level-idnex)
+                disabled? (or (> user-access-level-idnex (.indexOf (to-array access-levels) (:accessLevel acl-entry)))
                               (= (:email acl-entry) (-> @utils/google-auth2-instance (.-currentUser) (.get) (.getBasicProfile) (.getEmail))))]
             (style/create-identity-select
              {:ref (str "acl-value" i)
