@@ -515,7 +515,7 @@
                                                :queryTokenizer js/Bloodhound.tokenizers.whitespace
                                                :remote remote}))
                      :display render-display
-                     :templates {:empty (str "<div>" empty-message "</div>")
+                     :templates {:empty (str "<div style='padding: 0.5em'>" empty-message "</div>")
                                  :suggestion render-suggestion}}))
        (.bind (js/$ (@refs "field")) "typeahead:select" on-select)))})
 
