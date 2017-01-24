@@ -283,10 +283,11 @@
                            (swap! state dissoc :drag-index :drag-active :drop-index)))}
       [:div {:style {:display "flex" :marginBottom "0.5em" :justifyContent "space-between"
                      :padding "4px 8px" :borderRadius 5 :cursor "pointer"
-                     :border style/standard-line :backgroundColor (:background-light style/colors)}
+                     :border (str "1px solid " (:button-primary style/colors))
+                     :color (:button-primary style/colors)}
              :onClick (:reset-state props)}
-       [:span {:style {:fontSize 14 :flexGrow 1}} "Reset Columns"]
-       (icons/icon {:style {:fontSize 18 :lineHeight "inherit"}} :reset)]
+       (icons/icon {:style {:fontSize 18 :lineHeight "inherit"}} :reset)
+       [:span {:style {:fontSize 14 :flexGrow 1 :textAlign "center"}} "Reset Columns"]]
       "Show:"
       (let [style {:width "4rem" :padding "4px 8px" :marginRight "0.5rem" :borderRadius 5
                    :cursor (when-not (:drag-active @state) "pointer")}]
