@@ -108,7 +108,7 @@
        [(if enumerate :ol :div) {}
         (map
          (fn [property]
-           (let [{:keys [title type typeahead enum minimum consentCode hidden renderHint inputHint]} (get-in library-schema [:properties property])
+           (let [{:keys [title type typeahead enum minimum consentCode hidden renderHint inputHint relatedID relatedLabel]} (get-in library-schema [:properties property])
                  {:keys [wording datatype emptyChoice]} renderHint
                  required? (contains? required-attributes property)
                  error? (contains? invalid-properties property)
@@ -157,12 +157,23 @@
                                                :rows 3})
                       (= typeahead "ontology")
                       [:div {:style {:marginBottom "0.75em"}}
-                       (style/create-text-field {:ref property
-                                                 :className "typeahead"
-                                                 :placeholder "Select an ontology value."
-                                                 :style (colorize {:width "100%" :marginBottom "0px"})
-                                                 :value (get attributes property)
-                                                 :onChange update-property})
+                       [comps/Typeahead {:field-attributes {:placeholder "Select an ontology value."
+                                                            :style (colorize {:width "100%" :marginBottom "0px"})
+                                                            :value (get attributes property)
+                                                            :onChange update-property}
+                                         :remote {:url (str (config/api-url-root) "/duos/autocomplete/%QUERY")
+                                                  :wildcard "%QUERY"
+                                                  :cache false}
+                                         :render-display #(aget % "label")
+                                         :render-suggestion (fn [result]
+                                                              (str "<div> <div style='line-height: 1.5em;'>" (aget result "label")
+                                                                   "<small style='float: right;'>" (aget result "id") "</small></div>"
+                                                                   "<small style='font-style: italic;'> " (aget result "definition") "</small></div>"))
+                                         :on-select (fn [_ suggestion]
+                                                      (swap! state update :attributes assoc
+                                                             property (aget suggestion "label")
+                                                             (keyword relatedLabel) (aget suggestion "label")
+                                                             (keyword relatedID) (aget suggestion "id")))}]
                        (let [relatedID (library-utils/get-related-value attributes library-schema property true)
                              relatedLabel (library-utils/get-related-value attributes library-schema property false)]
                          (if (not (or (clojure.string/blank? relatedID) (clojure.string/blank? relatedLabel)))
@@ -183,41 +194,7 @@
                                                 :placeholder inputHint
                                                 :value (get attributes property)
                                                 :onChange update-property}))])))
-         (map keyword questions))]))
-   :component-did-mount
-   (fn [{:keys [props state refs]}]
-     (let [{:keys [library-schema questions]} props]
-       (doseq [property questions]
-         (let [property-kwd (keyword property)
-               {:keys [typeahead relatedID relatedLabel]} (get-in library-schema [:properties property-kwd])
-               options  (js/Bloodhound. (clj->js
-                                         {:datumTokenizer js/Bloodhound.tokenizers.whitespace
-                                          :queryTokenizer js/Bloodhound.tokenizers.whitespace
-                                          :remote  {:url (str (config/api-url-root) "/duos/autocomplete/%QUERY")
-                                                    :wildcard "%QUERY"
-                                                    :cache false}}))]
-           (when (= typeahead "ontology")
-             (.typeahead (js/$ (@refs property))
-                         (clj->js {:highlight true
-                                   :hint true
-                                   :minLength 3})
-                         (clj->js
-                          {:source options
-                           :display (fn [result]
-                                      (aget result "label"))
-                           :templates {:empty "<div> unable to find any matches to the current query </div>"
-                                       :suggestion
-                                       (fn [result]
-                                         (str "<div> <div style='line-height: 1.5em;'>" (aget result "label")
-                                              "<small style='float: right;'>" (aget result "id") "</small></div>"
-                                              "<small style='font-style: italic;'> " (aget result "definition") "</small></div>"))}}))
-             (.bind (js/$ (@refs property))
-                    "typeahead:select"
-                    (fn [ev suggestion]
-                      (swap! state update :attributes assoc
-                             property-kwd (aget suggestion "label")
-                             (keyword relatedLabel) (aget suggestion "label")
-                             (keyword relatedID) (aget suggestion "id")))))))))})
+         (map keyword questions))]))})
 
 (react/defc Options
   {:validate

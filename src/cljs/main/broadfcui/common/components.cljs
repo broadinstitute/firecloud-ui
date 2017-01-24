@@ -493,6 +493,33 @@
        (.initialize bi true)))})
 
 
+(react/defc Typeahead
+  {:get-default-props
+   (fn []
+     {:empty-message "No results to display."
+      :behavior {:highlight true
+                 :hint true
+                 :minLength 3}})
+   :render
+   (fn [{:keys [props]}]
+     (style/create-text-field (merge {:ref "field" :className "typeahead"}
+                                     (:field-attributes props))))
+   :component-did-mount
+   (fn [{:keys [props refs]}]
+     (let [{:keys [remote render-display behavior empty-message render-suggestion on-select]} props]
+       (.typeahead (js/$ (@refs "field"))
+                   (clj->js behavior)
+                   (clj->js
+                    {:source (js/Bloodhound. (clj->js
+                                              {:datumTokenizer js/Bloodhound.tokenizers.whitespace
+                                               :queryTokenizer js/Bloodhound.tokenizers.whitespace
+                                               :remote remote}))
+                     :display render-display
+                     :templates {:empty (str "<div>" empty-message "</div>")
+                                 :suggestion render-suggestion}}))
+       (.bind (js/$ (@refs "field")) "typeahead:select" on-select)))})
+
+
 (react/defc OKCancelForm
   {:get-default-props
    (fn []
