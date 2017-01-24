@@ -108,24 +108,26 @@
        [(if enumerate :ol :div) {}
         (map
          (fn [property]
-           (let [{:keys [title type typeahead enum minimum consentCode hidden renderHint inputHint relatedID relatedLabel]} (get-in library-schema [:properties property])
+           (let [current-value (get attributes property)
+                 {:keys [type enum consentCode renderHint] :as prop} (get-in library-schema [:properties property])
                  {:keys [wording datatype emptyChoice]} renderHint
                  required? (contains? required-attributes property)
                  error? (contains? invalid-properties property)
-                 colorize (fn [style] (merge style (when error? {:borderColor (:exception-state style/colors)})))
+                 colorize #(merge % (when error? {:borderColor (:exception-state style/colors)
+                                                  :color (:exception-state style/colors)}))
                  update-property #(swap! state update :attributes assoc property (.. % -target -value))
                  checkbox (fn [{:keys [val label]}]
-                            [:label {:style {:display "inline-flex" :alignItems "center" :cursor "pointer" :marginRight "2em"
-                                             :color (when error? (:exception-state style/colors))}}
+                            [:label {:style (colorize {:display "inline-flex" :alignItems "center"
+                                                       :cursor "pointer" :marginRight "2em"})}
                              [:input (merge
                                       {:type "radio" :style {:cursor "pointer"}
                                        :onClick #(swap! state update :attributes assoc property val)}
-                                      (when (= val (get attributes property)) {:checked true}))]
+                                      (when (= val current-value) {:checked true}))]
                              [:div {:style {:padding "0 0.4em" :fontWeight "500"}} (or label (str val))]])]
-             (when-not hidden
+             (when-not (:hidden prop)
                [(if enumerate :li :div) {}
                 [:div {:style {:marginBottom 2}}
-                 title
+                 (:title prop)
                  (when consentCode
                    (list
                     " ["
@@ -134,13 +136,13 @@
                      consentCode]
                     "]"))
                  (when required?
-                   [:span {:style {:fontWeight "bold" :color (when error? (:exception-state style/colors))}}
+                   [:span {:style (colorize {:fontWeight "bold"})}
                     " (required)"])]
                 (cond enum
                       (if (< (count enum) 4)
                         [:div {:style {:display "inline-block" :margin "0.75em 0 0.75em 1em"}}
                          (map #(checkbox {:val %}) enum)]
-                        (style/create-identity-select {:value (get attributes property ENUM_EMPTY_CHOICE)
+                        (style/create-identity-select {:value (or current-value ENUM_EMPTY_CHOICE)
                                                        :style (colorize {})
                                                        :onChange update-property}
                                                       (cons ENUM_EMPTY_CHOICE enum)))
@@ -152,14 +154,14 @@
                          (checkbox {:val nil :label (or emptyChoice "N/A")}))]
                       (= datatype "freetext")
                       (style/create-text-area {:style (colorize {:width "100%"})
-                                               :value (get attributes property)
+                                               :value current-value
                                                :onChange update-property
                                                :rows 3})
-                      (= typeahead "ontology")
+                      (= (:typeahead prop) "ontology")
                       [:div {:style {:marginBottom "0.75em"}}
                        [comps/Typeahead {:field-attributes {:placeholder "Select an ontology value."
                                                             :style (colorize {:width "100%" :marginBottom "0px"})
-                                                            :value (get attributes property)
+                                                            :value current-value
                                                             :onChange update-property}
                                          :remote {:url (str (config/api-url-root) "/duos/autocomplete/%QUERY")
                                                   :wildcard "%QUERY"
@@ -170,29 +172,30 @@
                                                                    "<small style='float: right;'>" (aget result "id") "</small></div>"
                                                                    "<small style='font-style: italic;'> " (aget result "definition") "</small></div>"))
                                          :on-select (fn [_ suggestion]
-                                                      (swap! state update :attributes assoc
-                                                             property (aget suggestion "label")
-                                                             (keyword relatedLabel) (aget suggestion "label")
-                                                             (keyword relatedID) (aget suggestion "id")))}]
-                       (let [relatedID (library-utils/get-related-value attributes library-schema property true)
-                             relatedLabel (library-utils/get-related-value attributes library-schema property false)]
-                         (if (not (or (clojure.string/blank? relatedID) (clojure.string/blank? relatedLabel)))
+                                                      (let [[id label] (map (partial aget suggestion) ["id" "label"])
+                                                            [related-id-prop related-label-prop] (map #(-> prop % keyword) [:relatedID :relatedLabel])]
+                                                        (swap! state update :attributes assoc
+                                                               property label
+                                                               related-id-prop id
+                                                               related-label-prop label)))}]
+                       (let [[related-id related-label] (library-utils/get-related-id+label attributes library-schema property)]
+                         (when (not-any? clojure.string/blank? [related-id related-label])
                            [:div {:style {:fontWeight "bold"}}
-                            relatedLabel [:span {:style {:fontWeight "normal" :fontSize "small" :float "right"}} relatedID]
+                            related-label
+                            [:span {:style {:fontWeight "normal" :fontSize "small" :float "right"}} related-id]
                             [:div {:style {:fontWeight "normal"}}
                              (style/create-link {:text "Clear Selection"
-                                                 :onClick #(swap! state update :attributes dissoc
-                                                                  (library-utils/get-related-label-keyword library-schema property)
-                                                                  (library-utils/get-related-id-keyword library-schema property))})]]))]
+                                                 :onClick #(apply swap! state update :attributes dissoc
+                                                                  (library-utils/get-related-id+label-props library-schema property))})]]))]
                       :else
                       (style/create-text-field {:style (colorize {:width "100%"})
                                                 :type (cond (= datatype "date") "date"
                                                             (= datatype "email") "email"
                                                             (= type "integer") "number"
                                                             :else "text")
-                                                :min minimum
-                                                :placeholder inputHint
-                                                :value (get attributes property)
+                                                :min (:minimum prop)
+                                                :placeholder (:inputHint prop)
+                                                :value current-value
                                                 :onChange update-property}))])))
          (map keyword questions))]))})
 
