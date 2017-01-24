@@ -447,7 +447,9 @@
      ((:on-filter props) (common/get-text refs "filter-field")))
    :component-did-mount
    (fn [{:keys [refs this]}]
-     (.addEventListener (@refs "filter-field") "search" #(when (= (.-value (.-currentTarget %)) "") (react/call :apply-filter this))))})
+     (.addEventListener (@refs "filter-field") "search"
+                        #(when (empty? (.. % -currentTarget -value))
+                           (react/call :apply-filter this))))})
 
 
 (react/defc Typeahead
