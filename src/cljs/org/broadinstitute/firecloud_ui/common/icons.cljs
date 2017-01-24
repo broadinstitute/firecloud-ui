@@ -29,6 +29,7 @@
    :catalog "local_offer"
    :reorder "reorder"
    :close "close"
+   :reset "replay"
    :new-window "open_in_new"})
 
 (defn icon [attributes key]
