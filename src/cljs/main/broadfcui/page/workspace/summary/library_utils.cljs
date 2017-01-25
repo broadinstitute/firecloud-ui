@@ -6,7 +6,7 @@
 (defn unpack-attribute-list [value]
   (if (map? value)
     (clojure.string/join ", " (:items value))
-    (str value)))
+    value))
 
 
 (defn get-related-id+label-props [library-schema property]
