@@ -18,7 +18,8 @@
   (let [config-keys (set (keys config))
         required {"apiUrlRoot" :string "googleClientId" :string "tcgaNamespace" :string}
         optional {"cromwellVersion" :string "isDebug" :boolean "shibbolethUrlRoot" :string
-                  "submissionStatusRefresh" :integer "workflowCountWarningThreshold" :integer}
+                  "submissionStatusRefresh" :integer "userGuideUrl" :string
+                  "workflowCountWarningThreshold" :integer}
         all (merge required optional)
         missing-required (filter #(not (contains? config-keys %)) (keys required))
         extra (clojure.set/difference config-keys (set (keys all)))
