@@ -39,7 +39,8 @@
                                           :optimizations :simple
                                           :pretty-print false}}}}}}
   :cljsbuild {:builds {:client {:source-paths ["src/cljs/main"]
-                                :compiler {:main "broadfcui.main"}}}}
+                                :compiler {:main "broadfcui.main"
+                                           :output-to "target/compiled.js"}}}}
   :resource {:resource-paths ["src/static"]
              :excludes [#".*\.DS_Store"]
              :skip-stencil [#"src/static/assets/.*"]
