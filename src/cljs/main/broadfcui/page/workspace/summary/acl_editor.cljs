@@ -10,7 +10,7 @@
     [broadfcui.utils :as utils]
     ))
 
-
+; Note that render-acl-content below requires that these values be in descending order
 (def ^:private access-levels ["OWNER" "WRITER" "READER" "NO ACCESS"])
 
 
