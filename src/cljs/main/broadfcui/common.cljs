@@ -177,6 +177,17 @@
    "sample_set" "samples"
    "pair_set" "pairs"})
 
+(def ^:private access-levels-ascending ["NO ACCESS", "READER", "WRITER", "OWNER", "PROJECT_OWNER"])
+
+(defn access-greater-than? [this that]
+  (> (.indexOf (to-array access-levels-ascending) this) (.indexOf (to-array access-levels-ascending) that)))
+
+(defn access-equal-to? [this that]
+  (= (.indexOf (to-array access-levels-ascending) this) (.indexOf (to-array access-levels-ascending) that)))
+
+(defn access-greater-than-equal-to? [this that]
+  (or (access-equal-to? this that) (access-greater-than? this that)))
+
 (defn count-workflows [entity root-entity-type]
   (let [entity-type (entity "entityType")]
     (cond (= entity-type root-entity-type) 1

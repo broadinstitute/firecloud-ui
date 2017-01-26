@@ -14,7 +14,7 @@
 (def ^:private access-levels ["OWNER" "WRITER" "READER" "NO ACCESS"])
 
 
-(defn- render-acl-content [workspace-id user-access-level state persist-acl]
+(defn- render-acl-content [workspace-id user-access-level state refs persist-acl]
   [comps/OKCancelForm
    {:header
     (str "Permissions for " (:namespace workspace-id) "/" (:name workspace-id))
@@ -31,7 +31,9 @@
        (:project-owner-acl-vec @state))
       [:div {:style {:padding "0.5rem 0" :fontSize "90%" :marginTop "0.5rem"}}
        [:div {:style {:display "inline-block" :width 400}} "User ID"]
-       [:div {:style {:display "inline-block" :width 200 :marginLeft "1rem"}} "Access Level"]]
+       [:div {:style {:display "inline-block" :width 200 :marginLeft "1rem"}} "Access Level"]
+       (if (common/access-greater-than-equal-to? user-access-level "OWNER")
+        [:div {:style {:display "inline-block" :width 80 :marginLeft "1rem"}} "Can Share"])]
       (map-indexed
        (fn [i acl-entry]
          [:div {:style {:borderTop style/standard-line :padding "0.5rem 0"}}
@@ -45,9 +47,8 @@
               :spellCheck false
               :value (:email acl-entry)
               :onChange #(swap! state assoc-in [:non-project-owner-acl-vec i :email] (.. % -target -value))}])
-          (let [user-access-level-index (.indexOf (to-array access-levels) user-access-level)
-                available-access-levels (subvec access-levels user-access-level-index)
-                disabled? (or (> user-access-level-index (.indexOf (to-array access-levels) (:accessLevel acl-entry)))
+          (let [available-access-levels (subvec access-levels (.indexOf (to-array access-levels) user-access-level))
+                disabled? (or (common/access-greater-than? (:accessLevel acl-entry) user-access-level)
                               (= (:email acl-entry) (-> @utils/google-auth2-instance (.-currentUser) (.get) (.getBasicProfile) (.getEmail))))]
             (style/create-identity-select
              {:ref (str "acl-value" i)
@@ -57,9 +58,17 @@
               :onChange #(swap! state assoc-in [:non-project-owner-acl-vec i :accessLevel]
                                 (.. % -target -value))}
              (if disabled? access-levels available-access-levels)))
+          (if (common/access-greater-than-equal-to? user-access-level "OWNER")
+            [:div {:style {:display "inline-block" :width 80}}
+              [:label {:style {:cursor "pointer" :verticalAlign "middle" :display "inline-block"}}
+               [:input {:type "checkbox" :ref (str "can-share" i)
+                        :style {:width 80 :verticalAlign "middle"}
+                        :onChange #(swap! state assoc-in [:non-project-owner-acl-vec i :canShare] (-> (@refs (str "can-share" i)) .-checked))
+                        :disabled (common/access-greater-than-equal-to? (:accessLevel acl-entry) "OWNER")
+                        :checked (:canShare acl-entry)}]]])
           (when (:pending? acl-entry)
-            [:span {:style {:fontStyle "italic" :color (:text-light style/colors)
-                            :marginLeft "0.5rem"}}
+            [:div {:style {:display "inline-block" :fontStyle "italic" :color (:text-light style/colors)
+                            :marginLeft "1rem"}}
              "Pending..."])])
        (:non-project-owner-acl-vec @state))
       [:div {:style {:margin "0.5rem 0"}}
@@ -94,12 +103,12 @@
 
 (react/defc AclEditor
   {:render
-   (fn [{:keys [props state this]}]
+   (fn [{:keys [props state refs this]}]
      (if (or (:non-project-owner-acl-vec @state) (:project-owner-acl-vec @state))
        (let [persist-acl #(react/call :persist-acl this %)]
         (if (:offering-invites? @state)
           (render-invite-offer (:workspace-id props) state persist-acl)
-          (render-acl-content (:workspace-id props) (:user-access-level props) state persist-acl)))
+          (render-acl-content (:workspace-id props) (:user-access-level props) state refs persist-acl)))
        [:div {:style {:padding "2em"}}
         (if (:load-error @state)
           (style/create-server-error-message (:load-error @state))
@@ -151,6 +160,7 @@
                               conj {:email k
                                     :accessLevel (v "accessLevel")
                                     :pending? (v "pending")
+                                    :canShare (v "canShare")
                                     :read-only? true}))
                     (assoc % :project-owner-acl-vec []
                              :non-project-owner-acl-vec [])
