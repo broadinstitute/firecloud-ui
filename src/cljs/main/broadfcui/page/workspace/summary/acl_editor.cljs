@@ -10,7 +10,8 @@
     [broadfcui.utils :as utils]
     ))
 
-; Note that render-acl-content below requires that these values be in descending order
+; The list of all assignable access levels in the system
+; Note that if you add an access level, you will want to add it in common.cljs as well
 (def ^:private access-levels ["OWNER" "WRITER" "READER" "NO ACCESS"])
 
 
@@ -59,10 +60,10 @@
                                 (.. % -target -value))}
              (if disabled? access-levels available-access-levels)))
           (if (common/access-greater-than-equal-to? user-access-level "OWNER")
-            [:div {:style {:display "inline-block" :width 80}}
-              [:label {:style {:cursor "pointer" :verticalAlign "middle" :display "inline-block"}}
+            [:div {:style {:display "inline-block" :width 80 :textAlign "center"}}
+              [:label {:style {:marginLeft "1rem" :cursor "pointer" :verticalAlign "middle" :display "inline-block"}}
                [:input {:type "checkbox" :ref (str "can-share" i)
-                        :style {:width 80 :verticalAlign "middle"}
+                        :style {:verticalAlign "middle" :float "none"}
                         :onChange #(swap! state assoc-in [:non-project-owner-acl-vec i :canShare] (-> (@refs (str "can-share" i)) .-checked))
                         :disabled (common/access-greater-than-equal-to? (:accessLevel acl-entry) "OWNER")
                         :checked (:canShare acl-entry)}]]])

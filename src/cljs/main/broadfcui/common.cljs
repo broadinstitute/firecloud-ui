@@ -177,6 +177,8 @@
    "sample_set" "samples"
    "pair_set" "pairs"})
 
+; The list of all access levels in the system, inclusive of roles that aren't directly assignable
+; Note that if you add an access level, you will want to add it in acl_editor.cljs as well
 (def ^:private access-levels-ascending ["NO ACCESS", "READER", "WRITER", "OWNER", "PROJECT_OWNER"])
 
 (defn access-greater-than? [this that]
