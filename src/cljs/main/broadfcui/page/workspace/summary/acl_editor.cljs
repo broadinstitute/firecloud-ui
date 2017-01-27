@@ -56,20 +56,17 @@
               :style {:display "inline-block" :width 200 :height 33 :marginLeft "1rem" :marginBottom 0}
               :disabled disabled?
               :value (:accessLevel acl-entry)
-              :onChange #(swap! state assoc-in [:non-project-owner-acl-vec i :accessLevel]
-                                (.. % -target -value))}
+              :onChange #(swap! state assoc-in [:non-project-owner-acl-vec i :accessLevel] (.. % -target -value))}
              (if disabled? access-levels available-access-levels)))
           (if (common/access-greater-than-equal-to? user-access-level "OWNER")
-            [:div {:style {:display "inline-block" :width 80 :textAlign "center"}}
-              [:label {:style {:marginLeft "1rem" :cursor "pointer" :verticalAlign "middle" :display "inline-block"}}
+              [:label {:style {:marginLeft "1rem" :cursor "pointer" :verticalAlign "middle" :display "inline-block" :width 80 :textAlign "center"}}
                [:input {:type "checkbox"
                         :style {:verticalAlign "middle" :float "none"}
                         :onChange #(swap! state assoc-in [:non-project-owner-acl-vec i :canShare] (.. % -target -checked))
                         :disabled (common/access-greater-than-equal-to? (:accessLevel acl-entry) "OWNER")
-                        :checked (or (:canShare acl-entry) (common/access-equal-to? (:accessLevel acl-entry) "OWNER"))}]]])
+                        :checked (or (:canShare acl-entry) (common/access-equal-to? (:accessLevel acl-entry) "OWNER"))}]])
           (when (:pending? acl-entry)
-            [:div {:style {:display "inline-block" :fontStyle "italic" :color (:text-light style/colors)
-                            :marginLeft "1rem"}}
+            [:span {:style {:fontStyle "italic" :color (:text-light style/colors) :marginLeft "1rem"}}
              "Pending..."])])
        (:non-project-owner-acl-vec @state))
       [:div {:style {:margin "0.5rem 0"}}
