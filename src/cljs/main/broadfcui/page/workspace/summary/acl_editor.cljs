@@ -66,7 +66,7 @@
                         :style {:verticalAlign "middle" :float "none"}
                         :onChange #(swap! state assoc-in [:non-project-owner-acl-vec i :canShare] (-> (@refs (str "can-share" i)) .-checked))
                         :disabled (common/access-greater-than-equal-to? (:accessLevel acl-entry) "OWNER")
-                        :checked (:canShare acl-entry)}]]])
+                        :checked (or (:canShare acl-entry) (common/access-equal-to? (:accessLevel acl-entry) "OWNER"))}]]])
           (when (:pending? acl-entry)
             [:div {:style {:display "inline-block" :fontStyle "italic" :color (:text-light style/colors)
                             :marginLeft "1rem"}}
