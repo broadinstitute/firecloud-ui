@@ -28,6 +28,12 @@
    (render-value (get library-attributes property-key))))
 
 
+(defn- render-consent-code-value [value]
+  (cond (true? value) "Yes"
+        (false? value) "No"
+        :else (library-utils/unpack-attribute-list value)))
+
+
 (defn- render-consent-codes [library-schema library-attributes]
   (render-library-row
    "Structured Data Use Restrictions"
@@ -44,7 +50,7 @@
                                     :margin "0 0.2em 0.2em 0" :padding "0 0.4em"
                                     :cursor "help"}
                             :title (get consent-codes (keyword consent-code))}
-                      (str consent-code ": " (library-utils/unpack-attribute-list value))])
+                      (str consent-code ": " (render-consent-code-value value))])
                    consent-attributes)])))
 
 

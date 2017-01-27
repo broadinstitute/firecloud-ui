@@ -447,50 +447,69 @@
      ((:on-filter props) (common/get-text refs "filter-field")))
    :component-did-mount
    (fn [{:keys [refs this]}]
-     (.addEventListener (@refs "filter-field") "search" #(when (= (.-value (.-currentTarget %)) "") (react/call :apply-filter this))))})
+     (.addEventListener (@refs "filter-field") "search"
+                        #(when (empty? (.. % -currentTarget -value))
+                           (react/call :apply-filter this))))})
+
+
+(react/defc Typeahead
+  {:get-text
+   (fn [{:keys [refs]}]
+     (common/get-text refs "field"))
+   :access-text-field
+   (fn [{:keys [refs]}]
+     (@refs "field"))
+   :get-default-props
+   (fn []
+     {:empty-message "No results to display."
+      :behavior {:highlight true
+                 :hint true
+                 :minLength 3}})
+   :render
+   (fn [{:keys [props]}]
+     (style/create-search-field (merge {:ref "field" :className "typeahead"}
+                                       (:field-attributes props))))
+   :component-did-mount
+   (fn [{:keys [props refs]}]
+     (let [{:keys [remote render-display behavior empty-message render-suggestion on-select]} props]
+       (.typeahead (js/$ (@refs "field"))
+                   (clj->js behavior)
+                   (clj->js
+                    {:source (js/Bloodhound. (clj->js
+                                              {:datumTokenizer js/Bloodhound.tokenizers.whitespace
+                                               :queryTokenizer js/Bloodhound.tokenizers.whitespace
+                                               :remote remote}))
+                     :display render-display
+                     :templates {:empty (str "<div style='padding: 0.5em'>" empty-message "</div>")
+                                 :suggestion render-suggestion}}))
+       (.bind (js/$ (@refs "field")) "typeahead:select" on-select)))})
+
 
 (react/defc AutocompleteFilter
   {:apply-filter
    (fn [{:keys [props refs]}]
-     ((:on-filter props) (common/get-text refs "autocomplete-filter-field")))
+     ((:on-filter props) (common/get-text refs "typeahead")))
    :render
    (fn [{:keys [props this]}]
      (let [{:keys [initial-text placeholder width]} props]
        [:div {:style {:display "inline-flex" :width width}}
-        (style/create-search-field
-          {:ref "autocomplete-filter-field" :autoSave "true" :results 5 :autofocus "true"
-           :placeholder (or placeholder "Filter") :defaultValue initial-text
-           :style {:flex "1 0 auto" :width width :borderRadius 3 :marginBottom 0}
-           :className "typeahead" :onKeyDown (common/create-key-handler [:enter] #(react/call :apply-filter this))})]))
+        [Typeahead {:ref "typeahead"
+                    :field-attributes {:autoSave "true" :results 5 :autofocus "true"
+                                       :placeholder (or placeholder "Filter") :defaultValue initial-text
+                                       :style {:flex "1 0 auto" :width width :borderRadius 3 :marginBottom 0}
+                                       :onKeyDown (common/create-key-handler [:enter] #(react/call :apply-filter this))}
+                    :behavior {:hint true :minLength 3}
+                    :remote (:bloodhoundInfo props)
+                    :render-display (:typeaheadDisplay props)
+                    :empty-message "<small>Unable to find any matches to the current query</small>"
+                    :render-suggestion (:typeaheadSuggestionTemplate props)
+                    :on-select (fn [_ suggestion]
+                                 ((:on-filter props) ((:typeaheadDisplay props) suggestion)))}]]))
    :component-did-mount
-   (fn [{:keys [refs props locals this]}]
-     (.addEventListener (@refs "autocomplete-filter-field") "search"
-                        #(when (= (.-value (.-currentTarget %)) "")
-                           (react/call :apply-filter this)))
-     (let [options (js/Bloodhound.
-                     (clj->js
-                       {:datumTokenizer js/Bloodhound.tokenizers.whitespace
-                        :queryTokenizer js/Bloodhound.tokenizers.whitespace
-                        :remote (:bloodhoundInfo props)}))]
-       (.typeahead (js/$ (@refs "autocomplete-filter-field"))
-                   (clj->js
-                     {:hint true
-                      :minLength 3})
-                   (clj->js
-                     {:source options
-                      :display (:typeaheadDisplay props)
-                      :templates
-                        {:empty "<div style='font-size:small; padding: 0.5em;'> Unable to find any matches to the current query </div>"
-                         :suggestion (:typeaheadSuggestionTemplate props)}}))
-       (swap! locals assoc :bloodhoundInstance options))
-     (.bind (js/$ (@refs "autocomplete-filter-field"))
-            "typeahead:select"
-            (fn [ev suggestion]
-              ((:on-filter props) ((:typeaheadDisplay props) suggestion)))))
-   :component-will-receive-props
-   (fn [{:keys [locals]}]
-     (let [bi (:bloodhoundInstance @locals)]
-       (.initialize bi true)))})
+   (fn [{:keys [refs this]}]
+     (.addEventListener (react/call :access-text-field (@refs "typeahead")) "search"
+                        #(when (empty? (.. % -currentTarget -value))
+                           (react/call :apply-filter this))))})
 
 
 (react/defc OKCancelForm
