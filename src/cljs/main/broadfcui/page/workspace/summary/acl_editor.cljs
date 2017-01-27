@@ -75,7 +75,7 @@
       [:div {:style {:margin "0.5rem 0"}}
        [comps/Button {:text "Add new" :icon :add
                       :onClick #(swap! state update :non-project-owner-acl-vec
-                                       conj {:email "" :accessLevel "READER"})}]]
+                                       conj {:email "" :accessLevel "READER" :canShare false})}]]
       (style/create-validation-error-message (:validation-error @state))
       [comps/ErrorViewer {:error (:save-error @state)}]])
     :ok-button {:text "Save" :onClick persist-acl}}])
