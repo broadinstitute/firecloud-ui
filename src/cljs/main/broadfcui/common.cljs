@@ -179,16 +179,17 @@
 
 ; The list of all access levels in the system, inclusive of roles that aren't directly assignable
 ; Note that if you add an access level, you will want to add it in acl_editor.cljs as well
-(def ^:private access-levels-ascending ["NO ACCESS", "READER", "WRITER", "OWNER", "PROJECT_OWNER"])
+(def ^:private access-levels
+  {"NO ACCESS" 0 "READER" 1 "WRITER" 2 "OWNER" 3 "PROJECT_OWNER" 4})
 
-(defn access-greater-than? [this that]
-  (> (.indexOf (to-array access-levels-ascending) this) (.indexOf (to-array access-levels-ascending) that)))
+(defn access-greater-than? [level1 level2]
+  (> (access-levels level1) (access-levels level2)))
 
-(defn access-equal-to? [this that]
-  (= (.indexOf (to-array access-levels-ascending) this) (.indexOf (to-array access-levels-ascending) that)))
+(defn access-equal-to? [level1 level2]
+  (= level1 level2))
 
-(defn access-greater-than-equal-to? [this that]
-  (or (access-equal-to? this that) (access-greater-than? this that)))
+(defn access-greater-than-equal-to? [level1 level2]
+  (or (access-equal-to? level1 level2) (access-greater-than? level1 level2)))
 
 (defn count-workflows [entity root-entity-type]
   (let [entity-type (entity "entityType")]
