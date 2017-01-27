@@ -101,6 +101,7 @@
         (map
          (fn [property]
            (let [current-value (get attributes property)
+                 value-nullsafe (or current-value "") ;; avoids warning for nil value
                  {:keys [type enum consentCode renderHint] :as prop} (get-in library-schema [:properties property])
                  {:keys [wording datatype emptyChoice]} renderHint
                  required? (contains? required-attributes property)
@@ -112,8 +113,9 @@
                          [:label {:style (colorize {:display "inline-flex" :alignItems "center"
                                                     :cursor "pointer" :marginRight "2em"})}
                           [:input (merge
-                                   {:type "radio" :style {:cursor "pointer"}
-                                    :onClick #(swap! state update :attributes assoc property val)}
+                                   {:type "radio" :readOnly true
+                                    :style {:cursor "pointer"}
+                                    :onChange #(swap! state update :attributes assoc property val)}
                                    (when (= val current-value) {:checked true}))]
                           [:div {:style {:padding "0 0.4em" :fontWeight "500"}} (or label (str val))]])]
              (when-not (:hidden prop)
@@ -146,14 +148,14 @@
                          (radio {:val nil :label (or emptyChoice "N/A")}))]
                       (= datatype "freetext")
                       (style/create-text-area {:style (colorize {:width "100%"})
-                                               :value current-value
+                                               :value value-nullsafe
                                                :onChange update-property
                                                :rows 3})
                       (= (:typeahead prop) "ontology")
                       [:div {:style {:marginBottom "0.75em"}}
                        [comps/Typeahead {:field-attributes {:placeholder (:inputHint prop)
                                                             :style (colorize {:width "100%" :marginBottom "0px"})
-                                                            :value current-value
+                                                            :value value-nullsafe
                                                             :onChange update-property}
                                          :remote {:url (str (config/api-url-root) "/duos/autocomplete/%QUERY")
                                                   :wildcard "%QUERY"
@@ -187,6 +189,6 @@
                                                             :else "text")
                                                 :min (:minimum prop)
                                                 :placeholder (:inputHint prop)
-                                                :value current-value
+                                                :value value-nullsafe
                                                 :onChange update-property}))])))
          (map keyword questions))]))})
