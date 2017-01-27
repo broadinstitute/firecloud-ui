@@ -486,6 +486,9 @@
       (footer)
       ;; As low as possible on the page so it will be the frontmost component when displayed.
       [modal/Component {:ref "modal"}]])
+   ;:component-will-mount
+   ;(fn []
+   ;  (aset js/window "moment" (aget js/window "webpack-deps" "moment")))
    :component-did-mount
    (fn [{:keys [this state refs locals]}]
      ;; pop up the message only when we start getting 503s, not on every 503

@@ -1,6 +1,5 @@
 (ns broadfcui.nih-link-warning
   (:require
-   cljsjs.moment
    [dmohs.react :as react]
    [broadfcui.common :as common]
    [broadfcui.page.profile :as profile]

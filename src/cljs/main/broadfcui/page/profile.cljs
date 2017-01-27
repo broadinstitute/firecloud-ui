@@ -1,6 +1,5 @@
 (ns broadfcui.page.profile
   (:require
-    cljsjs.moment
     clojure.string
     [dmohs.react :as react]
     [broadfcui.common :as common]

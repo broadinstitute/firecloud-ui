@@ -1,19 +1,18 @@
 (ns broadfcui.common.markdown
   (:require
-    cljsjs.marked
     [dmohs.react :as react]
     [broadfcui.common.components :as comps]
     [broadfcui.common.style :as style]
-    [broadfcui.utils :as utils]
     ))
 
 ;; Documentation:
 ;; https://github.com/chjj/marked
 
-(js/marked.setOptions
-  #js{:sanitize true})
+(def marked (aget js/window "webpack-deps" "marked"))
 
-(defonce ^:private renderer (js/marked.Renderer.))
+(def ^:private renderer-js (aget marked "Renderer"))
+(defonce ^:private renderer (renderer-js.))
+
 (set! (.-link renderer)
   (fn [href title text]
     ;; whitelist http/https to guard agaisnt XSS
@@ -22,6 +21,9 @@
       (str "<a href='" (js/encodeURI href) "' title='" title "' target='_blank'>"
            text
            "</a>"))))
+
+(js-invoke marked "setOptions"
+           #js{:sanitize true :renderer renderer})
 
 (react/defc MarkdownView
   {:render
@@ -37,7 +39,7 @@
    (fn [{:keys [refs]} text]
      (when text ; marked doesn't like trying to render null text
        (set! (.-innerHTML (@refs "ref"))
-             (js/marked text #js{:renderer renderer}))))})
+             (marked text))))})
 
 (react/defc MarkdownEditor
   {:get-text
