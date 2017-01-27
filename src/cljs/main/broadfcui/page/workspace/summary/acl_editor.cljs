@@ -15,7 +15,7 @@
 (def ^:private access-levels ["OWNER" "WRITER" "READER" "NO ACCESS"])
 
 
-(defn- render-acl-content [workspace-id user-access-level state refs persist-acl]
+(defn- render-acl-content [workspace-id user-access-level state persist-acl]
   [comps/OKCancelForm
    {:header
     (str "Permissions for " (:namespace workspace-id) "/" (:name workspace-id))
@@ -62,9 +62,9 @@
           (if (common/access-greater-than-equal-to? user-access-level "OWNER")
             [:div {:style {:display "inline-block" :width 80 :textAlign "center"}}
               [:label {:style {:marginLeft "1rem" :cursor "pointer" :verticalAlign "middle" :display "inline-block"}}
-               [:input {:type "checkbox" :ref (str "can-share" i)
+               [:input {:type "checkbox"
                         :style {:verticalAlign "middle" :float "none"}
-                        :onChange #(swap! state assoc-in [:non-project-owner-acl-vec i :canShare] (-> (@refs (str "can-share" i)) .-checked))
+                        :onChange #(swap! state assoc-in [:non-project-owner-acl-vec i :canShare] (.. % -target -checked))
                         :disabled (common/access-greater-than-equal-to? (:accessLevel acl-entry) "OWNER")
                         :checked (or (:canShare acl-entry) (common/access-equal-to? (:accessLevel acl-entry) "OWNER"))}]]])
           (when (:pending? acl-entry)
@@ -104,12 +104,12 @@
 
 (react/defc AclEditor
   {:render
-   (fn [{:keys [props state refs this]}]
+   (fn [{:keys [props state this]}]
      (if (or (:non-project-owner-acl-vec @state) (:project-owner-acl-vec @state))
        (let [persist-acl #(react/call :persist-acl this %)]
         (if (:offering-invites? @state)
           (render-invite-offer (:workspace-id props) state persist-acl)
-          (render-acl-content (:workspace-id props) (:user-access-level props) state refs persist-acl)))
+          (render-acl-content (:workspace-id props) (:user-access-level props) state persist-acl)))
        [:div {:style {:padding "2em"}}
         (if (:load-error @state)
           (style/create-server-error-message (:load-error @state))
