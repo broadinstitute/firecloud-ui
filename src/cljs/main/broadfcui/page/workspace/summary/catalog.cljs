@@ -29,18 +29,16 @@
 (defn- parse-attributes [attributes library-schema]
   (utils/map-kv
     (fn [k v]
-      (let [property (get-in library-schema [:properties k])
-            {:keys [type items enum]} property
-            value (if enum
-                    (resolve-enum v)
-                    (case type
-                      "integer" (int v)
-                      "array" (let [tokens (keep (comp not-empty trim) (split v #","))]
-                                (case (:type items)
-                                  "integer" (map int tokens)
-                                  tokens))
-                      v))]
-        [k value]))
+      (let [{:keys [type items enum]} (get-in library-schema [:properties k])]
+        [k (if enum
+             (resolve-enum v)
+             (case type
+               "integer" (int v)
+               "array" (let [tokens (keep (comp not-empty trim) (split v #","))]
+                         (case (:type items)
+                           "integer" (map int tokens)
+                           tokens))
+               v))]))
     attributes))
 
 
@@ -55,18 +53,21 @@
        :invalid missing-props})))
 
 (defn- validate-numbers [attributes library-schema]
-  (let [numeric-props (->> attributes
-                           (utils/filter-keys #(= "integer" (get-in library-schema [:properties % :type])))
-                           (utils/map-kv (fn [k v]
-                                           [k (merge (select-keys (get-in library-schema [:properties k]) [:minimum :maximum])
-                                                     {:value v})])))
-        invalid-numbers (set (keep (fn [[k {:keys [value minimum maximum] :or {minimum -Infinity maximum Infinity}}]]
+  (let [invalid-numbers (->> attributes
+                             ;; get ones that are integers:
+                             (utils/filter-keys #(= "integer" (get-in library-schema [:properties % :type])))
+                             ;; attach min/max props from library-schema:
+                             (utils/map-kv (fn [k v]
+                                             [k (merge (select-keys (get-in library-schema [:properties k]) [:minimum :maximum])
+                                                       {:value v})]))
+                             ;; throw out decimals and out of range values:
+                             (keep (fn [[k {:keys [value minimum maximum] :or {minimum -Infinity maximum Infinity}}]]
                                      (when-not (and (or
-                                                      (= value (str (int value)))
-                                                      (= value (int value)))
+                                                     (= value (str (int value)))
+                                                     (= value (int value)))
                                                     (<= minimum (int value) maximum))
-                                       k))
-                                   numeric-props))]
+                                       k)))
+                             set)]
     (when-not (empty? invalid-numbers)
       {:error "Invalid number"
        :invalid invalid-numbers})))
@@ -210,28 +211,21 @@
      (react/call :get-attributes (@refs "questions")))
    :render
    (fn [{:keys [props state]}]
-     (let [{:keys [switch]} props]
-       [:div {}
-        [:div {} (:title switch)]
-        (interpose
-          [:div {:style {:display "flex" :alignItems "center" :color (:text-lightest style/colors)}}
-           [:hr {:style {:flex "1 1 auto"}}]
-           [:span {:style {:flex "0 0 auto" :margin "0 0.5em" :fontSize "75%"}} "OR"]
-           [:hr {:style {:flex "1 1 auto"}}]]
+     (let [{:keys [switch]} props
+           {:keys [selected-index]} @state]
+       (if selected-index
+         [:div {}
+          (style/create-link {:text "Back" :onClick #(swap! state dissoc :selected-index)})
+          [Questions (merge (select-keys props [:library-schema :attributes :required-attributes])
+                            (select-keys (get-in switch [:options selected-index]) [:enumerate :questions])
+                            {:ref "questions"})]]
+         [:div {}
+          [:div {} (:title switch)]
           (map-indexed
-            (fn [index {:keys [title enumerate questions]}]
-              (let [selected (= index (:selected-index @state))]
-                [:div {}
-                 [:label {:style {:display "flex" :alignItems "center" :cursor "pointer"}}
-                  [:input (merge {:type "radio" :style {:cursor "pointer"}
-                                  :onClick #(swap! state assoc :selected-index index)}
-                                 (when selected {:checked true}))]
-                  [:div {:style {:padding "1em"}} title]]
-                 (when selected
-                   [:div {:style {:marginBottom "1.5em"}}
-                    [Questions (merge (select-keys props [:library-schema :attributes :required-attributes])
-                                      {:ref "questions" :enumerate enumerate :questions questions})]])]))
-            (:options switch)))]))})
+           (fn [index {:keys [title]}]
+             [comps/Button {:text title :onClick #(swap! state assoc :selected-index index)
+                            :style {:display "flex" :marginTop "2rem"}}])
+           (:options switch))])))})
 
 
 (react/defc WizardPage
@@ -254,7 +248,7 @@
 
 (defn- render-wizard-breadcrumbs [{:keys [library-schema page-num]}]
   (let [pages (:wizard library-schema)]
-    [:div {:style {:flex "0 0 250px"}}
+    [:div {:style {:flex "0 0 250px" :backgroundColor "white" :border style/standard-line}}
      [:ul {}
       (map-indexed
         (fn [index {:keys [title]}]
@@ -301,17 +295,22 @@
          "Catalog Data Set"
          [comps/XButton {:dismiss modal/pop-modal}]]
         [:div {:style {:padding "22px 24px 40px" :backgroundColor (:background-light style/colors)}}
-         [:div {:style {:display "flex" :width 850}}
+         [:div {:style {:display "flex" :width 850 :height 400}}
           (render-wizard-breadcrumbs {:library-schema library-schema :page-num page})
-          [:div {:style {:flex "0 0 600px" :maxHeight 400 :padding "1em" :overflow "auto"
-                         :border style/standard-line :boxSizing "border-box"}}
-           [WizardPage {:key page
-                        :ref "wizard-page"
-                        :library-schema library-schema
-                        :page-num page
-                        :attributes (or (get-in @state [:attributes-from-pages page])
-                                        (:initial-attributes @state))
-                        :required-attributes (:required-attributes @state)}]]]
+          [comps/ScrollFader
+           {:outer-style {:flex "1 1 auto"
+                          :border style/standard-line :boxSizing "border-box"
+                          :backgroundColor "white"}
+            :inner-style {:padding "1rem" :boxSizing "border-box" :height "100%"}
+            :content
+            (react/create-element
+             [WizardPage {:key page
+                          :ref "wizard-page"
+                          :library-schema library-schema
+                          :page-num page
+                          :attributes (or (get-in @state [:attributes-from-pages page])
+                                          (:initial-attributes @state))
+                          :required-attributes (:required-attributes @state)}])}]]
          (when-let [error (:validation-error @state)]
            [:div {:style {:marginTop "1em" :color (:exception-state style/colors) :textAlign "center"}}
             error])
