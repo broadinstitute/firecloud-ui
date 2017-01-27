@@ -64,6 +64,85 @@
        :invalid invalid-numbers})))
 
 
+(defn- render-header [{:keys [prop consentCode library-schema required? colorize]}]
+  [:div {:style {:marginBottom 2}}
+   (:title prop)
+   (when consentCode
+     (list
+      " ["
+      [:abbr {:style {:cursor "help" :whiteSpace "nowrap" :borderBottom "1px dotted"}
+              :title (get-in library-schema [:consentCodes (keyword consentCode)])}
+       consentCode]
+      "]"))
+   (when required?
+     [:span {:style (colorize {:fontWeight "bold"})}
+      " (required)"])])
+
+(defn- render-enum [{:keys [enum radio current-value colorize update-property]}]
+  (if (< (count enum) 4)
+    [:div {:style {:display "inline-block" :margin "0.75em 0 0.75em 1em"}}
+     (map #(radio {:val %}) enum)]
+    (style/create-identity-select {:value (or current-value ENUM_EMPTY_CHOICE)
+                                   :style (colorize {})
+                                   :onChange update-property}
+                                  (cons ENUM_EMPTY_CHOICE enum))))
+
+(defn- render-boolean [{:keys [radio required? emptyChoice wording]}]
+  [:div {:style {:display "inline-block" :margin "0.75em 0 0.75em 1em"}}
+   (radio {:val true :label (case wording "yes/no" "Yes" "True")})
+   (radio {:val false :label (case wording "yes/no" "No" "False")})
+   (when-not required?
+     (radio {:val nil :label (or emptyChoice "N/A")}))])
+
+(defn- render-freetext [{:keys [colorize value-nullsafe update-property]}]
+  (style/create-text-area {:style (colorize {:width "100%"})
+                           :value value-nullsafe
+                           :onChange update-property
+                           :rows 3}))
+
+(defn- render-typeahead [{:keys [prop colorize value-nullsafe update-property state property library-schema]}]
+  [:div {:style {:marginBottom "0.75em"}}
+   [comps/Typeahead {:field-attributes {:placeholder (:inputHint prop)
+                                        :style (colorize {:width "100%" :marginBottom "0px"})
+                                        :value value-nullsafe
+                                        :onChange update-property}
+                     :remote {:url (str (config/api-url-root) "/duos/autocomplete/%QUERY")
+                              :wildcard "%QUERY"
+                              :cache false}
+                     :render-display #(aget % "label")
+                     :render-suggestion (fn [result]
+                                          (str "<div> <div style='line-height: 1.5em;'>" (aget result "label")
+                                               "<small style='float: right;'>" (aget result "id") "</small></div>"
+                                               "<small style='font-style: italic;'> " (aget result "definition") "</small></div>"))
+                     :on-select (fn [_ suggestion]
+                                  (let [[id label] (map (partial aget suggestion) ["id" "label"])
+                                        [related-id-prop related-label-prop] (map #(-> prop % keyword) [:relatedID :relatedLabel])]
+                                    (swap! state update :attributes assoc
+                                           property label
+                                           related-id-prop id
+                                           related-label-prop label)))}]
+   (let [[related-id related-label] (library-utils/get-related-id+label (:attributes @state) library-schema property)]
+     (when (not-any? clojure.string/blank? [related-id related-label])
+       [:div {:style {:fontWeight "bold"}}
+        related-label
+        [:span {:style {:fontWeight "normal" :fontSize "small" :float "right"}} related-id]
+        [:div {:style {:fontWeight "normal"}}
+         (style/create-link {:text "Clear Selection"
+                             :onClick #(apply swap! state update :attributes dissoc
+                                              (library-utils/get-related-id+label-props library-schema property))})]]))])
+
+(defn- render-textfield [{:keys [colorize datatype prop value-nullsafe update-property]}]
+  (style/create-text-field {:style (colorize {:width "100%"})
+                            :type (cond (= datatype "date") "date"
+                                        (= datatype "email") "email"
+                                        (= type "integer") "number"
+                                        :else "text")
+                            :min (:minimum prop)
+                            :placeholder (:inputHint prop)
+                            :value value-nullsafe
+                            :onChange update-property}))
+
+
 (react/defc Questions
   {:validate
    (fn [{:keys [props state locals]}]
@@ -101,94 +180,32 @@
         (map
          (fn [property]
            (let [current-value (get attributes property)
-                 value-nullsafe (or current-value "") ;; avoids warning for nil value
-                 {:keys [type enum consentCode renderHint] :as prop} (get-in library-schema [:properties property])
-                 {:keys [wording datatype emptyChoice]} renderHint
-                 required? (contains? required-attributes property)
+                 {:keys [type enum renderHint] :as prop} (get-in library-schema [:properties property])
                  error? (contains? invalid-properties property)
                  colorize #(merge % (when error? {:borderColor (:exception-state style/colors)
                                                   :color (:exception-state style/colors)}))
-                 update-property #(swap! state update :attributes assoc property (.. % -target -value))
-                 radio (fn [{:keys [val label]}]
-                         [:label {:style (colorize {:display "inline-flex" :alignItems "center"
-                                                    :cursor "pointer" :marginRight "2em"})}
-                          [:input (merge
-                                   {:type "radio" :readOnly true
-                                    :style {:cursor "pointer"}
-                                    :onChange #(swap! state update :attributes assoc property val)}
-                                   (when (= val current-value) {:checked true}))]
-                          [:div {:style {:padding "0 0.4em" :fontWeight "500"}} (or label (str val))]])]
+                 data (merge {:prop prop :state state :property property :library-schema library-schema
+                              :colorize colorize :current-value current-value
+                              :value-nullsafe (or current-value "") ;; avoids warning for nil value
+                              :required? (contains? required-attributes property)
+                              :update-property #(swap! state update :attributes assoc property (.. % -target -value))
+                              :radio (fn [{:keys [val label]}]
+                                       [:label {:style (colorize {:display "inline-flex" :alignItems "center"
+                                                                  :cursor "pointer" :marginRight "2em"})}
+                                        [:input (merge
+                                                 {:type "radio" :readOnly true
+                                                  :style {:cursor "pointer"}
+                                                  :onChange #(swap! state update :attributes assoc property val)}
+                                                 (when (= val current-value) {:checked true}))]
+                                        [:div {:style {:padding "0 0.4em" :fontWeight "500"}} (or label (str val))]])}
+                             prop
+                             renderHint)]
              (when-not (:hidden prop)
                [(if enumerate :li :div) {}
-                [:div {:style {:marginBottom 2}}
-                 (:title prop)
-                 (when consentCode
-                   (list
-                    " ["
-                    [:abbr {:style {:cursor "help" :whiteSpace "nowrap" :borderBottom "1px dotted"}
-                            :title (get-in library-schema [:consentCodes (keyword consentCode)])}
-                     consentCode]
-                    "]"))
-                 (when required?
-                   [:span {:style (colorize {:fontWeight "bold"})}
-                    " (required)"])]
-                (cond enum
-                      (if (< (count enum) 4)
-                        [:div {:style {:display "inline-block" :margin "0.75em 0 0.75em 1em"}}
-                         (map #(radio {:val %}) enum)]
-                        (style/create-identity-select {:value (or current-value ENUM_EMPTY_CHOICE)
-                                                       :style (colorize {})
-                                                       :onChange update-property}
-                                                      (cons ENUM_EMPTY_CHOICE enum)))
-                      (= type "boolean")
-                      [:div {:style {:display "inline-block" :margin "0.75em 0 0.75em 1em"}}
-                       (radio {:val true :label (case wording "yes/no" "Yes" "True")})
-                       (radio {:val false :label (case wording "yes/no" "No" "False")})
-                       (when-not required?
-                         (radio {:val nil :label (or emptyChoice "N/A")}))]
-                      (= datatype "freetext")
-                      (style/create-text-area {:style (colorize {:width "100%"})
-                                               :value value-nullsafe
-                                               :onChange update-property
-                                               :rows 3})
-                      (= (:typeahead prop) "ontology")
-                      [:div {:style {:marginBottom "0.75em"}}
-                       [comps/Typeahead {:field-attributes {:placeholder (:inputHint prop)
-                                                            :style (colorize {:width "100%" :marginBottom "0px"})
-                                                            :value value-nullsafe
-                                                            :onChange update-property}
-                                         :remote {:url (str (config/api-url-root) "/duos/autocomplete/%QUERY")
-                                                  :wildcard "%QUERY"
-                                                  :cache false}
-                                         :render-display #(aget % "label")
-                                         :render-suggestion (fn [result]
-                                                              (str "<div> <div style='line-height: 1.5em;'>" (aget result "label")
-                                                                   "<small style='float: right;'>" (aget result "id") "</small></div>"
-                                                                   "<small style='font-style: italic;'> " (aget result "definition") "</small></div>"))
-                                         :on-select (fn [_ suggestion]
-                                                      (let [[id label] (map (partial aget suggestion) ["id" "label"])
-                                                            [related-id-prop related-label-prop] (map #(-> prop % keyword) [:relatedID :relatedLabel])]
-                                                        (swap! state update :attributes assoc
-                                                               property label
-                                                               related-id-prop id
-                                                               related-label-prop label)))}]
-                       (let [[related-id related-label] (library-utils/get-related-id+label attributes library-schema property)]
-                         (when (not-any? clojure.string/blank? [related-id related-label])
-                           [:div {:style {:fontWeight "bold"}}
-                            related-label
-                            [:span {:style {:fontWeight "normal" :fontSize "small" :float "right"}} related-id]
-                            [:div {:style {:fontWeight "normal"}}
-                             (style/create-link {:text "Clear Selection"
-                                                 :onClick #(apply swap! state update :attributes dissoc
-                                                                  (library-utils/get-related-id+label-props library-schema property))})]]))]
-                      :else
-                      (style/create-text-field {:style (colorize {:width "100%"})
-                                                :type (cond (= datatype "date") "date"
-                                                            (= datatype "email") "email"
-                                                            (= type "integer") "number"
-                                                            :else "text")
-                                                :min (:minimum prop)
-                                                :placeholder (:inputHint prop)
-                                                :value value-nullsafe
-                                                :onChange update-property}))])))
+                (render-header data)
+                (cond enum (render-enum data)
+                      (= type "boolean") (render-boolean data)
+                      (= (:datatype renderHint) "freetext") (render-freetext data)
+                      (= (:typeahead prop) "ontology") (render-typeahead data)
+                      :else (render-textfield data))])))
          (map keyword questions))]))})
