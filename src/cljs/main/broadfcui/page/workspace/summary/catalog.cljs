@@ -116,14 +116,14 @@
                  colorize #(merge % (when error? {:borderColor (:exception-state style/colors)
                                                   :color (:exception-state style/colors)}))
                  update-property #(swap! state update :attributes assoc property (.. % -target -value))
-                 checkbox (fn [{:keys [val label]}]
-                            [:label {:style (colorize {:display "inline-flex" :alignItems "center"
-                                                       :cursor "pointer" :marginRight "2em"})}
-                             [:input (merge
-                                      {:type "radio" :style {:cursor "pointer"}
-                                       :onClick #(swap! state update :attributes assoc property val)}
-                                      (when (= val current-value) {:checked true}))]
-                             [:div {:style {:padding "0 0.4em" :fontWeight "500"}} (or label (str val))]])]
+                 radio (fn [{:keys [val label]}]
+                         [:label {:style (colorize {:display "inline-flex" :alignItems "center"
+                                                    :cursor "pointer" :marginRight "2em"})}
+                          [:input (merge
+                                   {:type "radio" :style {:cursor "pointer"}
+                                    :onClick #(swap! state update :attributes assoc property val)}
+                                   (when (= val current-value) {:checked true}))]
+                          [:div {:style {:padding "0 0.4em" :fontWeight "500"}} (or label (str val))]])]
              (when-not (:hidden prop)
                [(if enumerate :li :div) {}
                 [:div {:style {:marginBottom 2}}
@@ -141,17 +141,17 @@
                 (cond enum
                       (if (< (count enum) 4)
                         [:div {:style {:display "inline-block" :margin "0.75em 0 0.75em 1em"}}
-                         (map #(checkbox {:val %}) enum)]
+                         (map #(radio {:val %}) enum)]
                         (style/create-identity-select {:value (or current-value ENUM_EMPTY_CHOICE)
                                                        :style (colorize {})
                                                        :onChange update-property}
                                                       (cons ENUM_EMPTY_CHOICE enum)))
                       (= type "boolean")
                       [:div {:style {:display "inline-block" :margin "0.75em 0 0.75em 1em"}}
-                       (checkbox {:val true :label (case wording "yes/no" "Yes" "True")})
-                       (checkbox {:val false :label (case wording "yes/no" "No" "False")})
+                       (radio {:val true :label (case wording "yes/no" "Yes" "True")})
+                       (radio {:val false :label (case wording "yes/no" "No" "False")})
                        (when-not required?
-                         (checkbox {:val nil :label (or emptyChoice "N/A")}))]
+                         (radio {:val nil :label (or emptyChoice "N/A")}))]
                       (= datatype "freetext")
                       (style/create-text-area {:style (colorize {:width "100%"})
                                                :value current-value
@@ -159,7 +159,7 @@
                                                :rows 3})
                       (= (:typeahead prop) "ontology")
                       [:div {:style {:marginBottom "0.75em"}}
-                       [comps/Typeahead {:field-attributes {:placeholder "Select an ontology value."
+                       [comps/Typeahead {:field-attributes {:placeholder (:inputHint prop)
                                                             :style (colorize {:width "100%" :marginBottom "0px"})
                                                             :value current-value
                                                             :onChange update-property}
