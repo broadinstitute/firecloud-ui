@@ -84,7 +84,7 @@
         [:div {:style {:borderBottom style/standard-line
                        :padding "20px 48px 18px"
                        :fontSize "137%" :fontWeight 400 :lineHeight 1}}
-         "Catalog Data Set"
+         "Catalog Dataset"
          [comps/XButton {:dismiss modal/pop-modal}]]
         [:div {:style {:padding "22px 24px 40px" :backgroundColor (:background-light style/colors)}}
          [:div {:style {:display "flex" :width 850 :height 400}}
