@@ -4,7 +4,7 @@
     [broadfcui.common :as common]
     [broadfcui.common.modal :as modal]
     [broadfcui.common.style :as style]
-    [broadfcui.page.workspace.summary.catalog :refer [CatalogWizard]]
+    [broadfcui.page.workspace.summary.catalog.wizard :refer [CatalogWizard]]
     [broadfcui.page.workspace.summary.library-utils :as library-utils]
     [broadfcui.utils :as utils]
     ))

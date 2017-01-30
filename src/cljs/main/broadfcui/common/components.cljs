@@ -515,6 +515,50 @@
                            (react/call :apply-filter this))))})
 
 
+(react/defc ScrollFader
+  {:get-default-props
+   (fn []
+     {:vertical 50
+      :blur 36
+      :spread -45
+      :alpha 0.25})
+   :render
+   (fn [{:keys [props this]}]
+     [:div {:style (merge {:position "relative"} (:outer-style props))}
+      [:div {:ref "scroller"
+             :style (merge {:overflowY "auto"} (:inner-style props))
+             :onScroll #(react/call :update-edges this)}
+       [:div {:ref "content-container"}
+        (:content props)]]
+      (react/call :build-shadow this true)
+      (react/call :build-shadow this false)])
+   :component-did-mount
+   (fn [{:keys [refs this]}]
+     ;; this listener also fires upon being added
+     (.addEventListener (@refs "content-container") "onresize"
+                        #(react/call :update-edges this)))
+   :build-shadow
+   (fn [{:keys [props state]} top?]
+     (let [{:keys [vertical blur spread alpha]} props]
+       [:div {:style {:position "absolute" :top 0 :left 0 :right 0 :bottom 0
+                      :pointerEvents "none"
+                      :WebkitBoxShadow (str "inset 0 "
+                                            (if top? vertical (- vertical)) "px "
+                                            blur "px "
+                                            spread "px "
+                                            "rgba(0,0,0," alpha ")")
+                      :opacity (if ((if top? :more-above? :more-below?) @state) 1 0)
+                      :transition "opacity 0.5s linear"}}]))
+   :update-edges
+   (fn [{:keys [state refs]}]
+     (let [scroll-top (.-scrollTop (@refs "scroller"))
+           scroll-height (.-scrollHeight (@refs "scroller"))
+           inner-height (.-offsetHeight (@refs "scroller"))]
+       (swap! state assoc
+              :more-above? (> scroll-top 0)
+              :more-below? (< (+ scroll-top inner-height) scroll-height))))})
+
+
 (react/defc OKCancelForm
   {:get-default-props
    (fn []

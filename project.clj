@@ -19,6 +19,7 @@
                        [codemirror "~5.10.0"]
                        [font-awesome "~4.2.0"]
                        [marked "~0.3.5"]
+                       [any-resize-event, "~1.0.0"]
                        ]
         :package {:scripts
                   {:postinstall "webpack --optimize-minimize --output-filename webpack-deps.min.js"}}}

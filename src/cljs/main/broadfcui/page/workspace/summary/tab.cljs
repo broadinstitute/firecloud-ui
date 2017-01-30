@@ -12,7 +12,7 @@
     [broadfcui.page.workspace.monitor.common :as moncommon :refer [all-success? any-running? any-failed?]]
     [broadfcui.page.workspace.summary.acl-editor :refer [AclEditor]]
     [broadfcui.page.workspace.summary.attribute-editor :as attributes]
-    [broadfcui.page.workspace.summary.catalog :as catalog]
+    [broadfcui.page.workspace.summary.catalog.wizard :refer [CatalogWizard]]
     [broadfcui.page.workspace.summary.publish :as publish]
     [broadfcui.page.workspace.summary.library-view :refer [LibraryView]]
     [broadfcui.page.workspace.summary.workspace-cloner :refer [WorkspaceCloner]]
@@ -80,10 +80,13 @@
                      :top (when-not sidebar-visible? 0)
                      :width 270}}
        (when (and curator? writer? (not editing?))
-         [catalog/CatalogButton {:library-schema library-schema
-                                 :workspace workspace
-                                 :workspace-id workspace-id
-                                 :request-refresh request-refresh}])
+         [comps/SidebarButton
+          {:style :light :color :button-primary :margin :top
+           :icon :catalog :text "Catalog Dataset..."
+           :onClick #(modal/push-modal [CatalogWizard {:library-schema library-schema
+                                                       :workspace workspace
+                                                       :workspace-id workspace-id
+                                                       :request-refresh request-refresh}])}])
        (when (and curator? owner? (not editing?))
          (if (:library:published library-attributes)
            [publish/UnpublishButton {:workspace-id workspace-id

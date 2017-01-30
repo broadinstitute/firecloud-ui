@@ -6,6 +6,7 @@ window.Bloodhound = require('typeahead.js');
 exports.CodeMirror = require('codemirror');
 exports.marked = require('marked');
 require('./static/assets/js/timingDiagram');
+require('any-resize-event');
 
 require('jquery-ui/themes/base/core.css');
 require('jquery-ui/themes/base/theme.css');
