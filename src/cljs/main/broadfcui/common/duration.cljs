@@ -6,19 +6,13 @@
     (str number unit)))
 
 (defn fuzzy-time [years months days hours minutes seconds]
-  (if (> years 0)
-    (maybe-pluralize years " year")
-    (if (> months 0)
-      (maybe-pluralize months " month")
-      (if (> days 1)
-        (maybe-pluralize days " day")
-        (if (> hours 0)
-          (maybe-pluralize hours " hour")
-          (if (> minutes 0)
-            (maybe-pluralize minutes " minute")
-            (if (> seconds 30)
-              "less than a minute"
-              "a few seconds")))))))
+  (cond (> years 0) (maybe-pluralize years " year")
+        (> months 0) (maybe-pluralize months " month")
+        (> days 1) (maybe-pluralize days " day")
+        (> hours 0) (maybe-pluralize hours " hour")
+        (> minutes 0) (maybe-pluralize minutes " minute")
+        (> seconds 30) "less than a minute"
+        :else "a few seconds"))
 
 (defn fuzzy-duration-ms
   ([start end] (fuzzy-duration-ms start end false))
