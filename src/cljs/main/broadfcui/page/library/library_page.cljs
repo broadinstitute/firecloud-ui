@@ -185,7 +185,7 @@
         [:div {:style {:paddingTop "1em"}}
          (map
            (fn [{:keys [key doc_count]}]
-             [:div {:style {:paddingTop "5"}}
+             [:div {:style {:paddingTop 5}}
               [:label {:style {:display "inline-block" :width "calc(100% - 30px)"
                                :textOverflow "ellipsis" :overflow "hidden" :whiteSpace "nowrap"}
                        :title key}
@@ -195,7 +195,7 @@
                [:span {:style {:marginLeft "0.3em"}} key]]
               (some-> doc_count style/render-count)])
            (concat (:buckets props) hidden-items-formatted))
-         [:div {:style {:paddingTop "5"}}
+         [:div {:style {:paddingTop 5}}
           (if (:expanded? props)
             (when (> (count (:buckets props)) 5)
               (style/create-link {:text " less..."

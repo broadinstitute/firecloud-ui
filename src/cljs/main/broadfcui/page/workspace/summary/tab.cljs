@@ -202,7 +202,7 @@
             [:div {}
              (str count-all " Submission" (when-not (= 1 count-all) "s"))
              (when (pos? count-all)
-               [:ul {:style {:marginTop "0"}}
+               [:ul {:style {:marginTop 0}}
                 (for [[status subs] (sort submissions-count)]
                  [:li {} (str subs " " status)])])])))]
 
