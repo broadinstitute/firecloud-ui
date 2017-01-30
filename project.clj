@@ -12,7 +12,6 @@
                        [extract-text-webpack-plugin "~2.0.0-rc"]
                        [file-loader "~0.9.0"]
                        [url-loader "~0.5.7"]
-                       [moment "~2.17.1"]
                        [jquery "^1.12.2"]
                        [jquery-ui "^1.11.2"]
                        [typeahead.js "~0.11.1"]

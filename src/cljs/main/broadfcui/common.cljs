@@ -99,7 +99,7 @@
     (cond (pos? count-running) "Running"
           (and last-failure
                (or (not last-success)
-                   (.isAfter (js/moment last-failure) (js/moment last-success)))) "Exception"
+                   (> (.getTime (js/Date. last-failure)) (.getTime (js/Date. last-success))))) "Exception"
           :else "Complete")))
 
 (defn gcs-object->download-url [bucket object]
@@ -123,8 +123,13 @@
   (when-let [parsed (parse-gcs-uri gcs-uri)]
     (gcs-object->google-url (:bucket-name parsed) (:object parsed))))
 
+(def default-date-format
+  {:month "long" :day "numeric" :year "numeric" :hour "numeric" :minute "numeric"})
+
 (defn format-date [date & [format]]
-  (-> date js/moment (.format (or format "LLL"))))
+  (-> date js/Date.
+      (.toLocaleString (.-language js/navigator)
+                       (clj->js (or format default-date-format)))))
 
 (defn format-filesize [bytes]
   (letfn [(loop [b n]

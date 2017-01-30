@@ -334,17 +334,20 @@
              status-code (or status-code code)]
          (if-let [expected-msg (get-in props [:expect status-code])]
            (style/create-flexbox {}
-             [:span {:style {:paddingRight "1ex"}}
-              (icons/icon {:style {:color (:exception-state style/colors)}}
-                          :warning-triangle)]
-             (str "Error: " expected-msg))
+                                 [:span {:style {:paddingRight "1ex"}}
+                                  (icons/icon {:style {:color (:exception-state style/colors)}}
+                                              :warning-triangle)]
+                                 (str "Error: " expected-msg))
            [:div {:style {:textAlign "initial"}}
             (style/create-flexbox {:style {:marginBottom "0.25em"}}
-              [:span {:style {:paddingRight "1ex"}}
-               (icons/icon {:style {:color (:exception-state style/colors)}}
-                           :warning-triangle)]
-              (str "Error " status-code ": " message))
-            (when timestamp [:div {} "Occurred: " (-> timestamp js/moment (.format "LLL Z"))])
+                                  [:span {:style {:paddingRight "1ex"}}
+                                   (icons/icon {:style {:color (:exception-state style/colors)}}
+                                               :warning-triangle)]
+                                  (str "Error " status-code ": " message))
+            (when timestamp [:div {} "Occurred: "
+                             (common/format-date timestamp
+                                                 (assoc common/default-date-format
+                                                   :timeZoneName "short"))])
             (when source [:div {} "Source: " source])
             (when (seq causes)
               (let [num-hidden (- (count causes) 4)]

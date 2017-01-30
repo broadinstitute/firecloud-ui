@@ -1,4 +1,3 @@
-window.moment = require('moment');
 window.jQuery = require('jquery');
 window.$ = window.jQuery;
 require('jquery-ui/ui/core');
