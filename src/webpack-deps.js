@@ -2,10 +2,11 @@ window.jQuery = require('jquery');
 window.$ = window.jQuery;
 require('jquery-ui/ui/core');
 require('jquery-ui/ui/widgets/draggable');
-window.Bloodhound = require('typeahead.js');
+exports.Bloodhound = require('typeahead.js');
 exports.CodeMirror = require('codemirror');
 exports.marked = require('marked');
 require('./static/assets/js/timingDiagram');
+require('./static/assets/js/igvIsTheWorst');
 require('any-resize-event');
 
 require('jquery-ui/themes/base/core.css');

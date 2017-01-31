@@ -454,6 +454,7 @@
                         #(when (empty? (.. % -currentTarget -value))
                            (react/call :apply-filter this))))})
 
+(def Bloodhound (aget js/window "webpack-deps" "Bloodhound"))
 
 (react/defc Typeahead
   {:get-text
@@ -474,14 +475,14 @@
                                        (:field-attributes props))))
    :component-did-mount
    (fn [{:keys [props refs]}]
-     (let [{:keys [remote render-display behavior empty-message render-suggestion on-select]} props]
+     (let [{:keys [remote render-display behavior empty-message render-suggestion on-select]} props
+           whitespace-tokenizer (aget Bloodhound "tokenizers" "whitespace")]
        (.typeahead (js/$ (@refs "field"))
                    (clj->js behavior)
                    (clj->js
-                    {:source (js/Bloodhound. (clj->js
-                                              {:datumTokenizer js/Bloodhound.tokenizers.whitespace
-                                               :queryTokenizer js/Bloodhound.tokenizers.whitespace
-                                               :remote remote}))
+                    {:source (Bloodhound. (clj->js {:datumTokenizer whitespace-tokenizer
+                                                    :queryTokenizer whitespace-tokenizer
+                                                    :remote remote}))
                      :display render-display
                      :templates {:empty (str "<div style='padding: 0.5em'>" empty-message "</div>")
                                  :suggestion render-suggestion}}))
