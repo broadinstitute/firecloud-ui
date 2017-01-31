@@ -1,7 +1,6 @@
 (ns broadfcui.page.workspace.summary.catalog.options
   (:require
     [dmohs.react :as react]
-    [broadfcui.common.components :as comps]
     [broadfcui.common.style :as style]
     [broadfcui.page.workspace.summary.catalog.questions :refer [Questions]]
     [broadfcui.utils :as utils]
@@ -39,8 +38,12 @@
          (keyword property) (get-in options [selected-index :propertyValue]))))
    :get-initial-state
    (fn [{:keys [props]}]
-     (utils/cljslog (:attributes props))
-     {:selected-index nil})
+     (let [{:keys [switch attributes]} props
+           {:keys [property options]} switch
+           initial-value (get attributes (keyword property))]
+       {:selected-index (utils/first-matching-index
+                         (comp (partial = initial-value) :propertyValue)
+                         options)}))
    :render
    (fn [{:keys [props state]}]
      (let [{:keys [switch library-schema]} props
@@ -48,8 +51,7 @@
            {:keys [title]} (get-in library-schema [:properties (keyword property)])
            {:keys [selected-index]} @state]
        [:div {}
-        (when-not selected-index
-          [:div {} title])
+        [:div {} title]
         (map-indexed
          (fn [index {:keys [title]}]
            (let [selected? (= index selected-index)
