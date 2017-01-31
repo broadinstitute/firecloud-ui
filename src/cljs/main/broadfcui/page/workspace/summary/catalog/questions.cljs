@@ -212,11 +212,9 @@
                               :radio (fn [{:keys [val label]}]
                                        [:label {:style (colorize {:display "inline-flex" :alignItems "center"
                                                                   :cursor "pointer" :marginRight "2em"})}
-                                        [:input (merge
-                                                 {:type "radio" :readOnly true
-                                                  :style {:cursor "pointer"}
-                                                  :onChange #(swap! state update :attributes assoc property val)}
-                                                 (when (= val current-value) {:checked true}))]
+                                        [:input {:type "radio" :readOnly true :checked (= val current-value)
+                                                 :style {:cursor "pointer"}
+                                                 :onChange #(swap! state update :attributes assoc property val)}]
                                         [:div {:style {:padding "0 0.4em" :fontWeight "500"}} (or label (str val))]])}
                              prop
                              renderHint)]

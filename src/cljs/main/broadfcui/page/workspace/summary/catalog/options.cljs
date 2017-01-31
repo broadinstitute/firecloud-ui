@@ -16,8 +16,7 @@
          :onClick on-click}
    [:input {:type "checkbox" :readOnly true :checked selected?
             :style {:cursor "pointer"}}]
-   [:div {:style {:marginLeft "0.75rem"
-                  :color (when selected? "white")}}
+   [:div {:style {:marginLeft "0.75rem" :color (when selected? "white")}}
     title]])
 
 
