@@ -92,32 +92,26 @@
                            :required-attributes required-attributes}]))}]]
          (when validation-error
            [:div {:style {:marginTop "1em" :color (:exception-state style/colors) :textAlign "center"}}
-            validation-error])
-         [comps/ErrorViewer {:error submit-error}]
+            error])
+         [comps/ErrorViewer {:error (:submit-error @state)}]
          (flex/flex-box {:style {:marginTop 40}}
           (flex/flex-strut 80)
           flex/flex-spacer
           [comps/Button {:text "Previous"
-                         :onClick (fn [_] (swap! state #(-> % (update :page-num dec) (dissoc :validation-error))))
+
+                         :onClick (fn [_] (swap! state #(-> % (update :page dec) (dissoc :validation-error))))
                          :style {:width 80}
-                         :disabled? (zero? page-num)}]
+                         :disabled? (zero? page)}]
           (flex/flex-strut 27)
           [comps/Button {:text "Next"
                          :onClick #(react/call :next-page this)
-                         :disabled? (= page-num (-> library-schema :wizard count dec))
+                         :disabled? (= page (-> library-schema :wizard count dec))
                          :style {:width 80}}]
           flex/flex-spacer
           [comps/Button {:text (if published? "Republish" "Submit")
                          :onClick #(react/call :next-page this)
-                         :disabled? (< page-num (-> library-schema :wizard count dec))
+                         :disabled? (< page (-> library-schema :wizard count dec))
                          :style {:width 80}}])]]))
-   :component-did-mount
-   (fn [{:keys [locals]}]
-     (swap! locals assoc :page-attributes []))
-   :component-did-update
-   (fn [{:keys [prev-state state refs]}]
-     (when (not= (:page-num prev-state) (:page-num @state))
-       (react/call :scroll-to (@refs "scroller") 0)))
    :next-page
    (fn [{:keys [props state refs this locals after-update]}]
      (swap! state dissoc :validation-error)
