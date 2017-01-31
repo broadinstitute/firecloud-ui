@@ -4,6 +4,7 @@
     [dmohs.react :as react]
     [broadfcui.common :as common]
     [broadfcui.common.components :as comps]
+    [broadfcui.common.flex-utils :as flex]
     [broadfcui.common.modal :as modal]
     [broadfcui.common.style :as style]
     [broadfcui.endpoints :as endpoints]
@@ -107,23 +108,23 @@
            [:div {:style {:marginTop "1em" :color (:exception-state style/colors) :textAlign "center"}}
             error])
          [comps/ErrorViewer {:error (:submit-error @state)}]
-         [:div {:style {:marginTop 40 :textAlign "center"}}
-          [:a {:className "cancel"
-               :style {:marginRight 27 :marginTop 2 :padding "0.5em"
-                       :display "inline-block"
-                       :fontSize "106%" :fontWeight 500 :textDecoration "none"
-                       :color (:button-primary style/colors)}
-               :href "javascript:;"
-               :onClick modal/pop-modal
-               :onKeyDown (common/create-key-handler [:space :enter] modal/pop-modal)}
-           "Cancel"]
+         (flex/flex-box {:style {:marginTop 40}}
+          (flex/flex-strut 80)
+          flex/flex-spacer
           [comps/Button {:text "Previous"
                          :onClick (fn [_] (swap! state #(-> % (update :page dec) (dissoc :validation-error))))
-                         :style {:width 80 :marginRight 27}
+                         :style {:width 80}
                          :disabled? (zero? page)}]
-          [comps/Button {:text (if (< page (-> library-schema :wizard count dec)) "Next" "Submit")
+          (flex/flex-strut 27)
+          [comps/Button {:text "Next"
                          :onClick #(react/call :next-page this)
-                         :style {:width 80}}]]]]))
+                         :disabled? (= page (-> library-schema :wizard count dec))
+                         :style {:width 80}}]
+          flex/flex-spacer
+          [comps/Button {:text "Submit"
+                         :onClick #(react/call :next-page this)
+                         :disabled? (< page (-> library-schema :wizard count dec))
+                         :style {:width 80}}])]]))
    :next-page
    (fn [{:keys [props state refs this after-update]}]
      (swap! state dissoc :validation-error)
