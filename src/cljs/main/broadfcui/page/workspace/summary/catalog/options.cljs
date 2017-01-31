@@ -14,10 +14,8 @@
                  :backgroundColor (when selected? (:button-primary style/colors))
                  :cursor "pointer"}
          :onClick on-click}
-   [:input (merge
-            {:type "checkbox" :readOnly true
-             :style {:cursor "pointer"}}
-            (when selected? {:checked true}))]
+   [:input {:type "checkbox" :readOnly true :checked selected?
+            :style {:cursor "pointer"}}]
    [:div {:style {:marginLeft "0.75rem"
                   :color (when selected? "white")}}
     title]])
