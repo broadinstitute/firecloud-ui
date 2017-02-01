@@ -99,7 +99,7 @@
     (cond (pos? count-running) "Running"
           (and last-failure
                (or (not last-success)
-                   (> (.getTime (js/Date. last-failure)) (.getTime (js/Date. last-success))))) "Exception"
+                   (> (.parse js/Date last-failure) (.parse js/Date last-success)))) "Exception"
           :else "Complete")))
 
 (defn gcs-object->download-url [bucket object]
