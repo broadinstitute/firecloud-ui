@@ -10,19 +10,21 @@
     [broadfcui.nav :as nav]
     [broadfcui.page.billing.create-project :refer [CreateBillingProjectDialog]]
     [broadfcui.page.billing.manage-project :refer [BillingProjectManagementPage]]
+    [broadfcui.page.workspace.monitor.common :as moncommon]
     [broadfcui.utils :as utils]
     ))
 
 
 (def ^:private project-refresh-interval-ms 10000)
 (def ^:private project-status-creating "Creating")
+(def ^:private project-status-ready "Ready")
+(def ^:private project-status-error "Error")
 
 
 (react/defc PendingProjectControl
   {:render
    (fn [{{:keys [project-name]} :props :keys [state]}]
      [:span {}
-      [:span {:style {:fontWeight "normal"}} "pending: "]
       [:span {:style {:fontStyle "italic"}} project-name]
       (when (:busy @state)
         [comps/AnimatedEllipsis])])
@@ -69,19 +71,21 @@
         {:columns [{:header "Project Name" :starting-width 400
                     :as-text #(% "projectName") :sort-by :text
                     :content-renderer
-                    (fn [{:strs [projectName role creationStatus]}]
-                      [:span {}
+                    (fn [{:strs [projectName role creationStatus message]}]
+                      [:span {:title creationStatus}
+                       (moncommon/icon-for-project-status creationStatus)
                        (cond
                          (= creationStatus project-status-creating)
                          [PendingProjectControl
                           {:project-name projectName
                            :on-status-change #(react/call :-handle-status-change this
                                                           projectName %)}]
-                         (= role "Owner")
+                         (and (= creationStatus project-status-ready) (= role "Owner"))
                          (style/create-link {:text projectName
                                              :onClick #((:on-select props) projectName)})
                          :else projectName)])}
-                   {:header "Role" :starting-width :remaining}]
+                   {:header "Role" :starting-width 100}
+                   {:header "Message" :starting-width :remaining}]
          :toolbar
          (add-right
           [comps/Button
@@ -105,9 +109,10 @@
                             "grantOfflineAccess"
                             (clj->js {:redirect_uri "postmessage" :scope "https://www.googleapis.com/auth/cloud-billing"})))))}])
          :data (:projects @state)
-         :->row (fn [{:strs [role] :as row}]
+         :->row (fn [{:strs [role message] :as row}]
                   [row
-                   role])}]))
+                   role
+                   message])}]))
    :component-did-mount
    (fn [{:keys [this]}]
      (react/call :load-data this))
