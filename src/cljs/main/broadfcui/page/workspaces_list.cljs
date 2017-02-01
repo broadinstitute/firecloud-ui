@@ -82,7 +82,8 @@
 (defn- get-max-length [func workspaces]
   (->> workspaces (map func) (map count) (apply max)))
 
-(def ^:private access-types {"Project Owner" true "Owner" true "Writer" true "Reader" true "No Access" true})
+(def ^:private access-types ["Project Owner" "Owner" "Writer" "Reader" "No Access"])
+(def ^:private access-types-defaults [true true true true true])
 (def ^:private access-predicates
   {"Project Owner" #(= "PROJECT_OWNER" (% "accessLevel"))
    "Owner" #(= "OWNER" (% "accessLevel"))
@@ -91,7 +92,8 @@
    "No Access" #(= "NO ACCESS" (% "accessLevel"))
    })
 
-(def ^:private realm-types {"Un-published" true "Published" false "TCGA Open Access" false "TCGA Protected Access" false})
+(def ^:private realm-types ["Un-published" "Published" "TCGA Open Access" "TCGA Protected Access"])
+(def ^:private realm-types-defaults [true false false false])
 (def ^:private realm-predicates
  {"Published" #(and (not= (config/tcga-namespace) (get-in % ["workspace" "namespace"])) (get-in % ["workspace" "attributes" "library:published"]))
   "Un-published" #(and (not= (config/tcga-namespace) (get-in % ["workspace" "namespace"])) (not (get-in % ["workspace" "attributes" "library:published"])))
@@ -111,10 +113,10 @@
      (let [persisted (persistence/try-restore
                        {:key persistence-key
                         :initial (fn [] {:v VERSION
-                                         :selected-types (merge access-types realm-types)})})]
+                                         :selected-types (merge (zipmap access-types access-types-defaults) (zipmap realm-types realm-types-defaults))})})]
        (if (persistence/is-valid (comp (partial = VERSION) :v) persisted)
          persisted
-         {:v VERSION :selected-types (merge (select-keys (:selected-types persisted) (keys access-types)) realm-types)})))
+         {:v VERSION :selected-types (merge (select-keys (:selected-types persisted) access-types) (zipmap realm-types realm-types-defaults))})))
    :render
    (fn [{:keys [props state refs]}]
      (let [max-workspace-name-length (get-max-length get-workspace-name-string (:workspaces props))
@@ -136,9 +138,9 @@
                               :content
                               (react/create-element
                                [:div {:style {:padding "1em" :border style/standard-line}}
-                                (map checkbox (keys access-types))
+                                (map checkbox access-types)
                                 [:hr {:style {:size "1px" :noshade true}}]
-                                (map checkbox (keys realm-types))])}]))
+                                (map checkbox realm-types)])}]))
         [table/Table
          {:state-key "workspace-table"
           :empty-message "No workspaces to display." :retain-header-on-empty? true
