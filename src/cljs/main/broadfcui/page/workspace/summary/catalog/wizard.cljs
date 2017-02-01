@@ -112,6 +112,10 @@
                          :onClick #(react/call :next-page this)
                          :disabled? (< page (-> library-schema :wizard count dec))
                          :style {:width 80}}])]]))
+   :component-did-update
+   (fn [{:keys [prev-state state refs]}]
+     (when (not= (:page prev-state) (:page @state))
+       (react/call :scroll-to (@refs "scroller") 0)))
    :next-page
    (fn [{:keys [props state refs this locals after-update]}]
      (swap! state dissoc :validation-error)
