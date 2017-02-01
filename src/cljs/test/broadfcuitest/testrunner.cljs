@@ -3,6 +3,7 @@
    cljs.test
    broadfcui.main
    broadfcuitest.config
+   broadfcuitest.duration
    broadfcuitest.utils
    ))
 
