@@ -523,7 +523,10 @@
 
 
 (react/defc ScrollFader
-  {:get-default-props
+  {:scroll-to
+   (fn [{:keys [refs]} position]
+     (set! (.-scrollTop (@refs "scroller")) position))
+   :get-default-props
    (fn []
      {:vertical 50
       :blur 36

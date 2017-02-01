@@ -91,7 +91,8 @@
          [:div {:style {:display "flex" :width 850 :height 400}}
           (render-wizard-breadcrumbs {:library-schema library-schema :page-num page})
           [comps/ScrollFader
-           {:outer-style {:flex "1 1 auto"
+           {:ref "scroller"
+            :outer-style {:flex "1 1 auto"
                           :border style/standard-line :boxSizing "border-box"
                           :backgroundColor "white"}
             :inner-style {:padding "1rem" :boxSizing "border-box" :height "100%"}
@@ -125,6 +126,10 @@
                          :onClick #(react/call :next-page this)
                          :disabled? (< page (-> library-schema :wizard count dec))
                          :style {:width 80}}])]]))
+   :component-did-update
+   (fn [{:keys [prev-state state refs]}]
+     (when (not= (:page prev-state) (:page @state))
+       (react/call :scroll-to (@refs "scroller") 0)))
    :next-page
    (fn [{:keys [props state refs this after-update]}]
      (swap! state dissoc :validation-error)
