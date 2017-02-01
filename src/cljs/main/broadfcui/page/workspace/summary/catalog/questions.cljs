@@ -150,7 +150,7 @@
      :typeaheadSuggestionTemplate (fn [result]
                                     (str "<div style='textOverflow: ellipsis; overflow: hidden; font-size: smaller;'>" result  "</div>"))}]])
 
-(defn- render-textfield [{:keys [colorize datatype prop value-nullsafe update-property]}]
+(defn- render-textfield [{:keys [colorize type datatype prop value-nullsafe update-property]}]
   (style/create-text-field {:style (colorize {:width "100%"})
                             :type (cond (= datatype "date") "date"
                                         (= datatype "email") "email"
