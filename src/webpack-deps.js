@@ -6,7 +6,7 @@ exports.Bloodhound = require('typeahead.js');
 exports.CodeMirror = require('codemirror');
 exports.marked = require('marked');
 require('./static/assets/js/timingDiagram');
-require('./static/assets/js/igvIsTheWorst');
+require('./static/assets/js/igvPatch');
 require('any-resize-event');
 
 require('jquery-ui/themes/base/core.css');
