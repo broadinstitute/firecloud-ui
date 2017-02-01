@@ -293,3 +293,8 @@
 (defn map-kv [f m]
   (into (empty m)
         (map (fn [[k v]] (f k v)) m)))
+
+(defn maybe-pluralize [number unit]
+  (if (> number 1)
+    (str number " " unit "s")
+    (str number " " unit)))

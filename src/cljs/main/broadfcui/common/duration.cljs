@@ -1,16 +1,14 @@
-(ns broadfcui.common.duration)
-
-(defn- maybe-pluralize [number unit]
-  (if (> number 1)
-    (str number unit "s")
-    (str number unit)))
+(ns broadfcui.common.duration
+  (:require
+    [broadfcui.utils :as utils]
+    ))
 
 (defn fuzzy-time [years months days hours minutes seconds]
-  (cond (> years 0) (maybe-pluralize years " year")
-        (> months 0) (maybe-pluralize months " month")
-        (> days 1) (maybe-pluralize days " day")
-        (> hours 0) (maybe-pluralize hours " hour")
-        (> minutes 0) (maybe-pluralize minutes " minute")
+  (cond (> years 0) (utils/maybe-pluralize years "year")
+        (> months 0) (utils/maybe-pluralize months "month")
+        (> days 1) (utils/maybe-pluralize days "day")
+        (> hours 0) (utils/maybe-pluralize hours "hour")
+        (> minutes 0) (utils/maybe-pluralize minutes "minute")
         (> seconds 30) "less than a minute"
         :else "a few seconds"))
 
