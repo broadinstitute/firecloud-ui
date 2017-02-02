@@ -37,9 +37,7 @@
                   ;; in all dev builds.
                   :main "broadfcuitest.testrunner"
                   :optimizations :none
-                  :output-dir "resources/public/build"
                   :asset-path "build"
-                  :output-to "resources/public/compiled.js"
                   :source-map true
                   :preloads [devtools.preload]
                   :external-config {:devtools/config {:features-to-install
@@ -50,10 +48,12 @@
                                           ;; infinite recursion, which I was not able to figure
                                           ;; out.
                                           :optimizations :simple
-                                          :pretty-print false}}}}}}
+                                          :pretty-print false
+                                          :output-dir "build"}}}}}}
   :cljsbuild {:builds {:client {:source-paths ["src/cljs/main"]
                                 :compiler {:main "broadfcui.main"
-                                           :output-to "target/compiled.js"}}}}
+                                           :output-dir "resources/public/build"
+                                           :output-to "resources/public/compiled.js"}}}}
   :resource {:resource-paths ["src/static"]
              :excludes [#".*\.DS_Store"]
              :skip-stencil [#"src/static/assets/.*"]
