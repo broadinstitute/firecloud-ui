@@ -100,7 +100,7 @@
                            :onChange update-property
                            :rows 3}))
 
-(defn- render-typeahead [{:keys [prop colorize value-nullsafe update-property state property library-schema]}]
+(defn- render-ontology-typeahead [{:keys [prop colorize value-nullsafe update-property state property library-schema]}]
   [:div {:style {:marginBottom "0.75em"}}
    [comps/Typeahead {:field-attributes {:placeholder (:inputHint prop)
                                         :style (colorize {:width "100%" :marginBottom "0px"})
@@ -130,6 +130,23 @@
          (style/create-link {:text "Clear Selection"
                              :onClick #(apply swap! state update :attributes dissoc
                                               (library-utils/get-related-id+label-props library-schema property))})]]))])
+
+(defn- render-populate-typeahead [{:keys [prop property inputHint]}]
+  [:div {:style {:marginBottom "0.75em"}}
+   [comps/AutocompleteFilter
+    {:width "100%"
+     :ref "text-filter"
+     :placeholder inputHint
+     :bloodhoundInfo {:url (str (config/api-url-root) "/api/library/populate/suggest/" (name property) "/")
+                      :cache false
+                      :prepare (fn [query settings]
+                                 (clj->js
+                                   (assoc (js->clj settings)
+                                     :headers {:Authorization (str "Bearer " (utils/get-access-token))}
+                                     :type "GET"
+                                     :url (str (aget settings "url") query))))}
+     :typeaheadSuggestionTemplate (fn [result]
+                                    (str "<div style='textOverflow: ellipsis; overflow: hidden; font-size: smaller;'>" result  "</div>"))}]])
 
 (defn- render-textfield [{:keys [colorize datatype prop value-nullsafe update-property]}]
   (style/create-text-field {:style (colorize {:width "100%"})
@@ -206,6 +223,7 @@
                 (cond enum (render-enum data)
                       (= type "boolean") (render-boolean data)
                       (= (:datatype renderHint) "freetext") (render-freetext data)
-                      (= (:typeahead prop) "ontology") (render-typeahead data)
+                      (= (:typeahead prop) "ontology") (render-ontology-typeahead data)
+                      (= (:typeahead prop) "populate") (render-populate-typeahead data)
                       :else (render-textfield data))])))
          (map keyword questions))]))})
