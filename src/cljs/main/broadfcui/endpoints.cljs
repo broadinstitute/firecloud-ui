@@ -1,7 +1,7 @@
 (ns broadfcui.endpoints
   (:require
-    [broadfcui.utils :as utils]
     [broadfcui.common :as common]
+    [broadfcui.utils :as utils]
     ))
 
 
