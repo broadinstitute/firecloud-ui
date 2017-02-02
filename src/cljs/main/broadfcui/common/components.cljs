@@ -334,17 +334,20 @@
              status-code (or status-code code)]
          (if-let [expected-msg (get-in props [:expect status-code])]
            (style/create-flexbox {}
-             [:span {:style {:paddingRight "1ex"}}
-              (icons/icon {:style {:color (:exception-state style/colors)}}
-                          :warning-triangle)]
-             (str "Error: " expected-msg))
+                                 [:span {:style {:paddingRight "1ex"}}
+                                  (icons/icon {:style {:color (:exception-state style/colors)}}
+                                              :warning-triangle)]
+                                 (str "Error: " expected-msg))
            [:div {:style {:textAlign "initial"}}
             (style/create-flexbox {:style {:marginBottom "0.25em"}}
-              [:span {:style {:paddingRight "1ex"}}
-               (icons/icon {:style {:color (:exception-state style/colors)}}
-                           :warning-triangle)]
-              (str "Error " status-code ": " message))
-            (when timestamp [:div {} "Occurred: " (-> timestamp js/moment (.format "LLL Z"))])
+                                  [:span {:style {:paddingRight "1ex"}}
+                                   (icons/icon {:style {:color (:exception-state style/colors)}}
+                                               :warning-triangle)]
+                                  (str "Error " status-code ": " message))
+            (when timestamp [:div {} "Occurred: "
+                             (common/format-date timestamp
+                                                 (assoc common/default-date-format
+                                                   :timeZoneName "short"))])
             (when source [:div {} "Source: " source])
             (when (seq causes)
               (let [num-hidden (- (count causes) 4)]
@@ -451,6 +454,7 @@
                         #(when (empty? (.. % -currentTarget -value))
                            (react/call :apply-filter this))))})
 
+(def Bloodhound (aget js/window "webpack-deps" "Bloodhound"))
 
 (react/defc Typeahead
   {:get-text
@@ -471,14 +475,14 @@
                                        (:field-attributes props))))
    :component-did-mount
    (fn [{:keys [props refs]}]
-     (let [{:keys [remote render-display behavior empty-message render-suggestion on-select]} props]
+     (let [{:keys [remote render-display behavior empty-message render-suggestion on-select]} props
+           whitespace-tokenizer (aget Bloodhound "tokenizers" "whitespace")]
        (.typeahead (js/$ (@refs "field"))
                    (clj->js behavior)
                    (clj->js
-                    {:source (js/Bloodhound. (clj->js
-                                              {:datumTokenizer js/Bloodhound.tokenizers.whitespace
-                                               :queryTokenizer js/Bloodhound.tokenizers.whitespace
-                                               :remote remote}))
+                    {:source (Bloodhound. (clj->js {:datumTokenizer whitespace-tokenizer
+                                                    :queryTokenizer whitespace-tokenizer
+                                                    :remote remote}))
                      :display render-display
                      :templates {:empty (str "<div style='padding: 0.5em'>" empty-message "</div>")
                                  :suggestion render-suggestion}}))

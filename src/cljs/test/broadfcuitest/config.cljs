@@ -25,4 +25,4 @@
       (is (= [false '("unexpected key foo")]
              (config/check-config (assoc valid-config "foo" true)))))))
 
-#_(cljs.test/run-tests)
+;(cljs.test/run-tests)

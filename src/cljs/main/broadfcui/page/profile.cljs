@@ -1,6 +1,5 @@
 (ns broadfcui.page.profile
   (:require
-    cljsjs.moment
     clojure.string
     [dmohs.react :as react]
     [broadfcui.common :as common]
@@ -22,20 +21,19 @@
         (let [loc (.-location js/window)]
           (str (.-protocol loc) "//" (.-host loc) "/#profile/nih-username-token={token}")))))
 
-(defn is-within-24-hours? [time]
-  (.isBefore (js/moment.) (.add time 24 "hours")))
+(defn is-within-last-24-hours? [epoch-time]
+  (< (.now js/Date) (+ epoch-time 1000 * 60 * 60 * 24)))
 
 (react/defc NihLink
   {:render
    (fn [{:keys [state]}]
      (let [status (:nih-status @state)
            username (get status "linkedNihUsername")
-           expire-time (-> (get status "linkExpireTime") (* 1000) (js/moment.))
-           expired? (.isBefore expire-time (js/moment.))
-           _24-hours-from-now (.add (js/moment.) 24 "hours")
-           expiring-soon? (.isBefore expire-time _24-hours-from-now)
+           expire-time (* (get status "linkExpireTime") 1000)
+           expired? (< expire-time (.now js/Date))
+           expiring-soon? (< expire-time (utils/_24-hours-from-now-ms))
            authorized? (get status "isDbgapAuthorized")
-           linked-recently? (is-within-24-hours? (-> (get status "lastLinkTime") (* 1000) (js/moment.)))
+           linked-recently? (is-within-last-24-hours? (* (get status "lastLinkTime") 1000))
            pending? (and username (not authorized?) (not expired?) linked-recently?)]
        [:div {}
         [:h3 {} "Linked NIH Account"]
@@ -56,7 +54,7 @@
             [:div {:style {:flex "0 0 auto"}}
              (if expired?
                [:span {:style {:color "red"}} "Expired"]
-               [:span {:style {:color (when expiring-soon? "red")}} (.format expire-time "LLL")])
+               [:span {:style {:color (when expiring-soon? "red")}} (common/format-date expire-time)])
              [:br]
              [:a {:href (get-nih-link-href)}
               "Log-In to NIH to re-link your account"]]]

@@ -1,11 +1,11 @@
 (ns broadfcui.common.codemirror
   (:require
-    cljsjs.codemirror
     [dmohs.react :as react]
     [broadfcui.common.style :as style]
     [broadfcui.utils :as utils]
     ))
 
+(def ^:private CodeMirror-js (aget js/window "webpack-deps" "CodeMirror"))
 
 (defn- regex-escape [s]
   (clojure.string/replace s #"[\\\*\+\|\^]" #(str "\\" %)))
@@ -19,7 +19,7 @@
                                (interpose "|")
                                (apply str)))
 
-(js/CodeMirror.defineMode "wdl"
+(js-invoke CodeMirror-js "defineMode" "wdl"
   (fn []
     #js{:token (fn [stream]
                  (.eatSpace stream)
@@ -66,5 +66,5 @@
    :component-did-mount
    (fn [{:keys [refs props locals]}]
      (swap! locals assoc :code-mirror-component
-            (js/CodeMirror.fromTextArea (@refs "ref")
+            (js-invoke CodeMirror-js "fromTextArea" (@refs "ref")
                #js{:mode "wdl" :lineNumbers (:line-numbers? props) :readOnly (:read-only? props)})))})
