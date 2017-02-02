@@ -89,19 +89,24 @@
    "Owner" #(= "OWNER" (% "accessLevel"))
    "Writer" #(= "WRITER" (% "accessLevel"))
    "Reader" #(= "READER" (% "accessLevel"))
-   "No Access" #(= "NO ACCESS" (% "accessLevel"))
-   })
+   "No Access" #(= "NO ACCESS" (% "accessLevel"))})
 
-(def ^:private realm-types ["Un-published" "Published" "TCGA Open Access" "TCGA Protected Access"])
-(def ^:private realm-types-defaults [true false false false])
+(def ^:private dataset-types ["Un-published" "Published"])
+(def ^:private dataset-types-defaults [true false])
+(def ^:private dataset-predicates
+  {"Published" #(get-in % ["workspace" "attributes" "library:published"])
+   "Un-published" #(not (get-in % ["workspace" "attributes" "library:published"]))})
+
+(def ^:private realm-types ["TCGA Open Access" "TCGA Protected Access"])
+(def ^:private realm-types-defaults [false false])
 (def ^:private realm-predicates
- {"Published" #(and (not= (config/tcga-namespace) (get-in % ["workspace" "namespace"])) (get-in % ["workspace" "attributes" "library:published"]))
-  "Un-published" #(and (not= (config/tcga-namespace) (get-in % ["workspace" "namespace"])) (not (get-in % ["workspace" "attributes" "library:published"])))
-  "TCGA Open Access" #(and (= (config/tcga-namespace) (get-in % ["workspace" "namespace"]))
+ {"TCGA Open Access" #(and (= (config/tcga-namespace) (get-in % ["workspace" "namespace"]))
                            (not (get-in % ["workspace" "realm"])))
   "TCGA Protected Access" #(and (= (config/tcga-namespace) (get-in % ["workspace" "namespace"]))
                                 (get-in % ["workspace" "realm"]))
-  })
+  ; this pred is used when neither visible option is selected to allow non TCGA workspaces to be shown
+  ; it is not intended to be displayed as an option
+  "TCGA None" #(not (= (config/tcga-namespace) (get-in % ["workspace" "namespace"])))})
 
 (def ^:private persistence-key "workspace-table-types")
 (def ^:private VERSION 1)
@@ -110,13 +115,13 @@
 (react/defc WorkspaceTable
   {:get-initial-state
    (fn []
-     (let [persisted (persistence/try-restore
+     (persistence/try-restore
                        {:key persistence-key
                         :initial (fn [] {:v VERSION
-                                         :selected-types (merge (zipmap access-types access-types-defaults) (zipmap realm-types realm-types-defaults))})})]
-       (if (persistence/is-valid (comp (partial = VERSION) :v) persisted)
-         persisted
-         {:v VERSION :selected-types (merge (select-keys (:selected-types persisted) access-types) (zipmap realm-types realm-types-defaults))})))
+                                         :selected-types (merge (zipmap access-types access-types-defaults)
+                                                                (zipmap dataset-types dataset-types-defaults)
+                                                                (zipmap realm-types realm-types-defaults))})
+                        :validator (comp (partial = VERSION) :v)}))
    :render
    (fn [{:keys [props state refs]}]
      (let [max-workspace-name-length (get-max-length get-workspace-name-string (:workspaces props))
@@ -139,6 +144,8 @@
                               (react/create-element
                                [:div {:style {:padding "1em" :border style/standard-line}}
                                 (map checkbox access-types)
+                                [:hr {:style {:size "1px" :noshade true}}]
+                                (map checkbox dataset-types)
                                 [:hr {:style {:size "1px" :noshade true}}]
                                 (map checkbox realm-types)])}]))
         [table/Table
@@ -206,6 +213,7 @@
                   (filter
                     (every-pred
                       (somepred access-predicates)
+                      (somepred dataset-predicates)
                       (somepred realm-predicates))
                     (:workspaces props)))
           :->row (fn [ws]
