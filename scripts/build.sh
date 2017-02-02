@@ -1,4 +1,6 @@
 #!/bin/bash
+IFS=$'\n\t'
+set -euxo pipefail
 
 docker run --rm \
   -w /work \
