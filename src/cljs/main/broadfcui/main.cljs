@@ -123,9 +123,6 @@
    {:key :policy
     :render #(react/create-element Policy %)}])
 
-(defn- top-nav-bar-items [state]
-  (filter (fn [r] (contains? #{:library :workspaces :methods} (:key r))) routes))
-
 (react/defc TopNavBarLink
   {:render
    (fn [{:keys [props state]}]
@@ -139,13 +136,13 @@
 
 (react/defc TopNavBar
   {:render
-   (fn [{:keys [props state]}]
+   (fn [{:keys [props]}]
      [:div {}
       (text-logo)
       [:div {:style {:display "inline-block" :paddingLeft "1em" :fontSize 18 :height 38 :verticalAlign "baseline"}}
        (map (fn [item] [TopNavBarLink {:name (:name item) :href (:href item)
                                        :selected (= (:selected-item props) (:key item))}])
-            (top-nav-bar-items state))
+            (filter (comp #{:library :workspaces :methods} :key) routes))
        (when (:show-nih-link-warning? props)
          [nih-link-warning/NihLinkWarning])]])})
 
