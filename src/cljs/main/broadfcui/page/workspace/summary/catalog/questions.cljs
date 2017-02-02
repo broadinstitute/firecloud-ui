@@ -78,14 +78,29 @@
      [:span {:style (colorize {:fontWeight "bold"})}
       " (required)"])])
 
-(defn- render-enum [{:keys [enum radio current-value colorize update-property]}]
-  (if (< (count enum) 4)
-    [:div {:style {:display "inline-block" :margin "0.75em 0 0.75em 1em"}}
-     (map #(radio {:val %}) enum)]
-    (style/create-identity-select {:value (or current-value ENUM_EMPTY_CHOICE)
-                                   :style (colorize {})
-                                   :onChange update-property}
-                                  (cons ENUM_EMPTY_CHOICE enum))))
+(defn- render-enum [{:keys [enum style wording radio current-value colorize update-property set-property]}]
+  (if (= style "large")
+    [:div {}
+     (map (fn [option]
+            (let [selected? (= current-value option)]
+              [:div {:style {:display "flex" :alignItems "center"
+                             :margin "0.5rem 0" :padding "1em"
+                             :border style/standard-line :borderRadius 8
+                             :backgroundColor (when selected? (:button-primary style/colors))
+                             :cursor "pointer"}
+                     :onClick #(set-property option)}
+               [:input {:type "radio" :readOnly true :checked selected?
+                        :style {:cursor "pointer"}}]
+               [:div {:style {:marginLeft "0.75rem" :color (when selected? "white")}}
+                (or (wording (keyword option)) option)]]))
+          enum)]
+    (if (< (count enum) 4)
+      [:div {:style {:display "inline-block" :margin "0.75em 0 0.75em 1em"}}
+       (map #(radio {:val %}) enum)]
+      (style/create-identity-select {:value (or current-value ENUM_EMPTY_CHOICE)
+                                     :style (colorize {})
+                                     :onChange update-property}
+                                    (cons ENUM_EMPTY_CHOICE enum)))))
 
 (defn- render-boolean [{:keys [radio required? emptyChoice wording]}]
   [:div {:style {:display "inline-block" :margin "0.75em 0 0.75em 1em"}}
