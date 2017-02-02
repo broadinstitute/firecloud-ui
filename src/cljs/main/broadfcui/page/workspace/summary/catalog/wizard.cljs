@@ -92,29 +92,31 @@
                            :required-attributes required-attributes}]))}]]
          (when validation-error
            [:div {:style {:marginTop "1em" :color (:exception-state style/colors) :textAlign "center"}}
-            error])
-         [comps/ErrorViewer {:error (:submit-error @state)}]
+            validation-error])
+         [comps/ErrorViewer {:error submit-error}]
          (flex/flex-box {:style {:marginTop 40}}
           (flex/flex-strut 80)
           flex/flex-spacer
           [comps/Button {:text "Previous"
-
-                         :onClick (fn [_] (swap! state #(-> % (update :page dec) (dissoc :validation-error))))
+                         :onClick (fn [_] (swap! state #(-> % (update :page-num dec) (dissoc :validation-error))))
                          :style {:width 80}
-                         :disabled? (zero? page)}]
+                         :disabled? (zero? page-num)}]
           (flex/flex-strut 27)
           [comps/Button {:text "Next"
                          :onClick #(react/call :next-page this)
-                         :disabled? (= page (-> library-schema :wizard count dec))
+                         :disabled? (= page-num (-> library-schema :wizard count dec))
                          :style {:width 80}}]
           flex/flex-spacer
           [comps/Button {:text (if published? "Republish" "Submit")
                          :onClick #(react/call :next-page this)
-                         :disabled? (< page (-> library-schema :wizard count dec))
+                         :disabled? (< page-num (-> library-schema :wizard count dec))
                          :style {:width 80}}])]]))
+   :component-did-mount
+   (fn [{:keys [locals]}]
+     (swap! locals assoc :page-attributes []))
    :component-did-update
    (fn [{:keys [prev-state state refs]}]
-     (when (not= (:page prev-state) (:page @state))
+     (when (not= (:page-num prev-state) (:page-num @state))
        (react/call :scroll-to (@refs "scroller") 0)))
    :next-page
    (fn [{:keys [props state refs this locals after-update]}]
