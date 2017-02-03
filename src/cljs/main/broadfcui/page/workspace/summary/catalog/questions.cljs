@@ -131,20 +131,21 @@
                              :onClick #(apply swap! state update :attributes dissoc
                                               (library-utils/get-related-id+label-props library-schema property))})]]))])
 
-(defn- render-populate-typeahead [{:keys [prop property inputHint]}]
+(defn- render-populate-typeahead [{:keys [property inputHint set-property]}]
   [:div {:style {:marginBottom "0.75em"}}
    [comps/AutocompleteFilter
     {:width "100%"
      :ref "text-filter"
      :placeholder inputHint
-     :bloodhoundInfo {:url (str (config/api-url-root) "/api/library/populate/suggest/" (name property) "/")
+     :on-filter set-property
+     :bloodhoundInfo {:url (str (config/api-url-root) "/api/library/populate/suggest/" (name property))
                       :cache false
                       :prepare (fn [query settings]
                                  (clj->js
                                    (assoc (js->clj settings)
                                      :headers {:Authorization (str "Bearer " (utils/get-access-token))}
                                      :type "GET"
-                                     :url (str (aget settings "url") query))))}
+                                     :url (str (aget settings "url") "?q=" query))))}
      :typeaheadSuggestionTemplate (fn [result]
                                     (str "<div style='textOverflow: ellipsis; overflow: hidden; font-size: smaller;'>" result  "</div>"))}]])
 
@@ -206,6 +207,7 @@
                               :value-nullsafe (or current-value "") ;; avoids warning for nil value
                               :required? (contains? required-attributes property)
                               :update-property #(swap! state update :attributes assoc property (.. % -target -value))
+                              :set-property #(swap! state update :attributes assoc property %)
                               :radio (fn [{:keys [val label]}]
                                        [:label {:style (colorize {:display "inline-flex" :alignItems "center"
                                                                   :cursor "pointer" :marginRight "2em"})}
