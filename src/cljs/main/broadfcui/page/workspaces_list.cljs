@@ -103,8 +103,8 @@
 (def ^:private realm-predicates
   (let [tcga? #(= (config/tcga-namespace) (get-in % ["workspace" "namespace"]))
         inRealm? #(get-in % ["workspace" "realm"])]
-    {"TCGA Open Access" (and tcga? (complement inRealm?))
-     "TCGA Protected Access" (and tcga? inRealm?)
+    {"TCGA Open Access" (every-pred tcga? (complement inRealm?))
+     "TCGA Protected Access" (every-pred tcga? inRealm?)
      ; this pred is used when neither visible option is selected to allow non TCGA workspaces to be shown
      ; it is not intended to be displayed as an option
      "TCGA None" (complement tcga?)}))
