@@ -17,7 +17,7 @@
                        [jquery "^1.12.2"]
                        [jquery-ui "^1.11.2"]
                        [marked "~0.3.5"]
-                       [typeahead.js "~0.11.1"]
+                       [corejs-typeahead "~1.1.1"]
                        [url-loader "~0.5.7"]
                        [webpack "~2.2.0"]
                        ]
