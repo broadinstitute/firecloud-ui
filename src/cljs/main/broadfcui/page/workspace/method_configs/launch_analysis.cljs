@@ -81,7 +81,7 @@
    [:div {:style {:marginTop "1em"}}
     [comps/Checkbox
     {:ref "callCache-check"
-     :label "Use Call Caching with this submission"
+     :label "Use Call Caching"
      :initial-checked? true
      :disabled-text (case (:protected-option @state)
                       :not-loaded "Call Caching status has not finished loading."
