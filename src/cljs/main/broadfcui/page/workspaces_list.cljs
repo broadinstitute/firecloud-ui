@@ -95,19 +95,19 @@
 (def ^:private dataset-types-defaults [true false])
 (def ^:private dataset-predicates
   (let [published? #(get-in % ["workspace" "attributes" "library:published"])]
-    {"Published" #(published? %)
-     "Un-published" #(not (published? %))}))
+    {"Published" published?
+     "Un-published" (complement published?)}))
 
 (def ^:private realm-types ["TCGA Open Access" "TCGA Protected Access"])
 (def ^:private realm-types-defaults [false false])
 (def ^:private realm-predicates
   (let [tcga? #(= (config/tcga-namespace) (get-in % ["workspace" "namespace"]))
         inRealm? #(get-in % ["workspace" "realm"])]
-    {"TCGA Open Access" #(and (tcga? %) (not (inRealm? %)))
-     "TCGA Protected Access" #(and (tcga? %) (inRealm? %))
+    {"TCGA Open Access" (and tcga? (complement inRealm?))
+     "TCGA Protected Access" (and tcga? inRealm?)
      ; this pred is used when neither visible option is selected to allow non TCGA workspaces to be shown
      ; it is not intended to be displayed as an option
-     "TCGA None" #(not (tcga? %))}))
+     "TCGA None" (complement tcga?)}))
 
 (def ^:private persistence-key "workspace-table-types")
 (def ^:private VERSION 1)
@@ -117,12 +117,11 @@
   {:get-initial-state
    (fn []
      (persistence/try-restore
-                       {:key persistence-key
-                        :initial (fn [] {:v VERSION
-                                         :selected-types (merge (zipmap access-types access-types-defaults)
-                                                                (zipmap dataset-types dataset-types-defaults)
-                                                                (zipmap realm-types realm-types-defaults))})
-                        :validator (comp (partial = VERSION) :v)}))
+       {:key persistence-key
+        :initial (fn [] {:v VERSION :selected-types (merge (zipmap access-types access-types-defaults)
+                                                           (zipmap dataset-types dataset-types-defaults)
+                                                           (zipmap realm-types realm-types-defaults))})
+        :validator (comp (partial = VERSION) :v)}))
    :render
    (fn [{:keys [props state refs]}]
      (let [max-workspace-name-length (get-max-length get-workspace-name-string (:workspaces props))
