@@ -207,6 +207,7 @@
                               :value-nullsafe (or current-value "") ;; avoids warning for nil value
                               :required? (contains? required-attributes property)
                               :update-property #(swap! state update :attributes assoc property (.. % -target -value))
+                              :set-property #(swap! state update :attributes assoc property %)
                               :radio (fn [{:keys [val label]}]
                                        [:label {:style (colorize {:display "inline-flex" :alignItems "center"
                                                                   :cursor "pointer" :marginRight "2em"})}
