@@ -74,3 +74,13 @@
     (contains? call-failure-statuses status) failure-icon
     :else (do (utils/log "Unknown call status: " status)
             failure-icon)))
+
+
+(defn call-cache-result [cacheStatus]
+   (if (= cacheStatus "ReadAndWriteCache") "Enabled" "Disabled")
+  )
+(defn format-call-cache [cacheHitMiss]
+   ;(get cacheHitMiss "Cache Hit" "Cache Miss")
+   (if (utils/contains cacheHitMiss "Cache Hit") "Hit" "Miss")
+  )
+
