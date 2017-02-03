@@ -135,15 +135,25 @@
                                     (swap! state update :attributes assoc
                                            property label
                                            related-id-prop id
-                                           related-label-prop label)))}]
+                                           related-label-prop label)))
+                     :on-clear #(apply swap! state update :attributes dissoc property
+                                       (library-utils/get-related-id+label-props library-schema property))}]
    (let [[related-id related-label] (library-utils/get-related-id+label (:attributes @state) library-schema property)]
-     (when (not-any? clojure.string/blank? [related-id related-label])
-       [:div {:style {:fontWeight "bold"}}
-        related-label
-        [:span {:style {:fontWeight "normal" :fontSize "small" :float "right"}} related-id]
-        [:div {:style {:fontWeight "normal"}}
+     [:div {:style {:display (when (some clojure.string/blank? [related-id related-label]) "none")}}
+      [:span {:style {:fontWeight "bold"}} related-label]
+      [:span {:style {:fontSize "small" :float "right"}} related-id]
+      [:div {}
+       (style/create-link {:text "Clear Selection"
+                           :onClick #(apply swap! state update :attributes dissoc property
+                                            (library-utils/get-related-id+label-props library-schema property))})]]
+
+     #_(when (not-any? clojure.string/blank? [related-id related-label])
+       [:div {}
+        [:span {:style {:fontWeight "bold"}} related-label]
+        [:span {:style {:fontSize "small" :float "right"}} related-id]
+        [:div {}
          (style/create-link {:text "Clear Selection"
-                             :onClick #(apply swap! state update :attributes dissoc
+                             :onClick #(apply swap! state update :attributes dissoc property
                                               (library-utils/get-related-id+label-props library-schema property))})]]))])
 
 (defn- render-populate-typeahead [{:keys [value-nullsafe property inputHint colorize set-property update-property]}]
