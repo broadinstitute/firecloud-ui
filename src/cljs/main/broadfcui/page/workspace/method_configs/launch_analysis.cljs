@@ -67,7 +67,7 @@
                                                     :selected-entity entity-id
                                                     :workflow-count (common/count-workflows
                                                                       e (:root-entity-type props)))})))}]]
-   (style/create-form-label "Define Expression Or Don't")
+   (style/create-form-label "Define Expression")
    (let [disabled (= (:root-entity-type props) (get-in @state [:selected-entity :type]))]
      (style/create-text-field {:placeholder "leave blank for default"
                                :style {:width "100%"
