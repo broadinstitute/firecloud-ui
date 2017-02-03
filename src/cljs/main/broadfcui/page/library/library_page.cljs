@@ -142,11 +142,11 @@
    (fn [{:keys [props this]}]
      [:div {:style {:padding "16px 12px 0 12px"}}
       [comps/AutocompleteFilter
-       {:on-filter (:on-filter props)
+       {:ref "text-filter"
+        :on-filter (:on-filter props)
         :width "100%"
-        :initial-text (:search-text props)
-        :ref "text-filter"
-        :placeholder "Search"
+        :field-attributes {:defaultValue (:search-text props)
+                           :placeholder "Search"}
         :facet-filters (:facet-filters props)
         :bloodhoundInfo {:url (str (config/api-url-root) "/api/library/suggest")
                          :transform (fn [response]
