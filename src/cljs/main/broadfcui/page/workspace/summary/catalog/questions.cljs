@@ -155,7 +155,7 @@
          (style/create-link {:text "Clear Selection"
                              :onClick #(apply swap! state update :attributes dissoc property
                                               (library-utils/get-related-id+label-props library-schema property))})]]))])
-  
+
 (defn- render-populate-typeahead [{:keys [value-nullsafe property inputHint colorize set-property update-property]}]
   [:div {:style {:marginBottom "0.75em"}}
    [comps/AutocompleteFilter
@@ -166,7 +166,6 @@
                         :style (colorize {})
                         :onChange update-property}
      :on-filter set-property
-     :initial-text value-nullsafe
      :bloodhoundInfo {:url (str (config/api-url-root) "/api/library/populate/suggest/" (name property))
                       :cache false
                       :prepare (fn [query settings]
