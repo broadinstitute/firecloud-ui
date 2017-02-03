@@ -2,7 +2,7 @@ window.jQuery = require('jquery');
 window.$ = window.jQuery;
 require('jquery-ui/ui/core');
 require('jquery-ui/ui/widgets/draggable');
-exports.Bloodhound = require('typeahead.js');
+exports.Bloodhound = require('corejs-typeahead');
 exports.CodeMirror = require('codemirror');
 exports.marked = require('marked');
 require('./static/assets/js/timingDiagram');
