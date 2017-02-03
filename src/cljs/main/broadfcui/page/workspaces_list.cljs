@@ -94,19 +94,20 @@
 (def ^:private dataset-types ["Un-published" "Published"])
 (def ^:private dataset-types-defaults [true false])
 (def ^:private dataset-predicates
-  {"Published" #(get-in % ["workspace" "attributes" "library:published"])
-   "Un-published" #(not (get-in % ["workspace" "attributes" "library:published"]))})
+  (let [published? #(get-in % ["workspace" "attributes" "library:published"])]
+    {"Published" #(published? %)
+     "Un-published" #(not (published? %))}))
 
 (def ^:private realm-types ["TCGA Open Access" "TCGA Protected Access"])
 (def ^:private realm-types-defaults [false false])
 (def ^:private realm-predicates
- {"TCGA Open Access" #(and (= (config/tcga-namespace) (get-in % ["workspace" "namespace"]))
-                           (not (get-in % ["workspace" "realm"])))
-  "TCGA Protected Access" #(and (= (config/tcga-namespace) (get-in % ["workspace" "namespace"]))
-                                (get-in % ["workspace" "realm"]))
-  ; this pred is used when neither visible option is selected to allow non TCGA workspaces to be shown
-  ; it is not intended to be displayed as an option
-  "TCGA None" #(not (= (config/tcga-namespace) (get-in % ["workspace" "namespace"])))})
+  (let [tcga? #(= (config/tcga-namespace) (get-in % ["workspace" "namespace"]))
+        inRealm? #(get-in % ["workspace" "realm"])]
+    {"TCGA Open Access" #(and (tcga? %) (not (inRealm? %)))
+     "TCGA Protected Access" #(and (tcga? %) (inRealm? %))
+     ; this pred is used when neither visible option is selected to allow non TCGA workspaces to be shown
+     ; it is not intended to be displayed as an option
+     "TCGA None" #(not (tcga? %))}))
 
 (def ^:private persistence-key "workspace-table-types")
 (def ^:private VERSION 1)
