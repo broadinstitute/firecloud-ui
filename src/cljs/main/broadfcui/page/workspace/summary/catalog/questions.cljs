@@ -154,6 +154,7 @@
      :placeholder inputHint
      :initial-text value-nullsafe
      :on-filter set-property
+     :initial-text value-nullsafe
      :bloodhoundInfo {:url (str (config/api-url-root) "/api/library/populate/suggest/" (name property))
                       :cache false
                       :prepare (fn [query settings]
