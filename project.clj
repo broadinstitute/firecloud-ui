@@ -25,8 +25,6 @@
                   {:postinstall "webpack --optimize-minimize --output-filename webpack-deps.min.js"}}}
   :profiles {:dev
              {:dependencies [[binaryage/devtools "0.8.3"]]
-              :target-path "resources/public"
-              :clean-targets ^{:protect false} [:target-path]
               :cljsbuild
               {:builds
                {:client
@@ -50,6 +48,8 @@
                                           :optimizations :simple
                                           :pretty-print false
                                           :output-dir "build"}}}}}}
+  :target-path "resources/public"
+  :clean-targets ^{:protect false} [:target-path]
   :cljsbuild {:builds {:client {:source-paths ["src/cljs/main"]
                                 :compiler {:main "broadfcui.main"
                                            :output-dir "resources/public/build"
