@@ -72,7 +72,7 @@
                     :as-text #(% "projectName") :sort-by :text
                     :content-renderer
                     (fn [{:strs [projectName role creationStatus message]}]
-                      [:span {:title creationStatus}
+                      [:span {:title (or message creationStatus)}
                        (moncommon/icon-for-project-status creationStatus)
                        (cond
                          (= creationStatus project-status-creating)
@@ -84,8 +84,7 @@
                          (style/create-link {:text projectName
                                              :onClick #((:on-select props) projectName)})
                          :else projectName)])}
-                   {:header "Role" :starting-width 100}
-                   {:header "Message" :starting-width :remaining}]
+                   {:header "Role" :starting-width :remaining}]
          :toolbar
          (add-right
           [comps/Button
@@ -111,8 +110,7 @@
          :data (:projects @state)
          :->row (fn [{:strs [role message] :as row}]
                   [row
-                   role
-                   message])}]))
+                   role])}]))
    :component-did-mount
    (fn [{:keys [this]}]
      (react/call :load-data this))
