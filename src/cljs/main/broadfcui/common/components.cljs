@@ -235,21 +235,22 @@
      {"methodVersion" (int (common/get-text refs "snapshotId"))})
    :render
    (fn [{:keys [props refs state this]}]
-     (let [entity (:entity props)
-           editing? (:editing? props)
-           make-field
-           (fn [entity key label dropdown? & [render]]
-             [:div {}
-              [:span {:style {:fontWeight 500 :width 100 :display "inline-block" :paddingBottom "0.3em"}} label]
-              (if (and editing? dropdown?)
-                (style/create-identity-select {:ref key
-                                               :style {:width 100}
-                                               :defaultValue (entity key)
-                                               :onChange (when-let [f (:onSnapshotIdChange props)]
-                                                           #(f (int (common/get-text refs "snapshotId"))))}
-                                              (:snapshots props))
-                [:span {} ((or render identity) (entity key))])])
-           config? (contains? entity "method")]
+     [:div {} (when-let [wdl-parse-error (:wdl-parse-error props)] (style/create-server-error-message wdl-parse-error))
+      (let [entity (:entity props)
+            editing? (:editing? props)
+            make-field
+            (fn [entity key label dropdown? & [render]]
+              [:div {}
+               [:span {:style {:fontWeight 500 :width 100 :display "inline-block" :paddingBottom "0.3em"}} label]
+               (if (and editing? dropdown?)
+                 (style/create-identity-select {:ref key
+                                                :style {:width 100}
+                                                :defaultValue (entity key)
+                                                :onChange (when-let [f (:onSnapshotIdChange props)]
+                                                            #(f (int (common/get-text refs "snapshotId"))))}
+                                               (:snapshots props))
+                 [:span {} ((or render identity) (entity key))])])
+            config? (contains? entity "method")]
        [:div {:style {:backgroundColor (:background-light style/colors)
                       :borderRadius 8 :border style/standard-line
                       :padding "1em"}}
@@ -264,7 +265,7 @@
              (react/call :render-details this make-field (entity "method"))
              [:div {:style {:fontWeight 500 :marginTop "1em"}} "WDL:"]
              [CodeMirror {:text (get-in entity ["method" "payload"])}]]
-            [CodeMirror {:text (entity "payload")}]))]))
+            [CodeMirror {:text (entity "payload")}]))])])
    :render-details
    (fn [{:keys []} make-field entity]
      [:div {}
