@@ -22,7 +22,7 @@
    :cancel "fa-times-circle"
    :warning-triangle "fa-exclamation-triangle"
    :error "fa-exclamation-circle"
-   :alert "fa-hand-paper-o"
+   :alert "fa-exclamation"
    :search "fa-search"
    :share "fa-share-alt"
    :library "fa-book"
@@ -31,12 +31,11 @@
    :reorder "fa-reorder"
    :close "fa-close"
    :reset "fa-undo"
-   :new-window "fa-external-link"})
+   :new-window "fa-external-link"
+   :spinner "fa-spinner"})
 
 (defn icon [attributes key]
-  [:span (utils/deep-merge
-          {:className (str "fa " (icon-keys key))}
-           attributes)])
+  [:span (assoc attributes :className (str (icon-keys key) " fa "  (:className attributes)))])
 
 (react/defc CompleteIcon
   {:get-default-props

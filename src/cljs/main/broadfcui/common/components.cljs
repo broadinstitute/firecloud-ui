@@ -17,9 +17,7 @@
   {:render
    (fn [{:keys [props]}]
      [:span {:style {:margin "1em" :whiteSpace "nowrap"}}
-      [:img {:src "assets/spinner.gif"
-             :style {:height (or (:height props) "1.5em")
-                     :verticalAlign "middle" :marginRight "1ex"}}]
+      (icons/icon {:className "fa-pulse fa-lg fa-fw" :style {:marginRight "0.5rem"}} :spinner)
       (:text props)])})
 
 
