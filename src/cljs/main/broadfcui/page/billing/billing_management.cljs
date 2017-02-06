@@ -78,8 +78,7 @@
                          (= creationStatus project-status-creating)
                          [PendingProjectControl
                           {:project-name projectName
-                           :on-status-change #(react/call :-handle-status-change this
-                                                          projectName %)}]
+                           :on-status-change (partial this :-handle-status-change projectName)}]
                          (and (= creationStatus project-status-ready) (= role "Owner"))
                          (style/create-link {:text projectName
                                              :onClick #((:on-select props) projectName)})
@@ -123,11 +122,13 @@
           (swap! state assoc :error-message err-text)
           (swap! state assoc :projects projects)))))
    :-handle-status-change
-   (fn [{:keys [state]} project-name new-status]
+   (fn [{:keys [state]} project-name new-status message]
      (let [project-index (utils/first-matching-index
                           #(= (% "projectName") project-name)
-                          (:projects @state))]
-       (swap! state assoc-in [:projects project-index "creationStatus"] new-status)))})
+                          (:projects @state))
+           project (get-in @state [:projects project-index])
+           updated-project (assoc project "creationStatus" new-status "message" message)]
+       (swap! state assoc-in [:projects project-index] updated-project)))})
 
 
 (react/defc Page

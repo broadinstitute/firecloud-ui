@@ -730,7 +730,9 @@
      (if err-text
        (on-done nil)
        (on-done
-        (get (first (filter #(= project-name (% "projectName")) projects)) "creationStatus"))))))
+        (let [project (first (filter #(= project-name (% "projectName")) projects))]
+          (get project "creationStatus")
+          (get project "message")))))))
 
 (defn get-billing-accounts []
   {:path "/profile/billingAccounts"
