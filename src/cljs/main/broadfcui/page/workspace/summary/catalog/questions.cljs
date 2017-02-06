@@ -32,17 +32,6 @@
               v))]))
    attributes))
 
-
-(defn- validate-required [attributes questions required-attributes]
-  (let [required-props (->> questions
-                            (map keyword)
-                            (filter (partial contains? required-attributes))
-                            set)
-        missing-props (clojure.set/difference required-props (-> attributes keys set))]
-    (when-not (empty? missing-props)
-      {:error "Please provide all required attributes"
-       :invalid missing-props})))
-
 (defn- validate-numbers [attributes library-schema]
   (let [invalid-numbers (->> attributes
                              ;; get ones that are integers:
@@ -192,15 +181,14 @@
 (react/defc Questions
   {:validate
    (fn [{:keys [props state locals]}]
-     (let [{:keys [questions library-schema required-attributes]} props
+     (let [{:keys [library-schema]} props
            processed-attributes (->> (:attributes @state)
                                      (utils/map-values (fn [val]
                                                          (if (string? val)
-                                                           (not-empty (trim val))
+                                                             (trim val)
                                                            val)))
                                      (utils/filter-values some?))
-           {:keys [error invalid]} (or (validate-required processed-attributes questions required-attributes)
-                                       (validate-numbers processed-attributes library-schema))]
+           {:keys [error invalid]} (or (validate-numbers processed-attributes library-schema))]
        (swap! locals assoc :processed-attributes processed-attributes)
        (when error
          (swap! state assoc :invalid-properties invalid)

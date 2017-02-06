@@ -34,6 +34,24 @@
        (map keyword)
        set))
 
+(defn- get-questions-for-page [working-attributes library-schema page-num]
+  (let [page-props (get-in library-schema [:wizard page-num] {})
+   {:keys [questions enumerate optionSource options]} page-props
+   ;; either title and questions OR title and optionsource where options has questions in it somewhere
+   [questions enumerate] (if optionSource
+                           (map (get options (keyword (get working-attributes (keyword optionSource))))
+                                [:questions :enumerate])
+                           [questions enumerate])]
+    [questions enumerate]))
+
+(defn convert-empty-strings [attributes]
+  (utils/map-values
+    (fn [val]
+      (if (string? val)
+        (not-empty val)
+        val)) attributes
+    ;; also need to validate here
+    ))
 
 (defn- get-initial-attributes [workspace]
   (utils/map-values
@@ -78,18 +96,17 @@
             :inner-style {:padding "1rem" :boxSizing "border-box" :height "100%"}
             :content
             (react/create-element
-             (let [page-props (get-in library-schema [:wizard page-num])
-                   {:keys [questions enumerate optionSource options]} page-props
-                   [questions enumerate] (if optionSource
-                                           (map (get options (keyword (get working-attributes (keyword optionSource))))
-                                                [:questions :enumerate])
-                                           [questions enumerate])]
-               [Questions {:ref "wizard-page" :key page-num
-                           :library-schema library-schema
-                           :enumerate enumerate
-                           :questions questions
-                           :attributes working-attributes
-                           :required-attributes required-attributes}]))}]]
+              (if (< page-num (count (:wizard library-schema)))
+                (let [[questions enumerate] (get-questions-for-page working-attributes library-schema page-num)]
+
+
+                 [Questions {:ref "wizard-page" :key page-num
+                             :library-schema library-schema
+                             :enumerate enumerate
+                             :questions questions
+                             :attributes working-attributes
+                             :required-attributes required-attributes}])
+                [:div {} "Hello"]))}]]
          (when validation-error
            [:div {:style {:marginTop "1em" :color (:exception-state style/colors) :textAlign "center"}}
             validation-error])
@@ -108,18 +125,18 @@
                          :style {:width 80}}]
           flex/flex-spacer
           [comps/Button {:text (if published? "Republish" "Submit")
-                         :onClick #(react/call :next-page this)
+                         :onClick #(react/call :submit this)
                          :disabled? (< page-num (-> library-schema :wizard count dec))
                          :style {:width 80}}])]]))
    :component-did-mount
    (fn [{:keys [locals]}]
      (swap! locals assoc :page-attributes []))
-   :component-did-update
-   (fn [{:keys [prev-state state refs]}]
-     (when (not= (:page-num prev-state) (:page-num @state))
-       (react/call :scroll-to (@refs "scroller") 0)))
+   ;:component-did-update
+   ;(fn [{:keys [prev-state state refs]}]
+   ;  (when (not= (:page-num prev-state) (:page-num @state))
+   ;    (react/call :scroll-to (@refs "scroller") 0)))
    :next-page
-   (fn [{:keys [props state refs this locals after-update]}]
+   (fn [{:keys [props state refs locals after-update]}]
      (swap! state dissoc :validation-error)
      (if-let [error-message (react/call :validate (@refs "wizard-page"))]
        (swap! state assoc :validation-error error-message)
@@ -127,19 +144,31 @@
          (swap! state update :working-attributes merge attributes-from-page)
          (swap! locals update :page-attributes assoc (:page-num @state) attributes-from-page)
          (after-update
-          #(if (< (:page-num @state) (-> props :library-schema :wizard count dec))
-             (swap! state update :page-num inc)
-             (react/call :submit this))))))
+          #(let [next-page (inc (:page-num @state))
+                 library-schema (:library-schema props)
+                 [questions enumerate] (get-questions-for-page (:working-attributes @state) (utils/cljslog library-schema) (utils/cljslog next-page))]
+            (utils/cljslog questions) ;; for the next page
+            (if (nil? questions) ;; this should really be a loop; while no questions, increment page
+               ;(utils/cljslog questions "\n last page? " (count (:wizard library-schema)))
+               (swap! state assoc :page-num (count (:wizard library-schema))) ;; skip to last page
+            (swap! state assoc :page-num next-page)))))))
    :submit
    (fn [{:keys [props state locals]}]
-     (swap! state assoc :submitting? true :submit-error nil)
-     (endpoints/call-ajax-orch
-      {:endpoint (endpoints/save-library-metadata (:workspace-id props))
-       :payload (apply merge (:version-attributes @state) (:page-attributes @locals))
-       :headers utils/content-type=json
-       :on-done (fn [{:keys [success? get-parsed-response]}]
-                  (swap! state dissoc :submitting?)
-                  (if success?
-                    (do (modal/pop-modal)
-                        ((:request-refresh props)))
-                    (swap! state assoc :submit-error (get-parsed-response false))))}))})
+     ;; this should be calling something in questions itself??
+     (let [attributes (convert-empty-strings (apply merge (:version-attributes @state) (:page-attributes @locals)))]
+       (utils/log attributes)))})
+         ;(endpoints/call-ajax-orch
+         ;  {:endpoint (endpoints/save-library-metadata (:workspace-id props))
+         ;   :payload attributes
+         ;   :headers utils/content-type=json
+         ;   :on-done (fn [{:keys [success? get-parsed-response]}]
+         ;              (swap! state dissoc :submitting?)
+         ;             (if success?
+         ;               (do (modal/pop-modal)
+         ;                   ((:request-refresh props)))
+         ;               (swap! state assoc :submit-error (get-parsed-response false))))}))))})
+
+;; TODO: make a new last window page that does the validation, allows you to submit, changes empty strings to nil
+;; TODO: create a third option to let you skip that step (orch part is almost functional, need to create the 3rd page now that next will get you to)
+
+;; the last window is where the publish vs save thing will happen
