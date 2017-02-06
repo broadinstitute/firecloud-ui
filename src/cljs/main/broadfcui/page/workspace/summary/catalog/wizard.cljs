@@ -35,14 +35,14 @@
        set))
 
 (defn- get-questions-for-page [working-attributes library-schema page-num]
-  (let [page-props (get-in library-schema [:wizard page-num] {})
-   {:keys [questions enumerate optionSource options]} page-props
-   ;; either title and questions OR title and optionsource where options has questions in it somewhere
-   [questions enumerate] (if optionSource
-                           (map (get options (keyword (get working-attributes (keyword optionSource))))
-                                [:questions :enumerate])
-                           [questions enumerate])]
-    [questions enumerate]))
+  (when (< page-num (count (:wizard library-schema)))
+    (let [page-props (get-in library-schema [:wizard page-num])
+          {:keys [questions enumerate optionSource options]} page-props]
+      (if optionSource
+        (let [option-value (get working-attributes (keyword optionSource))]
+          (when-let [option-match (some->> option-value keyword (get options))]
+            (map option-match [:questions :enumerate])))
+        [questions enumerate]))))
 
 (defn convert-empty-strings [attributes]
   (utils/map-values
@@ -121,12 +121,12 @@
           (flex/flex-strut 27)
           [comps/Button {:text "Next"
                          :onClick #(react/call :next-page this)
-                         :disabled? (= page-num (-> library-schema :wizard count dec))
+                         :disabled? (= page-num (-> library-schema :wizard count))
                          :style {:width 80}}]
           flex/flex-spacer
           [comps/Button {:text (if published? "Republish" "Submit")
                          :onClick #(react/call :submit this)
-                         :disabled? (< page-num (-> library-schema :wizard count dec))
+                         :disabled? (< page-num (-> library-schema :wizard count))
                          :style {:width 80}}])]]))
    :component-did-mount
    (fn [{:keys [locals]}]
@@ -136,22 +136,23 @@
    ;  (when (not= (:page-num prev-state) (:page-num @state))
    ;    (react/call :scroll-to (@refs "scroller") 0)))
    :next-page
-   (fn [{:keys [props state refs locals after-update]}]
+   (fn [{:keys [state refs this locals after-update]}]
      (swap! state dissoc :validation-error)
      (if-let [error-message (react/call :validate (@refs "wizard-page"))]
        (swap! state assoc :validation-error error-message)
        (let [attributes-from-page (react/call :get-attributes (@refs "wizard-page"))]
          (swap! state update :working-attributes merge attributes-from-page)
          (swap! locals update :page-attributes assoc (:page-num @state) attributes-from-page)
-         (after-update
-          #(let [next-page (inc (:page-num @state))
-                 library-schema (:library-schema props)
-                 [questions enumerate] (get-questions-for-page (:working-attributes @state) (utils/cljslog library-schema) (utils/cljslog next-page))]
-            (utils/cljslog questions) ;; for the next page
-            (if (nil? questions) ;; this should really be a loop; while no questions, increment page
-               ;(utils/cljslog questions "\n last page? " (count (:wizard library-schema)))
-               (swap! state assoc :page-num (count (:wizard library-schema))) ;; skip to last page
-            (swap! state assoc :page-num next-page)))))))
+         (after-update #(swap! state assoc :page-num (react/call :find-next-page this))))))
+   :find-next-page
+   (fn [{:keys [props state]}]
+     (let [{:keys [library-schema]} props
+           {:keys [page-num working-attributes]} @state
+           next (atom (inc page-num))]
+       (while (and (not (get-questions-for-page working-attributes library-schema @next))
+                   (< @next (count (:wizard library-schema))))
+         (swap! next inc))
+       @next))
    :submit
    (fn [{:keys [props state locals]}]
      ;; this should be calling something in questions itself??
