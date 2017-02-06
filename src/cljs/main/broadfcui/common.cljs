@@ -93,9 +93,9 @@
 
 
 (defn compute-status [workspace]
-  (let [last-success (get-in workspace ["workspaceSubmissionStats" "lastSuccessDate"])
-        last-failure (get-in workspace ["workspaceSubmissionStats" "lastFailureDate"])
-        count-running (get-in workspace ["workspaceSubmissionStats" "runningSubmissionsCount"])]
+  (let [last-success (get-in workspace [:workspaceSubmissionStats :lastSuccessDate])
+        last-failure (get-in workspace [:workspaceSubmissionStats :lastFailureDate])
+        count-running (get-in workspace [:workspaceSubmissionStats :runningSubmissionsCount])]
     (cond (pos? count-running) "Running"
           (and last-failure
                (or (not last-success)
@@ -206,8 +206,8 @@
           :else 1)))
 
 (def PHI-warning
-  [:div {:style {:display "inline-flex" :marginBottom ".5em" :marginLeft ".3em"}}
-    (icons/icon {:style {:fontSize 28 :color (:exception-state style/colors) :marginRight ".26em"
-                         :verticalAlign "middle"}} :warning-triangle)
-    [:span {:style {:fontWeight "bold" :fontSize "98%" :marginTop ".18em"}}
+  [:div {:style {:display "flex" :marginBottom ".5em" :marginLeft ".3em" :alignItems "center"}}
+    (icons/icon {:style {:fontSize 28 :color (:exception-state style/colors) :marginRight ".26em"}}
+                :alert)
+    [:span {:style {:fontWeight "bold" :fontSize "98%"}}
       "FireCloud is not intended to host personally identifiable information. Do not use any patient identifier, including name, social security number, or medical record number."]])

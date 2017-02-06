@@ -63,27 +63,27 @@
                                       [:div {}
                                        (map (fn [message]
                                               [:div {} message])
-                                         message-list)])}
+                                            message-list)])}
                  {:header "Workflow ID" :starting-width 300
                   :as-text
-                    (fn [workflow] (workflow "workflowId"))
+                  (fn [workflow] (workflow "workflowId"))
                   :sort-by :text
                   :content-renderer
                   (fn [workflow]
-                   (let [{:keys [submission-id bucketName]} props
-                         inputs (second (second (first (workflow "inputResolutions"))))
-                         input-names (string/split inputs ".")
-                         workflow-name (first input-names)
-                         workflowId (workflow "workflowId")]
-                   (style/create-link {:text workflowId
-                                       :target "_blank"
-                                       :style {:color "-webkit-link" :textDecoration "underline"}
-                     :href (str moncommon/google-cloud-context bucketName "/" submission-id  "/"
-                                workflow-name "/" workflowId "/")})))}]
+                    (let [{:keys [submission-id bucketName]} props
+                          inputs (second (second (first (workflow "inputResolutions"))))
+                          input-names (string/split inputs ".")
+                          workflow-name (first input-names)
+                          workflowId (workflow "workflowId")]
+                      (style/create-link {:text workflowId
+                                          :target "_blank"
+                                          :style {:color "-webkit-link" :textDecoration "underline"}
+                                          :href (str moncommon/google-cloud-context bucketName "/" submission-id "/"
+                                                     workflow-name "/" workflowId "/")})))}]
        :filter-groups
        (vec (cons {:text "All" :pred (constantly true)}
-              (map (fn [status] {:text status :pred #(= status (% "status"))})
-                moncommon/wf-all-statuses)))
+                  (map (fn [status] {:text status :pred #(= status (% "status"))})
+                       moncommon/wf-all-statuses)))
        :data (:workflows props)
        :->row (fn [row]
                 [row
@@ -95,18 +95,17 @@
    (fn [{:keys [state props]}]
      (let [workflows (:workflows props)
            workflowName (get-in workflows [0 "workflowEntity" "entityName"])]
-     [:div {}
-      [:div {}
-       (style/create-link {:text "Workflows"
-                           :onClick #(swap! state dissoc :selected-workflow)})
-       (icons/icon {:style {:verticalAlign "middle" :margin "0 1ex 0 1ex"}} :angle-right)
-       [:b {} (:name (:selected-workflow @state))]]
-      [:div {:style {:marginTop "1em"}}
-       (workflow-details/render
-        (merge (select-keys props [:workspace-id :submission-id :bucketName])
-               {:workflow-id (get-in @state [:selected-workflow :id])
-                :submission (:submission props)
-                :workflow-name workflowName}))]]))})
+       [:div {}
+        [comps/Breadcrumbs {:crumbs
+                            [{:text "Workflows"
+                              :onClick #(swap! state dissoc :selected-workflow)}
+                             {:text (get-in @state [:selected-workflow :name])}]}]
+        [:div {:style {:marginTop "1em"}}
+         (workflow-details/render
+          (merge (select-keys props [:workspace-id :submission-id :bucketName])
+                 {:workflow-id (get-in @state [:selected-workflow :id])
+                  :submission (:submission props)
+                  :workflow-name workflowName}))]]))})
 
 
 (react/defc AbortButton

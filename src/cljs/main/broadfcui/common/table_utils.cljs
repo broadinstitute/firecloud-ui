@@ -54,7 +54,7 @@
                                        (:border-light style/colors))
                               :cursor (when allow-prev "pointer")}
                       :onClick (when allow-prev #((:on-change props) (update-in pagination-params [:current-page] dec)))}
-                (icons/icon {:style {:alignSelf "center" :margin "-0.5em 0"}} :angle-left)
+                (icons/icon {:style {:alignSelf "center" :paddingRight "0.5rem"}} :angle-left)
                 "Prev"]
                [:span {:style {:whiteSpace "nowrap"}}
                 (map (fn [n]
@@ -76,7 +76,7 @@
                               :cursor (when allow-next "pointer")}
                       :onClick (when allow-next #((:on-change props) (update-in pagination-params [:current-page] inc)))}
                 "Next"
-                (icons/icon {:style {:alignSelf "center" :margin "-0.5em 0"}} :angle-right)])
+                (icons/icon {:style {:alignSelf "center" :paddingLeft "0.5rem"}} :angle-right)])
               rows-component
               [:div {:style {:display "inline-flex" :alignItems "baseline"}}
                "Display"

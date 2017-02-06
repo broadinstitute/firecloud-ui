@@ -12,7 +12,7 @@
                        [css-loader "~0.26.1"]               ; webpack plugin
                        [extract-text-webpack-plugin "~2.0.0-rc"] ; webpack plugin
                        [file-loader "~0.9.0"]               ; webpack plugin
-                       [font-awesome "~4.2.0"]              ; used for icons, also required by IGV
+                       [font-awesome "~4.7.0"]              ; used for icons, also required by IGV
                        [github-markdown-css "~2.4.1"]       ; used with marked
                        [jquery "^1.12.2"]                   ; required by IGV
                        [jquery-ui "^1.11.2"]                ; required by IGV

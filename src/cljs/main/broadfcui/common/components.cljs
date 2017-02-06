@@ -69,8 +69,8 @@
                          (common/create-key-handler [:space :enter] onClick))}
         text
         (some->> icon (icons/icon {:style (if text
-                                            {:fontSize 24 :margin "-0.5em -0.3em -0.5em 0.5em"}
-                                            {:fontSize 20})}))]))})
+                                            {:fontSize 20 :margin "-0.5em -0.3em -0.5em 0.5em"}
+                                            {:fontSize 18})}))]))})
 
 
 (react/defc Checkbox
@@ -194,8 +194,9 @@
 (react/defc StatusLabel
   {:render
    (fn [{:keys [props]}]
-     [:div {:style {:background (:color props) :color "#fff"
-                    :padding "15px 20px" :textAlign "center" :marginBottom "2em"}}
+     [:div {:style {:display "flex" :background (:color props) :color "#fff"
+                    :padding "15px 20px" :marginBottom "2em"
+                    :alignItems "center" :justifyContent "center"}}
       (:icon props)
       [:span {:style {:marginLeft "1em" :fontSize "125%" :fontWeight 400
                       :verticalAlign "middle"}}
@@ -226,7 +227,7 @@
                          #(push-error-text
                            (if (string? disabled?) disabled? "This action is disabled."))
                          (:onClick props))}
-        (icons/icon {:style {:padding "0 20px" :borderRight style/standard-line}} (:icon props))
+        (icons/icon {:style {:padding "0 20px" :borderRight style/standard-line} :class "fa-fw"} (:icon props))
         [:div {:style {:textAlign "center" :margin "auto"}}
          (:text props)]]))})
 
@@ -361,18 +362,22 @@
 
 
 (react/defc Breadcrumbs
-  {:render
+  {:get-default-props
+   (fn []
+     {:scale-factor "100%"})
+   :render
    (fn [{:keys [props]}]
-     (let [sep (icons/icon {:style {:color (:border-light style/colors)}} :angle-right)
+     (let [sep (icons/icon {:style {:color (:text-lightest style/colors) :padding "0 0.5rem"
+                                    :fontSize (:scale-factor props)}} :angle-right)
            crumbs (filter some? (:crumbs props))]
        (case (count crumbs)
          0 [:div {}]
          1 [:div {} (:text (first crumbs))]
-         [:div {:style {:display "flex" :alignItems "center" :flexWrap "wrap"}}
+         [:div {:style {:display "flex" :alignItems "baseline" :flexWrap "wrap"}}
           (interpose sep
             (map
               (fn [{:keys [text onClick href] :as link-props}]
-                [:span {:style {:fontSize "60%" :whiteSpace "pre"}}
+                [:span {:style {:fontSize (:scale-factor props) :whiteSpace "pre"}}
                  (if (or onClick href)
                    (style/create-link link-props)
                    text)])
