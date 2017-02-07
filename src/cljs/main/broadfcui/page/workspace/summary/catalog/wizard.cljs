@@ -49,9 +49,7 @@
     (fn [val]
       (if (string? val)
         (not-empty val)
-        val)) attributes
-    ;; also need to validate here
-    ))
+        val)) attributes))
 
 (defn- get-initial-attributes [workspace]
   (utils/map-values
@@ -65,6 +63,7 @@
      (let [{:keys [library-schema]} props
            {:keys [versions]} library-schema]
        {:page-num 0
+        :pages-seen `()
         :working-attributes (get-initial-attributes (:workspace props))
         :published? (get-in props [:workspace :workspace :library-attributes :library:published])
         :version-attributes (->> versions
@@ -115,7 +114,12 @@
           (flex/flex-strut 80)
           flex/flex-spacer
           [comps/Button {:text "Previous"
-                         :onClick (fn [_] (swap! state #(-> % (update :page-num dec) (dissoc :validation-error))))
+                         :onClick (fn [_]
+                                    (if-let [prev-page (peek (:pages-seen @state))]
+                                      (swap! state #(-> %
+                                                        (assoc :page-num prev-page)
+                                                        (update :pages-seen pop)
+                                                        (dissoc :validation-error)))))
                          :style {:width 80}
                          :disabled? (zero? page-num)}]
           (flex/flex-strut 27)
@@ -131,10 +135,10 @@
    :component-did-mount
    (fn [{:keys [locals]}]
      (swap! locals assoc :page-attributes []))
-   ;:component-did-update
-   ;(fn [{:keys [prev-state state refs]}]
-   ;  (when (not= (:page-num prev-state) (:page-num @state))
-   ;    (react/call :scroll-to (@refs "scroller") 0)))
+   :component-did-update
+   (fn [{:keys [prev-state state refs]}]
+     (when (not= (:page-num prev-state) (:page-num @state))
+       (react/call :scroll-to (@refs "scroller") 0)))
    :next-page
    (fn [{:keys [state refs this locals after-update]}]
      (swap! state dissoc :validation-error)
@@ -143,7 +147,11 @@
        (let [attributes-from-page (react/call :get-attributes (@refs "wizard-page"))]
          (swap! state update :working-attributes merge attributes-from-page)
          (swap! locals update :page-attributes assoc (:page-num @state) attributes-from-page)
-         (after-update #(swap! state assoc :page-num (react/call :find-next-page this))))))
+         (after-update (fn [_]
+                         (let [next-page (react/call :find-next-page this)]
+                           (swap! state #(-> %
+                                             (update :pages-seen conj (:page-num @state))
+                                             (assoc :page-num next-page)))))))))
    :find-next-page
    (fn [{:keys [props state]}]
      (let [{:keys [library-schema]} props
