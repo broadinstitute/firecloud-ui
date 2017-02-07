@@ -93,13 +93,12 @@
 
 
 (defn compute-status [workspace]
-  (let [last-success (get-in workspace [:workspaceSubmissionStats :lastSuccessDate])
-        last-failure (get-in workspace [:workspaceSubmissionStats :lastFailureDate])
-        count-running (get-in workspace [:workspaceSubmissionStats :runningSubmissionsCount])]
-    (cond (pos? count-running) "Running"
-          (and last-failure
-               (or (not last-success)
-                   (> (.parse js/Date last-failure) (.parse js/Date last-success)))) "Exception"
+  (let [{:keys [lastSuccessDate lastFailureDate runningSubmissionsCount]}
+        (:workspaceSubmissionStats workspace)]
+    (cond (pos? runningSubmissionsCount) "Running"
+          (and lastFailureDate
+               (or (not lastSuccessDate)
+                   (> (.parse js/Date lastFailureDate) (.parse js/Date lastSuccessDate)))) "Exception"
           :else "Complete")))
 
 (defn gcs-object->download-url [bucket object]

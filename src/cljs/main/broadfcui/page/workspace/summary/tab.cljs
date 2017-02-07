@@ -72,7 +72,7 @@
                          :icon (case status
                                  "Complete" [icons/CompleteIcon {:size 36}]
                                  "Running" [icons/RunningIcon {:size 36}]
-                                 "Exception" [icons/ExceptionIcon {:size 36}])
+                                 "Exception" [icons/ExceptionIcon {:size 32}])
                          :color (style/color-for-status status)}]
      [:div {:ref "sidebar"}]
      (style/create-unselectable

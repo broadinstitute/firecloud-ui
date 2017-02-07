@@ -193,7 +193,7 @@
   {:render
    (fn [{:keys [props]}]
      [:div {:style {:display "flex" :background (:color props) :color "#fff"
-                    :padding "15px 20px" :marginBottom "2em"
+                    :padding "15px 20px" :marginBottom "2em" :lineHeight "36px"
                     :alignItems "center" :justifyContent "center"}}
       (:icon props)
       [:span {:style {:marginLeft "1em" :fontSize "125%" :fontWeight 400
@@ -225,7 +225,7 @@
                          #(push-error-text
                            (if (string? disabled?) disabled? "This action is disabled."))
                          (:onClick props))}
-        (icons/icon {:style {:padding "0 20px" :borderRight style/standard-line} :class "fa-fw"} (:icon props))
+        (icons/icon {:style {:padding "0 20px" :borderRight style/standard-line} :className "fa-fw"} (:icon props))
         [:div {:style {:textAlign "center" :margin "auto"}}
          (:text props)]]))})
 
