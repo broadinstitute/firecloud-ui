@@ -146,7 +146,7 @@
        (style/create-link {:text "Clear Selection"
                            :onClick #(apply swap! state update :attributes dissoc property
                                             (library-utils/get-related-id+label-props library-schema property))})]]
-
+     ;; TODO: why is this causing React to bomb when adding the node?
      #_(when (not-any? clojure.string/blank? [related-id related-label])
        [:div {}
         [:span {:style {:fontWeight "bold"}} related-label]
