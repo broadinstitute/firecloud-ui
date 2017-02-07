@@ -51,28 +51,30 @@
 
 (defn- render-summary-page [attributes library-schema pages-seen required-attributes]
   [:div {}
-   (if (= (:library:useLimitationOption attributes) "skip") ;; do something else
-     "Note, you cannot publish this dataset until you define the Data Use Limitations.")
+   ;(if (= (:library:useLimitationOption attributes) "skip") ;; do something else
+   ;  "Note, you cannot publish this dataset until you define the Data Use Limitations.")
+     (map (fn [page]
+             (let [questions (first (get-questions-for-page attributes library-schema page))
+                   {:keys [error invalid]} (library-utils/validate-required
+                                             (convert-empty-strings attributes) questions required-attributes)]
+               (if error
+                 [:div {:style {:color (:exception-state style/colors)} :fontSize "14px"}
+                   "You are missing fields on page " (inc page)
+                  [:ul {} (map (fn [attribute]
+                                 [:li {:style {:fontSize "13px"}} (:title (attribute (:properties library-schema))) ])
+                               invalid)]])))
+               pages-seen)
 
-    ; attributes questions required-attributes
-
-    (map (fn [page]
-           (let [questions (first (get-questions-for-page attributes library-schema (utils/cljslog page)))
-                 {:keys [error invalid]} (library-utils/validate-required (utils/cljslog (convert-empty-strings attributes))
-                                                                          (utils/cljslog questions)
-                                                                          (utils/cljslog required-attributes))]
-             [:div {} "error? " error " on page: " page]))
-             pages-seen)
-
-   ;; check required?
-
-   ;(map (fn [attribute]
-   ;       (when (val attribute)
-   ;         [:div {:style {:fontSize "10px" :display "flex" :padding "0.5em 0"}}
-   ;          [:div {:style {:fontSize "12px" :flexBasis "45%" :paddingRight "2em"}} (:title ((key attribute) properties))]
-   ;          [:div {:style {:flexBasis "55%"}} (str (val attribute))]])) attributes)])
-
-   ])
+   (style/create-paragraph
+     [:div {}
+      (let [questions (first (get-questions-for-page attributes library-schema 0))]
+        (map (fn [attribute]
+               (if (not-empty (:get attributes attribute)) ;; TODO: fix, this is not working for *every* case
+                 (library-utils/render-property library-schema attributes (keyword attribute))))
+             questions))
+      (if (= (:library:useLimitationOption attributes) "orsp") ;; TODO: change this so not hardcoded
+        (library-utils/render-property library-schema attributes :library:orsp)
+        (library-utils/render-consent-codes library-schema attributes))])])
 
 
 
@@ -188,7 +190,7 @@
        @next))
    :submit
    (fn [{:keys [props state locals]}]
-     ;; this should be calling something in questions itself??
+     ;; TODO: fix this
      (let [attributes (convert-empty-strings (apply merge (:version-attributes @state) (:page-attributes @locals)))]
        (utils/log attributes)))})
          ;(endpoints/call-ajax-orch
@@ -202,7 +204,5 @@
          ;                   ((:request-refresh props)))
          ;               (swap! state assoc :submit-error (get-parsed-response false))))}))))})
 
-;; TODO: make a new last window page that does the validation, allows you to submit, changes empty strings to nil
-;; TODO: create a third option to let you skip that step (orch part is almost functional, need to create the 3rd page now that next will get you to)
-
-;; the last window is where the publish vs save thing will happen
+;; TODO: required stuff needs to show up as red once we validate stuff
+;; TODO: get submit working (only if everything has been saved)
