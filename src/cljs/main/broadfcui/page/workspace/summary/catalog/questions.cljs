@@ -131,12 +131,13 @@
                              :onClick #(apply swap! state update :attributes dissoc
                                               (library-utils/get-related-id+label-props library-schema property))})]]))])
 
-(defn- render-populate-typeahead [{:keys [property inputHint set-property]}]
+(defn- render-populate-typeahead [{:keys [property value-nullsafe inputHint set-property]}]
   [:div {:style {:marginBottom "0.75em"}}
    [comps/AutocompleteFilter
     {:width "100%"
      :ref "text-filter"
      :placeholder inputHint
+     :initial-text value-nullsafe
      :on-filter set-property
      :bloodhoundInfo {:url (str (config/api-url-root) "/api/library/populate/suggest/" (name property))
                       :cache false
