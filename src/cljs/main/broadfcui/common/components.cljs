@@ -493,6 +493,9 @@
   {:apply-filter
    (fn [{:keys [props refs]}]
      ((:on-filter props) (common/get-text refs "typeahead")))
+   :get-default-props
+   (fn []
+     {:typeaheadDisplay identity})
    :render
    (fn [{:keys [props this]}]
      (let [{:keys [initial-text placeholder width]} props]
@@ -502,7 +505,7 @@
                                        :placeholder (or placeholder "Filter") :defaultValue initial-text
                                        :style {:flex "1 0 auto" :width width :borderRadius 3 :marginBottom 0}
                                        :onKeyDown (common/create-key-handler [:enter] #(react/call :apply-filter this))}
-                    :behavior {:hint true :minLength 3}
+                    :behavior {:hint false :minLength 3}
                     :remote (:bloodhoundInfo props)
                     :render-display (:typeaheadDisplay props)
                     :empty-message "<small>Unable to find any matches to the current query</small>"
