@@ -12,7 +12,6 @@
     [broadfcui.utils :as utils]
     ))
 
-
 (defn- render-wizard-breadcrumbs [{:keys [library-schema page-num]}]
   (let [pages (:wizard library-schema)]
     [:div {:style {:flex "0 0 250px" :backgroundColor "white" :border style/standard-line}}
@@ -24,8 +23,7 @@
                          :fontWeight (when this "bold")
                          :color (when-not this (:text-lighter style/colors))}}
             title]))
-       pages)]]))
-
+       (conj pages {:title "Summary"}))]]))
 
 (defn- find-required-attributes [library-schema]
   (->> (map :required (:oneOf library-schema))
@@ -44,12 +42,39 @@
             (map option-match [:questions :enumerate])))
         [questions enumerate]))))
 
-(defn convert-empty-strings [attributes]
+(defn- convert-empty-strings [attributes]
   (utils/map-values
     (fn [val]
       (if (string? val)
         (not-empty val)
         val)) attributes))
+
+(defn- render-summary-page [attributes library-schema pages-seen required-attributes]
+  [:div {}
+   (if (= (:library:useLimitationOption attributes) "skip") ;; do something else
+     "Note, you cannot publish this dataset until you define the Data Use Limitations.")
+
+    ; attributes questions required-attributes
+
+    (map (fn [page]
+           (let [questions (first (get-questions-for-page attributes library-schema (utils/cljslog page)))
+                 {:keys [error invalid]} (library-utils/validate-required (utils/cljslog (convert-empty-strings attributes))
+                                                                          (utils/cljslog questions)
+                                                                          (utils/cljslog required-attributes))]
+             [:div {} "error? " error " on page: " page]))
+             pages-seen)
+
+   ;; check required?
+
+   ;(map (fn [attribute]
+   ;       (when (val attribute)
+   ;         [:div {:style {:fontSize "10px" :display "flex" :padding "0.5em 0"}}
+   ;          [:div {:style {:fontSize "12px" :flexBasis "45%" :paddingRight "2em"}} (:title ((key attribute) properties))]
+   ;          [:div {:style {:flexBasis "55%"}} (str (val attribute))]])) attributes)])
+
+   ])
+
+
 
 (defn- get-initial-attributes [workspace]
   (utils/map-values
@@ -105,7 +130,7 @@
                              :questions questions
                              :attributes working-attributes
                              :required-attributes required-attributes}])
-                [:div {} "Hello"]))}]]
+                (render-summary-page working-attributes library-schema (:pages-seen @state) (:required-attributes @state))))}]]
          (when validation-error
            [:div {:style {:marginTop "1em" :color (:exception-state style/colors) :textAlign "center"}}
             validation-error])

@@ -24,5 +24,5 @@
                             set)
         missing-props (clojure.set/difference required-props (-> attributes keys set))]
     (when-not (empty? missing-props)
-      {:error "Please provide all required attributes"
-       :invalid missing-props})))
+      (utils/log {:error "Please provide all required attributes"
+       :invalid missing-props}))))
