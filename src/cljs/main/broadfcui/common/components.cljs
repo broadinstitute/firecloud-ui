@@ -493,6 +493,9 @@
   {:apply-filter
    (fn [{:keys [props refs]}]
      ((:on-filter props) (common/get-text refs "typeahead")))
+   :get-default-props
+   (fn []
+     {:typeaheadDisplay identity})
    :render
    (fn [{:keys [props this]}]
      (let [{:keys [initial-text placeholder width]} props]
