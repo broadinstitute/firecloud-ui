@@ -48,6 +48,7 @@
            {:keys [versions]} library-schema]
        {:page-num 0
         :working-attributes (get-initial-attributes (:workspace props))
+        :published? (get-in props [:workspace :workspace :library-attributes :library:published])
         :version-attributes (->> versions
                                  (map keyword)
                                  (map (fn [version]
@@ -57,7 +58,7 @@
    :render
    (fn [{:keys [props state this]}]
      (let [{:keys [library-schema]} props
-           {:keys [page-num working-attributes required-attributes validation-error submit-error]} @state]
+           {:keys [page-num working-attributes required-attributes published? validation-error submit-error]} @state]
        [:div {}
         (when (:submitting? @state)
           [comps/Blocker {:banner "Submitting..."}])
@@ -106,7 +107,7 @@
                          :disabled? (= page-num (-> library-schema :wizard count dec))
                          :style {:width 80}}]
           flex/flex-spacer
-          [comps/Button {:text "Submit"
+          [comps/Button {:text (if published? "Republish" "Submit")
                          :onClick #(react/call :next-page this)
                          :disabled? (< page-num (-> library-schema :wizard count dec))
                          :style {:width 80}}])]]))
