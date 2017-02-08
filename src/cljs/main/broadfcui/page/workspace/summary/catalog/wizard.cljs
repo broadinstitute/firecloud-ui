@@ -202,7 +202,7 @@
    :submit
    (fn [{:keys [props state locals]}]
      (if (not-empty (:invalid-properties @state))
-       (swap! state assoc :validation-error "You cannot save attributes without filling out required properties")
+       (swap! state assoc :validation-error "You will need to complete all required metadata attributes to be able to publish the workspace in the Data Library")
        (let [attributes-seen (atom {})]
          (doseq [page (:pages-seen @state)]
            (let [attrs (nth (:page-attributes @locals) page)]
