@@ -515,7 +515,7 @@
                                         :onKeyDown (common/create-key-handler [:enter] #(react/call :apply-filter this))}
 
                                        field-attributes)
-                    :behavior {:hint true :minLength 3}
+                    :behavior {:hint false :minLength 3}
                     :remote (:bloodhoundInfo props)
                     :render-display (:typeaheadDisplay props)
                     :empty-message "<small>Unable to find any matches to the current query</small>"
