@@ -78,14 +78,29 @@
      [:span {:style (colorize {:fontWeight "bold"})}
       " (required)"])])
 
-(defn- render-enum [{:keys [enum radio current-value colorize update-property]}]
-  (if (< (count enum) 4)
-    [:div {:style {:display "inline-block" :margin "0.75em 0 0.75em 1em"}}
-     (map #(radio {:val %}) enum)]
-    (style/create-identity-select {:value (or current-value ENUM_EMPTY_CHOICE)
-                                   :style (colorize {})
-                                   :onChange update-property}
-                                  (cons ENUM_EMPTY_CHOICE enum))))
+(defn- render-enum [{:keys [enum style wording radio current-value colorize update-property set-property]}]
+  (if (= style "large")
+    [:div {}
+     (map (fn [option]
+            (let [selected? (= current-value option)]
+              [:div {:style {:display "flex" :alignItems "center"
+                             :margin "0.5rem 0" :padding "1em"
+                             :border style/standard-line :borderRadius 8
+                             :backgroundColor (when selected? (:button-primary style/colors))
+                             :cursor "pointer"}
+                     :onClick #(set-property option)}
+               [:input {:type "radio" :readOnly true :checked selected?
+                        :style {:cursor "pointer"}}]
+               [:div {:style {:marginLeft "0.75rem" :color (when selected? "white")}}
+                (or (wording (keyword option)) option)]]))
+          enum)]
+    (if (< (count enum) 4)
+      [:div {:style {:display "inline-block" :margin "0.75em 0 0.75em 1em"}}
+       (map #(radio {:val %}) enum)]
+      (style/create-identity-select {:value (or current-value ENUM_EMPTY_CHOICE)
+                                     :style (colorize {})
+                                     :onChange update-property}
+                                    (cons ENUM_EMPTY_CHOICE enum)))))
 
 (defn- render-boolean [{:keys [radio required? emptyChoice wording]}]
   [:div {:style {:display "inline-block" :margin "0.75em 0 0.75em 1em"}}
@@ -120,24 +135,36 @@
                                     (swap! state update :attributes assoc
                                            property label
                                            related-id-prop id
-                                           related-label-prop label)))}]
+                                           related-label-prop label)))
+                     :on-clear #(apply swap! state update :attributes dissoc property
+                                       (library-utils/get-related-id+label-props library-schema property))}]
    (let [[related-id related-label] (library-utils/get-related-id+label (:attributes @state) library-schema property)]
-     (when (not-any? clojure.string/blank? [related-id related-label])
-       [:div {:style {:fontWeight "bold"}}
-        related-label
-        [:span {:style {:fontWeight "normal" :fontSize "small" :float "right"}} related-id]
-        [:div {:style {:fontWeight "normal"}}
+     [:div {:style {:display (when (some clojure.string/blank? [related-id related-label]) "none")}}
+      [:span {:style {:fontWeight "bold"}} related-label]
+      [:span {:style {:fontSize "small" :float "right"}} related-id]
+      [:div {}
+       (style/create-link {:text "Clear Selection"
+                           :onClick #(apply swap! state update :attributes dissoc property
+                                            (library-utils/get-related-id+label-props library-schema property))})]]
+     ;; TODO: why is this causing React to bomb when adding the node?
+     #_(when (not-any? clojure.string/blank? [related-id related-label])
+       [:div {}
+        [:span {:style {:fontWeight "bold"}} related-label]
+        [:span {:style {:fontSize "small" :float "right"}} related-id]
+        [:div {}
          (style/create-link {:text "Clear Selection"
-                             :onClick #(apply swap! state update :attributes dissoc
+                             :onClick #(apply swap! state update :attributes dissoc property
                                               (library-utils/get-related-id+label-props library-schema property))})]]))])
 
-(defn- render-populate-typeahead [{:keys [property value-nullsafe inputHint set-property]}]
+(defn- render-populate-typeahead [{:keys [value-nullsafe property inputHint colorize set-property update-property]}]
   [:div {:style {:marginBottom "0.75em"}}
    [comps/AutocompleteFilter
-    {:width "100%"
-     :ref "text-filter"
-     :placeholder inputHint
-     :initial-text value-nullsafe
+    {:ref "text-filter"
+     :width "100%"
+     :field-attributes {:placeholder inputHint
+                        :defaultValue value-nullsafe
+                        :style (colorize {})
+                        :onChange update-property}
      :on-filter set-property
      :bloodhoundInfo {:url (str (config/api-url-root) "/api/library/populate/suggest/" (name property))
                       :cache false
@@ -150,7 +177,7 @@
      :typeaheadSuggestionTemplate (fn [result]
                                     (str "<div style='textOverflow: ellipsis; overflow: hidden; font-size: smaller;'>" result  "</div>"))}]])
 
-(defn- render-textfield [{:keys [colorize datatype prop value-nullsafe update-property]}]
+(defn- render-textfield [{:keys [colorize type datatype prop value-nullsafe update-property]}]
   (style/create-text-field {:style (colorize {:width "100%"})
                             :type (cond (= datatype "date") "date"
                                         (= datatype "email") "email"
@@ -212,11 +239,9 @@
                               :radio (fn [{:keys [val label]}]
                                        [:label {:style (colorize {:display "inline-flex" :alignItems "center"
                                                                   :cursor "pointer" :marginRight "2em"})}
-                                        [:input (merge
-                                                 {:type "radio" :readOnly true
-                                                  :style {:cursor "pointer"}
-                                                  :onChange #(swap! state update :attributes assoc property val)}
-                                                 (when (= val current-value) {:checked true}))]
+                                        [:input {:type "radio" :readOnly true :checked (= val current-value)
+                                                 :style {:cursor "pointer"}
+                                                 :onChange #(swap! state update :attributes assoc property val)}]
                                         [:div {:style {:padding "0 0.4em" :fontWeight "500"}} (or label (str val))]])}
                              prop
                              renderHint)]

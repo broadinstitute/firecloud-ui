@@ -142,11 +142,11 @@
    (fn [{:keys [props this]}]
      [:div {:style {:padding "16px 12px 0 12px"}}
       [comps/AutocompleteFilter
-       {:on-filter (:on-filter props)
+       {:ref "text-filter"
+        :on-filter (:on-filter props)
         :width "100%"
-        :initial-text (:search-text props)
-        :ref "text-filter"
-        :placeholder "Search"
+        :field-attributes {:defaultValue (:search-text props)
+                           :placeholder "Search"}
         :facet-filters (:facet-filters props)
         :bloodhoundInfo {:url (str (config/api-url-root) "/api/library/suggest")
                          :transform (fn [response]
@@ -185,7 +185,7 @@
         [:div {:style {:paddingTop "1em"}}
          (map
            (fn [{:keys [key doc_count]}]
-             [:div {:style {:paddingTop "5"}}
+             [:div {:style {:paddingTop 5}}
               [:label {:style {:display "inline-block" :width "calc(100% - 30px)"
                                :textOverflow "ellipsis" :overflow "hidden" :whiteSpace "nowrap"}
                        :title key}
@@ -195,7 +195,7 @@
                [:span {:style {:marginLeft "0.3em"}} key]]
               (some-> doc_count style/render-count)])
            (concat (:buckets props) hidden-items-formatted))
-         [:div {:style {:paddingTop "5"}}
+         [:div {:style {:paddingTop 5}}
           (if (:expanded? props)
             (when (> (count (:buckets props)) 5)
               (style/create-link {:text " less..."
