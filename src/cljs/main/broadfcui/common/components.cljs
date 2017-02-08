@@ -63,7 +63,7 @@
             :onClick
             (if disabled?
                 (cond
-                    (nil? disabled?) #(push-error-text "This action is disabled2.")
+                    (nil? disabled?) #(push-error-text "This action is disabled.")
                     (string? disabled?) #(push-error-text disabled?)
                     :else #(push-error disabled?))
                 onClick)
