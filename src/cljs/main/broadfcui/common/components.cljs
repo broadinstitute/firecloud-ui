@@ -63,7 +63,7 @@
             :onClick
             (if disabled?
                 (cond
-                    (nil? disabled?)  #(push-error-text "This action is disabled.")
+                    (nil? disabled?) #(push-error-text "This action is disabled2.")
                     (string? disabled?) #(push-error-text disabled?)
                     :else #(push-error disabled?))
                 onClick)
@@ -226,8 +226,9 @@
                       :border (when-not heavy? style/standard-line)
                       :borderRadius 5}
               :onClick (if disabled?
-                         #(push-error-text
-                           (if (string? disabled?) disabled? "This action is disabled."))
+                         (cond (nil? disabled?) #(push-error-text "This action is disabled.")
+                               (string? disabled?) #(push-error-text disabled?)
+                               :else #(push-error disabled?))
                          (:onClick props))}
         (icons/icon {:style {:padding "0 20px" :borderRight style/standard-line} :className "fa-fw"} (:icon props))
         [:div {:style {:textAlign "center" :margin "auto"}}
