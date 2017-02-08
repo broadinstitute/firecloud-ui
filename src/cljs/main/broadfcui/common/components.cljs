@@ -13,7 +13,7 @@
 
 (declare push-error)
 (declare push-error-text)
-(declare create-error)
+(declare create-error-message)
 
 (react/defc Spinner
   {:render
@@ -61,7 +61,7 @@
                      :textDecoration "none"}
                     (if (map? style) style {}))
             :href (or href "javascript:;")
-            :onClick (if disabled? (create-error disabled?) onClick)
+            :onClick (if disabled? (create-error-message disabled?) onClick)
             :onKeyDown (when (and onClick (not disabled?))
                          (common/create-key-handler [:space :enter] onClick))}
         text
@@ -220,7 +220,7 @@
                       :color (if heavy? "#fff" color)
                       :border (when-not heavy? style/standard-line)
                       :borderRadius 5}
-              :onClick (if disabled? (create-error disabled?) (:onClick props))}
+              :onClick (if disabled? (create-error-message disabled?) (:onClick props))}
         (icons/icon {:style {:padding "0 20px" :borderRight style/standard-line} :className "fa-fw"} (:icon props))
         [:div {:style {:textAlign "center" :margin "auto"}}
          (:text props)]]))})
@@ -616,7 +616,7 @@
                                        (when (:cycle-focus? props)
                                          (.focus (get-first)))))))))})
 
-(react/defc WorkspaceNoBillingNotice
+(react/defc NoBillingProjectsMessage
   {:render
   (fn [{:keys [props]}]
     [:div {:style {:textAlign "center"}} (str "You must have a billing project associated with your account"

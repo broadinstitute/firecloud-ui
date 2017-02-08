@@ -92,7 +92,7 @@
         :disabled? (case (:disabled-reason props)
                      nil false
                      :not-loaded "Project billing data has not yet been loaded."
-                     :no-billing [comps/WorkspaceNoBillingNotice]
+                     :no-billing [comps/NoBillingProjectsMessage]
                      "Project billing data failed to load.")
         :onClick #(modal/push-modal [CreateDialog {:billing-projects (:billing-projects props)
                                                    :nav-context (:nav-context props)}])}]])})

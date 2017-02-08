@@ -121,7 +121,7 @@
        (when-not editing?
          [comps/SidebarButton {:style :light :margin :top :color :button-primary
                                :text "Clone..." :icon :clone
-                               :disabled? (if (empty? billing-projects) [comps/WorkspaceNoBillingNotice] false)
+                               :disabled? (if (empty? billing-projects) [comps/NoBillingProjectsMessage] false)
                                :onClick #(modal/push-modal
                                           [WorkspaceCloner
                                            {:on-success (fn [namespace name]
