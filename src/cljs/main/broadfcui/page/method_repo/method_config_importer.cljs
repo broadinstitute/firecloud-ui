@@ -323,12 +323,13 @@
    (fn [{:keys [props state refs]}]
      [:div {}
       (if-let [item (:selected-item @state)]
-        ;; TODO use breadcrumbs and allow nav
-        (style/create-flexbox {}
-          (style/create-link {:text "Methods" :onClick #(swap! state dissoc :selected-item)})
-          (icons/icon {} :angle-right)
-          [:h2 {:style {:display "inline-block"}} (item "namespace") "/" (item "name")
-           [:span {:style {:marginLeft "1ex" :fontWeight "normal"}} "#" (item "snapshotId")]]))
+        ;; TODO allow nav
+        [:div {:style {:fontSize "140%" :marginBottom "1em"}}
+         [comps/Breadcrumbs
+          {:crumbs
+           [{:text "Methods" :onClick #(swap! state dissoc :selected-item)}
+            {:text [:span {} (item "namespace") "/" (item "name")
+                    [:span {:style {:marginLeft "1rem" :fontWeight "normal"}} "#" (item "snapshotId")]]}]}]])
       (when (:selected-item @state)
         (let [item-type (:type (:selected-item @state))
               form (if (= item-type :method) MethodImportForm ConfigImportForm)]

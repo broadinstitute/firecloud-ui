@@ -17,7 +17,7 @@ module.exports = {
         rules: [
             { test: /\.css$/, loader: ExtractTextPlugin.extract("css-loader") },
             { test: /\.png$/, loader: "url-loader?limit=100000" },
-            { test: /\.jpg$|\.svg$|\.eot$|\.woff$|\.ttf$/, loader: "file-loader" }
+            { test: /\.jpg$|\.svg$|\.eot$|\.woff$|\.woff2$|\.ttf$/, loader: "file-loader" }
         ]
     },
     plugins: [

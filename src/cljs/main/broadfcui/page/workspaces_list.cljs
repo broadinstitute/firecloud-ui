@@ -74,10 +74,10 @@
          (:name data)]]))})
 
 (defn- get-workspace-name-string [ws]
-  (str (get-in ws ["workspace" "namespace"]) "/" (get-in ws ["workspace" "name"])))
+  (str (get-in ws [:workspace :namespace]) "/" (get-in ws [:workspace :name])))
 
 (defn- get-workspace-description [ws]
-  (not-empty (get-in ws ["workspace" "attributes" "description"])))
+  (not-empty (get-in ws [:workspace :attributes :description])))
 
 (defn- get-max-length [func workspaces]
   (->> workspaces (map func) (map count) (apply max)))
@@ -85,24 +85,24 @@
 (def ^:private access-types ["Project Owner" "Owner" "Writer" "Reader" "No Access"])
 (def ^:private access-types-defaults [true true true true true])
 (def ^:private access-predicates
-  {"Project Owner" #(= "PROJECT_OWNER" (% "accessLevel"))
-   "Owner" #(= "OWNER" (% "accessLevel"))
-   "Writer" #(= "WRITER" (% "accessLevel"))
-   "Reader" #(= "READER" (% "accessLevel"))
-   "No Access" #(= "NO ACCESS" (% "accessLevel"))})
+  {"Project Owner" #(= "PROJECT_OWNER" (:accessLevel %))
+   "Owner" #(= "OWNER" (:accessLevel %))
+   "Writer" #(= "WRITER" (:accessLevel %))
+   "Reader" #(= "READER" (:accessLevel %))
+   "No Access" #(= "NO ACCESS" (:accessLevel %))})
 
 (def ^:private dataset-types ["Un-published" "Published"])
 (def ^:private dataset-types-defaults [true false])
 (def ^:private dataset-predicates
-  (let [published? #(get-in % ["workspace" "attributes" "library:published"])]
+  (let [published? #(get-in % [:workspace :attributes :library:published])]
     {"Published" published?
      "Un-published" (complement published?)}))
 
 (def ^:private realm-types ["TCGA Open Access" "TCGA Protected Access"])
 (def ^:private realm-types-defaults [false false])
 (def ^:private realm-predicates
-  (let [tcga? #(= (config/tcga-namespace) (get-in % ["workspace" "namespace"]))
-        inRealm? #(get-in % ["workspace" "realm"])]
+  (let [tcga? #(= (config/tcga-namespace) (get-in % [:workspace :namespace]))
+        inRealm? #(get-in % [:workspace :realm])]
     {"TCGA Open Access" (every-pred tcga? (complement inRealm?))
      "TCGA Protected Access" (every-pred tcga? inRealm?)
      ; this pred is used when neither visible option is selected to allow non TCGA workspaces to be shown
@@ -117,11 +117,11 @@
   {:get-initial-state
    (fn []
      (persistence/try-restore
-       {:key persistence-key
-        :initial (fn [] {:v VERSION :selected-types (merge (zipmap access-types access-types-defaults)
-                                                           (zipmap dataset-types dataset-types-defaults)
-                                                           (zipmap realm-types realm-types-defaults))})
-        :validator (comp (partial = VERSION) :v)}))
+      {:key persistence-key
+       :initial (fn [] {:v VERSION :selected-types (merge (zipmap access-types access-types-defaults)
+                                                          (zipmap dataset-types dataset-types-defaults)
+                                                          (zipmap realm-types realm-types-defaults))})
+       :validator (comp (partial = VERSION) :v)}))
    :render
    (fn [{:keys [props state refs]}]
      (let [max-workspace-name-length (get-max-length get-workspace-name-string (:workspaces props))
@@ -188,7 +188,7 @@
            {:as-text common/format-date
             :header "Last Modified Date" :starting-width 300
             :content-renderer (fn [date]
-                                [:div {:style {:paddingLeft 14}} (common/format-date date) ])}
+                                [:div {:style {:paddingLeft 14}} (common/format-date date)])}
            {:header "Access Level" :starting-width 118 :resizable? false
             :sort-by #(case % "OWNER" 0 "WRITER" 1 "READER" 2 "NO ACCESS" 3 4) :sort-initial :asc
             :content-renderer
@@ -204,28 +204,28 @@
                              :onClick #(swap! state assoc :show-access-level-select? true)}
                       "Include..."])
             :header-key "Include" :starting-width 68 :resizable? false :sort-by :none}]
-          :data (let [somepred (fn[preds]
-                                (->> (merge preds (:selected-types @state))
-                                     (keep (fn [[k v]] (when (and (not (false? v)) (some? (preds k))) k)))
-                                     (map preds)
-                                     (cons (constantly false)) ;; keeps (apply some-fn) from bombing when the list is empty
-                                     (apply some-fn)))]
+          :data (let [somepred (fn [preds]
+                                 (->> (merge preds (:selected-types @state))
+                                      (keep (fn [[k v]] (when (and (not (false? v)) (some? (preds k))) k)))
+                                      (map preds)
+                                      (cons (constantly false)) ;; keeps (apply some-fn) from bombing when the list is empty
+                                      (apply some-fn)))]
                   (filter
-                    (every-pred
-                      (somepred access-predicates)
-                      (somepred dataset-predicates)
-                      (somepred realm-predicates))
-                    (:workspaces props)))
+                   (every-pred
+                    (somepred access-predicates)
+                    (somepred dataset-predicates)
+                    (somepred realm-predicates))
+                   (:workspaces props)))
           :->row (fn [ws]
                    (let [ws-name (get-workspace-name-string ws)
-                         ws-href (let [x (ws "workspace")] (str (x "namespace") ":" (x "name")))
-                         disabled? (= (ws "accessLevel") "NO ACCESS")]
+                         ws-href (let [x (:workspace ws)] (str (:namespace x) ":" (:name x)))
+                         disabled? (= (:accessLevel ws) "NO ACCESS")]
                      [{:name ws-name :href ws-href :status (:status ws) :disabled? disabled?}
                       {:name ws-name :href ws-href :status (:status ws) :disabled? disabled?
-                       :protected? (get-in ws ["workspace" "realm"])}
+                       :protected? (get-in ws [:workspace :realm])}
                       (get-workspace-description ws)
-                      (get-in ws ["workspace" "lastModified"])
-                      (ws "accessLevel")
+                      (get-in ws [:workspace :lastModified])
+                      (:accessLevel ws)
                       nil]))}]]))
    :component-did-update
    (fn [{:keys [state]}]
@@ -260,7 +260,7 @@
                        assoc :workspaces (map
                                            (fn [ws]
                                              (assoc ws :status (common/compute-status ws)))
-                                           (get-parsed-response false)))
+                                           (get-parsed-response)))
                      (swap! state update :server-response
                        assoc :error-message status-text)))})
      (endpoints/get-billing-projects
@@ -294,7 +294,7 @@
           [:div {}
            [:div {:style {:margin "1em"}}
             [:span {:style {:fontSize "180%"}}
-             [comps/Breadcrumbs {:crumbs (create-breadcrumbs-from-hash (:hash nav-context))}]]]
+             [comps/Breadcrumbs {:scale-factor "60%" :crumbs (create-breadcrumbs-from-hash (:hash nav-context))}]]]
            [WorkspaceDetails {:key selected-ws-id
                               :workspace-id selected-ws-id
                               :nav-context nav-context
