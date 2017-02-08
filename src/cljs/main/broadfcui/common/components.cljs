@@ -11,6 +11,7 @@
     ))
 
 
+(declare push-error)
 (declare push-error-text)
 
 (react/defc Spinner
@@ -59,10 +60,11 @@
                      :textDecoration "none"}
                     (if (map? style) style {}))
             :href (or href "javascript:;")
-            :onClick (if disabled?
-                       #(push-error-text
-                         (if (string? disabled?) disabled? "This action is disabled."))
-                       onClick)
+            :onClick
+                       (cond
+                         (false? disabled?) onClick
+                         (string? disabled?) #(push-error-text disabled?)
+                         :else #(push-error disabled?))
             :onKeyDown (when (and onClick (not disabled?))
                          (common/create-key-handler [:space :enter] onClick))}
         text
@@ -629,7 +631,7 @@
      :content [:div {:style {:maxWidth 500}} message]
      :show-cancel? false :ok-button "OK"}))
 
-(defn- push-error [content]
+(defn push-error [content]
   (push-ok-cancel-modal
    {:header [:div {:style {:display "inline-flex" :alignItems "center"}}
              (icons/icon {:style {:color (:exception-state style/colors)

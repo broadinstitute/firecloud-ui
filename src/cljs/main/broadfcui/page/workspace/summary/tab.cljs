@@ -121,9 +121,12 @@
        (when-not editing?
          [comps/SidebarButton {:style :light :margin :top :color :button-primary
                                :text "Clone..." :icon :clone
-                               :disabled? (when (empty? billing-projects)
-                                            "There are no billing projects available for your account. To create a
-                                            billing project, choose the 'Billing' option from the dropdown in the top right.")
+                               :disabled? (if (empty? billing-projects)
+                                            [:div {:style {:textAlign "center"}} (str "You must have a billing project associated with your account"
+                                                 " to create a new workspace. To learn how to create a billing project, click ")
+                                                 [:a {:target "_blank"
+                                                      :href "https://software.broadinstitute.org/firecloud/guide/topic?name=firecloud-google"} "here"] "."]
+                                            false)
                                :onClick #(modal/push-modal
                                           [WorkspaceCloner
                                            {:on-success (fn [namespace name]
