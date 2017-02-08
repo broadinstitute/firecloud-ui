@@ -624,7 +624,7 @@
          [:a {:target "_blank"
               :href "https://software.broadinstitute.org/firecloud/guide/topic?name=firecloud-google"} "click here"] "."])})
 
-(defn create-error [disabled?]
+(defn create-error-message [disabled?]
   (cond
     (nil? disabled?) #(push-error-text "This action is disabled.")
     (string? disabled?) #(push-error-text disabled?)
