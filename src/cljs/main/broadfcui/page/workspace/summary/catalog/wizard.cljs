@@ -49,27 +49,25 @@
         (not-empty val)
         val)) attributes))
 
-(defn- render-summary-page [attributes library-schema pages-seen required-attributes]
+(defn- render-summary-page [attributes library-schema invalid-attributes]
   [:div {}
-   ;(if (= (:library:useLimitationOption attributes) "skip") ;; do something else
+   ;; TODO (as part of 1321?) don't let people publish if you have chosen skip
+   ;(if (= (:library:useLimitationOption attributes) "skip") ;; do this is in a non-hardcoded way
    ;  "Note, you cannot publish this dataset until you define the Data Use Limitations.")
-     (map (fn [page]
-             (let [questions (first (get-questions-for-page attributes library-schema page))
-                   {:keys [error invalid]} (library-utils/validate-required
-                                             (convert-empty-strings attributes) questions required-attributes)]
-               (if error
-                 [:div {:style {:color (:exception-state style/colors)} :fontSize "14px"}
-                   "You are missing fields on page " (inc page)
-                  [:ul {} (map (fn [attribute]
-                                 [:li {:style {:fontSize "13px"}} (:title (attribute (:properties library-schema))) ])
-                               invalid)]])))
-               pages-seen)
+
+   (if (not-empty invalid-attributes)
+     [:div {:style {:fontSize "14px" :color (:exception-state style/colors)}}
+      "Please fill in missing attributes before saving."
+      [:ul {:style {:fontSize "13px"}}
+       (map (fn [attribute]
+              [:li {} (get-in library-schema [:properties (keyword attribute) :title])])
+            invalid-attributes)]])
 
    (style/create-paragraph
      [:div {}
-      (let [questions (first (get-questions-for-page attributes library-schema 0))]
+      (let [questions (first (get-questions-for-page (convert-empty-strings attributes) library-schema 0))]
         (map (fn [attribute]
-               (if (not-empty (:get attributes attribute)) ;; TODO: fix, this is not working for *every* case
+               (if (not-empty (str (attributes (keyword attribute))))
                  (library-utils/render-property library-schema attributes (keyword attribute))))
              questions))
       (if (= (:library:useLimitationOption attributes) "orsp") ;; TODO: change this so not hardcoded
@@ -90,7 +88,8 @@
      (let [{:keys [library-schema]} props
            {:keys [versions]} library-schema]
        {:page-num 0
-        :pages-seen `()
+        :pages-seen []
+        :invalid-properties #{}
         :working-attributes (get-initial-attributes (:workspace props))
         :published? (get-in props [:workspace :workspace :library-attributes :library:published])
         :version-attributes (->> versions
@@ -102,7 +101,7 @@
    :render
    (fn [{:keys [props state this]}]
      (let [{:keys [library-schema]} props
-           {:keys [page-num working-attributes required-attributes published? validation-error submit-error]} @state]
+           {:keys [page-num invalid-properties working-attributes published? required-attributes validation-error submit-error]} @state]
        [:div {}
         (when (:submitting? @state)
           [comps/Blocker {:banner "Submitting..."}])
@@ -128,11 +127,12 @@
 
                  [Questions {:ref "wizard-page" :key page-num
                              :library-schema library-schema
+                             :missing-properties invalid-properties
                              :enumerate enumerate
                              :questions questions
                              :attributes working-attributes
                              :required-attributes required-attributes}])
-                (render-summary-page working-attributes library-schema (:pages-seen @state) (:required-attributes @state))))}]]
+                (render-summary-page working-attributes library-schema invalid-properties)))}]]
          (when validation-error
            [:div {:style {:marginTop "1em" :color (:exception-state style/colors) :textAlign "center"}}
             validation-error])
@@ -167,18 +167,29 @@
      (when (not= (:page-num prev-state) (:page-num @state))
        (react/call :scroll-to (@refs "scroller") 0)))
    :next-page
-   (fn [{:keys [state refs this locals after-update]}]
+   (fn [{:keys [state refs this locals after-update props]}]
      (swap! state dissoc :validation-error)
      (if-let [error-message (react/call :validate (@refs "wizard-page"))]
        (swap! state assoc :validation-error error-message)
-       (let [attributes-from-page (react/call :get-attributes (@refs "wizard-page"))]
-         (swap! state update :working-attributes merge attributes-from-page)
-         (swap! locals update :page-attributes assoc (:page-num @state) attributes-from-page)
-         (after-update (fn [_]
-                         (let [next-page (react/call :find-next-page this)]
-                           (swap! state #(-> %
-                                             (update :pages-seen conj (:page-num @state))
-                                             (assoc :page-num next-page)))))))))
+       (let [{:keys [working-attributes pages-seen required-attributes page-num]} @state
+             attributes-from-page (react/call :get-attributes (@refs "wizard-page"))
+             all-attributes (merge working-attributes attributes-from-page)
+             invalid-attributes (atom #{})]
+         (swap! state assoc :working-attributes all-attributes)
+         (swap! locals update :page-attributes assoc page-num attributes-from-page)
+         (doseq [page (conj pages-seen page-num)]
+              (let [questions (first (get-questions-for-page all-attributes (:library-schema props) page))
+                    {:keys [invalid]} (library-utils/validate-required
+                                              (convert-empty-strings all-attributes)
+                                              questions
+                                              required-attributes)]
+                (reset! invalid-attributes (clojure.set/union invalid @invalid-attributes))))
+         (swap! state assoc :invalid-properties @invalid-attributes)
+       (after-update (fn [_]
+                       (let [next-page (react/call :find-next-page this)]
+                         (swap! state #(-> %
+                                           (update :pages-seen conj page-num)
+                                           (assoc :page-num next-page)))))))))
    :find-next-page
    (fn [{:keys [props state]}]
      (let [{:keys [library-schema]} props
@@ -190,19 +201,19 @@
        @next))
    :submit
    (fn [{:keys [props state locals]}]
-     ;; TODO: fix this
-     (let [attributes (convert-empty-strings (apply merge (:version-attributes @state) (:page-attributes @locals)))]
-       (utils/log attributes)))})
-         ;(endpoints/call-ajax-orch
-         ;  {:endpoint (endpoints/save-library-metadata (:workspace-id props))
-         ;   :payload attributes
-         ;   :headers utils/content-type=json
-         ;   :on-done (fn [{:keys [success? get-parsed-response]}]
-         ;              (swap! state dissoc :submitting?)
-         ;             (if success?
-         ;               (do (modal/pop-modal)
-         ;                   ((:request-refresh props)))
-         ;               (swap! state assoc :submit-error (get-parsed-response false))))}))))})
-
-;; TODO: required stuff needs to show up as red once we validate stuff
-;; TODO: get submit working (only if everything has been saved)
+     (if (not-empty (:invalid-properties @state))
+       (swap! state assoc :validation-error "You cannot save attributes without filling out required properties")
+       (let [attributes-seen (atom {})]
+         (doseq [page (:pages-seen @state)]
+           (let [attrs (nth (:page-attributes @locals) page)]
+             (swap! attributes-seen merge attrs)))
+         (endpoints/call-ajax-orch
+           {:endpoint (endpoints/save-library-metadata (:workspace-id props))
+            :payload (convert-empty-strings (apply merge @attributes-seen (:version-attributes @state))) ;; still need the apply?
+            :headers utils/content-type=json
+            :on-done (fn [{:keys [success? get-parsed-response]}]
+                       (swap! state dissoc :submitting?)
+                       (if success?
+                         (do (modal/pop-modal)
+                             ((:request-refresh props)))
+                         (swap! state assoc :submit-error (get-parsed-response false))))}))))})

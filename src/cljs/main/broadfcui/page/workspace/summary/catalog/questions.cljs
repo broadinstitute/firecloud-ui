@@ -208,14 +208,14 @@
                 (map keyword questions))}))
    :render
    (fn [{:keys [props state]}]
-     (let [{:keys [library-schema questions required-attributes enumerate]} props
+     (let [{:keys [library-schema missing-properties questions required-attributes enumerate]} props
            {:keys [attributes invalid-properties]} @state]
        [(if enumerate :ol :div) {}
         (map
          (fn [property]
            (let [current-value (get attributes property)
                  {:keys [type enum renderHint] :as prop} (get-in library-schema [:properties property])
-                 error? (contains? invalid-properties property)
+                 error? (or (contains? invalid-properties property) (contains? missing-properties property))
                  colorize #(merge % (when error? {:borderColor (:exception-state style/colors)
                                                   :color (:exception-state style/colors)}))
                  data (merge {:prop prop :state state :property property :library-schema library-schema

@@ -25,12 +25,14 @@
                             set)
         missing-props (clojure.set/difference required-props (->> attributes (utils/filter-values some?) keys set))]
     (when-not (empty? missing-props)
-      (utils/log {:error "Please provide all required attributes"
-       :invalid missing-props}))))
+      {:error "Please provide all required attributes"
+       :invalid missing-props})))
 
 (defn render-value [value]
   (cond (sequential? value) (clojure.string/join ", " value)
         (common/attribute-list? value) (clojure.string/join ", " (common/attribute-values value))
+        (true? value) "Yes"
+        (false? value) "No"
         :else value))
 
 
