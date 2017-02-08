@@ -14,7 +14,7 @@
                        [file-loader "~0.9.0"]               ; webpack plugin
                        [font-awesome "~4.7.0"]              ; used for icons, also required by IGV
                        [github-markdown-css "~2.4.1"]       ; used with marked
-                       [jquery "^1.12.2"]                   ; required by IGV
+                       [jquery "^2.0"]                      ; required by IGV
                        [jquery-ui "^1.11.2"]                ; required by IGV
                        [marked "~0.3.5"]                    ; formats markdown
                        [corejs-typeahead "~1.1.1"]          ; maintained fork of bootstrap typeahead
