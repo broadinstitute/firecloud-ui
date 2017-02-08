@@ -60,13 +60,12 @@
                      :textDecoration "none"}
                     (if (map? style) style {}))
             :href (or href "javascript:;")
-            :onClick
-            (if disabled?
-                (cond
-                    (nil? disabled?) #(push-error-text "This action is disabled.")
-                    (string? disabled?) #(push-error-text disabled?)
-                    :else #(push-error disabled?))
-                onClick)
+            :onClick (if disabled?
+                         (cond
+                             (nil? disabled?) #(push-error-text "This action is disabled.")
+                             (string? disabled?) #(push-error-text disabled?)
+                             :else #(push-error disabled?))
+                         onClick)
             :onKeyDown (when (and onClick (not disabled?))
                          (common/create-key-handler [:space :enter] onClick))}
         text
