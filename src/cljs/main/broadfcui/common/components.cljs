@@ -12,6 +12,7 @@
 
 
 (declare push-error)
+(declare build-error)
 (declare push-error-text)
 
 (react/defc Spinner
@@ -61,10 +62,7 @@
                     (if (map? style) style {}))
             :href (or href "javascript:;")
             :onClick (if disabled?
-                         (cond
-                             (nil? disabled?) #(push-error-text "This action is disabled.")
-                             (string? disabled?) #(push-error-text disabled?)
-                             :else #(push-error disabled?))
+                         (build-error disabled?)
                          onClick)
             :onKeyDown (when (and onClick (not disabled?))
                          (common/create-key-handler [:space :enter] onClick))}
@@ -225,9 +223,7 @@
                       :border (when-not heavy? style/standard-line)
                       :borderRadius 5}
               :onClick (if disabled?
-                         (cond (nil? disabled?) #(push-error-text "This action is disabled.")
-                               (string? disabled?) #(push-error-text disabled?)
-                               :else #(push-error disabled?))
+                         (build-error disabled?)
                          (:onClick props))}
         (icons/icon {:style {:padding "0 20px" :borderRight style/standard-line} :className "fa-fw"} (:icon props))
         [:div {:style {:textAlign "center" :margin "auto"}}
@@ -624,6 +620,20 @@
                                        (when (:cycle-focus? props)
                                          (.focus (get-first)))))))))})
 
+(react/defc WorkspaceNoBillingNotice
+  {:render
+  (fn [{:keys [props]}]
+    [:div {:style {:textAlign "center"}} (str "You must have a billing project associated with your account"
+         " to create a new workspace. To learn how to create a billing project, ")
+         [:a {:target "_blank"
+              :href "https://software.broadinstitute.org/firecloud/guide/topic?name=firecloud-google"} "click here"] "."])})
+
+(defn build-error [disabled?]
+  (cond
+    (nil? disabled?) #(push-error-text "This action is disabled.")
+    (string? disabled?) #(push-error-text disabled?)
+    :else #(push-error disabled?)))
+
 (defn push-ok-cancel-modal [props]
   (modal/push-modal [OKCancelForm props]))
 
@@ -633,7 +643,7 @@
      :content [:div {:style {:maxWidth 500}} message]
      :show-cancel? false :ok-button "OK"}))
 
-(defn push-error [content]
+(defn- push-error [content]
   (push-ok-cancel-modal
    {:header [:div {:style {:display "inline-flex" :alignItems "center"}}
              (icons/icon {:style {:color (:exception-state style/colors)

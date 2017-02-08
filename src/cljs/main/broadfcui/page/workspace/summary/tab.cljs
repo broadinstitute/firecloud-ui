@@ -122,10 +122,7 @@
          [comps/SidebarButton {:style :light :margin :top :color :button-primary
                                :text "Clone..." :icon :clone
                                :disabled? (if (empty? billing-projects)
-                                            [:div {:style {:textAlign "center"}} (str "You must have a billing project associated with your account"
-                                                 " to create a new workspace. To learn how to create a billing project, click ")
-                                                 [:a {:target "_blank"
-                                                      :href "https://software.broadinstitute.org/firecloud/guide/topic?name=firecloud-google"} "here"] "."]
+                                            [comps/WorkspaceNoBillingNotice]
                                             false)
                                :onClick #(modal/push-modal
                                           [WorkspaceCloner

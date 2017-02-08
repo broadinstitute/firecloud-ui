@@ -92,10 +92,7 @@
         :disabled? (case (:disabled-reason props)
                      nil false
                      :not-loaded "Project billing data has not yet been loaded."
-                     :no-billing [:div {:style {:textAlign "center"}} (str "You must have a billing project associated with your account"
-                                      " to create a new workspace. To learn how to create a billing project, click ")
-                                      [:a {:target "_blank"
-                                           :href "https://software.broadinstitute.org/firecloud/guide/topic?name=firecloud-google"} "here"] "."]
+                     :no-billing [comps/WorkspaceNoBillingNotice]
                      "Project billing data failed to load.")
         :onClick #(modal/push-modal [CreateDialog {:billing-projects (:billing-projects props)
                                                    :nav-context (:nav-context props)}])}]])})
