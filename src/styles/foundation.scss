@@ -1,0 +1,7 @@
+@import '~foundation-sites/scss/settings/settings';
+@import '~foundation-sites/scss/foundation';
+
+@include foundation-global-styles;
+@include foundation-visibility-classes;
+@include foundation-float-classes;
+@include foundation-tooltip;

@@ -158,7 +158,8 @@
      [:div {:style {:display "flex" :flexWrap "wrap"}}
       (render-detail-box
         1
-        (str "Workspace Owner" (when (> (count owners) 1) "s"))
+        [common/FoundationTooltip {:text "Hey look, a tooltip"
+                                   :contents (str "Workspace Owner" (when (> (count owners) 1) "s"))}]
         (style/create-paragraph
           [:div {}
            (interpose ", " owners)

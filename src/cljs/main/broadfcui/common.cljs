@@ -210,3 +210,20 @@
                 :alert)
     [:span {:style {:fontWeight "bold" :fontSize "98%"}}
       "FireCloud is not intended to host personally identifiable information. Do not use any patient identifier, including name, social security number, or medical record number."]])
+
+(react/defc FoundationComponent
+  {:component-did-mount
+   (fn [{:keys [this]}]
+     (.foundation (js/$ (react/find-dom-node this))))
+   :render
+   (fn [{:keys [props]}]
+     (:contents props))})
+
+(react/defc FoundationTooltip
+  {:render
+   (fn [{:keys [props]}]
+     [FoundationComponent
+      {:contents [:span (merge {:title (:text props)}
+                               {:data-tooltip "" :className "has-tip" :data-disable-hover false
+                                :tabindex 1 :aria-haspopup true})
+                  (:contents props)]}])})

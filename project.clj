@@ -15,11 +15,14 @@
                        [font-awesome "~4.7.0"]              ; used for icons, also required by IGV
                        [github-markdown-css "~2.4.1"]       ; used with marked
                        [jquery "^2.0"]                      ; required by IGV
-                       [jquery-ui "^1.11.2"]                ; required by IGV
+                       [jquery-ui "^1.12.0"]                ; required by IGV
                        [marked "~0.3.5"]                    ; formats markdown
                        [corejs-typeahead "~1.1.1"]          ; maintained fork of bootstrap typeahead
                        [url-loader "~0.5.7"]                ; webpack plugin
                        [webpack "~2.2.0"]                   ; combines deps into single js/css file
+                       [foundation-sites "~6.3.0"]
+                       [node-sass "~4.5.0"]
+                       [sass-loader "~5.0.0"]
                        ]
         :package {:scripts
                   {:postinstall "webpack --optimize-minimize --output-filename webpack-deps.min.js"}}}
