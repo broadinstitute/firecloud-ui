@@ -19,18 +19,18 @@
 
 (defn- parse-attributes [attributes library-schema]
   (utils/map-kv
-    (fn [k v]
-      (let [{:keys [type items enum]} (get-in library-schema [:properties k])]
-        [k (if enum
-             (resolve-enum v)
-             (case type
-               "integer" (int v)
-               "array" (let [tokens (keep (comp not-empty trim) (split v #","))]
-                         (case (:type items)
-                           "integer" (map int tokens)
-                           tokens))
-               v))]))
-    attributes))
+   (fn [k v]
+     (let [{:keys [type items enum]} (get-in library-schema [:properties k])]
+       [k (if enum
+            (resolve-enum v)
+            (case type
+              "integer" (int v)
+              "array" (let [tokens (keep (comp not-empty trim) (split v #","))]
+                        (case (:type items)
+                          "integer" (map int tokens)
+                          tokens))
+              v))]))
+   attributes))
 
 (defn- validate-numbers [attributes library-schema]
   (let [invalid-numbers (->> attributes
@@ -43,8 +43,8 @@
                              ;; throw out decimals and out of range values:
                              (keep (fn [[k {:keys [value minimum maximum] :or {minimum -Infinity maximum Infinity}}]]
                                      (when-not (and (or
-                                                      (= value (str (int value)))
-                                                      (= value (int value)))
+                                                     (= value (str (int value)))
+                                                     (= value (int value)))
                                                     (<= minimum (int value) maximum))
                                        k)))
                              set)]
@@ -58,11 +58,11 @@
    (:title prop)
    (when consentCode
      (list
-       " ["
-       [:abbr {:style {:cursor "help" :whiteSpace "nowrap" :borderBottom "1px dotted"}
-               :title (get-in library-schema [:consentCodes (keyword consentCode)])}
-        consentCode]
-       "]"))
+      " ["
+      [:abbr {:style {:cursor "help" :whiteSpace "nowrap" :borderBottom "1px dotted"}
+              :title (get-in library-schema [:consentCodes (keyword consentCode)])}
+       consentCode]
+      "]"))
    (when required?
      [:span {:style (colorize {:fontWeight "bold"})}
       " (required)"])])
@@ -159,10 +159,10 @@
                       :cache false
                       :prepare (fn [query settings]
                                  (clj->js
-                                   (assoc (js->clj settings)
-                                     :headers {:Authorization (str "Bearer " (utils/get-access-token))}
-                                     :type "GET"
-                                     :url (str (aget settings "url") "?q=" query))))}
+                                  (assoc (js->clj settings)
+                                    :headers {:Authorization (str "Bearer " (utils/get-access-token))}
+                                    :type "GET"
+                                    :url (str (aget settings "url") "?q=" query))))}
      :typeaheadSuggestionTemplate (fn [result]
                                     (str "<div style='textOverflow: ellipsis; overflow: hidden; font-size: smaller;'>" result  "</div>"))}]])
 
@@ -212,34 +212,34 @@
            {:keys [attributes invalid-properties]} @state]
        [(if enumerate :ol :div) {}
         (map
-          (fn [property]
-            (let [current-value (get attributes property)
-                  {:keys [type enum renderHint] :as prop} (get-in library-schema [:properties property])
-                  error? (or (contains? invalid-properties property) (contains? missing-properties property))
-                  colorize #(merge % (when error? {:borderColor (:exception-state style/colors)
-                                                   :color (:exception-state style/colors)}))
-                  data (merge {:prop prop :state state :property property :library-schema library-schema
-                               :colorize colorize :current-value current-value
-                               :value-nullsafe (or current-value "") ;; avoids warning for nil value
-                               :required? (contains? required-attributes property)
-                               :update-property #(swap! state update :attributes assoc property (.. % -target -value))
-                               :set-property #(swap! state update :attributes assoc property %)
-                               :radio (fn [{:keys [val label]}]
-                                        [:label {:style (colorize {:display "inline-flex" :alignItems "center"
-                                                                   :cursor "pointer" :marginRight "2em"})}
-                                         [:input {:type "radio" :readOnly true :checked (= val current-value)
-                                                  :style {:cursor "pointer"}
-                                                  :onChange #(swap! state update :attributes assoc property val)}]
-                                         [:div {:style {:padding "0 0.4em" :fontWeight "500"}} (or label (str val))]])}
-                              prop
-                              renderHint)]
-              (when-not (:hidden prop)
-                [(if enumerate :li :div) {}
-                 (render-header data)
-                 (cond enum (render-enum data)
-                       (= type "boolean") (render-boolean data)
-                       (= (:datatype renderHint) "freetext") (render-freetext data)
-                       (= (:typeahead prop) "ontology") (render-ontology-typeahead data)
-                       (= (:typeahead prop) "populate") (render-populate-typeahead data)
-                       :else (render-textfield data))])))
-          (map keyword questions))]))})
+         (fn [property]
+           (let [current-value (get attributes property)
+                 {:keys [type enum renderHint] :as prop} (get-in library-schema [:properties property])
+                 error? (or (contains? invalid-properties property) (contains? missing-properties property))
+                 colorize #(merge % (when error? {:borderColor (:exception-state style/colors)
+                                                  :color (:exception-state style/colors)}))
+                 data (merge {:prop prop :state state :property property :library-schema library-schema
+                              :colorize colorize :current-value current-value
+                              :value-nullsafe (or current-value "") ;; avoids warning for nil value
+                              :required? (contains? required-attributes property)
+                              :update-property #(swap! state update :attributes assoc property (.. % -target -value))
+                              :set-property #(swap! state update :attributes assoc property %)
+                              :radio (fn [{:keys [val label]}]
+                                       [:label {:style (colorize {:display "inline-flex" :alignItems "center"
+                                                                  :cursor "pointer" :marginRight "2em"})}
+                                        [:input {:type "radio" :readOnly true :checked (= val current-value)
+                                                 :style {:cursor "pointer"}
+                                                 :onChange #(swap! state update :attributes assoc property val)}]
+                                        [:div {:style {:padding "0 0.4em" :fontWeight "500"}} (or label (str val))]])}
+                             prop
+                             renderHint)]
+             (when-not (:hidden prop)
+               [(if enumerate :li :div) {}
+                (render-header data)
+                (cond enum (render-enum data)
+                      (= type "boolean") (render-boolean data)
+                      (= (:datatype renderHint) "freetext") (render-freetext data)
+                      (= (:typeahead prop) "ontology") (render-ontology-typeahead data)
+                      (= (:typeahead prop) "populate") (render-populate-typeahead data)
+                      :else (render-textfield data))])))
+         (map keyword questions))]))})

@@ -17,13 +17,13 @@
     [:div {:style {:flex "0 0 250px" :backgroundColor "white" :border style/standard-line}}
      [:ul {}
       (map-indexed
-        (fn [index {:keys [title]}]
-          (let [this (= index page-num)]
-            [:li {:style {:margin "0.5em 0.5em 0.5em 0"
-                          :fontWeight (when this "bold")
-                          :color (when-not this (:text-lighter style/colors))}}
-             title]))
-        (conj pages {:title "Summary"}))]]))
+       (fn [index {:keys [title]}]
+         (let [this (= index page-num)]
+           [:li {:style {:margin "0.5em 0.5em 0.5em 0"
+                         :fontWeight (when this "bold")
+                         :color (when-not this (:text-lighter style/colors))}}
+            title]))
+       (conj pages {:title "Summary"}))]]))
 
 (defn- find-required-attributes [library-schema]
   (->> (map :required (:oneOf library-schema))
@@ -44,10 +44,10 @@
 
 (defn- convert-empty-strings [attributes]
   (utils/map-values
-    (fn [val]
-      (if (or (coll? val) (string? val))
-        (not-empty val)
-        val)) attributes))
+   (fn [val]
+     (if (or (coll? val) (string? val))
+       (not-empty val)
+       val)) attributes))
 
 (defn- render-summary-page [attributes library-schema invalid-attributes]
   [:div {}
@@ -64,22 +64,22 @@
             invalid-attributes)]])
 
    (style/create-paragraph
-     [:div {}
-      (let [questions (first (get-questions-for-page (convert-empty-strings attributes) library-schema 0))]
-        (map (fn [attribute]
-               (if (not-empty (str (attributes (keyword attribute))))
-                 (library-utils/render-property library-schema attributes (keyword attribute))))
-             questions))
-      (if (= (:library:useLimitationOption attributes) "orsp") ;; TODO: change this so not hardcoded
-        (library-utils/render-property library-schema attributes :library:orsp)
-        (library-utils/render-consent-codes library-schema attributes))])])
+    [:div {}
+     (let [questions (first (get-questions-for-page (convert-empty-strings attributes) library-schema 0))]
+       (map (fn [attribute]
+              (if (not-empty (str (attributes (keyword attribute))))
+                (library-utils/render-property library-schema attributes (keyword attribute))))
+            questions))
+     (if (= (:library:useLimitationOption attributes) "orsp") ;; TODO: change this so not hardcoded
+       (library-utils/render-property library-schema attributes :library:orsp)
+       (library-utils/render-consent-codes library-schema attributes))])])
 
 
 
 (defn- get-initial-attributes [workspace]
   (utils/map-values
-    library-utils/unpack-attribute-list
-    (dissoc (get-in workspace [:workspace :library-attributes]) :library:published)))
+   library-utils/unpack-attribute-list
+   (dissoc (get-in workspace [:workspace :library-attributes]) :library:published)))
 
 
 (react/defc CatalogWizard
@@ -121,18 +121,18 @@
             :inner-style {:padding "1rem" :boxSizing "border-box" :height "100%"}
             :content
             (react/create-element
-              (if (< page-num (count (:wizard library-schema)))
-                (let [[questions enumerate] (get-questions-for-page working-attributes library-schema page-num)]
+             (if (< page-num (count (:wizard library-schema)))
+               (let [[questions enumerate] (get-questions-for-page working-attributes library-schema page-num)]
 
 
-                  [Questions {:ref "wizard-page" :key page-num
-                              :library-schema library-schema
-                              :missing-properties invalid-properties
-                              :enumerate enumerate
-                              :questions questions
-                              :attributes working-attributes
-                              :required-attributes required-attributes}])
-                (render-summary-page working-attributes library-schema invalid-properties)))}]]
+                 [Questions {:ref "wizard-page" :key page-num
+                             :library-schema library-schema
+                             :missing-properties invalid-properties
+                             :enumerate enumerate
+                             :questions questions
+                             :attributes working-attributes
+                             :required-attributes required-attributes}])
+               (render-summary-page working-attributes library-schema invalid-properties)))}]]
          (when validation-error
            [:div {:style {:marginTop "1em" :color (:exception-state style/colors) :textAlign "center"}}
             validation-error])
@@ -204,12 +204,12 @@
        (let [attributes-seen (apply merge (replace (:page-attributes @locals) (:pages-seen @state)))]
          (swap! state assoc :submitting? true :submit-error nil)
          (endpoints/call-ajax-orch
-           {:endpoint (endpoints/save-library-metadata (:workspace-id props))
-            :payload  (convert-empty-strings (merge attributes-seen (:version-attributes @state))) ;; is it better to use merge or clojure.set/union here?
-            :headers utils/content-type=json
-            :on-done (fn [{:keys [success? get-parsed-response]}]
-                       (swap! state dissoc :submitting?)
-                       (if success?
-                         (do (modal/pop-modal)
-                             ((:request-refresh props)))
-                         (swap! state assoc :submit-error (get-parsed-response false))))}))))})
+          {:endpoint (endpoints/save-library-metadata (:workspace-id props))
+           :payload  (convert-empty-strings (merge attributes-seen (:version-attributes @state))) ;; is it better to use merge or clojure.set/union here?
+           :headers utils/content-type=json
+           :on-done (fn [{:keys [success? get-parsed-response]}]
+                      (swap! state dissoc :submitting?)
+                      (if success?
+                        (do (modal/pop-modal)
+                            ((:request-refresh props)))
+                        (swap! state assoc :submit-error (get-parsed-response false))))}))))})
