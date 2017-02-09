@@ -46,7 +46,7 @@
 (defn render-property [library-schema library-attributes property-key]
   (render-library-row
     (get-in library-schema [:properties property-key :title])
-    (render-value (get library-attributes property-key)))) ;; this is returning nil
+    (render-value (get library-attributes property-key))))
 
 
 (defn render-consent-code-value [value]

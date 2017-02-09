@@ -51,10 +51,6 @@
 
 (defn- render-summary-page [attributes library-schema invalid-attributes]
   [:div {}
-   ;; TODO (as part of 1321?) don't let people publish if you have chosen skip
-   ;(if (= (:library:useLimitationOption attributes) "skip") ;; do this is in a non-hardcoded way
-   ;  "Note, you cannot publish this dataset until you define the Data Use Limitations.")
-
    (if (not-empty invalid-attributes)
      [:div {:style {:fontSize "14px" :color (:exception-state style/colors)}}
       "Please fill in missing attributes before saving."
@@ -123,8 +119,6 @@
             (react/create-element
              (if (< page-num (count (:wizard library-schema)))
                (let [[questions enumerate] (get-questions-for-page working-attributes library-schema page-num)]
-
-
                  [Questions {:ref "wizard-page" :key page-num
                              :library-schema library-schema
                              :missing-properties invalid-properties
@@ -205,7 +199,7 @@
          (swap! state assoc :submitting? true :submit-error nil)
          (endpoints/call-ajax-orch
           {:endpoint (endpoints/save-library-metadata (:workspace-id props))
-           :payload  (convert-empty-strings (merge attributes-seen (:version-attributes @state))) ;; is it better to use merge or clojure.set/union here?
+           :payload  (convert-empty-strings (merge attributes-seen (:version-attributes @state)))
            :headers utils/content-type=json
            :on-done (fn [{:keys [success? get-parsed-response]}]
                       (swap! state dissoc :submitting?)
