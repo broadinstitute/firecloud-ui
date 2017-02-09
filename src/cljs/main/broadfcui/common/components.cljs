@@ -11,7 +11,6 @@
     ))
 
 
-(declare push-error)
 (declare push-error-text)
 (declare create-error-message)
 
