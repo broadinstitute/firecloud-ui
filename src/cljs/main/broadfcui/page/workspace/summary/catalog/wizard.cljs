@@ -17,13 +17,13 @@
     [:div {:style {:flex "0 0 250px" :backgroundColor "white" :border style/standard-line}}
      [:ul {}
       (map-indexed
-       (fn [index {:keys [title]}]
-         (let [this (= index page-num)]
-           [:li {:style {:margin "0.5em 0.5em 0.5em 0"
-                         :fontWeight (when this "bold")
-                         :color (when-not this (:text-lighter style/colors))}}
-            title]))
-       (conj pages {:title "Summary"}))]]))
+        (fn [index {:keys [title]}]
+          (let [this (= index page-num)]
+            [:li {:style {:margin "0.5em 0.5em 0.5em 0"
+                          :fontWeight (when this "bold")
+                          :color (when-not this (:text-lighter style/colors))}}
+             title]))
+        (conj pages {:title "Summary"}))]]))
 
 (defn- find-required-attributes [library-schema]
   (->> (map :required (:oneOf library-schema))
@@ -78,8 +78,8 @@
 
 (defn- get-initial-attributes [workspace]
   (utils/map-values
-   library-utils/unpack-attribute-list
-   (dissoc (get-in workspace [:workspace :library-attributes]) :library:published)))
+    library-utils/unpack-attribute-list
+    (dissoc (get-in workspace [:workspace :library-attributes]) :library:published)))
 
 
 (react/defc CatalogWizard
@@ -125,40 +125,40 @@
                 (let [[questions enumerate] (get-questions-for-page working-attributes library-schema page-num)]
 
 
-                 [Questions {:ref "wizard-page" :key page-num
-                             :library-schema library-schema
-                             :missing-properties invalid-properties
-                             :enumerate enumerate
-                             :questions questions
-                             :attributes working-attributes
-                             :required-attributes required-attributes}])
+                  [Questions {:ref "wizard-page" :key page-num
+                              :library-schema library-schema
+                              :missing-properties invalid-properties
+                              :enumerate enumerate
+                              :questions questions
+                              :attributes working-attributes
+                              :required-attributes required-attributes}])
                 (render-summary-page working-attributes library-schema invalid-properties)))}]]
          (when validation-error
            [:div {:style {:marginTop "1em" :color (:exception-state style/colors) :textAlign "center"}}
             validation-error])
          [comps/ErrorViewer {:error submit-error}]
          (flex/flex-box {:style {:marginTop 40}}
-          (flex/flex-strut 80)
-          flex/flex-spacer
-          [comps/Button {:text "Previous"
-                         :onClick (fn [_]
-                                    (if-let [prev-page (peek (:pages-seen @state))]
-                                      (swap! state #(-> %
-                                                        (assoc :page-num prev-page)
-                                                        (update :pages-seen pop)
-                                                        (dissoc :validation-error)))))
-                         :style {:width 80}
-                         :disabled? (zero? page-num)}]
-          (flex/flex-strut 27)
-          [comps/Button {:text "Next"
-                         :onClick #(react/call :next-page this)
-                         :disabled? (= page-num (-> library-schema :wizard count))
-                         :style {:width 80}}]
-          flex/flex-spacer
-          [comps/Button {:text (if published? "Republish" "Submit")
-                         :onClick #(react/call :submit this)
-                         :disabled? (< page-num (-> library-schema :wizard count))
-                         :style {:width 80}}])]]))
+                        (flex/flex-strut 80)
+                        flex/flex-spacer
+                        [comps/Button {:text "Previous"
+                                       :onClick (fn [_]
+                                                  (if-let [prev-page (peek (:pages-seen @state))]
+                                                    (swap! state #(-> %
+                                                                      (assoc :page-num prev-page)
+                                                                      (update :pages-seen pop)
+                                                                      (dissoc :validation-error)))))
+                                       :style {:width 80}
+                                       :disabled? (zero? page-num)}]
+                        (flex/flex-strut 27)
+                        [comps/Button {:text "Next"
+                                       :onClick #(react/call :next-page this)
+                                       :disabled? (= page-num (-> library-schema :wizard count))
+                                       :style {:width 80}}]
+                        flex/flex-spacer
+                        [comps/Button {:text (if published? "Republish" "Submit")
+                                       :onClick #(react/call :submit this)
+                                       :disabled? (< page-num (-> library-schema :wizard count))
+                                       :style {:width 80}}])]]))
    :component-did-mount
    (fn [{:keys [locals]}]
      (swap! locals assoc :page-attributes []))
@@ -178,16 +178,16 @@
          (swap! state assoc :working-attributes all-attributes)
          (swap! locals update :page-attributes assoc page-num attributes-from-page)
          (doseq [page (conj pages-seen page-num)]
-              (let [[questions _] (get-questions-for-page all-attributes (:library-schema props) page)
-                    {:keys [invalid]} (library-utils/validate-required (convert-empty-strings all-attributes)
-                                                                       questions required-attributes)]
-                (reset! invalid-attributes (clojure.set/union invalid @invalid-attributes))))
+           (let [[questions _] (get-questions-for-page all-attributes (:library-schema props) page)
+                 {:keys [invalid]} (library-utils/validate-required (convert-empty-strings all-attributes)
+                                                                    questions required-attributes)]
+             (reset! invalid-attributes (clojure.set/union invalid @invalid-attributes))))
          (swap! state assoc :invalid-properties @invalid-attributes)
-       (after-update (fn [_]
-                       (let [next-page (react/call :find-next-page this)]
-                         (swap! state #(-> %
-                                           (update :pages-seen conj page-num)
-                                           (assoc :page-num next-page)))))))))
+         (after-update (fn [_]
+                         (let [next-page (react/call :find-next-page this)]
+                           (swap! state #(-> %
+                                             (update :pages-seen conj page-num)
+                                             (assoc :page-num next-page)))))))))
    :find-next-page
    (fn [{:keys [props state]}]
      (let [{:keys [library-schema]} props
