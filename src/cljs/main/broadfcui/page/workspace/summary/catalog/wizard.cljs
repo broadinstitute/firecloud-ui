@@ -2,34 +2,15 @@
   (:require
     [clojure.string :refer [join split trim]]
     [dmohs.react :as react]
-    [broadfcui.common :as common]
     [broadfcui.common.components :as comps]
+    [broadfcui.common.flex-utils :as flex]
     [broadfcui.common.modal :as modal]
     [broadfcui.common.style :as style]
     [broadfcui.endpoints :as endpoints]
-    [broadfcui.page.workspace.summary.catalog.options :refer [Options]]
     [broadfcui.page.workspace.summary.catalog.questions :refer [Questions]]
     [broadfcui.page.workspace.summary.library-utils :as library-utils]
     [broadfcui.utils :as utils]
     ))
-
-
-(react/defc WizardPage
-  {:validate
-   (fn [{:keys [refs]}]
-     (react/call :validate (@refs "subcomponent")))
-   :get-attributes
-   (fn [{:keys [refs]}]
-     (react/call :get-attributes (@refs "subcomponent")))
-   :render
-   (fn [{:keys [props]}]
-     (let [{:keys [library-schema page-num]} props
-           page (get-in library-schema [:wizard page-num])
-           {:keys [questions enumerate switch]} page]
-       (cond questions [Questions (merge (select-keys props [:library-schema :attributes :required-attributes])
-                                         {:ref "subcomponent" :enumerate enumerate :questions questions})]
-             switch [Options (merge (select-keys props [:library-schema :attributes :required-attributes])
-                                    {:ref "subcomponent" :switch switch})])))})
 
 
 (defn- render-wizard-breadcrumbs [{:keys [library-schema page-num]}]
@@ -65,82 +46,95 @@
    (fn [{:keys [props]}]
      (let [{:keys [library-schema]} props
            {:keys [versions]} library-schema]
-       {:page 0
-        :initial-attributes (get-initial-attributes (:workspace props))
+       {:page-num 0
+        :working-attributes (get-initial-attributes (:workspace props))
         :version-attributes (->> versions
                                  (map keyword)
                                  (map (fn [version]
                                         [version (get-in library-schema [:properties version :default])]))
                                  (into {}))
-        :attributes-from-pages []
         :required-attributes (find-required-attributes library-schema)}))
    :render
    (fn [{:keys [props state this]}]
      (let [{:keys [library-schema]} props
-           {:keys [page]} @state]
+           {:keys [page-num working-attributes required-attributes validation-error submit-error]} @state]
        [:div {}
         (when (:submitting? @state)
           [comps/Blocker {:banner "Submitting..."}])
         [:div {:style {:borderBottom style/standard-line
                        :padding "20px 48px 18px"
                        :fontSize "137%" :fontWeight 400 :lineHeight 1}}
-         "Catalog Data Set"
+         "Catalog Dataset"
          [comps/XButton {:dismiss modal/pop-modal}]]
         [:div {:style {:padding "22px 24px 40px" :backgroundColor (:background-light style/colors)}}
          [:div {:style {:display "flex" :width 850 :height 400}}
-          (render-wizard-breadcrumbs {:library-schema library-schema :page-num page})
+          (render-wizard-breadcrumbs {:library-schema library-schema :page-num page-num})
           [comps/ScrollFader
-           {:outer-style {:flex "1 1 auto"
+           {:ref "scroller"
+            :outer-style {:flex "1 1 auto"
                           :border style/standard-line :boxSizing "border-box"
                           :backgroundColor "white"}
             :inner-style {:padding "1rem" :boxSizing "border-box" :height "100%"}
             :content
             (react/create-element
-             [WizardPage {:key page
-                          :ref "wizard-page"
-                          :library-schema library-schema
-                          :page-num page
-                          :attributes (or (get-in @state [:attributes-from-pages page])
-                                          (:initial-attributes @state))
-                          :required-attributes (:required-attributes @state)}])}]]
-         (when-let [error (:validation-error @state)]
+             (let [page-props (get-in library-schema [:wizard page-num])
+                   {:keys [questions enumerate optionSource options]} page-props
+                   [questions enumerate] (if optionSource
+                                           (map (get options (keyword (get working-attributes (keyword optionSource))))
+                                                [:questions :enumerate])
+                                           [questions enumerate])]
+               [Questions {:ref "wizard-page" :key page-num
+                           :library-schema library-schema
+                           :enumerate enumerate
+                           :questions questions
+                           :attributes working-attributes
+                           :required-attributes required-attributes}]))}]]
+         (when validation-error
            [:div {:style {:marginTop "1em" :color (:exception-state style/colors) :textAlign "center"}}
-            error])
-         [comps/ErrorViewer {:error (:submit-error @state)}]
-         [:div {:style {:marginTop 40 :textAlign "center"}}
-          [:a {:className "cancel"
-               :style {:marginRight 27 :marginTop 2 :padding "0.5em"
-                       :display "inline-block"
-                       :fontSize "106%" :fontWeight 500 :textDecoration "none"
-                       :color (:button-primary style/colors)}
-               :href "javascript:;"
-               :onClick modal/pop-modal
-               :onKeyDown (common/create-key-handler [:space :enter] modal/pop-modal)}
-           "Cancel"]
+            validation-error])
+         [comps/ErrorViewer {:error submit-error}]
+         (flex/flex-box {:style {:marginTop 40}}
+          (flex/flex-strut 80)
+          flex/flex-spacer
           [comps/Button {:text "Previous"
-                         :onClick (fn [_] (swap! state #(-> % (update :page dec) (dissoc :validation-error))))
-                         :style {:width 80 :marginRight 27}
-                         :disabled? (zero? page)}]
-          [comps/Button {:text (if (< page (-> library-schema :wizard count dec)) "Next" "Submit")
+                         :onClick (fn [_] (swap! state #(-> % (update :page-num dec) (dissoc :validation-error))))
+                         :style {:width 80}
+                         :disabled? (zero? page-num)}]
+          (flex/flex-strut 27)
+          [comps/Button {:text "Next"
                          :onClick #(react/call :next-page this)
-                         :style {:width 80}}]]]]))
+                         :disabled? (= page-num (-> library-schema :wizard count dec))
+                         :style {:width 80}}]
+          flex/flex-spacer
+          [comps/Button {:text "Submit"
+                         :onClick #(react/call :next-page this)
+                         :disabled? (< page-num (-> library-schema :wizard count dec))
+                         :style {:width 80}}])]]))
+   :component-did-mount
+   (fn [{:keys [locals]}]
+     (swap! locals assoc :page-attributes []))
+   :component-did-update
+   (fn [{:keys [prev-state state refs]}]
+     (when (not= (:page-num prev-state) (:page-num @state))
+       (react/call :scroll-to (@refs "scroller") 0)))
    :next-page
-   (fn [{:keys [props state refs this after-update]}]
+   (fn [{:keys [props state refs this locals after-update]}]
      (swap! state dissoc :validation-error)
      (if-let [error-message (react/call :validate (@refs "wizard-page"))]
        (swap! state assoc :validation-error error-message)
        (let [attributes-from-page (react/call :get-attributes (@refs "wizard-page"))]
-         (swap! state update :attributes-from-pages assoc (:page @state) attributes-from-page)
+         (swap! state update :working-attributes merge attributes-from-page)
+         (swap! locals update :page-attributes assoc (:page-num @state) attributes-from-page)
          (after-update
-          #(if (< (:page @state) (-> props :library-schema :wizard count dec))
-             (swap! state update :page inc)
+          #(if (< (:page-num @state) (-> props :library-schema :wizard count dec))
+             (swap! state update :page-num inc)
              (react/call :submit this))))))
    :submit
-   (fn [{:keys [props state]}]
+   (fn [{:keys [props state locals]}]
      (swap! state assoc :submitting? true :submit-error nil)
      (endpoints/call-ajax-orch
       {:endpoint (endpoints/save-library-metadata (:workspace-id props))
-       :payload (apply merge (:version-attributes @state) (:attributes-from-pages @state))
+       :payload (apply merge (:version-attributes @state) (:page-attributes @locals))
        :headers utils/content-type=json
        :on-done (fn [{:keys [success? get-parsed-response]}]
                   (swap! state dissoc :submitting?)

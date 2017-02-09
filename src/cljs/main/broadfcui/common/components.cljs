@@ -17,9 +17,7 @@
   {:render
    (fn [{:keys [props]}]
      [:span {:style {:margin "1em" :whiteSpace "nowrap"}}
-      [:img {:src "assets/spinner.gif"
-             :style {:height (or (:height props) "1.5em")
-                     :verticalAlign "middle" :marginRight "1ex"}}]
+      (icons/icon {:className "fa-pulse fa-lg fa-fw" :style {:marginRight "0.5rem"}} :spinner)
       (:text props)])})
 
 
@@ -69,8 +67,8 @@
                          (common/create-key-handler [:space :enter] onClick))}
         text
         (some->> icon (icons/icon {:style (if text
-                                            {:fontSize 24 :margin "-0.5em -0.3em -0.5em 0.5em"}
-                                            {:fontSize 20})}))]))})
+                                            {:fontSize 20 :margin "-0.5em -0.3em -0.5em 0.5em"}
+                                            {:fontSize 18})}))]))})
 
 
 (react/defc Checkbox
@@ -194,8 +192,9 @@
 (react/defc StatusLabel
   {:render
    (fn [{:keys [props]}]
-     [:div {:style {:background (:color props) :color "#fff"
-                    :padding "15px 20px" :textAlign "center" :marginBottom "2em"}}
+     [:div {:style {:display "flex" :background (:color props) :color "#fff"
+                    :padding "15px 20px" :marginBottom "2em" :lineHeight "36px"
+                    :alignItems "center" :justifyContent "center"}}
       (:icon props)
       [:span {:style {:marginLeft "1em" :fontSize "125%" :fontWeight 400
                       :verticalAlign "middle"}}
@@ -226,7 +225,7 @@
                          #(push-error-text
                            (if (string? disabled?) disabled? "This action is disabled."))
                          (:onClick props))}
-        (icons/icon {:style {:padding "0 20px" :borderRight style/standard-line}} (:icon props))
+        (icons/icon {:style {:padding "0 20px" :borderRight style/standard-line} :className "fa-fw"} (:icon props))
         [:div {:style {:textAlign "center" :margin "auto"}}
          (:text props)]]))})
 
@@ -334,17 +333,20 @@
              status-code (or status-code code)]
          (if-let [expected-msg (get-in props [:expect status-code])]
            (style/create-flexbox {}
-             [:span {:style {:paddingRight "1ex"}}
-              (icons/icon {:style {:color (:exception-state style/colors)}}
-                          :warning-triangle)]
-             (str "Error: " expected-msg))
+                                 [:span {:style {:paddingRight "1ex"}}
+                                  (icons/icon {:style {:color (:exception-state style/colors)}}
+                                              :warning-triangle)]
+                                 (str "Error: " expected-msg))
            [:div {:style {:textAlign "initial"}}
             (style/create-flexbox {:style {:marginBottom "0.25em"}}
-              [:span {:style {:paddingRight "1ex"}}
-               (icons/icon {:style {:color (:exception-state style/colors)}}
-                           :warning-triangle)]
-              (str "Error " status-code ": " message))
-            (when timestamp [:div {} "Occurred: " (-> timestamp js/moment (.format "LLL Z"))])
+                                  [:span {:style {:paddingRight "1ex"}}
+                                   (icons/icon {:style {:color (:exception-state style/colors)}}
+                                               :warning-triangle)]
+                                  (str "Error " status-code ": " message))
+            (when timestamp [:div {} "Occurred: "
+                             (common/format-date timestamp
+                                                 (assoc common/default-date-format
+                                                   :timeZoneName "short"))])
             (when source [:div {} "Source: " source])
             (when (seq causes)
               (let [num-hidden (- (count causes) 4)]
@@ -358,18 +360,22 @@
 
 
 (react/defc Breadcrumbs
-  {:render
+  {:get-default-props
+   (fn []
+     {:scale-factor "100%"})
+   :render
    (fn [{:keys [props]}]
-     (let [sep (icons/icon {:style {:color (:border-light style/colors)}} :angle-right)
+     (let [sep (icons/icon {:style {:color (:text-lightest style/colors) :padding "0 0.5rem"
+                                    :fontSize (:scale-factor props)}} :angle-right)
            crumbs (filter some? (:crumbs props))]
        (case (count crumbs)
          0 [:div {}]
          1 [:div {} (:text (first crumbs))]
-         [:div {:style {:display "flex" :alignItems "center" :flexWrap "wrap"}}
+         [:div {:style {:display "flex" :alignItems "baseline" :flexWrap "wrap"}}
           (interpose sep
             (map
               (fn [{:keys [text onClick href] :as link-props}]
-                [:span {:style {:fontSize "60%" :whiteSpace "pre"}}
+                [:span {:style {:fontSize (:scale-factor props) :whiteSpace "pre"}}
                  (if (or onClick href)
                    (style/create-link link-props)
                    text)])
@@ -451,6 +457,7 @@
                         #(when (empty? (.. % -currentTarget -value))
                            (react/call :apply-filter this))))})
 
+(def Bloodhound (aget js/window "webpack-deps" "Bloodhound"))
 
 (react/defc Typeahead
   {:get-text
@@ -471,34 +478,43 @@
                                        (:field-attributes props))))
    :component-did-mount
    (fn [{:keys [props refs]}]
-     (let [{:keys [remote render-display behavior empty-message render-suggestion on-select]} props]
+     (let [{:keys [remote render-display behavior empty-message render-suggestion on-select]} props
+           whitespace-tokenizer (aget Bloodhound "tokenizers" "whitespace")]
        (.typeahead (js/$ (@refs "field"))
                    (clj->js behavior)
                    (clj->js
-                    {:source (js/Bloodhound. (clj->js
-                                              {:datumTokenizer js/Bloodhound.tokenizers.whitespace
-                                               :queryTokenizer js/Bloodhound.tokenizers.whitespace
-                                               :remote remote}))
+                    {:source (Bloodhound. (clj->js {:datumTokenizer whitespace-tokenizer
+                                                    :queryTokenizer whitespace-tokenizer
+                                                    :remote remote}))
                      :display render-display
                      :templates {:empty (str "<div style='padding: 0.5em'>" empty-message "</div>")
                                  :suggestion render-suggestion}}))
-       (.bind (js/$ (@refs "field")) "typeahead:select" on-select)))})
+       (.bind (js/$ (@refs "field")) "typeahead:select" on-select))
+     (.addEventListener (@refs "field") "search"
+                        #(when (and (empty? (.. % -currentTarget -value))
+                                    (:on-clear props))
+                           ((:on-clear props)))))})
 
 
 (react/defc AutocompleteFilter
   {:apply-filter
    (fn [{:keys [props refs]}]
      ((:on-filter props) (common/get-text refs "typeahead")))
+   :get-default-props
+   (fn []
+     {:typeaheadDisplay identity})
    :render
    (fn [{:keys [props this]}]
-     (let [{:keys [initial-text placeholder width]} props]
+     (let [{:keys [field-attributes width]} props]
        [:div {:style {:display "inline-flex" :width width}}
         [Typeahead {:ref "typeahead"
-                    :field-attributes {:autoSave "true" :results 5 :autofocus "true"
-                                       :placeholder (or placeholder "Filter") :defaultValue initial-text
-                                       :style {:flex "1 0 auto" :width width :borderRadius 3 :marginBottom 0}
-                                       :onKeyDown (common/create-key-handler [:enter] #(react/call :apply-filter this))}
-                    :behavior {:hint true :minLength 3}
+                    :field-attributes (utils/deep-merge
+                                       {:autoSave "true" :results 5 :autofocus "true"
+                                        :placeholder "Filter"
+                                        :style {:flex "1 0 auto" :width width :borderRadius 3 :marginBottom 0}
+                                        :onKeyDown (common/create-key-handler [:enter] #(react/call :apply-filter this))}
+                                       field-attributes)
+                    :behavior {:hint false :minLength 3}
                     :remote (:bloodhoundInfo props)
                     :render-display (:typeaheadDisplay props)
                     :empty-message "<small>Unable to find any matches to the current query</small>"
@@ -513,7 +529,10 @@
 
 
 (react/defc ScrollFader
-  {:get-default-props
+  {:scroll-to
+   (fn [{:keys [refs]} position]
+     (set! (.-scrollTop (@refs "scroller")) position))
+   :get-default-props
    (fn []
      {:vertical 50
       :blur 36

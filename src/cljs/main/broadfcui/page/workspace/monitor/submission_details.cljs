@@ -4,6 +4,7 @@
       [clojure.string :as string]
       [broadfcui.common :as common]
       [broadfcui.common.components :as comps]
+      [broadfcui.common.duration :as duration]
       [broadfcui.common.icons :as icons]
       [broadfcui.common.modal :as modal]
       [broadfcui.common.style :as style]
@@ -62,27 +63,27 @@
                                       [:div {}
                                        (map (fn [message]
                                               [:div {} message])
-                                         message-list)])}
+                                            message-list)])}
                  {:header "Workflow ID" :starting-width 300
                   :as-text
-                    (fn [workflow] (workflow "workflowId"))
+                  (fn [workflow] (workflow "workflowId"))
                   :sort-by :text
                   :content-renderer
                   (fn [workflow]
-                   (let [{:keys [submission-id bucketName]} props
-                         inputs (second (second (first (workflow "inputResolutions"))))
-                         input-names (string/split inputs ".")
-                         workflow-name (first input-names)
-                         workflowId (workflow "workflowId")]
-                   (style/create-link {:text workflowId
-                                       :target "_blank"
-                                       :style {:color "-webkit-link" :textDecoration "underline"}
-                     :href (str moncommon/google-cloud-context bucketName "/" submission-id  "/"
-                                workflow-name "/" workflowId "/")})))}]
+                    (let [{:keys [submission-id bucketName]} props
+                          inputs (second (second (first (workflow "inputResolutions"))))
+                          input-names (string/split inputs ".")
+                          workflow-name (first input-names)
+                          workflowId (workflow "workflowId")]
+                      (style/create-link {:text workflowId
+                                          :target "_blank"
+                                          :style {:color "-webkit-link" :textDecoration "underline"}
+                                          :href (str moncommon/google-cloud-context bucketName "/" submission-id "/"
+                                                     workflow-name "/" workflowId "/")})))}]
        :filter-groups
        (vec (cons {:text "All" :pred (constantly true)}
-              (map (fn [status] {:text status :pred #(= status (% "status"))})
-                moncommon/wf-all-statuses)))
+                  (map (fn [status] {:text status :pred #(= status (% "status"))})
+                       moncommon/wf-all-statuses)))
        :data (:workflows props)
        :->row (fn [row]
                 [row
@@ -94,18 +95,17 @@
    (fn [{:keys [state props]}]
      (let [workflows (:workflows props)
            workflowName (get-in workflows [0 "workflowEntity" "entityName"])]
-     [:div {}
-      [:div {}
-       (style/create-link {:text "Workflows"
-                           :onClick #(swap! state dissoc :selected-workflow)})
-       (icons/icon {:style {:verticalAlign "middle" :margin "0 1ex 0 1ex"}} :angle-right)
-       [:b {} (:name (:selected-workflow @state))]]
-      [:div {:style {:marginTop "1em"}}
-       (workflow-details/render
-        (merge (select-keys props [:workspace-id :submission-id :bucketName])
-               {:workflow-id (get-in @state [:selected-workflow :id])
-                :submission (:submission props)
-                :workflow-name workflowName}))]]))})
+       [:div {}
+        [comps/Breadcrumbs {:crumbs
+                            [{:text "Workflows"
+                              :onClick #(swap! state dissoc :selected-workflow)}
+                             {:text (get-in @state [:selected-workflow :name])}]}]
+        [:div {:style {:marginTop "1em"}}
+         (workflow-details/render
+          (merge (select-keys props [:workspace-id :submission-id :bucketName])
+                 {:workflow-id (get-in @state [:selected-workflow :id])
+                  :submission (:submission props)
+                  :workflow-name workflowName}))]]))})
 
 
 (react/defc AbortButton
@@ -150,39 +150,39 @@
            (when (contains? moncommon/sub-running-statuses (submission "status"))
              [AbortButton
               {:on-abort (fn []
-                          (swap! state assoc :server-response nil)
-                          (react/call :load-details this))
+                           (swap! state assoc :server-response nil)
+                           (react/call :load-details this))
                :workspace-id (:workspace-id props)
                :submission-id (submission "submissionId")}])]
           [:div {:style {:float "left"}}
            (style/create-section-header "Method Configuration")
            (style/create-paragraph
-             [:div {}
-              [:div {:style {:fontWeight 200 :display "inline-block" :width 90}} "Namespace:"]
-              [:span {:style {:fontWeight 500}} (submission "methodConfigurationNamespace")]]
-             [:div {}
-              [:div {:style {:fontWeight 200 :display "inline-block" :width 90}} "Name:"]
-              [:span {:style {:fontWeight 500}} (submission "methodConfigurationName")]])
+            [:div {}
+             [:div {:style {:fontWeight 200 :display "inline-block" :width 90}} "Namespace:"]
+             [:span {:style {:fontWeight 500}} (submission "methodConfigurationNamespace")]]
+            [:div {}
+             [:div {:style {:fontWeight 200 :display "inline-block" :width 90}} "Name:"]
+             [:span {:style {:fontWeight 500}} (submission "methodConfigurationName")]])
            (style/create-section-header "Submission Entity")
            (style/create-paragraph
-             [:div {}
-              [:div {:style {:fontWeight 200 :display "inline-block" :width 90}} "Type:"]
-              [:span {:style {:fontWeight 500}} (get-in submission ["submissionEntity" "entityType"])]]
-             [:div {}
-              [:div {:style {:fontWeight 200 :display "inline-block" :width 90}} "Name:"]
-              [:span {:style {:fontWeight 500}} (get-in submission ["submissionEntity" "entityName"])]])]
+            [:div {}
+             [:div {:style {:fontWeight 200 :display "inline-block" :width 90}} "Type:"]
+             [:span {:style {:fontWeight 500}} (get-in submission ["submissionEntity" "entityType"])]]
+            [:div {}
+             [:div {:style {:fontWeight 200 :display "inline-block" :width 90}} "Name:"]
+             [:span {:style {:fontWeight 500}} (get-in submission ["submissionEntity" "entityName"])]])]
           [:div {:style {:float "right"}}
            (style/create-section-header "Submitted by")
            (style/create-paragraph
-             [:div {} (submission "submitter")]
-             (let [m (js/moment (submission "submissionDate"))]
-               [:div {} (.format m "LLL") " (" (.fromNow m) ")"]))
-                (style/create-section-header "Submission ID")
-                (style/create-link {:text (style/create-paragraph (submission "submissionId"))
+            [:div {} (submission "submitter")]
+            [:div {} (common/format-date (submission "submissionDate")) " ("
+             (duration/fuzzy-time-from-now-ms (.parse js/Date (submission "submissionDate")) true) ")"])
+           (style/create-section-header "Submission ID")
+           (style/create-link {:text (style/create-paragraph (submission "submissionId"))
                                :target "_blank"
                                :style {:color "-webkit-link" :textDecoration "underline"}
                                :href (str moncommon/google-cloud-context
-                                  (:bucketName props) "/" (submission "submissionId") "/")})]
+                                          (:bucketName props) "/" (submission "submissionId") "/")})]
           (common/clear-both)
           [:h2 {:style {:paddingBottom "0.5em"}} "Workflows:"]
           [WorkflowsTable {:workflows (submission "workflows")
@@ -193,9 +193,9 @@
    :load-details
    (fn [{:keys [props state]}]
      (endpoints/call-ajax-orch
-       {:endpoint (endpoints/get-submission (:workspace-id props) (:submission-id props))
-        :on-done (fn [{:keys [success? status-text get-parsed-response]}]
-                   (swap! state assoc :server-response (if success?
-                                                         {:submission (get-parsed-response false)}
-                                                         {:error-message status-text})))}))
+      {:endpoint (endpoints/get-submission (:workspace-id props) (:submission-id props))
+       :on-done (fn [{:keys [success? status-text get-parsed-response]}]
+                  (swap! state assoc :server-response (if success?
+                                                        {:submission (get-parsed-response false)}
+                                                        {:error-message status-text})))}))
    :component-did-mount (fn [{:keys [this]}] (react/call :load-details this))})

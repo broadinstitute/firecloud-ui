@@ -68,7 +68,7 @@
                                  :onClick #(swap! state update :crumbs (comp vec (partial take 2)))}))]
          [:div {:style {:position "relative" :width 720}}
           [:div {:style {:fontSize "150%" :marginBottom "1ex"}}
-           [comps/Breadcrumbs {:crumbs (:crumbs @state)}]]
+           [comps/Breadcrumbs {:scale-factor "60%" :crumbs (:crumbs @state)}]]
           common/PHI-warning
           [:div {:style {:backgroundColor "white" :padding "1em"}}
            (case last-crumb-id

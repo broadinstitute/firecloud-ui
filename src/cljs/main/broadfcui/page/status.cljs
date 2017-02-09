@@ -2,6 +2,7 @@
   (:require
    [dmohs.react :as react]
    [broadfcui.utils :as utils]
+   [broadfcui.common.components :as comps]
    ))
 
 
@@ -13,8 +14,7 @@
        (:label props) ": "
        (cond
          (nil? (:response @state))
-         [:img {:src "assets/spinner.gif"
-                :style {:height "1em" :verticalAlign "middle"}}]
+         [comps/Spinner]
          (not (:success? (:response @state)))
          [:span {} [:span {:style {:color "red"}} "Error"]
           (when-not (:show-error-details? @state)

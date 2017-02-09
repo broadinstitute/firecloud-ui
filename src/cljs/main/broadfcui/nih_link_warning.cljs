@@ -1,8 +1,7 @@
 (ns broadfcui.nih-link-warning
   (:require
-   cljsjs.moment
    [dmohs.react :as react]
-   [broadfcui.common :as common]
+   [broadfcui.common.duration :as duration]
    [broadfcui.page.profile :as profile]
    [broadfcui.utils :as utils]
    ))
@@ -25,14 +24,13 @@
   {:render
    (fn [{:keys [props state]}]
      (when-let [status (:status @state)]
-       (let [expire-time (-> (get status "linkExpireTime") (* 1000) (js/moment.))
-             _24-hours-from-now (.add (js/moment.) 24 "hours")]
+       (let [expire-time (-> (get status "linkExpireTime") (* 1000))]
          (when (and (get status "isDbgapAuthorized")
-                    (.isBefore expire-time _24-hours-from-now))
+                    (< expire-time (utils/_24-hours-from-now-ms)))
            [:div {:style {:border "1px solid #c00" :backgroundColor "#fcc"
                           :color "#800" :fontSize "small" :padding "6px 10px" :textAlign "center"}}
             "Your access to TCGA Controlled Access workspaces and data will expire "
-            (.calendar expire-time) " and your access to TCGA Controlled Access workspaces will be revoked "
+            (duration/fuzzy-time-from-now-ms expire-time true) " and your access to TCGA Controlled Access workspaces will be revoked "
             "within 24 hours of that time. "
             [:br]
             [:a {:href (profile/get-nih-link-href)} "Re-link"]

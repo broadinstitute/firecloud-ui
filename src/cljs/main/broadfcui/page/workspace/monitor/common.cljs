@@ -1,5 +1,7 @@
 (ns broadfcui.page.workspace.monitor.common
   (:require
+    [broadfcui.common :as common]
+    [broadfcui.common.duration :as duration]
     [broadfcui.common.icons :as icons]
     [broadfcui.common.style :as style]
     [broadfcui.utils :as utils]
@@ -8,8 +10,7 @@
 
 (defn render-date [date]
   (if date
-    (let [m (js/moment date)]
-      (str (.format m "L [at] LTS") " (" (.fromNow m) ")"))
+    (str (common/format-date date) " (" (duration/fuzzy-time-from-now-ms (.parse js/Date date) true) ")")
     [:span {:style {:fontStyle "italic"}} "Pending..."]))
 
 

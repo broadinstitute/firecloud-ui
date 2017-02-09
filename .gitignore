@@ -81,6 +81,7 @@ Temporary Items
 .apdisk
 
 resources
+build
 
 *.pid
 .nrepl-port

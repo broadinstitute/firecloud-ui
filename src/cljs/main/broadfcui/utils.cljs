@@ -2,10 +2,10 @@
   (:require-macros
    [broadfcui.utils :refer [log jslog cljslog pause]])
   (:require
-   cljs.pprint
-   [clojure.string :refer [join lower-case split]]
-   [broadfcui.config :as config]
-   ))
+    cljs.pprint
+    [clojure.string :refer [join lower-case split]]
+    [broadfcui.config :as config]
+    ))
 
 
 (defn str-index-of
@@ -263,9 +263,8 @@
 (defn rand-subset [items]
   (take (rand-int (inc (count items))) (shuffle items)))
 
-(defn rand-recent-time []
-  (.format (.subtract (js/moment (js/Date.)) (rand-int 100000) "seconds")))
-
+(defn _24-hours-from-now-ms []
+  (+ (.now js/Date) (* 1000 60 60 24)))
 
 (defn index-by [key m]
   (into {} (map (juxt key identity) m)))
@@ -294,3 +293,8 @@
 (defn map-kv [f m]
   (into (empty m)
         (map (fn [[k v]] (f k v)) m)))
+
+(defn maybe-pluralize [number unit]
+  (if (> number 1)
+    (str number " " unit "s")
+    (str number " " unit)))
