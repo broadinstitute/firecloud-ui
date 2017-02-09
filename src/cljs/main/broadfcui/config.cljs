@@ -19,7 +19,7 @@
         required {"apiUrlRoot" :string "googleClientId" :string "tcgaNamespace" :string}
         optional {"cromwellVersion" :string "isDebug" :boolean "shibbolethUrlRoot" :string
                   "submissionStatusRefresh" :integer "userGuideUrl" :string
-                  "workflowCountWarningThreshold" :integer}
+                  "workflowCountWarningThreshold" :integer "billingGuideUrl" :string}
         all (merge required optional)
         missing-required (filter #(not (contains? config-keys %)) (keys required))
         extra (clojure.set/difference config-keys (set (keys all)))
@@ -45,3 +45,4 @@
 (defn submission-status-refresh [] (get @config "submissionStatusRefresh" 60000)) ;; milliseconds
 (defn cromwell-version [] (get @config "cromwellVersion" "n/a"))
 (defn user-guide-url [] (get @config "userGuideUrl"))
+(defn billing-guide-url [] (get @config "billingGuideUrl"))

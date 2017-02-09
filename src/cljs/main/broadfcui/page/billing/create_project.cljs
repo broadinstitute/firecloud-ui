@@ -7,6 +7,7 @@
     [broadfcui.common.icons :as icons]
     [broadfcui.common.modal :as modal]
     [broadfcui.common.style :as style]
+    [broadfcui.config :as config]
     [broadfcui.endpoints :as endpoints]
     [broadfcui.utils :as utils]
     ))
@@ -30,8 +31,7 @@
             :else
             (if (empty? billing-accounts)
               [:div {} "You do not have any billing accounts available. To learn how to create a billing account, "
-                [:a {:target "_blank"
-                     :href "https://software.broadinstitute.org/firecloud/guide/topic?name=firecloud-google"} "click here"] "."]
+                [:a {:target "_blank" :href (config/billing-guide-url)} "click here"] "."]
               [:div {:style {:width 750}}
                (when (:creating? @state)
                  [comps/Blocker {:banner "Creating billing account..."}])

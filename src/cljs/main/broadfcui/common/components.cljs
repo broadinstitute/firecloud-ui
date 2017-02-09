@@ -7,6 +7,7 @@
     [broadfcui.common.icons :as icons]
     [broadfcui.common.modal :as modal]
     [broadfcui.common.style :as style]
+    [broadfcui.config :as config]
     [broadfcui.utils :as utils]
     ))
 
@@ -620,14 +621,7 @@
   (fn [{:keys [props]}]
     [:div {:style {:textAlign "center"}} (str "You must have a billing project associated with your account"
          " to create a new workspace. To learn how to create a billing project, ")
-         [:a {:target "_blank"
-              :href "https://software.broadinstitute.org/firecloud/guide/topic?name=firecloud-google"} "click here"] "."])})
-
-(defn create-error-message [disabled?]
-  (cond
-    (nil? disabled?) #(push-error-text "This action is disabled.")
-    (string? disabled?) #(push-error-text disabled?)
-    :else #(push-error disabled?)))
+         [:a {:target "_blank" :href (str (config/billing-guide-url))} "click here"] "."])})
 
 (defn push-ok-cancel-modal [props]
   (modal/push-modal [OKCancelForm props]))
@@ -658,3 +652,9 @@
     {:header (or header "Confirm")
      :content [:div {:style {:maxWidth 500}} text]
      :ok-button on-confirm}))
+
+(defn create-error-message [disabled?]
+  (cond
+    (nil? disabled?) #(push-error-text "This action is disabled.")
+    (string? disabled?) #(push-error-text disabled?)
+    :else #(push-error disabled?)))
