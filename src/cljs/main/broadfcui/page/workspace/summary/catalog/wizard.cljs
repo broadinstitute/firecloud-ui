@@ -45,7 +45,7 @@
 (defn- convert-empty-strings [attributes]
   (utils/map-values
     (fn [val]
-      (if (string? val)
+      (if (or (coll? val) (string? val))
         (not-empty val)
         val)) attributes))
 
@@ -178,11 +178,9 @@
          (swap! state assoc :working-attributes all-attributes)
          (swap! locals update :page-attributes assoc page-num attributes-from-page)
          (doseq [page (conj pages-seen page-num)]
-              (let [questions (first (get-questions-for-page all-attributes (:library-schema props) page))
-                    {:keys [invalid]} (library-utils/validate-required
-                                              (convert-empty-strings all-attributes)
-                                              questions
-                                              required-attributes)]
+              (let [[questions _] (get-questions-for-page all-attributes (:library-schema props) page)
+                    {:keys [invalid]} (library-utils/validate-required (convert-empty-strings all-attributes)
+                                                                       questions required-attributes)]
                 (reset! invalid-attributes (clojure.set/union invalid @invalid-attributes))))
          (swap! state assoc :invalid-properties @invalid-attributes)
        (after-update (fn [_]
@@ -203,13 +201,11 @@
    (fn [{:keys [props state locals]}]
      (if (not-empty (:invalid-properties @state))
        (swap! state assoc :validation-error "You will need to complete all required metadata attributes to be able to publish the workspace in the Data Library")
-       (let [attributes-seen (atom {})]
-         (doseq [page (:pages-seen @state)]
-           (let [attrs (nth (:page-attributes @locals) page)]
-             (swap! attributes-seen merge attrs)))
+       (let [attributes-seen (apply merge (replace (:page-attributes @locals) (:pages-seen @state)))]
+         (swap! state assoc :submitting? true :submit-error nil)
          (endpoints/call-ajax-orch
            {:endpoint (endpoints/save-library-metadata (:workspace-id props))
-            :payload (convert-empty-strings (apply merge @attributes-seen (:version-attributes @state))) ;; still need the apply?
+            :payload  (convert-empty-strings (merge attributes-seen (:version-attributes @state))) ;; is it better to use merge or clojure.set/union here?
             :headers utils/content-type=json
             :on-done (fn [{:keys [success? get-parsed-response]}]
                        (swap! state dissoc :submitting?)
