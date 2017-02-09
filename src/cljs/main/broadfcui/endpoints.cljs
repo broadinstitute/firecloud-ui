@@ -733,8 +733,8 @@
    (fn [err-text projects]
      (if err-text
        (on-done nil)
-       (on-done
-        (let [project (first (filter #(= project-name (% "projectName")) projects))]
+       (let [project (first (filter #(= project-name (% "projectName")) projects))]
+         (on-done
           (get project "creationStatus")
           (get project "message")))))))
 

@@ -40,11 +40,11 @@
      (swap! state assoc :busy (.getTime (js/Date.)))
      (endpoints/get-billing-project-status
       project-name
-      (fn [new-status]
+      (fn [new-status message]
         (if (and new-status (not= new-status project-status-creating))
           (do
             (swap! state dissoc :busy)
-            (on-status-change new-status))
+            (on-status-change new-status message))
           ;; Ensure a minimum of 2000ms of animation.
           (let [request-time (- (.getTime (js/Date.)) (:busy @state))]
             (react/call :-set-timeout this (max 0 (- 2000 request-time))
