@@ -478,7 +478,7 @@
                                        (:field-attributes props))))
    :component-did-mount
    (fn [{:keys [props refs]}]
-     (let [{:keys [remote render-display behavior empty-message render-suggestion on-select]} props
+     (let [{:keys [remote render-display behavior empty-message render-suggestion on-select typeahead-event]} props
            whitespace-tokenizer (aget Bloodhound "tokenizers" "whitespace")]
        (.typeahead (js/$ (@refs "field"))
                    (clj->js behavior)
@@ -489,7 +489,7 @@
                      :display render-display
                      :templates {:empty (str "<div style='padding: 0.5em'>" empty-message "</div>")
                                  :suggestion render-suggestion}}))
-       (.bind (js/$ (@refs "field")) "typeahead:select" on-select))
+       (.bind (js/$ (@refs "field")) typeahead-event on-select))
      (.addEventListener (@refs "field") "search"
                         #(when (and (empty? (.. % -currentTarget -value))
                                     (:on-clear props))
@@ -519,6 +519,7 @@
                     :render-display (:typeaheadDisplay props)
                     :empty-message "<small>Unable to find any matches to the current query</small>"
                     :render-suggestion (:typeaheadSuggestionTemplate props)
+                    :typeahead-event "typeahead:change"
                     :on-select (fn [_ suggestion]
                                  ((:on-filter props) ((:typeaheadDisplay props) suggestion)))}]]))
    :component-did-mount
