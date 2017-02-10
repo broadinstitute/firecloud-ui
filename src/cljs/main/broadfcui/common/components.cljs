@@ -471,8 +471,8 @@
      {:empty-message "No results to display."
       :behavior {:highlight true
                  :hint true
-                 :minLength 3
-                 :typeahead-event "typeahead:change"}})
+                 :minLength 3}
+      :typeahead-event ["typeahead:select" "typeahead:change"]})
    :render
    (fn [{:keys [props]}]
      (style/create-search-field (merge {:ref "field" :className "typeahead"}
@@ -490,7 +490,8 @@
                      :display render-display
                      :templates {:empty (str "<div style='padding: 0.5em'>" empty-message "</div>")
                                  :suggestion render-suggestion}}))
-       (.bind (js/$ (@refs "field")) typeahead-event on-select))
+       (doseq [item typeahead-event]
+         (.bind (js/$ (@refs "field")) item on-select)))
      (.addEventListener (@refs "field") "search"
                         #(when (and (empty? (.. % -currentTarget -value))
                                     (:on-clear props))
@@ -503,7 +504,8 @@
      ((:on-filter props) (common/get-text refs "typeahead")))
    :get-default-props
    (fn []
-     {:typeaheadDisplay identity})
+     {:typeaheadDisplay identity
+      :typeahead-event ["typeahead:select" "typeahead:change"]})
    :render
    (fn [{:keys [props this]}]
      (let [{:keys [field-attributes width]} props]
@@ -519,6 +521,7 @@
                     :remote (:bloodhoundInfo props)
                     :render-display (:typeaheadDisplay props)
                     :empty-message "<small>Unable to find any matches to the current query</small>"
+                    :typeahead-event (:typeahead-event props)
                     :render-suggestion (:typeaheadSuggestionTemplate props)
                     :on-select (fn [_ suggestion]
                                  ((:on-filter props) ((:typeaheadDisplay props) suggestion)))}]]))

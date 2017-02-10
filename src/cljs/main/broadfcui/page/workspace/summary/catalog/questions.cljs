@@ -136,7 +136,7 @@
                                            property label
                                            related-id-prop id
                                            related-label-prop label)))
-                     :typeahead-event "typeahead:select"
+                     :typeahead-event ["typeahead:select"]
                      :on-clear #(apply swap! state update :attributes dissoc property
                                        (library-utils/get-related-id+label-props library-schema property))}]
    (let [[related-id related-label] (library-utils/get-related-id+label (:attributes @state) library-schema property)]
@@ -166,6 +166,7 @@
                         :defaultValue value-nullsafe
                         :style (colorize {})
                         :onChange update-property}
+     :typeahead-event ["typeahead:select" "typeahead:change"]
      :on-filter set-property
      :bloodhoundInfo {:url (str (config/api-url-root) "/api/library/populate/suggest/" (name property))
                       :cache false
