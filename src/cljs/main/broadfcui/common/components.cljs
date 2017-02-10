@@ -471,14 +471,15 @@
      {:empty-message "No results to display."
       :behavior {:highlight true
                  :hint true
-                 :minLength 3}})
+                 :minLength 3
+                 :typeahead-event "typeahead:change"}})
    :render
    (fn [{:keys [props]}]
      (style/create-search-field (merge {:ref "field" :className "typeahead"}
                                        (:field-attributes props))))
    :component-did-mount
    (fn [{:keys [props refs]}]
-     (let [{:keys [remote render-display behavior empty-message render-suggestion on-select]} props
+     (let [{:keys [remote render-display behavior empty-message render-suggestion on-select typeahead-event]} props
            whitespace-tokenizer (aget Bloodhound "tokenizers" "whitespace")]
        (.typeahead (js/$ (@refs "field"))
                    (clj->js behavior)
@@ -489,7 +490,7 @@
                      :display render-display
                      :templates {:empty (str "<div style='padding: 0.5em'>" empty-message "</div>")
                                  :suggestion render-suggestion}}))
-       (.bind (js/$ (@refs "field")) "typeahead:select" on-select))
+       (.bind (js/$ (@refs "field")) typeahead-event on-select))
      (.addEventListener (@refs "field") "search"
                         #(when (and (empty? (.. % -currentTarget -value))
                                     (:on-clear props))

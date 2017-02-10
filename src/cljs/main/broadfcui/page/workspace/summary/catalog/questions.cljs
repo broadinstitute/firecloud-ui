@@ -136,6 +136,7 @@
                                            property label
                                            related-id-prop id
                                            related-label-prop label)))
+                     :typeahead-event "typeahead:select"
                      :on-clear #(apply swap! state update :attributes dissoc property
                                        (library-utils/get-related-id+label-props library-schema property))}]
    (let [[related-id related-label] (library-utils/get-related-id+label (:attributes @state) library-schema property)]
