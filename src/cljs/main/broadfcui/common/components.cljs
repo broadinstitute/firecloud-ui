@@ -471,7 +471,8 @@
      {:empty-message "No results to display."
       :behavior {:highlight true
                  :hint true
-                 :minLength 3}})
+                 :minLength 3
+                 :typeahead-event "typeahead:change"}})
    :render
    (fn [{:keys [props]}]
      (style/create-search-field (merge {:ref "field" :className "typeahead"}
@@ -519,7 +520,6 @@
                     :render-display (:typeaheadDisplay props)
                     :empty-message "<small>Unable to find any matches to the current query</small>"
                     :render-suggestion (:typeaheadSuggestionTemplate props)
-                    :typeahead-event "typeahead:change"
                     :on-select (fn [_ suggestion]
                                  ((:on-filter props) ((:typeaheadDisplay props) suggestion)))}]]))
    :component-did-mount
