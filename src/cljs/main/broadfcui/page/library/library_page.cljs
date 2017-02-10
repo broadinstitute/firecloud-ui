@@ -256,7 +256,7 @@
             aggregate-fields)])))})
 
 (def ^:private PERSISTENCE-KEY "library-page")
-(def ^:private VERSION 2)
+(def ^:private VERSION 3)
 
 (react/defc Page
   {:update-filter
