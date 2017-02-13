@@ -21,6 +21,7 @@
                        [url-loader "~0.5.7"]                ; webpack plugin
                        [webpack "~2.2.0"]                   ; combines deps into single js/css file
                        [foundation-sites "~6.3.0"]
+                       [uglify-js "git://github.com/mishoo/UglifyJS2#harmony"]
                        [node-sass "~4.5.0"]
                        [sass-loader "~5.0.0"]
                        ]
