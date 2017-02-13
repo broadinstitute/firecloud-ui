@@ -15,9 +15,20 @@
    [broadfcui.page.profile :as profile-page]
    [broadfcui.page.status :as status-page]
    [broadfcui.page.workspaces-list :as workspaces]
+   [broadfcui.tooltip :as tooltip]
    [broadfcui.utils :as utils]
    ))
 
+(react/defc TooltipTest
+  {:render
+   (fn []
+     [:div {:style {:marginBottom "2rem"}}
+      "You may need "
+      (tooltip/with-tooltip
+        "Here is a tooltip!"
+        [:span {:style {:fontStyle "italic"}}
+         "some additional information"])
+      "."])})
 
 (defn- logo []
   [:img {:src "assets/broad_logo.png" :style {:height 38}}])
@@ -440,6 +451,7 @@
         [RefreshCredentials {:auth2 (:auth2 @state)}])
       [:div {:style {:backgroundColor "white" :padding 20}}
        [:div {}
+        [TooltipTest]
         (when-let [auth2 (:auth2 @state)]
           [LoggedOut {:auth2 auth2 :hidden? (contains? (:user-status @state) :signed-in)
                       :on-change (fn [signed-in? token-saved?]
@@ -469,7 +481,8 @@
                      :auth2 (:auth2 @state)}])]]
       (footer)
       ;; As low as possible on the page so it will be the frontmost component when displayed.
-      [modal/Component {:ref "modal"}]])
+      [modal/Component {:ref "modal"}]
+      [tooltip/Container {:ref "tooltip"}]])
    :component-did-mount
    (fn [{:keys [this state refs locals]}]
      ;; pop up the message only when we start getting 503s, not on every 503
@@ -484,6 +497,7 @@
         (when maintenance-now?
           (show-system-status-dialog true))))
      (modal/set-instance! (@refs "modal"))
+     (set! tooltip/instance (@refs "tooltip"))
      (swap! locals assoc :hash-change-listener (partial react/call :handle-hash-change this))
      (.addEventListener js/window "hashchange" (:hash-change-listener @locals)))
    :component-will-unmount
