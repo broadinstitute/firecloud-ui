@@ -222,8 +222,11 @@
 (react/defc FoundationTooltip
   {:render
    (fn [{:keys [props]}]
-     [FoundationComponent
-      {:contents [:span (merge {:title (:text props)}
-                               {:data-tooltip "" :className "has-tip" :data-disable-hover false
-                                :tabindex 1 :aria-haspopup true})
-                  (:contents props)]}])})
+     (let [rand-id (gensym "tooltip-")]
+       [:div {}
+        [:button {:className "has-tip" :data-toggle rand-id}
+         (:text props)]
+        [FoundationComponent
+         {:contents [:div {:className "dropdown-pane" :id rand-id :data-dropdown ""
+                           :data-hover true :data-hover-pane true}
+                     (:tooltip props)]}]]))})
