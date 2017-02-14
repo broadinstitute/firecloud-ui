@@ -1,0 +1,31 @@
+{
+  "scenarioName": "Billing projects",
+  "requiredScenarioState": "Started",
+  "newScenarioState": "One finished",
+  "request": {
+    "method": "GET",
+    "url": "/api/profile/billing"
+  },
+  "response": {
+    "headers": {
+      "Access-Control-Allow-Origin": "*"
+    },
+    "jsonBody": [
+      {
+        "projectName": "dmohsbp1",
+        "role": "Owner",
+        "creationStatus": "Ready"
+      },
+      {
+        "projectName": "dmohsbp2",
+        "role": "Owner",
+        "creationStatus": "Creating"
+      },
+      {
+        "projectName": "dmohsbp3",
+        "role": "Owner",
+        "creationStatus": "Creating"
+      }
+    ]
+  }
+}

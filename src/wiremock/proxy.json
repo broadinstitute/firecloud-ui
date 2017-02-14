@@ -1,0 +1,9 @@
+{
+  "request": {
+    "method": "ANY",
+    "urlPattern": ".*"
+  },
+  "response": {
+    "proxyBaseUrl": "https://firecloud-orchestration.dsde-dev.broadinstitute.org"
+  }
+}
