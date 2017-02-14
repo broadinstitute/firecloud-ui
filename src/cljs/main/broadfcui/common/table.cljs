@@ -13,7 +13,7 @@
 
 (def ^:private default-initial-rows-per-page 20)
 
-(def persistence-keys #{:column-meta :query-params :filter-group-index :version})
+(def persistence-keys #{:column-meta :query-params :filter-group-index :v})
 
 
 (defn date-column [props]
@@ -24,6 +24,8 @@
 ;; Table component with specifiable style and column behaviors.
 ;;
 ;; Properties:
+;;   :v (optional)
+;;     A version number, used to validate persistence
 ;;   :pagination (optional, default :internal)
 ;;     Defines how the table is paginated.  Options are:
 ;;       :internal -- data is given via the :data property and client-side pagination is provided
@@ -188,8 +190,8 @@
                         :sort-order (or (:sort-initial initial-sort-column) :asc)}))}
      (when (:filter-groups props)
        {:filter-group-index (get props :initial-filter-group-index 0)})
-     (when-let [version (:version props)]
-       {:version version}))))
+     (when-let [version (:v props)]
+       {:v version}))))
 
 (defn- get-initial-table-state [{:keys [props]}]
   (merge
@@ -202,8 +204,8 @@
          (persistence/try-restore
           {:key (:state-key props)
            :validator (fn [stored-value]
-                        (or (not (:version props))
-                            (= (:version props) (:version stored-value))))
+                        (or (not (:v props))
+                            (= (:v props) (:v stored-value))))
            :initial #(restore-table-state props)})]
 
      (update restored :column-meta
