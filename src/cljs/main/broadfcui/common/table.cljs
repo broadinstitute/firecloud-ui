@@ -13,7 +13,7 @@
 
 (def ^:private default-initial-rows-per-page 20)
 
-(def persistence-keys #{:column-meta :query-params :filter-group-index})
+(def persistence-keys #{:column-meta :query-params :filter-group-index :version})
 
 
 (defn date-column [props]
@@ -177,15 +177,19 @@
                                          first)
                                 (when (:always-sort? props)
                                   (first (:columns props))))]
-    {:column-meta column-meta
-     :filter-group-index (get props :initial-filter-group-index 0)
-     :query-params (merge
-                    {:current-page 1 :rows-per-page (:initial-rows-per-page props)
-                     :filter-text ""}
-                    (when initial-sort-column
-                      {:sort-column (:header initial-sort-column)
-                       ; default needed when forcing sort
-                       :sort-order (or (:sort-initial initial-sort-column) :asc)}))}))
+    (merge
+     {:column-meta column-meta
+      :query-params (merge
+                     {:current-page 1 :rows-per-page (:initial-rows-per-page props)
+                      :filter-text ""}
+                     (when initial-sort-column
+                       {:sort-column (:header initial-sort-column)
+                        ; default needed when forcing sort
+                        :sort-order (or (:sort-initial initial-sort-column) :asc)}))}
+     (when (:filter-groups props)
+       {:filter-group-index (get props :initial-filter-group-index 0)})
+     (when-let [version (:version props)]
+       {:version version}))))
 
 (defn- get-initial-table-state [{:keys [props]}]
   (merge
@@ -197,7 +201,9 @@
    (let [restored
          (persistence/try-restore
           {:key (:state-key props)
-           :validator (fn [stored-value] (= (set (keys stored-value)) persistence-keys))
+           :validator (fn [stored-value]
+                        (or (not (:version props))
+                            (= (:version props) (:version stored-value))))
            :initial #(restore-table-state props)})]
 
      (update restored :column-meta
@@ -373,7 +379,7 @@
   (when (and (:state-key props)
              (not (:dragging? @state))
              (not (= (select-keys @state persistence-keys) (:initial-state @locals))))
-    (persistence/save {:key (:state-key props) :state state :only [:column-meta :query-params :filter-group-index]})))
+    (persistence/save {:key (:state-key props) :state state :only persistence-keys})))
 
 
 (react/defc Table
