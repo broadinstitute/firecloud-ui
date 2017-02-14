@@ -222,11 +222,14 @@
 (react/defc FoundationTooltip
   {:render
    (fn [{:keys [props]}]
-     (let [rand-id (gensym "tooltip-")]
+     (let [rand-id (gensym "tooltip-")
+           position (:position props)]
        [:div {}
         [:button {:className "has-tip" :data-toggle rand-id}
          (:text props)]
         [FoundationComponent
-         {:contents [:div {:className "dropdown-pane" :id rand-id :data-dropdown ""
+         {:contents [:div {:className (str "tooltip " position) :id rand-id :data-dropdown ""
+                           :data-v-offset (if (or (not position) (= position "top")) 12 100)
+                           :data-h-offset (if (or (= position "left") (= position "right")) 12 100)
                            :data-hover true :data-hover-pane true}
                      (:tooltip props)]}]]))})

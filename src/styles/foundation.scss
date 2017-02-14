@@ -1,8 +1,27 @@
 @import '~foundation-sites/scss/settings/settings';
 @import '~foundation-sites/scss/foundation';
 
-@include foundation-global-styles;
+.has-tip { // button resets normally applied by global, see below
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  border: none;
+  background: none;
+  font: unset;
+  text-align: unset;
+  padding: unset;
+}
+
+//@include foundation-global-styles;    // disabled because it insists on changing _everything_
 @include foundation-visibility-classes;
 @include foundation-float-classes;
 @include foundation-tooltip;
 @include foundation-dropdown;
+
+.tooltip {
+  visibility: hidden;
+  font-size: 0.8rem;
+
+  &.is-open {
+    visibility: visible;
+  }
+}

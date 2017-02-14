@@ -24,11 +24,11 @@
                        [uglify-js "git://github.com/mishoo/UglifyJS2#harmony"]
                        [node-sass "~4.5.0"]
                        [sass-loader "~5.0.0"]
-                       ]
-        :package {:scripts
-                  {:postinstall "webpack --optimize-minimize --output-filename webpack-deps.min.js"}}}
+                       ]}
   :profiles {:dev
              {:dependencies [[binaryage/devtools "0.8.3"]]
+              :npm {:package {:scripts
+                              {:postinstall "webpack --output-filename webpack-deps.min.js"}}}
               :cljsbuild
               {:builds
                {:client
@@ -51,7 +51,9 @@
                                           ;; out.
                                           :optimizations :simple
                                           :pretty-print false
-                                          :output-dir "build"}}}}}}
+                                          :output-dir "build"}}}}
+                      :npm {:package {:scripts
+                                      {:postinstall "webpack -p --output-filename webpack-deps.min.js"}}}}}
   :target-path "resources/public"
   :clean-targets ^{:protect false} [:target-path]
   :cljsbuild {:builds {:client {:source-paths ["src/cljs/main"]
