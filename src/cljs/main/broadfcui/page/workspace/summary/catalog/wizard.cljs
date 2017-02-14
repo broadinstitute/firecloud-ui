@@ -52,11 +52,14 @@
 (defn- render-summary-page [attributes library-schema invalid-attributes]
   [:div {}
    (if (not-empty invalid-attributes)
-     [:div {:style {:fontSize "14px" :color (:exception-state style/colors)}}
-      "Please fill in missing attributes before saving."
-      [:ul {:style {:fontSize "13px"}}
+     [:div {:style {:color (:exception-state style/colors) :border (str "1px solid " (:exception-state style/colors))
+                    :padding "1rem"}}
+      [:div {:style {:paddingBottom "0.5rem" :marginBottom "0.5rem"
+                     :borderBottom (str "1px solid " (:exception-state style/colors))}}
+       "The following additional attributes are required to publish:" ]
+      [:div {:style {:fontSize 14}}
        (map (fn [attribute]
-              [:li {} (get-in library-schema [:properties (keyword attribute) :title])])
+              [:div {:style {:paddingBottom "0.2rem"}} (get-in library-schema [:properties (keyword attribute) :title])])
             invalid-attributes)]])
 
    (style/create-paragraph
