@@ -619,9 +619,8 @@
 (react/defc NoBillingProjectsMessage
   {:render
   (fn [{:keys [props]}]
-    [:div {:style {:textAlign "center"}} (str "You must have a billing project associated with your account"
-         " to create a new workspace. To learn how to create a billing project, ")
-         [:a {:target "_blank" :href (str (config/billing-guide-url))} "click here"] "."])})
+    [:div {:style {:textAlign "center"}} (str "You must have a billing project associated with your account to create a new workspace. ")
+      [:a {:target "_blank" :href (str (config/billing-guide-url))} "Learn how to create a billing project."]])})
 
 (defn push-ok-cancel-modal [props]
   (modal/push-modal [OKCancelForm props]))

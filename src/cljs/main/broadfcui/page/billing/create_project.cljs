@@ -30,8 +30,8 @@
               [comps/ErrorViewer {:error (:details error)}])
             :else
             (if (empty? billing-accounts)
-              [:div {} "You do not have any billing accounts available. To learn how to create a billing account, "
-                [:a {:target "_blank" :href (config/billing-guide-url)} "click here"] "."]
+              [:div {} "You do not have any billing accounts available. "
+                [:a {:target "_blank" :href (str (config/billing-guide-url))} "Learn how to create a billing account."]]
               [:div {:style {:width 750}}
                (when (:creating? @state)
                  [comps/Blocker {:banner "Creating billing account..."}])
