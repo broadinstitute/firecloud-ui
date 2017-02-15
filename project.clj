@@ -28,7 +28,8 @@
   :profiles {:dev
              {:dependencies [[binaryage/devtools "0.8.3"]]
               :npm {:package {:scripts
-                              {:postinstall "webpack --output-filename webpack-deps.min.js"}}}
+                              {:postinstall "webpack"}}}
+              :figwheel {:css-dirs ["resources/public"]}
               :cljsbuild
               {:builds
                {:client
@@ -53,7 +54,7 @@
                                           :pretty-print false
                                           :output-dir "build"}}}}
                       :npm {:package {:scripts
-                                      {:postinstall "webpack -p --output-filename webpack-deps.min.js"}}}}}
+                                      {:postinstall "webpack -p"}}}}}
   :target-path "resources/public"
   :clean-targets ^{:protect false} [:target-path]
   :cljsbuild {:builds {:client {:source-paths ["src/cljs/main"]

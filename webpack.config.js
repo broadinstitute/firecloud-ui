@@ -10,9 +10,9 @@ module.exports = {
     },
     output: {
         path: path.join(__dirname, "resources/public/"),
-        library: 'webpack-deps',
-        libraryTarget: 'this',
-        filename: 'webpack-deps.js'
+        library: "webpack-deps",
+        libraryTarget: "this",
+        filename: "webpack-deps.min.js"
     },
     module: {
         rules: [
@@ -32,5 +32,8 @@ module.exports = {
     plugins: [
         new ExtractTextPlugin({filename: "webpack-deps.css"}),
         extractSass
-    ]
+    ],
+    watchOptions: {
+        ignored: /node_modules/
+    }
 };
