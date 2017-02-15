@@ -555,6 +555,7 @@
       (react/call :build-shadow this false)])
    :component-did-mount
    (fn [{:keys [refs this]}]
+     (react/call :update-edges this)
      ;; this listener also fires upon being added
      (.addEventListener (@refs "content-container") "onresize"
                         #(react/call :update-edges this)))
