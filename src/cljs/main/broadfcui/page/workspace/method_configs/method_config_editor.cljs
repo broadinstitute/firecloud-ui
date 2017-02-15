@@ -82,6 +82,7 @@
        (:loaded-method @state)
        [comps/EntityDetails {:entity (:loaded-method @state)
                              :editing? (:editing? props)
+                             :wdl-parse-error (:wdl-parse-error props)
                              :ref "methodDetails"
                              :onSnapshotIdChange (:onSnapshotIdChange props)
                              :snapshots ((:methods props) (map (:loaded-method @state) ["namespace" "name"]))}]
@@ -176,7 +177,7 @@
              error])]))
      all-values)]))
 
-(defn- render-main-display [this wrapped-config editing? inputs-outputs methods]
+(defn- render-main-display [this wrapped-config editing? wdl-parse-error inputs-outputs methods]
   (let [config (get-in wrapped-config ["methodConfiguration"])
         invalid-inputs (get-in wrapped-config ["invalidInputs"])
         invalid-outputs (get-in wrapped-config ["invalidOutputs"])]
@@ -196,6 +197,7 @@
                        :config config
                        :methods methods
                        :editing? editing?
+                       :wdl-parse-error wdl-parse-error
                        :onSnapshotIdChange #(react/call :load-new-method-template this %)}])
      (create-section-header "Root Entity Type")
      (create-section
@@ -230,7 +232,7 @@
                                                  (str "You do not currently have access"
                                                       " to the Google Bucket associated with this workspace."))
                                 :on-success (:on-submission-success props)})])
-      (render-main-display this wrapped-config editing? (:inputs-outputs @state) (:methods @state))
+      (render-main-display this wrapped-config editing? (:wdl-parse-error @state) (:inputs-outputs @state) (:methods @state))
       (clear-both)]]))
 
 (react/defc MethodConfigEditor
@@ -240,10 +242,14 @@
       :sidebar-visible? true})
    :render
    (fn [{:keys [this state refs props]}]
-     (cond (and (:loaded-config @state) (contains? @state :locked?))
-           (render-display this state refs props)
-           (:error @state) (style/create-server-error-message (:error @state))
-           :else [:div {:style {:textAlign "center"}} [comps/Spinner {:text "Loading Method Configuration..."}]]))
+     (cond
+       (and
+         (:loaded-config @state)
+         (contains? @state :locked?))
+       (render-display this state refs props)
+
+       (:error @state) (style/create-server-error-message (:error @state))
+       :else [:div {:style {:textAlign "center"}} [comps/Spinner {:text "Loading Method Configuration..."}]]))
    :component-did-mount
    (fn [{:keys [state props refs this]}]
      (react/call :load-validated-method-config this)
@@ -309,15 +315,15 @@
          {:endpoint (endpoints/create-template method-ref)
           :payload method-ref
           :headers utils/content-type=json
-          :on-done (fn [{:keys [success? get-parsed-response status-text]}]
-                     (if success?
-                       (let [response (get-parsed-response false)]
+          :on-done (fn [{:keys [success? get-parsed-response]}]
+                     (let [response (get-parsed-response false)]
+                       (if success?
                          (endpoints/call-ajax-orch
                            {:endpoint endpoints/get-inputs-outputs
                             :payload (response "methodRepoMethod")
                             :headers utils/content-type=json
                             :on-done (fn [{:keys [success? get-parsed-response]}]
-                                       (swap! state dissoc :blocker)
+                                       (swap! state dissoc :blocker :wdl-parse-error)
                                        (let [template {"methodConfiguration" (merge response config-namespace+name)}]
                                          (if success?
                                            (swap! state assoc
@@ -327,5 +333,7 @@
                                                                    "invalidOutputs" {}
                                                                    "validOutputs" {})
                                                   :inputs-outputs (get-parsed-response false))
-                                           (swap! state assoc :error ((get-parsed-response false) "message")))))}))
-                       (swap! state assoc :error status-text)))})))})
+                                           (swap! state assoc :error ((get-parsed-response false) "message")))))})
+                         (do
+                           (swap! state assoc :blocker nil :wdl-parse-error (response "message"))
+                           (comps/push-error (style/create-server-error-message (response "message")))))))})))})
