@@ -18,6 +18,7 @@
                        [jquery-ui "^1.12"]                  ; required by IGV
                        [marked "~0.3.5"]                    ; formats markdown
                        [corejs-typeahead "~1.1.1"]          ; maintained fork of bootstrap typeahead
+                       [uglify-js "git://github.com/mishoo/UglifyJS2#harmony"] ; override webpack's uglify with es6 compatible version
                        [url-loader "~0.5.7"]                ; webpack plugin
                        [webpack "~2.2.0"]                   ; combines deps into single js/css file
                        ]}
