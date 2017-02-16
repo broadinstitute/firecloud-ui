@@ -22,5 +22,8 @@ module.exports = {
     },
     plugins: [
         new ExtractTextPlugin({filename: "webpack-deps.css"})
-    ]
+    ],
+    watchOptions: {
+        ignored: /node_modules/
+    }
 };
