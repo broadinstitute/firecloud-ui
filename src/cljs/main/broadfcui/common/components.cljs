@@ -27,8 +27,8 @@
      {:dot-count 0})
    :render
    (fn [{:keys [state]}]
-     [:span {}
-      (repeat (:dot-count @state) ".")])
+     [:span {:style {:marginLeft 5}}
+      (repeat (:dot-count @state) "•")])
    :component-did-mount
    (fn [{:keys [this]}]
      (react/call :-cycle this))
