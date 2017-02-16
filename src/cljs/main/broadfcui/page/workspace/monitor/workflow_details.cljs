@@ -77,8 +77,7 @@
              [height (aget (aget (aget (aget (.-childNodes (aget (.-childNodes (aget (.-childNodes (aget (.-childNodes (aget
                         (.-childNodes (.getElementById js/document "chart_div")) 0)) 0)) 0)) 1)) 0) "height") "animVal") "value")]
              (gdom/remove-children "chart_div")
-             (.timingDiagram js/window (:data props) (:workflow-name props) (+ 50 height))))
-         0)
+             (.timingDiagram js/window (:data props) (:workflow-name props) (+ 50 height)))) 0)
        (when (.getElementById js/document "chart_div") (gdom/remove-children "chart_div"))))})
 
 (defn- backend-logs [data]
