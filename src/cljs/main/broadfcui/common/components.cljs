@@ -7,11 +7,13 @@
     [broadfcui.common.icons :as icons]
     [broadfcui.common.modal :as modal]
     [broadfcui.common.style :as style]
+    [broadfcui.config :as config]
     [broadfcui.utils :as utils]
     ))
 
 
 (declare push-error-text)
+(declare create-error-message)
 
 (react/defc Spinner
   {:render
@@ -59,10 +61,7 @@
                      :textDecoration "none"}
                     (if (map? style) style {}))
             :href (or href "javascript:;")
-            :onClick (if disabled?
-                       #(push-error-text
-                         (if (string? disabled?) disabled? "This action is disabled."))
-                       onClick)
+            :onClick (if disabled? (create-error-message disabled?) onClick)
             :onKeyDown (when (and onClick (not disabled?))
                          (common/create-key-handler [:space :enter] onClick))}
         text
@@ -221,10 +220,7 @@
                       :color (if heavy? "#fff" color)
                       :border (when-not heavy? style/standard-line)
                       :borderRadius 5}
-              :onClick (if disabled?
-                         #(push-error-text
-                           (if (string? disabled?) disabled? "This action is disabled."))
-                         (:onClick props))}
+              :onClick (if disabled? (create-error-message disabled?) (:onClick props))}
         (icons/icon {:style {:padding "0 20px" :borderRight style/standard-line} :className "fa-fw"} (:icon props))
         [:div {:style {:textAlign "center" :margin "auto"}}
          (:text props)]]))})
@@ -635,6 +631,12 @@
                                        (when (:cycle-focus? props)
                                          (.focus (get-first)))))))))})
 
+(react/defc NoBillingProjectsMessage
+  {:render
+  (fn [{:keys [props]}]
+    [:div {:style {:textAlign "center"}} (str "You must have a billing project associated with your account to create a new workspace. ")
+      [:a {:target "_blank" :href (str (config/billing-guide-url))} "Learn how to create a billing project."]])})
+
 (defn push-ok-cancel-modal [props]
   (modal/push-modal [OKCancelForm props]))
 
@@ -664,3 +666,9 @@
     {:header (or header "Confirm")
      :content [:div {:style {:maxWidth 500}} text]
      :ok-button on-confirm}))
+
+(defn create-error-message [disabled?]
+  (cond
+    (nil? disabled?) #(push-error-text "This action is disabled.")
+    (string? disabled?) #(push-error-text disabled?)
+    :else #(push-error disabled?)))
