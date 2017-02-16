@@ -68,7 +68,6 @@
         (if (:expanded @state)
           (.timingDiagram js/window (:data props) (:workflow-name props) nil)
           (when (.getElementById js/document "chart_div") (gdom/remove-children "chart_div")))])
-   :component-will-receive-props (fn [m] (swap! (:state m) identity))
    :component-did-update
    (fn [{:keys [props state]}]
      (if (:expanded @state)
@@ -80,13 +79,7 @@
              (gdom/remove-children "chart_div")
              (.timingDiagram js/window (:data props) (:workflow-name props) (+ 50 height))))
          0)
-       (when (.getElementById js/document "chart_div") (gdom/remove-children "chart_div"))))
-   :component-did-mount
-   (fn [state]
-     #_(js/setTimeout (fn [] (utils/log (.-childNodes (.getElementById js/document "chart_div")))) 2000)
-     ;;    (.querySelector {:aria-label "A chart."})
-     ;;(gdom/set-properties (.getElementsById js/document "chart_div") {:height (.get(.getElementsById js/document "chart_div"))} ))
-     )})
+       (when (.getElementById js/document "chart_div") (gdom/remove-children "chart_div"))))})
 
 (defn- backend-logs [data]
   (when-let [log-map (data "backendLogs")]
