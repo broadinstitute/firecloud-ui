@@ -12,21 +12,25 @@
     [broadfcui.utils :as utils]
     ))
 
-(defn- render-wizard-breadcrumbs [{:keys [library-schema page-num]}]
+(defn- render-wizard-breadcrumbs [{:keys [library-schema page-num pages-seen]}]
   (let [pages (:wizard library-schema)]
-    [:div {:style {:flex "0 0 250px" :backgroundColor "white" :border style/standard-line}}
-     [:div {:style {:padding "0.5rem 0.5rem 0 0.5rem" :fontWeight (when (< page-num (count pages)) "bold")}} "Catalog "]
-     [:ul {}
+    [:div {:style {:flex "0 0 250px" :backgroundColor "white"
+                   :border style/standard-line :padding "1rem"}}
+     [:div {:style {:paddingBottom "0.5rem" :fontWeight (when (< page-num (count pages)) "bold")}} "Catalog "]
+     [:ul {:style {:WebkitMarginBefore 0 :WebkitMarginAfter 0}}
       (map-indexed
        (fn [index {:keys [title]}]
          (let [this (= index page-num)]
-           [:li {:style {:margin "0.5em 0.5em 0.5em 0"
+           [:li {:style {:paddingBottom "0.5rem"
                          :fontWeight (when this "bold")
-                         :color (when-not this (:text-lighter style/colors))}}
+                         :color (when-not (or this (contains? pages-seen index)) (:text-lighter style/colors))}}
             title])) pages)]
-      [:div {:style {:padding "0.5rem 0.5rem 0 0.5rem"  :fontWeight (when (= page-num (count pages)) "bold")}}
+      [:div {:style {:paddingBottom "0.5rem"
+                     :color (when-not (contains? pages-seen (count pages)) (:text-lighter style/colors))
+                     :fontWeight (when (= page-num (count pages)) "bold")}}
        "Discoverability"]
-      [:div {:style {:padding "0.5rem 0.5rem 0 0.5rem"  :fontWeight (when (> page-num (count pages)) "bold")}}
+      [:div {:style {:color (when-not (contains? pages-seen (+ 1 (count pages))) (:text-lighter style/colors))
+                     :fontWeight (when (> page-num (count pages)) "bold")}}
        "Summary"]]))
 
 (defn- find-required-attributes [library-schema]
@@ -125,7 +129,8 @@
      (let [{:keys [library-schema]} props
            {:keys [versions]} library-schema]
        {:page-num 0
-        :pages-seen []
+        :pages-stack []
+        :pages-seen #{0}
         :invalid-properties #{}
         :working-attributes (get-initial-attributes (:workspace props))
         :published? (get-in props [:workspace :workspace :library-attributes :library:published])
@@ -138,7 +143,7 @@
    :render
    (fn [{:keys [props state this]}]
      (let [{:keys [library-schema library-groups]} props
-           {:keys [page-num invalid-properties working-attributes published? required-attributes validation-error submit-error]} @state]
+           {:keys [page-num pages-seen invalid-properties working-attributes published? required-attributes validation-error submit-error]} @state]
        [:div {}
         (when (:submitting? @state)
           [comps/Blocker {:banner "Submitting..."}])
@@ -149,7 +154,7 @@
          [comps/XButton {:dismiss modal/pop-modal}]]
         [:div {:style {:padding "22px 24px 40px" :backgroundColor (:background-light style/colors)}}
          [:div {:style {:display "flex" :width 850 :height 400}}
-          (render-wizard-breadcrumbs {:library-schema library-schema :page-num page-num})
+          (render-wizard-breadcrumbs {:library-schema library-schema :page-num page-num :pages-seen pages-seen})
           [comps/ScrollFader
            {:ref "scroller"
             :outer-style {:flex "1 1 auto"
@@ -183,10 +188,10 @@
                         flex/flex-spacer
                         [comps/Button {:text "Previous"
                                        :onClick (fn [_]
-                                                  (if-let [prev-page (peek (:pages-seen @state))]
+                                                  (if-let [prev-page (peek (:pages-stack @state))]
                                                     (swap! state #(-> %
                                                                       (assoc :page-num prev-page)
-                                                                      (update :pages-seen pop)
+                                                                      (update :pages-stack pop)
                                                                       (dissoc :validation-error)))))
                                        :style {:width 80}
                                        :disabled? (zero? page-num)}]
@@ -212,13 +217,13 @@
      (swap! state dissoc :validation-error)
      (if-let [error-message (react/call :validate (@refs "wizard-page"))]
        (swap! state assoc :validation-error error-message)
-       (let [{:keys [working-attributes pages-seen required-attributes page-num]} @state
+       (let [{:keys [working-attributes pages-seen pages-stack required-attributes page-num]} @state
              attributes-from-page (react/call :get-attributes (@refs "wizard-page"))
              all-attributes (merge working-attributes attributes-from-page)
              invalid-attributes (atom #{})]
          (swap! state assoc :working-attributes all-attributes)
          (swap! locals update :page-attributes assoc page-num attributes-from-page)
-         (doseq [page (conj pages-seen page-num)]
+         (doseq [page (conj pages-stack page-num)]
            (let [[questions _] (get-questions-for-page all-attributes (:library-schema props) page)
                  {:keys [invalid]} (library-utils/validate-required (convert-empty-strings all-attributes)
                                                                     questions required-attributes)]
@@ -227,7 +232,8 @@
          (after-update (fn [_]
                          (let [next-page (react/call :find-next-page this)]
                            (swap! state #(-> %
-                                             (update :pages-seen conj page-num)
+                                             (update :pages-seen conj next-page)
+                                             (update :pages-stack conj page-num)
                                              (assoc :page-num next-page)))))))))
    :find-next-page
    (fn [{:keys [props state]}]
