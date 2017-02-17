@@ -54,13 +54,18 @@
    (fn [{:keys [props]}]
      (if (not (:library:discoverableByGroups props))
        {:error "no groups set"}))
+   :get-initial-state
+   (fn [{:keys [props]}]
+     (select-keys props [:library:discoverableByGroups]))
    :get-attributes
-   (fn [{:keys [props]}]
-     (select-keys :library:discoverableByGroups props))
-
+   (fn [{:keys [state]}]
+     (select-keys @state [:library:discoverableByGroups]))
+   :set-groups
+   (fn [{:keys [state]} new-val]
+     (swap! state assoc :library:discoverableByGroups new-val))
    :render
-   (fn [{:keys [props]}]
-     (let [{:keys [library:discoverableByGroups library-groups]} props
+   (fn [{:keys [state this]}]
+     (let [{:keys [library:discoverableByGroups]} @state
            selected (if (empty? library:discoverableByGroups) 0 1)]
        [:div {} "Dataset should be discoverable by:"
         (map-indexed (fn [index wording]
@@ -68,10 +73,8 @@
                                       :margin "0.5rem 0" :padding "1em"
                                       :border style/standard-line :borderRadius 8
                                       :backgroundColor (when (= index selected) (:button-primary style/colors))
-                                      :cursor "pointer"}}
-                        ;; TODO: add onClick
-                        ;; if (= index 0) we want to set to '()
-                        ;; else, set to '("all_broad_users")
+                                      :cursor "pointer"}
+                              :onClick #(react/call :set-groups this (if (= index 0) '() '("all_broad_users")))}
                         [:input {:type "radio" :readOnly true :checked (= index selected)
                                  :style {:cursor "pointer"}}]
                         [:div {:style {:marginLeft "0.75rem" :color (when (= index selected) "white")}}
