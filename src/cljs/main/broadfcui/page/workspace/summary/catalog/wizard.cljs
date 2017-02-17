@@ -15,6 +15,7 @@
 (defn- render-wizard-breadcrumbs [{:keys [library-schema page-num]}]
   (let [pages (:wizard library-schema)]
     [:div {:style {:flex "0 0 250px" :backgroundColor "white" :border style/standard-line}}
+     [:div {:style {:padding "0.5rem 0.5rem 0 0.5rem" :fontWeight (when (< page-num (count pages)) "bold")}} "Catalog "]
      [:ul {}
       (map-indexed
        (fn [index {:keys [title]}]
@@ -22,8 +23,11 @@
            [:li {:style {:margin "0.5em 0.5em 0.5em 0"
                          :fontWeight (when this "bold")
                          :color (when-not this (:text-lighter style/colors))}}
-            title]))
-       (conj pages {:title "Discoverablility"} {:title "Summary"}))]]))
+            title])) pages)]
+      [:div {:style {:padding "0.5rem 0.5rem 0 0.5rem"  :fontWeight (when (= page-num (count pages)) "bold")}}
+       "Discoverability"]
+      [:div {:style {:padding "0.5rem 0.5rem 0 0.5rem"  :fontWeight (when (> page-num (count pages)) "bold")}}
+       "Summary"]]))
 
 (defn- find-required-attributes [library-schema]
   (->> (map :required (:oneOf library-schema))
@@ -50,10 +54,7 @@
        val)) attributes))
 
 (react/defc DiscoverabilityPage
-  {:validate
-   (fn [{:keys [props]}]
-     (if (not (:library:discoverableByGroups props))
-       {:error "no groups set"}))
+  {:validate (constantly nil)
    :get-initial-state
    (fn [{:keys [props]}]
      (select-keys props [:library:discoverableByGroups]))
@@ -107,7 +108,8 @@
             questions))
      (if (= (:library:useLimitationOption attributes) "orsp") ;; TODO: change this so not hardcoded
        (library-utils/render-property library-schema attributes :library:orsp)
-       (library-utils/render-consent-codes library-schema attributes))])])
+       (library-utils/render-consent-codes library-schema attributes))
+     (library-utils/render-library-row "Discoverability" (if (empty? (:library:discoverableByGroups attributes)) "All users" "Broad users only"))])])
 
 
 
