@@ -23,7 +23,7 @@
                          :fontWeight (when this "bold")
                          :color (when-not this (:text-lighter style/colors))}}
             title]))
-       (conj pages {:title "Summary"}))]]))
+       (conj pages {:title "Discoverablility"} {:title "Summary"}))]]))
 
 (defn- find-required-attributes [library-schema]
   (->> (map :required (:oneOf library-schema))
@@ -48,6 +48,39 @@
      (if (or (coll? val) (string? val))
        (not-empty val)
        val)) attributes))
+
+(react/defc DiscoverabilityPage
+  {:validate
+   (fn [{:keys [props]}]
+     (if (not (:library:discoverableByGroups props))
+       {:error "no groups set"}))
+   :get-attributes
+   (fn [{:keys [props]}]
+     (select-keys :library:discoverableByGroups props))
+
+   :render
+   (fn [{:keys [props]}]
+     (let [{:keys [library:discoverableByGroups library-groups]} props
+           selected (if (empty? library:discoverableByGroups) 0 1)]
+       [:div {} "Dataset should be discoverable by:"
+        (map-indexed (fn [index wording]
+                       [:div {:style {:display "flex" :alignItems "center"
+                                      :margin "0.5rem 0" :padding "1em"
+                                      :border style/standard-line :borderRadius 8
+                                      :backgroundColor (when (= index selected) (:button-primary style/colors))
+                                      :cursor "pointer"}}
+                        ;; TODO: add onClick
+                        ;; if (= index 0) we want to set to '()
+                        ;; else, set to '("all_broad_users")
+                        [:input {:type "radio" :readOnly true :checked (= index selected)
+                                 :style {:cursor "pointer"}}]
+                        [:div {:style {:marginLeft "0.75rem" :color (when (= index selected) "white")}}
+                         wording]])
+                     '("All users" "Broad users only"))
+        [:div {:style {:fontSize "small" :paddingTop "0.5rem" :fontStyle "italic"}}
+         "N.B. The Dataset will be visible to these users in the library, but users will still
+         need to acquire Read permission for the Workspace in order to view its contents."]]))})
+
 
 (defn- render-summary-page [attributes library-schema invalid-attributes]
   [:div {}
@@ -99,7 +132,7 @@
         :required-attributes (find-required-attributes library-schema)}))
    :render
    (fn [{:keys [props state this]}]
-     (let [{:keys [library-schema]} props
+     (let [{:keys [library-schema library-groups]} props
            {:keys [page-num invalid-properties working-attributes published? required-attributes validation-error submit-error]} @state]
        [:div {}
         (when (:submitting? @state)
@@ -120,16 +153,22 @@
             :inner-style {:padding "1rem" :boxSizing "border-box" :height "100%"}
             :content
             (react/create-element
-             (if (< page-num (count (:wizard library-schema)))
-               (let [[questions enumerate] (get-questions-for-page working-attributes library-schema page-num)]
+             (let [page-count (count (:wizard library-schema))
+                   [questions enumerate] (get-questions-for-page working-attributes library-schema page-num)]
+               (cond
+                 (< page-num page-count)
                  [Questions {:ref "wizard-page" :key page-num
                              :library-schema library-schema
                              :missing-properties invalid-properties
                              :enumerate enumerate
                              :questions questions
                              :attributes working-attributes
-                             :required-attributes required-attributes}])
-               (render-summary-page working-attributes library-schema invalid-properties)))}]]
+                             :required-attributes required-attributes}]
+                 (= page-num page-count)
+                 [DiscoverabilityPage {:ref "wizard-page"
+                                       :library:discoverableByGroups (:library:discoverableByGroups working-attributes)
+                                       :library-groups library-groups}]
+                 (> page-num page-count) (render-summary-page working-attributes library-schema invalid-properties))))}]]
          (when validation-error
            [:div {:style {:marginTop "1em" :color (:exception-state style/colors) :textAlign "center"}}
             validation-error])
@@ -149,12 +188,12 @@
                         (flex/flex-strut 27)
                         [comps/Button {:text "Next"
                                        :onClick #(react/call :next-page this)
-                                       :disabled? (= page-num (-> library-schema :wizard count))
+                                       :disabled? (> page-num (-> library-schema :wizard count))
                                        :style {:width 80}}]
                         flex/flex-spacer
                         [comps/Button {:text (if published? "Republish" "Submit")
                                        :onClick #(react/call :submit this)
-                                       :disabled? (< page-num (-> library-schema :wizard count))
+                                       :disabled? (not (> page-num (-> library-schema :wizard count)))
                                        :style {:width 80}}])]]))
    :component-did-mount
    (fn [{:keys [locals]}]

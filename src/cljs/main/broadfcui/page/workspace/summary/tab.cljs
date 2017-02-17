@@ -64,7 +64,7 @@
          {:keys [runningSubmissionsCount]} :workspaceSubmissionStats} workspace
         status (common/compute-status workspace)
         {:keys [sidebar-visible? editing?]
-         {:keys [library-schema]} :server-response} @state]
+         {:keys [library-schema library-groups]} :server-response} @state]
     [:div {:style {:flex "0 0 270px" :paddingRight 30}}
      [comps/StatusLabel {:text (str status
                                  (when (= status "Running")
@@ -84,6 +84,7 @@
           {:style :light :color :button-primary :margin :top
            :icon :catalog :text "Catalog Dataset..."
            :onClick #(modal/push-modal [CatalogWizard {:library-schema library-schema
+                                                       :library-groups library-groups
                                                        :workspace workspace
                                                        :workspace-id workspace-id
                                                        :request-refresh request-refresh}])}])
@@ -315,6 +316,11 @@
           (swap! state update :server-response assoc :server-error err-text)
           (swap! state update :server-response
                  assoc :billing-projects (map #(% "projectName") projects)))))
+     (endpoints/get-library-groups
+      (fn [{:keys [success? raw-response]}]
+        (if success?
+          (swap! state update :server-response assoc :library-groups raw-response)
+          (swap! state update :server-response assoc :server-error "Unable to load library groups"))))
      (endpoints/get-library-attributes
        (fn [{:keys [success? get-parsed-response]}]
          (if success?

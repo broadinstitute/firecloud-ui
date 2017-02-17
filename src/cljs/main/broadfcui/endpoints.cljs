@@ -763,6 +763,12 @@
   {:path (str "/billing/" project-id "/" role "/" user-email)
    :method :delete})
 
+(defn get-library-groups [on-done]
+  (utils/ajax-orch
+   "/library/groups"
+   {:method :get
+    :on-done on-done}))
+
 (defn get-library-attributes [on-done]
   (utils/ajax-orch
     "/library-attributedefinitions-v1"
