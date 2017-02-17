@@ -24,10 +24,10 @@
    (fn []
      [:div {:style {:marginBottom "2rem"}}
       "You may need "
-      (tooltip/with-tooltip
-        "Here is a tooltip!"
+      (tooltip/with-default
         [:span {:style {:fontStyle "italic"}}
-         "some additional information"])
+         "some additional information"]
+        "Here is a tooltip!")
       "."])})
 
 (defn- logo []
@@ -482,7 +482,7 @@
       (footer)
       ;; As low as possible on the page so it will be the frontmost component when displayed.
       [modal/Component {:ref "modal"}]
-      [tooltip/Container {:ref "tooltip"}]])
+      [tooltip/Container]])
    :component-did-mount
    (fn [{:keys [this state refs locals]}]
      ;; pop up the message only when we start getting 503s, not on every 503
@@ -497,7 +497,6 @@
         (when maintenance-now?
           (show-system-status-dialog true))))
      (modal/set-instance! (@refs "modal"))
-     (set! tooltip/instance (@refs "tooltip"))
      (swap! locals assoc :hash-change-listener (partial react/call :handle-hash-change this))
      (.addEventListener js/window "hashchange" (:hash-change-listener @locals)))
    :component-will-unmount
