@@ -7,11 +7,13 @@
     [broadfcui.common.icons :as icons]
     [broadfcui.common.modal :as modal]
     [broadfcui.common.style :as style]
+    [broadfcui.config :as config]
     [broadfcui.utils :as utils]
     ))
 
 
 (declare push-error-text)
+(declare create-error-message)
 
 (react/defc Spinner
   {:render
@@ -27,8 +29,8 @@
      {:dot-count 0})
    :render
    (fn [{:keys [state]}]
-     [:span {}
-      (repeat (:dot-count @state) ".")])
+     [:span {:style {:marginLeft 5}}
+      (repeat (:dot-count @state) "•")])
    :component-did-mount
    (fn [{:keys [this]}]
      (react/call :-cycle this))
@@ -59,10 +61,7 @@
                      :textDecoration "none"}
                     (if (map? style) style {}))
             :href (or href "javascript:;")
-            :onClick (if disabled?
-                       #(push-error-text
-                         (if (string? disabled?) disabled? "This action is disabled."))
-                       onClick)
+            :onClick (if disabled? (create-error-message disabled?) onClick)
             :onKeyDown (when (and onClick (not disabled?))
                          (common/create-key-handler [:space :enter] onClick))}
         text
@@ -221,10 +220,7 @@
                       :color (if heavy? "#fff" color)
                       :border (when-not heavy? style/standard-line)
                       :borderRadius 5}
-              :onClick (if disabled?
-                         #(push-error-text
-                           (if (string? disabled?) disabled? "This action is disabled."))
-                         (:onClick props))}
+              :onClick (if disabled? (create-error-message disabled?) (:onClick props))}
         (icons/icon {:style {:padding "0 20px" :borderRight style/standard-line} :className "fa-fw"} (:icon props))
         [:div {:style {:textAlign "center" :margin "auto"}}
          (:text props)]]))})
@@ -235,21 +231,22 @@
      {"methodVersion" (int (common/get-text refs "snapshotId"))})
    :render
    (fn [{:keys [props refs state this]}]
-     (let [entity (:entity props)
-           editing? (:editing? props)
-           make-field
-           (fn [entity key label dropdown? & [render]]
-             [:div {}
-              [:span {:style {:fontWeight 500 :width 100 :display "inline-block" :paddingBottom "0.3em"}} label]
-              (if (and editing? dropdown?)
-                (style/create-identity-select {:ref key
-                                               :style {:width 100}
-                                               :defaultValue (entity key)
-                                               :onChange (when-let [f (:onSnapshotIdChange props)]
-                                                           #(f (int (common/get-text refs "snapshotId"))))}
-                                              (:snapshots props))
-                [:span {} ((or render identity) (entity key))])])
-           config? (contains? entity "method")]
+     [:div {} (when-let [wdl-parse-error (:wdl-parse-error props)] (style/create-server-error-message wdl-parse-error))
+      (let [entity (:entity props)
+            editing? (:editing? props)
+            make-field
+            (fn [entity key label dropdown? & [render]]
+              [:div {}
+               [:span {:style {:fontWeight 500 :width 100 :display "inline-block" :paddingBottom "0.3em"}} label]
+               (if (and editing? dropdown?)
+                 (style/create-identity-select {:ref key
+                                                :style {:width 100}
+                                                :defaultValue (entity key)
+                                                :onChange (when-let [f (:onSnapshotIdChange props)]
+                                                            #(f (int (common/get-text refs "snapshotId"))))}
+                                               (:snapshots props))
+                 [:span {} ((or render identity) (entity key))])])
+            config? (contains? entity "method")]
        [:div {:style {:backgroundColor (:background-light style/colors)
                       :borderRadius 8 :border style/standard-line
                       :padding "1em"}}
@@ -264,7 +261,7 @@
              (react/call :render-details this make-field (entity "method"))
              [:div {:style {:fontWeight 500 :marginTop "1em"}} "WDL:"]
              [CodeMirror {:text (get-in entity ["method" "payload"])}]]
-            [CodeMirror {:text (entity "payload")}]))]))
+            [CodeMirror {:text (entity "payload")}]))])])
    :render-details
    (fn [{:keys []} make-field entity]
      [:div {}
@@ -471,14 +468,15 @@
      {:empty-message "No results to display."
       :behavior {:highlight true
                  :hint true
-                 :minLength 3}})
+                 :minLength 3}
+      :typeahead-events ["typeahead:select" "typeahead:change"]})
    :render
    (fn [{:keys [props]}]
      (style/create-search-field (merge {:ref "field" :className "typeahead"}
                                        (:field-attributes props))))
    :component-did-mount
    (fn [{:keys [props refs]}]
-     (let [{:keys [remote render-display behavior empty-message render-suggestion on-select]} props
+     (let [{:keys [remote render-display behavior empty-message render-suggestion on-select typeahead-events]} props
            whitespace-tokenizer (aget Bloodhound "tokenizers" "whitespace")]
        (.typeahead (js/$ (@refs "field"))
                    (clj->js behavior)
@@ -489,7 +487,8 @@
                      :display render-display
                      :templates {:empty (str "<div style='padding: 0.5em'>" empty-message "</div>")
                                  :suggestion render-suggestion}}))
-       (.bind (js/$ (@refs "field")) "typeahead:select" on-select))
+       (doseq [item typeahead-events]
+         (.bind (js/$ (@refs "field")) item on-select)))
      (.addEventListener (@refs "field") "search"
                         #(when (and (empty? (.. % -currentTarget -value))
                                     (:on-clear props))
@@ -502,7 +501,8 @@
      ((:on-filter props) (common/get-text refs "typeahead")))
    :get-default-props
    (fn []
-     {:typeaheadDisplay identity})
+     {:typeaheadDisplay identity
+      :typeahead-events ["typeahead:select" "typeahead:change"]})
    :render
    (fn [{:keys [props this]}]
      (let [{:keys [field-attributes width]} props]
@@ -518,6 +518,7 @@
                     :remote (:bloodhoundInfo props)
                     :render-display (:typeaheadDisplay props)
                     :empty-message "<small>Unable to find any matches to the current query</small>"
+                    :typeahead-events (:typeahead-events props)
                     :render-suggestion (:typeaheadSuggestionTemplate props)
                     :on-select (fn [_ suggestion]
                                  ((:on-filter props) ((:typeaheadDisplay props) suggestion)))}]]))
@@ -550,6 +551,7 @@
       (react/call :build-shadow this false)])
    :component-did-mount
    (fn [{:keys [refs this]}]
+     (react/call :update-edges this)
      ;; this listener also fires upon being added
      (.addEventListener (@refs "content-container") "onresize"
                         #(react/call :update-edges this)))
@@ -629,6 +631,12 @@
                                        (when (:cycle-focus? props)
                                          (.focus (get-first)))))))))})
 
+(react/defc NoBillingProjectsMessage
+  {:render
+  (fn [{:keys [props]}]
+    [:div {:style {:textAlign "center"}} (str "You must have a billing project associated with your account to create a new workspace. ")
+      [:a {:target "_blank" :href (str (config/billing-guide-url))} "Learn how to create a billing project."]])})
+
 (defn push-ok-cancel-modal [props]
   (modal/push-modal [OKCancelForm props]))
 
@@ -658,3 +666,9 @@
     {:header (or header "Confirm")
      :content [:div {:style {:maxWidth 500}} text]
      :ok-button on-confirm}))
+
+(defn create-error-message [disabled?]
+  (cond
+    (nil? disabled?) #(push-error-text "This action is disabled.")
+    (string? disabled?) #(push-error-text disabled?)
+    :else #(push-error disabled?)))

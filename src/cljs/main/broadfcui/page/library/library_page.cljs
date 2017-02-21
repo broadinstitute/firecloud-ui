@@ -25,7 +25,7 @@
            search-result-columns (:search-result-columns props)
            extra-columns (subvec search-result-columns 4)]
        [table/Table
-        {:ref "table" :state-key "library-table"
+        {:ref "table" :state-key "library-table" :v 1
          :header-row-style {:fontWeight 500 :fontSize "90%"
                             :backgroundColor nil
                             :color "black"
@@ -256,7 +256,7 @@
             aggregate-fields)])))})
 
 (def ^:private PERSISTENCE-KEY "library-page")
-(def ^:private VERSION 2)
+(def ^:private VERSION 3)
 
 (react/defc Page
   {:update-filter

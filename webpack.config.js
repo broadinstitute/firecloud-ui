@@ -10,9 +10,9 @@ module.exports = {
     },
     output: {
         path: path.join(__dirname, "resources/public/"),
-        library: "webpack-deps",
-        libraryTarget: "this",
-        filename: "webpack-deps.min.js"
+        library: 'webpack-deps',
+        libraryTarget: 'this',
+        filename: 'webpack-deps.js'
     },
     module: {
         rules: [

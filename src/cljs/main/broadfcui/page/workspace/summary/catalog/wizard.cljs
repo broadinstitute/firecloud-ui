@@ -12,7 +12,6 @@
     [broadfcui.utils :as utils]
     ))
 
-
 (defn- render-wizard-breadcrumbs [{:keys [library-schema page-num]}]
   (let [pages (:wizard library-schema)]
     [:div {:style {:flex "0 0 250px" :backgroundColor "white" :border style/standard-line}}
@@ -24,8 +23,7 @@
                          :fontWeight (when this "bold")
                          :color (when-not this (:text-lighter style/colors))}}
             title]))
-       pages)]]))
-
+       (conj pages {:title "Summary"}))]]))
 
 (defn- find-required-attributes [library-schema]
   (->> (map :required (:oneOf library-schema))
@@ -33,6 +31,48 @@
        flatten
        (map keyword)
        set))
+
+(defn- get-questions-for-page [working-attributes library-schema page-num]
+  (when (< page-num (count (:wizard library-schema)))
+    (let [page-props (get-in library-schema [:wizard page-num])
+          {:keys [questions enumerate optionSource options]} page-props]
+      (if optionSource
+        (let [option-value (get working-attributes (keyword optionSource))]
+          (when-let [option-match (some->> option-value keyword (get options))]
+            (map option-match [:questions :enumerate])))
+        [questions enumerate]))))
+
+(defn- convert-empty-strings [attributes]
+  (utils/map-values
+   (fn [val]
+     (if (or (coll? val) (string? val))
+       (not-empty val)
+       val)) attributes))
+
+(defn- render-summary-page [attributes library-schema invalid-attributes]
+  [:div {}
+   (if (not-empty invalid-attributes)
+     [:div {:style {:color (:exception-state style/colors) :border (str "1px solid " (:exception-state style/colors))
+                    :padding "1rem"}}
+      [:div {:style {:paddingBottom "0.5rem" :marginBottom "0.5rem"
+                     :borderBottom (str "1px solid " (:exception-state style/colors))}}
+       "The following additional attributes are required to publish:" ]
+      [:div {:style {:fontSize 14}}
+       (map (fn [attribute]
+              [:div {:style {:paddingBottom "0.2rem"}} (get-in library-schema [:properties (keyword attribute) :title])])
+            invalid-attributes)]])
+
+   (style/create-paragraph
+    [:div {}
+     (let [questions (first (get-questions-for-page (convert-empty-strings attributes) library-schema 0))]
+       (map (fn [attribute]
+              (if (not-empty (str (attributes (keyword attribute))))
+                (library-utils/render-property library-schema attributes (keyword attribute))))
+            questions))
+     (if (= (:library:useLimitationOption attributes) "orsp") ;; TODO: change this so not hardcoded
+       (library-utils/render-property library-schema attributes :library:orsp)
+       (library-utils/render-consent-codes library-schema attributes))])])
+
 
 
 (defn- get-initial-attributes [workspace]
@@ -47,7 +87,10 @@
      (let [{:keys [library-schema]} props
            {:keys [versions]} library-schema]
        {:page-num 0
+        :pages-seen []
+        :invalid-properties #{}
         :working-attributes (get-initial-attributes (:workspace props))
+        :published? (get-in props [:workspace :workspace :library-attributes :library:published])
         :version-attributes (->> versions
                                  (map keyword)
                                  (map (fn [version]
@@ -57,7 +100,7 @@
    :render
    (fn [{:keys [props state this]}]
      (let [{:keys [library-schema]} props
-           {:keys [page-num working-attributes required-attributes validation-error submit-error]} @state]
+           {:keys [page-num invalid-properties working-attributes published? required-attributes validation-error submit-error]} @state]
        [:div {}
         (when (:submitting? @state)
           [comps/Blocker {:banner "Submitting..."}])
@@ -77,39 +120,42 @@
             :inner-style {:padding "1rem" :boxSizing "border-box" :height "100%"}
             :content
             (react/create-element
-             (let [page-props (get-in library-schema [:wizard page-num])
-                   {:keys [questions enumerate optionSource options]} page-props
-                   [questions enumerate] (if optionSource
-                                           (map (get options (keyword (get working-attributes (keyword optionSource))))
-                                                [:questions :enumerate])
-                                           [questions enumerate])]
-               [Questions {:ref "wizard-page" :key page-num
-                           :library-schema library-schema
-                           :enumerate enumerate
-                           :questions questions
-                           :attributes working-attributes
-                           :required-attributes required-attributes}]))}]]
+             (if (< page-num (count (:wizard library-schema)))
+               (let [[questions enumerate] (get-questions-for-page working-attributes library-schema page-num)]
+                 [Questions {:ref "wizard-page" :key page-num
+                             :library-schema library-schema
+                             :missing-properties invalid-properties
+                             :enumerate enumerate
+                             :questions questions
+                             :attributes working-attributes
+                             :required-attributes required-attributes}])
+               (render-summary-page working-attributes library-schema invalid-properties)))}]]
          (when validation-error
            [:div {:style {:marginTop "1em" :color (:exception-state style/colors) :textAlign "center"}}
             validation-error])
          [comps/ErrorViewer {:error submit-error}]
          (flex/flex-box {:style {:marginTop 40}}
-          (flex/flex-strut 80)
-          flex/flex-spacer
-          [comps/Button {:text "Previous"
-                         :onClick (fn [_] (swap! state #(-> % (update :page-num dec) (dissoc :validation-error))))
-                         :style {:width 80}
-                         :disabled? (zero? page-num)}]
-          (flex/flex-strut 27)
-          [comps/Button {:text "Next"
-                         :onClick #(react/call :next-page this)
-                         :disabled? (= page-num (-> library-schema :wizard count dec))
-                         :style {:width 80}}]
-          flex/flex-spacer
-          [comps/Button {:text "Submit"
-                         :onClick #(react/call :next-page this)
-                         :disabled? (< page-num (-> library-schema :wizard count dec))
-                         :style {:width 80}}])]]))
+                        (flex/flex-strut 80)
+                        flex/flex-spacer
+                        [comps/Button {:text "Previous"
+                                       :onClick (fn [_]
+                                                  (if-let [prev-page (peek (:pages-seen @state))]
+                                                    (swap! state #(-> %
+                                                                      (assoc :page-num prev-page)
+                                                                      (update :pages-seen pop)
+                                                                      (dissoc :validation-error)))))
+                                       :style {:width 80}
+                                       :disabled? (zero? page-num)}]
+                        (flex/flex-strut 27)
+                        [comps/Button {:text "Next"
+                                       :onClick #(react/call :next-page this)
+                                       :disabled? (= page-num (-> library-schema :wizard count))
+                                       :style {:width 80}}]
+                        flex/flex-spacer
+                        [comps/Button {:text (if published? "Republish" "Submit")
+                                       :onClick #(react/call :submit this)
+                                       :disabled? (< page-num (-> library-schema :wizard count))
+                                       :style {:width 80}}])]]))
    :component-did-mount
    (fn [{:keys [locals]}]
      (swap! locals assoc :page-attributes []))
@@ -118,27 +164,49 @@
      (when (not= (:page-num prev-state) (:page-num @state))
        (react/call :scroll-to (@refs "scroller") 0)))
    :next-page
-   (fn [{:keys [props state refs this locals after-update]}]
+   (fn [{:keys [state refs this locals after-update props]}]
      (swap! state dissoc :validation-error)
      (if-let [error-message (react/call :validate (@refs "wizard-page"))]
        (swap! state assoc :validation-error error-message)
-       (let [attributes-from-page (react/call :get-attributes (@refs "wizard-page"))]
-         (swap! state update :working-attributes merge attributes-from-page)
-         (swap! locals update :page-attributes assoc (:page-num @state) attributes-from-page)
-         (after-update
-          #(if (< (:page-num @state) (-> props :library-schema :wizard count dec))
-             (swap! state update :page-num inc)
-             (react/call :submit this))))))
+       (let [{:keys [working-attributes pages-seen required-attributes page-num]} @state
+             attributes-from-page (react/call :get-attributes (@refs "wizard-page"))
+             all-attributes (merge working-attributes attributes-from-page)
+             invalid-attributes (atom #{})]
+         (swap! state assoc :working-attributes all-attributes)
+         (swap! locals update :page-attributes assoc page-num attributes-from-page)
+         (doseq [page (conj pages-seen page-num)]
+           (let [[questions _] (get-questions-for-page all-attributes (:library-schema props) page)
+                 {:keys [invalid]} (library-utils/validate-required (convert-empty-strings all-attributes)
+                                                                    questions required-attributes)]
+             (reset! invalid-attributes (clojure.set/union invalid @invalid-attributes))))
+         (swap! state assoc :invalid-properties @invalid-attributes)
+         (after-update (fn [_]
+                         (let [next-page (react/call :find-next-page this)]
+                           (swap! state #(-> %
+                                             (update :pages-seen conj page-num)
+                                             (assoc :page-num next-page)))))))))
+   :find-next-page
+   (fn [{:keys [props state]}]
+     (let [{:keys [library-schema]} props
+           {:keys [page-num working-attributes]} @state
+           next (atom (inc page-num))]
+       (while (and (not (get-questions-for-page working-attributes library-schema @next))
+                   (< @next (count (:wizard library-schema))))
+         (swap! next inc))
+       @next))
    :submit
    (fn [{:keys [props state locals]}]
-     (swap! state assoc :submitting? true :submit-error nil)
-     (endpoints/call-ajax-orch
-      {:endpoint (endpoints/save-library-metadata (:workspace-id props))
-       :payload (apply merge (:version-attributes @state) (:page-attributes @locals))
-       :headers utils/content-type=json
-       :on-done (fn [{:keys [success? get-parsed-response]}]
-                  (swap! state dissoc :submitting?)
-                  (if success?
-                    (do (modal/pop-modal)
-                        ((:request-refresh props)))
-                    (swap! state assoc :submit-error (get-parsed-response false))))}))})
+     (if (not-empty (:invalid-properties @state))
+       (swap! state assoc :validation-error "You will need to complete all required metadata attributes to be able to publish the workspace in the Data Library")
+       (let [attributes-seen (apply merge (replace (:page-attributes @locals) (:pages-seen @state)))]
+         (swap! state assoc :submitting? true :submit-error nil)
+         (endpoints/call-ajax-orch
+          {:endpoint (endpoints/save-library-metadata (:workspace-id props))
+           :payload  (convert-empty-strings (merge attributes-seen (:version-attributes @state)))
+           :headers utils/content-type=json
+           :on-done (fn [{:keys [success? get-parsed-response]}]
+                      (swap! state dissoc :submitting?)
+                      (if success?
+                        (do (modal/pop-modal)
+                            ((:request-refresh props)))
+                        (swap! state assoc :submit-error (get-parsed-response false))))}))))})

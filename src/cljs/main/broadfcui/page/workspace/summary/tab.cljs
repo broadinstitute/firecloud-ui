@@ -121,9 +121,7 @@
        (when-not editing?
          [comps/SidebarButton {:style :light :margin :top :color :button-primary
                                :text "Clone..." :icon :clone
-                               :disabled? (when (empty? billing-projects)
-                                            "There are no billing projects available for your account. To create a
-                                            billing project, choose the 'Billing' option from the dropdown in the top right.")
+                               :disabled? (if (empty? billing-projects) [comps/NoBillingProjectsMessage] false)
                                :onClick #(modal/push-modal
                                           [WorkspaceCloner
                                            {:on-success (fn [namespace name]
@@ -149,7 +147,8 @@
 (defn- render-main [{:keys [workspace curator? owner? writer? reader? can-share? bucket-access? editing? submissions-count
                             user-access-level library-schema request-refresh workspace-id storage-cost]}]
   (let [{:keys [owners]
-         {:keys [createdBy createdDate bucketName description workspace-attributes library-attributes]} :workspace} workspace
+         {:keys [createdBy createdDate bucketName description workspace-attributes library-attributes realm]} :workspace} workspace
+        realm-name (:realmName realm)
         render-detail-box (fn [order title & children]
                             [:div {:style {:flexBasis "50%" :order order}}
                              (style/create-section-header title)
@@ -171,7 +170,11 @@
                                               [AclEditor {:workspace-id workspace-id
                                                           :user-access-level user-access-level
                                                           :request-refresh request-refresh}])})
-              ")"])]))
+              ")"])]
+          (when realm-name
+            [:div {:style {:paddingTop "0.5rem"}}
+             [:div {:style {:fontStyle "italic"}} "Access restricted to realm:"]
+             [:div {} realm-name]])))
       (render-detail-box
         3
         "Created By"
