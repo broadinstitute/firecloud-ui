@@ -69,7 +69,7 @@
    (fn [{:keys [state]} new-val]
      (swap! state assoc :library:discoverableByGroups new-val))
    :render
-   (fn [{:keys [state this]}]
+   (fn [{:keys [state props this]}]
      (let [{:keys [library:discoverableByGroups]} @state
            selected (if (empty? library:discoverableByGroups) 0 1)]
        [:div {} "Dataset should be discoverable by:"
@@ -82,9 +82,15 @@
                               :onClick #(react/call :set-groups this (if (= index 0) '() '("all_broad_users")))}
                         [:input {:type "radio" :readOnly true :checked (= index selected)
                                  :style {:cursor "pointer"}}]
-                        [:div {:style {:marginLeft "0.75rem" :color (when (= index selected) "white")}}
-                         wording]])
-                     '("All users" "Broad users only"))
+                        (if (= index 1)
+                           (style/create-identity-select {:value "<select an option>" ;;(or current-value ENUM_EMPTY_CHOICE)
+                                                          }
+                                                         ;:style (colorize {}) }
+                                                         ;:onChange update-property}
+                                                         (cons "Limit to Group" (list (:library-groups props))))
+                           [:div {:style {:marginLeft "0.75rem" :color (when (= index selected) "white")}}
+                           wording])])
+                     '("All users" "Limit to Group"))
         [:div {:style {:fontSize "small" :paddingTop "0.5rem" :fontStyle "italic"}}
          "N.B. The Dataset will be visible to these users in the library, but users will still
          need to acquire Read permission for the Workspace in order to view its contents."]]))})
