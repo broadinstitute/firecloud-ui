@@ -44,6 +44,8 @@
 (defn- remove-derefed [tooltips]
   (filterv #(not (empty? (:references %))) tooltips))
 
+;; Tooltips are rendered in this external container so that when a parent has, for example,
+;; overflow: hidden, tooltips will still show up on the page.
 (r/defc Container
   {:show
    (fn [{:keys [state]} id trigger content]
