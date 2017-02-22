@@ -8,8 +8,8 @@ function addDataTableRow(dataTable, callName, callPartName, startDate, endDate) 
     //}
 }
 
-function timingDiagram(response, workflowName, height) {
-    var container = document.getElementById('chart_div');
+function timingDiagram(element, response, workflowName, height) {
+    var container = element;
     var chart = new google.visualization.Timeline(container);
     var data = JSON.parse(response);
 
