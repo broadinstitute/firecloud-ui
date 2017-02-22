@@ -80,7 +80,7 @@
                           .-childNodes (aget 0)
                           (aget "height") (aget "animVal") (aget "value"))]
            (gdom/removeChildren "chart-container")
-           (.timingDiagram js/window (get @refs "chart-container") (:data props) (:workflow-name props) (+ 50 height))))
+           (.timingDiagram js/window (get @refs "chart-container") (:data props) (:workflow-name props) (+ 75 height))))
        (gdom/removeChildren (get @refs "chart-container"))))})
 
 (defn- backend-logs [data]
