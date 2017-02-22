@@ -32,17 +32,6 @@
               v))]))
    attributes))
 
-
-(defn- validate-required [attributes questions required-attributes]
-  (let [required-props (->> questions
-                            (map keyword)
-                            (filter (partial contains? required-attributes))
-                            set)
-        missing-props (clojure.set/difference required-props (-> attributes keys set))]
-    (when-not (empty? missing-props)
-      {:error "Please provide all required attributes"
-       :invalid missing-props})))
-
 (defn- validate-numbers [attributes library-schema]
   (let [invalid-numbers (->> attributes
                              ;; get ones that are integers:
@@ -149,13 +138,13 @@
                                             (library-utils/get-related-id+label-props library-schema property))})]]
      ;; TODO: why is this causing React to bomb when adding the node?
      #_(when (not-any? clojure.string/blank? [related-id related-label])
-       [:div {}
-        [:span {:style {:fontWeight "bold"}} related-label]
-        [:span {:style {:fontSize "small" :float "right"}} related-id]
-        [:div {}
-         (style/create-link {:text "Clear Selection"
-                             :onClick #(apply swap! state update :attributes dissoc property
-                                              (library-utils/get-related-id+label-props library-schema property))})]]))])
+         [:div {}
+          [:span {:style {:fontWeight "bold"}} related-label]
+          [:span {:style {:fontSize "small" :float "right"}} related-id]
+          [:div {}
+           (style/create-link {:text "Clear Selection"
+                               :onClick #(apply swap! state update :attributes dissoc property
+                                                (library-utils/get-related-id+label-props library-schema property))})]]))])
 
 (defn- render-populate-typeahead [{:keys [value-nullsafe property inputHint colorize set-property update-property]}]
   [:div {:style {:marginBottom "0.75em"}}
@@ -172,10 +161,10 @@
                       :cache false
                       :prepare (fn [query settings]
                                  (clj->js
-                                   (assoc (js->clj settings)
-                                     :headers {:Authorization (str "Bearer " (utils/get-access-token))}
-                                     :type "GET"
-                                     :url (str (aget settings "url") "?q=" query))))}
+                                  (assoc (js->clj settings)
+                                    :headers {:Authorization (str "Bearer " (utils/get-access-token))}
+                                    :type "GET"
+                                    :url (str (aget settings "url") "?q=" query))))}
      :typeaheadSuggestionTemplate (fn [result]
                                     (str "<div style='textOverflow: ellipsis; overflow: hidden; font-size: smaller;'>" result  "</div>"))}]])
 
@@ -194,15 +183,14 @@
 (react/defc Questions
   {:validate
    (fn [{:keys [props state locals]}]
-     (let [{:keys [questions library-schema required-attributes]} props
+     (let [{:keys [library-schema]} props
            processed-attributes (->> (:attributes @state)
                                      (utils/map-values (fn [val]
                                                          (if (string? val)
-                                                           (not-empty (trim val))
+                                                           (trim val)
                                                            val)))
                                      (utils/filter-values some?))
-           {:keys [error invalid]} (or (validate-required processed-attributes questions required-attributes)
-                                       (validate-numbers processed-attributes library-schema))]
+           {:keys [error invalid]} (or (validate-numbers processed-attributes library-schema))]
        (swap! locals assoc :processed-attributes processed-attributes)
        (when error
          (swap! state assoc :invalid-properties invalid)
@@ -222,14 +210,14 @@
                 (map keyword questions))}))
    :render
    (fn [{:keys [props state]}]
-     (let [{:keys [library-schema questions required-attributes enumerate]} props
+     (let [{:keys [library-schema missing-properties questions required-attributes enumerate]} props
            {:keys [attributes invalid-properties]} @state]
        [(if enumerate :ol :div) {}
         (map
          (fn [property]
            (let [current-value (get attributes property)
                  {:keys [type enum renderHint] :as prop} (get-in library-schema [:properties property])
-                 error? (contains? invalid-properties property)
+                 error? (or (contains? invalid-properties property) (contains? missing-properties property))
                  colorize #(merge % (when error? {:borderColor (:exception-state style/colors)
                                                   :color (:exception-state style/colors)}))
                  data (merge {:prop prop :state state :property property :library-schema library-schema

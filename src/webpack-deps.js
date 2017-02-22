@@ -15,5 +15,5 @@ require('jquery-ui/themes/base/draggable.css');
 require('codemirror/lib/codemirror.css');
 require('github-markdown-css/github-markdown.css');
 require('font-awesome/css/font-awesome.css');
-require('./css/markdown.css');
-require('./css/twitter-typeahead.css');
+require('./styles/markdown.css');
+require('./styles/twitter-typeahead.css');

@@ -723,7 +723,7 @@
                 (if success?
                   (let [pred (if include-pending?
                                (constantly true)
-                               #(not= (% "creationStatus") "Creating"))]
+                               #(= (% "creationStatus") "Ready"))]
                     (on-done nil (filterv pred (get-parsed-response false))))
                   (on-done status-text nil)))})))
 
@@ -733,8 +733,10 @@
    (fn [err-text projects]
      (if err-text
        (on-done nil)
-       (on-done
-        (get (first (filter #(= project-name (% "projectName")) projects)) "creationStatus"))))))
+       (let [project (first (filter #(= project-name (% "projectName")) projects))]
+         (on-done
+          (get project "creationStatus")
+          (get project "message")))))))
 
 (defn get-billing-accounts []
   {:path "/profile/billingAccounts"

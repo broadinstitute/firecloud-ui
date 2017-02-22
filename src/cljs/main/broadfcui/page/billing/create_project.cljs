@@ -7,6 +7,7 @@
     [broadfcui.common.icons :as icons]
     [broadfcui.common.modal :as modal]
     [broadfcui.common.style :as style]
+    [broadfcui.config :as config]
     [broadfcui.endpoints :as endpoints]
     [broadfcui.utils :as utils]
     ))
@@ -29,7 +30,8 @@
               [comps/ErrorViewer {:error (:details error)}])
             :else
             (if (empty? billing-accounts)
-              [:div {} "You do not have any billing accounts available."]
+              [:div {} "You do not have any billing accounts available. "
+                [:a {:target "_blank" :href (str (config/billing-guide-url))} "Learn how to create a billing account."]]
               [:div {:style {:width 750}}
                (when (:creating? @state)
                  [comps/Blocker {:banner "Creating billing account..."}])
