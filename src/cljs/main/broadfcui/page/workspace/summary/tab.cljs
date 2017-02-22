@@ -320,9 +320,9 @@
           (swap! state update :server-response
                  assoc :billing-projects (map #(% "projectName") projects)))))
      (endpoints/get-library-groups
-      (fn [{:keys [success? raw-response]}]
+      (fn [{:keys [success? get-parsed-response]}]
         (if success?
-          (swap! state update :server-response assoc :library-groups raw-response)
+          (swap! state update :server-response assoc :library-groups (get-parsed-response))
           (swap! state update :server-response assoc :server-error "Unable to load library groups"))))
      (endpoints/get-library-attributes
        (fn [{:keys [success? get-parsed-response]}]

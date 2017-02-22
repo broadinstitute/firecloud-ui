@@ -57,6 +57,8 @@
        (not-empty val)
        val)) attributes))
 
+(def ^:private ALL_USERS "All users")
+
 (react/defc DiscoverabilityPage
   {:validate (constantly nil)
    :get-initial-state
@@ -67,31 +69,22 @@
      (select-keys @state [:library:discoverableByGroups]))
    :set-groups
    (fn [{:keys [state]} new-val]
-     (swap! state assoc :library:discoverableByGroups new-val))
+     (swap! state assoc :library:discoverableByGroups (if (= new-val ALL_USERS) nil new-val)))
    :render
    (fn [{:keys [state props this]}]
      (let [{:keys [library:discoverableByGroups]} @state
-           selected (if (empty? library:discoverableByGroups) 0 1)]
+           {:keys [:curator? :owner? :can-share?]} props
+           editable? (or curator? (or owner? can-share?))
+           selected (if (empty? library:discoverableByGroups) ALL_USERS library:discoverableByGroups)]
        [:div {} "Dataset should be discoverable by:"
-        (map-indexed (fn [index wording]
-                       [:div {:style {:display "flex" :alignItems "center"
-                                      :margin "0.5rem 0" :padding "1em"
-                                      :border style/standard-line :borderRadius 8
-                                      :backgroundColor (when (= index selected) (:button-primary style/colors))
-                                      :cursor "pointer"
-                                      :disabled true}
-                              :onClick #(react/call :set-groups this (if (= index 0) '() '("all_broad_users")))}
-                        [:input {:type "radio" :readOnly true :checked (= index selected)
-                                 :style {:cursor "pointer"}}]
-                        (if (= index 1)
-                           (style/create-identity-select {:value "<select an option>" ;;(or current-value ENUM_EMPTY_CHOICE)
-                                                          }
-                                                         ;:style (colorize {}) }
-                                                         ;:onChange update-property}
-                                                         (cons "Limit to Group" (list (:library-groups props))))
-                           [:div {:style {:marginLeft "0.75rem" :color (when (= index selected) "white")}}
-                           wording])])
-                     '("All users" "Limit to Group"))
+        (style/create-identity-select {:value selected
+                                       :display "flex" :alignItems "center"
+                                       :margin "0.5rem 0" :padding "1em"
+                                       :border style/standard-line :borderRadius 8
+                                       :cursor "pointer"
+                                       :disabled (not editable?)
+                                       :onChange #(react/call :set-groups this (.. % -target -value))}
+                                      (cons ALL_USERS (:library-groups props)))
         [:div {:style {:fontSize "small" :paddingTop "0.5rem" :fontStyle "italic"}}
          "N.B. The Dataset will be visible to these users in the library, but users will still
          need to acquire Read permission for the Workspace in order to view its contents."]]))})
@@ -120,7 +113,7 @@
      (if (= (:library:useLimitationOption attributes) "orsp") ;; TODO: change this so not hardcoded
        (library-utils/render-property library-schema attributes :library:orsp)
        (library-utils/render-consent-codes library-schema attributes))
-     (library-utils/render-library-row "Discoverability" (if (empty? (:library:discoverableByGroups attributes)) "All users" "Broad users only"))])])
+     (library-utils/render-library-row "Discoverability" (if-let [group (:library:discoverableByGroups attributes)] group ALL_USERS))])])
 
 
 
