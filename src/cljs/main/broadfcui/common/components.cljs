@@ -668,7 +668,5 @@
      :ok-button on-confirm}))
 
 (defn create-error-message [disabled?]
-  (cond
-    (nil? disabled?) #(push-error-text "This action is disabled.")
-    (string? disabled?) #(push-error-text disabled?)
-    :else #(push-error disabled?)))
+  (when (string? disabled?)
+    #(push-error-text disabled?)))
