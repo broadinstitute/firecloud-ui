@@ -79,7 +79,7 @@
        :div {:style {:position (when-not sidebar-visible? "fixed")
                      :top (when-not sidebar-visible? 0)
                      :width 270}}
-       (when (and curator? writer? (not editing?))
+       (when (not editing?)
          [comps/SidebarButton
           {:style :light :color :button-primary :margin :top
            :icon :catalog :text "Catalog Dataset..."
@@ -90,6 +90,7 @@
                                                        :can-share? can-share?
                                                        :owner? owner?
                                                        :curator? curator?
+                                                       :writer? writer?
                                                        :request-refresh request-refresh}])}])
        (when (and curator? owner? (not editing?))
          (if (:library:published library-attributes)
@@ -227,7 +228,10 @@
                      :workspace workspace
                      :workspace-id workspace-id
                      :request-refresh request-refresh
-                     :can-edit? (and curator? owner? (not editing?))}])
+                     :can-share? can-share?
+                     :owner? owner?
+                     :curator? curator?
+                     :writer? writer?}])
      [attributes/WorkspaceAttributeViewerEditor {:ref "workspace-attribute-editor"
                                                  :editing? editing?
                                                  :writer? writer?

@@ -142,7 +142,7 @@
         :required-attributes (find-required-attributes library-schema)}))
    :render
    (fn [{:keys [props state this]}]
-     (let [{:keys [library-schema library-groups can-share?]} props
+     (let [{:keys [library-schema curator? can-share? writer?]} props
            {:keys [page-num pages-seen invalid-properties working-attributes published? required-attributes validation-error submit-error]} @state]
        [:div {}
         (when (:submitting? @state)
@@ -173,6 +173,7 @@
                              :enumerate enumerate
                              :questions questions
                              :attributes working-attributes
+                             :editable? (or curator? writer?)
                              :required-attributes required-attributes}]
                  (= page-num page-count)
                  [DiscoverabilityPage
@@ -203,10 +204,12 @@
                                        :disabled? (> page-num (-> library-schema :wizard count))
                                        :style {:width 80}}]
                         flex/flex-spacer
+                        (let [save-permissions (or writer? curator? can-share?)
+                              last-page (> page-num (-> library-schema :wizard count))]
                         [comps/Button {:text (if published? "Republish" "Submit")
                                        :onClick #(react/call :submit this)
-                                       :disabled? (not (> page-num (-> library-schema :wizard count)))
-                                       :style {:width 80}}])]]))
+                                       :disabled? (not (and save-permissions last-page))
+                                       :style {:width 80}}]))]]))
    :component-did-mount
    (fn [{:keys [locals]}]
      (swap! locals assoc :page-attributes []))
@@ -250,7 +253,7 @@
    (fn [{:keys [props state locals]}]
      (if (not-empty (:invalid-properties @state))
        (swap! state assoc :validation-error "You will need to complete all required metadata attributes to be able to publish the workspace in the Data Library")
-       (let [attributes-seen (apply merge (replace (:page-attributes @locals) (:pages-seen @state)))]
+       (let [attributes-seen (apply merge (replace (:page-attributes @locals) (:pages-stack @state)))]
          (swap! state assoc :submitting? true :submit-error nil)
          (endpoints/call-ajax-orch
           {:endpoint (endpoints/save-library-metadata (:workspace-id props))
