@@ -1,7 +1,6 @@
 (ns broadfcui.page.workspace.monitor.workflow-details
   (:require
     [dmohs.react :as react]
-    [clojure.browser.dom :as gdom]
     [clojure.string :as string]
     [broadfcui.common :as common]
     [broadfcui.common.components :as comps]
@@ -11,6 +10,7 @@
     [broadfcui.endpoints :as endpoints]
     [broadfcui.page.workspace.monitor.common :as moncommon]
     [broadfcui.utils :as utils]
+    [goog.dom :as gdom]
     ))
 
 (defn- create-field [label & contents]
@@ -64,18 +64,32 @@
           "Not Available"
           (style/create-link {:text (if (:expanded @state) "Hide" "Show")
                               :onClick #(swap! state update :expanded not)})))
-        [:div {:style {:padding "0.25em 0 0 0"} :id "chart_div"}]
-        (if (:expanded @state)
-          (.timingDiagram js/window (:data props) (:workflow-name props))
-          (when (.getElementById js/document "chart_div") (gdom/remove-children "chart_div")))])})
+      [:div {:ref "chart-container" :style {:padding "0.25em 0 0 0"}}]])
+   :component-did-mount #((:this %) :-update-element)
+   :component-did-update #((:this %) :-update-element)
+   :-update-element
+   (fn [{:keys [props state refs]}]
+     (if (:expanded @state)
+       (do
+         (.timingDiagram js/window (get @refs "chart-container") (:data props) (:workflow-name props) 100)
+         (let [height (-> (get @refs "chart-container")
+                          .-childNodes (aget 0)
+                          .-childNodes (aget 0)
+                          .-childNodes (aget 0)
+                          .-childNodes (aget 1)
+                          .-childNodes (aget 0)
+                          (aget "height") (aget "animVal") (aget "value"))]
+           (gdom/removeChildren "chart-container")
+           (.timingDiagram js/window (get @refs "chart-container") (:data props) (:workflow-name props) (+ 50 height))))
+       (gdom/removeChildren (get @refs "chart-container"))))})
 
 (defn- backend-logs [data]
   (when-let [log-map (data "backendLogs")]
     ;; Right now we only ever have a single log, so we should only ever hit the "true" case.
     ;; But in case something changes, I'll leave the general case so the UI doesn't totally bomb.
     (if (= 1 (count log-map))
-      (let [log-name (last (string/split (first (vals log-map)) #"/" ))]
-      (create-field "JES log" (display-value (first (vals log-map)) log-name)))
+      (let [log-name (last (string/split (first (vals log-map)) #"/"))]
+        (create-field "JES log" (display-value (first (vals log-map)) log-name)))
       [:div {:style {:paddingBottom "0.25em"}} "Backend logs:"
        (map
          (fn [[name value]]
@@ -92,11 +106,11 @@
       [:div {:style {:display "inline-block" :marginRight "1em"}}
        (let [workflow-name (workflow-name (:label props))
              call-name (call-name (:label props))]
-        (style/create-link {:text (:label props)
-                            :target "_blank"
-                            :style {:color "-webkit-link" :textDecoration "underline"}
-          :href (str moncommon/google-cloud-context (:bucketName props) "/" (:submission-id props)
-                     "/" workflow-name "/" (:workflowId props) "/call-" call-name "/")}))]
+         (style/create-link {:text (:label props)
+                             :target "_blank"
+                             :style {:color "-webkit-link" :textDecoration "underline"}
+                             :href (str moncommon/google-cloud-context (:bucketName props) "/" (:submission-id props)
+                                        "/" workflow-name "/" (:workflowId props) "/call-" call-name "/")}))]
       (style/create-link {:text (if (:expanded @state) "Hide" "Show")
                           :onClick #(swap! state assoc :expanded (not (:expanded @state)))})
       (when (:expanded @state)
@@ -127,13 +141,13 @@
           inputs (first (first (workflow "calls")))
           input-names (string/split inputs ".")
           workflow-name (first input-names)]
-    (create-field "Workflow ID"
-                  (style/create-link {:text (workflow "id")
-                                      :target "_blank"
-                                      :style {:color "-webkit-link" :textDecoration "underline"}
-                                      :href (str moncommon/google-cloud-context
-                                                 bucketName "/" submission-id  "/"
-                                                 workflow-name "/" (workflow "id") "/")})))
+      (create-field "Workflow ID"
+                    (style/create-link {:text (workflow "id")
+                                        :target "_blank"
+                                        :style {:color "-webkit-link" :textDecoration "underline"}
+                                        :href (str moncommon/google-cloud-context
+                                                   bucketName "/" submission-id "/"
+                                                   workflow-name "/" (workflow "id") "/")})))
     (let [status (workflow "status")]
       (create-field "Status" (moncommon/icon-for-wf-status status) status))
     (when (workflow "submission")
@@ -146,8 +160,8 @@
     [IODetail {:label "Outputs" :data (workflow "outputs")}]
     [:div {:style {:whiteSpace "nowrap" :marginRight "0.5em"}}
      (let [wlogurl (str "gs://" bucketName "/" submission-id "/workflow.logs/workflow."
-                   (workflow "id") ".log")]
-      (create-field "Workflow Log" (display-value wlogurl (str "workflow." (workflow "id") ".log"))))]
+                        (workflow "id") ".log")]
+       (create-field "Workflow Log" (display-value wlogurl (str "workflow." (workflow "id") ".log"))))]
     [WorkflowTiming {:label "Workflow Timing" :data raw-data :workflow-name workflow-name}]]
 
    [:div {:style {:marginTop "1em" :fontWeight 500}} "Calls:"]
@@ -173,14 +187,14 @@
    :component-did-mount
    (fn [{:keys [props state]}]
      (endpoints/call-ajax-orch
-      {:endpoint
-       (endpoints/get-workflow-details
-        (:workspace-id props) (:submission-id props) (:workflow-id props))
-       :on-done (fn [{:keys [success? get-parsed-response status-text raw-response]}]
-                  (swap! state assoc :server-response
-                         {:success? success?
-                          :response (if success? (get-parsed-response false) status-text)
-                          :raw-response raw-response}))}))})
+       {:endpoint
+        (endpoints/get-workflow-details
+          (:workspace-id props) (:submission-id props) (:workflow-id props))
+        :on-done (fn [{:keys [success? get-parsed-response status-text raw-response]}]
+                   (swap! state assoc :server-response
+                          {:success? success?
+                           :response (if success? (get-parsed-response false) status-text)
+                           :raw-response raw-response}))}))})
 
 
 (defn render [props]
