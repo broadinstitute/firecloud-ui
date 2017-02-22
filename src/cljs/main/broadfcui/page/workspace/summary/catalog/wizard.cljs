@@ -222,12 +222,12 @@
      (swap! state dissoc :validation-error)
      (if-let [error-message (react/call :validate (@refs "wizard-page"))]
        (swap! state assoc :validation-error error-message)
-       (let [{:keys [working-attributes pages-seen pages-stack required-attributes page-num]} @state
+       (let [{:keys [working-attributes pages-stack required-attributes page-num]} @state
              attributes-from-page (react/call :get-attributes (@refs "wizard-page"))
              all-attributes (merge working-attributes attributes-from-page)
              invalid-attributes (atom #{})]
          (swap! state assoc :working-attributes all-attributes)
-         (swap! locals update :page-attributes assoc page-num attributes-from-page)
+         (if-not (empty? attributes-from-page) (swap! locals update :page-attributes assoc page-num attributes-from-page))
          (doseq [page (conj pages-stack page-num)]
            (let [[questions _] (get-questions-for-page all-attributes (:library-schema props) page)
                  {:keys [invalid]} (library-utils/validate-required (convert-empty-strings all-attributes)
