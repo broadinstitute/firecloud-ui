@@ -61,7 +61,7 @@
   {:validate (constantly nil)
    :get-initial-state
    (fn [{:keys [props]}]
-     (select-keys props [:library:discoverableByGroups]))
+     (select-keys props [:library:discoverableByGroups :curator? :owner? :can-share?]))
    :get-attributes
    (fn [{:keys [state]}]
      (select-keys @state [:library:discoverableByGroups]))
@@ -78,7 +78,8 @@
                                       :margin "0.5rem 0" :padding "1em"
                                       :border style/standard-line :borderRadius 8
                                       :backgroundColor (when (= index selected) (:button-primary style/colors))
-                                      :cursor "pointer"}
+                                      :cursor "pointer"
+                                      :disabled true}
                               :onClick #(react/call :set-groups this (if (= index 0) '() '("all_broad_users")))}
                         [:input {:type "radio" :readOnly true :checked (= index selected)
                                  :style {:cursor "pointer"}}]
@@ -148,7 +149,7 @@
         :required-attributes (find-required-attributes library-schema)}))
    :render
    (fn [{:keys [props state this]}]
-     (let [{:keys [library-schema library-groups]} props
+     (let [{:keys [library-schema library-groups can-share?]} props
            {:keys [page-num pages-seen invalid-properties working-attributes published? required-attributes validation-error submit-error]} @state]
        [:div {}
         (when (:submitting? @state)
@@ -181,9 +182,11 @@
                              :attributes working-attributes
                              :required-attributes required-attributes}]
                  (= page-num page-count)
-                 [DiscoverabilityPage {:ref "wizard-page"
-                                       :library:discoverableByGroups (:library:discoverableByGroups working-attributes)
-                                       :library-groups library-groups}]
+                 [DiscoverabilityPage
+                  (merge
+                   {:ref "wizard-page"}
+                   (select-keys working-attributes [:library:discoverableByGroups])
+                   (select-keys props [:library-schema :library-groups :can-share? :owner? :curator?]))]
                  (> page-num page-count) (render-summary-page working-attributes library-schema invalid-properties))))}]]
          (when validation-error
            [:div {:style {:marginTop "1em" :color (:exception-state style/colors) :textAlign "center"}}

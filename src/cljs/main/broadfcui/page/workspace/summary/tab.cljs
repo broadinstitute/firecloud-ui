@@ -58,7 +58,7 @@
 
 
 (defn- render-sidebar [state refs this
-                       {:keys [workspace billing-projects owner? writer? curator?
+                       {:keys [workspace billing-projects owner? writer? curator? can-share?
                                workspace-id on-clone on-delete request-refresh]}]
   (let [{{:keys [isLocked library-attributes description isProtected]} :workspace
          {:keys [runningSubmissionsCount]} :workspaceSubmissionStats} workspace
@@ -87,6 +87,9 @@
                                                        :library-groups library-groups
                                                        :workspace workspace
                                                        :workspace-id workspace-id
+                                                       :can-share? can-share?
+                                                       :owner? owner?
+                                                       :curator? curator?
                                                        :request-refresh request-refresh}])}])
        (when (and curator? owner? (not editing?))
          (if (:library:published library-attributes)
