@@ -480,7 +480,9 @@
           [LoggedIn {:nav-context (:root-nav-context @state)
                      :auth2 (:auth2 @state)}])]]
       (footer)
-      ;; As low as possible on the page so it will be the frontmost component when displayed.
+      ;; These components are as low as possible on the page so they will be the frontmost
+      ;; items when displayed. Further tweaking can be done by modifying the z-index style
+      ;; attribute.
       [modal/Component {:ref "modal"}]
       [tooltip/Container]])
    :component-did-mount
