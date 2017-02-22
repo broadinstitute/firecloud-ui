@@ -71,26 +71,16 @@
    (fn [{:keys [props state refs]}]
      (if (:expanded @state)
        (do
-         (.timingDiagram js/window (:data props) (:workflow-name props) nil)
-         (js/setTimeout
-           (fn []
-             (let
-               ;;[height (aget (aget (aget (aget (.-childNodes (aget (.-childNodes (aget (.-childNodes (aget (.-childNodes (aget
-               ;;    (.-childNodes (.getElementById js/document "chart_div")) 0)) 0)) 0)) 1)) 0) "height") "animVal") "value")
-               [height (-> (get @refs "chart-container")
-                           .-childNodes
-                           (aget 0)
-                           .-childNodes
-                           (aget 0)
-                           .-childNodes
-                           (aget 0)
-                           .-childNodes
-                           (aget 1)
-                           .-childNodes
-                           (aget 0)
-                           (aget "height") (aget "animVal") (aget "value"))]
-               (gdom/removeChildren "chart-container")
-               (.timingDiagram js/window (:data props) (:workflow-name props) (+ 50 height)))) 0))
+         (.timingDiagram js/window (get @refs "chart-container") (:data props) (:workflow-name props) 100)
+         (let [height (-> (get @refs "chart-container")
+                          .-childNodes (aget 0)
+                          .-childNodes (aget 0)
+                          .-childNodes (aget 0)
+                          .-childNodes (aget 1)
+                          .-childNodes (aget 0)
+                          (aget "height") (aget "animVal") (aget "value"))]
+           (gdom/removeChildren "chart-container")
+           (.timingDiagram js/window (get @refs "chart-container") (:data props) (:workflow-name props) (+ 50 height))))
        (gdom/removeChildren (get @refs "chart-container"))))})
 
 (defn- backend-logs [data]
