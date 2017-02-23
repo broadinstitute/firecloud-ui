@@ -7,8 +7,8 @@
 
 (defonce instance nil)
 
-(defn show [id trigger content]
-  (instance :show id trigger content))
+(defn show [id trigger content location]
+  (instance :show id trigger content location))
 
 (defn remove-tooltip [id]
   (instance :deref id :trigger))
@@ -25,7 +25,7 @@
    :component-did-update
    (fn [{:keys [this props state locals]}]
      (if (:show? @state)
-       (show (:id @locals) (r/find-dom-node this) (:hover-element props))
+       (show (:id @locals) (r/find-dom-node this) (:hover-element props) (:location props))
        (remove-tooltip (:id @locals))))})
 
 (defn- find-tooltip [tooltips id]
@@ -44,13 +44,27 @@
 (defn- remove-derefed [tooltips]
   (filterv #(not (empty? (:references %))) tooltips))
 
+(defn- calculate-position-from-anchor-rect [rect location]
+  (merge
+   (when (= location :below)
+     ;; Start immediately below the anchor.
+     {:top (+ (aget rect "bottom") (.-scrollY js/window))})
+   (when (= location :above)
+     ;; Set the bottom to be just above the anchor, accounting for margins.
+     {:bottom (str "calc("
+                   (- (.-innerHeight js/window) (aget rect "top")
+                      (.-scrollY js/window))
+                   "px - 1.5rem)")})
+   ;; Account for mouseover margin.
+   {:left (str "calc(" (aget rect "left") "px - 1rem)")}))
+
 ;; Tooltips are rendered in this external container so that when a parent has, for example,
 ;; overflow: hidden, tooltips will still show up on the page.
 (r/defc Container
   {:show
-   (fn [{:keys [state]} id trigger content]
+   (fn [{:keys [state]} id trigger content location]
      (swap! state update :tooltips update-tooltip id
-            assoc :references #{:trigger} :trigger trigger :content content))
+            assoc :references #{:trigger} :trigger trigger :content content :location location))
    :addref
    (fn [{:keys [state]} id reference]
      (swap! state update :tooltips update-tooltip id update :references conj reference))
@@ -70,11 +84,11 @@
        [:div {}
         (map (fn [tooltip]
                (let [rect (.getBoundingClientRect (:trigger tooltip))]
-                 [:div {:style {:position "absolute"
-                                :top (+ (aget rect "top") (aget rect "height"))
-                                :left (str "calc(" (aget rect "left") "px - 1rem)")
-                                :opacity (if (:showing? tooltip) 1 0)
-                                :transition "opacity 0.05s ease"}
+                 [:div {:style (merge
+                                (calculate-position-from-anchor-rect rect (:location tooltip))
+                                {:position "absolute"
+                                 :opacity (if (:showing? tooltip) 1 0)
+                                 :transition "opacity 0.05s ease"})
                         :onMouseEnter #(this :addref (:id tooltip) :body)
                         :onMouseLeave (fn [e]
                                         ;; mouseleave occurs before mouseenter, so this delay avoids
@@ -92,24 +106,36 @@
      (when (some #(not (:showing? %)) (:tooltips @state))
        (swap! state update :tooltips #(mapv (fn [tt] (assoc tt :showing? true)) %))))})
 
-(defn with-tooltip [trigger-element hover-element]
-  [ToolTip {:trigger-element trigger-element :hover-element hover-element}])
+(defn with-tooltip [location trigger-element hover-element]
+  [ToolTip {:trigger-element trigger-element :hover-element hover-element :location location}])
 
-(defn- with-default-hover-container [element]
+(defn- make-pointer [direction color]
+  [:div {:style {:width "2rem" :height "0.5rem"
+                 :overflow "hidden"}}
+   [:div {:style {:backgroundColor color
+                  :width "2rem" :height "2rem"
+                  :marginTop (if (= direction :down) "-2rem" "0.5rem")
+                  :transform "rotate(45deg)"}}]])
+
+(defn- with-hover-container [background-color location element]
   [:div {}
-   [:div {:style {:position "absolute" :top 0 :left "1rem"
-                  :width "2rem" :height "0.5rem"
-                  :overflow "hidden"}}
-    [:div {:style {:backgroundColor "rgba(50, 50, 50, 0.9)"
-                   :width "2rem" :height "2rem"
-                   :marginTop "0.5rem" :marginLeft 0
-                   :transform "rotate(45deg)"}}]]
-   [:div {:style {:backgroundColor "rgba(50, 50, 50, 0.9)"
+   [:div {:style {:backgroundColor background-color
                   :borderRadius 4
                   :margin "0.5rem 2rem 2rem 1rem"
                   :padding "0.4rem 0.8rem"
-                  :color "#eee"}}
+                  :color "#eee"
+                  :position "relative"}}
+    [:div {:style {:position "absolute"
+                   :top (when (= location :below) "-0.5rem")
+                   :bottom (when (= location :above) "-0.5rem")}}
+     (make-pointer (if (= location :above) :down :up) background-color)]
     element]])
 
-(defn with-default [trigger-element hover-element]
-  (with-tooltip trigger-element (with-default-hover-container hover-element)))
+(defn with-default-trigger-container [element]
+  [:span {:style {:fontStyle "italic"}} element])
+
+(defn with-default [location trigger-element hover-element]
+  (with-tooltip
+    location
+    (with-default-trigger-container trigger-element)
+    (with-hover-container "rgba(50, 50, 50, 0.9)" location hover-element)))

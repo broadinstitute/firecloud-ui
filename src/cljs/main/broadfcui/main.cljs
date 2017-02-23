@@ -23,12 +23,12 @@
   {:render
    (fn []
      [:div {:style {:marginBottom "2rem"}}
-      "You may need "
-      (tooltip/with-default
-        [:span {:style {:fontStyle "italic"}}
-         "some additional information"]
-        "Here is a tooltip!")
-      "."])})
+      [:div {}
+       "You may need "
+       (tooltip/with-default :below "some additional information" "Here is a tooltip!")
+       "."]
+      [:div {:style {:marginTop "2rem"}}
+       "Here is an " (tooltip/with-default :above "above" "I am above!") " version."]])})
 
 (defn- logo []
   [:img {:src "assets/broad_logo.png" :style {:height 38}}])
