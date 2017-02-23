@@ -668,10 +668,12 @@
   (or (react/valid-element? thing)
       (string? thing)
       (and (vector? thing)
-           (let [[type attr & rest] thing]
-             (and (keyword? type)
-                  (map? attr)
-                  (every? renderable? rest))))))
+           (pos? (count thing))
+           (keyword? (first thing))
+           (or (and (= 1 (count thing)))
+               (let [[_ attr & rest] thing]
+                 (and (map? attr)
+                      (every? renderable? rest)))))))
 
 (defn create-error-message [thing]
   (when (renderable? thing)
