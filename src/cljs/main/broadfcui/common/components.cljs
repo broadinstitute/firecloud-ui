@@ -664,6 +664,15 @@
      :content [:div {:style {:maxWidth 500}} text]
      :ok-button on-confirm}))
 
-(defn create-error-message [disabled?]
-  (when ((some-fn string? vector? react/valid-element?) disabled?)
-    #(push-error disabled?)))
+(defn renderable? [thing]
+  (or (react/valid-element? thing)
+      (string? thing)
+      (and (vector? thing)
+           (let [[type attr & rest] thing]
+             (and (keyword? type)
+                  (map? attr)
+                  (every? renderable? rest))))))
+
+(defn create-error-message [thing]
+  (when (renderable? thing)
+    #(push-error thing)))
