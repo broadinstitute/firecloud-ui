@@ -229,7 +229,7 @@
          (:text props)]
         [FoundationComponent
          {:contents [:div {:className (str "tooltip " position) :id rand-id :data-dropdown ""
-                           :data-v-offset (if (or (not position) (= position "top")) 12 100)
-                           :data-h-offset (if (or (= position "left") (= position "right")) 12 100)
+                           :data-v-offset (when (or (not position) (= position "top")) 12)
+                           :data-h-offset (when (or (= position "left") (= position "right")) 12)
                            :data-hover true :data-hover-pane true}
                      (:tooltip props)]}]]))})

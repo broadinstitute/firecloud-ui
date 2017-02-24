@@ -1,4 +1,8 @@
 @import '~foundation-sites/scss/settings/settings';
+
+$tooltip-padding: 1rem;
+$tooltip-font-size: 0.8rem;
+
 @import '~foundation-sites/scss/foundation';
 
 .has-tip { // button resets normally applied by global, see below
@@ -19,9 +23,20 @@
 
 .tooltip {
   visibility: hidden;
-  font-size: 0.8rem;
 
   &.is-open {
     visibility: visible;
+  }
+
+  &::before {
+    left: $tooltip-pip-width;
+  }
+
+  &.left::before {
+    top: $tooltip-pip-width;
+  }
+
+  &.right::before {
+    top: $tooltip-pip-width;
   }
 }

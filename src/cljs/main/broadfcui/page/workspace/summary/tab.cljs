@@ -177,13 +177,17 @@
              [:div {} realm-name]])))
       (render-detail-box
         3
-        "Created By"
+        [common/FoundationTooltip {:text "Created By"
+                                   :tooltip "Another tooltip, I'm such an incredibly cool dude"
+                                   :position "right"}]
         (style/create-paragraph
           [:div {} createdBy]
           [:div {} (common/format-date createdDate)]))
       (render-detail-box
         2
-        "Google Bucket"
+        [common/FoundationTooltip {:text "Google Bucket"
+                                   :tooltip "It's a tooltip party, and everyone's invited"
+                                   :position "left"}]
         (style/create-paragraph
           (case bucket-access?
             nil [:div {:style {:position "absolute" :marginTop "-1.5em"}}
@@ -200,7 +204,9 @@
              [:div {:style {:fontSize "80%"}} (str "Note: the billing account associated with " (:namespace workspace-id) " will be charged.")]])))
       (render-detail-box
         4
-        "Analysis Submissions"
+        [common/FoundationTooltip {:text "Analysis Submissions"
+                                   :tooltip "Yup, it sure is tooltippy in here"
+                                   :position "top"}]
         (style/create-paragraph
           (let [count-all (apply + (vals submissions-count))]
             [:div {}
