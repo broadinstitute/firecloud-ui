@@ -12,7 +12,7 @@
     ))
 
 
-(declare push-error-text)
+(declare push-error)
 (declare create-error-message)
 
 (react/defc Spinner
@@ -85,7 +85,7 @@
                         :color (when disabled? (:text-light style/colors))}
                 :title (when disabled? (:disabled-text props))
                 :onClick (when disabled?
-                           #(push-error-text
+                           #(push-error
                              (or (:disabled-text props) "This option is not available.")))}
         [:input {:type "checkbox" :ref "check"
                  :defaultChecked (:initial-checked? props)
@@ -607,10 +607,10 @@
                    :onKeyDown (common/create-key-handler [:space :enter] modal/pop-modal)}
                cancel-text])
             (when ok-button
-            (cond (string? ok-button) [Button {:text ok-button :ref "ok-button" :class-name "ok-button" :onClick modal/pop-modal}]
-              (fn? ok-button) [Button {:text "OK" :ref "ok-button" :class-name "ok-button" :onClick ok-button}]
-              (map? ok-button) [Button (merge {:ref "ok-button" :class-name "ok-button"} ok-button)]
-              :else ok-button))])]]))
+              (cond (string? ok-button) [Button {:text ok-button :ref "ok-button" :class-name "ok-button" :onClick modal/pop-modal}]
+                    (fn? ok-button) [Button {:text "OK" :ref "ok-button" :class-name "ok-button" :onClick ok-button}]
+                    (map? ok-button) [Button (merge {:ref "ok-button" :class-name "ok-button"} ok-button)]
+                    :else ok-button))])]]))
    :component-did-mount
    (fn [{:keys [props refs]}]
      (when-let [get-first (:get-first-element-dom-node props)]
@@ -631,11 +631,11 @@
                                        (when (:cycle-focus? props)
                                          (.focus (get-first)))))))))})
 
-(react/defc NoBillingProjectsMessage
-  {:render
-  (fn [{:keys [props]}]
-    [:div {:style {:textAlign "center"}} (str "You must have a billing project associated with your account to create a new workspace. ")
-      [:a {:target "_blank" :href (str (config/billing-guide-url))} "Learn how to create a billing project."]])})
+(def no-billing-projects-message
+  [:div {:style {:textAlign "center"}}
+   (str "You must have a billing project associated with your account to create a new workspace. ")
+   [:a {:target "_blank" :href (str (config/billing-guide-url))}
+    "Learn how to create a billing project."]])
 
 (defn push-ok-cancel-modal [props]
   (modal/push-modal [OKCancelForm props]))
@@ -646,7 +646,7 @@
      :content [:div {:style {:maxWidth 500}} message]
      :show-cancel? false :ok-button "OK"}))
 
-(defn- push-error [content]
+(defn push-error [content]
   (push-ok-cancel-modal
    {:header [:div {:style {:display "inline-flex" :alignItems "center"}}
              (icons/icon {:style {:color (:exception-state style/colors)
@@ -654,9 +654,6 @@
              "Error"]
     :content [:div {:style {:maxWidth "50vw"}} content]
     :show-cancel? false :ok-button "OK"}))
-
-(defn push-error-text [error-text]
-  (push-error error-text))
 
 (defn push-error-response [error-response]
   (push-error [ErrorViewer {:error error-response}]))
@@ -667,6 +664,17 @@
      :content [:div {:style {:maxWidth 500}} text]
      :ok-button on-confirm}))
 
-(defn create-error-message [disabled?]
-  (when (string? disabled?)
-    #(push-error-text disabled?)))
+(defn renderable? [thing]
+  (or (react/valid-element? thing)
+      (string? thing)
+      (and (vector? thing)
+           (pos? (count thing))
+           (keyword? (first thing))
+           (or (and (= 1 (count thing)))
+               (let [[_ attr & rest] thing]
+                 (and (map? attr)
+                      (every? renderable? rest)))))))
+
+(defn create-error-message [thing]
+  (when (renderable? thing)
+    #(push-error thing)))

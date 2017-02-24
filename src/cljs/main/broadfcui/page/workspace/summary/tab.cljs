@@ -109,7 +109,7 @@
                          (let [{:keys [success error]} (react/call :get-attributes (@refs "workspace-attribute-editor"))
                                new-description (react/call :get-text (@refs "description"))]
                            (if error
-                             (comps/push-error-text error)
+                             (comps/push-error error)
                              (save-attributes {:new-attributes (assoc success :description new-description)
                                                :state state
                                                :workspace-id workspace-id
@@ -121,7 +121,7 @@
        (when-not editing?
          [comps/SidebarButton {:style :light :margin :top :color :button-primary
                                :text "Clone..." :icon :clone
-                               :disabled? (if (empty? billing-projects) [comps/NoBillingProjectsMessage] false)
+                               :disabled? (when (empty? billing-projects) comps/no-billing-projects-message)
                                :onClick #(modal/push-modal
                                           [WorkspaceCloner
                                            {:on-success (fn [namespace name]
@@ -139,7 +139,7 @@
        (when (and owner? (not editing?))
          [comps/SidebarButton {:style :light :margin :top :color (if isLocked :text-lighter :exception-state)
                                :text "Delete..." :icon :delete
-                               :disabled? (if isLocked "This workspace is locked.")
+                               :disabled? (when isLocked "This workspace is locked.")
                                :onClick #(modal/push-modal [DeleteDialog {:workspace-id workspace-id
                                                                           :on-delete on-delete}])}]))]))
 
@@ -278,9 +278,9 @@
         :on-done (fn [{:keys [success? status-text status-code]}]
                    (when-not success?
                      (if (and (= status-code 409) (not locked-now?))
-                       (comps/push-error-text
+                       (comps/push-error
                         "Could not lock workspace, one or more analyses are currently running")
-                       (comps/push-error-text (str "Error: " status-text))))
+                       (comps/push-error (str "Error: " status-text))))
                    (swap! state dissoc :locking?)
                    (react/call :refresh this))}))
    :component-did-mount

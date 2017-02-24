@@ -128,7 +128,7 @@
                                     (swap! state dissoc :aborting-submission?)
                                     (if success?
                                       ((:on-abort props))
-                                      (comps/push-error-text
+                                      (comps/push-error
                                        (str "Error in aborting the job : " status-text))))}))})
 
 
