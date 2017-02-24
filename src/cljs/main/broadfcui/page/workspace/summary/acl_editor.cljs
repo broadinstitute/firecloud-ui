@@ -76,7 +76,8 @@
                                               ; Only owners can set new canShare permissions, so we only want to include
                                               ; those in the default settings when the user is at least an owner
                                               (if (common/access-greater-than-equal-to? user-access-level "OWNER")
-                                                (conj permissions (:canShare false)) permissions)))}]]
+                                                (assoc permissions :canShare false)
+                                                permissions)))}]]
       (style/create-validation-error-message (:validation-error @state))
       [comps/ErrorViewer {:error (:save-error @state)}]])
     :ok-button {:text "Save" :onClick persist-acl}}])
