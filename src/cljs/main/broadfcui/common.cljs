@@ -224,8 +224,8 @@
    (fn [{:keys [props]}]
      (let [rand-id (gensym "tooltip-")
            {:keys [position text tooltip]} props]
-       [:div {}
-        [:button {:className "has-tip" :data-toggle rand-id}
+       [:span {}
+        [:button {:className "has-tip button-reset" :data-toggle rand-id}
          text]
         [FoundationComponent
          {:contents [:div {:className (str "tooltip tooltip-overload " position) :id rand-id :data-dropdown ""
@@ -233,3 +233,24 @@
                            :data-h-offset (when (or (= position "left") (= position "right")) 12)
                            :data-hover true :data-hover-pane true}
                      tooltip]}]]))})
+
+(react/defc FoundationProperTooltip
+  {:render
+   (fn [{:keys [props]}]
+     (let [{:keys [position text tooltip]} props]
+       [FoundationComponent
+        {:contents [:span {:data-tooltip "" :className (str "has-tip " position)
+                           :title tooltip}
+                    text]}]))})
+
+(react/defc FoundationInfoBox
+  {:render
+   (fn [{:keys [props]}]
+     (let [rand-id (gensym "infobox-")]
+       [:span {}
+        [:button {:className "button-reset" :data-toggle rand-id
+                  :style {:cursor "pointer" :padding "0 0.5rem"}}
+         (icons/icon {:style {:color (:link-active style/colors)}} :information)]
+        [FoundationComponent
+         {:contents [:div {:className "dropdown-pane" :id rand-id :data-dropdown ""}
+                     (:text props)]}]]))})

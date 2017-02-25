@@ -218,7 +218,9 @@
 
     (when editing? [:div {:style {:marginBottom "10px"}} common/PHI-warning])
 
-     (style/create-section-header "Description")
+     (style/create-section-header
+      [common/FoundationProperTooltip {:text "Description"
+                                       :tooltip "A short summary or explanation"}])
      (style/create-paragraph
        (let [description (not-empty description)]
          (cond editing? (react/create-element [MarkdownEditor {:ref "description" :initial-text description}])

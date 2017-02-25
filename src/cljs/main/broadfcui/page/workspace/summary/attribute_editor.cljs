@@ -127,7 +127,10 @@
                                                        [:div {:style {:backgroundColor"white" :padding "1em"}}
                                                         [import-data/Page (merge (select-keys props [:workspace-id])
                                                                             {:reload (fn [] (modal/pop-modal) ((:request-refresh props)))}
-                                                                            {:import-type "workspace-attributes"})]]]}])}])])])
+                                                                            {:import-type "workspace-attributes"})]]]}])}])])
+           [common/FoundationInfoBox
+            {:text "This is information about what a workspace attribute is. You can highlight and
+            copy it if it's helpful to you. Blah blah blah, I do tend to go on, don't I?"}]])
         (style/create-paragraph
           [:div {}
            (if editing?

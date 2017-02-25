@@ -9,11 +9,12 @@ require('./js/timingDiagram');
 require('./js/igvPatch');
 require('any-resize-event');
 require('foundation-sites/js/foundation.core');
-require('foundation-sites/js/foundation.util.box');
 require('foundation-sites/js/foundation.util.mediaQuery');
+require('foundation-sites/js/foundation.util.box');
 require('foundation-sites/js/foundation.util.keyboard');
 require('foundation-sites/js/foundation.util.triggers');
 require('foundation-sites/js/foundation.dropdown');
+require('foundation-sites/js/foundation.tooltip');
 
 require('jquery-ui/themes/base/core.css');
 require('jquery-ui/themes/base/theme.css');
