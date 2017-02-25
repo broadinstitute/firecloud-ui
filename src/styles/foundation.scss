@@ -1,6 +1,5 @@
 @import '~foundation-sites/scss/settings/settings';
 
-$tooltip-padding: 1rem;
 $tooltip-font-size: 0.8rem;
 
 @import '~foundation-sites/scss/foundation';
@@ -13,6 +12,7 @@ $tooltip-font-size: 0.8rem;
   font: unset;
   text-align: unset;
   padding: unset;
+  font-weight: unset;
 }
 
 //@include foundation-global-styles;    // disabled because it insists on changing _everything_
@@ -21,8 +21,10 @@ $tooltip-font-size: 0.8rem;
 @include foundation-tooltip;
 @include foundation-dropdown;
 
-.tooltip {
+.tooltip-overload {
   visibility: hidden;
+  padding: 1rem;
+  top: 0;
 
   &.is-open {
     visibility: visible;

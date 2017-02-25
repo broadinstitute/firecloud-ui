@@ -223,13 +223,13 @@
   {:render
    (fn [{:keys [props]}]
      (let [rand-id (gensym "tooltip-")
-           position (:position props)]
+           {:keys [position text tooltip]} props]
        [:div {}
         [:button {:className "has-tip" :data-toggle rand-id}
-         (:text props)]
+         text]
         [FoundationComponent
-         {:contents [:div {:className (str "tooltip " position) :id rand-id :data-dropdown ""
+         {:contents [:div {:className (str "tooltip tooltip-overload " position) :id rand-id :data-dropdown ""
                            :data-v-offset (when (or (not position) (= position "top")) 12)
                            :data-h-offset (when (or (= position "left") (= position "right")) 12)
                            :data-hover true :data-hover-pane true}
-                     (:tooltip props)]}]]))})
+                     tooltip]}]]))})
