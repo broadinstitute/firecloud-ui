@@ -33,7 +33,7 @@
                             :borderBottom (str "2px solid " (:border-light style/colors))}
          :header-style {:padding "0.5em 0 0.5em 1em"}
          :resizable-columns? true
-         :sortable-columns? false
+         :sortable-columns? true
          :filterable? false
          :resize-tab-color (:border-light style/colors)
          :reorder-anchor :right
@@ -65,17 +65,22 @@
                                          (if (= (:workspaceAccess data) "NO ACCESS")
                                            (icons/icon {:style {:alignSelf "center" :cursor "pointer"}
                                                         :onClick #(react/call :check-access this data)} :shield)))}
-                    {:header (:title (:library:datasetName attributes)) :starting-width 250 :show-initial? true
+                    {:header-key "library:datasetName"
+                     :header (:title (:library:datasetName attributes)) :starting-width 250 :show-initial? true
                      :as-text :library:datasetDescription :reorderable? false
                      :content-renderer (fn [data]
                                          (style/create-link {:text (:library:datasetName data)
                                                              :onClick #(react/call :check-access this data)}))}
-                    {:header (:title (:library:indication attributes)) :starting-width 180 :show-initial? true}
-                    {:header (:title (:library:dataUseRestriction attributes)) :starting-width 180 :show-initial? true}
-                    {:header (:title (:library:numSubjects attributes)) :starting-width 100 :show-initial? true}]
+                    {:header-key "library:indication"
+                     :header (:title (:library:indication attributes)) :starting-width 180 :show-initial? true}
+                    {:header-key "library:dataUseRestriction"
+                     :header (:title (:library:dataUseRestriction attributes)) :starting-width 180 :show-initial? true}
+                    {:header-key "library:numSubjects"
+                     :header (:title (:library:numSubjects attributes)) :starting-width 100 :show-initial? true}]
                    (map
                     (fn [keyname]
-                      {:header (:title ((keyword keyname) attributes)) :starting-width 180 :show-initial? false})
+                      {:header-key keyname
+                       :header (:title ((keyword keyname) attributes)) :starting-width 180 :show-initial? false})
                     extra-columns))
          :pagination (react/call :pagination this)
          :->row (fn [data]
@@ -116,7 +121,7 @@
       (:aggregate-fields props)))
    :pagination
    (fn [{:keys [this state props]}]
-     (fn [{:keys [current-page rows-per-page]} callback]
+     (fn [{:keys [current-page rows-per-page sort-column sort-order]} callback]
        (when-not (empty? (:aggregate-fields props))
          (endpoints/call-ajax-orch
           (let [from (* (- current-page 1) rows-per-page)]
@@ -125,6 +130,8 @@
                        :filters (utils/map-keys name (:facet-filters props))
                        :from from
                        :size rows-per-page
+                       :sortField sort-column
+                       :sortDirection sort-order
                        :fieldAggregations (if (= 1 current-page)
                                             (react/call :build-aggregate-fields this)
                                             {})}
