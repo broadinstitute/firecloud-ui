@@ -27,7 +27,7 @@
 
 (react/defc EntityTable
   {:refresh
-   (fn [{:keys [props state]} & [entity-type]]
+   (fn [{:keys [props state refs]} & [entity-type]]
      (endpoints/call-ajax-orch
       {:endpoint (endpoints/get-entity-types (:workspace-id props))
        :on-done (fn [{:keys [success? get-parsed-response]}]
@@ -37,7 +37,8 @@
                       (swap! state update :server-response assoc
                              :entity-metadata metadata
                              :entity-types entity-types
-                             :selected-entity-type (or (some-> entity-type keyword) (first entity-types))))
+                             :selected-entity-type (or (some-> entity-type keyword) (first entity-types)))
+                      (react/call :refresh-rows (@refs "table")))
                     (swap! state update :server-response
                            assoc :server-error (get-parsed-response false))))}))
    :get-default-props
@@ -93,6 +94,7 @@
             [Table
              (merge props
                     {:key selected-entity-type
+                     :ref "table"
                      :state-key (when selected-entity-type
                                   (str (common/workspace-id->string (:workspace-id props)) ":data" selected-entity-type))
                      :columns columns
