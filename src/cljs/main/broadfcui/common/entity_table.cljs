@@ -38,11 +38,9 @@
                              :entity-metadata metadata
                              :entity-types entity-types
                              :selected-entity-type (or (some-> entity-type keyword) (first entity-types)))
-                      (react/call :refresh-rows (@refs "table"))
-                      )
+                      (react/call :refresh-rows (@refs "table")))
                     (swap! state update :server-response
-                           assoc :server-error (get-parsed-response false))))})
-     )
+                           assoc :server-error (get-parsed-response false))))}))
    :get-default-props
    (fn []
      {:empty-message "There are no entities to display."

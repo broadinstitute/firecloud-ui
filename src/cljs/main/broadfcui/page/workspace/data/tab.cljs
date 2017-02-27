@@ -89,8 +89,9 @@
                 [:div {:style {:height "1em"}}]
                 [:div {:style style :onClick #(add-crumb :workspace-import "Choose Workspace")}
                  "Copy from another workspace"]]))]])}])
-   :component-will-unmount (fn [{:keys [props this]}]
-                             ((:do-this-afterwards props)) )})
+   :component-will-unmount
+   (fn [{:keys [props this]}]
+     ((:on-close props)) )})
 
 (react/defc EntityAttributes
   {:render
@@ -216,13 +217,13 @@
                              [:div {:style {:paddingRight ".5em"}}
                               [comps/Button {:text "Import Data..."
                                              :disabled? (when locked? "This workspace is locked.")
-                                             :onClick #(modal/push-modal
-                                                        [DataImporter {:workspace-id workspace-id
-                                                                       :this-realm this-realm
-                                                                       :import-type "data"
-                                                                       :do-this-afterwards
-                                                                       (fn []
-                                                                         (react/call :refresh (@refs "entity-table") (:selected-entity-type @state)))}])}]]]))
+                                             :onClick (fn []
+                                                        (modal/push-modal
+                                                          [DataImporter {:workspace-id workspace-id
+                                                                         :this-realm this-realm
+                                                                         :import-type "data"
+                                                                         :on-close
+                                                                         #(react/call :refresh (@refs "entity-table") (:selected-entity-type @state))}]))}]]]))
                :on-filter-change #(swap! state assoc :selected-entity-type % :selected-entity nil :attr-list nil)
                :attribute-renderer (table-utils/render-gcs-links (get-in workspace [:workspace :bucketName]))
                :linked-entity-renderer (fn [e]

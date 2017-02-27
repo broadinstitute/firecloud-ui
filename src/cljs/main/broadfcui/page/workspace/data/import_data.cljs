@@ -64,5 +64,5 @@
         :on-done (fn [{:keys [success? xhr get-parsed-response]}]
                   (swap! state dissoc :loading? :file :file-contents)
                   (if success?
-                      (swap! state assoc :upload-result {:success? true})
+                    (swap! state assoc :upload-result {:success? true})
                     (swap! state assoc :upload-result {:success? false :error (get-parsed-response false)})))}))})
