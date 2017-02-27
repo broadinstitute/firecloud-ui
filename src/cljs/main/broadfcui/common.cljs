@@ -252,5 +252,6 @@
                   :style {:cursor "pointer" :padding "0 0.5rem"}}
          (icons/icon {:style {:color (:link-active style/colors)}} :information)]
         [FoundationComponent
-         {:contents [:div {:className "dropdown-pane" :id rand-id :data-dropdown ""}
+         {:contents [:div {:className "dropdown-pane" :id rand-id :data-dropdown ""
+                           :data-hover true :data-hover-pane true}
                      (:text props)]}]]))})
