@@ -258,7 +258,7 @@
                    (fn [e]
                      (when (not (.is infobox-element (.-target e)))
                        (.foundation infobox-element "close")
-                       (.off (js/$ "body" "click.zf.dropdown")))))))))
+                       (.off (js/$ "body") "click.zf.dropdown"))))))))
    :render
    (fn [{:keys [props locals]}]
      (let [rand-id (:component-id @locals)]
