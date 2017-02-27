@@ -63,18 +63,18 @@
   {:validate (constantly nil)
    :get-initial-state
    (fn [{:keys [props]}]
-     (select-keys props [:library:discoverableByGroups :curator? :owner? :can-share?]))
+     (select-keys props [:library:discoverableByGroups :owner?]))
    :get-attributes
    (fn [{:keys [state]}]
-     (select-keys @state [:library:discoverableByGroups]))
+     (if (nil? (:library:discoverableByGroups @state)) {} (select-keys @state [:library:discoverableByGroups])))
    :set-groups
    (fn [{:keys [state]} new-val]
      (swap! state assoc :library:discoverableByGroups (if (= new-val ALL_USERS) nil new-val)))
    :render
    (fn [{:keys [state props this]}]
      (let [{:keys [library:discoverableByGroups]} @state
-           {:keys [:curator? :owner? :can-share?]} props
-           editable? (or curator? (or owner? can-share?))
+           {:keys [:owner?]} props
+           editable? owner?
            selected (if (empty? library:discoverableByGroups) ALL_USERS library:discoverableByGroups)]
        [:div {} "Dataset should be discoverable by:"
         (style/create-identity-select {:value selected
@@ -89,7 +89,6 @@
          "N.B. The Dataset will be visible to these users in the library, but users will still
          need to acquire Read permission for the Workspace in order to view its contents."]]))})
 
-
 (defn- render-summary-page [attributes library-schema invalid-attributes]
   [:div {}
    (if (not-empty invalid-attributes)
@@ -102,7 +101,6 @@
        (map (fn [attribute]
               [:div {:style {:paddingBottom "0.2rem"}} (get-in library-schema [:properties (keyword attribute) :title])])
             invalid-attributes)]])
-
    (style/create-paragraph
     [:div {}
      (let [questions (first (get-questions-for-page (convert-empty-strings attributes) library-schema 0))]
@@ -142,7 +140,7 @@
         :required-attributes (find-required-attributes library-schema)}))
    :render
    (fn [{:keys [props state this]}]
-     (let [{:keys [library-schema curator? can-share? writer?]} props
+     (let [{:keys [library-schema writer? curator?]} props
            {:keys [page-num pages-seen invalid-properties working-attributes published? required-attributes validation-error submit-error]} @state]
        [:div {}
         (when (:submitting? @state)
@@ -173,14 +171,14 @@
                              :enumerate enumerate
                              :questions questions
                              :attributes working-attributes
-                             :editable? (or curator? writer?)
+                             :editable? writer?
                              :required-attributes required-attributes}]
                  (= page-num page-count)
                  [DiscoverabilityPage
                   (merge
                    {:ref "wizard-page"}
                    (select-keys working-attributes [:library:discoverableByGroups])
-                   (select-keys props [:library-schema :library-groups :can-share? :owner? :curator?]))]
+                   (select-keys props [:library-schema :library-groups :can-share? :owner?]))]
                  (> page-num page-count) (render-summary-page working-attributes library-schema invalid-properties))))}]]
          (when validation-error
            [:div {:style {:marginTop "1em" :color (:exception-state style/colors) :textAlign "center"}}
@@ -204,7 +202,7 @@
                                        :disabled? (> page-num (-> library-schema :wizard count))
                                        :style {:width 80}}]
                         flex/flex-spacer
-                        (let [save-permissions (or writer? curator? can-share?)
+                        (let [save-permissions (and writer? (or curator? published?))
                               last-page (> page-num (-> library-schema :wizard count))]
                         [comps/Button {:text (if published? "Republish" "Submit")
                                        :onClick #(react/call :submit this)
@@ -212,7 +210,7 @@
                                        :style {:width 80}}]))]]))
    :component-did-mount
    (fn [{:keys [locals]}]
-     (swap! locals assoc :page-attributes []))
+     (swap! locals assoc :page-attributes {}))
    :component-did-update
    (fn [{:keys [prev-state state refs]}]
      (when (not= (:page-num prev-state) (:page-num @state))
@@ -227,7 +225,7 @@
              all-attributes (merge working-attributes attributes-from-page)
              invalid-attributes (atom #{})]
          (swap! state assoc :working-attributes all-attributes)
-         (if-not (empty? attributes-from-page) (swap! locals update :page-attributes assoc page-num attributes-from-page))
+         (swap! locals update :page-attributes assoc page-num attributes-from-page)
          (doseq [page (conj pages-stack page-num)]
            (let [[questions _] (get-questions-for-page all-attributes (:library-schema props) page)
                  {:keys [invalid]} (library-utils/validate-required (convert-empty-strings all-attributes)
@@ -253,7 +251,7 @@
    (fn [{:keys [props state locals]}]
      (if (not-empty (:invalid-properties @state))
        (swap! state assoc :validation-error "You will need to complete all required metadata attributes to be able to publish the workspace in the Data Library")
-       (let [attributes-seen (apply merge (replace (:page-attributes @locals) (:pages-stack @state)))]
+       (let [attributes-seen (apply merge (vals (select-keys (:page-attributes @locals) (:pages-stack @state))))]
          (swap! state assoc :submitting? true :submit-error nil)
          (endpoints/call-ajax-orch
           {:endpoint (endpoints/save-library-metadata (:workspace-id props))
