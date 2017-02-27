@@ -244,14 +244,29 @@
                     text]}]))})
 
 (react/defc FoundationInfoBox
-  {:render
-   (fn [{:keys [props]}]
-     (let [rand-id (gensym "infobox-")]
+  {:component-will-mount
+   (fn [{:keys [locals]}]
+     (swap! locals assoc :component-id (gensym "infobox-")))
+   :component-did-mount
+   (fn [{:keys [locals]}]
+     (let [infobox-element (js/$ (str "#" (:component-id @locals)))]
+       (.on infobox-element
+            "show.zf.dropdown"
+            (fn [_]
+              (.on (js/$ "body")
+                   "click.zf.dropdown"
+                   (fn [e]
+                     (when (not (.is infobox-element (.-target e)))
+                       (.foundation infobox-element "close")
+                       (.off (js/$ "body" "click.zf.dropdown")))))))))
+   :render
+   (fn [{:keys [props locals]}]
+     (let [rand-id (:component-id @locals)]
+       (swap! locals assoc :component-id rand-id)
        [:span {}
         [:button {:className "button-reset" :data-toggle rand-id
                   :style {:cursor "pointer" :padding "0 0.5rem"}}
          (icons/icon {:style {:color (:link-active style/colors)}} :information)]
         [FoundationComponent
-         {:contents [:div {:className "dropdown-pane" :id rand-id :data-dropdown ""
-                           :data-hover true :data-hover-pane true}
+         {:contents [:div {:className "dropdown-pane" :id rand-id :data-dropdown ""}
                      (:text props)]}]]))})
