@@ -19,6 +19,14 @@
 
 (def standard-line (str "1px solid " (:line-default colors)))
 
+(def header-row-style-light
+  {:fontWeight nil
+   :color (:text-light colors) :backgroundColor nil})
+
+(def table-row-style-light
+  {:borderTop standard-line
+   :padding "0.2rem 0"})
+
 (defn color-for-status [status]
   (case status
     "Complete" (:success-state colors)

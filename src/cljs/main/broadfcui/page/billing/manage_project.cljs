@@ -80,12 +80,12 @@
               (when (:removing? @state)
                 [comps/Blocker {:banner "Removing user..."}])
               [table/Table
-               {:header-row-style {:fontWeight nil :fontSize "90%"
-                                   :color (:text-lighter style/colors) :backgroundColor nil}
+               {:header-row-style style/header-row-style-light
                 :header-style {:padding "0.5em 0 0.5em 14px"}
                 :row-style {:backgroundColor (:background-light style/colors)
                             :borderRadius 8 :margin "4px 0"}
-                :reorderable-columns? false :resize-tab-color (:line-default style/colors)
+                :reorderable-columns? false
+                :resize-tab-color (:line-default style/colors)
                 :toolbar (add-right
                           [comps/Button {:text "Add User..." :icon :add
                                          :onClick (fn [_]

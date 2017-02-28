@@ -68,7 +68,11 @@
        (nil? (:projects @state)) [comps/Spinner {:text "Loading billing projects..."}]
        :else
        [table/Table
-        {:columns [{:starting-width 32 :resizable? false
+        {:reorderable-columns? false
+         :header-row-style style/header-row-style-light
+         :row-style style/table-row-style-light
+         :resize-tab-color (:line-default style/colors)
+         :columns [{:starting-width 32 :resizable? false
                     :sort-by :none
                     :content-renderer
                     (fn [creationStatus]
