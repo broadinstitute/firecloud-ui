@@ -92,7 +92,7 @@
                        vec))}]))
    :execute-search
    (fn [{:keys [refs]}]
-     (react/call :update-query-params (@refs "table") {:current-page 1})
+     (react/call :update-query-params (@refs "table") {:current-page 1 :sort-column nil :sort-order nil})
      (react/call :execute-search (@refs "table")))
    :check-access
    (fn [{:keys [props]} data]
