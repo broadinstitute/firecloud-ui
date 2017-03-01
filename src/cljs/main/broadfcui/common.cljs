@@ -210,3 +210,48 @@
                 :alert)
     [:span {:style {:fontWeight "bold" :fontSize "98%"}}
       "FireCloud is not intended to host personally identifiable information. Do not use any patient identifier, including name, social security number, or medical record number."]])
+
+(react/defc FoundationComponent
+  {:component-did-mount
+   (fn [{:keys [this]}]
+     (.foundation (js/$ (react/find-dom-node this))))
+   :render
+   (fn [{:keys [props]}]
+     (:contents props))})
+
+(react/defc FoundationTooltip
+  {:render
+   (fn [{:keys [props]}]
+     (let [{:keys [position text tooltip]} props]
+       [FoundationComponent
+        {:contents [:span {:data-tooltip "" :className (str "has-tip " position)
+                           :title tooltip}
+                    text]}]))})
+
+(react/defc FoundationInfoBox
+  {:component-will-mount
+   (fn [{:keys [locals]}]
+     (swap! locals assoc :component-id (gensym "infobox-")))
+   :component-did-mount
+   (fn [{:keys [locals]}]
+     (let [infobox-element (js/$ (str "#" (:component-id @locals)))]
+       (.on infobox-element
+            "show.zf.dropdown"
+            (fn [_]
+              (.on (js/$ "body")
+                   "click.zf.dropdown"
+                   (fn [e]
+                     (when (not (.is infobox-element (.-target e)))
+                       (.foundation infobox-element "close")
+                       (.off (js/$ "body") "click.zf.dropdown"))))))))
+   :render
+   (fn [{:keys [props locals]}]
+     (let [rand-id (:component-id @locals)]
+       (swap! locals assoc :component-id rand-id)
+       [:span {}
+        [:button {:className "button-reset" :data-toggle rand-id
+                  :style {:cursor "pointer" :padding "0 0.5rem"}}
+         (icons/icon {:style {:color (:link-active style/colors)}} :information)]
+        [FoundationComponent
+         {:contents [:div {:className "dropdown-pane" :id rand-id :data-dropdown ""}
+                     (:text props)]}]]))})
