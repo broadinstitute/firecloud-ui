@@ -58,7 +58,9 @@
        :on-done (fn [{:keys [success? get-parsed-response xhr]}]
                   (swap! state dissoc :blocker)
                   (if success?
-                    ((:on-rename props) name)
+                    ;;((:on-rename props) name)
+                    (do ((:on-rename props) name)
+                        (swap! state assoc :loaded-config (get-parsed-response false) :blocker nil))
                     (comps/push-error (str "Exception:\n" (.-statusText xhr)))))})))
 
 (react/defc MethodDetailsViewer
