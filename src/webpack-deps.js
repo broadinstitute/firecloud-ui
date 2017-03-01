@@ -8,6 +8,7 @@ exports.marked = require('marked');
 require('./js/timingDiagram');
 require('./js/igvPatch');
 require('any-resize-event');
+require('what-input');
 require('foundation-sites/js/foundation.core');
 require('foundation-sites/js/foundation.util.mediaQuery');
 require('foundation-sites/js/foundation.util.box');

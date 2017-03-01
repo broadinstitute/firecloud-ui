@@ -1,6 +1,7 @@
 (ns broadfcui.page.billing.billing-management
   (:require
     [dmohs.react :as react]
+    [broadfcui.common :as common]
     [broadfcui.common.components :as comps]
     [broadfcui.common.modal :as modal]
     [broadfcui.common.style :as style]
@@ -78,11 +79,11 @@
                     (fn [creationStatus]
                       [:span {:title creationStatus}
                        (moncommon/icon-for-project-status creationStatus)])}
-                   {:header "Project Name" :starting-width 400
+                   {:header "Project Name" :starting-width 500
                     :as-text #(% "projectName") :sort-by :text
                     :sort-initial :asc
                     :content-renderer
-                    (fn [{:strs [projectName role creationStatus]}]
+                    (fn [{:strs [projectName role creationStatus message]}]
                       [:span {}
                        (cond
                          (= creationStatus project-status-creating)
@@ -92,9 +93,12 @@
                          (and (= creationStatus project-status-ready) (= role "Owner"))
                          (style/create-link {:text projectName
                                              :onClick #((:on-select props) projectName)})
-                         :else projectName)])}
-                   {:header "Role" :starting-width 100}
-                   {:header "Status Message" :starting-width :remaining}]
+                         :else projectName)
+                       (when message
+                         [:div {:style {:float "right"}}
+                          [common/FoundationInfoBox
+                           {:text [:div {} [:strong {} "Message:"] [:br] message]}]])])}
+                   {:header "Role" :starting-width 100}]
          :toolbar
          (add-right
           [comps/Button
@@ -118,11 +122,10 @@
                             "grantOfflineAccess"
                             (clj->js {:redirect_uri "postmessage" :scope "https://www.googleapis.com/auth/cloud-billing"})))))}])
          :data (:projects @state)
-         :->row (fn [{:strs [creationStatus role message] :as row}]
+         :->row (fn [{:strs [creationStatus role] :as row}]
                   [creationStatus
                    row
-                   role
-                   message])}]))
+                   role])}]))
    :component-did-mount
    (fn [{:keys [this]}]
      (react/call :load-data this))

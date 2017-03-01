@@ -234,14 +234,19 @@
      (swap! locals assoc :component-id (gensym "infobox-")))
    :component-did-mount
    (fn [{:keys [locals]}]
-     (let [infobox-element (js/$ (str "#" (:component-id @locals)))]
+     (let [infobox-element (js/$ (str "#" (:component-id @locals)))
+           infobox-button (js/$ (str "[data-toggle='" (:component-id @locals) "']"))]
        (.on infobox-element
             "show.zf.dropdown"
             (fn [_]
               (.on (js/$ "body")
                    "click.zf.dropdown"
                    (fn [e]
-                     (when (not (.is infobox-element (.-target e)))
+                     (when (not (or
+                                 (.is infobox-element (.-target e))
+                                 (pos? (.-length (.find infobox-element (.-target e))))
+                                 (.is infobox-button (.-target e))
+                                 (pos? (.-length (.find infobox-button (.-target e))))))
                        (.foundation infobox-element "close")
                        (.off (js/$ "body") "click.zf.dropdown"))))))))
    :render
@@ -250,8 +255,10 @@
        (swap! locals assoc :component-id rand-id)
        [:span {}
         [:button {:className "button-reset" :data-toggle rand-id
-                  :style {:cursor "pointer" :padding "0 0.5rem"}}
+                  :style {:cursor "pointer" :padding "0 0.5rem"
+                          :fontSize "16px" :lineHeight "1rem"}}
          (icons/icon {:style {:color (:link-active style/colors)}} :information)]
         [FoundationComponent
-         {:contents [:div {:className "dropdown-pane" :id rand-id :data-dropdown ""}
+         {:contents [:div {:className "dropdown-pane" :id rand-id :data-dropdown ""
+                           :style {:whiteSpace "normal"}}
                      (:text props)]}]]))})
