@@ -59,8 +59,7 @@
                   (if-not success?
                     (do (comps/push-error (str "Exception:\n" (.-statusText xhr)))
                         (swap! state dissoc :blocker))
-                    (do ((:on-rename props) name)
-                        (comps/push-error (str "Exception:\n" (.-statusText xhr))))))})))
+                    ((:on-rename props) name)))})))
 
 (react/defc MethodDetailsViewer
   {:get-fields
