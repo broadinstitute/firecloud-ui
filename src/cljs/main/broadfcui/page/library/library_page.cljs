@@ -267,7 +267,7 @@
             aggregate-fields)])))})
 
 (def ^:private PERSISTENCE-KEY "library-page")
-(def ^:private VERSION 3)
+(def ^:private VERSION 4)
 
 (react/defc Page
   {:update-filter
@@ -323,5 +323,5 @@
                                               :facet-filters :aggregate-fields :expanded-aggregates]))])]])
    :component-did-update
    (fn [{:keys [state refs]}]
-     (persistence/save {:key PERSISTENCE-KEY :state state})
+     (persistence/save {:key PERSISTENCE-KEY :state state :except [:library-attributes]})
      (react/call :execute-search (@refs "dataset-table")))})
