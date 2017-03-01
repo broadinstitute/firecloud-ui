@@ -17,10 +17,7 @@
 
 
 (react/defc DatasetsTable
-  {:set-filter-text
-   (fn [{:keys [refs]} new-filter-text]
-     (react/call :update-query-params (@refs "table") {:filter-text new-filter-text :current-page 1}))
-   :render
+  {:render
    (fn [{:keys [state this props]}]
      (let [attributes (:library-attributes props)
            search-result-columns (:search-result-columns props)
