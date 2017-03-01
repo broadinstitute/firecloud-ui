@@ -73,8 +73,8 @@
    :render
    (fn [{:keys [state props this]}]
      (let [{:keys [library:discoverableByGroups]} @state
-           {:keys [:owner?]} props
-           editable? owner?
+           {:keys [:owner? :curator?]} props
+           editable? (and curator? owner?)
            selected (if (empty? library:discoverableByGroups) ALL_USERS library:discoverableByGroups)]
        [:div {} "Dataset should be discoverable by:"
         (style/create-identity-select {:value selected
@@ -171,7 +171,7 @@
                              :enumerate enumerate
                              :questions questions
                              :attributes working-attributes
-                             :editable? writer?
+                             :editable? (and writer? curator?)
                              :required-attributes required-attributes}]
                  (= page-num page-count)
                  [DiscoverabilityPage
@@ -202,7 +202,7 @@
                                        :disabled? (> page-num (-> library-schema :wizard count))
                                        :style {:width 80}}]
                         flex/flex-spacer
-                        (let [save-permissions (and writer? (or curator? published?))
+                        (let [save-permissions (and writer? curator?)
                               last-page (> page-num (-> library-schema :wizard count))]
                         [comps/Button {:text (if published? "Republish" "Submit")
                                        :onClick #(react/call :submit this)
