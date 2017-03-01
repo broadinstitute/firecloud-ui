@@ -139,7 +139,7 @@
                                  (into {}))
         :required-attributes (find-required-attributes library-schema)}))
    :render
-   (fn [{:keys [props state this]}]
+   (fn [{:keys [props state locals this]}]
      (let [{:keys [library-schema writer? curator?]} props
            {:keys [page-num pages-seen invalid-properties working-attributes published? required-attributes validation-error submit-error]} @state]
        [:div {}
@@ -178,7 +178,8 @@
                   (merge
                    {:ref "wizard-page"}
                    (select-keys working-attributes [:library:discoverableByGroups])
-                   (select-keys props [:library-schema :library-groups :can-share? :owner?]))]
+                   (select-keys @locals [:library-groups])
+                   (select-keys props [:library-schema :can-share? :curator? :owner?]))]
                  (> page-num page-count) (render-summary-page working-attributes library-schema invalid-properties))))}]]
          (when validation-error
            [:div {:style {:marginTop "1em" :color (:exception-state style/colors) :textAlign "center"}}
@@ -210,7 +211,11 @@
                                        :style {:width 80}}]))]]))
    :component-did-mount
    (fn [{:keys [locals]}]
-     (swap! locals assoc :page-attributes {}))
+     (endpoints/get-library-groups
+      (fn [{:keys [success? get-parsed-response]}]
+        (if success?
+          (swap! locals assoc :page-attributes {} :library-groups (get-parsed-response))
+          (swap! locals assoc :page-attributes {})))))
    :component-did-update
    (fn [{:keys [prev-state state refs]}]
      (when (not= (:page-num prev-state) (:page-num @state))
