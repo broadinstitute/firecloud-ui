@@ -102,7 +102,8 @@
           [submission-details/Page {:key selected-submission-id
                                     :workspace-id workspace-id
                                     :bucketName bucketName
-                                    :submission-id selected-submission-id}]
+                                    :submission-id selected-submission-id
+                                    :nav-context nav-context}]
           [SubmissionsList {:ref "submissions-list"
                             :workspace-id workspace-id
                             :bucketName bucketName
