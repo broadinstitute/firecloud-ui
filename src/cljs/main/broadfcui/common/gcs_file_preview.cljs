@@ -28,8 +28,7 @@
           (labeled "Google Bucket" (:bucket-name props))
           (labeled "Object" (:object props))
           [:div {:style {:marginTop "1em"}}
-           [:div {} (if (or (= data-size "0") (clojure.string/blank? data-size))
-                      "File empty"
+           [:div {} (when-not (or (= data-size "0") (clojure.string/blank? data-size))
                       "Previews for some filetypes may be unsupported. ")]
            (when (> data-size preview-byte-count) (str "Last " (:preview-line-count @state)
                                                        " lines are shown. Use link below to view entire file."))
@@ -47,18 +46,22 @@
             [:div {:style {:marginTop "1em"}}
              (labeled "File size"
                       (common/format-filesize data-size)
-                      [:span {:style {:marginLeft "1em"}}
-                       [:a {:href (common/gcs-object->download-url (:bucket-name props) (:object props))
-                            :onClick #(utils/set-access-token-cookie (utils/get-access-token))
-                            :target "_blank"}
-                        "Open"]
-                       [:span {:style {:fontStyle "italic" :color (:text-light style/colors)}}
-                        " (right-click to download)"]])
-             (labeled "Estimated download fee"
-                      (if (nil? cost) "Unknown" (common/format-price cost))
-                      [:span {:style {:marginLeft "1em"}}
-                       [:span {:style {:fontStyle "italic" :color (:text-light style/colors)}}
-                        " (non-US destinations may be higher)"]])
+                      (if (or (= data-size "0") (clojure.string/blank? data-size))
+                        (react/create-element [:span {:style {:marginLeft "2em" :fontWeight "bold"}} "File Empty"])
+                        (react/create-element
+                          [:span {:style {:marginLeft "1em"}}
+                           [:a {:href (common/gcs-object->download-url (:bucket-name props) (:object props))
+                                :onClick #(utils/set-access-token-cookie (utils/get-access-token))
+                                :target "_blank"}
+                            "Open"]
+                           [:span {:style {:fontStyle "italic" :color (:text-light style/colors)}}
+                            " (right-click to download)"]])))
+             (when-not (or (= data-size "0") (clojure.string/blank? data-size))
+               (labeled "Estimated download fee"
+                        (if (nil? cost) "Unknown" (common/format-price cost))
+                        [:span {:style {:marginLeft "1em"}}
+                         [:span {:style {:fontStyle "italic" :color (:text-light style/colors)}}
+                          " (non-US destinations may be higher)"]]))
              (if (:show-details? @state)
                [:div {}
                 (labeled "Created" (common/format-date (:timeCreated data)))
