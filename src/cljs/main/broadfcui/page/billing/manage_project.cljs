@@ -82,8 +82,8 @@
               [table/Table
                {:header-row-style style/header-row-style-light
                 :header-style {:padding "0.5em 0 0.5em 14px"}
-                :row-style {:backgroundColor (:background-light style/colors)
-                            :borderRadius 8 :margin "4px 0"}
+                :cell-content-style {:padding 0 :paddingRight 20 :marginRight -20}
+                :row-style {:backgroundColor "white"}
                 :reorderable-columns? false
                 :resize-tab-color (:line-default style/colors)
                 :toolbar (add-right
@@ -92,8 +92,16 @@
                                                     (modal/push-modal
                                                      [AddUserDialog {:project-name (:project-name props)
                                                                      :on-add #(react/call :load this)}]))}])
-                :columns [{:header "Email" :starting-width 500}
-                          {:header "Role" :starting-width 100 :resizable? false :sort-initial :asc}
+                :columns [{:header "Email" :starting-width 500
+                           :content-renderer
+                           (fn [email]
+                             [:div {:style style/table-cell-plank-left}
+                              email])}
+                          {:header "Role" :starting-width 100 :resizable? false :sort-initial :asc
+                           :content-renderer
+                           (fn [role]
+                             [:div {:style style/table-cell-plank-right}
+                              role])}
                           {:starting-width :remaining
                            :filter-by :none :sort-by :none :resizable? false
                            :as-text
