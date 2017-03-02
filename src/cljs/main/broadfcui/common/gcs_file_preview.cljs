@@ -28,12 +28,14 @@
           (labeled "Google Bucket" (:bucket-name props))
           (labeled "Object" (:object props))
           [:div {:style {:marginTop "1em"}}
-           [:div {} (when-not (= data-size "0") "Previews for some filetypes may be unsupported. ")]
+           [:div {} (if (or (= data-size "0") (clojure.string/blank? data-size))
+                      "File empty"
+                      "Previews for some filetypes may be unsupported. ")]
            (when (> data-size preview-byte-count) (str "Last " (:preview-line-count @state)
                                                        " lines are shown. Use link below to view entire file."))
            ;; The max-height of 206 looks random, but it's so that the top line of the log preview is half cut-off
            ;; to hint to the user that they should scroll up.
-           (when-not (= data-size "0")
+           (when-not (or (= data-size "0") (clojure.string/blank? data-size))
              (react/create-element
                [:div {:ref "preview" :style {:marginTop "1em" :whiteSpace "pre-wrap" :fontFamily "monospace"
                                              :fontSize "90%" :overflowY "auto" :maxHeight 206
