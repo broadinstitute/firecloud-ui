@@ -139,7 +139,6 @@
      (let [server-response (:server-response @state)
            nav-context (:nav-context props)
            {:keys [submission error-message]} server-response]
-       (utils/cljslog nav-context)
        (cond
          (nil? server-response)
          [:div {:style {:textAlign "center"}} [comps/Spinner {:text "Loading analysis details..."}]]

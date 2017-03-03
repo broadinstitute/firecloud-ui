@@ -174,11 +174,6 @@
                           :prerequisites {"unused 1" "Predicate 1"
                                           "unused 2" "Predicate 2"}}}})
 
-(defn rename-workspace-method-config [workspace-id config]
-  {:path (str "/workspaces/" (ws-path workspace-id)
-           "/method_configs/" (config "namespace") "/" (config "name") "/rename")
-   :method :post})
-
 (defn delete-workspace-method-config [workspace-id config]
   {:path (str "/workspaces/" (ws-path workspace-id)
            "/method_configs/" (config "namespace") "/" (config "name"))
