@@ -9,6 +9,7 @@
       [broadfcui.common.modal :as modal]
       [broadfcui.common.style :as style]
       [broadfcui.common.table :as table]
+      [broadfcui.nav :as nav]
       [broadfcui.page.workspace.monitor.common :as moncommon]
       [broadfcui.page.workspace.monitor.workflow-details :as workflow-details]
       [broadfcui.endpoints :as endpoints]
@@ -31,10 +32,11 @@
    (fn []
      {:active-filter :all})
    :render
-   (fn [{:keys [this state]}]
-     (if (:selected-workflow @state)
-       (react/call :render-workflow-details this)
-       (react/call :render-table this)))
+   (fn [{:keys [this state props]}]
+     (let [nav-context (nav/parse-segment (:nav-context props))]
+       (if (empty? (:segment nav-context))
+         (react/call :render-table this)
+         (react/call :render-workflow-details this (:segment nav-context)))))
    :render-table
    (fn [{:keys [props state]}]
      [table/Table
@@ -50,8 +52,7 @@
                           name (str (entity "entityName") " (" (entity "entityType") ")")]
                       (if-not id
                         name
-                        (style/create-link {:text name
-                                            :onClick #(swap! state assoc :selected-workflow {:id id :name name})}))))}
+                        (style/create-link {:text name :href (nav/create-href (:nav-context props) id)}))))}
                  {:header "Last Changed" :starting-width 280 :as-text moncommon/render-date}
                  {:header "Status" :starting-width 120
                   :content-renderer (fn [status]
@@ -92,18 +93,18 @@
                  (row "messages")
                  row])}])
    :render-workflow-details
-   (fn [{:keys [state props]}]
+   (fn [{:keys [state props]} workflowId]
      (let [workflows (:workflows props)
            workflowName (get-in workflows [0 "workflowEntity" "entityName"])]
        [:div {}
         [comps/Breadcrumbs {:crumbs
                             [{:text "Workflows"
-                              :onClick #(swap! state dissoc :selected-workflow)}
-                             {:text (get-in @state [:selected-workflow :name])}]}]
+                              :href (nav/create-href (:nav-context props))}
+                             {:text workflowName}]}]
         [:div {:style {:marginTop "1em"}}
          (workflow-details/render
           (merge (select-keys props [:workspace-id :submission-id :bucketName])
-                 {:workflow-id (get-in @state [:selected-workflow :id])
+                 {:workflow-id workflowId
                   :submission (:submission props)
                   :workflow-name workflowName}))]]))})
 
@@ -136,7 +137,9 @@
   {:render
    (fn [{:keys [state props this]}]
      (let [server-response (:server-response @state)
+           nav-context (:nav-context props)
            {:keys [submission error-message]} server-response]
+       (utils/cljslog nav-context)
        (cond
          (nil? server-response)
          [:div {:style {:textAlign "center"}} [comps/Spinner {:text "Loading analysis details..."}]]
@@ -189,7 +192,8 @@
                            :workspace-id (:workspace-id props)
                            :submission submission
                            :bucketName (:bucketName props)
-                           :submission-id (submission "submissionId")}]])))
+                           :submission-id (submission "submissionId")
+                           :nav-context nav-context}]])))
    :load-details
    (fn [{:keys [props state]}]
      (endpoints/call-ajax-orch
