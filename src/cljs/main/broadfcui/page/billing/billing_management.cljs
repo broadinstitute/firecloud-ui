@@ -95,7 +95,7 @@
                                              :onClick #((:on-select props) projectName)})
                          :else projectName)
                        (when message
-                         [:div {:style {:float "right"}}
+                         [:div {:style {:float "right" :position "relative"}}
                           [common/FoundationInfoBox
                            {:text [:div {} [:strong {} "Message:"] [:br] message]}]])])}
                    {:header "Role" :starting-width :remaining}]

@@ -211,54 +211,63 @@
     [:span {:style {:fontWeight "bold" :fontSize "98%"}}
       "FireCloud is not intended to host personally identifiable information. Do not use any patient identifier, including name, social security number, or medical record number."]])
 
-(react/defc FoundationComponent
+(react/defc FoundationTooltip
   {:component-did-mount
    (fn [{:keys [this]}]
      (.foundation (js/$ (react/find-dom-node this))))
    :render
    (fn [{:keys [props]}]
-     (:contents props))})
-
-(react/defc FoundationTooltip
-  {:render
-   (fn [{:keys [props]}]
      (let [{:keys [position text tooltip]} props]
-       [FoundationComponent
-        {:contents [:span {:data-tooltip "" :className (str "has-tip " position)
-                           :title tooltip}
-                    text]}]))})
+       [:span {:data-tooltip "" :className (str "has-tip " position)
+               :title tooltip}
+        text]))})
 
 (react/defc FoundationInfoBox
   {:component-will-mount
    (fn [{:keys [locals]}]
-     (swap! locals assoc :component-id (gensym "infobox-")))
+     (swap! locals assoc :infobox-id (gensym "infobox-")))
+   :component-will-receive-props
+   (fn [{:keys [locals props]}]
+     (react/render
+      (react/create-element [:div {:className "dropdown-pane" :id (:infobox-id @locals) :data-dropdown ""
+                                   :style {:whiteSpace "normal"}}
+                             (:text props)])
+      (:infobox-container @locals)))
    :component-did-mount
+   (fn [{:keys [locals props]}]
+     (let [infobox-container (.createElement js/document "div")
+           infobox-id (:infobox-id @locals)]
+       (swap! locals assoc :infobox-container infobox-container)
+       (.insertBefore js/document.body infobox-container (.getElementById js/document "app"))
+       (react/render
+        (react/create-element [:div {:className "dropdown-pane" :id infobox-id :data-dropdown ""
+                                     :style {:whiteSpace "normal"}}
+                               (:text props)])
+        infobox-container)
+       (let [infobox-element (js/$ (str "#" infobox-id))
+             infobox-button (js/$ (str "[data-toggle='" infobox-id "']"))]
+         (.foundation infobox-element)
+         (.on infobox-element
+              "show.zf.dropdown"
+              (fn [_]
+                (.on (js/$ "body")
+                     "click.zf.dropdown"
+                     (fn [e]
+                       (when (not (or
+                                   (.is infobox-element (.-target e))
+                                   (pos? (.-length (.find infobox-element (.-target e))))
+                                   (.is infobox-button (.-target e))
+                                   (pos? (.-length (.find infobox-button (.-target e))))))
+                         (.foundation infobox-element "close")
+                         (.off (js/$ "body") "click.zf.dropdown")))))))))
+   :component-will-unmount
    (fn [{:keys [locals]}]
-     (let [infobox-element (js/$ (str "#" (:component-id @locals)))
-           infobox-button (js/$ (str "[data-toggle='" (:component-id @locals) "']"))]
-       (.on infobox-element
-            "show.zf.dropdown"
-            (fn [_]
-              (.on (js/$ "body")
-                   "click.zf.dropdown"
-                   (fn [e]
-                     (when (not (or
-                                 (.is infobox-element (.-target e))
-                                 (pos? (.-length (.find infobox-element (.-target e))))
-                                 (.is infobox-button (.-target e))
-                                 (pos? (.-length (.find infobox-button (.-target e))))))
-                       (.foundation infobox-element "close")
-                       (.off (js/$ "body") "click.zf.dropdown"))))))))
+     (.off (js/$ (str "#" (:infobox-id @locals))))
+     (react/unmount-component-at-node (:infobox-container @locals))
+     (.remove (:infobox-container @locals)))
    :render
-   (fn [{:keys [props locals]}]
-     (let [rand-id (:component-id @locals)]
-       (swap! locals assoc :component-id rand-id)
-       [:span {}
-        [:button {:className "button-reset" :data-toggle rand-id
-                  :style {:cursor "pointer" :padding "0 0.5rem"
-                          :fontSize "16px" :lineHeight "1rem"}}
-         (icons/icon {:style {:color (:link-active style/colors)}} :information)]
-        [FoundationComponent
-         {:contents [:div {:className "dropdown-pane" :id rand-id :data-dropdown ""
-                           :style {:whiteSpace "normal"}}
-                     (:text props)]}]]))})
+   (fn [{:keys [locals]}]
+     [:button {:className "button-reset" :data-toggle (:infobox-id @locals)
+               :style {:cursor "pointer" :padding "0 0.5rem"
+                       :fontSize "16px" :lineHeight "1rem"}}
+      (icons/icon {:style {:color (:link-active style/colors)}} :information)])})
