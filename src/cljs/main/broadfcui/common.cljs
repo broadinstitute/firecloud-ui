@@ -226,13 +226,6 @@
   {:component-will-mount
    (fn [{:keys [locals]}]
      (swap! locals assoc :infobox-id (gensym "infobox-")))
-   :component-will-receive-props
-   (fn [{:keys [locals props]}]
-     (react/render
-      (react/create-element [:div {:className "dropdown-pane" :id (:infobox-id @locals) :data-dropdown ""
-                                   :style {:whiteSpace "normal"}}
-                             (:text props)])
-      (:infobox-container @locals)))
    :component-did-mount
    (fn [{:keys [locals props]}]
      (let [infobox-container (.createElement js/document "div")
