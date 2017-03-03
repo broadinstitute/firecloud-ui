@@ -98,7 +98,7 @@
                          [:div {:style {:float "right"}}
                           [common/FoundationInfoBox
                            {:text [:div {} [:strong {} "Message:"] [:br] message]}]])])}
-                   {:header "Role" :starting-width 100}]
+                   {:header "Role" :starting-width :remaining}]
          :toolbar
          (add-right
           [comps/Button
