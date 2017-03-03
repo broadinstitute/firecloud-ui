@@ -236,23 +236,23 @@
         (react/create-element [:div {:className "dropdown-pane" :id infobox-id :data-dropdown ""
                                      :style {:whiteSpace "normal"}}
                                (:text props)])
-        infobox-container)
-       (let [infobox-element (js/$ (str "#" infobox-id))
-             infobox-button (js/$ (str "[data-toggle='" infobox-id "']"))]
-         (.foundation infobox-element)
-         (.on infobox-element
-              "show.zf.dropdown"
-              (fn [_]
-                (.on (js/$ "body")
-                     "click.zf.dropdown"
-                     (fn [e]
-                       (when (not (or
-                                   (.is infobox-element (.-target e))
-                                   (pos? (.-length (.find infobox-element (.-target e))))
-                                   (.is infobox-button (.-target e))
-                                   (pos? (.-length (.find infobox-button (.-target e))))))
-                         (.foundation infobox-element "close")
-                         (.off (js/$ "body") "click.zf.dropdown")))))))))
+        infobox-container
+        #(let [infobox-element (js/$ (str "#" infobox-id))
+              infobox-button (js/$ (str "[data-toggle='" infobox-id "']"))]
+          (.foundation infobox-element)
+          (.on infobox-element
+               "show.zf.dropdown"
+               (fn [_]
+                 (.on (js/$ "body")
+                      "click.zf.dropdown"
+                      (fn [e]
+                        (when (not (or
+                                    (.is infobox-element (.-target e))
+                                    (pos? (.-length (.find infobox-element (.-target e))))
+                                    (.is infobox-button (.-target e))
+                                    (pos? (.-length (.find infobox-button (.-target e))))))
+                          (.foundation infobox-element "close")
+                          (.off (js/$ "body") "click.zf.dropdown"))))))))))
    :component-will-unmount
    (fn [{:keys [locals]}]
      (.off (js/$ (str "#" (:infobox-id @locals))))
