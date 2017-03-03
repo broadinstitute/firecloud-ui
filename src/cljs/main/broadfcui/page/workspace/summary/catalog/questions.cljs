@@ -77,7 +77,7 @@
                              :border style/standard-line :borderRadius 8
                              :backgroundColor (cond disabled (:disabled-state style/colors) selected? (:button-primary style/colors))
                              :cursor "pointer"}
-                     :onClick #(when (not disabled) (set-property option))}
+                     :onClick #(when-not disabled (set-property option))}
                [:input {:type "radio" :readOnly true :checked selected? :disabled disabled
                         :style {:cursor "pointer"}}]
                [:div {:style {:marginLeft "0.75rem" :color (cond disabled (:text-light style/colors) selected? "white")}}
@@ -136,7 +136,7 @@
       [:span {:style {:fontWeight "bold"}} related-label]
       [:span {:style {:fontSize "small" :float "right"}} related-id]
       [:div {}
-       (when (not disabled)
+       (when-not disabled
          (style/create-link {:text "Clear Selection"
                            :onClick #(apply swap! state update :attributes dissoc property
                                             (library-utils/get-related-id+label-props library-schema property))}))]]

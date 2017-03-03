@@ -218,7 +218,7 @@
           (swap! locals assoc :page-attributes {})))))
    :component-did-update
    (fn [{:keys [prev-state state refs]}]
-     (when (not= (:page-num prev-state) (:page-num @state))
+     (when-not (= (:page-num prev-state) (:page-num @state))
        (react/call :scroll-to (@refs "scroller") 0)))
    :next-page
    (fn [{:keys [state refs this locals after-update props]}]
