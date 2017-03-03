@@ -16,23 +16,22 @@
   {:render
    (fn [{:keys [props state]}]
      (let [{:keys [library-attributes library-schema]} props
-           wizard-properties (select-keys props [:library-schema :workspace :workspace-id :request-refresh])]
+           wizard-properties (select-keys props [:library-schema :workspace :workspace-id :request-refresh :can-share? :owner? :curator? :writer?])]
        [:div {}
         (style/create-section-header
-          [:div {}
-           [:span {} "Dataset Attributes"]
-           (when (:can-edit? props)
-             (style/create-link {:style {:fontSize "0.8em" :fontWeight "normal" :marginLeft "1em"}
-                                 :text "Edit..."
-                                 :onClick #(modal/push-modal [CatalogWizard wizard-properties])}))])
+         [:div {}
+          [:span {} "Dataset Attributes"]
+          (style/create-link {:style {:fontSize "0.8em" :fontWeight "normal" :marginLeft "1em"}
+                              :text "Edit..."
+                              :onClick #(modal/push-modal [CatalogWizard wizard-properties])})])
         (style/create-paragraph
+         [:div {}
+          (map (partial library-utils/render-property library-schema library-attributes) (-> library-schema :display :primary))
           [:div {}
-           (map (partial library-utils/render-property library-schema library-attributes) (-> library-schema :display :primary))
-           [:div {}
-            (when (:expanded? @state)
-              [:div {}
-               (map (partial library-utils/render-property library-schema library-attributes) (-> library-schema :display :secondary))
-               (library-utils/render-consent-codes library-schema library-attributes)])
-            [:div {:style {:marginTop "0.5em"}}
-             (style/create-link {:text (if (:expanded? @state) "Collapse" "See more attributes")
-                                 :onClick #(swap! state update :expanded? not)})]]])]))})
+           (when (:expanded? @state)
+             [:div {}
+              (map (partial library-utils/render-property library-schema library-attributes) (-> library-schema :display :secondary))
+              (library-utils/render-consent-codes library-schema library-attributes)])
+           [:div {:style {:marginTop "0.5em"}}
+            (style/create-link {:text (if (:expanded? @state) "Collapse" "See more attributes")
+                                :onClick #(swap! state update :expanded? not)})]]])]))})
