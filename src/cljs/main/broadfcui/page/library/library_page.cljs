@@ -89,7 +89,9 @@
      (react/call :execute-search (@refs "table")))
    :check-access
    (fn [{:keys [props]} data]
-     (if (:workspaceAccess data)
+     (if (or (not (contains? data :workspaceAccess)) (:workspaceAccess data))
+       ;; if we don't know what the workspace id is, workspaceAccess won't be there, but we still want to send to the
+       ;; workspace page and let rawls deal with the permissions
        (nav/navigate (:nav-context props) "workspaces" (common/row->workspace-id data))
        (comps/push-message
         {:header "Request Access"
