@@ -21,18 +21,17 @@
 
 (def row-height-px 56)
 
-(defn- disabled-text [protected?]
-  (if protected?
-    (str "This workspace contains controlled access data. You can only access the contents of this workspace if you are "
-         "dbGaP authorized for TCGA data and have linked your FireCloud account to your eRA Commons account.")
-    "This workspace is protected. To access the data, please contact help@firecloud.org."
-    ))
+(def dbGap-disabled-text
+  (str "This workspace contains controlled access data. You can only access the contents of this workspace if you are "
+       "dbGaP authorized for TCGA data and have linked your FireCloud account to your eRA Commons account."))
+
+(def non-dbGap-disabled-text "This workspace is protected. To access the data, please contact help@firecloud.org.")
 
 (react/defc StatusCell
   {:render
    (fn [{:keys [props]}]
      (let [{:keys [nav-context data]} props
-           {:keys [href status disabled? protected?]} data]
+           {:keys [href status disabled? hover-text]} data]
        [:a {:href (if disabled?
                     "javascript:;"
                     (nav/create-href nav-context href))
@@ -40,7 +39,7 @@
                     :backgroundColor (if disabled? (:disabled-state style/colors) (style/color-for-status status))
                     :margin "2px 0 2px 2px" :height (- row-height-px 4)
                     :cursor (when disabled? "default")}
-            :title (when disabled? (disabled-text protected?))}
+            :title hover-text}
         [:span {:style {:position "absolute" :top 0 :right 0 :bottom 0 :left 0
                         :backgroundColor "rgba(0,0,0,0.2)"}}]
         (style/center {}
@@ -54,7 +53,7 @@
   {:render
    (fn [{:keys [props]}]
      (let [{:keys [nav-context data]} props
-           {:keys [href status restricted? disabled? protected?]} data
+           {:keys [href status restricted? disabled? hover-text]} data
            color (style/color-for-status status)]
        [:a {:href (if disabled?
                     "javascript:;"
@@ -65,7 +64,7 @@
                     :cursor (when disabled? "default")
                     :height (- row-height-px 4)
                     :margin "2px 0"}
-            :title (when disabled? (disabled-text protected?))}
+            :title hover-text}
         (when restricted?
           [:span {:style {:display "block" :position "relative"}}
            [:span {:style {:display "block" :position "absolute" :left -17 :top -9
@@ -222,9 +221,12 @@
           :->row (fn [ws]
                    (let [ws-name (get-workspace-name-string ws)
                          ws-href (let [x (:workspace ws)] (str (:namespace x) ":" (:name x)))
-                         disabled? (= (:accessLevel ws) "NO ACCESS")]
-                     [{:name ws-name :href ws-href :status (:status ws) :disabled? disabled? :protected? (get-in ws [:workspace :isProtected])}
-                      {:name ws-name :href ws-href :status (:status ws) :disabled? disabled? :protected? (get-in ws [:workspace :isProtected])
+                         disabled? (= (:accessLevel ws) "NO ACCESS")
+                         hover-text (when disabled? (if (get-in ws [:workspace :isProtected])
+                                                      dbGap-disabled-text
+                                                      non-dbGap-disabled-text))]
+                     [{:name ws-name :href ws-href :status (:status ws) :disabled? disabled? :hover-text hover-text}
+                      {:name ws-name :href ws-href :status (:status ws) :disabled? disabled? :hover-text hover-text
                        :restricted? (get-in ws [:workspace :realm])}
                       (get-workspace-description ws)
                       (get-in ws [:workspace :lastModified])
