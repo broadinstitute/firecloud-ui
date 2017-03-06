@@ -1,4 +1,4 @@
-(ns broadfcui.page.library.library_page
+(ns broadfcui.page.library.library-page
   (:require
     [clojure.set]
     [dmohs.react :as react]
