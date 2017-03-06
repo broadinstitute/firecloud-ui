@@ -5,7 +5,7 @@
     [broadfcui.utils :as utils]
     ))
 
-;; From https://design.google.com/icons/
+;; From http://fontawesome.io/icons/
 (def ^:private icon-keys
   {:angle-left "fa-angle-left"
    :angle-right "fa-angle-right"
@@ -32,6 +32,7 @@
    :close "fa-close"
    :reset "fa-undo"
    :new-window "fa-external-link"
+   :help "fa-question-circle"
    :spinner "fa-spinner"})
 
 (defn icon [attributes key]

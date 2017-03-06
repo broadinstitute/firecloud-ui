@@ -3,6 +3,7 @@
    [dmohs.react :as react]
    [broadfcui.common :as common]
    [broadfcui.common.components :as comps]
+   [broadfcui.common.icons :as icons]
    [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
    [broadfcui.config :as config]
@@ -178,7 +179,7 @@
 (react/defc AccountDropdown
   {:render
    (fn [{:keys [props state]}]
-     [:div {:style {:float "right" :position "relative" :marginBottom "0.5em"}}
+     [:div {:style {:float "right" :position "relative" :marginBottom "0.4rem"}}
       (when (:show-dropdown? @state)
         [:div {:style {:position "fixed" :top 0 :left 0 :right 0 :bottom 0}
                :onClick #(swap! state assoc :show-dropdown? false)}])
@@ -188,7 +189,7 @@
                    :borderRadius 2
                    :backgroundColor (:background-light style/colors)
                    :color "#000" :textDecoration "none"
-                   :padding "0.6em" :border style/standard-line
+                   :padding "0.5rem" :border style/standard-line
                    :minWidth 100}}
        [:div {}
         (-> (:auth2 props) (.-currentUser) (.get) (.getBasicProfile) (.getEmail))
@@ -200,7 +201,7 @@
                 (fn [{:keys [props state]}]
                   [:a {:style {:display "block"
                                :color "#000" :textDecoration "none" :fontSize 14
-                               :padding "0.6em 1.8em 0.6em 0.6em"
+                               :padding "0.5rem 1.3rem 0.5rem 0.5rem"
                                :backgroundColor (when (:hovering? @state) "#e8f5ff")}
                        :href (:href props)
                        :onMouseOver #(swap! state assoc :hovering? true)
@@ -228,6 +229,13 @@
         [:div {:style {:width "100%" :borderBottom (str "1px solid " (:line-default style/colors))}}
          [:div {:style {:float "right" :fontSize "70%" :margin "0 0 0.5em 0"}}
           [AccountDropdown {:auth2 (:auth2 props)}]
+          [:a {:href (config/user-guide-url)
+               :target "_blank"
+               :style {:display "block" :float "right"
+                       :color (:text-light style/colors)
+                       :fontSize "1.2rem" :lineHeight "0.6rem"
+                       :padding "0.4rem" :marginRight "0.5rem"}}
+           (icons/icon {} :help)]
           (common/clear-both)
           (when (= :registered (:registration-status @state))
             [GlobalSubmissionStatus])]
