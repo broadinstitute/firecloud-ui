@@ -59,10 +59,10 @@
          :cell-content-style {:padding nil}
          :columns (concat
                    [{:resizable? false :width 30 :reorderable? false
-                     :as-text (fn [access?]
-                                (if (not access?) "You don't have access to the workspace for this dataset.")) ;; what should the wording for this be?
-                     :content-renderer (fn [access?]
-                                         (if (not access?)
+                     :as-text (fn [access]
+                                (if (not (or (nil? access) access)) "You don't have access to the workspace for this dataset.")) ;; what should the wording for this be?
+                     :content-renderer (fn [access]
+                                         (if (not (or (nil? access) access))
                                            (icons/icon {:style {:alignSelf "center"}} :shield)))}
                     {:header (:title (:library:datasetName attributes)) :starting-width 250 :show-initial? true
                      :as-text :library:datasetDescription :reorderable? false
