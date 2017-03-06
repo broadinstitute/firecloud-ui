@@ -634,7 +634,7 @@
                                        (when (:cycle-focus? props)
                                          (.focus (get-first)))))))))})
 
-(def no-billing-projects-message
+(defn no-billing-projects-message []
   [:div {:style {:textAlign "center"}}
    (str "You must have a billing project associated with your account to create a new workspace. ")
    [:a {:target "_blank" :href (str (config/billing-guide-url))}
