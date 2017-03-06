@@ -60,9 +60,9 @@
          :columns (concat
                    [{:resizable? false :width 30 :reorderable? false
                      :as-text (fn [access]
-                                (if (not (or (nil? access) access)) "You don't have access to the workspace for this dataset.")) ;; what should the wording for this be?
+                                (if (= access "NO ACCESS") "You don't have access to the workspace for this dataset.")) ;; what should the wording for this be?
                      :content-renderer (fn [access]
-                                         (if (not (or (nil? access) access))
+                                         (if (= access "NO ACCESS")
                                            (icons/icon {:style {:alignSelf "center"}} :shield)))}
                     {:header (:title (:library:datasetName attributes)) :starting-width 250 :show-initial? true
                      :as-text :library:datasetDescription :reorderable? false
@@ -89,10 +89,7 @@
      (react/call :execute-search (@refs "table")))
    :check-access
    (fn [{:keys [props]} data]
-     (if (or (not (contains? data :workspaceAccess)) (:workspaceAccess data))
-       ;; if we don't know what the workspace id is, workspaceAccess won't be there, but we still want to send to the
-       ;; workspace page and let rawls deal with the permissions
-       (nav/navigate (:nav-context props) "workspaces" (common/row->workspace-id data))
+     (if (= (:workspaceAccess data) "NO ACCESS")
        (comps/push-message
         {:header "Request Access"
          :message
@@ -107,7 +104,8 @@
                  :href (str "mailto:" (:library:contactEmail data))}
              (str (:library:datasetCustodian data) " <" (:library:contactEmail data) ">")]
             " and request access for the "
-            (:namespace data) "/" (:name data) " workspace."])})))
+            (:namespace data) "/" (:name data) " workspace."])})
+       (nav/navigate (:nav-context props) "workspaces" (common/row->workspace-id data))))
    :build-aggregate-fields
    (fn [{:keys [props]}]
      (reduce
