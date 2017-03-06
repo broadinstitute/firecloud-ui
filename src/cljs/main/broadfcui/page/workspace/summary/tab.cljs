@@ -211,9 +211,22 @@
              (when (pos? count-all)
                [:ul {:style {:marginTop 0}}
                 (for [[status subs] (sort submissions-count)]
-                 [:li {} (str subs " " status)])])])))]
+                 [:li {} (str subs " " status)])])])))
+      (render-detail-box
+       5
+       "Tags"
+       (style/create-paragraph
+        ;; fix this to get tags from workspace response (need to work in orchestration)
+        (let [tags ["cancer" "tcga" "tag" "another tag" "another tag again" "a very long tag moves to the next line because it's an inline-block"]]
+          (if editing? [:input {:type "text" :value (clojure.string/join ", " tags) :data-role "tagsinput"}] ;; make this work better
+                       [:div {}
+                        (for [tag tags]
+                          [:div {:style {:display "inline-block" :background (:tag-background style/colors)
+                                         :color (:tag-foreground style/colors) :margin "0.1rem 0.1rem"
+                                         :borderRadius 3 :padding "0.2rem 0.5rem"}} tag])]))))]
 
     (when editing? [:div {:style {:marginBottom "10px"}} common/PHI-warning])
+
 
      (style/create-section-header "Description")
      (style/create-paragraph
