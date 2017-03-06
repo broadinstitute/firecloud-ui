@@ -308,3 +308,12 @@
 
 (defn get-app-root-element []
   (.getElementById js/document "app"))
+
+
+(defn log-methods [prefix defined-methods]
+  (map-kv (fn [method-name method]
+            [method-name
+             (fn [& args]
+               (log (str prefix " - " (name method-name)))
+               (apply method args))])
+          defined-methods))

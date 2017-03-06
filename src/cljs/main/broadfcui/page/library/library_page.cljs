@@ -17,6 +17,7 @@
 
 
 (react/defc DatasetsTable
+  (utils/log-methods "Datasets Table"
   {:render
    (fn [{:keys [state this props]}]
      (let [attributes (:library-attributes props)
@@ -143,7 +144,7 @@
                               :rows results})
                    (when (= 1 current-page)
                      ((:callback-function props) aggregations)))
-                 (callback {:error status-text})))})))))})
+                 (callback {:error status-text})))})))))}))
 
 (react/defc SearchSection
   {:get-filters
@@ -270,6 +271,7 @@
 (def ^:private VERSION 4)
 
 (react/defc Page
+  (utils/log-methods "Library Page"
   {:update-filter
    (fn [{:keys [state]} facet-name facet-list]
      (swap! state assoc-in [:facet-filters facet-name] facet-list))
@@ -324,4 +326,4 @@
    :component-did-update
    (fn [{:keys [state refs]}]
      (persistence/save {:key PERSISTENCE-KEY :state state :except [:library-attributes]})
-     (react/call :execute-search (@refs "dataset-table")))})
+     (react/call :execute-search (@refs "dataset-table")))}))

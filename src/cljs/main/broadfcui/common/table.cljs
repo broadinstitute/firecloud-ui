@@ -394,6 +394,7 @@
 
 
 (react/defc Table
+  (utils/log-methods "Table"
   {:get-query-params
    (fn [{:keys [state]}]
      (:query-params @state))
@@ -419,4 +420,4 @@
    :component-will-unmount
    (fn [{:keys [this]}]
      (.removeEventListener js/window "mousemove" (.-onMouseMoveHandler this))
-     (.removeEventListener js/window "mouseup" (.-onMouseUpHandler this)))})
+     (.removeEventListener js/window "mouseup" (.-onMouseUpHandler this)))}))
