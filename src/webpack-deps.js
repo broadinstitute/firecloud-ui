@@ -17,6 +17,7 @@ require('foundation-sites/js/foundation.util.triggers');
 require('foundation-sites/js/foundation.dropdown');
 require('foundation-sites/js/foundation.tooltip');
 require('select2');
+require('bootstrap-tagsinput');
 
 require('jquery-ui/themes/base/core.css');
 require('jquery-ui/themes/base/theme.css');
@@ -28,3 +29,4 @@ require('./styles/markdown.css');
 require('./styles/twitter-typeahead.css');
 require('./styles/foundation.scss');
 require('select2/dist/css/select2.css');
+require('bootstrap-tagsinput/dist/bootstrap-tagsinput.css');

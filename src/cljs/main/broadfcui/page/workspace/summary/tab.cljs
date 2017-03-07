@@ -218,7 +218,14 @@
        (style/create-paragraph
         ;; fix this to get tags from workspace response (need to work in orchestration)
         (let [tags ["cancer" "tcga" "tag" "another tag" "another tag again" "a very long tag moves to the next line because it's an inline-block"]]
-          (if editing? [:input {:type "text" :value (clojure.string/join ", " tags) :data-role "tagsinput"}] ;; make this work better
+          (if editing? [:div {:className "bootstrap-tagsinput"}
+                        [:select { :multiple true :data-role "tagsinput"}
+            ;[:select {:data-role "tagsinput"} ;; how to do a select multiple?
+                        [:option {:value "Amsterdam"} "Amsterdam"]
+                        [:option {:value "Washington"} "Washington"]
+                        [:option {:value "Sydney"} "Sydney"]]]
+          ;
+          ;              ] ;; make this work better (clojure.string/join ", " tags)
                        [:div {}
                         (for [tag tags]
                           [:div {:style {:display "inline-block" :background (:tag-background style/colors)
