@@ -144,21 +144,22 @@
              type (or inputType outputType)
              field-value (get values field-name "")
              error (invalid-values field-name)]
-         [:div {:key field-name}
-          [:div {:style {:display "flex" :alignItems "baseline" :marginBottom "0.5em"}}
-           [:div {:style {:marginRight "1em" :padding "0.5em"
+         [:div {:key field-name :style {:marginBottom "1rem"}}
+          [:div {}
+           [:div {:style {:marginBottom "0.5em" :padding "0.5rem" :display "inline-block"
                           :backgroundColor (:background-light style/colors)
                           :border style/standard-line :borderRadius 2}}
             (str field-name ": (" (when optional? "optional ") type ")")]
+           (when (and error (not editing?))
+             (icons/icon {:style {:marginLeft "0.5rem" :alignSelf "center"
+                                  :color (:exception-state style/colors)}}
+                         :error))
            (when editing?
              (style/create-text-field {:ref (str ref-prefix "_" field-name)
-                                       :defaultValue field-value}))
+                                       :defaultValue field-value
+                                       :style {:width 500 :marginLeft "0.5rem"}}))
            (when-not editing?
-             (or field-value [:span {:style {:fontStyle "italic"}} "No value entered"]))
-           (when (and error (not editing?))
-             (icons/icon {:style {:margin "0 0 0 0.7em" :alignSelf "center"
-                                  :color (:exception-state style/colors)}}
-                         :error))]
+             (or field-value [:span {:style {:fontStyle "italic"}} "No value entered"]))]
           (when error
             [:div {:style {:padding "0.5em" :marginBottom "0.5em"
                            :backgroundColor (:exception-state style/colors)
