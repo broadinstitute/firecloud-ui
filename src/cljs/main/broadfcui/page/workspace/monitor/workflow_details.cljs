@@ -133,40 +133,109 @@
 
 
 
-(defn- render-workflow-detail [workflow raw-data workflow-name submission-id bucketName]
-  [:div {:style {:padding "1em" :border style/standard-line :borderRadius 4
-                 :backgroundColor (:background-light style/colors)}}
-   [:div {}
-    (let [calls (workflow "calls")
-          inputs (first (first (workflow "calls")))
-          input-names (string/split inputs ".")
-          workflow-name (first input-names)]
-      (create-field "Workflow ID"
-                    (style/create-link {:text (workflow "id")
-                                        :target "_blank"
-                                        :style {:color "-webkit-link" :textDecoration "underline"}
-                                        :href (str moncommon/google-cloud-context
-                                                   bucketName "/" submission-id "/"
-                                                   workflow-name "/" (workflow "id") "/")})))
-    (let [status (workflow "status")]
-      (create-field "Status" (moncommon/icon-for-wf-status status) status))
-    (when (workflow "submission")
-      (create-field "Submitted" (moncommon/render-date (workflow "submission"))))
-    (when (workflow "start")
-      (create-field "Started" (moncommon/render-date (workflow "start"))))
-    (when (workflow "end")
-      (create-field "Ended" (moncommon/render-date (workflow "end"))))
-    [IODetail {:label "Inputs" :data (utils/parse-json-string (get-in workflow ["submittedFiles", "inputs"]))}]
-    [IODetail {:label "Outputs" :data (workflow "outputs")}]
-    [:div {:style {:whiteSpace "nowrap" :marginRight "0.5em"}}
-     (let [wlogurl (str "gs://" bucketName "/" submission-id "/workflow.logs/workflow."
-                        (workflow "id") ".log")]
-       (create-field "Workflow Log" (display-value wlogurl (str "workflow." (workflow "id") ".log"))))]
-    [WorkflowTiming {:label "Workflow Timing" :data raw-data :workflow-name workflow-name}]]
 
-   [:div {:style {:marginTop "1em" :fontWeight 500}} "Calls:"]
-   (for [[call data] (workflow "calls")]
-     [CallDetail {:label call :data data :submission-id submission-id :bucketName bucketName :workflowId (workflow "id")}])])
+(react/defc WorkflowTimingNEW
+  {:get-initial-state
+   (fn []
+     {:expanded false})
+   :render
+   (fn [{:keys [props state]}]
+     [:div {:style {:marginTop "1em"}}
+
+      ;; Flex with row direction
+      [:div {:style {:marginTop 15}}
+       ; X axis
+       [:div {:style {:display "flex" :flexDirection "row" :height 20 :fontSize 12}}
+        [:div {:style {:flex "0 1 auto" :borderLeft "1px solid rgb(244, 244, 244)" :borderRight style/standard-line :width "25%" :textAlign "right" :alignSelf "flex-end"}}  "0"]
+        [:div {:style {:flex "0 1 auto" :borderRight style/standard-line :width "25%" :textAlign "right" :alignSelf "flex-end"}} "10"]
+        [:div {:style {:flex "0 1 auto" :borderRight style/standard-line :width "25%" :textAlign "right" :alignSelf "flex-end"}} "20"]
+        [:div {:style {:flex "0 1 auto" :borderRight style/standard-line :width "25%" :textAlign "right" :alignSelf "flex-end"}} "30"]]]
+
+      [:div {:style {:border "1px solid gray"}}
+       ;Row 1
+       [:div {:style {:display "flex" :flexDirection "row" :backgroundColor "white" :borderBottom style/standard-line :height 20}}
+        [:div {:style {:flex "0 1 auto" :backgroundColor "white" :borderRight style/standard-line :width "25%" :fontSize 14 :alignSelf "center"}} "Call.One  "
+         (style/create-link {:text (if (:expanded1 @state) "Hide" "Show")
+                             :onClick #(swap! state assoc :expanded1 (not (:expanded1 @state)))})]
+        [:div {:style {:flex "0 1 auto" :backgroundColor "white" :borderRight style/standard-line :width "25%"}}
+         [:div {:style {:display "flex" :height "100%" :alignItems "center"}}
+          [:div {:style {:flex "0 1 auto" :position "relative" :left "3" :width "20%" :height "75%" :backgroundColor "blue"}}]
+          [:div {:style {:flex "0 1 auto" :width "40%" :height "75%" :backgroundColor "red"}}]]]
+        [:div {:style {:flex "0 1 auto" :backgroundColor "white" :borderRight style/standard-line :width "25%"}}]
+        [:div {:style {:flex "0 1 auto" :backgroundColor "white" :width "25%"}}]]
+
+       (when (:expanded1 @state)  [:div {:style {:x "100" :y "20" :width "100%" :height 90 :backgroundColor "rgb(244, 244, 244)" :borderBottom "1px solid gray"}}
+                                  "\nCall Details go here!"])
+       ;Row2
+       [:div {:style {:display "flex" :flexDirection "row" :backgroundColor "white" :borderBottom style/standard-line :height 20}}
+        [:div {:style {:flex "0 1 auto" :backgroundColor "white" :borderRight style/standard-line :width "25%" :fontSize 14 :alignSelf "center"}} "Call.Two  "
+         (style/create-link {:text (if (:expanded2 @state) "Hide" "Show")
+                             :onClick #(swap! state assoc :expanded2 (not (:expanded2 @state)))})]
+        [:div {:style {:flex "0 1 auto" :backgroundColor "white" :borderRight style/standard-line :width "25%"}}]
+        [:div {:style {:flex "0 1 auto" :backgroundColor "white" :borderRight style/standard-line :width "25%"}}]
+        [:div {:style {:flex "0 1 auto" :backgroundColor "white" :width "25%"}}]]
+
+       (when (:expanded2 @state)  [:div {:style {:x "100" :y "20" :width "100%" :height 90 :backgroundColor "rgb(244, 244, 244)" :borderBottom "1px solid gray" :fontSize 12}}
+                                   "\nCall Details go here!"])
+
+       ;Row 3
+       [:div {:style {:display "flex" :flexDirection "row" :backgroundColor "white" :borderBottom style/standard-line :height 20}}
+        [:div {:style {:flex "0 1 auto" :backgroundColor "white" :borderRight style/standard-line :width "25%" :fontSize 14 :alignSelf "center"}} "Call.Three  "
+         (style/create-link {:text (if (:expanded3 @state) "Hide" "Show")
+                             :onClick #(swap! state assoc :expanded3 (not (:expanded3 @state)))})]
+        [:div {:style {:flex "0 1 auto" :backgroundColor "white" :borderRight style/standard-line :width "25%"}}]
+        [:div {:style {:flex "0 1 auto" :backgroundColor "white" :borderRight style/standard-line :width "25%"}}]
+        [:div {:style {:flex "0 1 auto" :backgroundColor "white" :width "25%"}}]]
+
+       (when (:expanded3 @state)  [:div {:style {:x "100" :y "20" :width "100%" :height 90 :backgroundColor "rgb(244, 244, 244)" :borderBottom "1px solid gray"}}
+                                   "\nCall Details go here!"])
+       ]
+
+      ])})
+
+
+
+(defn- render-workflow-detail [workflow raw-data workflow-name submission-id bucketName]
+  [:div {}
+   [:div {:style {:padding "1em" :border style/standard-line :borderRadius 4
+                  :backgroundColor (:background-light style/colors)}}
+    [:div {}
+     (let [calls (workflow "calls")
+           inputs (first (first (workflow "calls")))
+           input-names (string/split inputs ".")
+           workflow-name (first input-names)]
+       (create-field "Workflow ID"
+                     (style/create-link {:text (workflow "id")
+                                         :target "_blank"
+                                         :style {:color "-webkit-link" :textDecoration "underline"}
+                                         :href (str moncommon/google-cloud-context
+                                                    bucketName "/" submission-id "/"
+                                                    workflow-name "/" (workflow "id") "/")})))
+     (let [status (workflow "status")]
+       (create-field "Status" (moncommon/icon-for-wf-status status) status))
+     (when (workflow "submission")
+       (create-field "Submitted" (moncommon/render-date (workflow "submission"))))
+     (when (workflow "start")
+       (create-field "Started" (moncommon/render-date (workflow "start"))))
+     (when (workflow "end")
+       (create-field "Ended" (moncommon/render-date (workflow "end"))))
+     [IODetail {:label "Inputs" :data (utils/parse-json-string (get-in workflow ["submittedFiles", "inputs"]))}]
+     [IODetail {:label "Outputs" :data (workflow "outputs")}]
+     [:div {:style {:whiteSpace "nowrap" :marginRight "0.5em"}}
+      (let [wlogurl (str "gs://" bucketName "/" submission-id "/workflow.logs/workflow."
+                         (workflow "id") ".log")]
+        (create-field "Workflow Log" (display-value wlogurl (str "workflow." (workflow "id") ".log"))))]
+     [WorkflowTiming {:label "Workflow Timing" :data raw-data :workflow-name workflow-name}]]
+
+    [:div {:style {:marginTop "1em" :fontWeight 500}} "Calls:"]
+    (for [[call data] (workflow "calls")]
+      [CallDetail {:label call :data data :submission-id submission-id :bucketName bucketName :workflowId (workflow "id")}])]
+
+   [:div {:style {:padding "1em" :border style/standard-line :borderRadius 4 :marginTop 10
+                  :backgroundColor (:background-light style/colors)}}
+    [:div {} "Timing Diagram"]
+    [WorkflowTimingNEW {}]
+    ]])
 
 
 (react/defc WorkflowDetails
@@ -200,3 +269,66 @@
 (defn render [props]
   (assert (every? #(contains? props %) #{:workspace-id :submission-id :workflow-id}))
   [WorkflowDetails props])
+
+
+
+
+;
+;;; Flex with column direction
+;[:div {:style {:display "flex" :flexDirection "row" :border "1px solid gray" :marginTop 15}}
+; [:div {:style {:display "flex" :flexDirection "column" :backgroundColor "white" :height 220 :width "20%" :borderRight "1px solid gray"}}
+;  [:div {:style {:flex "0 1 auto" :backgroundColor "white" :borderBottom style/standard-line :height 22}}]
+;  [:div {:style {:flex "0 1 auto" :backgroundColor "white" :borderBottom style/standard-line :height 22 :fontFamily "Roboto" :fontSize "12" :textAlign "center"}} "Call.1"]
+;  [:div {:style {:x "100" :y "20" :width 700 :height 90 :backgroundColor "blue"}}]
+;  [:div {:style {:flex "0 1 auto" :backgroundColor "white" :borderBottom style/standard-line :height 22}}]
+;  [:div {:style {:flex "0 1 auto" :backgroundColor "white" :borderBottom style/standard-line :height 22}}]
+;  [:div {:style {:flex "0 1 auto" :backgroundColor "white" :borderBottom style/standard-line :height 22}}]
+;  [:div {:style {:flex "0 1 auto" :backgroundColor "white" :borderBottom style/standard-line :height 22}}]
+;  [:div {:style {:flex "0 1 auto" :backgroundColor "white" :borderBottom style/standard-line :height 22}}]
+;  [:div {:style {:flex "0 1 auto" :backgroundColor "white" :borderBottom style/standard-line :height 22}}]
+;  [:div {:style {:flex "0 1 auto" :backgroundColor "white" :borderBottom style/standard-line :height 22}}]
+;  [:div {:style {:flex "0 1 auto" :backgroundColor "white" :borderBottom style/standard-line :height 22}}]]
+; [:div {:style {:display "flex" :flexDirection "column" :backgroundColor "white" :height 220 :width "20%" :borderRight "1px solid lightgray"}}
+;  [:div {:style {:flex "0 1 auto" :backgroundColor "white" :borderBottom style/standard-line :height 22}}]
+;  [:div {:style {:flex "0 1 auto" :backgroundColor "white" :borderBottom style/standard-line :height 22}}]
+;  [:div {:style {:flex "0 1 auto" :backgroundColor "white" :borderBottom style/standard-line :height 22}}]
+;  [:div {:style {:flex "0 1 auto" :backgroundColor "white" :borderBottom style/standard-line :height 22}}]
+;  [:div {:style {:flex "0 1 auto" :backgroundColor "white" :borderBottom style/standard-line :height 22}}]
+;  [:div {:style {:flex "0 1 auto" :backgroundColor "white" :borderBottom style/standard-line :height 22}}]
+;  [:div {:style {:flex "0 1 auto" :backgroundColor "white" :borderBottom style/standard-line :height 22}}]
+;  [:div {:style {:flex "0 1 auto" :backgroundColor "white" :borderBottom style/standard-line :height 22}}]
+;  [:div {:style {:flex "0 1 auto" :backgroundColor "white" :borderBottom style/standard-line :height 22}}]
+;  [:div {:style {:flex "0 1 auto" :backgroundColor "white" :borderBottom style/standard-line :height 22}}]]
+; [:div {:style {:display "flex" :flexDirection "column" :backgroundColor "white" :height 220 :width "20%" :borderRight "1px solid lightgray"}}
+;  [:div {:style {:flex "0 1 auto" :backgroundColor "white" :borderBottom style/standard-line :height 22}}]
+;  [:div {:style {:flex "0 1 auto" :backgroundColor "white" :borderBottom style/standard-line :height 22}}]
+;  [:div {:style {:flex "0 1 auto" :backgroundColor "white" :borderBottom style/standard-line :height 22}}]
+;  [:div {:style {:flex "0 1 auto" :backgroundColor "white" :borderBottom style/standard-line :height 22}}]
+;  [:div {:style {:flex "0 1 auto" :backgroundColor "white" :borderBottom style/standard-line :height 22}}]
+;  [:div {:style {:flex "0 1 auto" :backgroundColor "white" :borderBottom style/standard-line :height 22}}]
+;  [:div {:style {:flex "0 1 auto" :backgroundColor "white" :borderBottom style/standard-line :height 22}}]
+;  [:div {:style {:flex "0 1 auto" :backgroundColor "white" :borderBottom style/standard-line :height 22}}]
+;  [:div {:style {:flex "0 1 auto" :backgroundColor "white" :borderBottom style/standard-line :height 22}}]
+;  [:div {:style {:flex "0 1 auto" :backgroundColor "white" :borderBottom style/standard-line :height 22}}]]
+; [:div {:style {:display "flex" :flexDirection "column" :backgroundColor "white" :height 220 :width "20%" :borderRight "1px solid lightgray"}}
+;  [:div {:style {:flex "0 1 auto" :backgroundColor "white" :borderBottom style/standard-line :height 22}}]
+;  [:div {:style {:flex "0 1 auto" :backgroundColor "white" :borderBottom style/standard-line :height 22}}]
+;  [:div {:style {:flex "0 1 auto" :backgroundColor "white" :borderBottom style/standard-line :height 22}}]
+;  [:div {:style {:flex "0 1 auto" :backgroundColor "white" :borderBottom style/standard-line :height 22}}]
+;  [:div {:style {:flex "0 1 auto" :backgroundColor "white" :borderBottom style/standard-line :height 22}}]
+;  [:div {:style {:flex "0 1 auto" :backgroundColor "white" :borderBottom style/standard-line :height 22}}]
+;  [:div {:style {:flex "0 1 auto" :backgroundColor "white" :borderBottom style/standard-line :height 22}}]
+;  [:div {:style {:flex "0 1 auto" :backgroundColor "white" :borderBottom style/standard-line :height 22}}]
+;  [:div {:style {:flex "0 1 auto" :backgroundColor "white" :borderBottom style/standard-line :height 22}}]
+;  [:div {:style {:flex "0 1 auto" :backgroundColor "white" :borderBottom style/standard-line :height 22}}]]
+; [:div {:style {:display "flex" :flexDirection "column" :backgroundColor "white" :height 220 :width "20%" :borderRight "1px solid lightgray"}}
+;  [:div {:style {:flex "0 1 auto" :backgroundColor "white" :borderBottom style/standard-line :height 22}}]
+;  [:div {:style {:flex "0 1 auto" :backgroundColor "white" :borderBottom style/standard-line :height 22}}]
+;  [:div {:style {:flex "0 1 auto" :backgroundColor "white" :borderBottom style/standard-line :height 22}}]
+;  [:div {:style {:flex "0 1 auto" :backgroundColor "white" :borderBottom style/standard-line :height 22}}]
+;  [:div {:style {:flex "0 1 auto" :backgroundColor "white" :borderBottom style/standard-line :height 22}}]
+;  [:div {:style {:flex "0 1 auto" :backgroundColor "white" :borderBottom style/standard-line :height 22}}]
+;  [:div {:style {:flex "0 1 auto" :backgroundColor "white" :borderBottom style/standard-line :height 22}}]
+;  [:div {:style {:flex "0 1 auto" :backgroundColor "white" :borderBottom style/standard-line :height 22}}]
+;  [:div {:style {:flex "0 1 auto" :backgroundColor "white" :borderBottom style/standard-line :height 22}}]
+;  [:div {:style {:flex "0 1 auto" :backgroundColor "white" :borderBottom style/standard-line :height 22}}]]]
