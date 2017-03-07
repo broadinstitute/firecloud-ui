@@ -8,6 +8,7 @@ exports.marked = require('marked');
 require('./js/timingDiagram');
 require('./js/igvPatch');
 require('any-resize-event');
+require('select2');
 
 require('jquery-ui/themes/base/core.css');
 require('jquery-ui/themes/base/theme.css');
@@ -17,3 +18,4 @@ require('github-markdown-css/github-markdown.css');
 require('font-awesome/css/font-awesome.css');
 require('./styles/markdown.css');
 require('./styles/twitter-typeahead.css');
+require('select2/dist/css/select2.css');

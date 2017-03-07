@@ -88,14 +88,14 @@
         [:div {:style {:marginBottom "1em"}}
          [:div {:style {:fontSize "120%" :margin "1em 0"}} "Destination Workspace:"]
          (style/create-select
-           {:ref "workspace-id"
-            :style {:width 300}
-            :onChange (fn [event]
+          {:ref #(.on (.select2 (js/$ %)) "select2:select"
+                      (fn [event]
                         (swap! state assoc :selected-workspace
-                          (nth workspaces-list (js/parseInt (.-value (.-target event))))))}
-           (map
-             (fn [ws] (str (get-in ws ["workspace" "namespace"]) "/" (get-in ws ["workspace" "name"])))
-             workspaces-list))])
+                               (nth workspaces-list (js/parseInt (.-value (.-target event)))))))
+           :style {:width 500}}
+          (map
+           (fn [ws] (str (get-in ws ["workspace" "namespace"]) "/" (get-in ws ["workspace" "name"])))
+           workspaces-list))])
       (style/create-validation-error-message (:validation-error @state))
       [comps/ErrorViewer {:error (:server-error @state)}]
       [comps/Button {:text (if workspace-id "Import" "Export")
