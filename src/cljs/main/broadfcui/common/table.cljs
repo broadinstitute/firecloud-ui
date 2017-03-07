@@ -404,14 +404,13 @@
    :get-default-props get-default-table-props
    :get-initial-state get-initial-table-state
    :render render-table
-   :execute-search (fn [{:keys [this]}] (react/call :refresh-rows this))
    :get-ordered-columns
    (fn [{:keys [state]}]
      (->> (:column-meta @state)
           (map (fn [{:keys [header] :as column-meta}]
                  (merge column-meta (get (:given-columns-by-header @state) header))))
           vec))
-   :refresh-rows #(refresh-table-rows %)
+   :refresh-rows refresh-table-rows
    :reinitialize
    (fn [{:keys [state] :as data}]
      (swap! state merge (get-initial-table-state data)))
