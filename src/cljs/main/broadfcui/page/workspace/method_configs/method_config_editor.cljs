@@ -105,7 +105,7 @@
        [:div {:style {:lineHeight 1}}
         (when-not editing?
           [comps/SidebarButton {:style :light :color :button-primary
-                                :text "Edit this page" :icon :edit
+                                :text "Edit Configuration" :icon :edit
                                 :disabled? (when locked? "The workspace is locked")
                                 :onClick #(swap! state assoc :editing? true)}])
         (when-not editing?
