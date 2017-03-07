@@ -244,7 +244,7 @@
          error-message (style/create-server-error-message error-message)
          (some nil? [workspaces billing-projects]) [comps/Spinner {:text "Loading workspaces..."}]
          :else
-         [:div {:style {:margin "0 2em"}}
+         [:div {:style {:padding "0 1rem"}}
           [WorkspaceTable
            (assoc props
              :workspaces workspaces
@@ -289,12 +289,13 @@
    (fn [{:keys [props]}]
      (let [nav-context (nav/parse-segment (:nav-context props))
            selected-ws-id (common/get-id-from-nav-segment (:segment nav-context))]
-       [:div {:style {:marginTop "2em"}}
+       [:div {:style {:marginTop "1.5rem"}}
         (if selected-ws-id
           [:div {}
-           [:div {:style {:margin "1em"}}
-            [:span {:style {:fontSize "180%"}}
-             [comps/Breadcrumbs {:scale-factor "60%" :crumbs (create-breadcrumbs-from-hash (:hash nav-context))}]]]
+           [:div {:style {:marginBottom "1.5rem" :paddingLeft "1.5rem" :fontSize "125%"}}
+            "Workspace: "
+            [:span {:style {:fontWeight "500"}}
+             (:namespace selected-ws-id) "/" (:name selected-ws-id)]]
            [WorkspaceDetails {:key selected-ws-id
                               :workspace-id selected-ws-id
                               :nav-context nav-context

@@ -146,7 +146,7 @@
      (let [nav-context (nav/parse-segment (:nav-context props))
            selected-project (not-empty (:segment nav-context))]
        [:div {:style {:padding "1em"}}
-        [:div {:style {:fontSize "180%" :marginBottom "1em"}}
+        [:div {:style {:marginBottom "1rem" :fontSize "1.1rem"}}
          [comps/Breadcrumbs {:crumbs [{:text "Billing Management" :onClick #(nav/back nav-context)}
                                       (when selected-project {:text selected-project})]}]]
         (if selected-project

@@ -97,7 +97,7 @@
            nav-context (nav/parse-segment (:nav-context props))
            bucketName (get-in (:workspace props) [:workspace :bucketName])
            selected-submission-id (not-empty (:segment nav-context))]
-       [:div {:style {:padding "1em"}}
+       [:div {:style {:padding "1rem 1.5rem"}}
         (if selected-submission-id
           [submission-details/Page {:key selected-submission-id
                                     :workspace-id workspace-id

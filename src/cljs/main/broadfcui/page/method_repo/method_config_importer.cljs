@@ -327,9 +327,9 @@
   {:render
    (fn [{:keys [props state refs]}]
      [:div {}
-      (if-let [item (:selected-item @state)]
+      (when-let [item (:selected-item @state)]
         ;; TODO allow nav
-        [:div {:style {:fontSize "140%" :marginBottom "1em"}}
+        [:div {:style {:marginBottom "1rem" :fontSize "1.1rem"}}
          [comps/Breadcrumbs
           {:crumbs
            [{:text "Methods" :onClick #(swap! state dissoc :selected-item)}

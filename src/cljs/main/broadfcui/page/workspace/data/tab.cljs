@@ -67,8 +67,8 @@
                                 {:id id :text text
                                  :onClick #(swap! state update :crumbs (comp vec (partial take 2)))}))]
          [:div {:style {:position "relative" :width 720}}
-          [:div {:style {:fontSize "150%" :marginBottom "1ex"}}
-           [comps/Breadcrumbs {:scale-factor "60%" :crumbs (:crumbs @state)}]]
+          [:div {:style {:fontSize "1.1rem" :marginBottom "1rem"}}
+           [comps/Breadcrumbs {:crumbs (:crumbs @state)}]]
           common/PHI-warning
           [:div {:style {:backgroundColor "white" :padding "1em"}}
            (case last-crumb-id
@@ -91,7 +91,7 @@
                  "Copy from another workspace"]]))]])}])
    :component-will-unmount
    (fn [{:keys [props this]}]
-     ((:on-close props)) )})
+     ((:on-close props)))})
 
 (react/defc EntityAttributes
   {:render
@@ -167,7 +167,7 @@
    :render
    (fn [{:keys [props state refs this]}]
      (let [{:keys [workspace-id workspace workspace-error]} props]
-       [:div {:style {:padding "1em" :display "flex"}}
+       [:div {:style {:padding "1rem 1.5rem" :display "flex"}}
         (when (:loading-attributes @state)
           [comps/Blocker {:banner "Loading..."}])
         (cond
