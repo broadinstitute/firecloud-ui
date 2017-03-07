@@ -111,10 +111,11 @@
               :text "Save" :icon :done
               :onClick (fn [_]
                          (let [{:keys [success error]} (react/call :get-attributes (@refs "workspace-attribute-editor"))
-                               new-description (react/call :get-text (@refs "description"))]
+                               new-description (react/call :get-text (@refs "description"))
+                               new-tags (react/call :get-tags (@refs "tags-autocomplete"))]
                            (if error
                              (comps/push-error error)
-                             (save-attributes {:new-attributes (assoc success :description new-description)
+                             (save-attributes {:new-attributes (assoc success :description new-description :tags new-tags)
                                                :state state
                                                :workspace-id workspace-id
                                                :request-refresh request-refresh}))))}]
@@ -216,16 +217,9 @@
        5
        "Tags"
        (style/create-paragraph
-        ;; fix this to get tags from workspace response (need to work in orchestration)
+        ;; fix this to get tags tafrom workspace response (need to work in orchestration)
         (let [tags ["cancer" "tcga" "tag" "another tag" "another tag again" "a very long tag moves to the next line because it's an inline-block"]]
-          (if editing? [:div {:className "bootstrap-tagsinput"}
-                        [:select { :multiple true :data-role "tagsinput"}
-            ;[:select {:data-role "tagsinput"} ;; how to do a select multiple?
-                        [:option {:value "Amsterdam"} "Amsterdam"]
-                        [:option {:value "Washington"} "Washington"]
-                        [:option {:value "Sydney"} "Sydney"]]]
-          ;
-          ;              ] ;; make this work better (clojure.string/join ", " tags)
+          (if editing? [comps/TagAutocomplete {:tags tags :ref "tags-autocomplete"}]
                        [:div {}
                         (for [tag tags]
                           [:div {:style {:display "inline-block" :background (:tag-background style/colors)
@@ -320,9 +314,11 @@
                   (when-not (= visible (:sidebar-visible? @state))
                     (swap! state assoc :sidebar-visible? visible))))))
      (.addEventListener js/window "scroll" (:scroll-handler @locals)))
+
    :component-did-update
-   (fn [{:keys [locals]}]
-     ((:scroll-handler @locals)))
+   (fn [{:keys [locals refs]}]
+     ((:scroll-handler @locals))
+     #_(.tagsinput (js/$ (@refs "workspace-tags-input")) (clj->js {})))
    :component-will-unmount
    (fn [{:keys [locals]}]
      (.removeEventListener js/window "scroll" (:scroll-handler @locals)))

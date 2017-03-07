@@ -679,3 +679,24 @@
 (defn create-error-message [thing]
   (when (renderable? thing)
     #(push-error thing)))
+
+(react/defc TagAutocomplete
+  {:get-tags
+   (fn [{:keys [refs]}]
+     (js->clj (.tagsinput (js/$ (@refs "input-element")) "items")))
+   :component-did-mount
+   (fn [{:keys [refs]}]
+     (.tagsinput (js/$ (@refs "input-element"))))
+   :component-will-unmount
+   (fn [{:keys [refs]}]
+     (.tagsinput (js/$ (@refs "input-element")) "destroy"))
+   :render
+   (fn [{:keys [props ]}]
+     [:input {:ref "input-element"
+              :type "text"
+              :data-role "tagsinput"
+              :width "100%"
+              :value (clojure.string/join "," (:tags props))
+              :onInput
+              (fn [e]
+                (utils/log e))}])})

@@ -25,3 +25,16 @@ div.tt-suggestion.tt-cursor {
   padding-left: 4px;
   border-left: 4px #457fd2 solid;
 }
+
+span.tag.label {
+  background-color: #d4ecff;
+  border-radius: 3px;
+  color: #2c3c4d;
+  padding: 0.2rem 0.5rem;
+  margin: 0.1rem 0;
+  display: inline-block;
+}
+
+.bootstrap-tagsinput input {
+  font-size: 1em;
+}
