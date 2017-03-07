@@ -17,7 +17,6 @@
 
 
 (react/defc DatasetsTable
-  (utils/log-methods "Datasets Table"
   {:render
    (fn [{:keys [state this props]}]
      (let [attributes (:library-attributes props)
@@ -144,7 +143,7 @@
                               :rows results})
                    (when (= 1 current-page)
                      ((:callback-function props) aggregations)))
-                 (callback {:error status-text})))})))))}))
+                 (callback {:error status-text})))})))))})
 
 (react/defc SearchSection
   {:get-filters
@@ -271,10 +270,10 @@
 (def ^:private VERSION 4)
 
 (react/defc Page
-  (utils/log-methods "Library Page"
   {:update-filter
-   (fn [{:keys [state]} facet-name facet-list]
-     (swap! state assoc-in [:facet-filters facet-name] facet-list))
+   (fn [{:keys [state after-update refs]} facet-name facet-list]
+     (swap! state assoc-in [:facet-filters facet-name] facet-list)
+     (after-update #((@refs "dataset-table") :execute-search)))
    :set-expanded-aggregate
    (fn [{:keys [state]} facet-name expanded?]
      (swap! state update :expanded-aggregates (if expanded? conj disj) facet-name))
@@ -299,14 +298,16 @@
                     :aggregate-fields (->> properties (utils/filter-values :aggregate) keys)
                     :search-result-columns (mapv keyword searchResultColumns)))))))
    :render
-   (fn [{:keys [this refs state]}]
+   (fn [{:keys [this refs state after-update]}]
      [:div {:style {:display "flex" :marginTop "2em"}}
       [:div {:style {:width "20%" :minWidth 250 :marginRight "2em"
                      :background (:background-light style/colors)
                      :border style/standard-line}}
        [SearchSection {:search-text (:search-text @state)
                        :facet-filters (:facet-filters @state)
-                       :on-filter #(swap! state assoc :search-text %)}]
+                       :on-filter (fn [text]
+                                    (swap! state assoc :search-text text)
+                                    (after-update #((@refs "dataset-table") :execute-search)))}]
        [FacetSection (merge
                       {:ref "facets"
                        :aggregate-properties (:library-attributes @state)
@@ -324,6 +325,5 @@
                          (select-keys @state [:library-attributes :search-result-columns :search-text
                                               :facet-filters :aggregate-fields :expanded-aggregates]))])]])
    :component-did-update
-   (fn [{:keys [state refs]}]
-     (persistence/save {:key PERSISTENCE-KEY :state state :except [:library-attributes]})
-     (react/call :execute-search (@refs "dataset-table")))}))
+   (fn [{:keys [state]}]
+     (persistence/save {:key PERSISTENCE-KEY :state state :except [:library-attributes]}))})
