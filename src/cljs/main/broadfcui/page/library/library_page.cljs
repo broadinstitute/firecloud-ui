@@ -272,7 +272,9 @@
 (react/defc Page
   {:update-filter
    (fn [{:keys [state after-update refs]} facet-name facet-list]
-     (swap! state assoc-in [:facet-filters facet-name] facet-list)
+     (if (empty? facet-list)
+       (swap! state update :facet-filters dissoc facet-name)
+       (swap! state assoc-in [:facet-filters facet-name] facet-list))
      (after-update #((@refs "dataset-table") :execute-search)))
    :set-expanded-aggregate
    (fn [{:keys [state]} facet-name expanded?]
