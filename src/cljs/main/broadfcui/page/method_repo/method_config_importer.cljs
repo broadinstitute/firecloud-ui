@@ -1,7 +1,7 @@
 (ns broadfcui.page.method-repo.method-config-importer
   (:require
     [dmohs.react :as react]
-    [clojure.string :refer [trim]]
+    [clojure.string :refer [trim lower-case]]
     [broadfcui.common :refer [clear-both root-entity-types]]
     [broadfcui.common.components :as comps]
     [broadfcui.common.icons :as icons]
@@ -93,9 +93,10 @@
                         (swap! state assoc :selected-workspace
                                (nth workspaces-list (js/parseInt (.-value (.-target event)))))))
            :style {:width 500}}
-          (map
-           (fn [ws] (str (get-in ws ["workspace" "namespace"]) "/" (get-in ws ["workspace" "name"])))
-           workspaces-list))])
+          (sort #(compare (lower-case %1) (lower-case %2))
+                (map
+                 (fn [ws] (str (get-in ws ["workspace" "namespace"]) "/" (get-in ws ["workspace" "name"])))
+                 workspaces-list)))])
       (style/create-validation-error-message (:validation-error @state))
       [comps/ErrorViewer {:error (:server-error @state)}]
       [comps/Button {:text (if workspace-id "Import" "Export")
