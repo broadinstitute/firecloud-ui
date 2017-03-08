@@ -21,6 +21,9 @@
                        [uglify-js "git://github.com/mishoo/UglifyJS2#harmony"] ; override webpack's uglify with es6 compatible version
                        [url-loader "~0.5.7"]                ; webpack plugin
                        [webpack "~2.2.0"]                   ; combines deps into single js/css file
+                       [foundation-sites "~6.3.0"]
+                       [node-sass "~4.5.0"]
+                       [sass-loader "~5.0.0"]
                        ]}
   :profiles {:dev
              {:dependencies [[binaryage/devtools "0.8.3"]]
