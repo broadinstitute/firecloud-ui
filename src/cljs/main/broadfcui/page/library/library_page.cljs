@@ -123,15 +123,15 @@
          (endpoints/call-ajax-orch
           (let [from (* (- current-page 1) rows-per-page)]
             {:endpoint endpoints/search-datasets
-             :payload {:searchString (:search-text props)
-                       :filters (utils/map-keys name (:facet-filters props))
-                       :from from
-                       :size rows-per-page
-                       :sortField sort-column
-                       :sortDirection sort-order
-                       :fieldAggregations (if (= 1 current-page)
-                                            (react/call :build-aggregate-fields this)
-                                            {})}
+             :payload (merge
+                       ((:get-search-text-and-facets props))
+                       {:from from
+                        :size rows-per-page
+                        :sortField sort-column
+                        :sortDirection sort-order
+                        :fieldAggregations (if (= 1 current-page)
+                                             (react/call :build-aggregate-fields this)
+                                             {})})
              :headers utils/content-type=json
              :on-done
              (fn [{:keys [success? get-parsed-response status-text]}]
@@ -323,9 +323,10 @@
          [DatasetsTable (merge
                          {:ref "dataset-table"
                           :callback-function (fn [aggregates]
-                                               (react/call :update-aggregates (@refs "facets") aggregates))}
-                         (select-keys @state [:library-attributes :search-result-columns :search-text
-                                              :facet-filters :aggregate-fields :expanded-aggregates]))])]])
+                                               (react/call :update-aggregates (@refs "facets") aggregates))
+                          :get-search-text-and-facets (fn [] {:searchString (:search-text @state)
+                                                              :filters (utils/map-keys name (:facet-filters @state))})}
+                         (select-keys @state [:library-attributes :search-result-columns :aggregate-fields :expanded-aggregates]))])]])
    :component-did-update
    (fn [{:keys [state]}]
      (persistence/save {:key PERSISTENCE-KEY :state state :except [:library-attributes]}))})
