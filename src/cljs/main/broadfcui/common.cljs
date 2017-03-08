@@ -149,7 +149,7 @@
 (defn row->workspace-id [row]
   (select-keys row [:namespace :name]))
 
-(defn workspace-id->string [workspace-id] 
+(defn workspace-id->string [workspace-id]
   (str (:namespace workspace-id) "/" (:name workspace-id)))
 
 (defn get-id-from-nav-segment [segment]
@@ -209,7 +209,8 @@
     (icons/icon {:style {:fontSize 22 :color (:exception-state style/colors) :marginRight ".26em"}}
                 :alert)
     [:span {:style {:fontWeight "bold" :fontSize "98%"}}
-      "FireCloud is not intended to host personally identifiable information. Do not use any patient identifier, including name, social security number, or medical record number."]])
+      "FireCloud is not intended to host personally identifiable information. Do not use any patient
+       identifier, including name, social security number, or medical record number."]])
 
 (react/defc FoundationTooltip
   {:component-did-mount
@@ -218,6 +219,7 @@
    :render
    (fn [{:keys [props]}]
      (let [{:keys [position text tooltip]} props]
+       ;; data-tooltip marks this element for foundation
        [:span {:data-tooltip "" :className (str "has-tip " position)
                :title tooltip}
         text]))})
@@ -227,37 +229,45 @@
    (fn [{:keys [locals]}]
      (swap! locals assoc :infobox-id (gensym "infobox-")))
    :component-did-mount
-   (fn [{:keys [locals props]}]
-     (let [infobox-container (.createElement js/document "div")
-           infobox-id (:infobox-id @locals)]
+   (fn [{:keys [locals this props]}]
+     (let [infobox-container (.createElement js/document "div")]
        (swap! locals assoc :infobox-container infobox-container)
-       (.insertBefore js/document.body infobox-container (.getElementById js/document "app"))
+       (.insertBefore js/document.body infobox-container (utils/get-app-root-element))
        (react/render
-        (react/create-element [:div {:className "dropdown-pane" :id infobox-id :data-dropdown ""
-                                     :style {:whiteSpace "normal"}}
-                               (:text props)])
-        infobox-container
-        #(let [infobox-element (js/$ (str "#" infobox-id))
-              infobox-button (js/$ (str "[data-toggle='" infobox-id "']"))]
-          (.foundation infobox-element)
-          (.on infobox-element
-               "show.zf.dropdown"
-               (fn [_]
-                 (.on (js/$ "body")
-                      "click.zf.dropdown"
-                      (fn [e]
-                        (when (not (or
-                                    (.is infobox-element (.-target e))
-                                    (pos? (.-length (.find infobox-element (.-target e))))
-                                    (.is infobox-button (.-target e))
-                                    (pos? (.-length (.find infobox-button (.-target e))))))
-                          (.foundation infobox-element "close")
-                          (.off (js/$ "body") "click.zf.dropdown"))))))))))
-   :component-will-unmount
-   (fn [{:keys [locals]}]
-     (.off (js/$ (str "#" (:infobox-id @locals))))
-     (react/unmount-component-at-node (:infobox-container @locals))
-     (.remove (:infobox-container @locals)))
+        (react/create-element
+         ;; data-dropdown marks this element for foundation
+         [:div {:className "dropdown-pane" :id (:infobox-id @locals) :data-dropdown ""
+                :ref (utils/create-element-ref-handler
+                      {:store locals
+                       :key :dropdown-element
+                       :did-mount
+                       (fn [element]
+                         (let [infobox-element (js/$ (react/find-dom-node element))
+                               infobox-button (js/$ (react/find-dom-node this))]
+                           (.foundation infobox-element)
+                           (.on infobox-element
+                                "show.zf.dropdown"
+                                (fn [_]
+                                  (.on (js/$ "body")
+                                       "click.zf.dropdown"
+                                       (fn [e]
+                                         (when
+                                          (not
+                                           (or
+                                            (.is infobox-element (.-target e))
+                                            (pos? (.-length (.find infobox-element (.-target e))))
+                                            (.is infobox-button (.-target e))
+                                            (pos? (.-length (.find infobox-button (.-target e))))))
+                                           (.foundation infobox-element "close")
+                                           (.off (js/$ "body") "click.zf.dropdown"))))))))
+                       :will-unmount
+                       (fn [element]
+                         (.off (js/$ (react/find-dom-node element)))
+                         (react/unmount-component-at-node (:infobox-container @locals))
+                         (.remove (:infobox-container @locals)))})
+                :style {:whiteSpace "normal"}}
+          (:text props)])
+        infobox-container)))
    :render
    (fn [{:keys [locals]}]
      [:button {:className "button-reset" :data-toggle (:infobox-id @locals)

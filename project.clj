@@ -9,21 +9,21 @@
   :plugins [[lein-cljsbuild "1.1.4"] [lein-figwheel "0.5.8"] [lein-npm "0.6.2"] [lein-resource "16.9.1"]]
   :npm {:dependencies [[any-resize-event, "~1.0.0"]         ; used in dataset catalog wizard
                        [codemirror "~5.10.0"]               ; used to format WDL
+                       [corejs-typeahead "~1.1.1"]          ; maintained fork of bootstrap typeahead
                        [css-loader "~0.26.1"]               ; webpack plugin
                        [extract-text-webpack-plugin "~2.0.0-rc"] ; webpack plugin
                        [file-loader "~0.9.0"]               ; webpack plugin
                        [font-awesome "~4.7.0"]              ; used for icons, also required by IGV
+                       [foundation-sites "~6.3.0"]          ; used for tooltips, etc
                        [github-markdown-css "~2.4.1"]       ; used with marked
                        [jquery "^2.0"]                      ; required by IGV
                        [jquery-ui "^1.12"]                  ; required by IGV
                        [marked "~0.3.5"]                    ; formats markdown
-                       [corejs-typeahead "~1.1.1"]          ; maintained fork of bootstrap typeahead
+                       [node-sass "~4.5.0"]                 ; required by sass-loader
+                       [sass-loader "~5.0.0"]               ; webpack plugin (for foundation)
                        [uglify-js "git://github.com/mishoo/UglifyJS2#harmony"] ; override webpack's uglify with es6 compatible version
                        [url-loader "~0.5.7"]                ; webpack plugin
                        [webpack "~2.2.0"]                   ; combines deps into single js/css file
-                       [foundation-sites "~6.3.0"]
-                       [node-sass "~4.5.0"]
-                       [sass-loader "~5.0.0"]
                        ]}
   :profiles {:dev
              {:dependencies [[binaryage/devtools "0.8.3"]]

@@ -7,6 +7,7 @@
     [broadfcui.common.style :as style]
     [broadfcui.common.table :as table]
     [broadfcui.common.table-utils :refer [add-right]]
+    [broadfcui.common.table-style :as table-style]
     [broadfcui.endpoints :as endpoints]
     [broadfcui.nav :as nav]
     [broadfcui.page.billing.create-project :refer [CreateBillingProjectDialog]]
@@ -70,8 +71,8 @@
        :else
        [table/Table
         {:reorderable-columns? false
-         :header-row-style style/header-row-style-light
-         :row-style style/table-row-style-light
+         :header-row-style table-style/header-row-style-light
+         :row-style table-style/table-row-style-light
          :resize-tab-color (:line-default style/colors)
          :columns [{:starting-width 32 :resizable? false
                     :sort-by :none

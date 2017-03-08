@@ -33,7 +33,8 @@
    :reset "fa-undo"
    :new-window "fa-external-link"
    :information "fa-info-circle"
-   :spinner "fa-spinner"})
+   :spinner "fa-spinner"
+   :shield "fa-shield"})
 
 (defn icon [attributes key]
   [:span (assoc attributes :className (str (icon-keys key) " fa "  (:className attributes)))])

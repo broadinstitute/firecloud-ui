@@ -8,6 +8,7 @@
     [broadfcui.common.style :as style]
     [broadfcui.common.table :as table]
     [broadfcui.common.table-utils :refer [add-right]]
+    [broadfcui.common.table-style :as table-style]
     [broadfcui.endpoints :as endpoints]
     [broadfcui.utils :as utils]
     ))
@@ -80,7 +81,7 @@
               (when (:removing? @state)
                 [comps/Blocker {:banner "Removing user..."}])
               [table/Table
-               {:header-row-style style/header-row-style-light
+               {:header-row-style table-style/header-row-style-light
                 :header-style {:padding "0.5em 0 0.5em 14px"}
                 :cell-content-style {:padding 0 :paddingRight 20 :marginRight -20}
                 :row-style {:backgroundColor "white"}
@@ -95,12 +96,12 @@
                 :columns [{:header "Email" :starting-width 500
                            :content-renderer
                            (fn [email]
-                             [:div {:style style/table-cell-plank-left}
+                             [:div {:style table-style/table-cell-plank-left}
                               email])}
                           {:header "Role" :starting-width 100 :resizable? false :sort-initial :asc
                            :content-renderer
                            (fn [role]
-                             [:div {:style style/table-cell-plank-right}
+                             [:div {:style table-style/table-cell-plank-right}
                               role])}
                           {:starting-width :remaining
                            :filter-by :none :sort-by :none :resizable? false
