@@ -42,7 +42,7 @@
                        (do (modal/pop-modal) ((:on-delete props)))
                        (swap! state assoc :error (get-parsed-response false))))})))})
 
-(defn- create-import-form [state props this entity config? fields]
+(defn- create-import-form [state props this locals entity config? fields]
   (let [{:keys [workspace-id]} props
         workspaces-list (:workspaces-list @state)]
     [:div {}
@@ -76,7 +76,7 @@
            (style/create-form-label (:label field))
            (cond (= (:type field) "identity-select")
              (style/create-identity-select {:ref (:key field)
-                                            :value (entity (:key field))}
+                                            :value (or (entity (:key field)) "")}
                (:options field))
              :else
              [input/TextField {:defaultValue (entity (:key field))
@@ -88,10 +88,17 @@
         [:div {:style {:marginBottom "1em"}}
          [:div {:style {:fontSize "120%" :margin "1em 0"}} "Destination Workspace:"]
          (style/create-select
-          {:ref #(.on (.select2 (js/$ %)) "select2:select"
-                      (fn [event]
-                        (swap! state assoc :selected-workspace
-                               (nth workspaces-list (js/parseInt (.-value (.-target event)))))))
+          {:value ""
+           :ref (utils/create-element-ref-handler
+                 {:store locals
+                  :key :workspace-select
+                  :did-mount
+                  #(.on (.select2 (js/$ %)) "select2:select"
+                        (fn [event]
+                          (swap! state assoc :selected-workspace
+                                 (nth workspaces-list (js/parseInt (.-value (.-target event)))))))
+                  :will-unmount
+                  #(.off (js/$ %))})
            :style {:width 500}}
           (sort #(compare (lower-case %1) (lower-case %2))
                 (map
@@ -105,12 +112,12 @@
 
 (react/defc ConfigImportForm
   {:render
-   (fn [{:keys [props state this]}]
+   (fn [{:keys [props state this locals]}]
      (cond
        (and
          (:loaded-config @state)
          (or (:workspace-id props) (:workspaces-list @state)))
-       (create-import-form state props this (:loaded-config @state) true
+       (create-import-form state props this locals (:loaded-config @state) true
          [{:label "Configuration Namespace" :key "namespace"}
           {:label "Configuration Name" :key "name"}])
 
@@ -165,12 +172,12 @@
 
 (react/defc MethodImportForm
   {:render
-   (fn [{:keys [props state this]}]
+   (fn [{:keys [props state this locals]}]
      (cond
        (and
          (:loaded-method @state)
          (or (:workspace-id props) (:workspaces-list @state)))
-       (create-import-form state props this (:loaded-method @state) false
+       (create-import-form state props this locals (:loaded-method @state) false
          [{:label "Configuration Namespace" :key "namespace"}
           {:label "Configuration Name" :key "name"}
           {:label "Root Entity Type" :key "rootEntityType" :type "identity-select" :options root-entity-types}])
