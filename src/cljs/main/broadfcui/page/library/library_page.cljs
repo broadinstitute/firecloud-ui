@@ -60,7 +60,6 @@
          :columns (concat
                    [{:resizable? false :width 30 :reorderable? false
                      :as-text (fn [data]
-
                                 (if (= (:workspaceAccess data) "NO ACCESS") "You must request access to this dataset."))
                      :content-renderer (fn [data]
                                          (if (= (:workspaceAccess data) "NO ACCESS")
