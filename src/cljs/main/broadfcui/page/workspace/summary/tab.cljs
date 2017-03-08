@@ -58,7 +58,7 @@
 
 
 (defn- render-sidebar [state refs this
-                       {:keys [workspace billing-projects owner? writer? curator?
+                       {:keys [workspace billing-projects owner? writer? curator? can-share?
                                workspace-id on-clone on-delete request-refresh]}]
   (let [{{:keys [isLocked library-attributes description isProtected]} :workspace
          {:keys [runningSubmissionsCount]} :workspaceSubmissionStats} workspace
@@ -79,13 +79,17 @@
        :div {:style {:position (when-not sidebar-visible? "fixed")
                      :top (when-not sidebar-visible? 0)
                      :width 270}}
-       (when (and curator? writer? (not editing?))
+       (when (not editing?)
          [comps/SidebarButton
           {:style :light :color :button-primary :margin :top
            :icon :catalog :text "Catalog Dataset..."
            :onClick #(modal/push-modal [CatalogWizard {:library-schema library-schema
                                                        :workspace workspace
                                                        :workspace-id workspace-id
+                                                       :can-share? can-share?
+                                                       :owner? owner?
+                                                       :curator? curator?
+                                                       :writer? writer?
                                                        :request-refresh request-refresh}])}])
        (when (and curator? owner? (not editing?))
          (if (:library:published library-attributes)
@@ -121,7 +125,7 @@
        (when-not editing?
          [comps/SidebarButton {:style :light :margin :top :color :button-primary
                                :text "Clone..." :icon :clone
-                               :disabled? (when (empty? billing-projects) comps/no-billing-projects-message)
+                               :disabled? (when (empty? billing-projects) (comps/no-billing-projects-message))
                                :onClick #(modal/push-modal
                                           [WorkspaceCloner
                                            {:on-success (fn [namespace name]
@@ -223,7 +227,10 @@
                      :workspace workspace
                      :workspace-id workspace-id
                      :request-refresh request-refresh
-                     :can-edit? (and curator? owner? (not editing?))}])
+                     :can-share? can-share?
+                     :owner? owner?
+                     :curator? curator?
+                     :writer? writer?}])
      [attributes/WorkspaceAttributeViewerEditor {:ref "workspace-attribute-editor"
                                                  :editing? editing?
                                                  :writer? writer?

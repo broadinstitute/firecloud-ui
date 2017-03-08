@@ -12,18 +12,26 @@
     [broadfcui.utils :as utils]
     ))
 
-(defn- render-wizard-breadcrumbs [{:keys [library-schema page-num]}]
+(defn- render-wizard-breadcrumbs [{:keys [library-schema page-num pages-seen]}]
   (let [pages (:wizard library-schema)]
-    [:div {:style {:flex "0 0 250px" :backgroundColor "white" :border style/standard-line}}
-     [:ul {}
+    [:div {:style {:flex "0 0 250px" :backgroundColor "white"
+                   :border style/standard-line :padding "1rem"}}
+     [:div {:style {:paddingBottom "0.5rem" :fontWeight (when (< page-num (count pages)) "bold")}} "Catalog "]
+     [:ul {:style {:WebkitMarginBefore 0 :WebkitMarginAfter 0}}
       (map-indexed
        (fn [index {:keys [title]}]
          (let [this (= index page-num)]
-           [:li {:style {:margin "0.5em 0.5em 0.5em 0"
+           [:li {:style {:paddingBottom "0.5rem"
                          :fontWeight (when this "bold")
-                         :color (when-not this (:text-lighter style/colors))}}
-            title]))
-       (conj pages {:title "Summary"}))]]))
+                         :color (when-not (or this (contains? pages-seen index)) (:text-lighter style/colors))}}
+            title])) pages)]
+      [:div {:style {:paddingBottom "0.5rem"
+                     :color (when-not (contains? pages-seen (count pages)) (:text-lighter style/colors))
+                     :fontWeight (when (= page-num (count pages)) "bold")}}
+       "Discoverability"]
+      [:div {:style {:color (when-not (contains? pages-seen (+ 1 (count pages))) (:text-lighter style/colors))
+                     :fontWeight (when (> page-num (count pages)) "bold")}}
+       "Summary"]]))
 
 (defn- find-required-attributes [library-schema]
   (->> (map :required (:oneOf library-schema))
@@ -49,6 +57,38 @@
        (not-empty val)
        val)) attributes))
 
+(def ^:private ALL_USERS "All users")
+
+(react/defc DiscoverabilityPage
+  {:validate (constantly nil)
+   :get-initial-state
+   (fn [{:keys [props]}]
+     (select-keys props [:library:discoverableByGroups :owner?]))
+   :get-attributes
+   (fn [{:keys [state]}]
+     (if (nil? (:library:discoverableByGroups @state)) {} (select-keys @state [:library:discoverableByGroups])))
+   :set-groups
+   (fn [{:keys [state]} new-val]
+     (swap! state assoc :library:discoverableByGroups (if (= new-val ALL_USERS) nil new-val)))
+   :render
+   (fn [{:keys [state props this]}]
+     (let [{:keys [library:discoverableByGroups]} @state
+           {:keys [:owner? :curator?]} props
+           editable? (and curator? owner?)
+           selected (if (empty? library:discoverableByGroups) ALL_USERS library:discoverableByGroups)]
+       [:div {} "Dataset should be discoverable by:"
+        (style/create-identity-select {:value selected
+                                       :display "flex" :alignItems "center"
+                                       :margin "0.5rem 0" :padding "1em"
+                                       :border style/standard-line :borderRadius 8
+                                       :cursor "pointer"
+                                       :disabled (not editable?)
+                                       :onChange #(react/call :set-groups this (.. % -target -value))}
+                                      (cons ALL_USERS (:library-groups props)))
+        [:div {:style {:fontSize "small" :paddingTop "0.5rem" :fontStyle "italic"}}
+         "N.B. The Dataset will be visible to these users in the library, but users will still
+         need to acquire Read permission for the Workspace in order to view its contents."]]))})
+
 (defn- render-summary-page [attributes library-schema invalid-attributes]
   [:div {}
    (if (not-empty invalid-attributes)
@@ -61,7 +101,6 @@
        (map (fn [attribute]
               [:div {:style {:paddingBottom "0.2rem"}} (get-in library-schema [:properties (keyword attribute) :title])])
             invalid-attributes)]])
-
    (style/create-paragraph
     [:div {}
      (let [questions (first (get-questions-for-page (convert-empty-strings attributes) library-schema 0))]
@@ -71,7 +110,8 @@
             questions))
      (if (= (:library:useLimitationOption attributes) "orsp") ;; TODO: change this so not hardcoded
        (library-utils/render-property library-schema attributes :library:orsp)
-       (library-utils/render-consent-codes library-schema attributes))])])
+       (library-utils/render-consent-codes library-schema attributes))
+     (library-utils/render-library-row "Discoverability" (if-let [group (:library:discoverableByGroups attributes)] group ALL_USERS))])])
 
 
 
@@ -87,7 +127,8 @@
      (let [{:keys [library-schema]} props
            {:keys [versions]} library-schema]
        {:page-num 0
-        :pages-seen []
+        :pages-stack []
+        :pages-seen #{0}
         :invalid-properties #{}
         :working-attributes (get-initial-attributes (:workspace props))
         :published? (get-in props [:workspace :workspace :library-attributes :library:published])
@@ -98,9 +139,9 @@
                                  (into {}))
         :required-attributes (find-required-attributes library-schema)}))
    :render
-   (fn [{:keys [props state this]}]
-     (let [{:keys [library-schema]} props
-           {:keys [page-num invalid-properties working-attributes published? required-attributes validation-error submit-error]} @state]
+   (fn [{:keys [props state locals this]}]
+     (let [{:keys [library-schema writer? curator?]} props
+           {:keys [page-num pages-seen invalid-properties working-attributes published? required-attributes validation-error submit-error]} @state]
        [:div {}
         (when (:submitting? @state)
           [comps/Blocker {:banner "Submitting..."}])
@@ -111,7 +152,7 @@
          [comps/XButton {:dismiss modal/pop-modal}]]
         [:div {:style {:padding "22px 24px 40px" :backgroundColor (:background-light style/colors)}}
          [:div {:style {:display "flex" :width 850 :height 400}}
-          (render-wizard-breadcrumbs {:library-schema library-schema :page-num page-num})
+          (render-wizard-breadcrumbs {:library-schema library-schema :page-num page-num :pages-seen pages-seen})
           [comps/ScrollFader
            {:ref "scroller"
             :outer-style {:flex "1 1 auto"
@@ -120,16 +161,26 @@
             :inner-style {:padding "1rem" :boxSizing "border-box" :height "100%"}
             :content
             (react/create-element
-             (if (< page-num (count (:wizard library-schema)))
-               (let [[questions enumerate] (get-questions-for-page working-attributes library-schema page-num)]
+             (let [page-count (count (:wizard library-schema))
+                   [questions enumerate] (get-questions-for-page working-attributes library-schema page-num)]
+               (cond
+                 (< page-num page-count)
                  [Questions {:ref "wizard-page" :key page-num
                              :library-schema library-schema
                              :missing-properties invalid-properties
                              :enumerate enumerate
                              :questions questions
                              :attributes working-attributes
-                             :required-attributes required-attributes}])
-               (render-summary-page working-attributes library-schema invalid-properties)))}]]
+                             :editable? (and writer? curator?)
+                             :required-attributes required-attributes}]
+                 (= page-num page-count)
+                 [DiscoverabilityPage
+                  (merge
+                   {:ref "wizard-page"}
+                   (select-keys working-attributes [:library:discoverableByGroups])
+                   (select-keys @locals [:library-groups])
+                   (select-keys props [:library-schema :can-share? :curator? :owner?]))]
+                 (> page-num page-count) (render-summary-page working-attributes library-schema invalid-properties))))}]]
          (when validation-error
            [:div {:style {:marginTop "1em" :color (:exception-state style/colors) :textAlign "center"}}
             validation-error])
@@ -139,42 +190,48 @@
                         flex/flex-spacer
                         [comps/Button {:text "Previous"
                                        :onClick (fn [_]
-                                                  (if-let [prev-page (peek (:pages-seen @state))]
+                                                  (if-let [prev-page (peek (:pages-stack @state))]
                                                     (swap! state #(-> %
                                                                       (assoc :page-num prev-page)
-                                                                      (update :pages-seen pop)
+                                                                      (update :pages-stack pop)
                                                                       (dissoc :validation-error)))))
                                        :style {:width 80}
                                        :disabled? (zero? page-num)}]
                         (flex/flex-strut 27)
                         [comps/Button {:text "Next"
                                        :onClick #(react/call :next-page this)
-                                       :disabled? (= page-num (-> library-schema :wizard count))
+                                       :disabled? (> page-num (-> library-schema :wizard count))
                                        :style {:width 80}}]
                         flex/flex-spacer
+                        (let [save-permissions (and writer? curator?)
+                              last-page (> page-num (-> library-schema :wizard count))]
                         [comps/Button {:text (if published? "Republish" "Submit")
                                        :onClick #(react/call :submit this)
-                                       :disabled? (< page-num (-> library-schema :wizard count))
-                                       :style {:width 80}}])]]))
+                                       :disabled? (not (and save-permissions last-page))
+                                       :style {:width 80}}]))]]))
    :component-did-mount
    (fn [{:keys [locals]}]
-     (swap! locals assoc :page-attributes []))
+     (endpoints/get-library-groups
+      (fn [{:keys [success? get-parsed-response]}]
+        (if success?
+          (swap! locals assoc :page-attributes {} :library-groups (get-parsed-response))
+          (swap! locals assoc :page-attributes {})))))
    :component-did-update
    (fn [{:keys [prev-state state refs]}]
-     (when (not= (:page-num prev-state) (:page-num @state))
+     (when-not (= (:page-num prev-state) (:page-num @state))
        (react/call :scroll-to (@refs "scroller") 0)))
    :next-page
    (fn [{:keys [state refs this locals after-update props]}]
      (swap! state dissoc :validation-error)
      (if-let [error-message (react/call :validate (@refs "wizard-page"))]
        (swap! state assoc :validation-error error-message)
-       (let [{:keys [working-attributes pages-seen required-attributes page-num]} @state
+       (let [{:keys [working-attributes pages-stack required-attributes page-num]} @state
              attributes-from-page (react/call :get-attributes (@refs "wizard-page"))
              all-attributes (merge working-attributes attributes-from-page)
              invalid-attributes (atom #{})]
          (swap! state assoc :working-attributes all-attributes)
          (swap! locals update :page-attributes assoc page-num attributes-from-page)
-         (doseq [page (conj pages-seen page-num)]
+         (doseq [page (conj pages-stack page-num)]
            (let [[questions _] (get-questions-for-page all-attributes (:library-schema props) page)
                  {:keys [invalid]} (library-utils/validate-required (convert-empty-strings all-attributes)
                                                                     questions required-attributes)]
@@ -183,7 +240,8 @@
          (after-update (fn [_]
                          (let [next-page (react/call :find-next-page this)]
                            (swap! state #(-> %
-                                             (update :pages-seen conj page-num)
+                                             (update :pages-seen conj next-page)
+                                             (update :pages-stack conj page-num)
                                              (assoc :page-num next-page)))))))))
    :find-next-page
    (fn [{:keys [props state]}]
@@ -198,7 +256,7 @@
    (fn [{:keys [props state locals]}]
      (if (not-empty (:invalid-properties @state))
        (swap! state assoc :validation-error "You will need to complete all required metadata attributes to be able to publish the workspace in the Data Library")
-       (let [attributes-seen (apply merge (replace (:page-attributes @locals) (:pages-seen @state)))]
+       (let [attributes-seen (apply merge (vals (select-keys (:page-attributes @locals) (:pages-stack @state))))]
          (swap! state assoc :submitting? true :submit-error nil)
          (endpoints/call-ajax-orch
           {:endpoint (endpoints/save-library-metadata (:workspace-id props))

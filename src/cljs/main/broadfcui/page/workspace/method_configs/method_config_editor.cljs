@@ -56,21 +56,11 @@
        :payload new-conf
        :headers utils/content-type=json
        :on-done (fn [{:keys [success? get-parsed-response xhr]}]
-                  (if-not success?
-                    (do (comps/push-error (str "Exception:\n" (.-statusText xhr)))
-                        (swap! state dissoc :blocker))
-                    (if (= name (config "name"))
-                      (swap! state assoc :loaded-config (get-parsed-response false) :blocker nil)
-                      (endpoints/call-ajax-orch ;; TODO - make unified call in orchestration
-                        {:endpoint (endpoints/rename-workspace-method-config workspace-id config)
-                         :payload (select-keys new-conf ["name" "namespace" "workspaceName"])
-                         :headers utils/content-type=json
-                         :on-done (fn [{:keys [success? xhr]}]
-                                    (swap! state dissoc :blocker)
-                                    (if success?
-                                      ((:on-rename props) name)
-                                      (comps/push-error
-                                       (str "Exception:\n" (.-statusText xhr)))))}))))})))
+                  (swap! state dissoc :blocker)
+                  (if success?
+                    (do ((:on-rename props) name)
+                        (swap! state assoc :loaded-config (get-parsed-response false) :blocker nil))
+                    (comps/push-error (str "Exception:\n" (.-statusText xhr)))))})))
 
 (react/defc MethodDetailsViewer
   {:get-fields

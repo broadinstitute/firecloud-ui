@@ -55,7 +55,8 @@
                     {:display "inline-flex" :alignItems "center" :justifyContent "center"
                      :backgroundColor (if disabled? (:disabled-state style/colors) color)
                      :cursor (when disabled? "default")
-                     :color "white" :fontWeight 500
+                     :color (if disabled? (:text-light style/colors) "white")
+                     :fontWeight 500
                      :minHeight 19 :minWidth 19
                      :borderRadius 2 :padding (if text "0.7em 1em" "0.4em")
                      :textDecoration "none"}
@@ -472,27 +473,28 @@
       :typeahead-events ["typeahead:select" "typeahead:change"]})
    :render
    (fn [{:keys [props]}]
-     (style/create-search-field (merge {:ref "field" :className "typeahead"}
+     (style/create-search-field (merge {:ref "field" :className "typeahead" :disabled (:disabled props)}
                                        (:field-attributes props))))
    :component-did-mount
    (fn [{:keys [props refs]}]
-     (let [{:keys [remote render-display behavior empty-message render-suggestion on-select typeahead-events]} props
-           whitespace-tokenizer (aget Bloodhound "tokenizers" "whitespace")]
-       (.typeahead (js/$ (@refs "field"))
-                   (clj->js behavior)
-                   (clj->js
-                    {:source (Bloodhound. (clj->js {:datumTokenizer whitespace-tokenizer
-                                                    :queryTokenizer whitespace-tokenizer
-                                                    :remote remote}))
-                     :display render-display
-                     :templates {:empty (str "<div style='padding: 0.5em'>" empty-message "</div>")
-                                 :suggestion render-suggestion}}))
-       (doseq [item typeahead-events]
-         (.bind (js/$ (@refs "field")) item on-select)))
-     (.addEventListener (@refs "field") "search"
-                        #(when (and (empty? (.. % -currentTarget -value))
-                                    (:on-clear props))
-                           ((:on-clear props)))))})
+     (when (not (:disabled props))
+       (let [{:keys [remote render-display behavior empty-message render-suggestion on-select typeahead-events]} props
+             whitespace-tokenizer (aget Bloodhound "tokenizers" "whitespace")]
+         (.typeahead (js/$ (@refs "field"))
+                     (clj->js behavior)
+                     (clj->js
+                      {:source (Bloodhound. (clj->js {:datumTokenizer whitespace-tokenizer
+                                                      :queryTokenizer whitespace-tokenizer
+                                                      :remote remote}))
+                       :display render-display
+                       :templates {:empty (str "<div style='padding: 0.5em'>" empty-message "</div>")
+                                   :suggestion render-suggestion}}))
+         (doseq [item typeahead-events]
+           (.bind (js/$ (@refs "field")) item on-select)))
+       (.addEventListener (@refs "field") "search"
+                          #(when (and (empty? (.. % -currentTarget -value))
+                                      (:on-clear props))
+                             ((:on-clear props))))))})
 
 
 (react/defc AutocompleteFilter
@@ -519,6 +521,7 @@
                     :render-display (:typeaheadDisplay props)
                     :empty-message "<small>Unable to find any matches to the current query</small>"
                     :typeahead-events (:typeahead-events props)
+                    :disabled (:disabled props)
                     :render-suggestion (:typeaheadSuggestionTemplate props)
                     :on-select (fn [_ suggestion]
                                  ((:on-filter props) ((:typeaheadDisplay props) suggestion)))}]]))
@@ -631,7 +634,7 @@
                                        (when (:cycle-focus? props)
                                          (.focus (get-first)))))))))})
 
-(def no-billing-projects-message
+(defn no-billing-projects-message []
   [:div {:style {:textAlign "center"}}
    (str "You must have a billing project associated with your account to create a new workspace. ")
    [:a {:target "_blank" :href (str (config/billing-guide-url))}
