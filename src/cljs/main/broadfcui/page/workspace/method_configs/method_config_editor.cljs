@@ -146,7 +146,7 @@
              error (invalid-values field-name)]
          [:div {:key field-name :style {:marginBottom "1rem"}}
           [:div {}
-           [:div {:style {:marginBottom "0.5em" :padding "0.5rem" :display "inline-block"
+           [:div {:style {:margin "0 0.5rem 0.5rem 0" :padding "0.5rem" :display "inline-block"
                           :backgroundColor (:background-light style/colors)
                           :border style/standard-line :borderRadius 2}}
             (str field-name ": (" (when optional? "optional ") type ")")]
@@ -156,12 +156,13 @@
                          :error))
            (when editing?
              (style/create-text-field {:ref (str ref-prefix "_" field-name)
+                                       :list "inputs-datalist"
                                        :defaultValue field-value
-                                       :style {:width 500 :marginLeft "0.5rem"}}))
+                                       :style {:width 500}}))
            (when-not editing?
              (or field-value [:span {:style {:fontStyle "italic"}} "No value entered"]))]
           (when error
-            [:div {:style {:padding "0.5em" :marginBottom "0.5em"
+            [:div {:style {:padding "0.5em" :marginBottom "0.5rem"
                            :backgroundColor (:exception-state style/colors)
                            :display "inline-block"
                            :border style/standard-line :borderRadius 2}}
@@ -198,6 +199,9 @@
                                         :style {:width 500}}
                                        root-entity-types)
          [:div {:style {:padding "0.5em 0 1em 0"}} (config "rootEntityType")]))
+     [:datalist {:id "inputs-datalist"}
+      [:option {:value "this."}]
+      [:option {:value "workspace."}]]
      (create-section-header "Inputs")
      (input-output-list (config "inputs") "in" invalid-inputs editing? (inputs-outputs "inputs"))
      (create-section-header "Outputs")
