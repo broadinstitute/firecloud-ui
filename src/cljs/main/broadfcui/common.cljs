@@ -219,7 +219,7 @@
    :render
    (fn [{:keys [props]}]
      (let [{:keys [position text tooltip]} props]
-       ;; data-tooltip marks this element for foundation
+       ;; empty string makes react attach a property with no value
        [:span {:data-tooltip "" :className (str "has-tip " position)
                :title tooltip}
         text]))})
@@ -235,7 +235,7 @@
        (.insertBefore js/document.body infobox-container (utils/get-app-root-element))
        (react/render
         (react/create-element
-         ;; data-dropdown marks this element for foundation
+         ;; empty string makes react attach a property with no value
          [:div {:className "dropdown-pane" :id (:infobox-id @locals) :data-dropdown ""
                 :ref (utils/create-element-ref-handler
                       {:store locals
