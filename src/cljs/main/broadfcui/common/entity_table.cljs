@@ -27,7 +27,7 @@
 
 (react/defc EntityTable
   {:refresh
-   (fn [{:keys [props state refs]} & [entity-type]]
+   (fn [{:keys [props state refs]} & [entity-type reinitialize?]]
      (endpoints/call-ajax-orch
       {:endpoint (endpoints/get-entity-types (:workspace-id props))
        :on-done (fn [{:keys [success? get-parsed-response]}]
@@ -38,7 +38,10 @@
                              :entity-metadata metadata
                              :entity-types entity-types
                              :selected-entity-type (or (some-> entity-type keyword) (first entity-types)))
-                      (react/call :refresh-rows (@refs "table")))
+                         (when reinitialize?
+                               (utils/cljslog "WE'RE HERE")
+                               (react/call :reinitialize (@refs "table")))
+                         (react/call :refresh-rows (@refs "table")))
                     (swap! state update :server-response
                            assoc :server-error (get-parsed-response false))))}))
    :get-default-props
@@ -133,7 +136,7 @@
                                                             "pageSize" rows-per-page
                                                             "filterTerms" (js/encodeURIComponent filter-text)
                                                             "sortField" sort-column
-                                                            "sortDirection" (name sort-order)})
+                                                            "sortDirection" (name (utils/cljslog sort-order))})
                :on-done (fn [{:keys [success? get-parsed-response status-text status-code]}]
                           (if success?
                             (let [{:keys [results]

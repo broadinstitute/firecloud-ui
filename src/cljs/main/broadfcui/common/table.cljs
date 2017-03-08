@@ -402,6 +402,10 @@
                  (merge column-meta (get (:given-columns-by-header @state) header))))
           vec))
    :refresh-rows #(refresh-table-rows %)
+   :reinitialize
+   (fn [{:keys [props state]}]
+       (utils/cljslog "WE'RE IN reinit")
+       (swap! state merge (utils/cljslog (get-initial-table-state props))))
    :component-did-mount table-component-did-mount
    :component-did-update table-component-did-update
    :component-will-unmount
