@@ -59,11 +59,13 @@
          :cell-content-style {:padding nil}
          :columns (concat
                    [{:resizable? false :width 30 :reorderable? false
-                     :as-text (fn [access]
-                                (if (= access "NO ACCESS") "You don't have access to the workspace for this dataset.")) ;; what should the wording for this be?
-                     :content-renderer (fn [access]
-                                         (if (= access "NO ACCESS")
-                                           (icons/icon {:style {:alignSelf "center"}} :shield)))}
+                     :as-text (fn [data]
+
+                                (if (= (:workspaceAccess data) "NO ACCESS") "You must request access to this dataset."))
+                     :content-renderer (fn [data]
+                                         (if (= (:workspaceAccess data) "NO ACCESS")
+                                           (icons/icon {:style {:alignSelf "center" :cursor "pointer"}
+                                                        :onClick #(react/call :check-access this data)} :shield)))}
                     {:header (:title (:library:datasetName attributes)) :starting-width 250 :show-initial? true
                      :as-text :library:datasetDescription :reorderable? false
                      :content-renderer (fn [data]
@@ -82,7 +84,7 @@
                        (concat [:library:indication :library:dataUseRestriction :library:numSubjects])
                        (map data)
                        (cons data)
-                       (cons (:workspaceAccess data))))}]))
+                       (cons data)))}]))
    :execute-search
    (fn [{:keys [refs]}]
      (react/call :update-query-params (@refs "table") {:current-page 1})
