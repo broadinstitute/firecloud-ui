@@ -403,9 +403,8 @@
           vec))
    :refresh-rows #(refresh-table-rows %)
    :reinitialize
-   (fn [{:keys [props state]}]
-       (utils/cljslog "WE'RE IN reinit")
-       (swap! state merge (utils/cljslog (get-initial-table-state props))))
+   (fn [{:keys [state] :as data}]
+     (swap! state merge (get-initial-table-state data)))
    :component-did-mount table-component-did-mount
    :component-did-update table-component-did-update
    :component-will-unmount
