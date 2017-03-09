@@ -222,6 +222,8 @@
 
 (defn- render-table [{:keys [this state props refs after-update]}]
   (assert (vector? (:column-meta @state)) "column-meta got un-vec'd")
+  (when (pos? (count (:display-rows @state)))
+    (assert (vector? (first (:display-rows @state))) "->row function does not return a vector"))
   (let [{:keys [filterable? reorderable-columns? toolbar retain-header-on-empty?]} props
         {:keys [no-data? error]} @state
         any-width=remaining? (->> (:column-meta @state)
