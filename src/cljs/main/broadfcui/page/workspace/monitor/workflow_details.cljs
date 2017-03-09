@@ -145,6 +145,7 @@
                   ;; Flex with row direction
                   [:div {:style {:marginTop 15}}
                    ; X axis
+                   
                    [:div {:style {:display "flex" :flexDirection "row" :height 20 :fontSize 12}}
                     [:div {:style {:flex "0 1 auto" :borderLeft "1px solid rgb(244, 244, 244)" :borderRight style/standard-line :width "25%" :textAlign "right" :alignSelf "flex-end"}} "0"]
                     [:div {:style {:flex "0 1 auto" :borderRight style/standard-line :width "25%" :textAlign "right" :alignSelf "flex-end"}} "10"]
