@@ -106,7 +106,8 @@
   {:render
    (fn [{:keys [props state this]}]
      (cond
-       (and (:loaded-config @state)
+       (and
+         (:loaded-config @state)
          (or (:workspace-id props) (:workspaces-list @state)))
        (create-import-form state props this (:loaded-config @state) true
          [{:label "Configuration Namespace" :key "namespace"}
@@ -165,7 +166,8 @@
   {:render
    (fn [{:keys [props state this]}]
      (cond
-       (and (:loaded-method @state)
+       (and
+         (:loaded-method @state)
          (or (:workspace-id props) (:workspaces-list @state)))
        (create-import-form state props this (:loaded-method @state) false
          [{:label "Configuration Namespace" :key "namespace"}
@@ -193,16 +195,19 @@
                          "methodName" (get-in props [:method "name"])
                          "methodVersion" (get-in props [:method "snapshotId"]))
               :headers utils/content-type=json
-              :on-done (fn [{:keys [success? get-parsed-response status-text]}]
-                         (if-not success?
-                           (swap! state assoc :error status-text :blocking-text nil)
-                           (let [template (get-parsed-response false)]
+              :on-done (fn [{:keys [success? get-parsed-response]}]
+                         (let [response (get-parsed-response)]
+                           (if-not success?
+                             (do
+                               (swap! state dissoc :blocking-text)
+                               (modal/pop-modal)
+                               (comps/push-error (style/create-server-error-message (:message response))))
                              (endpoints/call-ajax-orch
                                {:endpoint (endpoints/post-workspace-method-config workspace-id)
-                                :payload (assoc template
-                                           "namespace" namespace
-                                           "name" name
-                                           "rootEntityType" rootEntityType)
+                                :payload (assoc response
+                                           :namespace namespace
+                                           :name name
+                                           :rootEntityType rootEntityType)
                                 :headers utils/content-type=json
                                 :on-done (fn [{:keys [success? get-parsed-response]}]
                                            (swap! state dissoc :blocking-text)
@@ -323,12 +328,13 @@
    (fn [{:keys [props state refs]}]
      [:div {}
       (if-let [item (:selected-item @state)]
-        ;; TODO use breadcrumbs and allow nav
-        (style/create-flexbox {}
-          (style/create-link {:text "Methods" :onClick #(swap! state dissoc :selected-item)})
-          (icons/icon {} :angle-right)
-          [:h2 {:style {:display "inline-block"}} (item "namespace") "/" (item "name")
-           [:span {:style {:marginLeft "1ex" :fontWeight "normal"}} "#" (item "snapshotId")]]))
+        ;; TODO allow nav
+        [:div {:style {:fontSize "140%" :marginBottom "1em"}}
+         [comps/Breadcrumbs
+          {:crumbs
+           [{:text "Methods" :onClick #(swap! state dissoc :selected-item)}
+            {:text [:span {} (item "namespace") "/" (item "name")
+                    [:span {:style {:marginLeft "1rem" :fontWeight "normal"}} "#" (item "snapshotId")]]}]}]])
       (when (:selected-item @state)
         (let [item-type (:type (:selected-item @state))
               form (if (= item-type :method) MethodImportForm ConfigImportForm)]

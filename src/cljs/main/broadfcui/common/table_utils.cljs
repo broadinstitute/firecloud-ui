@@ -54,7 +54,7 @@
                                        (:border-light style/colors))
                               :cursor (when allow-prev "pointer")}
                       :onClick (when allow-prev #((:on-change props) (update-in pagination-params [:current-page] dec)))}
-                (icons/icon {:style {:alignSelf "center" :margin "-0.5em 0"}} :angle-left)
+                (icons/icon {:style {:alignSelf "center" :paddingRight "0.5rem"}} :angle-left)
                 "Prev"]
                [:span {:style {:whiteSpace "nowrap"}}
                 (map (fn [n]
@@ -76,7 +76,7 @@
                               :cursor (when allow-next "pointer")}
                       :onClick (when allow-next #((:on-change props) (update-in pagination-params [:current-page] inc)))}
                 "Next"
-                (icons/icon {:style {:alignSelf "center" :margin "-0.5em 0"}} :angle-right)])
+                (icons/icon {:style {:alignSelf "center" :paddingLeft "0.5rem"}} :angle-right)])
               rows-component
               [:div {:style {:display "inline-flex" :alignItems "baseline"}}
                "Display"
@@ -177,38 +177,39 @@
                    (:header-row-style props))}
      (map-indexed
        (fn [index column]
-         (let [{:keys [header header-key width starting-width sort-by]} column
+         (let [{:keys [header header-key width starting-width sort-by visible?]} column
                sort-key (or header-key header)
                onResizeMouseDown
                (when (get column :resizable? (:resizable-columns? props))
                  (fn [e]
                    (swap! state assoc :dragging? true :mouse-x (.-clientX e) :drag-column index
                           :saved-user-select-state (common/disable-text-selection))))]
-           (render-cell
-             {:width width
-              :content header
-              :cell-style (when onResizeMouseDown {:borderRight (str "1px solid " (or (:resize-tab-color props) "#777777"))
-                                                   :marginRight -1})
-              :cell-padding-left (or (:cell-padding-left props) 0)
-              :content-container-style (merge
+           (when visible?
+             (render-cell
+              {:width width
+               :content header
+               :cell-style (when onResizeMouseDown {:borderRight (str "1px solid " (or (:resize-tab-color props) "#777777"))
+                                                    :marginRight -1})
+               :cell-padding-left (or (:cell-padding-left props) 0)
+               :content-container-style (merge
                                          {:padding (str "0.8em 0 0.8em "
                                                         (or (:cell-padding-left props) 0))}
                                          (:header-style props))
-              :onResizeMouseDown onResizeMouseDown
-              :onResizeDoubleClick #(swap! state assoc-in [:column-meta index :width] starting-width)
-              :onSortClick (when (and (or sort-by
-                                          (:sortable-columns? props))
-                                      (not= :none sort-by))
-                             (fn [_]
-                               (if (= sort-key sort-column)
-                                 (case sort-order
-                                   :asc (swap! state update :query-params assoc :sort-order :desc)
-                                   :desc (if (:always-sort? props)
-                                           (swap! state update :query-params assoc :sort-order :asc)
-                                           (swap! state update :query-params dissoc :sort-column :sort-order)))
-                                 (swap! state update :query-params assoc :sort-column sort-key :sort-order :asc))))
-              :sortOrder (when (= sort-key sort-column) sort-order)})))
-       (filter :visible? (react/call :get-ordered-columns this)))
+               :onResizeMouseDown onResizeMouseDown
+               :onResizeDoubleClick #(swap! state assoc-in [:column-meta index :width] starting-width)
+               :onSortClick (when (and (or sort-by
+                                           (:sortable-columns? props))
+                                       (not= :none sort-by))
+                              (fn [_]
+                                (if (= sort-key sort-column)
+                                  (case sort-order
+                                    :asc (swap! state update :query-params assoc :sort-order :desc)
+                                    :desc (if (:always-sort? props)
+                                            (swap! state update :query-params assoc :sort-order :asc)
+                                            (swap! state update :query-params dissoc :sort-column :sort-order)))
+                                  (swap! state update :query-params assoc :sort-column sort-key :sort-order :asc))))
+               :sortOrder (when (= sort-key sort-column) sort-order)}))))
+       (react/call :get-ordered-columns this))
      (common/clear-both)]))
 
 (react/defc FilterGroupBar

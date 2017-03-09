@@ -1,8 +1,12 @@
 (ns broadfcui.endpoints
   (:require
+    [broadfcui.common :as common]
     [broadfcui.utils :as utils]
     ))
 
+
+(defn- rand-recent-time []
+  (common/format-date (- (.getTime (js/Date.)) (rand-int 100000000))))
 
 (defn call-ajax-orch [{:keys [endpoint] :as arg-map}]
   (utils/ajax-orch
@@ -41,10 +45,10 @@
                       :createdBy "somebody@broadinstitute.org"
                       :bucketName "unavailable"
                       :namespace ns
-                      :createdDate (utils/rand-recent-time)}
+                      :createdDate (rand-recent-time)}
           :workspaceSubmissionStats {:runningSubmissionsCount (rand-int 2)
-                                     :lastSuccessDate (rand-nth [nil (utils/rand-recent-time)])
-                                     :lastFailureDate (rand-nth [nil (utils/rand-recent-time)])}
+                                     :lastSuccessDate (rand-nth [nil (rand-recent-time)])
+                                     :lastFailureDate (rand-nth [nil (rand-recent-time)])}
           :owners (utils/rand-subset ["test@broadinstitute.org"
                                       "test2@broadinstitute.org"
                                       "you@broadinstitute.org"])}))
@@ -77,8 +81,8 @@
                 :namespace (:namespace workspace-id)
                 :createdDate (.toISOString (js/Date.))}
     :workspaceSubmissionStats {:runningSubmissionsCount (rand-int 2)
-                               :lastSuccessDate (rand-nth [nil (utils/rand-recent-time)])
-                               :lastFailureDate (rand-nth [nil (utils/rand-recent-time)])}
+                               :lastSuccessDate (rand-nth [nil (rand-recent-time)])
+                               :lastFailureDate (rand-nth [nil (rand-recent-time)])}
     :owners (utils/rand-subset ["test@broadinstitute.org"
                                 "test2@broadinstitute.org"
                                 "you@broadinstitute.org"])}})
@@ -169,11 +173,6 @@
                                     "Output 3" "workspace.f0o"}
                           :prerequisites {"unused 1" "Predicate 1"
                                           "unused 2" "Predicate 2"}}}})
-
-(defn rename-workspace-method-config [workspace-id config]
-  {:path (str "/workspaces/" (ws-path workspace-id)
-           "/method_configs/" (config "namespace") "/" (config "name") "/rename")
-   :method :post})
 
 (defn delete-workspace-method-config [workspace-id config]
   {:path (str "/workspaces/" (ws-path workspace-id)
@@ -318,12 +317,12 @@
        {:workspaceName workspace-id
         :methodConfigurationNamespace (rand-nth ["Broad" "nci" "public"])
         :methodConfigurationName (str "test_config" (inc i))
-        :submissionDate (utils/rand-recent-time)
+        :submissionDate (rand-recent-time)
         :submissionId "46bfd579-b1d7-4f92-aab0-e44dd092b52a"
         :notstarted []
         :workflows [{:messages []
                      :workspaceName workspace-id
-                     :statusLastChangedDate (utils/rand-recent-time)
+                     :statusLastChangedDate (rand-recent-time)
                      :workflowEntity {:entityType "sample"
                                       :entityName "sample_01"}
                      :status "Succeeded"
@@ -372,7 +371,7 @@
    :method :get
    :mock-data
    {:submissionId submission-id
-    :submissionDate (utils/rand-recent-time)
+    :submissionDate (rand-recent-time)
     :submitter "test@broadinstitute.org"
     :methodConfigurationNamespace "broad-dsde-dev"
     :methodConfigurationName "some method conf"
@@ -381,7 +380,7 @@
     :workflows (map (fn [i]
                       {:messages []
                        :workspaceName "foo"
-                       :statusLastChangedDate (utils/rand-recent-time)
+                       :statusLastChangedDate (rand-recent-time)
                        :workflowEntity {:entityType "sample"
                                         :entityName (str "sample_" i)}
                        :status (rand-nth ["Succeeded" "Submitted" "Running" "Launching" "Queued" "Aborting" "Failed" "Aborted" "Unknown"])
@@ -435,10 +434,10 @@
              "CancerExomePipeline_v2.M2.ref_fasta" "gs://cancer-exome-pipeline-demo-data/Homo_sapiens_assembly19.fasta"
              "CancerExomePipeline_v2.M2.ref_fasta_fai" "gs://cancer-exome-pipeline-demo-data/Homo_sapiens_assembly19.fasta.fai"
              "CancerExomePipeline_v2.M2.m2_output_vcf_name" "mutations.vcf"}
-    :submission (utils/rand-recent-time)
+    :submission (rand-recent-time)
     :status (rand-nth ["Succeeded" "Submitted" "Running" "Aborting" "Failed" "Aborted" "Unknown"])
-    :start (utils/rand-recent-time)
-    :end (rand-nth [(utils/rand-recent-time) nil])}})
+    :start (rand-recent-time)
+    :end (rand-nth [(rand-recent-time) nil])}})
 
 (defn abort-submission [workspace-id submission-id]
   {:path (str "/workspaces/" (ws-path workspace-id) "/submissions/" submission-id)
@@ -460,7 +459,7 @@
         :snapshotId (rand-int 100)
         :synopsis (str (rand-nth ["variant caller synopsis", "gene analyzer synopsis", "mutect synopsis"]) " " (inc i))
         :documentation (str "Documentation for method " (inc i))
-        :createDate (utils/rand-recent-time)
+        :createDate (rand-recent-time)
         :url "http://agora.broadinstitute.org/methods/someurl"
         :payload "task wc {File in_file command { cat ${in_file} | wc -l } output { Int count = read_int(stdout()) }}\n"
         :entityType (rand-nth ["Task" "Workflow"])})
@@ -480,7 +479,7 @@
     :snapshotId snapshot-id
     :synopsis (rand-nth ["variant caller synopsis", "gene analyzer synopsis", "mutect synopsis"])
     :documentation (str "Documentation for method")
-    :createDate (utils/rand-recent-time)
+    :createDate (rand-recent-time)
     :url "http://agora.broadinstitute.org/methods/someurl"
     :payload "task wc {File in_file command { cat ${in_file} | wc -l } output { Int count = read_int(stdout()) }}\n"
     :entityType (rand-nth ["Task" "Workflow"])}})
@@ -497,7 +496,7 @@
                  :snapshotId (rand-int 100)
                  :synopsis (str (rand-nth ["variant caller synopsis", "gene analyzer synopsis", "mutect synopsis"]) " " (inc i))
                  :documentation (str "Documentation for method " (inc i))
-                 :createDate (utils/rand-recent-time)
+                 :createDate (rand-recent-time)
                  :url "http://agora.broadinstitute.org/methods/someurl"
                  :payload "task wc {File in_file command { cat ${in_file} | wc -l } output { Int count = read_int(stdout()) }}\n"
                  :entityType (rand-nth ["Task" "Workflow"])}
@@ -506,7 +505,7 @@
         :snapshotId (rand-int 100)
         :synopsis (str (rand-nth ["variant caller synopsis", "gene analyzer synopsis", "mutect synopsis"]) " " (inc i))
         :documentation (str "Documentation for config " (inc i))
-        :createDate (utils/rand-recent-time)
+        :createDate (rand-recent-time)
         :payload "task wc {File in_file command { cat ${in_file} | wc -l } output { Int count = read_int(stdout()) }}\n"
         :entityType "Task"})
      (range (rand-int 50)))})
@@ -520,7 +519,7 @@
              :snapshotId (rand-int 100)
              :synopsis (rand-nth ["variant caller synopsis", "gene analyzer synopsis", "mutect synopsis"])
              :documentation (str "Documentation for method")
-             :createDate (utils/rand-recent-time)
+             :createDate (rand-recent-time)
              :url "http://agora.broadinstitute.org/methods/someurl"
              :payload "task wc {File in_file command { cat ${in_file} | wc -l } output { Int count = read_int(stdout()) }}\n"
              :entityType (rand-nth ["Task" "Workflow"])}
@@ -529,7 +528,7 @@
     :snapshotId snapshot-id
     :synopsis (rand-nth ["variant caller synopsis", "gene analyzer synopsis", "mutect synopsis"])
     :documentation (str "Documentation for config")
-    :createDate (utils/rand-recent-time)
+    :createDate (rand-recent-time)
     :payload "task wc {File in_file command { cat ${in_file} | wc -l } output { Int count = read_int(stdout()) }}\n"
     :entityType "Task"}})
 
@@ -542,7 +541,7 @@
     :namespace (rand-nth ["Broad" "nci" "public" "ISB"])
     :snapshotId (rand-int 100)
     :synopsis (rand-nth ["variant caller synopsis", "gene analyzer synopsis", "mutect synopsis"])
-    :createDate (utils/rand-recent-time)
+    :createDate (rand-recent-time)
     :owner (rand-nth ["thibault@broadinstitute.org" "esalinas@broadinstitute.org"])}})
 
 (defn copy-method-config-to-repo [workspace-id config]
@@ -645,8 +644,8 @@
       :generation generation
       :metageneration (rand-int 5)
       :contentType "application/octet-stream"
-      :timeCreated (utils/rand-recent-time)
-      :updated (utils/rand-recent-time)
+      :timeCreated (rand-recent-time)
+      :updated (rand-recent-time)
       :storageClass "STANDARD"
       :size (rand-int 1000000000)
       :md5Hash "wVDkfF0kkuCJPazkScLgzQ=="
@@ -719,7 +718,7 @@
                 (if success?
                   (let [pred (if include-pending?
                                (constantly true)
-                               #(not= (% "creationStatus") "Creating"))]
+                               #(= (% "creationStatus") "Ready"))]
                     (on-done nil (filterv pred (get-parsed-response false))))
                   (on-done status-text nil)))})))
 
@@ -729,8 +728,10 @@
    (fn [err-text projects]
      (if err-text
        (on-done nil)
-       (on-done
-        (get (first (filter #(= project-name (% "projectName")) projects)) "creationStatus"))))))
+       (let [project (first (filter #(= project-name (% "projectName")) projects))]
+         (on-done
+          (get project "creationStatus")
+          (get project "message")))))))
 
 (defn get-billing-accounts []
   {:path "/profile/billingAccounts"
@@ -756,6 +757,12 @@
 (defn delete-billing-project-user [{:keys [project-id role user-email]}]
   {:path (str "/billing/" project-id "/" role "/" user-email)
    :method :delete})
+
+(defn get-library-groups [on-done]
+  (utils/ajax-orch
+   "/library/groups"
+   {:method :get
+    :on-done on-done}))
 
 (defn get-library-attributes [on-done]
   (utils/ajax-orch

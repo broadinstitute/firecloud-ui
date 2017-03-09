@@ -93,13 +93,12 @@
 
 
 (defn compute-status [workspace]
-  (let [last-success (get-in workspace ["workspaceSubmissionStats" "lastSuccessDate"])
-        last-failure (get-in workspace ["workspaceSubmissionStats" "lastFailureDate"])
-        count-running (get-in workspace ["workspaceSubmissionStats" "runningSubmissionsCount"])]
-    (cond (pos? count-running) "Running"
-          (and last-failure
-               (or (not last-success)
-                   (.isAfter (js/moment last-failure) (js/moment last-success)))) "Exception"
+  (let [{:keys [lastSuccessDate lastFailureDate runningSubmissionsCount]}
+        (:workspaceSubmissionStats workspace)]
+    (cond (pos? runningSubmissionsCount) "Running"
+          (and lastFailureDate
+               (or (not lastSuccessDate)
+                   (> (.parse js/Date lastFailureDate) (.parse js/Date lastSuccessDate)))) "Exception"
           :else "Complete")))
 
 (defn gcs-object->download-url [bucket object]
@@ -123,8 +122,13 @@
   (when-let [parsed (parse-gcs-uri gcs-uri)]
     (gcs-object->google-url (:bucket-name parsed) (:object parsed))))
 
+(def default-date-format
+  {:month "long" :day "numeric" :year "numeric" :hour "numeric" :minute "numeric"})
+
 (defn format-date [date & [format]]
-  (-> date js/moment (.format (or format "LLL"))))
+  (-> date js/Date.
+      (.toLocaleString (.-language js/navigator)
+                       (clj->js (or format default-date-format)))))
 
 (defn format-filesize [bytes]
   (letfn [(loop [b n]
@@ -201,8 +205,8 @@
           :else 1)))
 
 (def PHI-warning
-  [:div {:style {:display "inline-flex" :marginBottom ".5em" :marginLeft ".3em"}}
-    (icons/icon {:style {:fontSize 28 :color (:exception-state style/colors) :marginRight ".26em"
-                         :verticalAlign "middle"}} :warning-triangle)
-    [:span {:style {:fontWeight "bold" :fontSize "98%" :marginTop ".18em"}}
+  [:div {:style {:display "flex" :marginBottom ".5em" :marginLeft ".3em" :alignItems "center"}}
+    (icons/icon {:style {:fontSize 22 :color (:exception-state style/colors) :marginRight ".26em"}}
+                :alert)
+    [:span {:style {:fontWeight "bold" :fontSize "98%"}}
       "FireCloud is not intended to host personally identifiable information. Do not use any patient identifier, including name, social security number, or medical record number."]])

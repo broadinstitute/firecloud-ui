@@ -7,6 +7,7 @@
     [broadfcui.common.style :as style]
     [broadfcui.endpoints :as endpoints]
     [broadfcui.utils :as utils]
+    [clojure.string :as str]
     ))
 
 (def ^:private preview-byte-count 20000)
@@ -23,39 +24,46 @@
              labeled (fn [label & contents]
                        [:div {}
                         [:div {:style {:display "inline-block" :width 185}} (str label ": ")]
-                        contents])]
+                        contents])
+             data-empty (or (= data-size "0") (str/blank? data-size))]
          [:div {:style {:width 700 :overflow "auto"}}
           (labeled "Google Bucket" (:bucket-name props))
           (labeled "Object" (:object props))
           [:div {:style {:marginTop "1em"}}
-           [:div {} "Previews for some filetypes may be unsupported. "]
+           [:div {} (when-not data-empty
+                      "Previews for some filetypes may be unsupported. ")]
            (when (> data-size preview-byte-count) (str "Last " (:preview-line-count @state)
                                                        " lines are shown. Use link below to view entire file."))
            ;; The max-height of 206 looks random, but it's so that the top line of the log preview is half cut-off
            ;; to hint to the user that they should scroll up.
-           (react/create-element
-             [:div {:ref "preview" :style {:marginTop "1em" :whiteSpace "pre-wrap" :fontFamily "monospace"
-                                           :fontSize "90%" :overflowY "auto" :maxHeight 206
-                                           :backgroundColor "#fff" :padding "1em" :borderRadius 8}}
-              (str (if (> data-size preview-byte-count) "...") (:preview @state))])]
+           (when-not data-empty
+             (react/create-element
+               [:div {:ref "preview" :style {:marginTop "1em" :whiteSpace "pre-wrap" :fontFamily "monospace"
+                                             :fontSize "90%" :overflowY "auto" :maxHeight 206
+                                             :backgroundColor "#fff" :padding "1em" :borderRadius 8}}
+                (str (if (> data-size preview-byte-count) "...") (:preview @state))]))]
           (when (:loading? @state)
             [Spinner {:text "Getting file info..."}])
           (when data
             [:div {:style {:marginTop "1em"}}
              (labeled "File size"
                       (common/format-filesize data-size)
-                      [:span {:style {:marginLeft "1em"}}
-                       [:a {:href (common/gcs-object->download-url (:bucket-name props) (:object props))
-                            :onClick #(utils/set-access-token-cookie (utils/get-access-token))
-                            :target "_blank"}
-                        "Open"]
-                       [:span {:style {:fontStyle "italic" :color (:text-light style/colors)}}
-                        " (right-click to download)"]])
-             (labeled "Estimated download fee"
-                      (if (nil? cost) "Unknown" (common/format-price cost))
-                      [:span {:style {:marginLeft "1em"}}
-                       [:span {:style {:fontStyle "italic" :color (:text-light style/colors)}}
-                        " (non-US destinations may be higher)"]])
+                      (if data-empty
+                        (react/create-element [:span {:style {:marginLeft "2em" :fontWeight "bold"}} "File Empty"])
+                        (react/create-element
+                          [:span {:style {:marginLeft "1em"}}
+                           [:a {:href (common/gcs-object->download-url (:bucket-name props) (:object props))
+                                :onClick #(utils/set-access-token-cookie (utils/get-access-token))
+                                :target "_blank"}
+                            "Open"]
+                           [:span {:style {:fontStyle "italic" :color (:text-light style/colors)}}
+                            " (right-click to download)"]])))
+             (when-not data-empty
+               (labeled "Estimated download fee"
+                        (if (nil? cost) "Unknown" (common/format-price cost))
+                        [:span {:style {:marginLeft "1em"}}
+                         [:span {:style {:fontStyle "italic" :color (:text-light style/colors)}}
+                          " (non-US destinations may be higher)"]]))
              (if (:show-details? @state)
                [:div {}
                 (labeled "Created" (common/format-date (:timeCreated data)))
@@ -86,14 +94,14 @@
    (fn [{:keys [props state refs after-update]}]
      (swap! state assoc :loading? true)
      (endpoints/call-ajax-orch
-      {:endpoint (endpoints/get-gcs-stats (:bucket-name props) (:object props))
-       :on-done (fn [{:keys [success? get-parsed-response xhr status-code]}]
-                  (swap! state assoc
-                         :loading? false
-                         :response (if success?
-                                     {:data (get-parsed-response)}
-                                     {:error (.-responseText xhr)
-                                      :status status-code})))})
+       {:endpoint (endpoints/get-gcs-stats (:bucket-name props) (:object props))
+        :on-done (fn [{:keys [success? get-parsed-response xhr status-code]}]
+                   (swap! state assoc
+                          :loading? false
+                          :response (if success?
+                                      {:data (get-parsed-response)}
+                                      {:error (.-responseText xhr)
+                                       :status status-code})))})
      (utils/ajax {:url (str "https://www.googleapis.com/storage/v1/b/" (:bucket-name props) "/o/"
                             (js/encodeURIComponent (:object props)) "?alt=media")
                   :headers {"Authorization" (str "Bearer " (utils/get-access-token))
@@ -103,7 +111,8 @@
                                     :preview-line-count (count (clojure.string/split raw-response #"\n+")))
                              (after-update
                                (fn []
-                                 (aset (@refs "preview") "scrollTop" (aget (@refs "preview") "scrollHeight")))))}))})
+                                 (when-not (str/blank? (@refs "preview"))
+                                   (aset (@refs "preview") "scrollTop" (aget (@refs "preview") "scrollHeight"))))))}))})
 
 
 
@@ -118,3 +127,4 @@
          (if (= bucket-name workspace-bucket)
            object
            (if link-label (str link-label) (str "gs://" bucket-name "/" object)))]]))})
+

@@ -12,6 +12,7 @@
     [broadfcui.nav :as nav]
     [broadfcui.persistence :as persistence]
     [broadfcui.utils :as utils]
+    [broadfcui.common.icons :as icons]
     ))
 
 
@@ -25,7 +26,7 @@
            search-result-columns (:search-result-columns props)
            extra-columns (subvec search-result-columns 4)]
        [table/Table
-        {:ref "table" :state-key "library-table"
+        {:ref "table" :state-key "library-table" :v 2
          :header-row-style {:fontWeight 500 :fontSize "90%"
                             :backgroundColor nil
                             :color "black"
@@ -57,8 +58,15 @@
          :row-style {:backgroundColor nil :height 20 :padding "0 0 0.5em 1em"}
          :cell-content-style {:padding nil}
          :columns (concat
-                   [{:header (:title (:library:datasetName attributes)) :starting-width 250 :show-initial? true
-                     :as-text :library:datasetDescription
+                   [{:resizable? false :width 30 :reorderable? false
+                     :as-text (fn [data]
+                                (if (= (:workspaceAccess data) "NO ACCESS") "You must request access to this dataset."))
+                     :content-renderer (fn [data]
+                                         (if (= (:workspaceAccess data) "NO ACCESS")
+                                           (icons/icon {:style {:alignSelf "center" :cursor "pointer"}
+                                                        :onClick #(react/call :check-access this data)} :shield)))}
+                    {:header (:title (:library:datasetName attributes)) :starting-width 250 :show-initial? true
+                     :as-text :library:datasetDescription :reorderable? false
                      :content-renderer (fn [data]
                                          (style/create-link {:text (:library:datasetName data)
                                                              :onClick #(react/call :check-access this data)}))}
@@ -74,6 +82,7 @@
                   (->> extra-columns
                        (concat [:library:indication :library:dataUseRestriction :library:numSubjects])
                        (map data)
+                       (cons data)
                        (cons data)))}]))
    :execute-search
    (fn [{:keys [refs]}]
@@ -81,58 +90,55 @@
      (react/call :execute-search (@refs "table")))
    :check-access
    (fn [{:keys [props]} data]
-     (endpoints/call-ajax-orch
-       {:endpoint (endpoints/check-bucket-read-access (common/row->workspace-id data))
-        :on-done (fn [{:keys [success?]}]
-                   (if success?
-                     (nav/navigate (:nav-context props) "workspaces" (common/row->workspace-id data))
-                     (comps/push-message
-                      {:header "Request Access"
-                       :message
-                       (if (= (config/tcga-namespace) (:namespace data))
-                         [:span {}
-                          [:p {} "For access to TCGA protected data please apply for access via dbGaP [instructions can be found "
-                           [:a {:href "https://wiki.nci.nih.gov/display/TCGA/Application+Process" :target "_blank"} "here"] "]."]
-                          [:p {} "After dbGaP approves your application please link your eRA Commons ID in your FireCloud profile page."]]
-                         [:span {}
-                          "Please contact "
-                          [:a {:target "_blank"
-                               :href (str "mailto:" (:library:contactEmail data))}
-                           (str (:library:datasetCustodian data) " <" (:library:contactEmail data) ">")]
-                          " and request access for the "
-                          (:namespace data) "/" (:name data) " workspace."])})))}))
+     (if (= (:workspaceAccess data) "NO ACCESS")
+       (comps/push-message
+        {:header "Request Access"
+         :message
+         (if (= (config/tcga-namespace) (:namespace data))
+           [:span {}
+            [:p {} "For access to TCGA protected data please apply for access via dbGaP [instructions can be found "
+             [:a {:href "https://wiki.nci.nih.gov/display/TCGA/Application+Process" :target "_blank"} "here"] "]."]
+            [:p {} "After dbGaP approves your application please link your eRA Commons ID in your FireCloud profile page."]]
+           [:span {}
+            "Please contact "
+            [:a {:target "_blank"
+                 :href (str "mailto:" (:library:contactEmail data))}
+             (str (:library:datasetCustodian data) " <" (:library:contactEmail data) ">")]
+            " and request access for the "
+            (:namespace data) "/" (:name data) " workspace."])})
+       (nav/navigate (:nav-context props) "workspaces" (common/row->workspace-id data))))
    :build-aggregate-fields
    (fn [{:keys [props]}]
      (reduce
-       (fn [results field] (assoc results field (if (contains? (:expanded-aggregates props) field) 0 5)))
-       {}
-       (:aggregate-fields props)))
+      (fn [results field] (assoc results field (if (contains? (:expanded-aggregates props) field) 0 5)))
+      {}
+      (:aggregate-fields props)))
    :pagination
    (fn [{:keys [this state props]}]
      (fn [{:keys [current-page rows-per-page]} callback]
        (when-not (empty? (:aggregate-fields props))
          (endpoints/call-ajax-orch
-           (let [from (* (- current-page 1) rows-per-page)]
-             {:endpoint endpoints/search-datasets
-              :payload {:searchString (:search-text props)
-                        :filters (utils/map-keys name (:facet-filters props))
-                        :from from
-                        :size rows-per-page
-                        :fieldAggregations (if (= 1 current-page)
-                                             (react/call :build-aggregate-fields this)
-                                             {})}
-              :headers utils/content-type=json
-              :on-done
-              (fn [{:keys [success? get-parsed-response status-text]}]
-                (if success?
-                  (let [{:keys [total results aggregations]} (get-parsed-response)]
-                    (swap! state assoc :total total)
-                    (callback {:group-count total
-                               :filtered-count total
-                               :rows results})
-                    (when (= 1 current-page)
-                      ((:callback-function props) aggregations)))
-                  (callback {:error status-text})))})))))})
+          (let [from (* (- current-page 1) rows-per-page)]
+            {:endpoint endpoints/search-datasets
+             :payload {:searchString (:search-text props)
+                       :filters (utils/map-keys name (:facet-filters props))
+                       :from from
+                       :size rows-per-page
+                       :fieldAggregations (if (= 1 current-page)
+                                            (react/call :build-aggregate-fields this)
+                                            {})}
+             :headers utils/content-type=json
+             :on-done
+             (fn [{:keys [success? get-parsed-response status-text]}]
+               (if success?
+                 (let [{:keys [total results aggregations]} (get-parsed-response)]
+                   (swap! state assoc :total total)
+                   (callback {:group-count total
+                              :filtered-count total
+                              :rows results})
+                   (when (= 1 current-page)
+                     ((:callback-function props) aggregations)))
+                 (callback {:error status-text})))})))))})
 
 (react/defc SearchSection
   {:get-filters
@@ -142,11 +148,11 @@
    (fn [{:keys [props this]}]
      [:div {:style {:padding "16px 12px 0 12px"}}
       [comps/AutocompleteFilter
-       {:on-filter (:on-filter props)
+       {:ref "text-filter"
+        :on-filter (:on-filter props)
         :width "100%"
-        :initial-text (:search-text props)
-        :ref "text-filter"
-        :placeholder "Search"
+        :field-attributes {:defaultValue (:search-text props)
+                           :placeholder "Search"}
         :facet-filters (:facet-filters props)
         :bloodhoundInfo {:url (str (config/api-url-root) "/api/library/suggest")
                          :transform (fn [response]
@@ -185,7 +191,7 @@
         [:div {:style {:paddingTop "1em"}}
          (map
            (fn [{:keys [key doc_count]}]
-             [:div {:style {:paddingTop "5"}}
+             [:div {:style {:paddingTop 5}}
               [:label {:style {:display "inline-block" :width "calc(100% - 30px)"
                                :textOverflow "ellipsis" :overflow "hidden" :whiteSpace "nowrap"}
                        :title key}
@@ -195,7 +201,7 @@
                [:span {:style {:marginLeft "0.3em"}} key]]
               (some-> doc_count style/render-count)])
            (concat (:buckets props) hidden-items-formatted))
-         [:div {:style {:paddingTop "5"}}
+         [:div {:style {:paddingTop 5}}
           (if (:expanded? props)
             (when (> (count (:buckets props)) 5)
               (style/create-link {:text " less..."
@@ -256,7 +262,7 @@
             aggregate-fields)])))})
 
 (def ^:private PERSISTENCE-KEY "library-page")
-(def ^:private VERSION 2)
+(def ^:private VERSION 3)
 
 (react/defc Page
   {:update-filter

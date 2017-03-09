@@ -7,47 +7,44 @@
 
 ;; From https://design.google.com/icons/
 (def ^:private icon-keys
-  {:angle-left "keyboard_arrow_left"
-   :angle-right "keyboard_arrow_right"
-   :settings "settings"
-   :lock "lock"
-   :unlock "lock_open"
-   :edit "mode_edit"
-   :clone "content_copy"
-   :add "add"
-   :delete "delete"
-   :remove "remove_circle"
-   :done "done"
-   :done-circle "check_circle"
-   :cancel "cancel"
-   :warning-triangle "warning"
-   :error "error"
-   :search "search"
-   :share "share"
-   :library "import_contacts"
-   :publish "publish"
-   :catalog "local_offer"
-   :reorder "reorder"
-   :close "close"
-   :reset "replay"
-   :new-window "open_in_new"})
+  {:angle-left "fa-angle-left"
+   :angle-right "fa-angle-right"
+   :settings "fa-cog"
+   :lock "fa-lock"
+   :unlock "fa-unlock"
+   :edit "fa-pencil"
+   :clone "fa-clone"
+   :add "fa-plus"
+   :delete "fa-trash"
+   :remove "fa-minus-circle"
+   :done "fa-check"
+   :done-circle "fa-check-circle"
+   :cancel "fa-times-circle"
+   :warning-triangle "fa-exclamation-triangle"
+   :error "fa-exclamation-circle"
+   :alert "fa-exclamation"
+   :search "fa-search"
+   :share "fa-share-alt"
+   :library "fa-book"
+   :publish "fa-upload"
+   :catalog "fa-tag"
+   :reorder "fa-reorder"
+   :close "fa-close"
+   :reset "fa-undo"
+   :new-window "fa-external-link"
+   :spinner "fa-spinner"
+   :shield "fa-shield"})
 
 (defn icon [attributes key]
-  [:span (utils/deep-merge
-           {:className "material-icons"}
-           attributes)
-   (icon-keys key)])
+  [:span (assoc attributes :className (str (icon-keys key) " fa "  (:className attributes)))])
 
 (react/defc CompleteIcon
   {:get-default-props
    (fn []
-     {:size 36})
+     {:size 32})
    :render
    (fn [{:keys [props]}]
-     [:span {:style {:display "inline-block" :position "relative" :verticalAlign "middle"
-                     :width (:size props) :height (:size props)}}
-      (style/center {}
-        (icon {:style {:color "white" :fontSize (:size props) :marginTop 4}} :done-circle))])})
+     (icon {:style {:color "white" :fontSize (:size props)}} :done-circle))})
 
 (react/defc RunningIcon
   {:get-default-props
@@ -76,9 +73,7 @@
 (react/defc ExceptionIcon
   {:get-default-props
    (fn []
-     {:size 36})
+     {:size 28})
    :render
    (fn [{:keys [props]}]
-     [:span {:style {:display "inline-block" :position "relative" :verticalAlign "middle"
-                     :height (:size props) :width (:size props)}}
-      (style/center {} (icon {:style {:color "white" :fontSize (:size props) :marginTop 4}} :warning-triangle))])})
+     (icon {:style {:color "white" :fontSize (:size props)}} :warning-triangle))})

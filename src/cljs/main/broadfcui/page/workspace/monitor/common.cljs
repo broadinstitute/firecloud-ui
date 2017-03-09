@@ -1,5 +1,7 @@
 (ns broadfcui.page.workspace.monitor.common
   (:require
+    [broadfcui.common :as common]
+    [broadfcui.common.duration :as duration]
     [broadfcui.common.icons :as icons]
     [broadfcui.common.style :as style]
     [broadfcui.utils :as utils]
@@ -8,8 +10,7 @@
 
 (defn render-date [date]
   (if date
-    (let [m (js/moment date)]
-      (str (.format m "L [at] LTS") " (" (.fromNow m) ")"))
+    (str (common/format-date date) " (" (duration/fuzzy-time-from-now-ms (.parse js/Date date) true) ")")
     [:span {:style {:fontStyle "italic"}} "Pending..."]))
 
 
@@ -66,6 +67,14 @@
     (contains? wf-statuses "Succeeded") success-icon
     :else (do (utils/log "Unknown submission status")
             nil)))
+
+(defn icon-for-project-status [project-status]
+      (cond
+        (= project-status "Error") failure-icon
+        (= project-status "Ready") success-icon
+        (= project-status "Creating") running-icon
+        :else (do (utils/log "Unknown project status")
+                  nil)))
 
 (defn icon-for-call-status [status]
   (cond

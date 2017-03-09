@@ -12,7 +12,7 @@
     [broadfcui.page.workspace.monitor.common :as moncommon :refer [all-success? any-running? any-failed?]]
     [broadfcui.page.workspace.summary.acl-editor :refer [AclEditor]]
     [broadfcui.page.workspace.summary.attribute-editor :as attributes]
-    [broadfcui.page.workspace.summary.catalog :as catalog]
+    [broadfcui.page.workspace.summary.catalog.wizard :refer [CatalogWizard]]
     [broadfcui.page.workspace.summary.publish :as publish]
     [broadfcui.page.workspace.summary.library-view :refer [LibraryView]]
     [broadfcui.page.workspace.summary.workspace-cloner :refer [WorkspaceCloner]]
@@ -58,7 +58,7 @@
 
 
 (defn- render-sidebar [state refs this
-                       {:keys [workspace billing-projects owner? writer? curator?
+                       {:keys [workspace billing-projects owner? writer? curator? can-share?
                                workspace-id on-clone on-delete request-refresh]}]
   (let [{{:keys [isLocked library-attributes description isProtected]} :workspace
          {:keys [runningSubmissionsCount]} :workspaceSubmissionStats} workspace
@@ -72,18 +72,25 @@
                          :icon (case status
                                  "Complete" [icons/CompleteIcon {:size 36}]
                                  "Running" [icons/RunningIcon {:size 36}]
-                                 "Exception" [icons/ExceptionIcon {:size 36}])
+                                 "Exception" [icons/ExceptionIcon {:size 32}])
                          :color (style/color-for-status status)}]
      [:div {:ref "sidebar"}]
      (style/create-unselectable
        :div {:style {:position (when-not sidebar-visible? "fixed")
                      :top (when-not sidebar-visible? 0)
                      :width 270}}
-       (when (and curator? writer? (not editing?))
-         [catalog/CatalogButton {:library-schema library-schema
-                                 :workspace workspace
-                                 :workspace-id workspace-id
-                                 :request-refresh request-refresh}])
+       (when (not editing?)
+         [comps/SidebarButton
+          {:style :light :color :button-primary :margin :top
+           :icon :catalog :text "Catalog Dataset..."
+           :onClick #(modal/push-modal [CatalogWizard {:library-schema library-schema
+                                                       :workspace workspace
+                                                       :workspace-id workspace-id
+                                                       :can-share? can-share?
+                                                       :owner? owner?
+                                                       :curator? curator?
+                                                       :writer? writer?
+                                                       :request-refresh request-refresh}])}])
        (when (and curator? owner? (not editing?))
          (if (:library:published library-attributes)
            [publish/UnpublishButton {:workspace-id workspace-id
@@ -106,7 +113,7 @@
                          (let [{:keys [success error]} (react/call :get-attributes (@refs "workspace-attribute-editor"))
                                new-description (react/call :get-text (@refs "description"))]
                            (if error
-                             (comps/push-error-text error)
+                             (comps/push-error error)
                              (save-attributes {:new-attributes (assoc success :description new-description)
                                                :state state
                                                :workspace-id workspace-id
@@ -118,9 +125,7 @@
        (when-not editing?
          [comps/SidebarButton {:style :light :margin :top :color :button-primary
                                :text "Clone..." :icon :clone
-                               :disabled? (when (empty? billing-projects)
-                                            "There are no billing projects available for your account. To create a
-                                            billing project, choose the 'Billing' option from the dropdown in the top right.")
+                               :disabled? (when (empty? billing-projects) (comps/no-billing-projects-message))
                                :onClick #(modal/push-modal
                                           [WorkspaceCloner
                                            {:on-success (fn [namespace name]
@@ -138,7 +143,7 @@
        (when (and owner? (not editing?))
          [comps/SidebarButton {:style :light :margin :top :color (if isLocked :text-lighter :exception-state)
                                :text "Delete..." :icon :delete
-                               :disabled? (if isLocked "This workspace is locked.")
+                               :disabled? (when isLocked "This workspace is locked.")
                                :onClick #(modal/push-modal [DeleteDialog {:workspace-id workspace-id
                                                                           :on-delete on-delete}])}]))]))
 
@@ -146,7 +151,8 @@
 (defn- render-main [{:keys [workspace curator? owner? writer? reader? can-share? bucket-access? editing? submissions-count
                             user-access-level library-schema request-refresh workspace-id storage-cost]}]
   (let [{:keys [owners]
-         {:keys [createdBy createdDate bucketName description workspace-attributes library-attributes]} :workspace} workspace
+         {:keys [createdBy createdDate bucketName description workspace-attributes library-attributes realm]} :workspace} workspace
+        realm-name (:realmName realm)
         render-detail-box (fn [order title & children]
                             [:div {:style {:flexBasis "50%" :order order}}
                              (style/create-section-header title)
@@ -167,7 +173,11 @@
                                               [AclEditor {:workspace-id workspace-id
                                                           :user-access-level user-access-level
                                                           :request-refresh request-refresh}])})
-              ")"])]))
+              ")"])]
+          (when realm-name
+            [:div {:style {:paddingTop "0.5rem"}}
+             [:div {:style {:fontStyle "italic"}} "Access restricted to realm:"]
+             [:div {} realm-name]])))
       (render-detail-box
         3
         "Created By"
@@ -199,7 +209,7 @@
             [:div {}
              (str count-all " Submission" (when-not (= 1 count-all) "s"))
              (when (pos? count-all)
-               [:ul {:style {:marginTop "0"}}
+               [:ul {:style {:marginTop 0}}
                 (for [[status subs] (sort submissions-count)]
                  [:li {} (str subs " " status)])])])))]
 
@@ -217,7 +227,10 @@
                      :workspace workspace
                      :workspace-id workspace-id
                      :request-refresh request-refresh
-                     :can-edit? (and curator? owner? (not editing?))}])
+                     :can-share? can-share?
+                     :owner? owner?
+                     :curator? curator?
+                     :writer? writer?}])
      [attributes/WorkspaceAttributeViewerEditor {:ref "workspace-attribute-editor"
                                                  :editing? editing?
                                                  :writer? writer?
@@ -272,9 +285,9 @@
         :on-done (fn [{:keys [success? status-text status-code]}]
                    (when-not success?
                      (if (and (= status-code 409) (not locked-now?))
-                       (comps/push-error-text
+                       (comps/push-error
                         "Could not lock workspace, one or more analyses are currently running")
-                       (comps/push-error-text (str "Error: " status-text))))
+                       (comps/push-error (str "Error: " status-text))))
                    (swap! state dissoc :locking?)
                    (react/call :refresh this))}))
    :component-did-mount

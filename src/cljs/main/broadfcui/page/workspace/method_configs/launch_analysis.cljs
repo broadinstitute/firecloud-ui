@@ -5,6 +5,7 @@
     [dmohs.react :as react]
     [broadfcui.common :as common]
     [broadfcui.common.components :as comps]
+    [broadfcui.common.duration :as duration]
     [broadfcui.common.icons :as icons]
     [broadfcui.common.modal :as modal]
     [broadfcui.common.style :as style]
@@ -33,7 +34,7 @@
        (not queue-status) [comps/Spinner {:text "Loading submission queue status..."}]
        :else
        [:div {}
-        (row "Estimated wait time:" (.humanize (js/moment.duration queue-time)))
+        (row "Estimated wait time:" (duration/fuzzy-time-from-now-ms (+ (.now js/Date) queue-time) false))
         (row "Workflows ahead of yours:" queue-position)
         (row "Queue status:" (str queued " Queued; " active " Active"))])]))
 
