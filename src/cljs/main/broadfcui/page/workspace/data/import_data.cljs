@@ -32,7 +32,8 @@
                                (.readAsText reader (.slice file 0 preview-limit)))))}]
       [:div {:style {:marginBottom "0.8em"}} "For more information, see our "
        [:a {:href (config/user-guide-url) :target "_blank"} "user guide"] "."]
-      [comps/Button {:text "Choose file..." :onClick #(-> (@refs "entities") .click)}]
+      [comps/Button {:text (if (:upload-result @state) "Choose another file..." "Choose file...")
+                     :onClick #(-> (@refs "entities") .click)}]
       (when (:file-contents @state)
         [:div {:style {:margin "0.5em 2em" :padding "0.5em" :border style/standard-line}}
          (str "Previewing '" (-> (:file @state) .-name) "':")
@@ -47,21 +48,21 @@
       (if-let [result (:upload-result @state)]
         (if (:success? result)
           (style/create-flexbox {:style {:justifyContent "center" :paddingTop "1em"}}
-            (icons/icon {:style {:fontSize "200%" :color (:success-state style/colors)}} :done)
-            [:span {:style {:marginLeft "1em"}} "Success!"])
+                                (icons/icon {:style {:fontSize "200%" :color (:success-state style/colors)}} :done)
+                                [:span {:style {:marginLeft "1em"}} "Success!"])
           [:div {:style {:paddingTop "1em"}}
            [comps/ErrorViewer {:error (:error result)}]]))])
    :do-upload
    (fn [{:keys [props state]}]
      (swap! state assoc :loading? true)
      (endpoints/call-ajax-orch
-       {:endpoint ((if (= "data" (:import-type props))
-                     endpoints/import-entities
-                     endpoints/import-attributes)
-                    (:workspace-id props))
-        :raw-data (utils/generate-form-data {(if (= "data" (:import-type props)) :entities :attributes) (:file @state)})
-        :encType "multipart/form-data"
-        :on-done (fn [{:keys [success? xhr get-parsed-response]}]
+      {:endpoint ((if (= "data" (:import-type props))
+                    endpoints/import-entities
+                    endpoints/import-attributes)
+                  (:workspace-id props))
+       :raw-data (utils/generate-form-data {(if (= "data" (:import-type props)) :entities :attributes) (:file @state)})
+       :encType "multipart/form-data"
+       :on-done (fn [{:keys [success? xhr get-parsed-response]}]
                   (swap! state dissoc :loading? :file :file-contents)
                   (if success?
                     (swap! state assoc :upload-result {:success? true})
