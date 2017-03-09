@@ -287,7 +287,7 @@
      [:div {}
       [comps/DelayedBlocker {:ref "blocker" :banner "Loading..."}]
       ;; When using an auto-width column the table ends up ~1px wider than its parent
-      [:div {:style {:overflowX (if any-width=remaining? "hidden" "auto")}}
+      [:div {:style {:overflowX (when (not any-width=remaining?) "auto")}}
        [:div {:style {:position "relative"
                       :paddingBottom 10
                       :minWidth (when-not (or no-data? any-width=remaining?)

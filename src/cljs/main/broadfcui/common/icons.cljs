@@ -32,6 +32,7 @@
    :close "fa-close"
    :reset "fa-undo"
    :new-window "fa-external-link"
+   :information "fa-info-circle"
    :spinner "fa-spinner"
    :shield "fa-shield"})
 

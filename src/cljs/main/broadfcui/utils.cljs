@@ -298,3 +298,13 @@
   (if (> number 1)
     (str number " " unit "s")
     (str number " " unit)))
+
+(defn create-element-ref-handler [{:keys [store key did-mount will-unmount]}]
+  (fn [element]
+    (if element
+      (do (swap! store assoc key element)
+          (did-mount element))
+      (will-unmount (key @store)))))
+
+(defn get-app-root-element []
+  (.getElementById js/document "app"))
