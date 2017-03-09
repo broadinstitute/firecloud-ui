@@ -142,7 +142,7 @@
                               :filtered-count total
                               :rows results})
                    (when (= 1 current-page)
-                     ((:callback-function props) aggregations)))
+                     ((:update-aggregates props) aggregations)))
                  (callback {:error status-text})))})))))})
 
 (react/defc SearchSection
@@ -216,34 +216,34 @@
                                   :onClick #(react/call :update-expanded this true)})))]]]))
    :clear-all
    (fn [{:keys [props]}]
-     ((:callback-function props) (:field props) #{}))
+     ((:update-filter props) (:field props) #{}))
    :update-expanded
    (fn [{:keys [props]} newValue]
      ((:expanded-callback-function props) (:field props) newValue))
    :update-selected
    (fn [{:keys [props]} name checked?]
      (let [updated-items ((if checked? conj disj) (:selected-items props) name)]
-       ((:callback-function props) (:field props) updated-items)))})
+       ((:update-filter props) (:field props) updated-items)))})
 
-(defn get-aggregations-for-property [agg-name aggregates]
-  (first (keep (fn [m] (when (= (:field m) (name agg-name))
+(defn get-aggregations-for-property [aggregate-field aggregates]
+  (first (keep (fn [m] (when (= (:field m) (name aggregate-field))
                          (:results m)))
                aggregates)))
 
 (react/defc Facet
   {:render
    (fn [{:keys [props]}]
-     (let [k (:aggregate-field props)
+     (let [aggregate-field (:aggregate-field props)
            properties (:aggregate-properties props)
            title (:title properties)
            render-hint (get-in properties [:aggregate :renderHint])
-           aggregations (get-aggregations-for-property k (:aggregates props))]
+           aggregations (get-aggregations-for-property aggregate-field (:aggregates props))]
        (cond
          (= render-hint "checkbox") [FacetCheckboxes
                                      (merge
-                                      {:title title :field k}
+                                      {:title title :field aggregate-field}
                                       (select-keys aggregations [:numOtherDocs :buckets])
-                                      (select-keys props [:expanded? :selected-items :callback-function
+                                      (select-keys props [:expanded? :selected-items :update-filter
                                                           :expanded-callback-function]))])))})
 
 (react/defc FacetSection
@@ -254,17 +254,16 @@
    (fn [{:keys [props state]}]
      (if (empty? (:aggregates @state))
        [:div {:style {:fontSize "80%"}} "loading..."]
-       (let [aggregate-fields (:aggregate-fields props)]
-         [:div {:style {:fontSize "85%" :padding "16px 12px"}}
-          (map
-            (fn [prop-name] [Facet {:aggregate-field prop-name
-                                    :aggregate-properties (prop-name (:aggregate-properties props))
-                                    :aggregates (:aggregates @state)
-                                    :expanded? (contains? (:expanded-aggregates props) prop-name)
-                                    :selected-items (set (get-in props [:facet-filters prop-name]))
-                                    :callback-function (:callback-function props)
-                                    :expanded-callback-function (:expanded-callback-function props)}])
-            aggregate-fields)])))})
+       [:div {:style {:fontSize "85%" :padding "16px 12px"}}
+        (map
+         (fn [aggregate-field] [Facet {:aggregate-field aggregate-field
+                                       :aggregate-properties (get (:aggregate-properties props) aggregate-field)
+                                       :aggregates (:aggregates @state)
+                                       :expanded? (contains? (:expanded-aggregates props) aggregate-field)
+                                       :selected-items (set (get-in props [:facet-filters aggregate-field]))
+                                       :update-filter (:update-filter props)
+                                       :expanded-callback-function (:expanded-callback-function props)}])
+         (:aggregate-fields props))]))})
 
 (def ^:private PERSISTENCE-KEY "library-page")
 (def ^:private VERSION 4)
@@ -313,16 +312,16 @@
        [FacetSection (merge
                       {:ref "facets"
                        :aggregate-properties (:library-attributes @state)
-                       :callback-function (fn [facet-name facet-list]
-                                            (react/call :update-filter this facet-name facet-list))
-                       :expanded-callback-function (fn [field new-value]
-                                                     (react/call :set-expanded-aggregate this field new-value))}
+                       :update-filter (fn [facet-name facet-list]
+                                        (react/call :update-filter this facet-name facet-list))
+                       :expanded-callback-function (fn [facet-name expanded?]
+                                                     (react/call :set-expanded-aggregate this facet-name expanded?))}
                       (select-keys @state [:aggregate-fields :facet-filters :expanded-aggregates]))]]
       [:div {:style {:flex "1 1 auto" :overflowX "auto"}}
        (when (and (:library-attributes @state) (:search-result-columns @state))
          [DatasetsTable (merge
                          {:ref "dataset-table"
-                          :callback-function (fn [aggregates]
+                          :update-aggregates (fn [aggregates]
                                                (react/call :update-aggregates (@refs "facets") aggregates))
                           :get-search-text-and-facets (fn [] {:searchString (:search-text @state)
                                                               :filters (utils/map-keys name (:facet-filters @state))})}
