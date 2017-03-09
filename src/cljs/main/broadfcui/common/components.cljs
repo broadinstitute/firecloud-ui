@@ -683,7 +683,7 @@
 (react/defc TagAutocomplete
   {:get-tags
    (fn [{:keys [refs]}]
-     (js->clj (.tagsinput (js/$ (@refs "input-element")) "items")))
+     (flatten (js->clj (.tagsinput (js/$ (@refs "input-element")) "items"))))
    :component-did-mount
    (fn [{:keys [refs]}]
      (.tagsinput (js/$ (@refs "input-element"))))

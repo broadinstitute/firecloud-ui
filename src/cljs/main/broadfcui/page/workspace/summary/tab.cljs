@@ -115,7 +115,7 @@
                                new-tags (react/call :get-tags (@refs "tags-autocomplete"))]
                            (if error
                              (comps/push-error error)
-                             (save-attributes {:new-attributes (assoc success :description new-description :tags new-tags)
+                             (save-attributes {:new-attributes (assoc success :description new-description :tags:tags new-tags)
                                                :state state
                                                :workspace-id workspace-id
                                                :request-refresh request-refresh}))))}]
@@ -150,7 +150,7 @@
 
 
 (defn- render-main [{:keys [workspace curator? owner? writer? reader? can-share? bucket-access? editing? submissions-count
-                            user-access-level library-schema request-refresh workspace-id storage-cost]}]
+                            user-access-level library-schema request-refresh workspace-id storage-cost tags]}]
   (let [{:keys [owners]
          {:keys [createdBy createdDate bucketName description workspace-attributes library-attributes realm]} :workspace} workspace
         realm-name (:realmName realm)
@@ -217,14 +217,15 @@
        5
        "Tags"
        (style/create-paragraph
-        ;; fix this to get tags tafrom workspace response (need to work in orchestration)
-        (let [tags ["cancer" "tcga" "tag" "another tag" "another tag again" "a very long tag moves to the next line because it's an inline-block"]]
+        ;; fix this to get tags from workspace response (need to work in orchestration)
+
+        ;; get save to work : update tags !
           (if editing? [comps/TagAutocomplete {:tags tags :ref "tags-autocomplete"}]
                        [:div {}
                         (for [tag tags]
                           [:div {:style {:display "inline-block" :background (:tag-background style/colors)
                                          :color (:tag-foreground style/colors) :margin "0.1rem 0.1rem"
-                                         :borderRadius 3 :padding "0.2rem 0.5rem"}} tag])]))))]
+                                         :borderRadius 3 :padding "0.2rem 0.5rem"}} tag])])))]
 
     (when editing? [:div {:style {:marginBottom "10px"}} common/PHI-warning])
 
@@ -259,7 +260,8 @@
 (react/defc Summary
   {:get-initial-state
    (fn []
-     {:sidebar-visible? true})
+     {:sidebar-visible? true
+      :tags ["tag" "another tag" "and another other tag" "a really long tag which should go on to another line because of overflow"]})
    :render
    (fn [{:keys [refs state props this]}]
      (let [{:keys [server-response]} @state
@@ -284,7 +286,7 @@
                                    (select-keys server-response [:billing-projects :curator?])
                                    derived))
             (render-main (merge (select-keys props [:workspace :workspace-id :bucket-access?])
-                                (select-keys @state [:editing?])
+                                (select-keys @state [:editing? :tags])
                                 (select-keys server-response [:submissions-count :library-schema :curator? :storage-cost])
                                 derived))
             (when (:updating-attrs? @state)
@@ -316,14 +318,13 @@
      (.addEventListener js/window "scroll" (:scroll-handler @locals)))
 
    :component-did-update
-   (fn [{:keys [locals refs]}]
-     ((:scroll-handler @locals))
-     #_(.tagsinput (js/$ (@refs "workspace-tags-input")) (clj->js {})))
+   (fn [{:keys [locals]}]
+     ((:scroll-handler @locals)))
    :component-will-unmount
    (fn [{:keys [locals]}]
      (.removeEventListener js/window "scroll" (:scroll-handler @locals)))
    :refresh
-   (fn [{:keys [props state]}]
+   (fn [{:keys [props state refs]}]
      (swap! state dissoc :server-response)
      ((:request-refresh props))
      (endpoints/call-ajax-orch
