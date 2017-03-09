@@ -89,8 +89,8 @@
                        vec))}]))
    :execute-search
    (fn [{:keys [refs]}]
-     (react/call :update-query-params (@refs "table") {:current-page 1 :sort-column nil :sort-order nil})
-     (react/call :refresh-rows (@refs "table")))
+     (when-not (react/call :update-query-params (@refs "table") {:current-page 1 :sort-column nil :sort-order nil})
+       (react/call :refresh-rows (@refs "table"))))
    :check-access
    (fn [{:keys [props]} data]
      (if (= (:workspaceAccess data) "NO ACCESS")

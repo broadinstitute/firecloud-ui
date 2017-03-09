@@ -400,7 +400,9 @@
      (:query-params @state))
    :update-query-params
    (fn [{:keys [state]} new-params]
-     (swap! state update :query-params merge new-params))
+     (let [change? (not= new-params (select-keys (:query-params @state) (keys new-params)))]
+       (swap! state update :query-params merge new-params)
+       change?))
    :get-default-props get-default-table-props
    :get-initial-state get-initial-table-state
    :render render-table
