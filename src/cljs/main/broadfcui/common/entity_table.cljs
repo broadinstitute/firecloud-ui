@@ -28,10 +28,9 @@
 (react/defc EntityTable
   {:update-data
    (fn [{:keys [refs after-update]} reinitialize?]
-     (if reinitialize?
-       (do (react/call :refresh-rows (@refs "table"))
-           (after-update #(react/call :reinitialize (@refs "table"))))
-       (react/call :refresh-rows (@refs "table"))))
+       (react/call :refresh-rows (@refs "table"))
+       (when reinitialize?
+             (after-update #(react/call :reinitialize (@refs "table")))))
    :refresh
    (fn [{:keys [props state this after-update]} & [entity-type reinitialize?]]
      (endpoints/call-ajax-orch
@@ -139,7 +138,7 @@
                                                             "pageSize" rows-per-page
                                                             "filterTerms" (js/encodeURIComponent filter-text)
                                                             "sortField" sort-column
-                                                            "sortDirection" (name (utils/cljslog sort-order))})
+                                                            "sortDirection" (name sort-order)})
                :on-done (fn [{:keys [success? get-parsed-response status-text status-code]}]
                           (if success?
                             (let [{:keys [results]
