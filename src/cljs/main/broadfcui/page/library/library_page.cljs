@@ -74,7 +74,8 @@
                   (->> extra-columns
                        (concat [:library:indication :library:dataUseRestriction :library:numSubjects])
                        (map data)
-                       (cons data)))}]))
+                       (cons data)
+                       vec))}]))
    :execute-search
    (fn [{:keys [refs]}]
      (react/call :update-query-params (@refs "table") {:current-page 1})
