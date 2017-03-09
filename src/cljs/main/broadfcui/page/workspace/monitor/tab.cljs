@@ -10,6 +10,7 @@
     [broadfcui.nav :as nav]
     [broadfcui.page.workspace.monitor.common :as moncommon]
     [broadfcui.page.workspace.monitor.submission-details :as submission-details]
+    [broadfcui.persistence :as persistence]
     [broadfcui.utils :as utils]
     ))
 
@@ -18,7 +19,8 @@
 
 (defn- render-submissions-table [submissions nav-context bucketName]
   [table/Table
-   {:empty-message "There are no analyses to display."
+   {:state-key "monitor"
+    :empty-message "There are no analyses to display."
     :columns
     [{:header "Date" :starting-width 200 :as-text render-date
       :sort-by #(% "submissionDate")
