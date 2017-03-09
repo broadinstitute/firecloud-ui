@@ -518,7 +518,7 @@
 
 
 (defn render-application []
-  (react/render (react/create-element App) (.. js/document (getElementById "app"))))
+  (react/render (react/create-element App) (utils/get-app-root-element)))
 
 
 (render-application)

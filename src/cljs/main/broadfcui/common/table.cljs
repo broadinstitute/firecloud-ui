@@ -252,7 +252,14 @@
                                 :on-visibility-change
                                 (fn [column-index visible?]
                                   (if (= :all column-index)
-                                    (swap! state update :column-meta #(vec (map merge % (repeat {:visible? visible?}))))
+                                    ;; if you have explicitly set a column to not be reorderable, then we will always
+                                    ;; display it (even if you've clicked on none)
+                                    (swap! state update :column-meta #(vec (map merge  %
+                                                                                (map (fn [column]
+                                                                                       (if (= (:reorderable? column) false)
+                                                                                         {:visible? true}
+                                                                                         {:visible? visible?}))
+                                                                                     (:columns props)))))
                                     (swap! state assoc-in [:column-meta column-index :visible?] visible?)))
                                 :reorder-style (:reorder-style props)
                                 :reset-state (fn []
@@ -280,7 +287,7 @@
      [:div {}
       [comps/DelayedBlocker {:ref "blocker" :banner "Loading..."}]
       ;; When using an auto-width column the table ends up ~1px wider than its parent
-      [:div {:style {:overflowX (if any-width=remaining? "hidden" "auto")}}
+      [:div {:style {:overflowX (when (not any-width=remaining?) "auto")}}
        [:div {:style {:position "relative"
                       :paddingBottom 10
                       :minWidth (when-not (or no-data? any-width=remaining?)
