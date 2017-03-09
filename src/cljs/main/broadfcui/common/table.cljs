@@ -409,6 +409,9 @@
                  (merge column-meta (get (:given-columns-by-header @state) header))))
           vec))
    :refresh-rows #(refresh-table-rows %)
+   :reinitialize
+   (fn [{:keys [state] :as data}]
+     (swap! state merge (get-initial-table-state data)))
    :component-did-mount table-component-did-mount
    :component-did-update table-component-did-update
    :component-will-unmount
