@@ -215,7 +215,6 @@
         [:div {:style {:float "right"}}
          (launch/render-button {:workspace-id (:workspace-id props)
                                 :config-id {:namespace (config "namespace") :name (config "name")}
-                                :cromwell-version (gconfig/cromwell-version)
                                 :root-entity-type (config "rootEntityType")
                                 :disabled? (cond (:locked? @state) "This workspace is locked."
                                                  (not (:bucket-access? props))

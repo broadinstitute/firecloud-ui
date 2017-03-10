@@ -806,3 +806,8 @@
                 "Succeeded" (rand-int 1000)
                 "Aborted" (rand-int 1000)
                 "Unknown" (rand-int 1000)}}})
+
+(defn cromwell-version []
+  {:path "/version/executionEngine"
+   :method :get
+   :mock-data {"cromwell" "25-489f66b"}})

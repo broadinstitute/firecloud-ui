@@ -88,12 +88,15 @@
                      :warning-triangle)
          (str "Warning: This will launch " wf-count " workflows")]]))
    [:div {:style {:textAlign "right" :fontSize "80%"}}
-    (style/create-link {:text  (str "Cromwell Version: " (:cromwell-version props))
+    (style/create-link {:text  (str "Cromwell Version: " (:cromwell-version @state))
                         :target "_blank"
                         :href (str "https://github.com/broadinstitute/cromwell/releases/tag/"
-                                   (:cromwell-version props))})]
+                                   (:cromwell-version @state))})]
    (style/create-validation-error-message (:validation-errors @state))
    [comps/ErrorViewer {:error (:launch-server-error @state)}]])
+
+(defn- parse-cromwell-ver [cromwell-ver-response]
+  ((clojure.string/split (:cromwell cromwell-ver-response) #"-") 0) )
 
 (react/defc Form
   {:render
@@ -109,7 +112,12 @@
         :on-done (fn [{:keys [success? status-text get-parsed-response]}]
                    (if success?
                      (swap! state assoc :queue-status (common/queue-status-counts (get-parsed-response false)))
-                     (swap! state assoc :queue-error status-text)))}))
+                     (swap! state assoc :queue-error status-text)))})
+     (endpoints/call-ajax-orch
+       {:endpoint (endpoints/cromwell-version)
+        :on-done (fn [{:keys [success? status-text get-parsed-response]}]
+                   (if success?
+                     (swap! state assoc :cromwell-version (parse-cromwell-ver (get-parsed-response)))))}))
    :launch
    (fn [{:keys [props state]}]
      (if-let [entity (:selected-entity @state)]
