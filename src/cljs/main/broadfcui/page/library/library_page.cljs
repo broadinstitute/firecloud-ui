@@ -88,9 +88,10 @@
                        (cons data)
                        vec))}]))
    :execute-search
-   (fn [{:keys [refs]}]
-     (when-not (react/call :update-query-params (@refs "table") {:current-page 1 :sort-column nil :sort-order nil})
-       (react/call :refresh-rows (@refs "table"))))
+   (fn [{:keys [refs]} reset-sort?]
+     (let [query-params (merge {:current-page 1} (when reset-sort? {:sort-column nil :sort-order nil}))]
+       (when-not (react/call :update-query-params (@refs "table") query-params)
+         (react/call :refresh-rows (@refs "table")))))
    :check-access
    (fn [{:keys [props]} data]
      (if (= (:workspaceAccess data) "NO ACCESS")
@@ -274,11 +275,11 @@
      (if (empty? facet-list)
        (swap! state update :facet-filters dissoc facet-name)
        (swap! state assoc-in [:facet-filters facet-name] facet-list))
-     (after-update #((@refs "dataset-table") :execute-search)))
+     (after-update #((@refs "dataset-table") :execute-search false)))
    :set-expanded-aggregate
    (fn [{:keys [state refs after-update]} facet-name expanded?]
      (swap! state update :expanded-aggregates (if expanded? conj disj) facet-name)
-     (after-update #((@refs "dataset-table") :execute-search)))
+     (after-update #((@refs "dataset-table") :execute-search false)))
    :get-initial-state
    (fn []
      (persistence/try-restore
@@ -309,7 +310,7 @@
                        :facet-filters (:facet-filters @state)
                        :on-filter (fn [text]
                                     (swap! state assoc :search-text text)
-                                    (after-update #((@refs "dataset-table") :execute-search)))}]
+                                    (after-update #((@refs "dataset-table") :execute-search true)))}]
        [FacetSection (merge
                       {:ref "facets"
                        :aggregate-properties (:library-attributes @state)
