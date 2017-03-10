@@ -115,7 +115,7 @@
                                new-tags (react/call :get-tags (@refs "tags-autocomplete"))]
                            (if error
                              (comps/push-error error)
-                             (save-attributes {:new-attributes (assoc success :description new-description :tags:tags new-tags)
+                             (save-attributes {:new-attributes (assoc success :description new-description :tag:tags new-tags)
                                                :state state
                                                :workspace-id workspace-id
                                                :request-refresh request-refresh}))))}]
@@ -150,14 +150,15 @@
 
 
 (defn- render-main [{:keys [workspace curator? owner? writer? reader? can-share? bucket-access? editing? submissions-count
-                            user-access-level library-schema request-refresh workspace-id storage-cost tags]}]
+                            user-access-level library-schema request-refresh workspace-id storage-cost]}]
   (let [{:keys [owners]
-         {:keys [createdBy createdDate bucketName description workspace-attributes library-attributes realm]} :workspace} workspace
+         {:keys [createdBy createdDate bucketName description tags workspace-attributes library-attributes realm]} :workspace} workspace
         realm-name (:realmName realm)
         render-detail-box (fn [order title & children]
                             [:div {:style {:flexBasis "50%" :order order}}
                              (style/create-section-header title)
-                             children])]
+                             children])
+        processed-tags (flatten (map #(:items %) (vals tags)))]
     [:div {:style {:flex "1 1 auto" :overflow "hidden"}}
      [:div {:style {:display "flex" :flexWrap "wrap"}}
       (render-detail-box
@@ -217,15 +218,13 @@
        5
        "Tags"
        (style/create-paragraph
-        ;; fix this to get tags from workspace response (need to work in orchestration)
-
-        ;; get save to work : update tags !
-          (if editing? [comps/TagAutocomplete {:tags tags :ref "tags-autocomplete"}]
-                       [:div {}
-                        (for [tag tags]
-                          [:div {:style {:display "inline-block" :background (:tag-background style/colors)
-                                         :color (:tag-foreground style/colors) :margin "0.1rem 0.1rem"
-                                         :borderRadius 3 :padding "0.2rem 0.5rem"}} tag])])))]
+          (cond editing? [comps/TagAutocomplete {:tags processed-tags :ref "tags-autocomplete"}]
+                (empty? processed-tags) [:span {:style {:fontStyle "italic"}} "No tags provided"]
+                :else [:div {}
+                       (for [tag processed-tags]
+                         [:div {:style {:display "inline-block" :background (:tag-background style/colors)
+                                        :color (:tag-foreground style/colors) :margin "0.1rem 0.1rem"
+                                        :borderRadius 3 :padding "0.2rem 0.5rem"}} tag])])))]
 
     (when editing? [:div {:style {:marginBottom "10px"}} common/PHI-warning])
 
@@ -260,8 +259,7 @@
 (react/defc Summary
   {:get-initial-state
    (fn []
-     {:sidebar-visible? true
-      :tags ["tag" "another tag" "and another other tag" "a really long tag which should go on to another line because of overflow"]})
+     {:sidebar-visible? true})
    :render
    (fn [{:keys [refs state props this]}]
      (let [{:keys [server-response]} @state
@@ -286,7 +284,7 @@
                                    (select-keys server-response [:billing-projects :curator?])
                                    derived))
             (render-main (merge (select-keys props [:workspace :workspace-id :bucket-access?])
-                                (select-keys @state [:editing? :tags])
+                                (select-keys @state [:editing?])
                                 (select-keys server-response [:submissions-count :library-schema :curator? :storage-cost])
                                 derived))
             (when (:updating-attrs? @state)

@@ -681,6 +681,7 @@
     #(push-error thing)))
 
 (react/defc TagAutocomplete
+  ;; make this an actual autocomplete
   {:get-tags
    (fn [{:keys [refs]}]
      (flatten (js->clj (.tagsinput (js/$ (@refs "input-element")) "items"))))
@@ -696,7 +697,4 @@
               :type "text"
               :data-role "tagsinput"
               :width "100%"
-              :value (clojure.string/join "," (:tags props))
-              :onInput
-              (fn [e]
-                (utils/log e))}])})
+              :defaultValue (clojure.string/join "," (:tags props))}])})
