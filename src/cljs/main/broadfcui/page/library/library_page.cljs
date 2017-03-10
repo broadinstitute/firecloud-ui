@@ -23,7 +23,7 @@
            search-result-columns (:search-result-columns props)
            extra-columns (subvec search-result-columns 4)]
        [table/Table
-        {:ref "table" :state-key "library-table" :v 2
+        {:ref "table" :state-key "library-table" :v 3
          :header-row-style {:fontWeight 500 :fontSize "90%"
                             :backgroundColor nil
                             :color "black"
