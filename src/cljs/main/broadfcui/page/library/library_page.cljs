@@ -270,29 +270,20 @@
 (def ^:private VERSION 4)
 
 (react/defc Page
-  {:update-filter
-   (fn [{:keys [state after-update refs]} facet-name facet-list]
-     (if (empty? facet-list)
-       (swap! state update :facet-filters dissoc facet-name)
-       (swap! state assoc-in [:facet-filters facet-name] facet-list))
-     (after-update #((@refs "dataset-table") :execute-search false)))
-   :set-expanded-aggregate
-   (fn [{:keys [state refs after-update]} facet-name expanded?]
-     (swap! state update :expanded-aggregates (if expanded? conj disj) facet-name)
-     (after-update #((@refs "dataset-table") :execute-search false)))
-   :get-initial-state
-   (fn []
-     (persistence/try-restore
-       {:key PERSISTENCE-KEY
-        :initial (fn []
-                   {:v VERSION
-                    :search-text ""
-                    :facet-filters {}
-                    :expanded-aggregates #{}})
-        :validator (comp (partial = VERSION) :v)}))
-   :component-did-mount
-   (fn [{:keys [state]}]
-     (endpoints/get-library-attributes
+  (->>
+   {:update-filter
+    (fn [{:keys [state after-update refs]} facet-name facet-list]
+      (if (empty? facet-list)
+        (swap! state update :facet-filters dissoc facet-name)
+        (swap! state assoc-in [:facet-filters facet-name] facet-list))
+      (after-update #((@refs "dataset-table") :execute-search false)))
+    :set-expanded-aggregate
+    (fn [{:keys [state refs after-update]} facet-name expanded?]
+      (swap! state update :expanded-aggregates (if expanded? conj disj) facet-name)
+      (after-update #((@refs "dataset-table") :execute-search false)))
+    :component-did-mount
+    (fn [{:keys [state]}]
+      (endpoints/get-library-attributes
        (fn [{:keys [success? get-parsed-response]}]
          (if success?
            (let [{:keys [properties searchResultColumns]} (get-parsed-response)]
@@ -300,34 +291,36 @@
                     :library-attributes properties
                     :aggregate-fields (->> properties (utils/filter-values :aggregate) keys)
                     :search-result-columns (mapv keyword searchResultColumns)))))))
-   :render
-   (fn [{:keys [this refs state after-update]}]
-     [:div {:style {:display "flex" :margin "1.5rem 1rem 0"}}
-      [:div {:style {:width "20%" :minWidth 250 :marginRight "2em"
-                     :background (:background-light style/colors)
-                     :border style/standard-line}}
-       [SearchSection {:search-text (:search-text @state)
-                       :facet-filters (:facet-filters @state)
-                       :on-filter (fn [text]
-                                    (swap! state assoc :search-text text)
-                                    (after-update #((@refs "dataset-table") :execute-search true)))}]
-       [FacetSection (merge
-                      {:ref "facets"
-                       :aggregate-properties (:library-attributes @state)
-                       :update-filter (fn [facet-name facet-list]
-                                        (react/call :update-filter this facet-name facet-list))
-                       :expanded-callback-function (fn [facet-name expanded?]
-                                                     (react/call :set-expanded-aggregate this facet-name expanded?))}
-                      (select-keys @state [:aggregate-fields :facet-filters :expanded-aggregates]))]]
-      [:div {:style {:flex "1 1 auto" :overflowX "auto"}}
-       (when (and (:library-attributes @state) (:search-result-columns @state))
-         [DatasetsTable (merge
-                         {:ref "dataset-table"
-                          :update-aggregates (fn [aggregates]
-                                               (react/call :update-aggregates (@refs "facets") aggregates))
-                          :get-search-text-and-facets (fn [] {:searchString (:search-text @state)
-                                                              :filters (utils/map-keys name (:facet-filters @state))})}
-                         (select-keys @state [:library-attributes :search-result-columns :aggregate-fields :expanded-aggregates]))])]])
-   :component-did-update
-   (fn [{:keys [state]}]
-     (persistence/save {:key PERSISTENCE-KEY :state state :except [:library-attributes]}))})
+    :render
+    (fn [{:keys [this refs state after-update]}]
+      [:div {:style {:display "flex" :margin "1.5rem 1rem 0"}}
+       [:div {:style {:width "20%" :minWidth 250 :marginRight "2em"
+                      :background (:background-light style/colors)
+                      :border style/standard-line}}
+        [SearchSection {:search-text (:search-text @state)
+                        :facet-filters (:facet-filters @state)
+                        :on-filter (fn [text]
+                                     (swap! state assoc :search-text text)
+                                     (after-update #((@refs "dataset-table") :execute-search true)))}]
+        [FacetSection (merge
+                       {:ref "facets"
+                        :aggregate-properties (:library-attributes @state)
+                        :update-filter (fn [facet-name facet-list]
+                                         (react/call :update-filter this facet-name facet-list))
+                        :expanded-callback-function (fn [facet-name expanded?]
+                                                      (react/call :set-expanded-aggregate this facet-name expanded?))}
+                       (select-keys @state [:aggregate-fields :facet-filters :expanded-aggregates]))]]
+       [:div {:style {:flex "1 1 auto" :overflowX "auto"}}
+        (when (and (:library-attributes @state) (:search-result-columns @state))
+          [DatasetsTable (merge
+                          {:ref "dataset-table"
+                           :update-aggregates (fn [aggregates]
+                                                (react/call :update-aggregates (@refs "facets") aggregates))
+                           :get-search-text-and-facets (fn [] {:searchString (:search-text @state)
+                                                               :filters (utils/map-keys name (:facet-filters @state))})}
+                          (select-keys @state [:library-attributes :search-result-columns :aggregate-fields :expanded-aggregates]))])]])}
+   (persistence/with-state-persistence {:key PERSISTENCE-KEY :version VERSION
+                                        :initial {:search-text ""
+                                                  :facet-filters {}
+                                                  :expanded-aggregates #{}}
+                                        :except [:library-attributes]})))
