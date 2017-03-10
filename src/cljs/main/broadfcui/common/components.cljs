@@ -482,7 +482,9 @@
                      (clj->js
                       {:source (Bloodhound. (clj->js {:datumTokenizer whitespace-tokenizer
                                                       :queryTokenizer whitespace-tokenizer
-                                                      :remote remote}))
+                                                      :remote {:url (str (config/api-url-root) "/duos/autocomplete/%QUERY")
+                                                               :wildcard "%QUERY"
+                                                               :cache false}}))
                        :display render-display
                        :templates {:empty (str "<div style='padding: 0.5em'>" empty-message "</div>")
                                    :suggestion render-suggestion}}))
@@ -681,13 +683,25 @@
     #(push-error thing)))
 
 (react/defc TagAutocomplete
-  ;; make this an actual autocomplete
+  ;; autocomplete works, but sizing and stuff is real wierd so need to do some ux fixes
+  ;; also there are repetitions !!
   {:get-tags
    (fn [{:keys [refs]}]
      (flatten (js->clj (.tagsinput (js/$ (@refs "input-element")) "items"))))
    :component-did-mount
    (fn [{:keys [refs]}]
-     (.tagsinput (js/$ (@refs "input-element"))))
+     (let [whitespace-tokenizer (aget Bloodhound "tokenizers" "whitespace")
+           suggestion-engine (Bloodhound. (clj->js {:datumTokenizer whitespace-tokenizer
+                                                    :queryTokenizer whitespace-tokenizer
+                                                    :remote
+                                                    {:url (str (config/api-url-root) "/api/workspaces/tags")
+                                                     :prepare (fn [ _ settings]
+                                                                (clj->js
+                                                                 (assoc (js->clj settings)
+                                                                   :headers {:Authorization (str "Bearer " (utils/get-access-token))})))}}))]
+     (.tagsinput (js/$ (@refs "input-element"))
+                 (clj->js {:typeaheadjs {:name "suggestion-engine"
+                                        :source (.ttAdapter suggestion-engine) }}))))
    :component-will-unmount
    (fn [{:keys [refs]}]
      (.tagsinput (js/$ (@refs "input-element")) "destroy"))
