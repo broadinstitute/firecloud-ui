@@ -96,7 +96,7 @@
    [comps/ErrorViewer {:error (:launch-server-error @state)}]])
 
 (defn- parse-cromwell-ver [cromwell-ver-response]
-  ((clojure.string/split (:cromwell cromwell-ver-response) #"-") 0) )
+  (first (clojure.string/split (:cromwell cromwell-ver-response) #"-")) )
 
 (react/defc Form
   {:render
@@ -115,8 +115,8 @@
                      (swap! state assoc :queue-error status-text)))})
      (endpoints/call-ajax-orch
        {:endpoint (endpoints/cromwell-version)
-        :on-done (fn [{:keys [success? status-text get-parsed-response]}]
-                   (if success?
+        :on-done (fn [{:keys [success? get-parsed-response]}]
+                   (when success?
                      (swap! state assoc :cromwell-version (parse-cromwell-ver (get-parsed-response)))))}))
    :launch
    (fn [{:keys [props state]}]
