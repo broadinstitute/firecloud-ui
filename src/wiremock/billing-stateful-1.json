@@ -12,17 +12,17 @@
     },
     "jsonBody": [
       {
-        "projectName": "dmohsbp1",
+        "projectName": "testbp1",
         "role": "Owner",
         "creationStatus": "Ready"
       },
       {
-        "projectName": "dmohsbp2",
+        "projectName": "testbp2",
         "role": "Owner",
         "creationStatus": "Creating"
       },
       {
-        "projectName": "dmohsbp3",
+        "projectName": "testbp3",
         "role": "Owner",
         "creationStatus": "Creating"
       }
