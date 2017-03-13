@@ -222,6 +222,8 @@
 
 (defn- render-table [{:keys [this state props refs after-update]}]
   (assert (vector? (:column-meta @state)) "column-meta got un-vec'd")
+  (when (pos? (count (:display-rows @state)))
+    (assert (vector? (first (:display-rows @state))) "->row function does not return a vector"))
   (let [{:keys [filterable? reorderable-columns? toolbar retain-header-on-empty?]} props
         {:keys [no-data? error]} @state
         any-width=remaining? (->> (:column-meta @state)
@@ -287,7 +289,7 @@
      [:div {}
       [comps/DelayedBlocker {:ref "blocker" :banner "Loading..."}]
       ;; When using an auto-width column the table ends up ~1px wider than its parent
-      [:div {:style {:overflowX (if any-width=remaining? "hidden" "auto")}}
+      [:div {:style {:overflowX (when (not any-width=remaining?) "auto")}}
        [:div {:style {:position "relative"
                       :paddingBottom 10
                       :minWidth (when-not (or no-data? any-width=remaining?)
@@ -361,7 +363,7 @@
 (defn- table-component-did-mount [{:keys [this state locals]}]
   (swap! locals assoc :initial-state (select-keys @state persistence-keys))
   (react/call :refresh-rows this)
-  (set! (.-onMouseMoveHandler this)
+  (let [mouse-move-handler
         (fn [e]
           (when (:dragging? @state)
             (let [{:keys [drag-column mouse-x]} @state
@@ -373,13 +375,14 @@
                 ;; Update in a single step like this to avoid multiple re-renders
                 (swap! state #(-> %
                                   (assoc :mouse-x new-mouse-x)
-                                  (assoc-in [:column-meta drag-column :width] new-width))))))))
-  (.addEventListener js/window "mousemove" (.-onMouseMoveHandler this))
-  (set! (.-onMouseUpHandler this)
+                                  (assoc-in [:column-meta drag-column :width] new-width)))))))
+        mouse-up-handler
         #(when (:dragging? @state)
-          (common/restore-text-selection (:saved-user-select-state @state))
-          (swap! state dissoc :dragging? :drag-column :mouse-x :saved-user-select-state)))
-  (.addEventListener js/window "mouseup" (.-onMouseUpHandler this)))
+           (common/restore-text-selection (:saved-user-select-state @state))
+           (swap! state dissoc :dragging? :drag-column :mouse-x :saved-user-select-state))]
+    (.addEventListener js/window "mousemove" mouse-move-handler)
+    (.addEventListener js/window "mouseup" mouse-up-handler)
+    (swap! locals assoc :mouse-move-handler mouse-move-handler :mouse-up-handler mouse-up-handler)))
 
 (defn- table-component-did-update [{:keys [this prev-props props prev-state state locals]}]
   (when (or (not= (:data props) (:data prev-props))
@@ -397,21 +400,28 @@
      (:query-params @state))
    :update-query-params
    (fn [{:keys [state]} new-params]
-     (swap! state update :query-params merge new-params))
+     (let [old-state (:query-params @state)
+           new-state (merge old-state new-params)
+           change? (not= old-state new-state)]
+       (when change?
+         (swap! state assoc :query-params new-state))
+       change?))
    :get-default-props get-default-table-props
    :get-initial-state get-initial-table-state
    :render render-table
-   :execute-search (fn [{:keys [this]}] (react/call :refresh-rows this))
    :get-ordered-columns
    (fn [{:keys [state]}]
      (->> (:column-meta @state)
           (map (fn [{:keys [header] :as column-meta}]
                  (merge column-meta (get (:given-columns-by-header @state) header))))
           vec))
-   :refresh-rows #(refresh-table-rows %)
+   :refresh-rows refresh-table-rows
+   :reinitialize
+   (fn [{:keys [state] :as data}]
+     (swap! state merge (get-initial-table-state data)))
    :component-did-mount table-component-did-mount
    :component-did-update table-component-did-update
    :component-will-unmount
-   (fn [{:keys [this]}]
-     (.removeEventListener js/window "mousemove" (.-onMouseMoveHandler this))
-     (.removeEventListener js/window "mouseup" (.-onMouseUpHandler this)))})
+   (fn [{:keys [locals]}]
+     (.removeEventListener js/window "mousemove" (:mouse-move-handler @locals))
+     (.removeEventListener js/window "mouseup" (:mouse-up-handler @locals)))})

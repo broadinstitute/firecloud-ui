@@ -105,7 +105,7 @@
                         :as-text (fn [x] (:entityName x)) :content-renderer (fn [x] x)}]
            singleColumns [{:header "Attribute" :starting-width 120 :sort-initial :asc}
                           {:header "Value" :starting-width :remaining
-                           :as-text :name :sort-by :text
+                           :as-text :name :sort-by :text :resizable? false
                            :content-renderer (fn [attr-value]
                                                (if-let [parsed (common/parse-gcs-uri attr-value)]
                                                  [GCSFilePreviewLink (assoc parsed
@@ -223,7 +223,7 @@
                                                                          :this-realm this-realm
                                                                          :import-type "data"
                                                                          :on-close
-                                                                         #(react/call :refresh (@refs "entity-table") (:selected-entity-type @state))}]))}]]]))
+                                                                         #(react/call :refresh (@refs "entity-table")  (:selected-entity-type @state) true)}]))}]]]))
                :on-filter-change #(swap! state assoc :selected-entity-type % :selected-entity nil :attr-list nil)
                :attribute-renderer (table-utils/render-gcs-links (get-in workspace [:workspace :bucketName]))
                :linked-entity-renderer (fn [e]

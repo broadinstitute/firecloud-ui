@@ -17,23 +17,20 @@
 
 
 (react/defc DatasetsTable
-  {:set-filter-text
-   (fn [{:keys [refs]} new-filter-text]
-     (react/call :update-query-params (@refs "table") {:filter-text new-filter-text :current-page 1}))
-   :render
+  {:render
    (fn [{:keys [state this props]}]
      (let [attributes (:library-attributes props)
            search-result-columns (:search-result-columns props)
            extra-columns (subvec search-result-columns 4)]
        [table/Table
-        {:ref "table" :state-key "library-table" :v 2
+        {:ref "table" :state-key "library-table" :v 3
          :header-row-style {:fontWeight 500 :fontSize "90%"
                             :backgroundColor nil
                             :color "black"
                             :borderBottom (str "2px solid " (:border-light style/colors))}
          :header-style {:padding "0.5em 0 0.5em 1em"}
          :resizable-columns? true
-         :sortable-columns? false
+         :sortable-columns? true
          :filterable? false
          :resize-tab-color (:border-light style/colors)
          :reorder-anchor :right
@@ -65,17 +62,22 @@
                                          (if (= (:workspaceAccess data) "NO ACCESS")
                                            (icons/icon {:style {:alignSelf "center" :cursor "pointer"}
                                                         :onClick #(react/call :check-access this data)} :shield)))}
-                    {:header (:title (:library:datasetName attributes)) :starting-width 250 :show-initial? true
+                    {:header-key "library:datasetName"
+                     :header (:title (:library:datasetName attributes)) :starting-width 250 :show-initial? true
                      :as-text :library:datasetDescription :reorderable? false
                      :content-renderer (fn [data]
                                          (style/create-link {:text (:library:datasetName data)
                                                              :onClick #(react/call :check-access this data)}))}
-                    {:header (:title (:library:indication attributes)) :starting-width 180 :show-initial? true}
-                    {:header (:title (:library:dataUseRestriction attributes)) :starting-width 180 :show-initial? true}
-                    {:header (:title (:library:numSubjects attributes)) :starting-width 100 :show-initial? true}]
+                    {:header-key "library:indication"
+                     :header (:title (:library:indication attributes)) :starting-width 180 :show-initial? true}
+                    {:header-key "library:dataUseRestriction"
+                     :header (:title (:library:dataUseRestriction attributes)) :starting-width 180 :show-initial? true}
+                    {:header-key "library:numSubjects"
+                     :header (:title (:library:numSubjects attributes)) :starting-width 100 :show-initial? true}]
                    (map
                     (fn [keyname]
-                      {:header (:title ((keyword keyname) attributes)) :starting-width 180 :show-initial? false})
+                      {:header-key keyname
+                       :header (:title ((keyword keyname) attributes)) :starting-width 180 :show-initial? false})
                     extra-columns))
          :pagination (react/call :pagination this)
          :->row (fn [data]
@@ -83,11 +85,13 @@
                        (concat [:library:indication :library:dataUseRestriction :library:numSubjects])
                        (map data)
                        (cons data)
-                       (cons data)))}]))
+                       (cons data)
+                       vec))}]))
    :execute-search
-   (fn [{:keys [refs]}]
-     (react/call :update-query-params (@refs "table") {:current-page 1})
-     (react/call :execute-search (@refs "table")))
+   (fn [{:keys [refs]} reset-sort?]
+     (let [query-params (merge {:current-page 1} (when reset-sort? {:sort-column nil :sort-order nil}))]
+       (when-not (react/call :update-query-params (@refs "table") query-params)
+         (react/call :refresh-rows (@refs "table")))))
    :check-access
    (fn [{:keys [props]} data]
      (if (= (:workspaceAccess data) "NO ACCESS")
@@ -115,18 +119,20 @@
       (:aggregate-fields props)))
    :pagination
    (fn [{:keys [this state props]}]
-     (fn [{:keys [current-page rows-per-page]} callback]
+     (fn [{:keys [current-page rows-per-page sort-column sort-order]} callback]
        (when-not (empty? (:aggregate-fields props))
          (endpoints/call-ajax-orch
           (let [from (* (- current-page 1) rows-per-page)]
             {:endpoint endpoints/search-datasets
-             :payload {:searchString (:search-text props)
-                       :filters (utils/map-keys name (:facet-filters props))
-                       :from from
-                       :size rows-per-page
-                       :fieldAggregations (if (= 1 current-page)
-                                            (react/call :build-aggregate-fields this)
-                                            {})}
+             :payload (merge
+                       ((:get-search-text-and-facets props))
+                       {:from from
+                        :size rows-per-page
+                        :sortField sort-column
+                        :sortDirection sort-order
+                        :fieldAggregations (if (= 1 current-page)
+                                             (react/call :build-aggregate-fields this)
+                                             {})})
              :headers utils/content-type=json
              :on-done
              (fn [{:keys [success? get-parsed-response status-text]}]
@@ -137,7 +143,7 @@
                               :filtered-count total
                               :rows results})
                    (when (= 1 current-page)
-                     ((:callback-function props) aggregations)))
+                     ((:update-aggregates props) aggregations)))
                  (callback {:error status-text})))})))))})
 
 (react/defc SearchSection
@@ -211,34 +217,34 @@
                                   :onClick #(react/call :update-expanded this true)})))]]]))
    :clear-all
    (fn [{:keys [props]}]
-     ((:callback-function props) (:field props) #{}))
+     ((:update-filter props) (:field props) #{}))
    :update-expanded
    (fn [{:keys [props]} newValue]
      ((:expanded-callback-function props) (:field props) newValue))
    :update-selected
    (fn [{:keys [props]} name checked?]
      (let [updated-items ((if checked? conj disj) (:selected-items props) name)]
-       ((:callback-function props) (:field props) updated-items)))})
+       ((:update-filter props) (:field props) updated-items)))})
 
-(defn get-aggregations-for-property [agg-name aggregates]
-  (first (keep (fn [m] (when (= (:field m) (name agg-name))
+(defn get-aggregations-for-property [aggregate-field aggregates]
+  (first (keep (fn [m] (when (= (:field m) (name aggregate-field))
                          (:results m)))
                aggregates)))
 
 (react/defc Facet
   {:render
    (fn [{:keys [props]}]
-     (let [k (:aggregate-field props)
+     (let [aggregate-field (:aggregate-field props)
            properties (:aggregate-properties props)
            title (:title properties)
            render-hint (get-in properties [:aggregate :renderHint])
-           aggregations (get-aggregations-for-property k (:aggregates props))]
+           aggregations (get-aggregations-for-property aggregate-field (:aggregates props))]
        (cond
          (= render-hint "checkbox") [FacetCheckboxes
                                      (merge
-                                      {:title title :field k}
+                                      {:title title :field aggregate-field}
                                       (select-keys aggregations [:numOtherDocs :buckets])
-                                      (select-keys props [:expanded? :selected-items :callback-function
+                                      (select-keys props [:expanded? :selected-items :update-filter
                                                           :expanded-callback-function]))])))})
 
 (react/defc FacetSection
@@ -249,28 +255,31 @@
    (fn [{:keys [props state]}]
      (if (empty? (:aggregates @state))
        [:div {:style {:fontSize "80%"}} "loading..."]
-       (let [aggregate-fields (:aggregate-fields props)]
-         [:div {:style {:fontSize "85%" :padding "16px 12px"}}
-          (map
-            (fn [prop-name] [Facet {:aggregate-field prop-name
-                                    :aggregate-properties (prop-name (:aggregate-properties props))
-                                    :aggregates (:aggregates @state)
-                                    :expanded? (contains? (:expanded-aggregates props) prop-name)
-                                    :selected-items (set (get-in props [:facet-filters prop-name]))
-                                    :callback-function (:callback-function props)
-                                    :expanded-callback-function (:expanded-callback-function props)}])
-            aggregate-fields)])))})
+       [:div {:style {:fontSize "85%" :padding "16px 12px"}}
+        (map
+         (fn [aggregate-field] [Facet {:aggregate-field aggregate-field
+                                       :aggregate-properties (get (:aggregate-properties props) aggregate-field)
+                                       :aggregates (:aggregates @state)
+                                       :expanded? (contains? (:expanded-aggregates props) aggregate-field)
+                                       :selected-items (set (get-in props [:facet-filters aggregate-field]))
+                                       :update-filter (:update-filter props)
+                                       :expanded-callback-function (:expanded-callback-function props)}])
+         (:aggregate-fields props))]))})
 
 (def ^:private PERSISTENCE-KEY "library-page")
-(def ^:private VERSION 3)
+(def ^:private VERSION 4)
 
 (react/defc Page
   {:update-filter
-   (fn [{:keys [state]} facet-name facet-list]
-     (swap! state assoc-in [:facet-filters facet-name] facet-list))
+   (fn [{:keys [state after-update refs]} facet-name facet-list]
+     (if (empty? facet-list)
+       (swap! state update :facet-filters dissoc facet-name)
+       (swap! state assoc-in [:facet-filters facet-name] facet-list))
+     (after-update #((@refs "dataset-table") :execute-search false)))
    :set-expanded-aggregate
-   (fn [{:keys [state]} facet-name expanded?]
-     (swap! state update :expanded-aggregates (if expanded? conj disj) facet-name))
+   (fn [{:keys [state refs after-update]} facet-name expanded?]
+     (swap! state update :expanded-aggregates (if expanded? conj disj) facet-name)
+     (after-update #((@refs "dataset-table") :execute-search false)))
    :get-initial-state
    (fn []
      (persistence/try-restore
@@ -292,31 +301,33 @@
                     :aggregate-fields (->> properties (utils/filter-values :aggregate) keys)
                     :search-result-columns (mapv keyword searchResultColumns)))))))
    :render
-   (fn [{:keys [this refs state]}]
+   (fn [{:keys [this refs state after-update]}]
      [:div {:style {:display "flex" :marginTop "2em"}}
       [:div {:style {:width "20%" :minWidth 250 :marginRight "2em"
                      :background (:background-light style/colors)
                      :border style/standard-line}}
        [SearchSection {:search-text (:search-text @state)
                        :facet-filters (:facet-filters @state)
-                       :on-filter #(swap! state assoc :search-text %)}]
+                       :on-filter (fn [text]
+                                    (swap! state assoc :search-text text)
+                                    (after-update #((@refs "dataset-table") :execute-search true)))}]
        [FacetSection (merge
                       {:ref "facets"
                        :aggregate-properties (:library-attributes @state)
-                       :callback-function (fn [facet-name facet-list]
-                                            (react/call :update-filter this facet-name facet-list))
-                       :expanded-callback-function (fn [field new-value]
-                                                     (react/call :set-expanded-aggregate this field new-value))}
+                       :update-filter (fn [facet-name facet-list]
+                                        (react/call :update-filter this facet-name facet-list))
+                       :expanded-callback-function (fn [facet-name expanded?]
+                                                     (react/call :set-expanded-aggregate this facet-name expanded?))}
                       (select-keys @state [:aggregate-fields :facet-filters :expanded-aggregates]))]]
       [:div {:style {:flex "1 1 auto" :overflowX "auto"}}
        (when (and (:library-attributes @state) (:search-result-columns @state))
          [DatasetsTable (merge
                          {:ref "dataset-table"
-                          :callback-function (fn [aggregates]
-                                               (react/call :update-aggregates (@refs "facets") aggregates))}
-                         (select-keys @state [:library-attributes :search-result-columns :search-text
-                                              :facet-filters :aggregate-fields :expanded-aggregates]))])]])
+                          :update-aggregates (fn [aggregates]
+                                               (react/call :update-aggregates (@refs "facets") aggregates))
+                          :get-search-text-and-facets (fn [] {:searchString (:search-text @state)
+                                                              :filters (utils/map-keys name (:facet-filters @state))})}
+                         (select-keys @state [:library-attributes :search-result-columns :aggregate-fields :expanded-aggregates]))])]])
    :component-did-update
-   (fn [{:keys [state refs]}]
-     (persistence/save {:key PERSISTENCE-KEY :state state})
-     (react/call :execute-search (@refs "dataset-table")))})
+   (fn [{:keys [state]}]
+     (persistence/save {:key PERSISTENCE-KEY :state state :except [:library-attributes]}))})
