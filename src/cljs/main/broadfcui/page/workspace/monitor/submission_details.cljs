@@ -93,20 +93,20 @@
                  (row "messages")
                  row])}])
    :render-workflow-details
-   (fn [{:keys [state props]} workflowId]
+   (fn [{:keys [props]} workflowId]
      (let [workflows (:workflows props)
            workflowName (get-in workflows [0 "workflowEntity" "entityName"])]
        [:div {}
-        [comps/Breadcrumbs {:crumbs
-                            [{:text "Workflows"
-                              :href (nav/create-href (:nav-context props))}
-                             {:text workflowName}]}]
-        [:div {:style {:marginTop "1em"}}
-         (workflow-details/render
-          (merge (select-keys props [:workspace-id :submission-id :bucketName])
-                 {:workflow-id workflowId
-                  :submission (:submission props)
-                  :workflow-name workflowName}))]]))})
+        [:div {:style {:marginBottom "1rem" :fontSize "1.1rem"}}
+         [comps/Breadcrumbs {:crumbs
+                             [{:text "Workflows"
+                               :href (nav/create-href (:nav-context props))}
+                              {:text workflowName}]}]]
+        (workflow-details/render
+         (merge (select-keys props [:workspace-id :submission-id :bucketName])
+                {:workflow-id workflowId
+                 :submission (:submission props)
+                 :workflow-name workflowName}))]))})
 
 
 (react/defc AbortButton
@@ -186,7 +186,7 @@
                                :href (str moncommon/google-cloud-context
                                           (:bucketName props) "/" (submission "submissionId") "/")})]
           (common/clear-both)
-          [:h2 {:style {:paddingBottom "0.5em"}} "Workflows:"]
+          [:h2 {} "Workflows:"]
           [WorkflowsTable {:workflows (submission "workflows")
                            :workspace-id (:workspace-id props)
                            :submission submission

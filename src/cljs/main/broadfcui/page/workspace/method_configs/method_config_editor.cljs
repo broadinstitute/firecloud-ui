@@ -105,7 +105,7 @@
        [:div {:style {:lineHeight 1}}
         (when-not editing?
           [comps/SidebarButton {:style :light :color :button-primary
-                                :text "Edit this page" :icon :edit
+                                :text "Edit Configuration" :icon :edit
                                 :disabled? (when locked? "The workspace is locked")
                                 :onClick #(swap! state assoc :editing? true)}])
         (when-not editing?
@@ -144,23 +144,25 @@
              type (or inputType outputType)
              field-value (get values field-name "")
              error (invalid-values field-name)]
-         [:div {:key field-name}
-          [:div {:style {:display "flex" :alignItems "baseline" :marginBottom "0.5em"}}
-           [:div {:style {:marginRight "1em" :padding "0.5em"
+         [:div {:key field-name :style {:marginBottom "1rem"}}
+          [:div {}
+           [:div {:style {:margin "0 0.5rem 0.5rem 0" :padding "0.5rem" :display "inline-block"
                           :backgroundColor (:background-light style/colors)
                           :border style/standard-line :borderRadius 2}}
             (str field-name ": (" (when optional? "optional ") type ")")]
+           (when (and error (not editing?))
+             (icons/icon {:style {:marginLeft "0.5rem" :alignSelf "center"
+                                  :color (:exception-state style/colors)}}
+                         :error))
            (when editing?
              (style/create-text-field {:ref (str ref-prefix "_" field-name)
-                                       :defaultValue field-value}))
+                                       :list "inputs-datalist"
+                                       :defaultValue field-value
+                                       :style {:width 500}}))
            (when-not editing?
-             (or field-value [:span {:style {:fontStyle "italic"}} "No value entered"]))
-           (when (and error (not editing?))
-             (icons/icon {:style {:margin "0 0 0 0.7em" :alignSelf "center"
-                                  :color (:exception-state style/colors)}}
-                         :error))]
+             (or field-value [:span {:style {:fontStyle "italic"}} "No value entered"]))]
           (when error
-            [:div {:style {:padding "0.5em" :marginBottom "0.5em"
+            [:div {:style {:padding "0.5em" :marginBottom "0.5rem"
                            :backgroundColor (:exception-state style/colors)
                            :display "inline-block"
                            :border style/standard-line :borderRadius 2}}
@@ -197,6 +199,9 @@
                                         :style {:width 500}}
                                        root-entity-types)
          [:div {:style {:padding "0.5em 0 1em 0"}} (config "rootEntityType")]))
+     [:datalist {:id "inputs-datalist"}
+      [:option {:value "this."}]
+      [:option {:value "workspace."}]]
      (create-section-header "Inputs")
      (input-output-list (config "inputs") "in" invalid-inputs editing? (inputs-outputs "inputs"))
      (create-section-header "Outputs")

@@ -205,10 +205,11 @@
           :else 1)))
 
 (def PHI-warning
-  [:div {:style {:display "flex" :marginBottom ".5em" :marginLeft ".3em" :alignItems "center"}}
-    (icons/icon {:style {:fontSize 22 :color (:exception-state style/colors) :marginRight ".26em"}}
+  [:div {:style {:display "flex" :marginBottom ".5rem" :alignItems "center" :justifyContent "space-around"
+                 :padding "1rem" :backgroundColor (:background-light style/colors)}}
+    (icons/icon {:style {:fontSize 22 :color (:exception-state style/colors) :marginRight "1rem"}}
                 :alert)
-    [:span {:style {:fontWeight "bold" :fontSize "98%"}}
+    [:span {:style {:fontWeight 500}}
       "FireCloud is not intended to host personally identifiable information. Do not use any patient
        identifier, including name, social security number, or medical record number."]])
 
@@ -218,9 +219,9 @@
      (.foundation (js/$ (react/find-dom-node this))))
    :render
    (fn [{:keys [props]}]
-     (let [{:keys [position text tooltip]} props]
+     (let [{:keys [position text tooltip style]} props]
        ;; empty string makes react attach a property with no value
-       [:span {:data-tooltip "" :className (str "has-tip " position)
+       [:span {:data-tooltip "" :className (str "has-tip " position) :style style
                :title tooltip}
         text]))})
 

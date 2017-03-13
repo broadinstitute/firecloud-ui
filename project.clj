@@ -21,6 +21,7 @@
                        [marked "~0.3.5"]                    ; formats markdown
                        [node-sass "~4.5.0"]                 ; required by sass-loader
                        [sass-loader "~5.0.0"]               ; webpack plugin (for foundation)
+                       [select2 "^4.0"]                     ; adds search to selects
                        [uglify-js "git://github.com/mishoo/UglifyJS2#harmony"] ; override webpack's uglify with es6 compatible version
                        [url-loader "~0.5.7"]                ; webpack plugin
                        [webpack "~2.2.0"]                   ; combines deps into single js/css file

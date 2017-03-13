@@ -128,7 +128,7 @@
                          :backgroundColor (:background-light style/colors)
                          :borderTop style/standard-line
                          :borderBottom style/standard-line
-                         :padding "0 1.5em"}}
+                         :padding "0 1.5rem"}}
            (map-indexed
              (fn [i tab]
                [Tab {:index i :text (:text tab) :href (:href tab)
@@ -358,28 +358,25 @@
 
 
 (react/defc Breadcrumbs
-  {:get-default-props
-   (fn []
-     {:scale-factor "100%"})
-   :render
+  {:render
    (fn [{:keys [props]}]
-     (let [sep (icons/icon {:style {:color (:text-lightest style/colors) :padding "0 0.5rem"
-                                    :fontSize (:scale-factor props)}} :angle-right)
+     (let [sep (icons/icon {:style {:color (:text-lightest style/colors) :padding "0 0.5rem"}} :angle-right)
            crumbs (filter some? (:crumbs props))]
        (case (count crumbs)
          0 [:div {}]
-         1 [:div {} (:text (first crumbs))]
+         1 [:div {:style {:fontWeight 500 :fontSize "1.2em"}} (:text (first crumbs))]
          [:div {:style {:display "flex" :alignItems "baseline" :flexWrap "wrap"}}
-          (interpose sep
-            (map
-              (fn [{:keys [text onClick href] :as link-props}]
-                [:span {:style {:fontSize (:scale-factor props) :whiteSpace "pre"}}
-                 (if (or onClick href)
-                   (style/create-link link-props)
-                   text)])
-              (butlast crumbs)))
+          (interpose
+           sep
+           (map
+            (fn [{:keys [text onClick href] :as link-props}]
+              [:span {:style {:whiteSpace "pre"}}
+               (if (or onClick href)
+                 (style/create-link link-props)
+                 text)])
+            (butlast crumbs)))
           sep
-          (:text (last crumbs))])))})
+          [:span {:style {:fontWeight 500 :fontSize "1.2em"}} (:text (last crumbs))]])))})
 
 
 (react/defc SplitPane
