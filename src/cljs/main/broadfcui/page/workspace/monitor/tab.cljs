@@ -10,7 +10,6 @@
     [broadfcui.nav :as nav]
     [broadfcui.page.workspace.monitor.common :as moncommon]
     [broadfcui.page.workspace.monitor.submission-details :as submission-details]
-    [broadfcui.persistence :as persistence]
     [broadfcui.utils :as utils]
     ))
 

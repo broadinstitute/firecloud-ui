@@ -299,7 +299,7 @@
           [:div {}
            [:div {:style {:marginBottom "1.5rem" :paddingLeft "1.5rem" :fontSize "125%"}}
             "Workspace: "
-            [:span {:style {:fontWeight "500"}}
+            [:span {:style {:fontWeight 500}}
              (:namespace selected-ws-id) "/" (:name selected-ws-id)]]
            [WorkspaceDetails {:key selected-ws-id
                               :workspace-id selected-ws-id
