@@ -219,9 +219,9 @@
      (.foundation (js/$ (react/find-dom-node this))))
    :render
    (fn [{:keys [props]}]
-     (let [{:keys [position text tooltip]} props]
+     (let [{:keys [position text tooltip style]} props]
        ;; empty string makes react attach a property with no value
-       [:span {:data-tooltip "" :className (str "has-tip " position)
+       [:span {:data-tooltip "" :className (str "has-tip " position) :style style
                :title tooltip}
         text]))})
 
