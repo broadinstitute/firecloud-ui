@@ -26,8 +26,13 @@
     item))
 
 (react/defc EntityTable
-  {:refresh
-   (fn [{:keys [props state refs]} & [entity-type]]
+  {:update-data
+   (fn [{:keys [refs after-update]} reinitialize?]
+       (react/call :refresh-rows (@refs "table"))
+       (when reinitialize?
+             (after-update #(react/call :reinitialize (@refs "table")))))
+   :refresh
+   (fn [{:keys [props state this after-update]} & [entity-type reinitialize?]]
      (endpoints/call-ajax-orch
       {:endpoint (endpoints/get-entity-types (:workspace-id props))
        :on-done (fn [{:keys [success? get-parsed-response]}]
@@ -38,7 +43,7 @@
                              :entity-metadata metadata
                              :entity-types entity-types
                              :selected-entity-type (or (some-> entity-type keyword) (first entity-types)))
-                      (react/call :refresh-rows (@refs "table")))
+                      (after-update #(react/call :update-data this reinitialize?)))
                     (swap! state update :server-response
                            assoc :server-error (get-parsed-response false))))}))
    :get-default-props

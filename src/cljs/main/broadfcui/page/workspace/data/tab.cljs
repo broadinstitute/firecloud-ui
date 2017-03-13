@@ -222,7 +222,7 @@
                                                                          :this-realm this-realm
                                                                          :import-type "data"
                                                                          :on-close
-                                                                         #(react/call :refresh (@refs "entity-table") (:selected-entity-type @state))}]))}]]]))
+                                                                         #(react/call :refresh (@refs "entity-table")  (:selected-entity-type @state) true)}]))}]]]))
                :on-filter-change #(swap! state assoc :selected-entity-type % :selected-entity nil :attr-list nil)
                :attribute-renderer (table-utils/render-gcs-links (get-in workspace [:workspace :bucketName]))
                :linked-entity-renderer (fn [e]
