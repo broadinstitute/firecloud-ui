@@ -26,7 +26,7 @@ require('codemirror/lib/codemirror.css');
 require('github-markdown-css/github-markdown.css');
 require('font-awesome/css/font-awesome.css');
 require('./styles/markdown.css');
-require('./styles/twitter-typeahead.css');
+require('./styles/twitter-typeahead.scss');
 require('./styles/foundation.scss');
 require('select2/dist/css/select2.css');
 require('bootstrap-tagsinput/dist/bootstrap-tagsinput.css');
