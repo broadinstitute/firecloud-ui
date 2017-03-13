@@ -235,7 +235,10 @@
                        :color (:text-light style/colors)
                        :fontSize "1.2rem" :lineHeight "0.6rem"
                        :padding "0.4rem" :marginRight "0.5rem"}}
-           (icons/icon {} :help)]
+           [common/FoundationTooltip
+            {:text (icons/icon {} :help)
+             :style {:border "none" :cursor "pointer"}
+             :tooltip "FireCloud User Guide"}]]
           (common/clear-both)
           (when (= :registered (:registration-status @state))
             [GlobalSubmissionStatus])]

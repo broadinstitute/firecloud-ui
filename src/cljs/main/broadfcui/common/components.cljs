@@ -364,7 +364,7 @@
            crumbs (filter some? (:crumbs props))]
        (case (count crumbs)
          0 [:div {}]
-         1 [:div {:style {:fontWeight "500" :fontSize "1.2em"}} (:text (first crumbs))]
+         1 [:div {:style {:fontWeight 500 :fontSize "1.2em"}} (:text (first crumbs))]
          [:div {:style {:display "flex" :alignItems "baseline" :flexWrap "wrap"}}
           (interpose
            sep
