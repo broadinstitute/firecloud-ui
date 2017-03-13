@@ -142,27 +142,115 @@
              (fn [{:keys [props state]}]
                  [:div {:style {:marginTop "1em"}}
 
+                  ;;; Flex with row direction
+                  ;[:div {:style {:marginTop 15}}
+                  ; ; X axis
+                  ;
+                  ; [:div {:style {:display "flex" :flexDirection "row" :height 20 :fontSize 12}}
+                  ;  [:div {:style {:flex "0 1 auto" :borderLeft "1px solid rgb(244, 244, 244)" :borderRight style/standard-line :width "25%" :textAlign "right" :alignSelf "flex-end"}} "0"]
+                  ;  [:div {:style {:flex "0 1 auto" :borderRight style/standard-line :width "25%" :textAlign "right" :alignSelf "flex-end"}} "10"]
+                  ;  [:div {:style {:flex "0 1 auto" :borderRight style/standard-line :width "25%" :textAlign "right" :alignSelf "flex-end"}} "20"]
+                  ;  [:div {:style {:flex "0 1 auto" :borderRight style/standard-line :width "25%" :textAlign "right" :alignSelf "flex-end"}} "30"]]]
+                  ;
+                  ;[:div {:style {:border "1px solid gray"}}
+                  ; ;Row 1
+                  ; [:div {:style {:display "flex" :flexDirection "row" :backgroundColor "white" :borderBottom style/standard-line :height 20}}
+                  ;  [:div {:style {:flex "0 1 auto" :backgroundColor "white" :borderRight style/standard-line :width "25%" :fontSize 14 :alignSelf "center"}} "Call.One  "
+                  ;   (style/create-link {:text    (if (:expanded1 @state) "Hide" "Show")
+                  ;                       :onClick #(swap! state assoc :expanded1 (not (:expanded1 @state)))})]
+                  ;  [:div {:style {:flex "0 1 auto" :backgroundColor "white" :borderRight style/standard-line :width "25%"}}
+                  ;   [:div {:style {:display "flex" :height "100%" :alignItems "center"}}
+                  ;    [:div {:style {:flex "0 1 auto" :position "relative" :width "60%" :height "75%" :backgroundColor "white"}}]
+                  ;    [:div {:style {:flex "0 1 auto" :position "relative" :width "20%" :height "75%" :backgroundColor "blue"}}]
+                  ;    [:div {:style {:flex "0 1 auto" :width "40%" :height "75%" :backgroundColor "red"}}]]]
+                  ;  [:div {:style {:flex "0 1 auto" :backgroundColor "white" :borderRight style/standard-line :width "25%"}}]
+                  ;  [:div {:style {:flex "0 1 auto" :backgroundColor "white" :width "25%"}}]]
+                  ;
+                  ; (when (:expanded1 @state) [:div {:style {:x "100" :y "20" :width "100%" :height 90 :backgroundColor "rgb(244, 244, 244)" :borderBottom "1px solid gray"}}
+                  ;                            "\nCall Details go here!"])
+                  ; ;Row2
+                  ; [:div {:style {:display "flex" :flexDirection "row" :backgroundColor "white" :borderBottom style/standard-line :height 20}}
+                  ;  [:div {:style {:flex "0 1 auto" :backgroundColor "white" :borderRight style/standard-line :width "25%" :fontSize 14 :alignSelf "center"}} "Call.Two  "
+                  ;   (style/create-link {:text (if (:expanded2 @state) "Hide" "Show")
+                  ;                       :onClick #(swap! state assoc :expanded2 (not (:expanded2 @state)))})]
+                  ;  [:div {:style {:flex "0 1 auto" :backgroundColor "white" :borderRight style/standard-line :width "25%"}}]
+                  ;  [:div {:style {:flex "0 1 auto" :backgroundColor "white" :borderRight style/standard-line :width "25%"}}]
+                  ;  [:div {:style {:flex "0 1 auto" :backgroundColor "white" :width "25%"}}]]
+                  ;
+                  ; (when (:expanded2 @state) [:div {:style {:x "100" :y "20" :width "100%" :height 90 :backgroundColor "rgb(244, 244, 244)" :borderBottom "1px solid gray" :fontSize 12}}
+                  ;                            "\nCall Details go here!"])
+                  ;
+                  ; ;Row 3
+                  ; [:div {:style {:display "flex" :flexDirection "row" :backgroundColor "white" :borderBottom style/standard-line :height 20}}
+                  ;  [:div {:style {:flex "0 1 auto" :backgroundColor "white" :borderRight style/standard-line :width "25%" :fontSize 14 :alignSelf "center"}} "Call.Three  "
+                  ;   (style/create-link {:text    (if (:expanded3 @state) "Hide" "Show")
+                  ;                       :onClick #(swap! state assoc :expanded3 (not (:expanded3 @state)))})]
+                  ;  [:div {:style {:flex "0 1 auto" :backgroundColor "white" :borderRight style/standard-line :width "25%"}}]
+                  ;  [:div {:style {:flex "0 1 auto" :backgroundColor "white" :borderRight style/standard-line :width "25%"}}]
+                  ;  [:div {:style {:flex "0 1 auto" :backgroundColor "white" :width "25%"}}]]
+                  ;
+                  ; (when (:expanded3 @state) [:div {:style {:x "100" :y "20" :width "100%" :height 90 :backgroundColor "rgb(244, 244, 244)" :borderBottom "1px solid gray"}}
+                  ;                            "\nCall Details go here!"])
+                  ; ]
+
                   ;; Flex with row direction
                   [:div {:style {:marginTop 15}}
                    ; X axis
-                   
+
                    [:div {:style {:display "flex" :flexDirection "row" :height 20 :fontSize 12}}
                     [:div {:style {:flex "0 1 auto" :borderLeft "1px solid rgb(244, 244, 244)" :borderRight style/standard-line :width "25%" :textAlign "right" :alignSelf "flex-end"}} "0"]
                     [:div {:style {:flex "0 1 auto" :borderRight style/standard-line :width "25%" :textAlign "right" :alignSelf "flex-end"}} "10"]
                     [:div {:style {:flex "0 1 auto" :borderRight style/standard-line :width "25%" :textAlign "right" :alignSelf "flex-end"}} "20"]
                     [:div {:style {:flex "0 1 auto" :borderRight style/standard-line :width "25%" :textAlign "right" :alignSelf "flex-end"}} "30"]]]
 
-                  [:div {:style {:border "1px solid gray"}}
+
+
+                  [:div {:style {:display "flex" :flexDirection "row" :borderRight "1px solid gray" :borderBottom "1px solid gray"}}
+                   [:div {:style {:display "flex" :flexDirection "column" :backgroundColor "white" :width "25%" :borderRight "1px solid gray"}}
+                    ;[:div {:style {:flex "0 1 auto" :backgroundColor "rgb(244, 244, 244)" :borderLeft "1px solid gray" :borderBottom style/standard-line :borderRight style/standard-line :height 22
+                    ;               :textAlign "right"}} "0"]
+                    [:div {:style {:flex   "0 1 auto" :backgroundColor "white" :borderBottom style/standard-line
+                                   :height 22 :fontFamily "Roboto"}} "Call.1"
+                     (style/create-link {:text    (if (:expandedV1 @state) "Hide" "Show")
+                                         :onClick #(swap! state assoc :expandedV1 (not (:expandedV1 @state)))})]
+                    (when (:expandedV1 @state) [:div {:style {:x "100" :y "20" :position "relative" :width "400%" :height 90 :borderLeft "1px solid gray" :backgroundColor "rgb(244, 244, 244)"}}])
+                    [:div {:style {:flex "0 1 auto" :backgroundColor "white" :borderLeft "1px solid gray" :borderBottom style/standard-line :height 22}} "Call.2"
+                     (style/create-link {:text    (if (:expandedV2 @state) "Hide" "Show")
+                                         :onClick #(swap! state assoc :expandedV2 (not (:expandedV2 @state)))})]
+                    (when (:expandedV2 @state) [:div {:style {:x "100" :y "20" :position "relative" :width "400%" :height 90 :backgroundColor "rgb(244, 244, 244)"}}])
+                    [:div {:style {:flex "0 1 auto" :backgroundColor "white" :borderBottom style/standard-line :height 22}} "Call.3"
+                     (style/create-link {:text    (if (:expandedV3 @state) "Hide" "Show")
+                                         :onClick #(swap! state assoc :expandedV3 (not (:expandedV3 @state)))})]
+                    (when (:expandedV3 @state) [:div {:style {:x "100" :y "20" :position "relative" :width "400%" :height 90 :backgroundColor "rgb(244, 244, 244)"}}])
+                    [:div {:style {:flex "0 1 auto" :backgroundColor "white" :borderBottom style/standard-line :borderBottom style/standard-line :height 20}}]
+                    [:div {:style {:flex "1 1 auto" :borderRight style/standard-line :width "33.333%"}}]
+                    [:div {:style {:flex "1 1 auto" :borderRight style/standard-line :width "33.333%"}}]
+                    [:div {:style {:flex "1 1 auto" :borderRight style/standard-line :width "33.333%"}}]
+                    ]
+
+                   ]
+
+
+
+                  ;[:div {:style {:display "flex" :flexDirection "column" :borderRight "1px solid gray" :borderBottom "1px solid gray" :marginTop 15  :backgroundColor "red"}}
+                  ;  [:div {:style {:flex "0 1 auto" :borderBottom style/standard-line :textAlign "right"}}]]
+                  ;
+
+                  ;[:div {:style {:display "flex" :flex "0 1 auto"  :flexDirection "column" :backgroundColor "white" :width "25%" :borderRight "1px solid lightgray"}}
+                  ; [:div {:style {:flex "0 1 auto" :backgroundColor "blue" :borderBottom style/standard-line :height 22 :textAlign "right"}} "10"]]
+                  ;[:div {:style {:display "flex" :flex "0 1 auto"  :flexDirection "column" :backgroundColor "white" :width "25%" :borderRight "1px solid lightgray"}}
+                  ; [:div {:style {:flex "0 1 auto" :backgroundColor "blue" :borderBottom style/standard-line :height 22 :textAlign "right"}} "10"]]
+                  ;[:div {:style {:display "flex" :flex "0 1 auto"  :flexDirection "column" :backgroundColor "white" :width "25%" :borderRight "1px solid lightgray"}}
+                  ; [:div {:style {:flex "0 1 auto" :backgroundColor "blue" :borderBottom style/standard-line :height 22 :textAlign "right"}} "10"]]]
+                  ;
+
+                  [:div {:style {:border "1px solid gray" :marginTop 20}}
                    ;Row 1
                    [:div {:style {:display "flex" :flexDirection "row" :backgroundColor "white" :borderBottom style/standard-line :height 20}}
                     [:div {:style {:flex "0 1 auto" :backgroundColor "white" :borderRight style/standard-line :width "25%" :fontSize 14 :alignSelf "center"}} "Call.One  "
                      (style/create-link {:text    (if (:expanded1 @state) "Hide" "Show")
                                          :onClick #(swap! state assoc :expanded1 (not (:expanded1 @state)))})]
-                    [:div {:style {:flex "0 1 auto" :backgroundColor "white" :borderRight style/standard-line :width "25%"}}
-                     [:div {:style {:display "flex" :height "100%" :alignItems "center"}}
-                      [:div {:style {:flex "0 1 auto" :position "relative" :width "60%" :height "75%" :backgroundColor "white"}}]
-                      [:div {:style {:flex "0 1 auto" :position "relative" :width "20%" :height "75%" :backgroundColor "blue"}}]
-                      [:div {:style {:flex "0 1 auto" :width "40%" :height "75%" :backgroundColor "red"}}]]]
+                    [:div {:style {:flex "0 1 auto" :backgroundColor "white" :borderRight style/standard-line :width "25%"}}]
                     [:div {:style {:flex "0 1 auto" :backgroundColor "white" :borderRight style/standard-line :width "25%"}}]
                     [:div {:style {:flex "0 1 auto" :backgroundColor "white" :width "25%"}}]]
 
@@ -171,7 +259,7 @@
                    ;Row2
                    [:div {:style {:display "flex" :flexDirection "row" :backgroundColor "white" :borderBottom style/standard-line :height 20}}
                     [:div {:style {:flex "0 1 auto" :backgroundColor "white" :borderRight style/standard-line :width "25%" :fontSize 14 :alignSelf "center"}} "Call.Two  "
-                     (style/create-link {:text (if (:expanded2 @state) "Hide" "Show")
+                     (style/create-link {:text    (if (:expanded2 @state) "Hide" "Show")
                                          :onClick #(swap! state assoc :expanded2 (not (:expanded2 @state)))})]
                     [:div {:style {:flex "0 1 auto" :backgroundColor "white" :borderRight style/standard-line :width "25%"}}]
                     [:div {:style {:flex "0 1 auto" :backgroundColor "white" :borderRight style/standard-line :width "25%"}}]
@@ -194,30 +282,28 @@
                    ]
 
 
-
-
                   ;; Flex with column direction
                   [:div {:style {:display "flex" :flexDirection "row" :borderRight "1px solid gray" :borderBottom "1px solid gray" :marginTop 15}}
                    [:div {:style {:display "flex" :flexDirection "column" :backgroundColor "white" :width "25%" :borderRight "1px solid gray"}}
-                    [:div {:style {:flex "0 1 auto" :backgroundColor "rgb(244, 244, 244)" :borderLeft "1px solid gray" :borderBottom style/standard-line :borderRight style/standard-line :height 22
+                    [:div {:style {:flex      "0 1 auto" :backgroundColor "rgb(244, 244, 244)" :borderLeft "1px solid gray" :borderBottom style/standard-line :borderRight style/standard-line :height 22
                                    :textAlign "right"}} "0"]
-                    [:div {:style {:flex "0 1 auto" :backgroundColor "white" :borderBottom style/standard-line
+                    [:div {:style {:flex   "0 1 auto" :backgroundColor "white" :borderBottom style/standard-line
                                    :height 22 :fontFamily "Roboto"}} "Call.1"
                      (style/create-link {:text    (if (:expandedV1 @state) "Hide" "Show")
                                          :onClick #(swap! state assoc :expandedV1 (not (:expandedV1 @state)))})]
-                    (when (:expandedV1 @state)[:div {:style {:x "100" :y "20" :position "relative" :width "400%" :height 90 :borderLeft "1px solid gray" :backgroundColor "rgb(244, 244, 244)"}}])
+                    (when (:expandedV1 @state) [:div {:style {:x "100" :y "20" :position "relative" :width "400%" :height 90 :borderLeft "1px solid gray" :backgroundColor "rgb(244, 244, 244)"}}])
                     [:div {:style {:flex "0 1 auto" :backgroundColor "white" :borderLeft "1px solid gray" :borderBottom style/standard-line :height 22}} "Call.2"
                      (style/create-link {:text    (if (:expandedV2 @state) "Hide" "Show")
                                          :onClick #(swap! state assoc :expandedV2 (not (:expandedV2 @state)))})]
-                    (when (:expandedV2 @state)[:div {:style {:x "100" :y "20" :position "relative" :width "400%" :height 90 :backgroundColor "rgb(244, 244, 244)"}}])
-                    [:div {:style {:flex "0 1 auto" :backgroundColor "white" :borderBottom style/standard-line :height 22}}  "Call.3"
+                    (when (:expandedV2 @state) [:div {:style {:x "100" :y "20" :position "relative" :width "400%" :height 90 :backgroundColor "rgb(244, 244, 244)"}}])
+                    [:div {:style {:flex "0 1 auto" :backgroundColor "white" :borderBottom style/standard-line :height 22}} "Call.3"
                      (style/create-link {:text    (if (:expandedV3 @state) "Hide" "Show")
                                          :onClick #(swap! state assoc :expandedV3 (not (:expandedV3 @state)))})]
-                    (when (:expandedV3 @state)[:div {:style {:x "100" :y "20" :position "relative" :width "400%" :height 90 :backgroundColor "rgb(244, 244, 244)"}}])
+                    (when (:expandedV3 @state) [:div {:style {:x "100" :y "20" :position "relative" :width "400%" :height 90 :backgroundColor "rgb(244, 244, 244)"}}])
                     [:div {:style {:flex "0 1 auto" :backgroundColor "white" :borderBottom style/standard-line :height 22}} "Call.4"
                      (style/create-link {:text    (if (:expandedV4 @state) "Hide" "Show")
                                          :onClick #(swap! state assoc :expandedV4 (not (:expandedV4 @state)))})]
-                    (when (:expandedV4 @state)[:div {:style {:x "100" :y "20" :position "relative" :width "400%" :height 90 :backgroundColor "rgb(244, 244, 244)"}}])]
+                    (when (:expandedV4 @state) [:div {:style {:x "100" :y "20" :position "relative" :width "400%" :height 90 :backgroundColor "rgb(244, 244, 244)"}}])]
                    [:div {:style {:display "flex" :flexDirection "column" :backgroundColor "white" :width "25%" :borderRight "1px solid lightgray"}}
                     [:div {:style {:flex "0 1 auto" :backgroundColor "rgb(244, 244, 244)" :borderBottom style/standard-line :height 22 :textAlign "right"}} "10"]
                     [:div {:style {:flex "0 1 auto" :backgroundColor "white" :borderBottom style/standard-line :height 22}}]
@@ -237,11 +323,11 @@
                     [:div {:style {:flex "0 1 auto" :backgroundColor "white" :borderBottom style/standard-line :height 22}}]
                     (when (:expandedV3 @state) [:div {:style {:x "100" :y "20" :height 90 :backgroundColor "blue"}}])
                     [:div {:style {:flex "0 1 auto" :backgroundColor "white" :borderBottom style/standard-line :height 22}}]
-                    (when (:expandedV4 @state) [:div {:style {:x "100" :y "20" :height 90 :backgroundColor "blue"}}])  ]
+                    (when (:expandedV4 @state) [:div {:style {:x "100" :y "20" :height 90 :backgroundColor "blue"}}])]
                    [:div {:style {:display "flex" :flexDirection "column" :backgroundColor "white" :width "25%" :borderRight "1px solid lightgray"}}
                     [:div {:style {:flex "0 1 auto" :backgroundColor "rgb(244, 244, 244)" :borderBottom style/standard-line :height 22 :textAlign "right"}} "30"]
                     [:div {:style {:flex "0 1 auto" :backgroundColor "white" :borderBottom style/standard-line :height 22}}]
-                    (when (:expandedV1 @state)[:div {:style {:x "100" :y "20" :height 90 :backgroundColor "blue"}}])
+                    (when (:expandedV1 @state) [:div {:style {:x "100" :y "20" :height 90 :backgroundColor "blue"}}])
                     [:div {:style {:flex "0 1 auto" :backgroundColor "white" :borderBottom style/standard-line :height 22}}]
                     (when (:expandedV2 @state) [:div {:style {:x "100" :y "20" :height 90 :backgroundColor "blue"}}])
                     [:div {:style {:flex "0 1 auto" :backgroundColor "white" :borderBottom style/standard-line :height 22}}]
