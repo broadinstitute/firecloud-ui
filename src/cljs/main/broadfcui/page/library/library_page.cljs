@@ -156,6 +156,7 @@
       [comps/AutocompleteFilter
        {:ref "text-filter"
         :on-filter (:on-filter props)
+        :typeahead-events ["typeahead:select"]
         :width "100%"
         :field-attributes {:defaultValue (:search-text props)
                            :placeholder "Search"}
