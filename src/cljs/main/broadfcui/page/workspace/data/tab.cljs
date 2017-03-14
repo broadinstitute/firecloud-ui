@@ -59,17 +59,17 @@
    :render
    (fn [{:keys [state props]}]
      [comps/OKCancelForm
-      {:header "Import Data" :show-cancel? true :cancel-text "Close"
+      {:header "Import Data" :show-cancel? false
        :content
        (let [last-crumb-id (:id (second (:crumbs @state)))
              add-crumb (fn [id text]
                          (swap! state update :crumbs conj
                                 {:id id :text text
                                  :onClick #(swap! state update :crumbs (comp vec (partial take 2)))}))]
-         [:div {:style {:position "relative" :width 720}}
-          [:div {:style {:fontSize "150%" :marginBottom "1ex"}}
-           [comps/Breadcrumbs {:scale-factor "60%" :crumbs (:crumbs @state)}]]
+         [:div {:style {:position "relative"}}
           common/PHI-warning
+          [:div {:style {:fontSize "1.1rem" :marginBottom "1rem"}}
+           [comps/Breadcrumbs {:crumbs (:crumbs @state)}]]
           [:div {:style {:backgroundColor "white" :padding "1em"}}
            (case last-crumb-id
              :file-import
@@ -80,18 +80,17 @@
                 :crumbs (drop 2 (:crumbs @state))
                 :add-crumb #(swap! state update :crumbs conj %)
                 :pop-to-depth #(swap! state update :crumbs subvec 0 %))]
-             (let [style {:width 240 :margin "auto" :textAlign "center" :cursor "pointer"
+             (let [style {:width 240 :margin "0 1rem" :textAlign "center" :cursor "pointer"
                           :backgroundColor (:button-primary style/colors)
-                          :color "#fff" :padding "1em" :borderRadius 8}]
-               [:div {}
+                          :color "#fff" :padding "1rem" :borderRadius 8}]
+               [:div {:style {:display "flex" :justifyContent "center"}}
                 [:div {:style style :onClick #(add-crumb :file-import "File")}
                  "Import from file"]
-                [:div {:style {:height "1em"}}]
                 [:div {:style style :onClick #(add-crumb :workspace-import "Choose Workspace")}
                  "Copy from another workspace"]]))]])}])
    :component-will-unmount
    (fn [{:keys [props this]}]
-     ((:on-close props)) )})
+     ((:on-close props)))})
 
 (react/defc EntityAttributes
   {:render
@@ -167,7 +166,7 @@
    :render
    (fn [{:keys [props state refs this]}]
      (let [{:keys [workspace-id workspace workspace-error]} props]
-       [:div {:style {:padding "1em" :display "flex"}}
+       [:div {:style {:padding "1rem 1.5rem" :display "flex"}}
         (when (:loading-attributes @state)
           [comps/Blocker {:banner "Loading..."}])
         (cond

@@ -264,7 +264,7 @@
                user-access-level (:accessLevel workspace)
                derived {:owner? owner? :writer? writer? :reader? (reader? (:workspace props))
                         :can-share? can-share? :user-access-level user-access-level :request-refresh #(react/call :refresh this)}]
-           [:div {:style {:margin "45px 25px" :display "flex"}}
+           [:div {:style {:margin "2.5rem 1.5rem" :display "flex"}}
             (render-sidebar state refs this
                             (merge (select-keys props [:workspace :workspace-id :on-clone :on-delete])
                                    (select-keys server-response [:billing-projects :curator?])

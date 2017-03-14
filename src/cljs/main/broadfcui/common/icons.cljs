@@ -5,36 +5,38 @@
     [broadfcui.utils :as utils]
     ))
 
-;; From https://design.google.com/icons/
+;; From http://fontawesome.io/icons/
 (def ^:private icon-keys
-  {:angle-left "fa-angle-left"
+  {:add "fa-plus"
+   :alert "fa-exclamation"
+   :angle-left "fa-angle-left"
    :angle-right "fa-angle-right"
-   :settings "fa-cog"
-   :lock "fa-lock"
-   :unlock "fa-unlock"
-   :edit "fa-pencil"
+   :cancel "fa-times-circle"
+   :catalog "fa-tag"
    :clone "fa-clone"
-   :add "fa-plus"
+   :close "fa-close"
    :delete "fa-trash"
-   :remove "fa-minus-circle"
    :done "fa-check"
    :done-circle "fa-check-circle"
-   :cancel "fa-times-circle"
-   :warning-triangle "fa-exclamation-triangle"
+   :edit "fa-pencil"
    :error "fa-exclamation-circle"
-   :alert "fa-exclamation"
-   :search "fa-search"
-   :share "fa-share-alt"
-   :library "fa-book"
-   :publish "fa-upload"
-   :catalog "fa-tag"
-   :reorder "fa-reorder"
-   :close "fa-close"
-   :reset "fa-undo"
-   :new-window "fa-external-link"
+   :help "fa-question-circle"
    :information "fa-info-circle"
+   :library "fa-book"
+   :lock "fa-lock"
+   :new-window "fa-external-link"
+   :publish "fa-upload"
+   :remove "fa-minus-circle"
+   :reorder "fa-reorder"
+   :reset "fa-undo"
+   :search "fa-search"
+   :settings "fa-cog"
+   :share "fa-share-alt"
+   :shield "fa-shield"
    :spinner "fa-spinner"
-   :shield "fa-shield"})
+   :unlock "fa-unlock"
+   :warning-triangle "fa-exclamation-triangle"
+   })
 
 (defn icon [attributes key]
   [:span (assoc attributes :className (str (icon-keys key) " fa "  (:className attributes)))])

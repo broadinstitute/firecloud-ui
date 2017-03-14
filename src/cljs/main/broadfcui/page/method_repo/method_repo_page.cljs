@@ -13,7 +13,7 @@
 (react/defc Page
   {:render
    (fn [{:keys []}]
-     [:div {:style {:padding "1em"}}
+     [:div {:style {:padding "1.5rem 1rem 0"}}
       [MethodConfigImporter
        {:allow-edit true
         :after-import
