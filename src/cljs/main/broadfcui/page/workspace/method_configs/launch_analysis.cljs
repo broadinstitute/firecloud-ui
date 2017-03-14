@@ -135,7 +135,7 @@
                              :methodConfigurationName (:name config-id)
                              :entityType (:type entity)
                              :entityName (:name entity)
-                             :readFromCache (react/call :checked? (@refs "callCache-check"))}
+                             :useCallCache (react/call :checked? (@refs "callCache-check"))}
                        (when-not (clojure.string/blank? expression) {:expression expression}))]
          (swap! state assoc :launching? true :launch-server-error nil)
          (endpoints/call-ajax-orch
