@@ -76,7 +76,7 @@
              [import-data/Page (select-keys props [:workspace-id :import-type])]
              :workspace-import
              [copy-data-workspaces/Page
-              (assoc (select-keys props [:workspace-id :this-realm])
+              (assoc (select-keys props [:workspace-id :this-realm :on-data-imported])
                 :crumbs (drop 2 (:crumbs @state))
                 :add-crumb #(swap! state update :crumbs conj %)
                 :pop-to-depth #(swap! state update :crumbs subvec 0 %))]
@@ -87,10 +87,7 @@
                 [:div {:style style :onClick #(add-crumb :file-import "File")}
                  "Import from file"]
                 [:div {:style style :onClick #(add-crumb :workspace-import "Choose Workspace")}
-                 "Copy from another workspace"]]))]])}])
-   :component-will-unmount
-   (fn [{:keys [props this]}]
-     ((:on-close props)))})
+                 "Copy from another workspace"]]))]])}])})
 
 (react/defc EntityAttributes
   {:render
@@ -216,13 +213,7 @@
                              [:div {:style {:paddingRight ".5em"}}
                               [comps/Button {:text "Import Data..."
                                              :disabled? (when locked? "This workspace is locked.")
-                                             :onClick (fn []
-                                                        (modal/push-modal
-                                                          [DataImporter {:workspace-id workspace-id
-                                                                         :this-realm this-realm
-                                                                         :import-type "data"
-                                                                         :on-close
-                                                                         #(react/call :refresh (@refs "entity-table")  (:selected-entity-type @state) true)}]))}]]]))
+                                             :onClick #(this :-handle-import-data-click)}]]]))
                :on-filter-change #(swap! state assoc :selected-entity-type % :selected-entity nil :attr-list nil)
                :attribute-renderer (table-utils/render-gcs-links (get-in workspace [:workspace :bucketName]))
                :linked-entity-renderer (fn [e]
@@ -264,6 +255,15 @@
    :component-did-mount
    (fn [{:keys [props]}]
      ((:request-refresh props)))
+   :-handle-import-data-click
+   (fn [{:keys [props state refs]}]
+     (modal/push-modal
+      [DataImporter
+       {:workspace-id (get-in props [:workspace-id])
+        :this-realm (get-in props [:workspace :workspace :realm :groupName])
+        :import-type "data"
+        :on-data-imported #(react/call :refresh (@refs "entity-table")
+                                       (or % (:selected-entity-type @state)) true)}]))
    :update-state
    (fn [{:keys [state]} & args]
      (apply swap! state assoc args))})
