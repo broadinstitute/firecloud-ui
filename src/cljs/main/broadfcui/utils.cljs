@@ -323,8 +323,9 @@
   (let [did-mount
         (fn [{:keys [locals] :as data}]
           (doseq [[event function] listeners-map]
-            (swap! locals assoc (str "WINDOWLISTENER " event) (partial function data))
-            (.addEventListener js/window event (@locals (str "WINDOWLISTENER " event))))
+            (let [func (partial function data)]
+              (swap! locals assoc (str "WINDOWLISTENER " event) func)
+              (.addEventListener js/window event func)))
           (when-let [defined-did-mount (:component-did-mount defined-methods)]
             (defined-did-mount data)))
         will-unmount
