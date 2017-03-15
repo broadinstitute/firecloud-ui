@@ -28,5 +28,3 @@ compose_exec clojure lein resource
 
 docker cp scripts/.phantom-run-tests.js fcuitests_clojure_1:/w/run-tests.js
 compose_exec phantomjs phantomjs run-tests.js
-
-clean_up
