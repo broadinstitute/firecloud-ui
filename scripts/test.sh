@@ -27,4 +27,10 @@ compose_exec clojure lein cljsbuild once
 compose_exec clojure lein resource
 
 docker cp scripts/.phantom-run-tests.js fcuitests_clojure_1:/w/run-tests.js
+
+set +x
+echo "======================================="
+set -x
 compose_exec phantomjs phantomjs run-tests.js
+set +x
+echo "======================================="
