@@ -453,6 +453,7 @@
                            (react/call :apply-filter this))))})
 
 (def Bloodhound (aget js/window "webpack-deps" "Bloodhound"))
+(def ^:private whitespace-tokenizer (aget Bloodhound "tokenizers" "whitespace"))
 
 (react/defc Typeahead
   {:get-text
@@ -475,8 +476,7 @@
    :component-did-mount
    (fn [{:keys [props refs]}]
      (when (not (:disabled props))
-       (let [{:keys [remote render-display behavior empty-message render-suggestion on-select typeahead-events]} props
-             whitespace-tokenizer (aget Bloodhound "tokenizers" "whitespace")]
+       (let [{:keys [remote render-display behavior empty-message render-suggestion on-select typeahead-events]} props]
          (.typeahead (js/$ (@refs "field"))
                      (clj->js behavior)
                      (clj->js
@@ -686,17 +686,16 @@
      (flatten (js->clj (.tagsinput (js/$ (@refs "input-element")) "items"))))
    :component-did-mount
    (fn [{:keys [refs]}]
-     (let [whitespace-tokenizer (aget Bloodhound "tokenizers" "whitespace")
-           suggestion-engine (Bloodhound. (clj->js {:datumTokenizer whitespace-tokenizer
-                                                    :queryTokenizer whitespace-tokenizer
-                                                    :highlight true
-                                                    :remote
-                                                    {:url (str (config/api-url-root) "/api/workspaces/tags/autocomplete/")
-                                                     :prepare (fn [ query settings]
-                                                                (clj->js
-                                                                 (assoc (js->clj settings)
-                                                                   :headers {:Authorization (str "Bearer " (utils/get-access-token))}
-                                                                   :url (str (aget settings "url") query))))}}))]
+     (let [suggestion-engine (Bloodhound.
+                               (clj->js {:datumTokenizer whitespace-tokenizer
+                                         :queryTokenizer whitespace-tokenizer
+                                         :remote {:url (str (config/api-url-root) "/api/workspaces/tags/autocomplete/")
+                                                  :prepare
+                                                  (fn [ query settings]
+                                                    (clj->js
+                                                      (assoc (js->clj settings)
+                                                        :headers {:Authorization (str "Bearer " (utils/get-access-token))}
+                                                        :url (str (aget settings "url") query))))}}))]
      (.tagsinput (js/$ (@refs "input-element"))
                  (clj->js {:tagClass "workspace-tag"
                            :typeaheadjs {:name "suggestion-engine"

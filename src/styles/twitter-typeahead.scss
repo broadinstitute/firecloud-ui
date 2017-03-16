@@ -15,6 +15,10 @@ div.bootstrap-tagsinput {
       width: 10px;
     }
   }
+
+  .tt-hint {
+    display: none;
+  }
 }
 
 :not(.bootstrap-tagsinput) > span.twitter-typeahead {
