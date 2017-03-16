@@ -18,7 +18,7 @@
 (react/defc Spinner
   {:render
    (fn [{:keys [props]}]
-     [:span {:style {:margin "1em" :whiteSpace "nowrap"}}
+     [:span {:style (merge {:margin "1em" :whiteSpace "nowrap"} (:style props))}
       (icons/icon {:className "fa-pulse fa-lg fa-fw" :style {:marginRight "0.5rem"}} :spinner)
       (:text props)])})
 
