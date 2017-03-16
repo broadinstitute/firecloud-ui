@@ -85,11 +85,9 @@
             failure-icon)))
 
 
-(defn call-cache-result [cacheStatus]
-   (if (= cacheStatus "ReadAndWriteCache") "Enabled" "Disabled")
-  )
-(defn format-call-cache [cacheHitMiss]
-   ;(get cacheHitMiss "Cache Hit" "Cache Miss")
-   (if (utils/contains cacheHitMiss "Cache Hit") "Hit" "Miss")
-  )
+(defn call-cache-result [cache-status]
+   (if (= cache-status "ReadAndWriteCache") "Enabled" "Disabled"))
+
+(defn format-call-cache [cache-hit-miss]
+   (if (utils/contains cache-hit-miss "Cache Hit") "Hit" "Miss"))
 
