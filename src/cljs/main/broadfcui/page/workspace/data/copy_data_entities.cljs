@@ -59,7 +59,7 @@
                               (merge
                                (select-keys props [:workspace-id :selected-workspace-id :type
                                                    :id-name :on-data-imported])
-                               {:entity-list (:entity-list @state)})]
+                               (select-keys @state [:entity-list]))]
        (:server-error @state) [comps/ErrorViewer {:error (:server-error @state)}]
        :else [:div {:style {:textAlign "center"}} [comps/Spinner {:text "Loading entities..."}]]))
    :component-did-mount

@@ -259,11 +259,12 @@
    (fn [{:keys [props state refs]}]
      (modal/push-modal
       [DataImporter
-       {:workspace-id (get-in props [:workspace-id])
-        :this-realm (get-in props [:workspace :workspace :realm :groupName])
-        :import-type "data"
-        :on-data-imported #(react/call :refresh (@refs "entity-table")
-                                       (or % (:selected-entity-type @state)) true)}]))
+       (merge
+        (select-keys props [:workspace-id])
+        {:this-realm (get-in props [:workspace :workspace :realm :groupName])
+         :import-type "data"
+         :on-data-imported #(react/call :refresh (@refs "entity-table")
+                                        (or % (:selected-entity-type @state)) true)})]))
    :update-state
    (fn [{:keys [state]} & args]
      (apply swap! state assoc args))})
