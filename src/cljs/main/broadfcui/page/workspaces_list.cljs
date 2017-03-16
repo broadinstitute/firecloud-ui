@@ -247,7 +247,7 @@
            {:keys [workspaces billing-projects error-message disabled-reason]} server-response]
        (cond
          error-message (style/create-server-error-message error-message)
-         (some nil? [workspaces billing-projects]) [comps/Spinner {:text "Loading workspaces..."}]
+         (some nil? [workspaces]) [comps/Spinner {:text "Loading workspaces..."}]
          :else
          [:div {:style {:padding "0 1rem"}}
           [WorkspaceTable
