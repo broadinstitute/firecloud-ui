@@ -489,9 +489,10 @@
          (doseq [item typeahead-events]
            (.bind (js/$ (@refs "field")) item on-select)))
        (.addEventListener (@refs "field") "search"
-                          #(when (and (empty? (.. % -currentTarget -value))
-                                      (:on-clear props))
-                             ((:on-clear props))))))})
+                          (fn []
+                            (.typeahead (js/$ (@refs "field")) "close")
+                            #(when (and (empty? (.. % -currentTarget -value)) (:on-clear props))
+                              ((:on-clear props)))))))})
 
 
 (react/defc AutocompleteFilter
