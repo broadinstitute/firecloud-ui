@@ -98,8 +98,11 @@
          (if (:library:published library-attributes)
            [publish/UnpublishButton {:workspace-id workspace-id
                                      :request-refresh request-refresh}]
-           [publish/PublishButton {:disabled? (when (empty? library-attributes)
-                                                "Dataset attributes must be created before publishing.")
+           [publish/PublishButton {:disabled? (cond
+                                                (empty? library-attributes)
+                                                "Dataset attributes must be created before publishing."
+                                                (:library:invalidDataset library-attributes)
+                                   "All required dataset attributes must be set before publishing.")
                                    :workspace-id workspace-id
                                    :request-refresh request-refresh}]))
        (when (or owner? writer?)

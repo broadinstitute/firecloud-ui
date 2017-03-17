@@ -263,8 +263,10 @@
        @next))
    :submit
    (fn [{:keys [props state locals]} editable? set-discoverable?]
-     (if (not-empty (:invalid-properties @state))
-       (swap! state assoc :validation-error "You will need to complete all required metadata attributes to be able to publish the workspace in the Data Library")
+     ;; you can submit incomplete metadata unless it is currently published, because we cannot republish with incomplete
+     ;; metadata and we automatically republish when we save metadata if it's currently published
+     (if (and (:published? @state) (not-empty (:invalid-properties @state)))
+       (swap! state assoc :validation-error "You will need to complete all required metadata attributes to be able to re-publish the workspace in the Data Library")
        (let [attributes-seen (apply merge (vals (select-keys (:page-attributes @locals) (:pages-stack @state))))
              invoke-args (if (and set-discoverable? (not editable?))
                            {:name endpoints/save-discoverable-by-groups :data (:library:discoverableByGroups attributes-seen)}
