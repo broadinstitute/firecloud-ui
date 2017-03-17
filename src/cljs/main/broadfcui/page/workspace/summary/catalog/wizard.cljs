@@ -172,12 +172,17 @@
             :content
             (react/create-element
              (let [page-count (count (:wizard library-schema))
-                   [questions enumerate] (get-questions-for-page working-attributes library-schema page-num)]
+                   [questions enumerate] (get-questions-for-page working-attributes library-schema page-num)
+                   {:keys [invalid]} (if (:library:invalidDataset working-attributes)
+                                       ;; if you have previously saved incomplete metadata, anything required that
+                                       ;; you haven't filled out will be in red when you open the modal
+                                       (library-utils/validate-required (remove-empty-values working-attributes)
+                                                                      questions required-attributes))]
                (cond
                  (< page-num page-count)
                  [Questions (merge {:ref "wizard-page"
                                     :key page-num
-                                    :missing-properties invalid-properties
+                                    :missing-properties (clojure.set/union invalid invalid-properties)
                                     :attributes working-attributes}
                                    (utils/restructure library-schema enumerate questions required-attributes editable? set-discoverable?))]
                  (= page-num page-count)
@@ -212,11 +217,12 @@
                          :disabled? (> page-num (-> library-schema :wizard count))
                          :style {:width 80}}]
           flex/spring
-          (let [save-permissions (or editable? can-share?)
+          (let [save-permissions (or editable? set-discoverable?)
                 last-page (> page-num (-> library-schema :wizard count))]
             [comps/Button {:text (if published? "Republish" "Submit")
                            :onClick #(react/call :submit this editable? set-discoverable?)
-                           :disabled? (not (and save-permissions last-page))
+                           :disabled? (or (and published? (not-empty invalid-properties))
+                                          (not (and save-permissions last-page)))
                            :style {:width 80}}]))]]))
    :component-did-mount
    (fn [{:keys [locals]}]
@@ -263,8 +269,10 @@
        @next))
    :submit
    (fn [{:keys [props state locals]} editable? set-discoverable?]
-     (if (not-empty (:invalid-properties @state))
-       (swap! state assoc :validation-error "You will need to complete all required metadata attributes to be able to publish the workspace in the Data Library")
+     ;; you can submit incomplete metadata unless it is currently published, because we cannot republish with incomplete
+     ;; metadata and we automatically republish when we save metadata if it's currently published
+     (if (and (:published? @state) (not-empty (:invalid-properties @state)))
+       (swap! state assoc :validation-error "You will need to complete all required metadata attributes to be able to re-publish the workspace in the Data Library")
        (let [attributes-seen (apply merge (vals (select-keys (:page-attributes @locals) (:pages-stack @state))))
              invoke-args (if (and set-discoverable? (not editable?))
                            {:name endpoints/save-discoverable-by-groups :data (:library:discoverableByGroups attributes-seen)}
