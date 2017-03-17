@@ -32,3 +32,13 @@
   "JS debugger statement."
   []
   `(js* "debugger;"))
+
+
+(defmacro restructure
+  "Package bound values into a map with keywords:
+   (def x 3)
+   (def y 4)
+   (restructure x y)
+   ; => {:x 3 :y 4}"
+  [& symbols]
+  (zipmap (map keyword symbols) symbols))

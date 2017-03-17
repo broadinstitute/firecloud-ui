@@ -226,9 +226,8 @@
                  error? (or (contains? invalid-properties property) (contains? missing-properties property))
                  colorize #(merge % (when error? {:borderColor (:exception-state style/colors)
                                                   :color (:exception-state style/colors)}))
-                 data (merge {:prop prop :state state :property property :library-schema library-schema
-                              :colorize colorize :current-value current-value
-                              :value-nullsafe (or current-value "") ;; avoids warning for nil value
+                 data (merge (utils/restructure prop state property library-schema colorize current-value)
+                             {:value-nullsafe (or current-value "") ;; avoids warning for nil value
                               :required? (contains? required-attributes property)
                               :update-property #(swap! state update :attributes assoc property (.. % -target -value))
                               :set-property #(swap! state update :attributes assoc property %)
