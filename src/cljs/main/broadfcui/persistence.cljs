@@ -44,4 +44,4 @@
           (save (utils/restructure key state except only))
           (when-let [defined (:component-did-update defined-methods)]
             (defined data)))]
-    (apply assoc defined-methods (utils/restructure get-initial-state component-did-update))))
+    (merge defined-methods (utils/restructure get-initial-state component-did-update))))
