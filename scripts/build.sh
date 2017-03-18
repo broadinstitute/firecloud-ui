@@ -8,4 +8,4 @@ docker run --rm \
   -v maven-cache:/root/.m2 \
   -e npm_config_unsafe_perm="true" \
   broadinstitute/clojure-node \
-  lein with-profile deploy do clean, resource, npm install, cljsbuild once
+  bash -c 'lein with-profile deploy do clean, resource, cljsbuild once && npm install && npm run webpack -- -p'
