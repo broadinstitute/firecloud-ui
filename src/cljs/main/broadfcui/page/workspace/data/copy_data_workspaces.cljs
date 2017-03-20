@@ -19,6 +19,7 @@
      [:div {:style {:margin "1em"}}
       [table/Table
        {:empty-message "There are no workspaces to display."
+        :reorderable-columns? false
         :columns [{:header "Billing Project" :starting-width 150}
                   {:header "Name" :starting-width 150
                    :as-text #(get-in % ["workspace" "name"]) :sort-by :text
@@ -51,7 +52,9 @@
 
 (defn- filter-workspaces [this-realm workspace-list]
   (filter #(let [src-realm (get-in % ["workspace" "realm" "groupName"])]
-             (or (nil? src-realm) (= src-realm this-realm)))
+             (and
+              (or (nil? src-realm) (= src-realm this-realm))
+              (not= (% "accessLevel") "NO ACCESS")))
     workspace-list))
 
 (defn- workspace->id [workspace]
