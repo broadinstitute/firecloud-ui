@@ -4,11 +4,11 @@
     ))
 
 
+(def clip-text {:whiteSpace "nowrap" :overflow "hidden" :textOverflow "ellipsis"})
+
+
 (def billing-management-style
-  {:header-row {:fontSize "80%" :color (:text-light style/colors)}
-   :header-cell {:whiteSpace "nowrap" :overflow "hidden" :textOverflow "ellipsis"
-                 :padding "0.8em 0 0.8em 16px"}
-   :body-row (constantly {:fontSize "80%" :fontWeight 500
-                          :border-top style/standard-line :padding "0.2rem 0"})
-   :body-cell {:whiteSpace "nowrap" :overflow "hidden" :textOverflow "ellipsis"
-               :padding "0.6em 0 0.6em 16px"}})
+  {:table {:fontSize "80%"}
+   :cell (merge clip-text {:padding "0.8em 0 0.8em 16px"})
+   :header-row {:color (:text-light style/colors)}
+   :body-row (constantly {:fontWeight 500 :border-top style/standard-line})})

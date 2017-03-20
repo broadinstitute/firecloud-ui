@@ -13,31 +13,33 @@
 
 
 (defn- header [{:keys [joined-columns sort-column sort-order style]}]
-  [:div {:style (merge {:display "flex"} (:header-row style))}
+  [:div {:style (merge {:display "flex"} (:row style) (:header-row style))}
    (map
     (fn [{:keys [width header]}]
-      [:div {:style (merge (flex-params width) (:header-cell style))}
+      [:div {:style (merge (flex-params width) (:cell style) (:header-cell style))}
        header])
     joined-columns)])
 
 
 (defn- body [{:keys [rows joined-columns style]}]
-  [:div {}
+  [:div {:style {:body style}}
    (map-indexed
     (fn [index row]
       [:div {:style (merge {:display "flex"}
+                           (:row style)
                            ((or (:body-row style) identity) (utils/restructure index row)))}
        (map
         (fn [{:keys [width row->col render]}]
-          [:div {:style (merge (flex-params width) (:body-cell style))}
+          [:div {:style (merge (flex-params width) (:cell style) (:body-cell style))}
            (-> row row->col render)])
         joined-columns)])
     rows)])
 
 
 (defn- resolve-id [{:keys [header id]}]
-  (assert (or (string? id) (string? header)) "Every column must have a string header or id")
-  (or id (str header)))
+  (assert (or (not id) (string? id)) "Column id must be a string, if present")
+  (assert (or id (string? header)) "Every column must have a string header or id")
+  (or id header))
 
 (defn- resolve-all-props [{:keys [row->col as-text sort-by filter-as render] :as props}]
   (merge props
@@ -68,7 +70,7 @@
       (let [{:keys [rows columns sort-column sort-order style]} props
             joined-columns (join-columns {:raw-columns-by-id (utils/index-by resolve-id columns)
                                           :column-display (:column-display @state)})]
-        [:div {}
+        [:div {:style (:table style)}
          (header (utils/restructure joined-columns sort-column sort-order style))
          (body (utils/restructure rows joined-columns style))]))}
    (utils/with-window-listeners
