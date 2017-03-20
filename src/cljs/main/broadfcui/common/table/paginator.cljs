@@ -15,17 +15,17 @@
     :else (range (- current-page 2) (+ current-page 3))))
 
 
-(defn paginator [{:keys [filtered-count total-count page-num per-page per-page-options
+(defn paginator [{:keys [filtered-count total-count page-number rows-per-page per-page-options
                          page-selected per-page-selected
                          style]}]
-  [:div {:style {:border "1px solid #ebebeb" :padding "1em"}}
-   (let [{:keys [width]} style
-         num-pages (js/Math.ceil (/ filtered-count per-page))
-         allow-prev (> page-num 1)
-         allow-next (< page-num num-pages)
-         right-num (min filtered-count (* page-num per-page))
-         left-num (if (zero? right-num) 0 (inc (* (dec page-num) per-page)))
-         narrow? (= :narrow width)
+  [:div {:style (merge {:border "1px solid #ebebeb" :padding "1em"}
+                       style)}
+   (let [num-pages (js/Math.ceil (/ filtered-count rows-per-page))
+         allow-prev (> page-number 1)
+         allow-next (< page-number num-pages)
+         right-num (min filtered-count (* page-number rows-per-page))
+         left-num (if (zero? right-num) 0 (inc (* (dec page-number) rows-per-page)))
+         narrow? (= :narrow (:layout style))
          container (fn [child align]
                      (if narrow?
                        [:div {:style {:margin "0.25em 0"}} child]
@@ -45,12 +45,12 @@
                                   (:button-primary style/colors)
                                   (:border-light style/colors))
                          :cursor (when allow-prev "pointer")}
-                 :onClick (when allow-prev #(page-selected (dec page-num)))}
+                 :onClick (when allow-prev #(page-selected (dec page-number)))}
            (icons/icon {:style {:alignSelf "center" :paddingRight "0.5rem"}} :angle-left)
            "Prev"]
           [:span {:style {:whiteSpace "nowrap"}}
            (map (fn [n]
-                  (let [selected? (= n page-num)]
+                  (let [selected? (= n page-number)]
                     [:div {:style {:textAlign "center"
                                    :paddingTop 5 :display "inline-block" :width 29 :height 24
                                    :backgroundColor (when selected? (:button-primary style/colors))
@@ -59,23 +59,23 @@
                                    :cursor (when-not selected? "pointer")}
                            :onClick (when-not selected? #(page-selected n))}
                      n]))
-                (create-page-range page-num num-pages))]
+                (create-page-range page-number num-pages))]
           [:div {:style {:display "inline-flex" :alignItems "baseline"
                          :padding "0em 0.9em"
                          :color (if allow-next
                                   (:button-primary style/colors)
                                   (:border-light style/colors))
                          :cursor (when allow-next "pointer")}
-                 :onClick (when allow-next #(page-selected (inc page-num)))}
+                 :onClick (when allow-next #(page-selected (inc page-number)))}
            "Next"
            (icons/icon {:style {:alignSelf "center" :paddingLeft "0.5rem"}} :angle-right)])
          rows-component
          [:div {:style {:display "inline-flex" :alignItems "baseline"}}
           "Display"
-          (style/create-select
-           {:defaultValue (utils/index-of per-page-options per-page-options)
+          (style/create-identity-select
+           {:value rows-per-page
             :style {:width 60 :margin "0em 1em"}
-            :onChange #(per-page-selected (nth per-page-options (-> % .-target .-value js/parseInt)))}
+            :onChange #(per-page-selected (-> % .-target .-value js/parseInt))}
            per-page-options)
           "rows per page"]]
      [:div {:style {:fontSize 13 :lineHeight 1.5 :padding "0 48px"

@@ -6,6 +6,8 @@
     [broadfcui.common.modal :as modal]
     [broadfcui.common.style :as style]
     [broadfcui.common.table :as table]
+    [broadfcui.common.table.table :refer [Table]]
+    [broadfcui.common.table.utils :as table-utils]
     [broadfcui.common.table-utils :refer [add-right]]
     [broadfcui.common.table-style :as table-style]
     [broadfcui.endpoints :as endpoints]
@@ -69,7 +71,37 @@
        (:error-message @state) (style/create-server-error-message (:error-message @state))
        (nil? (:projects @state)) [comps/Spinner {:text "Loading billing projects..."}]
        :else
-       [table/Table
+       [Table
+        {:data-source (table-utils/local (:projects @state))
+         :columns [{:id "Status Icon" :initial-width 32 :resizable? false
+                    :row->col #(% "creationStatus")
+                    :sort-by :none
+                    :render
+                    (fn [creation-status]
+                      [:span {:title creation-status}
+                       (moncommon/icon-for-project-status creation-status)])}
+                   {:header "Project Name" :initial-width 500
+                    :as-text #(% "projectName") :sort-by :text
+                    :sort-initial :asc
+                    :render
+                    (fn [{:strs [projectName role creationStatus message]}]
+                      [:span {}
+                       (cond
+                         (= creationStatus project-status-creating)
+                         [PendingProjectControl
+                          {:project-name projectName
+                           :on-status-change (partial this :-handle-status-change projectName)}]
+                         (and (= creationStatus project-status-ready) (= role "Owner"))
+                         (style/create-link {:text projectName
+                                             :onClick #((:on-select props) projectName)})
+                         :else projectName)
+                       (when message
+                         [:div {:style {:float "right" :position "relative"}}
+                          [common/FoundationInfoBox
+                           {:text [:div {} [:strong {} "Message:"] [:br] message]}]])])}
+                   {:header "Role" :initial-width :auto :resizable? false
+                    :row->col #(% "role")}]}]
+       #_[table/Table
         {:reorderable-columns? false
          :header-row-style table-style/header-row-style-light
          :row-style table-style/table-row-style-light

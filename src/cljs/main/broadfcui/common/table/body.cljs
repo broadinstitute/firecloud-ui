@@ -25,11 +25,11 @@
   [:div {}
    (map-indexed
     (fn [index row]
-      [:div {:style (merge {:display "flex"} ((:row style) (utils/restructure index row)))}
+      [:div {:style (merge {:display "flex"} ((or (:row style) identity) (utils/restructure index row)))}
        (map
-        (fn [{:keys [width render]}]
+        (fn [{:keys [width row->col render]}]
           [:div {:style (flex-params width)}
-           (render row)])
+           (-> row row->col render)])
         joined-columns)])
     rows)])
 
@@ -38,9 +38,10 @@
   (assert (or (string? id) (string? header)) "Every column must have a string header or id")
   (or id (str header)))
 
-(defn- resolve-all-props [{:keys [as-text sort-by filter-as render] :as props}]
+(defn- resolve-all-props [{:keys [row->col as-text sort-by filter-as render] :as props}]
   (merge props
-         {:as-text (or as-text str)
+         {:row->col (or row->col identity)
+          :as-text (or as-text str)
           :sort-fn (if (= sort-by :text) as-text (or sort-by as-text identity))
           :filter-fn (or filter-as as-text str)
           :render (or render identity)}))
@@ -55,15 +56,16 @@
   (->>
    {:get-initial-state
     (fn [{:keys [props]}]
-      (map (fn [{:keys [initial-width show-initial?] :as raw-column}]
-             {:id (resolve-id raw-column)
-              :width (or initial-width 100)
-              :visible? (if (some? show-initial?) show-initial? true)})
-           (:columns props)))
+      {:column-display
+       (map (fn [{:keys [initial-width show-initial?] :as raw-column}]
+              {:id (resolve-id raw-column)
+               :width (or initial-width 100)
+               :visible? (if (some? show-initial?) show-initial? true)})
+            (:columns props))})
     :render
     (fn [{:keys [props state]}]
       (let [{:keys [rows columns sort-column sort-order]} props
-            joined-columns (join-columns {:raw-columns-by-id (group-by resolve-id columns)
+            joined-columns (join-columns {:raw-columns-by-id (utils/index-by resolve-id columns)
                                           :column-display (:column-display @state)})]
         [:div {}
          (header (utils/restructure joined-columns sort-column sort-order))

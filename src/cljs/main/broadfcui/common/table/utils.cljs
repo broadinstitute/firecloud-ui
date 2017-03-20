@@ -22,9 +22,9 @@
        (take rows-per-page)))
 
 (defn local
-  "Create a data source from a sequence, given the column definitions"
-  [{:keys [columns data]}]
-  (fn [{:keys [query-params on-done]}]
+  "Create a data source from a local sequence"
+  [data]
+  (fn [{:keys [columns query-params on-done]}]
     (on-done
      (->> data
           (filter-rows query-params columns)
