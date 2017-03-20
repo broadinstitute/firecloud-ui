@@ -7,9 +7,9 @@
     [broadfcui.common.style :as style]
     [broadfcui.common.table :as table]
     [broadfcui.common.table.table :refer [Table]]
+    [broadfcui.common.table.style :as table-style]
     [broadfcui.common.table.utils :as table-utils]
     [broadfcui.common.table-utils :refer [add-right]]
-    [broadfcui.common.table-style :as table-style]
     [broadfcui.endpoints :as endpoints]
     [broadfcui.nav :as nav]
     [broadfcui.page.billing.create-project :refer [CreateBillingProjectDialog]]
@@ -73,7 +73,7 @@
        :else
        [Table
         {:data-source (table-utils/local (:projects @state))
-         :columns [{:id "Status Icon" :initial-width 32 :resizable? false
+         :columns [{:id "Status Icon" :initial-width 16 :resizable? false
                     :row->col #(% "creationStatus")
                     :sort-by :none
                     :render
@@ -100,7 +100,8 @@
                           [common/FoundationInfoBox
                            {:text [:div {} [:strong {} "Message:"] [:br] message]}]])])}
                    {:header "Role" :initial-width :auto :resizable? false
-                    :row->col #(% "role")}]}]
+                    :row->col #(% "role")}]
+         :style table-style/billing-management-style}]
        #_[table/Table
         {:reorderable-columns? false
          :header-row-style table-style/header-row-style-light

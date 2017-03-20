@@ -23,12 +23,11 @@
    :render
    (fn [{:keys [props state]}]
      (let [{:keys [rows query-params]} @state
-           {:keys [columns]} props]
+           {:keys [columns style]} props]
        [:div {}
         [:div {:style {:overflowX "auto"}}
          [body/TableBody (merge (select-keys query-params [:sort-column :sort-order])
-                                (utils/restructure rows columns)
-                                {})]
+                                (utils/restructure rows columns style))]
         (paginator/paginator (merge (select-keys query-params [:rows-per-page :page-number])
                                     (:paginator props)
                                     {:filtered-count (count rows)

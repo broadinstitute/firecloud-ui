@@ -16,7 +16,7 @@
   [:div {:style (merge {:display "flex"} (:header-row style))}
    (map
     (fn [{:keys [width header]}]
-      [:div {:style (flex-params width)}
+      [:div {:style (merge (flex-params width) (:header-cell style))}
        header])
     joined-columns)])
 
@@ -25,10 +25,11 @@
   [:div {}
    (map-indexed
     (fn [index row]
-      [:div {:style (merge {:display "flex"} ((or (:row style) identity) (utils/restructure index row)))}
+      [:div {:style (merge {:display "flex"}
+                           ((or (:body-row style) identity) (utils/restructure index row)))}
        (map
         (fn [{:keys [width row->col render]}]
-          [:div {:style (flex-params width)}
+          [:div {:style (merge (flex-params width) (:body-cell style))}
            (-> row row->col render)])
         joined-columns)])
     rows)])
@@ -64,12 +65,12 @@
             (:columns props))})
     :render
     (fn [{:keys [props state]}]
-      (let [{:keys [rows columns sort-column sort-order]} props
+      (let [{:keys [rows columns sort-column sort-order style]} props
             joined-columns (join-columns {:raw-columns-by-id (utils/index-by resolve-id columns)
                                           :column-display (:column-display @state)})]
         [:div {}
-         (header (utils/restructure joined-columns sort-column sort-order))
-         (body (utils/restructure rows joined-columns))]))}
+         (header (utils/restructure joined-columns sort-column sort-order style))
+         (body (utils/restructure rows joined-columns style))]))}
    (utils/with-window-listeners
     {"mousemove"
      (fn [{:keys [state]} e]
