@@ -7,7 +7,8 @@
 
 ;; From http://fontawesome.io/icons/
 (def ^:private icon-keys
-  {:add "fa-plus"
+  {:add "fa-plus-circle"
+   :add-new "fa-plus"
    :alert "fa-exclamation"
    :angle-left "fa-angle-left"
    :angle-right "fa-angle-right"

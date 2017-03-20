@@ -67,21 +67,24 @@
      (let [selected-workspace (:selected-workspace (first (:crumbs props)))]
        (cond
          selected-workspace
-         [copy-data-entities/SelectType {:workspace-id (:workspace-id props)
-                                         :selected-workspace-id (workspace->id selected-workspace)
-                                         :crumbs (rest (:crumbs props))
-                                         :add-crumb (:add-crumb props)
-                                         :reload-data-tab (:reload-data-tab props)}]
+         [copy-data-entities/SelectType
+          {:workspace-id (:workspace-id props)
+           :selected-workspace-id (workspace->id selected-workspace)
+           :selected-workspace-bucket (get-in selected-workspace ["workspace" "bucketName"])
+           :crumbs (rest (:crumbs props))
+           :add-crumb (:add-crumb props)
+           :reload-data-tab (:reload-data-tab props)}]
          (:workspaces @state)
-         [WorkspaceList {:workspaces (:workspaces @state)
-                         :num-filtered (:num-filtered @state)
-                         :onWorkspaceSelected
-                         (fn [ws]
-                           ((:add-crumb props)
-                            {:text (str (get-in ws ["workspace" "namespace"]) "/"
-                                        (get-in ws ["workspace" "name"]))
-                             :onClick #((:pop-to-depth props) 3)
-                             :selected-workspace ws}))}]
+         [WorkspaceList
+          {:workspaces (:workspaces @state)
+           :num-filtered (:num-filtered @state)
+           :onWorkspaceSelected
+           (fn [ws]
+             ((:add-crumb props)
+              {:text (str (get-in ws ["workspace" "namespace"]) "/"
+                          (get-in ws ["workspace" "name"]))
+               :onClick #((:pop-to-depth props) 3)
+               :selected-workspace ws}))}]
          (:error-message @state) (style/create-server-error-message (:error-message @state))
          :else [:div {:style {:textAlign "center"}}
                 [comps/Spinner {:text "Loading workspaces..."}]])))

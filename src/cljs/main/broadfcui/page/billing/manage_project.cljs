@@ -88,7 +88,7 @@
                 :reorderable-columns? false
                 :resize-tab-color (:line-default style/colors)
                 :toolbar (add-right
-                          [comps/Button {:text "Add User..." :icon :add
+                          [comps/Button {:text "Add User..." :icon :add-new
                                          :onClick (fn [_]
                                                     (modal/push-modal
                                                      [AddUserDialog {:project-name (:project-name props)

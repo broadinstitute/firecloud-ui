@@ -88,7 +88,7 @@
      (assert (:nav-context props) "Missing :nav-context prop")
      [:div {:style {:display "inline"}}
       [comps/Button
-       {:text "Create New Workspace..." :icon :add
+       {:text "Create New Workspace..." :icon :add-new
         :disabled? (case (:disabled-reason props)
                      nil false
                      :not-loaded "Project billing data has not yet been loaded."

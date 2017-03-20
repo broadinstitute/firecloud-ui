@@ -106,92 +106,92 @@
      (let [{:keys [editing? writer?]} props]
        [:div {}
         (style/create-section-header
-          [:div {}
-           "Workspace Attributes"
-           (when-not editing?
-             [:span {:style {:fontSize "initial" :fontWeight "initial"}}
-              [:a {:style {:textDecoration "none" :marginLeft "1em"}
-                   :href (str (config/api-url-root) "/cookie-authed/workspaces/"
-                           (:namespace (:workspace-id props)) "/"
-                           (:name (:workspace-id props)) "/exportAttributesTSV")
-                   :onClick  #(utils/set-access-token-cookie (utils/get-access-token))
-                   :target "_blank"}
-               (str "Download Attributes")]
-              (when writer?
-                [comps/Button {:text "Import Attributes..."
-                               :style {:float "right" :marginTop -7}
-                               :onClick #(modal/push-modal
-                                           [comps/OKCancelForm
-                                            {:header "Import Attributes" :show-cancel? true :cancel-text "Close"
-                                             :content [:div {:style {:width 720}} common/PHI-warning
-                                                       [:div {:style {:backgroundColor"white" :padding "1em"}}
-                                                        [import-data/Page (merge (select-keys props [:workspace-id])
-                                                                            {:reload (fn [] (modal/pop-modal) ((:request-refresh props)))}
-                                                                            {:import-type "workspace-attributes"})]]]}])}])])])
+         [:div {}
+          "Workspace Attributes"
+          (when-not editing?
+            [:span {:style {:fontSize "initial" :fontWeight "initial"}}
+             [:a {:style {:textDecoration "none" :marginLeft "1em"}
+                  :href (str (config/api-url-root) "/cookie-authed/workspaces/"
+                             (:namespace (:workspace-id props)) "/"
+                             (:name (:workspace-id props)) "/exportAttributesTSV")
+                  :onClick #(utils/set-access-token-cookie (utils/get-access-token))
+                  :target "_blank"}
+              (str "Download Attributes")]
+             (when writer?
+               [comps/Button {:text "Import Attributes..."
+                              :style {:float "right" :marginTop -7}
+                              :onClick #(modal/push-modal
+                                         [comps/OKCancelForm
+                                          {:header "Import Attributes" :show-cancel? true :cancel-text "Close"
+                                           :content [:div {:style {:width 720}} common/PHI-warning
+                                                     [:div {:style {:backgroundColor "white" :padding "1em"}}
+                                                      [import-data/Page (merge (select-keys props [:workspace-id])
+                                                                               {:reload (fn [] (modal/pop-modal) ((:request-refresh props)))}
+                                                                               {:import-type "workspace-attributes"})]]]}])}])])])
         (style/create-paragraph
-          [:div {}
-           (if editing?
-             [:div {:style {:marginBottom "0.25em"}}
-              [comps/Button {:icon :add :text "Add new"
-                             :onClick (fn [_]
-                                        (swap! state update :attributes conj ["" ""])
-                                        ;; have to do this by ID not ref, since the fields are generated within Table
-                                        (after-update #(.focus (.getElementById js/document "focus"))))}]])
-           [table/Table
-            {:key (str editing? (count (:attributes @state)))
-             :reorderable-columns? false :sortable-columns? (not editing?) :filterable? false :pagination :none
-             :empty-message "No Workspace Attributes defined"
-             :row-style {:alignItems "center" :fontSize "120%"}
-             :always-sort? (not editing?)
-             :header-row-style {:borderBottom (str "2px solid " (:line-default style/colors))
-                                :backgroundColor "white" :color "black" :fontWeight "bold"}
-             :resize-tab-color (:line-default style/colors)
-             :columns (if editing?
-                        [{:starting-width 40 :resizable? false :as-text (constantly "Delete")
-                          :content-renderer
-                          (fn [index]
-                            (icons/icon {:style {:color (:text-lightest style/colors)
-                                                 :verticalAlign "middle" :fontSize 22
-                                                 :cursor "pointer"}
-                                         :onClick #(swap! state update :attributes utils/delete index)}
-                                        :remove))}
-                         {:header (header "Key") :starting-width 300 :as-text (constantly nil)
-                          :content-renderer
-                          (fn [{:keys [key index]}]
-                            (style/create-text-field (merge
-                                                       {:style {:marginBottom 0 :fontSize "100%" :height 26 :width "calc(100% - 2px)"}
-                                                        :defaultValue key
-                                                        :onChange #(swap! state update-in [:attributes index]
-                                                                          assoc 0 (-> % .-target .-value))}
-                                                       (when (= index (-> (:attributes @state) count dec))
-                                                         {:id "focus"}))))}
-                         {:header (header "Value") :starting-width :remaining :as-text (constantly nil) :resizable? false
-                          :content-renderer
-                          (fn [{:keys [value index]}]
-                            (style/create-text-field {:style {:marginBottom 0 :fontSize "100%" :height 26 :width "calc(100% - 2px)"}
-                                                      :defaultValue value
+         [:div {}
+          (if editing?
+            [:div {:style {:marginBottom "0.25em"}}
+             [comps/Button {:icon :add-new :text "Add new"
+                            :onClick (fn [_]
+                                       (swap! state update :attributes conj ["" ""])
+                                       ;; have to do this by ID not ref, since the fields are generated within Table
+                                       (after-update #(.focus (.getElementById js/document "focus"))))}]])
+          [table/Table
+           {:key (str editing? (count (:attributes @state)))
+            :reorderable-columns? false :sortable-columns? (not editing?) :filterable? false :pagination :none
+            :empty-message "No Workspace Attributes defined"
+            :row-style {:alignItems "center" :fontSize "120%"}
+            :always-sort? (not editing?)
+            :header-row-style {:borderBottom (str "2px solid " (:line-default style/colors))
+                               :backgroundColor "white" :color "black" :fontWeight "bold"}
+            :resize-tab-color (:line-default style/colors)
+            :columns (if editing?
+                       [{:starting-width 40 :resizable? false :as-text (constantly "Delete")
+                         :content-renderer
+                         (fn [index]
+                           (icons/icon {:style {:color (:text-lightest style/colors)
+                                                :verticalAlign "middle" :fontSize 22
+                                                :cursor "pointer"}
+                                        :onClick #(swap! state update :attributes utils/delete index)}
+                                       :remove))}
+                        {:header (header "Key") :starting-width 300 :as-text (constantly nil)
+                         :content-renderer
+                         (fn [{:keys [key index]}]
+                           (style/create-text-field (merge
+                                                     {:style {:marginBottom 0 :fontSize "100%" :height 26 :width "calc(100% - 2px)"}
+                                                      :defaultValue key
                                                       :onChange #(swap! state update-in [:attributes index]
-                                                                        assoc 1 (-> % .-target .-value))}))}
-                         {:header (header "Type") :starting-width 150 :as-text (constantly nil) :resizable? false
-                          :content-renderer
-                          (fn [{:keys [type index]}]
-                            (style/create-identity-select
-                              {:style {:marginBottom 0 :fontSize "100%" :height 26 :width "calc(100% - 2px)"}
-                               :defaultValue type
-                               :onChange #(swap! state update-in [:attributes index]
-                                                 assoc 2 (-> % .-target .-value))}
-                              all-types))}]
-                        [{:header (header "Key") :starting-width 300 :as-text name :sort-initial :asc}
-                         {:header (header "Value") :starting-width :remaining :as-text process-attribute-value
-                          :content-renderer (comp (table-utils/render-gcs-links (:workspace-bucket props)) process-attribute-value)}])
-             :data (if editing?
-                     (map-indexed (fn [index [key value type]]
-                                    {:index index :key key :value value :type type})
-                                  (:attributes @state))
-                     (:workspace-attributes props))
-             :->row (if editing?
-                      (juxt :index identity identity identity)
-                      identity)}]])]))
+                                                                        assoc 0 (-> % .-target .-value))}
+                                                     (when (= index (-> (:attributes @state) count dec))
+                                                       {:id "focus"}))))}
+                        {:header (header "Value") :starting-width :remaining :as-text (constantly nil) :resizable? false
+                         :content-renderer
+                         (fn [{:keys [value index]}]
+                           (style/create-text-field {:style {:marginBottom 0 :fontSize "100%" :height 26 :width "calc(100% - 2px)"}
+                                                     :defaultValue value
+                                                     :onChange #(swap! state update-in [:attributes index]
+                                                                       assoc 1 (-> % .-target .-value))}))}
+                        {:header (header "Type") :starting-width 150 :as-text (constantly nil) :resizable? false
+                         :content-renderer
+                         (fn [{:keys [type index]}]
+                           (style/create-identity-select
+                            {:style {:marginBottom 0 :fontSize "100%" :height 26 :width "calc(100% - 2px)"}
+                             :defaultValue type
+                             :onChange #(swap! state update-in [:attributes index]
+                                               assoc 2 (-> % .-target .-value))}
+                            all-types))}]
+                       [{:header (header "Key") :starting-width 300 :as-text name :sort-initial :asc}
+                        {:header (header "Value") :starting-width :remaining :as-text process-attribute-value
+                         :content-renderer (comp (table-utils/render-gcs-links (:workspace-bucket props)) process-attribute-value)}])
+            :data (if editing?
+                    (map-indexed (fn [index [key value type]]
+                                   {:index index :key key :value value :type type})
+                                 (:attributes @state))
+                    (:workspace-attributes props))
+            :->row (if editing?
+                     (juxt :index identity identity identity)
+                     identity)}]])]))
    :component-did-update
    (fn [{:keys [prev-props props state]}]
      (when (and (not (:editing? prev-props)) (:editing? props))
