@@ -16,6 +16,8 @@
    :clone "fa-clone"
    :close "fa-close"
    :delete "fa-trash"
+   :disclosure-closed "fa-caret-right"
+   :disclosure-opened "fa-caret-down"
    :done "fa-check"
    :done-circle "fa-check-circle"
    :edit "fa-pencil"

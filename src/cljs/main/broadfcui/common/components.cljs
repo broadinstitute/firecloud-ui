@@ -323,7 +323,7 @@
 
 (react/defc ErrorViewer
   {:render
-   (fn [{:keys [props]}]
+   (fn [{:keys [props state]}]
      (when-let [error (:error props)]
        (let [[source timestamp status-code code causes stack-trace message]
              (map error ["source" "timestamp" "statusCode" "code" "causes" "stackTrace" "message"])
@@ -331,30 +331,44 @@
              status-code (or status-code code)]
          (if-let [expected-msg (get-in props [:expect status-code])]
            (style/create-flexbox {}
-                                 [:span {:style {:paddingRight "1ex"}}
+                                 [:span {:style {:paddingRight "0.5rem"}}
                                   (icons/icon {:style {:color (:exception-state style/colors)}}
                                               :warning-triangle)]
                                  (str "Error: " expected-msg))
            [:div {:style {:textAlign "initial"}}
             (style/create-flexbox {:style {:marginBottom "0.25em"}}
-                                  [:span {:style {:paddingRight "1ex"}}
+                                  [:span {:style {:paddingRight "0.5rem"}}
                                    (icons/icon {:style {:color (:exception-state style/colors)}}
                                                :warning-triangle)]
-                                  (str "Error " status-code ": " message))
-            (when timestamp [:div {} "Occurred: "
-                             (common/format-date timestamp
-                                                 (assoc common/default-date-format
-                                                   :timeZoneName "short"))])
-            (when source [:div {} "Source: " source])
-            (when (seq causes)
-              (let [num-hidden (- (count causes) 4)]
-                [:div {}
-                 [:div {} (str "Cause" (when (> (count causes) 1) "s") ":")]
-                 (map (fn [cause] [CauseViewer cause]) (take 4 causes))
-                 (when (pos? num-hidden)
-                   [:div {} (str num-hidden " not shown")])]))
-            (when (seq stack-trace)
-              [StackTraceViewer {:lines stack-trace}])]))))})
+                                  (str "Error: " message))
+            (if (:expanded? @state)
+              [:div {}
+               (style/create-link {:text [:span {}
+                                          (icons/icon {:className "fa-fw"} :disclosure-opened)
+                                          "Hide Details"]
+                                   :onClick #(swap! state assoc :expanded? false)})
+               ;; Padding is specifically em rather than rem to match fa-fw
+               [:div {:style {:overflowX "auto" :paddingLeft "1.3em"}}
+                [:div {} (str "Code: " status-code)]
+                (when timestamp [:div {} "Occurred: "
+                                 (common/format-date timestamp
+                                                     (assoc common/default-date-format
+                                                       :timeZoneName "short"))])
+                (when source [:div {} "Source: " source])
+                (when (seq causes)
+                  (let [num-hidden (- (count causes) 4)]
+                    [:div {}
+                     [:div {} (str "Cause" (when (> (count causes) 1) "s") ":")]
+                     (map (fn [cause] [CauseViewer cause]) (take 4 causes))
+                     (when (pos? num-hidden)
+                       [:div {} (str num-hidden " not shown")])]))
+                (when (seq stack-trace)
+                  [StackTraceViewer {:lines stack-trace}])]]
+              [:div {}
+               (style/create-link {:text [:span {}
+                                          (icons/icon {:className "fa-fw"} :disclosure-closed)
+                                          "Show Details"]
+                                   :onClick #(swap! state assoc :expanded? true)})])]))))})
 
 
 (react/defc Breadcrumbs
