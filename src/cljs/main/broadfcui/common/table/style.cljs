@@ -11,4 +11,4 @@
   {:table {:fontSize "80%"}
    :cell (merge clip-text {:padding "0.8em 0 0.8em 16px"})
    :header-row {:color (:text-light style/colors)}
-   :body-row (constantly {:fontWeight 500 :border-top style/standard-line})})
+   :body-row (constantly {:fontWeight 500 :borderTop style/standard-line})})

@@ -333,11 +333,11 @@
                      (swap! state update :server-response assoc :submissions-count (get-parsed-response false))
                      (swap! state update :server-response assoc :server-error status-text)))})
      (endpoints/get-billing-projects
-       (fn [err-text projects]
-         (if err-text
-           (swap! state update :server-response assoc :server-error err-text)
-           (swap! state update :server-response
-                  assoc :billing-projects (map #(% "projectName") projects)))))
+      (fn [err-text projects]
+        (if err-text
+          (swap! state update :server-response assoc :server-error err-text)
+          (swap! state update :server-response
+                 assoc :billing-projects (map :projectName projects)))))
      (endpoints/get-library-attributes
        (fn [{:keys [success? get-parsed-response]}]
          (if success?

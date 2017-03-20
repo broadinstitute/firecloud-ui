@@ -74,17 +74,17 @@
        [Table
         {:data-source (table-utils/local (:projects @state))
          :columns [{:id "Status Icon" :initial-width 16 :resizable? false
-                    :row->col #(% "creationStatus")
+                    :row->col :creationStatus
                     :sort-by :none
                     :render
                     (fn [creation-status]
                       [:span {:title creation-status}
                        (moncommon/icon-for-project-status creation-status)])}
                    {:header "Project Name" :initial-width 500
-                    :as-text #(% "projectName") :sort-by :text
+                    :as-text :projectName :sort-by :text
                     :sort-initial :asc
                     :render
-                    (fn [{:strs [projectName role creationStatus message]}]
+                    (fn [{:keys [projectName role creationStatus message]}]
                       [:span {}
                        (cond
                          (= creationStatus project-status-creating)
@@ -100,7 +100,7 @@
                           [common/FoundationInfoBox
                            {:text [:div {} [:strong {} "Message:"] [:br] message]}]])])}
                    {:header "Role" :initial-width :auto :resizable? false
-                    :row->col #(% "role")}]
+                    :row->col :role}]
          :style table-style/billing-management-style}]
        #_[table/Table
         {:reorderable-columns? false
@@ -174,7 +174,7 @@
    :-handle-status-change
    (fn [{:keys [state]} project-name new-status message]
      (let [project-index (utils/first-matching-index
-                          #(= (% "projectName") project-name)
+                          #(= (:projectName %) project-name)
                           (:projects @state))
            project (get-in @state [:projects project-index])
            updated-project (assoc project "creationStatus" new-status "message" message)]

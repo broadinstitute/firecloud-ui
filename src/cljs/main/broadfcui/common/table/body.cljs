@@ -41,13 +41,13 @@
   (assert (or id (string? header)) "Every column must have a string header or id")
   (or id header))
 
-(defn- resolve-all-props [{:keys [row->col as-text sort-by filter-as render] :as props}]
-  (merge props
-         {:row->col (or row->col identity)
-          :as-text (or as-text str)
-          :sort-fn (if (= sort-by :text) as-text (or sort-by as-text identity))
+(defn- resolve-all-props [{:keys [as-text sort-by filter-as] :as props}]
+  (merge {:row->col identity
+          :as-text str
+          :sort-fn (or sort-by as-text identity)
           :filter-fn (or filter-as as-text str)
-          :render (or render identity)}))
+          :render identity}
+         props))
 
 (defn- join-columns [{:keys [raw-columns-by-id column-display]}]
   (map (fn [{:keys [id] :as data}]
