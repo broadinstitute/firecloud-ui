@@ -1,23 +1,33 @@
 (ns broadfcui.common.table.table
   (:require
     [dmohs.react :as react]
-    [broadfcui.common :as common]
-    [broadfcui.common.components :as comps]
-    [broadfcui.common.style :as style]
-    [broadfcui.common.table.components :as tc]
-    [broadfcui.persistence :as persistence]
+    [broadfcui.common.table.body :as body]
+    [broadfcui.common.table.paginator :as paginator]
     [broadfcui.utils :as utils]
     ))
 
 
 (react/defc Table
-  {:render
-   (fn [{:keys [props state this]}]
-     (let [{:keys [rows]} @state
-           columns (this :-build-columns)]
+  {:get-initial-state
+   (fn [{:keys []}]
+     {:query-params {:page-number 1
+                     :rows-per-page 20
+                     :filter-text ""
+                     :sort-column nil
+                     :sort-order nil}
+      :rows []})
+   :render
+   (fn [{:keys [props state]}]
+     (let [{:keys [rows query-params]} @state
+           {:keys [columns]} props]
        [:div {}
-        (tc/table-header (utils/restructure columns))
-        (tc/table-body (utils/restructure rows columns))]))
+        [body/TableBody (merge (select-keys query-params [:sort-column :sort-order])
+                               (utils/restructure rows columns)
+                               {})]
+        (paginator/paginator (merge (select-keys query-params [:rows-per-page :page-number])
+                                    (utils/restructure rows)
+                                    {:page-selected #(swap! state assoc-in [:query-params :page-number] %)
+                                     :per-page-selected #(swap! state assoc-in [:query-params :rows-per-page] %)}))]))
    :component-did-mount
    (fn [{:keys [this]}]
      (this :-refresh-rows!))
@@ -25,9 +35,8 @@
    (fn [{:keys [state prev-state this]}]
      (when-not (= (:query-params @state) (:query-params prev-state))
        (this :-refresh-rows!)))
-   :-build-columns
-   (fn [{:keys [props state]}])
    :-refresh-rows!
    (fn [{:keys [props state]}]
+     (swap! state assoc :loading? true)
      ((:data-source props) {:query-params (:query-params @state)
-                            :on-done #(swap! state assoc :rows %)}))})
+                            :on-done #(swap! state assoc :rows % :loading? false)}))})
