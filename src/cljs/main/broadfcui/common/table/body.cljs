@@ -18,19 +18,19 @@
    (map-indexed
     (fn [index {:keys [id width initial-width header resizable? sortable?]}]
       [:div {:style (merge (flex-params width)
-                           {:position "relative"}
+                           {:position "relative" :cursor (when sortable? "pointer")}
                            (when resizable? (or (:resize-tab style)
-                                                {:borderRight "1px solid" :marginRight -1}))
-                           (when sortable? {:cursor "pointer"}))}
-       [:div {:style (merge {:width width}
-                            (:cell style)
-                            (:header-cell style))
+                                                {:borderRight "1px solid" :marginRight -1})))}
+       [:div {:style (merge {:width width} (:cell style) (:header-cell style))
               :onClick (when sortable?
                          #(set-sort id (if (or (not= sort-column id)
                                                (= sort-order :desc))
                                          :asc
                                          :desc)))}
-        header]
+        header
+        (when (= id sort-column)
+          [:span {:style {:marginLeft "0.4rem"}}
+           (if (= :asc sort-order) "↑" "↓")])]
        (when resizable?
          [:div {:style {:position "absolute" :cursor "col-resize"
                         :right -11 :top 0 :width 21 :height "100%" :zIndex 1}
@@ -38,10 +38,7 @@
                                (swap! state assoc
                                       :dragging? true :mouse-x (.-clientX e) :drag-column index
                                       :saved-user-select-state (common/disable-text-selection)))
-                :onDoubleClick #(swap! state assoc-in [:column-display index :width] initial-width)}])
-       (when (= id sort-column)
-         [:div {:style {:position "absolute" :top "50%" :right 0 :width 16 :transform "translateY(-50%)"}}
-          (if (= :asc sort-order) "↑" "↓")])])
+                :onDoubleClick #(swap! state assoc-in [:column-display index :width] initial-width)}])])
     joined-columns)])
 
 
@@ -60,16 +57,16 @@
     rows)])
 
 
-(defn- resolve-all-props [{:keys [initial-width] :as props} behavior]
-  (merge {:column-data identity
-          :resizable? (and (not= initial-width :auto) (:resizable-columns? behavior))
+(defn- resolve-column-props [{:keys [initial-width] :as props} behavior]
+  (merge {:resizable? (and (not= initial-width :auto) (:resizable-columns? behavior))
           :sortable? (:sortable-columns? behavior)
+          :column-data identity
           :render identity}
          props))
 
-(defn- join-columns [{:keys [raw-columns-by-id column-display behavior]}]
+(defn- join-columns [{:keys [raw-columns-by-id column-display table-behavior]}]
   (map (fn [{:keys [id] :as data}]
-         (merge data (resolve-all-props (raw-columns-by-id id) behavior)))
+         (merge data (resolve-column-props (raw-columns-by-id id) table-behavior)))
        column-display))
 
 
@@ -88,7 +85,7 @@
       (let [{:keys [rows columns sort-column sort-order set-sort style]} props
             joined-columns (join-columns {:raw-columns-by-id (table-utils/index-by-id columns)
                                           :column-display (:column-display @state)
-                                          :behavior (:behavior props)})]
+                                          :table-behavior (:behavior props)})]
         [:div {:style (:table style)}
          (header (utils/restructure joined-columns sort-column sort-order set-sort style state))
          (body (utils/restructure rows joined-columns style))]))}
@@ -96,8 +93,8 @@
     {"mousemove"
      (fn [{:keys [state]} e]
        (when (:dragging? @state)
-         (let [{:keys [drag-column mouse-x]} @state
-               current-width (:width (nth (:column-display @state) drag-column))
+         (let [{:keys [drag-column mouse-x column-display]} @state
+               current-width (:width (nth column-display drag-column))
                new-mouse-x (.-clientX e)
                drag-amount (- new-mouse-x mouse-x)
                new-width (+ current-width drag-amount)]

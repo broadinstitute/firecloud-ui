@@ -4,8 +4,9 @@
     ))
 
 
-(def clip-text {:whiteSpace "nowrap" :overflow "hidden" :textOverflow "ellipsis"})
+(def table-icon-size 16)
 
+(def clip-text {:whiteSpace "nowrap" :overflow "hidden" :textOverflow "ellipsis"})
 
 (def table-light
   {:table {:fontSize "0.8rem"}
@@ -13,5 +14,3 @@
    :header-row {:color (:text-light style/colors)}
    :body-row (constantly {:fontWeight 500 :borderTop style/standard-line})
    :resize-tab {:borderRight style/standard-line :marginRight -1}})
-
-(def table-icon-size 16)
