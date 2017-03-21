@@ -238,6 +238,7 @@
         (react/create-element
          ;; empty string makes react attach a property with no value
          [:div {:className "dropdown-pane" :id (:infobox-id @locals) :data-dropdown ""
+                :data-h-offset 20
                 :ref (utils/create-element-ref-handler
                       {:store locals
                        :key :dropdown-element

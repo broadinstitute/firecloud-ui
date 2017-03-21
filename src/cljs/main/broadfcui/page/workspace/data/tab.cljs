@@ -67,14 +67,17 @@
                                 {:id id :text text
                                  :onClick #(swap! state update :crumbs (comp vec (partial take 2)))}))]
          [:div {:style {:position "relative"}}
-          common/PHI-warning
           [:div {:style {:fontSize "1.1rem" :marginBottom "1rem"}}
-           [comps/Breadcrumbs {:crumbs (:crumbs @state)}]]
+           [:span {:style {:display "inline-block"}} [comps/Breadcrumbs {:crumbs (:crumbs @state)}]]
+           (when-not last-crumb-id
+             [common/FoundationInfoBox
+              {:text [:div {} "For more information about importing files, see our "
+                      [:a {:href (config/user-guide-url) :target "_blank"} "user guide"] "."]}])]
           [:div {:style {:backgroundColor "white" :padding "1em"}}
            (case last-crumb-id
              :file-import
              [import-data/Page
-               (select-keys props [:workspace-id :import-type :on-data-imported])]
+              (select-keys props [:workspace-id :import-type :on-data-imported])]
              :workspace-import
              [copy-data-workspaces/Page
               (assoc (select-keys props [:workspace-id :this-realm :on-data-imported])
