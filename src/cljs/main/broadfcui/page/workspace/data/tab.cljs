@@ -73,7 +73,8 @@
           [:div {:style {:backgroundColor "white" :padding "1em"}}
            (case last-crumb-id
              :file-import
-             [import-data/Page (select-keys props [:workspace-id :import-type])]
+             [import-data/Page
+               (select-keys props [:workspace-id :import-type :on-data-imported])]
              :workspace-import
              [copy-data-workspaces/Page
               (assoc (select-keys props [:workspace-id :this-realm :on-data-imported])
