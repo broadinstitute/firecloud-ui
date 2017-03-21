@@ -64,11 +64,10 @@
      (let [selected-workspace (:selected-workspace (first (:crumbs props)))]
        (cond
          selected-workspace
-         [copy-data-entities/SelectType {:workspace-id (:workspace-id props)
-                                         :selected-workspace-id (workspace->id selected-workspace)
-                                         :crumbs (rest (:crumbs props))
-                                         :add-crumb (:add-crumb props)
-                                         :reload-data-tab (:reload-data-tab props)}]
+         [copy-data-entities/SelectType
+          (merge (select-keys props [:workspace-id :add-crumb :on-data-imported])
+                 {:selected-workspace-id (workspace->id selected-workspace)
+                  :crumbs (rest (:crumbs props))})]
          (:workspaces @state)
          [WorkspaceList {:workspaces (:workspaces @state)
                          :num-filtered (:num-filtered @state)
