@@ -23,15 +23,13 @@
   data)
 
 (defn- sort-rows [{:keys [sort-column sort-order]} columns data]
-  (if-not sort-column
-    data
-    (let [column (find-by-id sort-column columns)
-          column-data (or (:column-data column) identity)
-          sort-fn (comp column-data (or (:sort-by column) (:as-text column) identity))
-          sorted (sort-by sort-fn data)]
-      (if (= sort-order :desc)
-        (reverse sorted)
-        sorted))))
+  (let [column (find-by-id sort-column columns)
+        column-data (or (:column-data column) identity)
+        sort-fn (comp column-data (or (:sort-by column) (:as-text column) identity))
+        sorted (sort-by sort-fn data)]
+    (if (= sort-order :desc)
+      (reverse sorted)
+      sorted)))
 
 (defn- trim-rows [{:keys [page-number rows-per-page]} data]
   (->> data

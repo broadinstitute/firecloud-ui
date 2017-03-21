@@ -3,6 +3,7 @@
     [dmohs.react :as react]
     [broadfcui.common.table.body :as body]
     [broadfcui.common.table.paginator :as paginator]
+    [broadfcui.common.table.utils :as table-utils]
     [broadfcui.utils :as utils]
     ))
 
@@ -15,13 +16,16 @@
       :paginator {:style {:marginTop "1rem"}
                   :per-page-options [10 20 100 500]}})
    :get-initial-state
-   (fn [{:keys []}]
-     {:query-params {:page-number 1
-                     :rows-per-page 20
-                     :filter-text ""
-                     :sort-column nil
-                     :sort-order nil}
-      :rows []})
+   (fn [{:keys [props]}]
+     (let [initial-sort-column (or (first (filter :sort-initial (:columns props)))
+                                   (first (:columns props)))
+           initial-sort-order (get initial-sort-column :sort-initial :asc)]
+       {:query-params {:page-number 1
+                       :rows-per-page 20
+                       :filter-text ""
+                       :sort-column (table-utils/resolve-id initial-sort-column)
+                       :sort-order initial-sort-order}
+        :rows []}))
    :render
    (fn [{:keys [props state]}]
      (let [{:keys [rows total-count query-params]} @state
