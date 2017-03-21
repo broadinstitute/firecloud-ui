@@ -8,7 +8,9 @@
 
 
 (def table-light
-  {:table {:fontSize "80%"}
-   :cell (merge clip-text {:padding "0.8em 0 0.8em 16px"})
+  {:table {:fontSize "0.8rem"}
+   :cell (merge clip-text {:padding "0.6rem 0 0.6rem 16px"})
    :header-row {:color (:text-light style/colors)}
    :body-row (constantly {:fontWeight 500 :borderTop style/standard-line})})
+
+(def table-icon-size 16)

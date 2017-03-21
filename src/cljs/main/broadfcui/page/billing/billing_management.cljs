@@ -78,7 +78,7 @@
                     :sort-by :none
                     :render
                     (fn [creation-status]
-                      [:span {:title creation-status}
+                      [:div {:title creation-status :style {:height table-style/table-icon-size}}
                        (moncommon/icon-for-project-status creation-status)])}
                    {:header "Project Name" :initial-width 500
                     :as-text :projectName :sort-by :text
@@ -96,7 +96,8 @@
                                              :onClick #((:on-select props) projectName)})
                          :else projectName)
                        (when message
-                         [:div {:style {:float "right" :position "relative"}}
+                         [:div {:style {:float "right" :position "relative"
+                                        :height table-style/table-icon-size}}
                           [common/FoundationInfoBox
                            {:text [:div {} [:strong {} "Message:"] [:br] message]}]])])}
                    {:header "Role" :initial-width :auto :resizable? false

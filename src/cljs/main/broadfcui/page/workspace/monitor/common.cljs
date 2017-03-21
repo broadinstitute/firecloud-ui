@@ -4,6 +4,7 @@
     [broadfcui.common.duration :as duration]
     [broadfcui.common.icons :as icons]
     [broadfcui.common.style :as style]
+    [broadfcui.common.table.style :as table-style]
     [broadfcui.utils :as utils]
     ))
 
@@ -39,17 +40,20 @@
     (pos? (count (submission "notstarted")))))
 
 (def ^:private success-icon
-  (icons/icon {:style {:color (:success-state style/colors) :fontSize 12 :marginRight 4}}
+  (icons/icon {:style {:color (:success-state style/colors) :fontSize 12 :marginRight 4
+                       :width table-style/table-icon-size :height table-style/table-icon-size}}
               :done))
 (def ^:private running-icon
   [:span {:style {:display "inline-flex" :alignItems "center" :justifyContent "center" :verticalAlign "middle"
                   :backgroundColor (:running-state style/colors)
-                  :width 16 :height 16 :borderRadius 3 :margin "-4px 4px 0 0"}}
+                  :width table-style/table-icon-size :height table-style/table-icon-size
+                  :borderRadius 3 :margin "-4px 4px 0 0"}}
    [icons/RunningIcon {:size 12}]])
 (def ^:private failure-icon
   [:span {:style {:display "inline-flex" :alignItems "center" :justifyContent "center" :verticalAlign "middle"
                   :backgroundColor (:exception-state style/colors)
-                  :width 16 :height 16 :borderRadius 3 :margin "-4px 4px 0 0"}}
+                  :width table-style/table-icon-size :height table-style/table-icon-size
+                  :borderRadius 3 :margin "-4px 4px 0 0"}}
    [icons/ExceptionIcon {:size 12}]])
 
 
