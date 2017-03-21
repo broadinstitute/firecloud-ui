@@ -12,12 +12,26 @@
     {:flexBasis width :flexGrow 0 :flexShrink 0}))
 
 
-(defn- header [{:keys [joined-columns sort-column sort-order style]}]
+(defn- header [{:keys [joined-columns sort-column sort-order style state]}]
   [:div {:style (merge {:display "flex"} (:row style) (:header-row style))}
-   (map
-    (fn [{:keys [width header]}]
-      [:div {:style (merge (flex-params width) (:cell style) (:header-cell style))}
-       header])
+   (map-indexed
+    (fn [index {:keys [width initial-width header resizable?]}]
+      [:div {:style (merge (flex-params width)
+                           {:position "relative"}
+                           (when resizable? (or (:resize-tab style)
+                                                {:borderRight "1px solid" :marginRight -1})))}
+       [:div {:style (merge {:width width}
+                            (:cell style)
+                            (:header-cell style))}
+        header]
+       (when resizable?
+         [:div {:style {:position "absolute" :cursor "col-resize"
+                        :right -11 :top 0 :width 21 :height "100%" :zIndex 1}
+                :onMouseDown (fn [e]
+                               (swap! state assoc
+                                      :dragging? true :mouse-x (.-clientX e) :drag-column index
+                                      :saved-user-select-state (common/disable-text-selection)))
+                :onDoubleClick #(swap! state assoc-in [:column-display index :width] initial-width)}])])
     joined-columns)])
 
 
@@ -41,17 +55,18 @@
   (assert (or id (string? header)) "Every column must have a string header or id")
   (or id header))
 
-(defn- resolve-all-props [{:keys [as-text sort-by filter-as] :as props}]
+(defn- resolve-all-props [{:keys [as-text sort-by filter-as] :as props} behavior]
   (merge {:column-data identity
+          :resizable? (:resizable-columns? behavior)
           :as-text str
           :sort-fn (or sort-by as-text identity)
           :filter-fn (or filter-as as-text str)
           :render identity}
          props))
 
-(defn- join-columns [{:keys [raw-columns-by-id column-display]}]
+(defn- join-columns [{:keys [raw-columns-by-id column-display behavior]}]
   (map (fn [{:keys [id] :as data}]
-         (merge data (resolve-all-props (raw-columns-by-id id))))
+         (merge data (resolve-all-props (raw-columns-by-id id) behavior)))
        column-display))
 
 
@@ -60,18 +75,19 @@
    {:get-initial-state
     (fn [{:keys [props]}]
       {:column-display
-       (map (fn [{:keys [initial-width show-initial?] :as raw-column}]
-              {:id (resolve-id raw-column)
-               :width (or initial-width 100)
-               :visible? (if (some? show-initial?) show-initial? true)})
-            (:columns props))})
+       (mapv (fn [{:keys [initial-width show-initial?] :as raw-column}]
+               {:id (resolve-id raw-column)
+                :width (or initial-width 100)
+                :visible? (if (some? show-initial?) show-initial? true)})
+             (:columns props))})
     :render
     (fn [{:keys [props state]}]
       (let [{:keys [rows columns sort-column sort-order style]} props
             joined-columns (join-columns {:raw-columns-by-id (utils/index-by resolve-id columns)
-                                          :column-display (:column-display @state)})]
+                                          :column-display (:column-display @state)
+                                          :behavior (:behavior props)})]
         [:div {:style (:table style)}
-         (header (utils/restructure joined-columns sort-column sort-order style))
+         (header (utils/restructure joined-columns sort-column sort-order style state))
          (body (utils/restructure rows joined-columns style))]))}
    (utils/with-window-listeners
     {"mousemove"

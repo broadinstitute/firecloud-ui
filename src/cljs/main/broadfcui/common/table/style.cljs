@@ -11,6 +11,7 @@
   {:table {:fontSize "0.8rem"}
    :cell (merge clip-text {:padding "0.6rem 0 0.6rem 16px"})
    :header-row {:color (:text-light style/colors)}
-   :body-row (constantly {:fontWeight 500 :borderTop style/standard-line})})
+   :body-row (constantly {:fontWeight 500 :borderTop style/standard-line})
+   :resize-tab {:borderRight style/standard-line :marginRight -1}})
 
 (def table-icon-size 16)

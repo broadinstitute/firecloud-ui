@@ -10,7 +10,8 @@
 (react/defc Table
   {:get-default-props
    (fn []
-     {:paginator {:style {:marginTop "1rem"}
+     {:behavior {:resizable-columns? true}
+      :paginator {:style {:marginTop "1rem"}
                   :per-page-options [10 20 100 500]}})
    :get-initial-state
    (fn [{:keys []}]
@@ -23,11 +24,11 @@
    :render
    (fn [{:keys [props state]}]
      (let [{:keys [rows total-count query-params]} @state
-           {:keys [columns style]} props]
+           {:keys [columns style behavior]} props]
        [:div {}
         [:div {:style {:overflowX "auto"}}
          [body/TableBody (merge (select-keys query-params [:sort-column :sort-order])
-                                (utils/restructure rows columns style))]
+                                (utils/restructure rows columns style behavior))]
         (paginator/paginator
          (merge (select-keys query-params [:rows-per-page :page-number])
                 (:paginator props)
