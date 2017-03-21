@@ -73,16 +73,14 @@
        :else
        [Table
         {:data-source (table-utils/local (:projects @state))
-         :columns [{:id "Status Icon" :initial-width 16 :resizable? false
+         :columns [{:id "Status Icon" :initial-width 16 :resizable? false :sortable? false
                     :column-data :creationStatus
-                    :sort-by :none
                     :render
                     (fn [creation-status]
                       [:div {:title creation-status :style {:height table-style/table-icon-size}}
                        (moncommon/icon-for-project-status creation-status)])}
-                   {:header "Project Name" :initial-width 500
-                    :as-text :projectName :sort-by :text
-                    :sort-initial :asc
+                   {:header "Project Name" :initial-width 500 :sort-initial :asc
+                    :as-text :projectName
                     :render
                     (fn [{:keys [projectName role creationStatus message]}]
                       [:span {}
@@ -100,8 +98,7 @@
                                         :height table-style/table-icon-size}}
                           [common/FoundationInfoBox
                            {:text [:div {} [:strong {} "Message:"] [:br] message]}]])])}
-                   {:header "Role" :initial-width :auto :resizable? false
-                    :column-data :role}]
+                   {:header "Role" :initial-width :auto :column-data :role}]
          :style table-style/table-light}]
        #_[table/Table
         {:reorderable-columns? false

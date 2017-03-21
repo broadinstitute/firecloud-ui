@@ -4,6 +4,20 @@
     ))
 
 
+(defn resolve-id [{:keys [header id]}]
+  (assert (or (not id) (string? id)) "Column id must be a string, if present")
+  (assert (or id (string? header)) "Every column must have a string header or id")
+  (or id header))
+
+
+(defn index-by-id [columns]
+  (utils/index-by resolve-id columns))
+
+
+(defn find-by-id [id raw-columns]
+  (first (filter (comp (partial = id) resolve-id) raw-columns)))
+
+
 (defn- filter-rows [{:keys [filter-text]} columns data]
   ;; TODO
   data)
@@ -11,7 +25,10 @@
 (defn- sort-rows [{:keys [sort-column sort-order]} columns data]
   (if-not sort-column
     data
-    (let [sorted (sort-by (get-in columns [sort-column :sort-fn]) data)]
+    (let [column (find-by-id sort-column columns)
+          column-data (or (:column-data column) identity)
+          sort-fn (comp column-data (or (:sort-by column) (:as-text column) identity))
+          sorted (sort-by sort-fn data)]
       (if (= sort-order :desc)
         (reverse sorted)
         sorted))))

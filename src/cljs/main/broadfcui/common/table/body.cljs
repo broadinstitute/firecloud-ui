@@ -2,6 +2,7 @@
   (:require
     [dmohs.react :as react]
     [broadfcui.common :as common]
+    [broadfcui.common.table.utils :as table-utils]
     [broadfcui.utils :as utils]
     ))
 
@@ -12,17 +13,23 @@
     {:flexBasis width :flexGrow 0 :flexShrink 0}))
 
 
-(defn- header [{:keys [joined-columns sort-column sort-order style state]}]
+(defn- header [{:keys [joined-columns sort-column sort-order set-sort style state]}]
   [:div {:style (merge {:display "flex"} (:row style) (:header-row style))}
    (map-indexed
-    (fn [index {:keys [width initial-width header resizable?]}]
+    (fn [index {:keys [id width initial-width header resizable? sortable?]}]
       [:div {:style (merge (flex-params width)
                            {:position "relative"}
                            (when resizable? (or (:resize-tab style)
-                                                {:borderRight "1px solid" :marginRight -1})))}
+                                                {:borderRight "1px solid" :marginRight -1}))
+                           (when sortable? {:cursor "pointer"}))}
        [:div {:style (merge {:width width}
                             (:cell style)
-                            (:header-cell style))}
+                            (:header-cell style))
+              :onClick (when sortable?
+                         #(set-sort id (if (or (not= sort-column id)
+                                               (= sort-order :desc))
+                                         :asc
+                                         :desc)))}
         header]
        (when resizable?
          [:div {:style {:position "absolute" :cursor "col-resize"
@@ -31,7 +38,10 @@
                                (swap! state assoc
                                       :dragging? true :mouse-x (.-clientX e) :drag-column index
                                       :saved-user-select-state (common/disable-text-selection)))
-                :onDoubleClick #(swap! state assoc-in [:column-display index :width] initial-width)}])])
+                :onDoubleClick #(swap! state assoc-in [:column-display index :width] initial-width)}])
+       (when (= id sort-column)
+         [:div {:style {:position "absolute" :top "50%" :right 0 :width 16 :transform "translateY(-50%)"}}
+          (if (= :asc sort-order) "↑" "↓")])])
     joined-columns)])
 
 
@@ -50,17 +60,10 @@
     rows)])
 
 
-(defn- resolve-id [{:keys [header id]}]
-  (assert (or (not id) (string? id)) "Column id must be a string, if present")
-  (assert (or id (string? header)) "Every column must have a string header or id")
-  (or id header))
-
-(defn- resolve-all-props [{:keys [as-text sort-by filter-as] :as props} behavior]
+(defn- resolve-all-props [{:keys [initial-width] :as props} behavior]
   (merge {:column-data identity
-          :resizable? (:resizable-columns? behavior)
-          :as-text str
-          :sort-fn (or sort-by as-text identity)
-          :filter-fn (or filter-as as-text str)
+          :resizable? (and (not= initial-width :auto) (:resizable-columns? behavior))
+          :sortable? (:sortable-columns? behavior)
           :render identity}
          props))
 
@@ -76,18 +79,18 @@
     (fn [{:keys [props]}]
       {:column-display
        (mapv (fn [{:keys [initial-width show-initial?] :as raw-column}]
-               {:id (resolve-id raw-column)
+               {:id (table-utils/resolve-id raw-column)
                 :width (or initial-width 100)
                 :visible? (if (some? show-initial?) show-initial? true)})
              (:columns props))})
     :render
     (fn [{:keys [props state]}]
-      (let [{:keys [rows columns sort-column sort-order style]} props
-            joined-columns (join-columns {:raw-columns-by-id (utils/index-by resolve-id columns)
+      (let [{:keys [rows columns sort-column sort-order set-sort style]} props
+            joined-columns (join-columns {:raw-columns-by-id (table-utils/index-by-id columns)
                                           :column-display (:column-display @state)
                                           :behavior (:behavior props)})]
         [:div {:style (:table style)}
-         (header (utils/restructure joined-columns sort-column sort-order style state))
+         (header (utils/restructure joined-columns sort-column sort-order set-sort style state))
          (body (utils/restructure rows joined-columns style))]))}
    (utils/with-window-listeners
     {"mousemove"
