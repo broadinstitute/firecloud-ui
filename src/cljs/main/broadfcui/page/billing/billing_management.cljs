@@ -74,7 +74,7 @@
        [Table
         {:data-source (table-utils/local (:projects @state))
          :columns [{:id "Status Icon" :initial-width 16 :resizable? false
-                    :row->col :creationStatus
+                    :column-data :creationStatus
                     :sort-by :none
                     :render
                     (fn [creation-status]
@@ -100,8 +100,8 @@
                           [common/FoundationInfoBox
                            {:text [:div {} [:strong {} "Message:"] [:br] message]}]])])}
                    {:header "Role" :initial-width :auto :resizable? false
-                    :row->col :role}]
-         :style table-style/billing-management-style}]
+                    :column-data :role}]
+         :style table-style/table-light}]
        #_[table/Table
         {:reorderable-columns? false
          :header-row-style table-style/header-row-style-light

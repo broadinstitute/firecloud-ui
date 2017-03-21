@@ -7,7 +7,7 @@
 (def clip-text {:whiteSpace "nowrap" :overflow "hidden" :textOverflow "ellipsis"})
 
 
-(def billing-management-style
+(def table-light
   {:table {:fontSize "80%"}
    :cell (merge clip-text {:padding "0.8em 0 0.8em 16px"})
    :header-row {:color (:text-light style/colors)}

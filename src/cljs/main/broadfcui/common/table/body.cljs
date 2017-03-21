@@ -29,9 +29,9 @@
                            (:row style)
                            ((or (:body-row style) identity) (utils/restructure index row)))}
        (map
-        (fn [{:keys [width row->col render]}]
+        (fn [{:keys [width column-data render]}]
           [:div {:style (merge (flex-params width) (:cell style) (:body-cell style))}
-           (-> row row->col render)])
+           (-> row column-data render)])
         joined-columns)])
     rows)])
 
@@ -42,7 +42,7 @@
   (or id header))
 
 (defn- resolve-all-props [{:keys [as-text sort-by filter-as] :as props}]
-  (merge {:row->col identity
+  (merge {:column-data identity
           :as-text str
           :sort-fn (or sort-by as-text identity)
           :filter-fn (or filter-as as-text str)
