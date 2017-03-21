@@ -28,12 +28,14 @@
         [:div {:style {:overflowX "auto"}}
          [body/TableBody (merge (select-keys query-params [:sort-column :sort-order])
                                 (utils/restructure rows columns style))]
-        (paginator/paginator (merge (select-keys query-params [:rows-per-page :page-number])
-                                    (:paginator props)
-                                    {:filtered-count total-count
-                                     :total-count total-count
-                                     :page-selected #(swap! state assoc-in [:query-params :page-number] %)
-                                     :per-page-selected #(swap! state assoc-in [:query-params :rows-per-page] %)}))]]))
+        (paginator/paginator
+         (merge (select-keys query-params [:rows-per-page :page-number])
+                (:paginator props)
+                {:filtered-count total-count
+                 :total-count total-count
+                 :page-selected #(swap! state assoc-in [:query-params :page-number] %)
+                 :per-page-selected #(swap! state update :query-params
+                                            merge {:rows-per-page % :page-number 1})}))]]))
    :component-did-mount
    (fn [{:keys [this]}]
      (this :-refresh-rows!))
