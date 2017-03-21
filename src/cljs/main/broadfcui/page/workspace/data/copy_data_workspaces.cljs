@@ -68,12 +68,10 @@
        (cond
          selected-workspace
          [copy-data-entities/SelectType
-          {:workspace-id (:workspace-id props)
-           :selected-workspace-id (workspace->id selected-workspace)
-           :selected-workspace-bucket (get-in selected-workspace ["workspace" "bucketName"])
-           :crumbs (rest (:crumbs props))
-           :add-crumb (:add-crumb props)
-           :reload-data-tab (:reload-data-tab props)}]
+          (merge (select-keys props [:workspace-id :add-crumb :on-data-imported])
+                 {:selected-workspace-id (workspace->id selected-workspace)
+                  :selected-workspace-bucket (get-in selected-workspace ["workspace" "bucketName"])
+                  :crumbs (rest (:crumbs props))})]
          (:workspaces @state)
          [WorkspaceList
           {:workspaces (:workspaces @state)

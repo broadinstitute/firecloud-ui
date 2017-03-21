@@ -49,7 +49,7 @@
        :on-done (fn [{:keys [success? get-parsed-response]}]
                   (swap! state dissoc :copying?)
                   (if success?
-                    ((:reload-data-tab props) (:type props))
+                    ((:on-data-imported props) (:type props))
                     (swap! state assoc :server-error (get-parsed-response false))))}))})
 
 
@@ -57,13 +57,12 @@
   {:render
    (fn [{:keys [state props]}]
      (cond
-       (:entity-list @state) [EntitiesList {:workspace-id (:workspace-id props)
-                                            :selected-workspace-id (:selected-workspace-id props)
-                                            :selected-workspace-bucket (:selected-workspace-bucket props)
-                                            :entity-list (:entity-list @state)
-                                            :type (:type props)
-                                            :id-name (:id-name props)
-                                            :reload-data-tab (:reload-data-tab props)}]
+       (:entity-list @state) [EntitiesList
+                              (merge
+                               (select-keys props [:workspace-id :selected-workspace-id :type
+                                                   :selected-workspace-bucket :id-name
+                                                   :on-data-imported])
+                               (select-keys @state [:entity-list]))]
        (:server-error @state) [comps/ErrorViewer {:error (:server-error @state)}]
        :else [:div {:style {:textAlign "center"}} [comps/Spinner {:text "Loading entities..."}]]))
    :component-did-mount
