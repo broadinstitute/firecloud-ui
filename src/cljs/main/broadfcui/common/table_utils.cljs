@@ -247,14 +247,14 @@
     data
     (filter (fn [item]
               (utils/matches-filter-text
+               filter-text
                (apply str (map-indexed
                            (fn [i column]
                              (let [func (or (:filter-by column)
                                             (:as-text column)
                                             str)]
                                (if (= func :none) "" (func (nth (->row item) i)))))
-                           columns))
-               filter-text))
+                           columns))))
             data)))
 
 

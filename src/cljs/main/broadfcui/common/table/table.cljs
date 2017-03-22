@@ -9,7 +9,13 @@
 
 
 (react/defc Table
-  {:get-default-props
+  {:merge-query-params
+   (fn [{:keys [state]} new-params]
+     (swap! state update :query-params merge new-params))
+   :get-query-params
+   (fn [{:keys [state]}]
+     (:query-params @state))
+   :get-default-props
    (fn []
      {:behavior {:resizable-columns? true
                  :sortable-columns? true}
@@ -33,18 +39,20 @@
        [:div {}
         [:div {:style {:overflowX "auto"}}
          [body/TableBody
-          (merge (select-keys query-params [:sort-column :sort-order])
-                 (utils/restructure rows columns style behavior)
-                 {:set-sort (fn [col order] (swap! state update :query-params
-                                                   merge {:sort-column col :sort-order order}))})]
+          (utils/deep-merge
+           (select-keys query-params [:sort-column :sort-order])
+           (utils/restructure rows columns style behavior)
+           {:set-sort (fn [col order] (swap! state update :query-params
+                                             merge {:sort-column col :sort-order order}))})]
         (paginator/paginator
-         (merge (select-keys query-params [:rows-per-page :page-number])
-                (:paginator props)
-                {:filtered-count total-count
-                 :total-count total-count
-                 :page-selected #(swap! state assoc-in [:query-params :page-number] %)
-                 :per-page-selected #(swap! state update :query-params
-                                            merge {:rows-per-page % :page-number 1})}))]]))
+         (utils/deep-merge
+          (select-keys query-params [:rows-per-page :page-number])
+          (:paginator props)
+          {:filtered-count total-count
+           :total-count total-count
+           :page-selected #(swap! state assoc-in [:query-params :page-number] %)
+           :per-page-selected #(swap! state update :query-params
+                                      merge {:rows-per-page % :page-number 1})}))]]))
    :component-did-mount
    (fn [{:keys [this]}]
      (this :-refresh-rows!))

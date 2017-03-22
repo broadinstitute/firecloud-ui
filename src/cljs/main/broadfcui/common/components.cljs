@@ -382,7 +382,10 @@
 
 
 (react/defc TextFilter
-  {:render
+  {:set-text
+   (fn [{:keys [refs]} text]
+     (set! (.-value (@refs "filter-field")) text))
+   :render
    (fn [{:keys [props this]}]
      (let [{:keys [initial-text placeholder width]} props]
        [:div {:style {:display "inline-flex" :width width}}

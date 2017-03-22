@@ -18,9 +18,22 @@
   (first (filter (comp (partial = id) resolve-id) raw-columns)))
 
 
+(defn- row->text [row columns]
+  (keep (fn [column]
+          (when (get column :filterable? true)
+            (let [func (or (:as-text column) str)
+                  column-data-fn (or (:column-data column) identity)
+                  column-data (column-data-fn row)]
+              (func column-data))))
+        columns))
+
 (defn- filter-rows [{:keys [filter-text]} columns data]
-  ;; TODO
-  data)
+  (if (clojure.string/blank? filter-text)
+    data
+    (filter (fn [row]
+              (some (partial utils/matches-filter-text filter-text)
+                    (row->text row columns)))
+            data)))
 
 (defn- sort-rows [{:keys [sort-column sort-order]} columns data]
   (let [column (find-by-id sort-column columns)

@@ -43,7 +43,7 @@
 
 
 (defn- body [{:keys [rows joined-columns style]}]
-  [:div {:style {:body style}}
+  [:div {:style (:body style)}
    (map-indexed
     (fn [index row]
       [:div {:style (merge {:display "flex"}

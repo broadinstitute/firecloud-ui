@@ -7,6 +7,7 @@
     [broadfcui.common.style :as style]
     [broadfcui.common.table :as table]
     [broadfcui.common.table.table :refer [Table]]
+    [broadfcui.common.table.prefabs :refer [LightTable]]
     [broadfcui.common.table.style :as table-style]
     [broadfcui.common.table.utils :as table-utils]
     [broadfcui.common.table-utils :refer [add-right]]
@@ -71,35 +72,35 @@
        (:error-message @state) (style/create-server-error-message (:error-message @state))
        (nil? (:projects @state)) [comps/Spinner {:text "Loading billing projects..."}]
        :else
-       [Table
-        {:data-source (table-utils/local (:projects @state))
-         :columns [{:id "Status Icon" :initial-width 16 :resizable? false :sortable? false
-                    :column-data :creationStatus
-                    :render
-                    (fn [creation-status]
-                      [:div {:title creation-status :style {:height table-style/table-icon-size}}
-                       (moncommon/icon-for-project-status creation-status)])}
-                   {:header "Project Name" :initial-width 500 :sort-initial :asc
-                    :as-text :projectName
-                    :render
-                    (fn [{:keys [projectName role creationStatus message]}]
-                      [:span {}
-                       (cond
-                         (= creationStatus project-status-creating)
-                         [PendingProjectControl
-                          {:project-name projectName
-                           :on-status-change (partial this :-handle-status-change projectName)}]
-                         (and (= creationStatus project-status-ready) (= role "Owner"))
-                         (style/create-link {:text projectName
-                                             :onClick #((:on-select props) projectName)})
-                         :else projectName)
-                       (when message
-                         [:div {:style {:float "right" :position "relative"
-                                        :height table-style/table-icon-size}}
-                          [common/FoundationInfoBox
-                           {:text [:div {} [:strong {} "Message:"] [:br] message]}]])])}
-                   {:header "Role" :initial-width :auto :column-data :role}]
-         :style table-style/table-light}]
+       [LightTable
+        {:table {:data-source (table-utils/local (:projects @state))
+                 :columns [{:id "Status Icon" :initial-width 16
+                            :resizable? false :sortable? false :filterable? false
+                            :column-data :creationStatus
+                            :render
+                            (fn [creation-status]
+                              [:div {:title creation-status :style {:height table-style/table-icon-size}}
+                               (moncommon/icon-for-project-status creation-status)])}
+                           {:header "Project Name" :initial-width 500 :sort-initial :asc
+                            :as-text :projectName
+                            :render
+                            (fn [{:keys [projectName role creationStatus message]}]
+                              [:span {}
+                               (cond
+                                 (= creationStatus project-status-creating)
+                                 [PendingProjectControl
+                                  {:project-name projectName
+                                   :on-status-change (partial this :-handle-status-change projectName)}]
+                                 (and (= creationStatus project-status-ready) (= role "Owner"))
+                                 (style/create-link {:text projectName
+                                                     :onClick #((:on-select props) projectName)})
+                                 :else projectName)
+                               (when message
+                                 [:div {:style {:float "right" :position "relative"
+                                                :height table-style/table-icon-size}}
+                                  [common/FoundationInfoBox
+                                   {:text [:div {} [:strong {} "Message:"] [:br] message]}]])])}
+                           {:header "Role" :initial-width :auto :column-data :role}]}}]
        #_[table/Table
         {:reorderable-columns? false
          :header-row-style table-style/header-row-style-light
