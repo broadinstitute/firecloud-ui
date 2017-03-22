@@ -53,12 +53,14 @@
   "Create a data source from a local sequence"
   [data]
   (fn [{:keys [columns query-params on-done]}]
-    (on-done
-     {:total-count (count data)
-      :results (->> data
-                    (filter-rows query-params columns)
-                    (sort-rows query-params columns)
-                    (trim-rows query-params))})))
+    (let [filtered (filter-rows query-params columns data)
+          displayed (->> filtered
+                         (sort-rows query-params columns)
+                         (trim-rows query-params))]
+      (on-done
+       {:total-count (count data)
+        :filtered-count (count filtered)
+        :results displayed}))))
 
 
 

@@ -34,7 +34,7 @@
         :rows []}))
    :render
    (fn [{:keys [props state]}]
-     (let [{:keys [rows total-count query-params]} @state
+     (let [{:keys [rows total-count filtered-count query-params]} @state
            {:keys [columns style behavior]} props]
        [:div {}
         [:div {:style {:overflowX "auto"}}
@@ -48,9 +48,8 @@
          (utils/deep-merge
           (select-keys query-params [:rows-per-page :page-number])
           (:paginator props)
-          {:filtered-count total-count
-           :total-count total-count
-           :page-selected #(swap! state assoc-in [:query-params :page-number] %)
+          (utils/restructure total-count filtered-count)
+          {:page-selected #(swap! state assoc-in [:query-params :page-number] %)
            :per-page-selected #(swap! state update :query-params
                                       merge {:rows-per-page % :page-number 1})}))]]))
    :component-did-mount
@@ -65,8 +64,9 @@
      (swap! state assoc :loading? true)
      ((:data-source props) {:columns (:columns props)
                             :query-params (:query-params @state)
-                            :on-done (fn [{:keys [total-count results]}]
+                            :on-done (fn [{:keys [total-count filtered-count results]}]
                                        (swap! state assoc
                                               :total-count total-count
+                                              :filtered-count filtered-count
                                               :rows results
                                               :loading? false))}))})
