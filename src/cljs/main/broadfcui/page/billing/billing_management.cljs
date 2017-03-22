@@ -6,11 +6,9 @@
     [broadfcui.common.flex-utils :as flex]
     [broadfcui.common.modal :as modal]
     [broadfcui.common.style :as style]
-    [broadfcui.common.table.table :refer [Table]]
     [broadfcui.common.table.prefabs :refer [LightTable]]
     [broadfcui.common.table.style :as table-style]
     [broadfcui.common.table.utils :as table-utils]
-    [broadfcui.common.table-utils :refer [add-right]]
     [broadfcui.endpoints :as endpoints]
     [broadfcui.nav :as nav]
     [broadfcui.page.billing.create-project :refer [CreateBillingProjectDialog]]
@@ -101,7 +99,7 @@
                                   (common/render-info-box
                                    {:text [:div {} [:strong {} "Message:"] [:br] message]})])])}
                            {:header "Role" :initial-width :auto :column-data :role}]}
-         :toolbar-items
+         :toolbar{:items
          [flex/spring
           [comps/Button
            {:text "Create New Billing Project"
@@ -122,7 +120,7 @@
                            (js-invoke
                             @utils/google-auth2-instance
                             "grantOfflineAccess"
-                            (clj->js {:redirect_uri "postmessage" :scope "https://www.googleapis.com/auth/cloud-billing"})))))}]]}]))
+                            (clj->js {:redirect_uri "postmessage" :scope "https://www.googleapis.com/auth/cloud-billing"})))))}]]}}]))
    :component-did-mount
    (fn [{:keys [this]}]
      (react/call :load-data this))

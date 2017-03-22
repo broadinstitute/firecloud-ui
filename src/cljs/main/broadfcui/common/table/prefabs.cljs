@@ -21,7 +21,7 @@
        (when (:filterable? props)
          [comps/TextFilter {:ref "filter"
                             :on-filter #((@refs "table") :merge-query-params {:filter-text %})}])
-       (list* (:toolbar-items props))]
+       (list* (-> props :toolbar :items))]
       [table/Table (merge {:ref "table"
                            :style table-style/table-light}
                           (:table props))]])
