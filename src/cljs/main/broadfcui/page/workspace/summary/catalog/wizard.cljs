@@ -193,6 +193,7 @@
            [:div {:style {:marginTop "1em" :color (:exception-state style/colors) :textAlign "center"}}
             validation-error])
          [comps/ErrorViewer {:error submit-error}]
+<<<<<<< HEAD
          (flex/box
           {:style {:marginTop 40}}
           (flex/strut 80)
@@ -218,6 +219,33 @@
                            :onClick #(react/call :submit this)
                            :disabled? (not (and save-permissions last-page))
                            :style {:width 80}}]))]]))
+=======
+         (flex/flex-box {:style {:marginTop 40}}
+                        (flex/flex-strut 80)
+                        flex/flex-spacer
+                        [comps/Button {:text "Previous"
+                                       :onClick (fn [_]
+                                                  (if-let [prev-page (peek (:pages-stack @state))]
+                                                    (swap! state #(-> %
+                                                                      (assoc :page-num prev-page)
+                                                                      (update :pages-stack pop)
+                                                                      (dissoc :validation-error)))))
+                                       :style {:width 80}
+                                       :disabled? (zero? page-num)}]
+                        (flex/flex-strut 27)
+                        [comps/Button {:text "Next"
+                                       :onClick #(react/call :next-page this)
+                                       :disabled? (> page-num (-> library-schema :wizard count))
+                                       :style {:width 80}}]
+                        flex/flex-spacer
+                        (let [save-permissions (and writer? curator?)
+                              last-page (> page-num (-> library-schema :wizard count))]
+                        [comps/Button {:text (if published? "Republish" "Submit")
+                                       :onClick #(react/call :submit this)
+                                       :disabled? (or (and published? (not-empty invalid-properties))
+                                                      (not (and save-permissions last-page)))
+                                       :style {:width 80}}]))]]))
+>>>>>>> disable republish button if haven't filled out everything
    :component-did-mount
    (fn [{:keys [locals]}]
      (endpoints/get-library-groups
