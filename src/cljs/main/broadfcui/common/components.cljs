@@ -700,14 +700,13 @@
                                                       (assoc (js->clj settings)
                                                         :headers {:Authorization (str "Bearer " (utils/get-access-token))}
                                                         :url (str (aget settings "url") (:query-string props) query))))}}))]
-     (.tagsinput (js/$ (@refs "input-element"))
-                 (clj->js {:tagClass "workspace-tag"
-                           :typeaheadjs {:name "suggestion-engine"
-                                         :display (fn [response]
-                                                    ;; do we want something like that or just ordered by least to most?
-                                                    (str (aget response "tag") " (tagged by " (aget response "count") " workspaces)"))
-                                         :valueKey "tag"
-                                         :source (.ttAdapter suggestion-engine)}}))))
+       (.tagsinput (js/$ (@refs "input-element"))
+                   (clj->js {:tagClass "workspace-tag"
+                             :typeaheadjs {:name "suggestion-engine"
+                                           :display (fn [response]
+                                                      (str (aget response "tag") " (tagged by " (aget response "count") " workspaces)"))
+                                           :valueKey "tag"
+                                           :source (.ttAdapter suggestion-engine)}}))))
    :component-will-unmount
    (fn [{:keys [refs]}]
      (.tagsinput (js/$ (@refs "input-element")) "destroy"))
