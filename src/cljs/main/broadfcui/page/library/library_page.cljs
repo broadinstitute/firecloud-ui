@@ -5,9 +5,9 @@
     [broadfcui.common :as common]
     [broadfcui.common.components :as comps]
     [broadfcui.endpoints :as endpoints]
+    [broadfcui.common.flex-utils :as flex]
     [broadfcui.common.style :as style]
     [broadfcui.common.table :as table]
-    [broadfcui.common.table-utils :refer [flex-strut]]
     [broadfcui.config :as config]
     [broadfcui.nav :as nav]
     [broadfcui.persistence :as persistence]
@@ -48,7 +48,7 @@
                      " Dataset"
                      (when-not (= 1 total) "s")
                      " found"))]]
-            flex-strut
+            flex/spring
             reorderer])
          :body-style {:fontSize "87.5%" :fontWeight nil :marginTop 4
                       :color (:text-light style/colors)}

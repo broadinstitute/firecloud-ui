@@ -5,6 +5,7 @@
    [broadfcui.common :as common]
    [broadfcui.common.gcs-file-preview :refer [GCSFilePreviewLink]]
    [broadfcui.common.components :as comps]
+   [broadfcui.common.flex-utils :as flex]
    [broadfcui.common.style :as style]
    [broadfcui.common.icons :as icons]
    [broadfcui.utils :as utils]
@@ -329,9 +330,7 @@
       [:div {:style {:display "flex" :alignItems "center" :marginBottom "1em"}}
        (map #(some-> % layout) (concat [reorderer filter filter-groups] extras))])))
 
-(def flex-strut [:div {:style {:flexGrow 1}}])
-
 (defn add-right
   "Takes a single component and adds it to the line, right justified."
   [component]
-  (default-toolbar-layout flex-strut component))
+  (default-toolbar-layout flex/spring component))
