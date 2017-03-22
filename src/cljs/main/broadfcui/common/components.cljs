@@ -705,7 +705,7 @@
                            :typeaheadjs {:name "suggestion-engine"
                                          :display (fn [response]
                                                     ;; do we want something like that or just ordered by least to most?
-                                                    (str (aget response "tag") " (usages: " (aget response "count") ")"))
+                                                    (str (aget response "tag") " (tagged by " (aget response "count") " workspaces)"))
                                          :valueKey "tag"
                                          :source (.ttAdapter suggestion-engine)}}))))
    :component-will-unmount
