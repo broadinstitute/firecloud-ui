@@ -681,24 +681,32 @@
     #(push-error thing)))
 
 (react/defc TagAutocomplete
-  {:get-tags
+  {:get-default-props
+   (fn []
+     ;; when we use this component for GAWB-1406, we'll pass in a different query string like "?limitAccess=true&q="
+     {:query-string "?q="})
+   :get-tags
    (fn [{:keys [refs]}]
      (flatten (js->clj (.tagsinput (js/$ (@refs "input-element")) "items"))))
    :component-did-mount
-   (fn [{:keys [refs]}]
+   (fn [{:keys [refs props]}]
      (let [suggestion-engine (Bloodhound.
                                (clj->js {:datumTokenizer whitespace-tokenizer
                                          :queryTokenizer whitespace-tokenizer
-                                         :remote {:url (str (config/api-url-root) "/api/workspaces/tags/autocomplete/")
+                                         :remote {:url (str (config/api-url-root) "/api/workspaces/tags")
                                                   :prepare
                                                   (fn [ query settings]
                                                     (clj->js
                                                       (assoc (js->clj settings)
                                                         :headers {:Authorization (str "Bearer " (utils/get-access-token))}
-                                                        :url (str (aget settings "url") query))))}}))]
+                                                        :url (str (aget settings "url") (:query-string props) query))))}}))]
      (.tagsinput (js/$ (@refs "input-element"))
                  (clj->js {:tagClass "workspace-tag"
                            :typeaheadjs {:name "suggestion-engine"
+                                         :display (fn [response]
+                                                    ;; do we want something like that or just ordered by least to most?
+                                                    (str (aget response "tag") " (usages: " (aget response "count") ")"))
+                                         :valueKey "tag"
                                          :source (.ttAdapter suggestion-engine)}}))))
    :component-will-unmount
    (fn [{:keys [refs]}]
