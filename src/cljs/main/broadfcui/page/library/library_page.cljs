@@ -287,10 +287,13 @@
       (endpoints/get-library-attributes
        (fn [{:keys [success? get-parsed-response]}]
          (if success?
-           (let [{:keys [properties searchResultColumns]} (get-parsed-response)]
+           (let [{:keys [properties searchResultColumns]} (get-parsed-response)
+                 aggs (->> properties (utils/filter-values :aggregate) keys)
+                 facets (:facet-filters @state)]
              (swap! state assoc
                     :library-attributes properties
-                    :aggregate-fields (->> properties (utils/filter-values :aggregate) keys)
+                    :aggregate-fields aggs
+                    :facet-filters (select-keys facets aggs)
                     :search-result-columns (mapv keyword searchResultColumns)))))))
     :render
     (fn [{:keys [this refs state after-update]}]

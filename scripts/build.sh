@@ -5,7 +5,8 @@ set -euxo pipefail
 docker run --rm \
   -w /work \
   -v "$PWD":/work \
-  -v maven-cache:/root/.m2 \
+  -v jar-cache:/root/.m2 \
+  -v node-modules:/work/node_modules \
   -e npm_config_unsafe_perm="true" \
   broadinstitute/clojure-node \
-  lein with-profile deploy do clean, resource, npm install, cljsbuild once
+  bash -c 'lein with-profile deploy do clean, resource, cljsbuild once && npm install && npm run webpack -- -p'

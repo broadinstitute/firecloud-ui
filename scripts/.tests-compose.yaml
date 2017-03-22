@@ -1,6 +1,6 @@
 version: '2'
 services:
-  clojure:
+  clojure-node:
     image: broadinstitute/clojure-node
     volumes:
       - work:/w
