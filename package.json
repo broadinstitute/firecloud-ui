@@ -1,0 +1,36 @@
+{
+  "name": "firecloud-ui",
+  "version": "0.0.1",
+  "description": "FireCloud user interface for web browsers.",
+  "dependencies": {
+    "any-resize-event": "~1.0.0",
+    "codemirror": "~5.10.0",
+    "corejs-typeahead": "~1.1.1",
+    "font-awesome": "~4.7.0",
+    "foundation-sites": "~6.3.0",
+    "github-markdown-css": "~2.4.1",
+    "jquery": "^2.0",
+    "jquery-ui": "^1.12",
+    "marked": "~0.3.6",
+    "select2": "~4.0"
+  },
+  "devDependencies": {
+    "css-loader": "~0.26.1",
+    "extract-text-webpack-plugin": "~2.0.0",
+    "file-loader": "~0.10.0",
+    "node-sass": "~4.5.0",
+    "sass-loader": "~6.0.0",
+    "uglify-js": "git://github.com/mishoo/UglifyJS2.git#harmony-v2.8.14",
+    "url-loader": "~0.5.7",
+    "webpack": "~2.2.0"
+  },
+  "scripts": {
+    "webpack": "webpack"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/broadinstitute/firecloud-ui.git"
+  },
+  "homepage": "https://github.com/broadinstitute/firecloud-ui#readme",
+  "license": "SEE LICENSE IN LICENSE.txt"
+}
