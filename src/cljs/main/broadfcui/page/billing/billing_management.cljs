@@ -6,7 +6,7 @@
     [broadfcui.common.flex-utils :as flex]
     [broadfcui.common.modal :as modal]
     [broadfcui.common.style :as style]
-    [broadfcui.common.table.prefabs :refer [LightTable]]
+    [broadfcui.common.table.table :refer [Table]]
     [broadfcui.common.table.style :as table-style]
     [broadfcui.common.table.utils :as table-utils]
     [broadfcui.endpoints :as endpoints]
@@ -70,8 +70,10 @@
        (:error-message @state) (style/create-server-error-message (:error-message @state))
        (nil? (:projects @state)) [comps/Spinner {:text "Loading billing projects..."}]
        :else
-       [LightTable
-        {:table {:data-source (table-utils/local (:projects @state))
+       [Table
+        {:table {:behavior {:reorderable-columns? false}
+                 :style table-style/table-light
+                 :data-source (table-utils/local (:projects @state))
                  :columns [{:id "Status Icon" :initial-width 16
                             :resizable? false :sortable? false :filterable? false
                             :column-data :creationStatus

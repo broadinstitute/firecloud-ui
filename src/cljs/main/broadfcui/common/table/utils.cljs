@@ -63,4 +63,9 @@
         :results displayed}))))
 
 
-
+(defn build-column-display [user-columns]
+  (mapv (fn [column]
+          {:id (resolve-id column)
+           :width (get column :initial-width 100)
+           :visible? (get column :show-initial? true)})
+        user-columns))

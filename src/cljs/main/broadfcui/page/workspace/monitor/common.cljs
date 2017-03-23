@@ -67,8 +67,8 @@
 
 (defn icon-for-sub-status [wf-statuses]
   (cond
-    (contains? wf-statuses "Failed") failure-icon
-    (contains? wf-statuses "Succeeded") success-icon
+    (contains? wf-statuses :Failed) failure-icon
+    (contains? wf-statuses :Succeeded) success-icon
     :else (do (utils/log "Unknown submission status")
             nil)))
 

@@ -15,3 +15,13 @@
    :body {:fontWeight 500}
    :body-row (constantly {:borderTop style/standard-line})
    :resize-tab {:borderRight style/standard-line :marginRight -1}})
+
+(def table-heavy
+  {:table {:fontSize "0.8rem" :fontWeight 500}
+   :cell clip-text
+   :header-row {:backgroundColor (:background-dark style/colors) :color "white"}
+   :header-cell {:padding "0.6rem 0 0.6rem 16px"}
+   :resize-tab {:borderRight (str "1px solid #777") :marginRight -1}
+   :body-row (fn [{:keys [index]}]
+               {:backgroundColor (if (odd? index) "white" (:background-light style/colors))})
+   :body-cell {:padding "0.5rem 0 0.4rem 16px"}})
