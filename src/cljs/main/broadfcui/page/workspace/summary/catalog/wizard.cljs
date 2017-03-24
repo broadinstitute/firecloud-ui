@@ -80,8 +80,8 @@
    :render
    (fn [{:keys [state props this]}]
      (let [{:keys [library:discoverableByGroups]} @state
-           {:keys [:owner? :curator?]} props
-           editable? (and curator? owner?)
+           {:keys [:set-discoverable?]} props
+           editable? (:set-discoverable?)
            selected (if (empty? library:discoverableByGroups) ALL_USERS (first library:discoverableByGroups))]
        [:div {} "Dataset should be discoverable by:"
         (style/create-identity-select {:value selected
@@ -147,7 +147,7 @@
         :required-attributes (find-required-attributes library-schema)}))
    :render
    (fn [{:keys [props state locals this]}]
-     (let [{:keys [library-schema writer? curator?]} props
+     (let [{:keys [library-schema can-share? owner? writer? curator? catandread?]} props
            {:keys [page-num pages-seen invalid-properties working-attributes published? required-attributes validation-error submit-error]} @state]
        ;; FIXME: refactor -- this is heavily copy/pasted from OKCancelForm
        [:div {}
@@ -179,7 +179,9 @@
                              :enumerate enumerate
                              :questions questions
                              :attributes working-attributes
-                             :editable? (and writer? curator?)
+                             :editable? (or writer? catandread?)
+                             ;:publishable? (and curator? (or catandread? owner?))
+                             :set-discoverable? (or can-share? catandread? owner?)
                              :required-attributes required-attributes}]
                  (= page-num page-count)
                  [DiscoverabilityPage
@@ -187,7 +189,7 @@
                    {:ref "wizard-page"}
                    (select-keys working-attributes [:library:discoverableByGroups])
                    (select-keys @locals [:library-groups])
-                   (select-keys props [:library-schema :can-share? :curator? :owner?]))]
+                   (select-keys props [:library-schema :set-discoverable?]))]
                  (> page-num page-count) (render-summary-page working-attributes library-schema invalid-properties))))}]]
          (when validation-error
            [:div {:style {:marginTop "1em" :color (:exception-state style/colors) :textAlign "center"}}
