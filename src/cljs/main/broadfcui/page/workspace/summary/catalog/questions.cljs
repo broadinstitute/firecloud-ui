@@ -221,7 +221,7 @@
                 (map keyword questions))}))
    :render
    (fn [{:keys [props state]}]
-     (let [{:keys [library-schema missing-properties questions required-attributes enumerate editable?]} props
+     (let [{:keys [library-schema missing-properties questions required-attributes enumerate editable? publishable? set-discoverable?]} props
            {:keys [attributes invalid-properties]} @state]
        [(if enumerate :ol :div) {}
         (map

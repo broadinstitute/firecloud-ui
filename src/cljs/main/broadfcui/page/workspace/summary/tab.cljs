@@ -59,7 +59,7 @@
 
 
 (defn- render-sidebar [state refs this
-                       {:keys [workspace billing-projects owner? writer? curator? can-share?
+                       {:keys [workspace billing-projects owner? writer? curator? catandread? can-share?
                                workspace-id request-refresh]}]
   (let [{{:keys [isLocked library-attributes description isProtected]} :workspace
          {:keys [runningSubmissionsCount]} :workspaceSubmissionStats} workspace
@@ -91,6 +91,7 @@
                                                        :owner? owner?
                                                        :curator? curator?
                                                        :writer? writer?
+                                                       :catandread? catandread?
                                                        :request-refresh request-refresh}])}])
        (when (and curator? owner? (not editing?))
          (if (:library:published library-attributes)
@@ -152,7 +153,7 @@
                                           [DeleteDialog {:workspace-id workspace-id}])}]))]))
 
 
-(defn- render-main [{:keys [workspace curator? owner? writer? reader? can-share? bucket-access? editing? submissions-count
+(defn- render-main [{:keys [workspace curator? owner? writer? reader? can-share? catandread? bucket-access? editing? submissions-count
                             user-access-level library-schema request-refresh workspace-id storage-cost]}]
   (let [{:keys [owners]
          {:keys [createdBy createdDate bucketName description tags workspace-attributes library-attributes realm]} :workspace} workspace
@@ -248,7 +249,8 @@
                      :can-share? can-share?
                      :owner? owner?
                      :curator? curator?
-                     :writer? writer?}])
+                     :writer? writer?
+                     :catandread? catandread?}])
      [attributes/WorkspaceAttributeViewerEditor {:ref "workspace-attribute-editor"
                                                  :editing? editing?
                                                  :writer? writer?
@@ -279,9 +281,10 @@
          (let [owner? (or (= "PROJECT_OWNER" (:accessLevel workspace)) (= "OWNER" (:accessLevel workspace)))
                writer? (or owner? (= "WRITER" (:accessLevel workspace)))
                can-share? (:canShare workspace)
+               catandread? (and (or writer? (reader? workspace)) (:catalog workspace))
                user-access-level (:accessLevel workspace)
                derived {:owner? owner? :writer? writer? :reader? (reader? (:workspace props))
-                        :can-share? can-share? :user-access-level user-access-level :request-refresh #(react/call :refresh this)}]
+                        :can-share? can-share? :catandread? catandread? :user-access-level user-access-level :request-refresh #(react/call :refresh this)}]
            [:div {:style {:margin "2.5rem 1.5rem" :display "flex"}}
             (render-sidebar state refs this
                             (merge (select-keys props [:workspace :workspace-id])
