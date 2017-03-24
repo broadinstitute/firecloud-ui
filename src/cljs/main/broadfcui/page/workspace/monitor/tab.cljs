@@ -25,7 +25,7 @@
      :data-source (table-utils/local submissions)
      :empty-message "There are no analyses to display."
      :columns
-     [{:header "Date" :initial-width 200 :as-text render-date :reorderable? false
+     [{:header "Date" :initial-width 200 :as-text render-date
        :sort-by :submissionDate :sort-initial :desc
        :render (fn [submission]
                  (style/create-link {:text (render-date submission)

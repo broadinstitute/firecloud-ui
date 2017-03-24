@@ -37,7 +37,7 @@
            [:div {:style {:position "absolute" :cursor "col-resize"
                           :right -11 :top 0 :width 21 :height "100%" :zIndex 1}
                   :onMouseDown (fn [e] (start-column-drag (utils/restructure e width index)))
-                  :onDoubleClick #(column-reset (utils/restructure index initial-width))}])]))
+                  :onDoubleClick #(column-reset {:index index :initial-width (or initial-width 100)})}])]))
     joined-columns)])
 
 
@@ -72,31 +72,7 @@
 
 (react/defc TableBody
   (->>
-   {:swap-columns
-    (fn [{:keys [state]} source-index target-index]
-      (swap! state update :column-display utils/move source-index target-index))
-    :set-column-visibility
-    (fn [{:keys [props state]} column-index visible?]
-      (if (= :all column-index)
-        ;; if you have explicitly set a column to not be reorderable, then we will always
-        ;; display it (even if you've clicked on none)
-        (swap! state update :column-display
-               #(vec (map merge %
-                          (map (fn [column]
-                                 (if (= (:reorderable? column) false)
-                                   {:visible? true}
-                                   {:visible? visible?}))
-                               (:columns props)))))
-        (swap! state assoc-in [:column-display column-index :visible?] visible?)))
-    :get-initial-state
-    (fn [{:keys [props]}]
-      {:column-display
-       (mapv (fn [{:keys [initial-width show-initial?] :as raw-column}]
-               {:id (table-utils/resolve-id raw-column)
-                :width (or initial-width 100)
-                :visible? (if (some? show-initial?) show-initial? true)})
-             (:columns props))})
-    :render
+   {:render
     (fn [{:keys [props state locals]}]
       (let [{:keys [columns style update-column-display column-display]} props
             joined-columns (join-columns {:raw-columns-by-id (table-utils/index-by-id columns)
@@ -112,19 +88,22 @@
             (fn [{:keys [index initial-width]}]
               (update-column-display (assoc-in column-display [index :width] initial-width)))
             +props (merge props (utils/restructure joined-columns start-column-drag column-reset))]
-        [:div {:style (:table style)}
+        [:div {:style (merge {:width "-webkit-fit-content"} (:table style))}
          (header +props)
-         (body +props)]))}
+         (body +props)]))
+    :-on-mouse-move
+    (fn [{:keys [props state locals]} e]
+      (when (:dragging? @state)
+        (let [{:keys [update-column-display column-display]} props
+              {:keys [drag-column]} @state
+              {:keys [start-mouse-x start-width]} @locals
+              delta-x (- (.-clientX e) start-mouse-x)
+              new-width (max (+ start-width delta-x) 10)]
+          (update-column-display (assoc-in column-display [drag-column :width] new-width)))))}
    (utils/with-window-listeners
     {"mousemove"
-     (fn [{:keys [props state locals]} e]
-       (when (:dragging? @state)
-         (let [{:keys [drag-column]} @state
-               {:keys [start-mouse-x start-width]} @locals
-               {:keys [column-display]} props
-               delta-x (- (.-clientX e) start-mouse-x)
-               new-width (max (+ start-width delta-x) 10)]
-           ((:update-column-display props) (assoc-in column-display [drag-column :width] new-width)))))
+     (fn [{:keys [this]} e]
+       (this :-on-mouse-move e))
      "mouseup"
      (fn [{:keys [state locals]}]
        (when (:dragging? @state)
