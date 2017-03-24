@@ -48,20 +48,20 @@
     (get-in library-schema [:properties property-key :title])
     (render-value (get library-attributes property-key))))
 
-(defn render-consent [name consent]
+(defn render-consent [orsp-id consent]
   (render-library-row
     (str "Structured Data Use Limitations")
-    [:span {:style {:whiteSpace "pre-wrap"}} (str name "\n" (:translatedUseRestriction consent))]))
+    [:span {:style {:whiteSpace "pre-wrap"}} (str orsp-id "\n" (:translatedUseRestriction consent))]))
 
-(defn render-consent-error [name error]
+(defn render-consent-error [orsp-id error]
   (render-library-row
     (str "Structured Data Use Limitations")
     (let [code (:code error)
           unapproved (= code 400)
           not-found (= code 404)]
       (cond
-        unapproved (str "Structured Data Use Limitations are not approved for " name)
-        not-found (str "Structured Data Use Limitations are not available for " name)
+        unapproved (str "Structured Data Use Limitations are not approved for " orsp-id)
+        not-found (str "Structured Data Use Limitations are not available for " orsp-id)
         :else error))))
 
 (defn render-consent-code-value [value]
