@@ -80,8 +80,8 @@
    :render
    (fn [{:keys [state props this]}]
      (let [{:keys [library:discoverableByGroups]} @state
-           {:keys [:set-discoverable?]} props
-           editable? (:set-discoverable?)
+           {:keys [set-discoverable?]} props
+           editable? set-discoverable?
            selected (if (empty? library:discoverableByGroups) ALL_USERS (first library:discoverableByGroups))]
        [:div {} "Dataset should be discoverable by:"
         (style/create-identity-select {:value selected
@@ -180,16 +180,16 @@
                              :questions questions
                              :attributes working-attributes
                              :editable? (or writer? catandread?)
-                             ;:publishable? (and curator? (or catandread? owner?))
                              :set-discoverable? (or can-share? catandread? owner?)
                              :required-attributes required-attributes}]
                  (= page-num page-count)
                  [DiscoverabilityPage
                   (merge
-                   {:ref "wizard-page"}
+                   {:ref "wizard-page"
+                    :set-discoverable? (or can-share? catandread? owner?)}
                    (select-keys working-attributes [:library:discoverableByGroups])
                    (select-keys @locals [:library-groups])
-                   (select-keys props [:library-schema :set-discoverable?]))]
+                   (select-keys props [:library-schema]))]
                  (> page-num page-count) (render-summary-page working-attributes library-schema invalid-properties))))}]]
          (when validation-error
            [:div {:style {:marginTop "1em" :color (:exception-state style/colors) :textAlign "center"}}

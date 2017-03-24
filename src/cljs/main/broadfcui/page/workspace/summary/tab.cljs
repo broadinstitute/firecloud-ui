@@ -63,6 +63,7 @@
   (let [{{:keys [isLocked library-attributes description isProtected]} :workspace
          {:keys [runningSubmissionsCount]} :workspaceSubmissionStats} workspace
         status (common/compute-status workspace)
+        publishable? (and curator? (or catandread? owner?))
         {:keys [sidebar-visible? editing?]
          {:keys [library-schema]} :server-response} @state]
     [:div {:style {:flex "0 0 270px" :paddingRight 30}}
@@ -92,7 +93,7 @@
                                                        :writer? writer?
                                                        :catandread? catandread?
                                                        :request-refresh request-refresh}])}])
-       (when (and curator? owner? (not editing?))
+       (when (and publishable? (not editing?))
          (if (:library:published library-attributes)
            [publish/UnpublishButton {:workspace-id workspace-id
                                      :request-refresh request-refresh}]
