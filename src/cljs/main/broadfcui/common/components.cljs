@@ -693,3 +693,33 @@
 (defn create-error-message [thing]
   (when (renderable? thing)
     #(push-error thing)))
+
+(declare Tree)
+
+(react/defc Tree
+  {:get-initial-state
+   (fn [{:keys [props]}]
+     {:collapsed? (or (:start-collapsed? props) false)})
+   :render
+   (fn [{:keys [props state]}]
+     (let [body
+           [:div {:hidden (and (:collapsed? @state) (:label props))}
+            (map (fn [node]
+                   [:ul {:style {:margin "0.5rem 0 0.5rem 0.5rem" :paddingLeft "0.5rem"
+                                 :borderLeft (str "2px solid " (:border-light style/colors))}}
+                    (map (fn [key]
+                           [:li {:style {:listStyle "none"}}
+                            (let [value (get node key)]
+                              (if (and (vector? value) (not-empty value))
+                                [Tree {:data value :start-collapsed? (:start-collapsed? props) :label key}]
+                                (str key ": " value)))])
+                         (keys node))])
+                 (:data props))]]
+       (if (:label props)
+         [:span {}
+          (str (:label props) ": ")
+          (style/create-link
+           {:text (icons/icon {} (if (:collapsed? @state) :expand :collapse))
+            :onClick #(swap! state assoc :collapsed? (not (:collapsed? @state)))})
+          body]
+         body)))})
