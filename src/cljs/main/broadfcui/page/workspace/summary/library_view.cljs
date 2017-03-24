@@ -48,7 +48,4 @@
      (when-let [orsp-id (:library:orsp (:library-attributes props))]
        (endpoints/get-consent orsp-id
          (fn [{:keys [success? get-parsed-response]}]
-           (let [response (get-parsed-response)]
-             (if success?
-               (swap! state assoc :consent (get-parsed-response))
-               (swap! state assoc :consent-error (get-parsed-response))))))))})
+           (swap! state assoc (if success? :consent :consent-error) (get-parsed-response))))))})

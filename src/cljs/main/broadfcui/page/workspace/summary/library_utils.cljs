@@ -56,8 +56,8 @@
 (defn render-consent-error [name error]
   (render-library-row
     (str "Data Use Limitation not available for " name)
-    (if (:message error)
-      (:message error)
+    (if-let [message (:message error)]
+      message
       error)))
 
 (defn render-consent-code-value [value]
