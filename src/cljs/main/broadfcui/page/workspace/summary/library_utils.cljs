@@ -56,13 +56,10 @@
 (defn render-consent-error [orsp-id error]
   (render-library-row
     (str "Structured Data Use Limitations")
-    (let [code (:code error)
-          unapproved (= code 400)
-          not-found (= code 404)]
-      (cond
-        unapproved (str "Structured Data Use Limitations are not approved for " orsp-id)
-        not-found (str "Structured Data Use Limitations are not available for " orsp-id)
-        :else error))))
+    (case (:code error)
+      400 (str "Structured Data Use Limitations are not approved for " orsp-id)
+      404 (str "Structured Data Use Limitations are not available for " orsp-id)
+      error)))
 
 (defn render-consent-code-value [value]
   (cond (true? value) "Yes"
