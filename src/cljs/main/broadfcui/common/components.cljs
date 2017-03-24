@@ -679,3 +679,50 @@
 (defn create-error-message [thing]
   (when (renderable? thing)
     #(push-error thing)))
+
+
+(react/defc TagAutocomplete
+  {:get-tags
+   (fn [{:keys [refs]}]
+     (flatten (js->clj (.tagsinput (js/$ (@refs "input-element")) "items"))))
+   :component-did-mount
+   (fn [{:keys [refs props]}]
+     (.select2 (js/$ (@refs "input-element"))
+               (clj->js {:ajax {:url (str (config/api-url-root) "/api/workspaces/tags")
+                                :dataType "json"
+                                :type "GET"
+                                :headers {:Authorization (str "Bearer " (utils/get-access-token))}
+                                :data (fn [params]
+                                        (clj->js {:q (aget params "term")}))
+                                :processResults (fn [data params]
+                                                  (clj->js {:results (map (fn [thing]
+                                                                            (merge {"id" (thing "tag")} thing))
+                                                                          (js->clj data))}))}
+                         :templateResult (fn [res]
+                                           (aget res "tag"))
+                         :templateSelection (fn [res]
+                                              ;; need the or for when you load from initial (you need to give the select
+                                              ;; options that are selected but they can't be objects because react
+                                              ;; screams at you idk)
+                                              (aget res "tag"))
+                         :tags true})))
+
+     ;; TODO: fix this -- something along these lines so that initial tags show up as tags and not little x's
+     ;; http://stackoverflow.com/questions/30316586/select2-4-0-0-initial-value-with-ajax#30328989
+     ;(map (fn [val]
+     ;       (utils/cljslog val)
+     ;       (.val (.trigger (.select2 (js/$ (@refs "input-element"))) "change") val)
+     ;     (:tags props))))
+
+     ;when you do this, they load properly BUT autocomplete doesn't work so need to do something with the value
+     ;(.trigger (.select2 (js/$ (@refs "input-element"))) "change"))
+
+
+   :component-will-unmount
+   (fn [{:keys [refs]}]
+     (.select2 (js/$ (@refs "input-element")) "destroy"))
+   ;; need to kill it again?
+   :render
+   (fn [{:keys [props]}]
+     (style/create-select-selected {:ref "input-element" :multiple "multiple" :className "tag-autocomplete" } (:tags props)))})
+

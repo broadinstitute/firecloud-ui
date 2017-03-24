@@ -67,8 +67,14 @@
   [:textarea (deep-merge {:style input-text-style} props)])
 
 (defn create-select [props options]
+  (utils/cljslog options)
   [:select (deep-merge {:style select-style} props)
    (map-indexed (fn [i opt] [:option {:value i} opt]) options)])
+
+;; TODO -- fix this: bad naming; also react really doesn't like this
+(defn create-select-selected [props options]
+  [:select (deep-merge {:style select-style} props)
+   (map-indexed (fn [i opt] [:option {:value opt :selected "selected" :title opt} opt]) options)])
 
 (defn create-identity-select [props options]
   [:select (deep-merge {:style select-style} props)
