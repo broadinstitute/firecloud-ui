@@ -28,9 +28,6 @@
          (when (:selection-error @state)
            [:div {:style {:marginTop "0.5em"}}
             "Please select at least one entity to copy"])
-         (when (:server-error @state)
-           [:div {:style {:marginTop "0.5em"}}
-            [comps/ErrorViewer {:error (:server-error @state)}]])
          [:div {:style {:marginTop "1em"}}
           [comps/Button {:text "Import"
                          :onClick #(let [selected (react/call :get-selected-entities (@refs "EntitySelector"))]
@@ -38,7 +35,7 @@
                                        (swap! state assoc :selection-error true)
                                        (react/call :perform-copy this selected)))}]]]]))
    :perform-copy
-   (fn [{:keys [props state]} selected]
+   (fn [{:keys [props state this]} selected]
      (swap! state assoc :selection-error nil :server-error nil :copying? true)
      (endpoints/call-ajax-orch
       {:endpoint (endpoints/copy-entity-to-workspace (:workspace-id props))
@@ -48,9 +45,26 @@
        :headers utils/content-type=json
        :on-done (fn [{:keys [success? get-parsed-response]}]
                   (swap! state dissoc :copying?)
-                  (if success?
-                    ((:on-data-imported props) (:type props))
-                    (swap! state assoc :server-error (get-parsed-response false))))}))})
+                  (when success?
+                    ((:on-data-imported props) (:type props)))
+                  (react/call :show-import-result this (get-parsed-response false)))}))
+   :show-import-result
+   (fn [_ parsed-response]
+     (comps/push-message
+      {:header "Import Results"
+       :message [:div {}
+                 (when (not-empty (parsed-response "entitiesCopied"))
+                   [:div {}
+                    "Successfully copied:"
+                    [comps/Tree {:data (parsed-response "entitiesCopied")}]])
+                 (when (not-empty (parsed-response "hardConflicts"))
+                   [:div {}
+                    "Hard conflicts:"
+                    [comps/Tree {:data (parsed-response "hardConflicts")}]])
+                 (when (not-empty (parsed-response "softConflicts"))
+                   [:div {}
+                    "Soft conflicts:"
+                    [comps/Tree {:data (parsed-response "softConflicts")}]])]}))})
 
 
 (react/defc Page
