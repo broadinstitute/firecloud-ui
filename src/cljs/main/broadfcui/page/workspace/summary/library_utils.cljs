@@ -50,15 +50,19 @@
 
 (defn render-consent [name consent]
   (render-library-row
-    (str "Data Use Limitation for " name)
-    [:span {:style {:whiteSpace "pre-wrap"}} (:translatedUseRestriction consent)]))
+    (str "Structured Data Use Limitations")
+    [:span {:style {:whiteSpace "pre-wrap"}} (str name "\n" (:translatedUseRestriction consent))]))
 
 (defn render-consent-error [name error]
   (render-library-row
-    (str "Data Use Limitation not available for " name)
-    (if-let [message (:message error)]
-      message
-      error)))
+    (str "Structured Data Use Limitations")
+    (let [code (:code error)
+          unapproved (= code 400)
+          not-found (= code 404)]
+      (cond
+        unapproved (str "Structured Data Use Limitations are not approved for " name)
+        not-found (str "Structured Data Use Limitations are not available for " name)
+        :else error))))
 
 (defn render-consent-code-value [value]
   (cond (true? value) "Yes"
