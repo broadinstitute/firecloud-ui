@@ -701,14 +701,12 @@
                          :templateResult (fn [res]
                                            (aget res "tag"))
                          :templateSelection (fn [res]
-                                              ;; need the or for when you load from initial (you need to give the select
-                                              ;; options that are selected but they can't be objects because react
-                                              ;; screams at you idk)
                                               (aget res "tag"))
-                         :tags true})))
+                         :tags true ;; this should let you save tags by hitting enter, not sure it's working rn
+                         })))
 
-     ;; TODO: fix this -- something along these lines so that initial tags show up as tags and not little x's
-     ;; http://stackoverflow.com/questions/30316586/select2-4-0-0-initial-value-with-ajax#30328989
+     ;; TODO: get autocomplete and initial tags to work
+     ;; this is currently not working
      ;(map (fn [val]
      ;       (utils/cljslog val)
      ;       (.val (.trigger (.select2 (js/$ (@refs "input-element"))) "change") val)
@@ -721,7 +719,6 @@
    :component-will-unmount
    (fn [{:keys [refs]}]
      (.select2 (js/$ (@refs "input-element")) "destroy"))
-   ;; need to kill it again?
    :render
    (fn [{:keys [props]}]
      (style/create-select-selected {:ref "input-element" :multiple "multiple" :className "tag-autocomplete" } (:tags props)))})
