@@ -67,7 +67,6 @@
   [:textarea (deep-merge {:style input-text-style} props)])
 
 (defn create-select [props options]
-  (utils/cljslog options)
   [:select (deep-merge {:style select-style} props)
    (map-indexed (fn [i opt] [:option {:value i} opt]) options)])
 
