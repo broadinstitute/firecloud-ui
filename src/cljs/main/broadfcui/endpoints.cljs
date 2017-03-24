@@ -771,6 +771,12 @@
      :on-done on-done}
     :service-prefix "/schemas"))
 
+(defn get-consent [orsp-id on-done]
+  (utils/ajax-orch
+    (str "/duos/consent/orsp/" (js/encodeURIComponent orsp-id))
+    {:method :get
+     :on-done on-done}))
+
 (defn save-library-metadata [workspace-id]
   {:path (str "/library/" (ws-path workspace-id) "/metadata")
    :method :put})
