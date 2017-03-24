@@ -172,11 +172,17 @@
             :content
             (react/create-element
              (let [page-count (count (:wizard library-schema))
-                   [questions enumerate] (get-questions-for-page working-attributes library-schema page-num)]
+                   [questions enumerate] (get-questions-for-page working-attributes library-schema page-num)
+                   {:keys [invalid]} (if (:library:invalidDataset working-attributes)
+                                       ;; if you have previously saved incomplete metadata, anything required that
+                                       ;; you haven't filled out will be in red when you open the modal
+                                       (library-utils/validate-required (convert-empty-strings working-attributes)
+                                                                      questions required-attributes))]
                (cond
                  (< page-num page-count)
                  [Questions (merge {:ref "wizard-page"
                                     :key page-num
+                                    :missing-properties (clojure.set/union invalid invalid-properties)
                                     :missing-properties invalid-properties
                                     :attributes working-attributes}
                                    (utils/restructure library-schema enumerate questions required-attributes editable? set-discoverable?))]
@@ -193,7 +199,6 @@
            [:div {:style {:marginTop "1em" :color (:exception-state style/colors) :textAlign "center"}}
             validation-error])
          [comps/ErrorViewer {:error submit-error}]
-<<<<<<< HEAD
          (flex/box
           {:style {:marginTop 40}}
           (flex/strut 80)
@@ -217,35 +222,9 @@
                 last-page (> page-num (-> library-schema :wizard count))]
             [comps/Button {:text (if published? "Republish" "Submit")
                            :onClick #(react/call :submit this)
-                           :disabled? (not (and save-permissions last-page))
+                           :disabled? (or (and published? (not-empty invalid-properties))
+                                          (not (and save-permissions last-page)))
                            :style {:width 80}}]))]]))
-=======
-         (flex/flex-box {:style {:marginTop 40}}
-                        (flex/flex-strut 80)
-                        flex/flex-spacer
-                        [comps/Button {:text "Previous"
-                                       :onClick (fn [_]
-                                                  (if-let [prev-page (peek (:pages-stack @state))]
-                                                    (swap! state #(-> %
-                                                                      (assoc :page-num prev-page)
-                                                                      (update :pages-stack pop)
-                                                                      (dissoc :validation-error)))))
-                                       :style {:width 80}
-                                       :disabled? (zero? page-num)}]
-                        (flex/flex-strut 27)
-                        [comps/Button {:text "Next"
-                                       :onClick #(react/call :next-page this)
-                                       :disabled? (> page-num (-> library-schema :wizard count))
-                                       :style {:width 80}}]
-                        flex/flex-spacer
-                        (let [save-permissions (and writer? curator?)
-                              last-page (> page-num (-> library-schema :wizard count))]
-                        [comps/Button {:text (if published? "Republish" "Submit")
-                                       :onClick #(react/call :submit this)
-                                       :disabled? (or (and published? (not-empty invalid-properties))
-                                                      (not (and save-permissions last-page)))
-                                       :style {:width 80}}]))]]))
->>>>>>> disable republish button if haven't filled out everything
    :component-did-mount
    (fn [{:keys [locals]}]
      (endpoints/get-library-groups
