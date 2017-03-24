@@ -48,6 +48,17 @@
     (get-in library-schema [:properties property-key :title])
     (render-value (get library-attributes property-key))))
 
+(defn render-consent [name consent]
+  (render-library-row
+    (str "Data Use Limitation for " name)
+    [:span {:style {:whiteSpace "pre-wrap"}} (:translatedUseRestriction consent)]))
+
+(defn render-consent-error [name error]
+  (render-library-row
+    (str "Data Use Limitation not available for " name)
+    (if (:message error)
+      (:message error)
+      error)))
 
 (defn render-consent-code-value [value]
   (cond (true? value) "Yes"
