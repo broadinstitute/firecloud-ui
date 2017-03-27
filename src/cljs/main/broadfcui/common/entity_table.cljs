@@ -131,7 +131,9 @@
        (fn [{:keys [current-page rows-per-page filter-text sort-column sort-order filter-group-index]} callback]
          (if (empty? entity-types)
            (callback {:group-count 0 :filtered-count 0 :rows []})
-           (let [type (nth entity-types filter-group-index)]
+           (let [type (if (clojure.string/blank? filter-group-index)
+                        (:initial-entity-type props)
+                        (nth entity-types filter-group-index))]
              (endpoints/call-ajax-orch
               {:endpoint (endpoints/get-entities-paginated (:workspace-id props) (name type)
                                                            {"page" current-page
