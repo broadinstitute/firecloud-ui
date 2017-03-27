@@ -74,11 +74,10 @@
         (fn [field]
           [:div {:style {:float "left" :marginRight "0.5em"}}
            (style/create-form-label (:label field))
-           (cond (= (:type field) "identity-select")
+           (if (= (:type field) "identity-select")
              (style/create-identity-select {:ref (:key field)
-                                            :value (or (entity (:key field)) "")}
-               (:options field))
-             :else
+                                            :defaultValue (or (entity (:key field)) "")}
+                                           (:options field))
              [input/TextField {:defaultValue (entity (:key field))
                                :ref (:key field) :placeholder "Required"
                                :predicates [(input/nonempty "Fields")]}])])
