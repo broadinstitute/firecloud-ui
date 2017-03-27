@@ -684,7 +684,9 @@
 (react/defc TagAutocomplete
   {:get-tags
    (fn [{:keys [refs]}]
-     (js->clj (.select2 (js/$ (@refs "input-element")) "val")))
+     (or
+      (js->clj (.select2 (js/$ (@refs "input-element")) "val"))
+      []))
    :render
    (fn [{:keys [props]}]
      (style/create-identity-select {:defaultValue (:tags props)
