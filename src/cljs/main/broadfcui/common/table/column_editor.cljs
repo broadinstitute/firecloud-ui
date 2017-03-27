@@ -11,14 +11,12 @@
     ))
 
 
-(defn- reorderable? [id columns]
-  (get (table-utils/find-by-id id columns) :reorderable? true))
-
-(defn- set-all [{:keys [columns column-display update-column-display]} visible?]
-  (update-column-display (mapv (fn [{:keys [id] :as col}]
-                                 (assoc col :visible?
-                                            (if (reorderable? id columns) visible? true)))
-                               column-display)))
+(defn- set-all [{:keys [column-display update-column-display fixed-column-count]} visible?]
+  (->> (drop fixed-column-count column-display)
+       (map #(assoc % :visible? visible?))
+       (concat (take fixed-column-count column-display))
+       vec
+       update-column-display))
 
 
 (react/defc ColumnEditor
@@ -26,8 +24,8 @@
    {:render
     (fn [{:keys [props state]}]
       (let [{:keys [drag-index drop-index]} @state
-            {:keys [columns column-display update-column-display]} props
-            reorderable-columns (filterv #(reorderable? (:id %) columns) column-display)]
+            {:keys [columns column-display update-column-display fixed-column-count]} props
+            reorderable-columns (vec (drop fixed-column-count column-display))]
         [:div {:style {:border (str "2px solid " (:line-default style/colors))
                        :padding "1em" :lineHeight "1.5em" :cursor (when drag-index "grab")}}
          [:div {:style {:display "flex" :marginBottom "0.5em" :justifyContent "space-between"
@@ -44,27 +42,31 @@
             [comps/Button {:style style :onClick #(set-all props true) :text "All"}]
             [comps/Button {:style style :onClick #(set-all props false) :text "None"}]])
          (map-indexed
-          (fn [i column]
+          (fn [i {:keys [visible? id]}]
             [:div {:ref (str "div" i)
                    :style {:height 24}}
-             (if (= column :dummy)
-               [:div {} "< Drop Here >"]
-               (let [visible? (:visible? column)]
-                 [:div {}
-                  (icons/icon {:style {:color (style/colors :text-light) :fontSize 16 :verticalAlign "middle" :marginRight "1ex"
-                                       :cursor "ns-resize"}
-                               :draggable false
-                               :onMouseDown #(swap! state assoc :drag-index i :drop-index i
-                                                    :saved-user-select-state (common/disable-text-selection))}
-                              :reorder)
-                  [:label {:style {:cursor (when-not drag-index "pointer")}}
-                   [:input {:type "checkbox" :checked visible?
-                            :onChange #(update-column-display (update-in column-display [i :visible?] not))}]
-                   [:span {:style {:paddingLeft "0.5em"} :title (:id column)} (:id column)]]]))])
+             (if (= id :dummy)
+               [:div {:style {:backgroundColor (:tag-background style/colors)
+                              :color (:tag-foreground style/colors)
+                              :borderRadius 4
+                              :textAlign "center"}}
+                (:drop-text @state)]
+               [:div {}
+                (icons/icon {:style {:color (style/colors :text-light) :fontSize 16
+                                     :verticalAlign "middle" :marginRight "1ex"
+                                     :cursor "ns-resize"}
+                             :draggable false
+                             :onMouseDown #(swap! state assoc :drag-index i :drop-index i :drop-text id
+                                                  :saved-user-select-state (common/disable-text-selection))}
+                            :reorder)
+                [:label {:style {:cursor (when-not drag-index "pointer")}}
+                 [:input {:type "checkbox" :checked visible?
+                          :onChange #(update-column-display (update-in column-display [(+ i fixed-column-count) :visible?] not))}]
+                 [:span {:style {:paddingLeft "0.5em"} :title id} id]]])])
           (if drag-index
             (-> reorderable-columns
                 (utils/delete drag-index)
-                (utils/insert drop-index :dummy))
+                (utils/insert drop-index {:id :dummy}))
             reorderable-columns))]))
     :-on-mouse-move
     (fn [{:keys [props state refs]} e]
@@ -75,17 +77,18 @@
                                :midpoint
                                (let [rect (.getBoundingClientRect (@refs (str "div" i)))]
                                  (/ (+ (.-top rect) (.-bottom rect)) 2))})
-                            (range (count (:columns props) #_"TODO: FIX" )))
+                            (range (- (count (:columns props)) (:fixed-column-count props))))
               closest-div-index (:index (apply min-key #(js/Math.abs (- y (:midpoint %))) div-locs))]
           (when-not (= (:drop-index @state) closest-div-index)
             (swap! state assoc :drop-index closest-div-index)))))
     :-on-mouse-up
     (fn [{:keys [props state]}]
-      (when (:drag-index @state)
-        (let [{:keys [update-column-display column-display]} props]
-          (update-column-display (utils/move column-display (:drag-index @state) (:drop-index @state)))
+      (let [{:keys [update-column-display column-display fixed-column-count]} props
+            {:keys [drag-index drop-index]} @state]
+        (when drag-index
+          (update-column-display (utils/move column-display (+ drag-index fixed-column-count) (+ drop-index fixed-column-count)))
           (common/restore-text-selection (:saved-user-select-state @state))
-          (swap! state dissoc :drag-index :drop-index :saved-user-select-state))))}
+          (swap! state dissoc :drag-index :drop-index :reorderable-columns :saved-user-select-state))))}
    (utils/with-window-listeners
     {"mousemove"
      (fn [{:keys [this]} e]
@@ -111,4 +114,4 @@
           :anchor-x (:reorder-anchor props)
           :content
           (react/create-element
-           ColumnEditor (select-keys props [:columns :column-display :update-column-display]))}])])})
+           ColumnEditor (select-keys props [:columns :column-display :update-column-display :fixed-column-count]))}])])})

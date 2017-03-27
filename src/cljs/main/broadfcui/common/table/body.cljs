@@ -88,7 +88,7 @@
             (fn [{:keys [index initial-width]}]
               (update-column-display (assoc-in column-display [index :width] initial-width)))
             +props (merge props (utils/restructure joined-columns start-column-drag column-reset))]
-        [:div {:style (merge {:width "-webkit-fit-content"} (:table style))}
+        [:div {:style (merge {:width "-webkit-fit-content" :minWidth "100%"} (:table style))}
          (header +props)
          (body +props)]))
     :-on-mouse-move

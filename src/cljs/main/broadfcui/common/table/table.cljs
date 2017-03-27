@@ -15,6 +15,7 @@
 ;; instead of React's regular merge.
 (def ^:private default-props
   {:table {:empty-message "There are no rows to display."
+           :fixed-column-count 0
            :behavior {:reorderable-columns? true
                       :sortable-columns? true
                       :resizable-columns? true
@@ -42,14 +43,14 @@
      (let [props (utils/deep-merge default-props props)
            {:keys [rows column-display total-count filtered-count query-params]} @state
            {:keys [table]} props
-           {:keys [empty-message columns style behavior]} table
+           {:keys [empty-message columns behavior fixed-column-count]} table
            update-column-display #(swap! state assoc :column-display %)]
        [:div {}
         [:div {:style (merge {:display "flex" :alignItems "baseline" :marginBottom "1rem"}
                              (-> props :toolbar :style))}
-         (when (-> props :table :behavior :reorderable-columns?)
-           [ColumnEditButton (utils/restructure columns column-display update-column-display)])
-         (when (-> props :table :behavior :filterable?)
+         (when (:reorderable-columns? behavior)
+           [ColumnEditButton (utils/restructure columns column-display update-column-display fixed-column-count)])
+         (when (:filterable? behavior)
            [comps/TextFilter {:on-filter #(swap! state update :query-params assoc :filter-text %)}])
          (list* (-> props :toolbar :items))]
         [:div {:style {:overflowX "auto"}}
@@ -57,8 +58,9 @@
            (style/create-message-well empty-message)
            [body/TableBody
             (utils/deep-merge
+             table
              (select-keys query-params [:sort-column :sort-order])
-             (utils/restructure rows column-display columns style behavior update-column-display)
+             (utils/restructure rows column-display update-column-display)
              {:set-sort (fn [col order] (swap! state update :query-params
                                                merge {:sort-column col :sort-order order}))})])]
         (paginator/paginator
