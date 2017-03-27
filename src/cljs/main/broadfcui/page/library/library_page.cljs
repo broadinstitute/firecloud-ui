@@ -55,7 +55,12 @@
                     (map
                      (fn [keyname]
                        {:id (name keyname) :header (:title (keyname attributes))
-                        :column-data keyname :initial-width 180 :show-initial? false})
+                        :initial-width 180 :show-initial? false
+                        :column-data keyname
+                        :render (fn [field]
+                                  (if (sequential? field)
+                                    (clojure.string/join ", " field)
+                                    field))})
                      extra-columns))
           :style {:header-row {:fontWeight 500 :fontSize "90%"
                                :backgroundColor nil
