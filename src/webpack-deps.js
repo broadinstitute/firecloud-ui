@@ -16,7 +16,7 @@ require('foundation-sites/js/foundation.util.keyboard');
 require('foundation-sites/js/foundation.util.triggers');
 require('foundation-sites/js/foundation.dropdown');
 require('foundation-sites/js/foundation.tooltip');
-require('select2/dist/js/select2.full');
+require('select2');
 
 require('jquery-ui/themes/base/core.css');
 require('jquery-ui/themes/base/theme.css');
