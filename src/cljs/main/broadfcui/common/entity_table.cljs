@@ -1,7 +1,7 @@
 (ns broadfcui.common.entity-table
   (:require
     [clojure.set :refer [union]]
-    clojure.string
+    [clojure.string :refer [blank?]]
     [dmohs.react :as react]
     [broadfcui.common :as common]
     [broadfcui.common.components :as comps]
@@ -131,7 +131,7 @@
        (fn [{:keys [current-page rows-per-page filter-text sort-column sort-order filter-group-index]} callback]
          (if (empty? entity-types)
            (callback {:group-count 0 :filtered-count 0 :rows []})
-           (let [type (if (clojure.string/blank? filter-group-index)
+           (let [type (if (blank? filter-group-index)
                         (:initial-entity-type props)
                         (nth entity-types filter-group-index))]
              (endpoints/call-ajax-orch
