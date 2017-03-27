@@ -19,7 +19,7 @@
 
 (defn- render-submissions-table [submissions nav-context bucketName]
   [Table
-   {:state-key "monitor"
+   {:state-key "monitor" :v 1
     :table
     {:style table-style/table-heavy
      :data-source (table-utils/local submissions)

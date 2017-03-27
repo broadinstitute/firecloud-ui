@@ -8,6 +8,10 @@
 
 (def clip-text {:whiteSpace "nowrap" :overflow "hidden" :textOverflow "ellipsis"})
 
+(defn tab [color]
+  {:borderRight (str "1px solid " (if (keyword? color) (color style/colors) color))
+   :marginRight -1})
+
 (def table-light
   {:table {:fontSize "0.8rem"}
    :cell (merge clip-text {:padding "0.6rem 0 0.6rem 16px"})
@@ -21,7 +25,7 @@
    :cell clip-text
    :header-row {:backgroundColor (:background-dark style/colors) :color "white"}
    :header-cell {:padding "0.6rem 0 0.6rem 16px"}
-   :resize-tab {:borderRight (str "1px solid #777") :marginRight -1}
+   :resize-tab (tab "#777")
    :body-row (fn [{:keys [index]}]
                {:backgroundColor (if (odd? index) "white" (:background-light style/colors))})
    :body-cell {:padding "0.5rem 0 0.4rem 16px"}})
