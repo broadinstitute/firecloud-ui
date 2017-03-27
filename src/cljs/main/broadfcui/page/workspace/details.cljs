@@ -128,7 +128,7 @@
          [:span {:style {:fontWeight 500}}
           (:namespace workspace-id) "/" (:name workspace-id)]]
         [:div {:style {:marginTop "1rem"
-                       :display "flex" :background-color (:background-light style/colors)
+                       :display "flex" :backgroundColor (:background-light style/colors)
                        :borderTop style/standard-line :borderBottom style/standard-line
                        :padding "0 1.5rem" :justifyContent "space-between"}}
          [:div {:style {:display "flex"}}
@@ -137,8 +137,8 @@
           (make-tab ANALYSIS #(react/call :refresh (@refs ANALYSIS)))
           (make-tab CONFIGS #(react/call :refresh (@refs CONFIGS)))
           (make-tab MONITOR #(react/call :refresh (@refs MONITOR)))]
-         (when (:show-toolbar? @state)
-           (react/call :get-tracks-button (@refs ANALYSIS)))]
+         (when (= active-tab ANALYSIS)
+           (analysis-tab/render-track-selection-button #(@refs ANALYSIS)))]
         [:div {:style {:marginTop "2rem"}}
          (if-let [error (:workspace-error @state)]
            [:div {:style {:textAlign "center" :color (:exception-state style/colors)}}
@@ -158,7 +158,7 @@
                                             :workspace-id workspace-id
                                             :workspace workspace
                                             :workspace-error workspace-error
-                                            :request-refresh #(react/call :refresh-workspace this)}])
+                                            :request-refresh #(this :refresh-workspace)}])
              ANALYSIS (react/create-element
                        [analysis-tab/Page {:ref ANALYSIS :workspace-id workspace-id}])
              CONFIGS (react/create-element
@@ -181,13 +181,7 @@
    (fn [{:keys [props this]}]
      (let [nav-context (nav/parse-segment (:nav-context props))
            tab (:segment nav-context)]
-       ;; These tabs don't request a refresh, so if we nav straight there then we need to kick one off.
+       ;; These tabs don't request a refresh, so if we nav straight there then we need to kick one
+       ;; off.
        (when (#{ANALYSIS CONFIGS MONITOR} tab)
-         (react/call :refresh-workspace this))))
-   :component-did-update
-   (fn [{:keys [prev-state state refs]}]
-     (if-let [analysis-tab (@refs ANALYSIS)]
-       (when-not (:show-toolbar? @state)
-         (swap! state assoc :show-toolbar? true))
-       (when (:show-toolbar? @state)
-         (swap! state dissoc :show-toolbar?))))})
+         (react/call :refresh-workspace this))))})
