@@ -58,6 +58,10 @@
                                 (filter (fn [[k _]]
                                           (.startsWith (name k) "library:")))
                                 (into {}))
+        tags (->> attributes
+                  (filter (fn [[k _]]
+                            (.startsWith (name k) "tag:")))
+                          (into {}))
         workspace-attributes (->> attributes
                                   (remove (fn [[k _]]
                                             (or (= k :description)
@@ -67,6 +71,7 @@
         (update :workspace dissoc :attributes)
         (assoc-in [:workspace :description] (:description attributes))
         (assoc-in [:workspace :workspace-attributes] workspace-attributes)
+        (assoc-in [:workspace :tags] tags)
         (assoc-in [:workspace :library-attributes] library-attributes))))
 
 (react/defc Tab

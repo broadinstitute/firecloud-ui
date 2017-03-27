@@ -403,6 +403,7 @@
                            (react/call :apply-filter this))))})
 
 (def Bloodhound (aget js/window "webpack-deps" "Bloodhound"))
+(def ^:private whitespace-tokenizer (aget Bloodhound "tokenizers" "whitespace"))
 
 (react/defc Typeahead
   {:get-text
@@ -425,8 +426,7 @@
    :component-did-mount
    (fn [{:keys [props refs]}]
      (when (not (:disabled props))
-       (let [{:keys [remote render-display behavior empty-message render-suggestion on-select typeahead-events]} props
-             whitespace-tokenizer (aget Bloodhound "tokenizers" "whitespace")]
+       (let [{:keys [remote render-display behavior empty-message render-suggestion on-select typeahead-events]} props]
          (.typeahead (js/$ (@refs "field"))
                      (clj->js behavior)
                      (clj->js
@@ -629,3 +629,41 @@
 (defn create-error-message [thing]
   (when (renderable? thing)
     #(push-error thing)))
+
+(react/defc TagAutocomplete
+  {:get-default-props
+   (fn []
+     ;; when we use this component for GAWB-1406, we'll pass in a different query string like "?limitAccess=true&q="
+     {:query-string "?q="})
+   :get-tags
+   (fn [{:keys [refs]}]
+     (flatten (js->clj (.tagsinput (js/$ (@refs "input-element")) "items"))))
+   :component-did-mount
+   (fn [{:keys [refs props]}]
+     (let [suggestion-engine (Bloodhound.
+                               (clj->js {:datumTokenizer whitespace-tokenizer
+                                         :queryTokenizer whitespace-tokenizer
+                                         :remote {:url (str (config/api-url-root) "/api/workspaces/tags")
+                                                  :prepare
+                                                  (fn [ query settings]
+                                                    (clj->js
+                                                      (assoc (js->clj settings)
+                                                        :headers {:Authorization (str "Bearer " (utils/get-access-token))}
+                                                        :url (str (aget settings "url") (:query-string props) query))))}}))]
+       (.tagsinput (js/$ (@refs "input-element"))
+                   (clj->js {:tagClass "workspace-tag"
+                             :typeaheadjs {:name "suggestion-engine"
+                                           :display (fn [response]
+                                                      (str (aget response "tag") " (tagged by " (aget response "count") " workspaces)"))
+                                           :valueKey "tag"
+                                           :source (.ttAdapter suggestion-engine)}}))))
+   :component-will-unmount
+   (fn [{:keys [refs]}]
+     (.tagsinput (js/$ (@refs "input-element")) "destroy"))
+   :render
+   (fn [{:keys [props ]}]
+     [:input {:ref "input-element"
+              :type "text"
+              :data-role "tagsinput"
+              :width "100%"
+              :defaultValue (clojure.string/join "," (:tags props))}])})

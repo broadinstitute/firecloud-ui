@@ -111,10 +111,11 @@
               :text "Save" :icon :done
               :onClick (fn [_]
                          (let [{:keys [success error]} (react/call :get-attributes (@refs "workspace-attribute-editor"))
-                               new-description (react/call :get-text (@refs "description"))]
+                               new-description (react/call :get-text (@refs "description"))
+                               new-tags (react/call :get-tags (@refs "tags-autocomplete"))]
                            (if error
                              (comps/push-error error)
-                             (save-attributes {:new-attributes (assoc success :description new-description)
+                             (save-attributes {:new-attributes (assoc success :description new-description :tag:tags new-tags)
                                                :state state
                                                :workspace-id workspace-id
                                                :request-refresh request-refresh}))))}]
@@ -151,12 +152,13 @@
 (defn- render-main [{:keys [workspace curator? owner? writer? reader? can-share? bucket-access? editing? submissions-count
                             user-access-level library-schema request-refresh workspace-id storage-cost]}]
   (let [{:keys [owners]
-         {:keys [createdBy createdDate bucketName description workspace-attributes library-attributes realm]} :workspace} workspace
+         {:keys [createdBy createdDate bucketName description tags workspace-attributes library-attributes realm]} :workspace} workspace
         realm-name (:realmName realm)
         render-detail-box (fn [order title & children]
                             [:div {:style {:flexBasis "50%" :order order}}
                              (style/create-section-header title)
-                             children])]
+                             children])
+        processed-tags (flatten (map #(:items %) (vals tags)))]
     [:div {:style {:flex "1 1 auto" :overflow "hidden"}}
      [:div {:style {:display "flex" :flexWrap "wrap"}}
       (render-detail-box
@@ -211,9 +213,21 @@
              (when (pos? count-all)
                [:ul {:style {:marginTop 0}}
                 (for [[status subs] (sort submissions-count)]
-                 [:li {} (str subs " " status)])])])))]
+                 [:li {} (str subs " " status)])])])))
+      (render-detail-box
+       5
+       "Tags"
+       (style/create-paragraph
+          (cond editing? [comps/TagAutocomplete {:tags processed-tags :ref "tags-autocomplete"}]
+                (empty? processed-tags) [:span {:style {:fontStyle "italic"}} "No tags provided"]
+                :else [:div {}
+                       (for [tag processed-tags]
+                         [:div {:style {:display "inline-block" :background (:tag-background style/colors)
+                                        :color (:tag-foreground style/colors) :margin "0.1rem 0.1rem"
+                                        :borderRadius 3 :padding "0.2rem 0.5rem"}} tag])])))]
 
     (when editing? [:div {:style {:marginBottom "10px"}} common/PHI-warning])
+
 
      (style/create-section-header "Description")
      (style/create-paragraph
@@ -300,6 +314,7 @@
                   (when-not (= visible (:sidebar-visible? @state))
                     (swap! state assoc :sidebar-visible? visible))))))
      (.addEventListener js/window "scroll" (:scroll-handler @locals)))
+
    :component-did-update
    (fn [{:keys [locals]}]
      ((:scroll-handler @locals)))
@@ -307,7 +322,7 @@
    (fn [{:keys [locals]}]
      (.removeEventListener js/window "scroll" (:scroll-handler @locals)))
    :refresh
-   (fn [{:keys [props state]}]
+   (fn [{:keys [props state refs]}]
      (swap! state dissoc :server-response)
      ((:request-refresh props))
      (endpoints/call-ajax-orch

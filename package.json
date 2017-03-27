@@ -4,6 +4,7 @@
   "description": "FireCloud user interface for web browsers.",
   "dependencies": {
     "any-resize-event": "~1.0.0",
+    "bootstrap-tagsinput": "~0.7.1",
     "codemirror": "~5.10.0",
     "corejs-typeahead": "~1.1.1",
     "font-awesome": "~4.7.0",
