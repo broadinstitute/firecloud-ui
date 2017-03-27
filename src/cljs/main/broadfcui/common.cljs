@@ -154,7 +154,7 @@
 
 (defn get-id-from-nav-segment [segment]
   (when-not (clojure.string/blank? segment)
-    (let [[ns n] (clojure.string/split segment #":")]
+    (let [[ns n] (clojure.string/split segment #":" 2)]
       {:namespace ns :name n})))
 
 ;; GAWB-666 Globally show Queued and Cromwell (active) counts
