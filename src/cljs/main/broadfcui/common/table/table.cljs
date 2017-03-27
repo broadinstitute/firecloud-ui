@@ -66,14 +66,16 @@
                initial-sort-column (or (first (filter :sort-initial columns))
                                        (first columns))
                initial-sort-order (get initial-sort-column :sort-initial :asc)]
-           {:query-params (select-keys
-                           {:page-number 1
-                            :rows-per-page 20
-                            :filter-text ""
-                            :sort-column (table-utils/resolve-id initial-sort-column)
-                            :sort-order initial-sort-order}
-                           (difference all-query-params (-> props :table :external-query-params)))
-            :column-display (table-utils/build-column-display columns)})})
+           (merge
+            {:query-params (select-keys
+                            {:page-number 1
+                             :rows-per-page 20
+                             :filter-text ""
+                             :sort-column (table-utils/resolve-id initial-sort-column)
+                             :sort-order initial-sort-order}
+                            (difference all-query-params (-> props :table :external-query-params)))
+             :column-display (table-utils/build-column-display columns)}
+            (when-let [v (:v props)] {:v v})))})
        :rows []))
    :render
    (fn [{:keys [props state]}]
@@ -83,7 +85,7 @@
            {:keys [empty-message columns behavior fixed-column-count external-query-params]} table
            query-params (merge query-params (select-keys props external-query-params))
            update-column-display #(swap! state assoc :column-display %)]
-       [:div {:style {:position "relative"}}
+       [:div {}
         (when (:loading? @state)
           [comps/DelayedBlocker {:banner "Loading..."}])
         [:div {:style (:style toolbar)}
