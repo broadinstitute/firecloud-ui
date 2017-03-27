@@ -629,3 +629,42 @@
 (defn create-error-message [thing]
   (when (renderable? thing)
     #(push-error thing)))
+
+
+(react/defc TagAutocomplete
+  {:get-tags
+   (fn [{:keys [refs]}]
+     (or
+      (js->clj (.select2 (js/$ (@refs "input-element")) "val"))
+      []))
+   :render
+   (fn [{:keys [props]}]
+     (style/create-identity-select {:defaultValue (:tags props)
+                                    :ref "input-element" :multiple true}
+                                   (:tags props)))
+   :component-did-mount
+   (fn [{:keys [refs]}]
+     (.select2
+      (js/$ (@refs "input-element"))
+      (clj->js {:ajax {:url (str (config/api-url-root) "/api/workspaces/tags")
+                       :dataType "json"
+                       :type "GET"
+                       :headers {:Authorization (str "Bearer " (utils/get-access-token))}
+                       :data (fn [params]
+                               (clj->js {:q (aget params "term")}))
+                       :processResults (fn [data]
+                                         (clj->js {:results (map (fn [res]
+                                                                   (merge {"id" (res "tag")}
+                                                                          res))
+                                                                 (js->clj data))}))}
+                :templateResult (fn [res]
+                                  (.-tag res))
+                :templateSelection (fn [res]
+                                     (if (.-tag res)
+                                       (.-tag res)
+                                       (.-text res)))
+                :tags true})))
+   :component-will-unmount
+   (fn [{:keys [refs]}]
+     (.select2 (js/$ (@refs "input-element")) "destroy"))})
+

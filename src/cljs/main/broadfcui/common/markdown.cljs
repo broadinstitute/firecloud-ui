@@ -49,7 +49,7 @@
    :get-initial-state
    (fn [{:keys [props]}]
      {:mode :edit
-      :text (:initial-text props)})
+      :text (or (:initial-text props) "")})
    :render
    (fn [{:keys [props state]}]
      (let [{:keys [mode text]} @state

@@ -23,15 +23,15 @@
   {:render
    (fn [{:keys [state this]}]
      [comps/OKCancelForm
-       {:header "Confirm Delete"
-        :content
-        [:div {}
-         (when (:deleting? @state)
-           [comps/Blocker {:banner "Deleting..."}])
-         [:p {:style {:margin 0}} "Are you sure you want to delete this workspace?"]
-         [:p {} "Bucket data will be deleted too."]
-         [comps/ErrorViewer {:error (:server-error @state)}]]
-        :ok-button {:text "Delete" :onClick #(react/call :delete this)}}])
+      {:header "Confirm Delete"
+       :content
+       [:div {}
+        (when (:deleting? @state)
+          [comps/Blocker {:banner "Deleting..."}])
+        [:p {:style {:margin 0}} "Are you sure you want to delete this workspace?"]
+        [:p {} "Bucket data will be deleted too."]
+        [comps/ErrorViewer {:error (:server-error @state)}]]
+       :ok-button {:text "Delete" :onClick #(react/call :delete this)}}])
    :delete
    (fn [{:keys [props state]}]
      (swap! state assoc :deleting? true :server-error nil)
@@ -67,8 +67,8 @@
          {:keys [library-schema]} :server-response} @state]
     [:div {:style {:flex "0 0 270px" :paddingRight 30}}
      [comps/StatusLabel {:text (str status
-                                 (when (= status "Running")
-                                   (str " (" runningSubmissionsCount ")")))
+                                    (when (= status "Running")
+                                      (str " (" runningSubmissionsCount ")")))
                          :icon (case status
                                  "Complete" [icons/CompleteIcon {:size 36}]
                                  "Running" [icons/RunningIcon {:size 36}]
@@ -111,10 +111,11 @@
               :text "Save" :icon :done
               :onClick (fn [_]
                          (let [{:keys [success error]} (react/call :get-attributes (@refs "workspace-attribute-editor"))
-                               new-description (react/call :get-text (@refs "description"))]
+                               new-description (react/call :get-text (@refs "description"))
+                               new-tags (react/call :get-tags (@refs "tags-autocomplete"))]
                            (if error
                              (comps/push-error error)
-                             (save-attributes {:new-attributes (assoc success :description new-description)
+                             (save-attributes {:new-attributes (assoc success :description new-description :tag:tags new-tags)
                                                :state state
                                                :workspace-id workspace-id
                                                :request-refresh request-refresh}))))}]
@@ -127,14 +128,14 @@
                                :text "Clone..." :icon :clone
                                :disabled? (when (empty? billing-projects) (comps/no-billing-projects-message))
                                :onClick #(modal/push-modal
-                                          [WorkspaceCloner
-                                           {:on-success (fn [namespace name]
-                                                          (swap! state dissoc :cloning?)
-                                                          (on-clone (str namespace ":" name)))
-                                            :workspace-id workspace-id
-                                            :description description
-                                            :is-protected? isProtected
-                                            :billing-projects billing-projects}])}])
+                                           [WorkspaceCloner
+                                            {:on-success (fn [namespace name]
+                                                           (swap! state dissoc :cloning?)
+                                                           (on-clone (str namespace ":" name)))
+                                             :workspace-id workspace-id
+                                             :description description
+                                             :is-protected? isProtected
+                                             :billing-projects billing-projects}])}])
        (when (and owner? (not editing?))
          [comps/SidebarButton {:style :light :margin :top :color :button-primary
                                :text (if isLocked "Unlock" "Lock")
@@ -151,12 +152,13 @@
 (defn- render-main [{:keys [workspace curator? owner? writer? reader? can-share? bucket-access? editing? submissions-count
                             user-access-level library-schema request-refresh workspace-id storage-cost]}]
   (let [{:keys [owners]
-         {:keys [createdBy createdDate bucketName description workspace-attributes library-attributes realm]} :workspace} workspace
+         {:keys [createdBy createdDate bucketName description tags workspace-attributes library-attributes realm]} :workspace} workspace
         realm-name (:realmName realm)
         render-detail-box (fn [order title & children]
                             [:div {:style {:flexBasis "50%" :order order}}
                              (style/create-section-header title)
-                             children])]
+                             children])
+        processed-tags (flatten (map :items (vals tags)))]
     [:div {:style {:flex "1 1 auto" :overflow "hidden"}}
      [:div {:style {:display "flex" :flexWrap "wrap"}}
       (render-detail-box
@@ -211,14 +213,27 @@
              (when (pos? count-all)
                [:ul {:style {:marginTop 0}}
                 (for [[status subs] (sort submissions-count)]
-                 [:li {} (str subs " " status)])])])))]
+                  [:li {} (str subs " " status)])])])))
+      (render-detail-box
+        5
+        "Tags"
+        (style/create-paragraph
+          (cond editing? [comps/TagAutocomplete {:tags processed-tags :ref "tags-autocomplete"}]
+                (empty? processed-tags) [:em {} "No tags provided"]
+                :else [:div {}
+                       (for [tag processed-tags]
+                         [:div {:style {:display "inline-block" :background (:tag-background style/colors)
+                                        :color (:tag-foreground style/colors) :margin "0.1rem 0.1rem"
+                                        :borderRadius 3 :padding "0.2rem 0.5rem"}} tag])])))]
 
-    (when editing? [:div {:style {:marginBottom "10px"}} common/PHI-warning])
+     (when editing? [:div {:style {:marginBottom "10px"}} common/PHI-warning])
+
 
      (style/create-section-header "Description")
      (style/create-paragraph
        (let [description (not-empty description)]
-         (cond editing? (react/create-element [MarkdownEditor {:ref "description" :initial-text description}])
+         (cond editing? (react/create-element [MarkdownEditor
+                                               {:ref "description" :initial-text description}])
                description [MarkdownView {:text description}]
                :else [:span {:style {:fontStyle "italic"}} "No description provided"])))
      (when-not (empty? library-attributes)
@@ -286,7 +301,7 @@
                    (when-not success?
                      (if (and (= status-code 409) (not locked-now?))
                        (comps/push-error
-                        "Could not lock workspace, one or more analyses are currently running")
+                         "Could not lock workspace, one or more analyses are currently running")
                        (comps/push-error (str "Error: " status-text))))
                    (swap! state dissoc :locking?)
                    (react/call :refresh this))}))
@@ -300,6 +315,7 @@
                   (when-not (= visible (:sidebar-visible? @state))
                     (swap! state assoc :sidebar-visible? visible))))))
      (.addEventListener js/window "scroll" (:scroll-handler @locals)))
+
    :component-did-update
    (fn [{:keys [locals]}]
      ((:scroll-handler @locals)))
@@ -307,7 +323,7 @@
    (fn [{:keys [locals]}]
      (.removeEventListener js/window "scroll" (:scroll-handler @locals)))
    :refresh
-   (fn [{:keys [props state]}]
+   (fn [{:keys [props state refs]}]
      (swap! state dissoc :server-response)
      ((:request-refresh props))
      (endpoints/call-ajax-orch
@@ -317,11 +333,11 @@
                      (swap! state update :server-response assoc :submissions-count (get-parsed-response false))
                      (swap! state update :server-response assoc :server-error status-text)))})
      (endpoints/get-billing-projects
-      (fn [err-text projects]
-        (if err-text
-          (swap! state update :server-response assoc :server-error err-text)
-          (swap! state update :server-response
-                 assoc :billing-projects (map #(% "projectName") projects)))))
+       (fn [err-text projects]
+         (if err-text
+           (swap! state update :server-response assoc :server-error err-text)
+           (swap! state update :server-response
+                  assoc :billing-projects (map #(% "projectName") projects)))))
      (endpoints/get-library-attributes
        (fn [{:keys [success? get-parsed-response]}]
          (if success?
