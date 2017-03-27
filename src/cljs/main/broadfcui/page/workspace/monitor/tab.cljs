@@ -19,9 +19,9 @@
 
 (defn- render-submissions-table [submissions nav-context bucketName]
   [Table
-   {:table
-    {:state-key "monitor"
-     :style table-style/table-heavy
+   {:state-key "monitor"
+    :table
+    {:style table-style/table-heavy
      :data-source (table-utils/local submissions)
      :empty-message "There are no analyses to display."
      :columns
@@ -30,7 +30,7 @@
        :render (fn [submission]
                  (style/create-link {:text (render-date submission)
                                      :href (nav/create-href nav-context (:submissionId submission))}))}
-      {:header "Status" :as-text :status
+      {:header "Status" :as-text :status :sort-by :text
        :render (fn [submission]
                  [:div {:style {:height table-style/table-icon-size}}
                   (when (= "Done" (:status submission))

@@ -7,6 +7,7 @@
     [broadfcui.common.table.paginator :as paginator]
     [broadfcui.common.table.utils :as table-utils]
     [broadfcui.common.style :as style]
+    [broadfcui.persistence :as persistence]
     [broadfcui.utils :as utils]
     ))
 
@@ -30,17 +31,24 @@
 (react/defc Table
   {:get-initial-state
    (fn [{:keys [props]}]
-     (let [columns (-> props :table :columns)
-           initial-sort-column (or (first (filter :sort-initial columns))
-                                   (first columns))
-           initial-sort-order (get initial-sort-column :sort-initial :asc)]
-       {:query-params {:page-number 1
-                       :rows-per-page 20
-                       :filter-text ""
-                       :sort-column (table-utils/resolve-id initial-sort-column)
-                       :sort-order initial-sort-order}
-        :column-display (table-utils/build-column-display columns)
-        :rows []}))
+     (assoc
+      (persistence/try-restore
+       {:key (:state-key props)
+        :validator (fn [stored-value]
+                     (or (not (:v props))
+                         (= (:v props) (:v stored-value))))
+        :initial
+        #(let [columns (-> props :table :columns)
+               initial-sort-column (or (first (filter :sort-initial columns))
+                                       (first columns))
+               initial-sort-order (get initial-sort-column :sort-initial :asc)]
+           {:query-params {:page-number 1
+                           :rows-per-page 20
+                           :filter-text ""
+                           :sort-column (table-utils/resolve-id initial-sort-column)
+                           :sort-order initial-sort-order}
+            :column-display (table-utils/build-column-display columns)})})
+       :rows []))
    :render
    (fn [{:keys [props state]}]
      (let [props (utils/deep-merge default-props props)
@@ -79,9 +87,15 @@
    (fn [{:keys [this]}]
      (this :-refresh-rows!))
    :component-did-update
-   (fn [{:keys [state prev-state this]}]
+   (fn [{:keys [props state prev-state this]}]
      (when-not (= (:query-params @state) (:query-params prev-state))
-       (this :-refresh-rows!)))
+       (this :-refresh-rows!))
+     (when (and (:state-key props)
+                (or (not= (:query-params @state) (:query-params prev-state))
+                    (not= (:column-display @state) (:column-display prev-state))))
+       (persistence/save {:key (:state-key props)
+                          :state state
+                          :only [:query-params :column-display :v]})))
    :-refresh-rows!
    (fn [{:keys [props state]}]
      (swap! state assoc :loading? true)

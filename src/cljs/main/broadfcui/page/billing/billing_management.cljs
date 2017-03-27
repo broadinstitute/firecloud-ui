@@ -82,7 +82,7 @@
                               [:div {:title creation-status :style {:height table-style/table-icon-size}}
                                (moncommon/icon-for-project-status creation-status)])}
                            {:header "Project Name" :initial-width 500 :sort-initial :asc
-                            :as-text :projectName
+                            :as-text :projectName :sort-by :text
                             :render
                             (fn [{:keys [projectName role creationStatus message]}]
                               [:span {}
