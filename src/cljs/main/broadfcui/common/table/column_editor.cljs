@@ -104,7 +104,7 @@
      {:reorder-anchor :left})
    :render
    (fn [{:keys [props state refs]}]
-     [:div {:style {:marginRight "1rem"}}
+     [:div {}
       [comps/Button {:ref "col-edit-button" :icon :settings
                      :onClick #(swap! state assoc :reordering-columns? true)}]
       (when (:reordering-columns? @state)

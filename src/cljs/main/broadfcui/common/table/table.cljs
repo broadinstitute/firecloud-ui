@@ -20,6 +20,9 @@
                       :sortable-columns? true
                       :resizable-columns? true
                       :filterable? true}}
+   :toolbar {:style {:display "flex" :alignItems "baseline" :marginBottom "1rem"}
+             :column-edit-button {:marginRight "1rem"}
+             :filter-bar {:marginRight "1rem"}}
    :paginator {:style {:marginTop "1rem"}
                :per-page-options [10 20 100 500]}})
 
@@ -42,17 +45,18 @@
    (fn [{:keys [props state]}]
      (let [props (utils/deep-merge default-props props)
            {:keys [rows column-display total-count filtered-count query-params]} @state
-           {:keys [table]} props
+           {:keys [table toolbar]} props
            {:keys [empty-message columns behavior fixed-column-count]} table
            update-column-display #(swap! state assoc :column-display %)]
        [:div {}
-        [:div {:style (merge {:display "flex" :alignItems "baseline" :marginBottom "1rem"}
-                             (-> props :toolbar :style))}
+        [:div {:style (:style toolbar)}
          (when (:reorderable-columns? behavior)
-           [ColumnEditButton (utils/restructure columns column-display update-column-display fixed-column-count)])
+           [:div {:style (:column-edit-button toolbar)}
+            [ColumnEditButton (utils/restructure columns column-display update-column-display fixed-column-count)]])
          (when (:filterable? behavior)
-           [comps/TextFilter {:on-filter #(swap! state update :query-params assoc :filter-text %)}])
-         (list* (-> props :toolbar :items))]
+           [:div {:style (:filter-bar toolbar)}
+            [comps/TextFilter {:on-filter #(swap! state update :query-params assoc :filter-text %)}]])
+         (list* (:items toolbar))]
         [:div {:style {:overflowX "auto"}}
          (if (empty? rows)
            (style/create-message-well empty-message)
