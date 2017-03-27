@@ -74,11 +74,10 @@
         (fn [field]
           [:div {:style {:float "left" :marginRight "0.5em"}}
            (style/create-form-label (:label field))
-           (cond (= (:type field) "identity-select")
-             (style/create-identity-select {:ref (:key field)
-                                            :value (or (entity (:key field)) "")}
+           (if (= (:type field) "identity-select")
+             (style/create-identity-select
+               {:ref (:key field) :defaultValue (or (entity (:key field)) "")}
                (:options field))
-             :else
              [input/TextField {:defaultValue (entity (:key field))
                                :ref (:key field) :placeholder "Required"
                                :predicates [(input/nonempty "Fields")]}])])
@@ -182,7 +181,7 @@
           {:label "Configuration Name" :key "name"}
           {:label "Root Entity Type" :key "rootEntityType" :type "identity-select" :options root-entity-types}])
 
-       (:error @state) (style/create-server-error-message (:error @state))
+       (:error @state) (style/create-server-error-message (:error @state))`
        :else [comps/Spinner {:text "Creating template..."}]))
    :perform-copy
    (fn [{:keys [props state refs]}]
