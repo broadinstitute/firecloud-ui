@@ -158,7 +158,7 @@
                             [:div {:style {:flexBasis "50%" :order order}}
                              (style/create-section-header title)
                              children])
-        processed-tags (flatten (map #(:items %) (vals tags)))]
+        processed-tags (flatten (map :items (vals tags)))]
     [:div {:style {:flex "1 1 auto" :overflow "hidden"}}
      [:div {:style {:display "flex" :flexWrap "wrap"}}
       (render-detail-box

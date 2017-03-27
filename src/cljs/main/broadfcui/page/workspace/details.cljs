@@ -78,10 +78,7 @@
                                 (filter (fn [[k _]]
                                           (.startsWith (name k) "library:")))
                                 (into {}))
-        tags (->> attributes
-                  (filter (fn [[k _]]
-                            (.startsWith (name k) "tag:")))
-                  (into {}))
+        tags (utils/filter-keys #(.startsWith (name %) "tag:") attributes)
         workspace-attributes (->> attributes
                                   (remove (fn [[k _]]
                                             (or (= k :description)
