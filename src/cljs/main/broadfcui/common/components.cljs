@@ -684,42 +684,35 @@
 (react/defc TagAutocomplete
   {:get-tags
    (fn [{:keys [refs]}]
-     (flatten (js->clj (.tagsinput (js/$ (@refs "input-element")) "items"))))
-   :component-did-mount
-   (fn [{:keys [refs props]}]
-     (.select2 (js/$ (@refs "input-element"))
-               (clj->js {:ajax {:url (str (config/api-url-root) "/api/workspaces/tags")
-                                :dataType "json"
-                                :type "GET"
-                                :headers {:Authorization (str "Bearer " (utils/get-access-token))}
-                                :data (fn [params]
-                                        (clj->js {:q (aget params "term")}))
-                                :processResults (fn [data params]
-                                                  (clj->js {:results (map (fn [thing]
-                                                                            (merge {"id" (thing "tag")} thing))
-                                                                          (js->clj data))}))}
-                         :templateResult (fn [res]
-                                           (aget res "tag"))
-                         :templateSelection (fn [res]
-                                              (aget res "tag"))
-                         :tags true ;; this should let you save tags by hitting enter, not sure it's working rn
-                         })))
-
-     ;; TODO: get autocomplete and initial tags to work
-     ;; this is currently not working
-     ;(map (fn [val]
-     ;       (utils/cljslog val)
-     ;       (.val (.trigger (.select2 (js/$ (@refs "input-element"))) "change") val)
-     ;     (:tags props))))
-
-     ;when you do this, they load properly BUT autocomplete doesn't work so need to do something with the value
-     ;(.trigger (.select2 (js/$ (@refs "input-element"))) "change"))
-
-
-   :component-will-unmount
-   (fn [{:keys [refs]}]
-     (.select2 (js/$ (@refs "input-element")) "destroy"))
+     (js->clj (.select2 (js/$ (@refs "input-element")) "val")))
    :render
    (fn [{:keys [props]}]
-     (style/create-select-selected {:ref "input-element" :multiple "multiple" :className "tag-autocomplete" } (:tags props)))})
+     (style/create-identity-select {:defaultValue (:tags props)
+                                    :ref "input-element" :multiple true}
+                                   (:tags props)))
+   :component-did-mount
+   (fn [{:keys [refs]}]
+     (.select2
+      (js/$ (@refs "input-element"))
+      (clj->js {:ajax {:url (str (config/api-url-root) "/api/workspaces/tags")
+                       :dataType "json"
+                       :type "GET"
+                       :headers {:Authorization (str "Bearer " (utils/get-access-token))}
+                       :data (fn [params]
+                               (clj->js {:q (aget params "term")}))
+                       :processResults (fn [data]
+                                         (clj->js {:results (map (fn [res]
+                                                                   (merge {"id" (res "tag")}
+                                                                          res))
+                                                                 (js->clj data))}))}
+                :templateResult (fn [res]
+                                  (.-tag res))
+                :templateSelection (fn [res]
+                                     (if (.-tag res)
+                                       (.-tag res)
+                                       (.-text res)))
+                :tags true})))
+   :component-will-unmount
+   (fn [{:keys [refs]}]
+     (.select2 (js/$ (@refs "input-element")) "destroy"))})
 
