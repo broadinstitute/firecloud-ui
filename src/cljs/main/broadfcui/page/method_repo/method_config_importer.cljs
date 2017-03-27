@@ -181,7 +181,7 @@
           {:label "Configuration Name" :key "name"}
           {:label "Root Entity Type" :key "rootEntityType" :type "identity-select" :options root-entity-types}])
 
-       (:error @state) (style/create-server-error-message (:error @state))`
+       (:error @state) (style/create-server-error-message (:error @state))
        :else [comps/Spinner {:text "Creating template..."}]))
    :perform-copy
    (fn [{:keys [props state refs]}]
