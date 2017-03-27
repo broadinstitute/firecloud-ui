@@ -30,6 +30,7 @@ $tooltip-font-size: 0.8rem;
 @include foundation-float-classes;
 @include foundation-tooltip;
 @include foundation-dropdown;
+@include foundation-switch;
 
 .dropdown-pane {
   font-weight: normal;

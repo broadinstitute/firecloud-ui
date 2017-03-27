@@ -19,6 +19,7 @@
    [broadfcui.page.groups.groups-management :as group-management]
    [broadfcui.page.library.library-page :as library-page]
    [broadfcui.page.method-repo.method-repo-page :as method-repo]
+   [broadfcui.page.notifications :as notifications]
    [broadfcui.page.profile :as profile-page]
    [broadfcui.page.status :as status-page]
    [broadfcui.page.workspace.details :as workspace-details]
@@ -33,6 +34,7 @@
   (group-management/add-nav-paths)
   (library-page/add-nav-paths)
   (method-repo/add-nav-paths)
+  (notifications/add-nav-paths)
   (profile-page/add-nav-paths)
   (status-page/add-nav-paths)
   (workspace-details/add-nav-paths)

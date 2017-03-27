@@ -3,6 +3,7 @@
    [dmohs.react :as react]
    [broadfcui.common :as common]
    [broadfcui.common.components :as comps]
+   [broadfcui.common.icons :as icons]
    [broadfcui.common.style :as style]
    [broadfcui.config :as config]
    [broadfcui.endpoints :as endpoints]
@@ -15,6 +16,68 @@
    [broadfcui.utils :as utils]
    ))
 
+(react/defc Notifications
+  {:get-initial-state
+   (fn []
+     {:save-disabled? true
+      :notifications [{:key "mouse" :description "Any User Moves Mouse" :on? true}
+                      {:key "falafal"
+                       :description "Alla falla falafala afaalafaaffffffll la fala" :on? false}
+                      {:key "sneeze" :description "Collaborator Sneezes" :on? true}]})
+   :render
+   (fn [{:keys [this props state]}]
+     (let [{:keys [close-self]} props]
+       [:div {}
+        [:h3 {:style {:margin "0 0 0.5rem 0" :fontWeight 500}} "Workspace Notifications"]
+        (this
+         :-render-ajax-or-continue
+         (fn [notifications notifications-state]
+           (let [find-notification (fn [k]
+                                     (first (filter #(= k (:notificationKey %)) notifications)))
+                 is-checked? (fn [k] (get notifications-state k))
+                 set-checked? (fn [k value]
+                                (swap! state assoc-in [:notifications-state k] value))
+                 checkbox (fn [k]
+                            (common/render-foundation-switch
+                             {:checked? (is-checked? k) :on-change (partial set-checked? k)}))
+                 row (fn [{:keys [description notificationKey]}]
+                       [:tr {}
+                        [:td {} (checkbox notificationKey)]
+                        [:td {:style {:padding "0.3rem 0 0.3rem 1rem"}} description]])]
+             [:table {}
+              [:tbody {}
+               (map row notifications)]])))
+        [:div {:style {:marginTop "0.5rem"
+                       :display "flex" :justifyContent "center" :alignItems "center"}}
+         (style/create-link {:text "Cancel" :onClick #(close-self)})
+         [:div {:style {:width "1rem"}}]
+         [comps/Button {:text "Save"}]]]))
+   :component-did-mount
+   (fn [{:keys [state]}]
+     (utils/ajax-orch
+      "/notifications/workspace/dummy/dummy"
+      {:on-done (fn [{:keys [raw-response] :as m}]
+                  (let [[parsed error] (utils/parse-json-string raw-response true false)
+                        notifications-state (reduce (fn [r k] (assoc r k true))
+                                                    {}
+                                                    (map :notificationKey parsed))]
+                    (if error
+                      (swap! state assoc :server-response (assoc m :parse-error? true))
+                      (swap! state assoc
+                             :server-response (assoc m :parsed parsed)
+                             :notifications-state notifications-state))))}))
+   :-render-ajax-or-continue
+   (fn [{:keys [state]} f]
+     (let [{:keys [notifications-state server-response]} @state
+           show-error (fn [message]
+                        [:div {:style {:color (:exception-state style/colors)}}
+                         "Error when retrieving notifications: " message])]
+       (cond
+         (not server-response) [comps/Spinner {:text "Loading notifications..."}]
+         (not (:success? server-response))
+         (show-error (:status-text server-response))
+         (:parse-error? server-response) (show-error "Failed to parse response")
+         :else (f (:parsed server-response) notifications-state))))})
 
 (react/defc ProtectedBanner
   {:render
@@ -111,7 +174,7 @@
                     (swap! state assoc :workspace (process-workspace (get-parsed-response)))
                     (swap! state assoc :workspace-error status-text)))}))
    :render
-   (fn [{:keys [props state refs this]}]
+   (fn [{:keys [props state locals refs this]}]
      (let [{:keys [workspace-id]} props
            {:keys [workspace workspace-error bucket-access?]} @state
            active-tab (:tab-name props)
@@ -129,10 +192,15 @@
         [:div {:style {:minHeight "0.5rem"}}
          [ProtectedBanner (select-keys @state [:workspace :workspace-error])]
          [BucketBanner (select-keys @state [:bucket-access? :bucket-status-code])]]
-        [:div {:style {:marginTop "2rem" :paddingLeft "1.5rem" :fontSize "125%"}}
-         "Workspace: "
-         [:span {:style {:fontWeight 500}}
-          (:namespace workspace-id) "/" (:name workspace-id)]]
+        [:div {:style {:marginTop "1rem" :paddingLeft "1.5rem"
+                       :display "flex" :justifyContent "space-between"}}
+         [:div {:style {:fontSize "125%"}}
+          "Workspace: "
+          [:span {:style {:fontWeight 500}} (:namespace workspace-id) "/" (:name workspace-id)]]
+         (common/render-icon-dropdown
+          {:icon-name :bell :icon-color (:text-light style/colors)
+           :ref (fn [instance] (swap! locals assoc :infobox instance))
+           :contents [Notifications {:close-self #((:infobox @locals) :close)}]})]
         [:div {:style {:marginTop "1rem"
                        :display "flex" :backgroundColor (:background-light style/colors)
                        :borderTop style/standard-line :borderBottom style/standard-line

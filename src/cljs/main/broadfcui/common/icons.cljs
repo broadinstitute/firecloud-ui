@@ -12,6 +12,7 @@
    :alert "fa-exclamation"
    :angle-left "fa-angle-left"
    :angle-right "fa-angle-right"
+   :bell "fa-bell-o"
    :cancel "fa-times-circle"
    :catalog "fa-tag"
    :clone "fa-clone"

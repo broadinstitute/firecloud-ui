@@ -50,6 +50,7 @@
     :items [{:href (nav/get-link :profile) :text "Profile"}
             {:href (nav/get-link :groups) :text "Groups"}
             {:href (nav/get-link :billing) :text "Billing"}
+            {:href (nav/get-link :notifications) :text "Notifications"}
             {:text "Sign Out" :dismiss #(.signOut auth2)}]}))
 
 (r/defc GlobalSubmissionStatus
