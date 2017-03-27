@@ -219,7 +219,7 @@
         "Tags"
         (style/create-paragraph
           (cond editing? [comps/TagAutocomplete {:tags processed-tags :ref "tags-autocomplete"}]
-                (empty? processed-tags) [:span {:style {:fontStyle "italic"}} "No tags provided"]
+                (empty? processed-tags) [:em {} "No tags provided"]
                 :else [:div {}
                        (for [tag processed-tags]
                          [:div {:style {:display "inline-block" :background (:tag-background style/colors)
