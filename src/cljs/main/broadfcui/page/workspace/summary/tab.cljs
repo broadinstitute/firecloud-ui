@@ -232,7 +232,8 @@
      (style/create-section-header "Description")
      (style/create-paragraph
        (let [description (not-empty description)]
-         (cond editing? (react/create-element [MarkdownEditor {:ref "description" :initial-text description}])
+         (cond editing? (react/create-element [MarkdownEditor
+                                               {:ref "description" :initial-text description}])
                description [MarkdownView {:text description}]
                :else [:span {:style {:fontStyle "italic"}} "No description provided"])))
      (when-not (empty? library-attributes)
