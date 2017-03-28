@@ -14,7 +14,7 @@
 
 
 (defn- header [{:keys [joined-columns sort-column sort-order set-sort style
-                       start-column-drag column-reset]}]
+                       start-column-drag column-reset allow-no-sort?]}]
   [:div {:style (merge {:display "flex"} (:row style) (:header-row style))}
    (map-indexed
     (fn [index {:keys [id width initial-width header visible? resizable? sortable?]}]
@@ -25,10 +25,10 @@
                                                   {:borderRight "1px solid" :marginRight -1})))}
          [:div {:style (merge {:width width} (:cell style) (:header-cell style))
                 :onClick (when sortable?
-                           #(set-sort id (if (or (not= sort-column id)
-                                                 (= sort-order :desc))
-                                           :asc
-                                           :desc)))}
+                           #(cond (not= sort-column id) (set-sort id :asc)
+                                  (= sort-order :asc) (set-sort id :desc)
+                                  allow-no-sort? (set-sort nil nil)
+                                  :else (set-sort id :asc)))}
           header
           (when (= id sort-column)
             [:span {:style {:marginLeft "0.4rem"}}

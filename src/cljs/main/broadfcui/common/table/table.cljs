@@ -17,10 +17,11 @@
 ;; instead of React's regular merge.
 (def ^:private default-props
   {:table {:empty-message "There are no rows to display."
-           :fixed-column-count 0
            :external-query-params #{}
            :behavior {:reorderable-columns? true
+                      :fixed-column-count 0
                       :sortable-columns? true
+                      :allow-no-sort? false
                       :resizable-columns? true
                       :filterable? true}}
    :toolbar {:style {:display "flex" :alignItems "baseline" :marginBottom "1rem"}
@@ -66,8 +67,10 @@
         :initial
         #(let [columns (-> props :table :columns)
                initial-sort-column (or (first (filter :sort-initial columns))
-                                       (first columns))
-               initial-sort-order (get initial-sort-column :sort-initial :asc)]
+                                       (when-not (-> props :table :behavior :allow-no-sort?)
+                                         (first columns)))
+               initial-sort-order (when initial-sort-column
+                                    (get initial-sort-column :sort-initial :asc))]
            (merge
             {:query-params (select-keys
                             {:page-number 1
@@ -84,7 +87,8 @@
      (let [props (utils/deep-merge default-props props)
            {:keys [rows column-display total-count filtered-count query-params]} @state
            {:keys [table toolbar paginator]} props
-           {:keys [empty-message columns behavior fixed-column-count external-query-params]} table
+           {:keys [empty-message columns behavior external-query-params]} table
+           {:keys [fixed-column-count allow-no-sort?]} behavior
            query-params (merge query-params (select-keys props external-query-params))
            update-column-display #(swap! state assoc :column-display %)]
        [:div {}
@@ -110,7 +114,7 @@
             (merge
              table
              (select-keys query-params [:sort-column :sort-order])
-             (utils/restructure rows column-display update-column-display)
+             (utils/restructure rows column-display update-column-display fixed-column-count allow-no-sort?)
              {:set-sort (fn [col order] (swap! state update :query-params
                                                merge {:sort-column col :sort-order order}))})])]
         (paginator/paginator

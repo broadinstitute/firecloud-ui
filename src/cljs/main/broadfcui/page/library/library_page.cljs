@@ -27,7 +27,8 @@
        [Table
         {:ref "table" :state-key "library-table" :v 4
          :table
-         {:fixed-column-count 2
+         {:behavior {:allow-no-sort? true
+                     :fixed-column-count 2}
           :external-query-params #{:filter-text}
           :filter-text (:filter-text props)
           :data-source (this :pagination)
