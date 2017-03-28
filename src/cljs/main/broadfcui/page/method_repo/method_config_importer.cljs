@@ -83,11 +83,9 @@
         fields)
       (clear-both)
       (when-not workspace-id
-        (let [sorted-ws-list (sort #(compare (lower-case (str (get-in %1 ["workspace" "namespace"]) "/"
-                                                              (get-in %1 ["workspace" "name"])))
-                                             (lower-case (str (get-in %2 ["workspace" "namespace"]) "/"
-                                                              (get-in %2 ["workspace" "name"]))))
-                                   (:workspaces-list @state))]
+        (let [sorted-ws-list (sort-by (juxt #(lower-case (get-in % ["workspace" "namespace"]))
+                                            #(lower-case (get-in % ["workspace" "name"])))
+                                      (:workspaces-list @state))]
           [:div {:style {:marginBottom "1em"}}
            [:div {:style {:fontSize "120%" :margin "1em 0"}} "Destination Workspace:"]
            (style/create-select
