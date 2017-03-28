@@ -25,6 +25,7 @@
                       :filterable? true}}
    :toolbar {:style {:display "flex" :alignItems "baseline" :marginBottom "1rem"}
              :column-edit-button {:style {:marginRight "1rem"}
+                                  :button {:icon :settings}
                                   :anchor :left}
              :filter-bar {:style {:marginRight "1rem"}}}
    :paginator {:style {:marginTop "1rem"}
@@ -94,7 +95,8 @@
              [:div {:style (:style button-props)}
               [ColumnEditButton
                (assoc (utils/restructure columns column-display update-column-display fixed-column-count)
-                 :reorder-anchor (:anchor button-props))]]))
+                 :reorder-anchor (:anchor button-props)
+                 :button (:button button-props))]]))
          (when (and (:filterable? behavior) (not (contains? external-query-params :filter-text)))
            (let [filter-bar-props (:filter-bar toolbar)]
              [:div {:style (:style filter-bar-props)}

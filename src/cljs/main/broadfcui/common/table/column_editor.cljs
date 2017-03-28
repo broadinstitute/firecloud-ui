@@ -51,18 +51,20 @@
                               :borderRadius 4
                               :textAlign "center"}}
                 (:drop-text @state)]
-               [:div {}
-                (icons/icon {:style {:color (style/colors :text-light) :fontSize 16
-                                     :verticalAlign "middle" :marginRight "1ex"
-                                     :cursor "ns-resize"}
-                             :draggable false
-                             :onMouseDown #(swap! state assoc :drag-index i :drop-index i :drop-text id
-                                                  :saved-user-select-state (common/disable-text-selection))}
-                            :reorder)
-                [:label {:style {:cursor (when-not drag-index "pointer")}}
-                 [:input {:type "checkbox" :checked visible?
-                          :onChange #(update-column-display (update-in column-display [(+ i fixed-column-count) :visible?] not))}]
-                 [:span {:style {:paddingLeft "0.5em"} :title id} id]]])])
+               (let [header (:header (table-utils/find-by-id id columns))
+                     text (if (string? header) header id)]
+                 [:div {}
+                  (icons/icon {:style {:color (style/colors :text-light) :fontSize 16
+                                       :verticalAlign "middle" :marginRight "1ex"
+                                       :cursor "ns-resize"}
+                               :draggable false
+                               :onMouseDown #(swap! state assoc :drag-index i :drop-index i :drop-text text
+                                                    :saved-user-select-state (common/disable-text-selection))}
+                              :reorder)
+                  [:label {:style {:cursor (when-not drag-index "pointer")}}
+                   [:input {:type "checkbox" :checked visible?
+                            :onChange #(update-column-display (update-in column-display [(+ i fixed-column-count) :visible?] not))}]
+                   [:span {:style {:paddingLeft "0.5em"} :title text} text]]]))])
           (if drag-index
             (-> reorderable-columns
                 (utils/delete drag-index)
@@ -105,8 +107,9 @@
    :render
    (fn [{:keys [props state refs]}]
      [:div {}
-      [comps/Button {:ref "col-edit-button" :icon :settings
-                     :onClick #(swap! state assoc :reordering-columns? true)}]
+      [comps/Button (merge
+                     {:ref "col-edit-button" :onClick #(swap! state assoc :reordering-columns? true)}
+                     (:button props))]
       (when (:reordering-columns? @state)
         [overlay/Overlay
          {:get-anchor-dom-node #(react/find-dom-node (@refs "col-edit-button"))
