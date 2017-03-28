@@ -2,6 +2,7 @@
   (:require
     [dmohs.react :as react]
     [broadfcui.common :as common]
+    [broadfcui.common.flex-utils :as flex]
     [broadfcui.common.table.utils :as table-utils]
     [broadfcui.utils :as utils]
     ))
@@ -23,15 +24,19 @@
                              {:position "relative" :cursor (when sortable? "pointer")}
                              (when resizable? (or (:resize-tab style)
                                                   {:borderRight "1px solid" :marginRight -1})))}
-         [:div {:style (merge {:width width} (:cell style) (:header-cell style))
+         [:div {:style (merge {:display "flex" :width width}
+                              (:cell style)
+                              (:header-cell style))
                 :onClick (when sortable?
                            #(cond (not= sort-column id) (set-sort id :asc)
                                   (= sort-order :asc) (set-sort id :desc)
                                   allow-no-sort? (set-sort nil nil)
                                   :else (set-sort id :asc)))}
-          header
+          [:div {:style {:flex "1 1 auto" :overflow "hidden" :textOverflow "ellipsis"}}
+           header]
+          flex/spring
           (when (= id sort-column)
-            [:span {:style {:marginLeft "0.4rem"}}
+            [:span {:style {:margin "0 0.4rem 0 0.1rem" :flex "0 0 auto"}}
              (if (= :asc sort-order) "↑" "↓")])]
          (when resizable?
            [:div {:style {:position "absolute" :cursor "col-resize"
