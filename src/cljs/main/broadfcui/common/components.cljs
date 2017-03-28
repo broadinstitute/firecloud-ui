@@ -717,7 +717,7 @@
                  (:data props))]]
        (if (:label props)
          [:span {}
-          (str (:label props) ": ")
+          (:label props) ": "
           (style/create-link
            {:text (icons/icon {} (if (:collapsed? @state) :expand :collapse))
             :onClick #(swap! state assoc :collapsed? (not (:collapsed? @state)))})
