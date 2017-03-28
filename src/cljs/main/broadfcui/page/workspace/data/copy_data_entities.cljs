@@ -54,17 +54,14 @@
       {:header "Import Results"
        :message [:div {}
                  (when (not-empty (parsed-response "entitiesCopied"))
-                   [:div {}
-                    "Successfully copied:"
-                    [comps/Tree {:data (parsed-response "entitiesCopied")}]])
+                   [comps/Tree {:label "Successfully copied:"
+                                :data (parsed-response "entitiesCopied")}])
                  (when (not-empty (parsed-response "hardConflicts"))
-                   [:div {}
-                    "Hard conflicts:"
-                    [comps/Tree {:data (parsed-response "hardConflicts")}]])
+                   [comps/Tree {:label "Hard conflicts:"
+                                :data (parsed-response "hardConflicts")}])
                  (when (not-empty (parsed-response "softConflicts"))
-                   [:div {}
-                    "Soft conflicts:"
-                    [comps/Tree {:data (parsed-response "softConflicts")}]])]}))})
+                   [comps/Tree {:label "Soft conflicts:"
+                                :data (parsed-response "softConflicts")}])]}))})
 
 
 (react/defc Page
