@@ -3,6 +3,7 @@
     [dmohs.react :as react]
     [broadfcui.common :as common]
     [broadfcui.common.flex-utils :as flex]
+    [broadfcui.common.icons :as icons]
     [broadfcui.common.table.utils :as table-utils]
     [broadfcui.utils :as utils]
     ))
@@ -36,8 +37,8 @@
            header]
           flex/spring
           (when (= id sort-column)
-            [:span {:style {:margin "0 0.4rem 0 0.1rem" :flex "0 0 auto"}}
-             (if (= :asc sort-order) "↑" "↓")])]
+            (icons/icon {:style {:margin "0 0.4rem 0 0.1rem"}}
+                        (if (= :asc sort-order) :sort-asc :sort-desc)))]
          (when resizable?
            [:div {:style {:position "absolute" :cursor "col-resize"
                           :right -11 :top 0 :width 21 :height "100%" :zIndex 1}

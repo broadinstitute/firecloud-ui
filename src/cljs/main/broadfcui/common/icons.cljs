@@ -33,6 +33,8 @@
    :settings "fa-cog"
    :share "fa-share-alt"
    :shield "fa-shield"
+   :sort-asc "fa-sort-asc"
+   :sort-desc "fa-sort-desc"
    :spinner "fa-spinner"
    :unlock "fa-unlock"
    :warning-triangle "fa-exclamation-triangle"
