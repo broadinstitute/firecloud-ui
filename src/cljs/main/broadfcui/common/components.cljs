@@ -715,13 +715,15 @@
                            [:li {:style {:listStyle "none"}}
                             (let [value (get node key)]
                               (if (and (vector? value) (not-empty value))
-                                [Tree {:data value :start-collapsed? (:start-collapsed? props) :label key}]
+                                [Tree {:data value
+                                       :start-collapsed? (:start-collapsed? props)
+                                       :label (str key ":")}]
                                 (str key ": " value)))])
                          (keys node))])
                  (:data props))]]
        (if (:label props)
          [:span {}
-          (:label props) ": "
+          (:label props) " "
           (style/create-link
            {:text (icons/icon {} (if (:collapsed? @state) :expand :collapse))
             :onClick #(swap! state assoc :collapsed? (not (:collapsed? @state)))})

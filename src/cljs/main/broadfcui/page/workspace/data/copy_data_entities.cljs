@@ -3,7 +3,9 @@
     [clojure.set :refer [union]]
     [clojure.string :refer [capitalize]]
     [dmohs.react :as react]
+    [broadfcui.common :as common]
     [broadfcui.common.components :as comps]
+    [broadfcui.common.modal :as modal]
     [broadfcui.endpoints :as endpoints]
     [broadfcui.page.workspace.data.entity-selector :refer [EntitySelector]]
     [broadfcui.utils :as utils]
@@ -35,10 +37,10 @@
                                        (swap! state assoc :selection-error true)
                                        (react/call :perform-copy this selected)))}]]]]))
    :perform-copy
-   (fn [{:keys [props state this]} selected]
+   (fn [{:keys [props state this]} selected re-link?]
      (swap! state assoc :selection-error nil :server-error nil :copying? true)
      (endpoints/call-ajax-orch
-      {:endpoint (endpoints/copy-entity-to-workspace (:workspace-id props))
+      {:endpoint (endpoints/copy-entity-to-workspace (:workspace-id props) re-link?)
        :payload {:sourceWorkspace (:selected-workspace-id props)
                  :entityType (:type props)
                  :entityNames (map #(% "name") selected)}
@@ -47,21 +49,37 @@
                   (swap! state dissoc :copying?)
                   (when success?
                     ((:on-data-imported props) (:type props)))
-                  (react/call :show-import-result this (get-parsed-response false)))}))
+                  (react/call :show-import-result this (get-parsed-response false) selected))}))
    :show-import-result
-   (fn [_ parsed-response]
-     (comps/push-message
-      {:header "Import Results"
-       :message [:div {}
-                 (when (not-empty (parsed-response "entitiesCopied"))
-                   [comps/Tree {:label "Successfully copied:"
-                                :data (parsed-response "entitiesCopied")}])
-                 (when (not-empty (parsed-response "hardConflicts"))
-                   [comps/Tree {:label "Hard conflicts:"
-                                :data (parsed-response "hardConflicts")}])
-                 (when (not-empty (parsed-response "softConflicts"))
-                   [comps/Tree {:label "Soft conflicts:"
-                                :data (parsed-response "softConflicts")}])]}))})
+   (fn [{:keys [this]} parsed-response selected]
+     (let [copied (parsed-response "entitiesCopied")
+           hard-conflicts (parsed-response "hardConflicts")
+           soft-conflicts (parsed-response "softConflicts")]
+       (comps/push-ok-cancel-modal
+        {:header "Import Results"
+         :content [:div {}
+                   (when (not-empty copied)
+                     [comps/Tree {:label "Successfully copied"
+                                  :data copied}])
+                   (when (not-empty hard-conflicts)
+                     [comps/Tree {:label "Conflicting entities"
+                                  :data hard-conflicts}])
+                   (when (not-empty soft-conflicts)
+                     [:div {} [comps/Tree {:label [:span {} "Link conflicts"
+                                                   [common/FoundationInfoBox
+                                                    {:text "Link conflicts are entities that link
+                                                    to another entity that would conflict with one
+                                                    already in the workspace. You may choose to deal
+                                                    with this by re-linking these entities to the
+                                                    entities that you've already imported."}]]
+                                           :data soft-conflicts}]])]
+         :show-cancel? (not-empty soft-conflicts)
+         :ok-button (if (not-empty soft-conflicts)
+                      {:text "Re-link"
+                       :onClick (fn []
+                                  (modal/pop-modal)
+                                  (react/call :perform-copy this selected true))}
+                      "OK")})))})
 
 
 (react/defc Page
