@@ -43,8 +43,7 @@
                        (swap! state assoc :error (get-parsed-response false))))})))})
 
 (defn- create-import-form [state props this locals entity config? fields]
-  (let [{:keys [workspace-id]} props
-        workspaces-list (:workspaces-list @state)]
+  (let [{:keys [workspace-id]} props]
     [:div {}
      (when (:blocking-text @state)
        [comps/Blocker {:banner (:blocking-text @state)}])
@@ -84,25 +83,29 @@
         fields)
       (clear-both)
       (when-not workspace-id
-        [:div {:style {:marginBottom "1em"}}
-         [:div {:style {:fontSize "120%" :margin "1em 0"}} "Destination Workspace:"]
-         (style/create-select
-          {:value ""
-           :ref (utils/create-element-ref-handler
-                 {:store locals
-                  :key :workspace-select
-                  :did-mount
-                  #(.on (.select2 (js/$ %)) "select2:select"
-                        (fn [event]
-                          (swap! state assoc :selected-workspace
-                                 (nth workspaces-list (js/parseInt (.-value (.-target event)))))))
-                  :will-unmount
-                  #(.off (js/$ %))})
-           :style {:width 500}}
-          (sort #(compare (lower-case %1) (lower-case %2))
-                (map
-                 (fn [ws] (str (get-in ws ["workspace" "namespace"]) "/" (get-in ws ["workspace" "name"])))
-                 workspaces-list)))])
+        (let [sorted-ws-list (sort #(compare (lower-case (str (get-in %1 ["workspace" "namespace"]) "/"
+                                                              (get-in %1 ["workspace" "name"])))
+                                             (lower-case (str (get-in %2 ["workspace" "namespace"]) "/"
+                                                              (get-in %2 ["workspace" "name"]))))
+                                   (:workspaces-list @state))]
+          [:div {:style {:marginBottom "1em"}}
+           [:div {:style {:fontSize "120%" :margin "1em 0"}} "Destination Workspace:"]
+           (style/create-select
+            {:defaultValue ""
+             :ref (utils/create-element-ref-handler
+                   {:store locals
+                    :key :workspace-select
+                    :did-mount
+                    #(.on (.select2 (js/$ %)) "select2:select"
+                          (fn [event]
+                            (swap! state assoc :selected-workspace
+                                   (nth sorted-ws-list (js/parseInt (.-value (.-target event)))))))
+                    :will-unmount
+                    #(.off (js/$ %))})
+             :style {:width 500}}
+            (map
+             (fn [ws] (str (get-in ws ["workspace" "namespace"]) "/" (get-in ws ["workspace" "name"])))
+             sorted-ws-list))]))
       (style/create-validation-error-message (:validation-error @state))
       [comps/ErrorViewer {:error (:server-error @state)}]
       [comps/Button {:text (if workspace-id "Import" "Export")
