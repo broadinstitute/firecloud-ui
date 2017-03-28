@@ -697,6 +697,10 @@
 (declare Tree)
 
 (react/defc Tree
+  ":start-collapsed? (optional [false]) - Start with branches collapsed
+  :label (optional) - Label into which whole tree can be collapsed, must display inline
+  :data - Vector of maps to display in tree, any value can be a nested vector of maps.
+  NOTE: no current support for keys leading directly to nested maps."
   {:get-initial-state
    (fn [{:keys [props]}]
      {:collapsed? (or (:start-collapsed? props) false)})
