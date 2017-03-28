@@ -64,7 +64,7 @@
             :href (or href "javascript:;")
             :onClick (if disabled? (create-error-message disabled?) onClick)
             :onKeyDown (when (and onClick (not disabled?))
-                         (common/create-key-handler [:space :enter] onClick))}
+                         (common/create-key-handler [:space] onClick))}
         text
         (some->> icon (icons/icon {:style (if text
                                             {:fontSize 20 :margin "-0.5em -0.3em -0.5em 0.5em"}
