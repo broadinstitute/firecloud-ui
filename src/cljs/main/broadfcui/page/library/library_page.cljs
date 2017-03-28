@@ -84,7 +84,6 @@
                   flex/spring]
           :style {:alignItems "flex-start" :marginBottom 7}
           :column-edit-button {:style {:order 1 :marginRight nil}
-                               :button {:text "Columns" :style {:padding "0.4rem 0.8rem 0.4rem 0.4rem"}}
                                :anchor :right}}}]))
    :execute-search
    (fn [{:keys [refs]} reset-sort?]

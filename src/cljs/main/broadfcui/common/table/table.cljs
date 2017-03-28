@@ -25,7 +25,8 @@
                       :filterable? true}}
    :toolbar {:style {:display "flex" :alignItems "baseline" :marginBottom "1rem"}
              :column-edit-button {:style {:marginRight "1rem"}
-                                  :button {:icon :settings}
+                                  :button {:text "Columns" :icon :settings
+                                           :style {:padding "0.4rem 0.8rem 0.4rem 0.4rem"}}
                                   :anchor :left}
              :filter-bar {:style {:marginRight "1rem"}}}
    :paginator {:style {:marginTop "1rem"}
