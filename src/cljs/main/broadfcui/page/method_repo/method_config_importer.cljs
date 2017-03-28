@@ -87,7 +87,7 @@
         [:div {:style {:marginBottom "1em"}}
          [:div {:style {:fontSize "120%" :margin "1em 0"}} "Destination Workspace:"]
          (style/create-select
-          {:value ""
+          {:defaultValue ""
            :ref (utils/create-element-ref-handler
                  {:store locals
                   :key :workspace-select
