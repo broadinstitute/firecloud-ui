@@ -225,53 +225,81 @@
                :title tooltip}
         text]))})
 
-(react/defc FoundationInfoBox
-  {:component-will-mount
+(react/defc FoundationIconDropdown
+  {:close
    (fn [{:keys [locals]}]
-     (swap! locals assoc :infobox-id (gensym "infobox-")))
+     (.foundation (js/$ (:dropdown-element @locals)) "close"))
+   :get-default-props
+   (fn []
+     {:icon-name :information})
+   :component-will-mount
+   (fn [{:keys [locals]}]
+     (swap! locals assoc :dropdown-id (gensym "dropdown-")))
+   :render
+   (fn [{:keys [props locals]}]
+     [:button {:className "button-reset" :data-toggle (:dropdown-id @locals)
+               :style {:cursor "pointer" :padding "0 0.5rem"
+                       :fontSize "16px" :lineHeight "1rem"}}
+      (icons/icon {:style {:color (:icon-color props)}} (:icon-name props))])
    :component-did-mount
-   (fn [{:keys [locals this props]}]
-     (let [infobox-container (.createElement js/document "div")]
-       (swap! locals assoc :infobox-container infobox-container)
-       (.insertBefore js/document.body infobox-container (utils/get-app-root-element))
+   (fn [{:keys [this locals]}]
+     (let [dropdown-container (.createElement js/document "div")]
+       (swap! locals assoc :dropdown-container dropdown-container)
+       (.insertBefore js/document.body dropdown-container (utils/get-app-root-element))
+       (this :-render-dropdown)
+       (.foundation (js/$ (:dropdown-element @locals)))))
+   :component-will-receive-props
+   (fn [{:keys [this locals]}]
+     (this :-render-dropdown))
+   :component-will-unmount
+   (fn [{:keys [locals]}]
+     (react/unmount-component-at-node (:dropdown-container @locals))
+     (.remove (:dropdown-container @locals)))
+   :-render-dropdown
+   (fn [{:keys [this props state after-update locals]}]
+     (let [{:keys [contents]} props
+           {:keys [dropdown-container dropdown-id]} @locals]
        (react/render
         (react/create-element
          ;; empty string makes react attach a property with no value
-         [:div {:className "dropdown-pane" :id (:infobox-id @locals) :data-dropdown ""
+         [:div {:className "dropdown-pane" :id dropdown-id :data-dropdown ""
                 :ref (utils/create-element-ref-handler
                       {:store locals
                        :key :dropdown-element
                        :did-mount
                        (fn [element]
-                         (let [infobox-element (js/$ (react/find-dom-node element))
-                               infobox-button (js/$ (react/find-dom-node this))]
-                           (.foundation infobox-element)
-                           (.on infobox-element
+                         (let [element$ (js/$ element)
+                               button$ (js/$ (react/find-dom-node this))]
+                           (.on element$ "hide.zf.dropdown"
+                                (fn [_]
+                                  (swap! state dissoc :render-contents?)
+                                  (after-update #(this :-render-dropdown))))
+                           (.on element$
                                 "show.zf.dropdown"
                                 (fn [_]
+                                  (swap! state assoc :render-contents? true)
+                                  (after-update #(this :-render-dropdown))
                                   (.on (js/$ "body")
                                        "click.zf.dropdown"
                                        (fn [e]
                                          (when
-                                          (not
-                                           (or
-                                            (.is infobox-element (.-target e))
-                                            (pos? (.-length (.find infobox-element (.-target e))))
-                                            (.is infobox-button (.-target e))
-                                            (pos? (.-length (.find infobox-button (.-target e))))))
-                                           (.foundation infobox-element "close")
+                                           (not
+                                            (or
+                                             (.is element$ (.-target e))
+                                             (pos? (.-length (.find element$ (.-target e))))
+                                             (.is button$ (.-target e))
+                                             (pos? (.-length (.find button$ (.-target e))))))
+                                           (.foundation element$ "close")
                                            (.off (js/$ "body") "click.zf.dropdown"))))))))
                        :will-unmount
                        (fn [element]
-                         (.off (js/$ (react/find-dom-node element)))
-                         (react/unmount-component-at-node (:infobox-container @locals))
-                         (.remove (:infobox-container @locals)))})
+                         (.off (js/$ element) "show.zf.dropdown")
+                         (.off (js/$ element) "hide.zf.dropdown"))})
                 :style {:whiteSpace "normal"}}
-          (:text props)])
-        infobox-container)))
-   :render
-   (fn [{:keys [locals]}]
-     [:button {:className "button-reset" :data-toggle (:infobox-id @locals)
-               :style {:cursor "pointer" :padding "0 0.5rem"
-                       :fontSize "16px" :lineHeight "1rem"}}
-      (icons/icon {:style {:color (:link-active style/colors)}} :information)])})
+          (when (:render-contents? @state)
+            contents)])
+        dropdown-container)))})
+
+(defn foundation-info-box [{:keys [text]}]
+  [FoundationIconDropdown {:contents text
+                           :icon-name :information :icon-color (:link-active style/colors)}])
