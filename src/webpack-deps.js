@@ -28,3 +28,4 @@ require('./styles/markdown.css');
 require('./styles/twitter-typeahead.css');
 require('./styles/foundation.scss');
 require('./styles/select2.scss');
+require('./styles/fixes.scss');
