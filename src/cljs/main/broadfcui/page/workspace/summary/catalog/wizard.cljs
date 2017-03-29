@@ -147,7 +147,7 @@
         :required-attributes (find-required-attributes library-schema)}))
    :render
    (fn [{:keys [props state locals this]}]
-     (let [{:keys [library-schema can-share? owner? writer? curator? catandread?]} props
+     (let [{:keys [library-schema can-share? owner? writer? catalog-with-read?]} props
            {:keys [page-num pages-seen invalid-properties working-attributes published? required-attributes validation-error submit-error]} @state]
        ;; FIXME: refactor -- this is heavily copy/pasted from OKCancelForm
        [:div {}
@@ -173,20 +173,18 @@
                    [questions enumerate] (get-questions-for-page working-attributes library-schema page-num)]
                (cond
                  (< page-num page-count)
-                 [Questions {:ref "wizard-page" :key page-num
-                             :library-schema library-schema
-                             :missing-properties invalid-properties
-                             :enumerate enumerate
-                             :questions questions
-                             :attributes working-attributes
-                             :editable? (or writer? catandread?)
-                             :set-discoverable? (or can-share? catandread? owner?)
-                             :required-attributes required-attributes}]
+                 [Questions (merge {:ref "wizard-page"
+                                    :key page-num
+                                    :missing-properties invalid-properties
+                                    :attributes working-attributes
+                                    :editable? (or writer? catalog-with-read?)
+                                    :set-discoverable? (or can-share? catalog-with-read? owner?)}
+                                   (utils/restructure library-schema enumerate questions required-attributes))]
                  (= page-num page-count)
                  [DiscoverabilityPage
                   (merge
                    {:ref "wizard-page"
-                    :set-discoverable? (or can-share? catandread? owner?)}
+                    :set-discoverable? (or can-share? catalog-with-read? owner?)}
                    (select-keys working-attributes [:library:discoverableByGroups])
                    (select-keys @locals [:library-groups])
                    (select-keys props [:library-schema]))]
