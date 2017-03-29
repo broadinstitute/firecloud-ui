@@ -93,7 +93,7 @@
                                                        curator?
                                                        writer?
                                                        catalog-with-read?
-                                                       request-refresh)])
+                                                       request-refresh)])}])
        (when (and publishable? (not editing?))
          (if (:library:published library-attributes)
            [publish/UnpublishButton {:workspace-id workspace-id
