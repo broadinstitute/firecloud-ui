@@ -658,7 +658,7 @@
                                                                           res))
                                                                  (js->clj data))}))}
                 :templateResult (fn [res]
-                                  (.-tag res))
+                                  (str (.-tag res) " (" (.-count res) ")"))
                 :templateSelection (fn [res]
                                      (if (.-tag res)
                                        (.-tag res)
