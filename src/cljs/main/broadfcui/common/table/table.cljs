@@ -16,14 +16,14 @@
 ;; Define default props this way because we need to do a deep-merge,
 ;; instead of React's regular merge.
 (def ^:private default-props
-  {:table {:empty-message "There are no rows to display."
-           :external-query-params #{}
-           :behavior {:reorderable-columns? true
-                      :fixed-column-count 0
-                      :sortable-columns? true
-                      :allow-no-sort? false
-                      :resizable-columns? true
-                      :filterable? true}}
+  {:body {:empty-message "There are no rows to display."
+          :external-query-params #{}
+          :behavior {:reorderable-columns? true
+                     :fixed-column-count 0
+                     :sortable-columns? true
+                     :allow-no-sort? false
+                     :resizable-columns? true
+                     :filterable? true}}
    :toolbar {:style {:display "flex" :alignItems "baseline" :marginBottom "1rem"}
              :column-edit-button {:style {:marginRight "1rem"}
                                   :button {:text "Columns" :icon :settings
@@ -48,14 +48,14 @@
    :refresh-rows
    (fn [{:keys [props state]}]
      (swap! state assoc :loading? true)
-     ((-> props :table :data-source) {:columns (-> props :table :columns)
-                                      :query-params (:query-params @state)
-                                      :on-done (fn [{:keys [total-count filtered-count results]}]
-                                                 (swap! state assoc
-                                                        :total-count total-count
-                                                        :filtered-count filtered-count
-                                                        :rows results
-                                                        :loading? false))}))
+     ((-> props :body :data-source) {:columns (-> props :table :columns)
+                                     :query-params (:query-params @state)
+                                     :on-done (fn [{:keys [total-count filtered-count results]}]
+                                                (swap! state assoc
+                                                       :total-count total-count
+                                                       :filtered-count filtered-count
+                                                       :rows results
+                                                       :loading? false))}))
    :get-initial-state
    (fn [{:keys [props]}]
      (assoc
@@ -65,9 +65,9 @@
                      (or (not (:v props))
                          (= (:v props) (:v stored-value))))
         :initial
-        #(let [columns (-> props :table :columns)
+        #(let [columns (-> props :body :columns)
                initial-sort-column (or (first (filter :sort-initial columns))
-                                       (when-not (-> props :table :behavior :allow-no-sort?)
+                                       (when-not (-> props :body :behavior :allow-no-sort?)
                                          (first columns)))
                initial-sort-order (when initial-sort-column
                                     (get initial-sort-column :sort-initial :asc))]
@@ -78,7 +78,7 @@
                              :filter-text ""
                              :sort-column (table-utils/resolve-id initial-sort-column)
                              :sort-order initial-sort-order}
-                            (difference all-query-params (-> props :table :external-query-params)))
+                            (difference all-query-params (-> props :body :external-query-params)))
              :column-display (table-utils/build-column-display columns)}
             (when-let [v (:v props)] {:v v})))})
        :rows []))
@@ -86,8 +86,8 @@
    (fn [{:keys [props state]}]
      (let [props (utils/deep-merge default-props props)
            {:keys [rows column-display total-count filtered-count query-params]} @state
-           {:keys [table toolbar paginator]} props
-           {:keys [empty-message columns behavior external-query-params]} table
+           {:keys [body toolbar paginator]} props
+           {:keys [empty-message columns behavior external-query-params]} body
            {:keys [fixed-column-count allow-no-sort?]} behavior
            query-params (merge query-params (select-keys props external-query-params))
            update-column-display #(swap! state assoc :column-display %)]
@@ -112,7 +112,7 @@
            (style/create-message-well empty-message)
            [body/TableBody
             (merge
-             table
+             body
              (select-keys query-params [:sort-column :sort-order])
              (utils/restructure rows column-display update-column-display fixed-column-count allow-no-sort?)
              {:set-sort (fn [col order] (swap! state update :query-params

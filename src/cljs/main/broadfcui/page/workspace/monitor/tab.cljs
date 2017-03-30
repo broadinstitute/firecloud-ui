@@ -20,7 +20,7 @@
 (defn- render-submissions-table [submissions nav-context bucketName]
   [Table
    {:state-key "monitor" :v 1
-    :table
+    :body
     {:style table-style/table-heavy
      :data-source (table-utils/local submissions)
      :empty-message "There are no analyses to display."

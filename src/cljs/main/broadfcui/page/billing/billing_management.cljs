@@ -71,58 +71,62 @@
        (nil? (:projects @state)) [comps/Spinner {:text "Loading billing projects..."}]
        :else
        [Table
-        {:table {:behavior {:reorderable-columns? false}
+        {:body {:behavior {:reorderable-columns? false}
                  :style table-style/table-light
                  :data-source (table-utils/local (:projects @state))
-                 :columns [{:id "Status Icon" :initial-width 16
-                            :resizable? false :sortable? false :filterable? false
-                            :column-data :creationStatus
-                            :render
-                            (fn [creation-status]
-                              [:div {:title creation-status :style {:height table-style/table-icon-size}}
-                               (moncommon/icon-for-project-status creation-status)])}
-                           {:header "Project Name" :initial-width 500 :sort-initial :asc
-                            :as-text :projectName :sort-by :text
-                            :render
-                            (fn [{:keys [projectName role creationStatus message]}]
-                              [:span {}
-                               (cond
-                                 (= creationStatus project-status-creating)
-                                 [PendingProjectControl
-                                  {:project-name projectName
-                                   :on-status-change (partial this :-handle-status-change projectName)}]
-                                 (and (= creationStatus project-status-ready) (= role "Owner"))
-                                 (style/create-link {:text projectName
-                                                     :onClick #((:on-select props) projectName)})
-                                 :else projectName)
-                               (when message
-                                 [:div {:style {:float "right" :position "relative"
-                                                :height table-style/table-icon-size}}
-                                  (common/render-info-box
-                                   {:text [:div {} [:strong {} "Message:"] [:br] message]})])])}
-                           {:header "Role" :initial-width :auto :column-data :role}]}
-         :toolbar{:items
-         [flex/spring
-          [comps/Button
-           {:text "Create New Billing Project"
-            :onClick (fn []
-                       (if (-> @utils/google-auth2-instance (aget "currentUser") (js-invoke "get")
-                               (js-invoke "hasGrantedScopes" "https://www.googleapis.com/auth/cloud-billing"))
-                         (modal/push-modal
-                          [CreateBillingProjectDialog
-                           {:on-success #(react/call :reload this)}])
-                         (do
-                           (utils/add-user-listener
-                            ::billing
-                            (fn [_]
-                              (utils/remove-user-listener ::billing)
-                              (modal/push-modal
-                               [CreateBillingProjectDialog
-                                {:on-success #(react/call :reload this)}])))
-                           (js-invoke
-                            @utils/google-auth2-instance
-                            "grantOfflineAccess"
-                            (clj->js {:redirect_uri "postmessage" :scope "https://www.googleapis.com/auth/cloud-billing"})))))}]]}}]))
+                 :columns
+                 [{:id "Status Icon" :initial-width 16
+                   :resizable? false :sortable? false :filterable? false
+                   :column-data :creationStatus
+                   :render
+                   (fn [creation-status]
+                     [:div {:title creation-status :style {:height table-style/table-icon-size}}
+                      (moncommon/icon-for-project-status creation-status)])}
+                  {:header "Project Name" :initial-width 500 :sort-initial :asc
+                   :as-text :projectName :sort-by :text
+                   :render
+                   (fn [{:keys [projectName role creationStatus message]}]
+                     [:span {}
+                      (cond
+                        (= creationStatus project-status-creating)
+                        [PendingProjectControl
+                         {:project-name projectName
+                          :on-status-change (partial this :-handle-status-change projectName)}]
+                        (and (= creationStatus project-status-ready) (= role "Owner"))
+                        (style/create-link {:text projectName
+                                            :onClick #((:on-select props) projectName)})
+                        :else projectName)
+                      (when message
+                        [:div {:style {:float "right" :position "relative"
+                                       :height table-style/table-icon-size}}
+                         (common/render-info-box
+                          {:text [:div {} [:strong {} "Message:"] [:br] message]})])])}
+                  {:header "Role" :initial-width :auto :column-data :role}]}
+         :toolbar
+         {:items
+          [flex/spring
+           [comps/Button
+            {:text "Create New Billing Project"
+             :onClick
+             (fn []
+               (if (-> @utils/google-auth2-instance (aget "currentUser") (js-invoke "get")
+                       (js-invoke "hasGrantedScopes" "https://www.googleapis.com/auth/cloud-billing"))
+                 (modal/push-modal
+                  [CreateBillingProjectDialog
+                   {:on-success #(react/call :reload this)}])
+                 (do
+                   (utils/add-user-listener
+                    ::billing
+                    (fn [_]
+                      (utils/remove-user-listener ::billing)
+                      (modal/push-modal
+                       [CreateBillingProjectDialog
+                        {:on-success #(react/call :reload this)}])))
+                   (js-invoke
+                    @utils/google-auth2-instance
+                    "grantOfflineAccess"
+                    (clj->js {:redirect_uri "postmessage"
+                              :scope "https://www.googleapis.com/auth/cloud-billing"})))))}]]}}]))
    :component-did-mount
    (fn [{:keys [this]}]
      (react/call :load-data this))

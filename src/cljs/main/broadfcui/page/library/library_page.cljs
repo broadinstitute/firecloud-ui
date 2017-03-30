@@ -26,7 +26,7 @@
            extra-columns (subvec search-result-columns 4)]
        [Table
         {:ref "table" :state-key "library-table" :v 4
-         :table
+         :body
          {:behavior {:allow-no-sort? true
                      :fixed-column-count 2}
           :external-query-params #{:filter-text}
