@@ -88,7 +88,7 @@
                                :anchor :right}}}]))
    :execute-search
    (fn [{:keys [refs]} reset-sort?]
-     (let [query-params (merge {:current-page 1} (when reset-sort? {:sort-column nil :sort-order nil}))]
+     (let [query-params (merge {:page-number 1} (when reset-sort? {:sort-column nil :sort-order nil}))]
        (when-not ((@refs "table") :update-query-params query-params)
          ((@refs "table") :refresh-rows))))
    :check-access

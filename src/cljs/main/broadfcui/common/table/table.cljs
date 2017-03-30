@@ -1,6 +1,6 @@
 (ns broadfcui.common.table.table
   (:require
-    [clojure.set :refer [difference]]
+    [clojure.set :refer [difference subset?]]
     [dmohs.react :as react]
     [broadfcui.common.components :as comps]
     [broadfcui.common.table.body :as body]
@@ -39,6 +39,7 @@
 (react/defc Table
   {:update-query-params
    (fn [{:keys [state]} new-params]
+     (assert (subset? (set (keys new-params)) all-query-params) "Unknown key passed to :update-query-params")
      (let [old-state (:query-params @state)
            new-state (merge old-state new-params)
            different? (not= old-state new-state)]
