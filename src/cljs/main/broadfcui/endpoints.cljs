@@ -779,6 +779,10 @@
   {:path (str "/library/" (ws-path workspace-id) "/metadata")
    :method :put})
 
+(defn save-discoverable-by-groups [workspace-id]
+  {:path (str "/library/" (ws-path workspace-id) "/discoverableGroups")
+   :method :put})
+
 (defn publish-workspace [workspace-id]
   {:path (str "/library/" (ws-path workspace-id) "/published")
    :method :post})
