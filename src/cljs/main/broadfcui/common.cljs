@@ -263,43 +263,43 @@
         (react/create-element
          ;; empty string makes react attach a property with no value
          [:div {:className "dropdown-pane" :id dropdown-id :data-dropdown ""
-                :ref (utils/create-element-ref-handler
-                      {:store locals
-                       :key :dropdown-element
-                       :did-mount
-                       (fn [element]
-                         (let [element$ (js/$ element)
-                               button$ (js/$ (react/find-dom-node this))]
-                           (.on element$ "hide.zf.dropdown"
-                                (fn [_]
-                                  (swap! state dissoc :render-contents?)
-                                  (after-update #(this :-render-dropdown))))
-                           (.on element$
-                                "show.zf.dropdown"
-                                (fn [_]
-                                  (swap! state assoc :render-contents? true)
-                                  (after-update #(this :-render-dropdown))
-                                  (.on (js/$ "body")
-                                       "click.zf.dropdown"
-                                       (fn [e]
-                                         (when
-                                           (not
-                                            (or
-                                             (.is element$ (.-target e))
-                                             (pos? (.-length (.find element$ (.-target e))))
-                                             (.is button$ (.-target e))
-                                             (pos? (.-length (.find button$ (.-target e))))))
-                                           (.foundation element$ "close")
-                                           (.off (js/$ "body") "click.zf.dropdown"))))))))
-                       :will-unmount
-                       (fn [element]
-                         (.off (js/$ element) "show.zf.dropdown")
-                         (.off (js/$ element) "hide.zf.dropdown"))})
+                :ref (this :-create-dropdown-ref-handler)
                 :style {:whiteSpace "normal"}}
           (when (:render-contents? @state)
             contents)])
-        dropdown-container)))})
+        dropdown-container)))
+   :-create-dropdown-ref-handler
+   (fn [{:keys [this state after-update locals]}]
+     (utils/create-element-ref-handler
+      {:store locals
+       :key :dropdown-element
+       :did-mount
+       (fn [element]
+         (let [element$ (js/$ element)
+               button$ (js/$ (react/find-dom-node this))]
+           (.on element$ "hide.zf.dropdown"
+                (fn [_]
+                  (swap! state dissoc :render-contents?)
+                  (after-update #(this :-render-dropdown))))
+           (.on element$
+                "show.zf.dropdown"
+                (fn [_]
+                  (swap! state assoc :render-contents? true)
+                  (after-update #(this :-render-dropdown))
+                  (.on (js/$ "body")
+                       "click.zf.dropdown"
+                       (fn [e]
+                         (when (not (or (.is element$ (.-target e))
+                                        (pos? (.-length (.find element$ (.-target e))))
+                                        (.is button$ (.-target e))
+                                        (pos? (.-length (.find button$ (.-target e))))))
+                           (.foundation element$ "close")
+                           (.off (js/$ "body") "click.zf.dropdown"))))))))
+       :will-unmount
+       (fn [element]
+         (.off (js/$ element) "show.zf.dropdown")
+         (.off (js/$ element) "hide.zf.dropdown"))}))})
 
-(defn foundation-info-box [{:keys [text]}]
+(defn render-info-box [{:keys [text]}]
   [FoundationIconDropdown {:contents text
                            :icon-name :information :icon-color (:link-active style/colors)}])
