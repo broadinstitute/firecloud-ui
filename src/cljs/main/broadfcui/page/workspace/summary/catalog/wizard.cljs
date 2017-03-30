@@ -149,6 +149,8 @@
    (fn [{:keys [props state locals this]}]
      (let [{:keys [library-schema can-share? owner? writer? catalog-with-read?]} props
            {:keys [page-num pages-seen invalid-properties working-attributes published? required-attributes validation-error submit-error]} @state]
+           editable? (or writer? catalog-with-read?)
+           set-discoverable? (or can-share? catalog-with-read? owner?)]
        ;; FIXME: refactor -- this is heavily copy/pasted from OKCancelForm
        [:div {}
         (when (:submitting? @state)
@@ -176,10 +178,8 @@
                  [Questions (merge {:ref "wizard-page"
                                     :key page-num
                                     :missing-properties invalid-properties
-                                    :attributes working-attributes
-                                    :editable? (or writer? catalog-with-read?)
-                                    :set-discoverable? (or can-share? catalog-with-read? owner?)}
-                                   (utils/restructure library-schema enumerate questions required-attributes))]
+                                    :attributes working-attributes}
+                                   (utils/restructure library-schema enumerate questions required-attributes editable? set-discoverable?))]
                  (= page-num page-count)
                  [DiscoverabilityPage
                   (merge
@@ -262,14 +262,17 @@
          (swap! next inc))
        @next))
    :submit
-   (fn [{:keys [props state locals]}]
+   (fn [{:keys [props state locals]} editable? set-discoverable?]
      (if (not-empty (:invalid-properties @state))
        (swap! state assoc :validation-error "You will need to complete all required metadata attributes to be able to publish the workspace in the Data Library")
-       (let [attributes-seen (apply merge (vals (select-keys (:page-attributes @locals) (:pages-stack @state))))]
+       (let [attributes-seen (apply merge (vals (select-keys (:page-attributes @locals) (:pages-stack @state))))
+             invoke-args (if (and set-discoverable? (not editable?))
+                           {:name endpoints/save-discoverable-by-groups :data (:library:discoverableByGroups attributes-seen)}
+                           {:name endpoints/save-library-metadata :data (remove-empty-values (merge attributes-seen (:version-attributes @state)))})]
          (swap! state assoc :submitting? true :submit-error nil)
          (endpoints/call-ajax-orch
-          {:endpoint (endpoints/save-library-metadata (:workspace-id props))
-           :payload (remove-empty-values (merge attributes-seen (:version-attributes @state)))
+          {:endpoint ((:name invoke-args) (:workspace-id props))
+           :payload (:data invoke-args)
            :headers utils/content-type=json
            :on-done (fn [{:keys [success? get-parsed-response]}]
                       (swap! state dissoc :submitting?)
