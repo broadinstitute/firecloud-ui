@@ -55,10 +55,14 @@
                            (:row style)
                            ((or (:body-row style) identity) (utils/restructure index row)))}
        (map
-        (fn [{:keys [width visible? column-data render]}]
+        (fn [{:keys [width visible? column-data render as-text]}]
           (when visible?
-            [:div {:style (merge (flex-params width) (:cell style) (:body-cell style))}
-             (-> row column-data render)]))
+            (let [column-value (column-data row)
+                  rendered (render column-value)]
+              [:div {:style (merge (flex-params width) (:cell style) (:body-cell style))
+                     :title (cond as-text (as-text column-value)
+                                  (string? rendered) rendered)}
+               rendered])))
         joined-columns)])
     rows)])
 
