@@ -25,6 +25,7 @@
     (fn [{:keys [props state]}]
       (let [{:keys [drag-index drop-index]} @state
             {:keys [columns column-display update-column-display fixed-column-count dismiss]} props
+            fixed-columns (take fixed-column-count column-display)
             reorderable-columns (vec (drop fixed-column-count column-display))]
         [:div {:className (when drag-index "grabbing-icon")
                :style {:border (str "2px solid " (:line-default style/colors))
@@ -44,6 +45,16 @@
            [:div {:style {:padding "0.5em 0"}}
             [comps/Button {:style style :onClick #(set-all props true) :text "All"}]
             [comps/Button {:style style :onClick #(set-all props false) :text "None"}]])
+         (map
+          (fn [{:keys [id]}]
+            (let [{:keys [header hidden?]} (table-utils/find-by-id id columns)
+                  text (if (string? header) header id)]
+              (when-not hidden?
+                [:div {}
+                 (icons/icon {:style {:visibility "hidden" :fontSize 16 :marginRight "0.5rem"}} :reorder)
+                 [:input {:type "checkbox" :checked true :disabled true}]
+                 [:span {:style {:paddingLeft "0.5em" :color (:disabled-state style/colors)} :title text} text]])))
+          fixed-columns)
          (map-indexed
           (fn [i {:keys [visible? id]}]
             [:div {:ref (str "div" i)

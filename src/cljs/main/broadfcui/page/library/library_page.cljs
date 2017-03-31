@@ -33,7 +33,7 @@
           :filter-text (:filter-text props)
           :data-source (this :pagination)
           :columns (concat
-                    [{:id "access" :resizable? false :sortable? false :initial-width 12
+                    [{:id "access" :hidden? true :resizable? false :sortable? false :initial-width 12
                       :as-text (fn [data]
                                  (if (= (:workspaceAccess data) "NO ACCESS") "You must request access to this dataset."))
                       :render (fn [data]
