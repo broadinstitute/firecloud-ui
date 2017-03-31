@@ -56,21 +56,11 @@
        :payload new-conf
        :headers utils/content-type=json
        :on-done (fn [{:keys [success? get-parsed-response xhr]}]
-                  (if-not success?
-                    (do (comps/push-error-text (str "Exception:\n" (.-statusText xhr)))
-                        (swap! state dissoc :blocker))
-                    (if (= name (config "name"))
-                      (swap! state assoc :loaded-config (get-parsed-response false) :blocker nil)
-                      (endpoints/call-ajax-orch ;; TODO - make unified call in orchestration
-                        {:endpoint (endpoints/rename-workspace-method-config workspace-id config)
-                         :payload (select-keys new-conf ["name" "namespace" "workspaceName"])
-                         :headers utils/content-type=json
-                         :on-done (fn [{:keys [success? xhr]}]
-                                    (swap! state dissoc :blocker)
-                                    (if success?
-                                      ((:on-rename props) name)
-                                      (comps/push-error-text
-                                       (str "Exception:\n" (.-statusText xhr)))))}))))})))
+                  (swap! state dissoc :blocker)
+                  (if success?
+                    (do ((:on-rename props) name)
+                        (swap! state assoc :loaded-config (get-parsed-response false) :blocker nil))
+                    (comps/push-error (str "Exception:\n" (.-statusText xhr)))))})))
 
 (react/defc MethodDetailsViewer
   {:get-fields
@@ -82,6 +72,7 @@
        (:loaded-method @state)
        [comps/EntityDetails {:entity (:loaded-method @state)
                              :editing? (:editing? props)
+                             :wdl-parse-error (:wdl-parse-error props)
                              :ref "methodDetails"
                              :onSnapshotIdChange (:onSnapshotIdChange props)
                              :snapshots ((:methods props) (map (:loaded-method @state) ["namespace" "name"]))}]
@@ -114,7 +105,7 @@
        [:div {:style {:lineHeight 1}}
         (when-not editing?
           [comps/SidebarButton {:style :light :color :button-primary
-                                :text "Edit this page" :icon :edit
+                                :text "Edit Configuration" :icon :edit
                                 :disabled? (when locked? "The workspace is locked")
                                 :onClick #(swap! state assoc :editing? true)}])
         (when-not editing?
@@ -153,30 +144,32 @@
              type (or inputType outputType)
              field-value (get values field-name "")
              error (invalid-values field-name)]
-         [:div {:key field-name}
-          [:div {:style {:display "flex" :alignItems "baseline" :marginBottom "0.5em"}}
-           [:div {:style {:marginRight "1em" :padding "0.5em"
+         [:div {:key field-name :style {:marginBottom "1rem"}}
+          [:div {}
+           [:div {:style {:margin "0 0.5rem 0.5rem 0" :padding "0.5rem" :display "inline-block"
                           :backgroundColor (:background-light style/colors)
                           :border style/standard-line :borderRadius 2}}
             (str field-name ": (" (when optional? "optional ") type ")")]
+           (when (and error (not editing?))
+             (icons/icon {:style {:marginLeft "0.5rem" :alignSelf "center"
+                                  :color (:exception-state style/colors)}}
+                         :error))
            (when editing?
              (style/create-text-field {:ref (str ref-prefix "_" field-name)
-                                       :defaultValue field-value}))
+                                       :list "inputs-datalist"
+                                       :defaultValue field-value
+                                       :style {:width 500}}))
            (when-not editing?
-             (or field-value [:span {:style {:fontStyle "italic"}} "No value entered"]))
-           (when (and error (not editing?))
-             (icons/icon {:style {:margin "0 0 0 0.7em" :alignSelf "center"
-                                  :color (:exception-state style/colors)}}
-                         :error))]
+             (or field-value [:span {:style {:fontStyle "italic"}} "No value entered"]))]
           (when error
-            [:div {:style {:padding "0.5em" :marginBottom "0.5em"
+            [:div {:style {:padding "0.5em" :marginBottom "0.5rem"
                            :backgroundColor (:exception-state style/colors)
                            :display "inline-block"
                            :border style/standard-line :borderRadius 2}}
              error])]))
      all-values)]))
 
-(defn- render-main-display [this wrapped-config editing? inputs-outputs methods]
+(defn- render-main-display [this wrapped-config editing? wdl-parse-error inputs-outputs methods]
   (let [config (get-in wrapped-config ["methodConfiguration"])
         invalid-inputs (get-in wrapped-config ["invalidInputs"])
         invalid-outputs (get-in wrapped-config ["invalidOutputs"])]
@@ -196,6 +189,7 @@
                        :config config
                        :methods methods
                        :editing? editing?
+                       :wdl-parse-error wdl-parse-error
                        :onSnapshotIdChange #(react/call :load-new-method-template this %)}])
      (create-section-header "Root Entity Type")
      (create-section
@@ -205,6 +199,9 @@
                                         :style {:width 500}}
                                        root-entity-types)
          [:div {:style {:padding "0.5em 0 1em 0"}} (config "rootEntityType")]))
+     [:datalist {:id "inputs-datalist"}
+      [:option {:value "this."}]
+      [:option {:value "workspace."}]]
      (create-section-header "Inputs")
      (input-output-list (config "inputs") "in" invalid-inputs editing? (inputs-outputs "inputs"))
      (create-section-header "Outputs")
@@ -223,14 +220,13 @@
         [:div {:style {:float "right"}}
          (launch/render-button {:workspace-id (:workspace-id props)
                                 :config-id {:namespace (config "namespace") :name (config "name")}
-                                :cromwell-version (gconfig/cromwell-version)
                                 :root-entity-type (config "rootEntityType")
                                 :disabled? (cond (:locked? @state) "This workspace is locked."
                                                  (not (:bucket-access? props))
                                                  (str "You do not currently have access"
                                                       " to the Google Bucket associated with this workspace."))
                                 :on-success (:on-submission-success props)})])
-      (render-main-display this wrapped-config editing? (:inputs-outputs @state) (:methods @state))
+      (render-main-display this wrapped-config editing? (:wdl-parse-error @state) (:inputs-outputs @state) (:methods @state))
       (clear-both)]]))
 
 (react/defc MethodConfigEditor
@@ -240,10 +236,14 @@
       :sidebar-visible? true})
    :render
    (fn [{:keys [this state refs props]}]
-     (cond (and (:loaded-config @state) (contains? @state :locked?))
-           (render-display this state refs props)
-           (:error @state) (style/create-server-error-message (:error @state))
-           :else [:div {:style {:textAlign "center"}} [comps/Spinner {:text "Loading Method Configuration..."}]]))
+     (cond
+       (and
+         (:loaded-config @state)
+         (contains? @state :locked?))
+       (render-display this state refs props)
+
+       (:error @state) (style/create-server-error-message (:error @state))
+       :else [:div {:style {:textAlign "center"}} [comps/Spinner {:text "Loading Method Configuration..."}]]))
    :component-did-mount
    (fn [{:keys [state props refs this]}]
      (react/call :load-validated-method-config this)
@@ -309,15 +309,15 @@
          {:endpoint (endpoints/create-template method-ref)
           :payload method-ref
           :headers utils/content-type=json
-          :on-done (fn [{:keys [success? get-parsed-response status-text]}]
-                     (if success?
-                       (let [response (get-parsed-response false)]
+          :on-done (fn [{:keys [success? get-parsed-response]}]
+                     (let [response (get-parsed-response false)]
+                       (if success?
                          (endpoints/call-ajax-orch
                            {:endpoint endpoints/get-inputs-outputs
                             :payload (response "methodRepoMethod")
                             :headers utils/content-type=json
                             :on-done (fn [{:keys [success? get-parsed-response]}]
-                                       (swap! state dissoc :blocker)
+                                       (swap! state dissoc :blocker :wdl-parse-error)
                                        (let [template {"methodConfiguration" (merge response config-namespace+name)}]
                                          (if success?
                                            (swap! state assoc
@@ -327,5 +327,7 @@
                                                                    "invalidOutputs" {}
                                                                    "validOutputs" {})
                                                   :inputs-outputs (get-parsed-response false))
-                                           (swap! state assoc :error ((get-parsed-response false) "message")))))}))
-                       (swap! state assoc :error status-text)))})))})
+                                           (swap! state assoc :error ((get-parsed-response false) "message")))))})
+                         (do
+                           (swap! state assoc :blocker nil :wdl-parse-error (response "message"))
+                           (comps/push-error (style/create-server-error-message (response "message")))))))})))})

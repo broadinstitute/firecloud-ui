@@ -37,7 +37,7 @@
              (duration/fuzzy-time random-1000 random-12 random-31 random-12 random-60 random-60))))))
 
 (deftest fuzzy-duration-ms
-  (let [start-time 1485974627632
+  (let [start-time (.now js/Date)
         one-hour-later (+ start-time (* 1000 60 60))
         one-hour-earlier (- start-time (* 1000 60 60))]
     (testing "an hour in the future, no suffix"

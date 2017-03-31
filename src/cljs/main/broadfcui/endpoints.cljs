@@ -174,11 +174,6 @@
                           :prerequisites {"unused 1" "Predicate 1"
                                           "unused 2" "Predicate 2"}}}})
 
-(defn rename-workspace-method-config [workspace-id config]
-  {:path (str "/workspaces/" (ws-path workspace-id)
-           "/method_configs/" (config "namespace") "/" (config "name") "/rename")
-   :method :post})
-
 (defn delete-workspace-method-config [workspace-id config]
   {:path (str "/workspaces/" (ws-path workspace-id)
            "/method_configs/" (config "namespace") "/" (config "name"))
@@ -723,7 +718,7 @@
                 (if success?
                   (let [pred (if include-pending?
                                (constantly true)
-                               #(not= (% "creationStatus") "Creating"))]
+                               #(= (% "creationStatus") "Ready"))]
                     (on-done nil (filterv pred (get-parsed-response false))))
                   (on-done status-text nil)))})))
 
@@ -733,8 +728,10 @@
    (fn [err-text projects]
      (if err-text
        (on-done nil)
-       (on-done
-        (get (first (filter #(= project-name (% "projectName")) projects)) "creationStatus"))))))
+       (let [project (first (filter #(= project-name (% "projectName")) projects))]
+         (on-done
+          (get project "creationStatus")
+          (get project "message")))))))
 
 (defn get-billing-accounts []
   {:path "/profile/billingAccounts"
@@ -761,12 +758,24 @@
   {:path (str "/billing/" project-id "/" role "/" user-email)
    :method :delete})
 
+(defn get-library-groups [on-done]
+  (utils/ajax-orch
+   "/library/groups"
+   {:method :get
+    :on-done on-done}))
+
 (defn get-library-attributes [on-done]
   (utils/ajax-orch
     "/library-attributedefinitions-v1"
     {:method :get
      :on-done on-done}
     :service-prefix "/schemas"))
+
+(defn get-consent [orsp-id on-done]
+  (utils/ajax-orch
+    (str "/duos/consent/orsp/" (js/encodeURIComponent orsp-id))
+    {:method :get
+     :on-done on-done}))
 
 (defn save-library-metadata [workspace-id]
   {:path (str "/library/" (ws-path workspace-id) "/metadata")
@@ -803,3 +812,8 @@
                 "Succeeded" (rand-int 1000)
                 "Aborted" (rand-int 1000)
                 "Unknown" (rand-int 1000)}}})
+
+(defn cromwell-version []
+  {:path "/version/executionEngine"
+   :method :get
+   :mock-data {"cromwell" "25-489f66b"}})

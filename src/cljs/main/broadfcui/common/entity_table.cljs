@@ -1,7 +1,7 @@
 (ns broadfcui.common.entity-table
   (:require
     [clojure.set :refer [union]]
-    clojure.string
+    [clojure.string :refer [blank?]]
     [dmohs.react :as react]
     [broadfcui.common :as common]
     [broadfcui.common.components :as comps]
@@ -26,8 +26,13 @@
     item))
 
 (react/defc EntityTable
-  {:refresh
-   (fn [{:keys [props state]} & [entity-type]]
+  {:update-data
+   (fn [{:keys [refs after-update]} reinitialize?]
+       (react/call :refresh-rows (@refs "table"))
+       (when reinitialize?
+             (after-update #(react/call :reinitialize (@refs "table")))))
+   :refresh
+   (fn [{:keys [props state this after-update]} & [entity-type reinitialize?]]
      (endpoints/call-ajax-orch
       {:endpoint (endpoints/get-entity-types (:workspace-id props))
        :on-done (fn [{:keys [success? get-parsed-response]}]
@@ -37,7 +42,8 @@
                       (swap! state update :server-response assoc
                              :entity-metadata metadata
                              :entity-types entity-types
-                             :selected-entity-type (or (some-> entity-type keyword) (first entity-types))))
+                             :selected-entity-type (or (some-> entity-type keyword) (first entity-types)))
+                      (after-update #(react/call :update-data this reinitialize?)))
                     (swap! state update :server-response
                            assoc :server-error (get-parsed-response false))))}))
    :get-default-props
@@ -93,6 +99,7 @@
             [Table
              (merge props
                     {:key selected-entity-type
+                     :ref "table"
                      :state-key (when selected-entity-type
                                   (str (common/workspace-id->string (:workspace-id props)) ":data" selected-entity-type))
                      :columns columns
@@ -124,7 +131,9 @@
        (fn [{:keys [current-page rows-per-page filter-text sort-column sort-order filter-group-index]} callback]
          (if (empty? entity-types)
            (callback {:group-count 0 :filtered-count 0 :rows []})
-           (let [type (nth entity-types filter-group-index)]
+           (let [type (if (blank? filter-group-index)
+                        (:initial-entity-type props)
+                        (nth entity-types filter-group-index))]
              (endpoints/call-ajax-orch
               {:endpoint (endpoints/get-entities-paginated (:workspace-id props) (name type)
                                                            {"page" current-page

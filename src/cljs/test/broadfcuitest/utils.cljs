@@ -1,19 +1,10 @@
 (ns broadfcuitest.utils
   (:require
    cljs.test
-   figwheel.client.utils
    ))
 
 ;; cljs.test gets mad if *print-fn* is undefined.
 (enable-console-print!)
-
-(defonce ^:private figwheel-log-fn figwheel.client.utils/log)
-
-(defn suppress-figwheel-log []
-  (set! figwheel.client.utils/log identity))
-
-(defn restore-figwheel-log []
-  (set! figwheel.client.utils/log figwheel-log-fn))
 
 (defn- get-testing-contexts []
   (when (seq (:testing-contexts (cljs.test/get-current-env)))
@@ -51,3 +42,11 @@
 (defmethod cljs.test/report [:cljs.test/default :error] [m]
   (cljs.test/inc-report-counter! :error)
   (.error js/console (:actual m)))
+
+(defn report-test-status [success? failure-count error-count]
+  (when-not success?
+    (.error js/console
+            (str "Tests failed: " failure-count " failures and " error-count " errors"))))
+
+(defmethod cljs.test/report [:cljs.test/default :end-run-tests] [m]
+  (report-test-status (cljs.test/successful? m) (:fail m) (:error m)))

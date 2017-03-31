@@ -8,6 +8,7 @@
     [broadfcui.common.style :as style]
     [broadfcui.common.table :as table]
     [broadfcui.common.table-utils :refer [add-right]]
+    [broadfcui.common.table-style :as table-style]
     [broadfcui.endpoints :as endpoints]
     [broadfcui.utils :as utils]
     ))
@@ -80,20 +81,28 @@
               (when (:removing? @state)
                 [comps/Blocker {:banner "Removing user..."}])
               [table/Table
-               {:header-row-style {:fontWeight nil :fontSize "90%"
-                                   :color (:text-lighter style/colors) :backgroundColor nil}
+               {:header-row-style table-style/header-row-style-light
                 :header-style {:padding "0.5em 0 0.5em 14px"}
-                :row-style {:backgroundColor (:background-light style/colors)
-                            :borderRadius 8 :margin "4px 0"}
-                :reorderable-columns? false :resize-tab-color (:line-default style/colors)
+                :cell-content-style {:padding 0 :paddingRight 20 :marginRight -20}
+                :row-style {:backgroundColor "white"}
+                :reorderable-columns? false
+                :resize-tab-color (:line-default style/colors)
                 :toolbar (add-right
                           [comps/Button {:text "Add User..." :icon :add
                                          :onClick (fn [_]
                                                     (modal/push-modal
                                                      [AddUserDialog {:project-name (:project-name props)
                                                                      :on-add #(react/call :load this)}]))}])
-                :columns [{:header "Email" :starting-width 500}
-                          {:header "Role" :starting-width 100 :resizable? false :sort-initial :asc}
+                :columns [{:header "Email" :starting-width 500
+                           :content-renderer
+                           (fn [email]
+                             [:div {:style table-style/table-cell-plank-left}
+                              email])}
+                          {:header "Role" :starting-width 100 :resizable? false :sort-initial :asc
+                           :content-renderer
+                           (fn [role]
+                             [:div {:style table-style/table-cell-plank-right}
+                              role])}
                           {:starting-width :remaining
                            :filter-by :none :sort-by :none :resizable? false
                            :as-text

@@ -88,12 +88,14 @@
      (assert (:nav-context props) "Missing :nav-context prop")
      [:div {:style {:display "inline"}}
       [comps/Button
-       {:text "Create New Workspace..." :icon :add
+       {:text (case (:disabled-reason props)
+                :not-loaded [comps/Spinner {:text "Getting billing info..." :style {:margin 0}}]
+                "Create New Workspace...")
+        :icon :add
         :disabled? (case (:disabled-reason props)
                      nil false
                      :not-loaded "Project billing data has not yet been loaded."
-                     :no-billing (str "You must have a billing project associated with your account"
-                                      " to create a new workspace.")
+                     :no-billing (comps/no-billing-projects-message)
                      "Project billing data failed to load.")
         :onClick #(modal/push-modal [CreateDialog {:billing-projects (:billing-projects props)
                                                    :nav-context (:nav-context props)}])}]])})

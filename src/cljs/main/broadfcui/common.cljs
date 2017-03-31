@@ -93,13 +93,12 @@
 
 
 (defn compute-status [workspace]
-  (let [last-success (get-in workspace ["workspaceSubmissionStats" "lastSuccessDate"])
-        last-failure (get-in workspace ["workspaceSubmissionStats" "lastFailureDate"])
-        count-running (get-in workspace ["workspaceSubmissionStats" "runningSubmissionsCount"])]
-    (cond (pos? count-running) "Running"
-          (and last-failure
-               (or (not last-success)
-                   (> (.parse js/Date last-failure) (.parse js/Date last-success)))) "Exception"
+  (let [{:keys [lastSuccessDate lastFailureDate runningSubmissionsCount]}
+        (:workspaceSubmissionStats workspace)]
+    (cond (pos? runningSubmissionsCount) "Running"
+          (and lastFailureDate
+               (or (not lastSuccessDate)
+                   (> (.parse js/Date lastFailureDate) (.parse js/Date lastSuccessDate)))) "Exception"
           :else "Complete")))
 
 (defn gcs-object->download-url [bucket object]
@@ -150,12 +149,12 @@
 (defn row->workspace-id [row]
   (select-keys row [:namespace :name]))
 
-(defn workspace-id->string [workspace-id] 
+(defn workspace-id->string [workspace-id]
   (str (:namespace workspace-id) "/" (:name workspace-id)))
 
 (defn get-id-from-nav-segment [segment]
   (when-not (clojure.string/blank? segment)
-    (let [[ns n] (clojure.string/split segment #":")]
+    (let [[ns n] (clojure.string/split segment #":" 2)]
       {:namespace ns :name n})))
 
 ;; GAWB-666 Globally show Queued and Cromwell (active) counts
@@ -206,8 +205,101 @@
           :else 1)))
 
 (def PHI-warning
-  [:div {:style {:display "inline-flex" :marginBottom ".5em" :marginLeft ".3em"}}
-    (icons/icon {:style {:fontSize 28 :color (:exception-state style/colors) :marginRight ".26em"
-                         :verticalAlign "middle"}} :warning-triangle)
-    [:span {:style {:fontWeight "bold" :fontSize "98%" :marginTop ".18em"}}
-      "FireCloud is not intended to host personally identifiable information. Do not use any patient identifier, including name, social security number, or medical record number."]])
+  [:div {:style {:display "flex" :marginBottom ".5rem" :alignItems "center" :justifyContent "space-around"
+                 :padding "1rem" :backgroundColor (:background-light style/colors)}}
+    (icons/icon {:style {:fontSize 22 :color (:exception-state style/colors) :marginRight "1rem"}}
+                :alert)
+    [:span {:style {:fontWeight 500}}
+      "FireCloud is not intended to host personally identifiable information. Do not use any patient
+       identifier, including name, social security number, or medical record number."]])
+
+(react/defc FoundationTooltip
+  {:component-did-mount
+   (fn [{:keys [this]}]
+     (.foundation (js/$ (react/find-dom-node this))))
+   :render
+   (fn [{:keys [props]}]
+     (let [{:keys [position text tooltip style]} props]
+       ;; empty string makes react attach a property with no value
+       [:span {:data-tooltip "" :className (str "has-tip " position) :style style
+               :title tooltip}
+        text]))})
+
+(react/defc FoundationIconDropdown
+  {:close
+   (fn [{:keys [locals]}]
+     (.foundation (js/$ (:dropdown-element @locals)) "close"))
+   :get-default-props
+   (fn []
+     {:icon-name :information})
+   :component-will-mount
+   (fn [{:keys [locals]}]
+     (swap! locals assoc :dropdown-id (gensym "dropdown-")))
+   :render
+   (fn [{:keys [props locals]}]
+     [:button {:className "button-reset" :data-toggle (:dropdown-id @locals)
+               :style {:cursor "pointer" :padding "0 0.5rem"
+                       :fontSize "16px" :lineHeight "1rem"}}
+      (icons/icon {:style {:color (:icon-color props)}} (:icon-name props))])
+   :component-did-mount
+   (fn [{:keys [this locals]}]
+     (let [dropdown-container (.createElement js/document "div")]
+       (swap! locals assoc :dropdown-container dropdown-container)
+       (.insertBefore js/document.body dropdown-container (utils/get-app-root-element))
+       (this :-render-dropdown)
+       (.foundation (js/$ (:dropdown-element @locals)))))
+   :component-will-receive-props
+   (fn [{:keys [this locals]}]
+     (this :-render-dropdown))
+   :component-will-unmount
+   (fn [{:keys [locals]}]
+     (react/unmount-component-at-node (:dropdown-container @locals))
+     (.remove (:dropdown-container @locals)))
+   :-render-dropdown
+   (fn [{:keys [this props state after-update locals]}]
+     (let [{:keys [contents]} props
+           {:keys [dropdown-container dropdown-id]} @locals]
+       (react/render
+        (react/create-element
+         ;; empty string makes react attach a property with no value
+         [:div {:className "dropdown-pane" :id dropdown-id :data-dropdown ""
+                :ref (this :-create-dropdown-ref-handler)
+                :style {:whiteSpace "normal"}}
+          (when (:render-contents? @state)
+            contents)])
+        dropdown-container)))
+   :-create-dropdown-ref-handler
+   (fn [{:keys [this state after-update locals]}]
+     (utils/create-element-ref-handler
+      {:store locals
+       :key :dropdown-element
+       :did-mount
+       (fn [element]
+         (let [element$ (js/$ element)
+               button$ (js/$ (react/find-dom-node this))]
+           (.on element$ "hide.zf.dropdown"
+                (fn [_]
+                  (swap! state dissoc :render-contents?)
+                  (after-update #(this :-render-dropdown))))
+           (.on element$
+                "show.zf.dropdown"
+                (fn [_]
+                  (swap! state assoc :render-contents? true)
+                  (after-update #(this :-render-dropdown))
+                  (.on (js/$ "body")
+                       "click.zf.dropdown"
+                       (fn [e]
+                         (when (not (or (.is element$ (.-target e))
+                                        (pos? (.-length (.find element$ (.-target e))))
+                                        (.is button$ (.-target e))
+                                        (pos? (.-length (.find button$ (.-target e))))))
+                           (.foundation element$ "close")
+                           (.off (js/$ "body") "click.zf.dropdown"))))))))
+       :will-unmount
+       (fn [element]
+         (.off (js/$ element) "show.zf.dropdown")
+         (.off (js/$ element) "hide.zf.dropdown"))}))})
+
+(defn render-info-box [{:keys [text]}]
+  [FoundationIconDropdown {:contents text
+                           :icon-name :information :icon-color (:link-active style/colors)}])
