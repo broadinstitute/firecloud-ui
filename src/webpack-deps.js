@@ -27,4 +27,4 @@ require('font-awesome/css/font-awesome.css');
 require('./styles/markdown.css');
 require('./styles/twitter-typeahead.css');
 require('./styles/foundation.scss');
-require('select2/dist/css/select2.css');
+require('./styles/select2.scss');

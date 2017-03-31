@@ -64,7 +64,7 @@
             :href (or href "javascript:;")
             :onClick (if disabled? (create-error-message disabled?) onClick)
             :onKeyDown (when (and onClick (not disabled?))
-                         (common/create-key-handler [:space :enter] onClick))}
+                         (common/create-key-handler [:space] onClick))}
         text
         (some->> icon (icons/icon {:style (if text
                                             {:fontSize 20 :margin "-0.5em -0.3em -0.5em 0.5em"}
@@ -93,56 +93,6 @@
                  :disabled disabled?
                  :style {:cursor (when-not disabled? "pointer")}}]
         [:span {:style {:marginLeft "0.5ex"}} (:label props)]]))})
-
-
-(react/defc TabBar
-  (let [Tab (react/create-class
-              {:get-initial-state
-               (fn []
-                 {:hovering? false})
-               :render
-               (fn [{:keys [props state]}]
-                 [:a {:style {:flex "0 0 auto" :padding "1em 2em"
-                              :borderLeft (when (zero? (:index props)) style/standard-line)
-                              :borderRight style/standard-line
-                              :backgroundColor (when (:active? props) "white")
-                              :cursor "pointer" :textDecoration "none" :color "black"
-                              :position "relative"}
-                      :href (:href props)
-                      :onMouseOver #(swap! state assoc :hovering? true)
-                      :onMouseOut #(swap! state assoc :hovering? false)
-                      :onClick #((:onClick props) %)}
-                  (:text props)
-                  (when (or (:active? props) (:hovering? @state))
-                    [:div {:style {:position "absolute" :top "-0.5ex" :left 0
-                                   :width "100%" :height "0.5ex"
-                                   :backgroundColor (:button-primary style/colors)}}])
-                  (when (:active? props)
-                    [:div {:style {:position "absolute" :bottom -1 :left 0 :width "100%" :height 2
-                                   :backgroundColor "white"}}])])})]
-    {:render
-     (fn [{:keys [props]}]
-       (let [{:keys [selected-index items toolbar-right]} props]
-         [:div {}
-          [:div {:style {:display "flex"
-                         :backgroundColor (:background-light style/colors)
-                         :borderTop style/standard-line
-                         :borderBottom style/standard-line
-                         :padding "0 1.5rem"}}
-           (map-indexed
-             (fn [i tab]
-               [Tab {:index i :text (:text tab) :href (:href tab)
-                     :active? (= i selected-index)
-                     :onClick (fn [e]
-                                (let [k (if (= i selected-index) :onTabRefreshed :onTabSelected)
-                                      f (tab k)]
-                                  (when f (f e))))}])
-             items)
-           [:div {:style {:flexGrow 1}}]
-           [:div {:style {:alignSelf "center"}}
-            toolbar-right]]
-          (let [active-item (nth items selected-index)]
-            (:content active-item))]))}))
 
 
 (react/defc XButton
@@ -693,6 +643,45 @@
 (defn create-error-message [thing]
   (when (renderable? thing)
     #(push-error thing)))
+
+
+(react/defc TagAutocomplete
+  {:get-tags
+   (fn [{:keys [refs]}]
+     (or
+      (js->clj (.select2 (js/$ (@refs "input-element")) "val"))
+      []))
+   :render
+   (fn [{:keys [props]}]
+     (style/create-identity-select {:defaultValue (:tags props)
+                                    :ref "input-element" :multiple true}
+                                   (:tags props)))
+   :component-did-mount
+   (fn [{:keys [refs]}]
+     (.select2
+      (js/$ (@refs "input-element"))
+      (clj->js {:ajax {:url (str (config/api-url-root) "/api/workspaces/tags")
+                       :dataType "json"
+                       :type "GET"
+                       :headers {:Authorization (str "Bearer " (utils/get-access-token))}
+                       :data (fn [params]
+                               (clj->js {:q (aget params "term")}))
+                       :processResults (fn [data]
+                                         (clj->js {:results (map (fn [res]
+                                                                   (merge {"id" (res "tag")}
+                                                                          res))
+                                                                 (js->clj data))}))}
+                :templateResult (fn [res]
+                                  (.-tag res))
+                :templateSelection (fn [res]
+                                     (if (.-tag res)
+                                       (.-tag res)
+                                       (.-text res)))
+                :tags true})))
+   :component-will-unmount
+   (fn [{:keys [refs]}]
+     (.select2 (js/$ (@refs "input-element")) "destroy"))})
+
 
 (declare Tree)
 

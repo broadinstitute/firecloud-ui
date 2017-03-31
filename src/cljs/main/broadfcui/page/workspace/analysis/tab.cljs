@@ -11,20 +11,21 @@
 
 (def ^:private tracks-cache (atom {}))
 
+(defn render-track-selection-button [get-page-component-instance]
+  [comps/Button {:text "Select Tracks..."
+                 :style {:alignSelf "center"}
+                 :onClick #((get-page-component-instance) :show-track-selection-dialog)}])
 
 (react/defc Page
   {:refresh
    (fn [])
-   :get-tracks-button
+   :show-track-selection-dialog
    (fn [{:keys [props state]}]
-     [comps/Button {:text "Select Tracks..."
-                    :onClick
-                    (fn [_]
-                      (modal/push-modal
-                        [TrackSelectionDialog
-                         (assoc props
-                           :tracks (:tracks @state)
-                           :on-ok #(swap! state assoc :tracks %))]))}])
+     (modal/push-modal
+      [TrackSelectionDialog
+       (assoc props
+              :tracks (:tracks @state)
+              :on-ok #(swap! state assoc :tracks %))]))
    :get-initial-state
    (fn [{:keys [props]}]
      {:tracks (get @tracks-cache (:workspace-id props) [])})

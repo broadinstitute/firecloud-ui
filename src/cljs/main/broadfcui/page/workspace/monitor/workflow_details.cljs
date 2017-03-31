@@ -122,9 +122,10 @@
               (create-field "ID" (data "jobId"))
               (let [status (data "executionStatus")]
                 (create-field "Status" (moncommon/icon-for-call-status status) status))
-              (when (= (data "Effective call caching mode") "ReadAndWriteCache")
-                (create-field "Cache Result" (moncommon/format-call-cache (data "Call caching read result"))))
+              (when (= (-> (data "callCaching") (get "effectiveCallCachingMode")) "ReadAndWriteCache")
+                (create-field "Cache Result" (moncommon/format-call-cache (-> (data "callCaching") (get "hit")))))
               (create-field "Started" (moncommon/render-date (data "start")))
+              ;(utils/cljslog data)
               (create-field "Ended" (moncommon/render-date (data "end")))
               [IODetail {:label "Inputs" :data (data "inputs")}]
               [IODetail {:label "Outputs" :data (data "outputs")}]
@@ -152,7 +153,7 @@
                                                    workflow-name "/" (workflow "id") "/")})))
     (let [status (workflow "status")]
       (create-field "Status" (moncommon/icon-for-wf-status status)))
-    (let [call-cache-status (-> (workflow "calls") vals first first (get "Effective call caching mode"))]
+    (let [call-cache-status (-> (workflow "calls") vals first first (get "callCaching") (get "effectiveCallCachingMode"))]
       (create-field "Call Caching" (moncommon/call-cache-result call-cache-status)))
     (when (workflow "submission")
       (create-field "Submitted" (moncommon/render-date (workflow "submission"))))
