@@ -66,12 +66,12 @@
                                   :data hard-conflicts}])
                    (when (not-empty soft-conflicts)
                      [:div {} [comps/Tree {:label [:span {} "Link conflicts"
-                                                   [common/FoundationInfoBox
+                                                   (common/render-info-box
                                                     {:text "Link conflicts are entities that link
                                                     to another entity that would conflict with one
                                                     already in the workspace. You may choose to deal
                                                     with this by re-linking these entities to the
-                                                    entities that you've already imported."}]]
+                                                    entities that you've already imported."})]
                                            :data soft-conflicts}]])]
          :show-cancel? (not-empty soft-conflicts)
          :ok-button (if (not-empty soft-conflicts)

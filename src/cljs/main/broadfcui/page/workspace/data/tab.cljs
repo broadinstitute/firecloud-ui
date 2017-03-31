@@ -70,9 +70,9 @@
           [:div {:style {:fontSize "1.1rem" :marginBottom "1rem"}}
            [:span {:style {:display "inline-block"}} [comps/Breadcrumbs {:crumbs (:crumbs @state)}]]
            (when-not last-crumb-id
-             [common/FoundationInfoBox
+             (common/render-info-box
               {:text [:div {} "For more information about importing files, see our "
-                      [:a {:href (config/user-guide-url) :target "_blank"} "user guide"] "."]}])]
+                      [:a {:href (config/user-guide-url) :target "_blank"} "user guide"] "."]}))]
           [:div {:style {:backgroundColor "white" :padding "1em"}}
            (case last-crumb-id
              :file-import
