@@ -1,0 +1,32 @@
+{
+  "request": {
+    "method": "POST",
+    "urlPathPattern": "/api/workspaces/.+\\/entities/copy"
+  },
+  "response": {
+    "headers": {
+      "Access-Control-Allow-Origin": "*",
+      "Content-Type": "application/json"
+    },
+    "jsonBody": {
+      "softConflicts": [
+        {
+          "entityName": "fake-entity-1",
+          "entityType": "fake-type-1",
+          "conflicts": [
+            {
+              "entityName": "fake-entity-2",
+              "entityType": "fake-type-2",
+              "conflicts": []
+            },
+            {
+              "entityName": "fake-entity-3",
+              "entityType": "fake-type-3",
+              "conflicts": []
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
