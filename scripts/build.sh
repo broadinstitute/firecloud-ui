@@ -18,23 +18,23 @@ function clj_build() {
       -v maven-cache:/root/.m2 \
       -e npm_config_unsafe_perm="true" \
       broadinstitute/clojure-node \
-      lein with-profile deploy do clean, resource, npm install, cljsbuild once
+      bash -c 'lein with-profile deploy do clean, resource, cljsbuild once && npm install && npm run webpack -- -p'
 
 }
 
 function docker_cmd()
 {
     DOCKER_CMD=$1
-    REPO=$2
+    REPO=broadinstitute/$PROJECT
     if [ $DOCKER_CMD = "build" ] || [ $DOCKER_CMD = "push" ]; then
         echo "building docker image..."
         GIT_SHA=$(git rev-parse ${GIT_BRANCH})
         echo GIT_SHA=$GIT_SHA > env.properties  # for jenkins jobs
-        docker $DOCKER_CMD  -t $REPO:${GIT_SHA:0:12} .
+        docker build  -t $REPO:${GIT_SHA:0:12} .
 
         if [ $DOCKER_CMD = "push" ]; then
             echo "pushing docker image..."
-            docker $DOCKER_CMD $REPO:${GIT_SHA:0:12}
+            docker push $REPO:${GIT_SHA:0:12}
         fi
     else
         echo "Not a valid docker option!  Choose either build or push (which includes build)"
@@ -49,7 +49,7 @@ while [ "$1" != "" ]; do
     case $1 in
         compile) clj_build ;;
         -d | --docker) shift
-                       docker_cmd $1 broadinstitute/$PROJECT
+                       docker_cmd $1
                        ;;
     esac
     shift
