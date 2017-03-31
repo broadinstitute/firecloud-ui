@@ -95,7 +95,7 @@
    :render-workflow-details
    (fn [{:keys [props]} workflowId]
      (let [workflows (:workflows props)
-           workflowName (get-in workflows [0 "workflowEntity" "entityName"])]
+           workflowName (get-in (filterv #(= (get-in % ["workflowId"]) workflowId) workflows) [0 "workflowEntity" "entityName"])]
        [:div {}
         [:div {:style {:marginBottom "1rem" :fontSize "1.1rem"}}
          [comps/Breadcrumbs {:crumbs
