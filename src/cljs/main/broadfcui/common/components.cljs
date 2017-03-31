@@ -698,15 +698,16 @@
      (let [body
            [:div {:hidden (and (:collapsed? @state) (:label props))}
             (map (fn [node]
-                   [:ul {:style {:margin "0.5rem 0 0.5rem 0.5rem" :paddingLeft "0.5rem"
-                                 :borderLeft (str "2px solid " (:border-light style/colors))}}
+                   [:ul {:style {:margin "0.2rem" :padding "0.5rem"
+                                 :backgroundColor "rgba(0,0,0,0.1)" :borderRadius 8}}
                     (map (fn [key]
                            [:li {:style {:listStyle "none"}}
                             (let [value (get node key)]
                               (if (and (vector? value) (not-empty value))
-                                [Tree {:data value
-                                       :start-collapsed? (:start-collapsed? props)
-                                       :label (str key ":")}]
+                                [:div {:style {:marginLeft "0.5rem"}}
+                                 [Tree {:data value
+                                        :start-collapsed? (:start-collapsed? props)
+                                        :label (str key ":")}]]
                                 (str key ": " value)))])
                          (keys node))])
                  (:data props))]]
