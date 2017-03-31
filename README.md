@@ -56,3 +56,15 @@ To run a single test, add the following to the bottom of the file you wish to te
 ```
 
 Now, each time that file is saved, Figwheel will reload it and the tests will automatically run.
+
+## Building
+
+To compile the clojure project into the target directory, run 
+```
+./script/build.sh compile
+```
+
+To compile and build the `broadinstitute/firecloud-ui` docker image, run
+```
+./script/build.sh compile -d build
+```
