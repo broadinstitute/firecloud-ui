@@ -25,6 +25,17 @@
               "conflicts": []
             }
           ]
+        },
+        {
+          "entityName": "fake-entity-4",
+          "entityType": "fake-type-4",
+          "conflicts": [
+            {
+              "entityName": "fake-entity-5",
+              "entityType": "fake-type-5",
+              "conflicts": []
+            }
+          ]
         }
       ]
     }
