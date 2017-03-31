@@ -8,11 +8,6 @@
 # Jenkins build job should run with all options, for example,
 #   ./docker/build.sh compile -d push
 
-if [ -z "${PROJECT}" ]; then
-     echo "FATAL ERROR: PROJECT undefined."
-     exit 1
-fi
-
 
 IFS=$'\n\t'
 set -euxo pipefail
@@ -48,6 +43,7 @@ function docker_cmd()
 }
 
 # parse command line options
+PROJECT=firecloud-ui
 GIT_BRANCH=${GIT_BRANCH:-$(git rev-parse --abbrev-ref HEAD)}  # default to current branch
 
 while [ "$1" != "" ]; do
