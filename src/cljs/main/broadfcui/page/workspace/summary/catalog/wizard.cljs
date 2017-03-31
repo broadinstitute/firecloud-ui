@@ -60,23 +60,27 @@
 
 (def ^:private ALL_USERS "All users")
 
+(defn- make-list [input]
+  ;;input may or maynot be a list, make it a list
+  (flatten (conj '() input)))
+
 (react/defc DiscoverabilityPage
   {:validate (constantly nil)
    :get-initial-state
    (fn [{:keys [props]}]
-     (select-keys props [:library:discoverableByGroups :owner?]))
+     {:library:discoverableByGroups (make-list (get props :library:discoverableByGroups '()))})
    :get-attributes
    (fn [{:keys [state]}]
-     (if (nil? (:library:discoverableByGroups @state)) {} (select-keys @state [:library:discoverableByGroups])))
+     (select-keys @state [:library:discoverableByGroups]))
    :set-groups
    (fn [{:keys [state]} new-val]
-     (swap! state assoc :library:discoverableByGroups (if (= new-val ALL_USERS) nil new-val)))
+     (swap! state assoc :library:discoverableByGroups (if (= new-val ALL_USERS) '() (list new-val))))
    :render
    (fn [{:keys [state props this]}]
      (let [{:keys [library:discoverableByGroups]} @state
            {:keys [:owner? :curator?]} props
            editable? (and curator? owner?)
-           selected (if (empty? library:discoverableByGroups) ALL_USERS library:discoverableByGroups)]
+           selected (if (empty? library:discoverableByGroups) ALL_USERS (first library:discoverableByGroups))]
        [:div {} "Dataset should be discoverable by:"
         (style/create-identity-select {:value selected
                                        :display "flex" :alignItems "center"
