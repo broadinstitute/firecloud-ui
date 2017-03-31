@@ -9,7 +9,7 @@
 #   ./docker/build.sh compile -d push
 
 IFS=$'\n\t'
-set -euxo pipefail
+set -exo pipefail
 
 function clj_build() {
     docker run --rm \
