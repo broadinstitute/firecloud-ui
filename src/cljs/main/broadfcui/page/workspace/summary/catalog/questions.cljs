@@ -32,17 +32,6 @@
               v))]))
    attributes))
 
-
-(defn- validate-required [attributes questions required-attributes]
-  (let [required-props (->> questions
-                            (map keyword)
-                            (filter (partial contains? required-attributes))
-                            set)
-        missing-props (clojure.set/difference required-props (-> attributes keys set))]
-    (when-not (empty? missing-props)
-      {:error "Please provide all required attributes"
-       :invalid missing-props})))
-
 (defn- validate-numbers [attributes library-schema]
   (let [invalid-numbers (->> attributes
                              ;; get ones that are integers:
@@ -78,14 +67,30 @@
      [:span {:style (colorize {:fontWeight "bold"})}
       " (required)"])])
 
-(defn- render-enum [{:keys [enum radio current-value colorize update-property]}]
-  (if (< (count enum) 4)
-    [:div {:style {:display "inline-block" :margin "0.75em 0 0.75em 1em"}}
-     (map #(radio {:val %}) enum)]
-    (style/create-identity-select {:value (or current-value ENUM_EMPTY_CHOICE)
-                                   :style (colorize {})
-                                   :onChange update-property}
-                                  (cons ENUM_EMPTY_CHOICE enum))))
+(defn- render-enum [{:keys [enum style wording radio current-value colorize update-property set-property disabled]}]
+  (if (= style "large")
+    [:div {}
+     (map (fn [option]
+            (let [selected? (= current-value option)]
+              [:div {:style {:display "flex" :alignItems "center"
+                             :margin "0.5rem 0" :padding "1em"
+                             :border style/standard-line :borderRadius 8
+                             :backgroundColor (cond disabled (:disabled-state style/colors) selected? (:button-primary style/colors))
+                             :cursor "pointer"}
+                     :onClick #(when-not disabled (set-property option))}
+               [:input {:type "radio" :readOnly true :checked selected? :disabled disabled
+                        :style {:cursor "pointer"}}]
+               [:div {:style {:marginLeft "0.75rem" :color (cond disabled (:text-light style/colors) selected? "white")}}
+                (or (wording (keyword option)) option)]]))
+          enum)]
+    (if (< (count enum) 4)
+      [:div {:style {:display "inline-block" :margin "0.75em 0 0.75em 1em"}}
+       (map #(radio {:val %}) enum)]
+      (style/create-identity-select {:value (or current-value ENUM_EMPTY_CHOICE)
+                                     :style (colorize {})
+                                     :disabled disabled
+                                     :onChange update-property}
+                                    (cons ENUM_EMPTY_CHOICE enum)))))
 
 (defn- render-boolean [{:keys [radio required? emptyChoice wording]}]
   [:div {:style {:display "inline-block" :margin "0.75em 0 0.75em 1em"}}
@@ -94,13 +99,14 @@
    (when-not required?
      (radio {:val nil :label (or emptyChoice "N/A")}))])
 
-(defn- render-freetext [{:keys [colorize value-nullsafe update-property]}]
+(defn- render-freetext [{:keys [colorize value-nullsafe update-property disabled]}]
   (style/create-text-area {:style (colorize {:width "100%"})
                            :value value-nullsafe
                            :onChange update-property
+                           :disabled disabled
                            :rows 3}))
 
-(defn- render-ontology-typeahead [{:keys [prop colorize value-nullsafe update-property state property library-schema]}]
+(defn- render-ontology-typeahead [{:keys [prop colorize value-nullsafe update-property state property library-schema disabled]}]
   [:div {:style {:marginBottom "0.75em"}}
    [comps/Typeahead {:field-attributes {:placeholder (:inputHint prop)
                                         :style (colorize {:width "100%" :marginBottom "0px"})
@@ -110,6 +116,7 @@
                               :wildcard "%QUERY"
                               :cache false}
                      :render-display #(aget % "label")
+                     :disabled disabled
                      :render-suggestion (fn [result]
                                           (str "<div> <div style='line-height: 1.5em;'>" (aget result "label")
                                                "<small style='float: right;'>" (aget result "id") "</small></div>"
@@ -120,35 +127,53 @@
                                     (swap! state update :attributes assoc
                                            property label
                                            related-id-prop id
-                                           related-label-prop label)))}]
+                                           related-label-prop label)))
+                     :typeahead-events ["typeahead:select"]
+                     :on-clear #(apply swap! state update :attributes dissoc property
+                                       (library-utils/get-related-id+label-props library-schema property))}]
    (let [[related-id related-label] (library-utils/get-related-id+label (:attributes @state) library-schema property)]
-     (when (not-any? clojure.string/blank? [related-id related-label])
-       [:div {:style {:fontWeight "bold"}}
-        related-label
-        [:span {:style {:fontWeight "normal" :fontSize "small" :float "right"}} related-id]
-        [:div {:style {:fontWeight "normal"}}
+     [:div {:style {:display (when (some clojure.string/blank? [related-id related-label]) "none")}}
+      [:span {:style {:fontWeight "bold"}} related-label]
+      [:span {:style {:fontSize "small" :float "right"}} related-id]
+      [:div {}
+       (when-not disabled
          (style/create-link {:text "Clear Selection"
-                             :onClick #(apply swap! state update :attributes dissoc
-                                              (library-utils/get-related-id+label-props library-schema property))})]]))])
+                           :onClick #(apply swap! state update :attributes dissoc property
+                                            (library-utils/get-related-id+label-props library-schema property))}))]]
+     ;; TODO: why is this causing React to bomb when adding the node?
+     #_(when (not-any? clojure.string/blank? [related-id related-label])
+         [:div {}
+          [:span {:style {:fontWeight "bold"}} related-label]
+          [:span {:style {:fontSize "small" :float "right"}} related-id]
+          [:div {}
+           (style/create-link {:text "Clear Selection"
+                               :onClick #(apply swap! state update :attributes dissoc property
+                                                (library-utils/get-related-id+label-props library-schema property))})]]))])
 
-(defn- render-populate-typeahead [{:keys [prop property inputHint]}]
+(defn- render-populate-typeahead [{:keys [value-nullsafe property inputHint colorize set-property update-property disabled]}]
   [:div {:style {:marginBottom "0.75em"}}
    [comps/AutocompleteFilter
-    {:width "100%"
-     :ref "text-filter"
-     :placeholder inputHint
-     :bloodhoundInfo {:url (str (config/api-url-root) "/api/library/populate/suggest/" (name property) "/")
+    {:ref "text-filter"
+     :width "100%"
+     :field-attributes {:placeholder inputHint
+                        :defaultValue value-nullsafe
+                        :style (colorize {})
+                        :onChange update-property}
+     :disabled disabled
+     :typeahead-events ["typeahead:select" "typeahead:change"]
+     :on-filter set-property
+     :bloodhoundInfo {:url (str (config/api-url-root) "/api/library/populate/suggest/" (name property))
                       :cache false
                       :prepare (fn [query settings]
                                  (clj->js
-                                   (assoc (js->clj settings)
-                                     :headers {:Authorization (str "Bearer " (utils/get-access-token))}
-                                     :type "GET"
-                                     :url (str (aget settings "url") query))))}
+                                  (assoc (js->clj settings)
+                                    :headers {:Authorization (str "Bearer " (utils/get-access-token))}
+                                    :type "GET"
+                                    :url (str (aget settings "url") "?q=" query))))}
      :typeaheadSuggestionTemplate (fn [result]
                                     (str "<div style='textOverflow: ellipsis; overflow: hidden; font-size: smaller;'>" result  "</div>"))}]])
 
-(defn- render-textfield [{:keys [colorize datatype prop value-nullsafe update-property]}]
+(defn- render-textfield [{:keys [colorize type datatype prop value-nullsafe update-property disabled]}]
   (style/create-text-field {:style (colorize {:width "100%"})
                             :type (cond (= datatype "date") "date"
                                         (= datatype "email") "email"
@@ -157,21 +182,21 @@
                             :min (:minimum prop)
                             :placeholder (:inputHint prop)
                             :value value-nullsafe
+                            :disabled disabled
                             :onChange update-property}))
 
 
 (react/defc Questions
   {:validate
    (fn [{:keys [props state locals]}]
-     (let [{:keys [questions library-schema required-attributes]} props
+     (let [{:keys [library-schema]} props
            processed-attributes (->> (:attributes @state)
                                      (utils/map-values (fn [val]
                                                          (if (string? val)
-                                                           (not-empty (trim val))
+                                                           (trim val)
                                                            val)))
                                      (utils/filter-values some?))
-           {:keys [error invalid]} (or (validate-required processed-attributes questions required-attributes)
-                                       (validate-numbers processed-attributes library-schema))]
+           {:keys [error invalid]} (or (validate-numbers processed-attributes library-schema))]
        (swap! locals assoc :processed-attributes processed-attributes)
        (when error
          (swap! state assoc :invalid-properties invalid)
@@ -191,29 +216,29 @@
                 (map keyword questions))}))
    :render
    (fn [{:keys [props state]}]
-     (let [{:keys [library-schema questions required-attributes enumerate]} props
+     (let [{:keys [library-schema missing-properties questions required-attributes enumerate editable?]} props
            {:keys [attributes invalid-properties]} @state]
        [(if enumerate :ol :div) {}
         (map
          (fn [property]
            (let [current-value (get attributes property)
                  {:keys [type enum renderHint] :as prop} (get-in library-schema [:properties property])
-                 error? (contains? invalid-properties property)
+                 error? (or (contains? invalid-properties property) (contains? missing-properties property))
                  colorize #(merge % (when error? {:borderColor (:exception-state style/colors)
                                                   :color (:exception-state style/colors)}))
-                 data (merge {:prop prop :state state :property property :library-schema library-schema
-                              :colorize colorize :current-value current-value
-                              :value-nullsafe (or current-value "") ;; avoids warning for nil value
+                 data (merge (utils/restructure prop state property library-schema colorize current-value)
+                             {:value-nullsafe (or current-value "") ;; avoids warning for nil value
                               :required? (contains? required-attributes property)
                               :update-property #(swap! state update :attributes assoc property (.. % -target -value))
+                              :set-property #(swap! state update :attributes assoc property %)
+                              :disabled (not editable?)
                               :radio (fn [{:keys [val label]}]
                                        [:label {:style (colorize {:display "inline-flex" :alignItems "center"
                                                                   :cursor "pointer" :marginRight "2em"})}
-                                        [:input (merge
-                                                 {:type "radio" :readOnly true
-                                                  :style {:cursor "pointer"}
-                                                  :onChange #(swap! state update :attributes assoc property val)}
-                                                 (when (= val current-value) {:checked true}))]
+                                        [:input {:type "radio" :readOnly true :checked (= val current-value)
+                                                 :style {:cursor "pointer"}
+                                                 :disabled (not editable?)
+                                                 :onChange #(swap! state update :attributes assoc property val)}]
                                         [:div {:style {:padding "0 0.4em" :fontWeight "500"}} (or label (str val))]])}
                              prop
                              renderHint)]

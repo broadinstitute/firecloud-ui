@@ -1,0 +1,36 @@
+@import '~foundation-sites/scss/settings/settings';
+
+$tooltip-font-size: 0.8rem;
+
+@import '~foundation-sites/scss/foundation';
+
+// following resets normally applied by global, see below
+
+.button-reset {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  border: none;
+  background: none;
+  font: unset;
+  text-align: unset;
+  padding: unset;
+  font-weight: unset;
+
+  [data-whatinput='mouse'] & {
+    outline: 0;
+  }
+}
+
+.foundation-mq {
+  font-family: '#{-zf-bp-serialize($breakpoints)}';
+}
+
+//@include foundation-global-styles;    // disabled because it insists on changing _everything_
+@include foundation-visibility-classes;
+@include foundation-float-classes;
+@include foundation-tooltip;
+@include foundation-dropdown;
+
+.dropdown-pane {
+  font-weight: normal;
+}

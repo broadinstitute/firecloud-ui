@@ -93,7 +93,7 @@
    (fn [{:keys [props]}]
      (let [nav-context (nav/parse-segment (:nav-context props))
            selected-method-config-id (common/get-id-from-nav-segment (:segment nav-context))]
-       [:div {:style {:padding "1em"}}
+       [:div {:style {:padding "1rem 1.5rem"}}
         (if selected-method-config-id
           [MethodConfigEditor
            (merge (select-keys props [:workspace-id :bucket-access? :on-submission-success])

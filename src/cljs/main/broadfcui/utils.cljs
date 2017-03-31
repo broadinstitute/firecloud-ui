@@ -1,6 +1,6 @@
 (ns broadfcui.utils
   (:require-macros
-   [broadfcui.utils :refer [log jslog cljslog pause]])
+   [broadfcui.utils :refer [log jslog cljslog pause restructure]])
   (:require
     cljs.pprint
     [clojure.string :refer [join lower-case split]]
@@ -298,3 +298,42 @@
   (if (> number 1)
     (str number " " unit "s")
     (str number " " unit)))
+
+(defn create-element-ref-handler [{:keys [store key did-mount will-unmount]}]
+  (fn [element]
+    (if element
+      (do (swap! store assoc key element)
+          (did-mount element))
+      (will-unmount (key @store)))))
+
+(defn get-app-root-element []
+  (.getElementById js/document "app"))
+
+
+(defn log-methods [prefix defined-methods]
+  (map-kv (fn [method-name method]
+            [method-name
+             (fn [& args]
+               (log (str prefix " - " (name method-name)))
+               (apply method args))])
+          defined-methods))
+
+
+(defn with-window-listeners [listeners-map defined-methods]
+  (let [did-mount
+        (fn [{:keys [locals] :as data}]
+          (doseq [[event function] listeners-map]
+            (let [func (partial function data)]
+              (swap! locals assoc (str "WINDOWLISTENER " event) func)
+              (.addEventListener js/window event func)))
+          (when-let [defined-did-mount (:component-did-mount defined-methods)]
+            (defined-did-mount data)))
+        will-unmount
+        (fn [{:keys [locals] :as data}]
+          (doseq [[event _] listeners-map]
+            (.removeEventListener js/window event (@locals (str "WINDOWLISTENER " event))))
+          (when-let [defined-will-unmount (:component-will-unmount defined-methods)]
+            (defined-will-unmount data)))]
+    (assoc defined-methods
+      :component-did-mount did-mount
+      :component-will-unmount will-unmount)))

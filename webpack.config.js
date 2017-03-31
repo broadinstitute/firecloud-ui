@@ -16,11 +16,22 @@ module.exports = {
     module: {
         rules: [
             { test: /\.css$/, loader: ExtractTextPlugin.extract("css-loader") },
+            { test: /\.scss$/, loader: ExtractTextPlugin.extract({
+                use: [{loader: "css-loader"}, {
+                    loader: "sass-loader?sourceMap",
+                    options: {
+                        includePaths: ['node_modules/foundation-sites/scss/']
+                    }
+                }]
+            })},
             { test: /\.png$/, loader: "url-loader?limit=100000" },
-            { test: /\.jpg$|\.svg$|\.eot$|\.woff$|\.ttf$/, loader: "file-loader" }
+            { test: /\.jpg$|\.svg$|\.eot$|\.woff$|\.woff2$|\.ttf$/, loader: "file-loader" }
         ]
     },
     plugins: [
         new ExtractTextPlugin({filename: "webpack-deps.css"})
-    ]
+    ],
+    watchOptions: {
+        ignored: /node_modules/
+    }
 };

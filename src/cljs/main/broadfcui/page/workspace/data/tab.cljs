@@ -59,34 +59,34 @@
    :render
    (fn [{:keys [state props]}]
      [comps/OKCancelForm
-      {:header "Import Data" :show-cancel? true :cancel-text "Close"
+      {:header "Import Data" :show-cancel? false
        :content
        (let [last-crumb-id (:id (second (:crumbs @state)))
              add-crumb (fn [id text]
                          (swap! state update :crumbs conj
                                 {:id id :text text
                                  :onClick #(swap! state update :crumbs (comp vec (partial take 2)))}))]
-         [:div {:style {:position "relative" :width 720}}
-          [:div {:style {:fontSize "150%" :marginBottom "1ex"}}
-           [comps/Breadcrumbs {:crumbs (:crumbs @state)}]]
+         [:div {:style {:position "relative"}}
           common/PHI-warning
+          [:div {:style {:fontSize "1.1rem" :marginBottom "1rem"}}
+           [comps/Breadcrumbs {:crumbs (:crumbs @state)}]]
           [:div {:style {:backgroundColor "white" :padding "1em"}}
            (case last-crumb-id
              :file-import
-             [import-data/Page (select-keys props [:workspace-id :reload :import-type])]
+             [import-data/Page
+               (select-keys props [:workspace-id :import-type :on-data-imported])]
              :workspace-import
              [copy-data-workspaces/Page
-              (assoc (select-keys props [:workspace-id :this-realm :reload])
+              (assoc (select-keys props [:workspace-id :this-realm :on-data-imported])
                 :crumbs (drop 2 (:crumbs @state))
                 :add-crumb #(swap! state update :crumbs conj %)
                 :pop-to-depth #(swap! state update :crumbs subvec 0 %))]
-             (let [style {:width 240 :margin "auto" :textAlign "center" :cursor "pointer"
+             (let [style {:width 240 :margin "0 1rem" :textAlign "center" :cursor "pointer"
                           :backgroundColor (:button-primary style/colors)
-                          :color "#fff" :padding "1em" :borderRadius 8}]
-               [:div {}
+                          :color "#fff" :padding "1rem" :borderRadius 8}]
+               [:div {:style {:display "flex" :justifyContent "center"}}
                 [:div {:style style :onClick #(add-crumb :file-import "File")}
                  "Import from file"]
-                [:div {:style {:height "1em"}}]
                 [:div {:style style :onClick #(add-crumb :workspace-import "Choose Workspace")}
                  "Copy from another workspace"]]))]])}])})
 
@@ -102,7 +102,7 @@
                         :as-text (fn [x] (:entityName x)) :content-renderer (fn [x] x)}]
            singleColumns [{:header "Attribute" :starting-width 120 :sort-initial :asc}
                           {:header "Value" :starting-width :remaining
-                           :as-text :name :sort-by :text
+                           :as-text :name :sort-by :text :resizable? false
                            :content-renderer (fn [attr-value]
                                                (if-let [parsed (common/parse-gcs-uri attr-value)]
                                                  [GCSFilePreviewLink (assoc parsed
@@ -164,7 +164,7 @@
    :render
    (fn [{:keys [props state refs this]}]
      (let [{:keys [workspace-id workspace workspace-error]} props]
-       [:div {:style {:padding "1em" :display "flex"}}
+       [:div {:style {:padding "1rem 1.5rem" :display "flex"}}
         (when (:loading-attributes @state)
           [comps/Blocker {:banner "Loading..."}])
         (cond
@@ -214,14 +214,7 @@
                              [:div {:style {:paddingRight ".5em"}}
                               [comps/Button {:text "Import Data..."
                                              :disabled? (when locked? "This workspace is locked.")
-                                             :onClick #(modal/push-modal
-                                                        [DataImporter {:workspace-id workspace-id
-                                                                       :this-realm this-realm
-                                                                       :import-type "data"
-                                                                       :reload
-                                                                       (fn [entity-type]
-                                                                         ((:request-refresh props))
-                                                                         (react/call :refresh (@refs "entity-table") entity-type))}])}]]]))
+                                             :onClick #(this :-handle-import-data-click)}]]]))
                :on-filter-change #(swap! state assoc :selected-entity-type % :selected-entity nil :attr-list nil)
                :attribute-renderer (table-utils/render-gcs-links (get-in workspace [:workspace :bucketName]))
                :linked-entity-renderer (fn [e]
@@ -263,6 +256,16 @@
    :component-did-mount
    (fn [{:keys [props]}]
      ((:request-refresh props)))
+   :-handle-import-data-click
+   (fn [{:keys [props state refs]}]
+     (modal/push-modal
+      [DataImporter
+       (merge
+        (select-keys props [:workspace-id])
+        {:this-realm (get-in props [:workspace :workspace :realm :groupName])
+         :import-type "data"
+         :on-data-imported #(react/call :refresh (@refs "entity-table")
+                                        (or % (:selected-entity-type @state)) true)})]))
    :update-state
    (fn [{:keys [state]} & args]
      (apply swap! state assoc args))})

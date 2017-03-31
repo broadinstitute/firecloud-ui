@@ -6,7 +6,7 @@
 (defn fuzzy-time [years months days hours minutes seconds]
   (cond (> years 0) (utils/maybe-pluralize years "year")
         (> months 0) (utils/maybe-pluralize months "month")
-        (> days 1) (utils/maybe-pluralize days "day")
+        (> days 0) (utils/maybe-pluralize days "day")
         (> hours 0) (utils/maybe-pluralize hours "hour")
         (> minutes 0) (utils/maybe-pluralize minutes "minute")
         (> seconds 30) "less than a minute"
@@ -17,11 +17,11 @@
   ([start end suffix?]
    (let [duration-ms (- start end)
          duration-date (js/Date. (Math/abs duration-ms))
-         in-past? (< 0 duration-ms)]
+         in-past? (pos? duration-ms)]
      (str (when (and suffix? (not in-past?)) "in ")
           (fuzzy-time (- (.getUTCFullYear duration-date) 1970)
                       (.getUTCMonth duration-date)
-                      (.getUTCDate duration-date)
+                      (- (.getUTCDate duration-date) 1)
                       (.getUTCHours duration-date)
                       (.getUTCMinutes duration-date)
                       (.getUTCSeconds duration-date))

@@ -1,0 +1,40 @@
+version: '2'
+services:
+  clojure-node:
+    image: broadinstitute/clojure-node
+    volumes:
+      - work:/w
+      - node-modules:/w/node_modules
+      - jar-cache:/root/.m2
+    working_dir: /w
+    command: bash
+    stdin_open: true
+    tty: true
+  phantomjs:
+    image: wernight/phantomjs:2
+    volumes:
+      - work:/w
+    working_dir: /w
+    command: bash
+    stdin_open: true
+    tty: true
+  mkdir:
+    image: broadinstitute/clojure-node
+    volumes:
+      - work:/w
+    working_dir: /w
+    command: mkdir -p resources/public
+  server:
+    depends_on:
+      - mkdir
+    image: broadinstitute/clojure-node
+    volumes:
+      - work:/w
+    working_dir: /w/resources/public
+    command: python -m SimpleHTTPServer 80
+volumes:
+  work:
+  jar-cache:
+    external: true
+  node-modules:
+    external: true

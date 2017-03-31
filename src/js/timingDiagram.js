@@ -8,8 +8,8 @@ function addDataTableRow(dataTable, callName, callPartName, startDate, endDate) 
     //}
 }
 
-function timingDiagram(response, workflowName) {
-    var container = document.getElementById('chart_div');
+function timingDiagram(element, response, workflowName, height) {
+    var container = element;
     var chart = new google.visualization.Timeline(container);
     var data = JSON.parse(response);
 
@@ -120,7 +120,7 @@ function timingDiagram(response, workflowName) {
     var options = {
         colors: ['#04E9E7', '#009DF4', '#0201F4', '#01FC01', '#00C400', '#008C00', '#CCAD51', '#2dd801', '#F99200', '#9854C6', '#F800FD', '#BC0000', '#FD0000'],        
         backgroundColor: '#ffffff',
-        height: (executionCallsCount + 2) * 27.328,
+        height: height,
         timeline: {
             avoidOverlappingGridLines: false,
             showBarLabels: false,

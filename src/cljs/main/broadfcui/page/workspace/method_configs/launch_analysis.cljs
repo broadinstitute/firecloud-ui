@@ -38,7 +38,7 @@
         (row "Workflows ahead of yours:" queue-position)
         (row "Queue status:" (str queued " Queued; " active " Active"))])]))
 
-(defn- render-form [state props]
+(defn- render-form [state props refs]
   [:div {:style {:width 1000}}
    (when (:launching? @state)
      [comps/Blocker {:banner "Launching analysis..."}])
@@ -79,28 +79,39 @@
                                         (:expression @state))
                                :onChange #(let [text (-> % .-target .-value clojure.string/trim)]
                                             (swap! state assoc :expression text))}))
+   [:div {:style {:marginTop "1em"}}
+    [comps/Checkbox
+    {:ref "callCache-check"
+     :label "Use Call Caching"
+     :initial-checked? true
+     :disabled-text (case (:protected-option @state)
+                      :not-loaded "Call Caching status has not finished loading."
+                      :not-available "This option is not available for your account."
+                      nil)}]]
    (when-let [wf-count (:workflow-count @state)]
      (when (> wf-count (config/workflow-count-warning-threshold))
-       [:div {:style {:textAlign "center"}}
-        [:div {:style {:display "inline-flex" :alignItems "center" :margin "1em 0 -1em 0" :padding "0.5em"
+       [:div {:style {:textAlign "center"}}[:div {:style {:display "inline-flex" :alignItems "center" :margin "1em 0 -1em 0" :padding "0.5em"
                        :backgroundColor "white" :border style/standard-line :borderRadius 3}}
          (icons/icon {:style {:color (:exception-state style/colors) :marginRight 5 :verticalAlign "middle"}}
                      :warning-triangle)
          (str "Warning: This will launch " wf-count " workflows")]]))
    [:div {:style {:textAlign "right" :fontSize "80%"}}
-    (style/create-link {:text  (str "Cromwell Version: " (:cromwell-version props))
+    (style/create-link {:text  (str "Cromwell Version: " (:cromwell-version @state))
                         :target "_blank"
                         :href (str "https://github.com/broadinstitute/cromwell/releases/tag/"
-                                   (:cromwell-version props))})]
+                                   (:cromwell-version @state))})]
    (style/create-validation-error-message (:validation-errors @state))
    [comps/ErrorViewer {:error (:launch-server-error @state)}]])
 
+(defn- parse-cromwell-ver [cromwell-ver-response]
+  (first (clojure.string/split (:cromwell cromwell-ver-response) #"-")) )
+
 (react/defc Form
   {:render
-   (fn [{:keys [props state this]}]
+   (fn [{:keys [props state refs this]}]
      [comps/OKCancelForm
       {:header "Launch Analysis"
-       :content (render-form state props)
+       :content (react/create-element (render-form state props refs))
        :ok-button {:text "Launch" :disabled? (:disabled? props) :onClick #(react/call :launch this)}}])
    :component-did-mount
    (fn [{:keys [state]}]
@@ -109,16 +120,22 @@
         :on-done (fn [{:keys [success? status-text get-parsed-response]}]
                    (if success?
                      (swap! state assoc :queue-status (common/queue-status-counts (get-parsed-response false)))
-                     (swap! state assoc :queue-error status-text)))}))
+                     (swap! state assoc :queue-error status-text)))})
+     (endpoints/call-ajax-orch
+       {:endpoint (endpoints/cromwell-version)
+        :on-done (fn [{:keys [success? get-parsed-response]}]
+                   (when success?
+                     (swap! state assoc :cromwell-version (parse-cromwell-ver (get-parsed-response)))))}))
    :launch
-   (fn [{:keys [props state]}]
+   (fn [{:keys [props state refs]}]
      (if-let [entity (:selected-entity @state)]
        (let [config-id (:config-id props)
              expression (:expression @state)
              payload (merge {:methodConfigurationNamespace (:namespace config-id)
                              :methodConfigurationName (:name config-id)
                              :entityType (:type entity)
-                             :entityName (:name entity)}
+                             :entityName (:name entity)
+                             :useCallCache (react/call :checked? (@refs "callCache-check"))}
                        (when-not (clojure.string/blank? expression) {:expression expression}))]
          (swap! state assoc :launching? true :launch-server-error nil)
          (endpoints/call-ajax-orch

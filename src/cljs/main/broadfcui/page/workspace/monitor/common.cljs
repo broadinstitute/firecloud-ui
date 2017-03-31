@@ -68,6 +68,14 @@
     :else (do (utils/log "Unknown submission status")
             nil)))
 
+(defn icon-for-project-status [project-status]
+      (cond
+        (= project-status "Error") failure-icon
+        (= project-status "Ready") success-icon
+        (= project-status "Creating") running-icon
+        :else (do (utils/log "Unknown project status")
+                  nil)))
+
 (defn icon-for-call-status [status]
   (cond
     (contains? call-success-statuses status) success-icon
@@ -75,3 +83,11 @@
     (contains? call-failure-statuses status) failure-icon
     :else (do (utils/log "Unknown call status: " status)
             failure-icon)))
+
+
+(defn call-cache-result [cache-status]
+   (if (= cache-status "ReadAndWriteCache") "Enabled" "Disabled"))
+
+(defn format-call-cache [cache-hit]
+   (if cache-hit "Hit" "Miss"))
+
