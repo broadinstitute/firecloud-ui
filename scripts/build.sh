@@ -8,6 +8,11 @@
 # Jenkins build job should run with all options, for example,
 #   ./docker/build.sh compile -d push
 
+if [ -z "${PROJECT}" ]; then
+     echo "FATAL ERROR: PROJECT undefined."
+     exit 1
+fi
+
 
 IFS=$'\n\t'
 set -euxo pipefail
@@ -25,15 +30,17 @@ function clj_build() {
 
 function docker_cmd()
 {
+    DOCKER_CMD=$1
+    REPO=$2
     if [ $DOCKER_CMD = "build" ] || [ $DOCKER_CMD = "push" ]; then
         echo "building docker image..."
         GIT_SHA=$(git rev-parse ${GIT_BRANCH})
         echo GIT_SHA=$GIT_SHA > env.properties  # for jenkins jobs
-        docker build -t $REPO:${GIT_SHA:0:12} .
+        docker $DOCKER_CMD  -t $REPO:${GIT_SHA:0:12} .
 
         if [ $DOCKER_CMD = "push" ]; then
             echo "pushing docker image..."
-            docker push $REPO:${GIT_SHA:0:12}
+            docker $DOCKER_CMD $REPO:${GIT_SHA:0:12}
         fi
     else
         echo "Not a valid docker option!  Choose either build or push (which includes build)"
@@ -41,16 +48,13 @@ function docker_cmd()
 }
 
 # parse command line options
-DOCKER_CMD=
 GIT_BRANCH=${GIT_BRANCH:-$(git rev-parse --abbrev-ref HEAD)}  # default to current branch
-REPO=${REPO:-broadinstitute/$PROJECT}  # default to rawls docker repo
+
 while [ "$1" != "" ]; do
     case $1 in
         compile) clj_build ;;
         -d | --docker) shift
-                       echo $1
-                       DOCKER_CMD=$1
-                       docker_cmd
+                       docker_cmd $1 broadinstitute/$PROJECT
                        ;;
     esac
     shift
