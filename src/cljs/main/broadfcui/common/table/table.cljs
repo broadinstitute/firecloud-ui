@@ -49,7 +49,7 @@
    :refresh-rows
    (fn [{:keys [props state]}]
      (swap! state assoc :loading? true)
-     ((-> props :body :data-source) {:columns (-> props :table :columns)
+     ((-> props :body :data-source) {:columns (-> props :body :columns)
                                      :query-params (:query-params @state)
                                      :on-done (fn [{:keys [total-count filtered-count results]}]
                                                 (swap! state assoc
