@@ -50,12 +50,13 @@
             (map option-match [:questions :enumerate])))
         [questions enumerate]))))
 
-(defn- convert-empty-strings [attributes]
-  (utils/map-values
+(defn- remove-empty-values [attributes]
+  (utils/filter-values
    (fn [val]
      (if (or (coll? val) (string? val))
        (not-empty val)
-       val)) attributes))
+       true))
+   attributes))
 
 (def ^:private ALL_USERS "All users")
 
@@ -103,7 +104,7 @@
             invalid-attributes)]])
    (style/create-paragraph
     [:div {}
-     (let [questions (first (get-questions-for-page (convert-empty-strings attributes) library-schema 0))]
+     (let [questions (first (get-questions-for-page (remove-empty-values attributes) library-schema 0))]
        (map (fn [attribute]
               (if (not-empty (str (attributes (keyword attribute))))
                 (library-utils/render-property library-schema attributes (keyword attribute))))
@@ -233,7 +234,7 @@
          (swap! locals update :page-attributes assoc page-num attributes-from-page)
          (doseq [page (conj pages-stack page-num)]
            (let [[questions _] (get-questions-for-page all-attributes (:library-schema props) page)
-                 {:keys [invalid]} (library-utils/validate-required (convert-empty-strings all-attributes)
+                 {:keys [invalid]} (library-utils/validate-required (remove-empty-values all-attributes)
                                                                     questions required-attributes)]
              (reset! invalid-attributes (clojure.set/union invalid @invalid-attributes))))
          (swap! state assoc :invalid-properties @invalid-attributes)
@@ -260,7 +261,7 @@
          (swap! state assoc :submitting? true :submit-error nil)
          (endpoints/call-ajax-orch
           {:endpoint (endpoints/save-library-metadata (:workspace-id props))
-           :payload  (convert-empty-strings (merge attributes-seen (:version-attributes @state)))
+           :payload  (remove-empty-values (merge attributes-seen (:version-attributes @state)))
            :headers utils/content-type=json
            :on-done (fn [{:keys [success? get-parsed-response]}]
                       (swap! state dissoc :submitting?)
