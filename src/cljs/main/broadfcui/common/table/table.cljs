@@ -61,7 +61,7 @@
    (fn [{:keys [props]}]
      (assoc
       (persistence/try-restore
-       {:key (:state-key props)
+       {:key (:persistence-key props)
         :validator (fn [stored-value]
                      (or (not (:v props))
                          (= (:v props) (:v stored-value))))
@@ -133,9 +133,9 @@
    (fn [{:keys [props state prev-state this]}]
      (when-not (= (:query-params @state) (:query-params prev-state))
        (this :refresh-rows))
-     (when (and (:state-key props)
+     (when (and (:persistence-key props)
                 (or (not= (:query-params @state) (:query-params prev-state))
                     (not= (:column-display @state) (:column-display prev-state))))
-       (persistence/save {:key (:state-key props)
+       (persistence/save {:key (:persistence-key props)
                           :state state
                           :only [:query-params :column-display :v]})))})

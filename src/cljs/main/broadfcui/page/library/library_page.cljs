@@ -25,7 +25,7 @@
            search-result-columns (:search-result-columns props)
            extra-columns (subvec search-result-columns 4)]
        [Table
-        {:ref "table" :state-key "library-table" :v 4
+        {:ref "table" :persistence-key "library-table" :v 4
          :body
          {:behavior {:allow-no-sort? true
                      :fixed-column-count 2}
