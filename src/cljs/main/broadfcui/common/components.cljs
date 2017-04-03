@@ -688,6 +688,7 @@
 (react/defc Tree
   ":start-collapsed? (optional [false]) - Start with branches collapsed
   :label (optional) - Label into which whole tree can be collapsed, must display inline
+  :highlight-ends? (optional) - Highlight the ends of the tree as :warning-state
   :data - Vector of maps to display in tree, any value can be a nested vector of maps.
   NOTE: no current support for keys leading directly to nested maps."
   {:get-initial-state
@@ -699,7 +700,15 @@
            [:div {:hidden (and (:collapsed? @state) (:label props))}
             (map (fn [node]
                    [:ul {:style {:margin "0.2rem" :padding "0.5rem"
-                                 :backgroundColor "rgba(0,0,0,0.1)" :borderRadius 8}}
+                                 :backgroundColor (if (and (:highlight-ends? props)
+                                                           (not-any? (fn [key]
+                                                                       (let [value (get node key)]
+                                                                         (and (vector? value)
+                                                                              (not-empty value))))
+                                                                     (keys node)))
+                                                    (:warning-state style/colors)
+                                                    "rgba(0,0,0,0.1)")
+                                 :borderRadius 8}}
                     (map (fn [key]
                            [:li {:style {:listStyle "none"}}
                             (let [value (get node key)]
@@ -707,6 +716,7 @@
                                 [:div {:style {:marginLeft "0.5rem"}}
                                  [Tree {:data value
                                         :start-collapsed? (:start-collapsed? props)
+                                        :highlight-ends? (:highlight-ends? props)
                                         :label (str key ":")}]]
                                 (str key ": " value)))])
                          (keys node))])

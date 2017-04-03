@@ -72,6 +72,7 @@
                                                     already in the workspace. You may choose to deal
                                                     with this by re-linking these entities to the
                                                     entities that you've already imported."})]
+                                           :highlight-ends? true
                                            :data soft-conflicts}]])]
          :show-cancel? (not-empty soft-conflicts)
          :ok-button (if (not-empty soft-conflicts)
