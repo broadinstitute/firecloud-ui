@@ -19,6 +19,26 @@
        update-column-display))
 
 
+(defn- render-row [column {:keys [columns fixed? dragging? on-drag-mouse-down on-visibility-change]}]
+  (let [{:keys [id visible?]} column
+        {:keys [hidden?] :as resolved} (table-utils/find-by-id id columns)
+        text (table-utils/canonical-name resolved)]
+    (when-not hidden?
+      [:div {}
+       (icons/icon {:className "grab-icon"
+                    :style {:visibility (when fixed? "hidden")
+                            :color (style/colors :text-light) :fontSize 16
+                            :verticalAlign "middle" :marginRight "0.5rem"}
+                    :draggable false
+                    :onMouseDown on-drag-mouse-down}
+                   :reorder)
+       [:label {:style {:cursor (when-not (or dragging? fixed?) "pointer")}}
+        [:input {:type "checkbox" :checked (or fixed? visible?)
+                 :disabled fixed?
+                 :onChange on-visibility-change}]
+        [:span {:style {:paddingLeft "0.5em"} :title text} text]]])))
+
+
 (react/defc ColumnEditor
   (->>
    {:render
@@ -45,18 +65,11 @@
            [:div {:style {:padding "0.5em 0"}}
             [comps/Button {:style style :onClick #(set-all props true) :text "All"}]
             [comps/Button {:style style :onClick #(set-all props false) :text "None"}]])
-         (map
-          (fn [{:keys [id]}]
-            (let [{:keys [header hidden?]} (table-utils/find-by-id id columns)
-                  text (if (string? header) header id)]
-              (when-not hidden?
-                [:div {}
-                 (icons/icon {:style {:visibility "hidden" :fontSize 16 :marginRight "0.5rem"}} :reorder)
-                 [:input {:type "checkbox" :checked true :disabled true}]
-                 [:span {:style {:paddingLeft "0.5em" :color (:disabled-state style/colors)} :title text} text]])))
-          fixed-columns)
+         (map (fn [column]
+                (render-row column (merge props {:fixed? true :dragging? drag-index})))
+              fixed-columns)
          (map-indexed
-          (fn [i {:keys [visible? id]}]
+          (fn [i {:keys [id] :as column}]
             [:div {:ref (str "div" i)
                    :style {:height 24}}
              (if (= id :dummy)
@@ -65,21 +78,15 @@
                               :borderRadius 4
                               :textAlign "center"}}
                 (:drop-text @state)]
-               (let [header (:header (table-utils/find-by-id id columns))
-                     text (if (string? header) header id)]
-                 [:div {}
-                  (icons/icon {:className "grab-icon"
-                               :style {:color (style/colors :text-light) :fontSize 16
-                                       :verticalAlign "middle" :marginRight "0.5rem"}
-                               :draggable false
-                               :onMouseDown #(swap! state assoc :drag-index i :drop-index i :drop-text text
-                                                    :saved-user-select-state (common/disable-text-selection))}
-                              :reorder)
-                  [:label {:style {:cursor (when-not drag-index "pointer")}}
-                   [:input {:type "checkbox" :checked visible?
-                            :onChange #(update-column-display
-                                        (update-in column-display [(+ i fixed-column-count) :visible?] not))}]
-                   [:span {:style {:paddingLeft "0.5em"} :title text} text]]]))])
+               (render-row
+                column
+                (merge props
+                       {:dragging? drag-index
+                        :on-drag-mouse-down #(swap! state assoc :drag-index i :drop-index i
+                                                    :drop-text (table-utils/resolve-canonical-name id columns)
+                                                    :saved-user-select-state (common/disable-text-selection))
+                        :on-visibility-change #(update-column-display
+                                                (update-in column-display [(+ i fixed-column-count) :visible?] not))})))])
           (if drag-index
             (-> reorderable-columns
                 (utils/delete drag-index)
@@ -107,7 +114,7 @@
                                              (+ drag-index fixed-column-count)
                                              (+ drop-index fixed-column-count)))
           (common/restore-text-selection (:saved-user-select-state @state))
-          (swap! state dissoc :drag-index :drop-index :reorderable-columns :saved-user-select-state))))}
+          (swap! state dissoc :drag-index :drop-index :drop-text :saved-user-select-state))))}
    (utils/with-window-listeners
     {"mousemove"
      (fn [{:keys [this]} e]

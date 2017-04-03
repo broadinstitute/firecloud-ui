@@ -10,12 +10,20 @@
   (or id header))
 
 
+(defn canonical-name [{:keys [header id]}]
+  (if (string? header) header id))
+
+
 (defn index-by-id [columns]
   (utils/index-by resolve-id columns))
 
 
 (defn find-by-id [id raw-columns]
   (first (filter (comp (partial = id) resolve-id) raw-columns)))
+
+
+(defn resolve-canonical-name [id raw-columns]
+  (canonical-name (find-by-id id raw-columns)))
 
 
 (defn- row->text [row columns]
