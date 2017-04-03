@@ -68,6 +68,7 @@
                            [:tr {:style {:borderTop style/standard-line}}
                             [:td {:style {:borderTop style/standard-line}}
                              [:input {:type "radio" :value (account "accountName")
+                                      :name "billingAccountSelect"
                                       :disabled (not (account "firecloudHasAccess"))
                                       :id (account "accountName")
                                       :onChange (fn [event]
