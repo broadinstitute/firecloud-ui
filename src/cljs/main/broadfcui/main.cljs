@@ -16,9 +16,20 @@
    [broadfcui.page.profile :as profile-page]
    [broadfcui.page.status :as status-page]
    [broadfcui.page.workspaces-list :as workspaces]
+   [broadfcui.tooltip :as tooltip]
    [broadfcui.utils :as utils]
    ))
 
+(react/defc TooltipTest
+  {:render
+   (fn []
+     [:div {:style {:marginBottom "2rem"}}
+      [:div {}
+       "You may need "
+       (tooltip/with-default :below "some additional information" "Here is a tooltip!")
+       "."]
+      [:div {:style {:marginTop "2rem"}}
+       "Here is an " (tooltip/with-default :above "above" "I am above!") " version."]])})
 
 (defn- logo []
   [:img {:src "assets/broad_logo.png" :style {:height 38}}])
@@ -451,6 +462,7 @@
         [RefreshCredentials {:auth2 (:auth2 @state)}])
       [:div {:style {:backgroundColor "white" :padding 20}}
        [:div {}
+        [TooltipTest]
         (when-let [auth2 (:auth2 @state)]
           [LoggedOut {:auth2 auth2 :hidden? (contains? (:user-status @state) :signed-in)
                       :on-change (fn [signed-in? token-saved?]
@@ -479,8 +491,11 @@
           [LoggedIn {:nav-context (:root-nav-context @state)
                      :auth2 (:auth2 @state)}])]]
       (footer)
-      ;; As low as possible on the page so it will be the frontmost component when displayed.
-      [modal/Component {:ref "modal"}]])
+      ;; These components are as low as possible on the page so they will be the frontmost
+      ;; items when displayed. Further tweaking can be done by modifying the z-index style
+      ;; attribute.
+      [modal/Component {:ref "modal"}]
+      [tooltip/Container]])
    :component-did-mount
    (fn [{:keys [this state refs locals]}]
      ;; pop up the message only when we start getting 503s, not on every 503
