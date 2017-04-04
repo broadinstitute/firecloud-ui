@@ -60,15 +60,17 @@
 
 (def ^:private ALL_USERS "All users")
 
-(defn- make-list [input]
+(defn- ensure-sequence [input]
   ;;input may or maynot be a list, make it a list
-  (flatten (conj '() input)))
+  (cond (sequential? input) input
+        (nil? input) []
+        :else [input]))
 
 (react/defc DiscoverabilityPage
   {:validate (constantly nil)
    :get-initial-state
    (fn [{:keys [props]}]
-     {:library:discoverableByGroups (make-list (get props :library:discoverableByGroups '()))})
+     {:library:discoverableByGroups (ensure-sequence (:library:discoverableByGroups props))})
    :get-attributes
    (fn [{:keys [state]}]
      (select-keys @state [:library:discoverableByGroups]))
