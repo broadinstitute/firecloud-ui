@@ -82,7 +82,7 @@
    [:div {:style {:marginTop "1em"}}
     [comps/Checkbox
     {:ref "callCache-check"
-     :label "Use Call Caching"
+     :label [:span {:style {:marginBottom "0.8em"}} "Use " [:a {:href (config/call-caching-guide-url) :target "_blank"} "Call Caching"]]
      :initial-checked? true
      :disabled-text (case (:protected-option @state)
                       :not-loaded "Call Caching status has not finished loading."
