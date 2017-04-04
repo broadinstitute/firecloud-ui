@@ -61,7 +61,7 @@
 (def ^:private ALL_USERS "All users")
 
 (defn- ensure-sequence [input]
-  ;;input may or maynot be a list, make it a list
+  ;;input may or maynot be a sequence, make it a sequence
   (cond (sequential? input) input
         (nil? input) []
         :else [input]))
