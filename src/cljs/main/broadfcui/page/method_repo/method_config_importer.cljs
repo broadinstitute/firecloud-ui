@@ -259,6 +259,14 @@
       :else
       [table/Table
        {:columns [{:header "Type" :starting-width 100}
+                  {:header "Name" :starting-width 350
+                   :sort-by (fn [m]  [(clojure.string/lower-case (m "name")) (int (m "snapshotId"))])
+                   :filter-by (fn [m] [(m "name") (str (m "snapshotId"))])
+                   :as-text (fn [item] (str (item "namespace") "\n" (item "name") "\nSnapshot ID: " (item "snapshotId")))
+                   :content-renderer
+                   (fn [item]
+                     (style/create-link {:text (style/render-name-id (item "name") (item "snapshotId"))
+                                         :onClick #((:on-item-selected props) item)}))}
                   {:header "Namespace" :starting-width 160
                    :sort-by (fn [m] (clojure.string/lower-case (m "namespace")))
                    :sort-initial :asc
@@ -274,14 +282,6 @@
                                                           :load-endpoint (endpoints/get-agora-namespace-acl (item "namespace") (= :config (:type item)))
                                                           :entityType "Namespace" :entityName (item "namespace")
                                                           :title (str "Namespace " (item "namespace"))}])})))}
-                  {:header "Name" :starting-width 350
-                   :sort-by (fn [m]  [(clojure.string/lower-case (m "name")) (int (m "snapshotId"))])
-                   :filter-by (fn [m] [(m "name") (str (m "snapshotId"))])
-                   :as-text (fn [item] (str (item "namespace") "\n" (item "name") "\nSnapshot ID: " (item "snapshotId")))
-                   :content-renderer
-                   (fn [item]
-                     (style/create-link {:text (style/render-name-id (item "name") (item "snapshotId"))
-                                         :onClick #((:on-item-selected props) item)}))}
                   {:header "Synopsis" :starting-width 160}
                   (table/date-column {:header "Created"})
                   {:header "Referenced Method" :starting-width 250
@@ -308,7 +308,7 @@
                   (item "synopsis")
                   (item "createDate")
                   (when (= :config (:type item))
-                    (mapv (get item "method" {}) ["namespace" "name" "snapshotId"]))])}]))
+                    (mapv (get item "method" {}) ["name" "namespace" "snapshotId"]))])}]))
   :component-did-mount
   (fn [{:keys [this]}]
     (react/call :load-data this))
