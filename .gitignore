@@ -1,6 +1,6 @@
 *.log
 configure.rb
-config/
+/config/
 
 # npm/bower specific
 node_modules/
