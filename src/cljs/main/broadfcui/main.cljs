@@ -140,12 +140,11 @@
         (cond
           (not (:config-loaded? @state))
           [config-loader/Component
-           {:on-success #(do (swap! state assoc :config-loaded? true) (this :-initialize-auth2))}]
+           {:on-success #(swap! state assoc :config-loaded? true)}]
           (nil? (:auth2 @state))
           [:div {}
            (style/render-text-logo)
-           [:div {:style {:padding "40px 0"}}
-            [comps/Spinner {:text "Loading auth..."}]]]
+           [auth/GoogleAuthLibLoader {:on-loaded #(swap! state assoc :auth2 %)}]]
           (contains? (:user-status @state) :signed-in)
           (cond
             (not (contains? (:user-status @state) :go))
@@ -178,23 +177,7 @@
    (fn [{:keys [locals]}]
      (.removeEventListener js/window "hashchange" (:hash-change-listener @locals))
      (remove-watch utils/server-down? :server-watcher)
-     (remove-watch utils/maintenance-mode? :server-watcher))
-   :-initialize-auth2
-   (fn [{:keys [state]}]
-     (let [scopes (clojure.string/join
-                   " "
-                   ["email" "profile"
-                    "https://www.googleapis.com/auth/devstorage.full_control"
-                    "https://www.googleapis.com/auth/compute"])]
-       (.. js/gapi
-           (load "auth2"
-                 (fn []
-                   (let [auth2 (.. js/gapi -auth2
-                                   (init (clj->js
-                                          {:client_id (config/google-client-id)
-                                           :scope scopes})))]
-                     (swap! state assoc :auth2 auth2)
-                     (utils/set-google-auth2-instance! auth2)))))))})
+     (remove-watch utils/maintenance-mode? :server-watcher))})
 
 
 (defn render-application []

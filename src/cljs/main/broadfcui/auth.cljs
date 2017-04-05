@@ -4,8 +4,30 @@
    [broadfcui.common.style :as style]
    [broadfcui.config :as config]
    [broadfcui.utils :as u]
+   clojure.string
    [dmohs.react :as r]
    ))
+
+(r/defc GoogleAuthLibLoader
+  {:render
+   (fn []
+     [:div {:style {:padding "40px 0"}}
+      [comps/Spinner {:text "Loading auth..."}]])
+   :component-did-mount
+   (fn [{:keys [this]}]
+     (js-invoke js/gapi "load" "auth2" #(this :-handle-auth2-loaded)))
+   :-handle-auth2-loaded
+   (fn [{:keys [props]}]
+     (let [{:keys [on-loaded]} props
+           scopes (clojure.string/join
+                   " "
+                   ["email" "profile"
+                    "https://www.googleapis.com/auth/devstorage.full_control"
+                    "https://www.googleapis.com/auth/compute"])
+           init-options (clj->js {:client_id (config/google-client-id) :scope scopes})
+           auth2 (js-invoke (aget js/gapi "auth2") "init" init-options)]
+       (u/set-google-auth2-instance! auth2)
+       (on-loaded auth2)))})
 
 (r/defc Policy
   {:render
