@@ -308,7 +308,7 @@
                   (item "synopsis")
                   (item "createDate")
                   (when (= :config (:type item))
-                    (mapv (get item "method" {}) ["name" "namespace" "snapshotId"]))])}]))
+                    (mapv (get item "method" {}) ["namespace" "name" "snapshotId"]))])}]))
   :component-did-mount
   (fn [{:keys [this]}]
     (react/call :load-data this))
