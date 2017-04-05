@@ -76,7 +76,7 @@
      (select-keys @state [:library:discoverableByGroups]))
    :set-groups
    (fn [{:keys [state]} new-val]
-     (swap! state assoc :library:discoverableByGroups (if (= new-val ALL_USERS) '() (list new-val))))
+     (swap! state assoc :library:discoverableByGroups (if (= new-val ALL_USERS) [] [new-val])))
    :render
    (fn [{:keys [state props this]}]
      (let [{:keys [library:discoverableByGroups]} @state
