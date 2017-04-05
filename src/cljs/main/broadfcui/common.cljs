@@ -225,6 +225,17 @@
                :title tooltip}
         text]))})
 
+(defn question-icon-link [text link & {:keys [style]}]
+  [:a {:href link
+       :target "_blank"
+       :style (merge style {:color (:text-light style/colors)
+                             :fontSize "1.2rem" :lineHeight "0.6rem"
+                             :padding "0.4rem" :marginRight "0.5rem"})}
+   [FoundationTooltip
+    {:text (icons/icon {} :help)
+     :style {:border "none" :cursor "pointer"}
+     :tooltip text}]])
+
 (react/defc FoundationIconDropdown
   {:close
    (fn [{:keys [locals]}]

@@ -229,16 +229,7 @@
         [:div {:style {:width "100%" :borderBottom (str "1px solid " (:line-default style/colors))}}
          [:div {:style {:float "right" :fontSize "70%" :margin "0 0 0.5em 0"}}
           [AccountDropdown {:auth2 (:auth2 props)}]
-          [:a {:href (config/user-guide-url)
-               :target "_blank"
-               :style {:display "block" :float "right"
-                       :color (:text-light style/colors)
-                       :fontSize "1.2rem" :lineHeight "0.6rem"
-                       :padding "0.4rem" :marginRight "0.5rem"}}
-           [common/FoundationTooltip
-            {:text (icons/icon {} :help)
-             :style {:border "none" :cursor "pointer"}
-             :tooltip "FireCloud User Guide"}]]
+          (common/question-icon-link "FireCloud User Guide" (config/user-guide-url) :style {:display "block" :float "right"})
           (common/clear-both)
           (when (= :registered (:registration-status @state))
             [GlobalSubmissionStatus])]
