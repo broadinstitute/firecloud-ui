@@ -14,16 +14,16 @@
   (if (string? header) header id))
 
 
-(defn index-by-id [columns]
-  (utils/index-by resolve-id columns))
+(defn index-by-id [column-definitions]
+  (utils/index-by resolve-id column-definitions))
 
 
-(defn find-by-id [id raw-columns]
-  (first (filter (comp (partial = id) resolve-id) raw-columns)))
+(defn find-by-id [id column-definitions]
+  (first (filter (comp (partial = id) resolve-id) column-definitions)))
 
 
-(defn resolve-canonical-name [id raw-columns]
-  (canonical-name (find-by-id id raw-columns)))
+(defn resolve-canonical-name [id column-definitions]
+  (canonical-name (find-by-id id column-definitions)))
 
 
 (defn- row->text [row columns]

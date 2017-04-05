@@ -17,7 +17,7 @@
 
 (defn- container [narrow? child align]
   (if narrow?
-    [:div {:style {:margin "0.25em 0"}} child]
+    [:div {:style {:margin "0.2rem 0"}} child]
     [:div {:style {:width "33%" :textAlign align}} child]))
 
 
@@ -25,8 +25,8 @@
   (let [right-num (min filtered-count (* page-number rows-per-page))
         left-num (if (zero? right-num) 0 (inc (* (dec page-number) rows-per-page)))]
     [:div {:style {:display "inline-flex"}}
-     [:b {:style {:marginRight "1ex"}} (str left-num " - " right-num)]
-     (str "of " (pluralize filtered-count " result")
+     [:strong {:style {:marginRight "0.3rem"}} (str left-num " - " right-num)]
+     (str " of " (pluralize filtered-count " result")
           (when-not (= filtered-count total-count)
             (str " (filtered from " total-count " total)")))]))
 
@@ -38,7 +38,7 @@
     (style/create-unselectable
      :div {:style {:display "inline-flex" :alignItems "baseline"}}
      [:div {:style {:display "inline-flex" :alignItems "baseline"
-                    :padding "0em 0.9em"
+                    :padding "0 0.75rem"
                     :color (if allow-prev
                              (:button-primary style/colors)
                              (:border-light style/colors))
@@ -59,7 +59,7 @@
                 n]))
            (create-page-range page-number num-pages))]
      [:div {:style {:display "inline-flex" :alignItems "baseline"
-                    :padding "0em 0.9em"
+                    :padding "0 0.75rem"
                     :color (if allow-next
                              (:button-primary style/colors)
                              (:border-light style/colors))
@@ -74,8 +74,8 @@
    "Display"
    (style/create-identity-select
     {:value rows-per-page
-     :style {:width 60 :margin "0em 1em"}
-     :onChange #(per-page-selected (-> % .-target .-value js/parseInt))}
+     :style {:width 60 :margin "0 0.75rem"}
+     :onChange #(per-page-selected (-> % .-target .-value int))}
     per-page-options)
    "rows per page"])
 

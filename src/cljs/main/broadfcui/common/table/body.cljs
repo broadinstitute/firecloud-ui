@@ -15,6 +15,9 @@
     {:flexBasis width :flexGrow 0 :flexShrink 0}))
 
 
+(def ^:private column-drag-margin 11)
+
+
 (defn- header [{:keys [joined-columns sort-column sort-order set-sort style
                        start-column-drag column-reset allow-no-sort?]}]
   [:div {:style (merge {:display "flex"} (:row style) (:header-row style))}
@@ -41,7 +44,8 @@
                         (if (= :asc sort-order) :sort-asc :sort-desc)))]
          (when resizable?
            [:div {:style {:position "absolute" :cursor "col-resize"
-                          :right -11 :top 0 :width 21 :height "100%" :zIndex 1}
+                          :right (- column-drag-margin) :width (dec (* 2 column-drag-margin))
+                          :top 0 :height "100%" :zIndex 1}
                   :onMouseDown (fn [e] (start-column-drag (utils/restructure e width index)))
                   :onDoubleClick #(column-reset {:index index :initial-width (or initial-width 100)})}])]))
     joined-columns)])
@@ -97,10 +101,10 @@
             column-reset
             (fn [{:keys [index initial-width]}]
               (update-column-display (assoc-in column-display [index :width] initial-width)))
-            +props (merge props (utils/restructure joined-columns start-column-drag column-reset))]
+            properties (merge props (utils/restructure joined-columns start-column-drag column-reset))]
         [:div {:style (merge {:width "-webkit-fit-content" :minWidth "100%"} (:table style))}
-         (header +props)
-         (body +props)]))
+         (header properties)
+         (body properties)]))
     :-on-mouse-move
     (fn [{:keys [props state locals]} e]
       (when (:dragging? @state)
