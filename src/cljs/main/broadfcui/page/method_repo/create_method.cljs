@@ -7,6 +7,7 @@
     [broadfcui.common.input :as input]
     [broadfcui.common.modal :as modal]
     [broadfcui.common.style :as style]
+    [broadfcui.config :as config]
     [broadfcui.endpoints :as endpoints]
     [broadfcui.utils :as utils]
     ))
@@ -43,6 +44,8 @@
          (style/create-form-label "Documentation (optional)")
          (style/create-text-area {:ref "documentation" :style {:width "100%"} :rows 5})
 
+         [:div {:style {:marginBottom "0.8em"}} "WDL must use Docker image digests to allow call caching"
+          (common/question-icon-link "Guide to Call Caching" (config/call-caching-guide-url))]
          [:input {:type "file" :ref "wdl-uploader" :style {:display "none"}
                   :onChange (fn [e]
                               (let [file (-> e .-target .-files (aget 0))
