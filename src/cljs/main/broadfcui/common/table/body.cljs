@@ -2,6 +2,7 @@
   (:require
     [dmohs.react :as react]
     [broadfcui.common :as common]
+    [broadfcui.common.components :as comps]
     [broadfcui.common.flex-utils :as flex]
     [broadfcui.common.icons :as icons]
     [broadfcui.common.table.utils :as table-utils]
@@ -104,7 +105,13 @@
             properties (merge props (utils/restructure joined-columns start-column-drag column-reset))]
         [:div {:style (merge {:width "-webkit-fit-content" :minWidth "100%"} (:table style))}
          (header properties)
-         (body properties)]))
+         [:div {:style {:position "relative"}}
+          [comps/DelayedBlocker {:ref "blocker" :banner "Loading..."}]
+          (body properties)]]))
+    :component-will-receive-props
+    (fn [{:keys [props next-props refs]}]
+      (when-not (= (:loading? props) (:loading? next-props))
+        ((@refs "blocker") (if (:loading? next-props) :show :hide))))
     :-on-mouse-move
     (fn [{:keys [props state locals]} e]
       (when (:dragging? @state)

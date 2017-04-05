@@ -86,15 +86,13 @@
    :render
    (fn [{:keys [props state]}]
      (let [props (utils/deep-merge default-props props)
-           {:keys [rows column-display total-count filtered-count query-params]} @state
+           {:keys [rows column-display total-count filtered-count query-params loading?]} @state
            {:keys [body toolbar paginator]} props
            {:keys [empty-message columns behavior external-query-params]} body
            {:keys [fixed-column-count allow-no-sort?]} behavior
            query-params (merge query-params (select-keys props external-query-params))
            update-column-display #(swap! state assoc :column-display %)]
        [:div {}
-        (when (:loading? @state)
-          [comps/DelayedBlocker {:banner "Loading..."}])
         [:div {:style (:style toolbar)}
          (when (:reorderable-columns? behavior)
            (let [button-props (:column-edit-button toolbar)]
@@ -115,7 +113,7 @@
             (merge
              body
              (select-keys query-params [:sort-column :sort-order])
-             (utils/restructure rows column-display update-column-display fixed-column-count allow-no-sort?)
+             (utils/restructure rows column-display update-column-display fixed-column-count allow-no-sort? loading?)
              {:set-sort (fn [col order] (swap! state update :query-params
                                                merge {:sort-column col :sort-order order}))})])]
         (paginator/paginator
