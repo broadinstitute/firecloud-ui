@@ -44,8 +44,6 @@
          (style/create-form-label "Documentation (optional)")
          (style/create-text-area {:ref "documentation" :style {:width "100%"} :rows 5})
 
-         [:div {:style {:marginBottom "0.8em" :fontSize "88%"}} "WDL must use Docker image digests to allow call caching"
-          (common/question-icon-link "Guide to Call Caching" (config/call-caching-guide-url))]
          [:input {:type "file" :ref "wdl-uploader" :style {:display "none"}
                   :onChange (fn [e]
                               (let [file (-> e .-target .-files (aget 0))
@@ -87,7 +85,9 @@
          [CodeMirror {:ref "wdl-editor" :read-only? false}]
 
          [comps/ErrorViewer {:error (:upload-error @state)}]
-         (style/create-validation-error-message (:validation-errors @state))])
+         (style/create-validation-error-message (:validation-errors @state))
+         [:div {:style {:marginTop "0.8em" :fontSize "88%"}} "WDL must use Docker image digests to allow call caching"
+          (common/question-icon-link "Guide to Call Caching" (config/call-caching-guide-url))]])
        :ok-button (react/create-element
                    [comps/Button {:ref "ok-button" :text "Upload" :onClick #(react/call :create-method this)}])}])
    :component-did-mount
