@@ -21,16 +21,6 @@
    ))
 
 
-(defn- logo []
-  [:img {:src "assets/broad_logo.png" :style {:height 38}}])
-
-; Temporary replacement for the Broad Logo.
-(defn- text-logo []
-  [:div {:style {:display "inline-block"}}
-   [:a {:href "/#workspaces" :style {:fontSize 32 :color (:button-primary style/colors) :fontWeight "bold" :textDecoration "none" :height 38}}
-   "FireCloud"]])
-
-
 (react/defc PopUpFooterControl
   {:render
    (fn [{:keys [state]}]
@@ -140,7 +130,7 @@
   {:render
    (fn [{:keys [props]}]
      [:div {}
-      (text-logo)
+      (style/render-text-logo)
       [:div {:style {:display "inline-block" :paddingLeft "1em" :fontSize 18 :height 38 :verticalAlign "baseline"}}
        (map (fn [item] [TopNavBarLink {:name (:name item) :href (:href item)
                                        :selected (= (:selected-item props) (:key item))}])
@@ -282,7 +272,7 @@
      ;; Google's code complains if the sign-in button goes missing, so we hide this component rather
      ;; than removing it from the page.
      [:div {:style {:display (when (:hidden? props) "none")}}
-      [:div {:style {:marginBottom "2em"}} (text-logo)]
+      [:div {:style {:marginBottom "2em"}} (style/render-text-logo)]
       [comps/Button {:text "Sign In" :onClick #(react/call :.handle-sign-in-click this)}]
       [:div {:style {:marginTop "2em" :maxWidth 600}}
        [:div {} [:b {} "New user? FireCloud requires a Google account."]]
@@ -428,7 +418,7 @@
            {:on-success #(do (swap! state assoc :config-loaded? true) (this :-initialize-auth2))}]
           (nil? (:auth2 @state))
           [:div {}
-           (text-logo)
+           (style/render-text-logo)
            [:div {:style {:padding "40px 0"}}
             [comps/Spinner {:text "Loading auth..."}]]]
           (contains? (:user-status @state) :signed-in)
