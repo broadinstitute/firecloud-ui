@@ -6,6 +6,7 @@
     [broadfcui.common :as common]
     [broadfcui.common.components :as comps]
     [broadfcui.common.modal :as modal]
+    [broadfcui.common.style :as style]
     [broadfcui.endpoints :as endpoints]
     [broadfcui.page.workspace.data.entity-selector :refer [EntitySelector]]
     [broadfcui.utils :as utils]
@@ -51,29 +52,47 @@
                     ((:on-data-imported props) (:type props)))
                   (react/call :show-import-result this (get-parsed-response false) selected))}))
    :show-import-result
-   (fn [{:keys [this]} parsed-response selected]
+   (fn [{:keys [this props]} parsed-response selected]
      (let [copied (parsed-response "entitiesCopied")
            hard-conflicts (parsed-response "hardConflicts")
-           soft-conflicts (parsed-response "softConflicts")]
+           soft-conflicts (clojure.walk/postwalk
+                           (fn [x]
+                             (cond
+                               (= (second x) []) nil
+                               (= x "entityName") "ID"
+                               (= (first x) "entityType") ["Type" (clojure.string/replace (second x) "_" " ")]
+                               (= x "conflicts") "Conflicting linked entities"
+                               :else x))
+                           (parsed-response "softConflicts"))
+           import-type (:type props)]
        (comps/push-ok-cancel-modal
-        {:header "Import Results"
-         :content [:div {}
+        {:header (if (not-empty copied)
+                   "Import Successful"
+                   "Unable to Import")
+         :content [:div {:style {:maxWidth 600}}
                    (when (not-empty copied)
-                     [comps/Tree {:label "Successfully copied"
-                                  :data copied}])
+                     [comps/Tree {:data copied}])
                    (when (not-empty hard-conflicts)
-                     [comps/Tree {:label "Conflicting entities"
-                                  :data hard-conflicts}])
+                     [:div {}
+                      [:p {}
+                       "The import could not be completed because the following " import-type
+                       "s have the same IDs as entities already in this workspace."]
+                      [comps/Tree {:data hard-conflicts}]])
                    (when (not-empty soft-conflicts)
-                     [:div {} [comps/Tree {:label [:span {} "Link conflicts"
-                                                   (common/render-info-box
-                                                    {:text "Link conflicts are entities that link
-                                                    to another entity that would conflict with one
-                                                    already in the workspace. You may choose to deal
-                                                    with this by re-linking these entities to the
-                                                    entities that you've already imported."})]
-                                           :highlight-ends? true
-                                           :data soft-conflicts}]])]
+                     [:div {}
+                      [:p {} "The import could not be completed because some of the " import-type
+                       "s that you selected are connected to entities that already exist in the destination workspace."]
+                      [:p {} "The conflicting entities are highlighted below."]
+                      [comps/Tree {:highlight-ends? true
+                                   :data soft-conflicts}]
+                      [:p {} "You may connect the " import-type "s that you import to the existing
+                      entities in the destination workspace, by clicking " [:strong {} "Re-link"] "."]
+                      [:p {} "Re-linking will not import the conflicting entities from, or change the "
+                       import-type "s in, the source workspace."]
+                      [:p {:style {:color (:exception-state style/colors)}}
+                       "The existing entities may be different (i.e. older, newer, or unrelated but
+                       with the same ID) from the entities currently connected to the " import-type
+                       "s you are importing.  If you re-link the " import-type "s, you may lose this information."]])]
          :show-cancel? (not-empty soft-conflicts)
          :ok-button (if (not-empty soft-conflicts)
                       {:text "Re-link"

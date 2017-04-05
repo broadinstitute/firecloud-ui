@@ -12,27 +12,33 @@
       "softConflicts": [
         {
           "entityName": "fake-entity-1",
-          "entityType": "fake-type-1",
+          "entityType": "fake_type_1",
           "conflicts": [
             {
               "entityName": "fake-entity-2",
-              "entityType": "fake-type-2",
-              "conflicts": []
+              "entityType": "fake_type_2",
+              "conflicts": [
+                {
+                  "entityName": "fake-entity-6",
+                  "entityType": "fake_type_5",
+                  "conflicts": []
+                }
+              ]
             },
             {
               "entityName": "fake-entity-3",
-              "entityType": "fake-type-3",
+              "entityType": "fake_type_3",
               "conflicts": []
             }
           ]
         },
         {
           "entityName": "fake-entity-4",
-          "entityType": "fake-type-4",
+          "entityType": "fake_type_1",
           "conflicts": [
             {
               "entityName": "fake-entity-5",
-              "entityType": "fake-type-5",
+              "entityType": "fake_type_4",
               "conflicts": []
             }
           ]
