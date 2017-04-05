@@ -50,8 +50,6 @@
             (map option-match [:questions :enumerate])))
         [questions enumerate]))))
 
-(def ^:private ALL_USERS "All users")
-
 (defn- remove-empty-values [attributes]
   (utils/filter-values
    (fn [val]
@@ -59,6 +57,8 @@
        (not-empty val)
        true))
    attributes))
+
+(def ^:private ALL_USERS "All users")
 
 (defn- ensure-sequence [input]
   ;;input may or maynot be a sequence, make it a sequence
