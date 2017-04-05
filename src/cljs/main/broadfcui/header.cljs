@@ -5,6 +5,7 @@
    [broadfcui.common.style :as style]
    [broadfcui.config :as config]
    [broadfcui.endpoints :as endpoints]
+   [broadfcui.nav :as nav]
    [broadfcui.nih-link-warning :as nih-link-warning]
    [broadfcui.utils :as u]
    [dmohs.react :as r]
@@ -28,9 +29,10 @@
       (style/render-text-logo)
       [:div {:style {:display "inline-block" :paddingLeft "1em" :fontSize 18 :height 38
                      :verticalAlign "baseline"}}
-       (map (fn [item] [TopNavBarLink {:name (:name item) :href (:href item)
-                                       :selected (= (:selected-item props) (:key item))}])
-            (filter (comp #{:library :workspaces :methods} :key) (:routes props)))
+       (map (fn [item]
+              [TopNavBarLink {:name (:label item) :href (nav/get-link (:nav-key item))
+                              :selected ((:is-selected? item))}])
+            (:items props))
        (when (:show-nih-link-warning? props)
          [nih-link-warning/NihLinkWarning])]])})
 
@@ -70,9 +72,10 @@
                          :backgroundColor "#fff"
                          :position "absolute" :width "100%"
                          :border (str "1px solid " (:line-default style/colors))}}
-           [DropdownItem {:href "#profile" :text "Profile"
+           [DropdownItem {:href (nav/get-link :broadfcui.page.profile/main) :text "Profile"
                           :dismiss #(swap! state assoc :show-dropdown? false)}]
-           [DropdownItem {:href "#billing" :text "Billing"
+           [DropdownItem {:href (nav/get-link :broadfcui.page.billing.billing-management/main)
+                          :text "Billing"
                           :dismiss #(swap! state assoc :show-dropdown? false)}]
            [DropdownItem {:href "javascript:;" :text "Sign Out"
                           :dismiss #(.signOut (:auth2 props))}]]))])})

@@ -6,13 +6,13 @@
    [broadfcui.common.modal :as modal]
    [broadfcui.page.method-repo.method-config-importer :refer [MethodConfigImporter]]
    [broadfcui.nav :as nav]
-   [broadfcui.utils :as utils]
+   [broadfcui.utils :as u]
    ))
 
 
 (react/defc Page
   {:render
-   (fn [{:keys []}]
+   (fn [{:keys [props]}]
      [:div {:style {:padding "1.5rem 1rem 0"}}
       [MethodConfigImporter
        {:allow-edit true
@@ -25,7 +25,31 @@
              :ok-button
              {:text "Yes"
               :onClick modal/pop-modal
-              :href (str "#workspaces/"
-                         (:namespace workspace-id) "%3A" (:name workspace-id)
-                         "/Method%20Configurations/"
-                         (:namespace config-id) "%3A" (:name config-id))}}))}]])})
+              :href (nav/get-link :broadfcui.page.workspace.details/method-config
+                                  workspace-id config-id)}}))}]])})
+
+(defn add-nav-paths []
+  (nav/defpath
+    ::main
+    {:component Page
+     :regex #"methods"
+     :make-props (fn [_] {})
+     :make-path (fn [] "methods")})
+  (nav/defpath
+    ::method
+    {:component Page
+     :regex #"methods/m/([^/]+)/([^/]+)/([^/]+)"
+     :make-props (fn [namespace name snapshot-id]
+                   {:method-id (u/restructure namespace name snapshot-id)})
+     :make-path (fn [method-id]
+                  (str "methods/m/" (:namespace method-id) "/" (:name method-id) "/"
+                       (:snapshot-id method-id)))})
+  (nav/defpath
+    ::config
+    {:component Page
+     :regex #"methods/c/([^/]+)/([^/]+)/([^/]+)"
+     :make-props (fn [namespace name snapshot-id]
+                   {:config-id (u/restructure namespace name snapshot-id)})
+     :make-path (fn [config-id]
+                  (str "methods/c/" (:namespace config-id) "/" (:name config-id) "/"
+                       (:snapshot-id config-id)))}))

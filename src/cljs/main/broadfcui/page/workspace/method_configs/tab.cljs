@@ -12,7 +12,7 @@
     [broadfcui.nav :as nav]
     [broadfcui.page.method-repo.method-config-importer :refer [MethodConfigImporter]]
     [broadfcui.page.workspace.method-configs.method-config-editor :refer [MethodConfigEditor]]
-    [broadfcui.utils :as utils]
+    [broadfcui.utils :as u]
     ))
 
 
@@ -37,26 +37,31 @@
           {:empty-message "There are no method configurations to display."
            :toolbar
            (add-right
-            [comps/Button {:text "Import Configuration..."
-                           :disabled? (case locked?
-                                        nil "Looking up workspace status..."
-                                        true "This workspace is locked."
-                                        false)
-                           :onClick #(modal/push-modal
-                                      [comps/OKCancelForm
-                                       {:header "Import Method Configuration"
-                                        :content
-                                        [:div {:style {:backgroundColor "white" :padding "1ex" :width 1000}}
-                                         [MethodConfigImporter {:workspace-id (:workspace-id props)
-                                                                :after-import (fn [{:keys [config-id]}]
-                                                                                (modal/pop-modal)
-                                                                                ((:on-config-imported props) config-id))}]]}])}])
+            [comps/Button
+             {:text "Import Configuration..."
+              :disabled? (case locked?
+                           nil "Looking up workspace status..."
+                           true "This workspace is locked."
+                           false)
+              :onClick #(modal/push-modal
+                         [comps/OKCancelForm
+                          {:header "Import Method Configuration"
+                           :content
+                           [:div {:style {:backgroundColor "white" :padding "1ex" :width 1000}}
+                            [MethodConfigImporter
+                             {:workspace-id (:workspace-id props)
+                              :after-import (fn [{:keys [config-id]}]
+                                              (modal/pop-modal)
+                                              ((:on-config-imported props) config-id))}]]}])}])
            :columns
            [{:header "Name" :starting-width 240 :as-text :name :sort-by :text
              :content-renderer
              (fn [config-id]
                (style/create-link {:text (:name config-id)
-                                   :href (nav/create-href (:nav-context props) config-id)}))}
+                                   :href (nav/get-link
+                                          :broadfcui.page.workspace.details/method-config
+                                          (:workspace-id props)
+                                          config-id)}))}
             {:header "Root Entity Type" :starting-width 140}
             {:header "Method" :starting-width 800
              :content-renderer (fn [fields] (apply style/render-entity fields))}]
@@ -84,25 +89,28 @@
 (react/defc Page
   {:refresh
    (fn [{:keys [props refs]}]
-     (let [nav-context (nav/parse-segment (:nav-context props))
-           selected-method-config-id (common/get-id-from-nav-segment (:segment nav-context))]
-       (if selected-method-config-id
-         (nav/back nav-context)
-         (react/call :reload (@refs "method-config-list")))))
+     (when-not (:config-id props)
+       (react/call :reload (@refs "method-config-list"))))
    :render
-   (fn [{:keys [props]}]
-     (let [nav-context (nav/parse-segment (:nav-context props))
-           selected-method-config-id (common/get-id-from-nav-segment (:segment nav-context))]
+   (fn [{:keys [this props]}]
+     (let [{:keys [config-id workspace-id]} props]
        [:div {:style {:padding "1rem 1.5rem"}}
-        (if selected-method-config-id
+        (if config-id
           [MethodConfigEditor
            (merge (select-keys props [:workspace-id :bucket-access? :on-submission-success])
-                  {:key selected-method-config-id
-                   :config-id selected-method-config-id
-                   :on-rename #(nav/navigate (:nav-context props) (str (:namespace selected-method-config-id) ":" %))
-                   :after-delete #(nav/back nav-context)})]
+                  {:key config-id
+                   :config-id config-id
+                   :on-rename #(nav/go-to-path
+                                :broadfcui.page.workspace.details/method-config
+                                workspace-id
+                                (assoc config-id :name %))
+                   :after-delete #(nav/go-to-path
+                                   :broadfcui.page.workspace.details/method-configs
+                                   workspace-id)})]
           [MethodConfigurationsList
            (merge (select-keys props [:workspace-id :workspace :request-refresh])
                   {:ref "method-config-list"
-                   :nav-context nav-context
-                   :on-config-imported #(nav/navigate nav-context %)})])]))})
+                   :on-config-imported #(nav/go-to-path
+                                         :broadfcui.page.workspace.details/method-config
+                                         workspace-id
+                                         %)})])]))})

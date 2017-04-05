@@ -1,22 +1,23 @@
 (ns broadfcui.page.workspace.summary.tab
   (:require
-    [clojure.set :refer [difference]]
-    [dmohs.react :as react]
-    [broadfcui.common :as common]
-    [broadfcui.common.components :as comps]
-    [broadfcui.common.icons :as icons]
-    [broadfcui.common.markdown :refer [MarkdownView MarkdownEditor]]
-    [broadfcui.common.modal :as modal]
-    [broadfcui.common.style :as style]
-    [broadfcui.endpoints :as endpoints]
-    [broadfcui.page.workspace.monitor.common :as moncommon :refer [all-success? any-running? any-failed?]]
-    [broadfcui.page.workspace.summary.acl-editor :refer [AclEditor]]
-    [broadfcui.page.workspace.summary.attribute-editor :as attributes]
-    [broadfcui.page.workspace.summary.catalog.wizard :refer [CatalogWizard]]
-    [broadfcui.page.workspace.summary.publish :as publish]
-    [broadfcui.page.workspace.summary.library-view :refer [LibraryView]]
-    [broadfcui.page.workspace.summary.workspace-cloner :refer [WorkspaceCloner]]
-    [broadfcui.utils :as utils]))
+   [clojure.set :refer [difference]]
+   [dmohs.react :as react]
+   [broadfcui.common :as common]
+   [broadfcui.common.components :as comps]
+   [broadfcui.common.icons :as icons]
+   [broadfcui.common.markdown :refer [MarkdownView MarkdownEditor]]
+   [broadfcui.common.modal :as modal]
+   [broadfcui.common.style :as style]
+   [broadfcui.endpoints :as endpoints]
+   [broadfcui.nav :as nav]
+   [broadfcui.page.workspace.monitor.common :as moncommon :refer [all-success? any-running? any-failed?]]
+   [broadfcui.page.workspace.summary.acl-editor :refer [AclEditor]]
+   [broadfcui.page.workspace.summary.attribute-editor :as attributes]
+   [broadfcui.page.workspace.summary.catalog.wizard :refer [CatalogWizard]]
+   [broadfcui.page.workspace.summary.publish :as publish]
+   [broadfcui.page.workspace.summary.library-view :refer [LibraryView]]
+   [broadfcui.page.workspace.summary.workspace-cloner :refer [WorkspaceCloner]]
+   [broadfcui.utils :as u]))
 
 
 (react/defc DeleteDialog
@@ -40,7 +41,9 @@
         :on-done (fn [{:keys [success? get-parsed-response]}]
                    (swap! state dissoc :deleting?)
                    (if success?
-                     (do (modal/pop-modal) ((:on-delete props)))
+                     (do
+                       (modal/pop-modal)
+                       (nav/go-to-path :broadfcui.page.workspaces-list/main))
                      (swap! state assoc :server-error (get-parsed-response false))))}))})
 
 
@@ -49,7 +52,7 @@
   (endpoints/call-ajax-orch
     {:endpoint (endpoints/set-workspace-attributes workspace-id)
      :payload new-attributes
-     :headers utils/content-type=json
+     :headers u/content-type=json
      :on-done (fn [{:keys [success? get-parsed-response]}]
                 (swap! state dissoc :updating-attrs? :editing?)
                 (if success?
@@ -59,7 +62,7 @@
 
 (defn- render-sidebar [state refs this
                        {:keys [workspace billing-projects owner? writer? curator? can-share?
-                               workspace-id on-clone on-delete request-refresh]}]
+                               workspace-id request-refresh]}]
   (let [{{:keys [isLocked library-attributes description isProtected]} :workspace
          {:keys [runningSubmissionsCount]} :workspaceSubmissionStats} workspace
         status (common/compute-status workspace)
@@ -124,18 +127,20 @@
               :text "Cancel Editing" :icon :cancel
               :onClick #(swap! state dissoc :editing?)}]]))
        (when-not editing?
-         [comps/SidebarButton {:style :light :margin :top :color :button-primary
-                               :text "Clone..." :icon :clone
-                               :disabled? (when (empty? billing-projects) (comps/no-billing-projects-message))
-                               :onClick #(modal/push-modal
-                                           [WorkspaceCloner
-                                            {:on-success (fn [namespace name]
-                                                           (swap! state dissoc :cloning?)
-                                                           (on-clone (str namespace ":" name)))
-                                             :workspace-id workspace-id
-                                             :description description
-                                             :is-protected? isProtected
-                                             :billing-projects billing-projects}])}])
+         [comps/SidebarButton
+          {:style :light :margin :top :color :button-primary
+           :text "Clone..." :icon :clone
+           :disabled? (when (empty? billing-projects) (comps/no-billing-projects-message))
+           :onClick #(modal/push-modal
+                      [WorkspaceCloner
+                       {:on-success (fn [namespace name]
+                                      (swap! state dissoc :cloning?)
+                                      (nav/go-to-path :broadfcui.page.workspace.details/summary
+                                                      (u/restructure namespace name)))
+                        :workspace-id workspace-id
+                        :description description
+                        :is-protected? isProtected
+                        :billing-projects billing-projects}])}])
        (when (and owner? (not editing?))
          [comps/SidebarButton {:style :light :margin :top :color :button-primary
                                :text (if isLocked "Unlock" "Lock")
@@ -145,8 +150,8 @@
          [comps/SidebarButton {:style :light :margin :top :color (if isLocked :text-lighter :exception-state)
                                :text "Delete..." :icon :delete
                                :disabled? (when isLocked "This workspace is locked.")
-                               :onClick #(modal/push-modal [DeleteDialog {:workspace-id workspace-id
-                                                                          :on-delete on-delete}])}]))]))
+                               :onClick #(modal/push-modal
+                                          [DeleteDialog {:workspace-id workspace-id}])}]))]))
 
 
 (defn- render-main [{:keys [workspace curator? owner? writer? reader? can-share? bucket-access? editing? submissions-count
@@ -281,7 +286,7 @@
                         :can-share? can-share? :user-access-level user-access-level :request-refresh #(react/call :refresh this)}]
            [:div {:style {:margin "2.5rem 1.5rem" :display "flex"}}
             (render-sidebar state refs this
-                            (merge (select-keys props [:workspace :workspace-id :on-clone :on-delete])
+                            (merge (select-keys props [:workspace :workspace-id])
                                    (select-keys server-response [:billing-projects :curator?])
                                    derived))
             (render-main (merge (select-keys props [:workspace :workspace-id :bucket-access?])
@@ -357,7 +362,7 @@
        (endpoints/call-ajax-orch
          {:endpoint (endpoints/storage-cost-estimate (:workspace-id props))
           :on-done (fn [{:keys [success? status-text raw-response]}]
-                     (let [[response parse-error?] (utils/parse-json-string raw-response false false)]
+                     (let [[response parse-error?] (u/parse-json-string raw-response false false)]
                        (swap! state update :server-response assoc :storage-cost
                               (if parse-error?
                                 (str "Error parsing JSON response with status: " status-text)

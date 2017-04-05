@@ -33,10 +33,10 @@
      {:active-filter :all})
    :render
    (fn [{:keys [this state props]}]
-     (let [nav-context (nav/parse-segment (:nav-context props))]
-       (if (empty? (:segment nav-context))
-         (react/call :render-table this)
-         (react/call :render-workflow-details this (:segment nav-context)))))
+     (let [{:keys [workflow-id]} props]
+       (if workflow-id
+         (this :render-workflow-details workflow-id)
+         (this :render-table))))
    :render-table
    (fn [{:keys [props state]}]
      [table/Table
@@ -52,7 +52,13 @@
                           name (str (:entityName entity) " (" (:entityType entity) ")")]
                       (if-not id
                         name
-                        (style/create-link {:text name :href (nav/create-href (:nav-context props) id)}))))}
+                        (style/create-link
+                         {:text name
+                          :href (nav/get-link
+                                 :broadfcui.page.workspace.details/workflow
+                                 (:workspace-id props)
+                                 (:submission-id props)
+                                 id)}))))}
                  {:header "Last Changed" :starting-width 280 :as-text moncommon/render-date}
                  {:header "Status" :starting-width 120
                   :content-renderer (fn [status]
@@ -101,7 +107,10 @@
         [:div {:style {:marginBottom "1rem" :fontSize "1.1rem"}}
          [comps/Breadcrumbs {:crumbs
                              [{:text "Workflows"
-                               :href (nav/create-href (:nav-context props))}
+                               :href (nav/get-link
+                                      :broadfcui.page.workspace.details/submission
+                                      (:workspace-id props)
+                                      (:submission-id props))}
                               {:text workflowName}]}]]
         (workflow-details/render
          (merge (select-keys props [:workspace-id :submission-id :bucketName])
@@ -138,7 +147,6 @@
   {:render
    (fn [{:keys [state props this]}]
      (let [server-response (:server-response @state)
-           nav-context (:nav-context props)
            {:keys [submission error-message]} server-response]
        (cond
          (nil? server-response)
@@ -193,7 +201,7 @@
                            :submission submission
                            :bucketName (:bucketName props)
                            :submission-id (:submissionId submission)
-                           :nav-context nav-context}]])))
+                           :workflow-id (:workflow-id props)}]])))
    :load-details
    (fn [{:keys [props state]}]
      (endpoints/call-ajax-orch

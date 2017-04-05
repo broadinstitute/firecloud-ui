@@ -13,7 +13,6 @@
     [broadfcui.endpoints :as endpoints]
     [broadfcui.nav :as nav]
     [broadfcui.page.workspace.create :as create]
-    [broadfcui.page.workspace.details :refer [WorkspaceDetails]]
     [broadfcui.persistence :as persistence]
     [broadfcui.utils :as utils]
     ))
@@ -30,11 +29,11 @@
 (react/defc StatusCell
   {:render
    (fn [{:keys [props]}]
-     (let [{:keys [nav-context data]} props
-           {:keys [href status disabled? hover-text]} data]
+     (let [{:keys [data]} props
+           {:keys [href status disabled? hover-text workspace-id]} data]
        [:a {:href (if disabled?
                     "javascript:;"
-                    (nav/create-href nav-context href))
+                    (nav/get-link :broadfcui.page.workspace.details/summary workspace-id))
             :style {:display "block" :position "relative"
                     :backgroundColor (if disabled? (:disabled-state style/colors) (style/color-for-status status))
                     :margin "2px 0 2px 2px" :height (- row-height-px 4)
@@ -52,12 +51,12 @@
 (react/defc WorkspaceCell
   {:render
    (fn [{:keys [props]}]
-     (let [{:keys [nav-context data]} props
-           {:keys [href status restricted? disabled? hover-text]} data
+     (let [{:keys [data]} props
+           {:keys [href status restricted? disabled? hover-text workspace-id]} data
            color (style/color-for-status status)]
        [:a {:href (if disabled?
                     "javascript:;"
-                    (nav/create-href nav-context href))
+                    (nav/get-link :broadfcui.page.workspace.details/summary workspace-id))
             :style {:display "flex" :alignItems "center"
                     :backgroundColor (if disabled? (:disabled-state style/colors) color)
                     :color "white" :textDecoration "none"
@@ -165,7 +164,7 @@
           :row-style {:height row-height-px :borderTop style/standard-line}
           :cell-content-style {:padding nil}
           :toolbar (table-utils/add-right
-                    [create/Button (select-keys props [:nav-context :billing-projects :disabled-reason])])
+                    [create/Button (select-keys props [:billing-projects :disabled-reason])])
           :filter-groups [{:text "All" :pred (constantly true)}
                           {:text "Complete" :pred #(= "Complete" (:status %))}
                           {:text "Running" :pred #(= "Running" (:status %))}
@@ -174,13 +173,11 @@
           [{:sort-by :none :filter-by :none :starting-width row-height-px :resizable? false
             :header [:div {:style {:marginLeft -6}} "Status"] :header-key "Status"
             :as-text :status
-            :content-renderer (fn [data] [StatusCell {:data data
-                                                      :nav-context (:nav-context props)}])}
+            :content-renderer (fn [data] [StatusCell {:data data}])}
            {:as-text :name :sort-by :text
             :header [:span {:style {:marginLeft 10}} "Workspace"] :header-key "Workspace"
             :starting-width (min 500 (* max-workspace-name-length 10))
-            :content-renderer (fn [data] [WorkspaceCell {:data data
-                                                         :nav-context (:nav-context props)}])}
+            :content-renderer (fn [data] [WorkspaceCell {:data data}])}
            {:header "Description" :starting-width (max 200 (min 500 (* max-description-length 10)))
             :content-renderer (fn [description]
                                 [:div {:style {:paddingLeft 14}}
@@ -226,7 +223,9 @@
                                                       dbGap-disabled-text
                                                       non-dbGap-disabled-text))]
                      [{:name ws-name :href ws-href :status (:status ws) :disabled? disabled? :hover-text hover-text}
-                      {:name ws-name :href ws-href :status (:status ws) :disabled? disabled? :hover-text hover-text
+                      {:name ws-name :href ws-href :status (:status ws) :disabled? disabled?
+                       :hover-text hover-text
+                       :workspace-id (select-keys (:workspace ws) [:namespace :name])
                        :restricted? (get-in ws [:workspace :realm])}
                       (get-workspace-description ws)
                       (get-in ws [:workspace :lastModified])
@@ -277,28 +276,16 @@
                  :billing-projects (map :projectName projects)
                  :disabled-reason (if (empty? projects) :no-billing nil))))))})
 
-
-(defn- create-breadcrumbs-from-hash [hash]
-  (let [segments (split hash #"/")]
-    (map-indexed
-      (fn [index segment]
-        (if (zero? index)
-          {:text "Workspaces" :href "#workspaces"}
-          {:text (clojure.string/replace (js/decodeURIComponent segment) ":" "/")
-           :href (str "#" (join "/" (subvec segments 0 (inc index))))}))
-      segments)))
-
-
 (react/defc Page
   {:render
    (fn [{:keys [props]}]
-     (let [nav-context (nav/parse-segment (:nav-context props))
-           selected-ws-id (common/get-id-from-nav-segment (:segment nav-context))]
-       [:div {:style {:marginTop "1.5rem"}}
-        (if selected-ws-id
-          [WorkspaceDetails {:key selected-ws-id
-                             :workspace-id selected-ws-id
-                             :nav-context nav-context
-                             :on-delete #(nav/back nav-context)
-                             :on-clone #(nav/navigate (:nav-context props) %)}]
-          [WorkspaceList {:nav-context nav-context}])]))})
+     [:div {:style {:marginTop "1.5rem"}}
+      [WorkspaceList]])})
+
+(defn add-nav-paths []
+  (nav/defpath
+    ::main
+    {:component Page
+     :regex #""
+     :make-props (fn [_] {})
+     :make-path (fn [] "")}))

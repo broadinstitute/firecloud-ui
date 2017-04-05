@@ -11,7 +11,7 @@
    [broadfcui.page.workspace.method-configs.tab :as method-configs-tab]
    [broadfcui.page.workspace.monitor.tab :as monitor-tab]
    [broadfcui.page.workspace.summary.tab :as summary-tab]
-   [broadfcui.utils :as utils]
+   [broadfcui.utils :as u]
    ))
 
 
@@ -58,11 +58,11 @@
                                 (filter (fn [[k _]]
                                           (.startsWith (name k) "library:")))
                                 (into {}))
-        tags (utils/filter-keys #(.startsWith (name %) "tag:") attributes)
+        tags (u/filter-keys #(.startsWith (name %) "tag:") attributes)
         workspace-attributes (->> attributes
                                   (remove (fn [[k _]]
                                             (or (= k :description)
-                                                (utils/contains (name k) ":"))))
+                                                (u/contains (name k) ":"))))
                                   (into {}))]
     (-> raw-workspace
         (update :workspace dissoc :attributes)
@@ -108,24 +108,23 @@
                     (swap! state assoc :workspace-error status-text)))}))
    :render
    (fn [{:keys [props state refs this]}]
-     (let [nav-context (nav/parse-segment (:nav-context props))
-           workspace-id (:workspace-id props)
+     (let [{:keys [workspace-id]} props
            {:keys [workspace workspace-error bucket-access?]} @state
-           active-tab (:segment nav-context)
-           is-active? (fn [tab] (if (= tab SUMMARY) (= active-tab "") (= tab active-tab)))
+           active-tab (:tab-name props)
+           is-active? (fn [tab] (if (= tab SUMMARY) (nil? active-tab) (= tab active-tab)))
            make-tab (fn [text on-active-tab-clicked]
                       [Tab {:text text :first? (= text SUMMARY) :active? (is-active? text)
-                            :href (if (= text SUMMARY)
-                                    (nav/create-href (:nav-context props))
-                                    (nav/create-href (:nav-context props) text))
+                            :href (nav/get-link
+                                   (condp = text
+                                     SUMMARY ::summary DATA ::data ANALYSIS ::analysis
+                                     CONFIGS ::method-configs MONITOR ::monitor)
+                                   workspace-id)
                             :on-active-tab-clicked on-active-tab-clicked}])]
        [:div {}
-        [:div {:style {:marginTop "-1.5rem" :minHeight "0.5rem"}}
-         [ProtectedBanner (select-keys @state [:workspace :workspace-error])
-          {:workspace {:workspace {:realm true}}}]
-         [BucketBanner (select-keys @state [:bucket-access? :bucket-status-code])
-          {:bucket-access? false}]]
-        [:div {:style {:marginTop "1rem" :paddingLeft "1.5rem" :fontSize "125%"}}
+        [:div {:style {:minHeight "0.5rem"}}
+         [ProtectedBanner (select-keys @state [:workspace :workspace-error])]
+         [BucketBanner (select-keys @state [:bucket-access? :bucket-status-code])]]
+        [:div {:style {:marginTop "2rem" :paddingLeft "1.5rem" :fontSize "125%"}}
          "Workspace: "
          [:span {:style {:fontWeight 500}}
           (:namespace workspace-id) "/" (:name workspace-id)]]
@@ -146,15 +145,12 @@
            [:div {:style {:textAlign "center" :color (:exception-state style/colors)}}
             "Error loading workspace: " error]
            (condp = active-tab
-             "" (react/create-element
-                 [summary-tab/Summary {:key workspace-id :ref SUMMARY
-                                       :workspace-id workspace-id
-                                       :workspace workspace
-                                       :request-refresh #(react/call :refresh-workspace this)
-                                       :bucket-access? bucket-access?
-                                       :nav-context nav-context
-                                       :on-delete (:on-delete props)
-                                       :on-clone (:on-clone props)}])
+             nil (react/create-element
+                  [summary-tab/Summary {:key workspace-id :ref SUMMARY
+                                        :workspace-id workspace-id
+                                        :workspace workspace
+                                        :request-refresh #(react/call :refresh-workspace this)
+                                        :bucket-access? bucket-access?}])
              DATA (react/create-element
                    [data-tab/WorkspaceData {:ref DATA
                                             :workspace-id workspace-id
@@ -168,22 +164,93 @@
                        {:ref CONFIGS
                         :workspace-id workspace-id
                         :workspace workspace
+                        :config-id (:config-id props)
                         :request-refresh #(react/call :refresh-workspace this)
                         :bucket-access? bucket-access?
-                        :on-submission-success #(nav/navigate (:nav-context props) MONITOR %)
-                        :nav-context (nav/terminate-when (not= active-tab CONFIGS) nav-context)}])
+                        :on-submission-success #(nav/go-to-path ::submission workspace-id %)}])
              MONITOR (react/create-element
                       [monitor-tab/Page
                        {:ref MONITOR
                         :workspace-id workspace-id
                         :workspace workspace
-                        :nav-context (nav/terminate-when
-                                      (not= active-tab MONITOR) nav-context)}])))]]))
+                        :submission-id (:submission-id props)
+                        :workflow-id (:workflow-id props)}])))]]))
    :component-did-mount
    (fn [{:keys [props this]}]
-     (let [nav-context (nav/parse-segment (:nav-context props))
-           tab (:segment nav-context)]
-       ;; These tabs don't request a refresh, so if we nav straight there then we need to kick one
-       ;; off.
-       (when (#{ANALYSIS CONFIGS MONITOR} tab)
-         (react/call :refresh-workspace this))))})
+     ;; These tabs don't request a refresh, so if we nav straight there then we need to kick one
+     ;; off.
+     (when (contains? #{ANALYSIS CONFIGS MONITOR} (:tab-name props))
+       (react/call :refresh-workspace this)))})
+
+(defn- ws-path [ws-id]
+  (str "workspaces/" (js/encodeURIComponent (:namespace ws-id)) "/"
+       (js/encodeURIComponent (:name ws-id))))
+
+(defn add-nav-paths []
+  (nav/defpath
+    ::summary
+    {:component WorkspaceDetails
+     :regex #"workspaces/([^/]+)/([^/]+)"
+     :make-props (fn [namespace name]
+                   {:workspace-id (u/restructure namespace name)})
+     :make-path ws-path})
+  (nav/defpath
+    ::data
+    {:component WorkspaceDetails
+     :regex #"workspaces/([^/]+)/([^/]+)/Data"
+     :make-props (fn [namespace name]
+                   {:workspace-id (u/restructure namespace name) :tab-name "Data"})
+     :make-path (fn [workspace-id]
+                  (str (ws-path workspace-id) "/Data"))})
+  (nav/defpath
+    ::analysis
+    {:component WorkspaceDetails
+     :regex #"workspaces/([^/]+)/([^/]+)/Analysis"
+     :make-props (fn [namespace name]
+                   {:workspace-id (u/restructure namespace name) :tab-name "Analysis"})
+     :make-path (fn [workspace-id]
+                  (str (ws-path workspace-id) "/Analysis"))})
+  (nav/defpath
+    ::method-configs
+    {:component WorkspaceDetails
+     :regex #"workspaces/([^/]+)/([^/]+)/Method Configurations"
+     :make-props (fn [namespace name]
+                   {:workspace-id (u/restructure namespace name) :tab-name "Method Configurations"})
+     :make-path (fn [workspace-id]
+                  (str (ws-path workspace-id) "/Method Configurations"))})
+  (nav/defpath
+    ::method-config
+    {:component WorkspaceDetails
+     :regex #"workspaces/([^/]+)/([^/]+)/Method Configurations/([^/]+)/([^/]+)"
+     :make-props (fn [namespace name config-ns config-name]
+                   {:workspace-id (u/restructure namespace name) :tab-name "Method Configurations"
+                    :config-id {:namespace config-ns :name config-name}})
+     :make-path (fn [workspace-id config-id]
+                  (str (ws-path workspace-id) "/Method Configurations/"
+                       (:namespace config-id) "/" (:name config-id)))})
+  (nav/defpath
+    ::monitor
+    {:component WorkspaceDetails
+     :regex #"workspaces/([^/]+)/([^/]+)/Monitor"
+     :make-props (fn [namespace name]
+                   {:workspace-id (u/restructure namespace name) :tab-name "Monitor"})
+     :make-path (fn [workspace-id]
+                  (str (ws-path workspace-id) "/Monitor"))})
+  (nav/defpath
+    ::submission
+    {:component WorkspaceDetails
+     :regex #"workspaces/([^/]+)/([^/]+)/Monitor/([^/]+)"
+     :make-props (fn [namespace name submission-id]
+                   {:workspace-id (u/restructure namespace name) :tab-name "Monitor"
+                    :submission-id submission-id})
+     :make-path (fn [workspace-id submission-id]
+                  (str (ws-path workspace-id) "/Monitor/" submission-id))})
+  (nav/defpath
+    ::workflow
+    {:component WorkspaceDetails
+     :regex #"workspaces/([^/]+)/([^/]+)/Monitor/([^/]+)/([^/]+)"
+     :make-props (fn [namespace name submission-id workflow-id]
+                   {:workspace-id (u/restructure namespace name) :tab-name "Monitor"
+                    :submission-id submission-id :workflow-id workflow-id})
+     :make-path (fn [workspace-id submission-id workflow-id]
+                  (str (ws-path workspace-id) "/Monitor/" submission-id "/" workflow-id))}))

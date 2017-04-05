@@ -3,6 +3,7 @@
    [broadfcui.common.components :as comps]
    [broadfcui.common.style :as style]
    [broadfcui.config :as config]
+   [broadfcui.nav :as nav]
    [broadfcui.utils :as u]
    clojure.string
    [dmohs.react :as r]
@@ -60,8 +61,7 @@
    (fn [{:keys [this props]}]
      ;; Google's code complains if the sign-in button goes missing, so we hide this component rather
      ;; than removing it from the page.
-     [:div {:style {:display (when (:hidden? props) "none")}}
-      [:div {:style {:marginBottom "2em"}} (style/render-text-logo)]
+     [:div {:style {:display (when (:hidden? props) "none") :marginTop "2rem"}}
       [comps/Button {:text "Sign In" :onClick #(this :-handle-sign-in-click)}]
       [:div {:style {:marginTop "2em" :maxWidth 600}}
        [:div {} [:b {} "New user? FireCloud requires a Google account."]]
@@ -157,3 +157,12 @@
                                   {:code (.-code response)
                                    :redirectUri (.. js/window -location -origin)})
                            :on-done #(swap! state assoc :hidden? true)})))))})
+
+(defn add-nav-paths []
+  (nav/defpath
+    ::policy
+    {:public? true
+     :component Policy
+     :regex #"policy"
+     :make-props (fn [_] {})
+     :make-path (fn [] "policy")}))

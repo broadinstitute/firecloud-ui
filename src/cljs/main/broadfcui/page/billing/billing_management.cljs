@@ -14,7 +14,7 @@
     [broadfcui.page.billing.create-project :refer [CreateBillingProjectDialog]]
     [broadfcui.page.billing.manage-project :refer [BillingProjectManagementPage]]
     [broadfcui.page.workspace.monitor.common :as moncommon]
-    [broadfcui.utils :as utils]
+    [broadfcui.utils :as u]
     ))
 
 
@@ -95,7 +95,7 @@
                           :on-status-change (partial this :-handle-status-change projectName)}]
                         (and (= creationStatus project-status-ready) (= role "Owner"))
                         (style/create-link {:text projectName
-                                            :onClick #((:on-select props) projectName)})
+                                            :href (nav/get-link ::project projectName)})
                         :else projectName)
                       (when message
                         [:div {:style {:float "right" :position "relative"
@@ -110,21 +110,21 @@
             {:text "Create New Billing Project"
              :onClick
              (fn []
-               (if (-> @utils/google-auth2-instance (aget "currentUser") (js-invoke "get")
+               (if (-> @u/google-auth2-instance (aget "currentUser") (js-invoke "get")
                        (js-invoke "hasGrantedScopes" "https://www.googleapis.com/auth/cloud-billing"))
                  (modal/push-modal
                   [CreateBillingProjectDialog
                    {:on-success #(react/call :reload this)}])
                  (do
-                   (utils/add-user-listener
+                   (u/add-user-listener
                     ::billing
                     (fn [_]
-                      (utils/remove-user-listener ::billing)
+                      (u/remove-user-listener ::billing)
                       (modal/push-modal
                        [CreateBillingProjectDialog
                         {:on-success #(react/call :reload this)}])))
                    (js-invoke
-                    @utils/google-auth2-instance
+                    @u/google-auth2-instance
                     "grantOfflineAccess"
                     (clj->js {:redirect_uri "postmessage"
                               :scope "https://www.googleapis.com/auth/cloud-billing"})))))}]]}}]))
@@ -141,7 +141,7 @@
           (swap! state assoc :projects projects)))))
    :-handle-status-change
    (fn [{:keys [state refs after-update]} project-name new-status message]
-     (let [project-index (utils/first-matching-index
+     (let [project-index (u/first-matching-index
                           #(= (:projectName %) project-name)
                           (:projects @state))
            project (get-in @state [:projects project-index])
@@ -153,12 +153,25 @@
 (react/defc Page
   {:render
    (fn [{:keys [props]}]
-     (let [nav-context (nav/parse-segment (:nav-context props))
-           selected-project (not-empty (:segment nav-context))]
+     (let [{:keys [project-name]} props]
        [:div {:style {:padding "1em"}}
         [:div {:style {:marginBottom "1rem" :fontSize "1.1rem"}}
-         [comps/Breadcrumbs {:crumbs [{:text "Billing Management" :onClick #(nav/back nav-context)}
-                                      (when selected-project {:text selected-project})]}]]
-        (if selected-project
-          [BillingProjectManagementPage {:project-name selected-project}]
-          [BillingProjectTable {:on-select #(nav/navigate nav-context %)}])]))})
+         [comps/Breadcrumbs {:crumbs [{:text "Billing Management" :href (nav/get-link ::main)}
+                                      (when project-name {:text project-name})]}]]
+        (if project-name
+          [BillingProjectManagementPage (u/restructure project-name)]
+          [BillingProjectTable])]))})
+
+(defn add-nav-paths []
+  (nav/defpath
+    ::main
+    {:component Page
+     :regex #"billing"
+     :make-props (fn [_] {})
+     :make-path (fn [] "billing")})
+  (nav/defpath
+    ::project
+    {:component Page
+     :regex #"billing/([^/]+)"
+     :make-props (fn [project-name] (u/restructure project-name))
+     :make-path (fn [project-name] (str "billing/" project-name))}))

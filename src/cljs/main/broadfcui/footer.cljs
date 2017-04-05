@@ -3,6 +3,7 @@
    [broadfcui.common.components :as comps]
    [broadfcui.common.style :as style]
    [broadfcui.config :as config]
+   [broadfcui.nav :as nav]
    [broadfcui.utils :as u]
    [dmohs.react :as r]
    ))
@@ -47,7 +48,7 @@
      [:div {:style {:display "block"}}
       (str "\u00A9 " yeartext " Broad Institute")
       spacer
-      [Link {:href "#policy" :text "Privacy Policy"}]
+      [Link {:href (nav/get-link :broadfcui.auth/policy) :text "Privacy Policy"}]
       spacer
       [Link {:href "http://gatkforums.broadinstitute.org/firecloud/discussion/6819/firecloud-terms-of-service#latest"
              :text "Terms of Service" :target "_blank"}]

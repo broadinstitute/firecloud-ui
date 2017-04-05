@@ -1,74 +1,50 @@
 (ns broadfcui.nav
   (:require
    clojure.string
-   [broadfcui.utils :as utils]))
+   [dmohs.react :as r]
+   [broadfcui.utils :as u]))
 
+(defonce paths (atom []))
 
-(def ^:private delimiter "/")
+(defn defpath [k m]
+  (assert (contains? m :regex))
+  (assert (contains? m :component))
+  (assert (contains? m :make-props))
+  (assert (contains? m :make-path))
+  (swap! paths conj (assoc m :key k)))
 
+(defn clear-paths []
+  (reset! paths []))
 
-(defn get-hash-value []
-  (let [hash (-> js/window .-location .-hash)]
-    (if (= (subs hash 0 1) "#") (subs hash 1) hash)))
+(defn find-path-handler [window-hash]
+  (let [cleaned (subs window-hash 1)
+        cleaned (js/decodeURI cleaned)
+        matching-handlers (filter
+                           (complement nil?)
+                           (map
+                            (fn [p]
+                              (when-let [matches (re-matches (:regex p) cleaned)]
+                                (update p :make-props
+                                        ;; First match is the entire string, so toss that one.
+                                        (fn [f] #(apply f (rest matches))))))
+                            @paths))]
+    (assert (not (> (count matching-handlers) 1))
+            (str "Multiple keys matched path: " (map :key matching-handlers)))
+    (if (empty? matching-handlers)
+      nil
+      (first matching-handlers))))
 
+(defn get-path [k & args]
+  (let [handler (first (filter #(= k (:key %)) @paths))
+        {:keys [make-path]} handler]
+    (assert handler (str "No handler found for key " k ". Valid path keys are: " (map :key @paths)))
+    (js/encodeURI (apply make-path args))))
 
-(defn create-nav-context
-  "Returns a new nav-context from the browser's location hash."
-  []
-  (let [hash (get-hash-value)]
-    {:hash hash :consumed (list) :remaining hash}))
+(defn get-link [k & args]
+  (str "#" (apply get-path k args)))
 
+(defn go-to-path [k & args]
+  (aset js/window "location" "hash" (apply get-path k args)))
 
-(defn parse-segment
-  "Returns a new nav-context with :segment set to the parsed segment."
-  ([nav-context]
-   (if (clojure.string/blank? (:remaining nav-context))
-     (assoc nav-context :segment "")
-     (let [remaining (:remaining nav-context)
-           stop-index (utils/str-index-of remaining delimiter)
-           stop-index (if (neg? stop-index) (count remaining) stop-index)
-           segment (subs remaining 0 stop-index)]
-       (assoc nav-context
-              :segment (js/decodeURIComponent segment)
-              :consumed (conj (:consumed nav-context) segment)
-              :remaining (subs remaining (inc stop-index)))))))
-
-
-(defn- id? [segment]
-  (and (map? segment)
-       (= #{:namespace :name} (set (keys segment)))))
-
-(defn- process-segment [segment]
-  (if (id? segment)
-    (str (:namespace segment) ":" (:name segment))
-    segment))
-
-(defn create-hash [nav-context & segment-names]
-  (->> segment-names
-    (map process-segment)
-    (map js/encodeURIComponent)
-    (concat (reverse (:consumed nav-context)))
-    (interpose delimiter)
-    (apply str)))
-
-
-(defn create-href [nav-context & segment-names]
-  (str "#" (apply create-hash nav-context segment-names)))
-
-
-(defn navigate [nav-context & segment-names]
-  (->> segment-names
-    (map process-segment)
-    (apply create-hash nav-context)
-    (set! (.. js/window -location -hash))))
-
-
-(defn terminate [nav-context]
-  (assoc nav-context :remaining ""))
-
-(defn terminate-when [pred nav-context]
-  (if pred (terminate nav-context) nav-context))
-
-(defn back [nav-context]
-  (set! (-> js/window .-location .-hash)
-    (apply str (interpose delimiter (butlast (reverse (:consumed nav-context)))))))
+(defn is-current-path? [k & args]
+  (= (apply get-path k args) (subs (aget js/window "location" "hash") 1)))

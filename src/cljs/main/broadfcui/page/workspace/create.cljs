@@ -78,14 +78,14 @@
                       (swap! state dissoc :creating-wf)
                       (if success?
                         (do (modal/pop-modal)
-                          (nav/navigate (:nav-context props) (str project ":" name)))
+                          (nav/go-to-path :broadfcui.page.workspace.details/summary
+                                          {:namespace project :name name}))
                         (swap! state assoc :server-error (get-parsed-response false))))}))))})
 
 
 (react/defc Button
   {:render
    (fn [{:keys [props]}]
-     (assert (:nav-context props) "Missing :nav-context prop")
      [:div {:style {:display "inline"}}
       [comps/Button
        {:text (case (:disabled-reason props)
@@ -97,5 +97,4 @@
                      :not-loaded "Project billing data has not yet been loaded."
                      :no-billing (comps/no-billing-projects-message)
                      "Project billing data failed to load.")
-        :onClick #(modal/push-modal [CreateDialog {:billing-projects (:billing-projects props)
-                                                   :nav-context (:nav-context props)}])}]])})
+        :onClick #(modal/push-modal [CreateDialog (select-keys props [:billing-projects])])}]])})
