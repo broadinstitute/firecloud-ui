@@ -50,6 +50,7 @@
       (map (fn [n]
              (let [selected? (= n page-number)]
                [:div {:style {:textAlign "center"
+                              ;; FIXME: find a better way to make this div square
                               :paddingTop 5 :display "inline-block" :width 29 :height 24
                               :backgroundColor (when selected? (:button-primary style/colors))
                               :color (if selected? "white" (:button-primary style/colors))
