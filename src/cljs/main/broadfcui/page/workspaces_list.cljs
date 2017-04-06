@@ -4,11 +4,13 @@
     [dmohs.react :as react]
     [broadfcui.common :as common]
     [broadfcui.common.components :as comps]
+    [broadfcui.common.flex-utils :as flex]
     [broadfcui.common.icons :as icons]
     [broadfcui.common.overlay :as overlay]
     [broadfcui.common.style :as style]
-    [broadfcui.common.table :as table]
-    [broadfcui.common.table-utils :as table-utils]
+    [broadfcui.common.table.style :as table-style]
+    [broadfcui.common.table.table :refer [Table]]
+    [broadfcui.common.table.utils :as table-utils]
     [broadfcui.config :as config]
     [broadfcui.endpoints :as endpoints]
     [broadfcui.nav :as nav]
@@ -149,7 +151,77 @@
                                 (map checkbox dataset-types)
                                 [:hr {:style {:size "1px" :noshade true}}]
                                 (map checkbox realm-types)])}]))
-        [table/Table
+        [Table
+         {:body
+          {:data-source
+           (table-utils/local
+            (let [somepred (fn [preds]
+                             (->> (merge preds (:selected-types @state))
+                                  (keep (fn [[k v]] (when (and (not (false? v)) (some? (preds k))) k)))
+                                  (map preds)
+                                  (cons (constantly false)) ;; keeps (apply some-fn) from bombing when the list is empty
+                                  (apply some-fn)))]
+              (filter
+               (every-pred
+                (somepred access-predicates)
+                (somepred dataset-predicates)
+                (somepred realm-predicates))
+               (:workspaces props))))
+           :columns
+           (let [column-data (fn [ws]
+                               (let [disabled? (= (:accessLevel ws) "NO ACCESS")]
+                                 {:name (get-workspace-name-string ws)
+                                  :href (let [x (:workspace ws)] (str (:namespace x) ":" (:name x)))
+                                  :status (:status ws)
+                                  :disabled? disabled?
+                                  :hover-text (when disabled? (if (get-in ws [:workspace :isProtected])
+                                                                dbGap-disabled-text
+                                                                non-dbGap-disabled-text))
+                                  :restricted? (get-in ws [:workspace :realm])}))]
+             ;; All of this margining is terrible, but since this table
+             ;; will be redesigned soon I'm leaving it as-is.
+             [{:id "Status" :header [:span {:style {:marginLeft 7}} "Status"]
+               :sortable? false :resizable? false :filterable? false :initial-width row-height-px
+               :column-data column-data :as-text :status
+               :render (fn [data] [StatusCell {:data data :nav-context (:nav-context props)}])}
+              {:id "Workspace" :header [:span {:style {:marginLeft 24}} "Workspace"]
+               :initial-width (min 500 (* max-workspace-name-length 10))
+               :column-data column-data :as-text :name :sort-by :text
+               :render (fn [data] [WorkspaceCell {:data data :nav-context (:nav-context props)}])}
+              {:id "Description" :header [:span {:style {:marginLeft 14}} "Description"]
+               :initial-width (max 200 (min 500 (* max-description-length 10)))
+               :column-data get-workspace-description
+               :render (fn [description]
+                         [:div {:style {:paddingLeft 14}}
+                          (if description (-> description split-lines first)
+                                          [:span {:style {:fontStyle "italic"}}
+                                           "No description provided"])])}
+              {:id "Last Modified" :header [:span {:style {:marginLeft 14}} "Last Modified"]
+               :initial-width 300
+               :column-data (comp :lastModified :workspace)
+               :render (fn [date]
+                         [:div {:style {:paddingLeft 14}} (common/format-date date)])}
+              {:id "Access Level" :header [:span {:style {:marginLeft 14}} "Access Level"]
+               :initial-width 132 :resizable? false
+               :column-data :accessLevel
+               :sort-by #(case % "OWNER" 0 "WRITER" 1 "READER" 2 "NO ACCESS" 3 4) :sort-initial :asc
+               :render (fn [accessLevel]
+                         [:div {:style {:paddingLeft 14}}
+                          (if (= accessLevel "PROJECT_OWNER")
+                            "Project Owner"
+                            (clojure.string/capitalize accessLevel))])}])
+           :behavior {:reorderable-columns? false}
+           :style {:header-row {:color (:text-lighter style/colors) :fontSize "90%"}
+                   :header-cell {:padding "0.4rem 0"}
+                   :resize-tab (table-style/tab :line-default)
+                   :body {:border style/standard-line}
+                   :body-row (fn [{:keys [index]}]
+                               (merge {:alignItems "center"}
+                                      (when (pos? index)
+                                        {:border-top style/standard-line})))}}
+          :toolbar {:items [flex/spring
+                            [create/Button (select-keys props [:nav-context :billing-projects :disabled-reason])]]}}]
+        #_[table/Table
          {:state-key "workspace-table" :v 1
           :empty-message "No workspaces to display." :retain-header-on-empty? true
           :cell-padding-left nil
