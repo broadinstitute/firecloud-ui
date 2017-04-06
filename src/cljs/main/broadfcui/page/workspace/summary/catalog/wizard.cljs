@@ -143,6 +143,7 @@
    (fn [{:keys [props state locals this]}]
      (let [{:keys [library-schema writer? curator?]} props
            {:keys [page-num pages-seen invalid-properties working-attributes published? required-attributes validation-error submit-error]} @state]
+       ;; FIXME: refactor -- this is heavily copy/pasted from OKCancelForm
        [:div {}
         (when (:submitting? @state)
           [comps/Blocker {:banner "Submitting..."}])
@@ -186,30 +187,31 @@
            [:div {:style {:marginTop "1em" :color (:exception-state style/colors) :textAlign "center"}}
             validation-error])
          [comps/ErrorViewer {:error submit-error}]
-         (flex/flex-box {:style {:marginTop 40}}
-                        (flex/flex-strut 80)
-                        flex/flex-spacer
-                        [comps/Button {:text "Previous"
-                                       :onClick (fn [_]
-                                                  (if-let [prev-page (peek (:pages-stack @state))]
-                                                    (swap! state #(-> %
-                                                                      (assoc :page-num prev-page)
-                                                                      (update :pages-stack pop)
-                                                                      (dissoc :validation-error)))))
-                                       :style {:width 80}
-                                       :disabled? (zero? page-num)}]
-                        (flex/flex-strut 27)
-                        [comps/Button {:text "Next"
-                                       :onClick #(react/call :next-page this)
-                                       :disabled? (> page-num (-> library-schema :wizard count))
-                                       :style {:width 80}}]
-                        flex/flex-spacer
-                        (let [save-permissions (and writer? curator?)
-                              last-page (> page-num (-> library-schema :wizard count))]
-                        [comps/Button {:text (if published? "Republish" "Submit")
-                                       :onClick #(react/call :submit this)
-                                       :disabled? (not (and save-permissions last-page))
-                                       :style {:width 80}}]))]]))
+         (flex/box
+          {:style {:marginTop 40}}
+          (flex/strut 80)
+          flex/spring
+          [comps/Button {:text "Previous"
+                         :onClick (fn [_]
+                                    (if-let [prev-page (peek (:pages-stack @state))]
+                                      (swap! state #(-> %
+                                                        (assoc :page-num prev-page)
+                                                        (update :pages-stack pop)
+                                                        (dissoc :validation-error)))))
+                         :style {:width 80}
+                         :disabled? (zero? page-num)}]
+          (flex/strut 27)
+          [comps/Button {:text "Next"
+                         :onClick #(react/call :next-page this)
+                         :disabled? (> page-num (-> library-schema :wizard count))
+                         :style {:width 80}}]
+          flex/spring
+          (let [save-permissions (and writer? curator?)
+                last-page (> page-num (-> library-schema :wizard count))]
+            [comps/Button {:text (if published? "Republish" "Submit")
+                           :onClick #(react/call :submit this)
+                           :disabled? (not (and save-permissions last-page))
+                           :style {:width 80}}]))]]))
    :component-did-mount
    (fn [{:keys [locals]}]
      (endpoints/get-library-groups
@@ -261,7 +263,7 @@
          (swap! state assoc :submitting? true :submit-error nil)
          (endpoints/call-ajax-orch
           {:endpoint (endpoints/save-library-metadata (:workspace-id props))
-           :payload  (remove-empty-values (merge attributes-seen (:version-attributes @state)))
+           :payload (remove-empty-values (merge attributes-seen (:version-attributes @state)))
            :headers utils/content-type=json
            :on-done (fn [{:keys [success? get-parsed-response]}]
                       (swap! state dissoc :submitting?)

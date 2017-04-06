@@ -5,9 +5,11 @@
     [broadfcui.common :as common]
     [broadfcui.common.components :as comps]
     [broadfcui.endpoints :as endpoints]
+    [broadfcui.common.flex-utils :as flex]
     [broadfcui.common.style :as style]
     [broadfcui.common.table :as table]
-    [broadfcui.common.table-utils :refer [flex-strut]]
+    [broadfcui.common.table.style :as table-style]
+    [broadfcui.common.table.table :refer [Table]]
     [broadfcui.config :as config]
     [broadfcui.nav :as nav]
     [broadfcui.persistence :as persistence]
@@ -22,76 +24,74 @@
      (let [attributes (:library-attributes props)
            search-result-columns (:search-result-columns props)
            extra-columns (subvec search-result-columns 4)]
-       [table/Table
-        {:ref "table" :state-key "library-table" :v 3
-         :header-row-style {:fontWeight 500 :fontSize "90%"
-                            :backgroundColor nil
-                            :color "black"
-                            :borderBottom (str "2px solid " (:border-light style/colors))}
-         :header-style {:padding "0.5em 0 0.5em 1em"}
-         :resizable-columns? true
-         :sortable-columns? true
-         :filterable? false
-         :resize-tab-color (:border-light style/colors)
-         :reorder-anchor :right
-         :reorder-style {:width "300px" :whiteSpace "nowrap" :overflow "hidden" :textOverflow "ellipsis"}
-         :reorder-prefix "Columns"
-         :toolbar
-         (fn [{:keys [reorderer]}]
-           [:div {:style {:display "flex" :alignItems "top"}}
-            [:div {:style {:fontSize "112%" :marginBottom "1em"}}
-             [:span {:style {:fontWeight 700 :color (:text-light style/colors) :marginRight "0.5rem"}}
-              "Matching Cohorts"]
-             [:span {:style {:fontSize "80%"}}
-              (let [total (or (:total @state) 0)]
-                (str total
-                     " Dataset"
-                     (when-not (= 1 total) "s")
-                     " found"))]]
-            flex-strut
-            reorderer])
-         :body-style {:fontSize "87.5%" :fontWeight nil :marginTop 4
-                      :color (:text-light style/colors)}
-         :row-style {:backgroundColor nil :height 20 :padding "0 0 0.5em 1em"}
-         :cell-content-style {:padding nil}
-         :columns (concat
-                   [{:resizable? false :width 30 :reorderable? false
-                     :as-text (fn [data]
-                                (if (= (:workspaceAccess data) "NO ACCESS") "You must request access to this dataset."))
-                     :content-renderer (fn [data]
-                                         (if (= (:workspaceAccess data) "NO ACCESS")
-                                           (icons/icon {:style {:alignSelf "center" :cursor "pointer"}
-                                                        :onClick #(react/call :check-access this data)} :shield)))}
-                    {:header-key "library:datasetName"
-                     :header (:title (:library:datasetName attributes)) :starting-width 250 :show-initial? true
-                     :as-text :library:datasetDescription :reorderable? false
-                     :content-renderer (fn [data]
-                                         (style/create-link {:text (:library:datasetName data)
-                                                             :onClick #(react/call :check-access this data)}))}
-                    {:header-key "library:indication"
-                     :header (:title (:library:indication attributes)) :starting-width 180 :show-initial? true}
-                    {:header-key "library:dataUseRestriction"
-                     :header (:title (:library:dataUseRestriction attributes)) :starting-width 180 :show-initial? true}
-                    {:header-key "library:numSubjects"
-                     :header (:title (:library:numSubjects attributes)) :starting-width 100 :show-initial? true}]
-                   (map
-                    (fn [keyname]
-                      {:header-key keyname
-                       :header (:title ((keyword keyname) attributes)) :starting-width 180 :show-initial? false})
-                    extra-columns))
-         :pagination (react/call :pagination this)
-         :->row (fn [data]
-                  (->> extra-columns
-                       (concat [:library:indication :library:dataUseRestriction :library:numSubjects])
-                       (map data)
-                       (cons data)
-                       (cons data)
-                       vec))}]))
+       [Table
+        {:ref "table" :persistence-key "library-table" :v 4
+         :body
+         {:behavior {:allow-no-sort? true
+                     :fixed-column-count 2}
+          :external-query-params #{:filter-text}
+          :filter-text (:filter-text props)
+          :data-source (this :pagination)
+          :columns (concat
+                    [{:id "access" :hidden? true :resizable? false :sortable? false :initial-width 12
+                      :as-text (fn [data]
+                                 (if (= (:workspaceAccess data) "NO ACCESS") "You must request access to this dataset."))
+                      :render (fn [data]
+                                (if (= (:workspaceAccess data) "NO ACCESS")
+                                  (icons/icon {:style {:alignSelf "center" :cursor "pointer"}
+                                               :onClick #(react/call :check-access this data)} :shield)))}
+                     {:id "library:datasetName"
+                      :header (:title (:library:datasetName attributes)) :initial-width 250
+                      :sort-initial :asc :sort-by :library:datasetName
+                      :as-text :library:datasetDescription
+                      :render (fn [data]
+                                (style/create-link {:text (:library:datasetName data)
+                                                    :onClick #(react/call :check-access this data)}))}
+                     {:id "library:indication" :header (:title (:library:indication attributes))
+                      :column-data :library:indication :initial-width 180}
+                     {:id "library:dataUseRestriction" :header (:title (:library:dataUseRestriction attributes))
+                      :column-data :library:dataUseRestriction :initial-width 180}
+                     {:id "library:numSubjects" :header (:title (:library:numSubjects attributes))
+                      :column-data :library:numSubjects :initial-width 100}]
+                    (map
+                     (fn [keyname]
+                       {:id (name keyname) :header (:title (keyname attributes))
+                        :initial-width 180 :show-initial? false
+                        :column-data keyname
+                        :render (fn [field]
+                                  (if (sequential? field)
+                                    (clojure.string/join ", " field)
+                                    field))})
+                     extra-columns))
+          :style {:header-row {:fontWeight 500 :fontSize "90%"
+                               :backgroundColor nil
+                               :color "black"
+                               :borderBottom (str "2px solid " (:border-light style/colors))}
+                  :resize-tab (table-style/tab :border-light)
+                  :body {:fontSize "87.5%" :marginTop 4 :color (:text-light style/colors)}
+                  :cell table-style/clip-text
+                  :header-cell {:padding "0.5rem 0 0.5rem 1rem"}
+                  :body-cell {:padding "0.3rem 0 0.3rem 1rem"}}}
+         :toolbar ;; FIXME: magic numbers below:
+         {:items [[:div {:style {:fontSize "112%"}}
+                   ;; 112% makes this the same size as "Data Library" / "Workspaces" / "Method Repository" above
+                   [:span {:style {:fontWeight 700 :color (:text-light style/colors) :marginRight "0.5rem"}}
+                    "Matching Cohorts"]
+                   [:span {:style {:fontSize "80%"}}
+                    (let [total (or (:total @state) 0)]
+                      (str total
+                           " Dataset"
+                           (when-not (= 1 total) "s")
+                           " found"))]]
+                  flex/spring]
+          :style {:alignItems "flex-start" :marginBottom 7} ;; 7 makes some lines line up
+          :column-edit-button {:style {:order 1 :marginRight nil}
+                               :anchor :right}}}]))
    :execute-search
    (fn [{:keys [refs]} reset-sort?]
-     (let [query-params (merge {:current-page 1} (when reset-sort? {:sort-column nil :sort-order nil}))]
-       (when-not (react/call :update-query-params (@refs "table") query-params)
-         (react/call :refresh-rows (@refs "table")))))
+     (let [query-params (merge {:page-number 1} (when reset-sort? {:sort-column nil :sort-order nil}))]
+       (when-not ((@refs "table") :update-query-params query-params)
+         ((@refs "table") :refresh-rows))))
    :check-access
    (fn [{:keys [props]} data]
      (if (= (:workspaceAccess data) "NO ACCESS")
@@ -119,32 +119,33 @@
       (:aggregate-fields props)))
    :pagination
    (fn [{:keys [this state props]}]
-     (fn [{:keys [current-page rows-per-page sort-column sort-order]} callback]
-       (when-not (empty? (:aggregate-fields props))
-         (endpoints/call-ajax-orch
-          (let [from (* (- current-page 1) rows-per-page)]
-            {:endpoint endpoints/search-datasets
-             :payload (merge
-                       ((:get-search-text-and-facets props))
-                       {:from from
-                        :size rows-per-page
-                        :sortField sort-column
-                        :sortDirection sort-order
-                        :fieldAggregations (if (= 1 current-page)
-                                             (react/call :build-aggregate-fields this)
-                                             {})})
-             :headers utils/content-type=json
-             :on-done
-             (fn [{:keys [success? get-parsed-response status-text]}]
-               (if success?
-                 (let [{:keys [total results aggregations]} (get-parsed-response)]
-                   (swap! state assoc :total total)
-                   (callback {:group-count total
-                              :filtered-count total
-                              :rows results})
-                   (when (= 1 current-page)
-                     ((:update-aggregates props) aggregations)))
-                 (callback {:error status-text})))})))))})
+     (fn [{:keys [query-params on-done]}]
+       (let [{:keys [page-number rows-per-page sort-column sort-order]} query-params]
+         (when-not (empty? (:aggregate-fields props))
+           (endpoints/call-ajax-orch
+            (let [from (* (- page-number 1) rows-per-page)]
+              {:endpoint endpoints/search-datasets
+               :payload {:searchString (:filter-text props)
+                         :filters ((:get-facets props))
+                         :from from
+                         :size rows-per-page
+                         :sortField sort-column
+                         :sortDirection sort-order
+                         :fieldAggregations (if (= 1 page-number)
+                                              (react/call :build-aggregate-fields this)
+                                              {})}
+               :headers utils/content-type=json
+               :on-done
+               (fn [{:keys [success? get-parsed-response status-text]}]
+                 (if success?
+                   (let [{:keys [total results aggregations]} (get-parsed-response)]
+                     (swap! state assoc :total total)
+                     (on-done {:total-count total
+                               :filtered-count total
+                               :results results})
+                     (when (= 1 page-number)
+                       ((:update-aggregates props) aggregations)))
+                   (on-done {:error status-text})))}))))))})
 
 (react/defc SearchSection
   {:get-filters
@@ -318,10 +319,10 @@
         (when (and (:library-attributes @state) (:search-result-columns @state))
           [DatasetsTable (merge
                           {:ref "dataset-table"
+                           :filter-text (:search-text @state)
                            :update-aggregates (fn [aggregates]
                                                 (react/call :update-aggregates (@refs "facets") aggregates))
-                           :get-search-text-and-facets (fn [] {:searchString (:search-text @state)
-                                                               :filters (utils/map-keys name (:facet-filters @state))})}
+                           :get-facets #(utils/map-keys name (:facet-filters @state))}
                           (select-keys @state [:library-attributes :search-result-columns :aggregate-fields :expanded-aggregates]))])]])}
    (persistence/with-state-persistence {:key PERSISTENCE-KEY :version VERSION
                                         :initial {:search-text ""

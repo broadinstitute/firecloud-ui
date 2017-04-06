@@ -274,7 +274,7 @@
           (swap! state update :server-response assoc
                  :error-message err-text :disabled-reason :error)
           (swap! state update :server-response assoc
-                 :billing-projects (map #(% "projectName") projects)
+                 :billing-projects (map :projectName projects)
                  :disabled-reason (if (empty? projects) :no-billing nil))))))})
 
 

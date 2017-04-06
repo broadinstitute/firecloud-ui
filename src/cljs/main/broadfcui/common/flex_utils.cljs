@@ -4,12 +4,12 @@
     ))
 
 
-(defn flex-box [attrs & children]
+(defn box [attrs & children]
   [:div (utils/deep-merge {:style {:display "flex"}} attrs)
    children])
 
-(defn flex-strut [size]
+(defn strut [size]
   [:div {:style {:flexGrow 0 :flexShrink 0 :flexBasis size}}])
 
-(def flex-spacer
+(def spring
   [:div {:style {:flex "1 1 auto"}}])

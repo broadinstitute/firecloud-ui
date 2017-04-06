@@ -29,19 +29,21 @@
 
 
 (defn with-state-persistence [{:keys [key version validator initial except only]} defined-methods]
-  (let [get-initial-state
-        (fn [data]
-          (merge
-           (try-restore
-            {:key key
-             :initial (fn [] (merge initial (when version {:v version})))
-             :validator (or validator
-                            (when version (comp (partial = version) :v)))})
-           (when-let [defined (:get-initial-state defined-methods)]
-             (defined data))))
-        component-did-update
-        (fn [{:keys [state] :as data}]
-          (save (utils/restructure key state except only))
-          (when-let [defined (:component-did-update defined-methods)]
-            (defined data)))]
-    (merge defined-methods (utils/restructure get-initial-state component-did-update))))
+  (if-not key
+    defined-methods
+    (let [get-initial-state
+          (fn [data]
+            (merge
+             (try-restore
+              {:key key
+               :initial (fn [] (merge initial (when version {:v version})))
+               :validator (or validator
+                              (when version (comp (partial = version) :v)))})
+             (when-let [defined (:get-initial-state defined-methods)]
+               (defined data))))
+          component-did-update
+          (fn [{:keys [state] :as data}]
+            (save (utils/restructure key state except only))
+            (when-let [defined (:component-did-update defined-methods)]
+              (defined data)))]
+      (merge defined-methods (utils/restructure get-initial-state component-did-update)))))
