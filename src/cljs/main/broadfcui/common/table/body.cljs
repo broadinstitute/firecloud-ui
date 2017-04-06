@@ -12,8 +12,8 @@
 
 (defn- flex-params [width]
   (if (= width :auto)
-    {:flexBasis "auto" :flexGrow 1 :flexShrink 1}
-    {:flexBasis width :flexGrow 0 :flexShrink 0}))
+    {:flex "1 1 auto"}
+    {:flex (str "0 0 " width "px")}))
 
 
 (def ^:private column-drag-margin 11)
