@@ -21,7 +21,7 @@
   (contains (lower-case s) (lower-case what)))
 
 
-(defn matches-filter-text [source filter-text]
+(defn matches-filter-text [filter-text source]
   (let [lc-source (lower-case source)]
     (every? (fn [word] (contains lc-source word)) (split (lower-case filter-text) #"\s+"))))
 

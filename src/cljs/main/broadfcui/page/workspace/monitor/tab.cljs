@@ -3,9 +3,10 @@
     [dmohs.react :as react]
     [broadfcui.common :as common]
     [broadfcui.common.components :as comps]
-    [broadfcui.common.icons :as icons]
     [broadfcui.common.style :as style]
-    [broadfcui.common.table :as table]
+    [broadfcui.common.table.table :refer [Table]]
+    [broadfcui.common.table.style :as table-style]
+    [broadfcui.common.table.utils :as table-utils]
     [broadfcui.endpoints :as endpoints]
     [broadfcui.nav :as nav]
     [broadfcui.page.workspace.monitor.common :as moncommon]
@@ -14,46 +15,42 @@
     ))
 
 (defn- render-date [submission]
-  (common/format-date (submission "submissionDate")))
+  (common/format-date (:submissionDate submission)))
 
 (defn- render-submissions-table [submissions nav-context bucketName]
-  [table/Table
-   {:state-key "monitor"
-    :empty-message "There are no analyses to display."
-    :columns
-    [{:header "Date" :starting-width 200 :as-text render-date
-      :sort-by #(% "submissionDate")
-      :sort-initial :desc
-      :content-renderer (fn [submission]
-                          (style/create-link {:text (render-date submission)
-                                              :href (nav/create-href nav-context (submission "submissionId"))}))}
-     {:header "Status" :as-text #(% "status") :sort-by :text
-      :content-renderer (fn [submission]
-                          [:div {}
-                            (when (= "Done" (submission "status"))
-                              (moncommon/icon-for-sub-status (get-in submission ["workflowStatuses"])))
-                            (submission "status")])}
-     {:header "Method Configuration" :starting-width 300
-      :content-renderer (fn [[namespace name]]
-                          [:div {} namespace "/" name])}
-     {:header "Data Entity" :starting-width 220}
-     {:header "Submitted By" :starting-width 220}
-     {:header "Submission ID" :starting-width 235
-     :content-renderer (fn [submissionId]
-                          (style/create-link {:text submissionId
-                                              :target "_blank"
-                                              :style {:color "-webkit-link" :textDecoration "underline"}
-                                              :href (str moncommon/google-cloud-context
-                                                         bucketName "/" submissionId "/")}))}]
-    :data submissions
-    :->row (fn [x]
-             [x
-              x
-              [(x "methodConfigurationNamespace") (x "methodConfigurationName")]
-              (str (get-in x ["submissionEntity" "entityName"])
-                   " (" (get-in x ["submissionEntity" "entityType"]) ")")
-              (x "submitter")
-              (x "submissionId")])}])
+  [Table
+   {:persistence-key "monitor" :v 1
+    :body
+    {:style table-style/table-heavy
+     :data-source (table-utils/local submissions)
+     :empty-message "There are no analyses to display."
+     :columns
+     [{:header "Date" :initial-width 200 :as-text render-date
+       :sort-by :submissionDate :sort-initial :desc
+       :render (fn [submission]
+                 (style/create-link {:text (render-date submission)
+                                     :href (nav/create-href nav-context (:submissionId submission))}))}
+      {:header "Status" :as-text :status :sort-by :text
+       :render (fn [submission]
+                 [:div {:style {:height table-style/table-icon-size}}
+                  (when (= "Done" (:status submission))
+                    (moncommon/icon-for-sub-status (:workflowStatuses submission)))
+                  (:status submission)])}
+      {:header "Method Configuration" :initial-width 300
+       :column-data (juxt :methodConfigurationNamespace :methodConfigurationName)
+       :as-text (fn [[namespace name]] (str namespace "/" name))}
+      {:header "Data Entity" :initial-width 220
+       :column-data (comp (juxt :entityName :entityType) :submissionEntity)
+       :as-text (fn [[entity-name entity-type]]
+                  (str entity-name " (" entity-type ")"))}
+      {:header "Submitted By" :initial-width 220 :column-data :submitter}
+      {:header "Submission ID" :initial-width 235 :column-data :submissionId
+       :render (fn [submission-id]
+                 (style/create-link {:text submission-id
+                                     :target "_blank"
+                                     :style {:color "-webkit-link" :textDecoration "underline"}
+                                     :href (str moncommon/google-cloud-context
+                                                bucketName "/" submission-id "/")}))}]}}])
 
 
 (react/defc SubmissionsList
@@ -80,7 +77,7 @@
        {:endpoint (endpoints/list-submissions (:workspace-id props))
         :on-done (fn [{:keys [success? status-text get-parsed-response]}]
                    (swap! state assoc :server-response (if success?
-                                                         {:submissions (get-parsed-response false)}
+                                                         {:submissions (get-parsed-response)}
                                                          {:error-message status-text})))}))})
 
 

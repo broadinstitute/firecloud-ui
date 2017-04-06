@@ -396,7 +396,10 @@
 
 
 (react/defc TextFilter
-  {:render
+  {:set-text
+   (fn [{:keys [refs]} text]
+     (set! (.-value (@refs "filter-field")) text))
+   :render
    (fn [{:keys [props this]}]
      (let [{:keys [initial-text placeholder width]} props]
        [:div {:style {:display "inline-flex" :width width}}
@@ -672,11 +675,15 @@
                                                                           res))
                                                                  (js->clj data))}))}
                 :templateResult (fn [res]
-                                  (.-tag res))
-                :templateSelection (fn [res]
-                                     (if (.-tag res)
-                                       (.-tag res)
-                                       (.-text res)))
+                                  (if (.-loading res)
+                                    "Loading..."
+                                    (let [count-bubble (react/create-element (style/render-count (.-count res)))
+                                          tag-text (.createTextNode js/document (.-tag res))
+                                          element (.createElement js/document "div")]
+                                      (react/render count-bubble element)
+                                      (.appendChild element tag-text)
+                                      element)))
+                :templateSelection (some-fn #(aget % "tag") #(aget % "text"))
                 :tags true})))
    :component-will-unmount
    (fn [{:keys [refs]}]

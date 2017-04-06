@@ -50,12 +50,13 @@
             (map option-match [:questions :enumerate])))
         [questions enumerate]))))
 
-(defn- convert-empty-strings [attributes]
-  (utils/map-values
+(defn- remove-empty-values [attributes]
+  (utils/filter-values
    (fn [val]
      (if (or (coll? val) (string? val))
        (not-empty val)
-       val)) attributes))
+       true))
+   attributes))
 
 (def ^:private ALL_USERS "All users")
 
@@ -103,7 +104,7 @@
             invalid-attributes)]])
    (style/create-paragraph
     [:div {}
-     (let [questions (first (get-questions-for-page (convert-empty-strings attributes) library-schema 0))]
+     (let [questions (first (get-questions-for-page (remove-empty-values attributes) library-schema 0))]
        (map (fn [attribute]
               (if (not-empty (str (attributes (keyword attribute))))
                 (library-utils/render-property library-schema attributes (keyword attribute))))
@@ -142,6 +143,7 @@
    (fn [{:keys [props state locals this]}]
      (let [{:keys [library-schema writer? curator?]} props
            {:keys [page-num pages-seen invalid-properties working-attributes published? required-attributes validation-error submit-error]} @state]
+       ;; FIXME: refactor -- this is heavily copy/pasted from OKCancelForm
        [:div {}
         (when (:submitting? @state)
           [comps/Blocker {:banner "Submitting..."}])
@@ -185,30 +187,31 @@
            [:div {:style {:marginTop "1em" :color (:exception-state style/colors) :textAlign "center"}}
             validation-error])
          [comps/ErrorViewer {:error submit-error}]
-         (flex/flex-box {:style {:marginTop 40}}
-                        (flex/flex-strut 80)
-                        flex/flex-spacer
-                        [comps/Button {:text "Previous"
-                                       :onClick (fn [_]
-                                                  (if-let [prev-page (peek (:pages-stack @state))]
-                                                    (swap! state #(-> %
-                                                                      (assoc :page-num prev-page)
-                                                                      (update :pages-stack pop)
-                                                                      (dissoc :validation-error)))))
-                                       :style {:width 80}
-                                       :disabled? (zero? page-num)}]
-                        (flex/flex-strut 27)
-                        [comps/Button {:text "Next"
-                                       :onClick #(react/call :next-page this)
-                                       :disabled? (> page-num (-> library-schema :wizard count))
-                                       :style {:width 80}}]
-                        flex/flex-spacer
-                        (let [save-permissions (and writer? curator?)
-                              last-page (> page-num (-> library-schema :wizard count))]
-                        [comps/Button {:text (if published? "Republish" "Submit")
-                                       :onClick #(react/call :submit this)
-                                       :disabled? (not (and save-permissions last-page))
-                                       :style {:width 80}}]))]]))
+         (flex/box
+          {:style {:marginTop 40}}
+          (flex/strut 80)
+          flex/spring
+          [comps/Button {:text "Previous"
+                         :onClick (fn [_]
+                                    (if-let [prev-page (peek (:pages-stack @state))]
+                                      (swap! state #(-> %
+                                                        (assoc :page-num prev-page)
+                                                        (update :pages-stack pop)
+                                                        (dissoc :validation-error)))))
+                         :style {:width 80}
+                         :disabled? (zero? page-num)}]
+          (flex/strut 27)
+          [comps/Button {:text "Next"
+                         :onClick #(react/call :next-page this)
+                         :disabled? (> page-num (-> library-schema :wizard count))
+                         :style {:width 80}}]
+          flex/spring
+          (let [save-permissions (and writer? curator?)
+                last-page (> page-num (-> library-schema :wizard count))]
+            [comps/Button {:text (if published? "Republish" "Submit")
+                           :onClick #(react/call :submit this)
+                           :disabled? (not (and save-permissions last-page))
+                           :style {:width 80}}]))]]))
    :component-did-mount
    (fn [{:keys [locals]}]
      (endpoints/get-library-groups
@@ -233,7 +236,7 @@
          (swap! locals update :page-attributes assoc page-num attributes-from-page)
          (doseq [page (conj pages-stack page-num)]
            (let [[questions _] (get-questions-for-page all-attributes (:library-schema props) page)
-                 {:keys [invalid]} (library-utils/validate-required (convert-empty-strings all-attributes)
+                 {:keys [invalid]} (library-utils/validate-required (remove-empty-values all-attributes)
                                                                     questions required-attributes)]
              (reset! invalid-attributes (clojure.set/union invalid @invalid-attributes))))
          (swap! state assoc :invalid-properties @invalid-attributes)
@@ -260,7 +263,7 @@
          (swap! state assoc :submitting? true :submit-error nil)
          (endpoints/call-ajax-orch
           {:endpoint (endpoints/save-library-metadata (:workspace-id props))
-           :payload  (convert-empty-strings (merge attributes-seen (:version-attributes @state)))
+           :payload (remove-empty-values (merge attributes-seen (:version-attributes @state)))
            :headers utils/content-type=json
            :on-done (fn [{:keys [success? get-parsed-response]}]
                       (swap! state dissoc :submitting?)
