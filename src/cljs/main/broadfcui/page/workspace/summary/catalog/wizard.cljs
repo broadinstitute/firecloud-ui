@@ -143,6 +143,7 @@
    (fn [{:keys [props state locals this]}]
      (let [{:keys [library-schema writer? curator?]} props
            {:keys [page-num pages-seen invalid-properties working-attributes published? required-attributes validation-error submit-error]} @state]
+       ;; FIXME: refactor -- this is heavily copy/pasted from OKCancelForm
        [:div {}
         (when (:submitting? @state)
           [comps/Blocker {:banner "Submitting..."}])
