@@ -152,7 +152,8 @@
                                 [:hr {:style {:size "1px" :noshade true}}]
                                 (map checkbox realm-types)])}]))
         [Table
-         {:body
+         {:persistence-key "workspace-table" :v 1
+          :body
           {:data-source
            (table-utils/local
             (let [somepred (fn [preds]
@@ -218,7 +219,8 @@
                    :body-row (fn [{:keys [index]}]
                                (merge {:alignItems "center"}
                                       (when (pos? index)
-                                        {:border-top style/standard-line})))}}
+                                        {:borderTop style/standard-line})))
+                   :cell table-style/clip-text}}
           :toolbar {:items [flex/spring
                             [create/Button (select-keys props [:nav-context :billing-projects :disabled-reason])]]}}]
         #_[table/Table
