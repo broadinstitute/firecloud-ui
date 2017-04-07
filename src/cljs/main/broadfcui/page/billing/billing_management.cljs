@@ -71,7 +71,8 @@
        (nil? (:projects @state)) [comps/Spinner {:text "Loading billing projects..."}]
        :else
        [Table
-        {:body {:behavior {:reorderable-columns? false}
+        {:ref "table"
+         :body {:behavior {:reorderable-columns? false}
                  :style table-style/table-light
                  :data-source (table-utils/local (:projects @state))
                  :columns
@@ -139,13 +140,14 @@
           (swap! state assoc :error-message err-text)
           (swap! state assoc :projects projects)))))
    :-handle-status-change
-   (fn [{:keys [state]} project-name new-status message]
+   (fn [{:keys [state refs after-update]} project-name new-status message]
      (let [project-index (utils/first-matching-index
                           #(= (:projectName %) project-name)
                           (:projects @state))
            project (get-in @state [:projects project-index])
-           updated-project (assoc project "creationStatus" new-status "message" message)]
-       (swap! state assoc-in [:projects project-index] updated-project)))})
+           updated-project (assoc project :creationStatus new-status :message message)]
+       (swap! state assoc-in [:projects project-index] updated-project)
+       (after-update #((@refs "table") :refresh-rows))))})
 
 
 (react/defc Page
