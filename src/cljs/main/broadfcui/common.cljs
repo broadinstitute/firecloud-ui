@@ -225,18 +225,21 @@
                :title tooltip}
         text]))})
 
+(def secondary-icon-style
+  {:color (:text-light style/colors)
+   :fontSize "1.2rem" :lineHeight "0.6rem"
+   :padding "0.4rem" :marginRight "0.5rem"})
+
 (defn question-icon-link [text link & [style]]
   [:a {:href link
        :target "_blank"
-       :style (merge {:color (:text-light style/colors)
-                      :fontSize "1.2rem" :lineHeight "0.6rem"
-                      :padding "0.4rem" :marginRight "0.5rem"} style)}
+       :style (merge secondary-icon-style style)}
    [FoundationTooltip
     {:text (icons/icon {} :help)
      :style {:border "none" :cursor "pointer"}
      :tooltip text}]])
 
-(react/defc FoundationIconDropdown
+(react/defc FoundationDropdown
   {:close
    (fn [{:keys [locals]}]
      (.foundation (js/$ (:dropdown-element @locals)) "close"))
@@ -248,10 +251,11 @@
      (swap! locals assoc :dropdown-id (gensym "dropdown-")))
    :render
    (fn [{:keys [props locals]}]
-     [:button {:className "button-reset" :data-toggle (:dropdown-id @locals)
+     [:button {:className (str "button-reset " (:button-class props))
+               :data-toggle (:dropdown-id @locals)
                :style {:cursor "pointer" :padding "0 0.5rem"
                        :fontSize "16px" :lineHeight "1rem"}}
-      (icons/icon {:style {:color (:icon-color props)}} (:icon-name props))])
+      (:button-contents props)])
    :component-did-mount
    (fn [{:keys [this locals]}]
      (let [dropdown-container (.createElement js/document "div")]
@@ -275,12 +279,12 @@
          ;; empty string makes react attach a property with no value
          [:div {:className "dropdown-pane" :id dropdown-id :data-dropdown ""
                 :ref (this :-create-dropdown-ref-handler)
-                :style {:whiteSpace "normal"}}
+                :style (merge {:whiteSpace "normal"} (:style-override props))}
           (when (:render-contents? @state)
             contents)])
         dropdown-container)))
    :-create-dropdown-ref-handler
-   (fn [{:keys [this state after-update locals]}]
+   (fn [{:keys [this props state after-update locals]}]
      (utils/create-element-ref-handler
       {:store locals
        :key :dropdown-element
@@ -300,10 +304,11 @@
                   (.on (js/$ "body")
                        "click.zf.dropdown"
                        (fn [e]
-                         (when (not (or (.is element$ (.-target e))
-                                        (pos? (.-length (.find element$ (.-target e))))
-                                        (.is button$ (.-target e))
-                                        (pos? (.-length (.find button$ (.-target e))))))
+                         (when-not (or (.is button$ (.-target e))
+                                       (pos? (.-length (.find button$ (.-target e))))
+                                       (when-not (:close-on-click props)
+                                         (.is element$ (.-target e))
+                                         (pos? (.-length (.find element$ (.-target e))))))
                            (.foundation element$ "close")
                            (.off (js/$ "body") "click.zf.dropdown"))))))))
        :will-unmount
@@ -311,6 +316,81 @@
          (.off (js/$ element) "show.zf.dropdown")
          (.off (js/$ element) "hide.zf.dropdown"))}))})
 
+(defn FoundationIconDropdown [{:keys [text icon-name icon-color]}]
+  [FoundationDropdown {:contents text
+                       :button-contents (icons/icon {:style {:color icon-color}} icon-name)}])
+
 (defn render-info-box [{:keys [text]}]
   [FoundationIconDropdown {:contents text
                            :icon-name :information :icon-color (:link-active style/colors)}])
+
+(defn DropdownMenu [{:keys [label items]}]
+  [FoundationDropdown
+   {:button-contents label
+    :button-class "float-right"
+    :close-on-click true
+    :style-override {:boxShadow "0px 3px 6px 0px rgba(0, 0, 0, 0.15)"
+                     :backgroundColor "#fff"
+                     :padding 0
+                     :position "absolute" :maxWidth 100
+                     :border (str "1px solid " (:line-default style/colors))}
+    :contents (let [DropdownItem
+                    (react/create-class
+                     {:render
+                      (fn [{:keys [props state]}]
+                        [:a {:style {:display "block"
+                                     :color "#000" :textDecoration "none" :fontSize 14
+                                     :padding "0.5rem 1.3rem 0.5rem 0.5rem"
+                                     :backgroundColor (when (:hovering? @state) "#e8f5ff")}
+                             :href (:href props)
+                             :target (:target props)
+                             :onMouseOver #(swap! state assoc :hovering? true)
+                             :onMouseOut #(swap! state assoc :hovering? false)
+                             :onClick (:dismiss props)}
+                         (:text props)])})]
+                [:div {}
+                 (map (fn [item]
+                        [DropdownItem (merge {:href "javascript:;" :target "_self"}
+                                             item)])
+                      items)])}])
+
+#_(react/defc DropdownMenu
+    {:render
+     (fn [{:keys [props state]}]
+       [:div {:style (merge {:float "right" :position "relative" :marginBottom "0.4rem" :minWidth 100}
+                            (:style props))}
+        (when (:show-dropdown? @state)
+          [:div {:style {:position "fixed" :top 0 :left 0 :right 0 :bottom 0}
+                 :onClick #(swap! state assoc :show-dropdown? false)}])
+        [:a {:href "javascript:;"
+             :onClick #(swap! state assoc :show-dropdown? true)
+             :style {:display "block"
+                     :borderRadius 2
+                     :backgroundColor (:background-light style/colors)
+                     :color "#000" :textDecoration "none"
+                     :padding "0.5rem" :border style/standard-line}}
+         (:text props)]
+        (when (:show-dropdown? @state)
+          (let [DropdownItem
+                (react/create-class
+                 {:render
+                  (fn [{:keys [props state]}]
+                    [:a {:style {:display "block"
+                                 :color "#000" :textDecoration "none" :fontSize 14
+                                 :padding "0.5rem 1.3rem 0.5rem 0.5rem"
+                                 :backgroundColor (when (:hovering? @state) "#e8f5ff")}
+                         :href (:href props)
+                         :target (:target props)
+                         :onMouseOver #(swap! state assoc :hovering? true)
+                         :onMouseOut #(swap! state assoc :hovering? false)
+                         :onClick (:dismiss props)}
+                     (:text props)])})]
+            [:div {:style {:boxShadow "0px 3px 6px 0px rgba(0, 0, 0, 0.15)"
+                           :backgroundColor "#fff"
+                           :position "absolute" :width "100%"
+                           :border (str "1px solid " (:line-default style/colors))}}
+             (map (fn [item]
+                    [DropdownItem (merge {:dismiss #(swap! state assoc :show-dropdown? false)
+                                          :href "javascript:;" :target "_self"}
+                                         item)])
+                  (:items props))]))])})

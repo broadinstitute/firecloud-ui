@@ -176,46 +176,17 @@
                      (swap! state assoc :status-error nil :status-code nil :status-counts (common/queue-status-counts (get-parsed-response false)))
                      (swap! state assoc :status-error status-text :status-code status-code :status-counts nil)))}))})
 
-(react/defc AccountDropdown
-  {:render
-   (fn [{:keys [props state]}]
-     [:div {:style {:float "right" :position "relative" :marginBottom "0.4rem"}}
-      (when (:show-dropdown? @state)
-        [:div {:style {:position "fixed" :top 0 :left 0 :right 0 :bottom 0}
-               :onClick #(swap! state assoc :show-dropdown? false)}])
-      [:a {:href "javascript:;"
-           :onClick #(swap! state assoc :show-dropdown? true)
-           :style {:display "block"
-                   :borderRadius 2
-                   :backgroundColor (:background-light style/colors)
-                   :color "#000" :textDecoration "none"
-                   :padding "0.5rem" :border style/standard-line
-                   :minWidth 100}}
-       [:div {}
-        (-> (:auth2 props) (.-currentUser) (.get) (.getBasicProfile) (.getEmail))
-        [:div {:style {:display "inline-block" :marginLeft "1em" :fontSize 8}} "▼"]]]
-      (when (:show-dropdown? @state)
-        (let [DropdownItem
-              (react/create-class
-               {:render
-                (fn [{:keys [props state]}]
-                  [:a {:style {:display "block"
-                               :color "#000" :textDecoration "none" :fontSize 14
-                               :padding "0.5rem 1.3rem 0.5rem 0.5rem"
-                               :backgroundColor (when (:hovering? @state) "#e8f5ff")}
-                       :href (:href props)
-                       :onMouseOver #(swap! state assoc :hovering? true)
-                       :onMouseOut #(swap! state assoc :hovering? false)
-                       :onClick (:dismiss props)}
-                   (:text props)])})]
-          [:div {:style {:boxShadow "0px 3px 6px 0px rgba(0, 0, 0, 0.15)"
-                         :backgroundColor "#fff"
-                         :position "absolute" :width "100%"
-                         :border (str "1px solid " (:line-default style/colors))}}
-           [DropdownItem {:href "#profile" :text "Profile" :dismiss #(swap! state assoc :show-dropdown? false)}]
-           [DropdownItem {:href "#billing" :text "Billing" :dismiss #(swap! state assoc :show-dropdown? false)}]
-           [DropdownItem {:href "javascript:;" :text "Sign Out"
-                          :dismiss #(.signOut (:auth2 props))}]]))])})
+(defn AccountDropdown [auth2]
+  (common/DropdownMenu
+   {:text [:div {:style {:borderRadius 2
+                         :backgroundColor (:background-light style/colors)
+                         :color "#000" :textDecoration "none"
+                         :padding "0.5rem" :border style/standard-line}}
+           (-> auth2 (.-currentUser) (.get) (.getBasicProfile) (.getEmail))
+           [:div {:style {:display "inline-block" :marginLeft "1em" :fontSize 8}} "▼"]]
+    :items [{:href "#profile" :text "Profile"}
+            {:href "#billing" :text "Billing"}
+            {:text "Sign Out" :dismiss #(.signOut auth2)}]}))
 
 (react/defc LoggedIn
   {:render
@@ -228,8 +199,14 @@
        [:div {}
         [:div {:style {:width "100%" :borderBottom (str "1px solid " (:line-default style/colors))}}
          [:div {:style {:float "right" :fontSize "70%" :margin "0 0 0.5em 0"}}
-          [AccountDropdown {:auth2 (:auth2 props)}]
-          (common/question-icon-link "FireCloud User Guide" (config/user-guide-url) {:display "block" :float "right"})
+          (AccountDropdown (:auth2 props))
+          (common/DropdownMenu {:label [common/FoundationTooltip
+                                        {:text (icons/icon {} :help)
+                                         :style (merge common/secondary-icon-style {:border "none" :cursor "pointer" :float "right"})
+                                         :tooltip "Firecloud Help"}]
+                                :items [{:href (config/user-guide-url) :text "User Guide" :target "_blank"}]
+                                :style {:display "block" :float "right"} :no-box true})
+          #_(common/question-icon-link "FireCloud User Guide" (config/user-guide-url) {:display "block" :float "right"})
           (common/clear-both)
           (when (= :registered (:registration-status @state))
             [GlobalSubmissionStatus])]
