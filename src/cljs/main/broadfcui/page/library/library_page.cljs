@@ -7,7 +7,6 @@
     [broadfcui.endpoints :as endpoints]
     [broadfcui.common.flex-utils :as flex]
     [broadfcui.common.style :as style]
-    [broadfcui.common.table :as table]
     [broadfcui.common.table.style :as table-style]
     [broadfcui.common.table.table :refer [Table]]
     [broadfcui.config :as config]

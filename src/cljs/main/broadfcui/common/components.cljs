@@ -746,3 +746,31 @@
             :onClick #(swap! state assoc :collapsed? (not (:collapsed? @state)))})
           body]
          body)))})
+
+(defn filter-area [attributes & sections]
+  [:div (utils/deep-merge {:style {:fontSize "85%" :padding "16px 12px"}}
+                          attributes)
+   (interpose [:hr] sections)])
+
+(defn filter-section [{:keys [title on-clear content]}]
+  [:div {:style {:paddingBottom "0.9rem"}}
+   [:span {:style {:fontWeight "bold"}} title]
+   (when on-clear
+     [:div {:style {:fontSize "80%" :float "right"}}
+      (style/create-link {:text "Clear" :onClick on-clear})])
+   [:div {:style {:paddingTop "1em"}}
+    content]])
+
+(defn filter-checkboxes [{:keys [items checked-items on-change]}]
+  (map
+   (fn [{:keys [text hit-count]}]
+     [:div {:style {:paddingTop 5}}
+      [:label {:style {:display "inline-block" :width "calc(100% - 30px)"
+                       :textOverflow "ellipsis" :overflow "hidden" :whiteSpace "nowrap"}
+               :title text}
+       [:input {:type "checkbox"
+                :checked (contains? checked-items text)
+                :onChange #(on-change text (.. % -target -checked))}]
+       [:span {:style {:marginLeft "0.25rem"}} text]]
+      (some-> hit-count style/render-count)])
+   items))

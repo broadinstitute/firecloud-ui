@@ -85,35 +85,28 @@
 (defn- get-max-length [func workspaces]
   (->> workspaces (map func) (map count) (apply max)))
 
-(def ^:private access-types ["Project Owner" "Owner" "Writer" "Reader" "No Access"])
-(def ^:private access-types-defaults [true true true true true])
-(def ^:private access-predicates
-  {"Project Owner" #(= "PROJECT_OWNER" (:accessLevel %))
-   "Owner" #(= "OWNER" (:accessLevel %))
-   "Writer" #(= "WRITER" (:accessLevel %))
-   "Reader" #(= "READER" (:accessLevel %))
-   "No Access" #(= "NO ACCESS" (:accessLevel %))})
 
-(def ^:private dataset-types ["Un-published" "Published"])
-(def ^:private dataset-types-defaults [true false])
-(def ^:private dataset-predicates
-  (let [published? #(get-in % [:workspace :attributes :library:published])]
-    {"Published" published?
-     "Un-published" (complement published?)}))
-
-(def ^:private realm-types ["TCGA Open Access" "TCGA Protected Access"])
-(def ^:private realm-types-defaults [false false])
-(def ^:private realm-predicates
-  (let [tcga? #(= (config/tcga-namespace) (get-in % [:workspace :namespace]))
-        inRealm? #(get-in % [:workspace :realm])]
-    {"TCGA Open Access" (every-pred tcga? (complement inRealm?))
-     "TCGA Protected Access" (every-pred tcga? inRealm?)
-     ; this pred is used when neither visible option is selected to allow non TCGA workspaces to be shown
-     ; it is not intended to be displayed as an option
-     "TCGA None" (complement tcga?)}))
+(def ^:private table-filters
+  [{:title "Status"
+    :options ["Complete" "Running" "Exception"]
+    :render identity
+    :predicate (fn [ws option] (= (:status ws) option))}
+   {:title "Access"
+    :options ["PROJECT_OWNER" "OWNER" "WRITER" "READER" "NO ACCESS"]
+    :render #(clojure.string/capitalize (clojure.string/replace % "_" " "))
+    :predicate (fn [ws option] (= (:accessLevel ws) option))}
+   {:title "Publishing"
+    :options [true false]
+    :render #(if % "Published" "Un-published")
+    :predicate (fn [ws option] (= option (boolean (get-in ws [:workspace :attributes :library:published]))))}
+   {:title "TCGA Access"
+    :options [:open :protected]
+    :render #(if (= % :open) "TCGA Open Access" "TCGA Protected Access")
+    :predicate (fn [ws option] (and (= (config/tcga-namespace) (get-in ws [:workspace :namespace]))
+                                    ((if (= option :open) not identity) (get-in ws [:workspace :realm]))))}])
 
 (def ^:private persistence-key "workspace-table-types")
-(def ^:private VERSION 1)
+(def ^:private VERSION 2)
 
 
 (react/defc WorkspaceTable
@@ -121,193 +114,117 @@
    (fn []
      (persistence/try-restore
       {:key persistence-key
-       :initial (fn [] {:v VERSION :selected-types (merge (zipmap access-types access-types-defaults)
-                                                          (zipmap dataset-types dataset-types-defaults)
-                                                          (zipmap realm-types realm-types-defaults))})
+       :initial (fn [] {:v VERSION
+                        :filters-expanded? true
+                        :filters (into {"Filters" []} (map (fn [{:keys [title]}] [title #{}])
+                                                           table-filters))})
        :validator (comp (partial = VERSION) :v)}))
    :render
-   (fn [{:keys [props state refs]}]
-     (let [max-workspace-name-length (get-max-length get-workspace-name-string (:workspaces props))
-           max-description-length (get-max-length get-workspace-description (:workspaces props))]
-       [:div {}
-        (when (:show-access-level-select? @state)
-          (let [checkbox (fn [label]
-                           (let [stateval (get (:selected-types @state) label)]
-                             [:div {}
-                              [:label {:style {:cursor "pointer"}}
-                               [:input {:type "checkbox"
-                                        :checked (not (false? stateval))
-                                        :onChange #(swap! state update-in [:selected-types label] false?)
-                                        :style {:cursor "pointer"}}]
-                               [:span {:style {:marginLeft "0.5ex"}} label]]]))]
-            [overlay/Overlay {:get-anchor-dom-node #(react/find-dom-node (@refs "anchor"))
-                              :anchor-x :right :anchor-y :bottom
-                              :dismiss-self #(swap! state dissoc :show-access-level-select?)
-                              :content
-                              (react/create-element
-                               [:div {:style {:padding "1em" :border style/standard-line}}
-                                (map checkbox access-types)
-                                [:hr {:style {:size "1px" :noshade true}}]
-                                (map checkbox dataset-types)
-                                [:hr {:style {:size "1px" :noshade true}}]
-                                (map checkbox realm-types)])}]))
-        [Table
-         {:persistence-key "workspace-table" :v 1
-          :body
-          {:data-source
-           (table-utils/local
-            (let [somepred (fn [preds]
-                             (->> (merge preds (:selected-types @state))
-                                  (keep (fn [[k v]] (when (and (not (false? v)) (some? (preds k))) k)))
-                                  (map preds)
-                                  (cons (constantly false)) ;; keeps (apply some-fn) from bombing when the list is empty
-                                  (apply some-fn)))]
-              (filter
-               (every-pred
-                (somepred access-predicates)
-                (somepred dataset-predicates)
-                (somepred realm-predicates))
-               (:workspaces props))))
-           :columns
-           (let [column-data (fn [ws]
-                               (let [disabled? (= (:accessLevel ws) "NO ACCESS")]
-                                 {:name (get-workspace-name-string ws)
-                                  :href (let [x (:workspace ws)] (str (:namespace x) ":" (:name x)))
-                                  :status (:status ws)
-                                  :disabled? disabled?
-                                  :hover-text (when disabled? (if (get-in ws [:workspace :isProtected])
-                                                                dbGap-disabled-text
-                                                                non-dbGap-disabled-text))
-                                  :restricted? (get-in ws [:workspace :realm])}))]
-             ;; All of this margining is terrible, but since this table
-             ;; will be redesigned soon I'm leaving it as-is.
-             [{:id "Status" :header [:span {:style {:marginLeft 7}} "Status"]
-               :sortable? false :resizable? false :filterable? false :initial-width row-height-px
-               :column-data column-data :as-text :status
-               :render (fn [data] [StatusCell {:data data :nav-context (:nav-context props)}])}
-              {:id "Workspace" :header [:span {:style {:marginLeft 24}} "Workspace"]
-               :initial-width (min 500 (* max-workspace-name-length 10))
-               :column-data column-data :as-text :name :sort-by :text
-               :render (fn [data] [WorkspaceCell {:data data :nav-context (:nav-context props)}])}
-              {:id "Description" :header [:span {:style {:marginLeft 14}} "Description"]
-               :initial-width (max 200 (min 500 (* max-description-length 10)))
-               :column-data get-workspace-description
-               :render (fn [description]
-                         [:div {:style {:paddingLeft 14}}
-                          (if description (-> description split-lines first)
-                                          [:span {:style {:fontStyle "italic"}}
-                                           "No description provided"])])}
-              {:id "Last Modified" :header [:span {:style {:marginLeft 14}} "Last Modified"]
-               :initial-width 300
-               :column-data (comp :lastModified :workspace)
-               :render (fn [date]
-                         [:div {:style {:paddingLeft 14}} (common/format-date date)])}
-              {:id "Access Level" :header [:span {:style {:marginLeft 14}} "Access Level"]
-               :initial-width 132 :resizable? false
-               :column-data :accessLevel
-               :sort-by #(case % "OWNER" 0 "WRITER" 1 "READER" 2 "NO ACCESS" 3 4) :sort-initial :asc
-               :render (fn [accessLevel]
-                         [:div {:style {:paddingLeft 14}}
-                          (if (= accessLevel "PROJECT_OWNER")
-                            "Project Owner"
-                            (clojure.string/capitalize accessLevel))])}])
-           :behavior {:reorderable-columns? false}
-           :style {:header-row {:color (:text-lighter style/colors) :fontSize "90%"}
-                   :header-cell {:padding "0.4rem 0"}
-                   :resize-tab (table-style/tab :line-default)
-                   :body {:border style/standard-line}
-                   :body-row (fn [{:keys [index]}]
-                               (merge {:alignItems "center"}
-                                      (when (pos? index)
-                                        {:borderTop style/standard-line})))
-                   :cell table-style/clip-text}}
-          :toolbar {:items [flex/spring
-                            [create/Button (select-keys props [:nav-context :billing-projects :disabled-reason])]]}}]
-        #_[table/Table
-         {:state-key "workspace-table" :v 1
-          :empty-message "No workspaces to display." :retain-header-on-empty? true
-          :cell-padding-left nil
-          :initial-rows-per-page 10
-          :header-row-style {:fontWeight nil :fontSize "90%"
-                             :color (:text-lighter style/colors) :backgroundColor nil}
-          :header-style {:padding "0.5em 0 0.5em 14px"}
-          :resizable-columns? true :reorderable-columns? false :resize-tab-color (:line-default style/colors)
-          :body-style {:fontSize nil :fontWeight nil
-                       :borderLeft style/standard-line :borderRight style/standard-line
-                       :borderBottom style/standard-line}
-          :row-style {:height row-height-px :borderTop style/standard-line}
-          :cell-content-style {:padding nil}
-          :toolbar (table-utils/add-right
-                    [create/Button (select-keys props [:billing-projects :disabled-reason])])
-          :filter-groups [{:text "All" :pred (constantly true)}
-                          {:text "Complete" :pred #(= "Complete" (:status %))}
-                          {:text "Running" :pred #(= "Running" (:status %))}
-                          {:text "Exception" :pred #(= "Exception" (:status %))}]
+   (fn [{:keys [props state this]}]
+     (let [{:keys [workspaces nav-context]} props
+           {:keys [filters-expanded?]} @state
+           max-workspace-name-length (get-max-length get-workspace-name-string workspaces)
+           max-description-length (get-max-length get-workspace-description workspaces)]
+       [Table
+        {:persistence-key "workspace-table" :v 2
+         :body
+         {:data-source (table-utils/local workspaces)
           :columns
-          [{:sort-by :none :filter-by :none :starting-width row-height-px :resizable? false
-            :header [:div {:style {:marginLeft -6}} "Status"] :header-key "Status"
-            :as-text :status
-            :content-renderer (fn [data] [StatusCell {:data data}])}
-           {:as-text :name :sort-by :text
-            :header [:span {:style {:marginLeft 10}} "Workspace"] :header-key "Workspace"
-            :starting-width (min 500 (* max-workspace-name-length 10))
-            :content-renderer (fn [data] [WorkspaceCell {:data data}])}
-           {:header "Description" :starting-width (max 200 (min 500 (* max-description-length 10)))
-            :content-renderer (fn [description]
-                                [:div {:style {:paddingLeft 14}}
-                                 (if description (-> description split-lines first)
-                                                 [:span {:style {:fontStyle "italic"}}
-                                                  "No description provided"])])}
-           {:as-text common/format-date
-            :header "Last Modified Date" :starting-width 300
-            :content-renderer (fn [date]
-                                [:div {:style {:paddingLeft 14}} (common/format-date date)])}
-           {:header "Access Level" :starting-width 118 :resizable? false
-            :sort-by #(case % "OWNER" 0 "WRITER" 1 "READER" 2 "NO ACCESS" 3 4) :sort-initial :asc
-            :content-renderer
-            (fn [accessLevel]
-              [:div {:style {:paddingLeft 14}}
-               (if (= accessLevel "PROJECT_OWNER")
-                 "Project Owner"
-                 (clojure.string/capitalize accessLevel))])}
-           {:header (react/create-element
-                     [:span {:ref "anchor"
-                             :style {:cursor "pointer" :padding "0.1em 0.3em" :borderRadius 2 :marginLeft -14
-                                     :border style/standard-line}
-                             :onClick #(swap! state assoc :show-access-level-select? true)}
-                      "Include..."])
-            :header-key "Include" :starting-width 68 :resizable? false :sort-by :none}]
-          :data (let [somepred (fn [preds]
-                                 (->> (merge preds (:selected-types @state))
-                                      (keep (fn [[k v]] (when (and (not (false? v)) (some? (preds k))) k)))
-                                      (map preds)
-                                      (cons (constantly false)) ;; keeps (apply some-fn) from bombing when the list is empty
-                                      (apply some-fn)))]
-                  (filter
-                   (every-pred
-                    (somepred access-predicates)
-                    (somepred dataset-predicates)
-                    (somepred realm-predicates))
-                   (:workspaces props)))
-          :->row (fn [ws]
-                   (let [ws-name (get-workspace-name-string ws)
-                         ws-href (let [x (:workspace ws)] (str (:namespace x) ":" (:name x)))
-                         disabled? (= (:accessLevel ws) "NO ACCESS")
-                         hover-text (when disabled? (if (get-in ws [:workspace :isProtected])
-                                                      dbGap-disabled-text
-                                                      non-dbGap-disabled-text))]
-                     [{:name ws-name :href ws-href :status (:status ws) :disabled? disabled? :hover-text hover-text}
-                      {:name ws-name :href ws-href :status (:status ws) :disabled? disabled?
-                       :hover-text hover-text
-                       :workspace-id (select-keys (:workspace ws) [:namespace :name])
-                       :restricted? (get-in ws [:workspace :realm])}
-                      (get-workspace-description ws)
-                      (get-in ws [:workspace :lastModified])
-                      (:accessLevel ws)
-                      nil]))}]]))
+          (let [column-data (fn [ws]
+                              (let [disabled? (= (:accessLevel ws) "NO ACCESS")]
+                                {:name (get-workspace-name-string ws)
+                                 :href (let [x (:workspace ws)] (str (:namespace x) ":" (:name x)))
+                                 :status (:status ws)
+                                 :disabled? disabled?
+                                 :hover-text (when disabled? (if (get-in ws [:workspace :isProtected])
+                                                               dbGap-disabled-text
+                                                               non-dbGap-disabled-text))
+                                 :restricted? (get-in ws [:workspace :realm])}))]
+            ;; All of this margining is terrible, but since this table
+            ;; will be redesigned soon I'm leaving it as-is.
+            [{:id "Status" :header [:span {:style {:marginLeft 7}} "Status"]
+              :sortable? false :resizable? false :filterable? false :initial-width row-height-px
+              :column-data column-data :as-text :status
+              :render (fn [data] [StatusCell (utils/restructure data nav-context)])}
+             {:id "Workspace" :header [:span {:style {:marginLeft 24}} "Workspace"]
+              :initial-width (min 500 (* max-workspace-name-length 10))
+              :column-data column-data :as-text :name :sort-by :text
+              :render (fn [data] [WorkspaceCell (utils/restructure data nav-context)])}
+             {:id "Description" :header [:span {:style {:marginLeft 14}} "Description"]
+              :initial-width (max 200 (min 500 (* max-description-length 10)))
+              :column-data get-workspace-description
+              :render (fn [description]
+                        [:div {:style {:paddingLeft 14}}
+                         (if description
+                           (-> description split-lines first)
+                           [:span {:style {:fontStyle "italic"}}
+                            "No description provided"])])}
+             {:id "Last Modified" :header [:span {:style {:marginLeft 14}} "Last Modified"]
+              :initial-width 300
+              :column-data (comp :lastModified :workspace)
+              :render (fn [date]
+                        [:div {:style {:paddingLeft 14}} (common/format-date date)])}
+             {:id "Access Level" :header [:span {:style {:marginLeft 14}} "Access Level"]
+              :initial-width 132 :resizable? false
+              :column-data :accessLevel
+              :sort-by #(case % "OWNER" 0 "WRITER" 1 "READER" 2 "NO ACCESS" 3 4) :sort-initial :asc
+              :render (fn [accessLevel]
+                        [:div {:style {:paddingLeft 14}}
+                         (if (= accessLevel "PROJECT_OWNER")
+                           "Project Owner"
+                           (clojure.string/capitalize accessLevel))])}])
+          :behavior {:reorderable-columns? false}
+          :style {:header-row {:color (:text-lighter style/colors) :fontSize "90%"}
+                  :header-cell {:padding "0.4rem 0"}
+                  :resize-tab (table-style/tab :line-default)
+                  :body {:border style/standard-line}
+                  :body-row (fn [{:keys [index]}]
+                              (merge {:alignItems "center"}
+                                     (when (pos? index)
+                                       {:borderTop style/standard-line})))
+                  :cell table-style/clip-text}}
+         :toolbar {:style {:display "initial"}
+                   :filter-bar {:style {:float "left"}}
+                   :items [[:div {:style {:float "right"}}
+                            [create/Button (select-keys props [:nav-context :billing-projects :disabled-reason])]]
+                           [:div {:style {:clear "left" :float "left" :marginTop "0.5rem"}}
+                            (style/create-link {:text (if filters-expanded? "Hide filters" "Show filters")
+                                                :onClick #(swap! state update :filters-expanded? not)})]
+                           [:div {:style {:clear "both" :marginBottom "1rem"}}]
+                           (when filters-expanded?
+                             (this :-side-filters))]}
+         :paginator {:style {:clear "both"}}}]))
    :component-did-update
    (fn [{:keys [state]}]
-     (persistence/save {:key persistence-key :state state :only [:v :selected-types]}))})
+     (persistence/save {:key persistence-key :state state}))
+   :-side-filters
+   (fn [{:keys [props state]}]
+     (let [{:keys [workspaces]} props
+           {:keys [filters]} @state]
+       (apply
+        comps/filter-area
+        {:style {:float "left" :margin "0 1rem 1rem 0" :width 250
+                 :background (:background-light style/colors)
+                 :border style/standard-line}}
+        (comps/filter-section
+         {:title "Tags"
+          :content [comps/TagAutocomplete {:tags (:tags filters)}]
+          :on-clear #(swap! state update-in [:filters "Tags"] empty)})
+        (map (fn [{:keys [title options render predicate]}]
+               (comps/filter-section
+                {:title title
+                 :content (comps/filter-checkboxes
+                           {:items
+                            (map (fn [option]
+                                   {:text (render option)
+                                    :hit-count (count (filter (fn [ws] (predicate ws option)) workspaces))})
+                                 options)
+                            :checked-items (get-in @state [:filters title])
+                            :on-change (fn [item checked?]
+                                         (swap! state update-in [:filters title]
+                                                (if checked? conj disj) item))})
+                 :on-clear #(swap! state update-in [:filters title] empty)}))
+             table-filters))))})
 
 
 (react/defc WorkspaceList
@@ -349,6 +266,7 @@
           (swap! state update :server-response assoc
                  :billing-projects (map :projectName projects)
                  :disabled-reason (if (empty? projects) :no-billing nil))))))})
+
 
 (react/defc Page
   {:render
