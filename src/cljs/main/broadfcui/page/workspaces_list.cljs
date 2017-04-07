@@ -85,6 +85,14 @@
 (defn- get-max-length [func workspaces]
   (->> workspaces (map func) (map count) (apply max)))
 
+;; An obnoxious amount of effort due to "PROJECT_OWNER" vs. "NO ACCESS"
+(defn- prettify [s]
+  (as-> s $
+        (clojure.string/replace $ "_" " ")
+        (split $ #"\b")
+        (map clojure.string/capitalize $)
+        (join $)))
+
 
 (def ^:private table-filters
   [{:title "Status"
@@ -93,7 +101,7 @@
     :predicate (fn [ws option] (= (:status ws) option))}
    {:title "Access"
     :options ["PROJECT_OWNER" "OWNER" "WRITER" "READER" "NO ACCESS"]
-    :render #(clojure.string/capitalize (clojure.string/replace % "_" " "))
+    :render prettify
     :predicate (fn [ws option] (= (:accessLevel ws) option))}
    {:title "Publishing"
     :options [true false]
@@ -126,9 +134,9 @@
            max-workspace-name-length (get-max-length get-workspace-name-string workspaces)
            max-description-length (get-max-length get-workspace-description workspaces)]
        [Table
-        {:persistence-key "workspace-table" :v 2
+        {:ref "table" :persistence-key "workspace-table" :v 2
          :body
-         {:data-source (table-utils/local workspaces)
+         {:data-source (table-utils/local (this :-filter-workspaces))
           :columns
           (let [column-data (fn [ws]
                               (let [disabled? (= (:accessLevel ws) "NO ACCESS")]
@@ -195,8 +203,10 @@
                              (this :-side-filters))]}
          :paginator {:style {:clear "both"}}}]))
    :component-did-update
-   (fn [{:keys [state]}]
-     (persistence/save {:key persistence-key :state state}))
+   (fn [{:keys [state prev-state refs]}]
+     (persistence/save {:key persistence-key :state state})
+     (when-not (= (:filters @state) (:filters prev-state))
+       ((@refs "table") :refresh-rows)))
    :-side-filters
    (fn [{:keys [props state]}]
      (let [{:keys [workspaces]} props
@@ -216,7 +226,8 @@
                  :content (comps/filter-checkboxes
                            {:items
                             (map (fn [option]
-                                   {:text (render option)
+                                   {:item option
+                                    :render render
                                     :hit-count (count (filter (fn [ws] (predicate ws option)) workspaces))})
                                  options)
                             :checked-items (get-in @state [:filters title])
@@ -224,7 +235,23 @@
                                          (swap! state update-in [:filters title]
                                                 (if checked? conj disj) item))})
                  :on-clear #(swap! state update-in [:filters title] empty)}))
-             table-filters))))})
+             table-filters))))
+   :-filter-workspaces
+   (fn [{:keys [props state]}]
+     (let [{:keys [workspaces]} props
+           {:keys [filters]} @state
+           checkbox-filters (map (fn [{:keys [title predicate]}]
+                                   (let [selected (filters title)]
+                                     (utils/log selected)
+                                     (if (empty? selected)
+                                       (constantly true)
+                                       (apply some-fn (map (fn [option]
+                                                             (fn [ws] (predicate ws option)))
+                                                           selected)))))
+                                 table-filters)
+           tag-filter #_TODO (constantly true)]
+       (filter (apply every-pred tag-filter checkbox-filters) workspaces)
+       ))})
 
 
 (react/defc WorkspaceList

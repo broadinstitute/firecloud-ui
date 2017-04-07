@@ -763,14 +763,15 @@
 
 (defn filter-checkboxes [{:keys [items checked-items on-change]}]
   (map
-   (fn [{:keys [text hit-count]}]
-     [:div {:style {:paddingTop 5}}
-      [:label {:style {:display "inline-block" :width "calc(100% - 30px)"
-                       :textOverflow "ellipsis" :overflow "hidden" :whiteSpace "nowrap"}
-               :title text}
-       [:input {:type "checkbox"
-                :checked (contains? checked-items text)
-                :onChange #(on-change text (.. % -target -checked))}]
-       [:span {:style {:marginLeft "0.25rem"}} text]]
-      (some-> hit-count style/render-count)])
+   (fn [{:keys [item render hit-count]}]
+     (let [rendered (render item)]
+       [:div {:style {:paddingTop 5}}
+        [:label {:style {:display "inline-block" :width "calc(100% - 30px)"
+                         :textOverflow "ellipsis" :overflow "hidden" :whiteSpace "nowrap"}
+                 :title rendered}
+         [:input {:type "checkbox"
+                  :checked (contains? checked-items item)
+                  :onChange #(on-change item (.. % -target -checked))}]
+         [:span {:style {:marginLeft "0.25rem"}} rendered]]
+        (some-> hit-count style/render-count)]))
    items))
