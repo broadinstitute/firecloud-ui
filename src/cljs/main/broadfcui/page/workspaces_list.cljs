@@ -242,7 +242,6 @@
            {:keys [filters]} @state
            checkbox-filters (map (fn [{:keys [title predicate]}]
                                    (let [selected (filters title)]
-                                     (utils/log selected)
                                      (if (empty? selected)
                                        (constantly true)
                                        (apply some-fn (map (fn [option]
