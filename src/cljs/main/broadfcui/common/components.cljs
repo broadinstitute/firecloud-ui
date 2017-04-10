@@ -701,11 +701,11 @@
                                         element)))
                   :templateSelection (some-fn #(aget % "tag") #(aget % "text"))
                   :tags true}))
-       (.on component "change" #(this :on-change))))
+       (.on component "change" #(this :-on-change))))
    :component-will-unmount
    (fn [{:keys [refs]}]
      (.select2 (js/$ (@refs "input-element")) "destroy"))
-   :on-change
+   :-on-change
    (fn [{:keys [props this]}]
      (when-let [f (:on-change props)]
        (f (this :get-tags))))})

@@ -226,11 +226,10 @@
                (filter/section
                 {:title title
                  :content (filter/checkboxes
-                           {:items
-                            (map (fn [option]
-                                   {:item option
-                                    :render render})
-                                 options)
+                           {:items (map (fn [option]
+                                          {:item option
+                                           :render render})
+                                        options)
                             :checked-items (get-in @state [:filters title])
                             :on-change (fn [item checked?]
                                          (swap! state update-in [:filters title]
