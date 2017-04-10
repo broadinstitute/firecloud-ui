@@ -209,30 +209,27 @@
      (when-not (= (:filters @state) (:filters prev-state))
        ((@refs "table") :refresh-rows)))
    :-side-filters
-   (fn [{:keys [props state refs]}]
-     (let [{:keys [workspaces]} props
-           {:keys [filters]} @state]
+   (fn [{:keys [state refs]}]
+     (let [{:keys [filters]} @state]
        (apply
         filter/area
-        {:style {:float "left" :margin "0 1rem 1rem 0" :width 250
-                 :background (:background-light style/colors)
-                 :border style/standard-line}}
+        {:style {:float "left" :margin "0 1rem 1rem 0" :width 175}}
         (filter/section
          {:title "Tags"
           :content (react/create-element
                     [comps/TagAutocomplete {:ref "tag-autocomplete"
                                             :tags (filters "Tags")
+                                            :show-counts? false
                                             :on-change #(swap! state update :filters assoc "Tags" %)}])
           :on-clear #((@refs "tag-autocomplete") :set-tags [])})
-        (map (fn [{:keys [title options render predicate]}]
+        (map (fn [{:keys [title options render]}]
                (filter/section
                 {:title title
                  :content (filter/checkboxes
                            {:items
                             (map (fn [option]
                                    {:item option
-                                    :render render
-                                    :hit-count (count (filter (fn [ws] (predicate ws option)) workspaces))})
+                                    :render render})
                                  options)
                             :checked-items (get-in @state [:filters title])
                             :on-change (fn [item checked?]

@@ -657,6 +657,9 @@
    :set-tags
    (fn [{:keys [refs]} tags]
      (-> (@refs "input-element") js/$ (.val tags) (.trigger "change")))
+   :get-default-props
+   (fn []
+     {:show-counts? true})
    :render
    (fn [{:keys [props locals]}]
      (style/create-identity-select {:ref "input-element"
@@ -668,7 +671,7 @@
    (fn [{:keys [locals]}]
      (swap! locals assoc :initial-render? true))
    :component-did-mount
-   (fn [{:keys [refs this locals]}]
+   (fn [{:keys [props refs this locals]}]
      (swap! locals dissoc :initial-render?)
      (let [component (js/$ (@refs "input-element"))]
        (.select2
@@ -687,10 +690,13 @@
                   :templateResult (fn [res]
                                     (if (.-loading res)
                                       "Loading..."
-                                      (let [count-bubble (react/create-element (style/render-count (.-count res)))
+                                      (let [{:keys [show-counts?]} props
+                                            count-bubble (when show-counts?
+                                                           (react/create-element (style/render-count (.-count res))))
                                             tag-text (.createTextNode js/document (.-tag res))
                                             element (.createElement js/document "div")]
-                                        (react/render count-bubble element)
+                                        (when show-counts?
+                                          (react/render count-bubble element))
                                         (.appendChild element tag-text)
                                         element)))
                   :templateSelection (some-fn #(aget % "tag") #(aget % "text"))
