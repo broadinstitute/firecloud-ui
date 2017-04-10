@@ -4,6 +4,7 @@
     [dmohs.react :as react]
     [broadfcui.common :as common]
     [broadfcui.common.components :as comps]
+    [broadfcui.common.filter :as filter]
     [broadfcui.common.flex-utils :as flex]
     [broadfcui.common.icons :as icons]
     [broadfcui.common.overlay :as overlay]
@@ -212,11 +213,11 @@
      (let [{:keys [workspaces]} props
            {:keys [filters]} @state]
        (apply
-        comps/filter-area
+        filter/area
         {:style {:float "left" :margin "0 1rem 1rem 0" :width 250
                  :background (:background-light style/colors)
                  :border style/standard-line}}
-        (comps/filter-section
+        (filter/section
          {:title "Tags"
           :content (react/create-element
                     [comps/TagAutocomplete {:ref "tag-autocomplete"
@@ -224,9 +225,9 @@
                                             :on-change #(swap! state update :filters assoc "Tags" %)}])
           :on-clear #((@refs "tag-autocomplete") :set-tags [])})
         (map (fn [{:keys [title options render predicate]}]
-               (comps/filter-section
+               (filter/section
                 {:title title
-                 :content (comps/filter-checkboxes
+                 :content (filter/checkboxes
                            {:items
                             (map (fn [option]
                                    {:item option
