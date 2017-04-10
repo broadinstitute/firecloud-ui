@@ -3,7 +3,6 @@
     [dmohs.react :as react]
     [broadfcui.common.style :as style]
     [broadfcui.utils :as utils]
-    [goog.dom :as gdom]
     ))
 
 (def ^:private CodeMirror-js (aget js/window "webpack-deps" "CodeMirror"))
