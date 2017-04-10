@@ -124,8 +124,8 @@
       {:key persistence-key
        :initial (fn [] {:v VERSION
                         :filters-expanded? true
-                        :filters (into {"Filters" []} (map (fn [{:keys [title]}] [title #{}])
-                                                           table-filters))})
+                        :filters (into {"Tags" []} (map (fn [{:keys [title]}] [title #{}])
+                                                        table-filters))})
        :validator (comp (partial = VERSION) :v)}))
    :render
    (fn [{:keys [props state this]}]
@@ -208,7 +208,7 @@
      (when-not (= (:filters @state) (:filters prev-state))
        ((@refs "table") :refresh-rows)))
    :-side-filters
-   (fn [{:keys [props state]}]
+   (fn [{:keys [props state refs]}]
      (let [{:keys [workspaces]} props
            {:keys [filters]} @state]
        (apply
@@ -218,8 +218,11 @@
                  :border style/standard-line}}
         (comps/filter-section
          {:title "Tags"
-          :content [comps/TagAutocomplete {:tags (:tags filters)}]
-          :on-clear #(swap! state update-in [:filters "Tags"] empty)})
+          :content (react/create-element
+                    [comps/TagAutocomplete {:ref "tag-autocomplete"
+                                            :tags (filters "Tags")
+                                            :on-change #(swap! state update :filters assoc "Tags" %)}])
+          :on-clear #((@refs "tag-autocomplete") :set-tags [])})
         (map (fn [{:keys [title options render predicate]}]
                (comps/filter-section
                 {:title title
@@ -248,9 +251,13 @@
                                                              (fn [ws] (predicate ws option)))
                                                            selected)))))
                                  table-filters)
-           tag-filter #_TODO (constantly true)]
-       (filter (apply every-pred tag-filter checkbox-filters) workspaces)
-       ))})
+           selected-tags (filters "Tags")
+           tag-filter (if (empty? selected-tags)
+                        (constantly true)
+                        (fn [ws]
+                          (let [ws-tags (set (get-in ws [:workspace :attributes :tag:tags :items]))]
+                            (every? (partial contains? ws-tags) selected-tags))))]
+       (filter (apply every-pred tag-filter checkbox-filters) workspaces)))})
 
 
 (react/defc WorkspaceList

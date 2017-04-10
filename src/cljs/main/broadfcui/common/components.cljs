@@ -652,43 +652,51 @@
 (react/defc TagAutocomplete
   {:get-tags
    (fn [{:keys [refs]}]
-     (or
-      (js->clj (.select2 (js/$ (@refs "input-element")) "val"))
-      []))
+     (or (-> (@refs "input-element") js/$ (.select2 "val") js->clj)
+         []))
+   :set-tags
+   (fn [{:keys [refs]} tags]
+     (-> (@refs "input-element") js/$ (.val tags) (.trigger "change")))
    :render
    (fn [{:keys [props]}]
      (style/create-identity-select {:defaultValue (:tags props)
                                     :ref "input-element" :multiple true}
                                    (:tags props)))
    :component-did-mount
-   (fn [{:keys [refs]}]
-     (.select2
-      (js/$ (@refs "input-element"))
-      (clj->js {:ajax {:url (str (config/api-url-root) "/api/workspaces/tags")
-                       :dataType "json"
-                       :type "GET"
-                       :headers {:Authorization (str "Bearer " (utils/get-access-token))}
-                       :data (fn [params]
-                               (clj->js {:q (aget params "term")}))
-                       :processResults (fn [data]
-                                         (clj->js {:results (map (fn [res]
-                                                                   (merge {"id" (res "tag")}
-                                                                          res))
-                                                                 (js->clj data))}))}
-                :templateResult (fn [res]
-                                  (if (.-loading res)
-                                    "Loading..."
-                                    (let [count-bubble (react/create-element (style/render-count (.-count res)))
-                                          tag-text (.createTextNode js/document (.-tag res))
-                                          element (.createElement js/document "div")]
-                                      (react/render count-bubble element)
-                                      (.appendChild element tag-text)
-                                      element)))
-                :templateSelection (some-fn #(aget % "tag") #(aget % "text"))
-                :tags true})))
+   (fn [{:keys [refs this]}]
+     (let [component (js/$ (@refs "input-element"))]
+       (.select2
+        component
+        (clj->js {:ajax {:url (str (config/api-url-root) "/api/workspaces/tags")
+                         :dataType "json"
+                         :type "GET"
+                         :headers {:Authorization (str "Bearer " (utils/get-access-token))}
+                         :data (fn [params]
+                                 (clj->js {:q (aget params "term")}))
+                         :processResults (fn [data]
+                                           (clj->js {:results (map (fn [res]
+                                                                     (merge {"id" (res "tag")}
+                                                                            res))
+                                                                   (js->clj data))}))}
+                  :templateResult (fn [res]
+                                    (if (.-loading res)
+                                      "Loading..."
+                                      (let [count-bubble (react/create-element (style/render-count (.-count res)))
+                                            tag-text (.createTextNode js/document (.-tag res))
+                                            element (.createElement js/document "div")]
+                                        (react/render count-bubble element)
+                                        (.appendChild element tag-text)
+                                        element)))
+                  :templateSelection (some-fn #(aget % "tag") #(aget % "text"))
+                  :tags true}))
+       (.on component "change" #(this :on-change))))
    :component-will-unmount
    (fn [{:keys [refs]}]
-     (.select2 (js/$ (@refs "input-element")) "destroy"))})
+     (.select2 (js/$ (@refs "input-element")) "destroy"))
+   :on-change
+   (fn [{:keys [props this]}]
+     (when-let [f (:on-change props)]
+       (f (this :get-tags))))})
 
 ;; Declared because it calls itself recursively.
 (declare Tree)
