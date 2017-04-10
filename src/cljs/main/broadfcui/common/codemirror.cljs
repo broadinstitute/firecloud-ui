@@ -46,7 +46,6 @@
                    :else
                    (do (.next stream) nil)))}))
 
-
 (react/defc CodeMirror
   {:add-listener
    (fn [{:keys [this]} event-type listener]
