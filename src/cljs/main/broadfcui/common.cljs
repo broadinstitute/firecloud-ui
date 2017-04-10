@@ -273,7 +273,7 @@
        (react/render
         (react/create-element
          ;; empty string makes react attach a property with no value
-         [:div {:className "dropdown-pane" :id dropdown-id :data-dropdown ""
+         [:div {:className (str "dropdown-pane " (:position props)) :id dropdown-id :data-dropdown ""
                 :data-h-offset 20
                 :ref (this :-create-dropdown-ref-handler)
                 :style {:whiteSpace "normal"}}
@@ -293,8 +293,8 @@
                 (fn [_]
                   (swap! state dissoc :render-contents?)
                   (after-update #(this :-render-dropdown))))
-           (.on element$
-                "show.zf.dropdown"
+           (.on button$
+                "click"
                 (fn [_]
                   (swap! state assoc :render-contents? true)
                   (after-update #(this :-render-dropdown))
@@ -309,9 +309,10 @@
                            (.off (js/$ "body") "click.zf.dropdown"))))))))
        :will-unmount
        (fn [element]
-         (.off (js/$ element) "show.zf.dropdown")
+         (.off (js/$ (react/find-dom-node this)) "click")
          (.off (js/$ element) "hide.zf.dropdown"))}))})
 
-(defn render-info-box [{:keys [text]}]
+(defn render-info-box [{:keys [text position]}]
   [FoundationIconDropdown {:contents text
+                           :position position
                            :icon-name :information :icon-color (:link-active style/colors)}])
