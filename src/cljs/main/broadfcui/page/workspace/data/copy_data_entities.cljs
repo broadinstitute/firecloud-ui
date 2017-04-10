@@ -77,7 +77,8 @@
                       [:p {}
                        "The import could not be completed because the following " import-type
                        "s have the same IDs as entities already in this workspace."]
-                      [comps/Tree {:data hard-conflicts}]])
+                      [comps/Tree {:highlight-ends? true
+                                   :data hard-conflicts}]])
                    (when (not-empty soft-conflicts)
                      [:div {}
                       [:p {} "The import could not be completed because some of the " import-type
