@@ -88,11 +88,13 @@
                       [:p {} "You may connect the " import-type "s that you import to the existing
                       entities in the destination workspace, by clicking " [:strong {} "Re-link"] "."]
                       [:p {} "Re-linking will not import the conflicting entities from, or change the "
-                       import-type "s in, the source workspace."]
-                      [:p {:style {:color (:exception-state style/colors)}}
-                       "The existing entities may be different (i.e. older, newer, or unrelated but
-                       with the same ID) from the entities currently connected to the " import-type
-                       "s you are importing.  If you re-link the " import-type "s, you may lose this information."]])]
+                       import-type "s in, the source workspace."
+                       (common/render-info-box
+                        {:position "top"
+                         :text (react/create-element
+                                [:span {}
+                                 [:div {:style {:paddingBottom "1rem"}} "Let's say you have a \"Sample 1\" with " [:code {} "Participant 1"] " and " [:code {} "Gender"] " attributes already set in Workspace A, and you want to copy just the sample data over to Workspace B. Workspace B already has the " [:code {} "Participant 1"] " and " [:code {} "Gender"] " attributes set, so if you tried to copy over \"Sample 1\", Workspace B would tell you you have a conflict because " [:strong {} "copying"] " brings over all the attributes (" [:code {} "Participant 1"] " and " [:code {} "Gender"] ") with the sample data."]
+                                 [:div {} "Instead, you'll want to click re-link. This copies over the \"Sample 1\" data into Workspace B " [:strong {} "without"] " bringing along any attributes that were tied to it in Workspace A. Be aware that \"Participant 1\" may not be the same participant in Workspace A & B or they could be the same but have different versions of attributes."]])})]])]
          :show-cancel? (not-empty soft-conflicts)
          :ok-button (if (not-empty soft-conflicts)
                       {:text "Re-link"
