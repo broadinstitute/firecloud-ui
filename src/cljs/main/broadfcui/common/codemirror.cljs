@@ -3,6 +3,7 @@
     [dmohs.react :as react]
     [broadfcui.common.style :as style]
     [broadfcui.utils :as utils]
+    [goog.dom :as gdom]
     ))
 
 (def ^:private CodeMirror-js (aget js/window "webpack-deps" "CodeMirror"))
@@ -45,6 +46,7 @@
                    :else
                    (do (.next stream) nil)))}))
 
+
 (react/defc CodeMirror
   {:add-listener
    (fn [{:keys [this]} event-type listener]
@@ -63,8 +65,14 @@
    (fn [{:keys [props]}]
      [:div {:style {:border style/standard-line}}
       [:textarea {:ref "ref" :defaultValue (:text props)}]])
-   :component-did-mount
+   :component-did-mount #((:this %) :display-wdl)
+   :display-wdl
    (fn [{:keys [refs props locals]}]
      (swap! locals assoc :code-mirror-component
             (js-invoke CodeMirror-js "fromTextArea" (@refs "ref")
-               #js{:mode "wdl" :lineNumbers (:line-numbers? props) :readOnly (:read-only? props)})))})
+                       #js{:mode "wdl" :lineNumbers (:line-numbers? props) :readOnly (:read-only? props)})))
+   :component-will-receive-props
+   (fn [{:keys [refs props next-props locals]}]
+     (-> (@locals :code-mirror-component)
+         (js-invoke "getDoc")
+         (js-invoke "setValue" (:text next-props))))})
