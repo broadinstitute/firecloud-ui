@@ -658,12 +658,18 @@
    (fn [{:keys [refs]} tags]
      (-> (@refs "input-element") js/$ (.val tags) (.trigger "change")))
    :render
-   (fn [{:keys [props]}]
-     (style/create-identity-select {:defaultValue (:tags props)
-                                    :ref "input-element" :multiple true}
-                                   (:tags props)))
+   (fn [{:keys [props locals]}]
+     (style/create-identity-select {:ref "input-element"
+                                    :defaultValue (:tags props)
+                                    :multiple true}
+                                   (when (:initial-render? @locals)
+                                     (:tags props))))
+   :component-will-mount
+   (fn [{:keys [locals]}]
+     (swap! locals assoc :initial-render? true))
    :component-did-mount
-   (fn [{:keys [refs this]}]
+   (fn [{:keys [refs this locals]}]
+     (swap! locals dissoc :initial-render?)
      (let [component (js/$ (@refs "input-element"))]
        (.select2
         component
