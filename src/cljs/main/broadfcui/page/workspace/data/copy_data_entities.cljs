@@ -2,6 +2,7 @@
   (:require
     [clojure.set :refer [union]]
     [clojure.string :refer [capitalize]]
+    [clojure.walk :refer [postwalk]]
     [dmohs.react :as react]
     [broadfcui.common :as common]
     [broadfcui.common.components :as comps]
@@ -53,17 +54,19 @@
                   (react/call :show-import-result this (get-parsed-response false) selected))}))
    :show-import-result
    (fn [{:keys [this props]} parsed-response selected]
-     (let [copied (parsed-response "entitiesCopied")
-           hard-conflicts (parsed-response "hardConflicts")
-           soft-conflicts (clojure.walk/postwalk
-                           (fn [x]
-                             (cond
-                               (= (second x) []) nil
-                               (= x "entityName") "ID"
-                               (= (first x) "entityType") ["Type" (clojure.string/replace (second x) "_" " ")]
-                               (= x "conflicts") "Conflicting linked entities"
-                               :else x))
-                           (parsed-response "softConflicts"))
+     (let [formatted-response (postwalk
+                               (fn [x]
+                                 (cond
+                                   (= x "entityName") "ID"
+                                   (= x "entityType") "Type"
+                                   (= x "conflicts") "Conflicting linked entities"
+                                   :else x))
+                               parsed-response)
+           copied (formatted-response "entitiesCopied")
+           hard-conflicts (formatted-response "hardConflicts")
+           soft-conflicts (postwalk
+                           #(if (= (second %) []) nil %)
+                           (formatted-response "softConflicts"))
            import-type (:type props)]
        (comps/push-ok-cancel-modal
         {:header (if (not-empty copied)
@@ -77,7 +80,7 @@
                    (when (not-empty hard-conflicts)
                      [:div {}
                       [:p {}
-                       "The import could not be completed because the following " import-type
+                       "The import did not complete because the following " import-type
                        "s have the same IDs as entities already in this workspace."]
                       [comps/Tree {:highlight-ends? true
                                    :data hard-conflicts}]])
