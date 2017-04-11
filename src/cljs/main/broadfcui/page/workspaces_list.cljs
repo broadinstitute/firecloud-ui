@@ -177,11 +177,9 @@
               :initial-width 132 :resizable? false
               :column-data :accessLevel
               :sort-by #(case % "OWNER" 0 "WRITER" 1 "READER" 2 "NO ACCESS" 3 4) :sort-initial :asc
-              :render (fn [accessLevel]
+              :render (fn [access-level]
                         [:div {:style {:paddingLeft 14}}
-                         (if (= accessLevel "PROJECT_OWNER")
-                           "Project Owner"
-                           (clojure.string/capitalize accessLevel))])}])
+                         (prettify access-level)])}])
           :behavior {:reorderable-columns? false}
           :style {:header-row {:color (:text-lighter style/colors) :fontSize "90%"}
                   :header-cell {:padding "0.4rem 0"}
