@@ -71,7 +71,9 @@
                    "Unable to Import")
          :content [:div {:style {:maxWidth 600}}
                    (when (not-empty copied)
-                     [comps/Tree {:data copied}])
+                     [:div {}
+                      [:p {} "The following " import-type "s were imported successfully."]
+                      [comps/Tree {:data copied}]])
                    (when (not-empty hard-conflicts)
                      [:div {}
                       [:p {}
