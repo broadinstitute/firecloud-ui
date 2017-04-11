@@ -148,7 +148,7 @@
    :render
    (fn [{:keys [props state locals this]}]
      (let [{:keys [library-schema can-share? owner? writer? catalog-with-read?]} props
-           {:keys [page-num pages-seen invalid-properties working-attributes published? required-attributes validation-error submit-error]} @state]
+           {:keys [page-num pages-seen invalid-properties working-attributes published? required-attributes validation-error submit-error]} @state
            editable? (or writer? catalog-with-read?)
            set-discoverable? (or can-share? catalog-with-read? owner?)]
        ;; FIXME: refactor -- this is heavily copy/pasted from OKCancelForm
