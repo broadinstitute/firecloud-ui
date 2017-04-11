@@ -81,7 +81,7 @@
                                    :data hard-conflicts}]])
                    (when (not-empty soft-conflicts)
                      [:div {}
-                      [:p {} "The import could not be completed because some of the " import-type
+                      [:p {} "The import did not complete because some of the " import-type
                        "s that you selected are connected to entities that already exist in the
                        destination workspace."]
                       [:p {} "The conflicting entities are highlighted below."]
