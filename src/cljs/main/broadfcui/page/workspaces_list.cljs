@@ -118,6 +118,12 @@
 (def ^:private VERSION 2)
 
 
+(defn- union-tags [workspaces]
+  (->> workspaces
+       (keep #(some-> % :workspace :attributes :tag:tags :items set))
+       (apply clojure.set/union)))
+
+
 (react/defc WorkspaceTable
   {:get-initial-state
    (fn []
@@ -201,13 +207,16 @@
                            (when filters-expanded?
                              (this :-side-filters))]}
          :paginator {:style {:clear "both"}}}]))
+   :component-will-mount
+   (fn [{:keys [props locals]}]
+     (swap! locals assoc :tags (union-tags (:workspaces props))))
    :component-did-update
    (fn [{:keys [state prev-state refs]}]
      (persistence/save {:key persistence-key :state state})
      (when-not (= (:filters @state) (:filters prev-state))
        ((@refs "table") :refresh-rows)))
    :-side-filters
-   (fn [{:keys [state refs]}]
+   (fn [{:keys [state refs locals]}]
      (let [{:keys [filters]} @state]
        (apply
         filter/area
@@ -217,6 +226,7 @@
           :content (react/create-element
                     [comps/TagAutocomplete {:ref "tag-autocomplete"
                                             :tags (filters "Tags")
+                                            :data (:tags @locals)
                                             :show-counts? false
                                             :on-change #(swap! state update :filters assoc "Tags" %)}])
           :on-clear #((@refs "tag-autocomplete") :set-tags [])})

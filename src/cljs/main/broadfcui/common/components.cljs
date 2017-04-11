@@ -673,34 +673,38 @@
    :component-did-mount
    (fn [{:keys [props refs this locals]}]
      (swap! locals dissoc :initial-render?)
-     (let [component (js/$ (@refs "input-element"))]
+     (let [component (js/$ (@refs "input-element"))
+           data-source (if-let [data (:data props)]
+                         {:data data}
+                         {:ajax {:url (str (config/api-url-root) "/api/workspaces/tags")
+                                 :dataType "json"
+                                 :type "GET"
+                                 :headers {:Authorization (str "Bearer " (utils/get-access-token))}
+                                 :data (fn [params]
+                                         (clj->js {:q (aget params "term")}))
+                                 :processResults (fn [data]
+                                                   (clj->js {:results (map (fn [res]
+                                                                             (merge {"id" (res "tag")}
+                                                                                    res))
+                                                                           (js->clj data))}))}})]
        (.select2
         component
-        (clj->js {:ajax {:url (str (config/api-url-root) "/api/workspaces/tags")
-                         :dataType "json"
-                         :type "GET"
-                         :headers {:Authorization (str "Bearer " (utils/get-access-token))}
-                         :data (fn [params]
-                                 (clj->js {:q (aget params "term")}))
-                         :processResults (fn [data]
-                                           (clj->js {:results (map (fn [res]
-                                                                     (merge {"id" (res "tag")}
-                                                                            res))
-                                                                   (js->clj data))}))}
-                  :templateResult (fn [res]
-                                    (if (.-loading res)
-                                      "Loading..."
-                                      (let [{:keys [show-counts?]} props
-                                            count-bubble (when show-counts?
-                                                           (react/create-element (style/render-count (or (.-count res) 0))))
-                                            tag-text (.createTextNode js/document (or (.-tag res) (.-text res)))
-                                            element (.createElement js/document "div")]
-                                        (when show-counts?
-                                          (react/render count-bubble element))
-                                        (.appendChild element tag-text)
-                                        element)))
-                  :templateSelection (some-fn #(aget % "tag") #(aget % "text"))
-                  :tags true}))
+        (clj->js (merge
+                  data-source
+                  {:templateResult (fn [res]
+                                     (if (.-loading res)
+                                       "Loading..."
+                                       (let [{:keys [show-counts?]} props
+                                             count-bubble (when show-counts?
+                                                            (react/create-element (style/render-count (or (.-count res) 0))))
+                                             tag-text (.createTextNode js/document (or (.-tag res) (.-text res)))
+                                             element (.createElement js/document "div")]
+                                         (when show-counts?
+                                           (react/render count-bubble element))
+                                         (.appendChild element tag-text)
+                                         element)))
+                   :templateSelection (some-fn #(aget % "tag") #(aget % "text"))
+                   :tags true})))
        (.on component "change" #(this :-on-change))))
    :component-will-unmount
    (fn [{:keys [refs]}]
