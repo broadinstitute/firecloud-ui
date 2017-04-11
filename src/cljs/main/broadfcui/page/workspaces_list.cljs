@@ -213,8 +213,10 @@
    :component-did-update
    (fn [{:keys [state prev-state refs]}]
      (persistence/save {:key persistence-key :state state})
+     ;; this is terrible, but GAWB-1893 (which is up next) will fix it
      (when-not (= (:filters @state) (:filters prev-state))
-       ((@refs "table") :refresh-rows)))
+       (when-not ((@refs "table") :update-query-params {:page-number 1})
+         ((@refs "table") :refresh-rows))))
    :-side-filters
    (fn [{:keys [state refs locals]}]
      (let [{:keys [filters]} @state]
