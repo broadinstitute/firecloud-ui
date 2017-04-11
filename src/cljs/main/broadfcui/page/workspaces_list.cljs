@@ -135,7 +135,7 @@
                                                         table-filters))})
        :validator (comp (partial = VERSION) :v)}))
    :render
-   (fn [{:keys [props state this]}]
+   (fn [{:keys [props state this locals]}]
      (let [{:keys [workspaces nav-context]} props
            {:keys [filters-expanded?]} @state
            max-workspace-name-length (get-max-length get-workspace-name-string workspaces)
@@ -143,7 +143,7 @@
        [Table
         {:ref "table" :persistence-key "workspace-table" :v 2
          :body
-         {:data-source (table-utils/local (this :-filter-workspaces))
+         {:data-source (table-utils/local (this :-filter-workspaces) (:total-count @locals))
           :columns
           (let [column-data (fn [ws]
                               (let [disabled? (= (:accessLevel ws) "NO ACCESS")]
@@ -209,7 +209,9 @@
          :paginator {:style {:clear "both"}}}]))
    :component-will-mount
    (fn [{:keys [props locals]}]
-     (swap! locals assoc :tags (union-tags (:workspaces props))))
+     (swap! locals assoc
+            :tags (union-tags (:workspaces props))
+            :total-count (count (:workspaces props))))
    :component-did-update
    (fn [{:keys [state prev-state refs]}]
      (persistence/save {:key persistence-key :state state})
