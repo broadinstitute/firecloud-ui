@@ -87,12 +87,12 @@
                    (when (not-empty soft-conflicts)
                      [:div {}
                       [:p {} "The import did not complete because some of the " import-type
-                       "s that you selected are connected to entities that already exist in the
+                       "s that you selected are linked to entities that already exist in the
                        destination workspace."]
                       [:p {} "The conflicting entities are highlighted below."]
                       [comps/Tree {:highlight-ends? true
                                    :data soft-conflicts}]
-                      [:p {} "You may connect the " import-type "s that you import to the existing
+                      [:p {} "You may link the " import-type "s that you import to the existing
                       entities in the destination workspace, by clicking " [:strong {} "Re-link"] "."]
                       [:p {} "Re-linking will not import the conflicting entities from, or change the "
                        import-type "s in, the source workspace."
@@ -100,21 +100,26 @@
                         {:position "top"
                          :text (react/create-element
                                 [:span {}
-                                 [:div {:style {:paddingBottom "1rem"}} "Let's say you have a
-                                  \"Sample 1\" with " [:var {} "Participant 1"] " and " [:var {} "Gender"]
-                                  " attributes already set in Workspace A, and you want to copy just
-                                   the sample data over to Workspace B. Workspace B already has the "
-                                  [:var {} "Participant 1"] " and " [:var {} "Gender"] " attributes
-                                  set, so if you tried to copy over \"Sample 1\", Workspace B would
-                                  tell you you have a conflict because " [:strong {} "copying"]
-                                  " brings over all the attributes (" [:var {} "Participant 1"]
-                                  " and " [:var {} "Gender"] ") with the sample data."]
-                                 [:div {} "Instead, you'll want to click re-link. This copies over
-                                  the \"Sample 1\" data into Workspace B " [:strong {} "without"]
-                                  " bringing along any attributes that were tied to it in Workspace
-                                  A. Be aware that " [:var {} "Participant 1"] " may not be the same
-                                  participant in Workspace A & B or they could be the same but have
-                                  different versions of attributes."]])})]])]
+                                 [:div {:style {:paddingBottom "1rem"}}
+                                  "Every entity (participant, sample, etc.) has an ID. Multiple
+                                  entities cannot share the same ID, they must be unique."]
+                                 [:div {:style {:paddingBottom "1rem"}}
+                                  "Entities can be linked by their ID. For example, a sample can be
+                                   linked to a participant."]
+                                 [:div {:style {:paddingBottom "1rem"}}
+                                  "If you import a sample that is linked to a participant, that
+                                  participant will also be imported. However, if the imported
+                                  participant (\"source participant\") has the same ID as an existing
+                                  participant in the workspace (\"destination participant\"), the
+                                  import cannot finish. Since two entities cannot have the same ID,
+                                  this would cause a conflict."]
+                                 [:div {:style {:paddingBottom "1rem"}}
+                                  "Re-linking allows the sample to link to the participant that was
+                                  already in the workspace (\"destination participant\")."]
+                                 [:div {:style {:paddingBottom "1rem"}}
+                                  "Keep in mind that there may be differences between the \"source
+                                  participant\" and the \"destination participant\", so you may want
+                                  to confirm that they are actually the same."]])})]])]
          :show-cancel? (not-empty soft-conflicts)
          :ok-button (if (not-empty soft-conflicts)
                       {:text "Re-link"
