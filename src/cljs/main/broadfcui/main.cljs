@@ -112,6 +112,31 @@
                   "http://status.firecloud.org/"]
                  " for more information."])}))
 
+(defn status-alert [title message link]
+  [:div {:style {:border "1px solid" :borderColor "#bcaeac" :backgroundColor "#f7e4e1" :padding "1rem"}}
+   [:div {:style {:marginBottom "0.5rem"}} title]
+   [:div {:style {:color "#0a0a0a" :fontSize "80%"}}
+    [:div {} (str message " ")
+     [:a {:href (str link) :target "_blank" :style {:color "#1779ba"}} "Read more..."]]]])
+
+(react/defc ShowStatusAlerts
+  {:render
+   (fn [{:keys [this state]}]
+     (let [alerts (:alerts @state)]
+       (when (not (empty? alerts))
+         [:div {}
+         (map (fn [alert]
+                (status-alert (:title alert) (:message alert) (:link alert)))
+              alerts)])))
+   :component-did-mount
+   (fn [{:keys [state]}]
+     (utils/cljslog (str (config/alerts-json-url)))
+     (utils/ajax {:url "http://storage.googleapis.com/firecloud-alerts-dev/alerts.json"
+              :on-done (fn [{:keys [raw-response]}]
+                         (let [[parsed _] (utils/parse-json-string raw-response true false)]
+                           (if (not (empty? parsed))
+                             (swap! state assoc :alerts parsed))))}))})
+
 (react/defc App
   {:handle-hash-change
    (fn [{:keys [state]}]
@@ -126,6 +151,7 @@
       (when (and (contains? (:user-status @state) :signed-in)
                  (contains? (:user-status @state) :refresh-token-saved))
         [auth/RefreshCredentials {:auth2 (:auth2 @state)}])
+      [ShowStatusAlerts]
       [:div {:style {:backgroundColor "white" :padding 20}}
        [:div {}
         (when-let [auth2 (:auth2 @state)]
