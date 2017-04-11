@@ -692,8 +692,8 @@
                                       "Loading..."
                                       (let [{:keys [show-counts?]} props
                                             count-bubble (when show-counts?
-                                                           (react/create-element (style/render-count (.-count res))))
-                                            tag-text (.createTextNode js/document (.-tag res))
+                                                           (react/create-element (style/render-count (or (.-count res) 0))))
+                                            tag-text (.createTextNode js/document (or (.-tag res) (.-text res)))
                                             element (.createElement js/document "div")]
                                         (when show-counts?
                                           (react/render count-bubble element))
