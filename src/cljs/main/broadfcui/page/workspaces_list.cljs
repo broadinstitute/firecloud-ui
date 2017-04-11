@@ -83,9 +83,6 @@
 (defn- get-workspace-description [ws]
   (not-empty (get-in ws [:workspace :attributes :description])))
 
-(defn- get-max-length [func workspaces]
-  (->> workspaces (map func) (map count) (apply max)))
-
 ;; An obnoxious amount of effort due to "PROJECT_OWNER" vs. "NO ACCESS"
 (defn- prettify [s]
   (as-> s $
@@ -137,9 +134,7 @@
    :render
    (fn [{:keys [props state this locals]}]
      (let [{:keys [workspaces nav-context]} props
-           {:keys [filters-expanded?]} @state
-           max-workspace-name-length (get-max-length get-workspace-name-string workspaces)
-           max-description-length (get-max-length get-workspace-description workspaces)]
+           {:keys [filters-expanded?]} @state]
        [Table
         {:ref "table" :persistence-key "workspace-table" :v 2
          :body
@@ -162,11 +157,11 @@
               :column-data column-data :as-text :status
               :render (fn [data] [StatusCell (utils/restructure data nav-context)])}
              {:id "Workspace" :header [:span {:style {:marginLeft 24}} "Workspace"]
-              :initial-width (min 500 (* max-workspace-name-length 10))
+              :initial-width 300
               :column-data column-data :as-text :name :sort-by :text
               :render (fn [data] [WorkspaceCell (utils/restructure data nav-context)])}
              {:id "Description" :header [:span {:style {:marginLeft 14}} "Description"]
-              :initial-width (max 200 (min 500 (* max-description-length 10)))
+              :initial-width 250
               :column-data get-workspace-description
               :render (fn [description]
                         [:div {:style {:paddingLeft 14}}
