@@ -125,12 +125,11 @@
      (let [alerts (:alerts @state)]
        (when (not (empty? alerts))
          [:div {}
-         (map (fn [alert]
-                (status-alert (:title alert) (:message alert) (:link alert)))
-              alerts)])))
+          (map (fn [alert]
+                 (status-alert (:title alert) (:message alert) (:link alert)))
+               alerts)])))
    :component-did-mount
    (fn [{:keys [state]}]
-     (utils/cljslog (str (config/alerts-json-url)))
      (utils/ajax {:url "http://storage.googleapis.com/firecloud-alerts-dev/alerts.json"
               :on-done (fn [{:keys [raw-response]}]
                          (let [[parsed _] (utils/parse-json-string raw-response true false)]
