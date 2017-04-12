@@ -113,11 +113,11 @@
                  " for more information."])}))
 
 (defn status-alert [title message link]
-  [:div {:style {:border "1px solid" :borderColor "#bcaeac" :backgroundColor "#f7e4e1" :padding "1rem"}}
-   [:div {:style {:marginBottom "0.5rem"}} title]
-   [:div {:style {:color "#0a0a0a" :fontSize "80%"}}
+  [:div {:style {:borderBottom "1px solid" :borderBottomColor "#bcaeac" :backgroundColor (:exception-state style/colors) :padding "1rem"}}
+   [:div {:style {:color "#fff" :marginBottom "0.5rem" :fontWeight 600}} [icons/ExceptionIcon {:size 18}] (if title title "Service Alert")]
+   [:div {:style {:color "#fff" :fontSize "90%"}}
     [:div {} (str message " ")
-     [:a {:href (str link) :target "_blank" :style {:color "#1779ba"}} "Read more..."]]]])
+     (when link [:a {:href (str link) :target "_blank" :style {:color "#ddd"}} "Read more..."])]]])
 
 (react/defc ShowStatusAlerts
   {:render
@@ -130,7 +130,7 @@
                alerts)])))
    :component-did-mount
    (fn [{:keys [state]}]
-     (utils/ajax {:url "http://storage.googleapis.com/firecloud-alerts-dev/alerts.json"
+     (utils/ajax {:url "http://storage.googleapis.com/firecloud-alerts-dev/alerts2.json"
               :on-done (fn [{:keys [raw-response]}]
                          (let [[parsed _] (utils/parse-json-string raw-response true false)]
                            (if (not (empty? parsed))
