@@ -131,10 +131,11 @@
    :component-did-mount
    (fn [{:keys [state]}]
      (utils/ajax {:url (config/alerts-json-url)
-              :on-done (fn [{:keys [raw-response]}]
-                         (let [[parsed _] (utils/parse-json-string raw-response true false)]
-                           (if (not (empty? parsed))
-                             (swap! state assoc :alerts parsed))))}))})
+                  :headers {"Cache-Control" "no-store, no-cache"}
+                  :on-done (fn [{:keys [raw-response]}]
+                             (let [[parsed _] (utils/parse-json-string raw-response true false)]
+                               (if (not (empty? parsed))
+                                 (swap! state assoc :alerts parsed))))}))})
 
 (react/defc App
   {:handle-hash-change
