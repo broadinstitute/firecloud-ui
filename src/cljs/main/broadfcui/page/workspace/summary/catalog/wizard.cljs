@@ -176,14 +176,13 @@
                    {:keys [invalid]} (if (:library:invalidDataset working-attributes)
                                        ;; if you have previously saved incomplete metadata, anything required that
                                        ;; you haven't filled out will be in red when you open the modal
-                                       (library-utils/validate-required (convert-empty-strings working-attributes)
+                                       (library-utils/validate-required (remove-empty-values working-attributes)
                                                                       questions required-attributes))]
                (cond
                  (< page-num page-count)
                  [Questions (merge {:ref "wizard-page"
                                     :key page-num
                                     :missing-properties (clojure.set/union invalid invalid-properties)
-                                    :missing-properties invalid-properties
                                     :attributes working-attributes}
                                    (utils/restructure library-schema enumerate questions required-attributes editable? set-discoverable?))]
                  (= page-num page-count)
