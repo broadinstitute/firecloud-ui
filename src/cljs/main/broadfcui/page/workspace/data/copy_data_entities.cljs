@@ -119,7 +119,8 @@
                                  [:div {:style {:paddingBottom "1rem"}}
                                   "Keep in mind that there may be differences between the \"source
                                   participant\" and the \"destination participant\", so you may want
-                                  to confirm that they are actually the same."]])})]])]
+                                  to confirm that they are actually the same."]
+                                 [:div {} "All other attributes of the source will be imported normally."]])})]])]
          :show-cancel? (not-empty soft-conflicts)
          :ok-button (if (not-empty soft-conflicts)
                       {:text "Re-link"
