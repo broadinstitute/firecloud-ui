@@ -83,7 +83,7 @@
                                                      workflow-name "/" workflowId "/")})))}]
        :filter-groups
        (vec (cons {:text "All" :pred (constantly true)}
-                  (map (fn [status] {:text status :pred #(= status (% "status"))})
+                  (map (fn [status] {:text status :pred #(= status (:status %))})
                        moncommon/wf-all-statuses)))
        :data (:workflows props)
        :->row (fn [row]
