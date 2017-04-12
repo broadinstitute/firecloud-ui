@@ -113,8 +113,10 @@
                  " for more information."])}))
 
 (defn status-alert [title message link]
-  [:div {:style {:borderBottom "1px solid" :borderBottomColor "#bcaeac" :backgroundColor (:exception-state style/colors) :padding "1rem"}}
-   [:div {:style {:color "#fff" :marginBottom "0.5rem" :fontWeight 600}} [icons/ExceptionIcon {:size 18 :paddingRight "0.5rem"}] (if title title "Service Alert")]
+  [:div {:style {:borderBottom "1px solid" :borderBottomColor (:line-default style/colors)
+                 :backgroundColor (:exception-state style/colors) :padding "1rem"}}
+   [:div {:style {:color "#fff" :marginBottom "0.5rem" :fontWeight 600}}
+    [icons/ExceptionIcon {:size 18 :paddingRight "0.5rem"}] (if title title "Service Alert")]
    [:div {:style {:color "#fff" :fontSize "90%"}}
     [:div {} (str message " ")
      (when link [:a {:href (str link) :target "_blank" :style {:color "#ddd"}} "Read more..."])]]])
