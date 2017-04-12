@@ -94,13 +94,15 @@
         (join $)))
 
 
+(def ^:private access-levels ["PROJECT_OWNER" "OWNER" "WRITER" "READER" "NO ACCESS"])
+
 (def ^:private table-filters
   [{:title "Status"
     :options ["Complete" "Running" "Exception"]
     :render identity
     :predicate (fn [ws option] (= (:status ws) option))}
    {:title "Access"
-    :options ["PROJECT_OWNER" "OWNER" "WRITER" "READER" "NO ACCESS"]
+    :options access-levels
     :render prettify
     :predicate (fn [ws option] (= (:accessLevel ws) option))}
    {:title "Publishing"
@@ -186,7 +188,7 @@
              {:id "Access Level" :header [:span {:style {:marginLeft 14}} "Access Level"]
               :initial-width 132 :resizable? false
               :column-data :accessLevel
-              :sort-by #(case % "OWNER" 0 "WRITER" 1 "READER" 2 "NO ACCESS" 3 4) :sort-initial :asc
+              :sort-by (zipmap access-levels (range)) :sort-initial :asc
               :render (fn [access-level]
                         [:div {:style {:paddingLeft 14}}
                          (prettify access-level)])}])
