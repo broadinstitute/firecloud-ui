@@ -134,13 +134,24 @@
                (status-alert (:title alert) (:message alert) (:link alert)))
              alerts)]))
    :component-did-mount
+   (fn [{:keys [this locals]}]
+     ;; Call once for intiial load
+     (this :load-alerts)
+     ;; Add a long-polling call for continuous updates
+     (swap! locals assoc :interval-id
+            (js/setInterval #(this :load-alerts) (config/status-alerts-refresh))))
+   :component-will-unmount
+   (fn [{:keys [locals]}]
+     (js/clearInterval (:interval-id @locals)))
+   :load-alerts
    (fn [{:keys [state]}]
      (utils/ajax {:url (config/alerts-json-url)
                   :headers {"Cache-Control" "no-store, no-cache"}
                   :on-done (fn [{:keys [raw-response]}]
                              (let [[parsed _] (utils/parse-json-string raw-response true false)]
-                               (when (not (empty? parsed))
-                                 (swap! state assoc :alerts parsed))))}))})
+                               (if (not (empty? parsed))
+                                 (swap! state assoc :alerts parsed :hidden false)
+                                 (swap! state dissoc :alerts))))}))})
 
 (react/defc App
   {:handle-hash-change
