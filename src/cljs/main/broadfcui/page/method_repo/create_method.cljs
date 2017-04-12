@@ -31,14 +31,11 @@
            (style/create-form-label "Namespace")
            [input/TextField {:ref "namespace" :style {:width "100%"}
                              :predicates [(input/nonempty "Method namespace")]}]]
-          [:div {:style {:flex "1 0 auto" :marginRight "1em"}}
+          [:div {:style {:flex "1 0 auto"}}
            (style/create-form-label "Name")
            [input/TextField {:ref "name" :style {:width "100%"}
-                             :predicates [(input/nonempty "Method name")]}]]
-          [:div {:style {:flex "0 0 100px"}}
-           (style/create-form-label "Type")
-           (style/create-identity-select {:ref "type"} ["Task" "Workflow"])]]
-
+                             :predicates [(input/nonempty "Method name")]}]]]
+         ;;GAWB-1897 removes Type field and makes all MC types "Workflow" until "Task" type is supported
          (style/create-form-label "Synopsis (optional)")
          (style/create-text-field {:ref "synopsis" :style {:width "100%"}})
          (style/create-form-label "Documentation (optional)")
@@ -101,7 +98,8 @@
    :create-method
    (fn [{:keys [props state refs]}]
      (let [[namespace name & fails] (input/get-and-validate refs "namespace" "name")
-           [synopsis documentation type] (common/get-text refs "synopsis" "documentation" "type")
+           [synopsis documentation] (common/get-text refs "synopsis" "documentation")
+           type "Workflow"
            wdl (react/call :call-method (@refs "wdl-editor") "getValue")
            fails (or fails (when (clojure.string/blank? wdl) ["Please enter the WDL payload"]))]
        (swap! state assoc :validation-errors fails)
