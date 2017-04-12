@@ -705,14 +705,14 @@
    (fn [{:keys [props]}]
      (fn [res]
        (if (.-loading res)
-       "Loading..."
-       (let [show-counts? (:show-counts? props)
-             tag-text (.createTextNode js/document (or (.-tag res) (.-text res)))
-             element (.createElement js/document "div")]
-         (when show-counts?
-           (react/render (react/create-element (style/render-count (or (.-count res) 0))) element))
-         (.appendChild element tag-text)
-         element))))})
+         "Loading..."
+         (let [show-counts? (:show-counts? props)
+               tag-text (.createTextNode js/document (or (.-tag res) (.-text res)))
+               element (.createElement js/document "div")]
+           (when show-counts?
+             (react/render (react/create-element (style/render-count (or (.-count res) 0))) element))
+           (.appendChild element tag-text)
+           element))))})
 
 ;; Declared because it calls itself recursively.
 (declare Tree)
