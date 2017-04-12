@@ -125,6 +125,9 @@
 (def default-date-format
   {:month "long" :day "numeric" :year "numeric" :hour "numeric" :minute "numeric"})
 
+(def short-date-format
+  {:month "short" :day "numeric" :year "numeric" :hour "numeric" :minute "numeric"})
+
 (defn format-date [date & [format]]
   (-> date js/Date.
       (.toLocaleString (.-language js/navigator)

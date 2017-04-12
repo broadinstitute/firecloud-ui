@@ -55,11 +55,12 @@
   {:render
    (fn [{:keys [props]}]
      (let [{:keys [data]} props
-           {:keys [href status restricted? disabled? hover-text workspace-id]} data
+           {:keys [status restricted? disabled? hover-text ws-id]} data
+           {:keys [namespace name]} ws-id
            color (style/color-for-status status)]
        [:a {:href (if disabled?
                     "javascript:;"
-                    (nav/get-link :workspace-summary workspace-id))
+                    (nav/get-link :workspace-summary ws-id))
             :style {:display "flex" :alignItems "center"
                     :backgroundColor (if disabled? (:disabled-state style/colors) color)
                     :color "white" :textDecoration "none"
@@ -74,11 +75,12 @@
                            :backgroundColor "white" :color "#666" :fontSize "xx-small"
                            :transform "rotate(-90deg)"}}
             "RESTRICTED"]])
-        [:span {:style {:paddingLeft 24 :fontWeight 600}}
-         (:name data)]]))})
+        [:div {:style {:paddingLeft 24}}
+         [:div {:style {:fontSize "80%"}} namespace]
+         [:div {:style {:fontWeight 600}} name]]]))})
 
-(defn- get-workspace-name-string [ws]
-  (str (get-in ws [:workspace :namespace]) "/" (get-in ws [:workspace :name])))
+(defn- get-workspace-name-string [column-data]
+  (str (get-in column-data [:ws-id :namespace]) "/" (get-in column-data [:ws-id :name])))
 
 (defn- get-workspace-description [ws]
   (not-empty (get-in ws [:workspace :attributes :description])))
@@ -147,7 +149,7 @@
           :columns
           (let [column-data (fn [ws]
                               (let [disabled? (= (:accessLevel ws) "NO ACCESS")]
-                                {:name (get-workspace-name-string ws)
+                                {:ws-id (select-keys (:workspace ws) [:namespace :name])
                                  :href (let [x (:workspace ws)] (str (:namespace x) ":" (:name x)))
                                  :status (:status ws)
                                  :disabled? disabled?
@@ -162,11 +164,12 @@
               :column-data column-data :as-text :status
               :render (fn [data] [StatusCell (utils/restructure data nav-context)])}
              {:id "Workspace" :header [:span {:style {:marginLeft 24}} "Workspace"]
-              :initial-width 400
-              :column-data column-data :as-text :name :sort-by :text
+              :initial-width 300
+              :column-data column-data :as-text get-workspace-name-string
+              :sort-by #(mapv clojure.string/lower-case (replace (:ws-id %) [:namespace :name]))
               :render (fn [data] [WorkspaceCell (utils/restructure data nav-context)])}
              {:id "Description" :header [:span {:style {:marginLeft 14}} "Description"]
-              :initial-width 250
+              :initial-width 350
               :column-data get-workspace-description
               :render (fn [description]
                         [:div {:style {:paddingLeft 14}}
@@ -178,7 +181,8 @@
               :initial-width 200
               :column-data (comp :lastModified :workspace)
               :render (fn [date]
-                        [:div {:style {:paddingLeft 14}} (common/format-date date)])}
+                        [:div {:style {:paddingLeft 14}} (common/format-date date common/short-date-format)])
+              :as-text common/format-date}
              {:id "Access Level" :header [:span {:style {:marginLeft 14}} "Access Level"]
               :initial-width 132 :resizable? false
               :column-data :accessLevel
