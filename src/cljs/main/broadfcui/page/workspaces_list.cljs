@@ -157,7 +157,7 @@
               :column-data column-data :as-text :status
               :render (fn [data] [StatusCell (utils/restructure data nav-context)])}
              {:id "Workspace" :header [:span {:style {:marginLeft 24}} "Workspace"]
-              :initial-width 300
+              :initial-width 400
               :column-data column-data :as-text :name :sort-by :text
               :render (fn [data] [WorkspaceCell (utils/restructure data nav-context)])}
              {:id "Description" :header [:span {:style {:marginLeft 14}} "Description"]
@@ -170,7 +170,7 @@
                            [:span {:style {:fontStyle "italic"}}
                             "No description provided"])])}
              {:id "Last Modified" :header [:span {:style {:marginLeft 14}} "Last Modified"]
-              :initial-width 300
+              :initial-width 200
               :column-data (comp :lastModified :workspace)
               :render (fn [date]
                         [:div {:style {:paddingLeft 14}} (common/format-date date)])}
