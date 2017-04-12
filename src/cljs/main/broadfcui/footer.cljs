@@ -1,0 +1,56 @@
+(ns broadfcui.footer
+  (:require
+   [broadfcui.common.components :as comps]
+   [broadfcui.common.style :as style]
+   [broadfcui.config :as config]
+   [broadfcui.utils :as u]
+   [dmohs.react :as r]
+   ))
+
+(r/defc PopUpFooterControl
+  {:render
+   (fn [{:keys [state]}]
+     [:div {:style {:minWidth 50 :minHeight 20}
+            :onMouseOver #(swap! state assoc :visible? true)
+            :onMouseOut #(swap! state dissoc :visible?)}
+      [:div {:style {:display (when-not (or (:visible? @state) (not @u/use-live-data?)) "none")
+                     :padding 20 :paddingBottom 10 :margin -20 :marginBottom -10}}
+       [:div {}
+        "Fake data: "
+        [:a {:href "javascript:;"
+             :style {:textDecoration "none" :color (if @u/use-live-data? "green" "red")}
+             :onClick #(do (swap! u/use-live-data? not) (swap! state assoc :foo 1))}
+         (if @u/use-live-data? "off" "on")]]
+       [:div {}
+        [:a {:href "#status" :style {:textDecoration "none"}} "Status Page"]]]])})
+
+(defn render-footer []
+  (let [thisyear (.getFullYear (js/Date.))
+        startyear 2015
+        yeartext (if (= startyear thisyear) (str startyear) (str startyear "-" thisyear))
+        spacer [:span {:style {:padding "0 0.6em"}} "|"]
+        Link (r/create-class
+              {:render
+               (fn [{:keys [props state]}]
+                 [:a {:href (:href props)
+                      :target (:target props)
+                      :style {:color (:text-lightest style/colors)
+                              :textDecoration (when-not (:hovering? @state) "none")}
+                      :onMouseOver #(swap! state assoc :hovering? true)
+                      :onMouseOut  #(swap! state assoc :hovering? false)}
+                  (:text props)])})]
+    [:div {:style {:borderTop (str "2px solid " (:line-default style/colors))
+                   :padding "1em 25px 2em 25px"
+                   :color (:text-lightest style/colors) :fontSize "90%"}}
+     (when (config/debug?)
+       [:div {:style {:float "right"}} [PopUpFooterControl]])
+     [:div {:style {:display "block"}}
+      (str "\u00A9 " yeartext " Broad Institute")
+      spacer
+      [Link {:href "#policy" :text "Privacy Policy"}]
+      spacer
+      [Link {:href "http://gatkforums.broadinstitute.org/firecloud/discussion/6819/firecloud-terms-of-service#latest"
+             :text "Terms of Service" :target "_blank"}]
+      spacer
+      [Link {:href (config/user-guide-url) :text "Support"
+             :target "_blank"}]]]))
