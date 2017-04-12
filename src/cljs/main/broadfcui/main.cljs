@@ -130,7 +130,7 @@
                alerts)])))
    :component-did-mount
    (fn [{:keys [state]}]
-     (utils/ajax {:url "http://storage.googleapis.com/firecloud-alerts-dev/alerts2.json"
+     (utils/ajax {:url (config/alerts-json-url)
               :on-done (fn [{:keys [raw-response]}]
                          (let [[parsed _] (utils/parse-json-string raw-response true false)]
                            (if (not (empty? parsed))
@@ -150,7 +150,8 @@
       (when (and (contains? (:user-status @state) :signed-in)
                  (contains? (:user-status @state) :refresh-token-saved))
         [auth/RefreshCredentials {:auth2 (:auth2 @state)}])
-      [ShowStatusAlerts]
+      (when (:config-loaded? @state)
+        [ShowStatusAlerts])
       [:div {:style {:backgroundColor "white" :padding 20}}
        [:div {}
         (when-let [auth2 (:auth2 @state)]
