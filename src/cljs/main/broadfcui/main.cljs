@@ -119,7 +119,7 @@
     [icons/ExceptionIcon {:size 18 :paddingRight "0.5rem"}] (if title title "Service Alert")]
    [:div {:style {:color "#fff" :fontSize "90%"}}
     [:div {} (str message " ")
-     (when link [:a {:href (str link) :target "_blank" :style {:color "#ddd"}} "Read more..."])]]])
+     (when link [:a {:href (str link) :target "_blank" :style {:color "#fff"}} "Read more..."])]]])
 
 (react/defc ShowStatusAlerts
   {:render
