@@ -131,9 +131,14 @@
                         :filters (into {"Tags" []} (map (fn [{:keys [title]}] [title #{}])
                                                         table-filters))})
        :validator (comp (partial = VERSION) :v)}))
+   :component-will-mount
+   (fn [{:keys [props locals]}]
+     (swap! locals assoc
+            :tags (union-tags (:workspaces props))
+            :total-count (count (:workspaces props))))
    :render
    (fn [{:keys [props state this locals]}]
-     (let [{:keys [workspaces nav-context]} props
+     (let [{:keys [nav-context]} props
            {:keys [filters-expanded?]} @state]
        [Table
         {:ref "table" :persistence-key "workspace-table" :v 2
@@ -202,11 +207,6 @@
                            (when filters-expanded?
                              (this :-side-filters))]}
          :paginator {:style {:clear "both"}}}]))
-   :component-will-mount
-   (fn [{:keys [props locals]}]
-     (swap! locals assoc
-            :tags (union-tags (:workspaces props))
-            :total-count (count (:workspaces props))))
    :component-did-update
    (fn [{:keys [state prev-state refs]}]
      (persistence/save {:key persistence-key :state state})

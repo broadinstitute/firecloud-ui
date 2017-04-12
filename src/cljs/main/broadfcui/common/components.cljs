@@ -661,20 +661,16 @@
    (fn []
      {:show-counts? true})
    :render
-   (fn [{:keys [props locals]}]
+   (fn [{:keys [props]}]
      (style/create-identity-select {:ref "input-element"
                                     :defaultValue (:tags props)
                                     :multiple true}
-                                   (when (:initial-render? @locals)
-                                     (:tags props))))
-   :component-will-mount
-   (fn [{:keys [locals]}]
-     (swap! locals assoc :initial-render? true))
+                                   (or (:data props) (:tags props))))
    :component-did-mount
-   (fn [{:keys [props refs this locals]}]
-     (swap! locals dissoc :initial-render?)
-     (let [component (js/$ (@refs "input-element"))
-           data-source (if-let [data (:data props)]
+   (fn [{:keys [props refs this]}]
+     (let [{:keys [data]} props
+           component (js/$ (@refs "input-element"))
+           data-source (if data
                          {:data data}
                          {:ajax {:url (str (config/api-url-root) "/api/workspaces/tags")
                                  :dataType "json"
@@ -682,27 +678,12 @@
                                  :headers {:Authorization (str "Bearer " (utils/get-access-token))}
                                  :data (fn [params]
                                          (clj->js {:q (aget params "term")}))
-                                 :processResults (fn [data]
-                                                   (clj->js {:results (map (fn [res]
-                                                                             (merge {"id" (res "tag")}
-                                                                                    res))
-                                                                           (js->clj data))}))}})]
+                                 :processResults (this :-process-results)}})]
        (.select2
         component
         (clj->js (merge
                   data-source
-                  {:templateResult (fn [res]
-                                     (if (.-loading res)
-                                       "Loading..."
-                                       (let [{:keys [show-counts?]} props
-                                             count-bubble (when show-counts?
-                                                            (react/create-element (style/render-count (or (.-count res) 0))))
-                                             tag-text (.createTextNode js/document (or (.-tag res) (.-text res)))
-                                             element (.createElement js/document "div")]
-                                         (when show-counts?
-                                           (react/render count-bubble element))
-                                         (.appendChild element tag-text)
-                                         element)))
+                  {:templateResult (this :-template-result)
                    :templateSelection (some-fn #(aget % "tag") #(aget % "text"))
                    :tags true})))
        (.on component "change" #(this :-on-change))))
@@ -712,7 +693,26 @@
    :-on-change
    (fn [{:keys [props this]}]
      (when-let [f (:on-change props)]
-       (f (this :get-tags))))})
+       (f (this :get-tags))))
+   :-process-results
+   (fn [_]
+     (fn [data]
+       (clj->js {:results (map (fn [res]
+                                 (merge {"id" (res "tag")}
+                                        res))
+                               (js->clj data))})))
+   :-template-result
+   (fn [{:keys [props]}]
+     (fn [res]
+       (if (.-loading res)
+       "Loading..."
+       (let [show-counts? (:show-counts? props)
+             tag-text (.createTextNode js/document (or (.-tag res) (.-text res)))
+             element (.createElement js/document "div")]
+         (when show-counts?
+           (react/render (react/create-element (style/render-count (or (.-count res) 0))) element))
+         (.appendChild element tag-text)
+         element))))})
 
 ;; Declared because it calls itself recursively.
 (declare Tree)
