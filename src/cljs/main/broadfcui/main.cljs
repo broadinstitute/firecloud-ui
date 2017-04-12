@@ -115,28 +115,31 @@
 (defn status-alert [title message link]
   [:div {:style {:borderBottom "1px solid" :borderBottomColor (:line-default style/colors)
                  :backgroundColor (:exception-state style/colors) :padding "1rem"}}
-   [:div {:style {:color "#fff" :marginBottom "0.5rem" :fontWeight 600}}
-    [icons/ExceptionIcon {:size 18 :paddingRight "0.5rem"}] (if title title "Service Alert")]
+   [:div {:style {:display "flex" :background (:exception-state style/colors) :color "#fff"
+                  :alignItems "center" :marginBottom "0.5rem"}}
+    [icons/ExceptionIcon {:size 18}]
+    [:span {:style {:marginLeft "0.5rem" :fontWeight 600
+                    :verticalAlign "middle"}}
+     (if title title "Service Alert")]]
    [:div {:style {:color "#fff" :fontSize "90%"}}
-    [:div {} (str message " ")
-     (when link [:a {:href (str link) :target "_blank" :style {:color "#fff"}} "Read more..."])]]])
+    (str message " ")
+     (when link [:a {:href (str link) :target "_blank" :style {:color "#fff"}} "Read more..."])]])
 
-(react/defc ShowStatusAlerts
+(react/defc StatusAlertContainer
   {:render
    (fn [{:keys [this state]}]
-     (let [alerts (:alerts @state)]
-       (when (not (empty? alerts))
-         [:div {}
-          (map (fn [alert]
-                 (status-alert (:title alert) (:message alert) (:link alert)))
-               alerts)])))
+     (when-let [alerts (not-empty (:alerts @state))]
+       [:div {}
+        (map (fn [alert]
+               (status-alert (:title alert) (:message alert) (:link alert)))
+             alerts)]))
    :component-did-mount
    (fn [{:keys [state]}]
      (utils/ajax {:url (config/alerts-json-url)
                   :headers {"Cache-Control" "no-store, no-cache"}
                   :on-done (fn [{:keys [raw-response]}]
                              (let [[parsed _] (utils/parse-json-string raw-response true false)]
-                               (if (not (empty? parsed))
+                               (when (not (empty? parsed))
                                  (swap! state assoc :alerts parsed))))}))})
 
 (react/defc App
@@ -151,7 +154,7 @@
    (fn [{:keys [this state]}]
      [:div {}
       (when (:config-loaded? @state)
-        [ShowStatusAlerts])
+        [StatusAlertContainer])
       (when (and (contains? (:user-status @state) :signed-in)
                  (contains? (:user-status @state) :refresh-token-saved))
         [auth/RefreshCredentials {:auth2 (:auth2 @state)}])

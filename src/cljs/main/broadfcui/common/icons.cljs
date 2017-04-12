@@ -81,4 +81,4 @@
      {:size 28})
    :render
    (fn [{:keys [props]}]
-     (icon {:style (merge {:color "white" :fontSize (:size props)} props)} :warning-triangle))})
+     (icon {:style {:color "white" :fontSize (:size props)}} :warning-triangle))})
