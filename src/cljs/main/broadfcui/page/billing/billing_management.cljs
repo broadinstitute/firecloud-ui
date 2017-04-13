@@ -14,7 +14,7 @@
     [broadfcui.page.billing.create-project :refer [CreateBillingProjectDialog]]
     [broadfcui.page.billing.manage-project :refer [BillingProjectManagementPage]]
     [broadfcui.page.workspace.monitor.common :as moncommon]
-    [broadfcui.utils :as u]
+    [broadfcui.utils :as utils]
     ))
 
 
@@ -110,21 +110,21 @@
             {:text "Create New Billing Project"
              :onClick
              (fn []
-               (if (-> @u/google-auth2-instance (aget "currentUser") (js-invoke "get")
+               (if (-> @utils/google-auth2-instance (aget "currentUser") (js-invoke "get")
                        (js-invoke "hasGrantedScopes" "https://www.googleapis.com/auth/cloud-billing"))
                  (modal/push-modal
                   [CreateBillingProjectDialog
                    {:on-success #(react/call :reload this)}])
                  (do
-                   (u/add-user-listener
+                   (utils/add-user-listener
                     ::billing
                     (fn [_]
-                      (u/remove-user-listener ::billing)
+                      (utils/remove-user-listener ::billing)
                       (modal/push-modal
                        [CreateBillingProjectDialog
                         {:on-success #(react/call :reload this)}])))
                    (js-invoke
-                    @u/google-auth2-instance
+                    @utils/google-auth2-instance
                     "grantOfflineAccess"
                     (clj->js {:redirect_uri "postmessage"
                               :scope "https://www.googleapis.com/auth/cloud-billing"})))))}]]}}]))
@@ -141,7 +141,7 @@
           (swap! state assoc :projects projects)))))
    :-handle-status-change
    (fn [{:keys [state refs after-update]} project-name new-status message]
-     (let [project-index (u/first-matching-index
+     (let [project-index (utils/first-matching-index
                           #(= (:projectName %) project-name)
                           (:projects @state))
            project (get-in @state [:projects project-index])
@@ -159,7 +159,7 @@
          [comps/Breadcrumbs {:crumbs [{:text "Billing Management" :href (nav/get-link :billing)}
                                       (when project-name {:text project-name})]}]]
         (if project-name
-          [BillingProjectManagementPage (u/restructure project-name)]
+          [BillingProjectManagementPage (utils/restructure project-name)]
           [BillingProjectTable])]))})
 
 (defn add-nav-paths []
@@ -173,5 +173,5 @@
     :billing-project
     {:component Page
      :regex #"billing/([^/]+)"
-     :make-props (fn [project-name] (u/restructure project-name))
+     :make-props (fn [project-name] (utils/restructure project-name))
      :make-path (fn [project-name] (str "billing/" project-name))}))

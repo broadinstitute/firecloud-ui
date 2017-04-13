@@ -11,7 +11,7 @@
     [broadfcui.nav :as nav]
     [broadfcui.page.workspace.monitor.common :as moncommon]
     [broadfcui.page.workspace.monitor.submission-details :as submission-details]
-    [broadfcui.utils :as u]
+    [broadfcui.utils :as utils]
     ))
 
 (defn- render-date [submission]

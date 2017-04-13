@@ -17,7 +17,7 @@
    [broadfcui.page.workspace.summary.publish :as publish]
    [broadfcui.page.workspace.summary.library-view :refer [LibraryView]]
    [broadfcui.page.workspace.summary.workspace-cloner :refer [WorkspaceCloner]]
-   [broadfcui.utils :as u]))
+   [broadfcui.utils :as utils]))
 
 
 (react/defc DeleteDialog
@@ -50,7 +50,7 @@
   (endpoints/call-ajax-orch
     {:endpoint (endpoints/set-workspace-attributes workspace-id)
      :payload new-attributes
-     :headers u/content-type=json
+     :headers utils/content-type=json
      :on-done (fn [{:keys [success? get-parsed-response]}]
                 (swap! state dissoc :updating-attrs? :editing?)
                 (if success?
@@ -134,7 +134,7 @@
                        {:on-success (fn [namespace name]
                                       (swap! state dissoc :cloning?)
                                       (nav/go-to-path :workspace-summary
-                                                      (u/restructure namespace name)))
+                                                      (utils/restructure namespace name)))
                         :workspace-id workspace-id
                         :description description
                         :is-protected? isProtected
@@ -360,7 +360,7 @@
        (endpoints/call-ajax-orch
          {:endpoint (endpoints/storage-cost-estimate (:workspace-id props))
           :on-done (fn [{:keys [success? status-text raw-response]}]
-                     (let [[response parse-error?] (u/parse-json-string raw-response false false)]
+                     (let [[response parse-error?] (utils/parse-json-string raw-response false false)]
                        (swap! state update :server-response assoc :storage-cost
                               (if parse-error?
                                 (str "Error parsing JSON response with status: " status-text)

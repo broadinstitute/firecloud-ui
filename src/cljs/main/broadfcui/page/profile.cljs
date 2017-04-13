@@ -10,7 +10,7 @@
     [broadfcui.config :as config]
     [broadfcui.endpoints :as endpoints]
     [broadfcui.nav :as nav]
-    [broadfcui.utils :as u]
+    [broadfcui.utils :as utils]
     ))
 
 
@@ -31,7 +31,7 @@
            username (get status "linkedNihUsername")
            expire-time (* (get status "linkExpireTime") 1000)
            expired? (< expire-time (.now js/Date))
-           expiring-soon? (< expire-time (u/_24-hours-from-now-ms))
+           expiring-soon? (< expire-time (utils/_24-hours-from-now-ms))
            authorized? (get status "isDbgapAuthorized")
            linked-recently? (is-within-last-24-hours? (* (get status "lastLinkTime") 1000))
            pending? (and username (not authorized?) (not expired?) linked-recently?)]
@@ -243,5 +243,5 @@
     :profile
     {:component Page
      :regex #"profile(?:/nih-username-token=([^\s/&]+))?"
-     :make-props (fn [nih-token] (u/restructure nih-token))
+     :make-props (fn [nih-token] (utils/restructure nih-token))
      :make-path (fn [] "profile")}))

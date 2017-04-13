@@ -2,7 +2,7 @@
   (:require
    clojure.string
    [dmohs.react :as r]
-   [broadfcui.utils :as u]))
+   [broadfcui.utils :as utils]))
 
 (defonce all-path-handlers (atom {}))
 

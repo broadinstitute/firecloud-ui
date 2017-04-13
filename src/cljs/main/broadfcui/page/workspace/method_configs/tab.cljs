@@ -12,7 +12,7 @@
     [broadfcui.nav :as nav]
     [broadfcui.page.method-repo.method-config-importer :refer [MethodConfigImporter]]
     [broadfcui.page.workspace.method-configs.method-config-editor :refer [MethodConfigEditor]]
-    [broadfcui.utils :as u]
+    [broadfcui.utils :as utils]
     ))
 
 

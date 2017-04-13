@@ -6,7 +6,7 @@
    [broadfcui.common.modal :as modal]
    [broadfcui.page.method-repo.method-config-importer :refer [MethodConfigImporter]]
    [broadfcui.nav :as nav]
-   [broadfcui.utils :as u]
+   [broadfcui.utils :as utils]
    ))
 
 
@@ -41,7 +41,7 @@
     {:component Page
      :regex #"methods/m/([^/]+)/([^/]+)/([^/]+)"
      :make-props (fn [namespace name snapshot-id]
-                   {:type :method :id (u/restructure namespace name snapshot-id)})
+                   {:type :method :id (utils/restructure namespace name snapshot-id)})
      :make-path (fn [method-id]
                   (str "methods/m/" (:namespace method-id) "/" (:name method-id) "/"
                        (:snapshot-id method-id)))})
@@ -50,7 +50,7 @@
     {:component Page
      :regex #"methods/c/([^/]+)/([^/]+)/([^/]+)"
      :make-props (fn [namespace name snapshot-id]
-                   {:type :config :id (u/restructure namespace name snapshot-id)})
+                   {:type :config :id (utils/restructure namespace name snapshot-id)})
      :make-path (fn [config-id]
                   (str "methods/c/" (:namespace config-id) "/" (:name config-id) "/"
                        (:snapshot-id config-id)))}))

@@ -7,7 +7,7 @@
    [broadfcui.endpoints :as endpoints]
    [broadfcui.nav :as nav]
    [broadfcui.nih-link-warning :as nih-link-warning]
-   [broadfcui.utils :as u]
+   [broadfcui.utils :as utils]
    [dmohs.react :as r]
    ))
 
