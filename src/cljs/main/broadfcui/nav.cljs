@@ -32,9 +32,7 @@
                             @all-path-handlers))]
     (assert (not (> (count matching-handlers) 1))
             (str "Multiple keys matched path: " (map :key matching-handlers)))
-    (if (empty? matching-handlers)
-      nil
-      (first matching-handlers))))
+    (first (not-empty matching-handlers))))
 
 (defn get-path [k & args]
   (let [handler (get @all-path-handlers k)
