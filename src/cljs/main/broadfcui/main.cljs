@@ -24,6 +24,16 @@
    [broadfcui.utils :as utils]
    ))
 
+(defn- init-nav-paths []
+  (nav/clear-paths)
+  (auth/add-nav-paths)
+  (billing-management/add-nav-paths)
+  (library-page/add-nav-paths)
+  (method-repo/add-nav-paths)
+  (profile-page/add-nav-paths)
+  (status-page/add-nav-paths)
+  (workspace-details/add-nav-paths)
+  (workspaces/add-nav-paths))
 
 (react/defc LoggedIn
   {:render
@@ -111,7 +121,7 @@
       :user-status #{}})
    :component-will-mount
    (fn [{:keys [this]}]
-     (this :-init-nav-paths))
+     (init-nav-paths))
    :render
    (fn [{:keys [this state]}]
      (let [{:keys [auth2 user-status window-hash]} @state
@@ -173,23 +183,12 @@
      (.addEventListener js/window "hashchange" (:hash-change-listener @locals)))
    :component-will-receive-props
    (fn [{:keys [this]}]
-     (this :-init-nav-paths))
+     (init-nav-paths))
    :component-will-unmount
    (fn [{:keys [locals]}]
      (.removeEventListener js/window "hashchange" (:hash-change-listener @locals))
      (remove-watch utils/server-down? :server-watcher)
-     (remove-watch utils/maintenance-mode? :server-watcher))
-   :-init-nav-paths
-   (fn []
-     (nav/clear-paths)
-     (auth/add-nav-paths)
-     (billing-management/add-nav-paths)
-     (library-page/add-nav-paths)
-     (method-repo/add-nav-paths)
-     (profile-page/add-nav-paths)
-     (status-page/add-nav-paths)
-     (workspace-details/add-nav-paths)
-     (workspaces/add-nav-paths))})
+     (remove-watch utils/maintenance-mode? :server-watcher))})
 
 
 (defn render-application []
