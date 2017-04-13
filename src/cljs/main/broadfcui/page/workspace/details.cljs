@@ -197,60 +197,61 @@
   (nav/defpath
     :workspace-data
     {:component WorkspaceDetails
-     :regex #"workspaces/([^/]+)/([^/]+)/Data"
+     :regex #"workspaces/([^/]+)/([^/]+)/data"
      :make-props (fn [namespace name]
                    {:workspace-id (utils/restructure namespace name) :tab-name "Data"})
      :make-path (fn [workspace-id]
-                  (str (ws-path workspace-id) "/Data"))})
+                  (str (ws-path workspace-id) "/data"))})
   (nav/defpath
     :workspace-analysis
     {:component WorkspaceDetails
-     :regex #"workspaces/([^/]+)/([^/]+)/Analysis"
+     :regex #"workspaces/([^/]+)/([^/]+)/analysis"
      :make-props (fn [namespace name]
                    {:workspace-id (utils/restructure namespace name) :tab-name "Analysis"})
      :make-path (fn [workspace-id]
-                  (str (ws-path workspace-id) "/Analysis"))})
+                  (str (ws-path workspace-id) "/analysis"))})
   (nav/defpath
     :workspace-method-configs
     {:component WorkspaceDetails
-     :regex #"workspaces/([^/]+)/([^/]+)/Method Configurations"
+     :regex #"workspaces/([^/]+)/([^/]+)/method-configs"
      :make-props (fn [namespace name]
-                   {:workspace-id (utils/restructure namespace name) :tab-name "Method Configurations"})
+                   {:workspace-id (utils/restructure namespace name)
+                    :tab-name "Method Configurations"})
      :make-path (fn [workspace-id]
-                  (str (ws-path workspace-id) "/Method Configurations"))})
+                  (str (ws-path workspace-id) "/method-configs"))})
   (nav/defpath
     :workspace-method-config
     {:component WorkspaceDetails
-     :regex #"workspaces/([^/]+)/([^/]+)/Method Configurations/([^/]+)/([^/]+)"
+     :regex #"workspaces/([^/]+)/([^/]+)/method-configs/([^/]+)/([^/]+)"
      :make-props (fn [namespace name config-ns config-name]
                    {:workspace-id (utils/restructure namespace name) :tab-name "Method Configurations"
                     :config-id {:namespace config-ns :name config-name}})
      :make-path (fn [workspace-id config-id]
-                  (str (ws-path workspace-id) "/Method Configurations/"
+                  (str (ws-path workspace-id) "/method-configs/"
                        (:namespace config-id) "/" (:name config-id)))})
   (nav/defpath
     :workspace-monitor
     {:component WorkspaceDetails
-     :regex #"workspaces/([^/]+)/([^/]+)/Monitor"
+     :regex #"workspaces/([^/]+)/([^/]+)/monitor"
      :make-props (fn [namespace name]
                    {:workspace-id (utils/restructure namespace name) :tab-name "Monitor"})
      :make-path (fn [workspace-id]
-                  (str (ws-path workspace-id) "/Monitor"))})
+                  (str (ws-path workspace-id) "/monitor"))})
   (nav/defpath
     :workspace-submission
     {:component WorkspaceDetails
-     :regex #"workspaces/([^/]+)/([^/]+)/Monitor/([^/]+)"
+     :regex #"workspaces/([^/]+)/([^/]+)/monitor/([^/]+)"
      :make-props (fn [namespace name submission-id]
                    {:workspace-id (utils/restructure namespace name) :tab-name "Monitor"
                     :submission-id submission-id})
      :make-path (fn [workspace-id submission-id]
-                  (str (ws-path workspace-id) "/Monitor/" submission-id))})
+                  (str (ws-path workspace-id) "/monitor/" submission-id))})
   (nav/defpath
     :workspace-workflow
     {:component WorkspaceDetails
-     :regex #"workspaces/([^/]+)/([^/]+)/Monitor/([^/]+)/([^/]+)"
+     :regex #"workspaces/([^/]+)/([^/]+)/monitor/([^/]+)/([^/]+)"
      :make-props (fn [namespace name submission-id workflow-id]
                    {:workspace-id (utils/restructure namespace name) :tab-name "Monitor"
                     :submission-id submission-id :workflow-id workflow-id})
      :make-path (fn [workspace-id submission-id workflow-id]
-                  (str (ws-path workspace-id) "/Monitor/" submission-id "/" workflow-id))}))
+                  (str (ws-path workspace-id) "/monitor/" submission-id "/" workflow-id))}))
