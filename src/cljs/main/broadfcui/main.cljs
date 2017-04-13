@@ -126,7 +126,6 @@
      (when link [:a {:href (str link) :target "_blank" :style {:color "#fff"}} "Read more..."])]])
 
 (defn status-alert-interval [attempt]
-  (utils/cljslog attempt)
   (cond
     (= attempt 0) (config/status-alerts-refresh)
     (> attempt (config/max-retry-attempts)) (config/status-alerts-refresh)
