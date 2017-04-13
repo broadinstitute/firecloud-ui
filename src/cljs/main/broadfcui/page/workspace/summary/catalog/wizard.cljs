@@ -217,7 +217,7 @@
                          :disabled? (> page-num (-> library-schema :wizard count))
                          :style {:width 80}}]
           flex/spring
-          (let [save-permissions (and writer? curator?)
+          (let [save-permissions (or editable? set-discoverable?)
                 last-page (> page-num (-> library-schema :wizard count))]
             [comps/Button {:text (if published? "Republish" "Submit")
                            :onClick #(react/call :submit this)
