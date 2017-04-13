@@ -233,7 +233,7 @@
                     [comps/TagAutocomplete {:ref "tag-autocomplete"
                                             :tags (filters "Tags")
                                             :data (:tags @locals)
-                                            :show-counts? false
+                                            :show-counts? false :allow-new? false
                                             :on-change #(swap! state update :filters assoc "Tags" %)}])
           :on-clear #((@refs "tag-autocomplete") :set-tags [])})
         (map (fn [{:keys [title options render]}]

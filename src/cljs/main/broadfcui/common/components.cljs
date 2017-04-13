@@ -659,7 +659,8 @@
      (-> (@refs "input-element") js/$ (.val tags) (.trigger "change")))
    :get-default-props
    (fn []
-     {:show-counts? true})
+     {:show-counts? true
+      :allow-new? true})
    :render
    (fn [{:keys [props]}]
      (style/create-identity-select {:ref "input-element"
@@ -668,7 +669,7 @@
                                    (or (:data props) (:tags props))))
    :component-did-mount
    (fn [{:keys [props refs this]}]
-     (let [{:keys [data]} props
+     (let [{:keys [data allow-new?]} props
            component (js/$ (@refs "input-element"))
            data-source (if data
                          {:data data}
@@ -685,7 +686,7 @@
                   data-source
                   {:templateResult (this :-template-result)
                    :templateSelection (some-fn #(aget % "tag") #(aget % "text"))
-                   :tags true})))
+                   :tags allow-new?})))
        (.on component "change" #(this :-on-change))))
    :component-will-unmount
    (fn [{:keys [refs]}]
