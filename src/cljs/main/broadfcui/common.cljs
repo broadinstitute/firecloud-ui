@@ -178,7 +178,7 @@
 
 (def set-type->membership-attribute
   {"participant_set" "participants"
-   "sample_set" :samples
+   "sample_set" "samples"
    "pair_set" "pairs"})
 
 ; The list of all access levels in the system, inclusive of roles that aren't directly assignable
@@ -200,7 +200,7 @@
     (cond (= entity-type root-entity-type) 1
           ;; example: entity is 'sample_set', RET is 'sample', presumably using expression 'this.samples'
           (= entity-type (singular-type->set-type root-entity-type))
-          (count (get-in entity [:attributes (set-type->membership-attribute entity-type) :items]))
+          (count (get-in entity [:attributes (keyword (set-type->membership-attribute entity-type)) :items]))
           ;; something nonsensical has been selected, submission will probably fail anyway:
           :else 1)))
 
