@@ -18,8 +18,7 @@
   (reset! all-path-handlers {}))
 
 (defn find-path-handler [window-hash]
-  (let [cleaned (subs window-hash 1)
-        cleaned (js/decodeURI cleaned)
+  (let [cleaned (js/decodeURI (subs window-hash 1))
         matching-handlers (filter
                            (complement nil?)
                            (map
