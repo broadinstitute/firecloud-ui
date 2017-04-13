@@ -90,8 +90,9 @@
                       :not-available "This option is not available for your account."
                       nil)}]]
    (when-let [wf-count (:workflow-count @state)]
-     (when (> wf-count (config/workflow-count-warning-threshold))
-       [:div {:style {:textAlign "center"}}[:div {:style {:display "inline-flex" :alignItems "center" :margin "1em 0 -1em 0" :padding "0.5em"
+    (when (> wf-count (config/workflow-count-warning-threshold))
+       [:div {:style {:textAlign "center"}}
+        [:div {:style {:display "inline-flex" :alignItems "center" :margin "1em 0 -1em 0" :padding "0.5em"
                        :backgroundColor "white" :border style/standard-line :borderRadius 3}}
          (icons/icon {:style {:color (:exception-state style/colors) :marginRight 5 :verticalAlign "middle"}}
                      :warning-triangle)
