@@ -47,7 +47,7 @@
                          [comps/OKCancelForm
                           {:header "Import Method Configuration"
                            :content
-                           [:div {:style {:backgroundColor "white" :padding "1ex" :width 1000}}
+                           [:div {:style {:backgroundColor "white" :padding "1rem"}}
                             [MethodConfigImporter
                              {:workspace-id (:workspace-id props)
                               :after-import (fn [{:keys [config-id]}]
