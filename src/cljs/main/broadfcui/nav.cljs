@@ -4,17 +4,18 @@
    [dmohs.react :as r]
    [broadfcui.utils :as u]))
 
-(defonce paths (atom []))
+(defonce paths (atom {}))
 
 (defn defpath [k m]
   (assert (contains? m :regex))
   (assert (contains? m :component))
   (assert (contains? m :make-props))
   (assert (contains? m :make-path))
-  (swap! paths conj (assoc m :key k)))
+  (assert (not (contains? @paths k)) (str "Key " k " already defined"))
+  (swap! paths assoc k m))
 
 (defn clear-paths []
-  (reset! paths []))
+  (reset! paths {}))
 
 (defn find-path-handler [window-hash]
   (let [cleaned (subs window-hash 1)
@@ -22,11 +23,13 @@
         matching-handlers (filter
                            (complement nil?)
                            (map
-                            (fn [p]
-                              (when-let [matches (re-matches (:regex p) cleaned)]
-                                (update p :make-props
-                                        ;; First match is the entire string, so toss that one.
-                                        (fn [f] #(apply f (rest matches))))))
+                            (fn [[k handler]]
+                              (when-let [matches (re-matches (:regex handler) cleaned)]
+                                (let [make-props (:make-props handler)]
+                                  (assoc handler
+                                         :key k
+                                         ;; First match is the entire string, so toss that one.
+                                         :make-props #(apply make-props (rest matches))))))
                             @paths))]
     (assert (not (> (count matching-handlers) 1))
             (str "Multiple keys matched path: " (map :key matching-handlers)))
@@ -35,9 +38,9 @@
       (first matching-handlers))))
 
 (defn get-path [k & args]
-  (let [handler (first (filter #(= k (:key %)) @paths))
+  (let [handler (get @paths k)
         {:keys [make-path]} handler]
-    (assert handler (str "No handler found for key " k ". Valid path keys are: " (map :key @paths)))
+    (assert handler (str "No handler found for key " k ". Valid path keys are: " (keys @paths)))
     (js/encodeURI (apply make-path args))))
 
 (defn get-link [k & args]

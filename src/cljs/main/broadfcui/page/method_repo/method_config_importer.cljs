@@ -342,13 +342,13 @@
         [:div {:style {:marginBottom "1rem" :fontSize "1.1rem"}}
          [comps/Breadcrumbs
           {:crumbs
-           [{:text "Methods" :href (nav/get-link :broadfcui.page.method-repo.method-repo-page/main)}
+           [{:text "Methods" :href (nav/get-link :method-repo)}
             {:text [:span {} (id :namespace) "/" (id :name)
                     [:span {:style {:marginLeft "1rem" :fontWeight "normal"}} "#" (id :snapshot-id)]]}]}]])
       (if (:id props)
         (let [form (if (= (:type props) :method) MethodImportForm ConfigImportForm)]
           [form (merge
                  (select-keys props [:type :id :workspace-id :allow-edit :after-import])
-                 {:on-delete #(nav/go-to-path :broadfcui.page.method-repo.method-repo-page/main)})])
+                 {:on-delete #(nav/go-to-path :method-repo)})])
         [Table {:ref "table"
                 :in-workspace? (:workspace-id props)}])])})

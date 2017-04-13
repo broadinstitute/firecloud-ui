@@ -340,7 +340,7 @@
 
 (defn add-nav-paths []
   (nav/defpath
-    ::main
+    :library
     {:component Page
      :regex #"library"
      :make-props (fn [_] {})

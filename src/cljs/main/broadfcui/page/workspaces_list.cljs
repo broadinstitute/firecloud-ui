@@ -33,7 +33,7 @@
            {:keys [href status disabled? hover-text workspace-id]} data]
        [:a {:href (if disabled?
                     "javascript:;"
-                    (nav/get-link :broadfcui.page.workspace.details/summary workspace-id))
+                    (nav/get-link :workspace-summary workspace-id))
             :style {:display "block" :position "relative"
                     :backgroundColor (if disabled? (:disabled-state style/colors) (style/color-for-status status))
                     :margin "2px 0 2px 2px" :height (- row-height-px 4)
@@ -56,7 +56,7 @@
            color (style/color-for-status status)]
        [:a {:href (if disabled?
                     "javascript:;"
-                    (nav/get-link :broadfcui.page.workspace.details/summary workspace-id))
+                    (nav/get-link :workspace-summary workspace-id))
             :style {:display "flex" :alignItems "center"
                     :backgroundColor (if disabled? (:disabled-state style/colors) color)
                     :color "white" :textDecoration "none"
@@ -284,7 +284,7 @@
 
 (defn add-nav-paths []
   (nav/defpath
-    ::main
+    :workspaces
     {:component Page
      :regex #""
      :make-props (fn [_] {})

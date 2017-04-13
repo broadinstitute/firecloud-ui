@@ -41,9 +41,7 @@
         :on-done (fn [{:keys [success? get-parsed-response]}]
                    (swap! state dissoc :deleting?)
                    (if success?
-                     (do
-                       (modal/pop-modal)
-                       (nav/go-to-path :broadfcui.page.workspaces-list/main))
+                     (do (modal/pop-modal) (nav/go-to-path :workspaces))
                      (swap! state assoc :server-error (get-parsed-response false))))}))})
 
 
@@ -135,7 +133,7 @@
                       [WorkspaceCloner
                        {:on-success (fn [namespace name]
                                       (swap! state dissoc :cloning?)
-                                      (nav/go-to-path :broadfcui.page.workspace.details/summary
+                                      (nav/go-to-path :workspace-summary
                                                       (u/restructure namespace name)))
                         :workspace-id workspace-id
                         :description description

@@ -160,7 +160,7 @@
 
 (defn add-nav-paths []
   (nav/defpath
-    ::policy
+    :policy
     {:public? true
      :component Policy
      :regex #"policy"

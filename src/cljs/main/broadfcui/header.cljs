@@ -72,9 +72,9 @@
                          :backgroundColor "#fff"
                          :position "absolute" :width "100%"
                          :border (str "1px solid " (:line-default style/colors))}}
-           [DropdownItem {:href (nav/get-link :broadfcui.page.profile/main) :text "Profile"
+           [DropdownItem {:href (nav/get-link :profile) :text "Profile"
                           :dismiss #(swap! state assoc :show-dropdown? false)}]
-           [DropdownItem {:href (nav/get-link :broadfcui.page.billing.billing-management/main)
+           [DropdownItem {:href (nav/get-link :billing)
                           :text "Billing"
                           :dismiss #(swap! state assoc :show-dropdown? false)}]
            [DropdownItem {:href "javascript:;" :text "Sign Out"

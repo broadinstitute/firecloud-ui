@@ -95,7 +95,7 @@
                           :on-status-change (partial this :-handle-status-change projectName)}]
                         (and (= creationStatus project-status-ready) (= role "Owner"))
                         (style/create-link {:text projectName
-                                            :href (nav/get-link ::project projectName)})
+                                            :href (nav/get-link :billing-project projectName)})
                         :else projectName)
                       (when message
                         [:div {:style {:float "right" :position "relative"
@@ -156,7 +156,7 @@
      (let [{:keys [project-name]} props]
        [:div {:style {:padding "1em"}}
         [:div {:style {:marginBottom "1rem" :fontSize "1.1rem"}}
-         [comps/Breadcrumbs {:crumbs [{:text "Billing Management" :href (nav/get-link ::main)}
+         [comps/Breadcrumbs {:crumbs [{:text "Billing Management" :href (nav/get-link :billing)}
                                       (when project-name {:text project-name})]}]]
         (if project-name
           [BillingProjectManagementPage (u/restructure project-name)]
@@ -164,13 +164,13 @@
 
 (defn add-nav-paths []
   (nav/defpath
-    ::main
+    :billing
     {:component Page
      :regex #"billing"
      :make-props (fn [_] {})
      :make-path (fn [] "billing")})
   (nav/defpath
-    ::project
+    :billing-project
     {:component Page
      :regex #"billing/([^/]+)"
      :make-props (fn [project-name] (u/restructure project-name))

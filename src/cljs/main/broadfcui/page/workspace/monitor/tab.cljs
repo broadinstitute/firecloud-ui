@@ -29,10 +29,9 @@
        :sort-by :submissionDate :sort-initial :desc
        :render (fn [submission]
                  (style/create-link {:text (render-date submission)
-                                     :href (nav/get-link
-                                            :broadfcui.page.workspace.details/submission
-                                            workspace-id
-                                            (:submissionId submission))}))}
+                                     :href (nav/get-link :workspace-submission
+                                                         workspace-id
+                                                         (:submissionId submission))}))}
       {:header "Status" :as-text :status :sort-by :text
        :render (fn [submission]
                  [:div {:style {:height table-style/table-icon-size}}

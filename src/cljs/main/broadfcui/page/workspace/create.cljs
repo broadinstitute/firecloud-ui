@@ -78,8 +78,7 @@
                       (swap! state dissoc :creating-wf)
                       (if success?
                         (do (modal/pop-modal)
-                          (nav/go-to-path :broadfcui.page.workspace.details/summary
-                                          {:namespace project :name name}))
+                          (nav/go-to-path :workspace-summary {:namespace project :name name}))
                         (swap! state assoc :server-error (get-parsed-response false))))}))))})
 
 

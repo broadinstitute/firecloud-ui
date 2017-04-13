@@ -75,7 +75,7 @@
            (after-update #(this :link-nih-account nih-token))
            ;; Navigate to the parent (this page without the token), but replace the location so
            ;; the back button doesn't take the user back to the token.
-           (.replace (.-location js/window) (nav/get-link ::main)))
+           (.replace (.-location js/window) (nav/get-link :profile)))
          (react/call :load-nih-status this))))
    :component-did-update
    (fn [{:keys [refs]}]
@@ -240,7 +240,7 @@
 
 (defn add-nav-paths []
   (nav/defpath
-    ::main
+    :profile
     {:component Page
      :regex #"profile(?:/nih-username-token=([^\s/&]+))?"
      :make-props (fn [nih-token] (u/restructure nih-token))

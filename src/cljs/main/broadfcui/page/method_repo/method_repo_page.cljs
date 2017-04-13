@@ -27,12 +27,11 @@
              :ok-button
              {:text "Yes"
               :onClick modal/pop-modal
-              :href (nav/get-link :broadfcui.page.workspace.details/method-config
-                                  workspace-id config-id)}}))})]])})
+              :href (nav/get-link :workspace-method-config workspace-id config-id)}}))})]])})
 
 (defn add-nav-paths []
   (nav/defpath
-    ::main
+    :method-repo
     {:component Page
      :regex #"methods"
      :make-props (fn [_] {})

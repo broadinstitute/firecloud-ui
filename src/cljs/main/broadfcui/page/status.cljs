@@ -57,8 +57,8 @@
 
 (defn add-nav-paths []
   (nav/defpath
-    ::main
+    :status
     {:component Page
      :regex #"status"
-     :make-props (fn [_] {})
+     :make-props (fn [] {})
      :make-path (fn [] "status")}))

@@ -116,8 +116,9 @@
                       [Tab {:text text :first? (= text SUMMARY) :active? (is-active? text)
                             :href (nav/get-link
                                    (condp = text
-                                     SUMMARY ::summary DATA ::data ANALYSIS ::analysis
-                                     CONFIGS ::method-configs MONITOR ::monitor)
+                                     SUMMARY :workspace-summary DATA :workspace-data
+                                     ANALYSIS :workspace-analysis
+                                     CONFIGS :workspace-method-configs MONITOR :workspace-monitor)
                                    workspace-id)
                             :on-active-tab-clicked on-active-tab-clicked}])]
        [:div {}
@@ -167,7 +168,8 @@
                         :config-id (:config-id props)
                         :request-refresh #(react/call :refresh-workspace this)
                         :bucket-access? bucket-access?
-                        :on-submission-success #(nav/go-to-path ::submission workspace-id %)}])
+                        :on-submission-success #(nav/go-to-path
+                                                 :workspace-submission workspace-id %)}])
              MONITOR (react/create-element
                       [monitor-tab/Page
                        {:ref MONITOR
@@ -188,14 +190,14 @@
 
 (defn add-nav-paths []
   (nav/defpath
-    ::summary
+    :workspace-summary
     {:component WorkspaceDetails
      :regex #"workspaces/([^/]+)/([^/]+)"
      :make-props (fn [namespace name]
                    {:workspace-id (u/restructure namespace name)})
      :make-path ws-path})
   (nav/defpath
-    ::data
+    :workspace-data
     {:component WorkspaceDetails
      :regex #"workspaces/([^/]+)/([^/]+)/Data"
      :make-props (fn [namespace name]
@@ -203,7 +205,7 @@
      :make-path (fn [workspace-id]
                   (str (ws-path workspace-id) "/Data"))})
   (nav/defpath
-    ::analysis
+    :workspace-analysis
     {:component WorkspaceDetails
      :regex #"workspaces/([^/]+)/([^/]+)/Analysis"
      :make-props (fn [namespace name]
@@ -211,7 +213,7 @@
      :make-path (fn [workspace-id]
                   (str (ws-path workspace-id) "/Analysis"))})
   (nav/defpath
-    ::method-configs
+    :workspace-method-configs
     {:component WorkspaceDetails
      :regex #"workspaces/([^/]+)/([^/]+)/Method Configurations"
      :make-props (fn [namespace name]
@@ -219,7 +221,7 @@
      :make-path (fn [workspace-id]
                   (str (ws-path workspace-id) "/Method Configurations"))})
   (nav/defpath
-    ::method-config
+    :workspace-method-config
     {:component WorkspaceDetails
      :regex #"workspaces/([^/]+)/([^/]+)/Method Configurations/([^/]+)/([^/]+)"
      :make-props (fn [namespace name config-ns config-name]
@@ -229,7 +231,7 @@
                   (str (ws-path workspace-id) "/Method Configurations/"
                        (:namespace config-id) "/" (:name config-id)))})
   (nav/defpath
-    ::monitor
+    :workspace-monitor
     {:component WorkspaceDetails
      :regex #"workspaces/([^/]+)/([^/]+)/Monitor"
      :make-props (fn [namespace name]
@@ -237,7 +239,7 @@
      :make-path (fn [workspace-id]
                   (str (ws-path workspace-id) "/Monitor"))})
   (nav/defpath
-    ::submission
+    :workspace-submission
     {:component WorkspaceDetails
      :regex #"workspaces/([^/]+)/([^/]+)/Monitor/([^/]+)"
      :make-props (fn [namespace name submission-id]
@@ -246,7 +248,7 @@
      :make-path (fn [workspace-id submission-id]
                   (str (ws-path workspace-id) "/Monitor/" submission-id))})
   (nav/defpath
-    ::workflow
+    :workspace-workflow
     {:component WorkspaceDetails
      :regex #"workspaces/([^/]+)/([^/]+)/Monitor/([^/]+)/([^/]+)"
      :make-props (fn [namespace name submission-id workflow-id]

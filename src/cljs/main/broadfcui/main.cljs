@@ -41,18 +41,18 @@
          (when (= :registered (:registration-status @state))
            [header/TopNavBar
             {:items [{:label "Workspaces"
-                      :nav-key ::workspaces/main
+                      :nav-key :workspaces
                       :is-selected? #(or (empty? path)
                                          (clojure.string/starts-with? path "workspaces/"))}
                      {:label "Data Library"
-                      :nav-key ::library-page/main
+                      :nav-key :library
                       :is-selected? #(= path "library")}
                      {:label "Method Respository"
-                      :nav-key ::method-repo/main
+                      :nav-key :method-repo
                       :is-selected? #(or (= path "methods")
                                          (clojure.string/starts-with? path "methods/"))}]
-             :show-nih-link-warning? (not (or (nav/is-current-path? ::profile-page/main)
-                                              (nav/is-current-path? ::status-page/main)))}])
+             :show-nih-link-warning? (not (or (nav/is-current-path? :profile)
+                                              (nav/is-current-path? :status)))}])
          (common/clear-both)]
         (case (:registration-status @state)
           nil [:div {:style {:margin "2em 0" :textAlign "center"}}

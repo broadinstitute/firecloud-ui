@@ -58,10 +58,9 @@
              :content-renderer
              (fn [config-id]
                (style/create-link {:text (:name config-id)
-                                   :href (nav/get-link
-                                          :broadfcui.page.workspace.details/method-config
-                                          (:workspace-id props)
-                                          config-id)}))}
+                                   :href (nav/get-link :workspace-method-config
+                                                       (:workspace-id props)
+                                                       config-id)}))}
             {:header "Root Entity Type" :starting-width 140}
             {:header "Method" :starting-width 800
              :content-renderer (fn [fields] (apply style/render-entity fields))}]
@@ -100,17 +99,13 @@
            (merge (select-keys props [:workspace-id :bucket-access? :on-submission-success])
                   {:key config-id
                    :config-id config-id
-                   :on-rename #(nav/go-to-path
-                                :broadfcui.page.workspace.details/method-config
-                                workspace-id
-                                (assoc config-id :name %))
-                   :after-delete #(nav/go-to-path
-                                   :broadfcui.page.workspace.details/method-configs
-                                   workspace-id)})]
+                   :on-rename #(nav/go-to-path :workspace-method-config
+                                               workspace-id
+                                               (assoc config-id :name %))
+                   :after-delete #(nav/go-to-path :workspace-method-configs workspace-id)})]
           [MethodConfigurationsList
            (merge (select-keys props [:workspace-id :workspace :request-refresh])
                   {:ref "method-config-list"
-                   :on-config-imported #(nav/go-to-path
-                                         :broadfcui.page.workspace.details/method-config
-                                         workspace-id
-                                         %)})])]))})
+                   :on-config-imported #(nav/go-to-path :workspace-method-config
+                                                        workspace-id
+                                                        %)})])]))})

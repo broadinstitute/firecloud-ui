@@ -54,11 +54,10 @@
                         name
                         (style/create-link
                          {:text name
-                          :href (nav/get-link
-                                 :broadfcui.page.workspace.details/workflow
-                                 (:workspace-id props)
-                                 (:submission-id props)
-                                 id)}))))}
+                          :href (nav/get-link :workspace-workflow
+                                              (:workspace-id props)
+                                              (:submission-id props)
+                                              id)}))))}
                  {:header "Last Changed" :starting-width 280 :as-text moncommon/render-date}
                  {:header "Status" :starting-width 120
                   :content-renderer (fn [status]
@@ -107,10 +106,9 @@
         [:div {:style {:marginBottom "1rem" :fontSize "1.1rem"}}
          [comps/Breadcrumbs {:crumbs
                              [{:text "Workflows"
-                               :href (nav/get-link
-                                      :broadfcui.page.workspace.details/submission
-                                      (:workspace-id props)
-                                      (:submission-id props))}
+                               :href (nav/get-link :workspace-submission
+                                                   (:workspace-id props)
+                                                   (:submission-id props))}
                               {:text workflowName}]}]]
         (workflow-details/render
          (merge (select-keys props [:workspace-id :submission-id :bucketName])
@@ -128,7 +126,7 @@
                                    :onClick (fn [_]
                                               (comps/push-confirm
                                                {:text "Are you sure you want to abort this submission?"
-                                                :on-confirm #(react/call :abort-submission this)}))}])
+                                                :on-confirm #(this :abort-submission)}))}])
    :abort-submission (fn [{:keys [props state]}]
                        (modal/pop-modal)
                        (swap! state assoc :aborting-submission? true)
