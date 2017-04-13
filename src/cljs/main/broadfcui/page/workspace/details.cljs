@@ -185,8 +185,7 @@
        (react/call :refresh-workspace this)))})
 
 (defn- ws-path [ws-id]
-  (str "workspaces/" (js/encodeURIComponent (:namespace ws-id)) "/"
-       (js/encodeURIComponent (:name ws-id))))
+  (str "workspaces/" (:namespace ws-id) "/" (:name ws-id)))
 
 (defn add-nav-paths []
   (nav/defpath
