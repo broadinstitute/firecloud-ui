@@ -14,8 +14,16 @@
   (assert (not (contains? @all-path-handlers k)) (str "Key " k " already defined"))
   (swap! all-path-handlers assoc k handler))
 
+(defonce all-redirects (atom []))
+
+(defn defredirect [handler]
+  (assert (contains? handler :regex))
+  (assert (contains? handler :make-path))
+  (swap! all-redirects conj handler))
+
 (defn clear-paths []
-  (reset! all-path-handlers {}))
+  (reset! all-path-handlers {})
+  (reset! all-redirects []))
 
 (defn find-path-handler [window-hash]
   (let [cleaned (js/decodeURI (subs window-hash 1))
@@ -49,3 +57,22 @@
 
 (defn is-current-path? [k & args]
   (= (apply get-path k args) (subs (aget js/window "location" "hash") 1)))
+
+(defn execute-redirects [window-hash]
+  (let [cleaned (js/decodeURI (subs window-hash 1))
+        matching-handlers (filter
+                           (complement nil?)
+                           (map
+                            (fn [handler]
+                              (when-let [matches (re-matches (:regex handler) cleaned)]
+                                (let [make-path (:make-path handler)]
+                                  (assoc handler
+                                         ;; First match is the entire string, so toss that one.
+                                         :make-path #(apply make-path (rest matches))))))
+                            @all-redirects))]
+    (assert (not (> (count matching-handlers) 1))
+            (str "Multiple redirects matched path: " (map :regex matching-handlers)))
+    (when-let [handler (first (not-empty matching-handlers))]
+      (let [{:keys [make-path]} handler]
+        (js-invoke (aget js/window "location") "replace" (str "#" (make-path)))
+        true))))

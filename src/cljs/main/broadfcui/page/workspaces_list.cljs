@@ -283,9 +283,10 @@
       [WorkspaceList]])})
 
 (defn add-nav-paths []
+  (nav/defredirect {:regex #"workspaces" :make-path (fn [] "")})
   (nav/defpath
     :workspaces
     {:component Page
      :regex #""
-     :make-props (fn [_] {})
+     :make-props (fn [] {})
      :make-path (fn [] "")}))

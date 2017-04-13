@@ -114,14 +114,17 @@
 (react/defc App
   {:handle-hash-change
    (fn [{:keys [state]}]
-     (swap! state assoc :window-hash (aget js/window "location" "hash")))
+     (let [window-hash (aget js/window "location" "hash")]
+       (when-not (nav/execute-redirects window-hash)
+         (swap! state assoc :window-hash window-hash))))
    :get-initial-state
    (fn []
      {:window-hash (aget js/window "location" "hash")
       :user-status #{}})
    :component-will-mount
    (fn [{:keys [this]}]
-     (init-nav-paths))
+     (init-nav-paths)
+     (nav/execute-redirects (aget js/window "location" "hash")))
    :render
    (fn [{:keys [this state]}]
      (let [{:keys [auth2 user-status window-hash]} @state
