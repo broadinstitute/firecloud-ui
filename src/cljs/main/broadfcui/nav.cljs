@@ -4,18 +4,18 @@
    [dmohs.react :as r]
    [broadfcui.utils :as u]))
 
-(defonce paths (atom {}))
+(defonce all-path-handlers (atom {}))
 
-(defn defpath [k m]
-  (assert (contains? m :regex))
-  (assert (contains? m :component))
-  (assert (contains? m :make-props))
-  (assert (contains? m :make-path))
-  (assert (not (contains? @paths k)) (str "Key " k " already defined"))
-  (swap! paths assoc k m))
+(defn defpath [k handler]
+  (assert (contains? handler :regex))
+  (assert (contains? handler :component))
+  (assert (contains? handler :make-props))
+  (assert (contains? handler :make-path))
+  (assert (not (contains? @all-path-handlers k)) (str "Key " k " already defined"))
+  (swap! all-path-handlers assoc k handler))
 
 (defn clear-paths []
-  (reset! paths {}))
+  (reset! all-path-handlers {}))
 
 (defn find-path-handler [window-hash]
   (let [cleaned (subs window-hash 1)
@@ -30,7 +30,7 @@
                                          :key k
                                          ;; First match is the entire string, so toss that one.
                                          :make-props #(apply make-props (rest matches))))))
-                            @paths))]
+                            @all-path-handlers))]
     (assert (not (> (count matching-handlers) 1))
             (str "Multiple keys matched path: " (map :key matching-handlers)))
     (if (empty? matching-handlers)
@@ -38,9 +38,10 @@
       (first matching-handlers))))
 
 (defn get-path [k & args]
-  (let [handler (get @paths k)
+  (let [handler (get @all-path-handlers k)
         {:keys [make-path]} handler]
-    (assert handler (str "No handler found for key " k ". Valid path keys are: " (keys @paths)))
+    (assert handler
+            (str "No handler found for key " k ". Valid path keys are: " (keys @all-path-handlers)))
     (js/encodeURI (apply make-path args))))
 
 (defn get-link [k & args]
