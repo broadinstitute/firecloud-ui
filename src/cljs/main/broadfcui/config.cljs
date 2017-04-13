@@ -16,11 +16,12 @@
 
 (defn check-config [config]
   (let [config-keys (set (keys config))
-        required {"apiUrlRoot" :string "googleClientId" :string "tcgaNamespace" :string}
+        required {"apiUrlRoot" :string "googleClientId" :string "tcgaNamespace" :string
+                  "alertsJsonUrl" :string}
         optional {"cromwellVersion" :string "isDebug" :boolean "shibbolethUrlRoot" :string
                   "submissionStatusRefresh" :integer "userGuideUrl" :string
                   "workflowCountWarningThreshold" :integer "billingGuideUrl" :string
-                  "callCachingGuideUrl" :string "alertsJsonUrl" :string}
+                  "callCachingGuideUrl" :string "alertsPollInterval" :integer}
         all (merge required optional)
         missing-required (filter #(not (contains? config-keys %)) (keys required))
         extra (clojure.set/difference config-keys (set (keys all)))
@@ -44,7 +45,8 @@
 (defn tcga-namespace [] (get @config "tcgaNamespace"))
 (defn workflow-count-warning-threshold [] (get @config "workflowCountWarningThreshold" 100))
 (defn submission-status-refresh [] (get @config "submissionStatusRefresh" 60000)) ;; milliseconds
-(defn status-alerts-refresh [] (get @config "statusAlertsRefresh" 60000)) ;; milliseconds
+(defn status-alerts-refresh [] (get @config "alertsPollInterval" 60000)) ;; milliseconds
+(defn max-retry-attempts [] (get @config "maxRetryAttempts" 6)) ;; 6 exponential retries = ~ 2 minutes
 (defn cromwell-version [] (get @config "cromwellVersion" "n/a"))
 (defn user-guide-url [] (get @config "userGuideUrl"))
 (defn billing-guide-url [] (get @config "billingGuideUrl"))

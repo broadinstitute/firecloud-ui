@@ -125,33 +125,56 @@
     (str message " ")
      (when link [:a {:href (str link) :target "_blank" :style {:color "#fff"}} "Read more..."])]])
 
+(defn status-alert-interval [attempt]
+  (utils/cljslog attempt)
+  (cond
+    (= attempt 0) (config/status-alerts-refresh)
+    (> attempt (config/max-retry-attempts)) (config/status-alerts-refresh)
+    :else (utils/get-exponential-backoff-interval attempt)))
+
 (react/defc StatusAlertContainer
-  {:render
+  {:get-initial-state
+   (fn []
+     {:failedRetries 0})
+   :render
    (fn [{:keys [this state]}]
      (when-let [alerts (not-empty (:alerts @state))]
        [:div {}
         (map (fn [alert]
                (status-alert (:title alert) (:message alert) (:link alert)))
              alerts)]))
+   :component-did-update
+   (fn [{:keys [this state locals]}]
+     ;; Reset the interval
+     (js/clearInterval (:interval-id @locals))
+     ;; Update the poll interval based on the number of failed attempts (for expontential back offs)
+     (swap! locals assoc :interval-id
+            (js/setInterval #(this :load-alerts) (status-alert-interval (:failedRetries @state)))))
    :component-did-mount
-   (fn [{:keys [this locals]}]
+   (fn [{:keys [this state locals]}]
      ;; Call once for intiial load
      (this :load-alerts)
-     ;; Add a long-polling call for continuous updates
+     ;; Add initial poll interval
      (swap! locals assoc :interval-id
-            (js/setInterval #(this :load-alerts) (config/status-alerts-refresh))))
+            (js/setInterval #(this :load-alerts) (status-alert-interval (:failedRetries @state)))))
    :component-will-unmount
-   (fn [{:keys [locals]}]
+   (fn [{:keys [state locals]}]
      (js/clearInterval (:interval-id @locals)))
    :load-alerts
-   (fn [{:keys [state]}]
+   (fn [{:keys [locals state]}]
      (utils/ajax {:url (config/alerts-json-url)
                   :headers {"Cache-Control" "no-store, no-cache"}
-                  :on-done (fn [{:keys [raw-response]}]
-                             (let [[parsed _] (utils/parse-json-string raw-response true false)]
-                               (if (not (empty? parsed))
-                                 (swap! state assoc :alerts parsed :hidden false)
-                                 (swap! state dissoc :alerts))))}))})
+                  :on-done (fn [{:keys [status-code raw-response]}]
+                             (if (utils/check-server-down status-code)
+                               (if (>= (:failedRetries @state) (config/max-retry-attempts))
+                                 (swap! state assoc :alerts [{:title "Google Service Alert"
+                                                            :message "There may be problems accessing data in Google Cloud Storage."
+                                                            :link "https://status.cloud.google.com/"}])
+                                 (swap! state assoc :failedRetries (+ (:failedRetries @state) 1)))
+                               (let [[parsed _] (utils/parse-json-string raw-response true false)]
+                                 (if (not-empty parsed)
+                                   (swap! state assoc :alerts parsed  :failedRetries 0)
+                                   (swap! state dissoc :alerts)))))}))})
 
 (react/defc App
   {:handle-hash-change
