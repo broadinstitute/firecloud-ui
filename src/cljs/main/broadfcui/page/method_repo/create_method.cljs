@@ -99,7 +99,6 @@
    (fn [{:keys [props state refs]}]
      (let [[namespace name & fails] (input/get-and-validate refs "namespace" "name")
            [synopsis documentation] (common/get-text refs "synopsis" "documentation")
-           type "Workflow"
            wdl (react/call :call-method (@refs "wdl-editor") "getValue")
            fails (or fails (when (clojure.string/blank? wdl) ["Please enter the WDL payload"]))]
        (swap! state assoc :validation-errors fails)
@@ -112,7 +111,7 @@
                      :synopsis synopsis
                      :documentation documentation
                      :payload wdl
-                     :entityType type}
+                     :entityType "Workflow"}
            :headers utils/content-type=json
            :on-done
            (fn [{:keys [success? get-parsed-response]}]
