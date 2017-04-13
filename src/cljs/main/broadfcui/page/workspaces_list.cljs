@@ -203,13 +203,14 @@
                                        {:borderTop style/standard-line})))
                   :cell table-style/clip-text}}
          :toolbar {:style {:display "initial"}
-                   :filter-bar {:style {:float "left"}}
+                   :filter-bar {:style {:float "left"}
+                                :inner {:width 300}}
                    :items [[:div {:style {:float "right"}}
                             [create/Button (select-keys props [:nav-context :billing-projects :disabled-reason])]]
                            [:div {:style {:clear "left" :float "left" :marginTop "0.5rem"}}
-                            (style/create-link {:text (if filters-expanded? "Hide filters" "Show filters")
+                            (style/create-link {:text (if filters-expanded? "Collapse" "Show additional filters")
                                                 :onClick #(swap! state update :filters-expanded? not)})]
-                           [:div {:style {:clear "both" :marginBottom "1rem"}}]
+                           [:div {:style {:clear "both"}}]
                            (when filters-expanded?
                              (this :-side-filters))]}
          :paginator {:style {:clear "both"}}}]))
