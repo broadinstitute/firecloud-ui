@@ -42,18 +42,16 @@
        (utils/ajax-orch (:path (:request props))
                         {:on-done #(swap! state assoc :response %)})))})
 
-
-(defn render []
-  (react/create-element
-   :div {:style {:padding "1em"}}
-   [:h2 {} "Service Status"]
-   [:div {}
-    [StatusLine {:label "Orchestration" :request {:path "/status/ping"}}]
-    [StatusLine {:label "Rawls" :request {:path "/workspaces"}}]
-    [StatusLine {:label "Agora" :request {:path "/methods"}}]
-    [StatusLine {:label "Thurloe" :request {:path "/profile"}}]]))
-
-(react/defc Page {:render render})
+(react/defc Page
+  {:render
+   (fn [_]
+     [:div {:style {:padding "1em"}}
+      [:h2 {} "Service Status"]
+      [:div {}
+       [StatusLine {:label "Orchestration" :request {:path "/status/ping"}}]
+       [StatusLine {:label "Rawls" :request {:path "/workspaces"}}]
+       [StatusLine {:label "Agora" :request {:path "/methods"}}]
+       [StatusLine {:label "Thurloe" :request {:path "/profile"}}]]])})
 
 (defn add-nav-paths []
   (nav/defpath
