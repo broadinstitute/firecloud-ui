@@ -65,7 +65,7 @@
                                          :items [{:href (config/user-guide-url) :target "_blank"
                                                   :text "User Guide"}
                                                  {:href (config/forum-url) :target "_blank"
-                                                  :text "Firecloud Forums"}]})]
+                                                  :text "FireCloud Forum"}]})]
           (when (= :registered (:registration-status @state))
             [header/GlobalSubmissionStatus])]]
         (case (:registration-status @state)
