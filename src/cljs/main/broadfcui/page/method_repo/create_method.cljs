@@ -1,16 +1,17 @@
 (ns broadfcui.page.method-repo.create-method
   (:require
-    [dmohs.react :as react]
-    [broadfcui.common :as common]
-    [broadfcui.common.codemirror :refer [CodeMirror]]
-    [broadfcui.common.components :as comps]
-    [broadfcui.common.input :as input]
-    [broadfcui.common.modal :as modal]
-    [broadfcui.common.style :as style]
-    [broadfcui.config :as config]
-    [broadfcui.endpoints :as endpoints]
-    [broadfcui.utils :as utils]
-    ))
+   [dmohs.react :as react]
+   [broadfcui.common :as common]
+   [broadfcui.common.codemirror :refer [CodeMirror]]
+   [broadfcui.common.components :as comps]
+   [broadfcui.common.input :as input]
+   [broadfcui.common.modal :as modal]
+   [broadfcui.common.style :as style]
+   [broadfcui.config :as config]
+   [broadfcui.endpoints :as endpoints]
+   [broadfcui.nav :as nav]
+   [broadfcui.utils :as utils]
+   ))
 
 
 (react/defc CreateMethodDialog
@@ -120,5 +121,10 @@
            (fn [{:keys [success? get-parsed-response]}]
              (swap! state dissoc :uploading?)
              (if success?
-               (do (modal/pop-modal) ((:on-success props) (get-parsed-response false)))
+               (do
+                 (modal/pop-modal)
+                 (let [response (get-parsed-response)
+                       {:keys [namespace name snapshotId]} response]
+                   (nav/go-to-path :method {:namespace namespace :name name
+                                            :snapshot-id snapshotId})))
                (swap! state assoc :upload-error (get-parsed-response false))))}))))})

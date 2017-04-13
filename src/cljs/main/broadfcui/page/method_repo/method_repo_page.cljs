@@ -15,10 +15,12 @@
    (fn [{:keys [props]}]
      [:div {:style {:padding "1.5rem 1rem 0"}}
       [MethodConfigImporter
-       {:allow-edit true
-        :after-import
-        (fn [{:keys [workspace-id config-id]}]
-          (comps/push-ok-cancel-modal
+       (merge
+        (select-keys props [:id :type])
+        {:allow-edit true
+         :after-import
+         (fn [{:keys [workspace-id config-id]}]
+           (comps/push-ok-cancel-modal
             {:header "Export successful"
              :content "Would you like to go to the edit page now?"
              :cancel-text "No, stay here"
@@ -26,7 +28,7 @@
              {:text "Yes"
               :onClick modal/pop-modal
               :href (nav/get-link :broadfcui.page.workspace.details/method-config
-                                  workspace-id config-id)}}))}]])})
+                                  workspace-id config-id)}}))})]])})
 
 (defn add-nav-paths []
   (nav/defpath
@@ -36,20 +38,20 @@
      :make-props (fn [_] {})
      :make-path (fn [] "methods")})
   (nav/defpath
-    ::method
+    :method
     {:component Page
      :regex #"methods/m/([^/]+)/([^/]+)/([^/]+)"
      :make-props (fn [namespace name snapshot-id]
-                   {:method-id (u/restructure namespace name snapshot-id)})
+                   {:type :method :id (u/restructure namespace name snapshot-id)})
      :make-path (fn [method-id]
                   (str "methods/m/" (:namespace method-id) "/" (:name method-id) "/"
                        (:snapshot-id method-id)))})
   (nav/defpath
-    ::config
+    :method-config
     {:component Page
      :regex #"methods/c/([^/]+)/([^/]+)/([^/]+)"
      :make-props (fn [namespace name snapshot-id]
-                   {:config-id (u/restructure namespace name snapshot-id)})
+                   {:type :config :id (u/restructure namespace name snapshot-id)})
      :make-path (fn [config-id]
                   (str "methods/c/" (:namespace config-id) "/" (:name config-id) "/"
                        (:snapshot-id config-id)))}))
