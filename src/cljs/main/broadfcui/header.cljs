@@ -34,48 +34,19 @@
        (when (:show-nih-link-warning? props)
          [nih-link-warning/NihLinkWarning])]])})
 
-(r/defc AccountDropdown
-  {:render
-   (fn [{:keys [props state]}]
-     [:div {:style {:float "right" :position "relative" :marginBottom "0.4rem"}}
-      (when (:show-dropdown? @state)
-        [:div {:style {:position "fixed" :top 0 :left 0 :right 0 :bottom 0}
-               :onClick #(swap! state assoc :show-dropdown? false)}])
-      [:a {:href "javascript:;"
-           :onClick #(swap! state assoc :show-dropdown? true)
-           :style {:display "block"
-                   :borderRadius 2
-                   :backgroundColor (:background-light style/colors)
-                   :color "#000" :textDecoration "none"
-                   :padding "0.5rem" :border style/standard-line
-                   :minWidth 100}}
-       [:div {}
-        (-> (:auth2 props) (.-currentUser) (.get) (.getBasicProfile) (.getEmail))
-        [:div {:style {:display "inline-block" :marginLeft "1em" :fontSize 8}} "▼"]]]
-      (when (:show-dropdown? @state)
-        (let [DropdownItem
-              (r/create-class
-               {:render
-                (fn [{:keys [props state]}]
-                  [:a {:style {:display "block"
-                               :color "#000" :textDecoration "none" :fontSize 14
-                               :padding "0.5rem 1.3rem 0.5rem 0.5rem"
-                               :backgroundColor (when (:hovering? @state) "#e8f5ff")}
-                       :href (:href props)
-                       :onMouseOver #(swap! state assoc :hovering? true)
-                       :onMouseOut #(swap! state assoc :hovering? false)
-                       :onClick (:dismiss props)}
-                   (:text props)])})]
-          [:div {:style {:boxShadow "0px 3px 6px 0px rgba(0, 0, 0, 0.15)"
-                         :backgroundColor "#fff"
-                         :position "absolute" :width "100%"
-                         :border (str "1px solid " (:line-default style/colors))}}
-           [DropdownItem {:href "#profile" :text "Profile"
-                          :dismiss #(swap! state assoc :show-dropdown? false)}]
-           [DropdownItem {:href "#billing" :text "Billing"
-                          :dismiss #(swap! state assoc :show-dropdown? false)}]
-           [DropdownItem {:href "javascript:;" :text "Sign Out"
-                          :dismiss #(.signOut (:auth2 props))}]]))])})
+(defn create-account-dropdown [auth2]
+  (common/render-dropdown-menu
+   {:label [:div {:style {:borderRadius 2
+                          :backgroundColor (:background-light style/colors)
+                          :color "#000" :textDecoration "none"
+                          :padding "0.5rem" :border style/standard-line}}
+            (-> auth2 (.-currentUser) (.get) (.getBasicProfile) (.getEmail))
+            [:div {:style {:display "inline-block" :marginLeft "1em" :fontSize 8}} "▼"]]
+    :width 125
+    :button-style {:height 32}
+    :items [{:href "#profile" :text "Profile"}
+            {:href "#billing" :text "Billing"}
+            {:text "Sign Out" :dismiss #(.signOut auth2)}]}))
 
 (r/defc GlobalSubmissionStatus
   {:render

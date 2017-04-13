@@ -4,6 +4,7 @@
    [broadfcui.auth :as auth]
    [broadfcui.common :as common]
    [broadfcui.common.components :as comps]
+   [broadfcui.common.flex-utils :as flex]
    [broadfcui.common.icons :as icons]
    [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
@@ -49,18 +50,24 @@
                      (= page :status))
          (nav/navigate (:nav-context props) "workspaces"))
        [:div {}
-        [:div {:style {:width "100%" :borderBottom (str "1px solid " (:line-default style/colors))}}
-         [:div {:style {:float "right" :fontSize "70%" :margin "0 0 0.5em 0"}}
-          [header/AccountDropdown {:auth2 (:auth2 props)}]
-          (common/question-icon-link "FireCloud User Guide" (config/user-guide-url) {:display "block" :float "right"})
-          (common/clear-both)
-          (when (= :registered (:registration-status @state))
-            [header/GlobalSubmissionStatus])]
+        [:div {:style {:display "flex" :borderBottom (str "1px solid " (:line-default style/colors))}}
          (when (= :registered (:registration-status @state))
            [header/TopNavBar {:routes routes
                               :selected-item page
                               :show-nih-link-warning? (not (contains? #{:status :profile} page))}])
-         (common/clear-both)]
+         flex/spring
+         [:div {:style {:display "flex" :flexDirection "column" :fontSize "70%" :marginBottom "0.4rem"}}
+          [:div {:style {:marginBottom "0.4rem"}}
+           (header/create-account-dropdown (:auth2 props))
+           (common/render-dropdown-menu {:label (icons/icon {:style style/secondary-icon-style} :help)
+                                         :width 150
+                                         :button-style {:height 32 :marginRight "0.5rem"}
+                                         :items [{:href (config/user-guide-url) :target "_blank"
+                                                  :text "User Guide"}
+                                                 {:href (config/forum-url) :target "_blank"
+                                                  :text "Firecloud Forums"}]})]
+          (when (= :registered (:registration-status @state))
+            [header/GlobalSubmissionStatus])]]
         (case (:registration-status @state)
           nil [:div {:style {:margin "2em 0" :textAlign "center"}}
                [comps/Spinner {:text "Loading user information..."}]]

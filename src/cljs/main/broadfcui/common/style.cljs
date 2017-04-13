@@ -25,6 +25,10 @@
     "Running" (:running-state colors)
     "Exception" (:exception-state colors)))
 
+(def secondary-icon-style
+  {:color (:text-light colors)
+   :fontSize "1.2rem" :lineHeight "0.6rem"
+   :padding "0.4rem"})
 
 (defn create-section-header [text]
   [:div {:style {:fontSize "125%" :fontWeight 500}} text])
