@@ -117,7 +117,7 @@
                 (str (:library:datasetCustodian data) " <" (:library:contactEmail data) ">")]
                " and request access for the "
                (:namespace data) "/" (:name data) " workspace."])}))}
-       {:href (nav/get-link :broadfcui.page.workspace.details/summary
+       {:href (nav/get-link :workspace-summary
                             (common/row->workspace-id data))}))
    :build-aggregate-fields
    (fn [{:keys [props]}]
