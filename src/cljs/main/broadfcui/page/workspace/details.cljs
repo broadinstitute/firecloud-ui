@@ -172,11 +172,10 @@
                                                  :workspace-submission workspace-id %)}])
              MONITOR (react/create-element
                       [monitor-tab/Page
-                       {:ref MONITOR
-                        :workspace-id workspace-id
-                        :workspace workspace
-                        :submission-id (:submission-id props)
-                        :workflow-id (:workflow-id props)}])))]]))
+                       (merge
+                        {:ref MONITOR}
+                        (select-keys props [:submission-id :workflow-id :workspace-id])
+                        (select-keys @state [:workspace]))])))]]))
    :component-did-mount
    (fn [{:keys [props this]}]
      ;; These tabs don't request a refresh, so if we nav straight there then we need to kick one
