@@ -42,7 +42,7 @@
                           :padding "0.5rem" :border style/standard-line}}
             (-> auth2 (.-currentUser) (.get) (.getBasicProfile) (.getEmail))
             [:div {:style {:display "inline-block" :marginLeft "1em" :fontSize 8}} "▼"]]
-    :width 150
+    :width :auto
     :button-style {:height 32}
     :items [{:href "#profile" :text "Profile"}
             {:href "#billing" :text "Billing"}

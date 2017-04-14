@@ -275,7 +275,11 @@
          ;; empty string makes react attach a property with no value
          [:div {:className (str "dropdown-pane " dropdown-class) :id dropdown-id :data-dropdown ""
                 :ref (this :-create-dropdown-ref-handler)
-                :style (merge {:whiteSpace "normal"} (:style-override props))}
+                :style (merge
+                        {:whiteSpace "normal"}
+                        (:style-override props)
+                        (when (= (get-in props [:style-override :width]) :auto)
+                          {:width (.-clientWidth (react/find-dom-node this))}))}
           (when (:render-contents? @state)
             contents)])
         dropdown-container)))
