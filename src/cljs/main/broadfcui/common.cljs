@@ -317,13 +317,14 @@
          (.off (js/$ (react/find-dom-node this)) "click")
          (.off (js/$ element) "hide.zf.dropdown"))}))})
 
-(defn render-icon-dropdown [{:keys [text icon-name icon-color]}]
+(defn render-icon-dropdown [{:keys [text position icon-name icon-color]}]
   [FoundationDropdown {:contents text
+                       :dropdown-class position
                        :button-contents (icons/icon {:style {:color icon-color}} icon-name)}])
 
 (defn render-info-box [{:keys [text position]}]
   (render-icon-dropdown {:text text
-                         :dropdown-class position
+                         :position position
                          :icon-name :information :icon-color (:link-active style/colors)}))
 
 (defn render-dropdown-menu [{:keys [label items width button-style]}]
