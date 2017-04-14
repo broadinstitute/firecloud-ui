@@ -628,7 +628,7 @@
 
 (defn copy-entity-to-workspace [workspace-id re-link-soft-conflicts?]
   {:path (str "/workspaces/" (ws-path workspace-id)
-              "/entities/copy?linkExistingEntities=" (true? re-link-soft-conflicts?))
+              "/entities/copy?linkExistingEntities=" (boolean re-link-soft-conflicts?))
    :method :post})
 
 

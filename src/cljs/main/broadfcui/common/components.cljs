@@ -306,10 +306,11 @@
                                                        :timeZoneName "short"))])
                 (when source [:div {} "Source: " source])
                 (when (seq causes)
-                  (let [num-hidden (- (count causes) 4)]
+                  (let [num-shown 4
+                        num-hidden (- (count causes) num-shown)]
                     [:div {}
                      [:div {} (str "Cause" (when (> (count causes) 1) "s") ":")]
-                     (map (fn [cause] [CauseViewer cause]) (take 4 causes))
+                     (map (fn [cause] [CauseViewer cause]) (take num-shown causes))
                      (when (pos? num-hidden)
                        [:div {} (str num-hidden " not shown")])]))
                 (when (seq stack-trace)
@@ -689,8 +690,25 @@
    (fn [{:keys [refs]}]
      (.select2 (js/$ (@refs "input-element")) "destroy"))})
 
-
+;; Declared because it calls itself recursively.
 (declare Tree)
+
+(defn- is-branch-value? [value]
+  (and (vector? value) (not-empty value)))
+
+(defn- is-leaf-node? [node]
+  (not-any?
+   (fn [key]
+     (let [value (node key)]
+       (is-branch-value? value)))
+   (keys node)))
+
+(defn- map-node [node f]
+  (map
+   (fn [key]
+     (let [value (node key)]
+       (f key value (not (is-branch-value? value)))))
+   (keys node)))
 
 (react/defc Tree
   ":start-collapsed? (optional [false]) - Start with branches collapsed
@@ -709,24 +727,20 @@
             (map (fn [node]
                    [:ul {:style {:margin "0.2rem" :padding "0.5rem"
                                  :backgroundColor (if (and (:highlight-ends? props)
-                                                           (not-any? (fn [key]
-                                                                       (let [value (get node key)]
-                                                                         (and (vector? value)
-                                                                              (not-empty value))))
-                                                                     (keys node)))
+                                                           (is-leaf-node? node))
                                                     (:warning-state style/colors)
                                                     "rgba(0,0,0,0.1)")
                                  :borderRadius 8}}
-                    (map (fn [key]
-                           [:li {:style {:listStyle "none" :padding "0.1rem"}}
-                            (let [value (get node key)]
-                              (if (and (vector? value) (not-empty value))
-                                [Tree {:data value
-                                       :start-collapsed? (:start-collapsed? props)
-                                       :highlight-ends? (:highlight-ends? props)
-                                       :label [:strong {} key ":"]}]
-                                [:span {} [:strong {} key ": "] value]))])
-                         (keys node))])
+                    (map-node
+                     node
+                     (fn [key value leaf?]
+                       [:li {:style {:listStyle "none" :padding "0.1rem"}}
+                        (if leaf?
+                          [:span {} [:strong {} key ": "] value]
+                          [Tree {:data value
+                                 :start-collapsed? (:start-collapsed? props)
+                                 :highlight-ends? (:highlight-ends? props)
+                                 :label [:strong {} key ":"]}])]))])
                  (:data props))]]
        (if (:label props)
          [:span {}

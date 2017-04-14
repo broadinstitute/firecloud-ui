@@ -33,5 +33,5 @@ $tooltip-font-size: 0.8rem;
 
 .dropdown-pane {
   font-weight: normal;
-  z-index: 523;
+  z-index: 523; // Our modals are at 513
 }

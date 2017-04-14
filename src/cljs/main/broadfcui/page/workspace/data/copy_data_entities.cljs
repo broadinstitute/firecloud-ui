@@ -98,29 +98,28 @@
                        import-type "s in, the source workspace."
                        (common/render-info-box
                         {:position "top"
-                         :text (react/create-element
-                                [:span {}
-                                 [:div {:style {:paddingBottom "1rem"}}
-                                  "Every entity (participant, sample, etc.) has an ID. Multiple
-                                  entities cannot share the same ID, they must be unique."]
-                                 [:div {:style {:paddingBottom "1rem"}}
-                                  "Entities can be linked by their ID. For example, a sample can be
-                                   linked to a participant."]
-                                 [:div {:style {:paddingBottom "1rem"}}
-                                  "If you import a sample that is linked to a participant, that
-                                  participant will also be imported. However, if the imported
-                                  participant (\"source participant\") has the same ID as an existing
-                                  participant in the workspace (\"destination participant\"), the
-                                  import cannot finish. Since two entities cannot have the same ID,
-                                  this would cause a conflict."]
-                                 [:div {:style {:paddingBottom "1rem"}}
-                                  "Re-linking allows the sample to link to the participant that was
-                                  already in the workspace (\"destination participant\")."]
-                                 [:div {:style {:paddingBottom "1rem"}}
-                                  "Keep in mind that there may be differences between the \"source
-                                  participant\" and the \"destination participant\", so you may want
-                                  to confirm that they are actually the same."]
-                                 [:div {} "All other attributes of the source will be imported normally."]])})]])]
+                         :text [:span {}
+                                [:div {:style {:paddingBottom "1rem"}}
+                                 "Every entity (participant, sample, etc.) has an ID. Multiple
+                                 entities cannot share the same ID, they must be unique."]
+                                [:div {:style {:paddingBottom "1rem"}}
+                                 "Entities can be linked by their ID. For example, a sample can be
+                                  linked to a participant."]
+                                [:div {:style {:paddingBottom "1rem"}}
+                                 "If you import a sample that is linked to a participant, that
+                                 participant will also be imported. However, if the imported
+                                 participant (\"source participant\") has the same ID as an existing
+                                 participant in the workspace (\"destination participant\"), the
+                                 import cannot finish. Since two entities cannot have the same ID,
+                                 this would cause a conflict."]
+                                [:div {:style {:paddingBottom "1rem"}}
+                                 "Re-linking allows the sample to link to the participant that was
+                                 already in the workspace (\"destination participant\")."]
+                                [:div {:style {:paddingBottom "1rem"}}
+                                 "Keep in mind that there may be differences between the \"source
+                                 participant\" and the \"destination participant\", so you may want
+                                 to confirm that they are actually the same."]
+                                [:div {} "All other attributes of the source will be imported normally."]]})]])]
          :show-cancel? (not-empty soft-conflicts)
          :ok-button (if (not-empty soft-conflicts)
                       {:text "Re-link"
