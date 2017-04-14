@@ -26,6 +26,18 @@
                                        :link-label link-label)]
      (str gcs-uri))))
 
+(defn getTimingDiagramHeight [chartContainer]
+  (let [e (-> chartContainer (.-childNodes)
+              (aget 0) (.-childNodes)
+              (aget 0) (.-childNodes)
+              (aget 0) (.-childNodes))]
+    (-> (if (> (alength e) 1)
+          (let [el (-> e (aget 1) (.-childNodes) (aget 0) (.-childNodes) (aget 1) (.-childNodes))]
+            (aget el (- (alength el) 1)))
+          (let [el (-> e (aget 0) (.-childNodes) (aget 1) (.-childNodes))]
+            (aget el (- (alength el) 1))))
+        (aget "height") (aget "animVal") (aget "value"))))
+
 (defn- workflow-name [callName]
   (first (string/split callName ".")))
 
@@ -72,13 +84,7 @@
      (if (:expanded @state)
        (do
          (.timingDiagram js/window (get @refs "chart-container") (:data props) (:workflow-name props) 100)
-         (let [height (-> (get @refs "chart-container")
-                          .-childNodes (aget 0)
-                          .-childNodes (aget 0)
-                          .-childNodes (aget 0)
-                          .-childNodes (aget 1)
-                          .-childNodes (aget 0)
-                          (aget "height") (aget "animVal") (aget "value"))]
+         (let [height (getTimingDiagramHeight (get @refs "chart-container"))]
            (gdom/removeChildren "chart-container")
            (.timingDiagram js/window (get @refs "chart-container") (:data props) (:workflow-name props) (+ 75 height))))
        (gdom/removeChildren (get @refs "chart-container"))))})
