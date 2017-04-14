@@ -321,7 +321,7 @@
                        :button-contents (icons/icon {:style {:color icon-color}} icon-name)}])
 
 (defn render-info-box [{:keys [text]}]
-  (render-icon-dropdown {:contents text
+  (render-icon-dropdown {:text text
                          :icon-name :information :icon-color (:link-active style/colors)}))
 
 (defn render-dropdown-menu [{:keys [label items width button-style]}]
