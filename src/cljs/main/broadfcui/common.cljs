@@ -279,7 +279,8 @@
                         {:whiteSpace "normal"}
                         (:style props)
                         (when (= (get-in props [:style :width]) :auto)
-                          {:width (.-clientWidth (react/find-dom-node this))}))}
+                          {:width (.-clientWidth (react/find-dom-node this))
+                           :boxSizing "border-box" :minWidth 120}))}
           (when (:render-contents? @state)
             contents)])
         dropdown-container)))
@@ -332,10 +333,10 @@
                          button-style)
     :close-on-click true
     :dropdown-class "bottom"
-    :style {:boxShadow "0px 3px 6px 0px rgba(0, 0, 0, 0.15)"
-                     :backgroundColor "#fff"
-                     :padding 0 :width width
-                     :border (str "1px solid " (:line-default style/colors))}
+    :style {:boxShadow "0 3px 6px 0 rgba(0, 0, 0, 0.15)"
+            :backgroundColor "#fff"
+            :padding 0 :width width
+            :border style/standard-line}
     :contents (let [DropdownItem
                     (react/create-class
                      {:render
