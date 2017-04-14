@@ -17,7 +17,7 @@
 (defn- render-date [submission]
   (common/format-date (:submissionDate submission)))
 
-(defn- render-submissions-table [submissions nav-context bucketName]
+(defn- render-submissions-table [workspace-id submissions bucketName]
   [Table
    {:persistence-key "monitor" :v 1
     :body
@@ -29,7 +29,9 @@
        :sort-by :submissionDate :sort-initial :desc
        :render (fn [submission]
                  (style/create-link {:text (render-date submission)
-                                     :href (nav/create-href nav-context (:submissionId submission))}))}
+                                     :href (nav/get-link :workspace-submission
+                                                         workspace-id
+                                                         (:submissionId submission))}))}
       {:header "Status" :as-text :status :sort-by :text
        :render (fn [submission]
                  [:div {:style {:height table-style/table-icon-size}}
@@ -67,7 +69,7 @@
          [:div {:style {:textAlign "center"}} [comps/Spinner {:text "Loading analyses..."}]]
          error-message (style/create-server-error-message error-message)
          :else
-         (render-submissions-table submissions (:nav-context props) (:bucketName props)))))
+         (render-submissions-table (:workspace-id props) submissions (:bucketName props)))))
    :component-did-mount
    (fn [{:keys [this]}]
      (react/call :load-submissions this))
@@ -84,25 +86,19 @@
 (react/defc Page
   {:refresh
    (fn [{:keys [props refs]}]
-     (let [nav-context (nav/parse-segment (:nav-context props))
-           selected-submission-id (not-empty (:segment nav-context))]
-       (if selected-submission-id
-         (nav/back nav-context)
-         (react/call :reload (@refs "submissions-list")))))
+     (when-not (:submission-id props)
+       (react/call :reload (@refs "submissions-list"))))
    :render
    (fn [{:keys [props]}]
-     (let [workspace-id (:workspace-id props)
-           nav-context (nav/parse-segment (:nav-context props))
-           bucketName (get-in (:workspace props) [:workspace :bucketName])
-           selected-submission-id (not-empty (:segment nav-context))]
+     (let [{:keys [submission-id workspace-id]} props
+           bucketName (get-in (:workspace props) [:workspace :bucketName])]
        [:div {:style {:padding "1rem 1.5rem"}}
-        (if selected-submission-id
-          [submission-details/Page {:key selected-submission-id
+        (if submission-id
+          [submission-details/Page {:key submission-id
                                     :workspace-id workspace-id
                                     :bucketName bucketName
-                                    :submission-id selected-submission-id
-                                    :nav-context nav-context}]
+                                    :submission-id submission-id
+                                    :workflow-id (:workflow-id props)}]
           [SubmissionsList {:ref "submissions-list"
                             :workspace-id workspace-id
-                            :bucketName bucketName
-                            :nav-context nav-context}])]))})
+                            :bucketName bucketName}])]))})

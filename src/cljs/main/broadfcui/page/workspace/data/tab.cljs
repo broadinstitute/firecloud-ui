@@ -17,7 +17,7 @@
     [broadfcui.page.workspace.data.copy-data-workspaces :as copy-data-workspaces]
     [broadfcui.page.workspace.data.import-data :as import-data]
     [broadfcui.persistence :as persistence]
-    [broadfcui.utils :as u]
+    [broadfcui.utils :as utils]
     ))
 
 (defn- render-list-item [item]
@@ -178,10 +178,10 @@
               {:ref "entity-table"
                :workspace-id workspace-id
                :column-defaults (try
-                                  (u/parse-json-string (get-in workspace [:workspace :workspace-attributes
+                                  (utils/parse-json-string (get-in workspace [:workspace :workspace-attributes
                                                                           :workspace-column-defaults]))
                                   (catch js/Object e
-                                    (u/jslog e) nil))
+                                    (utils/jslog e) nil))
                :toolbar (fn [built-in]
                           (let [layout (fn [item] [:div {:style {:marginRight "1em"}}] item)]
                             [:div {:style {:display "flex" :alignItems "center" :marginBottom "1em"}}
@@ -194,7 +194,7 @@
                                                     (:name workspace-id) "/entities/" selected-entity-type "/tsv")}
                                 [:input {:type "hidden"
                                          :name "FCtoken"
-                                         :value (u/get-access-token)}]
+                                         :value (utils/get-access-token)}]
                                 [:input {:type "hidden"
                                          :name "attributeNames"
                                          :value (->> (persistence/try-restore
