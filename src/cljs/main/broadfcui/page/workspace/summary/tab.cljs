@@ -153,7 +153,7 @@
                             user-access-level library-schema request-refresh workspace-id storage-cost]}]
   (let [{:keys [owners]
          {:keys [createdBy createdDate bucketName description tags workspace-attributes library-attributes realm]} :workspace} workspace
-        realm-name (:realmName realm)
+        realm-name (:usersGroupName realm)
         render-detail-box (fn [order title & children]
                             [:div {:style {:flexBasis "50%" :order order}}
                              (style/create-section-header title)
@@ -178,7 +178,7 @@
               ")"])]
           (when realm-name
             [:div {:style {:paddingTop "0.5rem"}}
-             [:div {:style {:fontStyle "italic"}} "Access restricted to realm:"]
+             [:div {:style {:fontStyle "italic"}} "Access restricted to authorization domain:"]
              [:div {} realm-name]])))
       (render-detail-box
         3
