@@ -7,7 +7,7 @@
     [broadfcui.config :as config]
     [broadfcui.page.workspace.summary.library-utils :as library-utils]
     [broadfcui.utils :as utils]
-    ))
+    [broadfcui.common :as common]))
 
 
 (def ^:private ENUM_EMPTY_CHOICE "<select an option>")
@@ -107,11 +107,6 @@
                            :rows 3}))
 
 
-(defn- sanitize-html [s]
-  (->> s
-       (replace {"<" "&lt;" ">" "&gt;" "&" "&amp;"})
-       (apply str)))
-
 (defn- render-ontology-typeahead [{:keys [prop colorize value-nullsafe update-property state property library-schema disabled]}]
   [:div {:style {:marginBottom "0.75em"}}
    [comps/Typeahead {:field-attributes {:placeholder (:inputHint prop)
@@ -121,12 +116,17 @@
                      :remote {:url (str (config/api-url-root) "/duos/autocomplete/%QUERY")
                               :wildcard "%QUERY"
                               :cache false}
-                     :render-display #(sanitize-html (aget % "label"))
+                     :render-display #(-> (js/$ "<div>")
+                                          (.text (aget % "label")))
                      :disabled disabled
                      :render-suggestion (fn [result]
-                                          (str "<div> <div style='line-height: 1.5em;'>" (sanitize-html (aget result "label"))
-                                               "<small style='float: right;'>" (sanitize-html (aget result "id")) "</small></div>"
-                                               "<small style='font-style: italic;'> " (sanitize-html (aget result "definition")) "</small></div>"))
+                                          (-> (js/$ "<div>")
+                                              (.append (-> (js/$ "<div style='line-height: 1.5em;'>")
+                                                           (.text (aget result "label"))
+                                                           (.append (-> (js/$ "<small style='float: right;'>")
+                                                                        (.text (aget result "id")))))
+                                                       (-> (js/$ "<small style='font-style: italic;'> ")
+                                                           (.text (aget result "definition"))))))
                      :on-select (fn [_ suggestion]
                                   (let [[id label] (map (partial aget suggestion) ["id" "label"])
                                         [related-id-prop related-label-prop] (map #(-> prop % keyword) [:relatedID :relatedLabel])]
@@ -177,9 +177,8 @@
                                     :type "GET"
                                     :url (str (aget settings "url") "?q=" query))))}
      :typeaheadSuggestionTemplate (fn [result]
-                                    (str "<div style='textOverflow: ellipsis; overflow: hidden; font-size: smaller;'>"
-                                         (sanitize-html result)
-                                         "</div>"))}]])
+                                    (-> (js/$ "<div style='textOverflow: ellipsis; overflow: hidden; font-size: smaller;'>")
+                                        (.text result)))}]])
 
 (defn- render-textfield [{:keys [colorize type datatype prop value-nullsafe update-property disabled]}]
   (style/create-text-field {:style (colorize {:width "100%"})
