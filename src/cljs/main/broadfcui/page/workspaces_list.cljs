@@ -5,9 +5,7 @@
     [broadfcui.common :as common]
     [broadfcui.common.components :as comps]
     [broadfcui.common.filter :as filter]
-    [broadfcui.common.flex-utils :as flex]
     [broadfcui.common.icons :as icons]
-    [broadfcui.common.overlay :as overlay]
     [broadfcui.common.style :as style]
     [broadfcui.common.table.style :as table-style]
     [broadfcui.common.table.table :refer [Table]]
@@ -33,7 +31,7 @@
   {:render
    (fn [{:keys [props]}]
      (let [{:keys [data]} props
-           {:keys [href status disabled? hover-text workspace-id]} data]
+           {:keys [status disabled? hover-text workspace-id]} data]
        [:a {:href (if disabled?
                     "javascript:;"
                     (nav/get-link :workspace-summary workspace-id))
@@ -55,12 +53,12 @@
   {:render
    (fn [{:keys [props]}]
      (let [{:keys [data]} props
-           {:keys [status restricted? disabled? hover-text ws-id]} data
-           {:keys [namespace name]} ws-id
+           {:keys [status restricted? disabled? hover-text workspace-id]} data
+           {:keys [namespace name]} workspace-id
            color (style/color-for-status status)]
        [:a {:href (if disabled?
                     "javascript:;"
-                    (nav/get-link :workspace-summary ws-id))
+                    (nav/get-link :workspace-summary workspace-id))
             :style {:display "flex" :alignItems "center"
                     :backgroundColor (if disabled? (:disabled-state style/colors) color)
                     :color "white" :textDecoration "none"
@@ -80,7 +78,7 @@
          [:div {:style {:fontWeight 600}} name]]]))})
 
 (defn- get-workspace-name-string [column-data]
-  (str (get-in column-data [:ws-id :namespace]) "/" (get-in column-data [:ws-id :name])))
+  (str (get-in column-data [:workspace-id :namespace]) "/" (get-in column-data [:workspace-id :name])))
 
 (defn- get-workspace-description [ws]
   (not-empty (get-in ws [:workspace :attributes :description])))
@@ -151,7 +149,7 @@
           :columns
           (let [column-data (fn [ws]
                               (let [disabled? (= (:accessLevel ws) "NO ACCESS")]
-                                {:ws-id (select-keys (:workspace ws) [:namespace :name])
+                                {:workspace-id (select-keys (:workspace ws) [:namespace :name])
                                  :href (let [x (:workspace ws)] (str (:namespace x) ":" (:name x)))
                                  :status (:status ws)
                                  :disabled? disabled?
@@ -168,7 +166,7 @@
              {:id "Workspace" :header [:span {:style {:marginLeft 24}} "Workspace"]
               :initial-width 300
               :column-data column-data :as-text get-workspace-name-string
-              :sort-by #(mapv clojure.string/lower-case (replace (:ws-id %) [:namespace :name]))
+              :sort-by #(mapv clojure.string/lower-case (replace (:workspace-id %) [:namespace :name]))
               :render (fn [data] [WorkspaceCell (utils/restructure data nav-context)])}
              {:id "Description" :header [:span {:style {:marginLeft 14}} "Description"]
               :initial-width 350
