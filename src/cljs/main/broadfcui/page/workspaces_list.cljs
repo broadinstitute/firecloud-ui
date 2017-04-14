@@ -151,7 +151,7 @@
                                 [:hr {:style {:size "1px" :noshade true}}]
                                 (map checkbox realm-types)])}]))
         [table/Table
-         {:state-key "workspace-table"
+         {:state-key "workspace-table" :v 1
           :empty-message "No workspaces to display." :retain-header-on-empty? true
           :cell-padding-left nil
           :initial-rows-per-page 10
