@@ -277,8 +277,8 @@
                 :ref (this :-create-dropdown-ref-handler)
                 :style (merge
                         {:whiteSpace "normal"}
-                        (:style-override props)
-                        (when (= (get-in props [:style-override :width]) :auto)
+                        (:style props)
+                        (when (= (get-in props [:style :width]) :auto)
                           {:width (.-clientWidth (react/find-dom-node this))}))}
           (when (:render-contents? @state)
             contents)])
@@ -332,7 +332,7 @@
                          button-style)
     :close-on-click true
     :dropdown-class "bottom"
-    :style-override {:boxShadow "0px 3px 6px 0px rgba(0, 0, 0, 0.15)"
+    :style {:boxShadow "0px 3px 6px 0px rgba(0, 0, 0, 0.15)"
                      :backgroundColor "#fff"
                      :padding 0 :width width
                      :border (str "1px solid " (:line-default style/colors))}
