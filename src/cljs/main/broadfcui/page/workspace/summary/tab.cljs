@@ -178,7 +178,7 @@
               ")"])]
           (when realm-name
             [:div {:style {:paddingTop "0.5rem"}}
-             [:div {:style {:fontStyle "italic"}} "Access restricted to the authorization domain:"]
+             [:div {:style {:fontStyle "italic"}} "Access restricted to authorization domain:"]
              [:div {} realm-name]])))
       (render-detail-box
         3
