@@ -697,11 +697,7 @@
   (and (vector? value) (not-empty value)))
 
 (defn- is-leaf-node? [node]
-  (not-any?
-   (fn [key]
-     (let [value (node key)]
-       (is-branch-value? value)))
-   (keys node)))
+  (not-any? #(is-branch-value? (get node %)) (keys node)))
 
 (defn- map-node [node f]
   (map
