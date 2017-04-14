@@ -162,10 +162,10 @@
            (style/create-paragraph
             [:div {}
              [:div {:style {:fontWeight 200 :display "inline-block" :width 90}} "Namespace:"]
-             [:span {:style {:fontWeight 500}} (submission "methodConfigurationNamespace")]]
+             [:span {:style {:fontWeight 500}} (:methodConfigurationNamespace submission)]]
             [:div {}
              [:div {:style {:fontWeight 200 :display "inline-block" :width 90}} "Name:"]
-             [:span {:style {:fontWeight 500}} (submission "methodConfigurationName")]])
+             [:span {:style {:fontWeight 500}} (:methodConfigurationName submission)]])
            (style/create-section-header "Submission Entity")
            (style/create-paragraph
             [:div {}
