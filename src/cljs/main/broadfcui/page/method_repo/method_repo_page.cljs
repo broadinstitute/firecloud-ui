@@ -12,20 +12,45 @@
 
 (react/defc Page
   {:render
-   (fn [{:keys []}]
+   (fn [{:keys [props]}]
      [:div {:style {:padding "1.5rem 1rem 0"}}
       [MethodConfigImporter
-       {:allow-edit true
-        :after-import
-        (fn [{:keys [workspace-id config-id]}]
-          (comps/push-ok-cancel-modal
+       (merge
+        (select-keys props [:id :type])
+        {:allow-edit true
+         :after-import
+         (fn [{:keys [workspace-id config-id]}]
+           (comps/push-ok-cancel-modal
             {:header "Export successful"
              :content "Would you like to go to the edit page now?"
              :cancel-text "No, stay here"
              :ok-button
              {:text "Yes"
               :onClick modal/pop-modal
-              :href (str "#workspaces/"
-                         (:namespace workspace-id) "%3A" (:name workspace-id)
-                         "/Method%20Configurations/"
-                         (:namespace config-id) "%3A" (:name config-id))}}))}]])})
+              :href (nav/get-link :workspace-method-config workspace-id config-id)}}))})]])})
+
+(defn add-nav-paths []
+  (nav/defpath
+    :method-repo
+    {:component Page
+     :regex #"methods"
+     :make-props (fn [_] {})
+     :make-path (fn [] "methods")})
+  (nav/defpath
+    :method
+    {:component Page
+     :regex #"methods/m/([^/]+)/([^/]+)/([^/]+)"
+     :make-props (fn [namespace name snapshot-id]
+                   {:type :method :id (utils/restructure namespace name snapshot-id)})
+     :make-path (fn [method-id]
+                  (str "methods/m/" (:namespace method-id) "/" (:name method-id) "/"
+                       (:snapshot-id method-id)))})
+  (nav/defpath
+    :method-config
+    {:component Page
+     :regex #"methods/c/([^/]+)/([^/]+)/([^/]+)"
+     :make-props (fn [namespace name snapshot-id]
+                   {:type :config :id (utils/restructure namespace name snapshot-id)})
+     :make-path (fn [config-id]
+                  (str "methods/c/" (:namespace config-id) "/" (:name config-id) "/"
+                       (:snapshot-id config-id)))}))

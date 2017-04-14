@@ -3,7 +3,8 @@
    [broadfcui.common.components :as comps]
    [broadfcui.common.style :as style]
    [broadfcui.config :as config]
-   [broadfcui.utils :as u]
+   [broadfcui.nav :as nav]
+   [broadfcui.utils :as utils]
    clojure.string
    [dmohs.react :as r]
    ))
@@ -26,7 +27,7 @@
                     "https://www.googleapis.com/auth/compute"])
            init-options (clj->js {:client_id (config/google-client-id) :scope scopes})
            auth2 (js-invoke (aget js/gapi "auth2") "init" init-options)]
-       (u/set-google-auth2-instance! auth2)
+       (utils/set-google-auth2-instance! auth2)
        (on-loaded auth2)))})
 
 (r/defc Policy
@@ -60,8 +61,7 @@
    (fn [{:keys [this props]}]
      ;; Google's code complains if the sign-in button goes missing, so we hide this component rather
      ;; than removing it from the page.
-     [:div {:style {:display (when (:hidden? props) "none")}}
-      [:div {:style {:marginBottom "2em"}} (style/render-text-logo)]
+     [:div {:style {:display (when (:hidden? props) "none") :marginTop "2rem"}}
       [comps/Button {:text "Sign In" :onClick #(this :-handle-sign-in-click)}]
       [:div {:style {:marginTop "2em" :maxWidth 600}}
        [:div {} [:b {} "New user? FireCloud requires a Google account."]]
@@ -74,12 +74,12 @@
    (fn [{:keys [props locals]}]
      (swap! locals assoc :refresh-token-saved? true)
      (let [{:keys [on-change]} props]
-       (u/add-user-listener
+       (utils/add-user-listener
         ::logged-out
         #(on-change (js-invoke % "isSignedIn") (:refresh-token-saved? @locals)))))
    :component-will-unmount
    (fn [{:keys [props locals]}]
-     (u/remove-user-listener ::logged-out))
+     (utils/remove-user-listener ::logged-out))
    :-handle-sign-in-click
    (fn [{:keys [props locals]}]
      (swap! locals dissoc :refresh-token-saved?)
@@ -88,9 +88,9 @@
            (.grantOfflineAccess (clj->js {:redirect_uri "postmessage"
                                           :prompt "select_account"}))
            (.then (fn [response]
-                    (u/ajax {:url (str (config/api-url-root) "/handle-oauth-code")
+                    (utils/ajax {:url (str (config/api-url-root) "/handle-oauth-code")
                              :method "POST"
-                             :data (u/->json-string
+                             :data (utils/->json-string
                                     {:code (.-code response)
                                      :redirectUri (.. js/window -location -origin)})
                              :on-done (fn [{:keys [success?]}]
@@ -115,7 +115,7 @@
          "Error loading user information. Please try again later."])])
    :component-did-mount
    (fn [{:keys [props state]}]
-     (u/ajax-orch "/me"
+     (utils/ajax-orch "/me"
                   {:on-done (fn [{:keys [success? status-code]}]
                               (if success?
                                 ((:on-success props))
@@ -139,10 +139,10 @@
       " " [:a {:href "javascript:;" :onClick #(this :-re-auth)} "Refresh now..."]])
    :component-did-mount
    (fn [{:keys [state]}]
-     (u/ajax-orch "/refresh-token-status"
+     (utils/ajax-orch "/refresh-token-status"
                   {:on-done (fn [{:keys [raw-response]}]
                               (let [[parsed _]
-                                    (u/parse-json-string raw-response true false)]
+                                    (utils/parse-json-string raw-response true false)]
                                 (when (and parsed (:requiresRefresh parsed))
                                   (swap! state dissoc :hidden?))))}))
    :-re-auth
@@ -151,9 +151,18 @@
          (.grantOfflineAccess (clj->js {:redirect_uri "postmessage"
                                         :prompt "consent"}))
          (.then (fn [response]
-                  (u/ajax {:url (str (config/api-url-root) "/handle-oauth-code")
+                  (utils/ajax {:url (str (config/api-url-root) "/handle-oauth-code")
                            :method "POST"
-                           :data (u/->json-string
+                           :data (utils/->json-string
                                   {:code (.-code response)
                                    :redirectUri (.. js/window -location -origin)})
                            :on-done #(swap! state assoc :hidden? true)})))))})
+
+(defn add-nav-paths []
+  (nav/defpath
+    :policy
+    {:public? true
+     :component Policy
+     :regex #"policy"
+     :make-props (fn [_] {})
+     :make-path (fn [] "policy")}))

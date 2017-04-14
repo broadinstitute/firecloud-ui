@@ -26,6 +26,10 @@
     "Running" (:running-state colors)
     "Exception" (:exception-state colors)))
 
+(def secondary-icon-style
+  {:color (:text-light colors)
+   :fontSize "1.2rem" :lineHeight "0.6rem"
+   :padding "0.4rem"})
 
 (defn create-section-header [text]
   [:div {:style {:fontSize "125%" :fontWeight 500}} text])
@@ -147,6 +151,6 @@
 ; Temporary replacement for the Broad Logo.
 (defn render-text-logo []
   [:div {:style {:display "inline-block"}}
-   [:a {:href "/#workspaces" :style {:fontSize 32 :color (:button-primary colors)
-                                     :fontWeight "bold" :textDecoration "none" :height 38}}
-   "FireCloud"]])
+   [:a {:href "/" :style {:fontSize 32 :color (:button-primary colors)
+                          :fontWeight "bold" :textDecoration "none" :height 38}}
+    "FireCloud"]])
