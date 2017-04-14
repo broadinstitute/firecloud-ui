@@ -55,12 +55,11 @@
    :show-import-result
    (fn [{:keys [this props]} parsed-response selected]
      (let [formatted-response (postwalk
-                               (fn [x]
-                                 (cond
-                                   (= x "entityName") "ID"
-                                   (= x "entityType") "Type"
-                                   (= x "conflicts") "Conflicting linked entities"
-                                   :else x))
+                               #(case %
+                                  "entityName" "ID"
+                                  "entityType" "Type"
+                                  "conflicts" "Conflicting linked entities"
+                                  %)
                                parsed-response)
            copied (formatted-response "entitiesCopied")
            hard-conflicts (formatted-response "hardConflicts")
