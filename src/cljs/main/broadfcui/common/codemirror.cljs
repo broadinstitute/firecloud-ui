@@ -62,9 +62,16 @@
    :render
    (fn [{:keys [props]}]
      [:div {:style {:border style/standard-line}}
-      [:textarea {:ref "ref" :defaultValue (:text props)}]])
-   :component-did-mount
+      [:textarea {:ref "wdl-text" :defaultValue (:text props)}]])
+   :component-did-mount #((:this %) :display-wdl)
+   :display-wdl
    (fn [{:keys [refs props locals]}]
      (swap! locals assoc :code-mirror-component
-            (js-invoke CodeMirror-js "fromTextArea" (@refs "ref")
-               #js{:mode "wdl" :lineNumbers (:line-numbers? props) :readOnly (:read-only? props)})))})
+            (js-invoke CodeMirror-js "fromTextArea" (@refs "wdl-text")
+                       #js{:mode "wdl" :lineNumbers (:line-numbers? props) :readOnly (:read-only? props)})))
+   :component-will-receive-props
+   (fn [{:keys [refs props next-props locals]}]
+     (when (:read-only? props)
+       (-> (@locals :code-mirror-component)
+           (js-invoke "getDoc")
+           (js-invoke "setValue" (:text next-props)))))})

@@ -9,8 +9,8 @@
     [broadfcui.endpoints :as endpoints]
     [broadfcui.page.workspace.summary.catalog.questions :refer [Questions]]
     [broadfcui.page.workspace.summary.library-utils :as library-utils]
-    [broadfcui.utils :as utils]
-    ))
+    [broadfcui.utils :as utils]))
+
 
 (defn- render-wizard-breadcrumbs [{:keys [library-schema page-num pages-seen]}]
   (let [pages (:wizard library-schema)]
@@ -25,13 +25,13 @@
                          :fontWeight (when this "bold")
                          :color (when-not (or this (contains? pages-seen index)) (:text-lighter style/colors))}}
             title])) pages)]
-      [:div {:style {:paddingBottom "0.5rem"
-                     :color (when-not (contains? pages-seen (count pages)) (:text-lighter style/colors))
-                     :fontWeight (when (= page-num (count pages)) "bold")}}
-       "Discoverability"]
-      [:div {:style {:color (when-not (contains? pages-seen (+ 1 (count pages))) (:text-lighter style/colors))
-                     :fontWeight (when (> page-num (count pages)) "bold")}}
-       "Summary"]]))
+     [:div {:style {:paddingBottom "0.5rem"
+                    :color (when-not (contains? pages-seen (count pages)) (:text-lighter style/colors))
+                    :fontWeight (when (= page-num (count pages)) "bold")}}
+      "Discoverability"]
+     [:div {:style {:color (when-not (contains? pages-seen (+ 1 (count pages))) (:text-lighter style/colors))
+                    :fontWeight (when (> page-num (count pages)) "bold")}}
+      "Summary"]]))
 
 (defn- find-required-attributes [library-schema]
   (->> (map :required (:oneOf library-schema))
@@ -60,23 +60,29 @@
 
 (def ^:private ALL_USERS "All users")
 
+(defn- ensure-sequence [input]
+  ;;input may or maynot be a sequence, make it a sequence
+  (cond (sequential? input) input
+        (nil? input) []
+        :else [input]))
+
 (react/defc DiscoverabilityPage
   {:validate (constantly nil)
    :get-initial-state
    (fn [{:keys [props]}]
-     (select-keys props [:library:discoverableByGroups :owner?]))
+     {:library:discoverableByGroups (ensure-sequence (:library:discoverableByGroups props))})
    :get-attributes
    (fn [{:keys [state]}]
-     (if (nil? (:library:discoverableByGroups @state)) {} (select-keys @state [:library:discoverableByGroups])))
+     (select-keys @state [:library:discoverableByGroups]))
    :set-groups
    (fn [{:keys [state]} new-val]
-     (swap! state assoc :library:discoverableByGroups (if (= new-val ALL_USERS) nil new-val)))
+     (swap! state assoc :library:discoverableByGroups (if (= new-val ALL_USERS) [] [new-val])))
    :render
    (fn [{:keys [state props this]}]
      (let [{:keys [library:discoverableByGroups]} @state
            {:keys [:owner? :curator?]} props
            editable? (and curator? owner?)
-           selected (if (empty? library:discoverableByGroups) ALL_USERS library:discoverableByGroups)]
+           selected (if (empty? library:discoverableByGroups) ALL_USERS (first library:discoverableByGroups))]
        [:div {} "Dataset should be discoverable by:"
         (style/create-identity-select {:value selected
                                        :display "flex" :alignItems "center"
@@ -97,7 +103,7 @@
                     :padding "1rem"}}
       [:div {:style {:paddingBottom "0.5rem" :marginBottom "0.5rem"
                      :borderBottom (str "1px solid " (:exception-state style/colors))}}
-       "The following additional attributes are required to publish:" ]
+       "The following additional attributes are required to publish:"]
       [:div {:style {:fontSize 14}}
        (map (fn [attribute]
               [:div {:style {:paddingBottom "0.2rem"}} (get-in library-schema [:properties (keyword attribute) :title])])
@@ -112,9 +118,9 @@
      (if (= (:library:useLimitationOption attributes) "orsp") ;; TODO: change this so not hardcoded
        (library-utils/render-property library-schema attributes :library:orsp)
        (library-utils/render-consent-codes library-schema attributes))
-     (library-utils/render-library-row "Discoverability" (if-let [group (:library:discoverableByGroups attributes)] group ALL_USERS))])])
-
-
+     (library-utils/render-library-row "Discoverability"
+                                       (let [groups (get attributes :library:discoverableByGroups [])]
+                                         (if (empty? groups) ALL_USERS (first groups))))])])
 
 (defn- get-initial-attributes [workspace]
   (utils/map-values
