@@ -7,7 +7,7 @@
     [broadfcui.config :as config]
     [broadfcui.page.workspace.summary.library-utils :as library-utils]
     [broadfcui.utils :as utils]
-    [broadfcui.common :as common]))
+    ))
 
 
 (def ^:private ENUM_EMPTY_CHOICE "<select an option>")
@@ -116,8 +116,7 @@
                      :remote {:url (str (config/api-url-root) "/duos/autocomplete/%QUERY")
                               :wildcard "%QUERY"
                               :cache false}
-                     :render-display #(-> (js/$ "<div>")
-                                          (.text (aget % "label")))
+                     :render-display #(aget % "label")
                      :disabled disabled
                      :render-suggestion (fn [result]
                                           (-> (js/$ "<div>")
