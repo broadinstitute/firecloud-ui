@@ -106,7 +106,6 @@
                            :disabled disabled
                            :rows 3}))
 
-
 (defn- render-ontology-typeahead [{:keys [prop colorize value-nullsafe update-property state property library-schema disabled]}]
   [:div {:style {:marginBottom "0.75em"}}
    [comps/Typeahead {:field-attributes {:placeholder (:inputHint prop)
