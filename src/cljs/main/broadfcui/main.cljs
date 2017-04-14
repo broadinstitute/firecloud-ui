@@ -71,10 +71,12 @@
                   (style/create-server-error-message (.-errorMessage this))]
           :not-registered (profile-page/render
                            {:new-registration? true
-                            :on-done #(.. js/window -location (reload))})
+                            :on-done #(do (nav/go-to-path :library)
+                                        (js-invoke (aget js/window "location") "reload"))})
           :update-registered (profile-page/render
                               {:update-registration? true
-                               :on-done #(.. js/window -location (reload))})
+                               :on-done #(do (nav/go-to-path :workspaces)
+                                           (js-invoke (aget js/window "location") "reload"))})
           :registered
           (if component
             [component (make-props)]
