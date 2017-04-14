@@ -1,22 +1,23 @@
 (ns broadfcui.page.workspace.summary.tab
   (:require
-    [clojure.set :refer [difference]]
-    [dmohs.react :as react]
-    [broadfcui.common :as common]
-    [broadfcui.common.components :as comps]
-    [broadfcui.common.icons :as icons]
-    [broadfcui.common.markdown :refer [MarkdownView MarkdownEditor]]
-    [broadfcui.common.modal :as modal]
-    [broadfcui.common.style :as style]
-    [broadfcui.endpoints :as endpoints]
-    [broadfcui.page.workspace.monitor.common :as moncommon :refer [all-success? any-running? any-failed?]]
-    [broadfcui.page.workspace.summary.acl-editor :refer [AclEditor]]
-    [broadfcui.page.workspace.summary.attribute-editor :as attributes]
-    [broadfcui.page.workspace.summary.catalog.wizard :refer [CatalogWizard]]
-    [broadfcui.page.workspace.summary.publish :as publish]
-    [broadfcui.page.workspace.summary.library-view :refer [LibraryView]]
-    [broadfcui.page.workspace.summary.workspace-cloner :refer [WorkspaceCloner]]
-    [broadfcui.utils :as utils]))
+   [clojure.set :refer [difference]]
+   [dmohs.react :as react]
+   [broadfcui.common :as common]
+   [broadfcui.common.components :as comps]
+   [broadfcui.common.icons :as icons]
+   [broadfcui.common.markdown :refer [MarkdownView MarkdownEditor]]
+   [broadfcui.common.modal :as modal]
+   [broadfcui.common.style :as style]
+   [broadfcui.endpoints :as endpoints]
+   [broadfcui.nav :as nav]
+   [broadfcui.page.workspace.monitor.common :as moncommon :refer [all-success? any-running? any-failed?]]
+   [broadfcui.page.workspace.summary.acl-editor :refer [AclEditor]]
+   [broadfcui.page.workspace.summary.attribute-editor :as attributes]
+   [broadfcui.page.workspace.summary.catalog.wizard :refer [CatalogWizard]]
+   [broadfcui.page.workspace.summary.publish :as publish]
+   [broadfcui.page.workspace.summary.library-view :refer [LibraryView]]
+   [broadfcui.page.workspace.summary.workspace-cloner :refer [WorkspaceCloner]]
+   [broadfcui.utils :as utils]))
 
 
 (react/defc DeleteDialog
@@ -40,7 +41,7 @@
         :on-done (fn [{:keys [success? get-parsed-response]}]
                    (swap! state dissoc :deleting?)
                    (if success?
-                     (do (modal/pop-modal) ((:on-delete props)))
+                     (do (modal/pop-modal) (nav/go-to-path :workspaces))
                      (swap! state assoc :server-error (get-parsed-response false))))}))})
 
 
@@ -59,7 +60,7 @@
 
 (defn- render-sidebar [state refs this
                        {:keys [workspace billing-projects owner? writer? curator? can-share?
-                               workspace-id on-clone on-delete request-refresh]}]
+                               workspace-id request-refresh]}]
   (let [{{:keys [isLocked library-attributes description isProtected]} :workspace
          {:keys [runningSubmissionsCount]} :workspaceSubmissionStats} workspace
         status (common/compute-status workspace)
@@ -124,18 +125,20 @@
               :text "Cancel Editing" :icon :cancel
               :onClick #(swap! state dissoc :editing?)}]]))
        (when-not editing?
-         [comps/SidebarButton {:style :light :margin :top :color :button-primary
-                               :text "Clone..." :icon :clone
-                               :disabled? (when (empty? billing-projects) (comps/no-billing-projects-message))
-                               :onClick #(modal/push-modal
-                                           [WorkspaceCloner
-                                            {:on-success (fn [namespace name]
-                                                           (swap! state dissoc :cloning?)
-                                                           (on-clone (str namespace ":" name)))
-                                             :workspace-id workspace-id
-                                             :description description
-                                             :is-protected? isProtected
-                                             :billing-projects billing-projects}])}])
+         [comps/SidebarButton
+          {:style :light :margin :top :color :button-primary
+           :text "Clone..." :icon :clone
+           :disabled? (when (empty? billing-projects) (comps/no-billing-projects-message))
+           :onClick #(modal/push-modal
+                      [WorkspaceCloner
+                       {:on-success (fn [namespace name]
+                                      (swap! state dissoc :cloning?)
+                                      (nav/go-to-path :workspace-summary
+                                                      (utils/restructure namespace name)))
+                        :workspace-id workspace-id
+                        :description description
+                        :is-protected? isProtected
+                        :billing-projects billing-projects}])}])
        (when (and owner? (not editing?))
          [comps/SidebarButton {:style :light :margin :top :color :button-primary
                                :text (if isLocked "Unlock" "Lock")
@@ -145,15 +148,15 @@
          [comps/SidebarButton {:style :light :margin :top :color (if isLocked :text-lighter :exception-state)
                                :text "Delete..." :icon :delete
                                :disabled? (when isLocked "This workspace is locked.")
-                               :onClick #(modal/push-modal [DeleteDialog {:workspace-id workspace-id
-                                                                          :on-delete on-delete}])}]))]))
+                               :onClick #(modal/push-modal
+                                          [DeleteDialog {:workspace-id workspace-id}])}]))]))
 
 
 (defn- render-main [{:keys [workspace curator? owner? writer? reader? can-share? bucket-access? editing? submissions-count
                             user-access-level library-schema request-refresh workspace-id storage-cost]}]
   (let [{:keys [owners]
          {:keys [createdBy createdDate bucketName description tags workspace-attributes library-attributes realm]} :workspace} workspace
-        realm-name (:realmName realm)
+        realm-name (:usersGroupName realm)
         render-detail-box (fn [order title & children]
                             [:div {:style {:flexBasis "50%" :order order}}
                              (style/create-section-header title)
@@ -178,7 +181,7 @@
               ")"])]
           (when realm-name
             [:div {:style {:paddingTop "0.5rem"}}
-             [:div {:style {:fontStyle "italic"}} "Access restricted to realm:"]
+             [:div {:style {:fontStyle "italic"}} "Access restricted to authorization domain:"]
              [:div {} realm-name]])))
       (render-detail-box
         3
@@ -281,7 +284,7 @@
                         :can-share? can-share? :user-access-level user-access-level :request-refresh #(react/call :refresh this)}]
            [:div {:style {:margin "2.5rem 1.5rem" :display "flex"}}
             (render-sidebar state refs this
-                            (merge (select-keys props [:workspace :workspace-id :on-clone :on-delete])
+                            (merge (select-keys props [:workspace :workspace-id])
                                    (select-keys server-response [:billing-projects :curator?])
                                    derived))
             (render-main (merge (select-keys props [:workspace :workspace-id :bucket-access?])

@@ -68,18 +68,14 @@
                :else [:span {:style {:color (:text-light style/colors)}} "Not Authorized"])]]])]))
    :component-did-mount
    (fn [{:keys [this props state after-update]}]
-     (let [nav-context (nav/parse-segment (:parent-nav-context props))
-           segment (:segment nav-context)]
-       (if-not (clojure.string/blank? segment)
+     (let [{:keys [nih-token]} props]
+       (if-not (nil? nih-token)
          (do
-           (assert (re-find #"^nih-username-token=" segment) "Unexpected URL hash")
-           (let [[_ token] (clojure.string/split segment #"=")]
-             (swap! state assoc :pending-nih-username-token token)
-             (after-update #(react/call :link-nih-account this token))
-             ;; Navigate to the parent (this page without the token), but replace the location so
-             ;; the back button doesn't take the user back to the token.
-             (.replace (.-location js/window)
-                       (str "#" (nav/create-hash (:parent-nav-context props))))))
+           (swap! state assoc :pending-nih-username-token nih-token)
+           (after-update #(this :link-nih-account nih-token))
+           ;; Navigate to the parent (this page without the token), but replace the location so
+           ;; the back button doesn't take the user back to the token.
+           (.replace (.-location js/window) (nav/get-link :profile)))
          (react/call :load-nih-status this))))
    :component-did-update
    (fn [{:keys [refs]}]
@@ -143,7 +139,7 @@
               (react/call :render-nested-field this :programLocationCountry "Country" true)]]
             (common/clear-both)
             (when-not (:new-registration? props)
-              [:div {} [NihLink {:parent-nav-context (:parent-nav-context props)}]])]
+              [:div {} [NihLink (select-keys props [:nih-token])]])]
            :else [components/Spinner {:text "Loading User Profile..."}]))
    :render-radio-field
    (fn [{:keys [state]} key value]
@@ -194,8 +190,8 @@
                       update? "Update Registration"
                       :else "Profile")]
         [:div {}
-         [Form {:ref "form" :parent-nav-context (:nav-context props)
-                :new-registration? (:new-registration? props)}]]
+         [Form (merge {:ref "form"}
+                      (select-keys props [:new-registration? :nih-token]))]]
         [:div {:style {:marginTop "2em"}}
          (when (:server-error @state)
            [:div {:style {:marginBottom "1em"}}
@@ -241,3 +237,11 @@
 
 (defn render [props]
   (react/create-element Page props))
+
+(defn add-nav-paths []
+  (nav/defpath
+    :profile
+    {:component Page
+     :regex #"profile(?:/nih-username-token=([^\s/&]+))?"
+     :make-props (fn [nih-token] (utils/restructure nih-token))
+     :make-path (fn [] "profile")}))

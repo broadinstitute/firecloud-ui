@@ -150,6 +150,6 @@
 ; Temporary replacement for the Broad Logo.
 (defn render-text-logo []
   [:div {:style {:display "inline-block"}}
-   [:a {:href "/#workspaces" :style {:fontSize 32 :color (:button-primary colors)
-                                     :fontWeight "bold" :textDecoration "none" :height 38}}
-   "FireCloud"]])
+   [:a {:href "/" :style {:fontSize 32 :color (:button-primary colors)
+                          :fontWeight "bold" :textDecoration "none" :height 38}}
+    "FireCloud"]])

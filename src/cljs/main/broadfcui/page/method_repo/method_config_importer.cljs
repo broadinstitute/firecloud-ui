@@ -1,19 +1,20 @@
 (ns broadfcui.page.method-repo.method-config-importer
   (:require
-    [dmohs.react :as react]
-    [clojure.string :refer [trim lower-case]]
-    [broadfcui.common :refer [clear-both root-entity-types]]
-    [broadfcui.common.components :as comps]
-    [broadfcui.common.icons :as icons]
-    [broadfcui.common.input :as input]
-    [broadfcui.common.modal :as modal]
-    [broadfcui.common.style :as style]
-    [broadfcui.common.table :as table]
-    [broadfcui.common.table-utils :refer [add-right]]
-    [broadfcui.endpoints :as endpoints]
-    [broadfcui.page.method-repo.create-method :as create]
-    [broadfcui.page.method-repo.methods-configs-acl :as mca]
-    [broadfcui.utils :as utils]))
+   [dmohs.react :as react]
+   [clojure.string :refer [trim lower-case]]
+   [broadfcui.common :refer [clear-both root-entity-types]]
+   [broadfcui.common.components :as comps]
+   [broadfcui.common.icons :as icons]
+   [broadfcui.common.input :as input]
+   [broadfcui.common.modal :as modal]
+   [broadfcui.common.style :as style]
+   [broadfcui.common.table :as table]
+   [broadfcui.common.table-utils :refer [add-right]]
+   [broadfcui.endpoints :as endpoints]
+   [broadfcui.nav :as nav]
+   [broadfcui.page.method-repo.create-method :as create]
+   [broadfcui.page.method-repo.methods-configs-acl :as mca]
+   [broadfcui.utils :as utils]))
 
 
 (react/defc Redactor
@@ -120,12 +121,12 @@
        (create-import-form state props this locals (:loaded-config @state) true
          [{:label "Configuration Namespace" :key "namespace"}
           {:label "Configuration Name" :key "name"}])
-
        (:error @state) (style/create-server-error-message (:error @state))
        :else [comps/Spinner {:text "Loading configuration details..."}]))
    :perform-copy
    (fn [{:keys [props state refs]}]
-     (let [{:keys [workspace-id config after-import]} props
+     (let [{:keys [workspace-id after-import]} props
+           {:keys [loaded-config]} @state
            [namespace name & fails] (input/get-and-validate refs "namespace" "name")
            workspace-id (or workspace-id
                           {:namespace (get-in (:selected-workspace @state) ["workspace" "namespace"])
@@ -136,9 +137,9 @@
            (swap! state assoc :blocking-text (if (:workspace-id props) "Importing..." "Exporting..."))
            (endpoints/call-ajax-orch
              {:endpoint (endpoints/copy-method-config-to-workspace workspace-id)
-              :payload {"configurationNamespace" (config "namespace")
-                        "configurationName" (config "name")
-                        "configurationSnapshotId" (config "snapshotId")
+              :payload {"configurationNamespace" (loaded-config "namespace")
+                        "configurationName" (loaded-config "name")
+                        "configurationSnapshotId" (loaded-config "snapshotId")
                         "destinationNamespace" namespace
                         "destinationName" name}
               :headers utils/content-type=json
@@ -160,9 +161,9 @@
                        (swap! state assoc :error status-text)))}))
      (endpoints/call-ajax-orch
        {:endpoint (endpoints/get-configuration
-                    (get-in props [:config "namespace"])
-                    (get-in props [:config "name"])
-                    (get-in props [:config "snapshotId"]))
+                   (get-in props [:id :namespace])
+                   (get-in props [:id :name])
+                   (get-in props [:id :snapshot-id]))
         :headers utils/content-type=json
         :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                    (if success?
@@ -197,11 +198,11 @@
          (do
            (swap! state assoc :blocking-text (if (:workspace-id props) "Importing..." "Exporting..."))
            (endpoints/call-ajax-orch
-             {:endpoint (endpoints/create-template (:method props))
-              :payload (assoc (:method props)
-                         "methodNamespace" (get-in props [:method "namespace"])
-                         "methodName" (get-in props [:method "name"])
-                         "methodVersion" (get-in props [:method "snapshotId"]))
+             {:endpoint (endpoints/create-template (:loaded-method @state))
+              :payload (assoc (:loaded-method @state)
+                              "methodNamespace" (get-in @state [:loaded-method "namespace"])
+                              "methodName" (get-in @state [:loaded-method "name"])
+                              "methodVersion" (get-in @state [:loaded-method "snapshotId"]))
               :headers utils/content-type=json
               :on-done (fn [{:keys [success? get-parsed-response]}]
                          (let [response (get-parsed-response)]
@@ -235,9 +236,9 @@
                        (swap! state assoc :error status-text)))}))
      (endpoints/call-ajax-orch
        {:endpoint (endpoints/get-agora-method
-                    (get-in props [:method "namespace"])
-                    (get-in props [:method "name"])
-                    (get-in props [:method "snapshotId"]))
+                   (get-in props [:id :namespace])
+                   (get-in props [:id :name])
+                   (get-in props [:id :snapshot-id]))
         :headers utils/content-type=json
         :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                    (if success?
@@ -252,7 +253,6 @@
   :render
   (fn [{:keys [props state this]}]
     (cond
-      (:hidden? props) nil
       (:error-message @state) (style/create-server-error-message (:error-message @state))
       (or (nil? (:methods @state)) (nil? (:configs @state)))
       [comps/Spinner {:text "Loading methods and configurations..."}]
@@ -265,8 +265,15 @@
                    :as-text (fn [item] (str (item "namespace") "\n" (item "name") "\nSnapshot ID: " (item "snapshotId")))
                    :content-renderer
                    (fn [item]
-                     (style/create-link {:text (style/render-name-id (item "name") (item "snapshotId"))
-                                         :onClick #((:on-item-selected props) item)}))}
+                     (style/create-link {:text (style/render-name-id (item "name")
+                                                                     (item "snapshotId"))
+                                         :href (nav/get-link
+                                                (if (= (item "entityType") "Configuration")
+                                                  :method-config
+                                                  :method)
+                                                {:namespace (item "namespace")
+                                                 :name (item "name")
+                                                 :snapshot-id (item "snapshotId")})}))}
                   {:header "Namespace" :starting-width 160
                    :sort-by (fn [m] (clojure.string/lower-case (m "namespace")))
                    :sort-initial :asc
@@ -292,11 +299,7 @@
         :toolbar (add-right
                   [comps/Button
                    {:text "Create new method..."
-                    :onClick #(modal/push-modal
-                               [create/CreateMethodDialog
-                                {:on-success (fn [new-method]
-                                               (react/call :reload this)
-                                               ((:on-item-selected props) (assoc new-method :type :method)))}])}])
+                    :onClick #(modal/push-modal [create/CreateMethodDialog])}])
         :filter-groups [{:text "All" :pred (constantly true)}
                         {:text "Methods Only" :pred #(= :method (:type %))}
                         {:text "Configs Only" :pred #(= :config (:type %))}]
@@ -335,25 +338,17 @@
   {:render
    (fn [{:keys [props state refs]}]
      [:div {}
-      (when-let [item (:selected-item @state)]
-        ;; TODO allow nav
+      (when-let [id (:id props)]
         [:div {:style {:marginBottom "1rem" :fontSize "1.1rem"}}
          [comps/Breadcrumbs
           {:crumbs
-           [{:text "Methods" :onClick #(swap! state dissoc :selected-item)}
-            {:text [:span {} (item "namespace") "/" (item "name")
-                    [:span {:style {:marginLeft "1rem" :fontWeight "normal"}} "#" (item "snapshotId")]]}]}]])
-      (when (:selected-item @state)
-        (let [item-type (:type (:selected-item @state))
-              form (if (= item-type :method) MethodImportForm ConfigImportForm)]
-          [form {:on-delete (fn []
-                              (swap! state dissoc :selected-item)
-                              (react/call :reload (@refs "table")))
-                 item-type (:selected-item @state)
-                 :workspace-id (:workspace-id props)
-                 :allow-edit (:allow-edit props)
-                 :after-import (:after-import props)}]))
-      [Table {:ref "table"
-              :in-workspace? (:workspace-id props)
-              :hidden? (:selected-item @state)
-              :on-item-selected #(swap! state assoc :selected-item %)}]])})
+           [{:text "Methods" :href (nav/get-link :method-repo)}
+            {:text [:span {} (id :namespace) "/" (id :name)
+                    [:span {:style {:marginLeft "1rem" :fontWeight "normal"}} "#" (id :snapshot-id)]]}]}]])
+      (if (:id props)
+        (let [form (if (= (:type props) :method) MethodImportForm ConfigImportForm)]
+          [form (merge
+                 (select-keys props [:type :id :workspace-id :allow-edit :after-import])
+                 {:on-delete #(nav/go-to-path :method-repo)})])
+        [Table {:ref "table"
+                :in-workspace? (:workspace-id props)}])])})

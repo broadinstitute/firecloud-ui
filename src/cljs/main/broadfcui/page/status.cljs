@@ -1,8 +1,9 @@
 (ns broadfcui.page.status
   (:require
    [dmohs.react :as react]
-   [broadfcui.utils :as utils]
    [broadfcui.common.components :as comps]
+   [broadfcui.nav :as nav]
+   [broadfcui.utils :as utils]
    ))
 
 
@@ -18,12 +19,12 @@
          (not (:success? (:response @state)))
          [:span {} [:span {:style {:color "red"}} "Error"]
           (when-not (:show-error-details? @state)
-            [:span {} 
+            [:span {}
              " ("
              [:a {:href "javascript:;" :style {:textDecoration "none"}
                   :onClick #(swap! state assoc :show-error-details? true)}
               "show details"]
-             ")"])] 
+             ")"])]
          :else
          [:span {:style {:color "green"}} "Okay"])]
       (when (:show-error-details? @state)
@@ -41,13 +42,21 @@
        (utils/ajax-orch (:path (:request props))
                         {:on-done #(swap! state assoc :response %)})))})
 
+(react/defc Page
+  {:render
+   (fn [_]
+     [:div {:style {:padding "1em"}}
+      [:h2 {} "Service Status"]
+      [:div {}
+       [StatusLine {:label "Orchestration" :request {:path "/status/ping"}}]
+       [StatusLine {:label "Rawls" :request {:path "/workspaces"}}]
+       [StatusLine {:label "Agora" :request {:path "/methods"}}]
+       [StatusLine {:label "Thurloe" :request {:path "/profile"}}]]])})
 
-(defn render []
-  (react/create-element
-   :div {:style {:padding "1em"}}
-   [:h2 {} "Service Status"]
-   [:div {}
-    [StatusLine {:label "Orchestration" :request {:path "/status/ping"}}]
-    [StatusLine {:label "Rawls" :request {:path "/workspaces"}}]
-    [StatusLine {:label "Agora" :request {:path "/methods"}}]
-    [StatusLine {:label "Thurloe" :request {:path "/profile"}}]]))
+(defn add-nav-paths []
+  (nav/defpath
+    :status
+    {:component Page
+     :regex #"status"
+     :make-props (fn [] {})
+     :make-path (fn [] "status")}))
