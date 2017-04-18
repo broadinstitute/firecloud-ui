@@ -198,6 +198,8 @@
          [:div {:style {:marginRight "-0.5rem"}}
           (common/render-icon-dropdown
            {:icon-name :bell :icon-color (:text-light style/colors)
+            :position "bottom"
+            :button-class "float-right"
             :ref (fn [instance] (swap! locals assoc :infobox instance))
             :contents [Notifications {:close-self #((:infobox @locals) :close)}]})]]
         [:div {:style {:marginTop "1rem"
