@@ -3,6 +3,7 @@
    [dmohs.react :as react]
    [broadfcui.common :as common]
    [broadfcui.common.components :as comps]
+   [broadfcui.common.flex-utils :as flex]
    [broadfcui.common.icons :as icons]
    [broadfcui.common.style :as style]
    [broadfcui.config :as config]
@@ -26,7 +27,7 @@
        [:div {}
         [:div {:style {:borderBottom style/standard-line
                        :padding "0 1rem 0.5rem" :margin "0 -1rem 0.5rem"
-                       :fontSize "125%" :fontWeight 500}}
+                       :fontWeight 500}}
          "Workspace Notifications"]
         (this
          :-render-ajax-or-continue
@@ -40,14 +41,14 @@
                  row (fn [{:keys [description notificationKey]}]
                        [:tr {}
                         [:td {} (checkbox notificationKey)]
-                        [:td {:style {:padding "0.3rem 0 0.3rem 1rem"}} description]])]
-             [:table {}
+                        [:td {:style {:padding "0.5rem"}} description]])]
+             [:table {:style {:fontSize "90%"}}
               [:tbody {}
                (map row notifications)]])))
-        [:div {:style {:marginTop "0.5rem"
+        [:div {:style {:marginTop "1rem"
                        :display "flex" :justifyContent "center" :alignItems "center"}}
          (style/create-link {:text "Cancel" :onClick #(close-self)})
-         [:div {:style {:width "1rem"}}]
+         (flex/strut "1rem")
          [comps/Button {:text "Save"}]]]))
    :component-did-mount
    (fn [{:keys [state]}]
@@ -194,10 +195,11 @@
          [:div {:style {:fontSize "125%"}}
           "Workspace: "
           [:span {:style {:fontWeight 500}} (:namespace workspace-id) "/" (:name workspace-id)]]
-         (common/render-icon-dropdown
-          {:icon-name :bell :icon-color (:text-light style/colors)
-           :ref (fn [instance] (swap! locals assoc :infobox instance))
-           :contents [Notifications {:close-self #((:infobox @locals) :close)}]})]
+         [:div {:style {:marginRight "-0.5rem"}}
+          (common/render-icon-dropdown
+           {:icon-name :bell :icon-color (:text-light style/colors)
+            :ref (fn [instance] (swap! locals assoc :infobox instance))
+            :contents [Notifications {:close-self #((:infobox @locals) :close)}]})]]
         [:div {:style {:marginTop "1rem"
                        :display "flex" :backgroundColor (:background-light style/colors)
                        :borderTop style/standard-line :borderBottom style/standard-line
