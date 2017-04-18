@@ -52,7 +52,7 @@
                      {:label "Data Library"
                       :nav-key :library
                       :is-selected? #(= path "library")}
-                     {:label "Method Respository"
+                     {:label "Method Repository"
                       :nav-key :method-repo
                       :is-selected? #(or (= path "methods")
                                          (clojure.string/starts-with? path "methods/"))}]
