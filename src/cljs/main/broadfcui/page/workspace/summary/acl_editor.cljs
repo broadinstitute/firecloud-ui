@@ -34,7 +34,7 @@
        [:div {:style {:display "inline-block" :width 400}} "User ID"]
        [:div {:style {:display "inline-block" :width 200 :marginLeft "1rem"}} "Access Level"]
        (if (common/access-greater-than-equal-to? user-access-level "OWNER")
-        [:div {:style {:display "inline-block" :width 80 :marginLeft "1rem"}} "Can Share"])]
+         [:div {:style {:display "inline-block" :width 80 :marginLeft "1rem"}} "Can Share"])]
       (map-indexed
        (fn [i acl-entry]
          [:div {:style {:borderTop style/standard-line :padding "0.5rem 0"}}
@@ -59,18 +59,18 @@
               :onChange #(swap! state assoc-in [:non-project-owner-acl-vec i :accessLevel] (.. % -target -value))}
              (if disabled? access-levels available-access-levels)))
           (if (common/access-greater-than-equal-to? user-access-level "OWNER")
-              [:label {:style {:marginLeft "1rem" :cursor "pointer" :verticalAlign "middle" :display "inline-block" :width 80 :textAlign "center"}}
-               [:input {:type "checkbox"
-                        :style {:verticalAlign "middle" :float "none"}
-                        :onChange #(swap! state assoc-in [:non-project-owner-acl-vec i :canShare] (.. % -target -checked))
-                        :disabled (common/access-greater-than-equal-to? (:accessLevel acl-entry) "OWNER")
-                        :checked (or (:canShare acl-entry) (common/access-equal-to? (:accessLevel acl-entry) "OWNER"))}]])
+            [:label {:style {:marginLeft "1rem" :cursor "pointer" :verticalAlign "middle" :display "inline-block" :width 80 :textAlign "center"}}
+             [:input {:type "checkbox"
+                      :style {:verticalAlign "middle" :float "none"}
+                      :onChange #(swap! state assoc-in [:non-project-owner-acl-vec i :canShare] (.. % -target -checked))
+                      :disabled (common/access-greater-than-equal-to? (:accessLevel acl-entry) "OWNER")
+                      :checked (or (:canShare acl-entry) (common/access-equal-to? (:accessLevel acl-entry) "OWNER"))}]])
           (when (:pending? acl-entry)
             [:span {:style {:fontStyle "italic" :color (:text-light style/colors) :marginLeft "1rem"}}
              "Pending..."])])
        (:non-project-owner-acl-vec @state))
       [:div {:style {:margin "0.5rem 0"}}
-       [comps/Button {:text "Add new" :icon :add
+       [comps/Button {:text "Add new" :icon :add-new
                       :onClick #(swap! state update :non-project-owner-acl-vec
                                        conj (let [permissions {:email "" :accessLevel "READER"}]
                                               ; Only owners can set new canShare permissions, so we only want to include

@@ -90,7 +90,7 @@
        {:text (case (:disabled-reason props)
                 :not-loaded [comps/Spinner {:text "Getting billing info..." :style {:margin 0}}]
                 "Create New Workspace...")
-        :icon :add
+        :icon :add-new
         :disabled? (case (:disabled-reason props)
                      nil false
                      :not-loaded "Project billing data has not yet been loaded."

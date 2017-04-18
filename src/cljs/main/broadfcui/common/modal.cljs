@@ -47,7 +47,7 @@
                                :left 0
                                :width "100%"}}
                  [:div {:style {:display "flex" :justifyContent "center"}}
-                  [:div {:style {:backgroundColor "white" :maxWidth "95%"}}
+                  [:div {:style {:backgroundColor "white" :maxWidth "95%" :minWidth 500}}
                    child]]]])
              stack))])
    :component-did-mount

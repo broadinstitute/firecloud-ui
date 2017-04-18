@@ -9,6 +9,7 @@
              :line-default "#e6e6e6"
              :running-state "#67688a"
              :success-state "#7aac20"
+             :warning-state "#ebaf3b"
              :exception-state "#e85c46"
              :disabled-state "#dadada"
              :tag-background "#d4ecff"

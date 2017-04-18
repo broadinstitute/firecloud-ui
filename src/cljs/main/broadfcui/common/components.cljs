@@ -273,7 +273,7 @@
 
 (react/defc ErrorViewer
   {:render
-   (fn [{:keys [props]}]
+   (fn [{:keys [props state]}]
      (when-let [error (:error props)]
        (let [[source timestamp status-code code causes stack-trace message]
              (map error ["source" "timestamp" "statusCode" "code" "causes" "stackTrace" "message"])
@@ -281,30 +281,45 @@
              status-code (or status-code code)]
          (if-let [expected-msg (get-in props [:expect status-code])]
            (style/create-flexbox {}
-                                 [:span {:style {:paddingRight "1ex"}}
+                                 [:span {:style {:paddingRight "0.5rem"}}
                                   (icons/icon {:style {:color (:exception-state style/colors)}}
                                               :warning-triangle)]
                                  (str "Error: " expected-msg))
            [:div {:style {:textAlign "initial"}}
             (style/create-flexbox {:style {:marginBottom "0.25em"}}
-                                  [:span {:style {:paddingRight "1ex"}}
+                                  [:span {:style {:paddingRight "0.5rem"}}
                                    (icons/icon {:style {:color (:exception-state style/colors)}}
                                                :warning-triangle)]
-                                  (str "Error " status-code ": " message))
-            (when timestamp [:div {} "Occurred: "
-                             (common/format-date timestamp
-                                                 (assoc common/default-date-format
-                                                   :timeZoneName "short"))])
-            (when source [:div {} "Source: " source])
-            (when (seq causes)
-              (let [num-hidden (- (count causes) 4)]
-                [:div {}
-                 [:div {} (str "Cause" (when (> (count causes) 1) "s") ":")]
-                 (map (fn [cause] [CauseViewer cause]) (take 4 causes))
-                 (when (pos? num-hidden)
-                   [:div {} (str num-hidden " not shown")])]))
-            (when (seq stack-trace)
-              [StackTraceViewer {:lines stack-trace}])]))))})
+                                  (str "Error: " message))
+            (if (:expanded? @state)
+              [:div {}
+               (style/create-link {:text [:span {}
+                                          (icons/icon {:className "fa-fw"} :disclosure-opened)
+                                          "Hide Details"]
+                                   :onClick #(swap! state assoc :expanded? false)})
+               ;; Padding is specifically em rather than rem to match fa-fw
+               [:div {:style {:overflowX "auto" :paddingLeft "1.3em"}}
+                [:div {} (str "Code: " status-code)]
+                (when timestamp [:div {} "Occurred: "
+                                 (common/format-date timestamp
+                                                     (assoc common/default-date-format
+                                                       :timeZoneName "short"))])
+                (when source [:div {} "Source: " source])
+                (when (seq causes)
+                  (let [num-shown 4
+                        num-hidden (- (count causes) num-shown)]
+                    [:div {}
+                     [:div {} (str "Cause" (when (> (count causes) 1) "s") ":")]
+                     (map (fn [cause] [CauseViewer cause]) (take num-shown causes))
+                     (when (pos? num-hidden)
+                       [:div {} (str num-hidden " not shown")])]))
+                (when (seq stack-trace)
+                  [StackTraceViewer {:lines stack-trace}])]]
+              [:div {}
+               (style/create-link {:text [:span {}
+                                          (icons/icon {:className "fa-fw"} :disclosure-closed)
+                                          "Show Details"]
+                                   :onClick #(swap! state assoc :expanded? true)})])]))))})
 
 
 (react/defc Breadcrumbs
@@ -675,3 +690,59 @@
    (fn [{:keys [refs]}]
      (.select2 (js/$ (@refs "input-element")) "destroy"))})
 
+;; Declared because it calls itself recursively.
+(declare Tree)
+
+(defn- is-branch-value? [value]
+  (and (vector? value) (not-empty value)))
+
+(defn- is-leaf-node? [node]
+  (not-any? #(is-branch-value? (get node %)) (keys node)))
+
+(defn- map-node [node f]
+  (map
+   (fn [key]
+     (let [value (node key)]
+       (f key value (not (is-branch-value? value)))))
+   (keys node)))
+
+(react/defc Tree
+  ":start-collapsed? (optional [false]) - Start with branches collapsed
+  :label (optional) - Label into which whole tree can be collapsed, must display inline
+  :highlight-ends? (optional) - Highlight the ends of the tree as :warning-state
+  :data - Vector of maps to display in tree, any value can be a nested vector of maps.
+  NOTE: no current support for keys leading directly to nested maps."
+  {:get-initial-state
+   (fn [{:keys [props]}]
+     {:collapsed? (or (:start-collapsed? props) false)})
+   :render
+   (fn [{:keys [props state]}]
+     (let [body
+           [:div {:hidden (and (:collapsed? @state) (:label props))
+                  :marginLeft (if (:label props) "0.5rem" 0)}
+            (map (fn [node]
+                   [:ul {:style {:margin "0.2rem" :padding "0.5rem"
+                                 :backgroundColor (if (and (:highlight-ends? props)
+                                                           (is-leaf-node? node))
+                                                    (:warning-state style/colors)
+                                                    "rgba(0,0,0,0.1)")
+                                 :borderRadius 8}}
+                    (map-node
+                     node
+                     (fn [key value leaf?]
+                       [:li {:style {:listStyle "none" :padding "0.1rem"}}
+                        (if leaf?
+                          [:span {} [:strong {} key ": "] value]
+                          [Tree {:data value
+                                 :start-collapsed? (:start-collapsed? props)
+                                 :highlight-ends? (:highlight-ends? props)
+                                 :label [:strong {} key ":"]}])]))])
+                 (:data props))]]
+       (if (:label props)
+         [:span {}
+          (:label props) " "
+          (style/create-link
+           {:text (icons/icon {} (if (:collapsed? @state) :expand :collapse))
+            :onClick #(swap! state assoc :collapsed? (not (:collapsed? @state)))})
+          body]
+         body)))})

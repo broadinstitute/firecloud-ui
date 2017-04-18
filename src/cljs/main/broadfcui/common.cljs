@@ -297,8 +297,8 @@
                 (fn [_]
                   (swap! state dissoc :render-contents?)
                   (after-update #(this :-render-dropdown))))
-           (.on element$
-                "show.zf.dropdown"
+           (.on button$
+                "click"
                 (fn [_]
                   (swap! state assoc :render-contents? true)
                   (after-update #(this :-render-dropdown))
@@ -314,15 +314,17 @@
                            (.off (js/$ "body") "click.zf.dropdown"))))))))
        :will-unmount
        (fn [element]
-         (.off (js/$ element) "show.zf.dropdown")
+         (.off (js/$ (react/find-dom-node this)) "click")
          (.off (js/$ element) "hide.zf.dropdown"))}))})
 
-(defn render-icon-dropdown [{:keys [text icon-name icon-color]}]
+(defn render-icon-dropdown [{:keys [text position icon-name icon-color]}]
   [FoundationDropdown {:contents text
+                       :dropdown-class position
                        :button-contents (icons/icon {:style {:color icon-color}} icon-name)}])
 
-(defn render-info-box [{:keys [text]}]
+(defn render-info-box [{:keys [text position]}]
   (render-icon-dropdown {:text text
+                         :position position
                          :icon-name :information :icon-color (:link-active style/colors)}))
 
 (defn render-dropdown-menu [{:keys [label items width button-style]}]

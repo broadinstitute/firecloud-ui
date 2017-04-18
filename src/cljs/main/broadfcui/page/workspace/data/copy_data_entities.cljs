@@ -1,9 +1,13 @@
 (ns broadfcui.page.workspace.data.copy-data-entities
   (:require
     [clojure.set :refer [union]]
-    [clojure.string]
+    [clojure.string :refer [capitalize]]
+    [clojure.walk :refer [postwalk]]
     [dmohs.react :as react]
+    [broadfcui.common :as common]
     [broadfcui.common.components :as comps]
+    [broadfcui.common.modal :as modal]
+    [broadfcui.common.style :as style]
     [broadfcui.endpoints :as endpoints]
     [broadfcui.page.workspace.data.entity-selector :refer [EntitySelector]]
     [broadfcui.utils :as utils]
@@ -18,7 +22,9 @@
         (when (:copying? @state)
           [comps/Blocker {:banner "Copying..."}])
         [EntitySelector {:ref "EntitySelector"
-                         :left-text (str "Entities in " (:namespace swid) "/" (:name swid))
+                         :type (:type props)
+                         :selected-workspace-bucket (:selected-workspace-bucket props)
+                         :left-text (str (capitalize (:type props)) "s in " (:namespace swid) "/" (:name swid))
                          :right-text "To be imported"
                          :id-name (:id-name props)
                          :entities (:entity-list props)}]
@@ -26,29 +32,100 @@
          (when (:selection-error @state)
            [:div {:style {:marginTop "0.5em"}}
             "Please select at least one entity to copy"])
-         (when (:server-error @state)
-           [:div {:style {:marginTop "0.5em"}}
-            [comps/ErrorViewer {:error (:server-error @state)}]])
          [:div {:style {:marginTop "1em"}}
-          [comps/Button {:text "Copy"
+          [comps/Button {:text "Import"
                          :onClick #(let [selected (react/call :get-selected-entities (@refs "EntitySelector"))]
                                      (if (empty? selected)
                                        (swap! state assoc :selection-error true)
                                        (react/call :perform-copy this selected)))}]]]]))
    :perform-copy
-   (fn [{:keys [props state]} selected]
+   (fn [{:keys [props state this]} selected re-link?]
      (swap! state assoc :selection-error nil :server-error nil :copying? true)
      (endpoints/call-ajax-orch
-       {:endpoint (endpoints/copy-entity-to-workspace (:workspace-id props))
-        :payload {:sourceWorkspace (:selected-workspace-id props)
-                  :entityType (:type props)
-                  :entityNames (map #(% "name") selected)}
-        :headers utils/content-type=json
-        :on-done (fn [{:keys [success? get-parsed-response]}]
-                   (swap! state dissoc :copying?)
-                   (if success?
-                     ((:on-data-imported props) (:type props))
-                     (swap! state assoc :server-error (get-parsed-response false))))}))})
+      {:endpoint (endpoints/copy-entity-to-workspace (:workspace-id props) re-link?)
+       :payload {:sourceWorkspace (:selected-workspace-id props)
+                 :entityType (:type props)
+                 :entityNames (map #(% "name") selected)}
+       :headers utils/content-type=json
+       :on-done (fn [{:keys [success? get-parsed-response]}]
+                  (swap! state dissoc :copying?)
+                  (when success?
+                    ((:on-data-imported props) (:type props)))
+                  (react/call :show-import-result this (get-parsed-response false) selected))}))
+   :show-import-result
+   (fn [{:keys [this props]} parsed-response selected]
+     (let [formatted-response (postwalk
+                               #(case %
+                                  "entityName" "ID"
+                                  "entityType" "Type"
+                                  "conflicts" "Conflicting linked entities"
+                                  %)
+                               parsed-response)
+           copied (formatted-response "entitiesCopied")
+           hard-conflicts (formatted-response "hardConflicts")
+           soft-conflicts (postwalk
+                           #(if (= (second %) []) nil %)
+                           (formatted-response "softConflicts"))
+           import-type (:type props)]
+       (comps/push-ok-cancel-modal
+        {:header (if (not-empty copied)
+                   "Import Successful"
+                   "Unable to Import")
+         :content [:div {:style {:maxWidth 600}}
+                   (when (not-empty copied)
+                     [:div {}
+                      [:p {} "The following " import-type "s were imported successfully."]
+                      [comps/Tree {:data copied}]])
+                   (when (not-empty hard-conflicts)
+                     [:div {}
+                      [:p {}
+                       "The import did not complete because the following " import-type
+                       "s have the same IDs as entities already in this workspace."]
+                      [comps/Tree {:highlight-ends? true
+                                   :data hard-conflicts}]])
+                   (when (not-empty soft-conflicts)
+                     [:div {}
+                      [:p {} "The import did not complete because some of the " import-type
+                       "s that you selected are linked to entities that already exist in the
+                       destination workspace."]
+                      [:p {} "The conflicting entities are highlighted below."]
+                      [comps/Tree {:highlight-ends? true
+                                   :data soft-conflicts}]
+                      [:p {} "You may link the " import-type "s that you import to the existing
+                      entities in the destination workspace, by clicking " [:strong {} "Re-link"] "."]
+                      [:p {} "Re-linking will not import the conflicting entities from, or change the "
+                       import-type "s in, the source workspace."
+                       (common/render-info-box
+                        {:position "top"
+                         :text [:span {}
+                                [:div {:style {:paddingBottom "1rem"}}
+                                 "Every entity (participant, sample, etc.) has an ID. Multiple
+                                 entities cannot share the same ID, they must be unique."]
+                                [:div {:style {:paddingBottom "1rem"}}
+                                 "Entities can be linked by their ID. For example, a sample can be
+                                  linked to a participant."]
+                                [:div {:style {:paddingBottom "1rem"}}
+                                 "If you import a sample that is linked to a participant, that
+                                 participant will also be imported. However, if the imported
+                                 participant (\"source participant\") has the same ID as an existing
+                                 participant in the workspace (\"destination participant\"), the
+                                 import cannot finish. Since two entities cannot have the same ID,
+                                 this would cause a conflict."]
+                                [:div {:style {:paddingBottom "1rem"}}
+                                 "Re-linking allows the sample to link to the participant that was
+                                 already in the workspace (\"destination participant\")."]
+                                [:div {:style {:paddingBottom "1rem"}}
+                                 "Keep in mind that there may be differences between the \"source
+                                 participant\" and the \"destination participant\", so you may want
+                                 to confirm that they are actually the same."]
+                                [:div {} "All other attributes of the source will be imported normally."]]})]])]
+         :show-cancel? (not-empty soft-conflicts)
+         :ok-button (if (not-empty soft-conflicts)
+                      {:text "Re-link"
+                       :onClick (fn []
+                                  (modal/pop-modal)
+                                  (react/call :perform-copy this selected true))}
+                      "OK")})))})
 
 
 (react/defc Page
@@ -58,7 +135,8 @@
        (:entity-list @state) [EntitiesList
                               (merge
                                (select-keys props [:workspace-id :selected-workspace-id :type
-                                                   :id-name :on-data-imported])
+                                                   :selected-workspace-bucket :id-name
+                                                   :on-data-imported])
                                (select-keys @state [:entity-list]))]
        (:server-error @state) [comps/ErrorViewer {:error (:server-error @state)}]
        :else [:div {:style {:textAlign "center"}} [comps/Spinner {:text "Loading entities..."}]]))
@@ -80,7 +158,9 @@
    (fn [{:keys [props state]}]
      (let [selected-type (:text (first (:crumbs props)))]
        (cond
-         selected-type [Page (merge props {:type selected-type :id-name (get-in (:entity-types @state) [selected-type "idName"])})]
+         selected-type
+         [Page (merge props {:type selected-type
+                             :id-name (get-in (:entity-types @state) [selected-type "idName"])})]
 
          (:entity-types @state)
          [:div {:style {:textAlign "center"}}
@@ -93,8 +173,11 @@
                                :onClick #((:add-crumb props) {:text type})}]])
              (:entity-types @state))]]
 
-         (:server-error @state) [comps/ErrorViewer {:error (:server-error @state)}]
-         :else [:div {:style {:textAlign "center"}} [comps/Spinner {:text "Loading entity types..."}]])))
+         (:server-error @state)
+         [comps/ErrorViewer {:error (:server-error @state)}]
+
+         :else
+         [:div {:style {:textAlign "center"}} [comps/Spinner {:text "Loading entity types..."}]])))
    :component-did-mount
    (fn [{:keys [props state]}]
      (endpoints/call-ajax-orch
