@@ -11,8 +11,8 @@
 (r/defc Page
   {:render
    (fn [{:keys [this state]}]
-     [:div {}
-      [:h1 {} "Notifications"]
+     [:div {:style style/thin-page-style}
+      [:h1 {} "Account Notifications"]
       (this
        :-render-ajax-or-continue
        (fn [notifications notifications-state]
