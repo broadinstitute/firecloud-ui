@@ -192,7 +192,7 @@
         [:div {:style {:minHeight "0.5rem"}}
          [ProtectedBanner (select-keys @state [:workspace :workspace-error])]
          [BucketBanner (select-keys @state [:bucket-access? :bucket-status-code])]]
-        [:div {:style {:marginTop "1rem" :paddingLeft "1.5rem"
+        [:div {:style {:marginTop "1rem" :padding "0 1.5rem"
                        :display "flex" :justifyContent "space-between"}}
          [:div {:style {:fontSize "125%"}}
           "Workspace: "
