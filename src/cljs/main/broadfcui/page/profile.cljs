@@ -168,7 +168,9 @@
                          :data-test-id key
                          :defaultValue (get-in @state [:values key])
                          :ref (name key)
-                         :placeholder (when valid-email-or-empty (-> @utils/auth2-atom (.-currentUser) (.get) (.getBasicProfile) (.getEmail)))
+                         :placeholder (when valid-email-or-empty
+                                        (-> @utils/auth2-atom
+                                            (.-currentUser) (.get) (.getBasicProfile) (.getEmail)))
                          :predicates [(when required (input/nonempty label))
                                       (when valid-email-or-empty (input/valid-email-or-empty label))]
                          :onChange #(swap! state assoc-in [:values key] (-> % .-target .-value))}]]])
