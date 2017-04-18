@@ -19,22 +19,19 @@
 (react/defc Notifications
   {:get-initial-state
    (fn []
-     {:save-disabled? true
-      :notifications [{:key "mouse" :description "Any User Moves Mouse" :on? true}
-                      {:key "falafal"
-                       :description "Alla falla falafala afaalafaaffffffll la fala" :on? false}
-                      {:key "sneeze" :description "Collaborator Sneezes" :on? true}]})
+     {:save-disabled? true})
    :render
    (fn [{:keys [this props state]}]
      (let [{:keys [close-self]} props]
        [:div {}
-        [:h3 {:style {:margin "0 0 0.5rem 0" :fontWeight 500}} "Workspace Notifications"]
+        [:div {:style {:borderBottom style/standard-line
+                       :padding "0 1rem 0.5rem" :margin "0 -1rem 0.5rem"
+                       :fontSize "125%" :fontWeight 500}}
+         "Workspace Notifications"]
         (this
          :-render-ajax-or-continue
          (fn [notifications notifications-state]
-           (let [find-notification (fn [k]
-                                     (first (filter #(= k (:notificationKey %)) notifications)))
-                 is-checked? (fn [k] (get notifications-state k))
+           (let [is-checked? (fn [k] (get notifications-state k))
                  set-checked? (fn [k value]
                                 (swap! state assoc-in [:notifications-state k] value))
                  checkbox (fn [k]
