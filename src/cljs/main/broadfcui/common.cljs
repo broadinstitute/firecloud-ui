@@ -310,8 +310,12 @@
                                        (when-not (:close-on-click props)
                                          (.is element$ (.-target e))
                                          (pos? (.-length (.find element$ (.-target e))))))
-                           (.foundation element$ "close")
-                           (.off (js/$ "body") "click.zf.dropdown"))))))))
+                           ;; Delaying this until the next tick allows React event handlers to fire.
+                           (js/setTimeout
+                            (fn []
+                              (.foundation element$ "close")
+                              (.off (js/$ "body") "click.zf.dropdown"))
+                            0))))))))
        :will-unmount
        (fn [element]
          (.off (js/$ (react/find-dom-node this)) "click")
