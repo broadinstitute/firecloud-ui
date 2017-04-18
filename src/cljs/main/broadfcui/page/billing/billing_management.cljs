@@ -114,7 +114,7 @@
               {:text "Create New Billing Project"
                :onClick
                (fn []
-                 (if (-> @utils/google-auth2-instance (aget "currentUser") (js-invoke "get")
+                 (if (-> @utils/auth2-atom (aget "currentUser") (js-invoke "get")
                          (js-invoke "hasGrantedScopes" "https://www.googleapis.com/auth/cloud-billing"))
                    (modal/push-modal
                     [CreateBillingProjectDialog
@@ -128,7 +128,7 @@
                          [CreateBillingProjectDialog
                           {:on-success #(react/call :reload this)}])))
                      (js-invoke
-                      @utils/google-auth2-instance
+                      @utils/auth2-atom
                       "grantOfflineAccess"
                       (clj->js {:redirect_uri "postmessage"
                                 :scope "https://www.googleapis.com/auth/cloud-billing"})))))}]]}}])))

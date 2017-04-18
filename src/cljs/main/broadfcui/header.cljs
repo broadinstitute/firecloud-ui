@@ -36,22 +36,22 @@
        (when (:show-nih-link-warning? props)
          [nih-link-warning/NihLinkWarning])]])})
 
-(defn create-account-dropdown [auth2]
-  (common/render-dropdown-menu
-   {:label [:div {:style {:borderRadius 2
-                          :backgroundColor (:background-light style/colors)
-                          :color "#000" :textDecoration "none"
-                          :padding "0.5rem" :border style/standard-line}
-                  :data-test-id "account-dropdown"}
-            (-> auth2 (.-currentUser) (.get) (.getBasicProfile) (.getEmail))
-            [:div {:style {:display "inline-block" :marginLeft "1em" :fontSize 8}} "▼"]]
-    :width :auto
-    :button-style {:height 32}
-    :items [{:href (nav/get-link :profile) :text "Profile"}
-            {:href (nav/get-link :groups) :text "Groups"}
-            {:href (nav/get-link :billing) :text "Billing"}
-            {:href (nav/get-link :notifications) :text "Notifications"}
-            {:text "Sign Out" :dismiss #(.signOut auth2)}]}))
+(defn create-account-dropdown []
+  (let [auth2 @utils/auth2-atom]
+    (common/render-dropdown-menu
+     {:label [:div {:style {:borderRadius 2
+                            :backgroundColor (:background-light style/colors)
+                            :color "#000" :textDecoration "none"
+                            :padding "0.5rem" :border style/standard-line}}
+              (-> auth2 (.-currentUser) (.get) (.getBasicProfile) (.getEmail))
+              [:div {:style {:display "inline-block" :marginLeft "1em" :fontSize 8}} "▼"]]
+      :width :auto
+      :button-style {:height 32}
+      :items [{:href (nav/get-link :profile) :text "Profile"}
+              {:href (nav/get-link :groups) :text "Groups"}
+              {:href (nav/get-link :billing) :text "Billing"}
+              {:href (nav/get-link :notifications) :text "Notifications"}
+              {:text "Sign Out" :dismiss #(.signOut auth2)}]})))
 
 (r/defc GlobalSubmissionStatus
   {:render

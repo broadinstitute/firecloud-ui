@@ -65,7 +65,7 @@
          flex/spring
          [:div {:style {:display "flex" :flexDirection "column" :fontSize "70%" :marginBottom "0.4rem"}}
           [:div {:style {:marginBottom "0.4rem"}}
-           (header/create-account-dropdown (:auth2 props))
+           (header/create-account-dropdown)
            (common/render-dropdown-menu {:label (icons/icon {:style style/secondary-icon-style} :help)
                                          :width 150
                                          :button-style {:height 32 :marginRight "0.5rem"}
@@ -257,8 +257,7 @@
              (cond
                (not (contains? user-status :go))
                [auth/UserStatus {:on-success #(swap! state update :user-status conj :go)}]
-               :else [LoggedIn {:component component :make-props make-props
-                                :auth2 auth2}]))]]
+               :else [LoggedIn {:component component :make-props make-props}]))]]
          (footer/render-footer)
          ;; As low as possible on the page so it will be the frontmost component when displayed.
          [modal/Component {:ref "modal"}]]]))
