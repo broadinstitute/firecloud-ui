@@ -181,7 +181,8 @@
         :typeaheadDisplay (fn [result]
                             (.text (js/$ (str "<div>" (aget result "value") "</div>"))))
         :typeaheadSuggestionTemplate (fn [result]
-                                       (str "<div style='textOverflow: ellipsis; overflow: hidden; font-size: smaller;'>" (aget result "value") "</div>"))}]])})
+                                       (-> (js/$ "<div style='textOverflow: ellipsis; overflow: hidden; font-size: smaller;'>")
+                                           (.append (aget result "value"))))}]])})
 
 (react/defc FacetCheckboxes
   {:render
