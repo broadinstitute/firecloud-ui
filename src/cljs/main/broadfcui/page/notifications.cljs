@@ -12,13 +12,11 @@
   {:render
    (fn [{:keys [this state]}]
      [:div {:style style/thin-page-style}
-      [:h1 {} "Account Notifications"]
+      [:h2 {} "Account Notifications"]
       (this
        :-render-ajax-or-continue
        (fn [notifications notifications-state]
-         (let [find-notification (fn [k]
-                                   (first (filter #(= k (:notificationKey %)) notifications)))
-               is-checked? (fn [k] (get notifications-state k))
+         (let [is-checked? (fn [k] (get notifications-state k))
                set-checked? (fn [k value]
                               (swap! state assoc-in [:notifications-state k] value))
                checkbox (fn [k]

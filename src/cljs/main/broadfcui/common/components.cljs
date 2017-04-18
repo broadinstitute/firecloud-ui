@@ -344,7 +344,7 @@
                  text)])
             (butlast crumbs)))
           sep
-          [:span {:style {:fontWeight 500 :fontSize "1.2em"}} (:text (last crumbs))]])))})
+          [:span {:style {:fontWeight "bold" :fontSize "1.2em"}} (:text (last crumbs))]])))})
 
 
 (react/defc SplitPane
