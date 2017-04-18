@@ -19,7 +19,8 @@
 
 (defn- render-submissions-table [workspace-id submissions bucketName]
   [Table
-   {:persistence-key "monitor" :v 1
+   {:persistence-key (str (common/workspace-id->string workspace-id) ":monitor")
+    :v 1
     :body
     {:style table-style/table-heavy
      :data-source (table-utils/local submissions)
