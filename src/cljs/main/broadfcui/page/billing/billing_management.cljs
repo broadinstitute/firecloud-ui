@@ -63,7 +63,6 @@
 (react/defc BillingProjectTable
   {:reload
    (fn [{:keys [this refs after-update]}]
-     (utils/cljslog "now we're up here")
      (react/call :load-data this)
      (after-update #((@refs "table") :refresh-rows)))
    :render
