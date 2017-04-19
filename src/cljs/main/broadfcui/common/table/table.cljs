@@ -104,7 +104,10 @@
          (when (and (:filterable? behavior) (not (contains? external-query-params :filter-text)))
            (let [filter-bar-props (:filter-bar toolbar)]
              [:div {:style (:style filter-bar-props)}
-              [comps/TextFilter {:on-filter #(swap! state update :query-params assoc :filter-text %)}]]))
+              [comps/TextFilter (merge
+                                 {:initial-text (:filter-text query-params)
+                                  :on-filter #(swap! state update :query-params assoc :filter-text %)}
+                                 (:inner filter-bar-props))]]))
          (list* (:items toolbar))]
         [:div {:style {:overflowX "auto"}}
          (if (empty? rows)

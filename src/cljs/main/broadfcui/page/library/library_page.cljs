@@ -7,7 +7,6 @@
     [broadfcui.endpoints :as endpoints]
     [broadfcui.common.flex-utils :as flex]
     [broadfcui.common.style :as style]
-    [broadfcui.common.table :as table]
     [broadfcui.common.table.style :as table-style]
     [broadfcui.common.table.table :refer [Table]]
     [broadfcui.config :as config]
@@ -308,6 +307,7 @@
                     :search-result-columns (mapv keyword searchResultColumns)))))))
     :render
     (fn [{:keys [this refs state after-update]}]
+      ;; TODO: Refactor this to use filter.cljs
       [:div {:style {:display "flex" :margin "1.5rem 1rem 0"}}
        [:div {:style {:width 260 :marginRight "2em"
                       :background (:background-light style/colors)
