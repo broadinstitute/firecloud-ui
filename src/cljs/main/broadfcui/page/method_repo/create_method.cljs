@@ -123,7 +123,5 @@
                  (let [response (get-parsed-response)
                        {:keys [namespace name snapshotId]} response
                        id {:namespace namespace :name name :snapshot-id snapshotId}]
-                   (if (:in-workspace? props)
-                     ((:on-created props) :method id)
-                     (nav/go-to-path :method id))))
+                   ((:on-created props) :method id)))
                (swap! state assoc :upload-error (get-parsed-response false))))}))))})
