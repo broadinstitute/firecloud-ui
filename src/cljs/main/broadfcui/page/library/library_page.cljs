@@ -96,7 +96,7 @@
        (when-not ((@refs "table") :update-query-params query-params)
          ((@refs "table") :refresh-rows))))
    :-get-link-props
-   (fn [{:keys [props]} data]
+   (fn [_ data]
      (if (= (:workspaceAccess data) "NO ACCESS")
        {:onClick
         (fn [_]
@@ -309,7 +309,7 @@
     :render
     (fn [{:keys [this refs state after-update]}]
       [:div {:style {:display "flex" :margin "1.5rem 1rem 0"}}
-       [:div {:style {:width "20%" :minWidth 250 :marginRight "2em"
+       [:div {:style {:width 260 :marginRight "2em"
                       :background (:background-light style/colors)
                       :border style/standard-line}}
         [SearchSection {:search-text (:search-text @state)
