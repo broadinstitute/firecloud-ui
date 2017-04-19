@@ -277,6 +277,7 @@
         (react/create-element
          ;; empty string makes react attach a property with no value
          [:div {:className (str "dropdown-pane " dropdown-class) :id dropdown-id :data-dropdown ""
+                :data-close-on-click (when (:close-on-click props) "true")
                 :ref (this :-create-dropdown-ref-handler)
                 :style (merge
                         {:whiteSpace "normal"}
@@ -305,20 +306,19 @@
                 (fn [_]
                   (swap! state assoc :render-contents? true)
                   (after-update #(this :-render-dropdown))
-                  (.on (js/$ "body")
-                       "click.zf.dropdown"
-                       (fn [e]
-                         (when-not (or (.is button$ (.-target e))
-                                       (pos? (.-length (.find button$ (.-target e))))
-                                       (when-not (:close-on-click props)
+                  (if (:close-on-click props)
+                    (.on element$ "click.zf.dropdown"
+                         (fn [_]
+                           (.foundation element$ "close")))
+                    (.on (js/$ "body")
+                         "click.zf.dropdown"
+                         (fn [e]
+                           (when-not (or (.is button$ (.-target e))
+                                         (pos? (.-length (.find button$ (.-target e))))
                                          (.is element$ (.-target e))
-                                         (pos? (.-length (.find element$ (.-target e))))))
-                           ;; Delaying this until the next tick allows React event handlers to fire.
-                           (js/setTimeout
-                            (fn []
-                              (.foundation element$ "close")
-                              (.off (js/$ "body") "click.zf.dropdown"))
-                            0))))))))
+                                         (pos? (.-length (.find element$ (.-target e)))))
+                             (.foundation element$ "close")
+                             (.off (js/$ "body") "click.zf.dropdown")))))))))
        :will-unmount
        (fn [element]
          (.off (js/$ (react/find-dom-node this)) "click")
