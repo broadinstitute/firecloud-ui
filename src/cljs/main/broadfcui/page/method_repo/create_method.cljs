@@ -121,9 +121,9 @@
                (do
                  (modal/pop-modal)
                  (let [response (get-parsed-response)
-                       {:keys [namespace name snapshotId]} response]
+                       {:keys [namespace name snapshotId]} response
+                       id {:namespace namespace :name name :snapshot-id snapshotId}]
                    (if (:in-workspace? props)
-                     ((:on-created props) :method {:namespace namespace :name name :snapshot-id snapshotId})
-                     (nav/go-to-path :method {:namespace namespace :name name
-                                            :snapshot-id snapshotId}))))
+                     ((:on-created props) :method id)
+                     (nav/go-to-path :method id))))
                (swap! state assoc :upload-error (get-parsed-response false))))}))))})

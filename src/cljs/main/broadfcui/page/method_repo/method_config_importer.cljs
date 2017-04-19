@@ -298,7 +298,8 @@
         :toolbar (add-right
                   [comps/Button
                    {:text "Create new method..."
-                    :onClick #(modal/push-modal [create/CreateMethodDialog {:on-created (when (:in-workspace? props) (fn [type id] ((:on-selected props) type id)))
+                    :onClick #(modal/push-modal [create/CreateMethodDialog {:on-created (when (:in-workspace? props)
+                                                                                          (fn [type id] ((:on-selected props) type id)))
                                                                             :in-workspace? (:in-workspace? props)}])}])
         :filter-groups [{:text "All" :pred (constantly true)}
                         {:text "Methods Only" :pred #(= :method (:type %))}
