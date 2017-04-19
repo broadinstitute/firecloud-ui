@@ -62,8 +62,9 @@
 
 (react/defc BillingProjectTable
   {:reload
-   (fn [{:keys [this]}]
-     (react/call :load-data this))
+   (fn [{:keys [this refs after-update]}]
+     (react/call :load-data this)
+     (after-update #((@refs "table") :refresh-rows)))
    :render
    (fn [{:keys [props state this]}]
      (cond
