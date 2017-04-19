@@ -187,6 +187,8 @@
                                                :from 0
                                                :size 10}))))}
         :typeaheadDisplay (fn [result]
+                            ;; we intentionally do not encode the result value here, because it is already
+                            ;; encoded from the server.
                             (.text (js/$ (str "<div>" (aget result "value") "</div>"))))
         :typeaheadSuggestionTemplate (fn [result]
                                        (str "<div style='textOverflow: ellipsis; overflow: hidden; font-size: smaller;'>" (aget result "value") "</div>"))}]])})

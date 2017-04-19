@@ -118,9 +118,13 @@
                      :render-display #(aget % "label")
                      :disabled disabled
                      :render-suggestion (fn [result]
-                                          (str "<div> <div style='line-height: 1.5em;'>" (aget result "label")
-                                               "<small style='float: right;'>" (aget result "id") "</small></div>"
-                                               "<small style='font-style: italic;'> " (aget result "definition") "</small></div>"))
+                                          (-> (js/$ "<div>")
+                                              (.append (-> (js/$ "<div style='line-height: 1.5em;'>")
+                                                           (.text (aget result "label"))
+                                                           (.append (-> (js/$ "<small style='float: right;'>")
+                                                                        (.text (aget result "id")))))
+                                                       (-> (js/$ "<small style='font-style: italic;'> ")
+                                                           (.text (aget result "definition"))))))
                      :on-select (fn [_ suggestion]
                                   (let [[id label] (map (partial aget suggestion) ["id" "label"])
                                         [related-id-prop related-label-prop] (map #(-> prop % keyword) [:relatedID :relatedLabel])]
@@ -171,7 +175,8 @@
                                     :type "GET"
                                     :url (str (aget settings "url") "?q=" query))))}
      :typeaheadSuggestionTemplate (fn [result]
-                                    (str "<div style='textOverflow: ellipsis; overflow: hidden; font-size: smaller;'>" result  "</div>"))}]])
+                                    (-> (js/$ "<div style='textOverflow: ellipsis; overflow: hidden; font-size: smaller;'>")
+                                        (.text result)))}]])
 
 (defn- render-textfield [{:keys [colorize type datatype prop value-nullsafe update-property disabled]}]
   (style/create-text-field {:style (colorize {:width "100%"})
