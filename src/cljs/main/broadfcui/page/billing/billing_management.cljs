@@ -62,9 +62,8 @@
 
 (react/defc BillingProjectTable
   {:reload
-   (fn [{:keys [this refs after-update]}]
-     (react/call :load-data this)
-     (after-update #((@refs "table") :refresh-rows)))
+   (fn [{:keys [this]}]
+     (react/call :load-data this))
    :render
    (fn [{:keys [props state this]}]
      (cond
@@ -133,13 +132,14 @@
    (fn [{:keys [this]}]
      (react/call :load-data this))
    :load-data
-   (fn [{:keys [state]}]
+   (fn [{:keys [state refs after-update]}]
      (endpoints/get-billing-projects
       true
       (fn [err-text projects]
         (if err-text
           (swap! state assoc :error-message err-text)
-          (swap! state assoc :projects projects)))))
+          (swap! state assoc :projects projects)
+          (after-update #((@refs "table") :refresh-rows))))))
    :-handle-status-change
    (fn [{:keys [state refs after-update]} project-name new-status message]
      (let [project-index (utils/first-matching-index
