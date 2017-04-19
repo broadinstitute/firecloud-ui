@@ -2,61 +2,192 @@
   (:require
    [broadfcui.common :as common]
    [broadfcui.common.components :as comps]
+   [broadfcui.common.icons :as icons]
    [broadfcui.common.style :as style]
    [broadfcui.nav :as nav]
    [broadfcui.utils :as utils]
    [dmohs.react :as r]
    ))
 
+(defn- profile-response->map [notification-keys profile-response]
+  (->> (:keyValuePairs profile-response)
+       (filter #(contains? notification-keys (:key %)))
+       (reduce #(assoc %1 (:key %2) (if (= "false" (:value %2)) false true)) {})))
+
+(defn- handle-ajax-response [{:keys [state]} k {:keys [raw-response] :as m}]
+  (let [[parsed error] (utils/parse-json-string raw-response true false)]
+    (if error
+      (swap! state assoc k (assoc m :parse-error? true))
+      (swap! state assoc k (assoc m :parsed parsed)))))
+
+(defn- start-ajax-calls [{:keys [this props] :as component-attributes} & [did-get-profile]]
+  (let [{:keys [workspace-id]} props
+        {:keys [namespace name]} workspace-id
+        path (if workspace-id
+               (str "/notifications/workspace/"
+                    (js/encodeURIComponent namespace) "/" (js/encodeURIComponent name))
+               "/notifications/general")]
+    (utils/ajax-orch
+     path
+     {:on-done (partial handle-ajax-response component-attributes :general-response)})
+    (utils/ajax-orch
+     "/profile"
+     {:on-done (fn [m]
+                 (handle-ajax-response component-attributes :profile-response m)
+                 (when did-get-profile
+                   (did-get-profile)))}
+     :service-prefix "/register")))
+
+(defn- render-ajax-or-continue [{:keys [state]} f]
+  (let [{:keys [general-response profile-response]} @state
+        show-error (fn [message]
+                     [:div {:style {:color (:exception-state style/colors)}}
+                      "Error when retrieving notifications: " message])]
+    (cond
+      (not (and general-response profile-response))
+      [comps/Spinner {:text "Loading notifications..."}]
+      (not (:success? general-response))
+      (show-error (:status-text general-response))
+      (not (:success? profile-response))
+      (show-error (:status-text profile-response))
+      (or (:parse-error? general-response) (:parse-error? profile-response))
+      (show-error "Failed to parse response")
+      :else (f (:parsed general-response) (:parsed profile-response)))))
+
+(defn- collect-notification-state [general-response profile-response overrides]
+  (let [general (:parsed general-response)
+        notification-keys (set (map :notificationKey general))
+        prefs (profile-response->map notification-keys (:parsed profile-response))]
+    (sort-by :key
+             (map (fn [x]
+                    (let [k (:notificationKey x)]
+                      (merge (select-keys x [:description])
+                             {:key k
+                              :value (if (contains? overrides k)
+                                       (get overrides k)
+                                       (if (false? (get prefs k)) false true))})))
+                  general))))
+
+(defn- save [data on-done]
+  (utils/ajax-orch
+   "/profile/preferences"
+   {:method :post
+    :headers utils/content-type=json
+    :data (js-invoke js/JSON "stringify" (clj->js data))
+    :on-done on-done}))
+
 (r/defc Page
   {:render
-   (fn [{:keys [this state]}]
+   (fn [{:keys [this] :as m}]
      [:div {:style style/thin-page-style}
       [:h2 {} "Account Notifications"]
-      (this
-       :-render-ajax-or-continue
-       (fn [notifications notifications-state]
-         (let [is-checked? (fn [k] (get notifications-state k))
-               set-checked? (fn [k value]
-                              (swap! state assoc-in [:notifications-state k] value))
-               checkbox (fn [k]
-                          (common/render-foundation-switch
-                           {:checked? (is-checked? k) :on-change (partial set-checked? k)}))
-               row (fn [{:keys [description notificationKey]}]
-                     [:tr {}
-                      [:td {} (checkbox notificationKey)]
-                      [:td {:style {:padding "0.3rem 0 0.3rem 1rem"}} description]])]
-           [:div {}
-            [:table {}
-             [:tbody {}
-              (map row notifications)]]
-            [comps/Button {:style {:marginTop "1rem"} :text "Save"}]])))])
+      (render-ajax-or-continue m #(this :-render-notifications))])
    :component-did-mount
-   (fn [{:keys [state]}]
-     (utils/ajax-orch
-      "/notifications/general"
-      {:on-done (fn [{:keys [raw-response] :as m}]
-                  (let [[parsed error] (utils/parse-json-string raw-response true false)
-                        notifications-state (reduce (fn [r k] (assoc r k true))
-                                                    {}
-                                                    (map :notificationKey parsed))]
-                    (if error
-                      (swap! state assoc :server-response (assoc m :parse-error? true))
-                      (swap! state assoc
-                             :server-response (assoc m :parsed parsed)
-                             :notifications-state notifications-state))))}))
-   :-render-ajax-or-continue
-   (fn [{:keys [state]} f]
-     (let [{:keys [notifications-state server-response]} @state
-           show-error (fn [message]
-                        [:div {:style {:color (:exception-state style/colors)}}
-                         "Error when retrieving notifications: " message])]
-       (cond
-         (not server-response) [comps/Spinner {:text "Loading notifications..."}]
-         (not (:success? server-response))
-         (show-error (:status-text server-response))
-         (:parse-error? server-response) (show-error "Failed to parse response")
-         :else (f (:parsed server-response) notifications-state))))})
+   (fn [m]
+     (start-ajax-calls m))
+   :-render-notifications
+   (fn [{:keys [this state]}]
+     (let [{:keys [overridden]} @state
+           notifications (collect-notification-state
+                          (:general-response @state) (:profile-response @state) overridden)
+           set-checked? (fn [k value] (swap! state assoc-in [:overridden k] value))
+           checkbox (fn [k checked?]
+                      (common/render-foundation-switch
+                       {:checked? checked? :on-change (partial set-checked? k)}))
+           row (fn [{:keys [description key value]}]
+                 [:tr {}
+                  [:td {} (checkbox key value)]
+                  [:td {:style {:padding "0.5rem"}} description]])]
+       [:div {}
+        [:table {:style {:fontSize "90%"}}
+         [:tbody {}
+          (map row notifications)]]
+        [:div {:style {:marginTop "1rem" :display "flex" :alignItems "center"}}
+         [comps/Button {:text "Save" :disabled? (zero? (count overridden))
+                        :onClick #(this :-save)}]
+         [:div {:style {:marginLeft "1rem"}}
+          (cond
+            (:saving? @state) (icons/icon {:className "fa-pulse fa-lg fa-fw"} :spinner)
+            (:error? @state) (icons/icon {:style {:color (:exception-state style/colors)}}
+                                         :error)
+            (:saved? @state) (icons/icon {:style {:color (:success-state style/colors)}}
+                                         :done))]]]))
+   :-save
+   (fn [{:keys [state after-update] :as m}]
+     (swap! state assoc :saving? true :error? false)
+     (let [notifications (collect-notification-state
+                          (:general-response @state) (:profile-response @state)
+                          (:overridden @state))
+           profile (apply merge (map (fn [x] {(:key x) (str (boolean (:value x)))}) notifications))]
+       (save
+        profile
+        (fn [{:keys [success?]}]
+          (swap! state dissoc :saving?)
+          (if success?
+            (do
+              (swap! state assoc :saved? true)
+              (start-ajax-calls m #(swap! state assoc :overridden {}))
+              (after-update (fn [] (js/setTimeout #(swap! state dissoc :saved?) 1000))))
+            (swap! state assoc :error? true))))))})
+
+(r/defc WorkspaceComponent
+  {:get-initial-state
+   (fn []
+     {:save-disabled? true})
+   :render
+   (fn [{:keys [this props] :as m}]
+     (let [{:keys [close-self]} props]
+       [:div {}
+        [:div {:style {:borderBottom style/standard-line
+                       :padding "0 1rem 0.5rem" :margin "0 -1rem 0.5rem"
+                       :fontWeight 500}}
+         "Workspace Notifications"]
+        (render-ajax-or-continue m #(this :-render-notifications))]))
+   :component-did-mount
+   (fn [m]
+     (start-ajax-calls m))
+   :-render-notifications
+   (fn [{:keys [this state after-update]}]
+     (let [{:keys [overridden pending]} @state
+           notifications (collect-notification-state
+                          (:general-response @state) (:profile-response @state) overridden)
+           set-checked? (fn [k value]
+                          (swap! state assoc-in [:overridden k] value)
+                          (swap! state assoc-in [:pending k] true)
+                          (after-update #(this :-save k)))
+           checkbox (fn [k checked?]
+                      (common/render-foundation-switch
+                       {:checked? checked? :on-change (partial set-checked? k)}))
+           row (fn [{:keys [description key value]}]
+                 [:tr {}
+                  [:td {} (checkbox key value)]
+                  [:td {:style {:padding "0.5rem"}} description]
+                  [:td {} (when-let [pending (get pending key)]
+                            (case pending
+                              :error
+                              (icons/icon {:style {:color (:exception-state style/colors)}}
+                                          :error)
+                              :done
+                              (icons/icon {:style {:color (:success-state style/colors)}}
+                                          :done)
+                              (icons/icon {:className "fa-pulse fa-lg fa-fw"} :spinner)))]])]
+       [:table {:style {:fontSize "90%"}}
+        [:tbody {}
+         (map row notifications)]]))
+   :-save
+   (fn [{:keys [state after-update]} k]
+     (let [{:keys [pending]} @state]
+       (save
+        {k (str (boolean (get-in @state [:overridden k])))}
+        (fn [{:keys [success?]}]
+          (if success?
+            (do
+              (swap! state assoc-in [:pending k] :done)
+              (after-update
+               (fn [] (js/setTimeout #(swap! state update :pending dissoc k) 1000))))
+            (do
+              (swap! state assoc-in [:pending k] :error)
+              (swap! state update-in [:overridden k] not)))))))})
 
 (defn add-nav-paths []
   (nav/defpath
