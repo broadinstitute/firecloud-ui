@@ -42,7 +42,7 @@
                           :backgroundColor (:background-light style/colors)
                           :color "#000" :textDecoration "none"
                           :padding "0.5rem" :border style/standard-line}
-                  :className "accountDropdown"}
+                  :data-test-id "accountDropdown"}
             (-> auth2 (.-currentUser) (.get) (.getBasicProfile) (.getEmail))
             [:div {:style {:display "inline-block" :marginLeft "1em" :fontSize 8}} "▼"]]
     :width :auto

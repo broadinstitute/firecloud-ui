@@ -155,7 +155,7 @@
       [:label {}
        [:div {:style {:fontSize "88%"}} (str (when required "*") label ":")]]
       [input/TextField {:style {:marginRight "1em" :width 200}
-                        :className key
+                        :data-test-id key
                         :defaultValue (get-in @state [:values key])
                         :ref (name key) :placeholder (get-in @state [:values key])
                         :predicates [(when required (input/nonempty label))]
@@ -166,7 +166,7 @@
       [:label {}
        (style/create-form-label (str (when required "*") label ":"))
        [input/TextField {:style {:width 200}
-                         :className key
+                         :data-test-id key
                          :defaultValue (get-in @state [:values key])
                          :ref (name key) :placeholder (get-in @state [:values key])
                          :predicates [(when required (input/nonempty label))
