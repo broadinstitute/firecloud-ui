@@ -154,6 +154,14 @@
                        ((:update-aggregates props) aggregations)))
                    (on-done {:error status-text})))}))))))})
 
+(defn encode [text]
+  (clojure.string/escape text {\" "&quot;" \& "&amp;" \< "&lt;", \> "&gt;", \\ "&#x27;" \/ "&#x2F;"}))
+
+(defn highlight-suggestion [suggestion highlight]
+  (if (some? highlight)
+    (clojure.string/replace (encode suggestion) (encode highlight) (str "<strong>" (encode highlight) "</strong>"))
+    (encode suggestion)))
+
 (react/defc SearchSection
   {:get-filters
    (fn [{:keys [props]}]
@@ -186,11 +194,15 @@
                                                :from 0
                                                :size 10}))))}
         :typeaheadDisplay (fn [result]
-                            ;; we intentionally do not encode the result value here, because it is already
-                            ;; encoded from the server.
-                            (.text (js/$ (str "<div>" (aget result "value") "</div>"))))
+                            (let [sugg-object (js->clj (aget result "value"))
+                                  suggestion (get sugg-object "suggestion")]
+                              (.text (js/$ (str "<div>" suggestion "</div>")))))
         :typeaheadSuggestionTemplate (fn [result]
-                                       (str "<div style='textOverflow: ellipsis; overflow: hidden; font-size: smaller;'>" (aget result "value") "</div>"))}]])})
+                                       (let [sugg-object (js->clj (aget result "value"))
+                                             suggestion (get sugg-object "suggestion")
+                                             highlight (get sugg-object "highlight")
+                                             display (highlight-suggestion suggestion highlight)]
+                                         (str "<div style='textOverflow: ellipsis; overflow: hidden; font-size: smaller;'>" display "</div>")))}]])})
 
 (react/defc FacetCheckboxes
   {:render
