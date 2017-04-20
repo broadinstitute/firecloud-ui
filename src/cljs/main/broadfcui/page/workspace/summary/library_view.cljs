@@ -18,7 +18,7 @@
   {:render
    (fn [{:keys [props state]}]
      (let [{:keys [library-attributes library-schema]} props
-           wizard-properties (select-keys props [:library-schema :workspace :workspace-id :request-refresh :can-share? :owner? :curator? :writer?])
+           wizard-properties (select-keys props [:library-schema :workspace :workspace-id :request-refresh :can-share? :owner? :curator? :writer? :catalog-with-read?])
            orsp-id (:library:orsp library-attributes)]
        [:div {}
         (style/create-section-header
