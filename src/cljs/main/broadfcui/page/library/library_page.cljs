@@ -25,7 +25,7 @@
            extra-columns (subvec search-result-columns 4)]
        [Table
         {:ref "table" :persistence-key "library-table" :v 4
-         :remote (this :pagination)
+         :fetch-data (this :pagination)
          :body
          {:behavior {:allow-no-sort? true
                      :fixed-column-count 2}

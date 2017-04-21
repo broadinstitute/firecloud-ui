@@ -49,8 +49,8 @@
    :refresh-rows
    (fn [{:keys [props state]}]
      (swap! state assoc :loading? true)
-     (let [{:keys [data remote]} props
-           data-source (if data (table-utils/local data) remote)]
+     (let [{:keys [data fetch-data]} props
+           data-source (if data (table-utils/local data) fetch-data)]
        (data-source {:columns (-> props :body :columns)
                      :query-params (:query-params @state)
                      :on-done (fn [{:keys [total-count filtered-count results]}]
