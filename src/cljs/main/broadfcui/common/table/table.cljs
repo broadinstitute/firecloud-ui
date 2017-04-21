@@ -49,14 +49,16 @@
    :refresh-rows
    (fn [{:keys [props state]}]
      (swap! state assoc :loading? true)
-     ((-> props :body :data-source) {:columns (-> props :body :columns)
-                                     :query-params (:query-params @state)
-                                     :on-done (fn [{:keys [total-count filtered-count results]}]
-                                                (swap! state assoc
-                                                       :total-count total-count
-                                                       :filtered-count filtered-count
-                                                       :rows results
-                                                       :loading? false))}))
+     (let [{:keys [data remote]} props
+           data-source (if data (table-utils/local data) remote)]
+       (data-source {:columns (-> props :body :columns)
+                     :query-params (:query-params @state)
+                     :on-done (fn [{:keys [total-count filtered-count results]}]
+                                (swap! state assoc
+                                       :total-count total-count
+                                       :filtered-count filtered-count
+                                       :rows results
+                                       :loading? false))})))
    :get-initial-state
    (fn [{:keys [props]}]
      (assoc
@@ -86,10 +88,11 @@
    :render
    (fn [{:keys [props state]}]
      (let [props (utils/deep-merge default-props props)
-           {:keys [rows column-display total-count filtered-count query-params loading?]} @state
-           {:keys [body toolbar paginator]} props
+           {:keys [rows column-display filtered-count query-params loading?]} @state
+           {:keys [body toolbar paginator total-count]} props
            {:keys [empty-message columns behavior external-query-params]} body
            {:keys [fixed-column-count allow-no-sort?]} behavior
+           total-count (or total-count (:total-count @state))
            query-params (merge query-params (select-keys props external-query-params))
            update-column-display #(swap! state assoc :column-display %)]
        [:div {}

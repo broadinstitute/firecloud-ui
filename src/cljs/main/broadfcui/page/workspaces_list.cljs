@@ -9,7 +9,6 @@
     [broadfcui.common.style :as style]
     [broadfcui.common.table.style :as table-style]
     [broadfcui.common.table.table :refer [Table]]
-    [broadfcui.common.table.utils :as table-utils]
     [broadfcui.config :as config]
     [broadfcui.endpoints :as endpoints]
     [broadfcui.nav :as nav]
@@ -144,9 +143,9 @@
            {:keys [filters-expanded?]} @state]
        [Table
         {:ref "table" :persistence-key "workspace-table" :v 2
+         :data (this :-filter-workspaces) :total-count (:total-count @locals)
          :body
-         {:data-source (table-utils/local (this :-filter-workspaces) (:total-count @locals))
-          :columns
+         {:columns
           (let [column-data (fn [ws]
                               (let [disabled? (= (:accessLevel ws) "NO ACCESS")]
                                 {:workspace-id (select-keys (:workspace ws) [:namespace :name])
