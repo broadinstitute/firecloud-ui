@@ -9,8 +9,7 @@
                       "googleClientId" "foo"
                       "tcgaNamespace" "foo"}]
     (testing "empty config"
-      (is (= [false '("missing required key alertsJsonUrl"
-                      "missing required key apiUrlRoot"
+      (is (= [false '("missing required key apiUrlRoot"
                       "missing required key googleClientId"
                       "missing required key tcgaNamespace")]
              (config/check-config {}))))

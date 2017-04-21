@@ -154,12 +154,12 @@
    (fn [{:keys [this state locals]}]
      ;; Reset the interval
      (js/clearInterval (:interval-id @locals))
-     ;; Update the poll interval based on the number of failed attempts (for expontential back offs)
+     ;; Update the poll interval based on the number of failed attempts (for exponential back offs)
      (swap! locals assoc :interval-id
             (js/setInterval #(this :load-alerts) (status-alert-interval (:failedRetries @state)))))
    :component-did-mount
    (fn [{:keys [this state locals]}]
-     ;; Call once for intiial load
+     ;; Call once for initial load
      (this :load-alerts)
      ;; Add initial poll interval
      (swap! locals assoc :interval-id
