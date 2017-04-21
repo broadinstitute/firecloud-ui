@@ -120,6 +120,69 @@
                   "http://status.firecloud.org/"]
                  " for more information."])}))
 
+(defn status-alert [title message link]
+  [:div {:style {:borderBottom "1px solid" :borderBottomColor (:line-default style/colors)
+                 :backgroundColor (:exception-state style/colors) :padding "1rem"}}
+   [:div {:style {:display "flex" :background (:exception-state style/colors) :color "#fff"
+                  :alignItems "center" :marginBottom "0.5rem"}}
+    [icons/ExceptionIcon {:size 18}]
+    [:span {:style {:marginLeft "0.5rem" :fontWeight 600
+                    :verticalAlign "middle"}}
+     (if title title "Service Alert")]]
+   [:div {:style {:color "#fff" :fontSize "90%"}}
+    (str message " ")
+     (when link [:a {:href (str link) :target "_blank" :style {:color "#fff"}} "Read more..."])]])
+
+(defn status-alert-interval [attempt]
+  (cond
+    (= attempt 0) (config/status-alerts-refresh)
+    (> attempt (config/max-retry-attempts)) (config/status-alerts-refresh)
+    :else (utils/get-exponential-backoff-interval attempt)))
+
+(react/defc StatusAlertContainer
+  {:get-initial-state
+   (fn []
+     {:failedRetries 0})
+   :render
+   (fn [{:keys [this state]}]
+     (when-let [alerts (not-empty (:alerts @state))]
+       [:div {}
+        (map (fn [alert]
+               (status-alert (:title alert) (:message alert) (:link alert)))
+             alerts)]))
+   :component-did-update
+   (fn [{:keys [this state locals]}]
+     ;; Reset the interval
+     (js/clearInterval (:interval-id @locals))
+     ;; Update the poll interval based on the number of failed attempts (for exponential back offs)
+     (swap! locals assoc :interval-id
+            (js/setInterval #(this :load-alerts) (status-alert-interval (:failedRetries @state)))))
+   :component-did-mount
+   (fn [{:keys [this state locals]}]
+     ;; Call once for initial load
+     (this :load-alerts)
+     ;; Add initial poll interval
+     (swap! locals assoc :interval-id
+            (js/setInterval #(this :load-alerts) (status-alert-interval (:failedRetries @state)))))
+   :component-will-unmount
+   (fn [{:keys [state locals]}]
+     (js/clearInterval (:interval-id @locals)))
+   :load-alerts
+   (fn [{:keys [locals state]}]
+     (utils/ajax {:url (config/alerts-json-url)
+                  :headers {"Cache-Control" "no-store, no-cache"}
+                  :on-done (fn [{:keys [status-code raw-response]}]
+                             (if (utils/check-server-down status-code)
+                               (if (>= (:failedRetries @state) (config/max-retry-attempts))
+                                 (swap! state assoc :alerts [{:title "Google Service Alert"
+                                                            :message "There may be problems accessing data in Google Cloud Storage."
+                                                            :link "https://status.cloud.google.com/"}])
+                                 (swap! state assoc :failedRetries (+ (:failedRetries @state) 1)))
+                               (let [[parsed _] (utils/parse-json-string raw-response true false)]
+                                 (if (not-empty parsed)
+                                   (swap! state assoc :alerts parsed  :failedRetries 0)
+                                   (swap! state dissoc :alerts)))))}))})
+
 (react/defc App
   {:handle-hash-change
    (fn [{:keys [state]}]
@@ -141,6 +204,8 @@
                                public?
                                (contains? (:user-status @state) :signed-in))]
        [:div {}
+        (when (:config-loaded? @state)
+          [StatusAlertContainer])
         (when (and (contains? user-status :signed-in) (contains? user-status :refresh-token-saved))
           [auth/RefreshCredentials {:auth2 auth2}])
         [:div {:style {:backgroundColor "white" :padding 20}}

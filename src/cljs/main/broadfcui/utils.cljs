@@ -187,6 +187,9 @@
   (or (= 501 status-code)
       (<= 503 status-code 599)))
 
+(defn get-exponential-backoff-interval [attempt]
+  (* (.pow js/Math 2 attempt) 1000)) ;; backoff interval in millis
+
 
 (defn ajax-orch [path arg-map & {:keys [service-prefix] :or {service-prefix "/api"}}]
   (assert (= (subs path 0 1) "/") (str "Path must start with '/': " path))
