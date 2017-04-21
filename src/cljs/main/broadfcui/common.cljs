@@ -109,7 +109,7 @@
 
 (defn parse-gcs-uri [gcs-uri]
   (when (string? gcs-uri)
-    (let [matcher (re-find #"gs://([^/]+)/(.+)" gcs-uri)]
+    (let [matcher (re-find #"^gs://([^/]+)/(.+)" gcs-uri)]
       (when (= 3 (count matcher)) ;; first match will be the whole thing
         {:bucket-name (matcher 1)
          :object (matcher 2)}))))
