@@ -155,10 +155,11 @@
                    (on-done {:error status-text})))}))))))})
 
 (defn encode [text]
+  ;; character replacements modeled after Lucene's SimpleHTMLEncoder.
   (clojure.string/escape text {\" "&quot;" \& "&amp;" \< "&lt;", \> "&gt;", \\ "&#x27;" \/ "&#x2F;"}))
 
 (defn highlight-suggestion [suggestion highlight]
-  (if (some? highlight)
+  (if (not (clojure.string/blank? highlight))
     (clojure.string/replace (encode suggestion) (encode highlight) (str "<strong>" (encode highlight) "</strong>"))
     (encode suggestion)))
 
@@ -194,13 +195,11 @@
                                                :from 0
                                                :size 10}))))}
         :typeaheadDisplay (fn [result]
-                            (let [sugg-object (js->clj (aget result "value"))
-                                  suggestion (get sugg-object "suggestion")]
+                            (let [suggestion (aget result "value" "suggestion")]
                               (.text (js/$ (str "<div>" suggestion "</div>")))))
         :typeaheadSuggestionTemplate (fn [result]
-                                       (let [sugg-object (js->clj (aget result "value"))
-                                             suggestion (get sugg-object "suggestion")
-                                             highlight (get sugg-object "highlight")
+                                       (let [suggestion (aget result "value" "suggestion")
+                                             highlight (aget result "value" "highlight")
                                              display (highlight-suggestion suggestion highlight)]
                                          (str "<div style='textOverflow: ellipsis; overflow: hidden; font-size: smaller;'>" display "</div>")))}]])})
 
