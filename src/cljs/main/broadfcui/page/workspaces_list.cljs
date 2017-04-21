@@ -142,7 +142,7 @@
      (let [{:keys [nav-context]} props
            {:keys [filters-expanded?]} @state]
        [Table
-        {:ref "table" :persistence-key "workspace-table" :v 2
+        {:persistence-key "workspace-table" :v 2
          :data (this :-filter-workspaces) :total-count (:total-count @locals)
          :body
          {:columns
@@ -212,12 +212,8 @@
                              (this :-side-filters))]}
          :paginator {:style {:clear "both"}}}]))
    :component-did-update
-   (fn [{:keys [state prev-state refs]}]
-     (persistence/save {:key persistence-key :state state})
-     ;; this is terrible, but GAWB-1893 (which is up next) will fix it
-     (when-not (= (:filters @state) (:filters prev-state))
-       (when-not ((@refs "table") :update-query-params {:page-number 1})
-         ((@refs "table") :refresh-rows))))
+   (fn [{:keys [state]}]
+     (persistence/save {:key persistence-key :state state}))
    :-side-filters
    (fn [{:keys [state refs locals]}]
      (let [{:keys [filters]} @state]

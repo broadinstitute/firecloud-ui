@@ -64,14 +64,13 @@
    (fn [{:keys [this]}]
      (react/call :load-data this))
    :render
-   (fn [{:keys [props state this]}]
+   (fn [{:keys [state this]}]
      (cond
        (:error-message @state) (style/create-server-error-message (:error-message @state))
        (nil? (:projects @state)) [comps/Spinner {:text "Loading billing projects..."}]
        :else
        [Table
-        {:ref "table"
-         :data (:projects @state)
+        {:data (:projects @state)
          :body {:behavior {:reorderable-columns? false}
                 :style table-style/table-light
                 :columns
@@ -131,23 +130,21 @@
    (fn [{:keys [this]}]
      (react/call :load-data this))
    :load-data
-   (fn [{:keys [state refs after-update]}]
+   (fn [{:keys [state]}]
      (endpoints/get-billing-projects
       true
       (fn [err-text projects]
         (if err-text
           (swap! state assoc :error-message err-text)
-          (do (swap! state assoc :projects projects)
-              (after-update #((@refs "table") :refresh-rows)))))))
+          (swap! state assoc :projects projects)))))
    :-handle-status-change
-   (fn [{:keys [state refs after-update]} project-name new-status message]
+   (fn [{:keys [state]} project-name new-status message]
      (let [project-index (utils/first-matching-index
                           #(= (:projectName %) project-name)
                           (:projects @state))
            project (get-in @state [:projects project-index])
            updated-project (assoc project :creationStatus new-status :message message)]
-       (swap! state assoc-in [:projects project-index] updated-project)
-       (after-update #((@refs "table") :refresh-rows))))})
+       (swap! state assoc-in [:projects project-index] updated-project)))})
 
 
 (react/defc Page

@@ -134,8 +134,9 @@
    (fn [{:keys [this]}]
      (this :refresh-rows))
    :component-did-update
-   (fn [{:keys [props state prev-state this]}]
-     (when-not (= (:query-params @state) (:query-params prev-state))
+   (fn [{:keys [props state prev-props prev-state this]}]
+     (when (or (not= (:query-params @state) (:query-params prev-state))
+               (not= (:data props) (:data prev-props)))
        (this :refresh-rows))
      (when (and (:persistence-key props)
                 (or (not= (:query-params @state) (:query-params prev-state))
