@@ -19,6 +19,7 @@
      [:div {:style {:margin "1em"}}
       [table/Table
        {:empty-message "There are no workspaces to display."
+        :reorderable-columns? false
         :columns [{:header "Billing Project" :starting-width 150}
                   {:header "Name" :starting-width 150
                    :as-text #(get-in % ["workspace" "name"]) :sort-by :text
@@ -51,7 +52,9 @@
 
 (defn- filter-workspaces [this-realm workspace-list]
   (filter #(let [src-realm (get-in % ["workspace" "realm" "groupName"])]
-             (or (nil? src-realm) (= src-realm this-realm)))
+             (and
+              (or (nil? src-realm) (= src-realm this-realm))
+              (not= (% "accessLevel") "NO ACCESS")))
     workspace-list))
 
 (defn- workspace->id [workspace]
@@ -67,17 +70,19 @@
          [copy-data-entities/SelectType
           (merge (select-keys props [:workspace-id :add-crumb :on-data-imported])
                  {:selected-workspace-id (workspace->id selected-workspace)
+                  :selected-workspace-bucket (get-in selected-workspace ["workspace" "bucketName"])
                   :crumbs (rest (:crumbs props))})]
          (:workspaces @state)
-         [WorkspaceList {:workspaces (:workspaces @state)
-                         :num-filtered (:num-filtered @state)
-                         :onWorkspaceSelected
-                         (fn [ws]
-                           ((:add-crumb props)
-                            {:text (str (get-in ws ["workspace" "namespace"]) "/"
-                                        (get-in ws ["workspace" "name"]))
-                             :onClick #((:pop-to-depth props) 3)
-                             :selected-workspace ws}))}]
+         [WorkspaceList
+          {:workspaces (:workspaces @state)
+           :num-filtered (:num-filtered @state)
+           :onWorkspaceSelected
+           (fn [ws]
+             ((:add-crumb props)
+              {:text (str (get-in ws ["workspace" "namespace"]) "/"
+                          (get-in ws ["workspace" "name"]))
+               :onClick #((:pop-to-depth props) 3)
+               :selected-workspace ws}))}]
          (:error-message @state) (style/create-server-error-message (:error-message @state))
          :else [:div {:style {:textAlign "center"}}
                 [comps/Spinner {:text "Loading workspaces..."}]])))

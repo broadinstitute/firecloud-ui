@@ -95,7 +95,7 @@
                           :on-status-change (partial this :-handle-status-change projectName)}]
                         (and (= creationStatus project-status-ready) (= role "Owner"))
                         (style/create-link {:text projectName
-                                            :onClick #((:on-select props) projectName)})
+                                            :href (nav/get-link :billing-project projectName)})
                         :else projectName)
                       (when message
                         [:div {:style {:float "right" :position "relative"
@@ -132,13 +132,14 @@
    (fn [{:keys [this]}]
      (react/call :load-data this))
    :load-data
-   (fn [{:keys [state]}]
+   (fn [{:keys [state refs after-update]}]
      (endpoints/get-billing-projects
       true
       (fn [err-text projects]
         (if err-text
           (swap! state assoc :error-message err-text)
-          (swap! state assoc :projects projects)))))
+          (do (swap! state assoc :projects projects)
+              (after-update #((@refs "table") :refresh-rows)))))))
    :-handle-status-change
    (fn [{:keys [state refs after-update]} project-name new-status message]
      (let [project-index (utils/first-matching-index
@@ -153,12 +154,25 @@
 (react/defc Page
   {:render
    (fn [{:keys [props]}]
-     (let [nav-context (nav/parse-segment (:nav-context props))
-           selected-project (not-empty (:segment nav-context))]
+     (let [{:keys [project-name]} props]
        [:div {:style {:padding "1em"}}
         [:div {:style {:marginBottom "1rem" :fontSize "1.1rem"}}
-         [comps/Breadcrumbs {:crumbs [{:text "Billing Management" :onClick #(nav/back nav-context)}
-                                      (when selected-project {:text selected-project})]}]]
-        (if selected-project
-          [BillingProjectManagementPage {:project-name selected-project}]
-          [BillingProjectTable {:on-select #(nav/navigate nav-context %)}])]))})
+         [comps/Breadcrumbs {:crumbs [{:text "Billing Management" :href (nav/get-link :billing)}
+                                      (when project-name {:text project-name})]}]]
+        (if project-name
+          [BillingProjectManagementPage (utils/restructure project-name)]
+          [BillingProjectTable])]))})
+
+(defn add-nav-paths []
+  (nav/defpath
+    :billing
+    {:component Page
+     :regex #"billing"
+     :make-props (fn [_] {})
+     :make-path (fn [] "billing")})
+  (nav/defpath
+    :billing-project
+    {:component Page
+     :regex #"billing/([^/]+)"
+     :make-props (fn [project-name] (utils/restructure project-name))
+     :make-path (fn [project-name] (str "billing/" project-name))}))

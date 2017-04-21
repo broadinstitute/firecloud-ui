@@ -7,7 +7,6 @@
     [broadfcui.endpoints :as endpoints]
     [broadfcui.common.flex-utils :as flex]
     [broadfcui.common.style :as style]
-    [broadfcui.common.table :as table]
     [broadfcui.common.table.style :as table-style]
     [broadfcui.common.table.table :refer [Table]]
     [broadfcui.config :as config]
@@ -35,18 +34,21 @@
           :columns (concat
                     [{:id "access" :hidden? true :resizable? false :sortable? false :initial-width 12
                       :as-text (fn [data]
-                                 (if (= (:workspaceAccess data) "NO ACCESS") "You must request access to this dataset."))
+                                 (when (= (:workspaceAccess data) "NO ACCESS")
+                                   "You must request access to this dataset."))
                       :render (fn [data]
-                                (if (= (:workspaceAccess data) "NO ACCESS")
-                                  (icons/icon {:style {:alignSelf "center" :cursor "pointer"}
-                                               :onClick #(react/call :check-access this data)} :shield)))}
+                                (when (= (:workspaceAccess data) "NO ACCESS")
+                                  (icons/icon (merge
+                                               {:style {:alignSelf "center" :cursor "pointer"}}
+                                               (this :-get-link-props data))
+                                              :shield)))}
                      {:id "library:datasetName"
                       :header (:title (:library:datasetName attributes)) :initial-width 250
                       :sort-initial :asc :sort-by :library:datasetName
                       :as-text :library:datasetDescription
                       :render (fn [data]
-                                (style/create-link {:text (:library:datasetName data)
-                                                    :onClick #(react/call :check-access this data)}))}
+                                (style/create-link (merge {:text (:library:datasetName data)}
+                                                          (this :-get-link-props data))))}
                      {:id "library:indication" :header (:title (:library:indication attributes))
                       :column-data :library:indication :initial-width 180}
                      {:id "library:dataUseRestriction" :header (:title (:library:dataUseRestriction attributes))
@@ -92,25 +94,30 @@
      (let [query-params (merge {:page-number 1} (when reset-sort? {:sort-column nil :sort-order nil}))]
        (when-not ((@refs "table") :update-query-params query-params)
          ((@refs "table") :refresh-rows))))
-   :check-access
-   (fn [{:keys [props]} data]
+   :-get-link-props
+   (fn [_ data]
      (if (= (:workspaceAccess data) "NO ACCESS")
-       (comps/push-message
-        {:header "Request Access"
-         :message
-         (if (= (config/tcga-namespace) (:namespace data))
-           [:span {}
-            [:p {} "For access to TCGA protected data please apply for access via dbGaP [instructions can be found "
-             [:a {:href "https://wiki.nci.nih.gov/display/TCGA/Application+Process" :target "_blank"} "here"] "]."]
-            [:p {} "After dbGaP approves your application please link your eRA Commons ID in your FireCloud profile page."]]
-           [:span {}
-            "Please contact "
-            [:a {:target "_blank"
-                 :href (str "mailto:" (:library:contactEmail data))}
-             (str (:library:datasetCustodian data) " <" (:library:contactEmail data) ">")]
-            " and request access for the "
-            (:namespace data) "/" (:name data) " workspace."])})
-       (nav/navigate (:nav-context props) "workspaces" (common/row->workspace-id data))))
+       {:onClick
+        (fn [_]
+          (comps/push-message
+           {:header "Request Access"
+            :message
+            (if (= (config/tcga-namespace) (:namespace data))
+              [:span {}
+               [:p {} "For access to TCGA protected data please apply for access via dbGaP [instructions can be found "
+                [:a {:href "https://wiki.nci.nih.gov/display/TCGA/Application+Process"
+                     :target "_blank"}
+                 "here"] "]."]
+               [:p {} "After dbGaP approves your application please link your eRA Commons ID in your FireCloud profile page."]]
+              [:span {}
+               "Please contact "
+               [:a {:target "_blank"
+                    :href (str "mailto:" (:library:contactEmail data))}
+                (str (:library:datasetCustodian data) " <" (:library:contactEmail data) ">")]
+               " and request access for the "
+               (:namespace data) "/" (:name data) " workspace."])}))}
+       {:href (nav/get-link :workspace-summary
+                            (common/row->workspace-id data))}))
    :build-aggregate-fields
    (fn [{:keys [props]}]
      (reduce
@@ -179,6 +186,8 @@
                                                :from 0
                                                :size 10}))))}
         :typeaheadDisplay (fn [result]
+                            ;; we intentionally do not encode the result value here, because it is already
+                            ;; encoded from the server.
                             (.text (js/$ (str "<div>" (aget result "value") "</div>"))))
         :typeaheadSuggestionTemplate (fn [result]
                                        (str "<div style='textOverflow: ellipsis; overflow: hidden; font-size: smaller;'>" (aget result "value") "</div>"))}]])})
@@ -298,8 +307,9 @@
                     :search-result-columns (mapv keyword searchResultColumns)))))))
     :render
     (fn [{:keys [this refs state after-update]}]
+      ;; TODO: Refactor this to use filter.cljs
       [:div {:style {:display "flex" :margin "1.5rem 1rem 0"}}
-       [:div {:style {:width "20%" :minWidth 250 :marginRight "2em"
+       [:div {:style {:width 260 :marginRight "2em"
                       :background (:background-light style/colors)
                       :border style/standard-line}}
         [SearchSection {:search-text (:search-text @state)
@@ -329,3 +339,11 @@
                                                   :facet-filters {}
                                                   :expanded-aggregates #{}}
                                         :except [:library-attributes]})))
+
+(defn add-nav-paths []
+  (nav/defpath
+    :library
+    {:component Page
+     :regex #"library"
+     :make-props (fn [_] {})
+     :make-path (fn [] "library")}))

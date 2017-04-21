@@ -1,0 +1,49 @@
+{
+  "request": {
+    "method": "POST",
+    "urlPathPattern": "/api/workspaces/.+\\/entities/copy"
+  },
+  "response": {
+    "headers": {
+      "Access-Control-Allow-Origin": "*",
+      "Content-Type": "application/json"
+    },
+    "jsonBody": {
+      "softConflicts": [
+        {
+          "entityName": "fake-entity-1",
+          "entityType": "fake_type_1",
+          "conflicts": [
+            {
+              "entityName": "fake-entity-2",
+              "entityType": "fake_type_2",
+              "conflicts": [
+                {
+                  "entityName": "fake-entity-6",
+                  "entityType": "fake_type_5",
+                  "conflicts": []
+                }
+              ]
+            },
+            {
+              "entityName": "fake-entity-3",
+              "entityType": "fake_type_3",
+              "conflicts": []
+            }
+          ]
+        },
+        {
+          "entityName": "fake-entity-4",
+          "entityType": "fake_type_1",
+          "conflicts": [
+            {
+              "entityName": "fake-entity-5",
+              "entityType": "fake_type_4",
+              "conflicts": []
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

@@ -80,8 +80,8 @@
    :render
    (fn [{:keys [state props this]}]
      (let [{:keys [library:discoverableByGroups]} @state
-           {:keys [:owner? :curator?]} props
-           editable? (and curator? owner?)
+           {:keys [set-discoverable?]} props
+           editable? set-discoverable?
            selected (if (empty? library:discoverableByGroups) ALL_USERS (first library:discoverableByGroups))]
        [:div {} "Dataset should be discoverable by:"
         (style/create-identity-select {:value selected
@@ -147,8 +147,10 @@
         :required-attributes (find-required-attributes library-schema)}))
    :render
    (fn [{:keys [props state locals this]}]
-     (let [{:keys [library-schema writer? curator?]} props
-           {:keys [page-num pages-seen invalid-properties working-attributes published? required-attributes validation-error submit-error]} @state]
+     (let [{:keys [library-schema can-share? owner? writer? catalog-with-read?]} props
+           {:keys [page-num pages-seen invalid-properties working-attributes published? required-attributes validation-error submit-error]} @state
+           editable? (or writer? catalog-with-read?)
+           set-discoverable? (or can-share? catalog-with-read? owner?)]
        ;; FIXME: refactor -- this is heavily copy/pasted from OKCancelForm
        [:div {}
         (when (:submitting? @state)
@@ -173,21 +175,19 @@
                    [questions enumerate] (get-questions-for-page working-attributes library-schema page-num)]
                (cond
                  (< page-num page-count)
-                 [Questions {:ref "wizard-page" :key page-num
-                             :library-schema library-schema
-                             :missing-properties invalid-properties
-                             :enumerate enumerate
-                             :questions questions
-                             :attributes working-attributes
-                             :editable? (and writer? curator?)
-                             :required-attributes required-attributes}]
+                 [Questions (merge {:ref "wizard-page"
+                                    :key page-num
+                                    :missing-properties invalid-properties
+                                    :attributes working-attributes}
+                                   (utils/restructure library-schema enumerate questions required-attributes editable? set-discoverable?))]
                  (= page-num page-count)
                  [DiscoverabilityPage
                   (merge
-                   {:ref "wizard-page"}
+                   {:ref "wizard-page"
+                    :set-discoverable? (or can-share? catalog-with-read? owner?)}
                    (select-keys working-attributes [:library:discoverableByGroups])
                    (select-keys @locals [:library-groups])
-                   (select-keys props [:library-schema :can-share? :curator? :owner?]))]
+                   (select-keys props [:library-schema]))]
                  (> page-num page-count) (render-summary-page working-attributes library-schema invalid-properties))))}]]
          (when validation-error
            [:div {:style {:marginTop "1em" :color (:exception-state style/colors) :textAlign "center"}}
@@ -262,14 +262,17 @@
          (swap! next inc))
        @next))
    :submit
-   (fn [{:keys [props state locals]}]
+   (fn [{:keys [props state locals]} editable? set-discoverable?]
      (if (not-empty (:invalid-properties @state))
        (swap! state assoc :validation-error "You will need to complete all required metadata attributes to be able to publish the workspace in the Data Library")
-       (let [attributes-seen (apply merge (vals (select-keys (:page-attributes @locals) (:pages-stack @state))))]
+       (let [attributes-seen (apply merge (vals (select-keys (:page-attributes @locals) (:pages-stack @state))))
+             invoke-args (if (and set-discoverable? (not editable?))
+                           {:name endpoints/save-discoverable-by-groups :data (:library:discoverableByGroups attributes-seen)}
+                           {:name endpoints/save-library-metadata :data (remove-empty-values (merge attributes-seen (:version-attributes @state)))})]
          (swap! state assoc :submitting? true :submit-error nil)
          (endpoints/call-ajax-orch
-          {:endpoint (endpoints/save-library-metadata (:workspace-id props))
-           :payload (remove-empty-values (merge attributes-seen (:version-attributes @state)))
+          {:endpoint ((:name invoke-args) (:workspace-id props))
+           :payload (:data invoke-args)
            :headers utils/content-type=json
            :on-done (fn [{:keys [success? get-parsed-response]}]
                       (swap! state dissoc :submitting?)

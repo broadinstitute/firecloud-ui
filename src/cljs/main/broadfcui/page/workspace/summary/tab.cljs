@@ -1,22 +1,23 @@
 (ns broadfcui.page.workspace.summary.tab
   (:require
-    [clojure.set :refer [difference]]
-    [dmohs.react :as react]
-    [broadfcui.common :as common]
-    [broadfcui.common.components :as comps]
-    [broadfcui.common.icons :as icons]
-    [broadfcui.common.markdown :refer [MarkdownView MarkdownEditor]]
-    [broadfcui.common.modal :as modal]
-    [broadfcui.common.style :as style]
-    [broadfcui.endpoints :as endpoints]
-    [broadfcui.page.workspace.monitor.common :as moncommon :refer [all-success? any-running? any-failed?]]
-    [broadfcui.page.workspace.summary.acl-editor :refer [AclEditor]]
-    [broadfcui.page.workspace.summary.attribute-editor :as attributes]
-    [broadfcui.page.workspace.summary.catalog.wizard :refer [CatalogWizard]]
-    [broadfcui.page.workspace.summary.publish :as publish]
-    [broadfcui.page.workspace.summary.library-view :refer [LibraryView]]
-    [broadfcui.page.workspace.summary.workspace-cloner :refer [WorkspaceCloner]]
-    [broadfcui.utils :as utils]))
+   [clojure.set :refer [difference]]
+   [dmohs.react :as react]
+   [broadfcui.common :as common]
+   [broadfcui.common.components :as comps]
+   [broadfcui.common.icons :as icons]
+   [broadfcui.common.markdown :refer [MarkdownView MarkdownEditor]]
+   [broadfcui.common.modal :as modal]
+   [broadfcui.common.style :as style]
+   [broadfcui.endpoints :as endpoints]
+   [broadfcui.nav :as nav]
+   [broadfcui.page.workspace.monitor.common :as moncommon :refer [all-success? any-running? any-failed?]]
+   [broadfcui.page.workspace.summary.acl-editor :refer [AclEditor]]
+   [broadfcui.page.workspace.summary.attribute-editor :as attributes]
+   [broadfcui.page.workspace.summary.catalog.wizard :refer [CatalogWizard]]
+   [broadfcui.page.workspace.summary.publish :as publish]
+   [broadfcui.page.workspace.summary.library-view :refer [LibraryView]]
+   [broadfcui.page.workspace.summary.workspace-cloner :refer [WorkspaceCloner]]
+   [broadfcui.utils :as utils]))
 
 
 (react/defc DeleteDialog
@@ -40,7 +41,7 @@
         :on-done (fn [{:keys [success? get-parsed-response]}]
                    (swap! state dissoc :deleting?)
                    (if success?
-                     (do (modal/pop-modal) ((:on-delete props)))
+                     (do (modal/pop-modal) (nav/go-to-path :workspaces))
                      (swap! state assoc :server-error (get-parsed-response false))))}))})
 
 
@@ -58,11 +59,12 @@
 
 
 (defn- render-sidebar [state refs this
-                       {:keys [workspace billing-projects owner? writer? curator? can-share?
-                               workspace-id on-clone on-delete request-refresh]}]
+                       {:keys [workspace billing-projects owner? writer? curator? catalog-with-read? can-share?
+                               workspace-id request-refresh]}]
   (let [{{:keys [isLocked library-attributes description isProtected]} :workspace
          {:keys [runningSubmissionsCount]} :workspaceSubmissionStats} workspace
         status (common/compute-status workspace)
+        publishable? (and curator? (or catalog-with-read? owner?))
         {:keys [sidebar-visible? editing?]
          {:keys [library-schema]} :server-response} @state]
     [:div {:style {:flex "0 0 270px" :paddingRight 30}}
@@ -83,15 +85,17 @@
          [comps/SidebarButton
           {:style :light :color :button-primary :margin :top
            :icon :catalog :text "Catalog Dataset..."
-           :onClick #(modal/push-modal [CatalogWizard {:library-schema library-schema
-                                                       :workspace workspace
-                                                       :workspace-id workspace-id
-                                                       :can-share? can-share?
-                                                       :owner? owner?
-                                                       :curator? curator?
-                                                       :writer? writer?
-                                                       :request-refresh request-refresh}])}])
-       (when (and curator? owner? (not editing?))
+           :onClick #(modal/push-modal [CatalogWizard (utils/restructure
+                                                       library-schema
+                                                       workspace
+                                                       workspace-id
+                                                       can-share?
+                                                       owner?
+                                                       curator?
+                                                       writer?
+                                                       catalog-with-read?
+                                                       request-refresh)])}])
+       (when (and publishable? (not editing?))
          (if (:library:published library-attributes)
            [publish/UnpublishButton {:workspace-id workspace-id
                                      :request-refresh request-refresh}]
@@ -124,18 +128,20 @@
               :text "Cancel Editing" :icon :cancel
               :onClick #(swap! state dissoc :editing?)}]]))
        (when-not editing?
-         [comps/SidebarButton {:style :light :margin :top :color :button-primary
-                               :text "Clone..." :icon :clone
-                               :disabled? (when (empty? billing-projects) (comps/no-billing-projects-message))
-                               :onClick #(modal/push-modal
-                                           [WorkspaceCloner
-                                            {:on-success (fn [namespace name]
-                                                           (swap! state dissoc :cloning?)
-                                                           (on-clone (str namespace ":" name)))
-                                             :workspace-id workspace-id
-                                             :description description
-                                             :is-protected? isProtected
-                                             :billing-projects billing-projects}])}])
+         [comps/SidebarButton
+          {:style :light :margin :top :color :button-primary
+           :text "Clone..." :icon :clone
+           :disabled? (when (empty? billing-projects) (comps/no-billing-projects-message))
+           :onClick #(modal/push-modal
+                      [WorkspaceCloner
+                       {:on-success (fn [namespace name]
+                                      (swap! state dissoc :cloning?)
+                                      (nav/go-to-path :workspace-summary
+                                                      (utils/restructure namespace name)))
+                        :workspace-id workspace-id
+                        :description description
+                        :is-protected? isProtected
+                        :billing-projects billing-projects}])}])
        (when (and owner? (not editing?))
          [comps/SidebarButton {:style :light :margin :top :color :button-primary
                                :text (if isLocked "Unlock" "Lock")
@@ -145,15 +151,15 @@
          [comps/SidebarButton {:style :light :margin :top :color (if isLocked :text-lighter :exception-state)
                                :text "Delete..." :icon :delete
                                :disabled? (when isLocked "This workspace is locked.")
-                               :onClick #(modal/push-modal [DeleteDialog {:workspace-id workspace-id
-                                                                          :on-delete on-delete}])}]))]))
+                               :onClick #(modal/push-modal
+                                          [DeleteDialog {:workspace-id workspace-id}])}]))]))
 
 
-(defn- render-main [{:keys [workspace curator? owner? writer? reader? can-share? bucket-access? editing? submissions-count
+(defn- render-main [{:keys [workspace curator? owner? writer? reader? can-share? catalog-with-read? bucket-access? editing? submissions-count
                             user-access-level library-schema request-refresh workspace-id storage-cost]}]
   (let [{:keys [owners]
          {:keys [createdBy createdDate bucketName description tags workspace-attributes library-attributes realm]} :workspace} workspace
-        realm-name (:realmName realm)
+        realm-name (:usersGroupName realm)
         render-detail-box (fn [order title & children]
                             [:div {:style {:flexBasis "50%" :order order}}
                              (style/create-section-header title)
@@ -178,7 +184,7 @@
               ")"])]
           (when realm-name
             [:div {:style {:paddingTop "0.5rem"}}
-             [:div {:style {:fontStyle "italic"}} "Access restricted to realm:"]
+             [:div {:style {:fontStyle "italic"}} "Access restricted to authorization domain:"]
              [:div {} realm-name]])))
       (render-detail-box
         3
@@ -237,22 +243,20 @@
                description [MarkdownView {:text description}]
                :else [:span {:style {:fontStyle "italic"}} "No description provided"])))
      (when-not (empty? library-attributes)
-       [LibraryView {:library-attributes library-attributes
-                     :library-schema library-schema
-                     :workspace workspace
-                     :workspace-id workspace-id
-                     :request-refresh request-refresh
-                     :can-share? can-share?
-                     :owner? owner?
-                     :curator? curator?
-                     :writer? writer?}])
-     [attributes/WorkspaceAttributeViewerEditor {:ref "workspace-attribute-editor"
-                                                 :editing? editing?
-                                                 :writer? writer?
-                                                 :workspace-attributes workspace-attributes
-                                                 :workspace-bucket bucketName
-                                                 :workspace-id workspace-id
-                                                 :request-refresh request-refresh}]]))
+       [LibraryView (utils/restructure
+                     library-attributes
+                     library-schema
+                     workspace
+                     workspace-id
+                     request-refresh
+                     can-share?
+                     owner?
+                     curator?
+                     writer?
+                     catalog-with-read?)])
+     [attributes/WorkspaceAttributeViewerEditor
+      (merge {:ref "workspace-attribute-editor" :workspace-bucket bucketName}
+             (utils/restructure editing? writer? workspace-attributes workspace-id request-refresh))]]))
 
 (defn- reader? [workspace]
   (= "READER" (:accessLevel workspace)))
@@ -276,12 +280,13 @@
          (let [owner? (or (= "PROJECT_OWNER" (:accessLevel workspace)) (= "OWNER" (:accessLevel workspace)))
                writer? (or owner? (= "WRITER" (:accessLevel workspace)))
                can-share? (:canShare workspace)
+               catalog-with-read? (and (or writer? (reader? workspace)) (:catalog workspace))
                user-access-level (:accessLevel workspace)
-               derived {:owner? owner? :writer? writer? :reader? (reader? (:workspace props))
-                        :can-share? can-share? :user-access-level user-access-level :request-refresh #(react/call :refresh this)}]
+               derived (merge {:reader? (reader? (:workspace props)) :request-refresh #(react/call :refresh this)}
+                              (utils/restructure owner?  writer? can-share? catalog-with-read? user-access-level))]
            [:div {:style {:margin "2.5rem 1.5rem" :display "flex"}}
             (render-sidebar state refs this
-                            (merge (select-keys props [:workspace :workspace-id :on-clone :on-delete])
+                            (merge (select-keys props [:workspace :workspace-id])
                                    (select-keys server-response [:billing-projects :curator?])
                                    derived))
             (render-main (merge (select-keys props [:workspace :workspace-id :bucket-access?])

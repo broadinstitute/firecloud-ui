@@ -2,10 +2,11 @@
   (:require
     [clojure.string]
     [dmohs.react :as react]
+    [broadfcui.common :as common]
     [broadfcui.common.components :as comps]
-    [broadfcui.config :as config]
     [broadfcui.common.icons :as icons]
     [broadfcui.common.style :as style]
+    [broadfcui.config :as config]
     [broadfcui.endpoints :as endpoints]
     [broadfcui.utils :as utils]
     ))
@@ -30,8 +31,7 @@
                                (set! (.-onload reader)
                                      #(swap! state assoc :file file :file-contents (.-result reader)))
                                (.readAsText reader (.slice file 0 preview-limit)))))}]
-      [:div {:style {:marginBottom "0.8em"}} "For more information, see our "
-       [:a {:href (config/user-guide-url) :target "_blank"} "user guide"] "."]
+      common/PHI-warning
       [comps/Button {:text (if (:upload-result @state) "Choose another file..." "Choose file...")
                      :onClick #(-> (@refs "entities") .click)}]
       (when (:file-contents @state)

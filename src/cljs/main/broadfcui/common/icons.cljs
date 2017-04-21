@@ -7,7 +7,8 @@
 
 ;; From http://fontawesome.io/icons/
 (def ^:private icon-keys
-  {:add "fa-plus"
+  {:add "fa-plus-circle"
+   :add-new "fa-plus"
    :alert "fa-exclamation"
    :angle-left "fa-angle-left"
    :angle-right "fa-angle-right"
@@ -15,11 +16,15 @@
    :catalog "fa-tag"
    :clone "fa-clone"
    :close "fa-close"
+   :collapse "fa-minus-square-o"
    :delete "fa-trash"
+   :disclosure-closed "fa-caret-right"
+   :disclosure-opened "fa-caret-down"
    :done "fa-check"
    :done-circle "fa-check-circle"
    :edit "fa-pencil"
    :error "fa-exclamation-circle"
+   :expand "fa-plus-square-o"
    :help "fa-question-circle"
    :information "fa-info-circle"
    :library "fa-book"

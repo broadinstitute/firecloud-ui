@@ -3,9 +3,11 @@
     [dmohs.react :as react]
     [clojure.set :refer [union difference]]
     [broadfcui.common :as common]
-    [broadfcui.common.table :as table]
-    [broadfcui.common.table-utils :refer [default-render]]
+    [broadfcui.common.components :as comps]
+    [broadfcui.common.icons :as icons]
     [broadfcui.common.style :as style]
+    [broadfcui.common.table :as table]
+    [broadfcui.common.table-utils :refer [default-render render-gcs-links add-right]]
     [broadfcui.utils :as utils]
     ))
 
@@ -30,20 +32,21 @@
      (let [attribute-keys (apply union (map #(set (keys (% "attributes"))) (:entities props)))
            columns (fn [source?]
                      (into
-                      [{:header (:id-name props) :starting-width 200
-                        :as-text #(get-in % [1 "name"]) :sort-by :text
+                      [{:starting-width 40 :resizable? false :reorderable? false :sort-by :none
                         :content-renderer
-                        (fn [[index entity]]
-                          (style/create-link {:text (entity "name")
+                        (fn [index]
+                          (style/create-link {:text (icons/icon {} (if source? :add :remove))
                                               :onClick #(swap! state update :selected
-                                                               (if source? conj disj) index)}))}]
-                      (map (fn [k] {:header k :starting-width 100 :show-initial? false
+                                                               (if source? conj disj) index)}))}
+                       {:header (:id-name props) :starting-width 150
+                        :as-text #(% "name") :sort-by :text}]
+                      (map (fn [k] {:header k :starting-width 100
                                     :content-renderer
                                     (fn [attr-value]
                                       (if (and (map? attr-value)
                                                (= (set (keys attr-value)) #{"entityName"}))
                                         (attr-value "entityName")
-                                        (default-render attr-value)))})
+                                        ((render-gcs-links (:selected-workspace-bucket props)) attr-value)))})
                            attribute-keys)))
            data (fn [source?]
                   (replace
@@ -51,28 +54,35 @@
                    (if source?
                      (difference (-> (:entities props) count range set) (:selected @state))
                      (:selected @state))))
-           ->row (fn [[index entity :as item]]
+           ->row (fn [[index entity]]
                    (into
-                    [item]
+                    [index entity]
                     (map (fn [k] (get-in entity ["attributes" k])) attribute-keys)))
            create-table (fn [source?]
-                          [:div {:style {:float (if source? "left" "right") :width box-width
+                          [:div {:style {:width box-width :display "inline-block"
                                          :padding "0.5em" :boxSizing "border-box"
                                          :backgroundColor "#fff" :border (str "1px solid" (:line-default style/colors))}}
                            [table/Table {:width :narrow
+                                         :toolbar
+                                         (add-right
+                                          [comps/Button {:onClick #(if source?
+                                                                     (swap! state assoc :selected (set (range (count (:entities props)))))
+                                                                     (swap! state assoc :selected #{}))
+                                                         :text (if source? (str "Add all " (:type props) "s") "Clear")}])
                                          :empty-message ((if source? :left-empty-text :right-empty-text) props)
                                          :columns (columns source?)
                                          :data (data source?)
                                          :->row ->row}]])]
        [:div {}
-        [:div {:style {:float "left" :width box-width}}
+        [:div {:style {:width box-width :paddingBottom "0.5rem" :display "inline-block"
+                       :fontWeight 500}}
          (:left-text props)]
-        [:div {:style {:float "right" :width box-width}}
+        [:div {:style {:width box-width :paddingBottom "0.5rem" :display "inline-block"
+                       :fontWeight 500 :marginLeft 40}}
          (:right-text props)]
-        (common/clear-both)
-        (create-table true)
-        [:div {:style {:float "left" :width 40 :paddingTop 120
-                       :textAlign "center" :fontSize "180%"}}
-         "⇄"]
-        (create-table false)
-        (common/clear-both)]))})
+        [:div {:style {:display "flex"}}
+         (create-table true)
+         [:div {:style {:width 40 :paddingTop 120 :display "inline-block"
+                        :textAlign "center" :fontSize "180%"}}
+          "⇄"]
+         (create-table false)]]))})

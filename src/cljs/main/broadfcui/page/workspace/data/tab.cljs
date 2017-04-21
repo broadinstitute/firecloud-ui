@@ -17,7 +17,7 @@
     [broadfcui.page.workspace.data.copy-data-workspaces :as copy-data-workspaces]
     [broadfcui.page.workspace.data.import-data :as import-data]
     [broadfcui.persistence :as persistence]
-    [broadfcui.utils :as u]
+    [broadfcui.utils :as utils]
     ))
 
 (defn- render-list-item [item]
@@ -67,14 +67,17 @@
                                 {:id id :text text
                                  :onClick #(swap! state update :crumbs (comp vec (partial take 2)))}))]
          [:div {:style {:position "relative"}}
-          common/PHI-warning
           [:div {:style {:fontSize "1.1rem" :marginBottom "1rem"}}
-           [comps/Breadcrumbs {:crumbs (:crumbs @state)}]]
+           [:span {:style {:display "inline-block"}} [comps/Breadcrumbs {:crumbs (:crumbs @state)}]]
+           (when-not last-crumb-id
+             (common/render-info-box
+              {:text [:div {} "For more information about importing files, see our "
+                      [:a {:href (config/user-guide-url) :target "_blank"} "user guide"] "."]}))]
           [:div {:style {:backgroundColor "white" :padding "1em"}}
            (case last-crumb-id
              :file-import
              [import-data/Page
-               (select-keys props [:workspace-id :import-type :on-data-imported])]
+              (select-keys props [:workspace-id :import-type :on-data-imported])]
              :workspace-import
              [copy-data-workspaces/Page
               (assoc (select-keys props [:workspace-id :this-realm :on-data-imported])
@@ -178,10 +181,10 @@
               {:ref "entity-table"
                :workspace-id workspace-id
                :column-defaults (try
-                                  (u/parse-json-string (get-in workspace [:workspace :workspace-attributes
+                                  (utils/parse-json-string (get-in workspace [:workspace :workspace-attributes
                                                                           :workspace-column-defaults]))
                                   (catch js/Object e
-                                    (u/jslog e) nil))
+                                    (utils/jslog e) nil))
                :toolbar (fn [built-in]
                           (let [layout (fn [item] [:div {:style {:marginRight "1em"}}] item)]
                             [:div {:style {:display "flex" :alignItems "center" :marginBottom "1em"}}
@@ -194,7 +197,7 @@
                                                     (:name workspace-id) "/entities/" selected-entity-type "/tsv")}
                                 [:input {:type "hidden"
                                          :name "FCtoken"
-                                         :value (u/get-access-token)}]
+                                         :value (utils/get-access-token)}]
                                 [:input {:type "hidden"
                                          :name "attributeNames"
                                          :value (->> (persistence/try-restore

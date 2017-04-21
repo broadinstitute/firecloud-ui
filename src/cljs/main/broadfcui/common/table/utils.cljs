@@ -62,14 +62,14 @@
 
 (defn local
   "Create a data source from a local sequence"
-  [data]
+  [data & [total-count]]
   (fn [{:keys [columns query-params on-done]}]
     (let [filtered (filter-rows query-params columns data)
           displayed (->> filtered
                          (sort-rows query-params columns)
                          (trim-rows query-params))]
       (on-done
-       {:total-count (count data)
+       {:total-count (or total-count (count data))
         :filtered-count (count filtered)
         :results displayed}))))
 

@@ -33,10 +33,10 @@
      {:active-filter :all})
    :render
    (fn [{:keys [this state props]}]
-     (let [nav-context (nav/parse-segment (:nav-context props))]
-       (if (empty? (:segment nav-context))
-         (react/call :render-table this)
-         (react/call :render-workflow-details this (:segment nav-context)))))
+     (let [{:keys [workflow-id]} props]
+       (if workflow-id
+         (this :render-workflow-details workflow-id)
+         (this :render-table))))
    :render-table
    (fn [{:keys [props state]}]
      [table/Table
@@ -52,7 +52,12 @@
                           name (str (:entityName entity) " (" (:entityType entity) ")")]
                       (if-not id
                         name
-                        (style/create-link {:text name :href (nav/create-href (:nav-context props) id)}))))}
+                        (style/create-link
+                         {:text name
+                          :href (nav/get-link :workspace-workflow
+                                              (:workspace-id props)
+                                              (:submission-id props)
+                                              id)}))))}
                  {:header "Last Changed" :starting-width 280 :as-text moncommon/render-date}
                  {:header "Status" :starting-width 120
                   :content-renderer (fn [status]
@@ -83,7 +88,7 @@
                                                      workflow-name "/" workflowId "/")})))}]
        :filter-groups
        (vec (cons {:text "All" :pred (constantly true)}
-                  (map (fn [status] {:text status :pred #(= status (% "status"))})
+                  (map (fn [status] {:text status :pred #(= status (:status %))})
                        moncommon/wf-all-statuses)))
        :data (:workflows props)
        :->row (fn [row]
@@ -101,7 +106,9 @@
         [:div {:style {:marginBottom "1rem" :fontSize "1.1rem"}}
          [comps/Breadcrumbs {:crumbs
                              [{:text "Workflows"
-                               :href (nav/create-href (:nav-context props))}
+                               :href (nav/get-link :workspace-submission
+                                                   (:workspace-id props)
+                                                   (:submission-id props))}
                               {:text workflowName}]}]]
         (workflow-details/render
          (merge (select-keys props [:workspace-id :submission-id :bucketName])
@@ -119,7 +126,7 @@
                                    :onClick (fn [_]
                                               (comps/push-confirm
                                                {:text "Are you sure you want to abort this submission?"
-                                                :on-confirm #(react/call :abort-submission this)}))}])
+                                                :on-confirm #(this :abort-submission)}))}])
    :abort-submission (fn [{:keys [props state]}]
                        (modal/pop-modal)
                        (swap! state assoc :aborting-submission? true)
@@ -138,7 +145,6 @@
   {:render
    (fn [{:keys [state props this]}]
      (let [server-response (:server-response @state)
-           nav-context (:nav-context props)
            {:keys [submission error-message]} server-response]
        (cond
          (nil? server-response)
@@ -162,10 +168,10 @@
            (style/create-paragraph
             [:div {}
              [:div {:style {:fontWeight 200 :display "inline-block" :width 90}} "Namespace:"]
-             [:span {:style {:fontWeight 500}} (submission "methodConfigurationNamespace")]]
+             [:span {:style {:fontWeight 500}} (:methodConfigurationNamespace submission)]]
             [:div {}
              [:div {:style {:fontWeight 200 :display "inline-block" :width 90}} "Name:"]
-             [:span {:style {:fontWeight 500}} (submission "methodConfigurationName")]])
+             [:span {:style {:fontWeight 500}} (:methodConfigurationName submission)]])
            (style/create-section-header "Submission Entity")
            (style/create-paragraph
             [:div {}
@@ -193,7 +199,7 @@
                            :submission submission
                            :bucketName (:bucketName props)
                            :submission-id (:submissionId submission)
-                           :nav-context nav-context}]])))
+                           :workflow-id (:workflow-id props)}]])))
    :load-details
    (fn [{:keys [props state]}]
      (endpoints/call-ajax-orch

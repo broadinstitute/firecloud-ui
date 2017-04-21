@@ -9,6 +9,7 @@
              :line-default "#e6e6e6"
              :running-state "#67688a"
              :success-state "#7aac20"
+             :warning-state "#ebaf3b"
              :exception-state "#e85c46"
              :disabled-state "#dadada"
              :tag-background "#d4ecff"
@@ -25,6 +26,10 @@
     "Running" (:running-state colors)
     "Exception" (:exception-state colors)))
 
+(def secondary-icon-style
+  {:color (:text-light colors)
+   :fontSize "1.2rem" :lineHeight "0.6rem"
+   :padding "0.4rem"})
 
 (defn create-section-header [text]
   [:div {:style {:fontSize "125%" :fontWeight 500}} text])
@@ -127,7 +132,7 @@
   (render-name-id (str namespace "/" name) snapshot-id))
 
 (defn render-count [count]
-  [:div {:style {:width 24 :fontSize "80%" :fontWeight "normal" :float "right"}}
+  [:div {:style {:fontSize "80%" :fontWeight "normal" :float "right"}}
    [:span {:style {:display "inline-block"
                    :minWidth "10px"
                    :padding "3px 7px"
@@ -146,6 +151,6 @@
 ; Temporary replacement for the Broad Logo.
 (defn render-text-logo []
   [:div {:style {:display "inline-block"}}
-   [:a {:href "/#workspaces" :style {:fontSize 32 :color (:button-primary colors)
-                                     :fontWeight "bold" :textDecoration "none" :height 38}}
-   "FireCloud"]])
+   [:a {:href "/" :style {:fontSize 32 :color (:button-primary colors)
+                          :fontWeight "bold" :textDecoration "none" :height 38}}
+    "FireCloud"]])

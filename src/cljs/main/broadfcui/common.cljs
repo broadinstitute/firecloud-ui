@@ -125,6 +125,9 @@
 (def default-date-format
   {:month "long" :day "numeric" :year "numeric" :hour "numeric" :minute "numeric"})
 
+(def short-date-format
+  {:month "short" :day "numeric" :year "numeric" :hour "numeric" :minute "numeric"})
+
 (defn format-date [date & [format]]
   (-> date js/Date.
       (.toLocaleString (.-language js/navigator)
@@ -196,11 +199,11 @@
   (or (access-equal-to? level1 level2) (access-greater-than? level1 level2)))
 
 (defn count-workflows [entity root-entity-type]
-  (let [entity-type (entity "entityType")]
+  (let [entity-type (:entityType entity)]
     (cond (= entity-type root-entity-type) 1
           ;; example: entity is 'sample_set', RET is 'sample', presumably using expression 'this.samples'
           (= entity-type (singular-type->set-type root-entity-type))
-          (count (get-in entity ["attributes" (set-type->membership-attribute entity-type)]))
+          (count (get-in entity [:attributes (keyword (set-type->membership-attribute entity-type)) :items]))
           ;; something nonsensical has been selected, submission will probably fail anyway:
           :else 1)))
 
@@ -228,15 +231,13 @@
 (defn question-icon-link [text link & [style]]
   [:a {:href link
        :target "_blank"
-       :style (merge {:color (:text-light style/colors)
-                      :fontSize "1.2rem" :lineHeight "0.6rem"
-                      :padding "0.4rem" :marginRight "0.5rem"} style)}
+       :style (merge style/secondary-icon-style {:marginRight "0.4rem"} style)}
    [FoundationTooltip
     {:text (icons/icon {} :help)
      :style {:border "none" :cursor "pointer"}
      :tooltip text}]])
 
-(react/defc FoundationIconDropdown
+(react/defc FoundationDropdown
   {:close
    (fn [{:keys [locals]}]
      (.foundation (js/$ (:dropdown-element @locals)) "close"))
@@ -248,10 +249,12 @@
      (swap! locals assoc :dropdown-id (gensym "dropdown-")))
    :render
    (fn [{:keys [props locals]}]
-     [:button {:className "button-reset" :data-toggle (:dropdown-id @locals)
-               :style {:cursor "pointer" :padding "0 0.5rem"
-                       :fontSize "16px" :lineHeight "1rem"}}
-      (icons/icon {:style {:color (:icon-color props)}} (:icon-name props))])
+     [:button {:className (str "button-reset " (:button-class props))
+               :data-toggle (:dropdown-id @locals)
+               :style (merge {:cursor "pointer" :padding "0 0.5rem"
+                              :fontSize 16 :lineHeight "1rem"}
+                             (:button-style props))}
+      (:button-contents props)])
    :component-did-mount
    (fn [{:keys [this locals]}]
      (let [dropdown-container (.createElement js/document "div")]
@@ -260,27 +263,32 @@
        (this :-render-dropdown)
        (.foundation (js/$ (:dropdown-element @locals)))))
    :component-will-receive-props
-   (fn [{:keys [this locals]}]
+   (fn [{:keys [this]}]
      (this :-render-dropdown))
    :component-will-unmount
    (fn [{:keys [locals]}]
      (react/unmount-component-at-node (:dropdown-container @locals))
      (.remove (:dropdown-container @locals)))
    :-render-dropdown
-   (fn [{:keys [this props state after-update locals]}]
-     (let [{:keys [contents]} props
+   (fn [{:keys [this props state locals]}]
+     (let [{:keys [contents dropdown-class]} props
            {:keys [dropdown-container dropdown-id]} @locals]
        (react/render
         (react/create-element
          ;; empty string makes react attach a property with no value
-         [:div {:className "dropdown-pane" :id dropdown-id :data-dropdown ""
+         [:div {:className (str "dropdown-pane " dropdown-class) :id dropdown-id :data-dropdown ""
                 :ref (this :-create-dropdown-ref-handler)
-                :style {:whiteSpace "normal"}}
+                :style (merge
+                        {:whiteSpace "normal"}
+                        (:style props)
+                        (when (= (get-in props [:style :width]) :auto)
+                          {:width (.-clientWidth (react/find-dom-node this))
+                           :boxSizing "border-box" :minWidth 120}))}
           (when (:render-contents? @state)
             contents)])
         dropdown-container)))
    :-create-dropdown-ref-handler
-   (fn [{:keys [this state after-update locals]}]
+   (fn [{:keys [this props state after-update locals]}]
      (utils/create-element-ref-handler
       {:store locals
        :key :dropdown-element
@@ -292,25 +300,68 @@
                 (fn [_]
                   (swap! state dissoc :render-contents?)
                   (after-update #(this :-render-dropdown))))
-           (.on element$
-                "show.zf.dropdown"
+           (.on button$
+                "click"
                 (fn [_]
                   (swap! state assoc :render-contents? true)
                   (after-update #(this :-render-dropdown))
                   (.on (js/$ "body")
                        "click.zf.dropdown"
                        (fn [e]
-                         (when (not (or (.is element$ (.-target e))
-                                        (pos? (.-length (.find element$ (.-target e))))
-                                        (.is button$ (.-target e))
-                                        (pos? (.-length (.find button$ (.-target e))))))
-                           (.foundation element$ "close")
-                           (.off (js/$ "body") "click.zf.dropdown"))))))))
+                         (when-not (or (.is button$ (.-target e))
+                                       (pos? (.-length (.find button$ (.-target e))))
+                                       (when-not (:close-on-click props)
+                                         (.is element$ (.-target e))
+                                         (pos? (.-length (.find element$ (.-target e))))))
+                           ;; Delaying this until the next tick allows React event handlers to fire.
+                           (js/setTimeout
+                            (fn []
+                              (.foundation element$ "close")
+                              (.off (js/$ "body") "click.zf.dropdown"))
+                            0))))))))
        :will-unmount
        (fn [element]
-         (.off (js/$ element) "show.zf.dropdown")
+         (.off (js/$ (react/find-dom-node this)) "click")
          (.off (js/$ element) "hide.zf.dropdown"))}))})
 
-(defn render-info-box [{:keys [text]}]
-  [FoundationIconDropdown {:contents text
-                           :icon-name :information :icon-color (:link-active style/colors)}])
+(defn render-icon-dropdown [{:keys [text position icon-name icon-color]}]
+  [FoundationDropdown {:contents text
+                       :dropdown-class position
+                       :button-contents (icons/icon {:style {:color icon-color}} icon-name)}])
+
+(defn render-info-box [{:keys [text position]}]
+  (render-icon-dropdown {:text text
+                         :position position
+                         :icon-name :information :icon-color (:link-active style/colors)}))
+
+(defn render-dropdown-menu [{:keys [label items width button-style]}]
+  [FoundationDropdown
+   {:button-contents label
+    :button-class "float-right"
+    :button-style (merge {:fontSize "unset" :lineHeight "unset" :padding 0 :textAlign "center"}
+                         button-style)
+    :close-on-click true
+    :dropdown-class "bottom"
+    :style {:boxShadow "0 3px 6px 0 rgba(0, 0, 0, 0.15)"
+            :backgroundColor "#fff"
+            :padding 0 :width width
+            :border style/standard-line}
+    :contents (let [DropdownItem
+                    (react/create-class
+                     {:render
+                      (fn [{:keys [props state]}]
+                        [:a {:style {:display "block"
+                                     :color "#000" :textDecoration "none" :fontSize 14
+                                     :padding "0.5rem 1.3rem 0.5rem 0.5rem"
+                                     :backgroundColor (when (:hovering? @state) "#e8f5ff")}
+                             :href (:href props)
+                             :target (:target props)
+                             :onMouseOver #(swap! state assoc :hovering? true)
+                             :onMouseOut #(swap! state assoc :hovering? false)
+                             :onClick (:dismiss props)}
+                         (:text props)])})]
+                [:div {}
+                 (map (fn [item]
+                        [DropdownItem (merge {:href "javascript:;" :target "_self"}
+                                             item)])
+                      items)])}])

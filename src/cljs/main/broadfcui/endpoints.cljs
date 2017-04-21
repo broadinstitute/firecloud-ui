@@ -626,8 +626,9 @@
    :method :post})
 
 
-(defn copy-entity-to-workspace [workspace-id]
-  {:path (str "/workspaces/" (ws-path workspace-id) "/entities/copy")
+(defn copy-entity-to-workspace [workspace-id re-link-soft-conflicts?]
+  {:path (str "/workspaces/" (ws-path workspace-id)
+              "/entities/copy?linkExistingEntities=" (boolean re-link-soft-conflicts?))
    :method :post})
 
 
@@ -777,6 +778,10 @@
 
 (defn save-library-metadata [workspace-id]
   {:path (str "/library/" (ws-path workspace-id) "/metadata")
+   :method :put})
+
+(defn save-discoverable-by-groups [workspace-id]
+  {:path (str "/library/" (ws-path workspace-id) "/discoverableGroups")
    :method :put})
 
 (defn publish-workspace [workspace-id]
