@@ -18,7 +18,7 @@
 
 
 (react/defc DatasetsTable
-  {:render
+  (->>{:render
    (fn [{:keys [state this props]}]
      (let [attributes (:library-attributes props)
            search-result-columns (:search-result-columns props)
@@ -31,6 +31,7 @@
                      :fixed-column-count 2}
           :external-query-params #{:filter-text}
           :filter-text (:filter-text props)
+
           :columns (concat
                     [{:id "access" :hidden? true :resizable? false :sortable? false :initial-width 12
                       :as-text (fn [data]
@@ -125,20 +126,20 @@
       {}
       (:aggregate-fields props)))
    :pagination
-   (fn [{:keys [this state props]}]
+   (fn [{:keys [this state propslocals]}]
      (fn [{:keys [query-params on-done]}]
        (let [{:keys [page-number rows-per-page sort-column sort-order]} query-params]
          (when-not (empty? (:aggregate-fields props))
            (endpoints/call-ajax-orch
-            (let [from (* (- page-number 1) rows-per-page)]
-              {:endpoint endpoints/search-datasets
+            (let [from (* (- page-number 1) rows-per-page)
+              update-aggregates? (or (= 1 page-number) (:initial-render? @locals))]{:endpoint endpoints/search-datasets
                :payload {:searchString (:filter-text props)
                          :filters ((:get-facets props))
                          :from from
                          :size rows-per-page
                          :sortField sort-column
                          :sortDirection sort-order
-                         :fieldAggregations (if (= 1 page-number)
+                         :fieldAggregations (if update-aggregates?
                                               (react/call :build-aggregate-fields this)
                                               {})}
                :headers utils/content-type=json
@@ -150,9 +151,9 @@
                      (on-done {:total-count total
                                :filtered-count total
                                :results results})
-                     (when (= 1 page-number)
+                     (when update-aggregates?
                        ((:update-aggregates props) aggregations)))
-                   (on-done {:error status-text})))}))))))})
+                   (on-done {:error status-text})))}))))))}utils/track-initial-render))
 
 (react/defc SearchSection
   {:get-filters
