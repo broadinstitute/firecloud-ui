@@ -215,7 +215,7 @@
           (let [save-permissions (or editable? can-share?)
                 last-page (> page-num (-> library-schema :wizard count))]
             [comps/Button {:text (if published? "Republish" "Submit")
-                           :onClick #(react/call :submit this)
+                           :onClick #(react/call :submit this editable? set-discoverable?)
                            :disabled? (not (and save-permissions last-page))
                            :style {:width 80}}]))]]))
    :component-did-mount
