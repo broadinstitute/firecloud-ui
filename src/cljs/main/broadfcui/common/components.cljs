@@ -702,18 +702,20 @@
    (fn [_]
      (fn [data]
        (clj->js {:results (map (fn [res]
-                                 (merge {"id" (res "tag")}
-                                        res))
+                                 (let [tag (res "tag")]
+                                   (merge {"id" tag
+                                           ;; text is needed to check equality with the typed input
+                                           "text" tag}
+                                          res)))
                                (js->clj data))})))
    :-template-result
    (fn [{:keys [props]}]
      (fn [res]
        (if (.-loading res)
          "Loading..."
-         (let [show-counts? (:show-counts? props)
-               tag-text (.createTextNode js/document (or (.-tag res) (.-text res)))
+         (let [tag-text (.createTextNode js/document (or (.-tag res) (.-text res)))
                element (.createElement js/document "div")]
-           (when show-counts?
+           (when (:show-counts? props)
              (react/render (react/create-element (style/render-count (or (.-count res) 0))) element))
            (.appendChild element tag-text)
            element))))})
