@@ -261,52 +261,53 @@
           [BannerContainer])
         (when (and (contains? user-status :signed-in) (contains? user-status :refresh-token-saved))
           [auth/RefreshCredentials {:auth2 auth2}])
-        [:div {:style {:backgroundColor "white" :padding 20}}
-         (when-not (contains? user-status :signed-in)
-           (style/render-text-logo))
-         [:div {}
-          (when auth2
-            [auth/LoggedOut {:auth2 auth2 :hidden? sign-in-hidden?
-                             :on-change (fn [signed-in? token-saved?]
-                                          (swap! state update :user-status
-                                                 #(-> %
-                                                      ((if signed-in? conj disj)
-                                                       :signed-in)
-                                                      ((if token-saved? conj disj)
-                                                       :refresh-token-saved))))}])
+        [:div {:style {:position "relative"}}
+         [:div {:style {:backgroundColor "white" :padding 20}}
+          (when-not (contains? user-status :signed-in)
+            (style/render-text-logo))
+          [:div {}
+           (when auth2
+             [auth/LoggedOut {:auth2     auth2 :hidden? sign-in-hidden?
+                              :on-change (fn [signed-in? token-saved?]
+                                           (swap! state update :user-status
+                                                  #(-> %
+                                                       ((if signed-in? conj disj)
+                                                         :signed-in)
+                                                       ((if token-saved? conj disj)
+                                                         :refresh-token-saved))))}])
 
-          (cond
-            (not (:config-loaded? @state))
-            [config-loader/Component
-             {:on-success #(swap! state assoc :config-loaded? true)}]
-            (and (not (contains? user-status :signed-in)) (nil? component))
-            [:h2 {} "Page not found."]
-            public?
-            [component (make-props)]
-            (nil? auth2)
-            [auth/GoogleAuthLibLoader {:on-loaded #(swap! state assoc :auth2 %)}]
-            (contains? user-status :signed-in)
-            (cond
-              (not (contains? user-status :go))
-              [auth/UserStatus {:on-success #(swap! state update :user-status conj :go)}]
-              :else [LoggedIn {:component component :make-props make-props
-                               :auth2 auth2}]))]]
-        (footer/render-footer)
-        ;; As low as possible on the page so it will be the frontmost component when displayed.
-        [modal/Component {:ref "modal"}]]))
+           (cond
+             (not (:config-loaded? @state))
+             [config-loader/Component
+              {:on-success #(swap! state assoc :config-loaded? true)}]
+             (and (not (contains? user-status :signed-in)) (nil? component))
+             [:h2 {} "Page not found."]
+             public?
+             [component (make-props)]
+             (nil? auth2)
+             [auth/GoogleAuthLibLoader {:on-loaded #(swap! state assoc :auth2 %)}]
+             (contains? user-status :signed-in)
+             (cond
+               (not (contains? user-status :go))
+               [auth/UserStatus {:on-success #(swap! state update :user-status conj :go)}]
+               :else [LoggedIn {:component component :make-props make-props
+                                :auth2     auth2}]))]]
+         (footer/render-footer)
+         ;; As low as possible on the page so it will be the frontmost component when displayed.
+         [modal/Component {:ref "modal"}]]]))
    :component-did-mount
    (fn [{:keys [this state refs locals]}]
      ;; pop up the message only when we start getting 503s, not on every 503
      (add-watch
-      utils/server-down? :server-watcher
-      (fn [_ _ _ down-now?]
-        (when down-now?
-          (show-system-status-dialog false))))
+       utils/server-down? :server-watcher
+       (fn [_ _ _ down-now?]
+         (when down-now?
+           (show-system-status-dialog false))))
      (add-watch
-      utils/maintenance-mode? :server-watcher
-      (fn [_ _ _ maintenance-now?]
-        (when maintenance-now?
-          (show-system-status-dialog true))))
+       utils/maintenance-mode? :server-watcher
+       (fn [_ _ _ maintenance-now?]
+         (when maintenance-now?
+           (show-system-status-dialog true))))
      (modal/set-instance! (@refs "modal"))
      (swap! locals assoc :hash-change-listener (partial react/call :handle-hash-change this))
      (.addEventListener js/window "hashchange" (:hash-change-listener @locals)))
