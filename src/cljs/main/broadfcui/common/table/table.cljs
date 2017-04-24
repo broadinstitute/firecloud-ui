@@ -49,14 +49,16 @@
    :refresh-rows
    (fn [{:keys [props state]}]
      (swap! state assoc :loading? true)
-     ((-> props :body :data-source) {:columns (-> props :body :columns)
-                                     :query-params (:query-params @state)
-                                     :on-done (fn [{:keys [total-count filtered-count results]}]
-                                                (swap! state assoc
-                                                       :total-count total-count
-                                                       :filtered-count filtered-count
-                                                       :rows results
-                                                       :loading? false))}))
+     (let [{:keys [data fetch-data]} props
+           data-source (if data (table-utils/local data) fetch-data)]
+       (data-source {:columns (-> props :body :columns)
+                     :query-params (:query-params @state)
+                     :on-done (fn [{:keys [total-count filtered-count results]}]
+                                (swap! state assoc
+                                       :total-count total-count
+                                       :filtered-count filtered-count
+                                       :rows results
+                                       :loading? false))})))
    :get-initial-state
    (fn [{:keys [props]}]
      (assoc
@@ -86,10 +88,11 @@
    :render
    (fn [{:keys [props state]}]
      (let [props (utils/deep-merge default-props props)
-           {:keys [rows column-display total-count filtered-count query-params loading?]} @state
+           {:keys [rows column-display filtered-count query-params loading?]} @state
            {:keys [body toolbar paginator]} props
            {:keys [empty-message columns behavior external-query-params]} body
            {:keys [fixed-column-count allow-no-sort?]} behavior
+           total-count (some :total-count [props @state])
            query-params (merge query-params (select-keys props external-query-params))
            update-column-display #(swap! state assoc :column-display %)]
        [:div {}
@@ -131,8 +134,9 @@
    (fn [{:keys [this]}]
      (this :refresh-rows))
    :component-did-update
-   (fn [{:keys [props state prev-state this]}]
-     (when-not (= (:query-params @state) (:query-params prev-state))
+   (fn [{:keys [props state prev-props prev-state this]}]
+     (when (or (not= (:query-params @state) (:query-params prev-state))
+               (not= (:data props) (:data prev-props)))
        (this :refresh-rows))
      (when (and (:persistence-key props)
                 (or (not= (:query-params @state) (:query-params prev-state))

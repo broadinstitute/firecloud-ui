@@ -8,7 +8,6 @@
     [broadfcui.common.style :as style]
     [broadfcui.common.table.table :refer [Table]]
     [broadfcui.common.table.style :as table-style]
-    [broadfcui.common.table.utils :as table-utils]
     [broadfcui.endpoints :as endpoints]
     [broadfcui.nav :as nav]
     [broadfcui.page.billing.create-project :refer [CreateBillingProjectDialog]]
@@ -65,44 +64,43 @@
    (fn [{:keys [this]}]
      (react/call :load-data this))
    :render
-   (fn [{:keys [props state this]}]
+   (fn [{:keys [state this]}]
      (cond
        (:error-message @state) (style/create-server-error-message (:error-message @state))
        (nil? (:projects @state)) [comps/Spinner {:text "Loading billing projects..."}]
        :else
        [Table
-        {:ref "table"
+        {:data (:projects @state)
          :body {:behavior {:reorderable-columns? false}
-                 :style table-style/table-light
-                 :data-source (table-utils/local (:projects @state))
-                 :columns
-                 [{:id "Status Icon" :initial-width 16
-                   :resizable? false :sortable? false :filterable? false
-                   :column-data :creationStatus
-                   :render
-                   (fn [creation-status]
-                     [:div {:title creation-status :style {:height table-style/table-icon-size}}
-                      (moncommon/icon-for-project-status creation-status)])}
-                  {:header "Project Name" :initial-width 500 :sort-initial :asc
-                   :as-text :projectName :sort-by :text
-                   :render
-                   (fn [{:keys [projectName role creationStatus message]}]
-                     [:span {}
-                      (cond
-                        (= creationStatus project-status-creating)
-                        [PendingProjectControl
-                         {:project-name projectName
-                          :on-status-change (partial this :-handle-status-change projectName)}]
-                        (and (= creationStatus project-status-ready) (= role "Owner"))
-                        (style/create-link {:text projectName
-                                            :href (nav/get-link :billing-project projectName)})
-                        :else projectName)
-                      (when message
-                        [:div {:style {:float "right" :position "relative"
-                                       :height table-style/table-icon-size}}
-                         (common/render-info-box
-                          {:text [:div {} [:strong {} "Message:"] [:br] message]})])])}
-                  {:header "Role" :initial-width :auto :column-data :role}]}
+                :style table-style/table-light
+                :columns
+                [{:id "Status Icon" :initial-width 16
+                  :resizable? false :sortable? false :filterable? false
+                  :column-data :creationStatus
+                  :render
+                  (fn [creation-status]
+                    [:div {:title creation-status :style {:height table-style/table-icon-size}}
+                     (moncommon/icon-for-project-status creation-status)])}
+                 {:header "Project Name" :initial-width 500 :sort-initial :asc
+                  :as-text :projectName :sort-by :text
+                  :render
+                  (fn [{:keys [projectName role creationStatus message]}]
+                    [:span {}
+                     (cond
+                       (= creationStatus project-status-creating)
+                       [PendingProjectControl
+                        {:project-name projectName
+                         :on-status-change (partial this :-handle-status-change projectName)}]
+                       (and (= creationStatus project-status-ready) (= role "Owner"))
+                       (style/create-link {:text projectName
+                                           :href (nav/get-link :billing-project projectName)})
+                       :else projectName)
+                     (when message
+                       [:div {:style {:float "right" :position "relative"
+                                      :height table-style/table-icon-size}}
+                        (common/render-info-box
+                         {:text [:div {} [:strong {} "Message:"] [:br] message]})])])}
+                 {:header "Role" :initial-width :auto :column-data :role}]}
          :toolbar
          {:items
           [flex/spring
@@ -132,23 +130,21 @@
    (fn [{:keys [this]}]
      (react/call :load-data this))
    :load-data
-   (fn [{:keys [state refs after-update]}]
+   (fn [{:keys [state]}]
      (endpoints/get-billing-projects
       true
       (fn [err-text projects]
         (if err-text
           (swap! state assoc :error-message err-text)
-          (do (swap! state assoc :projects projects)
-              (after-update #((@refs "table") :refresh-rows)))))))
+          (swap! state assoc :projects projects)))))
    :-handle-status-change
-   (fn [{:keys [state refs after-update]} project-name new-status message]
+   (fn [{:keys [state]} project-name new-status message]
      (let [project-index (utils/first-matching-index
                           #(= (:projectName %) project-name)
                           (:projects @state))
            project (get-in @state [:projects project-index])
            updated-project (assoc project :creationStatus new-status :message message)]
-       (swap! state assoc-in [:projects project-index] updated-project)
-       (after-update #((@refs "table") :refresh-rows))))})
+       (swap! state assoc-in [:projects project-index] updated-project)))})
 
 
 (react/defc Page

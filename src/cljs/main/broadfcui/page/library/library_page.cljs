@@ -25,12 +25,12 @@
            extra-columns (subvec search-result-columns 4)]
        [Table
         {:ref "table" :persistence-key "library-table" :v 4
+         :fetch-data (this :pagination)
          :body
          {:behavior {:allow-no-sort? true
                      :fixed-column-count 2}
           :external-query-params #{:filter-text}
           :filter-text (:filter-text props)
-          :data-source (this :pagination)
           :columns (concat
                     [{:id "access" :hidden? true :resizable? false :sortable? false :initial-width 12
                       :as-text (fn [data]

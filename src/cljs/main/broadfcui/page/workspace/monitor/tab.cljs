@@ -6,7 +6,6 @@
     [broadfcui.common.style :as style]
     [broadfcui.common.table.table :refer [Table]]
     [broadfcui.common.table.style :as table-style]
-    [broadfcui.common.table.utils :as table-utils]
     [broadfcui.endpoints :as endpoints]
     [broadfcui.nav :as nav]
     [broadfcui.page.workspace.monitor.common :as moncommon]
@@ -19,11 +18,10 @@
 
 (defn- render-submissions-table [workspace-id submissions bucketName]
   [Table
-   {:persistence-key (str (common/workspace-id->string workspace-id) ":monitor")
-    :v 1
+   {:persistence-key (str (common/workspace-id->string workspace-id) ":monitor") :v 1
+    :data submissions
     :body
     {:style table-style/table-heavy
-     :data-source (table-utils/local submissions)
      :empty-message "There are no analyses to display."
      :columns
      [{:header "Date" :initial-width 200 :as-text render-date

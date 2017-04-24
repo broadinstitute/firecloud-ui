@@ -9,7 +9,6 @@
     [broadfcui.common.style :as style]
     [broadfcui.common.table.style :as table-style]
     [broadfcui.common.table.table :refer [Table]]
-    [broadfcui.common.table.utils :as table-utils]
     [broadfcui.config :as config]
     [broadfcui.endpoints :as endpoints]
     [broadfcui.nav :as nav]
@@ -143,10 +142,10 @@
      (let [{:keys [nav-context]} props
            {:keys [filters-expanded?]} @state]
        [Table
-        {:ref "table" :persistence-key "workspace-table" :v 2
+        {:persistence-key "workspace-table" :v 2
+         :data (this :-filter-workspaces) :total-count (:total-count @locals)
          :body
-         {:data-source (table-utils/local (this :-filter-workspaces) (:total-count @locals))
-          :columns
+         {:columns
           (let [column-data (fn [ws]
                               (let [disabled? (= (:accessLevel ws) "NO ACCESS")]
                                 {:workspace-id (select-keys (:workspace ws) [:namespace :name])
@@ -213,12 +212,8 @@
                              (this :-side-filters))]}
          :paginator {:style {:clear "both"}}}]))
    :component-did-update
-   (fn [{:keys [state prev-state refs]}]
-     (persistence/save {:key persistence-key :state state})
-     ;; this is terrible, but GAWB-1893 (which is up next) will fix it
-     (when-not (= (:filters @state) (:filters prev-state))
-       (when-not ((@refs "table") :update-query-params {:page-number 1})
-         ((@refs "table") :refresh-rows))))
+   (fn [{:keys [state]}]
+     (persistence/save {:key persistence-key :state state}))
    :-side-filters
    (fn [{:keys [state refs locals]}]
      (let [{:keys [filters]} @state]
