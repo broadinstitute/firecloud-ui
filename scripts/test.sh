@@ -26,7 +26,7 @@ docker cp package.json fcuitests_clojure-node_1:/w
 
 compose_exec clojure-node npm install
 compose_exec clojure-node npm run webpack -- -p
-compose_exec clojure-node lein cljsbuild once
+compose_exec clojure-node lein with-profile +test-for-release cljsbuild once
 compose_exec clojure-node lein resource
 
 docker cp scripts/.phantom-run-tests.js fcuitests_clojure-node_1:/w/run-tests.js
