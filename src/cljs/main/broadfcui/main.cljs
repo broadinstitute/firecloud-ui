@@ -149,7 +149,6 @@
       :showing-more? false})
    :render
    (fn [{:keys [props state]}]
-     (utils/cljslog @state)
      (when (:visible? @state)
        [:div {}
         (let [background-color (:warning-state style/colors) title "Uh oh! Something may be wrong..."]
@@ -172,7 +171,7 @@
                                           :style {:position "relative" :display "inline-block" :fontSize "100%"
                                                   :backgroundColor "transparent" :cursor "pointer"
                                                   :textDecoration "underline" :border "0rem" :padding "0rem"}}
-                                 (if (:showingMore @state) "Hide exception details..." "Show exception details...")]]
+                                 (if (:showing-more? @state) "Hide exception details..." "Show exception details...")]]
             (when (:showing-more? @state)
               (let [stack-trace (clojure.string/split-lines (:stack props))]
                 [:div {:style {:paddingTop "0.5rem"}}
@@ -210,7 +209,7 @@
    (fn [{:keys [this state locals]}]
      ;; Set the js error listener
      (set! js/window.onerror (fn [message source line column error]
-                               (swap! state assoc :js-alerts (conj (:js-alerts @state) {:source source :error error}))))
+                               (swap! state assoc :js-alerts (conj (vec (:js-alerts @state)) {:source (str (.-location js/document)) :error error}))))
      ;; Call once for initial load
      (this :load-service-alerts)
      ;; Add initial poll interval
@@ -232,7 +231,7 @@
                                  (swap! state assoc :failed-retries (+ (:failed-retries @state) 1)))
                                (let [[parsed _] (utils/parse-json-string raw-response true false)]
                                  (if (not-empty parsed)
-                                   (swap! state assoc :service-alerts parsed  :failed-retries 0)
+                                   (swap! state assoc :service-alerts parsed :failed-retries 0)
                                    (swap! state dissoc :service-alerts)))))}))})
 
 (react/defc App
