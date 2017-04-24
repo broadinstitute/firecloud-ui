@@ -191,7 +191,9 @@
    :render
    (fn [{:keys [this state]}]
      (let [service-alerts (:service-alerts @state) js-alerts (:js-alerts @state)]
-       [:div {}
+       ; Why was zIndex of 514 chosen? IGV has a zIndex of 512, so modals use a zIndex of 513
+       ; We want these banners to be shown in front of the modals, so we use a zIndex of 514
+       [:div {:style {:zIndex 514 :position "relative"}}
         (map (fn [alert]
                [AlertBanner {:message (:message alert) :link (:link alert) :title (:title alert)}])
              service-alerts)
