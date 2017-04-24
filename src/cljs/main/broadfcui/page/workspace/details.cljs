@@ -138,6 +138,7 @@
          [:div {:style {:marginRight "-0.5rem"}}
           (common/render-icon-dropdown
            {:icon-name :bell :icon-color (:text-light style/colors)
+            :icon-title "Adjust notifications for this workspace"
             :position "bottom"
             :button-class "float-right"
             :ref (fn [instance] (swap! locals assoc :infobox instance))
