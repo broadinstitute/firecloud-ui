@@ -120,68 +120,121 @@
                   "http://status.firecloud.org/"]
                  " for more information."])}))
 
-(defn status-alert [title message link]
-  [:div {:style {:borderBottom "1px solid" :borderBottomColor (:line-default style/colors)
-                 :backgroundColor (:exception-state style/colors) :padding "1rem"}}
-   [:div {:style {:display "flex" :background (:exception-state style/colors) :color "#fff"
-                  :alignItems "center" :marginBottom "0.5rem"}}
-    [icons/ExceptionIcon {:size 18}]
-    [:span {:style {:marginLeft "0.5rem" :fontWeight 600
-                    :verticalAlign "middle"}}
-     (if title title "Service Alert")]]
-   [:div {:style {:color "#fff" :fontSize "90%"}}
-    (str message " ")
-     (when link [:a {:href (str link) :target "_blank" :style {:color "#fff"}} "Read more..."])]])
-
 (defn status-alert-interval [attempt]
   (cond
     (= attempt 0) (config/status-alerts-refresh)
     (> attempt (config/max-retry-attempts)) (config/status-alerts-refresh)
     :else (utils/get-exponential-backoff-interval attempt)))
 
-(react/defc StatusAlertContainer
+(react/defc AlertBanner
+  {:render
+   (fn [{:keys [props state]}]
+     [:div {}
+      (let [background-color (:exception-state style/colors) text-color "#fff" title (:title props) message (:message props) link (:link props)]
+        [:div {:style {:borderBottom "1px solid" :borderBottomColor (:line-default style/colors) :color text-color
+                       :backgroundColor (:exception-state style/colors) :padding "1rem"}}
+         [:div {:style {:display "flex" :alignItems "center" :marginBottom "0.5rem"}}
+          [icons/ExceptionIcon {:size 18 :color text-color}]
+          [:span {:style {:marginLeft "0.5rem" :fontWeight 600
+                          :verticalAlign "middle"}}
+           (if title title "Service Alert")]]
+         [:div {:style {:color text-color :fontSize "90%"}}
+          (str message " ")
+          (when link [:a {:href (str link) :target "_blank" :style {:color text-color}} "Read more..."])]])])})
+
+(react/defc WarningBanner
+  {:get-initial-state
+   (fn []
+     {:visible true
+      :showingMore false})
+   :render
+   (fn [{:keys [props state]}]
+     (when (:visible @state)
+       [:div {}
+        (let [background-color (:warning-state style/colors) title "Uh oh! Something may be wrong..."]
+          [:div {:style {:borderBottom "1px solid" :borderBottomColor (:line-default style/colors)
+                         :backgroundColor background-color :padding "1rem"}}
+           [:div {:style {:float "right" :fontSize "90%"}}
+            [:button {:onClick #(swap! state assoc :visible false)
+                      :style {:position "relative"
+                              :display "inline-block" :fontSize "90%"
+                              :backgroundColor "transparent" :cursor "pointer"
+                              :textDecoration "underline" :border "0rem" :padding "0rem"}}
+             "Dismiss"]]
+           [:div {:style {:display "flex" :alignItems "center" :marginBottom "0.5rem"}}
+            [icons/ExceptionIcon {:size 18}]
+            [:span {:style {:marginLeft "0.5rem" :fontWeight 600
+                            :verticalAlign "middle"}}
+             title]]
+           [:div {:style {:fontSize "90%"}}
+            "There was an error in FireCloud. It may not mean anything, but you should consider reloading the page to be safe."
+            [:div {} [:button {:onClick #(swap! state assoc :showingMore (not (:showingMore @state)))
+                                          :style {:position "relative"
+                                                  :display "inline-block" :fontSize "100%"
+                                                  :backgroundColor "transparent" :cursor "pointer"
+                                                  :textDecoration "underline" :border "0rem" :padding "0rem"}}
+                                 (if (:showingMore @state) "Hide exception details..." "Show exception details...")]]
+            (when (:showingMore @state)
+              (let [stack-trace (clojure.string/split-lines (:stack props))]
+                [:div {:style {:paddingTop "0.5rem"}}
+                 [:div {} "Here are some details about the error that occurred. If you post this on our "
+                  [:a {:href "http://gatkforums.broadinstitute.org/firecloud/categories/ask-the-firecloud-team"
+                       :target "_blank" :style {}} "forum"] ", our team can take a look."]
+                 [:div {:style {:paddingTop "0.5rem"}} [:div {:style {:fontWeight 600}} "Stack trace: "]]
+                 (map (fn [line]
+                        [:div {} line])
+                      stack-trace)
+                 [:div {:style {:paddingTop "0.5rem"}} [:div {:style {:fontWeight 600}} "Source: "] (:source props)]]))]])]))})
+
+(react/defc BannerContainer
   {:get-initial-state
    (fn []
      {:failedRetries 0})
    :render
    (fn [{:keys [this state]}]
-     (when-let [alerts (not-empty (:alerts @state))]
+     (let [service-alerts (:service-alerts @state) js-alerts (:js-alerts @state)]
        [:div {}
         (map (fn [alert]
-               (status-alert (:title alert) (:message alert) (:link alert)))
-             alerts)]))
+               [AlertBanner {:message (:message alert) :link (:link alert) :title (:title alert)}])
+             service-alerts)
+        (map (fn [alert]
+               [WarningBanner {:source (:source alert) :stack (.-stack (:error alert))}])
+             js-alerts)]))
    :component-did-update
    (fn [{:keys [this state locals]}]
      ;; Reset the interval
      (js/clearInterval (:interval-id @locals))
      ;; Update the poll interval based on the number of failed attempts (for exponential back offs)
      (swap! locals assoc :interval-id
-            (js/setInterval #(this :load-alerts) (status-alert-interval (:failedRetries @state)))))
+            (js/setInterval #(this :load-service-alerts) (status-alert-interval (:failedRetries @state)))))
    :component-did-mount
    (fn [{:keys [this state locals]}]
+     ;; Set the js error listener
+     (set! js/window.onerror (fn [message source line column error]
+                               (swap! state assoc :js-alerts (conj (:js-alerts @state) {:source source :error error}))))
      ;; Call once for initial load
-     (this :load-alerts)
+     (this :load-service-alerts)
      ;; Add initial poll interval
      (swap! locals assoc :interval-id
-            (js/setInterval #(this :load-alerts) (status-alert-interval (:failedRetries @state)))))
+            (js/setInterval #(this :load-service-alerts) (status-alert-interval (:failedRetries @state)))))
    :component-will-unmount
    (fn [{:keys [state locals]}]
      (js/clearInterval (:interval-id @locals)))
-   :load-alerts
+   :load-service-alerts
    (fn [{:keys [locals state]}]
      (utils/ajax {:url (config/alerts-json-url)
                   :headers {"Cache-Control" "no-store, no-cache"}
                   :on-done (fn [{:keys [status-code raw-response]}]
                              (if (utils/check-server-down status-code)
                                (if (>= (:failedRetries @state) (config/max-retry-attempts))
-                                 (swap! state assoc :alerts [{:title "Google Service Alert"
+                                 (swap! state assoc :service-alerts [{:title "Google Service Alert"
                                                             :message "There may be problems accessing data in Google Cloud Storage."
                                                             :link "https://status.cloud.google.com/"}])
                                  (swap! state assoc :failedRetries (+ (:failedRetries @state) 1)))
                                (let [[parsed _] (utils/parse-json-string raw-response true false)]
                                  (if (not-empty parsed)
-                                   (swap! state assoc :alerts parsed  :failedRetries 0)
-                                   (swap! state dissoc :alerts)))))}))})
+                                   (swap! state assoc :service-alerts parsed  :failedRetries 0)
+                                   (swap! state dissoc :service-alerts)))))}))})
 
 (react/defc App
   {:handle-hash-change
@@ -205,7 +258,7 @@
                                (contains? (:user-status @state) :signed-in))]
        [:div {}
         (when (:config-loaded? @state)
-          [StatusAlertContainer])
+          [BannerContainer])
         (when (and (contains? user-status :signed-in) (contains? user-status :refresh-token-saved))
           [auth/RefreshCredentials {:auth2 auth2}])
         [:div {:style {:backgroundColor "white" :padding 20}}
