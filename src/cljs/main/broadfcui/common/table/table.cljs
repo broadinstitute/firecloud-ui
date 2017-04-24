@@ -89,10 +89,10 @@
    (fn [{:keys [props state]}]
      (let [props (utils/deep-merge default-props props)
            {:keys [rows column-display filtered-count query-params loading?]} @state
-           {:keys [body toolbar paginator total-count]} props
+           {:keys [body toolbar paginator]} props
            {:keys [empty-message columns behavior external-query-params]} body
            {:keys [fixed-column-count allow-no-sort?]} behavior
-           total-count (or total-count (:total-count @state))
+           total-count (some :total-count [props @state])
            query-params (merge query-params (select-keys props external-query-params))
            update-column-display #(swap! state assoc :column-display %)]
        [:div {}
