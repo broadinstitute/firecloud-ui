@@ -713,9 +713,10 @@
      (fn [res]
        (if (.-loading res)
          "Loading..."
-         (let [tag-text (.createTextNode js/document (or (.-tag res) (.-text res)))
+         (let [show-counts? (:show-counts? props)
+               tag-text (.createTextNode js/document (or (.-tag res) (.-text res)))
                element (.createElement js/document "div")]
-           (when (:show-counts? props)
+           (when show-counts?
              (react/render (react/create-element (style/render-count (or (.-count res) 0))) element))
            (.appendChild element tag-text)
            element))))})
