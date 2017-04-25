@@ -1,6 +1,7 @@
 (ns broadfcui.page.workspace.monitor.workflow-details
   (:require
     [dmohs.react :as react]
+    [clojure.walk :refer [prewalk]]
     [clojure.string :as string]
     [broadfcui.common :as common]
     [broadfcui.common.components :as comps]
@@ -62,7 +63,6 @@
          (for [[k v] (:data props)]
            [:div {} k [:span {:style {:margin "0 1em"}} "→"] (display-value v)])])])})
 
-
 (react/defc WorkflowTiming
   {:get-initial-state
    (fn []
@@ -102,6 +102,30 @@
            (create-field name (display-value value)))
          log-map)])))
 
+(react/defc Failures
+  {:get-initial-state
+   (fn []
+     {:expanded false})
+   :render
+   (fn [{:keys [props state]}]
+     [:div {}
+      (create-field
+        "Failures"
+        (style/create-link {:text (if (:expanded @state) "Hide" "Show")
+                            :onClick #(swap! state assoc :expanded (not (:expanded @state)))}))
+      (when (:expanded @state)
+        [comps/Tree {:start-collapsed? false
+                     :highlight-ends false
+                     :data (prewalk
+                             (fn [elem]
+                               (cond
+                                 ;; reorder map elements to message then causedBy
+                                 (map? elem) (select-keys elem ["message" "causedBy"])
+                                 ;; remove empty causedBy[] arrays - prewalk means this executes after the above
+                                 (= (second elem) []) nil
+                                 :else elem))
+                             (:data props))}])])})
+
 (react/defc CallDetail
   {:get-initial-state
    (fn []
@@ -137,9 +161,10 @@
               [IODetail {:label "Outputs" :data (data "outputs")}]
               (create-field "stdout" (display-value (data "stdout") (last (string/split (data "stdout") #"/"))))
               (create-field "stderr" (display-value (data "stderr") (last (string/split (data "stderr") #"/"))))
-              (backend-logs data)]])
-          (:data props)))])})
-
+              (backend-logs data)
+              (when-let [failures (data "failures")]
+                [Failures {:data failures}])]])
+        (:data props)))])})
 
 
 (defn- render-workflow-detail [workflow raw-data workflow-name submission-id bucketName]
@@ -173,9 +198,12 @@
      (let [wlogurl (str "gs://" bucketName "/" submission-id "/workflow.logs/workflow."
                         (workflow "id") ".log")]
        (create-field "Workflow Log" (display-value wlogurl (str "workflow." (workflow "id") ".log"))))]
-    [WorkflowTiming {:label "Workflow Timing" :data raw-data :workflow-name workflow-name}]]
-
-   [:div {:style {:marginTop "1em" :fontWeight 500}} "Calls:"]
+    (when-not (empty? (workflow "calls"))
+      [WorkflowTiming {:label "Workflow Timing" :data raw-data :workflow-name workflow-name}])
+    (when-let [failures (workflow "failures")]
+      [Failures {:data failures}])]
+   (when-not (empty? (workflow "calls"))
+     [:div {:style {:marginTop "1em" :fontWeight 500}} "Calls:"])
    (for [[call data] (workflow "calls")]
      [CallDetail {:label call :data data :submission-id submission-id :bucketName bucketName :workflowId (workflow "id")}])])
 
