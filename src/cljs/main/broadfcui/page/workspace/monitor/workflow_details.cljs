@@ -1,6 +1,7 @@
 (ns broadfcui.page.workspace.monitor.workflow-details
   (:require
     [dmohs.react :as react]
+    [clojure.core :as core]
     [clojure.string :as string]
     [broadfcui.common :as common]
     [broadfcui.common.components :as comps]
@@ -173,9 +174,8 @@
      (let [wlogurl (str "gs://" bucketName "/" submission-id "/workflow.logs/workflow."
                         (workflow "id") ".log")]
        (create-field "Workflow Log" (display-value wlogurl (str "workflow." (workflow "id") ".log"))))]
-    [WorkflowTiming {:label "Workflow Timing" :data raw-data :workflow-name workflow-name}]]
-
-   [:div {:style {:marginTop "1em" :fontWeight 500}} "Calls:"]
+    (when-not (core/empty? (workflow "calls")) [WorkflowTiming {:label "Workflow Timing" :data raw-data :workflow-name workflow-name}])]
+   (when-not (core/empty? (workflow "calls")) [:div {:style {:marginTop "1em" :fontWeight 500}} "Calls:"])
    (for [[call data] (workflow "calls")]
      [CallDetail {:label call :data data :submission-id submission-id :bucketName bucketName :workflowId (workflow "id")}])])
 
