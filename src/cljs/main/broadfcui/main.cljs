@@ -155,23 +155,17 @@
           [:div {:style {:borderBottom "1px solid" :borderBottomColor (:line-default style/colors)
                          :backgroundColor background-color :padding "1rem"}}
            [:div {:style {:float "right" :fontSize "90%"}}
-            [:button {:onClick #(swap! state assoc :visible? false)
-                      :style {:position "relative" :display "inline-block" :fontSize "90%"
-                              :backgroundColor "transparent" :cursor "pointer"
-                              :textDecoration "underline" :border "0rem" :padding "0rem"}}
-             "Dismiss"]]
+            [:div {} [:a {:href "javascript:;" :onClick #(swap! state assoc :visible? false) :style {:color "#000"}} "Dismiss"]]]
            [:div {:style {:display "flex" :alignItems "center" :marginBottom "0.5rem"}}
-            [icons/ExceptionIcon {:size 18}]
+            [icons/ExceptionIcon {:size 18 :color "#000"}]
             [:span {:style {:marginLeft "0.5rem" :fontWeight "bold"
                             :verticalAlign "middle"}}
              title]]
            [:div {:style {:fontSize "90%"}}
             "There was an error in FireCloud. It may not mean anything, but you should consider reloading the page to be safe."
-            [:div {} [:button {:onClick #(swap! state assoc :showing-more? (not (:showing-more? @state)))
-                                          :style {:position "relative" :display "inline-block" :fontSize "100%"
-                                                  :backgroundColor "transparent" :cursor "pointer"
-                                                  :textDecoration "underline" :border "0rem" :padding "0rem"}}
-                                 (if (:showing-more? @state) "Hide exception details..." "Show exception details...")]]
+            [:div {} [:a {:href "javascript:;" :onClick #(swap! state assoc :showing-more? (not (:showing-more? @state)))
+                          :style {:color "#000"}}
+                      (if (:showing-more? @state) "Hide exception details..." "Show exception details...")]]
             (when (:showing-more? @state)
               (let [stack-trace (clojure.string/split-lines (:stack props))]
                 [:div {:style {:paddingTop "0.5rem"}}
