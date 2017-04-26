@@ -702,8 +702,11 @@
    (fn [_]
      (fn [data]
        (clj->js {:results (map (fn [res]
-                                 (merge {"id" (res "tag")}
-                                        res))
+                                 (let [tag (res "tag")]
+                                   (merge {"id" tag
+                                           ;; text is needed to check equality with the typed input
+                                           "text" tag}
+                                          res)))
                                (js->clj data))})))
    :-template-result
    (fn [{:keys [props]}]
