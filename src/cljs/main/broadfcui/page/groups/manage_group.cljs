@@ -78,8 +78,8 @@
              [:div {:style {:position "relative"}}
               (let [owners-group (:ownersGroup group-info)
                     users-group (:usersGroup group-info)]
-                [:span {}
-                 [:span {:style {:fontWeight 500 :fontSize "110%"}} "Email the Group:"]
+                [:div {:style {:paddingBottom "0.5rem"}}
+                 [:span {:style {:fontSize "110%"}} "Email the Group:"]
                  [:div {} "Owners: "
                   (style/create-link {:href (str "mailto:" (:groupEmail owners-group))
                                       :text (:groupName owners-group)})]
@@ -114,17 +114,17 @@
                           {:starting-width :remaining
                            :filter-by :none :sort-by :none :resizable? false
                            :as-text
-                           (fn [{:strs [email role]}]
+                           (fn [{:keys [email role]}]
                              (str "Remove " (clojure.string/lower-case role) " " email))
                            :content-renderer
-                           (fn [{:strs [email role]}]
+                           (fn [{:keys [email role]}]
                              (style/create-link {:text "Remove"
                                                  :onClick #(remove-user state this {:groupName (:group-name props)
                                                                                     :role role
                                                                                     :email email})}))}]
-                :data (conj (mapv #(identity {:email % :role "Owner"}) (:ownersEmails group-info))
-                            (mapv #(identity {:email % :role "User"}) (:usersEmails group-info)))
-                :->row (fn [{:strs [email role] :as row}]
+                :data (concat (mapv #(identity {:email % :role "Owner"}) (:ownersEmails group-info))
+                              (mapv #(identity {:email % :role "User"}) (:usersEmails group-info)))
+                :->row (fn [{:keys [email role] :as row}]
                          [email
                           role
                           row])}]
