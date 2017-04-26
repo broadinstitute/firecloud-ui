@@ -9,7 +9,6 @@
    [broadfcui.common.style :as style]
    [broadfcui.config :as config]
    [broadfcui.endpoints :as endpoints]
-   [broadfcui.nav :as nav]
    [broadfcui.utils :as utils]
    ))
 
@@ -19,10 +18,10 @@
    (fn [{:keys [props state refs this]}]
      (let [{:keys [duplicate]} props
            header (if duplicate "Duplicate Method" "Create New Method")
-           name-default (if duplicate (str "Copy of " (duplicate "name")) "")
-           synopsis-default (if duplicate (duplicate "synopsis") "")
-           documentation-default (if duplicate (duplicate "documentation") "")
-           wdl-default (if duplicate (duplicate "payload") "")]
+           name-default (if duplicate (str "Copy of " (:name duplicate)) "")
+           synopsis-default (if duplicate (:synopsis duplicate) "")
+           documentation-default (if duplicate (:documentation duplicate) "")
+           wdl-default (if duplicate (:payload duplicate) "")]
        [comps/OKCancelForm
         {:header header
          :get-first-element-dom-node #(react/find-dom-node (@refs "namespace"))

@@ -36,7 +36,7 @@
        :ok-button {:text "Redact" :onClick #(react/call :redact this)}}])
    :redact
    (fn [{:keys [props state]}]
-     (let [[name namespace snapshotId] (map (:entity props) ["name" "namespace" "snapshotId"])]
+     (let [{:keys [name namespace snapshotId]} (:entity props)]
        (swap! state assoc :redacting? true :error nil)
        (endpoints/call-ajax-orch
          {:endpoint (endpoints/delete-agora-entity (:config? props) namespace name snapshotId)
@@ -63,10 +63,10 @@
           :onClick #(modal/push-modal
                      [mca/AgoraPermsEditor
                       {:save-endpoint (endpoints/persist-agora-method-acl entity)
-                       :load-endpoint (let [[name nmsp sid] (map entity ["name" "namespace" "snapshotId"])]
-                                        (endpoints/get-agora-method-acl nmsp name sid config?))
-                       :entityType (entity "entityType") :entityName (mca/get-ordered-name entity)
-                       :title (str (entity "entityType") " " (mca/get-ordered-name entity))}])}]
+                       :load-endpoint (let [{:keys [name namespace snapshotId]} entity]
+                                        (endpoints/get-agora-method-acl namespace name snapshotId config?))
+                       :entityType (:entityType entity) :entityName (mca/get-ordered-name entity)
+                       :title (str (:entityType entity) " " (mca/get-ordered-name entity))}])}]
         [comps/SidebarButton
          {:style :light :color :exception-state
           :text "Redact" :icon :delete :margin :bottom
@@ -129,8 +129,8 @@
          (:loaded-config @state)
          (or (:workspace-id props) (:workspaces-list @state)))
        (create-import-form state props this locals (:loaded-config @state) true
-         [{:label "Configuration Namespace" :key "namespace"}
-          {:label "Configuration Name" :key "name"}])
+         [{:label "Configuration Namespace" :key :namespace}
+          {:label "Configuration Name" :key :name}])
        (:error @state) (style/create-server-error-message (:error @state))
        :else [comps/Spinner {:text "Loading configuration details..."}]))
    :perform-copy
@@ -146,9 +146,9 @@
            (swap! state assoc :blocking-text (if (:workspace-id props) "Importing..." "Exporting..."))
            (endpoints/call-ajax-orch
              {:endpoint (endpoints/copy-method-config-to-workspace workspace-id)
-              :payload {"configurationNamespace" (loaded-config "namespace")
-                        "configurationName" (loaded-config "name")
-                        "configurationSnapshotId" (loaded-config "snapshotId")
+              :payload {"configurationNamespace" (:namespace loaded-config)
+                        "configurationName" (:name loaded-config)
+                        "configurationSnapshotId" (:snapshotId loaded-config)
                         "destinationNamespace" namespace
                         "destinationName" name}
               :headers utils/content-type=json
@@ -176,7 +176,7 @@
         :headers utils/content-type=json
         :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                    (if success?
-                     (swap! state assoc :loaded-config (get-parsed-response false))
+                     (swap! state assoc :loaded-config (get-parsed-response))
                      (swap! state assoc :error status-text)))}))})
 
 
@@ -188,9 +188,9 @@
          (:loaded-method @state)
          (or (:workspace-id props) (:workspaces-list @state)))
        (create-import-form state props this locals (:loaded-method @state) false
-         [{:label "Configuration Namespace" :key "namespace"}
-          {:label "Configuration Name" :key "name"}
-          {:label "Root Entity Type" :key "rootEntityType" :type "identity-select" :options root-entity-types}])
+         [{:label "Configuration Namespace" :key :namespace}
+          {:label "Configuration Name" :key :name}
+          {:label "Root Entity Type" :key :rootEntityType :type "identity-select" :options root-entity-types}])
 
        (:error @state) (style/create-server-error-message (:error @state))
        :else [comps/Spinner {:text "Creating template..."}]))
@@ -208,9 +208,9 @@
            (endpoints/call-ajax-orch
              {:endpoint (endpoints/create-template (:loaded-method @state))
               :payload (assoc (:loaded-method @state)
-                              "methodNamespace" (get-in @state [:loaded-method "namespace"])
-                              "methodName" (get-in @state [:loaded-method "name"])
-                              "methodVersion" (get-in @state [:loaded-method "snapshotId"]))
+                              "methodNamespace" (get-in @state [:loaded-method :namespace])
+                              "methodName" (get-in @state [:loaded-method :name])
+                              "methodVersion" (get-in @state [:loaded-method :snapshotId]))
               :headers utils/content-type=json
               :on-done (fn [{:keys [success? get-parsed-response]}]
                          (let [response (get-parsed-response)]
@@ -250,7 +250,7 @@
         :headers utils/content-type=json
         :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                    (if success?
-                     (swap! state assoc :loaded-method (get-parsed-response false))
+                     (swap! state assoc :loaded-method (get-parsed-response))
                      (swap! state assoc :error status-text)))}))})
 
 
@@ -268,7 +268,7 @@
         :else
         [Table
          {:persistence-key "method-repo-table" :v 1
-          :data (:filtered-data @state)
+          :data (or (:filtered-data @state) [])
           :body
           {:columns
            [{:header "Type" :initial-width 100

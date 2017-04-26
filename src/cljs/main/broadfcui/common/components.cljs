@@ -197,11 +197,11 @@
                                                             #(f (int (common/get-text refs "snapshotId"))))}
                                                (:snapshots props))
                  [:span {} ((or render identity) (entity key))])])
-            config? (contains? entity "method")]
+            config? (contains? entity :method)]
        [:div {:style {:backgroundColor (:background-light style/colors)
                       :borderRadius 8 :border style/standard-line
                       :padding "1em"}}
-        (react/call :render-details this make-field entity)
+        (this :render-details make-field entity)
         [:div {:style {:paddingTop "0.5em"}}
          [:span {:style {:fontWeight 500 :marginRight "1em"}} (if config? "Referenced Method:" "WDL:")]
          (style/create-link {:text (if (:payload-expanded @state) "Collapse" "Expand")
@@ -209,28 +209,28 @@
         (when (:payload-expanded @state)
           (if config?
             [:div {:style {:margin "0.5em 0 0 1em"}}
-             (react/call :render-details this make-field (entity "method"))
+             (this :render-details make-field (:method entity))
              [:div {:style {:fontWeight 500 :marginTop "1em"}} "WDL:"]
-             [CodeMirror {:text (get-in entity ["method" "payload"])}]]
-            [CodeMirror {:text (entity "payload")}]))])])
+             [CodeMirror {:text (get-in entity [:method :payload])}]]
+            [CodeMirror {:text (:payload entity)}]))])])
    :render-details
    (fn [{:keys []} make-field entity]
      [:div {}
       [:div {:style {:float "left" :marginRight "5em"}}
-       (make-field entity "namespace" "Namespace: " false)
-       (make-field entity "name" "Name: " false)
-       (make-field entity "snapshotId" "Snapshot ID: " true)]
+       (make-field entity :namespace "Namespace: " false)
+       (make-field entity :name "Name: " false)
+       (make-field entity :snapshotId "Snapshot ID: " true)]
       [:div {:style {:float "left"}}
-       (make-field entity "createDate" "Created: " false common/format-date)
-       (make-field entity "entityType" "Entity Type: " false)
-       (make-field entity "managers" "Owners: " false (partial clojure.string/join ", "))
-       (make-field entity "synopsis" "Synopsis: " false)]
+       (make-field entity :createDate "Created: " false common/format-date)
+       (make-field entity :entityType "Entity Type: " false)
+       (make-field entity :managers "Owners: " false (partial clojure.string/join ", "))
+       (make-field entity :synopsis "Synopsis: " false)]
       (common/clear-both)
       [:div {:style {:fontWeight 500 :padding "0.5em 0 0.3em 0"}}
        "Documentation:"]
-      (if (blank? (entity "documentation"))
+      (if (blank? (:documentation entity))
         [:div {:style {:fontStyle "italic" :fontSize "90%"}} "No documentation provided"]
-        [:div {:style {:fontSize "90%"}} (entity "documentation")])])})
+        [:div {:style {:fontSize "90%"}} (:documentation entity)])])})
 
 
 (react/defc StackTraceViewer
