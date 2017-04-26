@@ -93,8 +93,9 @@
         fields)
        (clear-both)
        (when-not workspace-id
-         (let [sorted-ws-list (sort-by (juxt #(lower-case (get-in % ["workspace" "namespace"]))
-                                             #(lower-case (get-in % ["workspace" "name"])))
+         (let [sorted-ws-list (sort-by (comp (partial mapv lower-case)
+                                             (juxt :namespace :name)
+                                             :workspace)
                                        (:workspaces-list @state))]
            [:div {:style {:marginBottom "1em"}}
             [:div {:style {:fontSize "120%" :margin "1em 0"}}
@@ -112,9 +113,8 @@
                      :will-unmount
                      #(.off (js/$ %))})
               :style {:width 500}}
-             (map
-              (fn [ws] (str (get-in ws ["workspace" "namespace"]) "/" (get-in ws ["workspace" "name"])))
-              sorted-ws-list))]))
+             (map (fn [ws] (clojure.string/join "/" (replace (:workspace ws) [:namespace :name])))
+                  sorted-ws-list))]))
        (style/create-validation-error-message (:validation-error @state))
        [comps/ErrorViewer {:error (:server-error @state)}]
        [comps/Button {:text (if workspace-id "Import" "Export")
@@ -139,8 +139,7 @@
            {:keys [loaded-config]} @state
            [namespace name & fails] (input/get-and-validate refs "namespace" "name")
            workspace-id (or workspace-id
-                          {:namespace (get-in (:selected-workspace @state) ["workspace" "namespace"])
-                           :name (get-in (:selected-workspace @state) ["workspace" "name"])})]
+                            (select-keys (-> @state :selected-workspace :workspace) [:namespace :name]))]
        (if fails
          (swap! state assoc :validation-error fails)
          (do
@@ -166,7 +165,7 @@
          {:endpoint endpoints/list-workspaces
           :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                      (if success?
-                       (let [ws-list (get-parsed-response false)]
+                       (let [ws-list (get-parsed-response)]
                          (swap! state assoc :workspaces-list ws-list :selected-workspace (first ws-list)))
                        (swap! state assoc :error status-text)))}))
      (endpoints/call-ajax-orch
@@ -201,8 +200,7 @@
            [namespace name & fails] (input/get-and-validate refs "namespace" "name")
            rootEntityType (.-value (@refs "rootEntityType"))
            workspace-id (or workspace-id
-                          {:namespace (get-in (:selected-workspace @state) ["workspace" "namespace"])
-                           :name (get-in (:selected-workspace @state) ["workspace" "name"])})]
+                            (select-keys (-> @state :selected-workspace :workspace) [:namespace :name]))]
        (if fails
          (swap! state assoc :validation-error fails)
          (do
@@ -241,7 +239,7 @@
          {:endpoint endpoints/list-workspaces
           :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                      (if success?
-                       (let [ws-list (get-parsed-response false)]
+                       (let [ws-list (get-parsed-response)]
                          (swap! state assoc :workspaces-list ws-list :selected-workspace (first ws-list)))
                        (swap! state assoc :error status-text)))}))
      (endpoints/call-ajax-orch
