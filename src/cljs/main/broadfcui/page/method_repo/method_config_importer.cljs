@@ -47,32 +47,34 @@
 
 (defn- create-import-form [state props this locals entity config? fields]
   (let [{:keys [workspace-id]} props]
-    [:div {}
+    [:div {:style {:display "flex"}}
      (when (:blocking-text @state)
        [comps/Blocker {:banner (:blocking-text @state)}])
-     [comps/EntityDetails {:entity entity}]
      (when (:allow-edit props)
-       [:div {:style {:margin "1em 0"}}
-        [:div {:style {:float "left" :width 290 :paddingRight "1em"}}
-         [comps/SidebarButton {:style :light :color :button-primary
-                               :text "Permissions..." :icon :settings
-                               :onClick #(modal/push-modal [mca/AgoraPermsEditor {:save-endpoint (endpoints/persist-agora-method-acl entity)
-                                                                                  :load-endpoint (let [[name nmsp sid] (map entity ["name" "namespace" "snapshotId"])]
-                                                                                                   (endpoints/get-agora-method-acl nmsp name sid config?))
-                                                                                  :entityType (entity "entityType") :entityName (mca/get-ordered-name entity)
-                                                                                  :title (str (entity "entityType") " " (mca/get-ordered-name entity))}])}]]
-        [:div {:style {:float "left" :width 290}}
-         [comps/SidebarButton {:style :light :color :exception-state
-                               :text "Redact" :icon :delete
-                               :onClick #(modal/push-modal [Redactor {:entity entity :config? config?
-                                                                      :on-delete (:on-delete props)}])}]]
-        (clear-both)])
-     [:div {:style {:border style/standard-line
-                    :backgroundColor (:background-light style/colors)
-                    :borderRadius 8 :padding "1em" :marginTop "1em"}}
-      [:div {:style {:fontSize "120%" :marginBottom "0.5em"}}
-       (if workspace-id "Import as:" "Export to Workspace as:")]
-      (map
+       [:div {:style {:flex "0 0 290px" :paddingRight "1rem"}}
+        [comps/SidebarButton
+         {:style :light :color :button-primary
+          :text "Permissions..." :icon :settings :margin :bottom
+          :onClick #(modal/push-modal
+                     [mca/AgoraPermsEditor
+                      {:save-endpoint (endpoints/persist-agora-method-acl entity)
+                       :load-endpoint (let [[name nmsp sid] (map entity ["name" "namespace" "snapshotId"])]
+                                        (endpoints/get-agora-method-acl nmsp name sid config?))
+                       :entityType (entity "entityType") :entityName (mca/get-ordered-name entity)
+                       :title (str (entity "entityType") " " (mca/get-ordered-name entity))}])}]
+        [comps/SidebarButton
+         {:style :light :color :exception-state
+          :text "Redact" :icon :delete :margin :bottom
+          :onClick #(modal/push-modal [Redactor {:entity entity :config? config?
+                                                 :on-delete (:on-delete props)}])}]])
+     [:div {:style {:flex "1 1 auto"}}
+      [comps/EntityDetails {:entity entity}]
+      [:div {:style {:border style/standard-line
+                     :backgroundColor (:background-light style/colors)
+                     :borderRadius 8 :padding "1em" :marginTop "1em"}}
+       [:div {:style {:fontSize "120%" :marginBottom "0.5em"}}
+        (if workspace-id "Import as:" "Export to Workspace as:")]
+       (map
         (fn [field]
           [:div {:style {:float "left" :marginRight "0.5em"}}
            (style/create-form-label (:label field))
@@ -84,33 +86,32 @@
                                :ref (:key field) :placeholder "Required"
                                :predicates [(input/nonempty "Fields")]}])])
         fields)
-      (clear-both)
-      (when-not workspace-id
-        (let [sorted-ws-list (sort-by (juxt #(lower-case (get-in % ["workspace" "namespace"]))
-                                            #(lower-case (get-in % ["workspace" "name"])))
-                                      (:workspaces-list @state))]
-          [:div {:style {:marginBottom "1em"}}
-           [:div {:style {:fontSize "120%" :margin "1em 0"}} "Destination Workspace:"]
-           (style/create-select
-            {:defaultValue ""
-             :ref (utils/create-element-ref-handler
-                   {:store locals
-                    :key :workspace-select
-                    :did-mount
-                    #(.on (.select2 (js/$ %)) "select2:select"
-                          (fn [event]
-                            (swap! state assoc :selected-workspace
-                                   (nth sorted-ws-list (js/parseInt (.-value (.-target event)))))))
-                    :will-unmount
-                    #(.off (js/$ %))})
-             :style {:width 500}}
-            (map
-             (fn [ws] (str (get-in ws ["workspace" "namespace"]) "/" (get-in ws ["workspace" "name"])))
-             sorted-ws-list))]))
-      (style/create-validation-error-message (:validation-error @state))
-      [comps/ErrorViewer {:error (:server-error @state)}]
-      [comps/Button {:text (if workspace-id "Import" "Export")
-                     :onClick #(react/call :perform-copy this)}]]]))
+       (when-not workspace-id
+         (let [sorted-ws-list (sort-by (juxt #(lower-case (get-in % ["workspace" "namespace"]))
+                                             #(lower-case (get-in % ["workspace" "name"])))
+                                       (:workspaces-list @state))]
+           [:div {:style {:marginBottom "1em"}}
+            [:div {:style {:fontSize "120%" :margin "1em 0"}} "Destination Workspace:"]
+            (style/create-select
+             {:defaultValue ""
+              :ref (utils/create-element-ref-handler
+                    {:store locals
+                     :key :workspace-select
+                     :did-mount
+                     #(.on (.select2 (js/$ %)) "select2:select"
+                           (fn [event]
+                             (swap! state assoc :selected-workspace
+                                    (nth sorted-ws-list (js/parseInt (.-value (.-target event)))))))
+                     :will-unmount
+                     #(.off (js/$ %))})
+              :style {:width 500}}
+             (map
+              (fn [ws] (str (get-in ws ["workspace" "namespace"]) "/" (get-in ws ["workspace" "name"])))
+              sorted-ws-list))]))
+       (style/create-validation-error-message (:validation-error @state))
+       [comps/ErrorViewer {:error (:server-error @state)}]
+       [comps/Button {:text (if workspace-id "Import" "Export")
+                      :onClick #(react/call :perform-copy this)}]]]]))
 
 
 (react/defc ConfigImportForm
@@ -254,15 +255,14 @@
     (fn [{:keys [this]}]
       (react/call :load-data this))
     :render
-    (fn [{:keys [props state refs]}]
+    (fn [{:keys [props state]}]
       (cond
         (:error-message @state) (style/create-server-error-message (:error-message @state))
         (or (nil? (:methods @state)) (nil? (:configs @state)))
         [comps/Spinner {:text "Loading methods and configurations..."}]
         :else
         [Table
-         {:ref "table"
-          :persistence-key "method-repo-table" :v 1
+         {:persistence-key "method-repo-table" :v 1
           :data (:filtered-data @state)
           :body
           {:columns
@@ -318,8 +318,7 @@
                      :on-change (fn [index data]
                                   (swap! state assoc
                                          :filter-group-index index
-                                         :filtered-data data)
-                                  ((@refs "table") :update-query-params {:page-number 1}))
+                                         :filtered-data data))
                      :filter-groups [{:text "All"}
                                      {:text "Methods Only" :pred (comp (partial = :method) :type)}
                                      {:text "Configs Only" :pred (comp (partial = :config) :type)}]}]
