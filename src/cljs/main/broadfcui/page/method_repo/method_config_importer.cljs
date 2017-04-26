@@ -1,22 +1,23 @@
 (ns broadfcui.page.method-repo.method-config-importer
   (:require
-   [dmohs.react :as react]
-   [clojure.string :refer [trim lower-case]]
-   [broadfcui.common :refer [clear-both root-entity-types]]
-   [broadfcui.common.components :as comps]
-   [broadfcui.common.flex-utils :as flex]
-   [broadfcui.common.input :as input]
-   [broadfcui.common.modal :as modal]
-   [broadfcui.common.style :as style]
-   [broadfcui.common.table.style :as table-style]
-   [broadfcui.common.table.table :refer [Table]]
-   [broadfcui.common.table.utils :as table-utils]
-   [broadfcui.endpoints :as endpoints]
-   [broadfcui.nav :as nav]
-   [broadfcui.page.method-repo.create-method :as create]
-   [broadfcui.page.method-repo.methods-configs-acl :as mca]
-   [broadfcui.persistence :as persistence]
-   [broadfcui.utils :as utils]))
+    [dmohs.react :as react]
+    [clojure.string :refer [trim lower-case]]
+    [broadfcui.common :refer [clear-both root-entity-types]]
+    [broadfcui.common.components :as comps]
+    [broadfcui.common.flex-utils :as flex]
+    [broadfcui.common.input :as input]
+    [broadfcui.common.modal :as modal]
+    [broadfcui.common.style :as style]
+    [broadfcui.common.table.style :as table-style]
+    [broadfcui.common.table.table :refer [Table]]
+    [broadfcui.common.table.utils :as table-utils]
+    [broadfcui.endpoints :as endpoints]
+    [broadfcui.nav :as nav]
+    [broadfcui.page.method-repo.create-method :as create]
+    [broadfcui.page.method-repo.methods-configs-acl :as mca]
+    [broadfcui.persistence :as persistence]
+    [broadfcui.utils :as utils]
+    ))
 
 
 (react/defc Redactor
@@ -54,6 +55,10 @@
        [:div {:style {:flex "0 0 290px" :paddingRight "1rem"}}
         [comps/SidebarButton
          {:style :light :color :button-primary
+          :text "Duplicate Method..." :icon :clone :margin :bottom
+          :onClick #(modal/push-modal [create/CreateMethodDialog {:duplicate entity}])}]
+        [comps/SidebarButton
+         {:style :light :color :button-primary
           :text "Permissions..." :icon :settings :margin :bottom
           :onClick #(modal/push-modal
                      [mca/AgoraPermsEditor
@@ -86,12 +91,14 @@
                                :ref (:key field) :placeholder "Required"
                                :predicates [(input/nonempty "Fields")]}])])
         fields)
+       (clear-both)
        (when-not workspace-id
          (let [sorted-ws-list (sort-by (juxt #(lower-case (get-in % ["workspace" "namespace"]))
                                              #(lower-case (get-in % ["workspace" "name"])))
                                        (:workspaces-list @state))]
            [:div {:style {:marginBottom "1em"}}
-            [:div {:style {:fontSize "120%" :margin "1em 0"}} "Destination Workspace:"]
+            [:div {:style {:fontSize "120%" :margin "1em 0"}}
+             "Destination Workspace:"]
             (style/create-select
              {:defaultValue ""
               :ref (utils/create-element-ref-handler
