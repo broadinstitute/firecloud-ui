@@ -48,6 +48,7 @@
     :width :auto
     :button-style {:height 32}
     :items [{:href (nav/get-link :profile) :text "Profile"}
+            {:href (nav/get-link :groups) :text "Groups"}
             {:href (nav/get-link :billing) :text "Billing"}
             {:text "Sign Out" :dismiss #(.signOut auth2)}]}))
 

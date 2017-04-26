@@ -704,6 +704,36 @@
     :canned-response {:status 200 :delay-ms (rand-int 2000)}}))
 
 
+(defn get-groups [on-done]
+  (call-ajax-orch
+   {:endpoint {:path "/groups"
+               :method :get}
+    :on-done (fn [{:keys [success? status-text get-parsed-response]}]
+               (if success?
+                 (on-done nil (get-parsed-response))
+                 (on-done status-text nil)))}))
+
+(defn create-group [group-name]
+  {:path (str "/groups/" group-name)
+   :method :post})
+
+(defn delete-group [group-name]
+  {:path (str "/groups/" group-name)
+   :method :delete})
+
+(defn list-group-members [group-name]
+  {:path (str "/groups/" group-name)
+   :method :get})
+
+(defn add-group-user [{:keys [group-name role user-email]}]
+  {:path (str "/group/" group-name "/" role "/" user-email)
+   :method :put})
+
+(defn delete-group-user [{:keys [group-name role user-email]}]
+  {:path (str "/group/" group-name "/" role "/" user-email)
+   :method :delete})
+
+
 (defn get-billing-projects
   ([on-done] (get-billing-projects false on-done))
   ([include-pending? on-done]
