@@ -46,7 +46,7 @@
          (let [role (common/get-text refs "role")]
            (swap! state assoc :adding? true)
            (endpoints/call-ajax-orch
-            {:endpoint (endpoints/add-group-user {:groupName (:group-name props)
+            {:endpoint (endpoints/add-group-user {:group-name (:group-name props)
                                                   :role role
                                                   :email email})
              :on-done (fn [{:keys [success? get-parsed-response]}]
@@ -54,7 +54,7 @@
                         (if success?
                           (do (modal/pop-modal)
                               ((:on-add props)))
-                          (swap! state assoc :server-error (get-parsed-response false))))})))))})
+                          (swap! state assoc :server-error (get-parsed-response))))})))))})
 
 
 (defn- remove-user [state this data]
@@ -65,7 +65,7 @@
                (swap! state dissoc :removing?)
                (if success?
                  (react/call :load this)
-                 (swap! state assoc :remove-error (get-parsed-response false))))}))
+                 (swap! state assoc :remove-error (get-parsed-response))))}))
 
 
 (react/defc GroupManagementPage
@@ -100,7 +100,7 @@
                                          :onClick (fn [_]
                                                     (modal/push-modal
                                                      [AddUserDialog {:group-name (:group-name props)
-                                                                     :on-add #(react/call :load this)}]))}])
+                                                                     :on-add #(this :load)}]))}])
                 :columns [{:header "Email" :starting-width 500
                            :content-renderer
                            (fn [email]
@@ -119,7 +119,7 @@
                            :content-renderer
                            (fn [{:keys [email role]}]
                              (style/create-link {:text "Remove"
-                                                 :onClick #(remove-user state this {:groupName (:group-name props)
+                                                 :onClick #(remove-user state this {:group-name (:group-name props)
                                                                                     :role role
                                                                                     :email email})}))}]
                 :data (concat (mapv #(identity {:email % :role "Owner"}) (:ownersEmails group-info))

@@ -725,12 +725,12 @@
   {:path (str "/groups/" group-name)
    :method :get})
 
-(defn add-group-user [{:keys [group-name role user-email]}]
-  {:path (str "/group/" group-name "/" role "/" user-email)
+(defn add-group-user [{:keys [group-name role email]}]
+  {:path (str "/groups/" group-name "/" role "/" email)
    :method :put})
 
-(defn delete-group-user [{:keys [group-name role user-email]}]
-  {:path (str "/group/" group-name "/" role "/" user-email)
+(defn delete-group-user [{:keys [group-name role email]}]
+  {:path (str "/groups/" group-name "/" role "/" email)
    :method :delete})
 
 
