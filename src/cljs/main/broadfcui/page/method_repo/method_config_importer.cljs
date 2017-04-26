@@ -270,7 +270,8 @@
              :column-data :entityType}
             {:header "Name" :initial-width 350
              :sort-by (juxt (comp lower-case :name) (comp int :snapshotId))
-             :filter-by (fn [m] (str (:name m) " " (int (:snapshotId m))))
+             :filter-by (fn [{:keys [name snapshotId]}] (str name " " (int snapshotId)))
+             :as-text (fn [{:keys [name snapshotId]}] (str name " Snapshot ID: " snapshotId))
              :render (fn [{:keys [namespace name snapshotId entityType]}]
                        (let [id {:namespace namespace
                                  :name name
@@ -301,6 +302,10 @@
              :column-data (fn [item]
                             (when (= :config (:type item))
                               (mapv (get item :method {}) [:namespace :name :snapshotId])))
+             :as-text (fn [[namespace name snapshotId]]
+                        (if namespace
+                          (str namespace "/" name " Snapshot ID: " snapshotId)
+                          "N/A"))
              :render (fn [fields]
                        (if fields
                          (apply style/render-entity fields)
