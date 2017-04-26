@@ -339,20 +339,13 @@
 
 (react/defc MethodConfigImporter
   {:render
-   (fn [{:keys [props state refs]}]
+   (fn [{:keys [props state]}]
      (let [{:keys [workspace-id]} props
-           type (or (:type props) (:type @state))
-           id (or (:id props) (:id @state))]
+           type (some :type [props @state])
+           id (some :id [props @state])]
        [:div {}
         (when id
-          [:div {:style {:marginBottom "1rem" :fontSize "1.1rem"}}
-           [comps/Breadcrumbs
-            {:crumbs
-             [{:text "Methods" :href (if workspace-id "javascript:;" (nav/get-link :method-repo))
-               :onClick (when workspace-id #(swap! state dissoc :type :id))}
-              {:text [:span {} (id :namespace) "/" (id :name)
-                      [:span {:style {:marginLeft "1rem" :fontWeight "normal"}}
-                       "#" (id :snapshot-id)]]}]}]])
+          [:h3 {} (str (:namespace id) "/" (:name id) " #" (:snapshot-id id))])
         (if id
           (let [form (if (= type :method) MethodImportForm ConfigImportForm)]
             [form (merge
