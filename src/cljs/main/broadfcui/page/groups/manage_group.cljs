@@ -22,22 +22,22 @@
        :get-first-element-dom-node #(react/find-dom-node (@refs "email"))
        :content
        (react/create-element
-         [:div {:style {:width 420}}
-          (when (:adding? @state)
-            [comps/Blocker {:banner "Adding user..."}])
-          [:div {:style {:display "flex"}}
-           [:div {:style {:flex "1 1 auto"}}
-            (style/create-form-label "User email")
-            [input/TextField {:ref "email" :style {:width "100%"}
-                              :predicates [(input/valid-email "Email")]
-                              :onKeyDown (common/create-key-handler [:enter] #(react/call :add-user this))}]]
-           [:div {:style {:flex "0 0 10px"}}]
-           [:div {:style {:flex "0 0 100px"}}
-            (style/create-form-label "Role")
-            (style/create-identity-select {:ref "role"} ["User" "Owner"])]]
-          (style/create-validation-error-message (:fails @state))
-          [comps/ErrorViewer {:error (:server-error @state)
-                              :expect {404 "This is not a registered user"}}]])}])
+        [:div {:style {:width 420}}
+         (when (:adding? @state)
+           [comps/Blocker {:banner "Adding user..."}])
+         [:div {:style {:display "flex"}}
+          [:div {:style {:flex "1 1 auto"}}
+           (style/create-form-label "User email")
+           [input/TextField {:ref "email" :style {:width "100%"}
+                             :predicates [(input/valid-email "Email")]
+                             :onKeyDown (common/create-key-handler [:enter] #(react/call :add-user this))}]]
+          [:div {:style {:flex "0 0 10px"}}]
+          [:div {:style {:flex "0 0 100px"}}
+           (style/create-form-label "Role")
+           (style/create-identity-select {:ref "role"} ["User" "Owner"])]]
+         (style/create-validation-error-message (:fails @state))
+         [comps/ErrorViewer {:error (:server-error @state)
+                             :expect {404 "This is not a registered user"}}]])}])
    :add-user
    (fn [{:keys [props state refs]}]
      (let [[email & fails] (input/get-and-validate refs "email")]
@@ -49,33 +49,43 @@
             {:endpoint (endpoints/add-group-user {:groupName (:group-name props)
                                                   :role role
                                                   :email email})
-              :on-done (fn [{:keys [success? get-parsed-response]}]
-                         (swap! state dissoc :adding?)
-                         (if success?
-                           (do (modal/pop-modal)
-                               ((:on-add props)))
-                           (swap! state assoc :server-error (get-parsed-response false))))})))))})
+             :on-done (fn [{:keys [success? get-parsed-response]}]
+                        (swap! state dissoc :adding?)
+                        (if success?
+                          (do (modal/pop-modal)
+                              ((:on-add props)))
+                          (swap! state assoc :server-error (get-parsed-response false))))})))))})
 
 
 (defn- remove-user [state this data]
   (swap! state assoc :removing? true)
   (endpoints/call-ajax-orch
-    {:endpoint (endpoints/delete-group-user data)
-     :on-done (fn [{:keys [success? get-parsed-response]}]
-                (swap! state dissoc :removing?)
-                (if success?
-                  (react/call :load this)
-                  (swap! state assoc :remove-error (get-parsed-response false))))}))
+   {:endpoint (endpoints/delete-group-user data)
+    :on-done (fn [{:keys [success? get-parsed-response]}]
+               (swap! state dissoc :removing?)
+               (if success?
+                 (react/call :load this)
+                 (swap! state assoc :remove-error (get-parsed-response false))))}))
 
 
 (react/defc GroupManagementPage
   {:render
    (fn [{:keys [props state this]}]
-     (let [{:keys [load-error members]} @state]
+     (let [{:keys [load-error group-info]} @state]
        (cond load-error [comps/ErrorViewer {:error load-error}]
-             (not members) [comps/Spinner {:text "Loading group membership..."}]
+             (not group-info) [comps/Spinner {:text "Loading group membership..."}]
              :else
              [:div {:style {:position "relative"}}
+              (let [owners-group (:ownersGroup group-info)
+                    users-group (:usersGroup group-info)]
+                [:span {}
+                 [:span {:style {:fontWeight 500 :fontSize "110%"}} "Email the Group:"]
+                 [:div {} "Owners: "
+                  (style/create-link {:href (str "mailto:" (:groupEmail owners-group))
+                                      :text (:groupName owners-group)})]
+                 [:div {} "All Users: "
+                  (style/create-link {:href (str "mailto:" (:groupEmail users-group))
+                                      :text (:groupName users-group)})]])
               (when (:removing? @state)
                 [comps/Blocker {:banner "Removing user..."}])
               [table/Table
@@ -112,7 +122,8 @@
                                                  :onClick #(remove-user state this {:groupName (:group-name props)
                                                                                     :role role
                                                                                     :email email})}))}]
-                :data members
+                :data (conj (mapv #(identity {:email % :role "Owner"}) (:ownersEmails group-info))
+                            (mapv #(identity {:email % :role "User"}) (:usersEmails group-info)))
                 :->row (fn [{:strs [email role] :as row}]
                          [email
                           role
@@ -123,8 +134,8 @@
      (react/call :load this))
    :load
    (fn [{:keys [props state]}]
-     (swap! state dissoc :members :load-error)
+     (swap! state dissoc :group-info :load-error)
      (endpoints/call-ajax-orch
       {:endpoint (endpoints/list-group-members (:group-name props))
        :on-done (fn [{:keys [success? get-parsed-response]}]
-                  (swap! state assoc (if success? :members :load-error) (get-parsed-response false)))}))})
+                  (swap! state assoc (if success? :group-info :load-error) (get-parsed-response)))}))})

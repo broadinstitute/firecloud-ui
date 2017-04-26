@@ -35,17 +35,17 @@
                 [{:header "Group Name" :initial-width 500 :sort-initial :asc
                   :sort-by :text
                   :as-text
-                  (fn [{:keys [managedGroupRef]}]
-                    (:usersGroupName managedGroupRef))
+                  (fn [{:keys [group-name]}]
+                    group-name)
                   :render
-                  (fn [{:keys [managedGroupRef accessLevel]}]
-                    (let [group-name (:usersGroupName managedGroupRef)]
-                      (if
-                       (= accessLevel "Owner")
-                        (style/create-link {:text group-name
-                                            :href (nav/get-link :group group-name)})
-                        group-name)))}
-                 {:header "Access Level" :initial-width :auto :column-data :accessLevel}]}
+                  (fn [{:keys [group-name access-levels]}]
+                    (if
+                     (contains? (set access-levels) "Owner")
+                      (style/create-link {:text group-name
+                                          :href (nav/get-link :group group-name)})
+                      group-name))}
+                 {:header "Access Levels" :initial-width :auto
+                  :column-data #(clojure.string/join ", " (:access-levels %))}]}
          :toolbar
          {:items
           [flex/spring
@@ -65,7 +65,14 @@
       (fn [err-text groups]
         (if err-text
           (swap! state assoc :error-message err-text)
-          (swap! state assoc :groups groups)))))
+          (let [groups (->>
+                        (map #(identity {:group-name (get-in % [:managedGroupRef :usersGroupName])
+                                         :access-level (:accessLevel %)})
+                             groups)
+                        (group-by :group-name)
+                        (map (fn [[k v]]
+                               {:group-name k :access-levels (sort (map :access-level v))})))]
+            (swap! state assoc :groups groups))))))
    :-handle-status-change
    (fn [{:keys [state]} group-name new-status message]
      (let [group-index (utils/first-matching-index
@@ -82,22 +89,22 @@
      (let [{:keys [group-name]} props]
        [:div {:style {:padding "1em"}}
         [:div {:style {:marginBottom "1rem" :fontSize "1.1rem"}}
-         [comps/Breadcrumbs {:crumbs [{:text "Group Management" :href (nav/get-link :groups)}
-                                      (when group-name {:text group-name})]}]]
+         [:div {:style {:fontSize "1.2em"}} (when group-name "Group: ")
+          [:span {:style {:fontWeight 500}} (if group-name group-name "Group Management")]]]
         (if group-name
           [GroupManagementPage (utils/restructure group-name)]
           [GroupTable])]))})
 
 (defn add-nav-paths []
   (nav/defpath
-    :groups
-    {:component Page
-     :regex #"groups"
-     :make-props (fn [_] {})
-     :make-path (fn [] "groups")})
+   :groups
+   {:component Page
+    :regex #"groups"
+    :make-props (fn [_] {})
+    :make-path (fn [] "groups")})
   (nav/defpath
-    :group
-    {:component Page
-     :regex #"groups/([^/]+)"
-     :make-props (fn [group-name] (utils/restructure group-name))
-     :make-path (fn [group-name] (str "groups/" group-name))}))
+   :group
+   {:component Page
+    :regex #"groups/([^/]+)"
+    :make-props (fn [group-name] (utils/restructure group-name))
+    :make-path (fn [group-name] (str "groups/" group-name))}))
