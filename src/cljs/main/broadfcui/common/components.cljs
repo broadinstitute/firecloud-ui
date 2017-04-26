@@ -778,6 +778,44 @@
           body]
          body)))})
 
+(react/defc FilterGroupBar
+  {:render
+   (fn [{:keys [props]}]
+     (let [{:keys [filter-groups selected-index data on-change]} props]
+       [:div {}
+        (map-indexed (fn [index {:keys [text pred count-override]}]
+                       (let [first? (zero? index)
+                             last? (= index (dec (count filter-groups)))
+                             selected? (= index selected-index)]
+                         [:div {:style {:display "inline-block" :textAlign "center"
+                                        :backgroundColor (if selected?
+                                                           (:button-primary style/colors)
+                                                           (:background-light style/colors))
+                                        :color (when selected? "white")
+                                        :padding "1ex" :minWidth 50
+                                        :marginLeft (when-not first? -1)
+                                        :border style/standard-line
+                                        :borderTopLeftRadius (when first? 8)
+                                        :borderBottomLeftRadius (when first? 8)
+                                        :borderTopRightRadius (when last? 8)
+                                        :borderBottomRightRadius (when last? 8)
+                                        :cursor "pointer"}
+                                :onClick #(on-change
+                                           index
+                                           (if pred (filter pred data) data))}
+                          (str text
+                               " ("
+                               (cond count-override count-override
+                                     pred (count (filter pred data))
+                                     :else (count data))
+                               ")")]))
+                     filter-groups)]))
+   :component-did-mount
+   (fn [{:keys [props]}]
+     (let [{:keys [filter-groups selected-index data on-change]} props
+           {:keys [pred]} (nth filter-groups selected-index)]
+       (on-change selected-index (if pred (filter pred data) data))))})
+
 (react/defc Banner
   {:get-initial-state
    (fn []
