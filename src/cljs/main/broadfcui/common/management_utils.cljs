@@ -1,4 +1,4 @@
-(ns broadfcui.page.groups.manage-group
+(ns broadfcui.common.management-utils
   (:require
     [dmohs.react :as react]
     [broadfcui.common :as common]
@@ -18,7 +18,7 @@
    (fn [{:keys [props state this refs]}]
      [comps/OKCancelForm
       {:header (str "Add user to " (:group-name props))
-       :ok-button #(react/call :add-user this)
+       :ok-button #(this :add-user)
        :get-first-element-dom-node #(react/find-dom-node (@refs "email"))
        :content
        (react/create-element
@@ -30,11 +30,12 @@
            (style/create-form-label "User email")
            [input/TextField {:ref "email" :style {:width "100%"}
                              :predicates [(input/valid-email "Email")]
-                             :onKeyDown (common/create-key-handler [:enter] #(react/call :add-user this))}]]
+                             :onKeyDown (common/create-key-handler [:enter] #(this :add-user))}]]
           [:div {:style {:flex "0 0 10px"}}]
           [:div {:style {:flex "0 0 100px"}}
            (style/create-form-label "Role")
            (style/create-identity-select {:ref "role"} ["User" "Owner"])]]
+         (:footer props)
          (style/create-validation-error-message (:fails @state))
          [comps/ErrorViewer {:error (:server-error @state)
                              :expect {404 "This is not a registered user"}}]])}])
@@ -43,49 +44,44 @@
      (let [[email & fails] (input/get-and-validate refs "email")]
        (swap! state assoc :fails fails :server-error nil)
        (when-not fails
-         (let [role (common/get-text refs "role")]
+         (let [role (common/get-text refs "role")
+               endpoint (:endpoint props)
+               on-add (:on-add props)]
            (swap! state assoc :adding? true)
            (endpoints/call-ajax-orch
-            {:endpoint (endpoints/add-group-user {:group-name (:group-name props)
-                                                  :role role
-                                                  :email email})
+            {:endpoint (endpoint (:group-name props) role email)
              :on-done (fn [{:keys [success? get-parsed-response]}]
                         (swap! state dissoc :adding?)
                         (if success?
                           (do (modal/pop-modal)
-                              ((:on-add props)))
+                              (on-add))
                           (swap! state assoc :server-error (get-parsed-response))))})))))})
 
 
-(defn- remove-user [state this data]
+(defn- remove-user [endpoint state this]
   (swap! state assoc :removing? true)
   (endpoints/call-ajax-orch
-   {:endpoint (endpoints/delete-group-user data)
+   {:endpoint (endpoint)
     :on-done (fn [{:keys [success? get-parsed-response]}]
                (swap! state dissoc :removing?)
                (if success?
-                 (react/call :load this)
+                 (this :load)
                  (swap! state assoc :remove-error (get-parsed-response))))}))
 
 
-(react/defc GroupManagementPage
+(react/defc ManagementPage
   {:render
    (fn [{:keys [props state this]}]
-     (let [{:keys [load-error group-info]} @state]
+     (let [{:keys [load-error data]} @state
+           header (:header props)
+           delete-endpoint (:delete-endpoint props)
+           table-data (:table-data props)]
        (cond load-error [comps/ErrorViewer {:error load-error}]
-             (not group-info) [comps/Spinner {:text "Loading group membership..."}]
+             (not data) [comps/Spinner {:text "Loading..."}]
              :else
              [:div {:style {:position "relative"}}
-              (let [owners-group (:ownersGroup group-info)
-                    users-group (:usersGroup group-info)]
-                [:div {:style {:paddingBottom "0.5rem"}}
-                 [:span {:style {:fontSize "110%"}} "Email the Group:"]
-                 [:div {} "Owners: "
-                  (style/create-link {:href (str "mailto:" (:groupEmail owners-group))
-                                      :text (:groupName owners-group)})]
-                 [:div {} "All Users: "
-                  (style/create-link {:href (str "mailto:" (:groupEmail users-group))
-                                      :text (:groupName users-group)})]])
+              (when header
+                (header (:data @state)))
               (when (:removing? @state)
                 [comps/Blocker {:banner "Removing user..."}])
               [table/Table
@@ -99,8 +95,10 @@
                           [comps/Button {:text "Add User..." :icon :add-new
                                          :onClick (fn [_]
                                                     (modal/push-modal
-                                                     [AddUserDialog {:group-name (:group-name props)
-                                                                     :on-add #(this :load)}]))}])
+                                                     [AddUserDialog {:endpoint (:add-endpoint props)
+                                                                     :group-name (:group-name props)
+                                                                     :on-add #(this :load)
+                                                                     :footer (:add-member-footer props)}]))}])
                 :columns [{:header "Email" :starting-width 500
                            :content-renderer
                            (fn [email]
@@ -119,11 +117,11 @@
                            :content-renderer
                            (fn [{:keys [email role]}]
                              (style/create-link {:text "Remove"
-                                                 :onClick #(remove-user state this {:group-name (:group-name props)
-                                                                                    :role role
-                                                                                    :email email})}))}]
-                :data (concat (mapv #(identity {:email % :role "Owner"}) (:ownersEmails group-info))
-                              (mapv #(identity {:email % :role "User"}) (:usersEmails group-info)))
+                                                 :onClick #(remove-user
+                                                            (fn [] (delete-endpoint (:group-name props) role email))
+                                                            state
+                                                            this)}))}]
+                :data (table-data data)
                 :->row (fn [{:keys [email role] :as row}]
                          [email
                           role
@@ -131,11 +129,12 @@
               [comps/ErrorViewer {:error (:remove-error @state)}]])))
    :component-did-mount
    (fn [{:keys [this]}]
-     (react/call :load this))
+     (this :load))
    :load
    (fn [{:keys [props state]}]
-     (swap! state dissoc :group-info :load-error)
-     (endpoints/call-ajax-orch
-      {:endpoint (endpoints/list-group-members (:group-name props))
-       :on-done (fn [{:keys [success? get-parsed-response]}]
-                  (swap! state assoc (if success? :group-info :load-error) (get-parsed-response)))}))})
+     (let [endpoint (:list-endpoint props)]
+       (swap! state dissoc :data :load-error)
+       (endpoints/call-ajax-orch
+        {:endpoint (endpoint (:group-name props))
+         :on-done (fn [{:keys [success? get-parsed-response]}]
+                    (swap! state assoc (if success? :data :load-error) (get-parsed-response)))})))})
