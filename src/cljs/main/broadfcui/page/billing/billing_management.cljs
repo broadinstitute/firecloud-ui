@@ -4,7 +4,7 @@
     [broadfcui.common :as common]
     [broadfcui.common.components :as comps]
     [broadfcui.common.flex-utils :as flex]
-    [broadfcui.common.management-utils :refer [ManagementPage]]
+    [broadfcui.common.management-utils :refer [MembershipManagementPage]]
     [broadfcui.common.modal :as modal]
     [broadfcui.common.style :as style]
     [broadfcui.common.table.table :refer [Table]]
@@ -156,30 +156,31 @@
          [comps/Breadcrumbs {:crumbs [{:text "Billing Management" :href (nav/get-link :billing)}
                                       (when project-name {:text project-name})]}]]
         (if project-name
-          [ManagementPage {:group-name project-name
-                           :add-endpoint #(endpoints/add-billing-project-user {:project-id %1
-                                                                                  :role %2
-                                                                                  :user-email %3})
-                           :delete-endpoint #(endpoints/delete-billing-project-user {:project-id %1
-                                                                                     :role %2
-                                                                                     :user-email %3})
-                           :table-data #(identity %)
-                           :add-member-footer [:div {:style {:marginBottom "1em"}}
-                                               "Warning: Adding any user to this project will mean
-                                               they can incur costs to the billing associated with this project."]
-                           :list-endpoint endpoints/list-billing-project-members}]
+          [MembershipManagementPage
+           {:group-name project-name
+            :add-endpoint #(endpoints/add-billing-project-user {:project-id %1
+                                                                :role %2
+                                                                :user-email %3})
+            :delete-endpoint #(endpoints/delete-billing-project-user {:project-id %1
+                                                                      :role %2
+                                                                      :user-email %3})
+            :table-data #(identity %)
+            :add-member-footer [:div {:style {:marginBottom "1em"}}
+                                "Warning: Adding any user to this project will mean
+                                they can incur costs to the billing associated with this project."]
+            :list-endpoint endpoints/list-billing-project-members}]
           [BillingProjectTable])]))})
 
 (defn add-nav-paths []
   (nav/defpath
-    :billing
-    {:component Page
-     :regex #"billing"
-     :make-props (fn [_] {})
-     :make-path (fn [] "billing")})
+   :billing
+   {:component Page
+    :regex #"billing"
+    :make-props (fn [_] {})
+    :make-path (fn [] "billing")})
   (nav/defpath
-    :billing-project
-    {:component Page
-     :regex #"billing/([^/]+)"
-     :make-props (fn [project-name] (utils/restructure project-name))
-     :make-path (fn [project-name] (str "billing/" project-name))}))
+   :billing-project
+   {:component Page
+    :regex #"billing/([^/]+)"
+    :make-props (fn [project-name] (utils/restructure project-name))
+    :make-path (fn [project-name] (str "billing/" project-name))}))

@@ -69,7 +69,7 @@
                  (swap! state assoc :remove-error (get-parsed-response))))}))
 
 
-(react/defc ManagementPage
+(react/defc MembershipManagementPage
   {:render
    (fn [{:keys [props state this]}]
      (let [{:keys [load-error data]} @state

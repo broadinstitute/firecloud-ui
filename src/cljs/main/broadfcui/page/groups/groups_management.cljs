@@ -4,7 +4,7 @@
     [broadfcui.common :as common]
     [broadfcui.common.components :as comps]
     [broadfcui.common.flex-utils :as flex]
-    [broadfcui.common.management-utils :refer [ManagementPage]]
+    [broadfcui.common.management-utils :refer [MembershipManagementPage]]
     [broadfcui.common.modal :as modal]
     [broadfcui.common.style :as style]
     [broadfcui.common.table.table :refer [Table]]
@@ -92,28 +92,29 @@
          [:div {:style {:fontSize "1.2em"}} (when group-name "Group: ")
           [:span {:style {:fontWeight 500}} (if group-name group-name "Group Management")]]]
         (if group-name
-          [ManagementPage {:group-name group-name
-                           :add-endpoint #(endpoints/add-group-user {:group-name %1
-                                                                     :role %2
-                                                                     :email %3})
-                           :delete-endpoint #(endpoints/delete-group-user {:group-name %1
-                                                                           :role %2
-                                                                           :email %3})
-                           :header (fn [data]
-                                     (let [owners-group (:ownersGroup data)
-                                           users-group (:usersGroup data)]
-                                       [:div {:style {:paddingBottom "0.5rem"}}
-                                        [:span {:style {:fontSize "110%"}} "Email the Group:"]
-                                        [:div {} "Owners: "
-                                         (style/create-link {:href (str "mailto:" (:groupEmail owners-group))
-                                                             :text (:groupName owners-group)})]
-                                        [:div {} "All Users: "
-                                         (style/create-link {:href (str "mailto:" (:groupEmail users-group))
-                                                             :text (:groupName users-group)})]]))
-                           :table-data (fn [data]
-                                         (concat (mapv #(identity {:email % :role "Owner"}) (:ownersEmails data))
-                                                 (mapv #(identity {:email % :role "User"}) (:usersEmails data))))
-                           :list-endpoint endpoints/list-group-members}]
+          [MembershipManagementPage
+           {:group-name group-name
+            :add-endpoint #(endpoints/add-group-user {:group-name %1
+                                                      :role %2
+                                                      :email %3})
+            :delete-endpoint #(endpoints/delete-group-user {:group-name %1
+                                                            :role %2
+                                                            :email %3})
+            :header (fn [data]
+                      (let [owners-group (:ownersGroup data)
+                            users-group (:usersGroup data)]
+                        [:div {:style {:paddingBottom "0.5rem"}}
+                         [:span {:style {:fontSize "110%"}} "Email the Group:"]
+                         [:div {} "Owners: "
+                          (style/create-link {:href (str "mailto:" (:groupEmail owners-group))
+                                              :text (:groupName owners-group)})]
+                         [:div {} "All Users: "
+                          (style/create-link {:href (str "mailto:" (:groupEmail users-group))
+                                              :text (:groupName users-group)})]]))
+            :table-data (fn [data]
+                          (concat (mapv #(identity {:email % :role "Owner"}) (:ownersEmails data))
+                                  (mapv #(identity {:email % :role "User"}) (:usersEmails data))))
+            :list-endpoint endpoints/list-group-members}]
           [GroupTable])]))})
 
 (defn add-nav-paths []
