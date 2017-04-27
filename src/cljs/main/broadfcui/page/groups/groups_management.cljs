@@ -34,9 +34,7 @@
                 :columns
                 [{:header "Group Name" :initial-width 500 :sort-initial :asc
                   :sort-by :text
-                  :as-text
-                  (fn [{:keys [group-name]}]
-                    group-name)
+                  :as-text :group-name
                   :render
                   (fn [{:keys [group-name access-levels]}]
                     (if
@@ -66,8 +64,9 @@
         (if err-text
           (swap! state assoc :error-message err-text)
           (let [groups (->>
-                        (map #(identity {:group-name (get-in % [:managedGroupRef :usersGroupName])
-                                         :access-level (:accessLevel %)})
+                        (map (fn [group]
+                               {:group-name (get-in group [:managedGroupRef :usersGroupName])
+                                :access-level (:accessLevel group)})
                              groups)
                         (group-by :group-name)
                         (map (fn [[k v]]
@@ -112,8 +111,8 @@
                           (style/create-link {:href (str "mailto:" (:groupEmail users-group))
                                               :text (:groupName users-group)})]]))
             :table-data (fn [data]
-                          (concat (mapv #(identity {:email % :role "Owner"}) (:ownersEmails data))
-                                  (mapv #(identity {:email % :role "User"}) (:usersEmails data))))
+                          (concat (mapv (fn [email] {:email email :role "Owner"}) (:ownersEmails data))
+                                  (mapv (fn [email] {:email email :role "User"}) (:usersEmails data))))
             :list-endpoint endpoints/list-group-members}]
           [GroupTable])]))})
 

@@ -165,7 +165,7 @@
             :delete-endpoint #(endpoints/delete-billing-project-user {:project-id %1
                                                                       :role %2
                                                                       :user-email %3})
-            :table-data #(identity %)
+            :table-data identity
             :add-member-footer [:div {:style {:marginBottom "1em"}}
                                 "Warning: Adding any user to this project will mean
                                 they can incur costs to the billing associated with this project."]

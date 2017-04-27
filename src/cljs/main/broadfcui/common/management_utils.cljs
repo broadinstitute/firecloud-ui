@@ -45,8 +45,7 @@
        (swap! state assoc :fails fails :server-error nil)
        (when-not fails
          (let [role (common/get-text refs "role")
-               endpoint (:endpoint props)
-               on-add (:on-add props)]
+               {:keys [endpoint on-add]} props]
            (swap! state assoc :adding? true)
            (endpoints/call-ajax-orch
             {:endpoint (endpoint (:group-name props) role email)
@@ -55,27 +54,25 @@
                         (if success?
                           (do (modal/pop-modal)
                               (on-add))
-                          (swap! state assoc :server-error (get-parsed-response))))})))))})
+                          (swap! state assoc :server-error (get-parsed-response false))))})))))})
 
 
 (defn- remove-user [endpoint state this]
   (swap! state assoc :removing? true)
   (endpoints/call-ajax-orch
-   {:endpoint (endpoint)
+   {:endpoint endpoint
     :on-done (fn [{:keys [success? get-parsed-response]}]
                (swap! state dissoc :removing?)
                (if success?
                  (this :load)
-                 (swap! state assoc :remove-error (get-parsed-response))))}))
+                 (swap! state assoc :remove-error (get-parsed-response false))))}))
 
 
 (react/defc MembershipManagementPage
   {:render
    (fn [{:keys [props state this]}]
      (let [{:keys [load-error data]} @state
-           header (:header props)
-           delete-endpoint (:delete-endpoint props)
-           table-data (:table-data props)]
+           {:keys [header delete-endpoint table-data]} props]
        (cond load-error [comps/ErrorViewer {:error load-error}]
              (not data) [comps/Spinner {:text "Loading..."}]
              :else
@@ -118,7 +115,7 @@
                            (fn [{:keys [email role]}]
                              (style/create-link {:text "Remove"
                                                  :onClick #(remove-user
-                                                            (fn [] (delete-endpoint (:group-name props) role email))
+                                                            (delete-endpoint (:group-name props) role email)
                                                             state
                                                             this)}))}]
                 :data (table-data data)
