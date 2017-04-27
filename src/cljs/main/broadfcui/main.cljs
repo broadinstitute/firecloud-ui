@@ -126,13 +126,17 @@
     (> attempt (config/max-retry-attempts)) (config/status-alerts-refresh)
     :else (utils/get-exponential-backoff-interval attempt)))
 
-(react/defc AlertBanner
-  {:render
+(react/defc Banner
+  {:get-initial-state
+   (fn []
+     {:showing-more? false})
+   :render
    (fn [{:keys [props state]}]
      [:div {}
-      (let [background-color (:exception-state style/colors) text-color "#fff" title (:title props) message (:message props) link (:link props)]
+      (let [{:keys [background-color text-color title message link more-content]} props]
+        (utils/cljslog more-content)
         [:div {:style {:borderBottom "1px solid" :borderBottomColor (:line-default style/colors) :color text-color
-                       :backgroundColor (:exception-state style/colors) :padding "1rem"}}
+                       :backgroundColor background-color :padding "1rem"}}
          [:div {:style {:display "flex" :alignItems "center" :marginBottom "0.5rem"}}
           [icons/ExceptionIcon {:size 18 :color text-color}]
           [:span {:style {:marginLeft "0.5rem" :fontWeight "bold"
@@ -140,43 +144,11 @@
            (if title title "Service Alert")]]
          [:div {:style {:color text-color :fontSize "90%"}}
           (str message " ")
-          (when link [:a {:href (str link) :target "_blank" :style {:color text-color}} "Read more..."])]])])})
-
-(react/defc WarningBanner
-  {:get-initial-state
-   (fn []
-     {:visible? true
-      :showing-more? false})
-   :render
-   (fn [{:keys [props state]}]
-     (when (:visible? @state)
-       [:div {}
-        (let [background-color (:warning-state style/colors) title "Uh oh! Something may be wrong..."]
-          [:div {:style {:borderBottom "1px solid" :borderBottomColor (:line-default style/colors)
-                         :backgroundColor background-color :padding "1rem"}}
-           [:div {:style {:float "right" :fontSize "90%"}}
-            [:div {} [:a {:href "javascript:;" :onClick #(swap! state assoc :visible? false) :style {:color "#000"}} "Dismiss"]]]
-           [:div {:style {:display "flex" :alignItems "center" :marginBottom "0.5rem"}}
-            [icons/ExceptionIcon {:size 18 :color "#000"}]
-            [:span {:style {:marginLeft "0.5rem" :fontWeight "bold"
-                            :verticalAlign "middle"}}
-             title]]
-           [:div {:style {:fontSize "90%"}}
-            "There was an error in FireCloud. It may not mean anything, but you should consider reloading the page to be safe."
-            [:div {} [:a {:href "javascript:;" :onClick #(swap! state assoc :showing-more? (not (:showing-more? @state)))
-                          :style {:color "#000"}}
-                      (if (:showing-more? @state) "Hide exception details..." "Show exception details...")]]
-            (when (:showing-more? @state)
-              (let [stack-trace (clojure.string/split-lines (:stack props))]
-                [:div {:style {:paddingTop "0.5rem"}}
-                 [:div {} "Here are some details about the error that occurred. If you post this on our "
-                  [:a {:href "http://gatkforums.broadinstitute.org/firecloud/categories/ask-the-firecloud-team"
-                       :target "_blank" :style {}} "forum"] ", our team can take a look."]
-                 [:div {:style {:paddingTop "0.5rem"}} [:div {:style {:fontWeight "bold"}} "Stack trace: "]]
-                 (map (fn [line]
-                        [:div {} line])
-                      stack-trace)
-                 [:div {:style {:paddingTop "0.5rem"}} [:div {:style {:fontWeight "bold"}} "Source: "] (:source props)]]))]])]))})
+          (if more-content
+            [:div {} [:a {:href  "javascript:;" :onClick #(swap! state assoc :showing-more? (not (:showing-more? @state)))
+                          :style {:color "#000"}} (if (:showing-more? @state) "Hide details..." "Show details...")]])
+          (when (:showing-more? @state) more-content)
+          (when link link)]])])})
 
 (react/defc BannerContainer
   {:get-initial-state
@@ -189,10 +161,26 @@
        ; We want these banners to be shown in front of the modals, so we use a zIndex of 514
        [:div {:style {:zIndex 514 :position "relative"}}
         (map (fn [alert]
-               [AlertBanner {:message (:message alert) :link (:link alert) :title (:title alert)}])
+               [Banner {:title (:title alert)
+                        :background-color (:exception-state style/colors)
+                        :text-color "#fff"
+                        :message (:message alert)
+                        :link [:a {:href (str (:link alert)) :target "_blank" :style {:color "#fff"}} "Read more..."]}])
              service-alerts)
         (map (fn [alert]
-               [WarningBanner {:source (:source alert) :stack (.-stack (:error alert))}])
+               [Banner {:title "Uh oh! Something may be wrong..."
+                        :background-color (:warning-state style/colors)
+                        :text-color "#000"
+                        :message "There was an error in FireCloud. It may not mean anything, but you should consider reloading the page to be safe."
+                        :more-content [:div {:style {:paddingTop "0.5rem"}}
+                                       [:div {} "Here are some details about the error that occurred. If you post this on our "
+                                        [:a {:href "http://gatkforums.broadinstitute.org/firecloud/categories/ask-the-firecloud-team"
+                                             :target "_blank" :style {}} "forum"] ", our team can take a look."]
+                                       [:div {:style {:paddingTop "0.5rem"}} [:div {:style {:fontWeight "bold"}} "Stack trace: "]]
+                                       (map (fn [line]
+                                              [:div {} line])
+                                            (clojure.string/split-lines (:stack alert)))
+                                       [:div {:style {:paddingTop "0.5rem"}} [:div {:style {:fontWeight "bold"}} "Source: "] (:source alert)]]}])
              js-alerts)]))
    :component-did-update
    (fn [{:keys [this state locals]}]
@@ -204,8 +192,11 @@
    :component-did-mount
    (fn [{:keys [this state locals]}]
      ;; Set the js error listener
-     (set! js/window.onerror (fn [message source line column error]
-                               (swap! state assoc :js-alerts (conj (vec (:js-alerts @state)) {:source (str (.-location js/document)) :error error}))))
+     (set! js/window.onerror
+           (fn [_ _ _ _ error]
+             (swap! state assoc :js-alerts
+                    (conj (vec (:js-alerts @state)) {:source (str (.-location js/document))
+                                                     :stack (.-stack error)}))))
      ;; Call once for initial load
      (this :load-service-alerts)
      ;; Add initial poll interval
