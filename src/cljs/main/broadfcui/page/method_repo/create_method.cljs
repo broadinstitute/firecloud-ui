@@ -13,17 +13,20 @@
    ))
 
 
+(defn- build-defaults [{:keys [duplicate]}]
+  (cond duplicate (merge {:header "Duplicate Method"
+                          :name (str "Copy of " (:name duplicate))
+                          :wdl (:payload duplicate)}
+                         (select-keys duplicate [:synopsis :documentation]))
+        :else {:header "Create New Method"}))
+
+
 (react/defc CreateMethodDialog
   {:render
    (fn [{:keys [props state refs this]}]
-     (let [{:keys [duplicate]} props
-           header (if duplicate "Duplicate Method" "Create New Method")
-           name-default (if duplicate (str "Copy of " (:name duplicate)) "")
-           synopsis-default (if duplicate (:synopsis duplicate) "")
-           documentation-default (if duplicate (:documentation duplicate) "")
-           wdl-default (if duplicate (:payload duplicate) "")]
+     (let [defaults (build-defaults props)]
        [comps/OKCancelForm
-        {:header header
+        {:header (:header defaults)
          :get-first-element-dom-node #(react/find-dom-node (@refs "namespace"))
          :get-last-element-dom-node #(react/find-dom-node (@refs "ok-button"))
          :content
@@ -40,16 +43,16 @@
             [:div {:style {:flex "1 0 auto"}}
              (style/create-form-label "Name")
              [input/TextField {:ref "name" :style {:width "100%"}
-                               :defaultValue name-default
+                               :defaultValue (:name defaults)
                                :predicates [(input/nonempty "Method name")]}]]]
            ;;GAWB-1897 removes Type field and makes all MC types "Workflow" until "Task" type is supported
            (style/create-form-label "Synopsis (optional)")
            (style/create-text-field {:ref "synopsis"
-                                     :defaultValue synopsis-default
+                                     :defaultValue (:synopsis defaults)
                                      :style {:width "100%"}})
            (style/create-form-label "Documentation (optional)")
            (style/create-text-area {:ref "documentation"
-                                    :defaultValue documentation-default
+                                    :defaultValue (:documentation defaults)
                                     :style {:width "100%"}
                                     :rows 5})
 
@@ -91,7 +94,7 @@
                [:span {:style {:flex "1 0 auto"}}]
                (link "undo" undo?)
                (link "redo" redo?)]))
-           [CodeMirror {:ref "wdl-editor" :text wdl-default :read-only? false}]
+           [CodeMirror {:ref "wdl-editor" :text (:wdl defaults) :read-only? false}]
 
            [comps/ErrorViewer {:error (:upload-error @state)}]
            (style/create-validation-error-message (:validation-errors @state))
