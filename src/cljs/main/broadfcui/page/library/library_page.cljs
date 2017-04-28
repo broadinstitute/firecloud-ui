@@ -18,143 +18,141 @@
 
 
 (react/defc DatasetsTable
-  (->>
-   {:render
-    (fn [{:keys [state this props]}]
-      (let [attributes (:library-attributes props)
-            search-result-columns (:search-result-columns props)
-            extra-columns (subvec search-result-columns 4)]
-        [Table
-         {:ref "table" :persistence-key "library-table" :v 4
-          :fetch-data (this :pagination)
-          :body
-          {:behavior {:allow-no-sort? true
-                      :fixed-column-count 2}
-           :external-query-params #{:filter-text}
-           :filter-text (:filter-text props)
-           :columns (concat
-                     [{:id "access" :hidden? true :resizable? false :sortable? false :initial-width 12
-                       :as-text (fn [data]
-                                  (when (= (:workspaceAccess data) "NO ACCESS")
-                                    "You must request access to this dataset."))
-                       :render (fn [data]
+  {:render
+   (fn [{:keys [state this props]}]
+     (let [attributes (:library-attributes props)
+           search-result-columns (:search-result-columns props)
+           extra-columns (subvec search-result-columns 4)]
+       [Table
+        {:ref "table" :persistence-key "library-table" :v 4
+         :fetch-data (this :pagination)
+         :body
+         {:behavior {:allow-no-sort? true
+                     :fixed-column-count 2}
+          :external-query-params #{:filter-text}
+          :filter-text (:filter-text props)
+          :columns (concat
+                    [{:id "access" :hidden? true :resizable? false :sortable? false :initial-width 12
+                      :as-text (fn [data]
                                  (when (= (:workspaceAccess data) "NO ACCESS")
-                                   (icons/icon (merge
-                                                {:style {:alignSelf "center" :cursor "pointer"}}
-                                                (this :-get-link-props data))
-                                               :shield)))}
-                      {:id "library:datasetName"
-                       :header (:title (:library:datasetName attributes)) :initial-width 250
-                       :sort-initial :asc :sort-by :library:datasetName
-                       :as-text :library:datasetDescription
-                       :render (fn [data]
-                                 (style/create-link (merge {:text (:library:datasetName data)}
-                                                           (this :-get-link-props data))))}
-                      {:id "library:indication" :header (:title (:library:indication attributes))
-                       :column-data :library:indication :initial-width 180}
-                      {:id "library:dataUseRestriction" :header (:title (:library:dataUseRestriction attributes))
-                       :column-data :library:dataUseRestriction :initial-width 180}
-                      {:id "library:numSubjects" :header (:title (:library:numSubjects attributes))
-                       :column-data :library:numSubjects :initial-width 100}]
-                     (map
-                      (fn [keyname]
-                        {:id (name keyname) :header (:title (keyname attributes))
-                         :initial-width 180 :show-initial? false
-                         :column-data keyname
-                         :render (fn [field]
-                                   (if (sequential? field)
-                                     (clojure.string/join ", " field)
-                                     field))})
-                      extra-columns))
-           :style {:header-row {:fontWeight 500 :fontSize "90%"
-                                :backgroundColor nil
-                                :color "black"
-                                :borderBottom (str "2px solid " (:border-light style/colors))}
-                   :resize-tab (table-style/tab :border-light)
-                   :body {:fontSize "87.5%" :marginTop 4 :color (:text-light style/colors)}
-                   :cell table-style/clip-text
-                   :header-cell {:padding "0.5rem 0 0.5rem 1rem"}
-                   :body-cell {:padding "0.3rem 0 0.3rem 1rem"}}}
-          :toolbar ;; FIXME: magic numbers below:
-          {:items [[:div {:style {:fontSize "112%"}}
-                    ;; 112% makes this the same size as "Data Library" / "Workspaces" / "Method Repository" above
-                    [:span {:style {:fontWeight 700 :color (:text-light style/colors) :marginRight "0.5rem"}}
-                     "Matching Cohorts"]
-                    [:span {:style {:fontSize "80%"}}
-                     (let [total (or (:total @state) 0)]
-                       (str total
-                            " Dataset"
-                            (when-not (= 1 total) "s")
-                            " found"))]]
-                   flex/spring]
-           :style {:alignItems "flex-start" :marginBottom 7} ;; 7 makes some lines line up
-           :column-edit-button {:style {:order 1 :marginRight nil}
-                                :anchor :right}}}]))
-    :execute-search
-    (fn [{:keys [refs]} reset-sort?]
-      (let [query-params (merge {:page-number 1} (when reset-sort? {:sort-column nil :sort-order nil}))]
-        (when-not ((@refs "table") :update-query-params query-params)
-          ((@refs "table") :refresh-rows))))
-    :-get-link-props
-    (fn [_ data]
-      (if (= (:workspaceAccess data) "NO ACCESS")
-        {:onClick
-         (fn [_]
-           (comps/push-message
-            {:header "Request Access"
-             :message
-             (if (= (config/tcga-namespace) (:namespace data))
-               [:span {}
-                [:p {} "For access to TCGA protected data please apply for access via dbGaP [instructions can be found "
-                 [:a {:href "https://wiki.nci.nih.gov/display/TCGA/Application+Process"
-                      :target "_blank"}
-                  "here"] "]."]
-                [:p {} "After dbGaP approves your application please link your eRA Commons ID in your FireCloud profile page."]]
-               [:span {}
-                "Please contact "
-                [:a {:target "_blank"
-                     :href (str "mailto:" (:library:contactEmail data))}
-                 (str (:library:datasetCustodian data) " <" (:library:contactEmail data) ">")]
-                " and request access for the "
-                (:namespace data) "/" (:name data) " workspace."])}))}
-        {:href (nav/get-link :workspace-summary (common/row->workspace-id data))}))
-    :build-aggregate-fields
-    (fn [{:keys [props]}]
-      (reduce
-       (fn [results field] (assoc results field (if (contains? (:expanded-aggregates props) field) 0 5)))
-       {}
-       (:aggregate-fields props)))
-    :pagination
-    (fn [{:keys [this state props locals]}]
-      (fn [{:keys [query-params on-done]}]
-        (let [{:keys [page-number rows-per-page sort-column sort-order]} query-params]
-          (when-not (empty? (:aggregate-fields props))
-            (endpoints/call-ajax-orch
-             (let [from (* (- page-number 1) rows-per-page)
-                   update-aggregates? (or (= 1 page-number) (:initial-render? @locals))]
-               {:endpoint endpoints/search-datasets
-                :payload {:searchString (:filter-text props)
-                          :filters ((:get-facets props))
-                          :from from
-                          :size rows-per-page
-                          :sortField sort-column
-                          :sortDirection sort-order
-                          :fieldAggregations (if update-aggregates?
-                                               (this :build-aggregate-fields)
-                                               {})}
-                :headers utils/content-type=json
-                :on-done
-                (fn [{:keys [success? get-parsed-response status-text]}]
-                  (if success?
-                    (let [{:keys [total results aggregations]} (get-parsed-response)]
-                      (swap! state assoc :total total)
-                      (on-done {:total-count total
-                                :filtered-count total
-                                :results results})
-                      (when update-aggregates?
-                        ((:update-aggregates props) aggregations)))
-                    (on-done {:error status-text})))}))))))}
-   utils/track-initial-render))
+                                   "You must request access to this dataset."))
+                      :render (fn [data]
+                                (when (= (:workspaceAccess data) "NO ACCESS")
+                                  (icons/icon (merge
+                                               {:style {:alignSelf "center" :cursor "pointer"}}
+                                               (this :-get-link-props data))
+                                              :shield)))}
+                     {:id "library:datasetName"
+                      :header (:title (:library:datasetName attributes)) :initial-width 250
+                      :sort-initial :asc :sort-by :library:datasetName
+                      :as-text :library:datasetDescription
+                      :render (fn [data]
+                                (style/create-link (merge {:text (:library:datasetName data)}
+                                                          (this :-get-link-props data))))}
+                     {:id "library:indication" :header (:title (:library:indication attributes))
+                      :column-data :library:indication :initial-width 180}
+                     {:id "library:dataUseRestriction" :header (:title (:library:dataUseRestriction attributes))
+                      :column-data :library:dataUseRestriction :initial-width 180}
+                     {:id "library:numSubjects" :header (:title (:library:numSubjects attributes))
+                      :column-data :library:numSubjects :initial-width 100}]
+                    (map
+                     (fn [keyname]
+                       {:id (name keyname) :header (:title (keyname attributes))
+                        :initial-width 180 :show-initial? false
+                        :column-data keyname
+                        :render (fn [field]
+                                  (if (sequential? field)
+                                    (clojure.string/join ", " field)
+                                    field))})
+                     extra-columns))
+          :style {:header-row {:fontWeight 500 :fontSize "90%"
+                               :backgroundColor nil
+                               :color "black"
+                               :borderBottom (str "2px solid " (:border-light style/colors))}
+                  :resize-tab (table-style/tab :border-light)
+                  :body {:fontSize "87.5%" :marginTop 4 :color (:text-light style/colors)}
+                  :cell table-style/clip-text
+                  :header-cell {:padding "0.5rem 0 0.5rem 1rem"}
+                  :body-cell {:padding "0.3rem 0 0.3rem 1rem"}}}
+         :toolbar ;; FIXME: magic numbers below:
+         {:items [[:div {:style {:fontSize "112%"}}
+                   ;; 112% makes this the same size as "Data Library" / "Workspaces" / "Method Repository" above
+                   [:span {:style {:fontWeight 700 :color (:text-light style/colors) :marginRight "0.5rem"}}
+                    "Matching Cohorts"]
+                   [:span {:style {:fontSize "80%"}}
+                    (let [total (or (:total @state) 0)]
+                      (str total
+                           " Dataset"
+                           (when-not (= 1 total) "s")
+                           " found"))]]
+                  flex/spring]
+          :style {:alignItems "flex-start" :marginBottom 7} ;; 7 makes some lines line up
+          :column-edit-button {:style {:order 1 :marginRight nil}
+                               :anchor :right}}}]))
+   :execute-search
+   (fn [{:keys [refs]} reset-sort?]
+     (let [query-params (merge {:page-number 1} (when reset-sort? {:sort-column nil :sort-order nil}))]
+       (when-not ((@refs "table") :update-query-params query-params)
+         ((@refs "table") :refresh-rows))))
+   :-get-link-props
+   (fn [_ data]
+     (if (= (:workspaceAccess data) "NO ACCESS")
+       {:onClick
+        (fn [_]
+          (comps/push-message
+           {:header "Request Access"
+            :message
+            (if (= (config/tcga-namespace) (:namespace data))
+              [:span {}
+               [:p {} "For access to TCGA protected data please apply for access via dbGaP [instructions can be found "
+                [:a {:href "https://wiki.nci.nih.gov/display/TCGA/Application+Process"
+                     :target "_blank"}
+                 "here"] "]."]
+               [:p {} "After dbGaP approves your application please link your eRA Commons ID in your FireCloud profile page."]]
+              [:span {}
+               "Please contact "
+               [:a {:target "_blank"
+                    :href (str "mailto:" (:library:contactEmail data))}
+                (str (:library:datasetCustodian data) " <" (:library:contactEmail data) ">")]
+               " and request access for the "
+               (:namespace data) "/" (:name data) " workspace."])}))}
+       {:href (nav/get-link :workspace-summary (common/row->workspace-id data))}))
+   :build-aggregate-fields
+   (fn [{:keys [props]}]
+     (reduce
+      (fn [results field] (assoc results field (if (contains? (:expanded-aggregates props) field) 0 5)))
+      {}
+      (:aggregate-fields props)))
+   :pagination
+   (fn [{:keys [this state props]}]
+     (fn [{:keys [query-params on-done]}]
+       (let [{:keys [page-number rows-per-page sort-column sort-order]} query-params]
+         (when-not (empty? (:aggregate-fields props))
+           (endpoints/call-ajax-orch
+            (let [from (* (- page-number 1) rows-per-page)
+                  update-aggregates? (or (= 1 page-number) (:no-aggregates? props))]
+              {:endpoint endpoints/search-datasets
+               :payload {:searchString (:filter-text props)
+                         :filters ((:get-facets props))
+                         :from from
+                         :size rows-per-page
+                         :sortField sort-column
+                         :sortDirection sort-order
+                         :fieldAggregations (if update-aggregates?
+                                              (this :build-aggregate-fields)
+                                              {})}
+               :headers utils/content-type=json
+               :on-done
+               (fn [{:keys [success? get-parsed-response status-text]}]
+                 (if success?
+                   (let [{:keys [total results aggregations]} (get-parsed-response)]
+                     (swap! state assoc :total total)
+                     (on-done {:total-count total
+                               :filtered-count total
+                               :results results})
+                     (when update-aggregates?
+                       ((:update-aggregates props) aggregations)))
+                   (on-done {:error status-text})))}))))))})
 
 (react/defc SearchSection
   {:get-filters
@@ -261,18 +259,15 @@
                                                           :expanded-callback-function]))])))})
 
 (react/defc FacetSection
-  {:update-aggregates
-   (fn [{:keys [state]} aggregate-data]
-     (swap! state assoc :aggregates aggregate-data))
-   :render
-   (fn [{:keys [props state]}]
-     (if (empty? (:aggregates @state))
+  {:render
+   (fn [{:keys [props]}]
+     (if (empty? (:aggregates props))
        [:div {:style {:fontSize "80%"}} "loading..."]
        [:div {:style {:fontSize "85%" :padding "16px 12px"}}
         (map
          (fn [aggregate-field] [Facet {:aggregate-field aggregate-field
                                        :aggregate-properties (get (:aggregate-properties props) aggregate-field)
-                                       :aggregates (:aggregates @state)
+                                       :aggregates (:aggregates props)
                                        :expanded? (contains? (:expanded-aggregates props) aggregate-field)
                                        :selected-items (set (get-in props [:facet-filters aggregate-field]))
                                        :update-filter (:update-filter props)
@@ -321,6 +316,7 @@
                                      (after-update #((@refs "dataset-table") :execute-search true)))}]
         [FacetSection (merge
                        {:ref "facets"
+                        :aggregates (:aggregates @state)
                         :aggregate-properties (:library-attributes @state)
                         :update-filter (fn [facet-name facet-list]
                                          (this :update-filter facet-name facet-list))
@@ -332,14 +328,15 @@
           [DatasetsTable (merge
                           {:ref "dataset-table"
                            :filter-text (:search-text @state)
-                           :update-aggregates #((@refs "facets") :update-aggregates %)
+                           :update-aggregates #(swap! state assoc :aggregates %)
+                           :no-aggregates? (empty? (:aggregates @state))
                            :get-facets #(utils/map-keys name (:facet-filters @state))}
                           (select-keys @state [:library-attributes :search-result-columns :aggregate-fields :expanded-aggregates]))])]])}
    (persistence/with-state-persistence {:key PERSISTENCE-KEY :version VERSION
                                         :initial {:search-text ""
                                                   :facet-filters {}
                                                   :expanded-aggregates #{}}
-                                        :except [:library-attributes]})))
+                                        :except [:library-attributes :aggregates]})))
 
 (defn add-nav-paths []
   (nav/defpath
