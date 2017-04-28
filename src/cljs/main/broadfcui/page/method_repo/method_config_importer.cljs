@@ -33,7 +33,7 @@
          (str "Are you sure you want to redact this " (if (:config? props) "configuration" "method") "?")]
         [comps/ErrorViewer {:error (:error @state)
                             :expect {401 "Unauthorized"}}]]
-       :ok-button {:text "Redact" :onClick #(react/call :redact this)}}])
+       :ok-button {:text "Redact" :onClick #(this :redact)}}])
    :redact
    (fn [{:keys [props state]}]
      (let [{:keys [name namespace snapshotId]} (:entity props)]
@@ -118,7 +118,7 @@
        (style/create-validation-error-message (:validation-error @state))
        [comps/ErrorViewer {:error (:server-error @state)}]
        [comps/Button {:text (if workspace-id "Import" "Export")
-                      :onClick #(react/call :perform-copy this)}]]]]))
+                      :onClick #(this :perform-copy)}]]]]))
 
 
 (react/defc ConfigImportForm
@@ -258,7 +258,7 @@
   (->>
    {:reload
     (fn [{:keys [this]}]
-      (react/call :load-data this))
+      (this :load-data))
     :render
     (fn [{:keys [props state]}]
       (cond
@@ -338,7 +338,7 @@
                                                   (nav/go-to-path :method id)))}])}]]}}]))
     :component-did-mount
     (fn [{:keys [this]}]
-      (react/call :load-data this))
+      (this :load-data))
     :load-data
     (fn [{:keys [state]}]
       (swap! state dissoc :configs :methods :error-message)

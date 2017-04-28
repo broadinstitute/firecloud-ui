@@ -64,7 +64,7 @@
                                     (set! (.-onload reader)
                                           #(let [text (.-result reader)]
                                              (swap! state assoc :file-name (.-name file) :file-contents text)
-                                             (react/call :set-wdl-text this text)))
+                                             (this :set-wdl-text text)))
                                     (.readAsText reader file))))}]
            (style/create-form-label
             (let [{:keys [file-name]
@@ -73,7 +73,7 @@
                   link (fn [label enabled?]
                          (if enabled?
                            (style/create-link {:text (clojure.string/capitalize label)
-                                               :onClick #(react/call :call-method (@refs "wdl-editor") label)
+                                               :onClick #((@refs "wdl-editor") :call-method label)
                                                :style {:color (:text-light style/colors)
                                                        :backgroundColor "white"
                                                        :padding "0 6px"
@@ -90,7 +90,7 @@
                  [:span {}
                   [:span {:style {:padding "0 1em 0 25px"}} (str "Selected: " file-name)]
                   (style/create-link {:text "Reset to file"
-                                      :onClick #(react/call :set-wdl-text this (:file-contents @state))})])
+                                      :onClick #(this :set-wdl-text (:file-contents @state))})])
                [:span {:style {:flex "1 0 auto"}}]
                (link "undo" undo?)
                (link "redo" redo?)]))
@@ -101,20 +101,20 @@
            [:div {:style {:marginTop "0.8em" :fontSize "88%"}} "WDL must use Docker image digests to allow call caching"
             (common/question-icon-link "Guide to Call Caching" (config/call-caching-guide-url))]])
          :ok-button (react/create-element
-                     [comps/Button {:ref "ok-button" :text "Upload" :onClick #(react/call :create-method this)}])}]))
+                     [comps/Button {:ref "ok-button" :text "Upload" :onClick #(this :create-method)}])}]))
    :component-did-mount
    (fn [{:keys [state refs]}]
-     (react/call :add-listener (@refs "wdl-editor") "change"
-                 #(swap! state assoc :undo-history
-                         (js->clj (react/call :call-method (@refs "wdl-editor") "historySize")))))
+     ((@refs "wdl-editor") :add-listener "change"
+      #(swap! state assoc :undo-history
+              (js->clj ((@refs "wdl-editor") :call-method "historySize")))))
    :set-wdl-text
    (fn [{:keys [refs]} text]
-     (react/call :call-method (@refs "wdl-editor") "setValue" text))
+     ((@refs "wdl-editor") :call-method "setValue" text))
    :create-method
    (fn [{:keys [props state refs]}]
      (let [[namespace name & fails] (input/get-and-validate refs "namespace" "name")
            [synopsis documentation] (common/get-text refs "synopsis" "documentation")
-           wdl (react/call :call-method (@refs "wdl-editor") "getValue")
+           wdl ((@refs "wdl-editor") :call-method "getValue")
            fails (or fails (when (clojure.string/blank? wdl) ["Please enter the WDL payload"]))]
        (swap! state assoc :validation-errors fails)
        (when-not fails
