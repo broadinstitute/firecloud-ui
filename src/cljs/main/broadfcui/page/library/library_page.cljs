@@ -154,6 +154,15 @@
                        ((:update-aggregates props) aggregations)))
                    (on-done {:error status-text})))}))))))})
 
+(defn encode [text]
+  ;; character replacements modeled after Lucene's SimpleHTMLEncoder.
+  (clojure.string/escape text {\" "&quot;" \& "&amp;" \< "&lt;", \> "&gt;", \\ "&#x27;" \/ "&#x2F;"}))
+
+(defn highlight-suggestion [suggestion highlight]
+  (if (not (clojure.string/blank? highlight))
+    (clojure.string/replace (encode suggestion) (encode highlight) (str "<strong>" (encode highlight) "</strong>"))
+    (encode suggestion)))
+
 (react/defc SearchSection
   {:get-filters
    (fn [{:keys [props]}]
@@ -186,11 +195,15 @@
                                                :from 0
                                                :size 10}))))}
         :typeaheadDisplay (fn [result]
-                            ;; we intentionally do not encode the result value here, because it is already
-                            ;; encoded from the server.
-                            (.text (js/$ (str "<div>" (aget result "value") "</div>"))))
+                            ;; underlying typeahead library uses the result of this function
+                            ;; via $input.val(x), which is safe from xss. So we explicitly
+                            ;; do not want to encode anything here.
+                            (aget result "value" "suggestion"))
         :typeaheadSuggestionTemplate (fn [result]
-                                       (str "<div style='textOverflow: ellipsis; overflow: hidden; font-size: smaller;'>" (aget result "value") "</div>"))}]])})
+                                       (let [suggestion (aget result "value" "suggestion")
+                                             highlight (aget result "value" "highlight")
+                                             display (highlight-suggestion suggestion highlight)]
+                                         (str "<div style='textOverflow: ellipsis; overflow: hidden; font-size: smaller;'>" display "</div>")))}]])})
 
 (react/defc FacetCheckboxes
   {:render
