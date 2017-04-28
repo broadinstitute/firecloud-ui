@@ -195,8 +195,10 @@
                                                :from 0
                                                :size 10}))))}
         :typeaheadDisplay (fn [result]
-                            (let [suggestion (aget result "value" "suggestion")]
-                              (.text (js/$ (str "<div>" suggestion "</div>")))))
+                            ;; underlying typeahead library uses the result of this function
+                            ;; via $input.val(x), which is safe from xss. So we explicitly
+                            ;; do not want to encode anything here.
+                            (aget result "value" "suggestion"))
         :typeaheadSuggestionTemplate (fn [result]
                                        (let [suggestion (aget result "value" "suggestion")
                                              highlight (aget result "value" "highlight")
