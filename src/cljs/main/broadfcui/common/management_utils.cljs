@@ -3,12 +3,12 @@
     [dmohs.react :as react]
     [broadfcui.common :as common]
     [broadfcui.common.components :as comps]
+    [broadfcui.common.flex-utils :as flex]
     [broadfcui.common.input :as input]
     [broadfcui.common.modal :as modal]
     [broadfcui.common.style :as style]
-    [broadfcui.common.table :as table]
-    [broadfcui.common.table-utils :refer [add-right]]
-    [broadfcui.common.table-style :as table-style]
+    [broadfcui.common.table.table :as table]
+    [broadfcui.common.table.style :as table-style]
     [broadfcui.endpoints :as endpoints]
     [broadfcui.utils :as utils]
     ))
@@ -82,47 +82,44 @@
               (when (:removing? @state)
                 [comps/Blocker {:banner "Removing user..."}])
               [table/Table
-               {:header-row-style table-style/header-row-style-light
-                :header-style {:padding "0.5em 0 0.5em 14px"}
-                :cell-content-style {:padding 0 :paddingRight 20 :marginRight -20}
-                :row-style {:backgroundColor "white"}
-                :reorderable-columns? false
-                :resize-tab-color (:line-default style/colors)
-                :toolbar (add-right
-                          [comps/Button {:text "Add User..." :icon :add-new
-                                         :onClick (fn [_]
-                                                    (modal/push-modal
-                                                     [AddUserDialog {:endpoint (:add-endpoint props)
-                                                                     :group-name (:group-name props)
-                                                                     :on-add #(this :load)
-                                                                     :footer (:add-member-footer props)}]))}])
-                :columns [{:header "Email" :starting-width 500
-                           :content-renderer
-                           (fn [email]
-                             [:div {:style table-style/table-cell-plank-left}
-                              email])}
-                          {:header "Role" :starting-width 100 :resizable? false :sort-initial :asc
-                           :content-renderer
-                           (fn [role]
-                             [:div {:style table-style/table-cell-plank-right}
-                              role])}
-                          {:starting-width :remaining
-                           :filter-by :none :sort-by :none :resizable? false
-                           :as-text
-                           (fn [{:keys [email role]}]
-                             (str "Remove " (clojure.string/lower-case role) " " email))
-                           :content-renderer
-                           (fn [{:keys [email role]}]
-                             (style/create-link {:text "Remove"
-                                                 :onClick #(remove-user
-                                                            (delete-endpoint (:group-name props) role email)
-                                                            state
-                                                            this)}))}]
-                :data (table-data data)
-                :->row (fn [{:keys [email role] :as row}]
-                         [email
-                          role
-                          row])}]
+               {:data (table-data data)
+                :body {:behavior {:reorderable-columns? false}
+                       :style (merge
+                               table-style/table-light
+                               {:body-cell {:paddingTop 0 :paddingBottom 0}
+                                :body-row (constantly {:margin "4px 0"})})
+                       :columns
+                       [{:header "Email" :initial-width 500 :column-data :email
+                         :render
+                         (fn [email]
+                           [:div {:style table-style/table-cell-plank-left} email])}
+                        {:header "Role" :initial-width 100 :resizable? false
+                         :column-data :role :sort-initial :asc
+                         :render
+                         (fn [role]
+                           [:div {:style table-style/table-cell-plank-right} role])}
+                        {:id "remove user" :initial-width :remaining
+                         :filterable? false :sortable? false :resizable? false
+                         :as-text
+                         (fn [{:keys [email role]}]
+                           (str "Remove " (clojure.string/lower-case role) " " email))
+                         :render
+                         (fn [{:keys [email role]}]
+                           [:div {:style {:padding "0.6rem 0 0.6rem 32px"}}
+                            (style/create-link {:text "Remove"
+                                                :onClick #(remove-user
+                                                           (delete-endpoint (:group-name props) role email)
+                                                           state
+                                                           this)})])}]}
+                :toolbar {:items [flex/spring
+                                  [comps/Button
+                                   {:text "Add User..." :icon :add-new
+                                    :onClick (fn [_]
+                                               (modal/push-modal
+                                                [AddUserDialog {:endpoint (:add-endpoint props)
+                                                                :group-name (:group-name props)
+                                                                :on-add #(this :load)
+                                                                :footer (:add-member-footer props)}]))}]]}}]
               [comps/ErrorViewer {:error (:remove-error @state)}]])))
    :component-did-mount
    (fn [{:keys [this]}]
