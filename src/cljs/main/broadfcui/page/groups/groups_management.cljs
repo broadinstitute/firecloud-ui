@@ -27,33 +27,41 @@
        (:error-message @state) (style/create-server-error-message (:error-message @state))
        (nil? (:groups @state)) [comps/Spinner {:text "Loading groups..."}]
        :else
-       [Table
-        {:data (:groups @state)
-         :body {:behavior {:reorderable-columns? false}
-                :style table-style/table-light
-                :columns
-                [{:header "Group Name" :initial-width 500 :sort-initial :asc
-                  :sort-by :text
-                  :as-text :group-name
-                  :render
-                  (fn [{:keys [group-name access-levels]}]
-                    (if
-                     (contains? (set access-levels) "Owner")
-                      (style/create-link {:text group-name
-                                          :href (nav/get-link :group group-name)})
-                      group-name))}
-                 {:header "Access Levels" :initial-width :auto
-                  :column-data #(clojure.string/join ", " (:access-levels %))}]}
-         :toolbar
-         {:items
-          [flex/spring
-           [comps/Button
-            {:text "Create New Group"
-             :onClick
-             (fn []
-               (modal/push-modal
-                [CreateGroupDialog
-                 {:on-success #(react/call :reload this)}]))}]]}}]))
+       (let [groups (->>
+                     (map (fn [group]
+                            {:group-name (get-in group [:managedGroupRef :usersGroupName])
+                             :access-level (:accessLevel group)})
+                          (:groups @state))
+                     (group-by :group-name)
+                     (map (fn [[k v]]
+                            {:group-name k :access-levels (sort (map :access-level v))})))]
+         [Table
+          {:data groups
+           :body {:behavior {:reorderable-columns? false}
+                  :style table-style/table-light
+                  :columns
+                  [{:header "Group Name" :initial-width 500 :sort-initial :asc
+                    :sort-by :text
+                    :as-text :group-name
+                    :render
+                    (fn [{:keys [group-name access-levels]}]
+                      (if
+                       (contains? (set access-levels) "Owner")
+                        (style/create-link {:text group-name
+                                            :href (nav/get-link :group group-name)})
+                        group-name))}
+                   {:header "Role" :initial-width :auto
+                    :column-data #(clojure.string/join ", " (:access-levels %))}]}
+           :toolbar
+           {:items
+            [flex/spring
+             [comps/Button
+              {:text "Create New Group"
+               :onClick
+               (fn []
+                 (modal/push-modal
+                  [CreateGroupDialog
+                   {:on-success #(react/call :reload this)}]))}]]}}])))
    :component-did-mount
    (fn [{:keys [this]}]
      (react/call :load-data this))
@@ -63,15 +71,7 @@
       (fn [err-text groups]
         (if err-text
           (swap! state assoc :error-message err-text)
-          (let [groups (->>
-                        (map (fn [group]
-                               {:group-name (get-in group [:managedGroupRef :usersGroupName])
-                                :access-level (:accessLevel group)})
-                             groups)
-                        (group-by :group-name)
-                        (map (fn [[k v]]
-                               {:group-name k :access-levels (sort (map :access-level v))})))]
-            (swap! state assoc :groups groups))))))
+          (swap! state assoc :groups groups)))))
    :-handle-status-change
    (fn [{:keys [state]} group-name new-status message]
      (let [group-index (utils/first-matching-index
@@ -100,16 +100,8 @@
                                                             :role %2
                                                             :email %3})
             :header (fn [data]
-                      (let [owners-group (:ownersGroup data)
-                            users-group (:usersGroup data)]
-                        [:div {:style {:paddingBottom "0.5rem"}}
-                         [:span {:style {:fontSize "110%"}} "Email the Group:"]
-                         [:div {} "Owners: "
-                          (style/create-link {:href (str "mailto:" (:groupEmail owners-group))
-                                              :text (:groupName owners-group)})]
-                         [:div {} "All Users: "
-                          (style/create-link {:href (str "mailto:" (:groupEmail users-group))
-                                              :text (:groupName users-group)})]]))
+                      [:small {:style {:display "block" :margin "-0.75rem 0 1rem"}}
+                       "Use when sharing workspaces: " (get-in data [:usersGroup :groupEmail])])
             :table-data (fn [data]
                           (concat (mapv (fn [email] {:email email :role "Owner"}) (:ownersEmails data))
                                   (mapv (fn [email] {:email email :role "User"}) (:usersEmails data))))
