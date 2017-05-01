@@ -53,10 +53,13 @@
        [comps/Blocker {:banner (:blocking-text @state)}])
      (when (:allow-edit props)
        [:div {:style {:flex "0 0 290px" :paddingRight "1rem"}}
-        [comps/SidebarButton
-         {:style :light :color :button-primary
-          :text "Duplicate Method..." :icon :clone :margin :bottom
-          :onClick #(modal/push-modal [create/CreateMethodDialog {:duplicate entity}])}]
+        (when-not config?
+          [comps/SidebarButton
+           {:style :light :color :button-primary
+            :text "Duplicate Method..." :icon :clone :margin :bottom
+            :onClick #(modal/push-modal [create/CreateMethodDialog
+                                         {:duplicate entity
+                                          :on-created (fn [_ id] (nav/go-to-path :method id))}])}])
         [comps/SidebarButton
          {:style :light :color :button-primary
           :text "Permissions..." :icon :settings :margin :bottom
