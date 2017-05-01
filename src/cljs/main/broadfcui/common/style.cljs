@@ -31,6 +31,9 @@
    :fontSize "1.2rem" :lineHeight "0.6rem"
    :padding "0.4rem"})
 
+(def thin-page-style
+  {:width 1000 :margin "auto" :minHeight 300 :paddingTop "1.5rem"})
+
 (defn create-section-header [text]
   [:div {:style {:fontSize "125%" :fontWeight 500}} text])
 

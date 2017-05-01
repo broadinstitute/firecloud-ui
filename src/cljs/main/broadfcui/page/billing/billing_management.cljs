@@ -157,11 +157,10 @@
   {:render
    (fn [{:keys [props]}]
      (let [{:keys [project-name]} props]
-       [:div {:style {:padding "1rem 1rem 0"}}
+       [:div {:style style/thin-page-style}
         [:div {:style {:marginBottom "1rem" :fontSize "1.1rem"}}
-         [:div {:style {:marginBottom "1rem" :fontSize "1.1rem"}}
-          [:div {:style {:fontSize "1.2em"}} (when project-name "Billing Project: ")
-           [:span {:style {:fontWeight 500}} (if project-name project-name "Billing Management")]]]]
+         [:div {:style {:fontSize "1.2em"}} (when project-name "Billing Project: ")
+          [:span {:style {:fontWeight 500}} (if project-name project-name "Billing Management")]]]
         (if project-name
           [MembershipManagementPage
            {:group-name project-name

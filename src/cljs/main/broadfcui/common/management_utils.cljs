@@ -86,7 +86,7 @@
                 :body {:behavior {:reorderable-columns? false}
                        :style (merge
                                table-style/table-light
-                               {:body-cell {:paddingTop 0 :paddingBottom 0}
+                               {:body-cell {:padding 0}
                                 :body-row (constantly {:margin "4px 0"})})
                        :columns
                        [{:header "Email" :initial-width 500 :column-data :email
