@@ -95,6 +95,7 @@
          [comps/SidebarButton
           {:style :light :color :button-primary :margin :top
            :icon :catalog :text "Catalog Dataset..."
+           :data-test-id "catalog-button"
            :onClick #(modal/push-modal [CatalogWizard (utils/restructure
                                                        library-schema
                                                        workspace
