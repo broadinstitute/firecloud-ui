@@ -1,9 +1,9 @@
 (ns broadfcui.page.groups.groups-management
   (:require
     [dmohs.react :as react]
-    [broadfcui.common :as common]
     [broadfcui.common.components :as comps]
     [broadfcui.common.flex-utils :as flex]
+    [broadfcui.common.icons :as icons]
     [broadfcui.common.management-utils :refer [MembershipManagementPage]]
     [broadfcui.common.modal :as modal]
     [broadfcui.common.style :as style]
@@ -12,7 +12,6 @@
     [broadfcui.endpoints :as endpoints]
     [broadfcui.nav :as nav]
     [broadfcui.page.groups.create-group :refer [CreateGroupDialog]]
-    [broadfcui.page.workspace.monitor.common :as moncommon]
     [broadfcui.utils :as utils]
     ))
 
@@ -42,8 +41,29 @@
                       (style/create-link {:text groupName
                                           :href (nav/get-link :group groupName)})
                       groupName))}
-                 {:header "Role" :initial-width :auto
-                  :column-data #(clojure.string/join ", " (:accessLevels %))}]}
+                 {:header "Role" :initial-width 100 :resizable? false
+                  :column-data #(clojure.string/join ", " (:accessLevels %))}
+                 {:id "delete group" :initial-width :auto
+                  :filterable? false :sortable? false
+                  :as-text
+                  (fn [{:keys [groupName accessLevels]}]
+                    (when (contains? (set accessLevels) "Owner")
+                      (str "Delete group " groupName)))
+                  :render
+                  (fn [{:keys [groupName accessLevels]}]
+                    (when (contains? (set accessLevels) "Owner")
+                      (style/create-link
+                       {:text (icons/icon {} :delete)
+                        :style {:float "right"}
+                        :onClick (fn []
+                                   (swap! state assoc :deleting? true)
+                                   (endpoints/call-ajax-orch
+                                    {:endpoint (endpoints/delete-group groupName)
+                                     :on-done (fn [{:keys [success? get-parsed-response]}]
+                                                (swap! state dissoc :deleting?)
+                                                (if success?
+                                                  (this :load-data)
+                                                  (swap! state assoc :error-mesage (get-parsed-response false))))}))})))}]}
          :toolbar
          {:items
           [flex/spring
@@ -63,25 +83,19 @@
       (fn [err-text groups]
         (if err-text
           (swap! state assoc :error-message err-text)
-          (swap! state assoc :groups groups)))))
-   :-handle-status-change
-   (fn [{:keys [state]} group-name new-status message]
-     (let [group-index (utils/first-matching-index
-                        #(= (:groupName %) group-name)
-                        (:groups @state))
-           group (get-in @state [:groups group-index])
-           updated-group (assoc group :creationStatus new-status :message message)]
-       (swap! state assoc-in [:groups group-index] updated-group)))})
+          (swap! state assoc :groups groups)))))})
 
 
 (react/defc Page
   {:render
-   (fn [{:keys [props]}]
+   (fn [{:keys [props state]}]
      (let [{:keys [group-name]} props]
        [:div {:style {:padding "1rem 1rem 0"}}
         [:div {:style {:marginBottom "1rem" :fontSize "1.1rem"}}
          [:div {:style {:fontSize "1.2em"}} (when group-name "Group: ")
           [:span {:style {:fontWeight 500}} (if group-name group-name "Group Management")]]]
+        (when (:deleting? @state)
+          [comps/Blocker {:banner "Deleting group..."}])
         (if group-name
           [MembershipManagementPage
            {:group-name group-name
