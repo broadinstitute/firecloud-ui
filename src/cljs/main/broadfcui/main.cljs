@@ -138,7 +138,9 @@
                [comps/Banner (merge (select-keys alert [:title :message])
                               {:background-color (:exception-state style/colors)
                                :text-color "#fff"
-                               :link [:a {:href (str (:link alert)) :target "_blank" :style {:color "#fff"}} "Read more..."]})])
+                               :link [:a {:style {:color "#fff"} :href (str (:link alert))
+                                          :target "_blank"}
+                                      "Read more..."]})])
              service-alerts)]))
    :component-did-update
    (fn [{:keys [this state locals]}]
@@ -189,7 +191,8 @@
                         :message (str "There was an error in FireCloud. It may not mean anything, "
                                       "but you should consider reloading the page to be safe.")
                         :more-content [:div {:style {:paddingTop "0.5rem"}}
-                                       [:div {} "Here are some details about the error that occurred. If you post this on our "
+                                       [:div {} "Here are some details about the error that occurred."
+                                       " If you post this on our "
                                         [:a {:href (config/forum-url)
                                              :target "_blank" :style {}} "forum"] ", our team can take a look."]
                                        [:div {:style {:fontWeight "bold" :paddingTop "0.5rem"}} "Stack trace: "]
@@ -230,8 +233,8 @@
                                (contains? (:user-status @state) :signed-in))]
        [:div {}
         (when (:config-loaded? @state)
-          ;; We want these banners to be shown in front of the modals, so we use a zIndex of 514
-          [:div {:style {:zIndex 514 :position "relative"}}
+          ;; We want these banners to be shown in front of the modals, so we use a zIndex above them
+          [:div {:style {:zIndex (inc style/modals-z-index) :position "relative"}}
            [ServiceAlertContainer]
            [JsAlertContainer]])
         (when (and (contains? user-status :signed-in) (contains? user-status :refresh-token-saved))

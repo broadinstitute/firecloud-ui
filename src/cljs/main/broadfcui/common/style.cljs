@@ -18,6 +18,9 @@
              :text-lighter "#7f7f7f"
              :text-lightest "#989898"})
 
+(def igv-z-index 512)
+(def modals-z-index (inc igv-z-index))
+
 (def standard-line (str "1px solid " (:line-default colors)))
 
 (defn color-for-status [status]
