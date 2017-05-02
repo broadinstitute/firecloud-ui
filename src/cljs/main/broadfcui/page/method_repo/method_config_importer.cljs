@@ -2,7 +2,7 @@
   (:require
     [dmohs.react :as react]
     [clojure.string :refer [trim lower-case]]
-    [broadfcui.common :refer [clear-both root-entity-types]]
+    [broadfcui.common :refer [clear-both root-entity-types scroll-to-top]]
     [broadfcui.common.components :as comps]
     [broadfcui.common.flex-utils :as flex]
     [broadfcui.common.input :as input]
@@ -59,7 +59,9 @@
             :text "Duplicate Method..." :icon :clone :margin :bottom
             :onClick #(modal/push-modal [create/CreateMethodDialog
                                          {:duplicate entity
-                                          :on-created (fn [_ id] (nav/go-to-path :method id))}])}])
+                                          :on-created (fn [_ id]
+                                                        (nav/go-to-path :method id)
+                                                        (scroll-to-top))}])}])
         [comps/SidebarButton
          {:style :light :color :button-primary
           :text "Permissions..." :icon :settings :margin :bottom
@@ -371,7 +373,7 @@
      (let [{:keys [workspace-id]} props
            type (some :type [props @state])
            id (some :id [props @state])]
-       [:div {}
+       [:div {:key (str id)}
         (when id
           [:h3 {} (str (:namespace id) "/" (:name id) " #" (:snapshot-id id))])
         (if id
