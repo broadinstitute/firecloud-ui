@@ -181,56 +181,57 @@
    (fn [{:keys [refs]}]
      {"methodVersion" (int (common/get-text refs "snapshotId"))})
    :render
-   (fn [{:keys [props refs state this]}]
+   (fn [{:keys [props state this]}]
      [:div {} (when-let [wdl-parse-error (:wdl-parse-error props)] (style/create-server-error-message wdl-parse-error))
       (let [entity (:entity props)
-            editing? (:editing? props)
-            make-field
-            (fn [entity key label dropdown? & [render]]
-              [:div {}
-               [:span {:style {:fontWeight 500 :width 100 :display "inline-block" :paddingBottom "0.3em"}} label]
+            config? (contains? entity :method)]
+        [:div {:style {:backgroundColor (:background-light style/colors)
+                       :borderRadius 8 :border style/standard-line
+                       :padding "1rem"}}
+         (this :render-details entity)
+         [:div {:style {:paddingTop "0.5rem"}}
+          [:span {:style {:fontWeight 500 :marginRight "1rem"}} (if config? "Referenced Method:" "WDL:")]
+          (style/create-link {:text (if (:payload-expanded @state) "Collapse" "Expand")
+                              :onClick #(swap! state assoc :payload-expanded (not (:payload-expanded @state)))})]
+         (when (:payload-expanded @state)
+           (if config?
+             [:div {:style {:margin "0.5rem 0 0 1rem"}}
+              (this :render-details (:method entity))
+              [:div {:style {:fontWeight 500 :marginTop "1rem"}} "WDL:"]
+              [CodeMirror {:text (get-in entity [:method :payload])}]]
+             [CodeMirror {:text (:payload entity)}]))])])
+   :render-details
+   (fn [{:keys [props refs]} entity]
+     (let [{:keys [editing?]} props
+           make-field
+           (fn [key label & {:keys [dropdown? render]}]
+             [:div {:style {:display "flex" :alignItems "baseline" :paddingBottom "0.25rem"}}
+              [:div {:style {:flex "0 0 100px" :fontWeight 500}} (str label ":")]
+              [:div {:style {:flex "1 1 auto"}}
                (if (and editing? dropdown?)
                  (style/create-identity-select {:ref key
                                                 :style {:width 100}
-                                                :defaultValue (entity key)
+                                                :defaultValue (key entity)
                                                 :onChange (when-let [f (:onSnapshotIdChange props)]
                                                             #(f (int (common/get-text refs "snapshotId"))))}
                                                (:snapshots props))
-                 [:span {} ((or render identity) (entity key))])])
-            config? (contains? entity :method)]
-       [:div {:style {:backgroundColor (:background-light style/colors)
-                      :borderRadius 8 :border style/standard-line
-                      :padding "1em"}}
-        (this :render-details make-field entity)
-        [:div {:style {:paddingTop "0.5em"}}
-         [:span {:style {:fontWeight 500 :marginRight "1em"}} (if config? "Referenced Method:" "WDL:")]
-         (style/create-link {:text (if (:payload-expanded @state) "Collapse" "Expand")
-                             :onClick #(swap! state assoc :payload-expanded (not (:payload-expanded @state)))})]
-        (when (:payload-expanded @state)
-          (if config?
-            [:div {:style {:margin "0.5em 0 0 1em"}}
-             (this :render-details make-field (:method entity))
-             [:div {:style {:fontWeight 500 :marginTop "1em"}} "WDL:"]
-             [CodeMirror {:text (get-in entity [:method :payload])}]]
-            [CodeMirror {:text (:payload entity)}]))])])
-   :render-details
-   (fn [{:keys []} make-field entity]
-     [:div {}
-      [:div {:style {:float "left" :marginRight "5em"}}
-       (make-field entity :namespace "Namespace: " false)
-       (make-field entity :name "Name: " false)
-       (make-field entity :snapshotId "Snapshot ID: " true)]
-      [:div {:style {:float "left"}}
-       (make-field entity :createDate "Created: " false common/format-date)
-       (make-field entity :entityType "Entity Type: " false)
-       (make-field entity :managers "Owners: " false (partial clojure.string/join ", "))
-       (make-field entity :synopsis "Synopsis: " false)]
-      (common/clear-both)
-      [:div {:style {:fontWeight 500 :padding "0.5em 0 0.3em 0"}}
-       "Documentation:"]
-      (if (blank? (:documentation entity))
-        [:div {:style {:fontStyle "italic" :fontSize "90%"}} "No documentation provided"]
-        [:div {:style {:fontSize "90%"}} (:documentation entity)])])})
+                 ((or render identity) (key entity)))]])]
+       [:div {}
+        [:div {:style {:display "flex"}}
+         [:div {:style {:flex "1 1 50%"}}
+          (make-field :namespace "Namespace")
+          (make-field :name "Name")
+          (make-field :snapshotId "Snapshot ID" :dropdown? true)
+          (make-field :entityType "Entity Type")]
+         [:div {:style {:flex "1 1 50%"}}
+          (make-field :createDate "Created" :render common/format-date)
+          (make-field :managers "Owners" :render (partial clojure.string/join ", "))
+          (make-field :synopsis "Synopsis")]]
+        [:div {:style {:fontWeight 500 :padding "0.5rem 0 0.3rem 0"}}
+         "Documentation:"]
+        (if (blank? (:documentation entity))
+          [:div {:style {:fontStyle "italic" :fontSize "90%"}} "No documentation provided"]
+          [:div {:style {:fontSize "90%"}} (:documentation entity)])]))})
 
 
 (react/defc StackTraceViewer
