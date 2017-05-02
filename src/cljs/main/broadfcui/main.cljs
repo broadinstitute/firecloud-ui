@@ -231,8 +231,7 @@
        [:div {}
         (when (:config-loaded? @state)
           ;; We want these banners to be shown in front of the modals, so we use a zIndex of 514
-          [:div {:style {:zIndex 514 :position "relative"
-                         :borderBottom (str "1px solid " (:line-default style/colors))}}
+          [:div {:style {:zIndex 514 :position "relative"}}
            [ServiceAlertContainer]
            [JsAlertContainer]])
         (when (and (contains? user-status :signed-in) (contains? user-status :refresh-token-saved))
