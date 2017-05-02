@@ -150,10 +150,10 @@
    :component-did-mount
    (fn [{:keys [this state locals]}]
      ;; Call once for initial load
-     (this :load-service-alerts)
+     (this :-load-service-alerts)
      ;; Add initial poll interval
      (swap! locals assoc :interval-id
-            (js/setInterval #(this :load-service-alerts) (status-alert-interval (:failed-retries @state)))))
+            (js/setInterval #(this :-load-service-alerts) (status-alert-interval (:failed-retries @state)))))
    :component-will-unmount
    (fn [{:keys [locals]}]
      (js/clearInterval (:interval-id @locals)))
