@@ -201,7 +201,7 @@
             (style/create-flexbox {}
               [:span {:style {:paddingRight "1ex"}}
                (icons/icon {:style {:color (:exception-state style/colors)}}
-                           :warning-triangle)]
+                           :warning)]
               "Validation Errors:")
             [:ul {}
              (map (fn [e] [:li {} e]) (:validation-errors @state))]])

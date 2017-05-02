@@ -283,13 +283,13 @@
            (style/create-flexbox {}
                                  [:span {:style {:paddingRight "0.5rem"}}
                                   (icons/icon {:style {:color (:exception-state style/colors)}}
-                                              :warning-triangle)]
+                                              :warning)]
                                  (str "Error: " expected-msg))
            [:div {:style {:textAlign "initial"}}
             (style/create-flexbox {:style {:marginBottom "0.25em"}}
                                   [:span {:style {:paddingRight "0.5rem"}}
                                    (icons/icon {:style {:color (:exception-state style/colors)}}
-                                               :warning-triangle)]
+                                               :warning)]
                                   (str "Error: " message))
             (if (:expanded? @state)
               [:div {}

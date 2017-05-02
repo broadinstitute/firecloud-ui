@@ -42,7 +42,7 @@
    :sort-desc "fa-sort-amount-desc"
    :spinner "fa-spinner"
    :unlock "fa-unlock"
-   :warning-triangle "fa-exclamation-triangle"
+   :warning "fa-exclamation-triangle"
    })
 
 (defn icon [attributes key]
@@ -87,4 +87,4 @@
       :color "white"})
    :render
    (fn [{:keys [props]}]
-     (icon {:style {:color (:color props) :fontSize (:size props)}} :warning-triangle))})
+     (icon {:style {:color (:color props) :fontSize (:size props)}} :warning))})
