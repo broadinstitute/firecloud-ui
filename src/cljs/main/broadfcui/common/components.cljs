@@ -815,9 +815,10 @@
                      filter-groups)]))
    :component-did-mount
    (fn [{:keys [props]}]
-     (let [{:keys [filter-groups selected-index data on-change]} props
-           {:keys [pred]} (nth filter-groups selected-index)]
-       (on-change selected-index (if pred (filter pred data) data))))})
+     (let [{:keys [filter-groups selected-index data on-change]} props]
+       (when selected-index
+         (let [{:keys [pred]} (nth filter-groups selected-index)]
+           (on-change selected-index (if pred (filter pred data) data))))))})
 
 (react/defc Banner
   {:get-initial-state
