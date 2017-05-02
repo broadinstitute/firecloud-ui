@@ -783,8 +783,7 @@
    (fn [{:keys [props state]}]
      [:div {}
       (let [{:keys [background-color text-color title message link more-content]} props]
-        [:div {:style {:borderBottom "1px solid" :borderBottomColor (:line-default style/colors) :color text-color
-                       :backgroundColor background-color :padding "1rem"}}
+        [:div {:style {:color text-color :backgroundColor background-color :padding "1rem"}}
          [:div {:style {:display "flex" :alignItems "baseline"}}
           [icons/ExceptionIcon {:size 18 :color text-color}]
           [:span {:style {:marginLeft "0.5rem" :fontWeight "bold"
