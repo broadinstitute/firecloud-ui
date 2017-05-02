@@ -25,6 +25,7 @@
    (fn [{:keys [state props]}]
      (style/create-text-field
       (merge {:ref "textfield"
+              :data-test-id (:data-test-id props)
               :style (merge (or (:style props) {})
                             (when (:invalid @state)
                               {:borderColor (:exception-state style/colors)}))

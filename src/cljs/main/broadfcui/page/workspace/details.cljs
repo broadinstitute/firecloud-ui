@@ -87,6 +87,7 @@
                   :cursor "pointer" :textDecoration "none" :color "inherit"
                   :position "relative"}
           :href (:href props)
+          :data-test-id (:data-test-id props)
           :onMouseOver #(swap! state assoc :hovering? true)
           :onMouseOut #(swap! state dissoc :hovering?)
           :onClick #(when (:active? props) ((:on-active-tab-clicked props)))}
@@ -126,6 +127,7 @@
                                      ANALYSIS :workspace-analysis
                                      CONFIGS :workspace-method-configs MONITOR :workspace-monitor)
                                    workspace-id)
+                            :data-test-id (str text "-tab")
                             :on-active-tab-clicked on-active-tab-clicked}])]
        [:div {}
         [:div {:style {:minHeight "0.5rem"}}

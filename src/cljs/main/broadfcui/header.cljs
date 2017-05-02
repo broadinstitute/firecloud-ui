@@ -18,6 +18,7 @@
           :style {:padding "1em" :textDecoration "none"
                   :fontWeight (when (:selected props) "bold")
                   :color (if (:hovering? @state) (:link-active style/colors) "black")}
+          :data-test-id (:data-test-id props)
           :onMouseOver #(swap! state assoc :hovering? true)
           :onMouseOut #(swap! state assoc :hovering? false)}
       (:name props)])})
@@ -31,7 +32,8 @@
                      :verticalAlign "baseline"}}
        (map (fn [item]
               [TopNavBarLink {:name (:label item) :href (nav/get-link (:nav-key item))
-                              :selected ((:is-selected? item))}])
+                              :selected ((:is-selected? item))
+                              :data-test-id (:data-test-id item)}])
             (:items props))
        (when (:show-nih-link-warning? props)
          [nih-link-warning/NihLinkWarning])]])})

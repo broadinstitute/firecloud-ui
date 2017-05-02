@@ -58,9 +58,9 @@
                           :backgroundColor (:button-primary style/colors)
                           :color "#fff" :padding "1rem" :borderRadius 8}]
                [:div {:style {:display "flex" :justifyContent "center"}}
-                [:div {:style style :onClick #(add-crumb :file-import "File")}
+                [:div {:style style :data-test-id "import-from-file-button" :onClick #(add-crumb :file-import "File")}
                  "Import from file"]
-                [:div {:style style :onClick #(add-crumb :workspace-import "Choose Workspace")}
+                [:div {:style style :data-test-id "copy-from-another-workspace-button" :onClick #(add-crumb :workspace-import "Choose Workspace")}
                  "Copy from another workspace"]]))]])}])})
 
 
@@ -117,6 +117,7 @@
                (when (:selected-entity-type @state) (this :-render-download-link))
                [:div {:style {:flexGrow 1}}]
                [comps/Button {:text "Import Metadata..."
+                              :data-test-id "import-metadata-button"
                               :disabled? (when (get-in workspace [:workspace :isLocked]) "This workspace is locked.")
                               :onClick #(this :-handle-import-data-click)}]]))
           :on-filter-change #(swap! state assoc :selected-entity-type % :selected-entity nil :selected-attr-list nil)
