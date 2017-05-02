@@ -204,10 +204,11 @@
    (fn [{:keys [props refs]} entity]
      (let [{:keys [editing?]} props
            make-field
-           (fn [key label & {:keys [dropdown? render]}]
+           (fn [key label & {:keys [dropdown? wrap? render]}]
              [:div {:style {:display "flex" :alignItems "baseline" :paddingBottom "0.25rem"}}
               [:div {:style {:flex "0 0 100px" :fontWeight 500}} (str label ":")]
-              [:div {:style {:flex "1 1 auto"}}
+              [:div {:style {:flex "1 1 auto" :overflow "hidden" :textOverflow "ellipsis"
+                             :whiteSpace (when-not wrap? "nowrap")}}
                (if (and editing? dropdown?)
                  (style/create-identity-select {:ref key
                                                 :style {:width 100}
@@ -215,17 +216,18 @@
                                                 :onChange (when-let [f (:onSnapshotIdChange props)]
                                                             #(f (int (common/get-text refs "snapshotId"))))}
                                                (:snapshots props))
-                 ((or render identity) (key entity)))]])]
+                 (let [rendered ((or render identity) (key entity))]
+                   [:span {:title rendered} rendered]))]])]
        [:div {}
         [:div {:style {:display "flex"}}
-         [:div {:style {:flex "1 1 50%"}}
+         [:div {:style {:flex "1 1 50%" :paddingRight "0.5rem"}}
           (make-field :namespace "Namespace")
           (make-field :name "Name")
           (make-field :snapshotId "Snapshot ID" :dropdown? true)
           (make-field :entityType "Entity Type")]
          [:div {:style {:flex "1 1 50%"}}
           (make-field :createDate "Created" :render common/format-date)
-          (make-field :managers "Owners" :render (partial clojure.string/join ", "))
+          (make-field :managers "Owners" :render (partial clojure.string/join ", ") :wrap? true)
           (make-field :synopsis "Synopsis")]]
         [:div {:style {:fontWeight 500 :padding "0.5rem 0 0.3rem 0"}}
          "Documentation:"]
