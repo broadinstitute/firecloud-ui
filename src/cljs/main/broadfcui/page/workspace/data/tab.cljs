@@ -88,9 +88,9 @@
                           :backgroundColor (:button-primary style/colors)
                           :color "#fff" :padding "1rem" :borderRadius 8}]
                [:div {:style {:display "flex" :justifyContent "center"}}
-                [:div {:style style :onClick #(add-crumb :file-import "File")}
+                [:div {:style style :data-test-id "import-from-file-button" :onClick #(add-crumb :file-import "File")}
                  "Import from file"]
-                [:div {:style style :onClick #(add-crumb :workspace-import "Choose Workspace")}
+                [:div {:style style :data-test-id "copy-from-another-workspace-button" :onClick #(add-crumb :workspace-import "Choose Workspace")}
                  "Copy from another workspace"]]))]])}])})
 
 (react/defc EntityAttributes
@@ -215,6 +215,7 @@
                                          :value (str "Download '" selected-entity-type "' data")}]])
                              [:div {:style {:flexGrow 1}}]
                              [comps/Button {:text "Import Data..."
+                                            :data-test-id "import-data-button"
                                             :disabled? (when locked? "This workspace is locked.")
                                             :onClick #(this :-handle-import-data-click)}]]))
                :on-filter-change #(swap! state assoc :selected-entity-type % :selected-entity nil :attr-list nil)

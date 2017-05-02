@@ -106,6 +106,7 @@
         (when-not editing?
           [comps/SidebarButton {:style :light :color :button-primary
                                 :text "Edit Configuration" :icon :edit
+                                :data-test-id "edit-method-config-button"
                                 :disabled? (when locked? "The workspace is locked")
                                 :onClick #(swap! state assoc :editing? true)}])
         (when-not editing?

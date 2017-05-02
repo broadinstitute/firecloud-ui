@@ -49,7 +49,7 @@
      {:color (:button-primary style/colors)})
    :render
    (fn [{:keys [props]}]
-     (let [{:keys [color icon href disabled? onClick text style class-name]} props]
+     (let [{:keys [color icon href disabled? onClick text style class-name data-test-id]} props]
        [:a {:className (or class-name "button")
             :style (merge
                     {:display "inline-flex" :alignItems "center" :justifyContent "center"
@@ -62,6 +62,7 @@
                      :textDecoration "none"}
                     (if (map? style) style {}))
             :href (or href "javascript:;")
+            :data-test-id data-test-id
             :onClick (if disabled? (create-error-message disabled?) onClick)
             :onKeyDown (when (and onClick (not disabled?))
                          (common/create-key-handler [:space] onClick))}
@@ -412,7 +413,7 @@
            :placeholder (or placeholder "Filter") :defaultValue initial-text
            :style {:flex "1 0 auto" :borderRadius "3px 0 0 3px" :marginBottom 0}
            :onKeyDown (common/create-key-handler [:enter] #(react/call :apply-filter this))})
-        [Button {:icon :search :onClick #(react/call :apply-filter this)
+        [Button {:icon :search :onClick #(react/call :apply-filter this) :data-test-id "search-button"
                  :style {:flex "0 0 auto" :borderRadius "0 3px 3px 0"}}]]))
    :apply-filter
    (fn [{:keys [props refs]}]

@@ -51,13 +51,16 @@
            [header/TopNavBar
             {:items [{:label "Workspaces"
                       :nav-key :workspaces
+                      :data-test-id "workspace-nav-link"
                       :is-selected? #(or (empty? path)
                                          (clojure.string/starts-with? path "workspaces/"))}
                      {:label "Data Library"
                       :nav-key :library
+                      :data-test-id "library-nav-link"
                       :is-selected? #(= path "library")}
                      {:label "Method Repository"
                       :nav-key :method-repo
+                      :data-test-id "method-repo-nav-link"
                       :is-selected? #(or (= path "methods")
                                          (clojure.string/starts-with? path "methods/"))}]
              :show-nih-link-warning? (not (or (nav/is-current-path? :profile)

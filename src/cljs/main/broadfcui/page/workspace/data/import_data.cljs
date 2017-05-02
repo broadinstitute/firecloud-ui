@@ -33,6 +33,7 @@
                                (.readAsText reader (.slice file 0 preview-limit)))))}]
       common/PHI-warning
       [comps/Button {:text (if (:upload-result @state) "Choose another file..." "Choose file...")
+                     :data-test-id "choose-file-button"
                      :onClick #(-> (@refs "entities") .click)}]
       (when (:file-contents @state)
         [:div {:style {:margin "0.5em 2em" :padding "0.5em" :border style/standard-line}}

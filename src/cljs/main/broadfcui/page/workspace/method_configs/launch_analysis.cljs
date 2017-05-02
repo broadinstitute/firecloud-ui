@@ -157,6 +157,7 @@
    (fn [{:keys [props]}]
      [comps/Button
       {:text "Launch Analysis..."
+       :data-test-id "launch-analysis-button"
        :disabled? (:disabled? props)
        :onClick #(modal/push-modal
                   [Form (select-keys props [:config-id :workspace-id
