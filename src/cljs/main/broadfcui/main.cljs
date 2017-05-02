@@ -136,18 +136,19 @@
       (let [{:keys [background-color text-color title message link more-content]} props]
         [:div {:style {:borderBottom "1px solid" :borderBottomColor (:line-default style/colors) :color text-color
                        :backgroundColor background-color :padding "1rem"}}
-         [:div {:style {:display "flex" :alignItems "center" :marginBottom "0.5rem"}}
+         [:div {:style {:display "flex" :alignItems "baseline"}}
           [icons/ExceptionIcon {:size 18 :color text-color}]
           [:span {:style {:marginLeft "0.5rem" :fontWeight "bold"
                           :verticalAlign "middle"}}
-           (or title "Service Alert")]]
-         [:div {:style {:color text-color :fontSize "90%"}}
-          (str message " ")
-          (if more-content
-            [:div {}
-             [:a {:href "javascript:;" :onClick #(swap! state assoc :showing-more? (not (:showing-more? @state)))
-                  :style {:color "#000"}} (if (:showing-more? @state) "Hide details..." "Show details...")]])
-          (when (:showing-more? @state) more-content) link]])])})
+           (or title "Service Alert")]
+          [:span {:style {:color text-color :fontSize "90%" :marginLeft "1rem"}}
+           (str message " ")
+           (if more-content
+             [:a {:style {:color "#000"}
+                  :href "javascript:;"
+                  :onClick #(swap! state assoc :showing-more? (not (:showing-more? @state)))}
+              (if (:showing-more? @state) " Hide details..." " Show details...")])
+           (when (:showing-more? @state) more-content) link]]])])})
 
 (react/defc BannerContainer
   {:get-initial-state
@@ -176,7 +177,10 @@
                                         [:a {:href (config/forum-url)
                                              :target "_blank" :style {}} "forum"] ", our team can take a look."]
                                        [:div {:style {:fontWeight "bold" :paddingTop "0.5rem"}} "Stack trace: "]
-                                       [:div {:style {:fontFamily "monospace" :whiteSpace "pre"}} (:stack alert)]
+                                       [:div {:style {:fontFamily "monospace" :whiteSpace "pre"
+                                                      :backgroundColor "black" :color "white"
+                                                      :padding "0.5rem" :borderRadius "0.3rem"}}
+                                        (:stack alert)]
                                        [:div {:style {:fontWeight "bold" :paddingTop "0.5rem"}} "Source: "]
                                        (:source alert)]}])
              js-alerts)]))
