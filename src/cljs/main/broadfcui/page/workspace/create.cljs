@@ -34,7 +34,7 @@
              :onChange #(swap! state assoc :selected-project (-> % .-target .-value))}
             (:billing-projects props))
           (style/create-form-label "Name")
-          [input/TextField {:ref "wsName" :style {:width "100%"}
+          [input/TextField {:ref "wsName" :autoFocus true :style {:width "100%"}
                             :predicates [(input/nonempty "Workspace name")
                                          (input/alphanumeric_- "Workspace name")]}]
           (style/create-textfield-hint "Only letters, numbers, underscores, and dashes allowed")

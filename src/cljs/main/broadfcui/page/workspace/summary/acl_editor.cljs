@@ -42,7 +42,7 @@
             [:div {:style {:display "inline-block" :width 400 :fontSize "88%"}}
              (:email acl-entry)]
             [input/TextField
-             {:ref (str "acl-key" i)
+             {:ref (str "acl-key" i) :autoFocus true
               :predicates [(input/valid-email-or-empty "User ID")]
               :style {:display "inline-block" :width 400 :marginBottom 0}
               :spellCheck false

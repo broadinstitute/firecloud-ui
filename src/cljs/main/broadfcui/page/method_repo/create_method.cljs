@@ -30,7 +30,7 @@
          [:div {:style {:display "flex" :justifyContent "space-between"}}
           [:div {:style {:flex "1 0 auto" :marginRight "1em"}}
            (style/create-form-label "Namespace")
-           [input/TextField {:ref "namespace" :style {:width "100%"}
+           [input/TextField {:ref "namespace" :autoFocus true :style {:width "100%"}
                              :predicates [(input/nonempty "Method namespace")]}]]
           [:div {:style {:flex "1 0 auto"}}
            (style/create-form-label "Name")
