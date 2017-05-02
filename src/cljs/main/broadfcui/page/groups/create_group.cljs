@@ -24,7 +24,7 @@
            [comps/Blocker {:banner "Creating group..."}])
          [:div {:style {:fontSize "120%"}}
           "Enter a unique name:"]
-         [input/TextField {:ref "name-field"
+         [input/TextField {:ref "name-field" :autoFocus true
                            :style {:width "100%" :marginTop "1em" :marginBottom 0}
                            :predicates [{:test #(re-matches #"\S*" %) :message "Enter a name with no spaces."}]}]
          (style/create-validation-error-message (:validation-errors @state))

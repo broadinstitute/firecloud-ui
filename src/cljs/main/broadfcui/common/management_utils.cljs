@@ -18,7 +18,7 @@
    (fn [{:keys [props state this refs]}]
      [comps/OKCancelForm
       {:header (str "Add user to " (:group-name props))
-       :ok-button #(this :add-user)
+       :ok-button #(this :-add-user)
        :get-first-element-dom-node #(react/find-dom-node (@refs "email"))
        :content
        (react/create-element
@@ -28,9 +28,10 @@
          [:div {:style {:display "flex"}}
           [:div {:style {:flex "1 1 auto"}}
            (style/create-form-label "User email")
-           [input/TextField {:ref "email" :style {:width "100%"}
+           [input/TextField {:ref "email" :autoFocus true
+                             :style {:width "100%"}
                              :predicates [(input/valid-email "Email")]
-                             :onKeyDown (common/create-key-handler [:enter] #(this :add-user))}]]
+                             :onKeyDown (common/create-key-handler [:enter] #(this :-add-user))}]]
           [:div {:style {:flex "0 0 10px"}}]
           [:div {:style {:flex "0 0 100px"}}
            (style/create-form-label "Role")
@@ -39,7 +40,7 @@
          (style/create-validation-error-message (:fails @state))
          [comps/ErrorViewer {:error (:server-error @state)
                              :expect {404 "This is not a registered user"}}]])}])
-   :add-user
+   :-add-user
    (fn [{:keys [props state refs]}]
      (let [[email & fails] (input/get-and-validate refs "email")]
        (swap! state assoc :fails fails :server-error nil)
@@ -55,17 +56,6 @@
                           (do (modal/pop-modal)
                               (on-add))
                           (swap! state assoc :server-error (get-parsed-response false))))})))))})
-
-
-(defn- remove-user [endpoint state this]
-  (swap! state assoc :removing? true)
-  (endpoints/call-ajax-orch
-   {:endpoint endpoint
-    :on-done (fn [{:keys [success? get-parsed-response]}]
-               (swap! state dissoc :removing?)
-               (if success?
-                 (this :load)
-                 (swap! state assoc :remove-error (get-parsed-response false))))}))
 
 
 (react/defc MembershipManagementPage
@@ -107,10 +97,7 @@
                          (fn [{:keys [email role]}]
                            [:div {:style {:padding "0.6rem 0 0.6rem 32px"}}
                             (style/create-link {:text "Remove"
-                                                :onClick #(remove-user
-                                                           (delete-endpoint (:group-name props) role email)
-                                                           state
-                                                           this)})])}]}
+                                                :onClick #(:-remove-user role email)})])}]}
                 :toolbar {:items [flex/spring
                                   [comps/Button
                                    {:text "Add User..." :icon :add-new
@@ -118,17 +105,28 @@
                                                (modal/push-modal
                                                 [AddUserDialog {:endpoint (:add-endpoint props)
                                                                 :group-name (:group-name props)
-                                                                :on-add #(this :load)
+                                                                :on-add #(this :-load-data)
                                                                 :footer (:add-member-footer props)}]))}]]}}]
               [comps/ErrorViewer {:error (:remove-error @state)}]])))
    :component-did-mount
    (fn [{:keys [this]}]
-     (this :load))
-   :load
+     (this :-load-data))
+   :-load-data
    (fn [{:keys [props state]}]
      (let [endpoint (:list-endpoint props)]
        (swap! state dissoc :data :load-error)
        (endpoints/call-ajax-orch
         {:endpoint (endpoint (:group-name props))
          :on-done (fn [{:keys [success? get-parsed-response]}]
-                    (swap! state assoc (if success? :data :load-error) (get-parsed-response)))})))})
+                    (swap! state assoc (if success? :data :load-error) (get-parsed-response)))})))
+   :-remove-user
+   (fn [{:keys [props state this]} role email]
+     (let [{:keys [delete-endpoint group-name]} props]
+       (swap! state assoc :removing? true)
+       (endpoints/call-ajax-orch
+        {:endpoint (delete-endpoint group-name role email)
+         :on-done (fn [{:keys [success? get-parsed-response]}]
+                    (swap! state dissoc :removing?)
+                    (if success?
+                      (this :-load-data)
+                      (swap! state assoc :remove-error (get-parsed-response false))))})))})
