@@ -126,48 +126,64 @@
     (> attempt (config/max-retry-attempts)) (config/status-alerts-refresh)
     :else (utils/get-exponential-backoff-interval attempt)))
 
-(react/defc Banner
+(react/defc ServiceAlertContainer
   {:get-initial-state
    (fn []
-     {:showing-more? false})
+     {:failed-retries 0})
    :render
-   (fn [{:keys [props state]}]
-     [:div {}
-      (let [{:keys [background-color text-color title message link more-content]} props]
-        [:div {:style {:borderBottom "1px solid" :borderBottomColor (:line-default style/colors) :color text-color
-                       :backgroundColor background-color :padding "1rem"}}
-         [:div {:style {:display "flex" :alignItems "baseline"}}
-          [icons/ExceptionIcon {:size 18 :color text-color}]
-          [:span {:style {:marginLeft "0.5rem" :fontWeight "bold"
-                          :verticalAlign "middle"}}
-           (or title "Service Alert")]
-          [:span {:style {:color text-color :fontSize "90%" :marginLeft "1rem"}}
-           (str message " ")
-           (if more-content
-             [:a {:style {:color "#000"}
-                  :href "javascript:;"
-                  :onClick #(swap! state assoc :showing-more? (not (:showing-more? @state)))}
-              (if (:showing-more? @state) " Hide details..." " Show details...")])
-           (when (:showing-more? @state) more-content) link]]])])})
-
-(react/defc BannerContainer
-  {:get-initial-state
-   (fn []
-     {:failed-retries 0
-      :js-alerts []})
-   :render
-   (fn [{:keys [this state]}]
-     (let [{:keys [service-alerts js-alerts]} @state]
-       ;; We want these banners to be shown in front of the modals, so we use a zIndex of 514
-       [:div {:style {:zIndex 514 :position "relative"}}
+   (fn [{:keys [state]}]
+     (let [{:keys [service-alerts]} @state]
+       [:div {}
         (map (fn [alert]
-               [Banner (merge (select-keys alert [:title :message])
+               [comps/Banner (merge (select-keys alert [:title :message])
                               {:background-color (:exception-state style/colors)
                                :text-color "#fff"
                                :link [:a {:href (str (:link alert)) :target "_blank" :style {:color "#fff"}} "Read more..."]})])
-             service-alerts)
+             service-alerts)]))
+   :component-did-update
+   (fn [{:keys [this state locals]}]
+     ;; Reset the interval
+     (js/clearInterval (:interval-id @locals))
+     ;; Update the poll interval based on the number of failed attempts (for exponential back offs)
+     (swap! locals assoc :interval-id
+            (js/setInterval #(this :-load-service-alerts) (status-alert-interval (:failed-retries @state)))))
+   :component-did-mount
+   (fn [{:keys [this state locals]}]
+     ;; Call once for initial load
+     (this :load-service-alerts)
+     ;; Add initial poll interval
+     (swap! locals assoc :interval-id
+            (js/setInterval #(this :load-service-alerts) (status-alert-interval (:failed-retries @state)))))
+   :component-will-unmount
+   (fn [{:keys [locals]}]
+     (js/clearInterval (:interval-id @locals)))
+   :-load-service-alerts
+   (fn [{:keys [state]}]
+     (utils/ajax {:url (config/alerts-json-url)
+                  :headers {"Cache-Control" "no-store, no-cache"}
+                  :on-done (fn [{:keys [status-code raw-response]}]
+                             (if (utils/check-server-down status-code)
+                               (if (>= (:failed-retries @state) (config/max-retry-attempts))
+                                 (swap! state assoc :service-alerts
+                                        [{:title "Google Service Alert"
+                                          :message "There may be problems accessing data in Google Cloud Storage."
+                                          :link "https://status.cloud.google.com/"}])
+                                 (swap! state assoc :failed-retries (+ (:failed-retries @state) 1)))
+                               (let [[parsed _] (utils/parse-json-string raw-response true false)]
+                                 (utils/parse-json-string raw-response true false)
+                                 (if (not-empty parsed)
+                                   (swap! state assoc :service-alerts parsed :failed-retries 0)
+                                   (swap! state dissoc :service-alerts)))))}))})
+(react/defc JsAlertContainer
+  {:get-initial-state
+   (fn []
+     {:js-alerts []})
+   :render
+   (fn [{:keys [state]}]
+     (let [{:keys [js-alerts]} @state]
+       [:div {}
         (map (fn [alert]
-               [Banner {:title "Uh oh! Something may be wrong..."
+               [comps/Banner {:title "Uh oh! Something may be wrong..."
                         :background-color (:warning-state style/colors)
                         :text-color "#000"
                         :message (str "There was an error in FireCloud. It may not mean anything, "
@@ -184,45 +200,13 @@
                                        [:div {:style {:fontWeight "bold" :paddingTop "0.5rem"}} "Source: "]
                                        (:source alert)]}])
              js-alerts)]))
-   :component-did-update
-   (fn [{:keys [this state locals]}]
-     ;; Reset the interval
-     (js/clearInterval (:interval-id @locals))
-     ;; Update the poll interval based on the number of failed attempts (for exponential back offs)
-     (swap! locals assoc :interval-id
-            (js/setInterval #(this :load-service-alerts) (status-alert-interval (:failed-retries @state)))))
    :component-did-mount
-   (fn [{:keys [this state locals]}]
+   (fn [{:keys [state]}]
      ;; Set the js error listener
      (aset js/window "onerror"
            (fn [_ _ _ _ error]
              (swap! state update :js-alerts conj {:source (str (aget js/document "location"))
-                                                  :stack (.-stack error)})))
-     ;; Call once for initial load
-     (this :load-service-alerts)
-     ;; Add initial poll interval
-     (swap! locals assoc :interval-id
-            (js/setInterval #(this :load-service-alerts) (status-alert-interval (:failed-retries @state)))))
-   :component-will-unmount
-   (fn [{:keys [state locals]}]
-     (js/clearInterval (:interval-id @locals)))
-   :load-service-alerts
-   (fn [{:keys [locals state]}]
-     (utils/ajax {:url (config/alerts-json-url)
-                  :headers {"Cache-Control" "no-store, no-cache"}
-                  :on-done (fn [{:keys [status-code raw-response]}]
-                             (if (utils/check-server-down status-code)
-                               (if (>= (:failed-retries @state) (config/max-retry-attempts))
-                                 (swap! state assoc :service-alerts
-                                        [{:title "Google Service Alert"
-                                          :message "There may be problems accessing data in Google Cloud Storage."
-                                          :link "https://status.cloud.google.com/"}])
-                                 (swap! state assoc :failed-retries (+ (:failed-retries @state) 1)))
-                               (let [[parsed _] (utils/parse-json-string raw-response true false)]
-                                 (utils/cljslog (utils/parse-json-string raw-response true false))
-                                 (if (not-empty parsed)
-                                   (swap! state assoc :service-alerts parsed :failed-retries 0)
-                                   (swap! state dissoc :service-alerts)))))}))})
+                                                  :stack (.-stack error)}))))})
 
 (react/defc App
   {:handle-hash-change
@@ -238,7 +222,7 @@
      (init-nav-paths)
      (this :handle-hash-change))
    :render
-   (fn [{:keys [this state]}]
+   (fn [{:keys [state]}]
      (let [{:keys [auth2 user-status window-hash]} @state
            {:keys [component make-props public?]} (nav/find-path-handler window-hash)
            sign-in-hidden? (or (nil? component)
@@ -246,7 +230,10 @@
                                (contains? (:user-status @state) :signed-in))]
        [:div {}
         (when (:config-loaded? @state)
-          [BannerContainer])
+          ;; We want these banners to be shown in front of the modals, so we use a zIndex of 514
+          [:div {:style {:zIndex 514 :position "relative"}}
+           [ServiceAlertContainer]
+           [JsAlertContainer]])
         (when (and (contains? user-status :signed-in) (contains? user-status :refresh-token-saved))
           [auth/RefreshCredentials {:auth2 auth2}])
         [:div {:style {:position "relative"}}
@@ -260,9 +247,9 @@
                                            (swap! state update :user-status
                                                   #(-> %
                                                        ((if signed-in? conj disj)
-                                                         :signed-in)
+                                                        :signed-in)
                                                        ((if token-saved? conj disj)
-                                                         :refresh-token-saved))))}])
+                                                        :refresh-token-saved))))}])
 
            (cond
              (not (:config-loaded? @state))
@@ -287,15 +274,15 @@
    (fn [{:keys [this state refs locals]}]
      ;; pop up the message only when we start getting 503s, not on every 503
      (add-watch
-       utils/server-down? :server-watcher
-       (fn [_ _ _ down-now?]
-         (when down-now?
-           (show-system-status-dialog false))))
+      utils/server-down? :server-watcher
+      (fn [_ _ _ down-now?]
+        (when down-now?
+          (show-system-status-dialog false))))
      (add-watch
-       utils/maintenance-mode? :server-watcher
-       (fn [_ _ _ maintenance-now?]
-         (when maintenance-now?
-           (show-system-status-dialog true))))
+      utils/maintenance-mode? :server-watcher
+      (fn [_ _ _ maintenance-now?]
+        (when maintenance-now?
+          (show-system-status-dialog true))))
      (modal/set-instance! (@refs "modal"))
      (swap! locals assoc :hash-change-listener (partial react/call :handle-hash-change this))
      (.addEventListener js/window "hashchange" (:hash-change-listener @locals)))
