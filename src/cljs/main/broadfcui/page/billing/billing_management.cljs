@@ -164,12 +164,12 @@
         (if project-name
           [MembershipManagementPage
            {:group-name project-name
-            :add-endpoint #(endpoints/add-billing-project-user {:project-id %1
-                                                                :role %2
-                                                                :user-email %3})
-            :delete-endpoint #(endpoints/delete-billing-project-user {:project-id %1
-                                                                      :role %2
-                                                                      :user-email %3})
+            :add-endpoint #(endpoints/add-billing-project-user {:project-id project-name
+                                                                :role %1
+                                                                :user-email %2})
+            :delete-endpoint #(endpoints/delete-billing-project-user {:project-id project-name
+                                                                      :role %1
+                                                                      :user-email %2})
             :table-data identity
             :add-member-footer [:div {:style {:marginBottom "1em"}}
                                 "Warning: Adding any user to this project will mean

@@ -49,7 +49,7 @@
                {:keys [endpoint on-add]} props]
            (swap! state assoc :adding? true)
            (endpoints/call-ajax-orch
-            {:endpoint (endpoint (:group-name props) role email)
+            {:endpoint (endpoint role email)
              :on-done (fn [{:keys [success? get-parsed-response]}]
                         (swap! state dissoc :adding?)
                         (if success?
@@ -62,9 +62,9 @@
   {:render
    (fn [{:keys [props state this]}]
      (let [{:keys [load-error data]} @state
-           {:keys [header delete-endpoint table-data]} props]
+           {:keys [header table-data]} props]
        (cond load-error [comps/ErrorViewer {:error load-error}]
-             (not data) [comps/Spinner {:text "Loading..."}]
+             (not data) [comps/Spinner {:text "Loading members..."}]
              :else
              [:div {:style {:position "relative"}}
               (when header
@@ -97,7 +97,7 @@
                          (fn [{:keys [email role]}]
                            [:div {:style {:padding "0.6rem 0 0.6rem 32px"}}
                             (style/create-link {:text "Remove"
-                                                :onClick #(:-remove-user role email)})])}]}
+                                                :onClick #(this :-remove-user role email)})])}]}
                 :toolbar {:items [flex/spring
                                   [comps/Button
                                    {:text "Add User..." :icon :add-new
@@ -113,18 +113,18 @@
      (this :-load-data))
    :-load-data
    (fn [{:keys [props state]}]
-     (let [endpoint (:list-endpoint props)]
+     (let [{:keys [list-endpoint group-name]} props]
        (swap! state dissoc :data :load-error)
        (endpoints/call-ajax-orch
-        {:endpoint (endpoint (:group-name props))
+        {:endpoint (list-endpoint group-name)
          :on-done (fn [{:keys [success? get-parsed-response]}]
                     (swap! state assoc (if success? :data :load-error) (get-parsed-response)))})))
    :-remove-user
    (fn [{:keys [props state this]} role email]
-     (let [{:keys [delete-endpoint group-name]} props]
+     (let [{:keys [delete-endpoint]} props]
        (swap! state assoc :removing? true)
        (endpoints/call-ajax-orch
-        {:endpoint (delete-endpoint group-name role email)
+        {:endpoint (delete-endpoint role email)
          :on-done (fn [{:keys [success? get-parsed-response]}]
                     (swap! state dissoc :removing?)
                     (if success?
