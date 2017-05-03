@@ -43,9 +43,11 @@
                            nil "Looking up workspace status..."
                            true "This workspace is locked."
                            false)
+              :data-test-id "import-config-button"
               :onClick #(modal/push-modal
                          [comps/OKCancelForm
                           {:header "Import Method Configuration"
+                           :data-test-id "import-method-configuration-modal"
                            :content
                            [:div {:style {:backgroundColor "white" :padding "1rem"}}
                             [MethodConfigImporter

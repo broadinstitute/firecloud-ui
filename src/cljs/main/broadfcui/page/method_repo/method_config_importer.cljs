@@ -128,6 +128,7 @@
        (style/create-validation-error-message (:validation-error @state))
        [comps/ErrorViewer {:error (:server-error @state)}]
        [comps/Button {:text (if workspace-id "Import" "Export")
+                      :data-test-id (if workspace-id "import-button" "export-button")
                       :onClick #(this :perform-copy)}]]]]))
 
 
@@ -294,6 +295,7 @@
                              type (if (= entityType "Configuration") :method-config :method)]
                          (style/create-link
                           {:text (style/render-name-id name snapshotId)
+                           :data-test-id (str name "-" (item "snapshotId") "-link")
                            :href (if (:in-workspace? props) "javascript:;" (nav/get-link type id))
                            :onClick (when (:in-workspace? props) #((:on-selected props) type id))})))}
             {:header "Namespace" :initial-width 160
@@ -334,9 +336,9 @@
                                   (swap! state assoc
                                          :filter-group-index index
                                          :filtered-data data))
-                     :filter-groups [{:text "All"}
-                                     {:text "Methods Only" :pred (comp (partial = :method) :type)}
-                                     {:text "Configs Only" :pred (comp (partial = :config) :type)}]}]
+                     :filter-groups [{:text "All" :data-test-id "all-methods-and-configs-filter"}
+                                     {:text "Methods Only" :pred (comp (partial = :method) :data-test-id "methods-only-filter" :type )}
+                                     {:text "Configs Only" :pred (comp (partial = :config) :data-test-id "configs-only-filter" :type)}]}]
                    flex/spring
                    [comps/Button
                     {:text "Create new method..."

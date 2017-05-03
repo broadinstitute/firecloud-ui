@@ -129,6 +129,7 @@
         (when editing?
           [comps/SidebarButton {:color :success-state
                                 :text "Save" :icon :done
+                                :data-test-id "save-method-config-button"
                                 :onClick #(do (commit state refs config props)
                                               (stop-editing state))}])
         (when editing?
@@ -159,6 +160,7 @@
            (when editing?
              (style/create-text-field {:ref (str ref-prefix "_" field-name)
                                        :list "inputs-datalist"
+                                       :data-test-id (str field-name "-text-field")
                                        :defaultValue field-value
                                        :style {:width 500}}))
            (when-not editing?
@@ -180,6 +182,7 @@
      (create-section
        (if editing?
          (style/create-text-field {:ref "confname" :style {:width 500}
+                                   :data-test-id "method-config-name-field"
                                    :defaultValue (config "name")})
          [:div {:style {:padding "0.5em 0 1em 0"}} (config "name")]))
      (create-section-header "Referenced Method")
@@ -207,8 +210,7 @@
      (create-section-header "Inputs")
      (input-output-list (config "inputs") "in" invalid-inputs editing? (inputs-outputs "inputs"))
      (create-section-header "Outputs")
-     (input-output-list
-      (config "outputs") "out" invalid-outputs editing? (inputs-outputs "outputs"))]))
+     (input-output-list (config "outputs") "out" invalid-outputs editing? (inputs-outputs "outputs"))]))
 
 (defn- render-display [this state refs props]
   (let [wrapped-config (:loaded-config @state)
