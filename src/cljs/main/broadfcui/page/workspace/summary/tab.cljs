@@ -60,7 +60,7 @@
 
 (defn- render-sidebar [state refs this
                        {:keys [workspace billing-projects owner? writer? curator? catalog-with-read? can-share?
-                               workspace-id request-refresh]}]
+                               workspace-id request-refresh user-access-level]}]
   (let [{{:keys [isLocked library-attributes description isProtected]} :workspace
          {:keys [runningSubmissionsCount]} :workspaceSubmissionStats} workspace
         status (common/compute-status workspace)
@@ -81,6 +81,15 @@
        :div {:style {:position (when-not sidebar-visible? "fixed")
                      :top (when-not sidebar-visible? 0)
                      :width 270}}
+       (when can-share?
+         [comps/SidebarButton
+          {:style :light :margin :top :color :button-primary
+           :text "Sharing..." :icon :share
+           :disabled? (when (empty? billing-projects) (comps/no-billing-projects-message))
+           :onClick #(modal/push-modal
+                      [AclEditor {:workspace-id workspace-id
+                                  :user-access-level user-access-level
+                                  :request-refresh request-refresh}])}])
        (when (not editing?)
          [comps/SidebarButton
           {:style :light :color :button-primary :margin :top
@@ -156,7 +165,7 @@
 
 
 (defn- render-main [{:keys [workspace curator? owner? writer? reader? can-share? catalog-with-read? bucket-access? editing? submissions-count
-                            user-access-level library-schema request-refresh workspace-id storage-cost]}]
+                            library-schema request-refresh workspace-id storage-cost]}]
   (let [{:keys [owners]
          {:keys [createdBy createdDate bucketName description tags workspace-attributes library-attributes realm]} :workspace} workspace
         realm-name (:usersGroupName realm)
@@ -172,16 +181,7 @@
         (str "Workspace Owner" (when (> (count owners) 1) "s"))
         (style/create-paragraph
           [:div {}
-           (interpose ", " owners)
-           (when can-share?
-             [:span {}
-              " ("
-              (style/create-link {:text "Sharing..."
-                                  :onClick #(modal/push-modal
-                                              [AclEditor {:workspace-id workspace-id
-                                                          :user-access-level user-access-level
-                                                          :request-refresh request-refresh}])})
-              ")"])]
+           (interpose ", " owners)]
           (when realm-name
             [:div {:style {:paddingTop "0.5rem"}}
              [:div {:style {:fontStyle "italic"}} "Access restricted to authorization domain:"]
