@@ -213,7 +213,7 @@
                                                  :color (:button-primary style/colors) :fontSize "inherit" :fontFamily "inherit"
                                                  :padding 0 :marginLeft "1em"}
                                          :type "submit"
-                                         :value (str "Download '" selected-entity-type "' data")}]])
+                                         :value (str "Download '" selected-entity-type "' metadata")}]])
                              [:div {:style {:flexGrow 1}}]
                              [:div {:style {:paddingRight ".5em"}}
                               [comps/Button {:text "Import Metadata..."
