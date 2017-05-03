@@ -44,7 +44,7 @@
    :sort-desc "fa-sort-amount-desc"
    :spinner "fa-spinner"
    :unlock "fa-unlock"
-   :warning-triangle "fa-exclamation-triangle"
+   :warning "fa-exclamation-triangle"
    })
 
 (defn icon [attributes key]

@@ -122,7 +122,7 @@
              (when (:aborting-submission? @state)
                [comps/Blocker {:banner "Aborting submission ..."}])
              [comps/SidebarButton {:color :button-primary :style :light :margin :top
-                                   :text "Abort" :icon :status-warning-triangle
+                                   :text "Abort" :icon :warning
                                    :onClick (fn [_]
                                               (comps/push-confirm
                                                {:text "Are you sure you want to abort this submission?"
