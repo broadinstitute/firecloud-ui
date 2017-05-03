@@ -77,6 +77,7 @@
                                :value (if disabled
                                         "Disabled - selected entity is of root entity type"
                                         (:expression @state))
+                               :data-test-id "define-expression-text-field"
                                :onChange #(let [text (-> % .-target .-value clojure.string/trim)]
                                             (swap! state assoc :expression text))}))
    [:div {:style {:marginTop "1em"}}
@@ -114,6 +115,7 @@
      [comps/OKCancelForm
       {:header "Launch Analysis"
        :content (react/create-element (render-form state props refs))
+       :data-test-id "launch-button"
        :ok-button {:text "Launch" :disabled? (:disabled? props) :onClick #(react/call :launch this)}}])
    :component-did-mount
    (fn [{:keys [state]}]

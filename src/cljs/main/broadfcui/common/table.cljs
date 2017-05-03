@@ -272,6 +272,7 @@
              filter (when filterable?
                       [:div {:style {:marginRight "1em"}}
                        [comps/TextFilter {:initial-text (get-in @state [:query-params :filter-text])
+                                          :table-name (:name props)
                                           :on-filter #(swap! state update :query-params
                                                              assoc :filter-text % :current-page 1)}]])
              filter-groups (when (:filter-groups props)

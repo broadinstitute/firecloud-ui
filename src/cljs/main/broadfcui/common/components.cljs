@@ -172,6 +172,7 @@
                       :color (if heavy? "#fff" color)
                       :border (when-not heavy? style/standard-line)
                       :borderRadius 5}
+              :data-test-id (:data-test-id props)
               :onClick (if disabled? (create-error-message disabled?) (:onClick props))}
         (icons/icon {:style {:padding "0 20px" :borderRight style/standard-line} :className "fa-fw"} (:icon props))
         [:div {:style {:textAlign "center" :margin "auto"}}
@@ -410,10 +411,11 @@
        [:div {:style {:display "inline-flex" :width width}}
         (style/create-search-field
           {:ref "filter-field" :autoSave "true" :results 5 :autofocus "true"
+           :data-test-id (str (:table-name props) "-search-field")
            :placeholder (or placeholder "Filter") :defaultValue initial-text
            :style {:flex "1 0 auto" :borderRadius "3px 0 0 3px" :marginBottom 0}
            :onKeyDown (common/create-key-handler [:enter] #(react/call :apply-filter this))})
-        [Button {:icon :search :onClick #(react/call :apply-filter this) :data-test-id "search-button"
+        [Button {:icon :search :onClick #(react/call :apply-filter this) :data-test-id (str (:table-name props) "-search-button")
                  :style {:flex "0 0 auto" :borderRadius "0 3px 3px 0"}}]]))
    :apply-filter
    (fn [{:keys [props refs]}]
@@ -558,9 +560,9 @@
       :show-close? true})
    :render
    (fn [{:keys [props]}]
-     (let [{:keys [header content ok-button show-cancel? cancel-text show-close?]} props
+     (let [{:keys [header content ok-button show-cancel? cancel-text show-close? data-test-id]} props
            cancel-text (or cancel-text "Cancel")]
-       [:div {}
+       [:div {:data-test-id data-test-id}
         [:div {:style {:borderBottom style/standard-line
                        :padding "20px 48px 18px"
                        :fontSize "137%" :fontWeight 400 :lineHeight 1}}
