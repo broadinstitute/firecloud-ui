@@ -295,7 +295,6 @@
                              type (if (= entityType "Configuration") :method-config :method)]
                          (style/create-link
                           {:text (style/render-name-id name snapshotId)
-                           :data-test-id (str name "-snapshotId-link")
                            :href (if (:in-workspace? props) "javascript:;" (nav/get-link type id))
                            :onClick (when (:in-workspace? props) #((:on-selected props) type id))})))}
             {:header "Namespace" :initial-width 160
