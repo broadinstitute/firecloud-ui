@@ -23,8 +23,10 @@
    :done "fa-check"
    :done-circle "fa-check-circle"
    :edit "fa-pencil"
+   :email "fa-envelope-o"
    :error "fa-exclamation-circle"
    :expand "fa-plus-square-o"
+   :external-link "fa-external-link"
    :help "fa-question-circle"
    :information "fa-info-circle"
    :library "fa-book"
@@ -47,6 +49,9 @@
 
 (defn icon [attributes key]
   [:span (assoc attributes :className (str (icon-keys key) " fa "  (:className attributes)))])
+
+(def external-link-icon
+  (icon {:style {:paddingLeft "0.25rem" :fontSize "80%"}} :external-link))
 
 (react/defc CompleteIcon
   {:get-default-props

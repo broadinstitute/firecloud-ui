@@ -8,6 +8,7 @@
     [broadfcui.common.components :as comps]
     [broadfcui.common.entity-table :as entity-table :refer [EntityTable]]
     [broadfcui.common.gcs-file-preview :refer [GCSFilePreviewLink]]
+    [broadfcui.common.icons :as icons]
     [broadfcui.common.modal :as modal]
     [broadfcui.common.table :as table]
     [broadfcui.common.table-utils :as table-utils]
@@ -72,7 +73,7 @@
            (when-not last-crumb-id
              (common/render-info-box
               {:text [:div {} "For more information about importing files, see our "
-                      [:a {:href (config/user-guide-url) :target "_blank"} "user guide"] "."]}))]
+                      [:a {:href (config/user-guide-url) :target "_blank"} "user guide." icons/external-link-icon]]}))]
           [:div {:style {:backgroundColor "white" :padding "1em"}}
            (case last-crumb-id
              :file-import

@@ -352,7 +352,7 @@
                       (fn [{:keys [props state]}]
                         [:a {:style {:display "block"
                                      :color "#000" :textDecoration "none" :fontSize 14
-                                     :padding "0.5rem 1.3rem 0.5rem 0.5rem"
+                                     :padding "0.5rem"
                                      :backgroundColor (when (:hovering? @state) "#e8f5ff")}
                              :href (:href props)
                              :target (:target props)

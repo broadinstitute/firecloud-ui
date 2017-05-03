@@ -1,10 +1,11 @@
 (ns broadfcui.page.status
   (:require
-   [dmohs.react :as react]
-   [broadfcui.common.components :as comps]
-   [broadfcui.nav :as nav]
-   [broadfcui.utils :as utils]
-   ))
+    [dmohs.react :as react]
+    [broadfcui.common.components :as comps]
+    [broadfcui.common.style :as style]
+    [broadfcui.nav :as nav]
+    [broadfcui.utils :as utils]
+    ))
 
 
 (react/defc StatusLine
@@ -21,9 +22,9 @@
           (when-not (:show-error-details? @state)
             [:span {}
              " ("
-             [:a {:href "javascript:;" :style {:textDecoration "none"}
-                  :onClick #(swap! state assoc :show-error-details? true)}
-              "show details"]
+             (style/create-link
+              {:onClick #(swap! state assoc :show-error-details? true)
+               :text "show details"})
              ")"])]
          :else
          [:span {:style {:color "green"}} "Okay"])]

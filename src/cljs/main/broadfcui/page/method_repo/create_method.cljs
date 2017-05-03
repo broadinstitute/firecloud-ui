@@ -1,17 +1,17 @@
 (ns broadfcui.page.method-repo.create-method
   (:require
-   [dmohs.react :as react]
-   [broadfcui.common :as common]
-   [broadfcui.common.codemirror :refer [CodeMirror]]
-   [broadfcui.common.components :as comps]
-   [broadfcui.common.input :as input]
-   [broadfcui.common.modal :as modal]
-   [broadfcui.common.style :as style]
-   [broadfcui.config :as config]
-   [broadfcui.endpoints :as endpoints]
-   [broadfcui.nav :as nav]
-   [broadfcui.utils :as utils]
-   ))
+    [dmohs.react :as react]
+    [broadfcui.common :as common]
+    [broadfcui.common.codemirror :refer [CodeMirror]]
+    [broadfcui.common.components :as comps]
+    [broadfcui.common.icons :as icons]
+    [broadfcui.common.input :as input]
+    [broadfcui.common.modal :as modal]
+    [broadfcui.common.style :as style]
+    [broadfcui.config :as config]
+    [broadfcui.endpoints :as endpoints]
+    [broadfcui.utils :as utils]
+    ))
 
 
 (react/defc CreateMethodDialog
@@ -49,8 +49,8 @@
                                 (when file
                                   (set! (.-onload reader)
                                         #(let [text (.-result reader)]
-                                          (swap! state assoc :file-name (.-name file) :file-contents text)
-                                          (react/call :set-wdl-text this text)))
+                                           (swap! state assoc :file-name (.-name file) :file-contents text)
+                                           (react/call :set-wdl-text this text)))
                                   (.readAsText reader file))))}]
          (style/create-form-label
           (let [{:keys [file-name]
@@ -85,7 +85,7 @@
          [comps/ErrorViewer {:error (:upload-error @state)}]
          (style/create-validation-error-message (:validation-errors @state))
          [:div {:style {:marginTop "0.8em" :fontSize "88%"}} "WDL must use Docker image digests to allow call caching"
-          (common/question-icon-link "Guide to Call Caching" (config/call-caching-guide-url))]])
+          (common/question-icon-link [:span {} "Guide to Call Caching" icons/external-link-icon] (config/call-caching-guide-url))]])
        :ok-button (react/create-element
                    [comps/Button {:ref "ok-button" :text "Upload" :onClick #(react/call :create-method this)}])}])
    :component-did-mount

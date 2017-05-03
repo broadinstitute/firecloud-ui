@@ -66,9 +66,9 @@
                                          :width 150
                                          :button-style {:height 32 :marginRight "0.5rem"}
                                          :items [{:href (config/user-guide-url) :target "_blank"
-                                                  :text "User Guide"}
+                                                  :text [:span {} "User Guide" icons/external-link-icon]}
                                                  {:href (config/forum-url) :target "_blank"
-                                                  :text "FireCloud Forum"}]})]
+                                                  :text [:span {} "FireCloud Forum" icons/external-link-icon]}]})]
           (when (= :registered (:registration-status @state))
             [header/GlobalSubmissionStatus])]]
         (case (:registration-status @state)
@@ -79,11 +79,11 @@
           :not-registered (profile-page/render
                            {:new-registration? true
                             :on-done #(do (nav/go-to-path :library)
-                                        (js-invoke (aget js/window "location") "reload"))})
+                                          (js-invoke (aget js/window "location") "reload"))})
           :update-registered (profile-page/render
                               {:update-registration? true
                                :on-done #(do (nav/go-to-path :workspaces)
-                                           (js-invoke (aget js/window "location") "reload"))})
+                                             (js-invoke (aget js/window "location") "reload"))})
           :registered
           (if component
             [component (make-props)]
@@ -131,7 +131,8 @@
      (if title title "Service Alert")]]
    [:div {:style {:color "#fff" :fontSize "90%"}}
     (str message " ")
-     (when link [:a {:href (str link) :target "_blank" :style {:color "#fff"}} "Read more..."])]])
+     (when link [:a {:href (str link) :target "_blank" :style {:color "#fff"}} "Read more..."
+                 icons/external-link-icon])]])
 
 (defn status-alert-interval [attempt]
   (cond

@@ -604,7 +604,7 @@
   [:div {:style {:textAlign "center"}}
    (str "You must have a billing project associated with your account to create a new workspace. ")
    [:a {:target "_blank" :href (str (config/billing-guide-url))}
-    "Learn how to create a billing project."]])
+    "Learn how to create a billing project." icons/external-link-icon]])
 
 (defn push-ok-cancel-modal [props]
   (modal/push-modal [OKCancelForm props]))
