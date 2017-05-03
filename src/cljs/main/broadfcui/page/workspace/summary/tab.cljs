@@ -84,7 +84,7 @@
        (when can-share?
          [comps/SidebarButton
           {:style :light :margin :top :color :button-primary
-           :text "Sharing..." :icon :share
+           :text "Share..." :icon :share
            :disabled? (when (empty? billing-projects) (comps/no-billing-projects-message))
            :onClick #(modal/push-modal
                       [AclEditor {:workspace-id workspace-id
@@ -158,7 +158,7 @@
                                :onClick #(react/call :lock-or-unlock this isLocked)}])
        (when (and owner? (not editing?))
          [comps/SidebarButton {:style :light :margin :top :color (if isLocked :text-lighter :exception-state)
-                               :text "Delete..." :icon :delete
+                               :text "Delete" :icon :delete
                                :disabled? (when isLocked "This workspace is locked.")
                                :onClick #(modal/push-modal
                                           [DeleteDialog {:workspace-id workspace-id}])}]))]))

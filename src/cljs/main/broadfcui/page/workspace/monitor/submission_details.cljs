@@ -120,7 +120,7 @@
 (react/defc AbortButton
   {:render (fn [{:keys [state this]}]
              (when (:aborting-submission? @state)
-               [comps/Blocker {:banner "Aborting submission ..."}])
+               [comps/Blocker {:banner "Aborting submission..."}])
              [comps/SidebarButton {:color :button-primary :style :light :margin :top
                                    :text "Abort" :icon :warning
                                    :onClick (fn [_]
