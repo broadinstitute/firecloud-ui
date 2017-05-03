@@ -61,7 +61,7 @@
                                                                                   :title (str (entity "entityType") " " (mca/get-ordered-name entity))}])}]]
         [:div {:style {:float "left" :width 290}}
          [comps/SidebarButton {:style :light :color :exception-state
-                               :text "Redact" :icon :delete
+                               :text "Redact..." :icon :delete
                                :onClick #(modal/push-modal [Redactor {:entity entity :config? config?
                                                                       :on-delete (:on-delete props)}])}]]
         (clear-both)])

@@ -110,7 +110,7 @@
                                 :onClick #(swap! state assoc :editing? true)}])
         (when-not editing?
           [comps/SidebarButton {:style :light :color :exception-state :margin :top
-                                :text "Delete" :icon :delete
+                                :text "Delete..." :icon :delete
                                 :disabled? (when locked? "The workspace is locked")
                                 :onClick #(modal/push-modal
                                            [delete/DeleteDialog {:config config
@@ -119,7 +119,7 @@
 
         (when-not editing?
           [comps/SidebarButton {:style :light :color :button-primary :margin :top
-                                :text "Publish" :icon :share
+                                :text "Publish..." :icon :share
                                 :onClick #(modal/push-modal
                                            [publish/PublishDialog {:config config
                                                                    :workspace-id (:workspace-id props)}])}])
