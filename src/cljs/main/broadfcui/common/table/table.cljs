@@ -13,6 +13,10 @@
     ))
 
 
+;; Documentation:
+;; https://broadinstitute.atlassian.net/wiki/display/GAWB/The+Table+UI+component
+
+
 ;; Define default props this way because we need to do a deep-merge,
 ;; instead of React's regular merge.
 (def ^:private default-props
