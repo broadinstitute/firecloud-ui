@@ -37,11 +37,10 @@
      [:div {}
       (let [{:keys [stack]} @state]
         (map (fn [child]
-               [:div {}
-                ; IGV uses zIndex values up to 512; make sure that modals appear on top
-                [:div {:style {:position "fixed" :zIndex 513
-                               :top 0 :bottom 0 :left 0 :right 0
-                               :backgroundColor "rgba(110,110,110,0.4)"}}]
+               ;; IGV uses zIndex values up to 512; make sure that modals appear on top
+               [:div {:style {:position "fixed" :zIndex 513 :overflow "auto"
+                              :top 0 :bottom 0 :left 0 :right 0
+                              :backgroundColor "rgba(110,110,110,0.4)"}}
                 [:div {:style {:position "absolute" :zIndex 513
                                :top (+ (aget js/document "body" "scrollTop") 30)
                                :left 0
@@ -54,6 +53,11 @@
    (fn [{:keys [locals]}]
      (swap! locals assoc :keydown-handler (common/create-key-handler [:esc] pop-modal))
      (.addEventListener js/window "keydown" (:keydown-handler @locals)))
+   :component-did-update
+   (fn [{:keys [state]}]
+     (if (empty? (:stack @state))
+       (.remove (->> js/document .-body .-classList) "modal-open")
+       (.add (->> js/document .-body .-classList) "modal-open")))
    :component-will-unmount
    (fn [{:keys [locals]}]
      (.removeEventListener js/window "keydown" (:keydown-handler @locals)))})

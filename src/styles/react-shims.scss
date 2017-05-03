@@ -9,3 +9,7 @@
   cursor: -webkit-grabbing;
   cursor: -moz-grabbing;
 }
+
+body.modal-open {
+  overflow: hidden;
+}
