@@ -52,7 +52,7 @@
                      (update-main :attr-list (:attributes (get-parsed-response true)) :loading-attributes false))
                    (update-main :server-error (get-parsed-response false) :loading-attributes false)))})))
 
-(react/defc DataImporter
+(react/defc MetadataImporter
   {:get-initial-state
    (fn [{:keys [state]}]
      {:crumbs [{:text "Choose Source"
@@ -60,7 +60,7 @@
    :render
    (fn [{:keys [state props]}]
      [comps/OKCancelForm
-      {:header "Import Data" :show-cancel? false
+      {:header "Import Metadata" :show-cancel? false
        :content
        (let [last-crumb-id (:id (second (:crumbs @state)))
              add-crumb (fn [id text]
@@ -216,7 +216,7 @@
                                          :value (str "Download '" selected-entity-type "' data")}]])
                              [:div {:style {:flexGrow 1}}]
                              [:div {:style {:paddingRight ".5em"}}
-                              [comps/Button {:text "Import Data..."
+                              [comps/Button {:text "Import Metadata..."
                                              :disabled? (when locked? "This workspace is locked.")
                                              :onClick #(this :-handle-import-data-click)}]]]))
                :on-filter-change #(swap! state assoc :selected-entity-type % :selected-entity nil :attr-list nil)
@@ -263,7 +263,7 @@
    :-handle-import-data-click
    (fn [{:keys [props state refs]}]
      (modal/push-modal
-      [DataImporter
+      [MetadataImporter
        (merge
         (select-keys props [:workspace-id])
         {:this-realm (get-in props [:workspace :workspace :realm :groupName])
