@@ -85,7 +85,7 @@
          [comps/ErrorViewer {:error (:upload-error @state)}]
          (style/create-validation-error-message (:validation-errors @state))
          [:div {:style {:marginTop "0.8em" :fontSize "88%"}} "WDL must use Docker image digests to allow call caching"
-          (common/question-icon-link [:span {} "Guide to Call Caching" icons/external-link-icon] (config/call-caching-guide-url))]])
+          (common/question-icon-link "Guide to Call Caching" (config/call-caching-guide-url))]])
        :ok-button (react/create-element
                    [comps/Button {:ref "ok-button" :text "Upload" :onClick #(react/call :create-method this)}])}])
    :component-did-mount
