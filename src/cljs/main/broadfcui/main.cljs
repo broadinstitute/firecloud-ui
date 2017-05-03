@@ -275,7 +275,7 @@
      (modal/set-instance! (@refs "modal"))
      (swap! locals assoc :hash-change-listener (partial react/call :handle-hash-change this))
      (.addEventListener js/window "hashchange" (:hash-change-listener @locals))
-     (.addEventListener js/window "error" (fn [e] (js-debugger) (show-js-exception e))))
+     (.addEventListener js/window "error" (fn [e] (show-js-exception e))))
      :component-will-receive-props
      (fn []
        (init-nav-paths))
