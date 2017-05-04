@@ -82,9 +82,12 @@
              attributes (if (or (:description props) (not (clojure.string/blank? desc)))
                           {:description desc}
                           {})
+             selected-auth-domain-index (int (:selected-auth-domain @state))
              auth-domain (if (:auth-domain props)
                            {:authorizationDomain {:membersGroupName (:auth-domain props)}}
-                           {:authorizationDomain {:membersGroupName (nth (:groups @state) (int (:selected-auth-domain @state)))}})]
+                           (when (> selected-auth-domain-index 0)
+                             {:authorizationDomain
+                              {:membersGroupName (nth (:groups @state) (int (:selected-auth-domain @state)))}}))]
          (swap! state assoc :working? true :validation-error nil :error nil)
          (endpoints/call-ajax-orch
           {:endpoint (endpoints/clone-workspace (:workspace-id props))
