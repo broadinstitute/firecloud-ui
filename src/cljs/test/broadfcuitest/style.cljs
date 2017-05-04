@@ -19,8 +19,8 @@
       (testing "for a rendered text field, boolean false value exists"
         (is (not (nil? disabled)))
         (not disabled))
-      (testing "for a rendered text field, nil value doesn't exist"
-        (is (not (contains? attribute-map :value))))))
+      (testing "for a rendered text field, nil :value is replaced with empty string"
+        (is (= value "")))))
 
 (deftest create-search-field
   (let [text-field-map {:placeholder "test" :disabled false :value nil}
@@ -36,7 +36,7 @@
       (testing "for a rendered search field, boolean false value exists"
         (is (not (nil? disabled)))
         (not disabled))
-      (testing "for a rendered search field, nil value doesn't exist"
-        (is (not (contains? attribute-map :value))))))
+      (testing "for a rendered text field, nil :value is replaced with empty string"
+        (is (= value "")))))
 
 ;(cljs.test/run-tests)
