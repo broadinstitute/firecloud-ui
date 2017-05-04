@@ -62,11 +62,15 @@
 (defn create-form-label [text]
   [:div {:style {:marginBottom "0.16667em" :fontSize "88%"}} text])
 
+;; jQuery3+React warns about nil :value elements. Filter.
+(defn- filter-nil-props [props]
+   (into {} (filter #(not (nil? (val %))) props)))
+
 (defn create-text-field [props]
-  [:input (deep-merge {:type "text" :style input-text-style} props)])
+  [:input (deep-merge {:type "text" :style input-text-style} (filter-nil-props props))])
 
 (defn create-search-field [props]
-  [:input (deep-merge {:type "search" :style (assoc input-text-style :WebkitAppearance "none")} props)])
+  [:input (deep-merge {:type "search" :style (assoc input-text-style :WebkitAppearance "none")} (filter-nil-props props))])
 
 (defn create-text-area [props]
   [:textarea (deep-merge {:style input-text-style} props)])
