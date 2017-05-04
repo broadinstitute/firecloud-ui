@@ -87,7 +87,7 @@
                            {:authorizationDomain {:membersGroupName (:auth-domain props)}}
                            (when (> selected-auth-domain-index 0)
                              {:authorizationDomain
-                              {:membersGroupName (nth (:groups @state) (int (:selected-auth-domain @state)))}}))]
+                              {:membersGroupName (nth (:groups @state) selected-auth-domain-index)}}))]
          (swap! state assoc :working? true :validation-error nil :error nil)
          (endpoints/call-ajax-orch
           {:endpoint (endpoints/clone-workspace (:workspace-id props))
