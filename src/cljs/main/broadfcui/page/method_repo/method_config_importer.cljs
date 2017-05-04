@@ -56,7 +56,7 @@
         (when-not config?
           [comps/SidebarButton
            {:style :light :color :button-primary
-            :text "Duplicate Method..." :icon :clone :margin :bottom
+            :text "Clone..." :icon :clone :margin :bottom
             :onClick #(modal/push-modal [create/CreateMethodDialog
                                          {:duplicate entity
                                           :on-created (fn [_ id]
