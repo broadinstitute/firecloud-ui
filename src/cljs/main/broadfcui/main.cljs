@@ -193,9 +193,9 @@
                              :backgroundColor "black" :color "white"
                              :padding "0.5rem" :marginTop "0.5rem" :borderRadius "0.3rem"}}
                [:div {:style {:fontWeight "bold"}} "Error: "]
-               (.-message e)
+               (aget e "message")
                [:div {:style {:fontWeight "bold" :paddingTop "0.5rem"}} "Source: "]
-               (.-filename e)]]
+               (aget e "filename")]]
     :show-cancel? false :ok-button "OK"}))
 
 (react/defc App
