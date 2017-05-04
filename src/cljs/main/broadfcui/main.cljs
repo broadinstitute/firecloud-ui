@@ -120,20 +120,6 @@
                   "http://status.firecloud.org/"]
                  " for more information."])}))
 
-(defn status-alert [title message link]
-  [:div {:style {:borderBottom "1px solid" :borderBottomColor (:line-default style/colors)
-                 :backgroundColor (:exception-state style/colors) :padding "1rem"}}
-   [:div {:style {:display "flex" :background (:exception-state style/colors) :color "#fff"
-                  :alignItems "center" :marginBottom "0.5rem"}}
-    [icons/ExceptionIcon {:size 18}]
-    [:span {:style {:marginLeft "0.5rem" :fontWeight 600
-                    :verticalAlign "middle"}}
-     (if title title "Service Alert")]]
-   [:div {:style {:color "#fff" :fontSize "90%"}}
-    (str message " ")
-     (when link [:a {:href (str link) :target "_blank" :style {:color "#fff"}} "Read more..."
-                 icons/external-link-icon])]])
-
 (defn status-alert-interval [attempt]
   (cond
     (= attempt 0) (config/status-alerts-refresh)
@@ -155,7 +141,7 @@
                                :link (when-let [link (:link alert)]
                                        [:a {:style {:color "#fff"} :href (str link)
                                           :target "_blank"}
-                                      "Read more..."])})])
+                                      "Read more..." icons/external-link-icon])})])
              service-alerts)]))
    :component-did-update
    (fn [{:keys [this state locals]}]
