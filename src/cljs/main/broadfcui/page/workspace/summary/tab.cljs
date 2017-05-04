@@ -181,11 +181,7 @@
         (str "Workspace Owner" (when (> (count owners) 1) "s"))
         (style/create-paragraph
           [:div {}
-           (interpose ", " owners)]
-          (when auth-domain
-            [:div {:style {:paddingTop "0.5rem"}}
-             [:div {:style {:fontStyle "italic"}} "Access restricted to authorization domain:"]
-             [:div {} auth-domain]])))
+           (interpose ", " owners)]))
       (render-detail-box
         3
         "Created By"

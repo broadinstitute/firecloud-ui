@@ -61,8 +61,7 @@
             (style/create-select
              {:ref "auth-domain"
               :onChange #(swap! state assoc :selected-auth-domain (-> % .-target .-value))}
-              (:groups @state)
-                               ))
+              (:groups @state)))
           (style/create-validation-error-message (:validation-error @state))
           [comps/ErrorViewer {:error (:error @state)
                               :expect {409 "A workspace with this name already exists in this project"}}]])}])
