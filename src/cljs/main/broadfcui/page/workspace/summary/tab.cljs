@@ -81,7 +81,7 @@
        :div {:style {:position (when-not sidebar-visible? "fixed")
                      :top (when-not sidebar-visible? 0)
                      :width 270}}
-       (when can-share?
+       (when (and can-share? (not editing?))
          [comps/SidebarButton
           {:style :light :margin :top :color :button-primary
            :text "Share..." :icon :share
