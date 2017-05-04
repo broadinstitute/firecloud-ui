@@ -6,6 +6,7 @@
     [broadfcui.common.input :as input]
     [broadfcui.common.modal :as modal]
     [broadfcui.common.style :as style]
+    [broadfcui.config :as config]
     [broadfcui.endpoints :as endpoints]
     [broadfcui.utils :as utils]
     ))
@@ -22,46 +23,55 @@
        :get-first-element-dom-node #(@refs "project")
        :content
        (react/create-element
-         [:div {}
-          (when (:working? @state)
-            [comps/Blocker {:banner "Cloning..."}])
-          (style/create-form-label "Billing Project")
-          (style/create-select {:ref "project"
-                                :value (:selected-project @state)
-                                :onChange #(swap! state assoc :selected-project (-> % .-target .-value))}
-                               (:billing-projects props))
-          (style/create-form-label "Name")
-          [input/TextField {:ref "name"
-                            :style {:width "100%"}
-                            :defaultValue (get-in props [:workspace-id :name])
-                            :placeholder "Required"
-                            :predicates [(input/nonempty "Workspace name")
-                                         (input/alphanumeric_- "Workspace name")]}]
-          (style/create-textfield-hint "Only letters, numbers, underscores, and dashes allowed")
-          (style/create-form-label "Description (optional)")
-          (style/create-text-area {:style {:width "100%"} :rows 5 :ref "wsDescription"
-                                   :defaultValue (:description props)})
-          (if (:is-protected? props)
-            [:div {} "Cloned workspace will automatically be protected because this workspace is protected."]
-            [comps/Checkbox
-             {:ref "protected-check"
-              :label "Workspace intended to contain NIH protected data"
-              :disabled? (not= (:protected-option @state) :enabled)
-              :disabled-text (case (:protected-option @state)
-                               :not-loaded "Account status has not finished loading."
-                               :not-available "This option is not available for your account."
-                               nil)}])
-          (style/create-validation-error-message (:validation-error @state))
-          [comps/ErrorViewer {:error (:error @state)
-                              :expect {409 "A workspace with this name already exists in this project"}}]])}])
+        [:div {}
+         (when (:working? @state)
+           [comps/Blocker {:banner "Cloning..."}])
+         (style/create-form-label "Billing Project")
+         (style/create-select {:ref "project"
+                               :value (:selected-project @state)
+                               :onChange #(swap! state assoc :selected-project (-> % .-target .-value))}
+                              (:billing-projects props))
+         (style/create-form-label "Name")
+         [input/TextField {:ref "name"
+                           :style {:width "100%"}
+                           :defaultValue (get-in props [:workspace-id :name])
+                           :placeholder "Required"
+                           :predicates [(input/nonempty "Workspace name")
+                                        (input/alphanumeric_- "Workspace name")]}]
+         (style/create-textfield-hint "Only letters, numbers, underscores, and dashes allowed")
+         (style/create-form-label "Description (optional)")
+         (style/create-text-area {:style {:width "100%"} :rows 5 :ref "wsDescription"
+                                  :defaultValue (:description props)})
+         [:div {:style {:display "flex"}}
+          (style/create-form-label "Authorization Domain")
+          (common/render-info-box
+            {:text [:div {} [:strong {} "Note:"]
+                    [:div {} "Once this workspace is associated with an Authorization Domain, a user
+                   can access the data only if they are a member of the Domain and have been granted
+                   read or write permission on the workspace. If a user with access to the workspace
+                   clones it, any Domain associations will be retained by the new copy. If a user
+                   tries to share the clone with a person who is not in the Domain, the data remains protected. "]
+                    (style/create-link {:href "https://software.broadinstitute.org/firecloud/documentation/article?id=9524"
+                                        :target "_blank"
+                                        :text "Read more about Authorization Domains"})]})]
+         (if-let [auth-domain (:auth-domain props)]
+           [:div {:style {:fontStyle "italic" :fontSize "80%"}}
+            "The cloned workspace will automatically inherit the authorization domain "
+            [:strong {} auth-domain] " from this workspace."]
+           (style/create-select
+            {:ref "auth-domain"
+             :onChange #(swap! state assoc :selected-auth-domain (-> % .-target .-value))}
+            (:groups @state)))
+         (style/create-validation-error-message (:validation-error @state))
+         [comps/ErrorViewer {:error (:error @state)
+                             :expect {409 "A workspace with this name already exists in this project"}}]])}])
    :component-did-mount
    (fn [{:keys [state]}]
-     (utils/ajax-orch
-       "/nih/status"
-       {:on-done (fn [{:keys [success? get-parsed-response]}]
-                     (if (and success? (get (get-parsed-response false) "isDbgapAuthorized"))
-                       (swap! state assoc :protected-option :enabled)
-                       (swap! state assoc :protected-option :not-available)))}))
+     (endpoints/get-groups
+      (fn [success? parsed-response]
+        (swap! state assoc :groups
+               (conj (map #(:groupName %) parsed-response)
+                     "Anyone who is given permission")))))
    :do-clone
    (fn [{:keys [props refs state]}]
      (if-let [fails (input/validate refs "name")]
@@ -72,14 +82,16 @@
              attributes (if (or (:description props) (not (clojure.string/blank? desc)))
                           {:description desc}
                           {})
-             protected? (or (:is-protected? props) (react/call :checked? (@refs "protected-check")))]
+             auth-domain (if (:auth-domain props)
+                           {:authorizationDomain {:membersGroupName (:auth-domain props)}}
+                           {:authorizationDomain {:membersGroupName (nth (:groups @state) (int (:selected-auth-domain @state)))}})]
          (swap! state assoc :working? true :validation-error nil :error nil)
          (endpoints/call-ajax-orch
-           {:endpoint (endpoints/clone-workspace (:workspace-id props))
-            :payload {:namespace project :name name :attributes attributes :isProtected protected?}
-            :headers utils/content-type=json
-            :on-done (fn [{:keys [success? get-parsed-response]}]
-                       (swap! state dissoc :working?)
-                       (if success?
-                         (do (modal/pop-modal) ((:on-success props) project name))
-                         (swap! state assoc :error (get-parsed-response false))))}))))})
+          {:endpoint (endpoints/clone-workspace (:workspace-id props))
+           :payload (conj {:namespace project :name name :attributes attributes} auth-domain)
+           :headers utils/content-type=json
+           :on-done (fn [{:keys [success? get-parsed-response]}]
+                      (swap! state dissoc :working?)
+                      (if success?
+                        (do (modal/pop-modal) ((:on-success props) project name))
+                        (swap! state assoc :error (get-parsed-response false))))}))))})
