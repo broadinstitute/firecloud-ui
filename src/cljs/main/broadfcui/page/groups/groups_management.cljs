@@ -27,7 +27,7 @@
         (when (:deleting? @state)
           [comps/Blocker {:banner "Deleting group..."}])
         [Table
-         {:data (:groups @state)
+         {:data (utils/log (:groups @state))
           :body {:behavior {:reorderable-columns? false}
                  :style table-style/table-light
                  :columns
@@ -35,23 +35,23 @@
                    :sort-by :text
                    :as-text :group-name
                    :render
-                   (fn [{:keys [groupName accessLevels]}]
+                   (fn [{:keys [groupName role]}]
                      (if
-                      (contains? (set accessLevels) "Owner")
+                      (= role "Admin")
                        (style/create-link {:text groupName
                                            :href (nav/get-link :group groupName)})
                        groupName))}
                   {:header "Role" :initial-width 100 :resizable? false
-                   :column-data #(clojure.string/join ", " (:accessLevels %))}
+                   :as-text :role}
                   {:id "delete group" :initial-width :auto
                    :filterable? false :sortable? false
                    :as-text
-                   (fn [{:keys [groupName accessLevels]}]
-                     (when (contains? (set accessLevels) "Owner")
+                   (fn [{:keys [groupName role]}]
+                     (when (= role "Admin")
                        (str "Delete group " groupName)))
                    :render
-                   (fn [{:keys [groupName accessLevels]}]
-                     (when (contains? (set accessLevels) "Owner")
+                   (fn [{:keys [groupName role]}]
+                     (when (= role "Admin")
                        (style/create-link
                         {:text (icons/icon {} :delete)
                          :style {:float "right"}
@@ -89,7 +89,7 @@
 
 (react/defc Page
   {:render
-   (fn [{:keys [props state]}]
+   (fn [{:keys [props]}]
      (let [{:keys [group-name]} props]
        [:div {:style style/thin-page-style}
         [:div {:style {:marginBottom "1rem" :fontSize "1.1rem"}}
@@ -106,10 +106,10 @@
                                                             :email %2})
             :header (fn [data]
                       [:small {:style {:display "block" :margin "-0.75rem 0 1rem"}}
-                       "Use when sharing workspaces: " (get-in data [:usersGroup :groupEmail])])
+                       "Use when sharing workspaces: " (get-in data [:membersGroup :groupEmail])])
             :table-data (fn [data]
-                          (concat (mapv (fn [email] {:email email :role "Owner"}) (:ownersEmails data))
-                                  (mapv (fn [email] {:email email :role "User"}) (:usersEmails data))))
+                          (concat (mapv (fn [email] {:email email :role "Admin"}) (:adminsEmails data))
+                                  (mapv (fn [email] {:email email :role "Member"}) (:membersEmails data))))
             :list-endpoint endpoints/list-group-members}]
           [GroupTable])]))})
 
