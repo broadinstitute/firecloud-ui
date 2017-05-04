@@ -46,7 +46,7 @@
                                :top (+ (aget js/document "body" "scrollTop") 30)
                                :left 0
                                :width "100%"}}
-                 [:div {:style {:display "flex" :justifyContent "center"}}
+                 [:div {:style {:display "flex" :justifyContent "center" :paddingBottom "2rem"}}
                   [:div {:style {:backgroundColor "white" :maxWidth "95%" :minWidth 500}}
                    child]]]])
              stack))])

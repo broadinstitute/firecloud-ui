@@ -116,8 +116,7 @@
                 (str (:library:datasetCustodian data) " <" (:library:contactEmail data) ">")]
                " and request access for the "
                (:namespace data) "/" (:name data) " workspace."])}))}
-       {:href (nav/get-link :workspace-summary
-                            (common/row->workspace-id data))}))
+       {:href (nav/get-link :workspace-summary (common/row->workspace-id data))}))
    :build-aggregate-fields
    (fn [{:keys [props]}]
      (reduce
@@ -130,7 +129,8 @@
        (let [{:keys [page-number rows-per-page sort-column sort-order]} query-params]
          (when-not (empty? (:aggregate-fields props))
            (endpoints/call-ajax-orch
-            (let [from (* (- page-number 1) rows-per-page)]
+            (let [from (* (- page-number 1) rows-per-page)
+                  update-aggregates? (or (= 1 page-number) (:no-aggregates? props))]
               {:endpoint endpoints/search-datasets
                :payload {:searchString (:filter-text props)
                          :filters ((:get-facets props))
@@ -138,8 +138,8 @@
                          :size rows-per-page
                          :sortField sort-column
                          :sortDirection sort-order
-                         :fieldAggregations (if (= 1 page-number)
-                                              (react/call :build-aggregate-fields this)
+                         :fieldAggregations (if update-aggregates?
+                                              (this :build-aggregate-fields)
                                               {})}
                :headers utils/content-type=json
                :on-done
@@ -150,9 +150,18 @@
                      (on-done {:total-count total
                                :filtered-count total
                                :results results})
-                     (when (= 1 page-number)
+                     (when update-aggregates?
                        ((:update-aggregates props) aggregations)))
                    (on-done {:error status-text})))}))))))})
+
+(defn encode [text]
+  ;; character replacements modeled after Lucene's SimpleHTMLEncoder.
+  (clojure.string/escape text {\" "&quot;" \& "&amp;" \< "&lt;", \> "&gt;", \\ "&#x27;" \/ "&#x2F;"}))
+
+(defn highlight-suggestion [suggestion highlight]
+  (if (not (clojure.string/blank? highlight))
+    (clojure.string/replace (encode suggestion) (encode highlight) (str "<strong>" (encode highlight) "</strong>"))
+    (encode suggestion)))
 
 (react/defc SearchSection
   {:get-filters
@@ -182,15 +191,19 @@
                                        :contentType "application/json; charset=UTF-8"
                                        :data (utils/->json-string
                                               {:searchString query
-                                               :filters (react/call :get-filters this)
+                                               :filters (this :get-filters)
                                                :from 0
                                                :size 10}))))}
         :typeaheadDisplay (fn [result]
-                            ;; we intentionally do not encode the result value here, because it is already
-                            ;; encoded from the server.
-                            (.text (js/$ (str "<div>" (aget result "value") "</div>"))))
+                            ;; underlying typeahead library uses the result of this function
+                            ;; via $input.val(x), which is safe from xss. So we explicitly
+                            ;; do not want to encode anything here.
+                            (aget result "value" "suggestion"))
         :typeaheadSuggestionTemplate (fn [result]
-                                       (str "<div style='textOverflow: ellipsis; overflow: hidden; font-size: smaller;'>" (aget result "value") "</div>"))}]])})
+                                       (let [suggestion (aget result "value" "suggestion")
+                                             highlight (aget result "value" "highlight")
+                                             display (highlight-suggestion suggestion highlight)]
+                                         (str "<div style='textOverflow: ellipsis; overflow: hidden; font-size: smaller;'>" display "</div>")))}]])})
 
 (react/defc FacetCheckboxes
   {:render
@@ -204,7 +217,7 @@
         [:hr {}]
         [:span {:style {:fontWeight "bold"}} title]
         [:div {:style {:fontSize "80%" :float "right"}}
-         (style/create-link {:text "Clear" :onClick #(react/call :clear-all this)})]
+         (style/create-link {:text "Clear" :onClick #(this :clear-all)})]
         [:div {:style {:paddingTop "1em"}}
          (map
            (fn [{:keys [key doc_count]}]
@@ -214,7 +227,7 @@
                        :title key}
                [:input {:type "checkbox"
                         :checked (contains? (:selected-items props) key)
-                        :onChange #(react/call :update-selected this key (.. % -target -checked))}]
+                        :onChange #(this :update-selected key (.. % -target -checked))}]
                [:span {:style {:marginLeft "0.3em"}} key]]
               (some-> doc_count style/render-count)])
            (concat (:buckets props) hidden-items-formatted))
@@ -222,10 +235,10 @@
           (if (:expanded? props)
             (when (> (count (:buckets props)) 5)
               (style/create-link {:text " less..."
-                                  :onClick #(react/call :update-expanded this false)}))
+                                  :onClick #(this :update-expanded false)}))
             (when (> size 0)
               (style/create-link {:text " more..."
-                                  :onClick #(react/call :update-expanded this true)})))]]]))
+                                  :onClick #(this :update-expanded true)})))]]]))
    :clear-all
    (fn [{:keys [props]}]
      ((:update-filter props) (:field props) #{}))
@@ -259,18 +272,15 @@
                                                           :expanded-callback-function]))])))})
 
 (react/defc FacetSection
-  {:update-aggregates
-   (fn [{:keys [state]} aggregate-data]
-     (swap! state assoc :aggregates aggregate-data))
-   :render
-   (fn [{:keys [props state]}]
-     (if (empty? (:aggregates @state))
+  {:render
+   (fn [{:keys [props]}]
+     (if (empty? (:aggregates props))
        [:div {:style {:fontSize "80%"}} "loading..."]
        [:div {:style {:fontSize "85%" :padding "16px 12px"}}
         (map
          (fn [aggregate-field] [Facet {:aggregate-field aggregate-field
                                        :aggregate-properties (get (:aggregate-properties props) aggregate-field)
-                                       :aggregates (:aggregates @state)
+                                       :aggregates (:aggregates props)
                                        :expanded? (contains? (:expanded-aggregates props) aggregate-field)
                                        :selected-items (set (get-in props [:facet-filters aggregate-field]))
                                        :update-filter (:update-filter props)
@@ -319,26 +329,27 @@
                                      (after-update #((@refs "dataset-table") :execute-search true)))}]
         [FacetSection (merge
                        {:ref "facets"
+                        :aggregates (:aggregates @state)
                         :aggregate-properties (:library-attributes @state)
                         :update-filter (fn [facet-name facet-list]
-                                         (react/call :update-filter this facet-name facet-list))
+                                         (this :update-filter facet-name facet-list))
                         :expanded-callback-function (fn [facet-name expanded?]
-                                                      (react/call :set-expanded-aggregate this facet-name expanded?))}
+                                                      (this :set-expanded-aggregate facet-name expanded?))}
                        (select-keys @state [:aggregate-fields :facet-filters :expanded-aggregates]))]]
        [:div {:style {:flex "1 1 auto" :overflowX "auto"}}
         (when (and (:library-attributes @state) (:search-result-columns @state))
           [DatasetsTable (merge
                           {:ref "dataset-table"
                            :filter-text (:search-text @state)
-                           :update-aggregates (fn [aggregates]
-                                                (react/call :update-aggregates (@refs "facets") aggregates))
+                           :update-aggregates #(swap! state assoc :aggregates %)
+                           :no-aggregates? (empty? (:aggregates @state))
                            :get-facets #(utils/map-keys name (:facet-filters @state))}
                           (select-keys @state [:library-attributes :search-result-columns :aggregate-fields :expanded-aggregates]))])]])}
    (persistence/with-state-persistence {:key PERSISTENCE-KEY :version VERSION
                                         :initial {:search-text ""
                                                   :facet-filters {}
                                                   :expanded-aggregates #{}}
-                                        :except [:library-attributes]})))
+                                        :except [:library-attributes :aggregates]})))
 
 (defn add-nav-paths []
   (nav/defpath

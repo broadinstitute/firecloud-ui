@@ -340,3 +340,19 @@
     (assoc defined-methods
       :component-did-mount did-mount
       :component-will-unmount will-unmount)))
+
+
+(defn track-initial-render [defined-methods]
+  (let [will-mount
+        (fn [{:keys [locals] :as data}]
+          (swap! locals assoc :initial-render? true)
+          (when-let [defined-will-mount (:component-will-mount defined-methods)]
+            (defined-will-mount data)))
+        did-mount
+        (fn [{:keys [locals] :as data}]
+          (swap! locals dissoc :initial-render?)
+          (when-let [defined-did-mount (:component-did-mount defined-methods)]
+            (defined-did-mount data)))]
+    (assoc defined-methods
+      :component-will-mount will-mount
+      :component-did-mount did-mount)))

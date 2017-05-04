@@ -4,6 +4,7 @@
    [broadfcui.common :as common]
    [broadfcui.common.components :as comps]
    [broadfcui.common.style :as style]
+   [broadfcui.config :as config]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.nav :as nav]
    [broadfcui.page.workspace.analysis.tab :as analysis-tab]
@@ -18,14 +19,17 @@
 (react/defc ProtectedBanner
   {:render
    (fn [{:keys [props]}]
-     (let [{:keys [workspace]} props]
-       (when (and workspace (get-in workspace [:workspace :realm]))
+     (let [{:keys [workspace]} props
+           this-auth-domain (get-in workspace [:workspace :authorizationDomain :membersGroupName])
+           dbGapProtected (= this-auth-domain (config/dbgap-authorization-domain))]
+       (when this-auth-domain
          [:div {:style {:paddingTop 2}}
           [:div {:style {:backgroundColor "#ccc"
                          :fontSize "small"
                          :padding "4px 0"
                          :textAlign "center"}}
-           "This is a " [:b {} "restricted"] " workspace for TCGA Controlled Access Data."]
+           "Access to this workspace is " [:strong {} "restricted"] " to: " this-auth-domain
+           (when dbGapProtected " (TCGA Controlled Access Data)")]
           [:div {:style {:height 1 :backgroundColor "#bbb" :marginTop 2}}]])))})
 
 (react/defc BucketBanner
