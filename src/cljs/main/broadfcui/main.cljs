@@ -185,11 +185,9 @@
                                   :warning)
              "Something Went Wrong"]
     :content [:div {:style {:width 800}}
-              "There was an error in FireCloud. It may not mean anything, but you should consider reloading the page to be safe."
-              [:div {:style {:marginTop "1rem"}} "Here are some details about the error that occurred."
-               " If you post this on our "
+              "A JavaScript error occurred; please try reloading the page. If the error persists, please report it to our "
                [:a {:href (config/forum-url)
-                    :target "_blank" :style {}} "forum"] ", our team can take a look."]
+                    :target "_blank" :style {}} "forum"] " for help. Details of the error message are below."
               [:div {:style {:fontFamily "monospace" :whiteSpace "pre" :overflow "auto"
                              :backgroundColor "black" :color "white"
                              :padding "0.5rem" :marginTop "0.5rem" :borderRadius "0.3rem"}}
