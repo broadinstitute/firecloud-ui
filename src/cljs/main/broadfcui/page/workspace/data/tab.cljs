@@ -81,7 +81,7 @@
               (select-keys props [:workspace-id :import-type :on-data-imported])]
              :workspace-import
              [copy-data-workspaces/Page
-              (assoc (select-keys props [:workspace-id :this-realm :on-data-imported])
+              (assoc (select-keys props [:workspace-id :this-auth-domain :on-data-imported])
                 :crumbs (drop 2 (:crumbs @state))
                 :add-crumb #(swap! state update :crumbs conj %)
                 :pop-to-depth #(swap! state update :crumbs subvec 0 %))]
@@ -176,7 +176,7 @@
           (style/create-server-error-message workspace-error)
           workspace
           (let [locked? (get-in workspace [:workspace :isLocked])
-                this-realm (get-in workspace [:workspace :realm :groupName])]
+                this-auth-domain (get-in workspace [:workspace :authorizationDomain :membersGroupName])]
             [:div {:style {:flex "1" :width 0}}
              [EntityTable
               {:ref "entity-table"
@@ -266,7 +266,7 @@
       [MetadataImporter
        (merge
         (select-keys props [:workspace-id])
-        {:this-realm (get-in props [:workspace :workspace :realm :groupName])
+        {:this-auth-domain (get-in props [:workspace :workspace :authorizationDomain :membersGroupName])
          :import-type "data"
          :on-data-imported #(react/call :refresh (@refs "entity-table")
                                         (or % (:selected-entity-type @state)) true)})]))

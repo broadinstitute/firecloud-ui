@@ -6,6 +6,7 @@
    [broadfcui.common.input :as input]
    [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
+   [broadfcui.config :as config]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.nav :as nav]
    [broadfcui.utils :as utils]
@@ -25,40 +26,46 @@
        :get-first-element-dom-node #(@refs "project")
        :content
        (react/create-element
-         [:div {:style {:marginBottom -20}}
-          (when (:creating-wf @state)
-            [comps/Blocker {:banner "Creating Workspace..."}])
-          (style/create-form-label "Billing Project")
-          (style/create-select
-            {:ref "project" :value (:selected-project @state)
-             :onChange #(swap! state assoc :selected-project (-> % .-target .-value))}
-            (:billing-projects props))
-          (style/create-form-label "Name")
-          [input/TextField {:ref "wsName" :style {:width "100%"}
-                            :predicates [(input/nonempty "Workspace name")
-                                         (input/alphanumeric_- "Workspace name")]}]
-          (style/create-textfield-hint "Only letters, numbers, underscores, and dashes allowed")
-          (style/create-form-label "Description (optional)")
-          (style/create-text-area {:style {:width "100%"} :rows 5 :ref "wsDescription"})
-          [:div {:style {:marginBottom "1em"}}
-           [comps/Checkbox
-            {:ref "protected-check"
-             :label "Workspace intended to contain NIH protected data"
-             :disabled? (not= (:protected-option @state) :enabled)
-             :disabled-text (case (:protected-option @state)
-                              :not-loaded "Account status has not finished loading."
-                              :not-available "This option is not available for your account."
-                              nil)}]]
-          [comps/ErrorViewer {:error (:server-error @state)}]
-          (style/create-validation-error-message (:validation-errors @state))])}])
+        [:div {:style {:marginBottom -20}}
+         (when (:creating-wf @state)
+           [comps/Blocker {:banner "Creating Workspace..."}])
+         (style/create-form-label "Billing Project")
+         (style/create-select
+          {:ref "project" :value (:selected-project @state)
+           :onChange #(swap! state assoc :selected-project (-> % .-target .-value))}
+          (:billing-projects props))
+         (style/create-form-label "Name")
+         [input/TextField {:ref "wsName" :style {:width "100%"}
+                           :predicates [(input/nonempty "Workspace name")
+                                        (input/alphanumeric_- "Workspace name")]}]
+         (style/create-textfield-hint "Only letters, numbers, underscores, and dashes allowed")
+         (style/create-form-label "Description (optional)")
+         (style/create-text-area {:style {:width "100%"} :rows 5 :ref "wsDescription"})
+         [:div {:style {:display "flex"}}
+          (style/create-form-label "Authorization Domain")
+          (common/render-info-box
+           {:text [:div {} [:strong {} "Note:"]
+                   [:div {} "Once this workspace is associated with an Authorization Domain, a user
+                   can access the data only if they are a member of the Domain and have been granted
+                   read or write permission on the workspace. If a user with access to the workspace
+                   clones it, any Domain associations will be retained by the new copy. If a user
+                   tries to share the clone with a person who is not in the Domain, the data remains protected. "]
+                   (style/create-link {:href "https://software.broadinstitute.org/firecloud/documentation/article?id=9524"
+                                       :target "_blank"
+                                       :text "Read more about Authorization Domains"})]})]
+         (style/create-select
+          {:ref "auth-domain"
+           :onChange #(swap! state assoc :selected-auth-domain (-> % .-target .-value))}
+          (:groups @state))
+         [comps/ErrorViewer {:error (:server-error @state)}]
+         (style/create-validation-error-message (:validation-errors @state))])}])
    :component-did-mount
    (fn [{:keys [state]}]
-     (utils/ajax-orch
-      "/nih/status"
-      {:on-done (fn [{:keys [success? get-parsed-response]}]
-                  (if (and success? (get (get-parsed-response false) "isDbgapAuthorized"))
-                    (swap! state assoc :protected-option :enabled)
-                    (swap! state assoc :protected-option :not-available)))}))
+     (endpoints/get-groups
+      (fn [success? parsed-response]
+        (swap! state assoc :groups
+               (conj (map #(:groupName %) parsed-response)
+                     "Anyone who is given permission")))))
    :create-workspace
    (fn [{:keys [props state refs]}]
      (swap! state dissoc :server-error :validation-errors)
@@ -68,17 +75,20 @@
              name (input/get-text refs "wsName")
              desc (common/get-text refs "wsDescription")
              attributes (if (clojure.string/blank? desc) {} {:description desc})
-             protected? (react/call :checked? (@refs "protected-check"))]
+             selected-auth-domain-index (int (:selected-auth-domain @state))
+             auth-domain (when (> selected-auth-domain-index 0)
+                           {:authorizationDomain
+                            {:membersGroupName (nth (:groups @state) selected-auth-domain-index)}})]
          (swap! state assoc :creating-wf true)
          (endpoints/call-ajax-orch
           {:endpoint (endpoints/create-workspace project name)
-           :payload {:namespace project :name name :attributes attributes :isProtected protected?}
+           :payload (conj {:namespace project :name name :attributes attributes} auth-domain)
            :headers utils/content-type=json
            :on-done (fn [{:keys [success? get-parsed-response]}]
                       (swap! state dissoc :creating-wf)
                       (if success?
                         (do (modal/pop-modal)
-                          (nav/go-to-path :workspace-summary {:namespace project :name name}))
+                            (nav/go-to-path :workspace-summary {:namespace project :name name}))
                         (swap! state assoc :server-error (get-parsed-response false))))}))))})
 
 

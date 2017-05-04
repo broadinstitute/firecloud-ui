@@ -61,7 +61,7 @@
 (defn- render-sidebar [state refs this
                        {:keys [workspace billing-projects owner? writer? curator? catalog-with-read? can-share?
                                workspace-id request-refresh user-access-level]}]
-  (let [{{:keys [isLocked library-attributes description isProtected]} :workspace
+  (let [{{:keys [isLocked library-attributes description authorizationDomain]} :workspace
          {:keys [runningSubmissionsCount]} :workspaceSubmissionStats} workspace
         status (common/compute-status workspace)
         publishable? (and curator? (or catalog-with-read? owner?))
@@ -149,7 +149,7 @@
                                                       (utils/restructure namespace name)))
                         :workspace-id workspace-id
                         :description description
-                        :is-protected? isProtected
+                        :auth-domain (:membersGroupName authorizationDomain)
                         :billing-projects billing-projects}])}])
        (when (and owner? (not editing?))
          [comps/SidebarButton {:style :light :margin :top :color :button-primary

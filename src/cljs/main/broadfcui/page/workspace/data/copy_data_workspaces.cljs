@@ -22,44 +22,45 @@
         :reorderable-columns? false
         :columns [{:header "Billing Project" :starting-width 150}
                   {:header "Name" :starting-width 150
-                   :as-text #(get-in % ["workspace" "name"]) :sort-by :text
+                   :as-text #(get-in % [:workspace :name]) :sort-by :text
                    :content-renderer
                    (fn [ws]
-                     (style/create-link {:text (get-in ws ["workspace" "name"])
+                     (style/create-link {:text (get-in ws [:workspace :name])
                                          :onClick #((:onWorkspaceSelected props) ws)}))}
                   {:header "Created By" :starting-width 200}
                   (table/date-column {})
                   {:header "Access Level" :starting-width 106}
-                  {:header "Protected" :starting-width 86
-                   :content-renderer #(if % "Yes" "No")}]
+                  {:header "Authorization Domain" :starting-width 150
+                   :content-renderer #(or % "None")}]
         :toolbar (default-toolbar-layout
                   (let [num (:num-filtered props)]
                     (when (pos? num)
                       (str (:num-filtered props)
-                           " workspace(s) unavailable because they contain protected data."))))
+                           " workspace(s) unavailable because they contain data from other authorization domains."))))
         :data (:workspaces props)
         :->row (fn [ws]
-                 [(get-in ws ["workspace" "namespace"])
-                  ws
-                  (get-in ws ["workspace" "createdBy"])
-                  (get-in ws ["workspace" "createdDate"])
-                  (ws "accessLevel")
-                  (get-in ws ["workspace" "isProtected"])])}]])})
+                 (let [workspace (:workspace ws)]
+                   [(:namespace workspace)
+                    ws
+                    (:createdBy workspace)
+                    (:createdDate workspace)
+                    (:accessLevel ws)
+                    (get-in workspace [:authorizationDomain :membersGroupName])]))}]])})
 
 (defn- remove-self [workspace-id workspace-list]
-  (filter #(not= workspace-id {:namespace (get-in % ["workspace" "namespace"])
-                               :name (get-in % ["workspace" "name"])}) workspace-list))
+  (filter #(not= workspace-id {:namespace (get-in % [:workspace :namespace])
+                               :name (get-in % [:workspace :name])}) workspace-list))
 
-(defn- filter-workspaces [this-realm workspace-list]
-  (filter #(let [src-realm (get-in % ["workspace" "realm" "groupName"])]
+(defn- filter-workspaces [this-auth-domain workspace-list]
+  (filter #(let [src-auth-domain (get-in % [:workspace :authorizationDomain :membersGroupName])]
              (and
-              (or (nil? src-realm) (= src-realm this-realm))
-              (not= (% "accessLevel") "NO ACCESS")))
+              (or (nil? src-auth-domain) (= src-auth-domain this-auth-domain))
+              (not= (:accessLevel %) "NO ACCESS")))
     workspace-list))
 
 (defn- workspace->id [workspace]
-  {:namespace (get-in workspace ["workspace" "namespace"])
-   :name (get-in workspace ["workspace" "name"])})
+  {:namespace (get-in workspace [:workspace :namespace])
+   :name (get-in workspace [:workspace :name])})
 
 (react/defc Page
   {:render
@@ -70,7 +71,7 @@
          [copy-data-entities/SelectType
           (merge (select-keys props [:workspace-id :add-crumb :on-data-imported])
                  {:selected-workspace-id (workspace->id selected-workspace)
-                  :selected-workspace-bucket (get-in selected-workspace ["workspace" "bucketName"])
+                  :selected-workspace-bucket (get-in selected-workspace [:workspace :bucketName])
                   :crumbs (rest (:crumbs props))})]
          (:workspaces @state)
          [WorkspaceList
@@ -79,8 +80,8 @@
            :onWorkspaceSelected
            (fn [ws]
              ((:add-crumb props)
-              {:text (str (get-in ws ["workspace" "namespace"]) "/"
-                          (get-in ws ["workspace" "name"]))
+              {:text (str (get-in ws [:workspace :namespace]) "/"
+                          (get-in ws [:workspace :name]))
                :onClick #((:pop-to-depth props) 3)
                :selected-workspace ws}))}]
          (:error-message @state) (style/create-server-error-message (:error-message @state))
@@ -92,8 +93,8 @@
        {:endpoint endpoints/list-workspaces
         :on-done (fn [{:keys [success? status-text get-parsed-response]}]
                    (if success?
-                     (let [all-workspaces (remove-self (:workspace-id props) (get-parsed-response false))
-                           filtered-workspaces (filter-workspaces (:this-realm props) all-workspaces)]
+                     (let [all-workspaces (remove-self (:workspace-id props) (get-parsed-response))
+                           filtered-workspaces (filter-workspaces (:this-auth-domain props) all-workspaces)]
                        (swap! state assoc :workspaces filtered-workspaces
                          :num-filtered (- (count all-workspaces) (count filtered-workspaces))))
                      (swap! state assoc :error-message status-text)))}))})
