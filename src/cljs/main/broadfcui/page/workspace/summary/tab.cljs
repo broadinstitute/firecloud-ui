@@ -167,8 +167,8 @@
 (defn- render-main [{:keys [workspace curator? owner? writer? reader? can-share? catalog-with-read? bucket-access? editing? submissions-count
                             library-schema request-refresh workspace-id storage-cost]}]
   (let [{:keys [owners]
-         {:keys [createdBy createdDate bucketName description tags workspace-attributes library-attributes realm]} :workspace} workspace
-        realm-name (:usersGroupName realm)
+         {:keys [createdBy createdDate bucketName description tags workspace-attributes library-attributes authorizationDomain]} :workspace} workspace
+        auth-domain (:membersGroupName authorizationDomain)
         render-detail-box (fn [order title & children]
                             [:div {:style {:flexBasis "50%" :order order}}
                              (style/create-section-header title)
@@ -182,10 +182,10 @@
         (style/create-paragraph
           [:div {}
            (interpose ", " owners)]
-          (when realm-name
+          (when auth-domain
             [:div {:style {:paddingTop "0.5rem"}}
              [:div {:style {:fontStyle "italic"}} "Access restricted to authorization domain:"]
-             [:div {} realm-name]])))
+             [:div {} auth-domain]])))
       (render-detail-box
         3
         "Created By"
