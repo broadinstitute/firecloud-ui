@@ -98,6 +98,8 @@
         (if group-name
           [MembershipManagementPage
            {:group-name group-name
+            :admin-term "Admin"
+            :user-term "Member"
             :add-endpoint #(endpoints/add-group-user {:group-name group-name
                                                       :role %1
                                                       :email %2})

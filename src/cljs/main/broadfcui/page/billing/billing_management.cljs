@@ -163,7 +163,9 @@
           [:span {:style {:fontWeight 500}} (if project-name project-name "Billing Management")]]]
         (if project-name
           [MembershipManagementPage
-           {:group-name project-name
+           {:admin-term "Owner"
+            :user-term "User"
+            :group-name project-name
             :add-endpoint #(endpoints/add-billing-project-user {:project-id project-name
                                                                 :role %1
                                                                 :user-email %2})

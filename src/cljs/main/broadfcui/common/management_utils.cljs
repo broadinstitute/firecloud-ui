@@ -35,7 +35,7 @@
           [:div {:style {:flex "0 0 10px"}}]
           [:div {:style {:flex "0 0 100px"}}
            (style/create-form-label "Role")
-           (style/create-identity-select {:ref "role"} ["User" "Owner"])]]
+           (style/create-identity-select {:ref "role"} [(:user props) (:admin props)])]]
          (:footer props)
          (style/create-validation-error-message (:fails @state))
          [comps/ErrorViewer {:error (:server-error @state)
@@ -105,6 +105,8 @@
                                                (modal/push-modal
                                                 [AddUserDialog {:endpoint (:add-endpoint props)
                                                                 :group-name (:group-name props)
+                                                                :user (:user-term props)
+                                                                :admin (:admin-term props)
                                                                 :on-add #(this :-load-data)
                                                                 :footer (:add-member-footer props)}]))}]]}}]
               [comps/ErrorViewer {:error (:remove-error @state)}]])))
