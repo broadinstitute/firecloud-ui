@@ -61,7 +61,7 @@
                  {:header "Last Changed" :starting-width 280 :as-text moncommon/render-date}
                  {:header "Status" :starting-width 120
                   :content-renderer (fn [status]
-                                      [:div {}
+                                      [:div {:data-test-id "workflow-status"}
                                        (moncommon/icon-for-wf-status status)
                                        status])}
                  {:header "Messages" :starting-width 300

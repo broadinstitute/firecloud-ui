@@ -148,7 +148,8 @@
                     :alignItems "center" :justifyContent "center"}}
       (:icon props)
       [:span {:style {:marginLeft "1em" :fontSize "125%" :fontWeight 400
-                      :verticalAlign "middle"}}
+                      :verticalAlign "middle"}
+              :data-test-id "submission-status"}
        (:text props)]])})
 
 (react/defc SidebarButton
