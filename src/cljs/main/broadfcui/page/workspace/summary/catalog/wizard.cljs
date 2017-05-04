@@ -173,11 +173,8 @@
             (react/create-element
              (let [page-count (count (:wizard library-schema))
                    [questions enumerate] (get-questions-for-page working-attributes library-schema page-num)
-                   {:keys [invalid]} (if (:library:invalidDataset working-attributes)
-                                       ;; if you have previously saved incomplete metadata, anything required that
-                                       ;; you haven't filled out will be in red when you open the modal
-                                       (library-utils/validate-required (remove-empty-values working-attributes)
-                                                                      questions required-attributes))]
+                   {:keys [invalid]} (library-utils/validate-required (remove-empty-values working-attributes)
+                                                                      questions required-attributes)]
                (cond
                  (< page-num page-count)
                  [Questions (merge {:ref "wizard-page"
