@@ -61,7 +61,7 @@
 (defn- render-sidebar [state refs this
                        {:keys [workspace billing-projects owner? writer? curator? catalog-with-read? can-share?
                                workspace-id request-refresh]}]
-  (let [{{:keys [isLocked library-attributes description isProtected]} :workspace
+  (let [{{:keys [isLocked library-attributes description authorizationDomain]} :workspace
          {:keys [runningSubmissionsCount]} :workspaceSubmissionStats} workspace
         status (common/compute-status workspace)
         publishable? (and curator? (or catalog-with-read? owner?))
@@ -140,7 +140,7 @@
                                                       (utils/restructure namespace name)))
                         :workspace-id workspace-id
                         :description description
-                        :is-protected? isProtected
+                        :auth-domain (:membersGroupName authorizationDomain)
                         :billing-projects billing-projects}])}])
        (when (and owner? (not editing?))
          [comps/SidebarButton {:style :light :margin :top :color :button-primary
@@ -158,8 +158,8 @@
 (defn- render-main [{:keys [workspace curator? owner? writer? reader? can-share? catalog-with-read? bucket-access? editing? submissions-count
                             user-access-level library-schema request-refresh workspace-id storage-cost]}]
   (let [{:keys [owners]
-         {:keys [createdBy createdDate bucketName description tags workspace-attributes library-attributes realm]} :workspace} workspace
-        realm-name (:usersGroupName realm)
+         {:keys [createdBy createdDate bucketName description tags workspace-attributes library-attributes authorizationDomain]} :workspace} workspace
+        auth-domain (:membersGroupName authorizationDomain)
         render-detail-box (fn [order title & children]
                             [:div {:style {:flexBasis "50%" :order order}}
                              (style/create-section-header title)
@@ -181,11 +181,7 @@
                                               [AclEditor {:workspace-id workspace-id
                                                           :user-access-level user-access-level
                                                           :request-refresh request-refresh}])})
-              ")"])]
-          (when realm-name
-            [:div {:style {:paddingTop "0.5rem"}}
-             [:div {:style {:fontStyle "italic"}} "Access restricted to authorization domain:"]
-             [:div {} realm-name]])))
+              ")"])]))
       (render-detail-box
         3
         "Created By"
