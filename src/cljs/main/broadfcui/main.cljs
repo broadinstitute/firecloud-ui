@@ -138,9 +138,10 @@
                [comps/Banner (merge (select-keys alert [:title :message])
                               {:background-color (:exception-state style/colors)
                                :text-color "#fff"
-                               :link [:a {:style {:color "#fff"} :href (str (:link alert))
+                               :link (when-let [link (:link alert)]
+                                       [:a {:style {:color "#fff"} :href (str link)
                                           :target "_blank"}
-                                      "Read more..."]})])
+                                      "Read more..."])})])
              service-alerts)]))
    :component-did-update
    (fn [{:keys [this state locals]}]
