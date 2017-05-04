@@ -37,8 +37,8 @@
            [input/TextField {:ref "name" :style {:width "100%"}
                              :predicates [(input/nonempty "Method name")]}]]]
          ;;GAWB-1897 removes Type field and makes all MC types "Workflow" until "Task" type is supported
-         (style/create-form-label "Synopsis (optional)")
-         (style/create-text-field {:ref "synopsis" :style {:width "100%"}})
+         (style/create-form-label "Synopsis (optional, 80 characters max)")
+         (style/create-text-field {:ref "synopsis" :style {:width "100%"} :maxLength 80})
          (style/create-form-label "Documentation (optional)")
          (style/create-text-area {:ref "documentation" :style {:width "100%"} :rows 5})
 
