@@ -114,7 +114,7 @@
          (swap! state assoc :account-errors ["Please select a billing account"]))
        (let [[name & fails] (input/get-and-validate refs "name-field")]
          (swap! state assoc :validation-errors fails)
-         (when-not (and fails (not account))
+         (when-not (or fails (not account))
            (do
              (swap! state assoc :creating? true)
              (endpoints/call-ajax-orch
