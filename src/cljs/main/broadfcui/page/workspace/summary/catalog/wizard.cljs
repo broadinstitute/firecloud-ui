@@ -33,31 +33,6 @@
                     :fontWeight (when (> page-num (count pages)) "bold")}}
       "Summary"]]))
 
-(defn- find-required-attributes [library-schema]
-  (->> (map :required (:oneOf library-schema))
-       (concat (:required library-schema))
-       flatten
-       (map keyword)
-       set))
-
-(defn- get-questions-for-page [working-attributes library-schema page-num]
-  (when (< page-num (count (:wizard library-schema)))
-    (let [page-props (get-in library-schema [:wizard page-num])
-          {:keys [questions enumerate optionSource options]} page-props]
-      (if optionSource
-        (let [option-value (get working-attributes (keyword optionSource))]
-          (when-let [option-match (some->> option-value keyword (get options))]
-            (map option-match [:questions :enumerate])))
-        [questions enumerate]))))
-
-(defn- remove-empty-values [attributes]
-  (utils/filter-values
-   (fn [val]
-     (if (or (coll? val) (string? val))
-       (not-empty val)
-       true))
-   attributes))
-
 (def ^:private ALL_USERS "All users")
 
 (defn- ensure-sequence [input]
@@ -110,7 +85,7 @@
             invalid-attributes)]])
    (style/create-paragraph
     [:div {}
-     (let [questions (first (get-questions-for-page (remove-empty-values attributes) library-schema 0))]
+     (let [questions (first (library-utils/get-questions-for-page (library-utils/remove-empty-values attributes) library-schema 0))]
        (map (fn [attribute]
               (if (not-empty (str (attributes (keyword attribute))))
                 (library-utils/render-property library-schema attributes (keyword attribute))))
@@ -144,7 +119,7 @@
                                  (map (fn [version]
                                         [version (get-in library-schema [:properties version :default])]))
                                  (into {}))
-        :required-attributes (find-required-attributes library-schema)}))
+        :required-attributes (library-utils/find-required-attributes library-schema)}))
    :render
    (fn [{:keys [props state locals this]}]
      (let [{:keys [library-schema can-share? owner? writer? catalog-with-read?]} props
@@ -172,8 +147,8 @@
             :content
             (react/create-element
              (let [page-count (count (:wizard library-schema))
-                   [questions enumerate] (get-questions-for-page working-attributes library-schema page-num)
-                   {:keys [invalid]} (library-utils/validate-required (remove-empty-values working-attributes)
+                   [questions enumerate] (library-utils/get-questions-for-page working-attributes library-schema page-num)
+                   {:keys [invalid]} (library-utils/validate-required (library-utils/remove-empty-values working-attributes)
                                                                       questions required-attributes)]
                (cond
                  (< page-num page-count)
@@ -244,8 +219,8 @@
          (swap! state assoc :working-attributes all-attributes)
          (swap! locals update :page-attributes assoc page-num attributes-from-page)
          (doseq [page (conj pages-stack page-num)]
-           (let [[questions _] (get-questions-for-page all-attributes (:library-schema props) page)
-                 {:keys [invalid]} (library-utils/validate-required (remove-empty-values all-attributes)
+           (let [[questions _] (library-utils/get-questions-for-page all-attributes (:library-schema props) page)
+                 {:keys [invalid]} (library-utils/validate-required (library-utils/remove-empty-values all-attributes)
                                                                     questions required-attributes)]
              (reset! invalid-attributes (clojure.set/union invalid @invalid-attributes))))
          (swap! state assoc :invalid-properties @invalid-attributes)
@@ -260,7 +235,7 @@
      (let [{:keys [library-schema]} props
            {:keys [page-num working-attributes]} @state
            next (atom (inc page-num))]
-       (while (and (not (get-questions-for-page working-attributes library-schema @next))
+       (while (and (not (library-utils/get-questions-for-page working-attributes library-schema @next))
                    (< @next (count (:wizard library-schema))))
          (swap! next inc))
        @next))
@@ -273,7 +248,7 @@
        (let [attributes-seen (apply merge (vals (select-keys (:page-attributes @locals) (:pages-stack @state))))
              invoke-args (if (and set-discoverable? (not editable?))
                            {:name endpoints/save-discoverable-by-groups :data (:library:discoverableByGroups attributes-seen)}
-                           {:name endpoints/save-library-metadata :data (remove-empty-values (merge attributes-seen (:version-attributes @state)))})]
+                           {:name endpoints/save-library-metadata :data (library-utils/remove-empty-values (merge attributes-seen (:version-attributes @state)))})]
          (swap! state assoc :submitting? true :submit-error nil)
          (endpoints/call-ajax-orch
           {:endpoint ((:name invoke-args) (:workspace-id props))
