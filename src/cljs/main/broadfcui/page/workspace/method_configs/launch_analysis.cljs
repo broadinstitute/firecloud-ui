@@ -38,6 +38,20 @@
         (row "Workflows ahead of yours:" queue-position)
         (row "Queue status:" (str queued " Queued; " active " Active"))])]))
 
+(react/defc DefineExpressionField
+  {:render
+   (fn [{:keys [props state]}]
+     (let [disabled (= (:root-entity-type props) (get-in @state [:selected-entity :type]))]
+      (style/create-text-field {:placeholder "leave blank for default"
+                                :style {:width "100%"
+                                        :backgroundColor (when disabled (:background-light style/colors))}
+                                :disabled disabled
+                                :value (if disabled
+                                         "Disabled - selected entity is of root entity type"
+                                         (:expression @state))
+                                :onChange #(let [text (-> % .-target .-value clojure.string/trim)]
+                                             (swap! state assoc :expression text))})))})
+
 (defn- render-form [state props refs]
   [:div {:style {:width 1000}}
    (when (:launching? @state)
@@ -69,16 +83,7 @@
                                                     :workflow-count (common/count-workflows
                                                                       e (:root-entity-type props)))})))}]]
    (style/create-form-label "Define Expression")
-   (let [disabled (= (:root-entity-type props) (get-in @state [:selected-entity :type]))]
-     (style/create-text-field {:placeholder "leave blank for default"
-                               :style {:width "100%"
-                                       :backgroundColor (when disabled (:background-light style/colors))}
-                               :disabled disabled
-                               :value (if disabled
-                                        "Disabled - selected entity is of root entity type"
-                                        (:expression @state))
-                               :onChange #(let [text (-> % .-target .-value clojure.string/trim)]
-                                            (swap! state assoc :expression text))}))
+   [DefineExpressionField props state]
    [:div {:style {:marginTop "1em"}}
     [comps/Checkbox
     {:ref "callCache-check"
