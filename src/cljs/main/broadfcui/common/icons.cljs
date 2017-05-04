@@ -42,7 +42,7 @@
    :sort-desc "fa-sort-amount-desc"
    :spinner "fa-spinner"
    :unlock "fa-unlock"
-   :warning-triangle "fa-exclamation-triangle"
+   :warning "fa-exclamation-triangle"
    })
 
 (defn icon [attributes key]
@@ -83,7 +83,8 @@
 (react/defc ExceptionIcon
   {:get-default-props
    (fn []
-     {:size 28})
+     {:size 28
+      :color "white"})
    :render
    (fn [{:keys [props]}]
-     (icon {:style {:color "white" :fontSize (:size props)}} :warning-triangle))})
+     (icon {:style {:color (:color props) :fontSize (:size props)}} :warning))})

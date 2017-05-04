@@ -120,68 +120,82 @@
                   "http://status.firecloud.org/"]
                  " for more information."])}))
 
-(defn status-alert [title message link]
-  [:div {:style {:borderBottom "1px solid" :borderBottomColor (:line-default style/colors)
-                 :backgroundColor (:exception-state style/colors) :padding "1rem"}}
-   [:div {:style {:display "flex" :background (:exception-state style/colors) :color "#fff"
-                  :alignItems "center" :marginBottom "0.5rem"}}
-    [icons/ExceptionIcon {:size 18}]
-    [:span {:style {:marginLeft "0.5rem" :fontWeight 600
-                    :verticalAlign "middle"}}
-     (if title title "Service Alert")]]
-   [:div {:style {:color "#fff" :fontSize "90%"}}
-    (str message " ")
-     (when link [:a {:href (str link) :target "_blank" :style {:color "#fff"}} "Read more..."])]])
-
 (defn status-alert-interval [attempt]
   (cond
     (= attempt 0) (config/status-alerts-refresh)
     (> attempt (config/max-retry-attempts)) (config/status-alerts-refresh)
     :else (utils/get-exponential-backoff-interval attempt)))
 
-(react/defc StatusAlertContainer
+(react/defc ServiceAlertContainer
   {:get-initial-state
    (fn []
-     {:failedRetries 0})
+     {:failed-retries 0})
    :render
-   (fn [{:keys [this state]}]
-     (when-let [alerts (not-empty (:alerts @state))]
+   (fn [{:keys [state]}]
+     (let [{:keys [service-alerts]} @state]
        [:div {}
         (map (fn [alert]
-               (status-alert (:title alert) (:message alert) (:link alert)))
-             alerts)]))
+               [comps/Banner (merge (select-keys alert [:title :message])
+                              {:background-color (:exception-state style/colors)
+                               :text-color "#fff"
+                               :link (when-let [link (:link alert)]
+                                       [:a {:style {:color "#fff"} :href (str link)
+                                          :target "_blank"}
+                                      "Read more..."])})])
+             service-alerts)]))
    :component-did-update
    (fn [{:keys [this state locals]}]
      ;; Reset the interval
      (js/clearInterval (:interval-id @locals))
      ;; Update the poll interval based on the number of failed attempts (for exponential back offs)
      (swap! locals assoc :interval-id
-            (js/setInterval #(this :load-alerts) (status-alert-interval (:failedRetries @state)))))
+            (js/setInterval #(this :-load-service-alerts) (status-alert-interval (:failed-retries @state)))))
    :component-did-mount
    (fn [{:keys [this state locals]}]
      ;; Call once for initial load
-     (this :load-alerts)
+     (this :-load-service-alerts)
      ;; Add initial poll interval
      (swap! locals assoc :interval-id
-            (js/setInterval #(this :load-alerts) (status-alert-interval (:failedRetries @state)))))
+            (js/setInterval #(this :-load-service-alerts) (status-alert-interval (:failed-retries @state)))))
    :component-will-unmount
-   (fn [{:keys [state locals]}]
+   (fn [{:keys [locals]}]
      (js/clearInterval (:interval-id @locals)))
-   :load-alerts
-   (fn [{:keys [locals state]}]
+   :-load-service-alerts
+   (fn [{:keys [state]}]
      (utils/ajax {:url (config/alerts-json-url)
                   :headers {"Cache-Control" "no-store, no-cache"}
                   :on-done (fn [{:keys [status-code raw-response]}]
                              (if (utils/check-server-down status-code)
-                               (if (>= (:failedRetries @state) (config/max-retry-attempts))
-                                 (swap! state assoc :alerts [{:title "Google Service Alert"
-                                                            :message "There may be problems accessing data in Google Cloud Storage."
-                                                            :link "https://status.cloud.google.com/"}])
-                                 (swap! state assoc :failedRetries (+ (:failedRetries @state) 1)))
+                               (if (>= (:failed-retries @state) (config/max-retry-attempts))
+                                 (swap! state assoc :service-alerts
+                                        [{:title "Google Service Alert"
+                                          :message "There may be problems accessing data in Google Cloud Storage."
+                                          :link "https://status.cloud.google.com/"}])
+                                 (swap! state assoc :failed-retries (+ (:failed-retries @state) 1)))
                                (let [[parsed _] (utils/parse-json-string raw-response true false)]
+                                 (utils/parse-json-string raw-response true false)
                                  (if (not-empty parsed)
-                                   (swap! state assoc :alerts parsed  :failedRetries 0)
-                                   (swap! state dissoc :alerts)))))}))})
+                                   (swap! state assoc :service-alerts parsed :failed-retries 0)
+                                   (swap! state dissoc :service-alerts)))))}))})
+
+(defn- show-js-exception [e]
+  (comps/push-ok-cancel-modal
+   {:header [:span {} (icons/icon {:style {:color (:warning-state style/colors)
+                                           :marginRight "1rem"}}
+                                  :warning)
+             "Something Went Wrong"]
+    :content [:div {:style {:width 800}}
+              "A JavaScript error occurred; please try reloading the page. If the error persists, please report it to our "
+               [:a {:href (config/forum-url)
+                    :target "_blank" :style {}} "forum"] " for help. Details of the error message are below."
+              [:div {:style {:fontFamily "monospace" :whiteSpace "pre" :overflow "auto"
+                             :backgroundColor "black" :color "white"
+                             :padding "0.5rem" :marginTop "0.5rem" :borderRadius "0.3rem"}}
+               [:div {:style {:fontWeight "bold"}} "Error: "]
+               (aget e "message")
+               [:div {:style {:fontWeight "bold" :paddingTop "0.5rem"}} "Source: "]
+               (aget e "filename")]]
+    :show-cancel? false :ok-button "OK"}))
 
 (react/defc App
   {:handle-hash-change
@@ -197,7 +211,7 @@
      (init-nav-paths)
      (this :handle-hash-change))
    :render
-   (fn [{:keys [this state]}]
+   (fn [{:keys [state]}]
      (let [{:keys [auth2 user-status window-hash]} @state
            {:keys [component make-props public?]} (nav/find-path-handler window-hash)
            sign-in-hidden? (or (nil? component)
@@ -205,42 +219,45 @@
                                (contains? (:user-status @state) :signed-in))]
        [:div {}
         (when (:config-loaded? @state)
-          [StatusAlertContainer])
+          ;; We want these banners to be shown in front of the modals, so we use a zIndex above them
+          [:div {:style {:zIndex (inc style/modals-z-index) :position "relative"}}
+           [ServiceAlertContainer]])
         (when (and (contains? user-status :signed-in) (contains? user-status :refresh-token-saved))
           [auth/RefreshCredentials {:auth2 auth2}])
-        [:div {:style {:backgroundColor "white" :padding 20}}
-         (when-not (contains? user-status :signed-in)
-           (style/render-text-logo))
-         [:div {}
-          (when auth2
-            [auth/LoggedOut {:auth2 auth2 :hidden? sign-in-hidden?
-                             :on-change (fn [signed-in? token-saved?]
-                                          (swap! state update :user-status
-                                                 #(-> %
-                                                      ((if signed-in? conj disj)
-                                                       :signed-in)
-                                                      ((if token-saved? conj disj)
-                                                       :refresh-token-saved))))}])
+        [:div {:style {:position "relative"}}
+         [:div {:style {:backgroundColor "white" :padding 20}}
+          (when-not (contains? user-status :signed-in)
+            (style/render-text-logo))
+          [:div {}
+           (when auth2
+             [auth/LoggedOut {:auth2 auth2 :hidden? sign-in-hidden?
+                              :on-change (fn [signed-in? token-saved?]
+                                           (swap! state update :user-status
+                                                  #(-> %
+                                                       ((if signed-in? conj disj)
+                                                        :signed-in)
+                                                       ((if token-saved? conj disj)
+                                                        :refresh-token-saved))))}])
 
-          (cond
-            (not (:config-loaded? @state))
-            [config-loader/Component
-             {:on-success #(swap! state assoc :config-loaded? true)}]
-            (and (not (contains? user-status :signed-in)) (nil? component))
-            [:h2 {} "Page not found."]
-            public?
-            [component (make-props)]
-            (nil? auth2)
-            [auth/GoogleAuthLibLoader {:on-loaded #(swap! state assoc :auth2 %)}]
-            (contains? user-status :signed-in)
-            (cond
-              (not (contains? user-status :go))
-              [auth/UserStatus {:on-success #(swap! state update :user-status conj :go)}]
-              :else [LoggedIn {:component component :make-props make-props
-                               :auth2 auth2}]))]]
-        (footer/render-footer)
-        ;; As low as possible on the page so it will be the frontmost component when displayed.
-        [modal/Component {:ref "modal"}]]))
+           (cond
+             (not (:config-loaded? @state))
+             [config-loader/Component
+              {:on-success #(swap! state assoc :config-loaded? true)}]
+             (and (not (contains? user-status :signed-in)) (nil? component))
+             [:h2 {} "Page not found."]
+             public?
+             [component (make-props)]
+             (nil? auth2)
+             [auth/GoogleAuthLibLoader {:on-loaded #(swap! state assoc :auth2 %)}]
+             (contains? user-status :signed-in)
+             (cond
+               (not (contains? user-status :go))
+               [auth/UserStatus {:on-success #(swap! state update :user-status conj :go)}]
+               :else [LoggedIn {:component component :make-props make-props
+                                :auth2 auth2}]))]]
+         (footer/render-footer)
+         ;; As low as possible on the page so it will be the frontmost component when displayed.
+         [modal/Component {:ref "modal"}]]]))
    :component-did-mount
    (fn [{:keys [this state refs locals]}]
      ;; pop up the message only when we start getting 503s, not on every 503
@@ -256,15 +273,16 @@
           (show-system-status-dialog true))))
      (modal/set-instance! (@refs "modal"))
      (swap! locals assoc :hash-change-listener (partial react/call :handle-hash-change this))
-     (.addEventListener js/window "hashchange" (:hash-change-listener @locals)))
-   :component-will-receive-props
-   (fn [{:keys [this]}]
-     (init-nav-paths))
-   :component-will-unmount
-   (fn [{:keys [locals]}]
-     (.removeEventListener js/window "hashchange" (:hash-change-listener @locals))
-     (remove-watch utils/server-down? :server-watcher)
-     (remove-watch utils/maintenance-mode? :server-watcher))})
+     (.addEventListener js/window "hashchange" (:hash-change-listener @locals))
+     (.addEventListener js/window "error" (fn [e] (show-js-exception e))))
+     :component-will-receive-props
+     (fn []
+       (init-nav-paths))
+     :component-will-unmount
+     (fn [{:keys [locals]}]
+       (.removeEventListener js/window "hashchange" (:hash-change-listener @locals))
+       (remove-watch utils/server-down? :server-watcher)
+       (remove-watch utils/maintenance-mode? :server-watcher))})
 
 
 (defn render-application []
