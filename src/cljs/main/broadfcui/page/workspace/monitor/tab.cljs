@@ -24,22 +24,23 @@
     {:style table-style/table-heavy
      :empty-message "There are no analyses to display."
      :columns
-     [{:header "Date" :initial-width 200 :as-text render-date
-       :sort-by :submissionDate :sort-initial :desc
-       :render (fn [submission]
-                 (style/create-link {:text (render-date submission)
-                                     :href (nav/get-link :workspace-submission
-                                                         workspace-id
-                                                         (:submissionId submission))}))}
-      {:header "Status" :as-text :status :sort-by :text
+     [{:header "Status" :as-text :status :sort-by :text
        :render (fn [submission]
                  [:div {:style {:height table-style/table-icon-size}}
                   (when (= "Done" (:status submission))
                     (moncommon/icon-for-sub-status (:workflowStatuses submission)))
                   (:status submission)])}
       {:header "Method Configuration" :initial-width 300
-       :column-data (juxt :methodConfigurationNamespace :methodConfigurationName)
-       :as-text (fn [[namespace name]] (str namespace "/" name))}
+       :column-data (juxt :methodConfigurationNamespace :methodConfigurationName :submissionId)
+       :as-text (fn [[namespace name]] (str namespace "/" name))
+       :render
+       (fn [[namespace name submission-id]]
+         (style/create-link {:text (str namespace "/" name)
+                             :href (nav/get-link :workspace-submission
+                                                 workspace-id
+                                                 submission-id)}))}
+      {:header "Date" :initial-width 200 :as-text render-date
+       :sort-by :submissionDate :sort-initial :desc}
       {:header "Data Entity" :initial-width 220
        :column-data (comp (juxt :entityName :entityType) :submissionEntity)
        :as-text (fn [[entity-name entity-type]]
