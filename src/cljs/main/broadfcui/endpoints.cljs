@@ -709,6 +709,26 @@
                  (on-done nil (get-parsed-response))
                  (on-done status-text nil)))}))
 
+(defn create-group [group-name]
+  {:path (str "/groups/" group-name)
+   :method :post})
+
+(defn delete-group [group-name]
+  {:path (str "/groups/" group-name)
+   :method :delete})
+
+(defn list-group-members [group-name]
+  {:path (str "/groups/" group-name)
+   :method :get})
+
+(defn add-group-user [{:keys [group-name role email]}]
+  {:path (str "/groups/" group-name "/" role "/" email)
+   :method :put})
+
+(defn delete-group-user [{:keys [group-name role email]}]
+  {:path (str "/groups/" group-name "/" role "/" email)
+   :method :delete})
+
 
 (defn get-billing-projects
   ([on-done] (get-billing-projects false on-done))

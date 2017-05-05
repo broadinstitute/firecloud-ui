@@ -32,7 +32,7 @@
                                :onChange #(swap! state assoc :selected-project (-> % .-target .-value))}
                               (:billing-projects props))
          (style/create-form-label "Name")
-         [input/TextField {:ref "name"
+         [input/TextField {:ref "name" :autoFocus true
                            :style {:width "100%"}
                            :defaultValue (get-in props [:workspace-id :name])
                            :placeholder "Required"

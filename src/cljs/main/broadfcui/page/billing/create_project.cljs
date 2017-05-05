@@ -37,7 +37,7 @@
                  [comps/Blocker {:banner "Creating billing account..."}])
                [:div {:style {:fontSize "120%"}}
                 "1. Enter a unique name:"]
-               [input/TextField {:ref "name-field"
+               [input/TextField {:ref "name-field" :autoFocus true
                                  :style {:width "100%" :marginTop "1em" :marginBottom 0}
                                  :predicates [{:test #(<= 6 (count %) 30) :message "Name must be 6-30 characters long"}
                                               {:test #(re-matches #"[a-z0-9\-]*" %) :message "Name contains invalid characters"}

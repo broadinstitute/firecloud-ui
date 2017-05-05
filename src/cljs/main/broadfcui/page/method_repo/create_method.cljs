@@ -44,7 +44,7 @@
                                :predicates [(input/nonempty "Method namespace")]}]]
             [:div {:style {:flex "1 0 auto"}}
              (style/create-form-label "Name")
-             [input/TextField {:ref "name" :style {:width "100%"}
+             [input/TextField {:ref "name" :style {:autoFocus true :width "100%"}
                                :defaultValue (:name defaults)
                                :predicates [(input/nonempty "Method name")]}]]]
            ;;GAWB-1897 removes Type field and makes all MC types "Workflow" until "Task" type is supported
