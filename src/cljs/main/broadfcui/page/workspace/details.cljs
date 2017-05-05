@@ -137,15 +137,20 @@
           "Workspace: "
           [:span {:style {:fontWeight 500}} (:namespace workspace-id) "/" (:name workspace-id)]]
          [:div {:style {:marginRight "-0.5rem"}}
-          (common/render-icon-dropdown
-           {:icon-name :bell :icon-color (:text-light style/colors)
-            :icon-title "Adjust notifications for this workspace"
-            :position "bottom"
-            :button-class "float-right"
-            :ref (fn [instance] (swap! locals assoc :infobox instance))
-            :contents [notifications/WorkspaceComponent
-                       (merge (select-keys props [:workspace-id])
-                              {:close-self #((:infobox @locals) :close)})]})]]
+          [common/FoundationTooltip
+           {:tooltip "Adjust notifications for this workspace"
+            :position "left"
+            :style {:borderBottom "none"}
+            :data-hover-delay "1000" :data-click-open "false"
+            :text
+            (common/render-icon-dropdown
+             {:icon-name :bell :icon-color (:text-light style/colors)
+              :position "bottom"
+              :button-class "float-right"
+              :ref (fn [instance] (swap! locals assoc :infobox instance))
+              :contents [notifications/WorkspaceComponent
+                         (merge (select-keys props [:workspace-id])
+                                {:close-self #((:infobox @locals) :close)})]})}]]]
         [:div {:style {:marginTop "1rem"
                        :display "flex" :backgroundColor (:background-light style/colors)
                        :borderTop style/standard-line :borderBottom style/standard-line

@@ -9,6 +9,12 @@
    [dmohs.react :as r]
    ))
 
+(def notification-details
+  {"WorkspaceChangedNotification"
+   {:label "Data Added or Changed"
+    :description (str "This notification can be triggered by a Writer or Owner when they have added"
+                      " or changed the data in this workspace.")}})
+
 (defn- profile-response->map [notification-keys profile-response]
   (->> (:keyValuePairs profile-response)
        (filter #(contains? notification-keys (:key %)))
@@ -130,6 +136,10 @@
               (after-update (fn [] (js/setTimeout #(swap! state dissoc :saved?) 1000))))
             (swap! state assoc :error? true))))))})
 
+(defn- parse-ws-notification-key [k]
+  (let [[_ id ws-namespace ws-name] (clojure.string/split k #"/")]
+    {:id id :workspace-id {:namespace ws-namespace :name ws-name}}))
+
 (r/defc WorkspaceComponent
   {:get-initial-state
    (fn []
@@ -159,18 +169,21 @@
                       (common/render-foundation-switch
                        {:checked? checked? :on-change (partial set-checked? k)}))
            row (fn [{:keys [description key value]}]
-                 [:tr {}
-                  [:td {} (checkbox key value)]
-                  [:td {:style {:padding "0.5rem"}} description]
-                  [:td {} (when-let [pending (get pending key)]
-                            (case pending
-                              :error
-                              (icons/icon {:style {:color (:exception-state style/colors)}}
-                                          :error)
-                              :done
-                              (icons/icon {:style {:color (:success-state style/colors)}}
-                                          :done)
-                              (icons/icon {:className "fa-pulse fa-lg fa-fw"} :spinner)))]])]
+                 (let [{:keys [id]} (parse-ws-notification-key key)
+                       {:keys [label description]} (notification-details id)]
+                   [:tr {}
+                    [:td {} (checkbox key value)]
+                    [:td {:style {:padding "0.5rem"}} label]
+                    [:td {} (common/render-info-box {:text description})]
+                    [:td {} (when-let [pending (get pending key)]
+                              (case pending
+                                :error
+                                (icons/icon {:style {:color (:exception-state style/colors)}}
+                                            :error)
+                                :done
+                                (icons/icon {:style {:color (:success-state style/colors)}}
+                                            :done)
+                                (icons/icon {:className "fa-pulse fa-lg fa-fw"} :spinner)))]]))]
        [:table {:style {:fontSize "90%"}}
         [:tbody {}
          (map row notifications)]]))
