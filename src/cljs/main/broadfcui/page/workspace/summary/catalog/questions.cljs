@@ -67,7 +67,7 @@
      [:span {:style (colorize {:fontWeight "bold"})}
       " (required)"])])
 
-(defn- render-enum [{:keys [enum style wording radio current-value colorize update-property set-property disabled]}]
+(defn- render-enum [{:keys [enum style wording radio current-value colorize update-property set-property disabled property]}]
   (if (= style "large")
     [:div {}
      (map (fn [option]
@@ -85,19 +85,19 @@
           enum)]
     (if (< (count enum) 4)
       [:div {:style {:display "inline-block" :margin "0.75em 0 0.75em 1em"}}
-       (map #(radio {:val %}) enum)]
+       (map #(radio {:val % :property property}) enum)]
       (style/create-identity-select {:value (or current-value ENUM_EMPTY_CHOICE)
                                      :style (colorize {})
                                      :disabled disabled
                                      :onChange update-property}
                                     (cons ENUM_EMPTY_CHOICE enum)))))
 
-(defn- render-boolean [{:keys [radio required? emptyChoice wording]}]
+(defn- render-boolean [{:keys [radio required? emptyChoice wording property]}]
   [:div {:style {:display "inline-block" :margin "0.75em 0 0.75em 1em"}}
-   (radio {:val true :label (case wording "yes/no" "Yes" "True")})
-   (radio {:val false :label (case wording "yes/no" "No" "False")})
+   (radio {:val true :label (case wording "yes/no" "Yes" "True") :property property})
+   (radio {:val false :label (case wording "yes/no" "No" "False")  :property property})
    (when-not required?
-     (radio {:val nil :label (or emptyChoice "N/A")}))])
+     (radio {:val nil :label (or emptyChoice "N/A") :property property}))])
 
 (defn- render-freetext [{:keys [colorize value-nullsafe update-property disabled property]}]
   (style/create-text-area {:style (colorize {:width "100%"})
@@ -241,10 +241,12 @@
                               :update-property #(swap! state update :attributes assoc property (.. % -target -value))
                               :set-property #(swap! state update :attributes assoc property %)
                               :disabled (not editable?)
-                              :radio (fn [{:keys [val label]}]
+                              :radio (fn [{:keys [val label property]}]
                                        [:label {:style (colorize {:display "inline-flex" :alignItems "center"
                                                                   :cursor "pointer" :marginRight "2em"})}
                                         [:input {:type "radio" :readOnly true :checked (= val current-value)
+                                                 ;; looks like "library:RS-G-Male" or "library:requiresExternalApproval-Yes"
+                                                 :data-test-id (str (name property) "-" (or label (str val)))
                                                  :style {:cursor "pointer"}
                                                  :disabled (not editable?)
                                                  :onChange #(swap! state update :attributes assoc property val)}]
