@@ -44,10 +44,10 @@
         [:span {:style {:position "absolute" :top 0 :right 0 :bottom 0 :left 0
                         :backgroundColor "rgba(0,0,0,0.2)"}}]
         (style/center {}
-                      (case status
-                        "Complete" [icons/CompleteIcon]
-                        "Running" [icons/RunningIcon]
-                        "Exception" [icons/ExceptionIcon]))]))})
+          (case status
+            "Complete" [icons/CompleteIcon]
+            "Running" [icons/RunningIcon]
+            "Exception" [icons/ExceptionIcon]))]))})
 
 (react/defc RequestAuthDomainAccessDialog
   {:get-initial-state
@@ -253,6 +253,7 @@
               :column-data column-data :as-text :status
               :render (fn [data] [StatusCell (utils/restructure data nav-context)])}
              {:id "Workspace" :header [:span {:style {:marginLeft 24}} "Workspace"]
+              :initial-width 300
               :column-data column-data :as-text get-workspace-name-string
               :sort-by #(mapv clojure.string/lower-case (replace (:workspace-id %) [:namespace :name]))
               :render (fn [data] [WorkspaceCell (utils/restructure data nav-context)])}
@@ -302,11 +303,7 @@
          :paginator {:style {:clear "both"}}}]))
    :component-did-update
    (fn [{:keys [state prev-state refs]}]
-     (persistence/save {:key persistence-key :state state})
-     ;; this is terrible, but GAWB-1893 (which is up next) will fix it
-     (when-not (= (:filters @state) (:filters prev-state))
-       (when-not ((@refs "table") :update-query-params {:page-number 1})
-         ((@refs "table") :refresh-rows))))
+     (persistence/save {:key persistence-key :state state}))
    :-side-filters
    (fn [{:keys [state refs locals]}]
      (let [{:keys [filters]} @state]
@@ -364,7 +361,6 @@
    :render
    (fn [{:keys [props state]}]
      (let [server-response (:server-response @state)
-
            {:keys [workspaces billing-projects error-message disabled-reason]} server-response]
        (cond
          error-message (style/create-server-error-message error-message)
@@ -379,23 +375,16 @@
    :component-did-mount
    (fn [{:keys [state]}]
      (endpoints/call-ajax-orch
-      {:endpoint endpoints/list-workspaces
-       :on-done (fn [{:keys [success? status-text get-parsed-response]}]
-                  (if success?
-                    (swap! state update :server-response
-                           assoc :workspaces (map
-                                              (fn [ws]
-                                                (assoc ws :status (common/compute-status ws)))
-                                              (get-parsed-response)))
-                    (swap! state update :server-response
-                           assoc :error-message status-text)))})
-     (endpoints/get-groups
-      (fn [success? status-text get-parsed-response]
-        (if success?
-          (swap! state update :server-response
-                 assoc :group(map #(:groupName %) get-parsed-response))
-          (swap! state update :service-response
-                 assoc :error-message status-text))))
+       {:endpoint endpoints/list-workspaces
+        :on-done (fn [{:keys [success? status-text get-parsed-response]}]
+                   (if success?
+                     (swap! state update :server-response
+                            assoc :workspaces (map
+                                               (fn [ws]
+                                                 (assoc ws :status (common/compute-status ws)))
+                                               (get-parsed-response)))
+                     (swap! state update :server-response
+                            assoc :error-message status-text)))})
      (endpoints/get-billing-projects
       (fn [err-text projects]
         (if err-text
@@ -415,8 +404,8 @@
 (defn add-nav-paths []
   (nav/defredirect {:regex #"workspaces" :make-path (fn [] "")})
   (nav/defpath
-   :workspaces
-   {:component Page
-    :regex #""
-    :make-props (fn [] {})
-    :make-path (fn [] "")}))
+    :workspaces
+    {:component Page
+     :regex #""
+     :make-props (fn [] {})
+     :make-path (fn [] "")}))
