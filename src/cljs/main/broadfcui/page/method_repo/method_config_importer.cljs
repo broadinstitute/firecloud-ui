@@ -63,7 +63,15 @@
                                                         (nav/go-to-path :method id)
                                                         (scroll-to-top))}])}])
         (when owner?
-          [:div {}
+          (list
+           [comps/SidebarButton
+            {:style :light :color :button-primary
+             :text "Edit..." :icon :edit :margin :bottom
+             :onClick #(modal/push-modal [create/CreateMethodDialog
+                                          {:snapshot entity
+                                           :on-created (fn [_ id]
+                                                         (nav/go-to-path :method id)
+                                                         (scroll-to-top))}])}]
             [comps/SidebarButton
              {:style :light :color :button-primary
               :text "Permissions..." :icon :settings :margin :bottom
@@ -79,7 +87,7 @@
              {:style :light :color :exception-state
               :text "Redact" :icon :delete :margin :bottom
               :onClick #(modal/push-modal [Redactor {:entity entity :config? config?
-                                                     :on-delete (:on-delete props)}])}]])])
+                                                 :on-delete (:on-delete props)}])}]))])
      [:div {:style {:flex "1 1 auto"}}
       [comps/EntityDetails {:entity entity}]
       [:div {:style {:border style/standard-line
