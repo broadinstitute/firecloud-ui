@@ -27,7 +27,10 @@
     "Entity"))
 
 (react/defc EntityViewer
-  {:render
+  {:get-initial-state
+   (fn []
+     {:last-entity []})
+   :render
    (fn [{:keys [props state]}]
      (let [{:keys [update-parent-state entity-type entity-name attr-list]} props
            item-column-name (get-column-name entity-type)
@@ -44,25 +47,29 @@
                        (style/create-link
                         {:text item-name
                          :onClick (fn []
-                                    (swap! state assoc
-                                           :last-entity (:entity-name props)
-                                           :last-entity-type (:entity-type props))
+                                    (swap! state update
+                                           :last-entity conj {:type (:entity-type props)
+                                                              :name (:entity-name props)})
                                     (update-and-load item-type item-name))}))]
-       [:div {:style {:flex "0 0 30%" :padding "0.5rem" :marginLeft ".38em"
+       [:div {:style {:width "30%" :padding "0.5rem" :marginLeft ".38em"
                       :border (str "1px solid " (:line-default style/colors))}}
         [:a {:onClick #(update-parent-state :selected-entity nil)
              :href "javascript:;"
              :style {:padding "1rem" :float "right"
                      :fontSize "80%" :color (:text-light style/colors)}}
          (icons/icon {} :close)]
-        (when (:last-entity @state)
-          [:a {:onClick #(update-and-load (:last-entity-type @state) (:last-entity @state))
-               :href "javascript:;"
-               :style {:padding "1rem"
-                       :color (:text-light style/colors)}}
-           (icons/icon {} :angle-left)])
+        (when (not-empty (:last-entity @state))
+          (let [last-entity (last (:last-entity @state))]
+            [:a {:onClick (fn []
+                            (swap! state update :last-entity pop)
+                            (update-and-load (:type last-entity) (:name last-entity)))
+                 :href "javascript:;"
+                 :style {:padding "1rem"
+                         :color (:text-light style/colors)}}
+             (icons/icon {} :angle-left)]))
         [:div {:style {:display "inline-block" :fontWeight "bold" :padding "1rem 0 0 1rem" :marginBottom "1em"}} entity-name]
-        [table/Table {:reorderable-columns? false
+        [table/Table {:key entity-type
+                      :reorderable-columns? false
                       :width :narrow
                       :pagination :none
                       :filterable? false
