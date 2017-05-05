@@ -32,7 +32,7 @@
                                 :onChange #(swap! state assoc :selected-project (-> % .-target .-value))}
                                (:billing-projects props))
           (style/create-form-label "Name")
-          [input/TextField {:ref "name"
+          [input/TextField {:ref "name" :autoFocus true
                             :style {:width "100%"}
                             :defaultValue (str (get-in props [:workspace-id :name])" copy")
                             :placeholder "Required"
@@ -47,30 +47,30 @@
           (common/render-info-box
             {:text [:div {} [:strong {} "Note:"]
                     [:div {} "Once this workspace is associated with an Authorization Domain, a user
-                   can access the data onlyif they are a member of the Domain and have been granted
+                   can access the data only if they are a member of the Domain and have been granted
                    read or write permission on the workspace. If a user with access to the workspace
                    clones it, any Domain associations will be retained by the new copy. If a user
-                   tries to share the clone with a person whoisnot in the Domain, the data remainsprotected. "]
+                   tries to share the clone with a person who is not in the Domain, the data remains protected. "]
                     (style/create-link {:href "https://software.broadinstitute.org/firecloud/documentation/article?id=9524"
                                         :target "_blank"
                                         :text "Read more about Authorization Domains"})]})]
          (if-let [auth-domain (:auth-domain props)]
-            [:div {:style {:fontStyle "italic" :fontSize "80%"}}
+           [:div {:style {:fontStyle "italic" :fontSize "80%"}}
             "The cloned workspace will automatically inherit the authorization domain "
-            [:strong {} auth-domain] " from this workspace ."]
-            (style/create-select
-             {:ref "auth-domain"
-              :onChange #(swap! state assoc :selected-auth-domain (-> % .-target .-value))}
-              (:groups @state)))
-          (style/create-validation-error-message (:validation-error @state))
-          [comps/ErrorViewer {:error (:error @state)
-                              :expect {409 "A workspace with this name already exists in this project"}}]])}])
+            [:strong {} auth-domain] " from this workspace."]
+           (style/create-select
+            {:ref "auth-domain"
+             :onChange #(swap! state assoc :selected-auth-domain (-> % .-target .-value))}
+            (:groups @state)))
+         (style/create-validation-error-message (:validation-error @state))
+         [comps/ErrorViewer {:error (:error @state)
+                             :expect {409 "A workspace with this name already exists in this project"}}]])}])
    :component-did-mount
    (fn [{:keys [state]}]
      (endpoints/get-groups
-        (fn [success? parsed-response]
-                     (swap! state assoc :groups
-                       (conj (map #(:groupName %) parsed-response)
+      (fn [success? parsed-response]
+        (swap! state assoc :groups
+               (conj (map #(:groupName %) parsed-response)
                      "Anyone who is given permission")))))
    :do-clone
    (fn [{:keys [props refs state]}]

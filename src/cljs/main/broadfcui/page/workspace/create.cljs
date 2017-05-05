@@ -35,7 +35,7 @@
            :onChange #(swap! state assoc :selected-project (-> % .-target .-value))}
           (:billing-projects props))
          (style/create-form-label "Name")
-         [input/TextField {:ref "wsName" :style {:width "100%"}
+         [input/TextField {:ref "wsName" :autoFocus true :style {:width "100%"}
                            :predicates [(input/nonempty "Workspace name")
                                         (input/alphanumeric_- "Workspace name")]}]
          (style/create-textfield-hint "Only letters, numbers, underscores, and dashes allowed")
@@ -45,11 +45,10 @@
           (style/create-form-label "Authorization Domain")
           (common/render-info-box
            {:text [:div {} [:strong {} "Note:"]
-                   [:div {} "Once this workspace is associated with an Authorization Domain, a user
-                   can access the data only if they are a member of the Domain and have been granted
-                   read or write permission on the workspace. If a user with access to the workspace
-                   clones it, any Domain associations will be retained by the new copy. If a user
-                   tries to share the clone with a person who is not in the Domain, the data remains protected. "]
+                   [:div {} "Once this workspace's Authorization Domain is set, a user can access
+                   the data only if they are a member of the Domain and have been granted read or
+                   write permission on the workspace. To define this workspace's Authorization
+                   Domain, select a group."]
                    (style/create-link {:href "https://software.broadinstitute.org/firecloud/documentation/article?id=9524"
                                        :target "_blank"
                                        :text "Read more about Authorization Domains"})]})]
@@ -64,8 +63,11 @@
      (endpoints/get-groups
       (fn [success? parsed-response]
         (swap! state assoc :groups
-               (conj (map #(:groupName %) parsed-response)
-                     "Anyone who is given permission")))))
+               (->> parsed-response
+                    (remove (fn [group]
+                              (= (:groupName group) "All_Users")))
+                    (map :groupName )
+                    (concat ["Anyone who is given permission"]))))))
    :create-workspace
    (fn [{:keys [props state refs]}]
      (swap! state dissoc :server-error :validation-errors)

@@ -16,6 +16,7 @@
    [broadfcui.header :as header]
    [broadfcui.nav :as nav]
    [broadfcui.page.billing.billing-management :as billing-management]
+   [broadfcui.page.groups.groups-management :as group-management]
    [broadfcui.page.library.library-page :as library-page]
    [broadfcui.page.method-repo.method-repo-page :as method-repo]
    [broadfcui.page.profile :as profile-page]
@@ -29,6 +30,7 @@
   (nav/clear-paths)
   (auth/add-nav-paths)
   (billing-management/add-nav-paths)
+  (group-management/add-nav-paths)
   (library-page/add-nav-paths)
   (method-repo/add-nav-paths)
   (profile-page/add-nav-paths)

@@ -611,18 +611,14 @@
    :method :delete})
 
 
-(defn persist-agora-method-acl [ent]
-  {:path (let [ent-type (ent "entityType")
-               name (ent "name")
-               nmsp (ent "namespace")
-               sid (ent "snapshotId")
-               base (cond
-                      (= "Configuration" ent-type) "configurations"
-                      (or (= "Task" ent-type) (= "Workflow" ent-type)) "methods"
+(defn persist-agora-method-acl [{:keys [entityType name namespace snapshotId]}]
+  {:path (let [base (cond
+                      (= "Configuration" entityType) "configurations"
+                      (or (= "Task" entityType) (= "Workflow" entityType)) "methods"
                       :else (do
-                              (utils/log "Error, unknown type : " ent-type)
+                              (utils/log "Error, unknown type : " entityType)
                               (str "configurations")))]
-           (str "/" base "/" nmsp "/" name "/" sid "/permissions"))
+           (str "/" base "/" namespace "/" name "/" snapshotId "/permissions"))
    :method :post})
 
 
@@ -712,6 +708,26 @@
                (if success?
                  (on-done nil (get-parsed-response))
                  (on-done status-text nil)))}))
+
+(defn create-group [group-name]
+  {:path (str "/groups/" group-name)
+   :method :post})
+
+(defn delete-group [group-name]
+  {:path (str "/groups/" group-name)
+   :method :delete})
+
+(defn list-group-members [group-name]
+  {:path (str "/groups/" group-name)
+   :method :get})
+
+(defn add-group-user [{:keys [group-name role email]}]
+  {:path (str "/groups/" group-name "/" role "/" email)
+   :method :put})
+
+(defn delete-group-user [{:keys [group-name role email]}]
+  {:path (str "/groups/" group-name "/" role "/" email)
+   :method :delete})
 
 
 (defn get-billing-projects
