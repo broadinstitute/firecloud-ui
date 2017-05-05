@@ -9,7 +9,6 @@
     [broadfcui.common.style :as style]
     [broadfcui.common.table.style :as table-style]
     [broadfcui.common.table.table :refer [Table]]
-    [broadfcui.common.table.utils :as table-utils]
     [broadfcui.config :as config]
     [broadfcui.endpoints :as endpoints]
     [broadfcui.common.modal :as modal]
@@ -37,7 +36,9 @@
                     "javascript:;"
                     (nav/get-link :workspace-summary workspace-id))
             :style {:display "block" :position "relative"
-                    :backgroundColor (if no-access? (:disabled-state style/colors) (style/color-for-status status))
+                    :backgroundColor (if no-access?
+                                       (:disabled-state style/colors)
+                                       (style/color-for-status status))
                     :margin "2px 0 2px 2px" :height (- row-height-px 4)
                     :cursor (when disabled? "default")}
             :title hover-text}
@@ -82,10 +83,12 @@
                          You need permission from the owner(s) of all of the Authorization Domains
                          protecting the workspace."]
              (let [simple-th (fn [text]
-                               [:th {:style {:textAlign "left" :padding "0 0.5rem" :borderBottom style/standard-line}} text])
+                               [:th {:style {:textAlign "left" :padding "0 0.5rem"
+                                             :borderBottom style/standard-line}} text])
                    simple-td (fn [text]
                                [:td {}
-                                [:label {:style {:display "block" :padding "1rem 0.5rem" :width "33%"}} text]])]
+                                [:label {:style {:display "block" :padding "1rem 0.5rem"
+                                                 :width "33%"}} text]])]
                [:form {:style {:margin "1em 0 1em 0"}}
                 [:table {:style {:width "100%" :borderCollapse "collapse"}}
                  [:thead {} [:tr {}
@@ -100,12 +103,21 @@
                                   [:td {:style {:width "34%"}}
                                    (if-not (:member? (:data auth-domain))
                                      (if (:requested? (:data auth-domain))
-                                       [:div {:style {:fontSize "75%" :textAlign "center"}} "Your request has been submitted. When you are granted access, the " [:strong {} "Access Level"] " displayed on the Workspace list will be updated."]
+                                       [:div {:style {:fontSize "75%" :textAlign "center"}}
+                                        "Your request has been submitted. When you are granted
+                                         access, the " [:strong {} "Access Level"] " displayed on
+                                         the Workspace list will be updated."]
                                        [:div {} [comps/Button {:style {:width "125px"}
-                                                               :disabled? (or (:member? (:data auth-domain)) (:requested? (:data auth-domain)) (:requesting? (:data auth-domain)))
-                                                               :text (if (:requesting? (:data auth-domain)) "Sending Request" "Request Access")
-                                                               :onClick #(react/call :-request-access this (:name auth-domain) i)}]
-                                        [comps/Spinner {:style {:visibility (if (:requesting? (:data auth-domain)) "inherit" "hidden")}}]]))]])
+                                                               :disabled? (or
+                                                                           (:member? (:data auth-domain))
+                                                                           (:requested? (:data auth-domain))
+                                                                           (:requesting? (:data auth-domain)))
+                                                               :text (if (:requesting? (:data auth-domain))
+                                                                       "Sending Request" "Request Access")
+                                                               :onClick #(react/call :-request-access this
+                                                                                     (:name auth-domain) i)}]
+                                        [comps/Spinner {:style {:visibility (if (:requesting? (:data auth-domain))
+                                                                              "inherit" "hidden")}}]]))]])
                                (:ws-auth-domains @state))]]])
              [comps/ErrorViewer {:error (:server-error @state)}]])))}])
    :component-did-mount
@@ -123,7 +135,9 @@
      (swap! state update-in [:ws-auth-domains group-index :data] assoc :requesting? true)
      (endpoints/get-groups
       (fn []
-        (swap! state update-in [:ws-auth-domains group-index :data] assoc :requesting? false :requested? true))))})
+        (swap! state update-in [:ws-auth-domains group-index :data] assoc
+               :requesting? false
+               :requested? true))))})
 
 (react/defc WorkspaceCell
   {:render
@@ -226,10 +240,10 @@
      (let [{:keys [nav-context]} props
            {:keys [filters-expanded? groups]} @state]
        [Table
-        {:ref "table" :persistence-key "workspace-table" :v 2
+        {:persistence-key "workspace-table" :v 2
+         :data (this :-filter-workspaces) :total-count (:total-count @locals)
          :body
-         {:data-source (table-utils/local (this :-filter-workspaces) (:total-count @locals))
-          :columns
+         {:columns
           (let [column-data (fn [ws]
                               (let [no-access? (= (:accessLevel ws) "NO ACCESS")
                                     disabled? (and no-access? (= (get-in ws [:workspace :authorizationDomain :membersGroupName])
@@ -302,7 +316,7 @@
                              (this :-side-filters))]}
          :paginator {:style {:clear "both"}}}]))
    :component-did-update
-   (fn [{:keys [state prev-state refs]}]
+   (fn [{:keys [state]}]
      (persistence/save {:key persistence-key :state state}))
    :-side-filters
    (fn [{:keys [state refs locals]}]
@@ -379,10 +393,10 @@
         :on-done (fn [{:keys [success? status-text get-parsed-response]}]
                    (if success?
                      (swap! state update :server-response
-                            assoc :workspaces (map
-                                               (fn [ws]
-                                                 (assoc ws :status (common/compute-status ws)))
-                                               (get-parsed-response)))
+                       assoc :workspaces (map
+                                          (fn [ws]
+                                            (assoc ws :status (common/compute-status ws)))
+                                          (get-parsed-response)))
                      (swap! state update :server-response
                             assoc :error-message status-text)))})
      (endpoints/get-billing-projects
