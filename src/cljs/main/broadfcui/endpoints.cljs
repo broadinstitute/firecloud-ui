@@ -611,18 +611,14 @@
    :method :delete})
 
 
-(defn persist-agora-method-acl [ent]
-  {:path (let [ent-type (ent "entityType")
-               name (ent "name")
-               nmsp (ent "namespace")
-               sid (ent "snapshotId")
-               base (cond
-                      (= "Configuration" ent-type) "configurations"
-                      (or (= "Task" ent-type) (= "Workflow" ent-type)) "methods"
+(defn persist-agora-method-acl [{:keys [entityType name namespace snapshotId]}]
+  {:path (let [base (cond
+                      (= "Configuration" entityType) "configurations"
+                      (or (= "Task" entityType) (= "Workflow" entityType)) "methods"
                       :else (do
-                              (utils/log "Error, unknown type : " ent-type)
+                              (utils/log "Error, unknown type : " entityType)
                               (str "configurations")))]
-           (str "/" base "/" nmsp "/" name "/" sid "/permissions"))
+           (str "/" base "/" namespace "/" name "/" snapshotId "/permissions"))
    :method :post})
 
 

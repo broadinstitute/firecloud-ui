@@ -75,7 +75,7 @@
                              :wdl-parse-error (:wdl-parse-error props)
                              :ref "methodDetails"
                              :onSnapshotIdChange (:onSnapshotIdChange props)
-                             :snapshots ((:methods props) (map (:loaded-method @state) ["namespace" "name"]))}]
+                             :snapshots ((:methods props) (map (:loaded-method @state) [:namespace :name]))}]
        (:error @state) (style/create-server-error-message (:error @state))
         :else [comps/Spinner {:text "Loading details..."}]))
    :component-did-mount
@@ -91,7 +91,7 @@
         :headers utils/content-type=json
         :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                    (if success?
-                     (swap! state assoc :loaded-method (get-parsed-response false))
+                     (swap! state assoc :loaded-method (get-parsed-response))
                      (swap! state assoc :error status-text)))}))})
 
 

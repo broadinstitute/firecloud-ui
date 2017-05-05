@@ -13,10 +13,7 @@
 
 
 (defn- get-ordered-name [entity]
-  (clojure.string/join ":"
-    [(entity "namespace")
-     (entity "name")
-     (entity "snapshotId")]))
+  (clojure.string/join ":" (replace entity [:namespace :name :snapshotId])))
 
 (def ^:private reader-level "READER")
 (def ^:private owner-level "OWNER")

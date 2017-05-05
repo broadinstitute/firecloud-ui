@@ -276,10 +276,10 @@
                                                              assoc :filter-text % :current-page 1)}]])
              filter-groups (when (:filter-groups props)
                              [:div {:style {:marginRight "1em"}}
-                              [table-utils/FilterGroupBar
+                              [comps/FilterGroupBar
                                (merge (select-keys props [:filter-groups :data])
                                       {:selected-index (:filter-group-index @state)
-                                       :on-change (fn [new-index]
+                                       :on-change (fn [new-index _]
                                                     (swap! state assoc :filter-group-index new-index)
                                                     (after-update #(react/call :refresh-rows this))
                                                     (when-let [f (:on-filter-change props)]

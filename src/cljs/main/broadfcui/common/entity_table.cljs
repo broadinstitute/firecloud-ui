@@ -108,7 +108,7 @@
                      :pagination (react/call :pagination this)
                      :filter-groups (map (fn [type]
                                            {:text (name type)
-                                            :count (get-in entity-metadata [type :count])
+                                            :count-override (get-in entity-metadata [type :count])
                                             :pred (constantly true)})
                                          entity-types)
                      :initial-filter-group-index (utils/index-of entity-types selected-entity-type)
