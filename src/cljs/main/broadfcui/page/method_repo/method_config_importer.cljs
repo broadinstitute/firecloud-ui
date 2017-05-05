@@ -87,15 +87,19 @@
         (if workspace-id "Import as:" "Export to Workspace as:")]
        (map
         (fn [field]
-          [:div {:style {:float "left" :marginRight "0.5em"}}
-           (style/create-form-label (:label field))
-           (if (= (:type field) "identity-select")
-             (style/create-identity-select {:ref (:key field)
-                                            :defaultValue (or (entity (:key field)) "")}
-                                           (:options field))
-             [input/TextField {:defaultValue (entity (:key field))
-                               :ref (:key field) :placeholder "Required"
-                               :predicates [(input/nonempty "Fields")]}])])
+          (let [field-key (:key field)
+                field-name (name field-key)
+                entity-val (or (field-key entity) "")]
+            [:div {:style {:float "left" :marginRight "0.5em"}}
+             (style/create-form-label (:label field))
+             (if (= (:type field) "identity-select")
+               (style/create-identity-select {:ref field-name
+                                              :defaultValue entity-val}
+                                             (:options field))
+               [input/TextField {:ref field-name
+                                 :defaultValue entity-val
+                                 :placeholder "Required"
+                                 :predicates [(input/nonempty "Fields")]}])]))
         fields)
        (clear-both)
        (when-not workspace-id
