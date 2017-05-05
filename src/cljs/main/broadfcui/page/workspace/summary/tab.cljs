@@ -98,7 +98,9 @@
                                                        request-refresh)])}])
        (when (and publishable? (not editing?))
          (let [working-attributes (library-utils/get-initial-attributes workspace)
-               [questions _] (library-utils/get-questions-for-page working-attributes library-schema 0)
+               questions (->> (range (count (:wizard library-schema)))
+                                  (map (comp first (partial library-utils/get-questions-for-page working-attributes library-schema)))
+                                  (apply concat))
                required-attributes (library-utils/find-required-attributes library-schema)]
            (if (:library:published library-attributes)
              [publish/UnpublishButton {:workspace-id workspace-id
