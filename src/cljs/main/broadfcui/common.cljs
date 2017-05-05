@@ -344,7 +344,8 @@
     :button-class "float-right"
     :button-style (merge {:fontSize "unset" :lineHeight "unset" :padding 0 :textAlign "center"}
                          button-style)
-    :close-on-click true
+    ;; TODO(dmohs): This prevents DropdownItem from receiving the click event.
+    ;; :close-on-click true
     :dropdown-class "bottom"
     :style {:boxShadow "0 3px 6px 0 rgba(0, 0, 0, 0.15)"
             :backgroundColor "#fff"
