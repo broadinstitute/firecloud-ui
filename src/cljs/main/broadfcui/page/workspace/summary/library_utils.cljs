@@ -18,6 +18,11 @@
   (map #(get attributes (keyword (get-in library-schema [:properties property %])))
        [:relatedID :relatedLabel]))
 
+(defn get-initial-attributes [workspace]
+  (utils/map-values
+   unpack-attribute-list
+   (dissoc (get-in workspace [:workspace :library-attributes]) :library:published)))
+
 (defn find-required-attributes [library-schema]
   (->> (map :required (:oneOf library-schema))
        (concat (:required library-schema))

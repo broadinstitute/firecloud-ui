@@ -97,12 +97,6 @@
                                        (let [groups (get attributes :library:discoverableByGroups [])]
                                          (if (empty? groups) ALL_USERS (first groups))))])])
 
-(defn- get-initial-attributes [workspace]
-  (utils/map-values
-   library-utils/unpack-attribute-list
-   (dissoc (get-in workspace [:workspace :library-attributes]) :library:published)))
-
-
 (react/defc CatalogWizard
   {:get-initial-state
    (fn [{:keys [props]}]
@@ -112,7 +106,7 @@
         :pages-stack []
         :pages-seen #{0}
         :invalid-properties #{}
-        :working-attributes (get-initial-attributes (:workspace props))
+        :working-attributes (library-utils/get-initial-attributes (:workspace props))
         :published? (get-in props [:workspace :workspace :library-attributes :library:published])
         :version-attributes (->> versions
                                  (map keyword)
