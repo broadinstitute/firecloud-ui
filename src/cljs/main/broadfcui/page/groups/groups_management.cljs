@@ -27,13 +27,13 @@
         (when (:deleting? @state)
           [comps/Blocker {:banner "Deleting group..."}])
         [Table
-         {:data (utils/log (:groups @state))
+         {:data (:groups @state)
           :body {:behavior {:reorderable-columns? false}
                  :style table-style/table-light
                  :columns
-                 [{:header "Group Name" :initial-width 500 :sort-initial :asc
+                 [{:header "Group Name" :initial-width 300 :sort-initial :asc
                    :sort-by :text
-                   :as-text :group-name
+                   :as-text :groupName
                    :render
                    (fn [{:keys [groupName role]}]
                      (if
@@ -41,10 +41,16 @@
                        (style/create-link {:text groupName
                                            :href (nav/get-link :group groupName)})
                        groupName))}
-                  {:header "Role" :initial-width 100 :resizable? false
+                  {:header "Role" :initial-width 100
                    :as-text :role}
-                  {:id "delete group" :initial-width :auto
-                   :filterable? false :sortable? false
+                  {:header "Email for Sharing Workspaces" :initial-width :auto
+                   :resizable? false
+                   :as-text :groupEmail
+                   :render
+                   (fn [{:keys [groupEmail]}]
+                     [:span {:style {:fontWeight "normal"}} groupEmail])}
+                  {:id "delete group" :initial-width 30
+                   :filterable? false :sortable? false :resizable? false
                    :as-text
                    (fn [{:keys [groupName role]}]
                      (when (= role "Admin")
