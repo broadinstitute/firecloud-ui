@@ -35,6 +35,11 @@
        [:div {:style {:display "inline-block" :width 200 :marginLeft "1rem"}} "Access Level"]
        (if (common/access-greater-than-equal-to? user-access-level "OWNER")
          [:div {:style {:display "inline-block" :width 80 :marginLeft "1rem"}} "Can Share"])]
+      [:datalist {:id "groups-datalist"}
+       (when-let [groups (:user-groups @state)]
+         (map (fn [group]
+               [:option {:value (:groupEmail group)}])
+              groups))]
       (map-indexed
        (fn [i acl-entry]
          [:div {:style {:borderTop style/standard-line :padding "0.5rem 0"}}
@@ -47,6 +52,7 @@
               :style {:display "inline-block" :width 400 :marginBottom 0}
               :spellCheck false
               :value (:email acl-entry)
+              :list "groups-datalist"
               :onChange #(swap! state assoc-in [:non-project-owner-acl-vec i :email] (.. % -target -value))}])
           (let [available-access-levels (filter #(common/access-greater-than-equal-to? user-access-level %) access-levels)
                 disabled? (or (common/access-greater-than? (:accessLevel acl-entry) user-access-level)
@@ -168,4 +174,7 @@
                     (assoc % :project-owner-acl-vec []
                              :non-project-owner-acl-vec [])
                     ((get-parsed-response false) "acl")))
-           (swap! state assoc :load-error (get-parsed-response false))))}))})
+           (swap! state assoc :load-error (get-parsed-response false))))})
+     (endpoints/get-groups
+      (fn [err-text groups]
+        (swap! state assoc :user-groups groups))))})
