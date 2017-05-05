@@ -99,19 +99,21 @@
    (when-not required?
      (radio {:val nil :label (or emptyChoice "N/A")}))])
 
-(defn- render-freetext [{:keys [colorize value-nullsafe update-property disabled]}]
+(defn- render-freetext [{:keys [colorize value-nullsafe update-property disabled property]}]
   (style/create-text-area {:style (colorize {:width "100%"})
                            :value value-nullsafe
                            :onChange update-property
                            :disabled disabled
-                           :rows 3}))
+                           :rows 3
+                           :data-test-id property})) ; Dataset attribute, looks like "library:datasetOwner"
 
 (defn- render-ontology-typeahead [{:keys [prop colorize value-nullsafe update-property state property library-schema disabled]}]
   [:div {:style {:marginBottom "0.75em"}}
    [comps/Typeahead {:field-attributes {:placeholder (:inputHint prop)
                                         :style (colorize {:width "100%" :marginBottom "0px"})
                                         :value value-nullsafe
-                                        :onChange update-property}
+                                        :onChange update-property
+                                        :data-test-id property} ; Dataset attribute, looks like "library:datasetOwner"
                      :remote {:url (str (config/api-url-root) "/duos/autocomplete/%QUERY")
                               :wildcard "%QUERY"
                               :cache false}
@@ -162,6 +164,7 @@
      :field-attributes {:placeholder inputHint
                         :defaultValue value-nullsafe
                         :style (colorize {})
+                        :data-test-id property ; Dataset attribute, looks like "library:datasetOwner"
                         :onChange update-property}
      :disabled disabled
      :typeahead-events ["typeahead:select" "typeahead:change"]
@@ -178,8 +181,9 @@
                                     (-> (js/$ "<div style='textOverflow: ellipsis; overflow: hidden; font-size: smaller;'>")
                                         (.text result)))}]])
 
-(defn- render-textfield [{:keys [colorize type datatype prop value-nullsafe update-property disabled]}]
+(defn- render-textfield [{:keys [colorize type datatype prop value-nullsafe update-property disabled property]}]
   (style/create-text-field {:style (colorize {:width "100%"})
+                            :data-test-id property ; Dataset attribute, looks like "library:datasetOwner"
                             :type (cond (= datatype "date") "date"
                                         (= datatype "email") "email"
                                         (= type "integer") "number"

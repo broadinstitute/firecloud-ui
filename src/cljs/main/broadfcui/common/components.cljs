@@ -473,14 +473,15 @@
       :typeahead-events ["typeahead:select" "typeahead:change"]})
    :render
    (fn [{:keys [props this]}]
-     (let [{:keys [field-attributes width]} props]
+     (let [{:keys [field-attributes width property]} props]
        [:div {:style {:display "inline-flex" :width width}}
         [Typeahead {:ref "typeahead"
                     :field-attributes (utils/deep-merge
                                        {:autoSave "true" :results 5 :autofocus "true"
                                         :placeholder "Filter"
                                         :style {:flex "1 0 auto" :width width :borderRadius 3 :marginBottom 0}
-                                        :onKeyDown (common/create-key-handler [:enter] #(react/call :apply-filter this))}
+                                        :onKeyDown (common/create-key-handler [:enter] #(react/call :apply-filter this))
+                                        :data-test-id property}
                                        field-attributes)
                     :behavior {:hint false :minLength 3}
                     :remote (:bloodhoundInfo props)
