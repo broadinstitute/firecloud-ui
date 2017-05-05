@@ -12,8 +12,8 @@
 (def notification-details
   {"WorkspaceChangedNotification"
    {:label "Data Added or Changed"
-    :description (str "This notification can be triggered by a Writer or Owner when they have added"
-                      " or changed the data in this workspace.")}})
+    :description (str "A Write or Owner can trigger this notification when data is added or changed"
+                      " within this workspace.")}})
 
 (defn- profile-response->map [notification-keys profile-response]
   (->> (:keyValuePairs profile-response)
