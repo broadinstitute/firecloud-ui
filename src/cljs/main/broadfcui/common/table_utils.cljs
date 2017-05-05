@@ -213,35 +213,6 @@
        (react/call :get-ordered-columns this))
      (common/clear-both)]))
 
-(react/defc FilterGroupBar
-  {:render
-   (fn [{:keys [props]}]
-     [:div {}
-      (map-indexed (fn [index item]
-                     (let [first? (zero? index)
-                           last? (= index (dec (count (:filter-groups props))))]
-                       [:div {:style {:display "inline-block" :textAlign "center"
-                                      :backgroundColor (if (= index (:selected-index props))
-                                                         (:button-primary style/colors)
-                                                         (:background-light style/colors))
-                                      :color (when (= index (:selected-index props)) "white")
-                                      :padding "1ex" :minWidth 50
-                                      :marginLeft (when-not first? -1)
-                                      :border style/standard-line
-                                      :borderTopLeftRadius (when first? 8)
-                                      :borderBottomLeftRadius (when first? 8)
-                                      :borderTopRightRadius (when last? 8)
-                                      :borderBottomRightRadius (when last? 8)
-                                      :cursor "pointer"}
-                              :onClick #((:on-change props) index)}
-                        (str (:text item)
-                             " ("
-                             (or (:count item)
-                                 (count (filter (:pred item) (:data props))))
-                             ")")]))
-                   (:filter-groups props))])})
-
-
 
 (defn- filter-data [data ->row columns filter-text]
   (if (empty? filter-text)

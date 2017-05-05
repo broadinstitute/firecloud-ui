@@ -181,56 +181,59 @@
    (fn [{:keys [refs]}]
      {"methodVersion" (int (common/get-text refs "snapshotId"))})
    :render
-   (fn [{:keys [props refs state this]}]
+   (fn [{:keys [props state this]}]
      [:div {} (when-let [wdl-parse-error (:wdl-parse-error props)] (style/create-server-error-message wdl-parse-error))
       (let [entity (:entity props)
-            editing? (:editing? props)
-            make-field
-            (fn [entity key label dropdown? & [render]]
-              [:div {}
-               [:span {:style {:fontWeight 500 :width 100 :display "inline-block" :paddingBottom "0.3em"}} label]
+            config? (contains? entity :method)]
+        [:div {:style {:backgroundColor (:background-light style/colors)
+                       :borderRadius 8 :border style/standard-line
+                       :padding "1rem"}}
+         (this :render-details entity)
+         [:div {:style {:paddingTop "0.5rem"}}
+          [:span {:style {:fontWeight 500 :marginRight "1rem"}} (if config? "Referenced Method:" "WDL:")]
+          (style/create-link {:text (if (:payload-expanded @state) "Collapse" "Expand")
+                              :onClick #(swap! state assoc :payload-expanded (not (:payload-expanded @state)))})]
+         (when (:payload-expanded @state)
+           (if config?
+             [:div {:style {:margin "0.5rem 0 0 1rem"}}
+              (this :render-details (:method entity))
+              [:div {:style {:fontWeight 500 :marginTop "1rem"}} "WDL:"]
+              [CodeMirror {:text (get-in entity [:method :payload])}]]
+             [CodeMirror {:text (:payload entity)}]))])])
+   :render-details
+   (fn [{:keys [props refs]} entity]
+     (let [{:keys [editing?]} props
+           make-field
+           (fn [key label & {:keys [dropdown? wrap? render]}]
+             [:div {:style {:display "flex" :alignItems "baseline" :paddingBottom "0.25rem"}}
+              [:div {:style {:flex "0 0 100px" :fontWeight 500}} (str label ":")]
+              [:div {:style {:flex "1 1 auto" :overflow "hidden" :textOverflow "ellipsis"
+                             :whiteSpace (when-not wrap? "nowrap")}}
                (if (and editing? dropdown?)
                  (style/create-identity-select {:ref key
                                                 :style {:width 100}
-                                                :defaultValue (entity key)
+                                                :defaultValue (key entity)
                                                 :onChange (when-let [f (:onSnapshotIdChange props)]
                                                             #(f (int (common/get-text refs "snapshotId"))))}
                                                (:snapshots props))
-                 [:span {} ((or render identity) (entity key))])])
-            config? (contains? entity "method")]
-       [:div {:style {:backgroundColor (:background-light style/colors)
-                      :borderRadius 8 :border style/standard-line
-                      :padding "1em"}}
-        (react/call :render-details this make-field entity)
-        [:div {:style {:paddingTop "0.5em"}}
-         [:span {:style {:fontWeight 500 :marginRight "1em"}} (if config? "Referenced Method:" "WDL:")]
-         (style/create-link {:text (if (:payload-expanded @state) "Collapse" "Expand")
-                             :onClick #(swap! state assoc :payload-expanded (not (:payload-expanded @state)))})]
-        (when (:payload-expanded @state)
-          (if config?
-            [:div {:style {:margin "0.5em 0 0 1em"}}
-             (react/call :render-details this make-field (entity "method"))
-             [:div {:style {:fontWeight 500 :marginTop "1em"}} "WDL:"]
-             [CodeMirror {:text (get-in entity ["method" "payload"])}]]
-            [CodeMirror {:text (entity "payload")}]))])])
-   :render-details
-   (fn [{:keys []} make-field entity]
-     [:div {}
-      [:div {:style {:float "left" :marginRight "5em"}}
-       (make-field entity "namespace" "Namespace: " false)
-       (make-field entity "name" "Name: " false)
-       (make-field entity "snapshotId" "Snapshot ID: " true)]
-      [:div {:style {:float "left"}}
-       (make-field entity "createDate" "Created: " false common/format-date)
-       (make-field entity "entityType" "Entity Type: " false)
-       (make-field entity "managers" "Owners: " false (partial clojure.string/join ", "))
-       (make-field entity "synopsis" "Synopsis: " false)]
-      (common/clear-both)
-      [:div {:style {:fontWeight 500 :padding "0.5em 0 0.3em 0"}}
-       "Documentation:"]
-      (if (blank? (entity "documentation"))
-        [:div {:style {:fontStyle "italic" :fontSize "90%"}} "No documentation provided"]
-        [:div {:style {:fontSize "90%"}} (entity "documentation")])])})
+                 (let [rendered ((or render identity) (key entity))]
+                   [:span {:title rendered} rendered]))]])]
+       [:div {}
+        [:div {:style {:display "flex"}}
+         [:div {:style {:flex "1 1 50%" :paddingRight "0.5rem"}}
+          (make-field :namespace "Namespace")
+          (make-field :name "Name")
+          (make-field :snapshotId "Snapshot ID" :dropdown? true)
+          (make-field :entityType "Entity Type")]
+         [:div {:style {:flex "1 1 50%"}}
+          (make-field :createDate "Created" :render common/format-date)
+          (make-field :managers "Owners" :render (partial clojure.string/join ", ") :wrap? true)
+          (make-field :synopsis "Synopsis")]]
+        [:div {:style {:fontWeight 500 :padding "0.5rem 0 0.3rem 0"}}
+         "Documentation:"]
+        (if (blank? (:documentation entity))
+          [:div {:style {:fontStyle "italic" :fontSize "90%"}} "No documentation provided"]
+          [:div {:style {:fontSize "90%"}} (:documentation entity)])]))})
 
 
 (react/defc StackTraceViewer
@@ -777,6 +780,45 @@
             :onClick #(swap! state assoc :collapsed? (not (:collapsed? @state)))})
           body]
          body)))})
+
+(react/defc FilterGroupBar
+  {:render
+   (fn [{:keys [props]}]
+     (let [{:keys [filter-groups selected-index data on-change]} props]
+       [:div {}
+        (map-indexed (fn [index {:keys [text pred count-override]}]
+                       (let [first? (zero? index)
+                             last? (= index (dec (count filter-groups)))
+                             selected? (= index selected-index)]
+                         [:div {:style {:display "inline-block" :textAlign "center"
+                                        :backgroundColor (if selected?
+                                                           (:button-primary style/colors)
+                                                           (:background-light style/colors))
+                                        :color (when selected? "white")
+                                        :padding "1ex" :minWidth 50
+                                        :marginLeft (when-not first? -1)
+                                        :border style/standard-line
+                                        :borderTopLeftRadius (when first? 8)
+                                        :borderBottomLeftRadius (when first? 8)
+                                        :borderTopRightRadius (when last? 8)
+                                        :borderBottomRightRadius (when last? 8)
+                                        :cursor "pointer"}
+                                :onClick #(on-change
+                                           index
+                                           (if pred (filter pred data) data))}
+                          (str text
+                               " ("
+                               (cond count-override count-override
+                                     pred (count (filter pred data))
+                                     :else (count data))
+                               ")")]))
+                     filter-groups)]))
+   :component-did-mount
+   (fn [{:keys [props]}]
+     (let [{:keys [filter-groups selected-index data on-change]} props]
+       (when selected-index
+         (let [{:keys [pred]} (nth filter-groups selected-index)]
+           (on-change selected-index (if pred (filter pred data) data))))))})
 
 (react/defc Banner
   {:get-initial-state

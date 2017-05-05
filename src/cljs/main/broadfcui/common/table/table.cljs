@@ -13,6 +13,10 @@
     ))
 
 
+;; Documentation:
+;; https://broadinstitute.atlassian.net/wiki/display/GAWB/The+Table+UI+component
+
+
 ;; Define default props this way because we need to do a deep-merge,
 ;; instead of React's regular merge.
 (def ^:private default-props
@@ -47,18 +51,21 @@
          (swap! state assoc :query-params new-state))
        different?))
    :refresh-rows
-   (fn [{:keys [props state]}]
+   (fn [{:keys [props state]} & [reset-page-number?]]
      (swap! state assoc :loading? true)
      (let [{:keys [data fetch-data]} props
-           data-source (if data (table-utils/local data) fetch-data)]
+           data-source (if data (table-utils/local data) fetch-data)
+           query-params (merge (:query-params @state)
+                               (when reset-page-number? {:page-number 1}))]
        (data-source {:columns (-> props :body :columns)
-                     :query-params (:query-params @state)
+                     :query-params query-params
                      :on-done (fn [{:keys [total-count filtered-count results]}]
                                 (swap! state assoc
                                        :total-count total-count
                                        :filtered-count filtered-count
                                        :rows results
-                                       :loading? false))})))
+                                       :loading? false
+                                       :query-params query-params))})))
    :get-initial-state
    (fn [{:keys [props]}]
      (assoc
@@ -135,9 +142,10 @@
      (this :refresh-rows))
    :component-did-update
    (fn [{:keys [props state prev-props prev-state this]}]
-     (when (or (not= (:query-params @state) (:query-params prev-state))
-               (not= (:data props) (:data prev-props)))
-       (this :refresh-rows))
+     (let [data-change? (not= (:data props) (:data prev-props))]
+       (when (or (not= (:query-params @state) (:query-params prev-state))
+                 data-change?)
+         (this :refresh-rows data-change?)))
      (when (and (:persistence-key props)
                 (or (not= (:query-params @state) (:query-params prev-state))
                     (not= (:column-display @state) (:column-display prev-state))))

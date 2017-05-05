@@ -1,5 +1,6 @@
 (ns broadfcui.common.table.utils
   (:require
+    [broadfcui.common :as common]
     [broadfcui.utils :as utils]
     ))
 
@@ -80,3 +81,10 @@
            :width (get column :initial-width 100)
            :visible? (get column :show-initial? true)})
         user-columns))
+
+
+(defn date-column [props]
+  (merge {:header "Create Date"
+          :initial-width 200
+          :as-text #(common/format-date % (:format props))}
+         props))
