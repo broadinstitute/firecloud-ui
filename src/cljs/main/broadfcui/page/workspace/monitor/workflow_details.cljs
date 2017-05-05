@@ -66,9 +66,10 @@
                   :behavior {:reorderable-columns? false
                              :sortable-columns? false
                              :filterable? false}
-                  :columns [{:header "Label"
-                             :initial-width 200
-                             :column-data key}
+                  :columns [{:header "Task"
+                             :column-data #(second (string/split (key %) #"\."))}
+                            {:header "Label"
+                             :column-data #(last (string/split (key %) #"\."))}
                             {:header "Value"
                              :initial-width :auto
                              :column-data #(->> % second display-value)}]}}]])])})
