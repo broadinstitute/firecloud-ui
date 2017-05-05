@@ -222,10 +222,11 @@
      (.foundation (js/$ (react/find-dom-node this))))
    :render
    (fn [{:keys [props]}]
-     (let [{:keys [position text tooltip style]} props]
+     (let [{:keys [position text tooltip]} props]
        ;; empty string makes react attach a property with no value
-       [:span {:data-tooltip "" :className (str "has-tip " position) :style style
-               :title tooltip}
+       [:span (merge
+               {:data-tooltip "" :className (str "has-tip " position) :title tooltip}
+               (dissoc props :position :text :tooltip))
         text]))})
 
 (defn question-icon-link [text link & [style]]
@@ -277,6 +278,7 @@
         (react/create-element
          ;; empty string makes react attach a property with no value
          [:div {:className (str "dropdown-pane " dropdown-class) :id dropdown-id :data-dropdown ""
+                :data-close-on-click (when (:close-on-click props) "true")
                 :ref (this :-create-dropdown-ref-handler)
                 :style (merge
                         {:whiteSpace "normal"}
@@ -305,34 +307,36 @@
                 (fn [_]
                   (swap! state assoc :render-contents? true)
                   (after-update #(this :-render-dropdown))
-                  (.on (js/$ "body")
-                       "click.zf.dropdown"
-                       (fn [e]
-                         (when-not (or (.is button$ (.-target e))
-                                       (pos? (.-length (.find button$ (.-target e))))
-                                       (when-not (:close-on-click props)
+                  (if (:close-on-click props)
+                    (.on element$ "click.zf.dropdown"
+                         (fn [_]
+                           (.foundation element$ "close")))
+                    (.on (js/$ "body")
+                         "click.zf.dropdown"
+                         (fn [e]
+                           (when-not (or (.is button$ (.-target e))
+                                         (pos? (.-length (.find button$ (.-target e))))
                                          (.is element$ (.-target e))
-                                         (pos? (.-length (.find element$ (.-target e))))))
-                           ;; Delaying this until the next tick allows React event handlers to fire.
-                           (js/setTimeout
-                            (fn []
-                              (.foundation element$ "close")
-                              (.off (js/$ "body") "click.zf.dropdown"))
-                            0))))))))
+                                         (pos? (.-length (.find element$ (.-target e)))))
+                             (.foundation element$ "close")
+                             (.off (js/$ "body") "click.zf.dropdown")))))))))
        :will-unmount
        (fn [element]
          (.off (js/$ (react/find-dom-node this)) "click")
          (.off (js/$ element) "hide.zf.dropdown"))}))})
 
-(defn render-icon-dropdown [{:keys [text position icon-name icon-color]}]
-  [FoundationDropdown {:contents text
-                       :dropdown-class position
-                       :button-contents (icons/icon {:style {:color icon-color}} icon-name)}])
+(defn render-icon-dropdown [{:keys [position icon-name icon-color icon-title] :as props}]
+  [FoundationDropdown
+   (merge {:dropdown-class position
+           :button-contents (icons/icon
+                             {:title icon-title :style {:color icon-color}} icon-name)}
+          props)])
 
-(defn render-info-box [{:keys [text position]}]
-  (render-icon-dropdown {:text text
-                         :position position
-                         :icon-name :information :icon-color (:link-active style/colors)}))
+(defn render-info-box [{:keys [text] :as props}]
+  (render-icon-dropdown
+   (merge {:contents text
+           :icon-name :information :icon-color (:link-active style/colors)}
+          props)))
 
 (defn render-dropdown-menu [{:keys [label items width button-style]}]
   [FoundationDropdown
@@ -365,3 +369,13 @@
                         [DropdownItem (merge {:href "javascript:;" :target "_self"}
                                              item)])
                       items)])}])
+
+(defn render-foundation-switch [{:keys [checked? on-change size]}]
+  (let [id (gensym "switch-")]
+    [:div {:className (str "switch " (or size "tiny")) :style {:marginBottom 0}}
+     [:input {:className "switch-input" :type "checkbox"
+              :id id
+              :checked checked?
+              :onChange #(on-change (aget % "target" "checked"))}]
+     [:label {:className "switch-paddle"
+              :htmlFor id}]]))

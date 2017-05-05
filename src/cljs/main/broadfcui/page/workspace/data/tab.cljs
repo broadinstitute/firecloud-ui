@@ -182,7 +182,7 @@
                :workspace-id workspace-id
                :column-defaults (try
                                   (utils/parse-json-string (get-in workspace [:workspace :workspace-attributes
-                                                                          :workspace-column-defaults]))
+                                                                              :workspace-column-defaults]))
                                   (catch js/Object e
                                     (utils/jslog e) nil))
                :toolbar (fn [built-in]
@@ -214,10 +214,9 @@
                                          :type "submit"
                                          :value (str "Download '" selected-entity-type "' data")}]])
                              [:div {:style {:flexGrow 1}}]
-                             [:div {:style {:paddingRight ".5em"}}
-                              [comps/Button {:text "Import Data..."
-                                             :disabled? (when locked? "This workspace is locked.")
-                                             :onClick #(this :-handle-import-data-click)}]]]))
+                             [comps/Button {:text "Import Data..."
+                                            :disabled? (when locked? "This workspace is locked.")
+                                            :onClick #(this :-handle-import-data-click)}]]))
                :on-filter-change #(swap! state assoc :selected-entity-type % :selected-entity nil :attr-list nil)
                :attribute-renderer (table-utils/render-gcs-links (get-in workspace [:workspace :bucketName]))
                :linked-entity-renderer (fn [e]

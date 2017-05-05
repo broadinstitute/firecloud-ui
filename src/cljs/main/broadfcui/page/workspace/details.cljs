@@ -1,20 +1,22 @@
 (ns broadfcui.page.workspace.details
   (:require
-   [dmohs.react :as react]
-   [broadfcui.common :as common]
-   [broadfcui.common.components :as comps]
-   [broadfcui.common.style :as style]
-   [broadfcui.config :as config]
-   [broadfcui.endpoints :as endpoints]
-   [broadfcui.nav :as nav]
-   [broadfcui.page.workspace.analysis.tab :as analysis-tab]
-   [broadfcui.page.workspace.data.tab :as data-tab]
-   [broadfcui.page.workspace.method-configs.tab :as method-configs-tab]
-   [broadfcui.page.workspace.monitor.tab :as monitor-tab]
-   [broadfcui.page.workspace.summary.tab :as summary-tab]
-   [broadfcui.utils :as utils]
-   ))
-
+    [dmohs.react :as react]
+    [broadfcui.common :as common]
+    [broadfcui.common.components :as comps]
+    [broadfcui.common.flex-utils :as flex]
+    [broadfcui.common.icons :as icons]
+    [broadfcui.common.style :as style]
+    [broadfcui.config :as config]
+    [broadfcui.endpoints :as endpoints]
+    [broadfcui.nav :as nav]
+    [broadfcui.page.notifications :as notifications]
+    [broadfcui.page.workspace.analysis.tab :as analysis-tab]
+    [broadfcui.page.workspace.data.tab :as data-tab]
+    [broadfcui.page.workspace.method-configs.tab :as method-configs-tab]
+    [broadfcui.page.workspace.monitor.tab :as monitor-tab]
+    [broadfcui.page.workspace.summary.tab :as summary-tab]
+    [broadfcui.utils :as utils]
+    ))
 
 (react/defc ProtectedBanner
   {:render
@@ -111,7 +113,7 @@
                     (swap! state assoc :workspace (process-workspace (get-parsed-response)))
                     (swap! state assoc :workspace-error status-text)))}))
    :render
-   (fn [{:keys [props state refs this]}]
+   (fn [{:keys [props state locals refs this]}]
      (let [{:keys [workspace-id]} props
            {:keys [workspace workspace-error bucket-access?]} @state
            active-tab (:tab-name props)
@@ -129,10 +131,25 @@
         [:div {:style {:minHeight "0.5rem"}}
          [ProtectedBanner (select-keys @state [:workspace :workspace-error])]
          [BucketBanner (select-keys @state [:bucket-access? :bucket-status-code])]]
-        [:div {:style {:marginTop "2rem" :paddingLeft "1.5rem" :fontSize "125%"}}
-         "Workspace: "
-         [:span {:style {:fontWeight 500}}
-          (:namespace workspace-id) "/" (:name workspace-id)]]
+        [:div {:style {:marginTop "1rem" :padding "0 1.5rem"
+                       :display "flex" :justifyContent "space-between"}}
+         [:div {:style {:fontSize "125%"}}
+          "Workspace: "
+          [:span {:style {:fontWeight 500}} (:namespace workspace-id) "/" (:name workspace-id)]]
+         [common/FoundationTooltip
+          {:tooltip "Adjust notifications for this workspace"
+           :position "left"
+           :style {:marginRight "-0.5rem" :borderBottom "none"}
+           :data-hover-delay "1000" :data-click-open "false"
+           :text
+           (common/render-icon-dropdown
+            {:icon-name :bell :icon-color (:text-light style/colors)
+             :position "bottom"
+             :button-class "float-right"
+             :ref (fn [instance] (swap! locals assoc :infobox instance))
+             :contents [notifications/WorkspaceComponent
+                        (merge (select-keys props [:workspace-id])
+                               {:close-self #((:infobox @locals) :close)})]})}]]
         [:div {:style {:marginTop "1rem"
                        :display "flex" :backgroundColor (:background-light style/colors)
                        :borderTop style/standard-line :borderBottom style/standard-line

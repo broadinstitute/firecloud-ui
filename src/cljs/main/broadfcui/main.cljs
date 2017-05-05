@@ -19,6 +19,7 @@
    [broadfcui.page.groups.groups-management :as group-management]
    [broadfcui.page.library.library-page :as library-page]
    [broadfcui.page.method-repo.method-repo-page :as method-repo]
+   [broadfcui.page.notifications :as notifications]
    [broadfcui.page.profile :as profile-page]
    [broadfcui.page.status :as status-page]
    [broadfcui.page.workspace.details :as workspace-details]
@@ -33,6 +34,7 @@
   (group-management/add-nav-paths)
   (library-page/add-nav-paths)
   (method-repo/add-nav-paths)
+  (notifications/add-nav-paths)
   (profile-page/add-nav-paths)
   (status-page/add-nav-paths)
   (workspace-details/add-nav-paths)
@@ -63,7 +65,7 @@
          flex/spring
          [:div {:style {:display "flex" :flexDirection "column" :fontSize "70%" :marginBottom "0.4rem"}}
           [:div {:style {:marginBottom "0.4rem"}}
-           (header/create-account-dropdown (:auth2 props))
+           (header/create-account-dropdown)
            (common/render-dropdown-menu {:label (icons/icon {:style style/secondary-icon-style} :help)
                                          :width 150
                                          :button-style {:height 32 :marginRight "0.5rem"}
@@ -255,8 +257,7 @@
              (cond
                (not (contains? user-status :go))
                [auth/UserStatus {:on-success #(swap! state update :user-status conj :go)}]
-               :else [LoggedIn {:component component :make-props make-props
-                                :auth2 auth2}]))]]
+               :else [LoggedIn {:component component :make-props make-props}]))]]
          (footer/render-footer)
          ;; As low as possible on the page so it will be the frontmost component when displayed.
          [modal/Component {:ref "modal"}]]]))
