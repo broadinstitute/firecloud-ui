@@ -137,6 +137,7 @@
    :-request-access
    (fn [{:keys [props state refs]} group-name group-index]
      (swap! state update-in [:ws-auth-domains group-index :data] assoc :requesting? true)
+     ; todo: hook this up to the real request access endpoint
      (endpoints/get-groups
       (fn []
         (swap! state update-in [:ws-auth-domains group-index :data] assoc
@@ -242,7 +243,7 @@
    :render
    (fn [{:keys [props state this locals]}]
      (let [{:keys [nav-context]} props
-           {:keys [filters-expanded? groups]} @state]
+           {:keys [filters-expanded?]} @state]
        [Table
         {:persistence-key "workspace-table" :v 2
          :data (this :-filter-workspaces) :total-count (:total-count @locals)
@@ -256,7 +257,6 @@
                                  :href (let [x (:workspace ws)] (str (:namespace x) ":" (:name x)))
                                  :status (:status ws)
                                  :disabled? disabled?
-                                 :groups groups
                                  :auth-domains (conj [](get-in ws [:workspace :authorizationDomain :membersGroupName])) ;; this will very soon return multiple auth domains, so im future-proofing it now
                                  :no-access? no-access?
                                  :hover-text (when no-access? (if (= (get-in ws [:workspace :authorizationDomain :membersGroupName])
