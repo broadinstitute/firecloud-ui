@@ -149,7 +149,7 @@
        [:a {:href (if no-access?
                     "javascript:;"
                     (nav/get-link :workspace-summary workspace-id))
-            :onClick (if no-access? #(react/call :-do-shit this))
+            :onClick (if no-access? #(react/call :-show-request-access-modal this))
             :style {:display "flex" :alignItems "center"
                     :backgroundColor (if no-access? (:disabled-state style/colors) color)
                     :color "white" :textDecoration "none"
@@ -167,7 +167,7 @@
         [:div {:style {:paddingLeft 24}}
          [:div {:style {:fontSize "80%"}} namespace]
          [:div {:style {:fontWeight 600}} name]]]))
-   :-do-shit
+   :-show-request-access-modal
    (fn [{:keys [props]}]
      (modal/push-modal
       [RequestAuthDomainAccessDialog
@@ -394,11 +394,11 @@
                    (if success?
                      (swap! state update :server-response
                        assoc :workspaces (map
-                                          (fn [ws]
-                                            (assoc ws :status (common/compute-status ws)))
-                                          (get-parsed-response)))
+                                           (fn [ws]
+                                             (assoc ws :status (common/compute-status ws)))
+                                           (get-parsed-response)))
                      (swap! state update :server-response
-                            assoc :error-message status-text)))})
+                       assoc :error-message status-text)))})
      (endpoints/get-billing-projects
       (fn [err-text projects]
         (if err-text
