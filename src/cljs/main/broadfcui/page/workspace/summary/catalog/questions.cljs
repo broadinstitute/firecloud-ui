@@ -105,7 +105,7 @@
                            :onChange update-property
                            :disabled disabled
                            :rows 3
-                           :data-test-id property})) ; Dataset attribute, looks like "library:datasetOwner"
+                           :data-test-id property})) ;; Dataset attribute, looks like "library:datasetOwner"
 
 (defn- render-ontology-typeahead [{:keys [prop colorize value-nullsafe update-property state property library-schema disabled]}]
   [:div {:style {:marginBottom "0.75em"}}
@@ -113,7 +113,7 @@
                                         :style (colorize {:width "100%" :marginBottom "0px"})
                                         :value value-nullsafe
                                         :onChange update-property
-                                        :data-test-id property} ; Dataset attribute, looks like "library:datasetOwner"
+                                        :data-test-id property} ;; Dataset attribute, looks like "library:datasetOwner"
                      :remote {:url (str (config/api-url-root) "/duos/autocomplete/%QUERY")
                               :wildcard "%QUERY"
                               :cache false}
@@ -164,7 +164,7 @@
      :field-attributes {:placeholder inputHint
                         :defaultValue value-nullsafe
                         :style (colorize {})
-                        :data-test-id property ; Dataset attribute, looks like "library:datasetOwner"
+                        :data-test-id property ;; Dataset attribute, looks like "library:datasetOwner"
                         :onChange update-property}
      :disabled disabled
      :typeahead-events ["typeahead:select" "typeahead:change"]
@@ -183,7 +183,7 @@
 
 (defn- render-textfield [{:keys [colorize type datatype prop value-nullsafe update-property disabled property]}]
   (style/create-text-field {:style (colorize {:width "100%"})
-                            :data-test-id property ; Dataset attribute, looks like "library:datasetOwner"
+                            :data-test-id property ;; Dataset attribute, looks like "library:datasetOwner"
                             :type (cond (= datatype "date") "date"
                                         (= datatype "email") "email"
                                         (= type "integer") "number"
