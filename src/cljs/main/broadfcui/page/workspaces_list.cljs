@@ -75,7 +75,7 @@
             (case (:code error)
               (:unknown :parse-error)
               [:div {:style {:color (:exception-state style/colors)}}
-               "Error:" [:br] (:details error)]
+               "Error:" [:div {} (:details error)]]
               [comps/ErrorViewer {:error (:details error)}])
             :else
             [:div {:style {:width 750}}
@@ -97,27 +97,31 @@
                              (simple-th "")]]
                  [:tbody {}
                   (map-indexed (fn [i auth-domain]
-                                 [:tr {}
-                                  (simple-td (:name auth-domain))
-                                  (simple-td (if (:member? (:data auth-domain)) "Yes" "No"))
-                                  [:td {:style {:width "34%"}}
-                                   (if-not (:member? (:data auth-domain))
-                                     (if (:requested? (:data auth-domain))
-                                       [:div {:style {:fontSize "75%" :textAlign "center"}}
-                                        "Your request has been submitted. When you are granted
-                                         access, the " [:strong {} "Access Level"] " displayed on
-                                         the Workspace list will be updated."]
-                                       [:div {} [comps/Button {:style {:width "125px"}
-                                                               :disabled? (or
-                                                                           (:member? (:data auth-domain))
-                                                                           (:requested? (:data auth-domain))
-                                                                           (:requesting? (:data auth-domain)))
-                                                               :text (if (:requesting? (:data auth-domain))
-                                                                       "Sending Request" "Request Access")
-                                                               :onClick #(react/call :-request-access this
-                                                                                     (:name auth-domain) i)}]
-                                        [comps/Spinner {:style {:visibility (if (:requesting? (:data auth-domain))
-                                                                              "inherit" "hidden")}}]]))]])
+                                 (let [name (:name auth-domain)
+                                       member? (:member? (:data auth-domain))
+                                       requested? (:requested? (:data auth-domain))
+                                       requesting? (:requesting? (:data auth-domain))]
+                                   [:tr {}
+                                    (simple-td name)
+                                    (simple-td (if member? "Yes" "No"))
+                                    [:td {:style {:width "34%"}}
+                                     (if-not member?
+                                       (if requested?
+                                         [:div {:style {:fontSize "75%" :textAlign "center"}}
+                                          "Your request has been submitted. When you are granted
+                                           access, the " [:strong {} "Access Level"] " displayed on
+                                           the Workspace list will be updated."]
+                                         [:div {} [comps/Button {:style {:width "125px"}
+                                                                 :disabled? (or
+                                                                             member?
+                                                                             requested?
+                                                                             requesting?)
+                                                                 :text (if requesting?
+                                                                         "Sending Request" "Request Access")
+                                                                 :onClick #(react/call :-request-access this
+                                                                                       name i)}]
+                                          [comps/Spinner {:style {:visibility (if requesting?
+                                                                                "inherit" "hidden")}}]]))]]))
                                (:ws-auth-domains @state))]]])
              [comps/ErrorViewer {:error (:server-error @state)}]])))}])
    :component-did-mount
