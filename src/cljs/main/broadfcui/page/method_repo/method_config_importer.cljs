@@ -47,13 +47,16 @@
                        (swap! state assoc :error (get-parsed-response false))))})))})
 
 (defn- create-import-form [state props this locals entity config? fields]
-  (let [{:keys [workspace-id]} props]
+  (let [{:keys [workspace-id]} props
+        workflow? (= "Workflow" (:entityType entity))
+        owner? (contains? (set (:managers entity)) (utils/get-user-email))
+        any-actions? (or workflow? owner?)]
     [:div {:style {:display "flex"}}
      (when (:blocking-text @state)
        [comps/Blocker {:banner (:blocking-text @state)}])
-     (when (:allow-edit props)
+     (when (and any-actions? (:allow-edit props))
        [:div {:style {:flex "0 0 290px" :paddingRight "1rem"}}
-        (when (= "Workflow" (:entityType entity))
+        (when workflow?
           [comps/SidebarButton
            {:style :light :color :button-primary
             :text "Clone..." :icon :clone :margin :bottom
@@ -62,16 +65,17 @@
                                           :on-created (fn [_ id]
                                                         (nav/go-to-path :method id)
                                                         (scroll-to-top))}])}])
-        (when (contains? (set (:managers entity)) (utils/get-user-email))
+        (when owner?
           (list
-           [comps/SidebarButton
-            {:style :light :color :button-primary
-             :text "Edit..." :icon :edit :margin :bottom
-             :onClick #(modal/push-modal [create/CreateMethodDialog
-                                          {:snapshot entity
-                                           :on-created (fn [_ id]
-                                                         (nav/go-to-path :method id)
-                                                         (scroll-to-top))}])}]
+           (when workflow?
+             [comps/SidebarButton
+              {:style :light :color :button-primary
+               :text "Edit..." :icon :edit :margin :bottom
+               :onClick #(modal/push-modal [create/CreateMethodDialog
+                                            {:snapshot entity
+                                             :on-created (fn [_ id]
+                                                           (nav/go-to-path :method id)
+                                                           (scroll-to-top))}])}])
            [comps/SidebarButton
             {:style :light :color :button-primary
              :text "Permissions..." :icon :settings :margin :bottom

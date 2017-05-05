@@ -13,12 +13,15 @@
    ))
 
 
-(defn- build-defaults [{:keys [duplicate]}]
+(defn- build-info [{:keys [duplicate snapshot]}]
   (cond duplicate (merge {:header "Clone Method"
                           :name (str (:name duplicate) "_copy")
-                          :wdl (:payload duplicate)
                           :ok-text "Create New Method"}
-                         (select-keys duplicate [:synopsis :documentation]))
+                         (select-keys duplicate [:synopsis :documentation :payload]))
+        snapshot (merge {:header "Edit Method"
+                         :ok-text "Create New Snapshot"
+                         :locked #{:namespace :name}}
+                        (select-keys snapshot [:namespace :name :synopsis :documentation :payload]))
         :else {:header "Create New Method"
                :ok-text "Upload"}))
 
@@ -26,9 +29,9 @@
 (react/defc CreateMethodDialog
   {:render
    (fn [{:keys [props state refs this]}]
-     (let [defaults (build-defaults props)]
+     (let [info (build-info props)]
        [comps/OKCancelForm
-        {:header (:header defaults)
+        {:header (:header info)
          :get-first-element-dom-node #(react/find-dom-node (@refs "namespace"))
          :get-last-element-dom-node #(react/find-dom-node (@refs "ok-button"))
          :content
@@ -41,20 +44,23 @@
             [:div {:style {:flex "1 0 auto" :marginRight "1em"}}
              (style/create-form-label "Namespace")
              [input/TextField {:ref "namespace" :style {:width "100%"}
+                               :defaultValue (:namespace info)
+                               :disabled (contains? (:locked info) :namespace)
                                :predicates [(input/nonempty "Method namespace")]}]]
             [:div {:style {:flex "1 0 auto"}}
              (style/create-form-label "Name")
              [input/TextField {:ref "name" :style {:autoFocus true :width "100%"}
-                               :defaultValue (:name defaults)
+                               :defaultValue (:name info)
+                               :disabled (contains? (:locked info) :name)
                                :predicates [(input/nonempty "Method name")]}]]]
            ;;GAWB-1897 removes Type field and makes all MC types "Workflow" until "Task" type is supported
            (style/create-form-label "Synopsis (optional)")
            (style/create-text-field {:ref "synopsis"
-                                     :defaultValue (:synopsis defaults)
+                                     :defaultValue (:synopsis info)
                                      :style {:width "100%"}})
            (style/create-form-label "Documentation (optional)")
            (style/create-text-area {:ref "documentation"
-                                    :defaultValue (:documentation defaults)
+                                    :defaultValue (:documentation info)
                                     :style {:width "100%"}
                                     :rows 5})
 
@@ -96,7 +102,7 @@
                [:span {:style {:flex "1 0 auto"}}]
                (link "undo" undo?)
                (link "redo" redo?)]))
-           [CodeMirror {:ref "wdl-editor" :text (:wdl defaults) :read-only? false}]
+           [CodeMirror {:ref "wdl-editor" :text (:payload info) :read-only? false}]
 
            [comps/ErrorViewer {:error (:upload-error @state)}]
            (style/create-validation-error-message (:validation-errors @state))
@@ -105,7 +111,7 @@
             (common/question-icon-link "Guide to Call Caching" (config/call-caching-guide-url))]])
          :ok-button (react/create-element
                      [comps/Button {:ref "ok-button"
-                                    :text (:ok-text defaults)
+                                    :text (:ok-text info)
                                     :onClick #(this :create-method)}])}]))
    :component-did-mount
    (fn [{:keys [state refs]}]
