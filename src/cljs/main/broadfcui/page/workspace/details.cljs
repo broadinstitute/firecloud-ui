@@ -6,6 +6,7 @@
     [broadfcui.common.flex-utils :as flex]
     [broadfcui.common.icons :as icons]
     [broadfcui.common.style :as style]
+    [broadfcui.config :as config]
     [broadfcui.endpoints :as endpoints]
     [broadfcui.nav :as nav]
     [broadfcui.page.notifications :as notifications]
