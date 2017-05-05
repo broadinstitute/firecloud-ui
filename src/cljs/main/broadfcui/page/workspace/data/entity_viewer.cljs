@@ -4,7 +4,6 @@
     [clojure.set :refer [union]]
     clojure.string
     [broadfcui.common :as common]
-    [broadfcui.common.components :as comps]
     [broadfcui.common.entity-table :as entity-table :refer [EntityTable]]
     [broadfcui.common.gcs-file-preview :refer [GCSFilePreviewLink]]
     [broadfcui.common.style :as style]
@@ -68,7 +67,7 @@
                          :color (:text-light style/colors)}}
              (icons/icon {} :angle-left)]))
         [:div {:style {:display "inline-block" :fontWeight "bold" :padding "1rem 0 0 1rem" :marginBottom "1em"}} entity-name]
-        [table/Table {:key entity-type
+        [table/Table {:key entity-type                      ; key to enforce re-evaluating columns when changing entity types
                       :reorderable-columns? false
                       :width :narrow
                       :pagination :none
