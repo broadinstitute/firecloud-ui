@@ -31,7 +31,7 @@
    advanced compilation and cause an error.
    DEPRECATED: this is what js-invoke is for"
   [obj method-name & args]
-  (apply (.bind (aget obj (name method-name)) obj) args))
+  (apply (.on (aget obj (name method-name)) obj) args))
 
 
 (defn ->json-string [x]
@@ -92,9 +92,9 @@
   (swap! user-listeners dissoc k))
 
 
-(defonce google-auth2-instance (atom nil))
+(defonce auth2-atom (atom nil))
 (defn set-google-auth2-instance! [instance]
-  (reset! google-auth2-instance instance)
+  (reset! auth2-atom instance)
   (-> instance
       (aget "currentUser")
       (js-invoke
@@ -103,7 +103,7 @@
                     (on-change u))))))
 
 (defn get-access-token []
-  (-> @google-auth2-instance
+  (-> @auth2-atom
       (aget "currentUser") (js-invoke "get") (js-invoke "getAuthResponse") (aget "access_token")))
 
 

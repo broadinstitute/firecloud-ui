@@ -56,7 +56,7 @@
               :onChange #(swap! state assoc-in [:non-project-owner-acl-vec i :email] (.. % -target -value))}])
           (let [available-access-levels (filter #(common/access-greater-than-equal-to? user-access-level %) access-levels)
                 disabled? (or (common/access-greater-than? (:accessLevel acl-entry) user-access-level)
-                              (= (:email acl-entry) (-> @utils/google-auth2-instance (.-currentUser) (.get) (.getBasicProfile) (.getEmail))))]
+                              (= (:email acl-entry) (-> @utils/auth2-atom (.-currentUser) (.get) (.getBasicProfile) (.getEmail))))]
             (style/create-identity-select
              {:ref (str "acl-value" i)
               :style {:display "inline-block" :width 200 :height 33 :marginLeft "1rem" :marginBottom 0}

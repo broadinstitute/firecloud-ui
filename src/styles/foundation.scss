@@ -1,6 +1,9 @@
 @import '~foundation-sites/scss/settings/settings';
 
+$primary-color: #457fd2;
 $tooltip-font-size: 0.8rem;
+$switch-radius: 1rem;
+$switch-paddle-radius: 1rem;
 
 @import '~foundation-sites/scss/foundation';
 
@@ -30,6 +33,7 @@ $tooltip-font-size: 0.8rem;
 @include foundation-float-classes;
 @include foundation-tooltip;
 @include foundation-dropdown;
+@include foundation-switch;
 
 .dropdown-pane {
   font-weight: normal;

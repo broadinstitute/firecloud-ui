@@ -117,26 +117,25 @@
      (cond (:error-message @state) (style/create-server-error-message (:error-message @state))
            (:values @state)
            [:div {}
-            [:div {:style {:fontWeight "bold" :margin "1em 0 1em 0"}} "* - required fields"]
-            (react/call :render-nested-field this :firstName "First Name" true)
-            (react/call :render-nested-field this :lastName "Last Name" true)
-            (react/call :render-field this :title "Title" true)
-            (react/call :render-field this :contactEmail "Contact Email (to receive FireCloud notifications)" false true)
-            (react/call :render-nested-field this :institute "Institute" true)
-            (react/call :render-nested-field this :institutionalProgram "Institutional Program" true)
+            [:h3 {:style {:marginBottom "0.5rem"}} "User Info"]
+            (this :render-nested-field :firstName "First Name" true)
+            (this :render-nested-field :lastName "Last Name" true)
+            (this :render-field :title "Title" true)
+            (this :render-field :contactEmail "Contact Email for Notifications (if different)" false true)
+            (this :render-nested-field :institute "Institute" true)
+            (this :render-nested-field :institutionalProgram "Institutional Program" true)
             (common/clear-both)
+            [:h3 {:style {:marginBottom "0.5rem"}} "Program Info"]
             [:div {}
-             [:div {:style {:marginTop "0.5em" :fontSize "88%"}} "*Non-Profit Status"]
+             [:div {:style {:marginTop "0.5em" :fontSize "88%"}} "Non-Profit Status"]
              [:div {:style {:fontSize "88%"}}
-              (react/call :render-radio-field this :nonProfitStatus "Profit")
-              (react/call :render-radio-field this :nonProfitStatus "Non-Profit")]]
-            (react/call :render-field this :pi "Principal Investigator/Program Lead" true)
+              (this :render-radio-field :nonProfitStatus "Profit")
+              (this :render-radio-field :nonProfitStatus "Non-Profit")]]
+            (this :render-field :pi "Principal Investigator/Program Lead" true)
             [:div {}
-             [:div {:style {:fontSize "88%"}} "Program Location:"]
-             [:div {}
-              (react/call :render-nested-field this :programLocationCity "City" true)
-              (react/call :render-nested-field this :programLocationState "State/Province" true)
-              (react/call :render-nested-field this :programLocationCountry "Country" true)]]
+             (this :render-nested-field :programLocationCity "City" true)
+             (this :render-nested-field :programLocationState "State/Province" true)
+             (this :render-nested-field :programLocationCountry "Country" true)]
             (common/clear-both)
             (when-not (:new-registration? props)
               [:div {} [NihLink (select-keys props [:nih-token])]])]
@@ -153,22 +152,25 @@
    (fn [{:keys [state]} key label required]
      [:div {:style {:float "left" :marginBottom "0.5em" :marginTop "0.5em"}}
       [:label {}
-       [:div {:style {:fontSize "88%"}} (str (when required "*") label ":")]]
+       [:div {:style {:fontSize "88%"}} label]]
       [input/TextField {:style {:marginRight "1em" :width 200}
                         :data-test-id key
                         :defaultValue (get-in @state [:values key])
-                        :ref (name key) :placeholder (get-in @state [:values key])
+                        :ref (name key)
                         :predicates [(when required (input/nonempty label))]
                         :onChange #(swap! state assoc-in [:values key] (-> % .-target .-value))}]])
    :render-field
    (fn [{:keys [state]} key label required valid-email-or-empty]
      [:div {:style {:clear "both" :margin "0.5em 0"}}
       [:label {}
-       (style/create-form-label (str (when required "*") label ":"))
+       (style/create-form-label label)
        [input/TextField {:style {:width 200}
                          :data-test-id key
                          :defaultValue (get-in @state [:values key])
-                         :ref (name key) :placeholder (get-in @state [:values key])
+                         :ref (name key)
+                         :placeholder (when valid-email-or-empty
+                                        (-> @utils/auth2-atom
+                                            (.-currentUser) (.get) (.getBasicProfile) (.getEmail)))
                          :predicates [(when required (input/nonempty label))
                                       (when valid-email-or-empty (input/valid-email-or-empty label))]
                          :onChange #(swap! state assoc-in [:values key] (-> % .-target .-value))}]]])
@@ -187,7 +189,7 @@
    (fn [{:keys [this props state]}]
      (let [new? (:new-registration? props)
            update? (:update-registration? props)]
-       [:div {:style {:margin "1em 2em"}}
+       [:div {:style style/thin-page-style}
         [:h2 {} (cond new? "New User Registration"
                       update? "Update Registration"
                       :else "Profile")]

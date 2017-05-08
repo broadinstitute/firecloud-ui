@@ -344,7 +344,7 @@
                  text)])
             (butlast crumbs)))
           sep
-          [:span {:style {:fontWeight 500 :fontSize "1.2em"}} (:text (last crumbs))]])))})
+          [:span {:style {:fontWeight "bold" :fontSize "1.2em"}} (:text (last crumbs))]])))})
 
 
 (react/defc SplitPane
@@ -458,7 +458,7 @@
                        :templates {:empty (str "<div style='padding: 0.5em'>" empty-message "</div>")
                                    :suggestion render-suggestion}}))
          (doseq [item typeahead-events]
-           (.bind (js/$ (@refs "field")) item on-select)))
+           (.on (js/$ (@refs "field")) item on-select)))
        (.addEventListener (@refs "field") "search"
                           (fn []
                             (.typeahead (js/$ (@refs "field")) "close")

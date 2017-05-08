@@ -116,10 +116,9 @@
                (map layout (vals built-in))
                (when (some-> (:selected-entity-type @state) name) (:-render-download-link this))
                [:div {:style {:flexGrow 1}}]
-               [:div {:style {:paddingRight ".5em"}}
-                [comps/Button {:text "Import Metadata..."
-                               :disabled? (when (get-in workspace [:workspace :isLocked]) "This workspace is locked.")
-                               :onClick #(this :-handle-import-data-click)}]]]))
+               [comps/Button {:text "Import Metadata..."
+                              :disabled? (when (get-in workspace [:workspace :isLocked]) "This workspace is locked.")
+                              :onClick #(this :-handle-import-data-click)}]]))
           :on-filter-change #(swap! state assoc :selected-entity-type % :selected-entity nil :selected-attr-list nil)
           :attribute-renderer (table-utils/render-gcs-links (get-in workspace [:workspace :bucketName]))
           :linked-entity-renderer
