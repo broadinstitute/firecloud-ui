@@ -55,8 +55,6 @@
    (fn [{:keys [props state]}]
      {:ws-auth-domains (vec (map
                              (fn [group]
-                               (utils/cljslog group)
-                               (utils/cljslog (:ws-auth-domains props))
                                {:name group
                                 :data {:member? (contains? (:my-auth-domains @state) group)
                                        :requested? false
@@ -117,11 +115,13 @@
                                                                              requested?
                                                                              requesting?)
                                                                  :text (if requesting?
-                                                                         "Sending Request" "Request Access")
-                                                                 :onClick #(react/call :-request-access this
-                                                                                       name i)}]
+                                                                         "Sending Request"
+                                                                         "Request Access")
+                                                                 :onClick #(react/call :-request-access
+                                                                                       this name i)}]
                                           [comps/Spinner {:style {:visibility (if requesting?
-                                                                                "inherit" "hidden")}}]]))]]))
+                                                                                "inherit"
+                                                                                "hidden")}}]]))]]))
                                (:ws-auth-domains @state))]]])
              [comps/ErrorViewer {:error (:server-error @state)}]])))}])
    :component-did-mount
@@ -136,7 +136,6 @@
           (swap! state assoc :my-auth-domains (map :groupName groups))))))
    :-request-access
    (fn [{:keys [props state refs]} group-name group-index]
-     (utils/cljslog group-name)
      (swap! state update-in [:ws-auth-domains group-index :data] assoc :requesting? true)
      (endpoints/call-ajax-orch
       {:endpoint (endpoints/request-group-access group-name)
