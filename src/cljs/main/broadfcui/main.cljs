@@ -158,7 +158,7 @@
      (init-nav-paths)
      (this :handle-hash-change))
    :render
-   (fn [{:keys [state this]}]
+   (fn [{:keys [state]}]
      (let [{:keys [auth2 user-status window-hash]} @state
            {:keys [component make-props public?]} (nav/find-path-handler window-hash)
            sign-in-hidden? (or (nil? component)
@@ -203,7 +203,7 @@
          ;; As low as possible on the page so it will be the frontmost component when displayed.
          [modal/Component {:ref "modal"}]]]))
    :component-did-mount
-   (fn [{:keys [this state refs locals]}]
+   (fn [{:keys [this refs locals]}]
      ;; pop up the message only when we start getting 503s, not on every 503
      (add-watch
       utils/server-down? :server-watcher
