@@ -15,7 +15,7 @@
 
 (defn- build-defaults [{:keys [duplicate]}]
   (cond duplicate (merge {:header "Clone Method"
-                          :name (str (:name duplicate) " copy")
+                          :name (str (:name duplicate) "_copy")
                           :wdl (:payload duplicate)
                           :ok-text "Create New Method"}
                          (select-keys duplicate [:synopsis :documentation]))
