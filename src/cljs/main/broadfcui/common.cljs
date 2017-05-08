@@ -278,7 +278,6 @@
         (react/create-element
          ;; empty string makes react attach a property with no value
          [:div {:className (str "dropdown-pane " dropdown-class) :id dropdown-id :data-dropdown ""
-                :data-close-on-click (when (:close-on-click props) "true")
                 :ref (this :-create-dropdown-ref-handler)
                 :style (merge
                         {:whiteSpace "normal"}
@@ -310,7 +309,9 @@
                   (if (:close-on-click props)
                     (.on element$ "click.zf.dropdown"
                          (fn [_]
-                           (.foundation element$ "close")))
+                           (js/setTimeout                   ; allow click handlers to fire
+                            #(.foundation element$ "close")
+                            0)))
                     (.on (js/$ "body")
                          "click.zf.dropdown"
                          (fn [e]
@@ -344,8 +345,7 @@
     :button-class "float-right"
     :button-style (merge {:fontSize "unset" :lineHeight "unset" :padding 0 :textAlign "center"}
                          button-style)
-    ;; TODO(dmohs): This prevents DropdownItem from receiving the click event.
-    ;; :close-on-click true
+    :close-on-click true
     :dropdown-class "bottom"
     :style {:boxShadow "0 3px 6px 0 rgba(0, 0, 0, 0.15)"
             :backgroundColor "#fff"
