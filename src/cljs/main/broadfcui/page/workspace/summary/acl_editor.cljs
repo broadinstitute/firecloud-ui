@@ -129,9 +129,9 @@
                              (map #(dissoc % :read-only?))
                              (map #(update-in % [:email] clojure.string/trim))
                              (filter #(not (empty? (:email %)))))
-           grant-filtered-acl (if-not (common/access-greater-than-equal-to? (:user-access-level props) "OWNER")
-                                (map #(dissoc % :canShare) filtered-acl)
-                                filtered-acl)
+           grant-filtered-acl (if (common/access-greater-than-equal-to? (:user-access-level props) "OWNER")
+                                filtered-acl
+                                (map #(dissoc % :canShare) filtered-acl))
            fails (apply input/validate refs (filter
                                              #(contains? @refs %)
                                              (map #(str "acl-key" %) (range (count (:non-project-owner-acl-vec @state))))))]
