@@ -31,7 +31,7 @@
    advanced compilation and cause an error.
    DEPRECATED: this is what js-invoke is for"
   [obj method-name & args]
-  (apply (.bind (aget obj (name method-name)) obj) args))
+  (apply (.on (aget obj (name method-name)) obj) args))
 
 
 (defn ->json-string [x]
