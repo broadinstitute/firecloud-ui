@@ -819,26 +819,3 @@
        (when selected-index
          (let [{:keys [pred]} (nth filter-groups selected-index)]
            (on-change selected-index (if pred (filter pred data) data))))))})
-
-(react/defc Banner
-  {:get-initial-state
-   (fn []
-     {:showing-more? false})
-   :render
-   (fn [{:keys [props state]}]
-     [:div {}
-      (let [{:keys [background-color text-color title message link more-content]} props]
-        [:div {:style {:color text-color :backgroundColor background-color :padding "1rem"}}
-         [:div {:style {:display "flex" :alignItems "baseline"}}
-          [icons/ExceptionIcon {:size 18 :color text-color}]
-          [:span {:style {:marginLeft "0.5rem" :fontWeight "bold"
-                          :verticalAlign "middle"}}
-           (or title "Service Alert")]
-          [:span {:style {:color text-color :fontSize "90%" :marginLeft "1rem"}}
-           (str message " ")
-           (if more-content
-             [:a {:style {:color "#000"}
-                  :href "javascript:;"
-                  :onClick #(swap! state assoc :showing-more? (not (:showing-more? @state)))}
-              (if (:showing-more? @state) " Hide details..." " Show details...")])
-           (when (:showing-more? @state) more-content) link]]])])})
