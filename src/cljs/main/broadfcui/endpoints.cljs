@@ -729,6 +729,10 @@
   {:path (str "/groups/" group-name "/" role "/" email)
    :method :delete})
 
+(defn request-group-access [group-name]
+  {:path (str "/groups/" group-name "/requestAccess")
+   :method :post})
+
 
 (defn get-billing-projects
   ([on-done] (get-billing-projects false on-done))

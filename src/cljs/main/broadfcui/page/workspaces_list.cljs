@@ -136,13 +136,14 @@
           (swap! state assoc :my-auth-domains (map :groupName groups))))))
    :-request-access
    (fn [{:keys [props state refs]} group-name group-index]
+     (utils/cljslog group-name)
      (swap! state update-in [:ws-auth-domains group-index :data] assoc :requesting? true)
-     ; todo: hook this up to the real request access endpoint
-     (endpoints/get-groups
-      (fn []
-        (swap! state update-in [:ws-auth-domains group-index :data] assoc
-               :requesting? false
-               :requested? true))))})
+     (endpoints/call-ajax-orch
+      {:endpoint (endpoints/request-group-access group-name)
+       :on-done (fn []
+                  (swap! state update-in [:ws-auth-domains group-index :data] assoc
+                         :requesting? false
+                         :requested? true))}))})
 
 (react/defc WorkspaceCell
   {:render
@@ -257,7 +258,8 @@
                                  :href (let [x (:workspace ws)] (str (:namespace x) ":" (:name x)))
                                  :status (:status ws)
                                  :disabled? disabled?
-                                 :auth-domains (conj [](get-in ws [:workspace :authorizationDomain :membersGroupName])) ;; this will very soon return multiple auth domains, so im future-proofing it now
+                                 ;; this will very soon return multiple auth domains, so im future-proofing it now
+                                 :auth-domains [(get-in ws [:workspace :authorizationDomain :membersGroupName])]
                                  :no-access? no-access?
                                  :hover-text (when no-access? (if (= (get-in ws [:workspace :authorizationDomain :membersGroupName])
                                                                      (config/dbgap-authorization-domain))
