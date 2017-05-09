@@ -43,7 +43,7 @@
          (style/create-text-area {:style {:width "100%"} :rows 5 :ref "wsDescription"
                                   :defaultValue (:description props)})
          [:div {:style {:display "flex"}}
-          (style/create-form-label "Authorization Domain (optional)")
+          (style/create-form-label (str "Authorization Domain" (when-not (:auth-domain props) " (optional)")))
           (common/render-info-box
             {:text [:div {} [:strong {} "Note:"]
                     [:div {} "An Authorization Domain can only be set when creating the workspace.
@@ -53,10 +53,11 @@
                                         :text "Read more about Authorization Domains"})]})]
          (if-let [auth-domain (:auth-domain props)]
            [:div {:style {:fontStyle "italic" :fontSize "80%"}}
-            "The cloned workspace will automatically inherit the authorization domain "
-            [:strong {} auth-domain] " from this workspace."]
+            "The cloned workspace will automatically inherit the Authorization Domain "
+            [:strong {} auth-domain] " from this workspace"]
            (style/create-select
             {:ref "auth-domain"
+             :defaultValue -1
              :onChange #(swap! state assoc :selected-auth-domain (-> % .-target .-value))}
             (:groups @state)
             "Select a Group..."))
@@ -68,8 +69,11 @@
      (endpoints/get-groups
       (fn [success? parsed-response]
         (swap! state assoc :groups
-               (conj (map #(:groupName %) parsed-response)
-                     "None")))))
+               (->> parsed-response
+                    (remove (fn [group]
+                              (= (:groupName group) "All_Users")))
+                    (map :groupName )
+                    (concat ["None"]))))))
    :do-clone
    (fn [{:keys [props refs state]}]
      (if-let [fails (input/validate refs "name")]
