@@ -21,16 +21,20 @@
                          (select-keys duplicate [:synopsis :documentation :payload]))
         snapshot (merge {:header "Edit Method"
                          :ok-text "Create New Snapshot"
-                         :locked #{:namespace :name}}
-                        (select-keys snapshot [:namespace :name :synopsis :documentation :payload]))
+                         :locked #{:namespace :name}
+                         :show-redact? true}
+                        (select-keys snapshot [:namespace :name :snapshotId :synopsis :documentation :payload]))
         :else {:header "Create New Method"
                :ok-text "Upload"}))
 
 
 (react/defc CreateMethodDialog
-  {:render
-   (fn [{:keys [props state refs this]}]
-     (let [info (build-info props)]
+  {:component-will-mount
+   (fn [{:keys [props locals]}]
+     (swap! locals assoc :info (build-info props)))
+   :render
+   (fn [{:keys [state refs locals this]}]
+     (let [{:keys [info]} @locals]
        [comps/OKCancelForm
         {:header (:header info)
          :get-first-element-dom-node #(react/find-dom-node (@refs "namespace"))
@@ -38,8 +42,8 @@
          :content
          (react/create-element
           [:div {:style {:width "80vw"}}
-           (when (:uploading? @state)
-             [comps/Blocker {:banner "Uploading..."}])
+           (when-let [banner (:banner @state)]
+             [comps/Blocker {:banner banner}])
 
            [:div {:style {:display "flex" :justifyContent "space-between"}}
             [:div {:style {:flex "1 0 auto" :marginRight "1em"}}
@@ -74,7 +78,7 @@
                                     (set! (.-onload reader)
                                           #(let [text (.-result reader)]
                                              (swap! state assoc :file-name (.-name file) :file-contents text)
-                                             (this :set-wdl-text text)))
+                                             (this :-set-wdl-text text)))
                                     (.readAsText reader file))))}]
            (style/create-form-label
             (let [{:keys [file-name]
@@ -100,39 +104,44 @@
                  [:span {}
                   [:span {:style {:padding "0 1em 0 25px"}} (str "Selected: " file-name)]
                   (style/create-link {:text "Reset to file"
-                                      :onClick #(this :set-wdl-text (:file-contents @state))})])
+                                      :onClick #(this :-set-wdl-text (:file-contents @state))})])
                [:span {:style {:flex "1 0 auto"}}]
                (link "undo" undo?)
                (link "redo" redo?)]))
            [CodeMirror {:ref "wdl-editor" :text (:payload info) :read-only? false}]
-
-           [comps/ErrorViewer {:error (:upload-error @state)}]
-           (style/create-validation-error-message (:validation-errors @state))
            [:div {:style {:marginTop "0.8em" :fontSize "88%"}}
             "WDL must use Docker image digests to allow call caching "
             [:a {:target "_blank" :href (str (config/call-caching-guide-url))}
-             "Learn about call caching" icons/external-link-icon]]])
+             "Learn about call caching" icons/external-link-icon]]
+
+           (when (:show-redact? info)
+             [:div {:style {:textAlign "center"}}
+              [comps/Checkbox {:ref "redact-checkbox"
+                               :label (str "Redact Snapshot " (:snapshotId info))}]])
+
+           [comps/ErrorViewer {:error (:upload-error @state)}]
+           (style/create-validation-error-message (:validation-errors @state))])
          :ok-button (react/create-element
                      [comps/Button {:ref "ok-button"
                                     :text (:ok-text info)
-                                    :onClick #(this :create-method)}])}]))
+                                    :onClick #(this :-create-method)}])}]))
    :component-did-mount
    (fn [{:keys [state refs]}]
      ((@refs "wdl-editor") :add-listener "change"
       #(swap! state assoc :undo-history
               (js->clj ((@refs "wdl-editor") :call-method "historySize")))))
-   :set-wdl-text
+   :-set-wdl-text
    (fn [{:keys [refs]} text]
      ((@refs "wdl-editor") :call-method "setValue" text))
-   :create-method
-   (fn [{:keys [props state refs]}]
+   :-create-method
+   (fn [{:keys [state refs this]}]
      (let [[namespace name & fails] (input/get-and-validate refs "namespace" "name")
            [synopsis documentation] (common/get-text refs "synopsis" "documentation")
            wdl ((@refs "wdl-editor") :call-method "getValue")
            fails (or fails (when (clojure.string/blank? wdl) ["Please enter the WDL payload"]))]
        (swap! state assoc :validation-errors fails)
        (when-not fails
-         (swap! state assoc :uploading? true)
+         (swap! state assoc :banner "Uploading...")
          (endpoints/call-ajax-orch
           {:endpoint endpoints/post-method
            :payload {:namespace namespace
@@ -144,12 +153,31 @@
            :headers utils/content-type=json
            :on-done
            (fn [{:keys [success? get-parsed-response]}]
-             (swap! state dissoc :uploading?)
              (if success?
-               (do
-                 (modal/pop-modal)
-                 (let [response (get-parsed-response)
-                       {:keys [namespace name snapshotId]} response
-                       id {:namespace namespace :name name :snapshot-id snapshotId}]
-                   ((:on-created props) :method id)))
-               (swap! state assoc :upload-error (get-parsed-response false))))}))))})
+               (this :-after-upload (get-parsed-response))
+               (swap! state assoc
+                      :banner nil
+                      :upload-error (get-parsed-response false))))}))))
+   :-after-upload
+   (fn [{:keys [refs locals this]} parsed-response]
+     (let [{:keys [namespace name snapshotId]} parsed-response
+           new-entity-id {:namespace namespace :name name :snapshot-id snapshotId}]
+       (if (and (:show-redact? (:info @locals))
+                ((@refs "redact-checkbox") :checked?))
+         (this :-redact-old-method new-entity-id)
+         (this :-complete new-entity-id))))
+   :-redact-old-method
+   (fn [{:keys [state locals this]} new-entity-id]
+     (swap! state assoc :banner "Redacting old method...")
+     (let [{:keys [namespace name snapshotId]} (:info @locals)]
+       (endpoints/call-ajax-orch
+        {:endpoint (endpoints/delete-agora-entity false namespace name snapshotId)
+         :on-done (fn [{:keys [success? get-parsed-response]}]
+                    (this :-complete new-entity-id
+                          (when-not success? (get-parsed-response false))))})))
+   :-complete
+   (fn [{:keys [props]} new-entity-id & [redact-error]]
+     (modal/pop-modal)
+     ((:on-created props) :method new-entity-id)
+     (when redact-error
+       (comps/push-error-response redact-error)))})
