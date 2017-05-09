@@ -43,13 +43,11 @@
          (style/create-text-area {:style {:width "100%"} :rows 5 :ref "wsDescription"
                                   :defaultValue (:description props)})
          [:div {:style {:display "flex"}}
-          (style/create-form-label "Select a Group to set as the Authorization Domain")
+          (style/create-form-label "Authorization Domain (optional)")
           (common/render-info-box
             {:text [:div {} [:strong {} "Note:"]
-                    [:div {} "Once this workspace's Authorization Domain is set, a user can access
-                   the data only if they are a member of the Group and have been granted read or
-                   write permission on the workspace. To define this workspace's Authorization
-                   Domain, select a Group."]
+                    [:div {} "An Authorization Domain can only be set when creating the workspace.
+                     Once set, it cannot be changed."]
                     (style/create-link {:href "https://software.broadinstitute.org/firecloud/documentation/article?id=9524"
                                         :target "_blank"
                                         :text "Read more about Authorization Domains"})]})]
@@ -60,7 +58,8 @@
            (style/create-select
             {:ref "auth-domain"
              :onChange #(swap! state assoc :selected-auth-domain (-> % .-target .-value))}
-            (:groups @state)))
+            (:groups @state)
+            "Select a Group..."))
          (style/create-validation-error-message (:validation-error @state))
          [comps/ErrorViewer {:error (:error @state)
                              :expect {409 "A workspace with this name already exists in this project"}}]])}])
