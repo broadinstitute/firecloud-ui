@@ -15,6 +15,7 @@
    [broadfcui.page.workspace.summary.attribute-editor :as attributes]
    [broadfcui.page.workspace.summary.catalog.wizard :refer [CatalogWizard]]
    [broadfcui.page.workspace.summary.publish :as publish]
+   [broadfcui.page.workspace.summary.library-utils :as library-utils]
    [broadfcui.page.workspace.summary.library-view :refer [LibraryView]]
    [broadfcui.page.workspace.summary.workspace-cloner :refer [WorkspaceCloner]]
    [broadfcui.utils :as utils]))
@@ -105,13 +106,23 @@
                                                        catalog-with-read?
                                                        request-refresh)])}])
        (when (and publishable? (not editing?))
-         (if (:library:published library-attributes)
-           [publish/UnpublishButton {:workspace-id workspace-id
-                                     :request-refresh request-refresh}]
-           [publish/PublishButton {:disabled? (when (empty? library-attributes)
-                                                "Dataset attributes must be created before publishing.")
-                                   :workspace-id workspace-id
-                                   :request-refresh request-refresh}]))
+         (let [working-attributes (library-utils/get-initial-attributes workspace)
+               questions (->> (range (count (:wizard library-schema)))
+                                  (map (comp first (partial library-utils/get-questions-for-page working-attributes library-schema)))
+                                  (apply concat))
+               required-attributes (library-utils/find-required-attributes library-schema)]
+           (if (:library:published library-attributes)
+             [publish/UnpublishButton {:workspace-id workspace-id
+                                       :request-refresh request-refresh}]
+             [publish/PublishButton {:disabled? (cond
+                                                  (empty? library-attributes)
+                                                    "Dataset attributes must be created before publishing."
+                                                  (seq (library-utils/validate-required
+                                                              (library-utils/remove-empty-values working-attributes)
+                                                              questions required-attributes))
+                                                    "All required dataset attributes must be set before publishing.")
+                                     :workspace-id workspace-id
+                                     :request-refresh request-refresh}])))
        (when (or owner? writer?)
          (if (not editing?)
            [comps/SidebarButton

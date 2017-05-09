@@ -18,6 +18,36 @@
   (map #(get attributes (keyword (get-in library-schema [:properties property %])))
        [:relatedID :relatedLabel]))
 
+(defn get-initial-attributes [workspace]
+  (utils/map-values
+   unpack-attribute-list
+   (dissoc (get-in workspace [:workspace :library-attributes]) :library:published)))
+
+(defn find-required-attributes [library-schema]
+  (->> (map :required (:oneOf library-schema))
+       (concat (:required library-schema))
+       flatten
+       (map keyword)
+       set))
+
+(defn get-questions-for-page [working-attributes library-schema page-num]
+  (when (< page-num (count (:wizard library-schema)))
+    (let [page-props (get-in library-schema [:wizard page-num])
+          {:keys [questions enumerate optionSource options]} page-props]
+      (if optionSource
+        (let [option-value (get working-attributes (keyword optionSource))]
+          (when-let [option-match (some->> option-value keyword (get options))]
+            (map option-match [:questions :enumerate])))
+       [questions enumerate]))))
+
+(defn remove-empty-values [attributes]
+  (utils/filter-values
+   (fn [val]
+     (if (or (coll? val) (string? val))
+       (not-empty val)
+       true))
+   attributes))
+
 (defn validate-required [attributes questions required-attributes]
   (let [required-props (->> questions
                             (map keyword)

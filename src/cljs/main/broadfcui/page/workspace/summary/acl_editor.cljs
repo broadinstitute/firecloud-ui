@@ -129,6 +129,9 @@
                              (map #(dissoc % :read-only?))
                              (map #(update-in % [:email] clojure.string/trim))
                              (filter #(not (empty? (:email %)))))
+           grant-filtered-acl (if (common/access-greater-than-equal-to? (:user-access-level props) "OWNER")
+                                filtered-acl
+                                (map #(dissoc % :canShare) filtered-acl))
            fails (apply input/validate refs (filter
                                              #(contains? @refs %)
                                              (map #(str "acl-key" %) (range (count (:non-project-owner-acl-vec @state))))))]
@@ -139,7 +142,7 @@
            (endpoints/call-ajax-orch
             {:endpoint (endpoints/update-workspace-acl (:workspace-id props) invite-new?)
              :headers utils/content-type=json
-             :payload filtered-acl
+             :payload grant-filtered-acl
              :on-done (fn [{:keys [success? get-parsed-response]}]
                         (swap! state dissoc :saving?)
                         (if (seq (:usersNotFound (get-parsed-response)))
