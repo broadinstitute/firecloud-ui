@@ -57,6 +57,7 @@
             [:strong {} auth-domain] " from this workspace"]
            (style/create-select
             {:ref "auth-domain"
+             :defaultValue -1
              :onChange #(swap! state assoc :selected-auth-domain (-> % .-target .-value))}
             (:groups @state)
             "Select a Group..."))

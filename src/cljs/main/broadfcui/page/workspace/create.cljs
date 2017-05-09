@@ -55,7 +55,7 @@
            :defaultValue -1
            :onChange #(swap! state assoc :selected-auth-domain (-> % .-target .-value))}
           (:groups @state)
-          "Select a Group..."))
+          "Select a Group...")
          [comps/ErrorViewer {:error (:server-error @state)}]
          (style/create-validation-error-message (:validation-errors @state))])}])
    :component-did-mount
