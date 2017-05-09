@@ -115,7 +115,7 @@
              "Learn about call caching" icons/external-link-icon]]
 
            (when (:show-redact? info)
-             [:div {:style {:textAlign "center"}}
+             [:div {:style {:margin "1rem 0 -1rem"}}
               [comps/Checkbox {:ref "redact-checkbox"
                                :label (str "Redact Snapshot " (:snapshotId info))}]])
 
