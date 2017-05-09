@@ -64,7 +64,6 @@
           {:data (:data props)
            :body {:style table-style/table-heavy
                   :behavior {:reorderable-columns? false
-                             :sortable-columns? false
                              :filterable? false}
                   :columns [{:header "Task"
                              :column-data #(second (string/split (key %) #"\."))}
@@ -72,6 +71,7 @@
                              :column-data #(last (string/split (key %) #"\."))}
                             {:header "Value"
                              :initial-width :auto
+                             :sortable? false
                              :column-data #(->> % second display-value)}]}}]])])})
 
 
