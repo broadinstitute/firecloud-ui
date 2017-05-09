@@ -111,13 +111,13 @@
                                     (if (some? instruction)
                                       [:td {:style {:width "34%"}}
                                        (when-not member?
-                                         [:div {:style {:fontSize "75%" :textAlign "center"}}
-                                          "Application instructions for this Authorization Domain can be found "
+                                         [:div {:style {:fontSize "85%"}}
+                                          "Learn how to apply for this Authorization Domain  "
                                           [:a {:href instruction :target "_blank"} "here"] "."])]
                                       [:td {:style {:width "34%"}}
                                        (when-not member?
                                          (if requested?
-                                           [:div {:style {:fontSize "75%" :textAlign "center"}}
+                                           [:div {:style {:fontSize "85%"}}
                                             "Your request has been submitted. When you are granted
                                              access, the " [:strong {} "Access Level"] " displayed on
                                            the Workspace list will be updated."]
@@ -131,9 +131,7 @@
                                                                            "Request Access")
                                                                    :onClick #(react/call :-request-access
                                                                                          this name i)}]
-                                            [comps/Spinner {:style {:visibility (if requesting?
-                                                                                  "inherit"
-                                                                                  "hidden")}}]]))])]))
+                                            (when requesting?[comps/Spinner])]))])]))
                                (:ws-auth-domains @state))]]])
              [comps/ErrorViewer {:error (:server-error @state)}]])))}])
    :component-did-mount
