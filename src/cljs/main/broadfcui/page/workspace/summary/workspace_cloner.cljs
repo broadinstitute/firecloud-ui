@@ -46,7 +46,7 @@
           (style/create-form-label (str "Authorization Domain" (when-not (:auth-domain props) " (optional)")))
           (common/render-info-box
             {:text [:div {} [:strong {} "Note:"]
-                    [:div {} "An Authorization Domain can only be set when creating the workspace.
+                    [:div {} "An Authorization Domain can only be set when creating a workspace.
                      Once set, it cannot be changed."]
                     (style/create-link {:href "https://software.broadinstitute.org/firecloud/documentation/article?id=9524"
                                         :target "_blank"
