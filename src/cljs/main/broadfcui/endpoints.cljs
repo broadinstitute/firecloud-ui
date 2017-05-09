@@ -709,6 +709,15 @@
                  (on-done nil (get-parsed-response))
                  (on-done status-text nil)))}))
 
+(defn get-ws-access-instructions [workspace-id on-done]
+  (call-ajax-orch
+   {:endpoint {:path (str "/workspaces/" (ws-path workspace-id) "/accessInstructions")
+               :method :get}
+    :on-done (fn [{:keys [success? status-text get-parsed-response]}]
+               (if success?
+                 (on-done nil (get-parsed-response))
+                 (on-done status-text nil)))}))
+
 (defn create-group [group-name]
   {:path (str "/groups/" group-name)
    :method :post})

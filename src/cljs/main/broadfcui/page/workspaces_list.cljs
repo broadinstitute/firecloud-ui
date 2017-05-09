@@ -66,9 +66,10 @@
       {:header "Request Access"
        :content
        (react/create-element
-        (let [{:keys [my-auth-domains error]} @state]
+        (let [{:keys [my-auth-domains ws-instructions error]} @state]
           (cond
-            (not (or my-auth-domains error)) [comps/Spinner {:text "Loading authorization domains..."}]
+            (not (or (and my-auth-domains ws-instructions) error))
+            [comps/Spinner {:text "Loading authorization domains..."}]
             error
             (case (:code error)
               (:unknown :parse-error)
@@ -78,7 +79,7 @@
             :else
             [:div {:style {:width 750}}
              [:div {} "You cannot access this workspace because it contains restricted data.
-                         You need permission from the owner(s) of all of the Authorization Domains
+                         You need permission from the admin(s) of all of the Authorization Domains
                          protecting the workspace."]
              (let [simple-th (fn [text]
                                [:th {:style {:textAlign "left" :padding "0 0.5rem"
@@ -86,7 +87,11 @@
                    simple-td (fn [text]
                                [:td {}
                                 [:label {:style {:display "block" :padding "1rem 0.5rem"
-                                                 :width "33%"}} text]])]
+                                                 :width "33%"}} text]])
+                   instructions (into {}
+                                      (map (fn [ad]
+                                             {(keyword (:authorizationDomain ad)) (:instructions ad)})
+                                           ws-instructions))]
                [:form {:style {:margin "1em 0 1em 0"}}
                 [:table {:style {:width "100%" :borderCollapse "collapse"}}
                  [:thead {} [:tr {}
@@ -96,37 +101,45 @@
                  [:tbody {}
                   (map-indexed (fn [i auth-domain]
                                  (let [name (:name auth-domain)
+                                       instruction ((keyword name) instructions)
                                        member? (:member? (:data auth-domain))
                                        requested? (:requested? (:data auth-domain))
                                        requesting? (:requesting? (:data auth-domain))]
                                    [:tr {}
                                     (simple-td name)
                                     (simple-td (if member? "Yes" "No"))
-                                    [:td {:style {:width "34%"}}
-                                     (if-not member?
-                                       (if requested?
+                                    (if (some? instruction)
+                                      [:td {:style {:width "34%"}}
+                                       (when-not member?
                                          [:div {:style {:fontSize "75%" :textAlign "center"}}
-                                          "Your request has been submitted. When you are granted
-                                           access, the " [:strong {} "Access Level"] " displayed on
+                                          "Application instructions for this Authorization Domain can be found "
+                                          [:a {:href instruction :target "_blank"} "here"] "."])]
+                                      [:td {:style {:width "34%"}}
+                                       (when-not member?
+                                         (if requested?
+                                           [:div {:style {:fontSize "75%" :textAlign "center"}}
+                                            "Your request has been submitted. When you are granted
+                                             access, the " [:strong {} "Access Level"] " displayed on
                                            the Workspace list will be updated."]
-                                         [:div {} [comps/Button {:style {:width "125px"}
-                                                                 :disabled? (or
-                                                                             member?
-                                                                             requested?
-                                                                             requesting?)
-                                                                 :text (if requesting?
-                                                                         "Sending Request"
-                                                                         "Request Access")
-                                                                 :onClick #(react/call :-request-access
-                                                                                       this name i)}]
-                                          [comps/Spinner {:style {:visibility (if requesting?
-                                                                                "inherit"
-                                                                                "hidden")}}]]))]]))
+                                           [:div {} [comps/Button {:style {:width "125px"}
+                                                                   :disabled? (or
+                                                                               member?
+                                                                               requested?
+                                                                               requesting?)
+                                                                   :text (if requesting?
+                                                                           "Sending Request"
+                                                                           "Request Access")
+                                                                   :onClick #(react/call :-request-access
+                                                                                         this name i)}]
+                                            [comps/Spinner {:style {:visibility (if requesting?
+                                                                                  "inherit"
+                                                                                  "hidden")}}]]))])]))
                                (:ws-auth-domains @state))]]])
              [comps/ErrorViewer {:error (:server-error @state)}]])))}])
    :component-did-mount
    (fn [{:keys [this]}]
-     (react/call :-load-groups this))
+     (react/call :-load-groups this)
+     (react/call :-get-access-instructions this))
    :-load-groups
    (fn [{:keys [state refs after-update]}]
      (endpoints/get-groups
@@ -134,15 +147,21 @@
         (if err-text
           (swap! state assoc :error-message err-text)
           (swap! state assoc :my-auth-domains (map :groupName groups))))))
+   :-get-access-instructions
+   (fn [{:keys [props state]}]
+     (endpoints/get-ws-access-instructions (:workspace-id props)
+       (fn [err-text instructions]
+         (if err-text
+           (swap! state assoc :error-message err-text)
+           (swap! state assoc :ws-instructions instructions)))))
    :-request-access
    (fn [{:keys [props state refs]} group-name group-index]
      (swap! state update-in [:ws-auth-domains group-index :data] assoc :requesting? true)
      (endpoints/call-ajax-orch
       {:endpoint (endpoints/request-group-access group-name)
        :on-done (fn []
-                  (swap! state update-in [:ws-auth-domains group-index :data] assoc
-                         :requesting? false
-                         :requested? true))}))})
+                  (swap! state update-in [:ws-auth-domains group-index :data]
+                         assoc :requesting? false :requested? true))}))})
 
 (react/defc WorkspaceCell
   {:render
@@ -154,7 +173,7 @@
        [:a {:href (if no-access?
                     "javascript:;"
                     (nav/get-link :workspace-summary workspace-id))
-            :onClick (if no-access? #(react/call :-show-request-access-modal this))
+            :onClick (if no-access? #(react/call :-show-request-access-modal this workspace-id))
             :style {:display "flex" :alignItems "center"
                     :backgroundColor (if no-access? (:disabled-state style/colors) color)
                     :color "white" :textDecoration "none"
@@ -176,7 +195,8 @@
    (fn [{:keys [props]}]
      (modal/push-modal
       [RequestAuthDomainAccessDialog
-       {:ws-auth-domains (get-in props [:data :auth-domains])}]))})
+       {:workspace-id (get-in props [:data :workspace-id])
+        :ws-auth-domains (get-in props [:data :auth-domains])}]))})
 
 (defn- get-workspace-name-string [column-data]
   (str (get-in column-data [:workspace-id :namespace]) "/" (get-in column-data [:workspace-id :name])))
@@ -258,7 +278,7 @@
                                  :status (:status ws)
                                  :disabled? disabled?
                                  ;; this will very soon return multiple auth domains, so im future-proofing it now
-                                 :auth-domains [(get-in ws [:workspace :authorizationDomain :membersGroupName])]
+                                 :auth-domains (conj [(get-in ws [:workspace :authorizationDomain :membersGroupName])] "fake-realm")
                                  :no-access? no-access?
                                  :hover-text (when no-access? (if (= (get-in ws [:workspace :authorizationDomain :membersGroupName])
                                                                      (config/dbgap-authorization-domain))
