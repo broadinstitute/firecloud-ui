@@ -43,14 +43,13 @@
          (style/create-text-area {:style {:width "100%"} :rows 5 :ref "wsDescription"
                                   :defaultValue (:description props)})
          [:div {:style {:display "flex"}}
-          (style/create-form-label "Authorization Domain")
+          (style/create-form-label "Select a Group to set as the Authorization Domain")
           (common/render-info-box
             {:text [:div {} [:strong {} "Note:"]
-                    [:div {} "Once this workspace is associated with an Authorization Domain, a user
-                   can access the data only if they are a member of the Domain and have been granted
-                   read or write permission on the workspace. If a user with access to the workspace
-                   clones it, any Domain associations will be retained by the new copy. If a user
-                   tries to share the clone with a person who is not in the Domain, the data remains protected. "]
+                    [:div {} "Once this workspace's Authorization Domain is set, a user can access
+                   the data only if they are a member of the Group and have been granted read or
+                   write permission on the workspace. To define this workspace's Authorization
+                   Domain, select a Group."]
                     (style/create-link {:href "https://software.broadinstitute.org/firecloud/documentation/article?id=9524"
                                         :target "_blank"
                                         :text "Read more about Authorization Domains"})]})]
@@ -71,7 +70,7 @@
       (fn [success? parsed-response]
         (swap! state assoc :groups
                (conj (map #(:groupName %) parsed-response)
-                     "Anyone who is given permission")))))
+                     "None")))))
    :do-clone
    (fn [{:keys [props refs state]}]
      (if-let [fails (input/validate refs "name")]

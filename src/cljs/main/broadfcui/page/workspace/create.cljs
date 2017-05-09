@@ -42,13 +42,13 @@
          (style/create-form-label "Description (optional)")
          (style/create-text-area {:style {:width "100%"} :rows 5 :ref "wsDescription"})
          [:div {:style {:display "flex"}}
-          (style/create-form-label "Authorization Domain")
+          (style/create-form-label "Select a Group to set as the Authorization Domain")
           (common/render-info-box
            {:text [:div {} [:strong {} "Note:"]
                    [:div {} "Once this workspace's Authorization Domain is set, a user can access
-                   the data only if they are a member of the Domain and have been granted read or
+                   the data only if they are a member of the Group and have been granted read or
                    write permission on the workspace. To define this workspace's Authorization
-                   Domain, select a group."]
+                   Domain, select a Group."]
                    (style/create-link {:href "https://software.broadinstitute.org/firecloud/documentation/article?id=9524"
                                        :target "_blank"
                                        :text "Read more about Authorization Domains"})]})]
@@ -67,7 +67,7 @@
                     (remove (fn [group]
                               (= (:groupName group) "All_Users")))
                     (map :groupName )
-                    (concat ["Anyone who is given permission"]))))))
+                    (concat ["None"]))))))
    :create-workspace
    (fn [{:keys [props state refs]}]
      (swap! state dissoc :server-error :validation-errors)
