@@ -42,20 +42,20 @@
          (style/create-form-label "Description (optional)")
          (style/create-text-area {:style {:width "100%"} :rows 5 :ref "wsDescription"})
          [:div {:style {:display "flex"}}
-          (style/create-form-label "Authorization Domain")
+          (style/create-form-label "Authorization Domain (optional)")
           (common/render-info-box
            {:text [:div {} [:strong {} "Note:"]
-                   [:div {} "Once this workspace's Authorization Domain is set, a user can access
-                   the data only if they are a member of the Domain and have been granted read or
-                   write permission on the workspace. To define this workspace's Authorization
-                   Domain, select a group."]
+                   [:div {} "An Authorization Domain can only be set when creating a workspace.
+                   Once set, it cannot be changed."]
                    (style/create-link {:href "https://software.broadinstitute.org/firecloud/documentation/article?id=9524"
                                        :target "_blank"
                                        :text "Read more about Authorization Domains"})]})]
          (style/create-select
           {:ref "auth-domain"
+           :defaultValue -1
            :onChange #(swap! state assoc :selected-auth-domain (-> % .-target .-value))}
-          (:groups @state))
+          (:groups @state)
+          "Select a Group...")
          [comps/ErrorViewer {:error (:server-error @state)}]
          (style/create-validation-error-message (:validation-errors @state))])}])
    :component-did-mount
@@ -63,11 +63,8 @@
      (endpoints/get-groups
       (fn [success? parsed-response]
         (swap! state assoc :groups
-               (->> parsed-response
-                    (remove (fn [group]
-                              (= (:groupName group) "All_Users")))
-                    (map :groupName )
-                    (concat ["Anyone who is given permission"]))))))
+               (conj (map :groupName parsed-response)
+                     "None")))))
    :create-workspace
    (fn [{:keys [props state refs]}]
      (swap! state dissoc :server-error :validation-errors)

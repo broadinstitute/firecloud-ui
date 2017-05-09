@@ -43,25 +43,24 @@
          (style/create-text-area {:style {:width "100%"} :rows 5 :ref "wsDescription"
                                   :defaultValue (:description props)})
          [:div {:style {:display "flex"}}
-          (style/create-form-label "Authorization Domain")
+          (style/create-form-label (str "Authorization Domain" (when-not (:auth-domain props) " (optional)")))
           (common/render-info-box
             {:text [:div {} [:strong {} "Note:"]
-                    [:div {} "Once this workspace is associated with an Authorization Domain, a user
-                   can access the data only if they are a member of the Domain and have been granted
-                   read or write permission on the workspace. If a user with access to the workspace
-                   clones it, any Domain associations will be retained by the new copy. If a user
-                   tries to share the clone with a person who is not in the Domain, the data remains protected. "]
+                    [:div {} "An Authorization Domain can only be set when creating a workspace.
+                    Once set, it cannot be changed."]
                     (style/create-link {:href "https://software.broadinstitute.org/firecloud/documentation/article?id=9524"
                                         :target "_blank"
                                         :text "Read more about Authorization Domains"})]})]
          (if-let [auth-domain (:auth-domain props)]
            [:div {:style {:fontStyle "italic" :fontSize "80%"}}
-            "The cloned workspace will automatically inherit the authorization domain "
-            [:strong {} auth-domain] " from this workspace."]
+            "The cloned workspace will automatically inherit the Authorization Domain "
+            [:strong {} auth-domain] " from this workspace"]
            (style/create-select
             {:ref "auth-domain"
+             :defaultValue -1
              :onChange #(swap! state assoc :selected-auth-domain (-> % .-target .-value))}
-            (:groups @state)))
+            (:groups @state)
+            "Select a Group..."))
          (style/create-validation-error-message (:validation-error @state))
          [comps/ErrorViewer {:error (:error @state)
                              :expect {409 "A workspace with this name already exists in this project"}}]])}])
@@ -70,8 +69,8 @@
      (endpoints/get-groups
       (fn [success? parsed-response]
         (swap! state assoc :groups
-               (conj (map #(:groupName %) parsed-response)
-                     "Anyone who is given permission")))))
+               (conj (map :groupName parsed-response)
+                     "None")))))
    :do-clone
    (fn [{:keys [props refs state]}]
      (if-let [fails (input/validate refs "name")]
