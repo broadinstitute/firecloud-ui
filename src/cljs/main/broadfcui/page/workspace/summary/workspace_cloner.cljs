@@ -69,9 +69,8 @@
      (endpoints/get-groups
       (fn [success? parsed-response]
         (swap! state assoc :groups
-               (swap! state assoc :groups
-                      (conj (map :groupName parsed-response)
-                            "None")))))
+               (conj (map :groupName parsed-response)
+                     "None")))))
    :do-clone
    (fn [{:keys [props refs state]}]
      (if-let [fails (input/validate refs "name")]
