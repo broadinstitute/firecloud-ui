@@ -63,11 +63,8 @@
      (endpoints/get-groups
       (fn [success? parsed-response]
         (swap! state assoc :groups
-               (->> parsed-response
-                    (remove (fn [group]
-                              (= (:groupName group) "All_Users")))
-                    (map :groupName )
-                    (concat ["None"]))))))
+               (conj (map :groupName parsed-response)
+                     "None")))))
    :create-workspace
    (fn [{:keys [props state refs]}]
      (swap! state dissoc :server-error :validation-errors)
