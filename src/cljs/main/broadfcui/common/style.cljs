@@ -85,9 +85,12 @@
 (defn create-text-area [props]
   [:textarea (deep-merge {:style input-text-style} props)])
 
-(defn create-select [props options]
-  [:select (deep-merge {:style select-style} props)
-   (map-indexed (fn [i opt] [:option {:value i} opt]) options)])
+(defn create-select [props options & placeholder]
+  (let [option-elements (map-indexed (fn [i opt] [:option {:value i} opt]) options)]
+    [:select (deep-merge {:style select-style} props)
+     (if-not (empty? placeholder)
+       (cons [:option {:value -1 :disabled true} (first placeholder)] option-elements)
+       option-elements)]))
 
 (defn create-identity-select [props options]
   [:select (deep-merge {:style select-style} props)
