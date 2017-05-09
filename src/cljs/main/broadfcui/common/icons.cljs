@@ -44,6 +44,7 @@
    :sort-asc "fa-sort-amount-asc"
    :sort-desc "fa-sort-amount-desc"
    :spinner "fa-spinner"
+   :unknown "fa-question"
    :unlock "fa-unlock"
    :warning "fa-exclamation-triangle"
    })
@@ -94,3 +95,12 @@
    :render
    (fn [{:keys [props]}]
      (icon {:style {:color (:color props) :fontSize (:size props)}} :warning))})
+
+(react/defc UnknownIcon
+  {:get-default-props
+   (fn []
+     {:size 28
+      :color "white"})
+   :render
+   (fn [{:keys [props]}]
+     (icon {:style {:color (:color props) :fontSize (:size props)}} :unknown))})
