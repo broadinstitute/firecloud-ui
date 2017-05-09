@@ -61,19 +61,20 @@
                              :onClick #(swap! state assoc :expanded (not (:expanded @state)))})))
       (when (:expanded @state)
         [:div {:style {:padding "0.25em 0 0.25em 1em"}}
-         [Table
-          {:data (:data props)
-           :body {:style table-style/table-heavy
-                  :behavior {:reorderable-columns? false
-                             :filterable? false}
-                  :columns [{:header "Task"
-                             :column-data #(second (string/split (key %) #"\."))}
-                            {:header "Label"
-                             :column-data #(last (string/split (key %) #"\."))}
-                            {:header "Value"
-                             :initial-width :auto
-                             :sortable? false
-                             :column-data #(->> % second display-value)}]}}]])])})
+         (let [columns [{:header "Label"
+                         :column-data #(last (string/split (key %) #"\."))}
+                        {:header "Value"
+                         :initial-width :auto
+                         :sortable? false
+                         :column-data #(->> % second display-value)}]
+               task-column {:header "Task"
+                            :column-data #(second (string/split (key %) #"\."))}]
+           [Table
+            {:data (:data props)
+             :body {:style table-style/table-heavy
+                    :behavior {:reorderable-columns? false
+                               :filterable? false}
+                    :columns (if (:call-detail? props) columns (cons task-column columns))}}])])])})
 
 (react/defc WorkflowTiming
   {:get-initial-state
@@ -169,8 +170,8 @@
               (create-field "Started" (moncommon/render-date (data "start")))
               ;(utils/cljslog data)
               (create-field "Ended" (moncommon/render-date (data "end")))
-              [IODetail {:label "Inputs" :data (data "inputs")}]
-              [IODetail {:label "Outputs" :data (data "outputs")}]
+              [IODetail {:label "Inputs" :data (data "inputs") :call-detail? true}]
+              [IODetail {:label "Outputs" :data (data "outputs") :call-detail? true}]
               (create-field "stdout" (display-value (data "stdout") (last (string/split (data "stdout") #"/"))))
               (create-field "stderr" (display-value (data "stderr") (last (string/split (data "stderr") #"/"))))
               (backend-logs data)
