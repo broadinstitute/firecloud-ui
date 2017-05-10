@@ -4,8 +4,10 @@
     [clojure.walk :refer [prewalk]]
     [clojure.string :as string]
     [broadfcui.common :as common]
+    [broadfcui.common.codemirror :refer [CodeMirror]]
     [broadfcui.common.components :as comps]
     [broadfcui.common.gcs-file-preview :refer [GCSFilePreviewLink]]
+    [broadfcui.common.icons :as icons]
     [broadfcui.common.style :as style]
     [broadfcui.common.table.table :refer [Table]]
     [broadfcui.common.table.style :as table-style]
@@ -139,6 +141,43 @@
                                  :else elem))
                              (:data props))}])])})
 
+(react/defc OperationDialog
+            {:render
+             (fn [{:keys [props state]}]
+                 [comps/OKCancelForm
+                  {:header "Operation Details"
+                   :content
+                   (let [server-response (:server-response @state)]
+                        (cond
+                         (nil? server-response)
+                         [:div {} [comps/Spinner {:text "Loading operation details..."}]]
+                         (not (:success? server-response))
+                         (style/create-server-error-message (:response server-response))
+                         :else
+                         [CodeMirror {:text (:raw-response server-response)}]))
+                   :show-cancel? false
+                   :ok-button {:text "Done" :onClick modal/pop-modal}}])
+
+             :component-did-mount
+             (fn [{:keys [props state]}]
+                 (endpoints/call-ajax-orch
+                  {:endpoint
+                   (endpoints/get-workspace-genomic-operations
+                    ;; strip out operations/ from the job id
+                    (last (string/split (:job-id props) #"/")))
+                   :on-done (fn [{:keys [success? get-parsed-response status-text raw-response]}]
+                                (swap! state assoc :server-response
+                                       {:success? success?
+                                        :response (if success? (get-parsed-response false) status-text)
+                                        :raw-response raw-response}))}))})
+
+(react/defc OperationLink
+            {:render
+             (fn [{:keys [props]}]
+                 (let [{:keys [job-id]} props]
+                      [:a {:href "javascript:;"
+                           :onClick #(modal/push-modal [OperationDialog props])} job-id]))})
+
 (react/defc CallDetail
   {:get-initial-state
    (fn []
@@ -162,7 +201,7 @@
             [:div {:style {:padding "0.5em 0 0 0.5em"}}
              [:div {:style {:paddingBottom "0.25em"}} (str "Call #" (inc index) ":")]
              [:div {:style {:paddingLeft "0.5em"}}
-              (create-field "ID" (data "jobId"))
+              (create-field "ID" [OperationLink {:job-id (data "jobId")}])
               (let [status (data "executionStatus")]
                 (create-field "Status" (moncommon/icon-for-call-status status) status))
               (when (= (-> (data "callCaching") (get "effectiveCallCachingMode")) "ReadAndWriteCache")
