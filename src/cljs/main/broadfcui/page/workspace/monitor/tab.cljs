@@ -24,21 +24,26 @@
     {:style table-style/table-heavy
      :empty-message "There are no analyses to display."
      :columns
-     [{:header "Status" :as-text :status :sort-by :text
+     [{:id "view" :initial-width 50
+       :resizable? false :sortable? false :filterable? false :hidden? true
+       :column-data :submissionId
+       :as-text (fn [_] "View analysis details")
+       :render #(style/create-link {:text "View"
+                                    :href (nav/get-link :workspace-submission
+                                                        workspace-id
+                                                        %)})}
+      {:header "Status" :as-text :status :sort-by :text
        :render (fn [submission]
                  [:div {:style {:height table-style/table-icon-size}}
                   (when (= "Done" (:status submission))
                     (moncommon/icon-for-sub-status (:workflowStatuses submission)))
                   (:status submission)])}
       {:header "Method Configuration" :initial-width 300
-       :column-data (juxt :methodConfigurationNamespace :methodConfigurationName :submissionId)
+       :column-data (juxt :methodConfigurationNamespace :methodConfigurationName)
        :as-text (fn [[namespace name]] (str namespace "/" name))
        :render
-       (fn [[namespace name submission-id]]
-         (style/create-link {:text (str namespace "/" name)
-                             :href (nav/get-link :workspace-submission
-                                                 workspace-id
-                                                 submission-id)}))}
+       (fn [[namespace name]]
+         (str namespace "/" name))}
       {:header "Date" :initial-width 200 :as-text render-date
        :sort-by :submissionDate :sort-initial :desc}
       {:header "Data Entity" :initial-width 220
