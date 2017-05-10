@@ -21,7 +21,7 @@
         snapshot (merge {:header "Edit Method"
                          :ok-text "Create New Snapshot"
                          :locked #{:namespace :name}
-                         :show-redact? true}
+                         :edit-mode? true}
                         (select-keys snapshot [:namespace :name :snapshotId :synopsis :documentation :payload]))
         :else {:header "Create New Method"
                :ok-text "Upload"}))
@@ -111,7 +111,7 @@
             "WDL must use Docker image digests to allow call caching"
             (common/question-icon-link "Guide to Call Caching" (config/call-caching-guide-url))]
 
-           (when (:show-redact? info)
+           (when (:edit-mode? info)
              [:div {:style {:margin "1rem 0 -1rem"}}
               [comps/Checkbox {:ref "redact-checkbox"
                                :label (str "Redact Snapshot " (:snapshotId info))}]])
@@ -131,7 +131,7 @@
    (fn [{:keys [refs]} text]
      ((@refs "wdl-editor") :call-method "setValue" text))
    :-create-method
-   (fn [{:keys [state refs this]}]
+   (fn [{:keys [state locals refs this]}]
      (let [[namespace name & fails] (input/get-and-validate refs "namespace" "name")
            [synopsis documentation] (common/get-text refs "synopsis" "documentation")
            wdl ((@refs "wdl-editor") :call-method "getValue")
@@ -151,30 +151,54 @@
            :on-done
            (fn [{:keys [success? get-parsed-response]}]
              (if success?
-               (this :-after-upload (get-parsed-response))
+               (let [{:keys [namespace name snapshotId]} (get-parsed-response)
+                     new-entity-id {:namespace namespace :name name :snapshot-id snapshotId}
+                     old-entity-id (select-keys (:info @locals) [:namespace :name :snapshotId])]
+                 (this :-after-upload (utils/restructure new-entity-id old-entity-id)))
                (swap! state assoc
                       :banner nil
                       :upload-error (get-parsed-response false))))}))))
    :-after-upload
-   (fn [{:keys [refs locals this]} parsed-response]
-     (let [{:keys [namespace name snapshotId]} parsed-response
-           new-entity-id {:namespace namespace :name name :snapshot-id snapshotId}]
-       (if (and (:show-redact? (:info @locals))
-                ((@refs "redact-checkbox") :checked?))
-         (this :-redact-old-method new-entity-id)
-         (this :-complete new-entity-id))))
-   :-redact-old-method
-   (fn [{:keys [state locals this]} new-entity-id]
-     (swap! state assoc :banner "Redacting old method...")
-     (let [{:keys [namespace name snapshotId]} (:info @locals)]
+   (fn [{:keys [locals this]} data]
+     (if (:edit-mode? (:info @locals))
+       (this :-set-permissions data)
+       (this :-complete data)))
+   :-set-permissions
+   (fn [{:keys [state this]} {:keys [new-entity-id old-entity-id] :as data}]
+     (swap! state assoc :banner "Loading current permissions...")
+     (let [{:keys [namespace name snapshotId]} old-entity-id]
        (endpoints/call-ajax-orch
-        {:endpoint (endpoints/delete-agora-entity false namespace name snapshotId)
+        {:endpoint (endpoints/get-agora-method-acl namespace name snapshotId false)
          :on-done (fn [{:keys [success? get-parsed-response]}]
-                    (this :-complete new-entity-id
-                          (when-not success? (get-parsed-response false))))})))
+                    (if success?
+                      (let [permissions (get-parsed-response)]
+                        (swap! state assoc :banner "Setting permissions on new snapshot...")
+                        (endpoints/call-ajax-orch
+                         {:endpoint (endpoints/persist-agora-method-acl
+                                     (assoc new-entity-id
+                                       :snapshotId (:snapshot-id new-entity-id)
+                                       :entityType "Workflow"))
+                          :headers utils/content-type=json
+                          :payload permissions
+                          :on-done (fn [{:keys [success? get-parsed-response]}]
+                                     (if success?
+                                       (this :-redact-old-method data)
+                                       (this :-complete data (get-parsed-response false))))}))
+                      (this :-complete data (get-parsed-response false))))})))
+   :-redact-old-method
+   (fn [{:keys [state refs this]} {:keys [old-entity-id] :as data}]
+     (if ((@refs "redact-checkbox") :checked?)
+       (let [{:keys [namespace name snapshotId]} old-entity-id]
+         (swap! state assoc :banner "Redacting old method...")
+         (endpoints/call-ajax-orch
+          {:endpoint (endpoints/delete-agora-entity false namespace name snapshotId)
+           :on-done (fn [{:keys [success? get-parsed-response]}]
+                      (this :-complete data
+                            (when-not success? (get-parsed-response false))))}))
+       (this :-complete data)))
    :-complete
-   (fn [{:keys [props]} new-entity-id & [redact-error]]
+   (fn [{:keys [props]} {:keys [new-entity-id]} & [error]]
      (modal/pop-modal)
      ((:on-created props) :method new-entity-id)
-     (when redact-error
-       (comps/push-error-response redact-error)))})
+     (when error
+       (comps/push-error-response error)))})
