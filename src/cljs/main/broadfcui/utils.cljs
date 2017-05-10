@@ -99,7 +99,7 @@
       (aget "currentUser") (js-invoke "get") (js-invoke "getAuthResponse") (aget "access_token")))
 
 (defn get-user-email []
-  (-> @google-auth2-instance
+  (-> @auth2-atom
       (aget "currentUser") (js-invoke "get") (js-invoke "getBasicProfile") (js-invoke "getEmail")))
 
 

@@ -48,10 +48,10 @@
 (react/defc CodeMirror
   {:add-listener
    (fn [{:keys [this]} event-type listener]
-     (react/call :call-method this "on" event-type listener))
+     (this :call-method "on" event-type listener))
    :remove-listener
    (fn [{:keys [this]} event-type listener]
-     (react/call :call-method this "off" event-type listener))
+     (this :call-method "off" event-type listener))
    :call-method
    (fn [{:keys [locals]} method & args]
      (apply js-invoke (aget (:code-mirror-component @locals) "doc") method args))
@@ -64,7 +64,9 @@
    (fn [{:keys [props]}]
      [:div {:style {:border style/standard-line}}
       [:textarea {:ref "code-text" :defaultValue (:text props)}]])
-   :component-did-mount #((:this %) :display-code)
+   :component-did-mount
+   (fn [{:keys [this]}]
+     (this :display-code))
    :display-code
    (fn [{:keys [refs props locals]}]
      (let [{:keys [mode line-numbers read-only?]} props]
@@ -72,7 +74,7 @@
               (js-invoke CodeMirror-js "fromTextArea" (@refs "code-text")
                          #js{:mode mode :lineNumbers line-numbers :readOnly read-only?}))))
    :component-will-receive-props
-   (fn [{:keys [refs props next-props locals]}]
+   (fn [{:keys [props next-props locals]}]
      (when (:read-only? props)
        (-> (@locals :code-mirror-component)
            (js-invoke "getDoc")
