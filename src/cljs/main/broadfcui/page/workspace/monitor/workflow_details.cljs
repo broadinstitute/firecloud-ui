@@ -142,41 +142,39 @@
                              (:data props))}])])})
 
 (react/defc OperationDialog
-            {:render
-             (fn [{:keys [props state]}]
-                 [comps/OKCancelForm
-                  {:header "Operation Details"
-                   :content
-                   (let [server-response (:server-response @state)]
-                        (cond
-                         (nil? server-response)
-                         [:div {} [comps/Spinner {:text "Loading operation details..."}]]
-                         (not (:success? server-response))
-                         (style/create-server-error-message (:response server-response))
-                         :else
-                         [CodeMirror {:text (:raw-response server-response)}]))
-                   :show-cancel? false
-                   :ok-button {:text "Done" :onClick modal/pop-modal}}])
+  {:render
+   (fn [{:keys [props state]}]
+     [comps/OKCancelForm
+      {:header "Operation Details"
+       :content
+       (let [server-response (:server-response @state)]
+         (cond
+           (nil? server-response)
+           [:div {} [comps/Spinner {:text "Loading operation details..."}]]
+           (not (:success? server-response))
+           (style/create-server-error-message (:response server-response))
+           :else
+           [CodeMirror {:text (:raw-response server-response)}]))
+       :show-cancel? false
+       :ok-button {:text "Done" :onClick modal/pop-modal}}])
 
-             :component-did-mount
-             (fn [{:keys [props state]}]
-                 (endpoints/call-ajax-orch
-                  {:endpoint
-                   (endpoints/get-workspace-genomic-operations
-                    ;; strip out operations/ from the job id
-                    (last (string/split (:job-id props) #"/")))
-                   :on-done (fn [{:keys [success? get-parsed-response status-text raw-response]}]
-                                (swap! state assoc :server-response
-                                       {:success? success?
-                                        :response (if success? (get-parsed-response false) status-text)
-                                        :raw-response raw-response}))}))})
+   :component-did-mount
+   (fn [{:keys [props state]}]
+     (endpoints/call-ajax-orch
+      {:endpoint
+       (endpoints/get-workspace-genomic-operations
+        ;; strip out operations/ from the job id
+        (last (string/split (:job-id props) #"/")))
+       :on-done (fn [{:keys [success? get-parsed-response status-text raw-response]}]
+                  (swap! state assoc :server-response
+                         {:success? success?
+                          :response (if success? (get-parsed-response false) status-text)
+                          :raw-response raw-response}))}))})
 
-(react/defc OperationLink
-            {:render
-             (fn [{:keys [props]}]
-                 (let [{:keys [job-id]} props]
-                      [:a {:href "javascript:;"
-                           :onClick #(modal/push-modal [OperationDialog props])} job-id]))})
+(defn operation-link [job-id]
+  ;; Note: using [:a ...] instead of style/create-link to be consistent with GCSFilePreviewLink
+  [:a {:href "javascript:;"
+       :onClick #(modal/push-modal [OperationDialog props])} job-id])
 
 (react/defc CallDetail
   {:get-initial-state
@@ -201,7 +199,7 @@
             [:div {:style {:padding "0.5em 0 0 0.5em"}}
              [:div {:style {:paddingBottom "0.25em"}} (str "Call #" (inc index) ":")]
              [:div {:style {:paddingLeft "0.5em"}}
-              (create-field "ID" [OperationLink {:job-id (data "jobId")}])
+              (create-field "ID" (operation-link (data "jobId")))
               (let [status (data "executionStatus")]
                 (create-field "Status" (moncommon/icon-for-call-status status) status))
               (when (= (-> (data "callCaching") (get "effectiveCallCachingMode")) "ReadAndWriteCache")
