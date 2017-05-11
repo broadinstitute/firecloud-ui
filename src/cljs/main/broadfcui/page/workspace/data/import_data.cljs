@@ -20,20 +20,10 @@
      [:div {:style {:textAlign "center"}}
       (when (:loading? @state)
         [comps/Blocker {:banner "Uploading file..."}])
-
-      [:input {:type "file" :name "entities" :ref "entities"
-               :style {:display "none"}
-               :onChange (fn [e]
-                           (let [file (-> e .-target .-files (aget 0))
-                                 reader (js/FileReader.)]
-                             (when file
-                               (swap! state assoc :upload-result nil)
-                               (set! (.-onload reader)
-                                     #(swap! state assoc :file file :file-contents (.-result reader)))
-                               (.readAsText reader (.slice file 0 preview-limit)))))}]
+      [:div {:ref "entity-input"}]
       common/PHI-warning
       [comps/Button {:text (if (:upload-result @state) "Choose another file..." "Choose file...")
-                     :onClick #(-> (@refs "entities") .click)}]
+                     :onClick #(-> (@refs "entity-input") .-firstChild .click)}]
       (when (:file-contents @state)
         [:div {:style {:margin "0.5em 2em" :padding "0.5em" :border style/standard-line}}
          (str "Previewing '" (-> (:file @state) .-name) "':")
@@ -53,6 +43,9 @@
            [:span {:style {:marginLeft "1em"}} "Success!"])
           [:div {:style {:paddingTop "1em"}}
            [comps/ErrorViewer {:error (:error result)}]]))])
+   :component-did-mount
+   (fn [{:keys [this]}]
+     (this :-create-file-input))
    :do-upload
    (fn [{:keys [props state]}]
      (swap! state assoc :loading? true)
@@ -69,4 +62,20 @@
                     (do
                       (swap! state assoc :upload-result {:success? true})
                       ((:on-data-imported props)))
-                    (swap! state assoc :upload-result {:success? false :error (get-parsed-response false)})))}))})
+                    (swap! state assoc :upload-result {:success? false :error (get-parsed-response false)})))}))
+   :-create-file-input
+   (fn [{:keys [state refs this after-update]}]
+     (react/unmount-component-at-node (@refs "entity-input"))
+     (react/render
+      (react/create-element
+       [:input {:type "file" :name "entities"
+                :style {:display "none"}
+                :onChange (fn [e]
+                            (let [file (-> e .-target .-files (aget 0))
+                                  reader (js/FileReader.)]
+                              (when file
+                                (set! (.-onload reader)
+                                      #(swap! state assoc :file file :file-contents (.-result reader)))
+                                (.readAsText reader (.slice file 0 preview-limit)))
+                              (after-update #(this :-create-file-input))))}])
+      (@refs "entity-input")))})
