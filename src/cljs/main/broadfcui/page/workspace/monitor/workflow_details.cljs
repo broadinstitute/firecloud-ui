@@ -199,7 +199,7 @@
             [:div {:style {:padding "0.5em 0 0 0.5em"}}
              [:div {:style {:paddingBottom "0.25em"}} (str "Call #" (inc index) ":")]
              [:div {:style {:paddingLeft "0.5em"}}
-              (create-field "ID" (operation-link (data "jobId")))
+              (create-field "Operation" (operation-link (data "jobId")))
               (let [status (data "executionStatus")]
                 (create-field "Status" (moncommon/icon-for-call-status status) status))
               (when (= (-> (data "callCaching") (get "effectiveCallCachingMode")) "ReadAndWriteCache")
