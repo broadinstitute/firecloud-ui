@@ -90,14 +90,15 @@
                                                  :width "33%"}} text]])
                    instructions (into {}
                                       (map (fn [ad]
-                                             {(keyword (:authorizationDomain ad)) (:instructions ad)})
+                                             {(keyword (:groupName ad)) (:instructions ad)})
                                            ws-instructions))]
                [:form {:style {:margin "1em 0 1em 0"}}
                 [:table {:style {:width "100%" :borderCollapse "collapse"}}
-                 [:thead {} [:tr {}
-                             (simple-th "Authorization Domain")
-                             (simple-th "Access")
-                             (simple-th "")]]
+                 [:thead {}
+                  [:tr {}
+                   (simple-th "Authorization Domain")
+                   (simple-th "Access")
+                   (simple-th "")]]
                  [:tbody {}
                   (map-indexed (fn [i auth-domain]
                                  (let [name (:name auth-domain)
@@ -116,22 +117,18 @@
                                           [:a {:href instruction :target "_blank"} "here"] "."])]
                                       [:td {:style {:width "34%"}}
                                        (when-not member?
-                                         (if requested?
-                                           [:div {:style {:fontSize "85%"}}
-                                            "Your request has been submitted. When you are granted
-                                             access, the " [:strong {} "Access Level"] " displayed on
-                                           the Workspace list will be updated."]
-                                           [:div {} [comps/Button {:style {:width "125px"}
-                                                                   :disabled? (or
-                                                                               member?
-                                                                               requested?
-                                                                               requesting?)
-                                                                   :text (if requesting?
-                                                                           "Sending Request"
-                                                                           "Request Access")
-                                                                   :onClick #(react/call :-request-access
-                                                                                         this name i)}]
-                                            (when requesting?[comps/Spinner])]))])]))
+                                         [:div {}
+                                          [comps/Button {:style {:width "125px"}
+                                                         :disabled? (or requested? requesting?)
+                                                         :text (if requested? "Request Sent" "Request Access")
+                                                         :onClick #(react/call :-request-access this name i)}]
+                                          (when requesting?[comps/Spinner])
+                                          (when requested?
+                                            (common/render-info-box
+                                             {:text [:div {}
+                                                     "Your request has been submitted. When you are granted
+                                                     access, the " [:strong {} "Access Level"] " displayed on
+                                                     the Workspace list will be updated."]}))])])]))
                                (:ws-auth-domains @state))]]])
              [comps/ErrorViewer {:error (:server-error @state)}]])))}])
    :component-did-mount
@@ -175,7 +172,6 @@
             :style {:display "flex" :alignItems "center"
                     :backgroundColor (if no-access? (:disabled-state style/colors) color)
                     :color "white" :textDecoration "none"
-                    :cursor (when disabled? "default")
                     :height (- row-height-px 4)
                     :margin "2px 0"}
             :title hover-text}
@@ -276,7 +272,7 @@
                                  :status (:status ws)
                                  :disabled? disabled?
                                  ;; this will very soon return multiple auth domains, so im future-proofing it now
-                                 :auth-domains (conj [(get-in ws [:workspace :authorizationDomain :membersGroupName])] "fake-realm")
+                                 :auth-domains [(get-in ws [:workspace :authorizationDomain :membersGroupName])]
                                  :no-access? no-access?
                                  :hover-text (when no-access? (if (= (get-in ws [:workspace :authorizationDomain :membersGroupName])
                                                                      (config/dbgap-authorization-domain))
