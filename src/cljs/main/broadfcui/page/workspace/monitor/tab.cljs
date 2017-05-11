@@ -27,7 +27,7 @@
      [{:id "view" :initial-width 50
        :resizable? false :sortable? false :filterable? false :hidden? true
        :column-data :submissionId
-       :as-text (fn [_] "View analysis details")
+       :as-text #(constantly "View analysis details")
        :render #(style/create-link {:text "View"
                                     :href (nav/get-link :workspace-submission
                                                         workspace-id
@@ -40,10 +40,7 @@
                   (:status submission)])}
       {:header "Method Configuration" :initial-width 300
        :column-data (juxt :methodConfigurationNamespace :methodConfigurationName)
-       :as-text (fn [[namespace name]] (str namespace "/" name))
-       :render
-       (fn [[namespace name]]
-         (str namespace "/" name))}
+       :as-text (partial clojure.string/join "/")}
       {:header "Date" :initial-width 200 :as-text render-date
        :sort-by :submissionDate :sort-initial :desc}
       {:header "Data Entity" :initial-width 220

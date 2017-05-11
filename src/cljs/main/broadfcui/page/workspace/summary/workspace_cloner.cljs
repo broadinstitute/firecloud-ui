@@ -34,7 +34,7 @@
           (style/create-form-label "Name")
           [input/TextField {:ref "name" :autoFocus true
                             :style {:width "100%"}
-                            :defaultValue (str (get-in props [:workspace-id :name])" copy")
+                            :defaultValue (str (get-in props [:workspace-id :name])"_copy")
                             :placeholder "Required"
                             :predicates [(input/nonempty "Workspace name")
                                          (input/alphanumeric_- "Workspace name")]}]

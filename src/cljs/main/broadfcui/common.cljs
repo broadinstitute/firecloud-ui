@@ -388,22 +388,21 @@
      {:showing-more? false})
    :render
    (fn [{:keys [props state]}]
-     [:div {}
-      (let [{:keys [background-color text-color title message link more-content]} props]
-        [:div {:style {:color text-color :backgroundColor background-color :padding "1rem"}}
-         [:div {:style {:display "flex" :alignItems "baseline"}}
-          [icons/ExceptionIcon {:size 18 :color text-color}]
-          [:span {:style {:marginLeft "0.5rem" :fontWeight "bold"
-                          :verticalAlign "middle"}}
-           (or title "Service Alert")]
-          [:span {:style {:color text-color :fontSize "90%" :marginLeft "1rem"}}
-           (str message " ")
-           (if more-content
-             [:a {:style {:color "#000"}
-                  :href "javascript:;"
-                  :onClick #(swap! state assoc :showing-more? (not (:showing-more? @state)))}
-              (if (:showing-more? @state) " Hide details..." " Show details...")])
-           (when (:showing-more? @state) more-content) link]]])])})
+     (let [{:keys [background-color text-color title message link more-content]} props]
+       [:div {:style {:color text-color :backgroundColor background-color :padding "1rem"}}
+        [:div {:style {:display "flex" :alignItems "baseline"}}
+         [icons/ExceptionIcon {:size 18 :color text-color}]
+         [:span {:style {:marginLeft "0.5rem" :fontWeight "bold"
+                         :verticalAlign "middle"}}
+          (or title "Service Alert")]
+         [:span {:style {:color text-color :fontSize "90%" :marginLeft "1rem"}}
+          (str message " ")
+          (if more-content
+            [:a {:style {:color "#000"}
+                 :href "javascript:;"
+                 :onClick #(swap! state update :showing-more? not)}
+             (if (:showing-more? @state) " Hide details..." " Show details...")])
+          (when (:showing-more? @state) more-content) link]]]))})
 
 (defn- status-alert-interval [attempt]
   (cond
@@ -458,7 +457,6 @@
                                           :link "https://status.cloud.google.com/"}])
                                  (swap! state assoc :failed-retries (+ (:failed-retries @state) 1)))
                                (let [[parsed _] (utils/parse-json-string raw-response true false)]
-                                 (utils/parse-json-string raw-response true false)
                                  (if (not-empty parsed)
                                    (swap! state assoc :service-alerts parsed :failed-retries 0)
                                    (swap! state dissoc :service-alerts)))))}))})

@@ -48,7 +48,7 @@
               [{:id "view" :initial-width 50
                 :filterable? false :sortable? false :hidden? true :resizable? false
                 :column-data :workflowId
-                :as-text (fn [_] "View workflow details")
+                :as-text #(constantly "View workflow details")
                 :render
                 (fn [id]
                   (when id
