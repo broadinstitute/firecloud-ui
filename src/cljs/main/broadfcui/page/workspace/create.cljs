@@ -105,4 +105,5 @@
                      :not-loaded "Project billing data has not yet been loaded."
                      :no-billing (comps/no-billing-projects-message)
                      "Project billing data failed to load.")
-        :onClick #(modal/push-modal [CreateDialog (select-keys props [:billing-projects])])}]])})
+        :onClick #(modal/push-modal [CreateDialog (select-keys props [:billing-projects])])
+        :data-test-id "create-workspace-button"}]])})
