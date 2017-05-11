@@ -27,7 +27,7 @@
      [{:id "view" :initial-width 50
        :resizable? false :sortable? false :filterable? false :hidden? true
        :column-data :submissionId
-       :as-text #(constantly "View analysis details")
+       :as-text (constantly "View analysis details")
        :render #(style/create-link {:text "View"
                                     :href (nav/get-link :workspace-submission
                                                         workspace-id
