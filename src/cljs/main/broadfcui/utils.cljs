@@ -98,6 +98,10 @@
   (-> @auth2-atom
       (aget "currentUser") (js-invoke "get") (js-invoke "getAuthResponse") (aget "access_token")))
 
+(defn get-user-email []
+  (-> @auth2-atom
+      (aget "currentUser") (js-invoke "get") (js-invoke "getBasicProfile") (js-invoke "getEmail")))
+
 
 (defn get-cookie-domain []
   (if (= "local.broadinstitute.org" js/window.location.hostname)
