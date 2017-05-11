@@ -63,6 +63,7 @@
                       (swap! state assoc :upload-result {:success? true})
                       ((:on-data-imported props)))
                     (swap! state assoc :upload-result {:success? false :error (get-parsed-response false)})))}))
+   ;; We put this here to trick html into using the onChange method EVERY time regardless of filename
    :-create-file-input
    (fn [{:keys [state refs this after-update]}]
      (react/unmount-component-at-node (@refs "entity-input"))
