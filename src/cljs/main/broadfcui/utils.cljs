@@ -26,14 +26,6 @@
     (every? (fn [word] (contains lc-source word)) (split (lower-case filter-text) #"\s+"))))
 
 
-(defn call-external-object-method
-  "Call an external object's method by name, since a normal call will get renamed during
-   advanced compilation and cause an error.
-   DEPRECATED: this is what js-invoke is for"
-  [obj method-name & args]
-  (apply (.on (aget obj (name method-name)) obj) args))
-
-
 (defn ->json-string [x]
   (js/JSON.stringify (clj->js x)))
 

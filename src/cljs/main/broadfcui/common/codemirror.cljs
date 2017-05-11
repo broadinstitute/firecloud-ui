@@ -54,7 +54,7 @@
      (react/call :call-method this "off" event-type listener))
    :call-method
    (fn [{:keys [locals]} method & args]
-     (apply utils/call-external-object-method (aget (:code-mirror-component @locals) "doc") method args))
+     (apply js-invoke (aget (:code-mirror-component @locals) "doc") method args))
    :get-default-props
    (fn []
      {:line-numbers? true
