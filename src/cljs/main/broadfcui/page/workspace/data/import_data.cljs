@@ -15,13 +15,16 @@
 (def ^:private preview-limit 4096)
 
 (react/defc Page
-  {:render
+  {:get-initial-state
+   (fn []
+     {:file-input-key (gensym "file-input-")})
+   :render
    (fn [{:keys [state refs this]}]
      [:div {:style {:textAlign "center"}}
       (when (:loading? @state)
         [comps/Blocker {:banner "Uploading file..."}])
-
-      [:input {:type "file" :name "entities" :ref "entities"
+      [:input {:key (:file-input-key @state)
+               :type "file" :name "entities" :ref "entities"
                :style {:display "none"}
                :onChange (fn [e]
                            (let [file (-> e .-target .-files (aget 0))
@@ -29,7 +32,10 @@
                              (when file
                                (swap! state assoc :upload-result nil)
                                (set! (.-onload reader)
-                                     #(swap! state assoc :file file :file-contents (.-result reader)))
+                                     #(swap! state assoc
+                                             :file file
+                                             :file-contents (.-result reader)
+                                             :file-input-key (gensym "file-input-")))
                                (.readAsText reader (.slice file 0 preview-limit)))))}]
       common/PHI-warning
       [comps/Button {:text (if (:upload-result @state) "Choose another file..." "Choose file...")
