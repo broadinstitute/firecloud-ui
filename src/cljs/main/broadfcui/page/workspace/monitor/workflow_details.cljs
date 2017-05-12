@@ -174,7 +174,7 @@
 (defn operation-link [job-id]
   ;; Note: using [:a ...] instead of style/create-link to be consistent with GCSFilePreviewLink
   [:a {:href "javascript:;"
-       :onClick #(modal/push-modal [OperationDialog props])} job-id])
+       :onClick #(modal/push-modal [OperationDialog {:job-id job-id}])} job-id])
 
 (react/defc CallDetail
   {:get-initial-state
