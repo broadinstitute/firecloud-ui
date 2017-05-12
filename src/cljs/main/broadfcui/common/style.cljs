@@ -106,7 +106,8 @@
 
 (defn create-message-well [message]
   [:div {:style {:textAlign "center" :backgroundColor (:background-light colors)
-                 :padding "1em 0" :borderRadius 8}}
+                 :padding "1em 0" :borderRadius 8}
+         :data-test-id "empty-message"}
    message])
 
 (defn center [props & children]

@@ -94,7 +94,8 @@
     (when (> wf-count (config/workflow-count-warning-threshold))
        [:div {:style {:textAlign "center"}}
         [:div {:style {:display "inline-flex" :alignItems "center" :margin "1em 0 -1em 0" :padding "0.5em"
-                       :backgroundColor "white" :border style/standard-line :borderRadius 3}}
+                       :backgroundColor "white" :border style/standard-line :borderRadius 3}
+               :data-test-id "workflow-count-warning"}
          (icons/icon {:style {:color (:exception-state style/colors) :marginRight 5 :verticalAlign "middle"}}
                      :warning)
          (str "Warning: This will launch " wf-count " workflows")]]))
@@ -115,8 +116,7 @@
      [comps/OKCancelForm
       {:header "Launch Analysis"
        :content (react/create-element (render-form state props refs))
-       :data-test-id "launch-button"
-       :ok-button {:text "Launch" :disabled? (:disabled? props) :onClick #(react/call :launch this)}}])
+       :ok-button {:text "Launch" :disabled? (:disabled? props) :data-test-id "launch-button" :onClick #(react/call :launch this)}}])
    :component-did-mount
    (fn [{:keys [state]}]
      (endpoints/call-ajax-orch

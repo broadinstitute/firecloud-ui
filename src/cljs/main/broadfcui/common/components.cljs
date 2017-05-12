@@ -580,6 +580,7 @@
                            :fontSize "106%" :fontWeight 500 :textDecoration "none"
                            :color (:button-primary style/colors)}
                    :href "javascript:;"
+                   :data-test-id "cancel-button"
                    :onClick modal/pop-modal
                    :onKeyDown (common/create-key-handler [:space :enter] modal/pop-modal)}
                cancel-text])
