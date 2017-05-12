@@ -28,12 +28,12 @@
   {:render
    (fn [{:keys [state]}]
      (let [status (:nih-status @state)
-           username (get status "linkedNihUsername")
-           expire-time (* (get status "linkExpireTime") 1000)
+           username (:linkedNihUsername status)
+           expire-time (* (:linkExpireTime status) 1000)
            expired? (< expire-time (.now js/Date))
            expiring-soon? (< expire-time (utils/_24-hours-from-now-ms))
-           whitelists (map utils/keywordize-keys (get status "whitelistAuthorization"))
-           linked-recently? (is-within-last-24-hours? (* (get status "lastLinkTime") 1000))]
+           whitelists (:whitelistStatuses status)
+           linked-recently? (is-within-last-24-hours? (* (:lastLinkTime status) 1000))]
        [:div {}
         [:h3 {} "Linked NIH Account"]
         (cond
@@ -88,7 +88,7 @@
      (endpoints/profile-get-nih-status
       (fn [{:keys [success? status-code status-text get-parsed-response]}]
         (cond
-          success? (swap! state assoc :nih-status (get-parsed-response false))
+          success? (swap! state assoc :nih-status (get-parsed-response))
           (= status-code 404) (swap! state assoc :nih-status :none)
           :else
           (swap! state assoc :error-message status-text)))))
