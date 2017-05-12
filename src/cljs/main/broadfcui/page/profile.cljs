@@ -32,9 +32,8 @@
            expire-time (* (get status "linkExpireTime") 1000)
            expired? (< expire-time (.now js/Date))
            expiring-soon? (< expire-time (utils/_24-hours-from-now-ms))
-           authorized? (get status "isDbgapAuthorized")
-           linked-recently? (is-within-last-24-hours? (* (get status "lastLinkTime") 1000))
-           pending? (and username (not authorized?) (not expired?) linked-recently?)]
+           whitelists (map utils/keywordize-keys (get status "whitelistAuthorization"))
+           linked-recently? (is-within-last-24-hours? (* (get status "lastLinkTime") 1000))]
        [:div {}
         [:h3 {} "Linked NIH Account"]
         (cond
@@ -58,14 +57,17 @@
              [:br]
              [:a {:href (get-nih-link-href)}
               "Log-In to NIH to re-link your account"]]]
-           [:div {:style {:display "flex" :marginTop "1em"}}
-            [:div {:style {:flex "0 0 20ex"}} "dbGaP Authorization:"]
-            [:div {:style {:flex "0 0 auto"}}
-             (cond
-               authorized? [:span {:style {:color (:success-state style/colors)}} "Authorized"]
-               pending? [:span {:style {:color (:success-state style/colors)}}
-                         "Your link was successful; you will be granted access shortly."]
-               :else [:span {:style {:color (:text-light style/colors)}} "Not Authorized"])]]])]))
+           (map
+            (fn [whitelist]
+              [:div {:style {:display "flex" :marginTop "1em"}}
+               [:div {:style {:flex "0 0 20ex"}} (str (:name whitelist) " Authorization:")]
+               [:div {:style {:flex "0 0 auto"}}
+                (cond
+                  (:authorized whitelist) [:span {:style {:color (:success-state style/colors)}} "Authorized"]
+                  (and username (not  (:authorized whitelist)) (not expired?) linked-recently?) [:span {:style {:color (:success-state style/colors)}}
+                            "Your link was successful; you will be granted access shortly."]
+                  :else [:span {:style {:color (:text-light style/colors)}} "Not Authorized"])]])
+            whitelists)])]))
    :component-did-mount
    (fn [{:keys [this props state after-update]}]
      (let [{:keys [nih-token]} props]
