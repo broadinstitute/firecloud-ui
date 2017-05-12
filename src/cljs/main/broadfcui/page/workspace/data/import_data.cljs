@@ -23,6 +23,9 @@
      [:div {:style {:textAlign "center"}}
       (when (:loading? @state)
         [comps/Blocker {:banner "Uploading file..."}])
+      ;; This key is changed every time a file is selected causing React to completely replace the
+      ;; element. Otherwise, if a user selects the same file (even after having modified it), the
+      ;; browser will not fire the onChange event.
       [:input {:key (:file-input-key @state)
                :type "file" :name "entities" :ref "entities"
                :style {:display "none"}
