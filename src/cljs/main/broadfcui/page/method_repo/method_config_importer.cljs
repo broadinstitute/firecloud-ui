@@ -66,13 +66,13 @@
          {:style :light :color :button-primary
           :text "Permissions..." :icon :settings :margin :bottom
           :onClick #(modal/push-modal
-                      [mca/AgoraPermsEditor
-                       {:save-endpoint (endpoints/persist-agora-method-acl entity)
-                        :load-endpoint (let [{:keys [name namespace snapshotId]} entity]
-                                         (endpoints/get-agora-method-acl namespace name snapshotId config?))
-                        :entityType (:entityType entity)
-                        :entityName (mca/get-ordered-name entity)
-                        :title (str (:entityType entity) " " (mca/get-ordered-name entity))}])}]
+                     [mca/AgoraPermsEditor
+                      {:save-endpoint (endpoints/persist-agora-method-acl entity)
+                       :load-endpoint (let [{:keys [name namespace snapshotId]} entity]
+                                        (endpoints/get-agora-method-acl namespace name snapshotId config?))
+                       :entityType (:entityType entity)
+                       :entityName (mca/get-ordered-name entity)
+                       :title (str (:entityType entity) " " (mca/get-ordered-name entity))}])}]
         [comps/SidebarButton
          {:style :light :color :exception-state
           :text "Redact" :icon :delete :margin :bottom
@@ -86,21 +86,21 @@
        [:div {:style {:fontSize "120%" :marginBottom "0.5em"}}
         (if workspace-id "Import as:" "Export to Workspace as:")]
        (map
-         (fn [field]
-           (let [field-key (:key field)
-                 field-name (name field-key)
-                 entity-val (or (field-key entity) "")]
-             [:div {:style {:float "left" :marginRight "0.5em"}}
-              (style/create-form-label (:label field))
-              (if (= (:type field) "identity-select")
-                (style/create-identity-select {:ref field-name
-                                               :defaultValue entity-val}
-                                              (:options field))
-                [input/TextField {:ref field-name
-                                  :defaultValue entity-val
-                                  :placeholder "Required"
-                                  :predicates [(input/nonempty "Fields")]}])]))
-         fields)
+        (fn [field]
+          (let [field-key (:key field)
+                field-name (name field-key)
+                entity-val (or (field-key entity) "")]
+            [:div {:style {:float "left" :marginRight "0.5em"}}
+             (style/create-form-label (:label field))
+             (if (= (:type field) "identity-select")
+               (style/create-identity-select {:ref field-name
+                                              :defaultValue entity-val}
+                                             (:options field))
+               [input/TextField {:ref field-name
+                                 :defaultValue entity-val
+                                 :placeholder "Required"
+                                 :predicates [(input/nonempty "Fields")]}])]))
+        fields)
        (clear-both)
        (when-not workspace-id
          (let [sorted-ws-list (sort-by (comp (partial mapv lower-case)
@@ -111,20 +111,20 @@
             [:div {:style {:fontSize "120%" :margin "1em 0"}}
              "Destination Workspace:"]
             (style/create-select
-              {:defaultValue ""
-               :ref (utils/create-element-ref-handler
-                      {:store locals
-                       :key :workspace-select
-                       :did-mount
-                       #(.on (.select2 (js/$ %)) "select2:select"
-                             (fn [event]
-                               (swap! state assoc :selected-workspace
-                                      (nth sorted-ws-list (js/parseInt (.-value (.-target event)))))))
-                       :will-unmount
-                       #(.off (js/$ %))})
-               :style {:width 500}}
-              (map (fn [ws] (clojure.string/join "/" (replace (:workspace ws) [:namespace :name])))
-                   sorted-ws-list))]))
+             {:defaultValue ""
+              :ref (utils/create-element-ref-handler
+                    {:store locals
+                     :key :workspace-select
+                     :did-mount
+                     #(.on (.select2 (js/$ %)) "select2:select"
+                           (fn [event]
+                             (swap! state assoc :selected-workspace
+                                    (nth sorted-ws-list (js/parseInt (.-value (.-target event)))))))
+                     :will-unmount
+                     #(.off (js/$ %))})
+              :style {:width 500}}
+             (map (fn [ws] (clojure.string/join "/" (replace (:workspace ws) [:namespace :name])))
+                  sorted-ws-list))]))
        (style/create-validation-error-message (:validation-error @state))
        [comps/ErrorViewer {:error (:server-error @state)}]
        [comps/Button {:text (if workspace-id "Import" "Export")
@@ -181,9 +181,9 @@
                        (swap! state assoc :error status-text)))}))
      (endpoints/call-ajax-orch
        {:endpoint (endpoints/get-configuration
-                    (get-in props [:id :namespace])
-                    (get-in props [:id :name])
-                    (get-in props [:id :snapshot-id]))
+                   (get-in props [:id :namespace])
+                   (get-in props [:id :name])
+                   (get-in props [:id :snapshot-id]))
         :headers utils/content-type=json
         :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                    (if success?
@@ -219,9 +219,9 @@
            (endpoints/call-ajax-orch
              {:endpoint (endpoints/create-template (:loaded-method @state))
               :payload (assoc (:loaded-method @state)
-                         "methodNamespace" (get-in @state [:loaded-method :namespace])
-                         "methodName" (get-in @state [:loaded-method :name])
-                         "methodVersion" (get-in @state [:loaded-method :snapshotId]))
+                              "methodNamespace" (get-in @state [:loaded-method :namespace])
+                              "methodName" (get-in @state [:loaded-method :name])
+                              "methodVersion" (get-in @state [:loaded-method :snapshotId]))
               :headers utils/content-type=json
               :on-done (fn [{:keys [success? get-parsed-response]}]
                          (let [response (get-parsed-response)]
@@ -255,9 +255,9 @@
                        (swap! state assoc :error status-text)))}))
      (endpoints/call-ajax-orch
        {:endpoint (endpoints/get-agora-method
-                    (get-in props [:id :namespace])
-                    (get-in props [:id :name])
-                    (get-in props [:id :snapshot-id]))
+                   (get-in props [:id :namespace])
+                   (get-in props [:id :name])
+                   (get-in props [:id :snapshot-id]))
         :headers utils/content-type=json
         :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                    (if success?
@@ -267,111 +267,111 @@
 
 (react/defc MethodRepoTable
   (->>
-    {:reload
-     (fn [{:keys [this]}]
-       (this :load-data))
-     :render
-     (fn [{:keys [props state]}]
-       (cond
-         (:error-message @state) (style/create-server-error-message (:error-message @state))
-         (or (nil? (:methods @state)) (nil? (:configs @state)))
-         [comps/Spinner {:text "Loading methods and configurations..."}]
-         :else
-         [Table
-          {:persistence-key "method-repo-table" :v 1
-           :data (or (:filtered-data @state) [])
-           :body
-           {:columns
-            [{:header "Type" :initial-width 100
-              :column-data :entityType}
-             {:header "Name" :initial-width 350
-              :sort-by (juxt (comp lower-case :name) (comp int :snapshotId))
-              :filter-by (fn [{:keys [name snapshotId]}] (str name " " (int snapshotId)))
-              :as-text (fn [{:keys [name snapshotId]}] (str name " Snapshot ID: " snapshotId))
-              :render (fn [{:keys [namespace name snapshotId entityType]}]
-                        (let [id {:namespace namespace
-                                  :name name
-                                  :snapshot-id snapshotId}
-                              type (if (= entityType "Configuration") :method-config :method)]
-                          (style/create-link
-                            {:text (style/render-name-id name snapshotId)
-                             :data-test-id (str name "-" (item "snapshotId") "-link")
-                             :href (if (:in-workspace? props) "javascript:;" (nav/get-link type id))
-                             :onClick (when (:in-workspace? props) #((:on-selected props) type id))})))}
-             {:header "Namespace" :initial-width 160
-              :sort-by (comp lower-case :namespace)
-              :sort-initial :asc
-              :as-text :namespace
-              :render (fn [{:keys [namespace type]}]
-                        (if (:in-workspace? props)
-                          namespace
-                          (style/create-link
-                            {:text namespace
-                             :onClick #(modal/push-modal
-                                         [mca/AgoraPermsEditor
-                                          {:save-endpoint (endpoints/post-agora-namespace-acl namespace (= :config type))
-                                           :load-endpoint (endpoints/get-agora-namespace-acl namespace (= :config type))
-                                           :entityType "Namespace" :entityName namespace
-                                           :title (str "Namespace " namespace)}])})))}
-             {:header "Synopsis" :initial-width 160 :column-data :synopsis}
-             (table-utils/date-column {:header "Created" :column-data :createDate})
-             {:header "Referenced Method" :initial-width 250
-              :column-data (fn [item]
-                             (when (= :config (:type item))
-                               (mapv (get item :method {}) [:namespace :name :snapshotId])))
-              :as-text (fn [[namespace name snapshotId]]
-                         (if namespace
-                           (str namespace "/" name " Snapshot ID: " snapshotId)
-                           "N/A"))
-              :render (fn [fields]
-                        (if fields
-                          (apply style/render-entity fields)
-                          "N/A"))}]
-            :style table-style/table-heavy}
-           :toolbar
-           {:items [[comps/FilterGroupBar
-                     {:data (concat (:methods @state) (:configs @state))
-                      :selected-index (:filter-group-index @state)
-                      :on-change (fn [index data]
-                                   (swap! state assoc
-                                          :filter-group-index index
-                                          :filtered-data data))
-                      :filter-groups [{:text "All" :data-test-id "all-methods-and-configs-filter"}
-                                      {:text "Methods Only" :pred (comp (partial = :method) :data-test-id "methods-only-filter" :type)}
-                                      {:text "Configs Only" :pred (comp (partial = :config) :data-test-id "configs-only-filter" :type)}]}]
-                    flex/spring
-                    [comps/Button
-                     {:text "Create new method..."
-                      :onClick #(modal/push-modal
-                                  [create/CreateMethodDialog
-                                   {:on-created (fn [type id]
-                                                  (if (:in-workspace? props)
-                                                    ((:on-selected props) type id)
-                                                    (nav/go-to-path :method id)))}])}]]}}]))
-     :component-did-mount
-     (fn [{:keys [this]}]
-       (this :load-data))
-     :load-data
-     (fn [{:keys [state]}]
-       (swap! state dissoc :configs :methods :error-message)
-       (endpoints/call-ajax-orch
-         {:endpoint endpoints/list-configurations
-          :on-done
-          (fn [{:keys [success? get-parsed-response status-text]}]
-            (if success?
-              (swap! state assoc :configs (map #(assoc % :type :config) (get-parsed-response)))
-              (swap! state assoc :error-message status-text)))})
-       (endpoints/call-ajax-orch
-         {:endpoint endpoints/list-methods
-          :on-done
-          (fn [{:keys [success? get-parsed-response status-text]}]
-            (if success?
-              (swap! state assoc :methods (map #(assoc % :type :method) (get-parsed-response)))
-              (swap! state assoc :error-message status-text)))}))}
-    (persistence/with-state-persistence
-      {:key "method-repo-table-container" :version 1
-       :initial {:filter-group-index 0}
-       :only [:v :filter-group-index]})))
+   {:reload
+    (fn [{:keys [this]}]
+      (this :load-data))
+    :render
+    (fn [{:keys [props state]}]
+      (cond
+        (:error-message @state) (style/create-server-error-message (:error-message @state))
+        (or (nil? (:methods @state)) (nil? (:configs @state)))
+        [comps/Spinner {:text "Loading methods and configurations..."}]
+        :else
+        [Table
+         {:persistence-key "method-repo-table" :v 1
+          :data (or (:filtered-data @state) [])
+          :body
+          {:columns
+           [{:header "Type" :initial-width 100
+             :column-data :entityType}
+            {:header "Name" :initial-width 350
+             :sort-by (juxt (comp lower-case :name) (comp int :snapshotId))
+             :filter-by (fn [{:keys [name snapshotId]}] (str name " " (int snapshotId)))
+             :as-text (fn [{:keys [name snapshotId]}] (str name " Snapshot ID: " snapshotId))
+             :render (fn [{:keys [namespace name snapshotId entityType]}]
+                       (let [id {:namespace namespace
+                                 :name name
+                                 :snapshot-id snapshotId}
+                             type (if (= entityType "Configuration") :method-config :method)]
+                         (style/create-link
+                          {:text (style/render-name-id name snapshotId)
+                           :data-test-id (str name "-" (item "snapshotId") "-link")
+                           :href (if (:in-workspace? props) "javascript:;" (nav/get-link type id))
+                           :onClick (when (:in-workspace? props) #((:on-selected props) type id))})))}
+            {:header "Namespace" :initial-width 160
+             :sort-by (comp lower-case :namespace)
+             :sort-initial :asc
+             :as-text :namespace
+             :render (fn [{:keys [namespace type]}]
+                       (if (:in-workspace? props)
+                         namespace
+                         (style/create-link
+                          {:text namespace
+                           :onClick #(modal/push-modal
+                                      [mca/AgoraPermsEditor
+                                       {:save-endpoint (endpoints/post-agora-namespace-acl namespace (= :config type))
+                                        :load-endpoint (endpoints/get-agora-namespace-acl namespace (= :config type))
+                                        :entityType "Namespace" :entityName namespace
+                                        :title (str "Namespace " namespace)}])})))}
+            {:header "Synopsis" :initial-width 160 :column-data :synopsis}
+            (table-utils/date-column {:header "Created" :column-data :createDate})
+            {:header "Referenced Method" :initial-width 250
+             :column-data (fn [item]
+                            (when (= :config (:type item))
+                              (mapv (get item :method {}) [:namespace :name :snapshotId])))
+             :as-text (fn [[namespace name snapshotId]]
+                        (if namespace
+                          (str namespace "/" name " Snapshot ID: " snapshotId)
+                          "N/A"))
+             :render (fn [fields]
+                       (if fields
+                         (apply style/render-entity fields)
+                         "N/A"))}]
+           :style table-style/table-heavy}
+          :toolbar
+          {:items [[comps/FilterGroupBar
+                    {:data (concat (:methods @state) (:configs @state))
+                     :selected-index (:filter-group-index @state)
+                     :on-change (fn [index data]
+                                  (swap! state assoc
+                                         :filter-group-index index
+                                         :filtered-data data))
+                     :filter-groups [{:text "All" :data-test-id "all-methods-and-configs-filter"}
+                                     {:text "Methods Only" :pred (comp (partial = :method) :data-test-id "methods-only-filter" :type)}
+                                     {:text "Configs Only" :pred (comp (partial = :config) :data-test-id "configs-only-filter" :type)}]}]
+                   flex/spring
+                   [comps/Button
+                    {:text "Create new method..."
+                     :onClick #(modal/push-modal
+                                [create/CreateMethodDialog
+                                 {:on-created (fn [type id]
+                                                (if (:in-workspace? props)
+                                                  ((:on-selected props) type id)
+                                                  (nav/go-to-path :method id)))}])}]]}}]))
+    :component-did-mount
+    (fn [{:keys [this]}]
+      (this :load-data))
+    :load-data
+    (fn [{:keys [state]}]
+      (swap! state dissoc :configs :methods :error-message)
+      (endpoints/call-ajax-orch
+       {:endpoint endpoints/list-configurations
+        :on-done
+        (fn [{:keys [success? get-parsed-response status-text]}]
+          (if success?
+            (swap! state assoc :configs (map #(assoc % :type :config) (get-parsed-response)))
+            (swap! state assoc :error-message status-text)))})
+      (endpoints/call-ajax-orch
+       {:endpoint endpoints/list-methods
+        :on-done
+        (fn [{:keys [success? get-parsed-response status-text]}]
+          (if success?
+            (swap! state assoc :methods (map #(assoc % :type :method) (get-parsed-response)))
+            (swap! state assoc :error-message status-text)))}))}
+   (persistence/with-state-persistence
+    {:key "method-repo-table-container" :version 1
+     :initial {:filter-group-index 0}
+     :only [:v :filter-group-index]})))
 
 
 (react/defc MethodConfigImporter
@@ -386,8 +386,8 @@
         (if id
           (let [form (if (= type :method) MethodImportForm ConfigImportForm)]
             [form (merge
-                    (utils/restructure type id)
-                    (select-keys props [:workspace-id :allow-edit :after-import])
-                    {:on-delete #(nav/go-to-path :method-repo)})])
+                   (utils/restructure type id)
+                   (select-keys props [:workspace-id :allow-edit :after-import])
+                   {:on-delete #(nav/go-to-path :method-repo)})])
           [MethodRepoTable {:in-workspace? workspace-id
                             :on-selected #(swap! state assoc :type %1 :id %2)}])]))})
