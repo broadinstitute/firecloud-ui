@@ -36,11 +36,13 @@
           (:billing-projects props))
          (style/create-form-label "Name")
          [input/TextField {:ref "wsName" :autoFocus true :style {:width "100%"}
+                           :data-test-id "worspace-name-text-field"
                            :predicates [(input/nonempty "Workspace name")
                                         (input/alphanumeric_- "Workspace name")]}]
          (style/create-textfield-hint "Only letters, numbers, underscores, and dashes allowed")
          (style/create-form-label "Description (optional)")
-         (style/create-text-area {:style {:width "100%"} :rows 5 :ref "wsDescription"})
+         (style/create-text-area {:style {:width "100%"} :rows 5 :ref "wsDescription"
+                                  :data-test-id "workspace-description-text-field"})
          [:div {:style {:display "flex"}}
           (style/create-form-label "Authorization Domain (optional)")
           (common/render-info-box
@@ -58,33 +60,6 @@
           "Select a Group...")
          [comps/ErrorViewer {:error (:server-error @state)}]
          (style/create-validation-error-message (:validation-errors @state))])}])
-         [:div {:style {:marginBottom -20}}
-          (when (:creating-wf @state)
-            [comps/Blocker {:banner "Creating Workspace..."}])
-          (style/create-form-label "Billing Project")
-          (style/create-select
-            {:ref "project" :value (:selected-project @state)
-             :onChange #(swap! state assoc :selected-project (-> % .-target .-value))}
-            (:billing-projects props))
-          (style/create-form-label "Name")
-          [input/TextField {:ref "wsName" :style {:width "100%"}
-                            :data-test-id "worspace-name-text-field"
-                            :predicates [(input/nonempty "Workspace name")
-                                         (input/alphanumeric_- "Workspace name")]}]
-          (style/create-textfield-hint "Only letters, numbers, underscores, and dashes allowed")
-          (style/create-form-label "Description (optional)")
-          (style/create-text-area {:style {:width "100%"} :rows 5 :ref "wsDescription" :data-test-id "workspace-description-text-field"})
-          [:div {:style {:marginBottom "1em"}}
-           [comps/Checkbox
-            {:ref "protected-check"
-             :label "Workspace intended to contain NIH protected data"
-             :disabled? (not= (:protected-option @state) :enabled)
-             :disabled-text (case (:protected-option @state)
-                              :not-loaded "Account status has not finished loading."
-                              :not-available "This option is not available for your account."
-                              nil)}]]
-          [comps/ErrorViewer {:error (:server-error @state)}]
-          (style/create-validation-error-message (:validation-errors @state))])}])
    :component-did-mount
    (fn [{:keys [state]}]
      (endpoints/get-groups
