@@ -2,6 +2,7 @@
   (:require
     [dmohs.react :as react]
     [broadfcui.common :as common]
+    [broadfcui.common.notifications :as notifications]
     [broadfcui.utils :as utils]))
 
 
@@ -43,7 +44,7 @@
                [:div {:style {:position "fixed" :zIndex 513 :overflow "auto"
                               :top 0 :bottom 0 :left 0 :right 0
                               :backgroundColor "rgba(110,110,110,0.4)"}}
-                [common/ServiceAlertContainer]
+                [notifications/ServiceAlertContainer]
                 [:div {:style {:padding "2rem 0"
                                :display "flex" :justifyContent "center" :alignItems "flex-start"}}
                  [:div {:style {:backgroundColor "white" :maxWidth "95%" :minWidth 500}}
