@@ -8,6 +8,7 @@
    [broadfcui.common.flex-utils :as flex]
    [broadfcui.common.icons :as icons]
    [broadfcui.common.modal :as modal]
+   [broadfcui.common.notifications :as notifications]
    [broadfcui.common.style :as style]
    [broadfcui.config :as config]
    [broadfcui.config.loader :as config-loader]
@@ -19,7 +20,7 @@
    [broadfcui.page.groups.groups-management :as group-management]
    [broadfcui.page.library.library-page :as library-page]
    [broadfcui.page.method-repo.method-repo-page :as method-repo]
-   [broadfcui.page.notifications :as notifications]
+   [broadfcui.page.notifications :as billing-notifications]
    [broadfcui.page.profile :as profile-page]
    [broadfcui.page.status :as status-page]
    [broadfcui.page.workspace.details :as workspace-details]
@@ -34,7 +35,7 @@
   (group-management/add-nav-paths)
   (library-page/add-nav-paths)
   (method-repo/add-nav-paths)
-  (notifications/add-nav-paths)
+  (billing-notifications/add-nav-paths)
   (profile-page/add-nav-paths)
   (status-page/add-nav-paths)
   (workspace-details/add-nav-paths)
@@ -166,7 +167,7 @@
                                (contains? (:user-status @state) :signed-in))]
        [:div {}
         (when (:config-loaded? @state)
-          [common/ServiceAlertContainer])
+          [notifications/ServiceAlertContainer])
         (when (and (contains? user-status :signed-in) (contains? user-status :refresh-token-saved))
           [auth/RefreshCredentials {:auth2 auth2}])
         [:div {:style {:position "relative"}}
