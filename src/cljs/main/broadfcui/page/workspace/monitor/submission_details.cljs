@@ -121,7 +121,7 @@
   {:render (fn [{:keys [state this]}]
              (when (:aborting-submission? @state)
                [comps/Blocker {:banner "Aborting submission..."}])
-             [comps/SidebarButton {:color :button-primary :style :light :margin :top
+             [comps/SidebarButton {:color :exception-state :style :light :margin :top
                                    :text "Abort" :icon :warning
                                    :onClick (fn [_]
                                               (comps/push-confirm
