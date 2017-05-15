@@ -218,8 +218,8 @@
   {:path (str "/workspaces/" (ws-path workspace-id) "/setAttributes")
    :method :patch})
 
-(defn get-workspace-genomic-operations [job-id]
-  {:path (str "/workspaces/genomics/operations/" job-id)
+(defn get-workspace-genomic-operations [workspace-id job-id]
+  {:path (str "/workspaces/" (ws-path workspace-id) "/genomics/operations/" job-id)
    :method :get})
 
 (defn import-entities [workspace-id]

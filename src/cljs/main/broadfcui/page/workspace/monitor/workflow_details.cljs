@@ -164,17 +164,17 @@
       {:endpoint
        (endpoints/get-workspace-genomic-operations
         ;; strip out operations/ from the job id
-        (last (string/split (:job-id props) #"/")))
+        (:workspace-id props) (last (string/split (:job-id props) #"/")))
        :on-done (fn [{:keys [success? get-parsed-response status-text raw-response]}]
                   (swap! state assoc :server-response
                          {:success? success?
                           :response (if success? (get-parsed-response false) status-text)
                           :raw-response raw-response}))}))})
 
-(defn operation-link [job-id]
+(defn operation-link [workspace-id job-id]
   ;; Note: using [:a ...] instead of style/create-link to be consistent with GCSFilePreviewLink
   [:a {:href "javascript:;"
-       :onClick #(modal/push-modal [OperationDialog {:job-id job-id}])} job-id])
+       :onClick #(modal/push-modal [OperationDialog {:workspace-id workspace-id :job-id job-id}])} job-id])
 
 (react/defc CallDetail
   {:get-initial-state
@@ -199,7 +199,7 @@
             [:div {:style {:padding "0.5em 0 0 0.5em"}}
              [:div {:style {:paddingBottom "0.25em"}} (str "Call #" (inc index) ":")]
              [:div {:style {:paddingLeft "0.5em"}}
-              (create-field "Operation" (operation-link (data "jobId")))
+              (create-field "Operation" (operation-link (:workspace-id props) (data "jobId")))
               (let [status (data "executionStatus")]
                 (create-field "Status" (moncommon/icon-for-call-status status) status))
               (when (= (-> (data "callCaching") (get "effectiveCallCachingMode")) "ReadAndWriteCache")
@@ -217,7 +217,7 @@
         (:data props)))])})
 
 
-(defn- render-workflow-detail [workflow raw-data workflow-name submission-id bucketName]
+(defn- render-workflow-detail [workflow raw-data workflow-name submission-id bucketName workspace-id]
   [:div {:style {:padding "1em" :border style/standard-line :borderRadius 4
                  :backgroundColor (:background-light style/colors)}}
    [:div {}
@@ -255,7 +255,8 @@
    (when-not (empty? (workflow "calls"))
      [:div {:style {:marginTop "1em" :fontWeight 500}} "Calls:"])
    (for [[call data] (workflow "calls")]
-     [CallDetail {:label call :data data :submission-id submission-id :bucketName bucketName :workflowId (workflow "id")}])])
+     [CallDetail {:label call :data data :submission-id submission-id :bucketName bucketName :workflowId (workflow "id")
+                  :workspace-id workspace-id}])])
 
 
 (react/defc WorkflowDetails
@@ -272,7 +273,8 @@
          (style/create-server-error-message (:response server-response))
          :else
          (render-workflow-detail (:response server-response) (:raw-response server-response)
-                                 (:workflow-name props) (:submission-id props) (:bucketName props)))))
+                                 (:workflow-name props) (:submission-id props) (:bucketName props)
+                                 (:workspace-id props)))))
    :component-did-mount
    (fn [{:keys [props state]}]
      (endpoints/call-ajax-orch
