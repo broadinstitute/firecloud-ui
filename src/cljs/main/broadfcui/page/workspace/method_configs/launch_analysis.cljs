@@ -81,14 +81,14 @@
                                             (swap! state assoc :expression text))}))
    [:div {:style {:marginTop "1em"}}
     [comps/Checkbox
-    {:ref "callCache-check"
-     :label [:span {:style {:marginBottom "0.8em"}} "Use Call Caching"
-             (common/question-icon-link "Guide to Call Caching" (config/call-caching-guide-url))]
-     :initial-checked? true
-     :disabled-text (case (:protected-option @state)
-                      :not-loaded "Call Caching status has not finished loading."
-                      :not-available "This option is not available for your account."
-                      nil)}]]
+     {:ref "callCache-check"
+      :label [:span {:style {:marginBottom "0.8em"}} "Use Call Caching"
+              (common/question-icon-link [:span {} "Guide to Call Caching" icons/external-link-icon] (config/call-caching-guide-url))]
+      :initial-checked? true
+      :disabled-text (case (:protected-option @state)
+                       :not-loaded "Call Caching status has not finished loading."
+                       :not-available "This option is not available for your account."
+                       nil)}]]
    (when-let [wf-count (:workflow-count @state)]
     (when (> wf-count (config/workflow-count-warning-threshold))
        [:div {:style {:textAlign "center"}}

@@ -4,6 +4,7 @@
    [broadfcui.common :as common]
    [broadfcui.common.codemirror :refer [CodeMirror]]
    [broadfcui.common.components :as comps]
+   [broadfcui.common.icons :as icons]
    [broadfcui.common.input :as input]
    [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
@@ -48,10 +49,10 @@
                                :defaultValue (:name defaults)
                                :predicates [(input/nonempty "Method name")]}]]]
            ;;GAWB-1897 removes Type field and makes all MC types "Workflow" until "Task" type is supported
-           (style/create-form-label "Synopsis (optional)")
+           (style/create-form-label "Synopsis (optional, 80 characters max)")
            (style/create-text-field {:ref "synopsis"
                                      :defaultValue (:synopsis defaults)
-                                     :style {:width "100%"}})
+                                     :style {:width "100%" :maxLength 80}})
            (style/create-form-label "Documentation (optional)")
            (style/create-text-area {:ref "documentation"
                                     :defaultValue (:documentation defaults)

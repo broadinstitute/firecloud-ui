@@ -6,8 +6,9 @@
     [broadfcui.common :as common]
     [broadfcui.common.components :as comps]
     [broadfcui.common.gcs-file-preview :refer [GCSFilePreviewLink]]
-    [broadfcui.common.icons :as icons]
     [broadfcui.common.style :as style]
+    [broadfcui.common.table.table :refer [Table]]
+    [broadfcui.common.table.style :as table-style]
     [broadfcui.endpoints :as endpoints]
     [broadfcui.page.workspace.monitor.common :as moncommon]
     [broadfcui.utils :as utils]
@@ -53,15 +54,27 @@
    (fn [{:keys [props state]}]
      [:div {}
       (create-field
-        (:label props)
-        (if (empty? (:data props))
-          "None"
-          (style/create-link {:text (if (:expanded @state) "Hide" "Show")
-                              :onClick #(swap! state assoc :expanded (not (:expanded @state)))})))
+       (:label props)
+       (if (empty? (:data props))
+         "None"
+         (style/create-link {:text (if (:expanded @state) "Hide" "Show")
+                             :onClick #(swap! state assoc :expanded (not (:expanded @state)))})))
       (when (:expanded @state)
         [:div {:style {:padding "0.25em 0 0.25em 1em"}}
-         (for [[k v] (:data props)]
-           [:div {} k [:span {:style {:margin "0 1em"}} "→"] (display-value v)])])])})
+         (let [columns [{:header "Label"
+                         :column-data #(last (string/split (key %) #"\."))}
+                        {:header "Value"
+                         :initial-width :auto
+                         :sortable? false
+                         :column-data #(->> % second display-value)}]
+               task-column {:header "Task"
+                            :column-data #(second (string/split (key %) #"\."))}]
+           [Table
+            {:data (:data props)
+             :body {:style table-style/table-heavy
+                    :behavior {:reorderable-columns? false
+                               :filterable? false}
+                    :columns (if (:call-detail? props) columns (cons task-column columns))}}])])])})
 
 (react/defc WorkflowTiming
   {:get-initial-state
@@ -157,8 +170,8 @@
               (create-field "Started" (moncommon/render-date (data "start")))
               ;(utils/cljslog data)
               (create-field "Ended" (moncommon/render-date (data "end")))
-              [IODetail {:label "Inputs" :data (data "inputs")}]
-              [IODetail {:label "Outputs" :data (data "outputs")}]
+              [IODetail {:label "Inputs" :data (data "inputs") :call-detail? true}]
+              [IODetail {:label "Outputs" :data (data "outputs") :call-detail? true}]
               (create-field "stdout" (display-value (data "stdout") (last (string/split (data "stdout") #"/"))))
               (create-field "stderr" (display-value (data "stderr") (last (string/split (data "stderr") #"/"))))
               (backend-logs data)

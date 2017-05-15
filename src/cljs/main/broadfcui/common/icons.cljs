@@ -24,8 +24,10 @@
    :done "fa-check"
    :done-circle "fa-check-circle"
    :edit "fa-pencil"
+   :email "fa-envelope-o"
    :error "fa-exclamation-circle"
    :expand "fa-plus-square-o"
+   :external-link "fa-external-link"
    :help "fa-question-circle"
    :information "fa-info-circle"
    :library "fa-book"
@@ -42,12 +44,16 @@
    :sort-asc "fa-sort-amount-asc"
    :sort-desc "fa-sort-amount-desc"
    :spinner "fa-spinner"
+   :unknown "fa-question"
    :unlock "fa-unlock"
    :warning "fa-exclamation-triangle"
    })
 
 (defn icon [attributes key]
   [:span (assoc attributes :className (str (icon-keys key) " fa "  (:className attributes)))])
+
+(def external-link-icon
+  (icon {:style {:paddingLeft "0.25rem" :fontSize "80%"}} :external-link))
 
 (react/defc CompleteIcon
   {:get-default-props
@@ -89,3 +95,12 @@
    :render
    (fn [{:keys [props]}]
      (icon {:style {:color (:color props) :fontSize (:size props)}} :warning))})
+
+(react/defc UnknownIcon
+  {:get-default-props
+   (fn []
+     {:size 28
+      :color "white"})
+   :render
+   (fn [{:keys [props]}]
+     (icon {:style {:color (:color props) :fontSize (:size props)}} :unknown))})

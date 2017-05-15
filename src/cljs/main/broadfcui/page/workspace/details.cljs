@@ -159,9 +159,7 @@
           (make-tab DATA #(react/call :refresh-workspace this))
           (make-tab ANALYSIS #(react/call :refresh (@refs ANALYSIS)))
           (make-tab CONFIGS #(react/call :refresh (@refs CONFIGS)))
-          (make-tab MONITOR #(react/call :refresh (@refs MONITOR)))]
-         (when (= active-tab ANALYSIS)
-           (analysis-tab/render-track-selection-button #(@refs ANALYSIS)))]
+          (make-tab MONITOR #(react/call :refresh (@refs MONITOR)))]]
         [:div {:style {:marginTop "2rem"}}
          (if-let [error (:workspace-error @state)]
            [:div {:style {:textAlign "center" :color (:exception-state style/colors)}}

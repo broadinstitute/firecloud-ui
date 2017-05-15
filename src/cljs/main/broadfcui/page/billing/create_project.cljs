@@ -31,7 +31,8 @@
             :else
             (if (empty? billing-accounts)
               [:div {} "You do not have any billing accounts available. "
-                [:a {:target "_blank" :href (str (config/billing-guide-url))} "Learn how to create a billing account."]]
+                [:a {:target "_blank" :href (str (config/billing-guide-url))} "Learn how to create a billing account."
+                 icons/external-link-icon]]
               [:div {:style {:width 750}}
                (when (:creating? @state)
                  [comps/Blocker {:banner "Creating billing account..."}])
@@ -113,7 +114,7 @@
          (swap! state assoc :account-errors ["Please select a billing account"]))
        (let [[name & fails] (input/get-and-validate refs "name-field")]
          (swap! state assoc :validation-errors fails)
-         (when-not (and fails (not account))
+         (when-not (or fails (not account))
            (do
              (swap! state assoc :creating? true)
              (endpoints/call-ajax-orch

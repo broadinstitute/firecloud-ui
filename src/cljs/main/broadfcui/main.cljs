@@ -8,6 +8,7 @@
    [broadfcui.common.flex-utils :as flex]
    [broadfcui.common.icons :as icons]
    [broadfcui.common.modal :as modal]
+   [broadfcui.common.notifications :as notifications]
    [broadfcui.common.style :as style]
    [broadfcui.config :as config]
    [broadfcui.config.loader :as config-loader]
@@ -19,7 +20,7 @@
    [broadfcui.page.groups.groups-management :as group-management]
    [broadfcui.page.library.library-page :as library-page]
    [broadfcui.page.method-repo.method-repo-page :as method-repo]
-   [broadfcui.page.notifications :as notifications]
+   [broadfcui.page.notifications :as billing-notifications]
    [broadfcui.page.profile :as profile-page]
    [broadfcui.page.status :as status-page]
    [broadfcui.page.workspace.details :as workspace-details]
@@ -34,7 +35,7 @@
   (group-management/add-nav-paths)
   (library-page/add-nav-paths)
   (method-repo/add-nav-paths)
-  (notifications/add-nav-paths)
+  (billing-notifications/add-nav-paths)
   (profile-page/add-nav-paths)
   (status-page/add-nav-paths)
   (workspace-details/add-nav-paths)
@@ -70,9 +71,9 @@
                                          :width 150
                                          :button-style {:height 32 :marginRight "0.5rem"}
                                          :items [{:href (config/user-guide-url) :target "_blank"
-                                                  :text "User Guide"}
+                                                  :text [:span {} "User Guide" icons/external-link-icon]}
                                                  {:href (config/forum-url) :target "_blank"
-                                                  :text "FireCloud Forum"}]})]
+                                                  :text [:span {} "FireCloud Forum" icons/external-link-icon]}]})]
           (when (= :registered (:registration-status @state))
             [header/GlobalSubmissionStatus])]]
         (case (:registration-status @state)
@@ -83,11 +84,11 @@
           :not-registered (profile-page/render
                            {:new-registration? true
                             :on-done #(do (nav/go-to-path :library)
-                                        (js-invoke (aget js/window "location") "reload"))})
+                                          (js-invoke (aget js/window "location") "reload"))})
           :update-registered (profile-page/render
                               {:update-registration? true
                                :on-done #(do (nav/go-to-path :workspaces)
-                                           (js-invoke (aget js/window "location") "reload"))})
+                                             (js-invoke (aget js/window "location") "reload"))})
           :registered
           (if component
             [component (make-props)]
@@ -124,63 +125,6 @@
                   "http://status.firecloud.org/"]
                  " for more information."])}))
 
-(defn status-alert-interval [attempt]
-  (cond
-    (= attempt 0) (config/status-alerts-refresh)
-    (> attempt (config/max-retry-attempts)) (config/status-alerts-refresh)
-    :else (utils/get-exponential-backoff-interval attempt)))
-
-(react/defc ServiceAlertContainer
-  {:get-initial-state
-   (fn []
-     {:failed-retries 0})
-   :render
-   (fn [{:keys [state]}]
-     (let [{:keys [service-alerts]} @state]
-       [:div {}
-        (map (fn [alert]
-               [comps/Banner (merge (select-keys alert [:title :message])
-                              {:background-color (:exception-state style/colors)
-                               :text-color "#fff"
-                               :link (when-let [link (:link alert)]
-                                       [:a {:style {:color "#fff"} :href (str link)
-                                          :target "_blank"}
-                                      "Read more..."])})])
-             service-alerts)]))
-   :component-did-update
-   (fn [{:keys [this state locals]}]
-     ;; Reset the interval
-     (js/clearInterval (:interval-id @locals))
-     ;; Update the poll interval based on the number of failed attempts (for exponential back offs)
-     (swap! locals assoc :interval-id
-            (js/setInterval #(this :-load-service-alerts) (status-alert-interval (:failed-retries @state)))))
-   :component-did-mount
-   (fn [{:keys [this state locals]}]
-     ;; Call once for initial load
-     (this :-load-service-alerts)
-     ;; Add initial poll interval
-     (swap! locals assoc :interval-id
-            (js/setInterval #(this :-load-service-alerts) (status-alert-interval (:failed-retries @state)))))
-   :component-will-unmount
-   (fn [{:keys [locals]}]
-     (js/clearInterval (:interval-id @locals)))
-   :-load-service-alerts
-   (fn [{:keys [state]}]
-     (utils/ajax {:url (config/alerts-json-url)
-                  :headers {"Cache-Control" "no-store, no-cache"}
-                  :on-done (fn [{:keys [status-code raw-response]}]
-                             (if (utils/check-server-down status-code)
-                               (if (>= (:failed-retries @state) (config/max-retry-attempts))
-                                 (swap! state assoc :service-alerts
-                                        [{:title "Google Service Alert"
-                                          :message "There may be problems accessing data in Google Cloud Storage."
-                                          :link "https://status.cloud.google.com/"}])
-                                 (swap! state assoc :failed-retries (+ (:failed-retries @state) 1)))
-                               (let [[parsed _] (utils/parse-json-string raw-response true false)]
-                                 (utils/parse-json-string raw-response true false)
-                                 (if (not-empty parsed)
-                                   (swap! state assoc :service-alerts parsed :failed-retries 0)
-                                   (swap! state dissoc :service-alerts)))))}))})
 
 (defn- show-js-exception [e]
   (comps/push-ok-cancel-modal
@@ -223,9 +167,7 @@
                                (contains? (:user-status @state) :signed-in))]
        [:div {}
         (when (:config-loaded? @state)
-          ;; We want these banners to be shown in front of the modals, so we use a zIndex above them
-          [:div {:style {:zIndex (inc style/modals-z-index) :position "relative"}}
-           [ServiceAlertContainer]])
+          [notifications/ServiceAlertContainer])
         (when (and (contains? user-status :signed-in) (contains? user-status :refresh-token-saved))
           [auth/RefreshCredentials {:auth2 auth2}])
         [:div {:style {:position "relative"}}
@@ -262,7 +204,7 @@
          ;; As low as possible on the page so it will be the frontmost component when displayed.
          [modal/Component {:ref "modal"}]]]))
    :component-did-mount
-   (fn [{:keys [this state refs locals]}]
+   (fn [{:keys [this refs locals]}]
      ;; pop up the message only when we start getting 503s, not on every 503
      (add-watch
       utils/server-down? :server-watcher
@@ -278,14 +220,14 @@
      (swap! locals assoc :hash-change-listener (partial react/call :handle-hash-change this))
      (.addEventListener js/window "hashchange" (:hash-change-listener @locals))
      (.addEventListener js/window "error" (fn [e] (show-js-exception e))))
-     :component-will-receive-props
-     (fn []
-       (init-nav-paths))
-     :component-will-unmount
-     (fn [{:keys [locals]}]
-       (.removeEventListener js/window "hashchange" (:hash-change-listener @locals))
-       (remove-watch utils/server-down? :server-watcher)
-       (remove-watch utils/maintenance-mode? :server-watcher))})
+   :component-will-receive-props
+   (fn []
+     (init-nav-paths))
+   :component-will-unmount
+   (fn [{:keys [locals]}]
+     (.removeEventListener js/window "hashchange" (:hash-change-listener @locals))
+     (remove-watch utils/server-down? :server-watcher)
+     (remove-watch utils/maintenance-mode? :server-watcher))})
 
 
 (defn render-application []

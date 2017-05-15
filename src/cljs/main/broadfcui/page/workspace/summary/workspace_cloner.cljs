@@ -23,26 +23,26 @@
        :get-first-element-dom-node #(@refs "project")
        :content
        (react/create-element
-        [:div {}
-         (when (:working? @state)
-           [comps/Blocker {:banner "Cloning..."}])
-         (style/create-form-label "Billing Project")
-         (style/create-select {:ref "project"
-                               :value (:selected-project @state)
-                               :onChange #(swap! state assoc :selected-project (-> % .-target .-value))}
-                              (:billing-projects props))
-         (style/create-form-label "Name")
-         [input/TextField {:ref "name" :autoFocus true
-                           :style {:width "100%"}
-                           :defaultValue (get-in props [:workspace-id :name])
-                           :placeholder "Required"
-                           :predicates [(input/nonempty "Workspace name")
-                                        (input/alphanumeric_- "Workspace name")]}]
-         (style/create-textfield-hint "Only letters, numbers, underscores, and dashes allowed")
-         (style/create-form-label "Description (optional)")
-         (style/create-text-area {:style {:width "100%"} :rows 5 :ref "wsDescription"
-                                  :defaultValue (:description props)})
-         [:div {:style {:display "flex"}}
+         [:div {}
+          (when (:working? @state)
+            [comps/Blocker {:banner "Cloning..."}])
+          (style/create-form-label "Billing Project")
+          (style/create-select {:ref "project"
+                                :value (:selected-project @state)
+                                :onChange #(swap! state assoc :selected-project (-> % .-target .-value))}
+                               (:billing-projects props))
+          (style/create-form-label "Name")
+          [input/TextField {:ref "name" :autoFocus true
+                            :style {:width "100%"}
+                            :defaultValue (str (get-in props [:workspace-id :name])"_copy")
+                            :placeholder "Required"
+                            :predicates [(input/nonempty "Workspace name")
+                                         (input/alphanumeric_- "Workspace name")]}]
+          (style/create-textfield-hint "Only letters, numbers, underscores, and dashes allowed")
+          (style/create-form-label "Description (optional)")
+          (style/create-text-area {:style {:width "100%"} :rows 5 :ref "wsDescription"
+                                   :defaultValue (:description props)})
+          [:div {:style {:display "flex"}}
           (style/create-form-label (str "Authorization Domain" (when-not (:auth-domain props) " (optional)")))
           (common/render-info-box
             {:text [:div {} [:strong {} "Note:"]

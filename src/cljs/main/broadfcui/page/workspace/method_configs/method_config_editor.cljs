@@ -2,7 +2,7 @@
   (:require
     [dmohs.react :as react]
     [clojure.string :refer [trim blank?]]
-    [broadfcui.common :refer [clear-both get-text root-entity-types]]
+    [broadfcui.common :refer [clear-both get-text root-entity-types access-greater-than?]]
     [broadfcui.common.components :as comps]
     [broadfcui.common.overlay :as dialog]
     [broadfcui.common.icons :as icons]
@@ -101,25 +101,26 @@
    (style/create-unselectable :div {:style {:position (when-not (:sidebar-visible? @state) "fixed")
                                             :top (when-not (:sidebar-visible? @state) 4)
                                             :width 290}}
-     (let [locked? (:locked? @state)]
+     (let [locked? (:locked? @state)
+           can-edit? (access-greater-than? (:access-level props) "READER")]
        [:div {:style {:lineHeight 1}}
-        (when-not editing?
-          [comps/SidebarButton {:style :light :color :button-primary
-                                :text "Edit Configuration" :icon :edit
-                                :disabled? (when locked? "The workspace is locked")
-                                :onClick #(swap! state assoc :editing? true)}])
-        (when-not editing?
-          [comps/SidebarButton {:style :light :color :exception-state :margin :top
-                                :text "Delete" :icon :delete
-                                :disabled? (when locked? "The workspace is locked")
-                                :onClick #(modal/push-modal
-                                           [delete/DeleteDialog {:config config
-                                                                 :workspace-id (:workspace-id props)
-                                                                 :after-delete (:after-delete props)}])}])
+        (when (and can-edit? (not editing?))
+          [:div {}
+           [comps/SidebarButton {:style :light :color :button-primary
+                                 :text "Edit Configuration" :icon :edit
+                                 :disabled? (when locked? "The workspace is locked")
+                                 :onClick #(swap! state assoc :editing? true)}]
+           [comps/SidebarButton {:style :light :color :exception-state :margin :top
+                                 :text "Delete" :icon :delete
+                                 :disabled? (when locked? "The workspace is locked")
+                                 :onClick #(modal/push-modal
+                                            [delete/DeleteDialog {:config config
+                                                                  :workspace-id (:workspace-id props)
+                                                                  :after-delete (:after-delete props)}])}]])
 
         (when-not editing?
-          [comps/SidebarButton {:style :light :color :button-primary :margin :top
-                                :text "Publish" :icon :share
+          [comps/SidebarButton {:style :light :color :button-primary :margin (when can-edit? :top)
+                                :text "Publish..." :icon :share
                                 :onClick #(modal/push-modal
                                            [publish/PublishDialog {:config config
                                                                    :workspace-id (:workspace-id props)}])}])
