@@ -43,6 +43,7 @@
       {:empty-message "No Workflows"
        :columns [{:starting-width 50
                   :as-text (constantly "View workflow details")
+                  :resizable? false :sort-by :none :reorderable? false
                   :content-renderer
                   (fn [id]
                     (when id
@@ -91,7 +92,7 @@
                        moncommon/wf-all-statuses)))
        :data (:workflows props)
        :->row (fn [row]
-                [(:id row)
+                [(:workflowId row)
                  (:workflowEntity row)
                  (:statusLastChangedDate row)
                  (:status row)

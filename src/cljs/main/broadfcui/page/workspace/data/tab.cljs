@@ -114,7 +114,7 @@
             (let [layout (fn [item] [:div {:style {:marginRight "1em"}}] item)]
               [:div {:style {:display "flex" :alignItems "center" :marginBottom "1em"}}
                (map layout (vals built-in))
-               (when (some-> (:selected-entity-type @state) name) (:-render-download-link this))
+               (when (:selected-entity-type @state) (this :-render-download-link))
                [:div {:style {:flexGrow 1}}]
                [comps/Button {:text "Import Metadata..."
                               :disabled? (when (get-in workspace [:workspace :isLocked]) "This workspace is locked.")
@@ -130,7 +130,7 @@
    :-render-download-link
    (fn [{:keys [props state]}]
      (let [{:keys [workspace-id]} props
-           {:keys [selected-entity-type]} @state]
+           selected-entity-type (name (:selected-entity-type @state))]
        [:form {:target "_blank"
                :method "POST"
                :action (str (config/api-url-root) "/cookie-authed/workspaces/"
