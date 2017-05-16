@@ -15,21 +15,30 @@
 (def ^:private preview-limit 4096)
 
 (react/defc Page
-  {:render
+  {:get-initial-state
+   (fn []
+     {:file-input-key (gensym "file-input-")})
+   :render
    (fn [{:keys [state refs this]}]
      [:div {:style {:textAlign "center"}}
       (when (:loading? @state)
         [comps/Blocker {:banner "Uploading file..."}])
-
-      [:input {:type "file" :name "entities" :ref "entities"
+      ;; This key is changed every time a file is selected causing React to completely replace the
+      ;; element. Otherwise, if a user selects the same file (even after having modified it), the
+      ;; browser will not fire the onChange event.
+      [:input {:key (:file-input-key @state)
+               :type "file" :name "entities" :ref "entities"
                :style {:display "none"}
                :onChange (fn [e]
                            (let [file (-> e .-target .-files (aget 0))
                                  reader (js/FileReader.)]
                              (when file
-                               (swap! state assoc :upload-result nil)
+                               (swap! state dissoc :upload-result)
                                (set! (.-onload reader)
-                                     #(swap! state assoc :file file :file-contents (.-result reader)))
+                                     #(swap! state assoc
+                                             :file file
+                                             :file-contents (.-result reader)
+                                             :file-input-key (gensym "file-input-")))
                                (.readAsText reader (.slice file 0 preview-limit)))))}]
       common/PHI-warning
       [comps/Button {:text (if (:upload-result @state) "Choose another file..." "Choose file...")
