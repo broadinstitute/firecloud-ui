@@ -52,7 +52,8 @@
            (style/create-form-label "Synopsis (optional, 80 characters max)")
            (style/create-text-field {:ref "synopsis"
                                      :defaultValue (:synopsis defaults)
-                                     :style {:width "100%" :maxLength 80}})
+                                     :maxLength 80
+                                     :style {:width "100%"}})
            (style/create-form-label "Documentation (optional)")
            (style/create-text-area {:ref "documentation"
                                     :defaultValue (:documentation defaults)
