@@ -22,7 +22,8 @@
    (fn [{:keys [props state refs this]}]
      [comps/OKCancelForm
       {:header "Create New Workspace"
-       :ok-button {:text "Create Workspace" :onClick #(react/call :create-workspace this)}
+       :ok-button {:text "Create Workspace" :onClick #(react/call :create-workspace this)
+                   :data-test-id "create-workspace-button"}
        :get-first-element-dom-node #(@refs "project")
        :content
        (react/create-element
@@ -37,11 +38,13 @@
           (:billing-projects props))
          (style/create-form-label "Name")
          [input/TextField {:ref "wsName" :autoFocus true :style {:width "100%"}
+                           :data-test-id "workspace-name-input"
                            :predicates [(input/nonempty "Workspace name")
                                         (input/alphanumeric_- "Workspace name")]}]
          (style/create-textfield-hint "Only letters, numbers, underscores, and dashes allowed")
          (style/create-form-label "Description (optional)")
-         (style/create-text-area {:style {:width "100%"} :rows 5 :ref "wsDescription"})
+         (style/create-text-area {:style {:width "100%"} :rows 5 :ref "wsDescription"
+                                  :data-test-id "workspace-description-text-field"})
          [:div {:style {:display "flex"}}
           (style/create-form-label "Authorization Domain (optional)")
           (common/render-info-box
