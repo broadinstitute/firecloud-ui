@@ -22,6 +22,7 @@
     :data submissions
     :body
     {:style table-style/table-heavy
+     :behavior {:fixed-column-count 1}
      :empty-message "There are no analyses to display."
      :columns
      [{:id "view" :initial-width 50
