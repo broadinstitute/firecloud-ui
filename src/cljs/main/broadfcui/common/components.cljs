@@ -49,7 +49,7 @@
      {:color (:button-primary style/colors)})
    :render
    (fn [{:keys [props]}]
-     (let [{:keys [color icon href disabled? onClick text style class-name]} props]
+     (let [{:keys [color icon disabled? onClick text style class-name]} props]
        [:a (merge
             {:className (or class-name "button")
              :style (merge
@@ -62,11 +62,11 @@
                       :borderRadius 2 :padding (if text "0.7em 1em" "0.4em")
                       :textDecoration "none"}
                      (if (map? style) style {}))
-             :href (or href "javascript:;")
+             :href "javascript:;"
              :onClick (if disabled? (create-error-message disabled?) onClick)
              :onKeyDown (when (and onClick (not disabled?))
                           (common/create-key-handler [:space] onClick))}
-            (dissoc props :color :icon :href :onClick :style :className))
+            (dissoc props :color :icon :onClick :style :className))
         text
         (some->> icon (icons/icon {:style (if text
                                             {:fontSize 20 :margin "-0.5em -0.3em -0.5em 0.5em"}
