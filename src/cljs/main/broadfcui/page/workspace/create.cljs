@@ -32,6 +32,7 @@
          (style/create-form-label "Billing Project")
          (style/create-select
           {:ref "project" :value (:selected-project @state)
+           :data-test-id "billing-project-select"
            :onChange #(swap! state assoc :selected-project (-> % .-target .-value))}
           (:billing-projects props))
          (style/create-form-label "Name")
