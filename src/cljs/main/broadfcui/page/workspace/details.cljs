@@ -108,10 +108,13 @@
                   (swap! state assoc :bucket-status-code status-code :bucket-access? success?))})
      (endpoints/call-ajax-orch
       {:endpoint (endpoints/get-workspace (:workspace-id props))
-       :on-done (fn [{:keys [success? get-parsed-response status-text]}]
+       :on-done (fn [{:keys [success? get-parsed-response xhr]}]
                   (if success?
                     (swap! state assoc :workspace (process-workspace (get-parsed-response)))
-                    (swap! state assoc :workspace-error status-text)))}))
+                    (swap! state assoc :workspace-error (as-> xhr x
+                                                            (aget x "responseText")
+                                                            (js-invoke js/JSON "parse" x)
+                                                            (aget x "message")))))}))
    :render
    (fn [{:keys [props state locals refs this]}]
      (let [{:keys [workspace-id]} props
