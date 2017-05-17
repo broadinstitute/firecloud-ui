@@ -149,7 +149,7 @@ A list of any "gotchas" that have been found in development. These may be browse
 
 ### React
 
-- None yet.
+- See above
 
 ## Tooling Notes
 
