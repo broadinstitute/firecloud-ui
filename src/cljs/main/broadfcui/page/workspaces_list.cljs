@@ -109,7 +109,7 @@
                                    [:tr {}
                                     (simple-td name)
                                     (simple-td (if member? "Yes" "No"))
-                                    (if (some? instruction)
+                                    (if instruction
                                       [:td {:style {:width "34%"}}
                                        (when-not member?
                                          [:div {:style {:fontSize "85%"}}
@@ -265,7 +265,7 @@
           (let [column-data (fn [ws]
                               (let [no-access? (= (:accessLevel ws) "NO ACCESS")
                                     disabled? (and no-access? (= (get-in ws [:workspace :authorizationDomain :membersGroupName])
-                                                                 (config/dbgap-authorization-domain)))]
+                                                                 config/tcga-authorization-domain))]
                                 {:workspace-id (select-keys (:workspace ws) [:namespace :name])
                                  :status (:status ws)
                                  :disabled? disabled?
@@ -273,7 +273,7 @@
                                  :auth-domains [(get-in ws [:workspace :authorizationDomain :membersGroupName])]
                                  :no-access? no-access?
                                  :hover-text (when no-access? (if (= (get-in ws [:workspace :authorizationDomain :membersGroupName])
-                                                                     (config/dbgap-authorization-domain))
+                                                                     config/tcga-authorization-domain)
                                                                 dbGap-disabled-text
                                                                 non-dbGap-disabled-text))
                                  :restricted? (some? (get-in ws [:workspace :authorizationDomain :membersGroupName]))}))]

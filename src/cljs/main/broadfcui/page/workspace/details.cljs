@@ -23,7 +23,7 @@
    (fn [{:keys [props]}]
      (let [{:keys [workspace]} props
            this-auth-domain (get-in workspace [:workspace :authorizationDomain :membersGroupName])
-           dbGapProtected (= this-auth-domain (config/dbgap-authorization-domain))]
+           dbGapProtected (= this-auth-domain config/tcga-authorization-domain)]
        (when this-auth-domain
          [:div {:style {:paddingTop 2}}
           [:div {:style {:backgroundColor "#ccc"
