@@ -188,7 +188,11 @@
            (cond
              (not (:config-loaded? @state))
              [config-loader/Component
-              {:on-success #(swap! state assoc :config-loaded? true)}]
+              {:on-success (fn []
+                             (swap! state assoc :config-loaded? true)
+                             (when (config/debug?)
+                               (.addEventListener
+                                js/window "error" (fn [e] (show-js-exception e)))))}]
              (and (not (contains? user-status :signed-in)) (nil? component))
              [:h2 {} "Page not found."]
              public?
@@ -219,7 +223,8 @@
      (modal/set-instance! (@refs "modal"))
      (swap! locals assoc :hash-change-listener (partial react/call :handle-hash-change this))
      (.addEventListener js/window "hashchange" (:hash-change-listener @locals))
-     (.addEventListener js/window "error" (fn [e] (show-js-exception e))))
+     (aset js/window "testJsException"
+           (fn [] (js/setTimeout #(throw (js/Error. "You told me to do this.")) 100) nil)))
    :component-will-receive-props
    (fn []
      (init-nav-paths))
