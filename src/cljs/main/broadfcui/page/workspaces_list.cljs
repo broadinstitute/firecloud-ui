@@ -94,42 +94,42 @@
                                  (fn [m ad]
                                    (assoc m (keyword (:groupName ad)) (:instructions ad))) {}
                                  ws-instructions)]
-               [:form {:style {:margin "1em 0 1em 0"}}
-                [:table {:style {:width "100%" :borderCollapse "collapse"}}
-                 [:thead {}
-                  [:tr {}
-                   (simple-th "Authorization Domain")
-                   (simple-th "Access")
-                   (simple-th "")]]
-                 [:tbody {}
-                  (map-indexed (fn [i auth-domain]
-                                 (let [{:keys [member? requested? requesting?]} (:data auth-domain)
-                                       name (:name auth-domain)
-                                       instruction ((keyword name) instructions)]
-                                   [:tr {}
-                                    (simple-td name)
-                                    (simple-td (if member? "Yes" "No"))
-                                    (if instruction
-                                      [:td {:style {:width "34%"}}
-                                       (when-not member?
-                                         [:div {:style {:fontSize "85%"}}
-                                          "Learn how to apply for this Authorization Domain  "
-                                          [:a {:href instruction :target "_blank"} "here"] "."])]
-                                      [:td {:style {:width "34%"}}
-                                       (when-not member?
-                                         [:div {}
-                                          [comps/Button {:style {:width "125px"}
-                                                         :disabled? (or requested? requesting?)
-                                                         :text (if requested? "Request Sent" "Request Access")
-                                                         :onClick #(react/call :-request-access this name i)}]
-                                          (when requesting? [comps/Spinner])
-                                          (when requested?
-                                            (common/render-info-box
-                                             {:text [:div {}
-                                                     "Your request has been submitted. When you are granted
-                                                     access, the " [:strong {} "Access Level"] " displayed on
+               [:table {:style {:width "100%" :borderCollapse "collapse"
+                                :margin "1em 0 1em 0"}}
+                [:thead {}
+                 [:tr {}
+                  (simple-th "Authorization Domain")
+                  (simple-th "Access")
+                  (simple-th "")]]
+                [:tbody {}
+                 (map-indexed (fn [i auth-domain]
+                                (let [{:keys [member? requested? requesting?]} (:data auth-domain)
+                                      name (:name auth-domain)
+                                      instruction ((keyword name) instructions)]
+                                  [:tr {}
+                                   (simple-td name)
+                                   (simple-td (if member? "Yes" "No"))
+                                   (if instruction
+                                     [:td {:style {:width "34%"}}
+                                      (when-not member?
+                                        [:div {:style {:fontSize "85%"}}
+                                         "Learn how to apply for this Authorization Domain  "
+                                         [:a {:href instruction :target "_blank"} "here"] "."])]
+                                     [:td {:style {:width "34%"}}
+                                      (when-not member?
+                                        [:div {}
+                                         [comps/Button {:style {:width "125px"}
+                                                        :disabled? (or requested? requesting?)
+                                                        :text (if requested? "Request Sent" "Request Access")
+                                                        :onClick #(react/call :-request-access this name i)}]
+                                         (when requesting? [comps/Spinner])
+                                         (when requested?
+                                           (common/render-info-box
+                                            {:text [:div {}
+                                                    "Your request has been submitted. When you are granted
+                                                    access, the " [:strong {} "Access Level"] " displayed on
                                                      the Workspace list will be updated."]}))])])]))
-                               (:ws-auth-domains @state))]]])])))}])
+                              (:ws-auth-domains @state))]])])))}])
    :component-did-mount
    (fn [{:keys [this]}]
      (react/call :-load-groups this)
@@ -144,10 +144,10 @@
    :-get-access-instructions
    (fn [{:keys [props state]}]
      (endpoints/get-ws-access-instructions (:workspace-id props)
-       (fn [err-text instructions]
-         (if err-text
-           (swap! state assoc :error-message err-text)
-           (swap! state assoc :ws-instructions instructions)))))
+                                           (fn [err-text instructions]
+                                             (if err-text
+                                               (swap! state assoc :error-message err-text)
+                                               (swap! state assoc :ws-instructions instructions)))))
    :-request-access
    (fn [{:keys [props state refs]} group-name group-index]
      (swap! state update-in [:ws-auth-domains group-index :data] assoc :requesting? true)
