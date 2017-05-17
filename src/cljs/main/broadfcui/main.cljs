@@ -135,7 +135,7 @@
     :content [:div {:style {:width 800}}
               "A JavaScript error occurred; please try reloading the page. If the error persists, please report it to our "
                [:a {:href (config/forum-url)
-                    :target "_blank" :style {}} "forum"] " for help. Details of the error message are below."
+                    :target "_blank" :style {}} "forum" icons/external-link-icon] " for help. Details of the error message are below."
               [:div {:style {:fontFamily "monospace" :whiteSpace "pre" :overflow "auto"
                              :backgroundColor "black" :color "white"
                              :padding "0.5rem" :marginTop "0.5rem" :borderRadius "0.3rem"}}
