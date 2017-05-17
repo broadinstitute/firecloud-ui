@@ -44,7 +44,8 @@
      {:label [:div {:style {:borderRadius 2
                             :backgroundColor (:background-light style/colors)
                             :color "#000" :textDecoration "none"
-                            :padding "0.5rem" :border style/standard-line}}
+`                            :padding "0.5rem" :border style/standard-line}
+                    :data-test-id "account-dropdown"}
               (-> auth2 (.-currentUser) (.get) (.getBasicProfile) (.getEmail))
               [:div {:style {:display "inline-block" :marginLeft "1em" :fontSize 8}} "▼"]]
       :width :auto
@@ -53,7 +54,7 @@
               {:href (nav/get-link :groups) :text "Groups"}
               {:href (nav/get-link :billing) :text "Billing"}
               {:href (nav/get-link :notifications) :text "Notifications"}
-              {:text "Sign Out" :dismiss #(.signOut auth2)}]})))
+              {:text "Sign Out" :dismiss #(.signOut auth2) :data-test-id "sign-out"}]})))
 
 (r/defc GlobalSubmissionStatus
   {:render
