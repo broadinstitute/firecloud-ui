@@ -127,7 +127,7 @@
                 :not-loaded [comps/Spinner {:text "Getting billing info..." :style {:margin 0}}]
                 "Create New Workspace...")
         :icon :add-new
-        :data-test-id "create-new-workspace-button"
+        :data-test-id "open-create-workspace-modal-button"
         :disabled? (case (:disabled-reason props)
                      nil false
                      :not-loaded "Project billing data has not yet been loaded."
