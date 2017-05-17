@@ -83,15 +83,17 @@
                          protecting the workspace."]
              (let [simple-th (fn [text]
                                [:th {:style {:textAlign "left" :padding "0 0.5rem"
-                                             :borderBottom style/standard-line}} text])
+                                             :borderBottom style/standard-line}}
+                                text])
                    simple-td (fn [text]
                                [:td {}
                                 [:label {:style {:display "block" :padding "1rem 0.5rem"
-                                                 :width "33%"}} text]])
-                   instructions (into {}
-                                      (map (fn [ad]
-                                             {(keyword (:groupName ad)) (:instructions ad)})
-                                           ws-instructions))]
+                                                 :width "33%"}}
+                                 text]])
+                   instructions (reduce
+                                 (fn [m ad]
+                                   (assoc m (keyword (:groupName ad)) (:instructions ad))) {}
+                                 ws-instructions)]
                [:form {:style {:margin "1em 0 1em 0"}}
                 [:table {:style {:width "100%" :borderCollapse "collapse"}}
                  [:thead {}
@@ -101,11 +103,9 @@
                    (simple-th "")]]
                  [:tbody {}
                   (map-indexed (fn [i auth-domain]
-                                 (let [name (:name auth-domain)
-                                       instruction ((keyword name) instructions)
-                                       member? (:member? (:data auth-domain))
-                                       requested? (:requested? (:data auth-domain))
-                                       requesting? (:requesting? (:data auth-domain))]
+                                 (let [{:keys [member? requested? requesting?]} (:data auth-domain)
+                                       name (:name auth-domain)
+                                       instruction ((keyword name) instructions)]
                                    [:tr {}
                                     (simple-td name)
                                     (simple-td (if member? "Yes" "No"))
@@ -122,15 +122,14 @@
                                                          :disabled? (or requested? requesting?)
                                                          :text (if requested? "Request Sent" "Request Access")
                                                          :onClick #(react/call :-request-access this name i)}]
-                                          (when requesting?[comps/Spinner])
+                                          (when requesting? [comps/Spinner])
                                           (when requested?
                                             (common/render-info-box
                                              {:text [:div {}
                                                      "Your request has been submitted. When you are granted
                                                      access, the " [:strong {} "Access Level"] " displayed on
                                                      the Workspace list will be updated."]}))])])]))
-                               (:ws-auth-domains @state))]]])
-             [comps/ErrorViewer {:error (:server-error @state)}]])))}])
+                               (:ws-auth-domains @state))]]])])))}])
    :component-did-mount
    (fn [{:keys [this]}]
      (react/call :-load-groups this)
@@ -268,7 +267,6 @@
                                     disabled? (and no-access? (= (get-in ws [:workspace :authorizationDomain :membersGroupName])
                                                                  (config/dbgap-authorization-domain)))]
                                 {:workspace-id (select-keys (:workspace ws) [:namespace :name])
-                                 :href (let [x (:workspace ws)] (str (:namespace x) ":" (:name x)))
                                  :status (:status ws)
                                  :disabled? disabled?
                                  ;; this will very soon return multiple auth domains, so im future-proofing it now
