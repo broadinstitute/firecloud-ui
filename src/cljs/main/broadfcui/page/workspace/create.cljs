@@ -1,16 +1,16 @@
 (ns broadfcui.page.workspace.create
   (:require
-   [dmohs.react :as react]
-   [broadfcui.common :as common]
-   [broadfcui.common.components :as comps]
-   [broadfcui.common.input :as input]
-   [broadfcui.common.modal :as modal]
-   [broadfcui.common.style :as style]
-   [broadfcui.config :as config]
-   [broadfcui.endpoints :as endpoints]
-   [broadfcui.nav :as nav]
-   [broadfcui.utils :as utils]
-   ))
+    [dmohs.react :as react]
+    [broadfcui.common :as common]
+    [broadfcui.common.components :as comps]
+    [broadfcui.common.input :as input]
+    [broadfcui.common.modal :as modal]
+    [broadfcui.common.style :as style]
+    [broadfcui.config :as config]
+    [broadfcui.endpoints :as endpoints]
+    [broadfcui.nav :as nav]
+    [broadfcui.utils :as utils]
+    ))
 
 
 (react/defc CreateDialog
@@ -137,5 +137,4 @@
                      :not-loaded "Project billing data has not yet been loaded."
                      :no-billing (comps/no-billing-projects-message)
                      "Project billing data failed to load.")
-        :onClick #(modal/push-modal [CreateDialog (select-keys props [:billing-projects])])
-        :data-test-id "create-workspace-button"}]])})
+        :onClick #(modal/push-modal [CreateDialog (select-keys props [:billing-projects])])}]])})
