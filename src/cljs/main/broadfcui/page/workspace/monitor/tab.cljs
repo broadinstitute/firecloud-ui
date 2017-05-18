@@ -22,6 +22,7 @@
     :data submissions
     :body
     {:style table-style/table-heavy
+     :behavior {:fixed-column-count 1}
      :empty-message "There are no analyses to display."
      :columns
      [{:id "view" :initial-width 50
@@ -35,8 +36,9 @@
       {:header "Status" :as-text :status :sort-by :text
        :render (fn [submission]
                  [:div {:style {:height table-style/table-icon-size}}
-                  (when (= "Done" (:status submission))
-                    (moncommon/icon-for-sub-status (:workflowStatuses submission)))
+                  (case (:status submission)
+                    "Done" (moncommon/icon-for-sub-status (:workflowStatuses submission))
+                    "Aborted" moncommon/failure-icon)
                   (:status submission)])}
       {:header "Method Configuration" :initial-width 300
        :column-data (juxt :methodConfigurationNamespace :methodConfigurationName)

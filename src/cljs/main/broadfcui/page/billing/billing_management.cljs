@@ -111,7 +111,7 @@
            {:items
             [flex/spring
              [comps/Button
-              {:text "Create New Billing Project"
+              {:text "Create New Billing Project..."
                :onClick
                (fn []
                  (if (-> @utils/auth2-atom (aget "currentUser") (js-invoke "get")

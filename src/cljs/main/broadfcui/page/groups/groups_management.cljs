@@ -74,7 +74,7 @@
           {:items
            [flex/spring
             [comps/Button
-             {:text "Create New Group"
+             {:text "Create New Group..."
               :onClick
               (fn []
                 (modal/push-modal
