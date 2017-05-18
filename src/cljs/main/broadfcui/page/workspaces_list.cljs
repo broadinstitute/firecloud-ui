@@ -36,7 +36,9 @@
                     "javascript:;"
                     (nav/get-link :workspace-summary workspace-id))
             :style {:display "block" :position "relative"
-                    :backgroundColor (style/color-for-status status)
+                    :backgroundColor (if no-access?
+                                       (:disabled-state style/colors)
+                                       (style/color-for-status status))
                     :margin "2px 0 2px 2px" :height (- row-height-px 4)}
             :title hover-text}
         [:span {:style {:position "absolute" :top 0 :right 0 :bottom 0 :left 0
@@ -166,7 +168,7 @@
                     (nav/get-link :workspace-summary workspace-id))
             :onClick (if no-access? #(react/call :-show-request-access-modal this workspace-id))
             :style {:display "flex" :alignItems "center"
-                    :backgroundColor color
+                    :backgroundColor (if no-access? (:disabled-state style/colors) color)
                     :color "white" :textDecoration "none"
                     :height (- row-height-px 4)
                     :margin "2px 0"}
@@ -268,6 +270,7 @@
                                  ;; this will very soon return multiple auth domains, so im future-proofing it now
                                  :auth-domains [(get-in ws [:workspace :authorizationDomain :membersGroupName])]
                                  :no-access? no-access?
+                                 :access-level (:accessLevel ws)
                                  :hover-text (when no-access?
                                                (if tcga?
                                                  tcga-disabled-text
@@ -301,11 +304,20 @@
               :as-text common/format-date}
              {:id "Access Level" :header [:span {:style {:marginLeft 14}} "Access Level"]
               :initial-width 132 :resizable? false
-              :column-data :accessLevel
+              :column-data column-data
               :sort-by (zipmap access-levels (range)) :sort-initial :asc
-              :render (fn [access-level]
+              :render (fn [data]
                         [:div {:style {:paddingLeft 14}}
-                         (prettify access-level)])}])
+                         (prettify (:access-level data))
+                         (when (= (:access-level data) "NO ACCESS")
+                           (icons/icon
+                            {:onClick #(modal/push-modal
+                                        [RequestAuthDomainAccessDialog
+                                         {:workspace-id (:workspace-id data)
+                                          :ws-auth-domains (:auth-domains data)}])
+                             :title "Click to request access."
+                             :style {:color (:link-active style/colors) :cursor "pointer" :paddingLeft 5}}
+                            :information))])}])
           :behavior {:reorderable-columns? false}
           :style {:header-row {:color (:text-lighter style/colors) :fontSize "90%"}
                   :header-cell {:padding "0.4rem 0"}
