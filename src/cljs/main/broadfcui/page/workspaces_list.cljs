@@ -21,7 +21,7 @@
 
 (def row-height-px 56)
 
-(def dbGap-disabled-text
+(def tcga-disabled-text
   (str "This workspace contains controlled access data. You can only access the contents of this workspace if you are "
        "dbGaP authorized for TCGA data and have linked your FireCloud account to your eRA Commons account."))
 
@@ -31,16 +31,13 @@
   {:render
    (fn [{:keys [props]}]
      (let [{:keys [data]} props
-           {:keys [status disabled? no-access? hover-text workspace-id]} data]
-       [:a {:href (if disabled?
+           {:keys [status no-access? hover-text workspace-id]} data]
+       [:a {:href (if no-access?
                     "javascript:;"
                     (nav/get-link :workspace-summary workspace-id))
             :style {:display "block" :position "relative"
-                    :backgroundColor (if no-access?
-                                       (:disabled-state style/colors)
-                                       (style/color-for-status status))
-                    :margin "2px 0 2px 2px" :height (- row-height-px 4)
-                    :cursor (when disabled? "default")}
+                    :backgroundColor (style/color-for-status status)
+                    :margin "2px 0 2px 2px" :height (- row-height-px 4)}
             :title hover-text}
         [:span {:style {:position "absolute" :top 0 :right 0 :bottom 0 :left 0
                         :backgroundColor "rgba(0,0,0,0.2)"}}]
@@ -161,7 +158,7 @@
   {:render
    (fn [{:keys [props this]}]
      (let [{:keys [data]} props
-           {:keys [status restricted? disabled? no-access? hover-text workspace-id auth-domains]} data
+           {:keys [status restricted? no-access? hover-text workspace-id auth-domains]} data
            {:keys [namespace name]} workspace-id
            color (style/color-for-status status)]
        [:a {:href (if no-access?
@@ -169,7 +166,7 @@
                     (nav/get-link :workspace-summary workspace-id))
             :onClick (if no-access? #(react/call :-show-request-access-modal this workspace-id))
             :style {:display "flex" :alignItems "center"
-                    :backgroundColor (if no-access? (:disabled-state style/colors) color)
+                    :backgroundColor color
                     :color "white" :textDecoration "none"
                     :height (- row-height-px 4)
                     :margin "2px 0"}
@@ -264,18 +261,17 @@
          {:columns
           (let [column-data (fn [ws]
                               (let [no-access? (= (:accessLevel ws) "NO ACCESS")
-                                    disabled? (and no-access? (= (get-in ws [:workspace :authorizationDomain :membersGroupName])
+                                    tcga? (and no-access? (= (get-in ws [:workspace :authorizationDomain :membersGroupName])
                                                                  config/tcga-authorization-domain))]
                                 {:workspace-id (select-keys (:workspace ws) [:namespace :name])
                                  :status (:status ws)
-                                 :disabled? disabled?
                                  ;; this will very soon return multiple auth domains, so im future-proofing it now
                                  :auth-domains [(get-in ws [:workspace :authorizationDomain :membersGroupName])]
                                  :no-access? no-access?
-                                 :hover-text (when no-access? (if (= (get-in ws [:workspace :authorizationDomain :membersGroupName])
-                                                                     config/tcga-authorization-domain)
-                                                                dbGap-disabled-text
-                                                                non-dbGap-disabled-text))
+                                 :hover-text (when no-access?
+                                               (if tcga?
+                                                 tcga-disabled-text
+                                                 non-dbGap-disabled-text))
                                  :restricted? (some? (get-in ws [:workspace :authorizationDomain :membersGroupName]))}))]
             ;; All of this margining is terrible, but since this table
             ;; will be redesigned soon I'm leaving it as-is.
