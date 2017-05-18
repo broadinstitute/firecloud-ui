@@ -261,6 +261,9 @@
 (defn _24-hours-from-now-ms []
   (+ (.now js/Date) (* 1000 60 60 24)))
 
+(defn _30-days-from-now-ms []
+  (+ (.now js/Date) (* 1000 60 60 24 30)))
+
 (defn index-by [key m]
   (into {} (map (juxt key identity) m)))
 

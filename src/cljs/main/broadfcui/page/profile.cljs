@@ -21,8 +21,9 @@
         (let [loc (.-location js/window)]
           (str (.-protocol loc) "//" (.-host loc) "/#profile/nih-username-token={token}")))))
 
-(defn is-within-last-24-hours? [epoch-time]
-  (< (.now js/Date) (+ epoch-time 1000 * 60 * 60 * 24)))
+(defn is-link-within-last-1-minute? [expire-time]
+  (let [diff (- (utils/_30-days-from-now-ms) expire-time)]
+    (< diff (* 1000 60))))
 
 (react/defc NihLink
   {:render
@@ -33,7 +34,7 @@
            expired? (< expire-time (.now js/Date))
            expiring-soon? (< expire-time (utils/_24-hours-from-now-ms))
            whitelists (:whitelistStatuses status)
-           linked-recently? (is-within-last-24-hours? (* (:lastLinkTime status) 1000))]
+           linked-recently? (is-link-within-last-1-minute? expire-time)]
        [:div {}
         [:h3 {} "Linked NIH Account"]
         (cond
@@ -64,8 +65,11 @@
                [:div {:style {:flex "0 0 auto"}}
                 (cond
                   (:authorized whitelist) [:span {:style {:color (:success-state style/colors)}} "Authorized"]
-                  (and username (not  (:authorized whitelist)) (not expired?) linked-recently?) [:span {:style {:color (:success-state style/colors)}}
-                            "Your link was successful; you will be granted access shortly."]
+                  (and username (not (:authorized whitelist)) (not expired?) linked-recently?)
+                  [:span {:style {:color (:text-light style/colors)}} "Pending"
+                   (common/render-info-box
+                    {:text [:div {} "We are still updating your access to this dataset.
+                    Refresh in a few minutes and your access should be updated."]})]
                   :else [:span {:style {:color (:text-light style/colors)}} "Not Authorized"])]])
             whitelists)])]))
    :component-did-mount
