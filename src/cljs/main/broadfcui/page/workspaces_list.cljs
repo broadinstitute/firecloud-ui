@@ -39,6 +39,7 @@
                     :backgroundColor (if no-access?
                                        (:disabled-state style/colors)
                                        (style/color-for-status status))
+                    :cursor (when no-access? "default")
                     :margin "2px 0 2px 2px" :height (- row-height-px 4)}
             :title hover-text}
         [:span {:style {:position "absolute" :top 0 :right 0 :bottom 0 :left 0
@@ -166,9 +167,9 @@
        [:a {:href (if no-access?
                     "javascript:;"
                     (nav/get-link :workspace-summary workspace-id))
-            :onClick (if no-access? #(react/call :-show-request-access-modal this workspace-id))
             :style {:display "flex" :alignItems "center"
                     :backgroundColor (if no-access? (:disabled-state style/colors) color)
+                    :cursor (when no-access? "default")
                     :color "white" :textDecoration "none"
                     :height (- row-height-px 4)
                     :margin "2px 0"}
@@ -308,16 +309,13 @@
               :sort-by (zipmap access-levels (range)) :sort-initial :asc
               :render (fn [data]
                         [:div {:style {:paddingLeft 14}}
-                         (prettify (:access-level data))
-                         (when (= (:access-level data) "NO ACCESS")
-                           (icons/icon
-                            {:onClick #(modal/push-modal
-                                        [RequestAuthDomainAccessDialog
-                                         {:workspace-id (:workspace-id data)
-                                          :ws-auth-domains (:auth-domains data)}])
-                             :title "Click to request access."
-                             :style {:color (:link-active style/colors) :cursor "pointer" :paddingLeft 5}}
-                            :information))])}])
+                         (if (= (:access-level data) "NO ACCESS")
+                           [:a {:href "javascript:;" :onClick #(modal/push-modal
+                                                                [RequestAuthDomainAccessDialog
+                                                                 {:workspace-id (:workspace-id data)
+                                                                  :ws-auth-domains (:auth-domains data)}])}
+                            (prettify (:access-level data))]
+                           (prettify (:access-level data)))])}])
           :behavior {:reorderable-columns? false}
           :style {:header-row {:color (:text-lighter style/colors) :fontSize "90%"}
                   :header-cell {:padding "0.4rem 0"}
