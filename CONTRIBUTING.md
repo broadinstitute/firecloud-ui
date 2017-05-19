@@ -139,6 +139,18 @@ Changing state causes a re-render. If you update state in a lifecycle method, th
 
 So: some lifecycle methods are automatically called every render. Avoid changing state inside of them.
 
+## Gotchas
+
+A list of any "gotchas" that have been found in development. These may be browser bugs (or "features"), or react issues.
+
+### Browser
+
+- A "feature" in browsers is that any `button` inside of a `form` will cause the page to submit, even if you don't define an `on-click` or link attribute on it. Be careful when using buttons inside of forms because the behavior you define may not be the behavior you get.
+
+### React
+
+- See above
+
 ## Tooling Notes
 
 When doing UI development, Chrome's caching gets in the way. We recommending disabling it when devtools is open (via devtools settings):
