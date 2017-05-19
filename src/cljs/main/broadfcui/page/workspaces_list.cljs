@@ -308,14 +308,17 @@
               :column-data column-data
               :sort-by (zipmap access-levels (range)) :sort-initial :asc
               :render (fn [data]
-                        [:div {:style {:paddingLeft 14}}
-                         (if (= (:access-level data) "NO ACCESS")
-                           [:a {:href "javascript:;" :onClick #(modal/push-modal
-                                                                [RequestAuthDomainAccessDialog
-                                                                 {:workspace-id (:workspace-id data)
-                                                                  :ws-auth-domains (:auth-domains data)}])}
-                            (prettify (:access-level data))]
-                           (prettify (:access-level data)))])}])
+                        (let [access-level (:access-level data)]
+                          [:div {:style {:paddingLeft 14}}
+                           (if (= access-level "NO ACCESS")
+                             [:a {:style {:color (:link-active style/colors)}
+                                  :href "javascript:;"
+                                  :onClick #(modal/push-modal
+                                             [RequestAuthDomainAccessDialog
+                                              {:workspace-id (:workspace-id data)
+                                               :ws-auth-domains (:auth-domains data)}])}
+                              (prettify access-level)]
+                             (prettify access-level))]))}])
           :behavior {:reorderable-columns? false}
           :style {:header-row {:color (:text-lighter style/colors) :fontSize "90%"}
                   :header-cell {:padding "0.4rem 0"}
