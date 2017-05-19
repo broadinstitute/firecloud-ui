@@ -18,7 +18,8 @@
 (react/defc Spinner
   {:render
    (fn [{:keys [props]}]
-     [:span {:style (merge {:margin "1em" :whiteSpace "nowrap"} (:style props))}
+     [:span {:style (merge {:margin "1em" :whiteSpace "nowrap"} (:style props))
+             :data-test-id "spinner"}
       (icons/icon {:className "fa-pulse fa-lg fa-fw" :style {:marginRight "0.5rem"}} :spinner)
       (:text props)])})
 
@@ -37,7 +38,7 @@
    :component-will-unmount
    (fn [{:keys [locals]}]
      (js/clearTimeout (:-cycle @locals)))
-   :-cycle
+   :-cycleX
    (fn [{:keys [this state locals]}]
      (swap! state update :dot-count #(mod (inc %) 4))
      (swap! locals assoc :-cycle (js/setTimeout #(react/call :-cycle this) 600)))})
@@ -174,6 +175,7 @@
                       :color (if heavy? "#fff" color)
                       :border (when-not heavy? style/standard-line)
                       :borderRadius 5}
+              :data-test-id (:data-test-id props)
               :onClick (if disabled? (create-error-message disabled?) (:onClick props))}
         (icons/icon {:style {:padding "0 20px" :borderRight style/standard-line} :className "fa-fw"} (:icon props))
         [:div {:style {:textAlign "center" :margin "auto"}}

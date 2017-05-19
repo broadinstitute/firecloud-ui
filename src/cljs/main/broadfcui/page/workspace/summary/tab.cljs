@@ -33,7 +33,8 @@
         [:p {:style {:margin 0}} "Are you sure you want to delete this workspace?"]
         [:p {} "Bucket data will be deleted too."]
         [comps/ErrorViewer {:error (:server-error @state)}]]
-       :ok-button {:text "Delete" :onClick #(react/call :delete this)}}])
+       :ok-button {:text "Delete" :onClick #(react/call :delete this)
+                   :data-test-id "confirm-delete-workspace-button"}}])
    :delete
    (fn [{:keys [props state]}]
      (swap! state assoc :deleting? true :server-error nil)
@@ -171,6 +172,7 @@
        (when (and owner? (not editing?))
          [comps/SidebarButton {:style :light :margin :top :color (if isLocked :text-lighter :exception-state)
                                :text "Delete" :icon :delete
+                               :data-test-id "delete-workspace-button"
                                :disabled? (when isLocked "This workspace is locked.")
                                :onClick #(modal/push-modal
                                           [DeleteDialog {:workspace-id workspace-id}])}]))]))
