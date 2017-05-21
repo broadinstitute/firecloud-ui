@@ -47,7 +47,10 @@
                        (swap! state assoc :error (get-parsed-response false))))})))})
 
 (defn- create-import-form [state props this locals entity config? fields]
-  (let [{:keys [workspace-id]} props]
+  (let [{:keys [workspace-id]} props
+         currentEmail (-> @utils/auth2-atom (.-currentUser) (.get) (.getBasicProfile) (.getEmail))
+         owners (set (:managers entity))
+         owner? (contains? owners currentEmail)]
     [:div {:style {:display "flex"}}
      (when (:blocking-text @state)
        [comps/Blocker {:banner (:blocking-text @state)}])
@@ -65,6 +68,7 @@
         [comps/SidebarButton
          {:style :light :color :button-primary
           :text "Permissions..." :icon :settings :margin :bottom
+          :disabled? (not owner?)
           :onClick #(modal/push-modal
                      [mca/AgoraPermsEditor
                       {:save-endpoint (endpoints/persist-agora-method-acl entity)
@@ -76,6 +80,7 @@
         [comps/SidebarButton
          {:style :light :color :exception-state
           :text "Redact" :icon :delete :margin :bottom
+          :disabled? (not owner?)
           :onClick #(modal/push-modal [Redactor {:entity entity :config? config?
                                                  :on-delete (:on-delete props)}])}]])
      [:div {:style {:flex "1 1 auto"}}
