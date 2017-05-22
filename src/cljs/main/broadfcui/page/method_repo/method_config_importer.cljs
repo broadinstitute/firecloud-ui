@@ -82,7 +82,7 @@
              {:style :light :color :exception-state
               :text "Redact" :icon :delete :margin :bottom
               :onClick #(modal/push-modal [Redactor {:entity entity :config? config?
-                                                     :on-delete (:on-delete props)}])}]])])
+                                                 :on-delete (:on-delete props)}])}]])])
      [:div {:style {:flex "1 1 auto"}}
       [comps/EntityDetails {:entity entity}]
       [:div {:style {:border style/standard-line
