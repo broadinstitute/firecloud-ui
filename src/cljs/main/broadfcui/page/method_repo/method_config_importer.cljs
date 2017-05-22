@@ -65,24 +65,24 @@
                                           :on-created (fn [_ id]
                                                         (nav/go-to-path :method id)
                                                         (scroll-to-top))}])}])
-        [comps/SidebarButton
-         {:style :light :color :button-primary
-          :text "Permissions..." :icon :settings :margin :bottom
-          :disabled? (not owner?)
-          :onClick #(modal/push-modal
-                     [mca/AgoraPermsEditor
-                      {:save-endpoint (endpoints/persist-agora-method-acl entity)
-                       :load-endpoint (let [{:keys [name namespace snapshotId]} entity]
-                                        (endpoints/get-agora-method-acl namespace name snapshotId config?))
-                       :entityType (:entityType entity)
-                       :entityName (mca/get-ordered-name entity)
-                       :title (str (:entityType entity) " " (mca/get-ordered-name entity))}])}]
-        [comps/SidebarButton
-         {:style :light :color :exception-state
-          :text "Redact" :icon :delete :margin :bottom
-          :disabled? (not owner?)
-          :onClick #(modal/push-modal [Redactor {:entity entity :config? config?
-                                                 :on-delete (:on-delete props)}])}]])
+        (when owner?
+          [:div {}
+            [comps/SidebarButton
+             {:style :light :color :button-primary
+              :text "Permissions..." :icon :settings :margin :bottom
+              :onClick #(modal/push-modal
+                         [mca/AgoraPermsEditor
+                          {:save-endpoint (endpoints/persist-agora-method-acl entity)
+                           :load-endpoint (let [{:keys [name namespace snapshotId]} entity]
+                                            (endpoints/get-agora-method-acl namespace name snapshotId config?))
+                           :entityType (:entityType entity)
+                           :entityName (mca/get-ordered-name entity)
+                           :title (str (:entityType entity) " " (mca/get-ordered-name entity))}])}]
+            [comps/SidebarButton
+             {:style :light :color :exception-state
+              :text "Redact" :icon :delete :margin :bottom
+              :onClick #(modal/push-modal [Redactor {:entity entity :config? config?
+                                                     :on-delete (:on-delete props)}])}]])])
      [:div {:style {:flex "1 1 auto"}}
       [comps/EntityDetails {:entity entity}]
       [:div {:style {:border style/standard-line
