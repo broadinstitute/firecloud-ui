@@ -297,30 +297,32 @@
        (fn [element]
          (let [element$ (js/$ element)
                button$ (js/$ (react/find-dom-node this))]
-           (.on element$ "hide.zf.dropdown"
-                (fn [_]
-                  (swap! state dissoc :render-contents?)
-                  (after-update #(this :-render-dropdown))))
-           (.on button$
-                "click"
-                (fn [_]
-                  (swap! state assoc :render-contents? true)
-                  (after-update #(this :-render-dropdown))
-                  (if (:close-on-click props)
-                    (.on element$ "click.zf.dropdown"
-                         (fn [_]
-                           (js/setTimeout                   ; allow click handlers to fire
-                            #(.foundation element$ "close")
-                            0)))
-                    (.on (js/$ "body")
-                         "click.zf.dropdown"
-                         (fn [e]
-                           (when-not (or (.is button$ (.-target e))
-                                         (pos? (.-length (.find button$ (.-target e))))
-                                         (.is element$ (.-target e))
-                                         (pos? (.-length (.find element$ (.-target e)))))
-                             (.foundation element$ "close")
-                             (.off (js/$ "body") "click.zf.dropdown")))))))))
+           (letfn [(clean-up []
+                     (.off (js/$ "body") "click.zf.dropdown" close-on-body-click)
+                     (.off element$ "click.zf.dropdown" close-on-element-click))
+                   (close-on-element-click [_]
+                    ;; timeout to allow click handlers to fire
+                     (js/setTimeout #(.foundation element$ "close") 0)
+                     (clean-up))
+                   (close-on-body-click [e]
+                     (when-not (or (.is button$ (.-target e))
+                                   (pos? (.-length (.find button$ (.-target e))))
+                                   (.is element$ (.-target e))
+                                   (pos? (.-length (.find element$ (.-target e)))))
+                       (.foundation element$ "close")
+                       (clean-up)))]
+             (.on element$ "hide.zf.dropdown"
+                  (fn [_]
+                    (swap! state dissoc :render-contents?)
+                    (after-update #(this :-render-dropdown))))
+             (.on button$
+                  "click"
+                  (fn [_]
+                    (swap! state assoc :render-contents? true)
+                    (after-update #(this :-render-dropdown))
+                    (when (:close-on-click props)
+                      (.on element$ "click.zf.dropdown" close-on-element-click))
+                    (.on (js/$ "body") "click.zf.dropdown" close-on-body-click))))))
        :will-unmount
        (fn [element]
          (.off (js/$ (react/find-dom-node this)) "click")
