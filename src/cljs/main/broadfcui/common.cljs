@@ -298,14 +298,13 @@
          (let [element$ (js/$ element)
                button$ (js/$ (react/find-dom-node this))]
            (letfn [(clean-up []
-                     (.off (js/$ "body") "click.zf.dropdown" body-fn)
-                     (.off element$ "click.zf.dropdown" element-fn))
-                   (element-fn [_]
-                     (js/setTimeout                         ; allow click handlers to fire
-                      #(.foundation element$ "close")
-                      0)
+                     (.off (js/$ "body") "click.zf.dropdown" close-on-body-click)
+                     (.off element$ "click.zf.dropdown" close-on-element-click))
+                   (close-on-element-click [_]
+                    ;; timeout to allow click handlers to fire
+                     (js/setTimeout #(.foundation element$ "close") 0)
                      (clean-up))
-                   (body-fn [e]
+                   (close-on-body-click [e]
                      (when-not (or (.is button$ (.-target e))
                                    (pos? (.-length (.find button$ (.-target e))))
                                    (.is element$ (.-target e))
@@ -322,11 +321,8 @@
                     (swap! state assoc :render-contents? true)
                     (after-update #(this :-render-dropdown))
                     (when (:close-on-click props)
-                      (.on element$ "click.zf.dropdown"
-                           element-fn))
-                    (.on (js/$ "body")
-                         "click.zf.dropdown"
-                         body-fn))))))
+                      (.on element$ "click.zf.dropdown" close-on-element-click))
+                    (.on (js/$ "body") "click.zf.dropdown" close-on-body-click))))))
        :will-unmount
        (fn [element]
          (.off (js/$ (react/find-dom-node this)) "click")
