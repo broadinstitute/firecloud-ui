@@ -86,7 +86,6 @@
          [comps/SidebarButton
           {:style :light :margin :top :color :button-primary
            :text "Share..." :icon :share
-           :disabled? (when (empty? billing-projects) (comps/no-billing-projects-message))
            :onClick #(modal/push-modal
                       [AclEditor {:workspace-id workspace-id
                                   :user-access-level user-access-level
