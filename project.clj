@@ -35,17 +35,7 @@
                   ;; out.
                   :optimizations :simple
                   :pretty-print false
-                  :output-dir "build"}}}}}
-             :test-for-release
-             {:cljsbuild
-              {:builds
-               {:client
-                ;; http://jakemccrary.com/blog/2015/12/19/clojurescript-treat-warnings-as-errors/
-                {:warning-handlers [(fn [warning-type env extra]
-                                      (when-let [s (cljs.analyzer/error-message warning-type extra)]
-                                        (binding [*out* *err*]
-                                          (println "WARNING:" (cljs.analyzer/message env s)))
-                                        (System/exit 1)))]}}}}}
+                  :output-dir "build"}}}}}}
   :target-path "resources/public"
   :clean-targets ^{:protect false} [:target-path]
   :cljsbuild {:builds {:client {:source-paths ["src/cljs/main"]
