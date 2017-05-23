@@ -3,7 +3,9 @@
 - [ ] **Submitter**: JIRA ticket checks:
   * Acceptance criteria exists and is met
   * Note any changes to implementation from the description
-  * Add notes on what you've tested
+  * To Demo flag is set
+  * Release Summary is filled out, if applicable
+  * Add notes on how to QA
 - [ ] **Submitter**: Update RC_XXX release ticket with any config or environment changes necessary
 - [ ] **Submitter**: Update FISMA documentation if changes to:
   * Authentication
