@@ -3,6 +3,7 @@
   [
    [inflections "0.9.14"]
    [dmohs/react "1.1.2+15.5.4-0"]
+   [frankiesardo/linked "1.2.9"]
    [org.clojure/clojure "1.8.0"]
    [org.clojure/clojurescript "1.9.293"]
    ]
