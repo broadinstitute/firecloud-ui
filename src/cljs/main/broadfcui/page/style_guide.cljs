@@ -9,20 +9,27 @@
     [broadfcui.utils :as u]
     [clojure.string :as string]))
 
+(defn- nav-link [label]
+  (style/create-link {:text label
+                      :href (str "#" (string/lower-case label))}))
+
 (def ^:private style-nav
   [:div {:data-sticky-container "" :style {:float "right" :width 200}}
    [:div {:data-sticky "" :className "sticky" :data-anchor "guide"
           :style {:padding "0.5rem" :border style/standard-line :width 200}}
     [:ul {:className "vertical menu" :data-magellan ""}
-     [:li {} (style/create-link {:href "#overview" :text "Overview"})
+     [:li {} [:span {} "Overview"]
       [:ul {:className "nested vertical menu"}
-       [:li {} (style/create-link {:href "#hierarchy" :text "Hierarchy"})]]]
-     [:li {} (style/create-link {:href "#conventions" :text "Conventions"})
+       [:li {} (nav-link "Hierarchy")]]]
+     [:li {} [:span {} "Conventions"]
       [:ul {:className "nested vertical menu"}
-       [:li {} (style/create-link {:href "#links" :text "Links"})]]]
-     [:li {} (style/create-link {:href "#components" :text "Components"})
+       [:li {} (nav-link "Links")]]]
+     [:li {} [:span {} "Styles"]
       [:ul {:className "nested vertical menu"}
-       [:li {} (style/create-link {:href "#modals" :text "Modals"})]]]]]])
+       [:li {} (nav-link "Colors")]]]
+     [:li {} [:span {} "Components"]
+      [:ul {:className "nested vertical menu"}
+       [:li {} (nav-link "Modals")]]]]]])
 
 (def ^:private section-break
   [:hr {:style {:border style/standard-line}}])
@@ -34,7 +41,7 @@
 
 (defn- code-sample [text]
   [:code {:style {:backgroundColor (:background-dark style/colors) :color "white" :fontWeight "bold"
-                  :padding "0.2rem" :borderRadius "0.2rem"}}
+                  :padding "0.2rem" :borderRadius "0.2rem" :margin "0 0.1rem"}}
    text])
 
 (def ^:private overview
@@ -66,9 +73,21 @@
      (code-sample "icons/external-link-icon") ", so that they "
      [:a {:href "javascript:;"} "look like this" icons/external-link-icon] "."]]])
 
+(defn- color-swatch [color]
+  [:div {:style {:padding "1rem" :backgroundColor (style/colors color) :width "10%"
+                 :textAlign "center"}}
+   [:span {:style {:backgroundColor "rgba(255, 255, 255, 0.8)"
+                   :padding "0.2rem" :borderRadius "0.2rem"}}
+    (name color)]])
+
 (def ^:private styles
   [:section {:id "styles" :data-magellan-target "styles"}
    [:h2 {} "Styles"]
+   (sub-head "Colors")
+   [:p {} "Firecloud defines the following colors in " (code-sample "style/colors") ":"]
+   [:div {:style {:display "flex" :flexWrap "wrap"}}
+    (map #(color-swatch %) (sort (keys style/colors)))]
+   [:p {} "Pay attention to the names of the colors, and you'll be fine."]
    ])
 
 (def ^:private components
@@ -92,6 +111,7 @@
       [:style {}                                            ; Yeah, yeah, they're overrides, so sue me.
        ".menu .active {background-color: #457fd2; color: white !important;}
        .menu {padding: 0;}
+       .menu > li > span {display: block; padding: 0.7rem 1rem; line-height: 1;}
        p {margin: 0.5rem 0;}"]
       [:h1 {} "Style Guide"]
       [:p {} "What components should I be using? When do I leave a link underlined? The answers are all here."]

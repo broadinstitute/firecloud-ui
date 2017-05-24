@@ -17,7 +17,7 @@
      [:a {:href (:href props)
           :style {:padding "1em" :textDecoration "none"
                   :fontWeight (when (:selected props) "bold")
-                  :color (if (:hovering? @state) (:link-active style/colors) "black")}
+                  :color (if (:hovering? @state) (:button-primary style/colors) "black")}
           :onMouseOver #(swap! state assoc :hovering? true)
           :onMouseOut #(swap! state assoc :hovering? false)}
       (:name props)])})

@@ -338,7 +338,7 @@
 (defn render-info-box [{:keys [text] :as props}]
   (render-icon-dropdown
    (merge {:contents text
-           :icon-name :information :icon-color (:link-active style/colors)}
+           :icon-name :information :icon-color (:button-primary style/colors)}
           props)))
 
 (defn render-dropdown-menu [{:keys [label items width button-style]}]

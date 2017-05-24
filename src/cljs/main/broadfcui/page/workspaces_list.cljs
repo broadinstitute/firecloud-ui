@@ -311,7 +311,7 @@
                         (let [access-level (:access-level data)]
                           [:div {:style {:paddingLeft 14}}
                            (if (= access-level "NO ACCESS")
-                             [:a {:style {:color (:link-active style/colors)}
+                             [:a {:style {:color (:button-primary style/colors)}
                                   :href "javascript:;"
                                   :onClick #(modal/push-modal
                                              [RequestAuthDomainAccessDialog
