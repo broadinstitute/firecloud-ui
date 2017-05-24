@@ -21,10 +21,6 @@
         (let [loc (.-location js/window)]
           (str (.-protocol loc) "//" (.-host loc) "/#profile/nih-username-token={token}")))))
 
-(defn is-link-within-last-1-minute? [expire-time]
-  (let [diff (- (utils/_30-days-from-now-ms) expire-time)]
-    (< diff (* 1000 60))))
-
 (react/defc NihLink
   {:render
    (fn [{:keys [state]}]
@@ -33,8 +29,7 @@
            expire-time (* (:linkExpireTime status) 1000)
            expired? (< expire-time (.now js/Date))
            expiring-soon? (< expire-time (utils/_24-hours-from-now-ms))
-           whitelists (:whitelistStatuses status)
-           linked-recently? (is-link-within-last-1-minute? expire-time)]
+           datasets (:datasetPermissions status)]
        [:div {}
         [:h3 {} "Linked NIH Account"]
         (cond
@@ -63,15 +58,10 @@
               [:div {:style {:display "flex" :marginTop "1em"}}
                [:div {:style {:flex "0 0 20ex"}} (str (:name whitelist) " Authorization:")]
                [:div {:style {:flex "0 0 auto"}}
-                (cond
-                  (:authorized whitelist) [:span {:style {:color (:success-state style/colors)}} "Authorized"]
-                  (and username (not (:authorized whitelist)) (not expired?) linked-recently?)
-                  [:span {:style {:color (:text-light style/colors)}} "Pending"
-                   (common/render-info-box
-                    {:text [:div {} "We are still updating your access to this dataset.
-                    Refresh in a few minutes and your access should be updated."]})]
-                  :else [:span {:style {:color (:text-light style/colors)}} "Not Authorized"])]])
-            whitelists)])]))
+                (if (:authorized whitelist)
+                  [:span {:style {:color (:success-state style/colors)}} "Authorized"]
+                  [:span {:style {:color (:text-light style/colors)}} "Not Authorized"])]])
+            datasets)])]))
    :component-did-mount
    (fn [{:keys [this props state after-update]}]
      (let [{:keys [nih-token]} props]
@@ -100,10 +90,10 @@
    (fn [{:keys [this state]} token]
      (endpoints/profile-link-nih-account
       token
-      (fn [{:keys [success?]}]
+      (fn [{:keys [success? get-parsed-response]}]
         (if success?
           (do (swap! state dissoc :pending-nih-username-token :nih-status)
-              (react/call :load-nih-status this))
+            (swap! state assoc :nih-status (get-parsed-response)))
           (swap! state assoc :error-message "Failed to link NIH account")))))})
 
 
