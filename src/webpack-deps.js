@@ -15,6 +15,8 @@ require('foundation-sites/js/foundation.util.box');
 require('foundation-sites/js/foundation.util.keyboard');
 require('foundation-sites/js/foundation.util.triggers');
 require('foundation-sites/js/foundation.dropdown');
+require('foundation-sites/js/foundation.magellan');
+require('foundation-sites/js/foundation.sticky');
 require('foundation-sites/js/foundation.tooltip');
 require('select2');
 

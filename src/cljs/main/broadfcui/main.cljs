@@ -23,6 +23,7 @@
    [broadfcui.page.notifications :as billing-notifications]
    [broadfcui.page.profile :as profile-page]
    [broadfcui.page.status :as status-page]
+   [broadfcui.page.style-guide :as style-guide]
    [broadfcui.page.workspace.details :as workspace-details]
    [broadfcui.page.workspaces-list :as workspaces]
    [broadfcui.utils :as utils]
@@ -38,6 +39,7 @@
   (billing-notifications/add-nav-paths)
   (profile-page/add-nav-paths)
   (status-page/add-nav-paths)
+  (style-guide/add-nav-paths)
   (workspace-details/add-nav-paths)
   (workspaces/add-nav-paths))
 

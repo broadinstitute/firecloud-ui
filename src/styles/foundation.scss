@@ -34,6 +34,8 @@ $switch-paddle-radius: 1rem;
 @include foundation-tooltip;
 @include foundation-dropdown;
 @include foundation-switch;
+@include foundation-menu;
+@include foundation-sticky;
 
 .dropdown-pane {
   font-weight: normal;
