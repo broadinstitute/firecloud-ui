@@ -6,7 +6,6 @@
    [broadfcui.config :as config]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.nav :as nav]
-   [broadfcui.nih-link-warning :as nih-link-warning]
    [broadfcui.utils :as utils]
    [dmohs.react :as r]
    ))
@@ -32,9 +31,7 @@
        (map (fn [item]
               [TopNavBarLink {:name (:label item) :href (nav/get-link (:nav-key item))
                               :selected ((:is-selected? item))}])
-            (:items props))
-       (when (:show-nih-link-warning? props)
-         [nih-link-warning/NihLinkWarning])]])})
+            (:items props))]])})
 
 (defn create-account-dropdown []
   (let [auth2 @utils/auth2-atom]

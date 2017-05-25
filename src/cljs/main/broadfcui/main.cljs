@@ -16,6 +16,7 @@
    [broadfcui.footer :as footer]
    [broadfcui.header :as header]
    [broadfcui.nav :as nav]
+   [broadfcui.nih-link-warning :as nih-link-warning]
    [broadfcui.page.billing.billing-management :as billing-management]
    [broadfcui.page.groups.groups-management :as group-management]
    [broadfcui.page.library.library-page :as library-page]
@@ -60,9 +61,7 @@
                      {:label "Method Repository"
                       :nav-key :method-repo
                       :is-selected? #(or (= path "methods")
-                                         (clojure.string/starts-with? path "methods/"))}]
-             :show-nih-link-warning? (not (or (nav/is-current-path? :profile)
-                                              (nav/is-current-path? :status)))}])
+                                         (clojure.string/starts-with? path "methods/"))}]}])
          flex/spring
          [:div {:style {:display "flex" :flexDirection "column" :fontSize "70%" :marginBottom "0.4rem"}}
           [:div {:style {:marginBottom "0.4rem"}}
@@ -166,6 +165,8 @@
                                public?
                                (contains? (:user-status @state) :signed-in))]
        [:div {}
+        (when (contains? user-status :signed-in)
+          [nih-link-warning/NihLinkWarning])
         (when (:config-loaded? @state)
           [notifications/ServiceAlertContainer])
         (when (and (contains? user-status :signed-in) (contains? user-status :refresh-token-saved))
