@@ -2,7 +2,6 @@
   (:require
     [dmohs.react :as react]
     clojure.string
-    [broadfcui.common :as common]
     [broadfcui.common.components :as comps]
     [broadfcui.common.modal :as modal]
     [broadfcui.common.style :as style]
@@ -17,7 +16,7 @@
 
 
 (defn- config->id [config]
-  {:namespace (config "namespace") :name (config "name")})
+  (select-keys config [:namespace :name]))
 
 
 (react/defc MethodConfigurationsList
@@ -67,9 +66,8 @@
            :data configs
            :->row (fn [config]
                     [(config->id config)
-                     (config "rootEntityType")
-                     (mapv #(get-in config ["methodRepoMethod" %])
-                           ["methodNamespace" "methodName" "methodVersion"])])}]
+                     (:rootEntityType config)
+                     ((juxt :methodNamespace :methodName :methodVersion) (:methodRepoMethod config))])}]
          :else [:div {:style {:textAlign "center"}} [comps/Spinner {:text "Loading configurations..."}]])))
    :component-did-mount
    (fn [{:keys [this]}]
@@ -81,7 +79,7 @@
       {:endpoint (endpoints/list-workspace-method-configs (:workspace-id props))
        :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                   (if success?
-                    (swap! state assoc :server-response {:configs (vec (get-parsed-response false))})
+                    (swap! state assoc :server-response {:configs (vec (get-parsed-response))})
                     (swap! state assoc :server-response {:error-message status-text})))}))})
 
 
