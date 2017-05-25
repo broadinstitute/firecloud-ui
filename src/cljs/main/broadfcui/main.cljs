@@ -165,7 +165,9 @@
                                public?
                                (contains? (:user-status @state) :signed-in))]
        [:div {}
-        (when (contains? user-status :signed-in)
+        (when (and (contains? user-status :signed-in)
+                   (not (or (nav/is-current-path? :profile)
+                            (nav/is-current-path? :status))))
           [nih-link-warning/NihLinkWarning])
         (when (:config-loaded? @state)
           [notifications/ServiceAlertContainer])
