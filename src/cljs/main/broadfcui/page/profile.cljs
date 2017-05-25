@@ -38,14 +38,14 @@
           [components/Spinner {:ref "pending-spinner" :text "Linking NIH account..."}]
           (nil? username)
           [:a {:href (get-nih-link-href)}
-           "Log-In to NIH to link your account"]
+           "Log-In to NIH to link your account" icons/external-link-icon]
           :else
           [:div {}
            [:div {:style {:display "flex"}}
-            [:div {:style {:flex "0 0 20rem"}} "eRA Commons / NIH Username:"]
+            [:div {:style {:flex "0 0 12rem"}} "eRA Commons / NIH Username:"]
             [:div {:style {:flex "0 0 auto"}} username]]
            [:div {:style {:display "flex" :marginTop "1rem"}}
-            [:div {:style {:flex "0 0 20rem"}} "Link Expiration:"]
+            [:div {:style {:flex "0 0 12rem"}} "Link Expiration:"]
             [:div {:style {:flex "0 0 auto"}}
              (if expired?
                [:span {:style {:color "red"}} "Expired"]
@@ -55,7 +55,7 @@
            (map
             (fn [whitelist]
               [:div {:style {:display "flex" :marginTop "1rem"}}
-               [:div {:style {:flex "0 0 20rem"}} (str (:name whitelist) " Authorization:")]
+               [:div {:style {:flex "0 0 12rem"}} (str (:name whitelist) " Authorization:")]
                [:div {:style {:flex "0 0 auto"}}
                 (if (:authorized whitelist)
                   [:span {:style {:color (:success-state style/colors)}} "Authorized"]

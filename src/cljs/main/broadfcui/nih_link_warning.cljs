@@ -19,8 +19,9 @@
            [:div {:style {:border "1px solid #c00" :backgroundColor "#fcc"
                           :color "#800" :fontSize "small" :padding "6px 10px" :textAlign "center"}}
             "Your access to NIH Controlled Access workspaces and data "
-            (if expired? " has expired" "will expire ")
-            (if expiring-soon? (duration/fuzzy-time-from-now-ms expire-time true))
+            (if expiring-soon?
+              (str "will expire " (duration/fuzzy-time-from-now-ms expire-time true))
+              "has expired")
             " and your access to NIH Controlled Access workspaces will be revoked within 24 hours."
             [:div {} [:a {:href (profile/get-nih-link-href)} "Re-link"]
              " your FireCloud and eRA Commons / NIH accounts (" linked-username
