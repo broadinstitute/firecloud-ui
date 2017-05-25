@@ -59,7 +59,7 @@
    [:p {} "FireCloud's font is Roboto, and icons come from FontAwesome. We use some widgets
    from Foundation."]
    [:p {} "When you're working on any part of FireCloud, remember
-    that its purpose is to put the user in touch with their data. That is, FireCloud should come
+    that its purpose is to put the user in touch with their data. That is, FireCloud should never come
     between its users and what they came to do. It may seem obvious, but it's important to keep in mind."]
 
    (sub-head "Hierarchy")
