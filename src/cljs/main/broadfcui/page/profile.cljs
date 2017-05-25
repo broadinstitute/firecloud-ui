@@ -42,21 +42,20 @@
           :else
           [:div {}
            [:div {:style {:display "flex"}}
-            [:div {:style {:flex "0 0 20ex"}} "eRA Commons / NIH Username:"]
+            [:div {:style {:flex "0 0 20rem"}} "eRA Commons / NIH Username:"]
             [:div {:style {:flex "0 0 auto"}} username]]
-           [:div {:style {:display "flex" :marginTop "1em"}}
-            [:div {:style {:flex "0 0 20ex"}} "Link Expiration:"]
+           [:div {:style {:display "flex" :marginTop "1rem"}}
+            [:div {:style {:flex "0 0 20rem"}} "Link Expiration:"]
             [:div {:style {:flex "0 0 auto"}}
              (if expired?
                [:span {:style {:color "red"}} "Expired"]
                [:span {:style {:color (when expiring-soon? "red")}} (common/format-date expire-time)])
-             [:br]
-             [:a {:href (get-nih-link-href)}
-              "Log-In to NIH to re-link your account"]]]
+             [:div {} [:a {:href (get-nih-link-href)}
+              "Log-In to NIH to re-link your account" icons/external-link-icon]]]]
            (map
             (fn [whitelist]
-              [:div {:style {:display "flex" :marginTop "1em"}}
-               [:div {:style {:flex "0 0 20ex"}} (str (:name whitelist) " Authorization:")]
+              [:div {:style {:display "flex" :marginTop "1rem"}}
+               [:div {:style {:flex "0 0 20rem"}} (str (:name whitelist) " Authorization:")]
                [:div {:style {:flex "0 0 auto"}}
                 (if (:authorized whitelist)
                   [:span {:style {:color (:success-state style/colors)}} "Authorized"]
@@ -66,7 +65,8 @@
                     {:text
                      [:div {} "Your account was linked, but you are not authorized to view
                      this protected dataset. Please go "
-                      [:a {:href "https://dbgap.ncbi.nlm.nih.gov/aa/wga.cgi?page=login" :target "_blank"} "here" icons/external-link-icon]
+                      [:a {:href "https://dbgap.ncbi.nlm.nih.gov/aa/wga.cgi?page=login" :target "_blank"}
+                       "here" icons/external-link-icon]
                       " to check your credentials."]})])]])
             datasets)])]))
    :component-did-mount

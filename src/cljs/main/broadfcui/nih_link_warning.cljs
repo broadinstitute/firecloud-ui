@@ -11,24 +11,20 @@
   {:render
    (fn [{:keys [props state]}]
      (when-let [status (:nih-status @state)]
-       (let [expire-time (* (:linkExpireTime status) 1000)]
-         (cond
-           (< expire-time (.now js/Date))
-             [:div {:style {:border "1px solid #c00" :backgroundColor "#fcc"
-                            :color "#800" :fontSize "small" :padding "6px 10px" :textAlign "center"}}
-              "Your access to NIH Controlled Access workspaces and data has expired and your access to NIH Controlled Access workspaces will be revoked within 24 hours."
-              [:div {} [:a {:href (profile/get-nih-link-href)} "Re-link"]
-               " your FireCloud and eRA Commons / NIH accounts (" (:linkedNihUsername status)
-               ") to regain access to these workspaces and data."]]
-           (< expire-time (utils/_24-hours-from-now-ms))
-             [:div {:style {:border "1px solid #c00" :backgroundColor "#fcc"
-                            :color "#800" :fontSize "small" :padding "6px 10px" :textAlign "center"}}
-              "Your access to NIH Controlled Access workspaces and data will expire "
-              (duration/fuzzy-time-from-now-ms expire-time true) " and your access to NIH Controlled Access workspaces will be revoked "
-              "within 24 hours of that time."
-              [:div {} [:a {:href (profile/get-nih-link-href)} "Re-link"]
-              " your FireCloud and eRA Commons / NIH accounts (" (:linkedNihUsername status)
-              ") before then to retain access to these workspaces and data."]]))))
+       (let [linked-username (:linkedNihUsername status)
+             expire-time (* (:linkExpireTime status) 1000)
+             expired? (< expire-time (.now js/Date))
+             expiring-soon? (and (not expired?) (< expire-time (utils/_24-hours-from-now-ms)))]
+         (when (and linked-username (or expired? expiring-soon?))
+           [:div {:style {:border "1px solid #c00" :backgroundColor "#fcc"
+                          :color "#800" :fontSize "small" :padding "6px 10px" :textAlign "center"}}
+            "Your access to NIH Controlled Access workspaces and data "
+            (if expired? " has expired" "will expire ")
+            (if expiring-soon? (duration/fuzzy-time-from-now-ms expire-time true))
+            " and your access to NIH Controlled Access workspaces will be revoked within 24 hours."
+            [:div {} [:a {:href (profile/get-nih-link-href)} "Re-link"]
+             " your FireCloud and eRA Commons / NIH accounts (" linked-username
+             ") to retain access to these workspaces and data."]]))))
    :component-did-mount
    (fn [{:keys [state]}]
      (endpoints/profile-get-nih-status

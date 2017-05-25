@@ -16,7 +16,7 @@
    [broadfcui.footer :as footer]
    [broadfcui.header :as header]
    [broadfcui.nav :as nav]
-   [broadfcui.nih-link-warning :as nih-link-warning]
+   [broadfcui.nih-link-warning :refer [NihLinkWarning]]
    [broadfcui.page.billing.billing-management :as billing-management]
    [broadfcui.page.groups.groups-management :as group-management]
    [broadfcui.page.library.library-page :as library-page]
@@ -168,7 +168,7 @@
         (when (and (contains? user-status :signed-in)
                    (not (or (nav/is-current-path? :profile)
                             (nav/is-current-path? :status))))
-          [nih-link-warning/NihLinkWarning])
+          [NihLinkWarning])
         (when (:config-loaded? @state)
           [notifications/ServiceAlertContainer])
         (when (and (contains? user-status :signed-in) (contains? user-status :refresh-token-saved))
