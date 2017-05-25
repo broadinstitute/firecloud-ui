@@ -29,14 +29,16 @@
        [:li {} (nav-link "Colors")]]]
      [:li {} [:span {} "Components"]
       [:ul {:className "nested vertical menu"}
-       [:li {} (nav-link "Modals")]]]]]])
+       [:li {} (nav-link "Modals")]
+       [:li {} (nav-link "Infoboxes")]
+       [:li {} (nav-link "Tooltips")]]]]]])
 
 (def ^:private section-break
   [:hr {:style {:border style/standard-line}}])
 
 (defn- sub-head [label]
   [:div {:id (string/lower-case label) :data-magellan-target (string/lower-case label)
-         :style {:fontSize "1.2rem" :fontWeight 500}}
+         :style {:fontSize "1.2rem" :fontWeight 500 :paddingTop "0.5rem"}}
    label])
 
 (defn- code-sample [text]
@@ -46,9 +48,10 @@
 
 (def ^:private overview
   [:section {:id "overview" :data-magellan-target "overview"}
-   [:h2 {} "Overview"]
-   [:p {} "FireCloud's font is Roboto, and icons come from FontAwesome."]
-   [:p {:style {:paddingBottom "0.5rem"}} "When you're working on any part of FireCloud, remember
+   [:h2 {:style {:marginBottom "0.5rem"}} "Overview"]
+   [:p {} "FireCloud's font is Roboto, and icons come from FontAwesome. We use some widgets
+   from Foundation."]
+   [:p {} "When you're working on any part of FireCloud, remember
     that its purpose is to put the user in touch with their data. That is, FireCloud should come
     between its users and what they came to do. It may seem obvious, but it's important to keep in mind."]
 
@@ -63,7 +66,7 @@
 
 (def ^:private conventions
   [:section {:id "conventions" :data-magellan-target "conventions"}
-   [:h2 {} "Conventions"]
+   [:h2 {:style {:marginBottom "0.5rem"}} "Conventions"]
    [:div {} (sub-head "Links")
     [:p {} "Internal links are created using " (code-sample "style/create-link") ", and "
      (style/create-link {:text "look like this"}) "."]
@@ -82,17 +85,16 @@
 
 (def ^:private styles
   [:section {:id "styles" :data-magellan-target "styles"}
-   [:h2 {} "Styles"]
+   [:h2 {:style {:marginBottom "0.5rem"}} "Styles"]
    (sub-head "Colors")
    [:p {} "Firecloud defines the following colors in " (code-sample "style/colors") ":"]
    [:div {:style {:display "flex" :flexWrap "wrap"}}
     (map #(color-swatch %) (sort (keys style/colors)))]
-   [:p {} "Pay attention to the names of the colors, and you'll be fine."]
-   ])
+   [:p {} "Pay attention to the names of the colors, and you'll be fine."]])
 
 (def ^:private components
   [:section {:id "components" :data-magellan-target "components"}
-   [:h2 {} "Components"]
+   [:h2 {:style {:marginBottom "0.5rem"}} "Components"]
    (sub-head "Modals")
    [:p {} "We have a lot of options for creating modals. On a fundamental level, you " [:em {} "could"]
     " just use " (code-sample "modal/push-modal") ", but don't do that, you'd have to define the
@@ -100,9 +102,26 @@
     its ilk, which includes methods for quickly creating confirmation modals, alerts, etc."]
    [:p {} " Any button that spawns a modal should have an ellipsis on the end of its label, "
     [:em {} "unless"] " that modal is just an \"are you sure?\" confirmation."]
-   [:p {} "Modal titles, the labels of buttons that open them, and their confirm buttons should share
-   terminology as much as possible, specifically they should use a consistent verb. For example, a
-   button marked \"Delete\" could open a modal titled \"Delete Method\" "]])
+   [:p {} "Modal titles, the labels of buttons that open them, and
+   their confirm buttons should share terminology as much as possible, specifically they should use
+   a consistent verb. For example, a button marked \"Delete\" could open a modal titled
+   \"Delete Method\" with a confirmation button labeled \"Delete\". Consistency is key."]
+
+   (sub-head "Infoboxes")
+   [:p {} "Observe, the ever-useful infobox:"
+    (common/render-info-box {:text [:span {} "Create me with " (code-sample "common/render-info-box") "!"]})]
+   [:p {} "An infobox is an instance of a " (code-sample "[common/FoundationDropdown]") ", but it should
+   only be used when there's a contextual explanation to be displayed. The most interactivity inside
+   of it should be an external link."]
+
+   (sub-head "Tooltips")
+   [:p {} "There are basically two types of tooltips in FireCloud. In the data tables, every cell
+   has a title attribute, so hovering over them spawns a standard browser tooltip. The purpose of
+   these is ot show the full text contents of a cell, regardless of its width."]
+   [:p {} "We also have " (code-sample "[common/FoundationTooltip]") "s, "
+    [common/FoundationTooltip {:text "which look like this." :tooltip "Ooooh, aaaah."}]]
+   [:p {} "These are used for description or explanation. Generally, it's something the user could
+   figure out either from context or from clicking, but we want to be explicit."]])
 
 (react/defc Page
   {:render
