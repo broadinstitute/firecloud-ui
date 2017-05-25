@@ -18,7 +18,7 @@
   [:div {:data-sticky-container "" :style {:float "right" :width 200}}
    [:div {:data-sticky "" :className "sticky" :data-anchor "guide"
           :style {:padding "0.5rem" :border style/standard-line :width 200
-                  :maxHeight "calc(100% - 2rem)" :overflow "auto"}}
+                  :maxHeight "calc(100vh - 3rem)" :overflow "auto"}}
     [:ul {:className "vertical menu" :data-magellan ""}
      [:li {} [:span {} "Overview"]
       [:ul {:className "nested vertical menu"}
