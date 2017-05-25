@@ -27,10 +27,6 @@ We feel the 80-character line length limit in the style guide is more restrictiv
 
 We do not strictly adhere to the guide's suggestion to keep functions under 10 lines of code. In general, however, shorter functions are preferred.
 
-## DOM Node (HTML) Conventions
-
-We prefer `rem` units over `em`, `ex`, `px`, etc. for size values, since these adjust with the user's selected font size.
-
 ## React Conventions
 
 ### Styles

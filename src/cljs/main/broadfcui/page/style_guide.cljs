@@ -44,7 +44,8 @@
    label])
 
 (defn- code-sample [text]
-  [:code {:style {:backgroundColor (:background-dark style/colors) :color "white" :fontWeight "bold"
+  [:code {:style {:backgroundColor (:background-dark style/colors) :color "white"
+                  :fontWeight "bold" :fontFamily "Menlo, monospace" :fontSize 12
                   :padding "0.2rem" :borderRadius "0.2rem" :margin "0 0.1rem"}}
    text])
 
@@ -73,6 +74,11 @@
 (def ^:private conventions
   [:section {:id "conventions" :data-magellan-target "conventions"}
    [:h2 {:style {:marginBottom "0.5rem"}} "Conventions"]
+   (sub-head "Units")
+   [:p {} "We prefer " (code-sample "rem") " over " (code-sample "em") ", " (code-sample "ex") ", "
+    (code-sample "px") ", etc. for size values, since these are always the same size wherever they
+    are used."]
+
    (sub-head "Links")
    [:p {} "Internal links are created using " (code-sample "style/create-link") ", and "
     (style/create-link {:text "look like this"}) "."]
@@ -82,11 +88,12 @@
     "'s, and followed by an "
     (code-sample "icons/external-link-icon") ", so that they "
     [:a {:href "javascript:;"} "look like this" icons/external-link-icon] "."]
-   (code-block "[:a {:href \"url\"} \"link text\" icons/external-link-icon]")
+   (code-block "[:a {:href \"url\" :target \"_blank\"} \"link text\" icons/external-link-icon]")
 
    (sub-head "Switches")
    [:p {} "As an alternative to checkboxes, we have switches."]
-   [:div {:style {:marginBottom "0.5rem"}} (common/render-foundation-switch {:on-change identity})]
+   [:div {:style {:marginBottom "0.5rem"}}
+    (common/render-foundation-switch {:on-change identity :checked? true})]
    (code-block "(common/render-foundation-switch {:on-change #(...)})")
    [:p {} "Under the hood, these are just checkboxes, but they should be used for forms that don't
    have a submit button. See the example of notification control: toggling the switch saves the
@@ -125,8 +132,9 @@
 
    (sub-head "Infoboxes")
    [:p {} "Observe, the ever-useful infobox:"
-    (common/render-info-box {:text [:span {} "Create me with " (code-sample "common/render-info-box") "!"]})]
-   [:p {} "An infobox is an instance of a " (code-sample "[common/FoundationDropdown]") ", but it should
+    (common/render-info-box {:text "Can we be friends?"})]
+   (code-block "(common/render-info-box {:text \"Infobox text or element here.\"]})")
+   [:p {} "An infobox is an instance of a " (code-sample "common/FoundationDropdown") ", but it should
    only be used when there's a contextual explanation to be displayed. The most interactivity inside
    of it should be an external link."]
 
@@ -134,8 +142,9 @@
    [:p {} "There are basically two types of tooltips in FireCloud. In the data tables, every cell
    has a title attribute, so hovering over them spawns a standard browser tooltip. The purpose of
    these is ot show the full text contents of a cell, regardless of its width."]
-   [:p {} "We also have " (code-sample "[common/FoundationTooltip]") "s, "
+   [:p {} "We also have Foundation's tooltips, "
     [common/FoundationTooltip {:text "which look like this." :tooltip "Ooooh, aaaah."}]]
+   (code-block "[common/FoundationTooltip {:text \"Text or element with tooltip\" :tooltip \"Tooltip contents\"}]")
    [:p {} "These are used for description or explanation. Generally, it's something the user could
    figure out either from context or from clicking, but we want to be explicit."]])
 
