@@ -60,7 +60,14 @@
                [:div {:style {:flex "0 0 auto"}}
                 (if (:authorized whitelist)
                   [:span {:style {:color (:success-state style/colors)}} "Authorized"]
-                  [:span {:style {:color (:text-light style/colors)}} "Not Authorized"])]])
+                  [:span {:style {:color (:text-light style/colors)}}
+                   "Not Authorized"
+                   (common/render-info-box
+                    {:text
+                     [:div {} "Your account was linked, but you are not authorized to view
+                     this protected dataset. Please go "
+                      [:a {:href "https://dbgap.ncbi.nlm.nih.gov/aa/wga.cgi?page=login" :target "_blank"} "here"]
+                      " to check your credentials."]})])]])
             datasets)])]))
    :component-did-mount
    (fn [{:keys [this props state after-update]}]
