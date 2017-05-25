@@ -1,0 +1,66 @@
+(ns broadfcui.components.modals
+  (:require
+   [broadfcui.common :as common]
+   [broadfcui.common.components :as comps]
+   [broadfcui.common.style :as style]
+   [dmohs.react :as r]
+   [org.broadinstitute.uicomps.modal :as modal]
+   ))
+
+(r/defc OKCancelForm
+  {:get-default-props
+   (fn []
+     {:show-cancel? true
+      :show-close? true})
+   :render
+   (fn [{:keys [this props]}]
+     (let [{:keys [header content dismiss ok-button show-cancel? cancel-text show-close?]} props
+           cancel-text (or cancel-text "Cancel")]
+       (modal/render
+        {:content
+         [:div {}
+          [:div {:style {:borderBottom style/standard-line
+                         :padding "20px 48px 18px"
+                         :fontSize "137%" :fontWeight 400 :lineHeight 1}}
+           header
+           (when show-close? [comps/XButton {:dismiss dismiss}])]
+          [:div {:style {:padding "22px 48px 40px" :backgroundColor (:background-light style/colors)}}
+           content
+           (when (or show-cancel? ok-button)
+             [:div {:style {:marginTop (if ok-button 40 25) :textAlign "center"}}
+              (when show-cancel?
+                [:a {:className "cancel"
+                     :style {:marginRight (when ok-button 27) :marginTop 2
+                             :display "inline-block"
+                             :fontSize "106%" :fontWeight 500 :textDecoration "none"
+                             :color (:button-primary style/colors)}
+                     :href "javascript:;"
+                     :onClick dismiss
+                     :onKeyDown (common/create-key-handler [:space :enter] dismiss)}
+                 cancel-text])
+              (when ok-button
+                (cond (string? ok-button) [comps/Button {:text ok-button :ref "ok-button" :class-name "ok-button" :onClick dismiss}]
+                  (fn? ok-button) [comps/Button {:text "OK" :ref "ok-button" :class-name "ok-button" :onClick ok-button}]
+                  (map? ok-button) [comps/Button (merge {:ref "ok-button" :class-name "ok-button"} ok-button)]
+                  :else ok-button))])]]
+         :did-mount #(this :-modal-did-mount)
+         :dismiss dismiss})))
+   :-modal-did-mount
+   (fn [{:keys [props refs]}]
+     (when-let [get-first (:get-first-element-dom-node props)]
+       (common/focus-and-select (get-first))
+       (when-let [get-last (or (:get-last-element-dom-node props)
+                               #(r/find-dom-node (@refs "ok-button")))]
+         (.addEventListener
+          (get-first) "keydown"
+          (common/create-key-handler [:tab] #(.-shiftKey %)
+                                     (fn [e] (.preventDefault e)
+                                       (when (:cycle-focus? props)
+                                         (.focus (get-last))))))
+         (.addEventListener
+          (get-last)
+          "keydown"
+          (common/create-key-handler [:tab] #(not (.-shiftKey %))
+                                     (fn [e] (.preventDefault e)
+                                       (when (:cycle-focus? props)
+                                         (.focus (get-first)))))))))})
