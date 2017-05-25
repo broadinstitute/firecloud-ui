@@ -16,12 +16,12 @@
     [broadfcui.net :as net]
     ))
 
-(defn div-to-render [[state this]]
+(defn render-groups-table [this state]
   [:div {}
    (when (:deleting? @state)
      [comps/Blocker {:banner "Deleting group..."}])
    [Table
-    {:data (:groups @state)
+    {:data (get-in @state [:groups-response :parsed])
      :body {:behavior {:reorderable-columns? false}
             :style table-style/table-light
             :columns
@@ -61,10 +61,8 @@
                                 {:endpoint (endpoints/delete-group groupName)
                                  :on-done (fn [{:keys [success? get-parsed-response xhr state]}]
                                             (swap! state dissoc :deleting?)
-                                            (net/handle-ajax-state [success? xhr state])
-                                            (if success?
-                                              (this :-load-data)
-                                             ))}))})))}]}
+                                            (this :-load-data)
+                                             )}))})))}]}
      :toolbar
      {:items
       [flex/spring
@@ -78,19 +76,20 @@
 
 (react/defc GroupTable
   {:render
-   (fn [{:keys [state this]}]
-     (net/render-ajax-state [state :error-message :groups "Loading groups..." div-to-render [state this]]))
+   (fn [{:keys [this state]}]
+     (net/render-ajax
+      @state
+      :groups-response
+      (partial render-groups-table this state)))
    :component-did-mount
    (fn [{:keys [this]}]
      (this :-load-data))
    :-load-data
    (fn [{:keys [state]}]
      (swap! state dissoc :groups)
-     (endpoints/get-groups
-      (fn [err-text groups]
-        (if err-text
-          (swap! state assoc :error-message err-text)
-          (swap! state assoc :groups groups)))))})
+     (utils/ajax-orch
+      "/groups"
+      {:on-done (net/create-handle-ajax-response state :groups-response)}))})
 
 
 (react/defc Page
