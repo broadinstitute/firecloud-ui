@@ -3,10 +3,11 @@
     [dmohs.react :as react]
     clojure.string
     [broadfcui.common.components :as comps]
+    [broadfcui.common.flex-utils :as flex]
     [broadfcui.common.modal :as modal]
     [broadfcui.common.style :as style]
-    [broadfcui.common.table :as table]
-    [broadfcui.common.table-utils :refer [add-right]]
+    [broadfcui.common.table.table :refer [Table]]
+    [broadfcui.common.table.style :as table-style]
     [broadfcui.endpoints :as endpoints]
     [broadfcui.nav :as nav]
     [broadfcui.page.method-repo.method-config-importer :refer [MethodConfigImporter]]
@@ -32,42 +33,41 @@
        (cond
          error-message (style/create-server-error-message error-message)
          configs
-         [table/Table
-          {:empty-message "There are no method configurations to display."
-           :toolbar
-           (add-right
-            [comps/Button
-             {:text "Import Configuration..."
-              :disabled? (case locked?
-                           nil "Looking up workspace status..."
-                           true "This workspace is locked."
-                           false)
-              :onClick #(modal/push-modal
-                         [comps/OKCancelForm
-                          {:header "Import Method Configuration"
-                           :content
-                           [:div {:style {:backgroundColor "white" :padding "1rem"}}
-                            [MethodConfigImporter
-                             {:workspace-id (:workspace-id props)
-                              :after-import (fn [{:keys [config-id]}]
-                                              (modal/pop-modal)
-                                              ((:on-config-imported props) config-id))}]]}])}])
-           :columns
-           [{:header "Name" :starting-width 240 :as-text :name :sort-by :text
-             :content-renderer
-             (fn [config-id]
-               (style/create-link {:text (:name config-id)
-                                   :href (nav/get-link :workspace-method-config
-                                                       (:workspace-id props)
-                                                       config-id)}))}
-            {:header "Root Entity Type" :starting-width 140}
-            {:header "Method" :starting-width 800
-             :content-renderer (fn [fields] (apply style/render-entity fields))}]
-           :data configs
-           :->row (fn [config]
-                    [(config->id config)
-                     (:rootEntityType config)
-                     ((juxt :methodNamespace :methodName :methodVersion) (:methodRepoMethod config))])}]
+         [Table
+          {:data configs
+           :body {:empty-message "There are no method configurations to display."
+                  :style table-style/table-heavy
+                  :columns [{:header "Name" :initial-width 240
+                             :column-data config->id
+                             :as-text :name :sort-by :text
+                             :render (fn [config-id]
+                                       (style/create-link {:text (:name config-id)
+                                                           :href (nav/get-link :workspace-method-config
+                                                                               (:workspace-id props)
+                                                                               config-id)}))}
+                            {:header "Root Entity Type" :initial-width 140
+                             :column-data :rootEntityType}
+                            {:header "Method" :initial-width 800
+                             :column-data (comp (juxt :methodNamespace :methodName :methodVersion) :methodRepoMethod)
+                             :as-text (partial clojure.string/join "/")
+                             :render (partial apply style/render-entity)}]}
+           :toolbar {:items [flex/spring
+                             [comps/Button
+                              {:text "Import Configuration..."
+                               :disabled? (case locked?
+                                            nil "Looking up workspace status..."
+                                            true "This workspace is locked."
+                                            false)
+                               :onClick #(modal/push-modal
+                                          [comps/OKCancelForm
+                                           {:header "Import Method Configuration"
+                                            :content
+                                            [:div {:style {:backgroundColor "white" :padding "1rem"}}
+                                             [MethodConfigImporter
+                                              {:workspace-id (:workspace-id props)
+                                               :after-import (fn [{:keys [config-id]}]
+                                                               (modal/pop-modal)
+                                                               ((:on-config-imported props) config-id))}]]}])}]]}}]
          :else [:div {:style {:textAlign "center"}} [comps/Spinner {:text "Loading configurations..."}]])))
    :component-did-mount
    (fn [{:keys [this]}]
