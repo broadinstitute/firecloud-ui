@@ -66,7 +66,7 @@
                     {:text
                      [:div {} "Your account was linked, but you are not authorized to view
                      this protected dataset. Please go "
-                      [:a {:href "https://dbgap.ncbi.nlm.nih.gov/aa/wga.cgi?page=login" :target "_blank"} "here"]
+                      [:a {:href "https://dbgap.ncbi.nlm.nih.gov/aa/wga.cgi?page=login" :target "_blank"} "here" icons/external-link-icon]
                       " to check your credentials."]})])]])
             datasets)])]))
    :component-did-mount
