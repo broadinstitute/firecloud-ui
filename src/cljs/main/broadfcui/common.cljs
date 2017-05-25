@@ -229,15 +229,6 @@
                (dissoc props :position :text :tooltip))
         text]))})
 
-(defn question-icon-link [text link & [style]]
-  [:a {:href link
-       :target "_blank"
-       :style (merge style/secondary-icon-style {:marginRight "0.4rem"} style)}
-   [FoundationTooltip
-    {:text (icons/icon {} :help)
-     :style {:border "none" :cursor "pointer"}
-     :tooltip text}]])
-
 (react/defc FoundationDropdown
   {:close
    (fn [{:keys [locals]}]
