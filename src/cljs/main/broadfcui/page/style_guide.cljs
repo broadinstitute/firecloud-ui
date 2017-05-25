@@ -17,13 +17,15 @@
 (def ^:private style-nav
   [:div {:data-sticky-container "" :style {:float "right" :width 200}}
    [:div {:data-sticky "" :className "sticky" :data-anchor "guide"
-          :style {:padding "0.5rem" :border style/standard-line :width 200}}
+          :style {:padding "0.5rem" :border style/standard-line :width 200
+                  :maxHeight "calc(100% - 2rem)" :overflow "auto"}}
     [:ul {:className "vertical menu" :data-magellan ""}
      [:li {} [:span {} "Overview"]
       [:ul {:className "nested vertical menu"}
        [:li {} (nav-link "Hierarchy")]]]
      [:li {} [:span {} "Conventions"]
       [:ul {:className "nested vertical menu"}
+       [:li {} (nav-link "Units")]
        [:li {} (nav-link "Links")]
        [:li {} (nav-link "Switches")]]]
      [:li {} [:span {} "Styles"]
