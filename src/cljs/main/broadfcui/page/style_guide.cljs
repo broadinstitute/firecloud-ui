@@ -2,6 +2,7 @@
   (:require
     [dmohs.react :as react]
     [broadfcui.common :as common]
+    [broadfcui.common.codemirror :refer [CodeMirror]]
     [broadfcui.common.components :as comps]
     [broadfcui.common.icons :as icons]
     [broadfcui.common.style :as style]
@@ -23,7 +24,8 @@
        [:li {} (nav-link "Hierarchy")]]]
      [:li {} [:span {} "Conventions"]
       [:ul {:className "nested vertical menu"}
-       [:li {} (nav-link "Links")]]]
+       [:li {} (nav-link "Links")]
+       [:li {} (nav-link "Switches")]]]
      [:li {} [:span {} "Styles"]
       [:ul {:className "nested vertical menu"}
        [:li {} (nav-link "Colors")]]]
@@ -46,6 +48,10 @@
                   :padding "0.2rem" :borderRadius "0.2rem" :margin "0 0.1rem"}}
    text])
 
+(defn- code-block [text]
+  [:div {:style {:maxWidth "80%" :paddingBottom "0.25rem"}}
+   [CodeMirror {:mode "clojure" :text text :line-numbers? false}]])
+
 (def ^:private overview
   [:section {:id "overview" :data-magellan-target "overview"}
    [:h2 {:style {:marginBottom "0.5rem"}} "Overview"]
@@ -67,14 +73,24 @@
 (def ^:private conventions
   [:section {:id "conventions" :data-magellan-target "conventions"}
    [:h2 {:style {:marginBottom "0.5rem"}} "Conventions"]
-   [:div {} (sub-head "Links")
-    [:p {} "Internal links are created using " (code-sample "style/create-link") ", and "
-     (style/create-link {:text "look like this"}) "."]
-    [:p {} "Links that go to an external location should be created as regular "
-     (code-sample "[:a]")
-     "'s, and followed by an "
-     (code-sample "icons/external-link-icon") ", so that they "
-     [:a {:href "javascript:;"} "look like this" icons/external-link-icon] "."]]])
+   (sub-head "Links")
+   [:p {} "Internal links are created using " (code-sample "style/create-link") ", and "
+    (style/create-link {:text "look like this"}) "."]
+   (code-block "(style/create-link {:text \"link text\" :onClick #(...)})")
+   [:p {} "Links that go to an external location should be created as regular "
+    (code-sample "[:a]")
+    "'s, and followed by an "
+    (code-sample "icons/external-link-icon") ", so that they "
+    [:a {:href "javascript:;"} "look like this" icons/external-link-icon] "."]
+   (code-block "[:a {:href \"url\"} \"link text\" icons/external-link-icon]")
+
+   (sub-head "Switches")
+   [:p {} "As an alternative to checkboxes, we have switches."]
+   [:div {:style {:marginBottom "0.5rem"}} (common/render-foundation-switch {:on-change identity})]
+   (code-block "(common/render-foundation-switch {:on-change #(...)})")
+   [:p {} "Under the hood, these are just checkboxes, but they should be used for forms that don't
+   have a submit button. See the example of notification control: toggling the switch saves the
+   new value."]])
 
 (defn- color-swatch [color]
   [:div {:style {:padding "1rem" :backgroundColor (style/colors color) :width "10%"
@@ -131,7 +147,8 @@
        ".menu .active {background-color: #457fd2; color: white !important;}
        .menu {padding: 0;}
        .menu > li > span {display: block; padding: 0.7rem 1rem; line-height: 1;}
-       p {margin: 0.5rem 0;}"]
+       p {margin: 0.5rem 0;}
+       .CodeMirror {height: auto; font-family: Menlo, monospace; font-size: 12px;}"]
       [:h1 {} "Style Guide"]
       [:p {} "What components should I be using? When do I leave a link underlined? The answers are all here."]
       section-break

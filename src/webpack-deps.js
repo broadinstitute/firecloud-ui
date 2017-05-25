@@ -4,6 +4,7 @@ require('jquery-ui/ui/core');
 require('jquery-ui/ui/widgets/draggable');
 exports.Bloodhound = require('corejs-typeahead');
 exports.CodeMirror = require('codemirror');
+require('codemirror/mode/clojure/clojure');
 exports.marked = require('marked');
 require('./js/timingDiagram');
 require('./js/igvPatch');
