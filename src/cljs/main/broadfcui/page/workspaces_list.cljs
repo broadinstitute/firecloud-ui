@@ -311,13 +311,12 @@
                         (let [access-level (:access-level data)]
                           [:div {:style {:paddingLeft 14}}
                            (if (= access-level "NO ACCESS")
-                             [:a {:style {:color (:button-primary style/colors)}
-                                  :href "javascript:;"
-                                  :onClick #(modal/push-modal
-                                             [RequestAuthDomainAccessDialog
-                                              {:workspace-id (:workspace-id data)
-                                               :ws-auth-domains (:auth-domains data)}])}
-                              (prettify access-level)]
+                             (style/create-link {:text (prettify access-level)
+                                                 :href "javascript:;"
+                                                 :onClick #(modal/push-modal
+                                                            [RequestAuthDomainAccessDialog
+                                                             {:workspace-id (:workspace-id data)
+                                                              :ws-auth-domains (:auth-domains data)}])})
                              (prettify access-level))]))}])
           :behavior {:reorderable-columns? false}
           :style {:header-row {:color (:text-lighter style/colors) :fontSize "90%"}
