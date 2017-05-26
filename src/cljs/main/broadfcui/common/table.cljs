@@ -211,14 +211,14 @@
      (update restored :column-meta
              (fn [cols]
                (let [headers-restored (set (map #(or (:header-key %) (:header %)) cols))
-                     col-headers (map #(or (:header-key %) (:header %)) (:columns props))
+                     col-headers (set (map #(or (:header-key %) (:header %)) (:columns props)))
                      unmentioned-headers (set (remove #(contains? headers-restored %) col-headers))
                      unmentioned-cols (->> (:columns props)
                                            (filter #(contains? unmentioned-headers (:header %)))
                                            (map #(select-keys % [:header]))
-                                           (map #(assoc % :width 100 :visible? true)))]
-
-                 (vec (concat cols unmentioned-cols))))))))
+                                           (map #(assoc % :width 100 :visible? true)))
+                     extant-cols (filterv #(contains? col-headers (or (:header-key %) (:header %))) cols)]
+                 (vec (concat extant-cols unmentioned-cols))))))))
 
 (defn- render-table [{:keys [this state props refs after-update]}]
   (assert (vector? (:column-meta @state)) "column-meta got un-vec'd")
