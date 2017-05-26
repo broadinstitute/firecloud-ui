@@ -125,7 +125,7 @@
                                           {:header "Import Attributes" :show-cancel? true :cancel-text "Close"
                                            :content [:div {:style {:width 720 :backgroundColor "white" :padding "1em"}}
                                                       [import-data/Page (merge (select-keys props [:workspace-id])
-                                                                               {:reload (fn [] (modal/pop-modal) ((:request-refresh props)))}
+                                                                               {:on-data-imported (fn [] ((:request-refresh props)))}
                                                                                {:import-type "workspace-attributes"})]]}])}])])])
         (style/create-paragraph
          [:div {}
