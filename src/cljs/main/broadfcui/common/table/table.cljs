@@ -116,6 +116,7 @@
              [:div {:style (:style filter-bar-props)}
               [comps/TextFilter (merge
                                  {:initial-text (:filter-text query-params)
+                                  :data-test-id (:data-test-id props)
                                   :on-filter #(swap! state update :query-params assoc :filter-text %)}
                                  (:inner filter-bar-props))]]))
          (list* (:items toolbar))]

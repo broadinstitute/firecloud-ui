@@ -106,7 +106,8 @@
 
 (defn create-message-well [message]
   [:div {:style {:textAlign "center" :backgroundColor (:background-light colors)
-                 :padding "1em 0" :borderRadius 8}}
+                 :padding "1em 0" :borderRadius 8}
+         :data-test-id "message-well"}
    message])
 
 (defn center [props & children]
@@ -134,7 +135,7 @@
    children])
 
 (defn create-link [{:keys [text] :as attributes}]
-  [:a (deep-merge {:href "javascript:;"
+  [:a (deep-merge {:href "javascript:;" :data-test-id (:data-test-id attributes)
                    :style {:textDecoration "none" :color (:button-primary colors)}}
                   (dissoc attributes :text))
    text])

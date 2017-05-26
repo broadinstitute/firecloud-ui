@@ -100,6 +100,7 @@
              (merge props
                     {:key selected-entity-type
                      :ref "table"
+                     :data-test-id "entity-table"
                      :state-key (when selected-entity-type
                                   (str (common/workspace-id->string (:workspace-id props)) ":data" selected-entity-type))
                      :columns columns
@@ -109,8 +110,7 @@
                      :filter-groups (map (fn [type]
                                            {:text (name type)
                                             :count-override (get-in entity-metadata [type :count])
-                                            :pred (constantly true)
-                                            :data-test-id (str (name type) "-button")})
+                                            :pred (constantly true)})
                                          entity-types)
                      :initial-filter-group-index (utils/index-of entity-types selected-entity-type)
                      :on-filter-change (fn [index]

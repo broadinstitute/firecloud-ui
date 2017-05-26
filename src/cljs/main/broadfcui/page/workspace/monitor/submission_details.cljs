@@ -60,7 +60,7 @@
                   :sort-by :text}
                   {:header "Last Changed" :starting-width 280 :as-text moncommon/render-date}
                   {:header "Status" :starting-width 120
-                   :content-renderer (fn [status]
+                   :content-renderer (fn [status workflows]
                                        [:div {:data-test-id "workflow-status"}
                                         (moncommon/icon-for-wf-status status)
                                         status])}
@@ -189,7 +189,7 @@
              (duration/fuzzy-time-from-now-ms (.parse js/Date (:submissionDate submission)) true) ")"])
            (style/create-section-header "Submission ID")
            (style/create-link {:text (style/create-paragraph (:submissionId submission))
-                               :target "_blank"
+                               :target "_blank" :data-test-id "submission-id"
                                :style {:color "-webkit-link" :textDecoration "underline"}
                                :href (str moncommon/google-cloud-context
                                           (:bucketName props) "/" (:submissionId submission) "/")})]

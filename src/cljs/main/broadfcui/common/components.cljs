@@ -38,7 +38,7 @@
    :component-will-unmount
    (fn [{:keys [locals]}]
      (js/clearTimeout (:-cycle @locals)))
-   :-cycleX
+   :-cycle
    (fn [{:keys [this state locals]}]
      (swap! state update :dot-count #(mod (inc %) 4))
      (swap! locals assoc :-cycle (js/setTimeout #(react/call :-cycle this) 600)))})
@@ -105,7 +105,7 @@
       [:a {:style {:color (:text-light style/colors)}
            :href "javascript:;"
            :onClick (:dismiss props)
-           :id (:id props)}
+           :id (:id props) :data-test-id "x-button"}
        (icons/icon {:style {:fontSize "80%"}} :close)]])})
 
 
@@ -215,7 +215,7 @@
               [:div {:style {:flex "1 1 auto" :overflow "hidden" :textOverflow "ellipsis"
                              :whiteSpace (when-not wrap? "nowrap")}}
                (if (and editing? dropdown?)
-                 (style/create-identity-select {:ref key
+                 (style/create-identity-select {:ref key :data-test-id "edit-method-config-snapshot-id-select"
                                                 :style {:width 100}
                                                 :defaultValue (key entity)
                                                 :onChange (when-let [f (:onSnapshotIdChange props)]
@@ -414,6 +414,7 @@
        [:div {:style {:display "inline-flex" :width width}}
         (style/create-search-field
           {:ref "filter-field" :autoSave "true" :results 5 :autofocus "true"
+           :data-test-id (str (:data-test-id props) "-search-input")
            :placeholder (or placeholder "Filter") :defaultValue initial-text
            :style {:flex "1 0 auto" :borderRadius "3px 0 0 3px" :marginBottom 0}
            :onKeyDown (common/create-key-handler [:enter] #(react/call :apply-filter this))})
@@ -809,6 +810,7 @@
                                         :borderTopRightRadius (when last? 8)
                                         :borderBottomRightRadius (when last? 8)
                                         :cursor "pointer"}
+                                :data-test-id (str text "-filter-button")
                                 :onClick #(on-change
                                            index
                                            (if pred (filter pred data) data))}
