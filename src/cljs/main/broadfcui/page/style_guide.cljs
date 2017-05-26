@@ -102,7 +102,7 @@
    (sub-head "Switches")
    [:p {} "As an alternative to checkboxes, we have switches."]
    [:div {:style {:marginBottom "0.5rem"}}
-    (common/render-foundation-switch {:on-change identity :checked? true})]
+    (common/render-foundation-switch {:on-change identity})]
    (code-block "(common/render-foundation-switch {:on-change #(...)})")
    [:p {} "Under the hood, these are just checkboxes, but they should be used for forms that don't
    have a submit button. See the example of notification control: toggling the switch saves the
