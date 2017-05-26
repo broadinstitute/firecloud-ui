@@ -22,6 +22,7 @@
     [:ul {:className "vertical menu" :data-magellan ""}
      [:li {} [:span {} "Overview"]
       [:ul {:className "nested vertical menu"}
+       [:li {} (nav-link "Summary")]
        [:li {} (nav-link "Hierarchy")]]]
      [:li {} [:span {} "Conventions"]
       [:ul {:className "nested vertical menu"}
@@ -58,16 +59,22 @@
 (def ^:private overview
   [:section {:id "overview" :data-magellan-target "overview"}
    [:h2 {:style {:marginBottom "0.5rem"}} "Overview"]
-   [:p {} "FireCloud's font is Roboto, and icons come from FontAwesome. We use some widgets
-   from Foundation."]
+   (sub-head "Summary")
+   [:p {} "FireCloud's font is "
+    [:a {:href "https://fonts.google.com/specimen/Roboto"} "Roboto" icons/external-link-icon]
+    ", and icons come from "
+    [:a {:href "http://fontawesome.io/icons/"} "Font Awesome" icons/external-link-icon]
+    ". We use some widgets from "
+    [:a {:href "http://foundation.zurb.com/sites/docs/"} "Foundation" icons/external-link-icon] "."]
    [:p {} "When you're working on any part of FireCloud, remember
     that its purpose is to put the user in touch with their data. That is, FireCloud should never come
     between its users and what they came to do. It may seem obvious, but it's important to keep in mind."]
 
    (sub-head "Hierarchy")
    [:p {} "FireCloud's navigational and conceptual hierarchy breaks down like this: at the top
-   (see the main nav) are the three primary sections of the site. There are also the management
-   pages in the user menu, but those are secondary."]
+   (see the main nav) are the three primary sections of the site, " [:strong {} "Workspaces"] ", "
+    [:strong {} "Data Library"] ", and the " [:strong {} "Method Repository"]
+    ". There are also the management pages in the user menu, but those are secondary."]
    [:p {} "Each of the primary sections leads to a table where the user can select an entity
    to work with, and each of those (workspaces, methods, configs) then has its own controls and
    sub-sections. So: these top level entities are inviolable. Whenever they're referenced, remember
@@ -122,8 +129,8 @@
    [:h2 {:style {:marginBottom "0.5rem"}} "Components"]
    (sub-head "Modals")
    [:p {} "We have a lot of options for creating modals. On a fundamental level, you " [:em {} "could"]
-    " just use " (code-sample "modal/push-modal") ", but don't do that, you'd have to define the
-    modal from scratch, it would be awful. Instead, use " (code-sample "comps/push-message") " and
+    " just use " (code-sample "modal/push-modal") ", but don't do that. You'd have to define the
+    modal from scratch, which would be awful. Instead, use " (code-sample "comps/push-message") " and
     its ilk, which includes methods for quickly creating confirmation modals, alerts, etc."]
    [:p {} " Any button that spawns a modal should have an ellipsis on the end of its label, "
     [:em {} "unless"] " that modal is just an \"are you sure?\" confirmation."]
@@ -143,7 +150,7 @@
    (sub-head "Tooltips")
    [:p {} "There are basically two types of tooltips in FireCloud. In the data tables, every cell
    has a title attribute, so hovering over them spawns a standard browser tooltip. The purpose of
-   these is ot show the full text contents of a cell, regardless of its width."]
+   these is to show the full text contents of a cell, regardless of its width."]
    [:p {} "We also have Foundation's tooltips, "
     [common/FoundationTooltip {:text "which look like this." :tooltip "Ooooh, aaaah."}]]
    (code-block "[common/FoundationTooltip {:text \"Text or element with tooltip\" :tooltip \"Tooltip contents\"}]")
