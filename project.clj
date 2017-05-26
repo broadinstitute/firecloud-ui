@@ -20,7 +20,7 @@
                   ;; in all dev builds.
                   :main "broadfcuitest.testrunner"
                   :optimizations :none
-                  :asset-path "build"
+                  :asset-path "target/build"
                   :source-map true
                   :preloads [devtools.preload]
                   :external-config {:devtools/config {:features-to-install
@@ -36,13 +36,14 @@
                   :optimizations :simple
                   :pretty-print false
                   :output-dir "build"}}}}}}
-  :target-path "resources/public"
+  :target-path "resources/public/target"
   :clean-targets ^{:protect false} [:target-path]
   :cljsbuild {:builds {:client {:source-paths ["src/cljs/main"]
                                 :compiler {:main "broadfcui.main"
-                                           :output-dir "resources/public/build"
-                                           :output-to "resources/public/compiled.js"}}}}
+                                           :output-dir "resources/public/target/build"
+                                           :output-to "resources/public/target/compiled.js"}}}}
   :resource {:resource-paths ["src/static"]
+             :target-path "resources/public"
              :excludes [#".*\.DS_Store"]
              :skip-stencil [#"src/static/assets/.*"]
              :extra-values {:vtag ~(.getTime (java.util.Date.))}})
