@@ -57,7 +57,7 @@
    [CodeMirror {:mode "clojure" :text text :line-numbers? false}]])
 
 (def ^:private overview
-  [:section {:id "overview" :data-magellan-target "overview"}
+  [:section {}
    [:h2 {:style {:marginBottom "0.5rem"}} "Overview"]
    (sub-head "Summary")
    [:p {} "FireCloud's font is "
@@ -81,12 +81,14 @@
    to treat them as the independant entities that they are."]])
 
 (def ^:private conventions
-  [:section {:id "conventions" :data-magellan-target "conventions"}
+  [:section {}
    [:h2 {:style {:marginBottom "0.5rem"}} "Conventions"]
    (sub-head "Units")
    [:p {} "We prefer " (code-sample "rem") " over " (code-sample "em") ", " (code-sample "ex") ", "
     (code-sample "px") ", etc. for size values, since these are always the same size wherever they
-    are used."]
+    are used. If you're unfamiliar with these units, find out more "
+    [:a {:href "https://developer.mozilla.org/en-US/docs/Web/CSS/length"}
+     "at the MDN" icons/external-link-icon] "."]
 
    (sub-head "Links")
    [:p {} "Internal links are created using " (code-sample "style/create-link") ", and "
@@ -105,8 +107,8 @@
     (common/render-foundation-switch {:on-change identity})]
    (code-block "(common/render-foundation-switch {:on-change #(...)})")
    [:p {} "Under the hood, these are just checkboxes, but they should be used for forms that don't
-   have a submit button. See the example of notification control: toggling the switch saves the
-   new value."]])
+   have a submit button. See the example of workspace notification control: toggling the switch
+   saves the new value."]])
 
 (defn- color-swatch [color]
   [:div {:style {:padding "1rem" :backgroundColor (style/colors color) :width "10%"
@@ -116,16 +118,16 @@
     (name color)]])
 
 (def ^:private styles
-  [:section {:id "styles" :data-magellan-target "styles"}
+  [:section {}
    [:h2 {:style {:marginBottom "0.5rem"}} "Styles"]
    (sub-head "Colors")
    [:p {} "Firecloud defines the following colors in " (code-sample "style/colors") ":"]
    [:div {:style {:display "flex" :flexWrap "wrap"}}
-    (map #(color-swatch %) (sort (keys style/colors)))]
+    (map color-swatch (sort (keys style/colors)))]
    [:p {} "Pay attention to the names of the colors, and you'll be fine."]])
 
 (def ^:private components
-  [:section {:id "components" :data-magellan-target "components"}
+  [:section {}
    [:h2 {:style {:marginBottom "0.5rem"}} "Components"]
    (sub-head "Modals")
    [:p {} "We have a lot of options for creating modals. On a fundamental level, you " [:em {} "could"]

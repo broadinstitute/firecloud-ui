@@ -312,7 +312,6 @@
                           [:div {:style {:paddingLeft 14}}
                            (if (= access-level "NO ACCESS")
                              (style/create-link {:text (prettify access-level)
-                                                 :href "javascript:;"
                                                  :onClick #(modal/push-modal
                                                             [RequestAuthDomainAccessDialog
                                                              {:workspace-id (:workspace-id data)
