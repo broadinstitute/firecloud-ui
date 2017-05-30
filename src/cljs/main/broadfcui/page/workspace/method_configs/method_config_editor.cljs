@@ -95,21 +95,22 @@
                      (swap! state assoc :error status-text)))}))})
 
 
-(defn- render-side-bar [state refs config editing? props]
+(defn- render-side-bar [this state refs config editing? props]
   [:div {:style {:width 290 :float "left"}}
    [:div {:ref "sidebar"}]
    (style/create-unselectable :div {:style {:position (when-not (:sidebar-visible? @state) "fixed")
                                             :top (when-not (:sidebar-visible? @state) 4)
                                             :width 290}}
      (let [locked? (:locked? @state)
-           can-edit? (access-greater-than? (:access-level props) "READER")]
+           can-edit? (access-greater-than? (:access-level props) "READER")
+           snapshot-id (get-in config ["methodRepoMethod" "methodVersion"])]
        [:div {:style {:lineHeight 1}}
         (when (and can-edit? (not editing?))
           [:div {}
            [comps/SidebarButton {:style :light :color :button-primary
                                  :text "Edit Configuration" :icon :edit
                                  :disabled? (when locked? "The workspace is locked")
-                                 :onClick #(swap! state assoc :editing? true)}]
+                                 :onClick #(swap! state assoc :editing? true :prev-snapshot-id snapshot-id)}]
            [comps/SidebarButton {:style :light :color :exception-state :margin :top
                                  :text "Delete" :icon :delete
                                  :disabled? (when locked? "The workspace is locked")
@@ -133,7 +134,8 @@
         (when editing?
           [comps/SidebarButton {:color :exception-state :margin :top
                                 :text "Cancel Editing" :icon :cancel
-                                :onClick #(stop-editing state)}])]))])
+                                :onClick #(do (react/call :load-new-method-template this (:prev-snapshot-id @state))
+                                              (stop-editing state))}])]))])
 
 
 (defn- input-output-list [values ref-prefix invalid-values editing? all-values]
@@ -216,7 +218,7 @@
     [:div {}
      [comps/Blocker {:banner (:blocker @state)}]
      [:div {:style {:padding "1em 2em"}}
-      (render-side-bar state refs config editing? props)
+      (render-side-bar this state refs config editing? props)
       (when-not editing?
         [:div {:style {:float "right"}}
          (launch/render-button {:workspace-id (:workspace-id props)
