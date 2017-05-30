@@ -59,10 +59,10 @@
                                (swap! state assoc :deleting? true)
                                (endpoints/call-ajax-orch
                                 {:endpoint (endpoints/delete-group groupName)
-                                 :on-done (fn [{:keys [success? get-parsed-response xhr state]}]
-                                            (swap! state dissoc :deleting?)
-                                            (this :-load-data)
-                                             )}))})))}]}
+                                 :on-done (fn [{:keys [success? state]}]
+                                            (if success?
+                                             (this :-load-data))
+                                            )}))})))}]}
      :toolbar
      {:items
       [flex/spring
@@ -80,7 +80,9 @@
      (net/render-ajax
       @state
       :groups-response
-      (partial render-groups-table this state)))
+      "Loading Groups..."
+      (partial render-groups-table this state)
+      nil))
    :component-did-mount
    (fn [{:keys [this]}]
      (this :-load-data))
