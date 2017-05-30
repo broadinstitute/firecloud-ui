@@ -51,4 +51,4 @@
 (defn billing-guide-url [] (get @config "billingGuideUrl"))
 (defn call-caching-guide-url [] (get @config "callCachingGuideUrl"))
 (defn alerts-json-url [] (get @config "alertsJsonUrl"))
-(def tcga-authorization-domain "dbGapAuthorizedUsers")
+(def tcga-authorization-domain "TCGA-dbGaP-Authorized")
