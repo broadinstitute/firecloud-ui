@@ -10,8 +10,8 @@
     [broadfcui.common.table.style :as table-style]
     [broadfcui.endpoints :as endpoints]
     [broadfcui.nav :as nav]
-    [broadfcui.page.method-repo.method-config-importer :refer [MethodConfigImporter]]
     [broadfcui.page.workspace.method-configs.method-config-editor :refer [MethodConfigEditor]]
+    [broadfcui.page.workspace.method-configs.import-config :refer [ConfigImporter]]
     [broadfcui.utils :as utils]
     ))
 
@@ -59,7 +59,12 @@
                                             true "This workspace is locked."
                                             false)
                                :onClick #(modal/push-modal
-                                          [comps/OKCancelForm
+                                          [ConfigImporter
+                                           {:workspace-id (:workspace-id props)
+                                            :after-import (fn [{:keys [config-id]}]
+                                                            (modal/pop-modal)
+                                                            ((:on-config-imported props) config-id))}]
+                                          #_[comps/OKCancelForm
                                            {:header "Import Method Configuration"
                                             :content
                                             [:div {:style {:backgroundColor "white" :padding "1rem"}}
