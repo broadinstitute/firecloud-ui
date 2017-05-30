@@ -10,7 +10,7 @@
     [broadfcui.utils :as u]
     [clojure.string :as string]))
 
-(defn- nav-link [label]
+(defn- create-nav-link [label]
   (style/create-link {:text label
                       :href (str "#" (string/lower-case label))}))
 
@@ -24,23 +24,23 @@
        [:ul {:className "vertical menu" :data-magellan ""}
         [:li {} [:span {} "Overview"]
          [:ul {:className "nested vertical menu"}
-          [:li {} (nav-link "Summary")]
-          [:li {} (nav-link "Hierarchy")]]]
+          [:li {} (create-nav-link "Summary")]
+          [:li {} (create-nav-link "Hierarchy")]]]
         [:li {} [:span {} "Conventions"]
          [:ul {:className "nested vertical menu"}
-          [:li {} (nav-link "Units")]
-          [:li {} (nav-link "Links")]
-          [:li {} (nav-link "Switches")]
-          [:li {} (nav-link "Buttons")]]]
+          [:li {} (create-nav-link "Units")]
+          [:li {} (create-nav-link "Links")]
+          [:li {} (create-nav-link "Switches")]
+          [:li {} (create-nav-link "Buttons")]]]
         [:li {} [:span {} "Styles"]
          [:ul {:className "nested vertical menu"}
-          [:li {} (nav-link "Colors")]
-          [:li {} (nav-link "Icons")]]]
+          [:li {} (create-nav-link "Colors")]
+          [:li {} (create-nav-link "Icons")]]]
         [:li {} [:span {} "Components"]
          [:ul {:className "nested vertical menu"}
-          [:li {} (nav-link "Modals")]
-          [:li {} (nav-link "Infoboxes")]
-          [:li {} (nav-link "Tooltips")]]]]]])
+          [:li {} (create-nav-link "Modals")]
+          [:li {} (create-nav-link "Infoboxes")]
+          [:li {} (create-nav-link "Tooltips")]]]]]])
    :component-did-mount
    (fn [{:keys [this]}]
      (.foundation (js/$ (react/find-dom-node this)))
@@ -49,25 +49,25 @@
 (def ^:private section-break
   [:hr {:style {:border style/standard-line}}])
 
-(defn- sub-head [label]
+(defn- create-sub-head [label]
   [:div {:id (string/lower-case label) :data-magellan-target (string/lower-case label)
          :style {:fontSize "1.2rem" :fontWeight 500 :paddingTop "0.5rem"}}
    label])
 
-(defn- code-sample [text]
+(defn- create-code-sample [text]
   [:code {:style {:backgroundColor (:background-dark style/colors) :color "white"
                   :fontWeight "bold" :fontFamily "Menlo, monospace" :fontSize 12
                   :padding "0.2rem" :borderRadius "0.2rem" :margin "0 0.1rem"}}
    text])
 
-(defn- code-block [text]
+(defn- create-code-block [text]
   [:div {:style {:maxWidth "80%" :paddingBottom "0.25rem"}}
    [CodeMirror {:mode "clojure" :text text :line-numbers? false}]])
 
 (def ^:private overview
   [:section {}
    [:h2 {:style {:marginBottom "0.5rem"}} "Overview"]
-   (sub-head "Summary")
+   (create-sub-head "Summary")
    [:p {} "FireCloud's font is "
     [:a {:href "https://fonts.google.com/specimen/Roboto" :target "_blank"} "Roboto" icons/external-link-icon]
     ", and icons come from "
@@ -78,7 +78,7 @@
     that its purpose is to put the user in touch with their data. That is, FireCloud should never come
     between its users and what they came to do. It may seem obvious, but it's important to keep in mind."]
 
-   (sub-head "Hierarchy")
+   (create-sub-head "Hierarchy")
    [:p {} "FireCloud's navigational and conceptual hierarchy breaks down like this: at the top
    (see the main nav) are the three primary sections of the site, " [:strong {} "Workspaces"] ", "
     [:strong {} "Data Library"] ", and the " [:strong {} "Method Repository"]
@@ -91,35 +91,35 @@
 (def ^:private conventions
   [:section {}
    [:h2 {:style {:marginBottom "0.5rem"}} "Conventions"]
-   (sub-head "Units")
-   [:p {} "We prefer " (code-sample "rem") " over " (code-sample "em") ", " (code-sample "ex") ", "
-    (code-sample "px") ", etc. for size values, since these are always the same size wherever they
+   (create-sub-head "Units")
+   [:p {} "We prefer " (create-code-sample "rem") " over " (create-code-sample "em") ", " (create-code-sample "ex") ", "
+    (create-code-sample "px") ", etc. for size values, since these are always the same size wherever they
     are used. If you're unfamiliar with these units, find out more "
     [:a {:href "https://developer.mozilla.org/en-US/docs/Web/CSS/length" :target "_blank"}
      "at the MDN" icons/external-link-icon] "."]
 
-   (sub-head "Links")
-   [:p {} "Internal links are created using " (code-sample "style/create-link") ", and "
+   (create-sub-head "Links")
+   [:p {} "Internal links are created using " (create-code-sample "style/create-link") ", and "
     (style/create-link {:text "look like this"}) "."]
-   (code-block "(style/create-link {:text \"link text\" :onClick #(...)})")
+   (create-code-block "(style/create-link {:text \"link text\" :onClick #(...)})")
    [:p {} "Links that go to an external location should be created as regular "
-    (code-sample "[:a]")
+    (create-code-sample "[:a]")
     "'s, and followed by an "
-    (code-sample "icons/external-link-icon") ", so that they "
+    (create-code-sample "icons/external-link-icon") ", so that they "
     [:a {:href "javascript:;"} "look like this" icons/external-link-icon] "."]
-   (code-block "[:a {:href \"url\" :target \"_blank\"} \"link text\" icons/external-link-icon]")
+   (create-code-block "[:a {:href \"url\" :target \"_blank\"} \"link text\" icons/external-link-icon]")
 
-   (sub-head "Switches")
+   (create-sub-head "Switches")
    [:p {} "As an alternative to checkboxes, we have switches."]
    [:div {:style {:marginBottom "0.5rem"}}
     (common/render-foundation-switch {:on-change identity})]
-   (code-block "(common/render-foundation-switch {:on-change #(...)})")
+   (create-code-block "(common/render-foundation-switch {:on-change #(...)})")
    [:p {} "Under the hood, these are just checkboxes, but they should be used for forms that don't
    have a submit button. See the example of workspace notification control: toggling the switch
    saves the new value."]
 
-   (sub-head "Buttons")
-   [:p {} "To create a button, use " (code-sample "comps/Button") "."]
+   (create-sub-head "Buttons")
+   [:p {} "To create a button, use " (create-code-sample "comps/Button") "."]
    [:p {} "When the button is for manipulating an entity (workspace, method, config), follow these
    conventions when its action is not available:"
     [:ol {}
@@ -130,43 +130,43 @@
      reader on a workspace, so the delete workspace button is hidden."]]]
    [:p {} "When the button is for a non-entity action, such as creating a new workspace, always make it visible."]])
 
-(defn- color-swatch [color]
+(defn- render-color-swatch [color]
   [:div {:style {:padding "1rem" :backgroundColor (style/colors color) :width "10%"
                  :textAlign "center"}}
    [:span {:style {:backgroundColor "rgba(255, 255, 255, 0.8)"
                    :padding "0.2rem" :borderRadius "0.2rem"}}
     (name color)]])
 
-(defn- icon-sample [icon]
+(defn- render-icon-sample [icon]
   [:div {:style {:padding "0.5rem 1rem" :border style/standard-line :width 175}}
    (icons/icon {:style {:marginRight "0.5rem"} :className "fa-fw"} icon) (name icon)])
 
 (def ^:private styles
   [:section {}
    [:h2 {:style {:marginBottom "0.5rem"}} "Styles"]
-   (sub-head "Colors")
-   [:p {} "Firecloud defines the following colors in " (code-sample "style/colors") ":"]
+   (create-sub-head "Colors")
+   [:p {} "Firecloud defines the following colors in " (create-code-sample "style/colors") ":"]
    [:div {:style {:display "flex" :flexWrap "wrap"}}
-    (map color-swatch (sort (keys style/colors)))]
+    (map render-color-swatch (sort (keys style/colors)))]
    [:p {} "Pay attention to the names of the colors, and you'll be fine. Reference them like this:"]
-   (code-block "(:color-name style/colors)")
-   [:p {} "Often, " (code-sample "line-default") " isn't used directly. It's common to just use "
-    (code-sample "style/standard-line") " instead."]
+   (create-code-block "(:color-name style/colors)")
+   [:p {} "Often, " (create-code-sample "line-default") " isn't used directly. It's common to just use "
+    (create-code-sample "style/standard-line") " instead."]
 
-   (sub-head "Icons")
-   [:p {} "Firecloud defines the following icons in " (code-sample "icons/icon-keys") ":"]
+   (create-sub-head "Icons")
+   [:p {} "Firecloud defines the following icons in " (create-code-sample "icons/icon-keys") ":"]
    [:div {:style {:display "flex" :flexWrap "wrap"}}
-    (map icon-sample (sort (keys icons/icon-keys)))]
+    (map render-icon-sample (sort (keys icons/icon-keys)))]
    [:p {} "Use them like this:"]
-   (code-block "(icons/icon {} :icon-name)")])
+   (create-code-block "(icons/icon {} :icon-name)")])
 
 (def ^:private components
   [:section {}
    [:h2 {:style {:marginBottom "0.5rem"}} "Components"]
-   (sub-head "Modals")
+   (create-sub-head "Modals")
    [:p {} "We have a lot of options for creating modals. On a fundamental level, you " [:em {} "could"]
-    " just use " (code-sample "modal/push-modal") ", but don't do that. You'd have to define the
-    modal from scratch, which would be awful. Instead, use " (code-sample "comps/push-message") " and
+    " just use " (create-code-sample "modal/push-modal") ", but don't do that. You'd have to define the
+    modal from scratch, which would be awful. Instead, use " (create-code-sample "comps/push-message") " and
     its ilk, which includes methods for quickly creating confirmation modals, alerts, etc."]
    [:p {} " Any button that spawns a modal should have an ellipsis on the end of its label, "
     [:em {} "unless"] " that modal is just an \"are you sure?\" confirmation."]
@@ -175,21 +175,21 @@
    a consistent verb. For example, a button marked \"Delete\" could open a modal titled
    \"Delete Method\" with a confirmation button labeled \"Delete\". Consistency is key."]
 
-   (sub-head "Infoboxes")
+   (create-sub-head "Infoboxes")
    [:p {} "Observe, the ever-useful infobox:"
     (common/render-info-box {:text "Can we be friends?"})]
-   (code-block "(common/render-info-box {:text \"Infobox text or element here.\"]})")
-   [:p {} "An infobox is an instance of a " (code-sample "common/FoundationDropdown") ", but it should
+   (create-code-block "(common/render-info-box {:text \"Infobox text or element here.\"]})")
+   [:p {} "An infobox is an instance of a " (create-code-sample "common/FoundationDropdown") ", but it should
    only be used when there's a contextual explanation to be displayed. The most interactivity inside
    of it should be an external link."]
 
-   (sub-head "Tooltips")
+   (create-sub-head "Tooltips")
    [:p {} "There are basically two types of tooltips in FireCloud. In the data tables, every cell
    has a title attribute, so hovering over them spawns a standard browser tooltip. The purpose of
    these is to show the full text contents of a cell, regardless of its width."]
    [:p {} "We also have Foundation's tooltips, "
     [common/FoundationTooltip {:text "which look like this." :tooltip "Ooooh, aaaah."}]]
-   (code-block "[common/FoundationTooltip {:text \"Text or element with tooltip\" :tooltip \"Tooltip contents\"}]")
+   (create-code-block "[common/FoundationTooltip {:text \"Text or element with tooltip\" :tooltip \"Tooltip contents\"}]")
    [:p {} "These are used for description or explanation. Generally, it's something the user could
    figure out either from context or from clicking, but we want to be explicit."]])
 
