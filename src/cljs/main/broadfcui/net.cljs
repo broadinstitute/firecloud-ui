@@ -3,7 +3,8 @@
   [dmohs.react :as react]
   [broadfcui.utils :as utils]
   [broadfcui.common.style :as style]
-  [broadfcui.common.components :as comps]))
+  [broadfcui.common.components :as comps]
+  ))
 
 (defn handle-ajax-state [[success? xhr state error-keyword parsed-keyword]]
   (let [r (as-> xhr x
@@ -26,20 +27,30 @@
 
 (defn create-handle-ajax-response [state state-key]
   (fn [{:keys [xhr success?]}]
-    (swap! state assoc state-key)
+    (swap! state assoc state-key nil)
     (let [parsed-response (as-> xhr x
-                  (aget x "responseText")
-                  (js-invoke js/JSON "parse" x))]
+                                (aget x "responseText")
+                                (try (js-invoke js/JSON "parse" x) (catch js/Error e e))
+                                (when-not (instance? js/Error x)
+                                  (js->clj x :keywordize-keys true)))]
      (cond
-       (complement parsed-response) (swap! state assoc-in [state-key :parse-error] "Error in parsing response");;("assgn parse error to error")
-       ((not success?)) (swap! state assoc-in [state-key :error] (aget parsed-response "message"));;("assign error to error")
-       :else (swap! state assoc-in [state-key :parsed-response] parsed-response)))
+       (not parsed-response) (swap! state assoc-in [state-key :error] "Error parsing server response");;("assgn parse error to error")
+       (not success?) (swap! state assoc-in [state-key :error] (:message parsed-response));;("assign error to error")
+       :else (swap! state assoc-in [state-key :parsed] parsed-response))))
 
     ) ;;writing to passed key map of "response" for
 
-(defn render-ajax [state state-key render-success]
-  (utils/log state-key)
+(defn render-ajax [state state-key loading-text render-success error-overwrite]
   (cond
-    (state-key state) [comps/Spinner {:text "Loading..."}]
-    (get-in state [state-key :error]) (style/create-server-error-message ((get-in state [state-key :error])))
-    :else (render-success)))) ;;reading the passed key map to properly render state
+    (nil? (get-in state [state-key])) [comps/Spinner {:text loading-text}]
+    (get-in state [state-key :error]) (style/create-server-error-message (if error-overwrite (error-overwrite state state-key) (get-in state [state-key :error])))
+    :else (render-success))) ;;reading the passed key map to properly render state
+
+(defn error-overwrite
+  ([message] message)
+  ([message code state state-key]
+   (let [current-error (as-> (get-in state [state-key :error]) e
+                             (js-invoke js/JSON "parse" e)
+                             (js->clj e :keywordize-keys true))]
+     (if (= code (:code current-error)) message
+                                        (:message current-error)))))

@@ -9,6 +9,7 @@
    [broadfcui.common.style :as style]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.utils :as utils]
+   [broadfcui.net :as net]
    ))
 
 
@@ -21,7 +22,60 @@
 (def ^:private access-levels [reader-level owner-level no-access-level])
 
 (def ^:private column-width "calc(50% - 4px)")
-
+;;:on-done (fn [{:keys [success? get-parsed-response status-text xhr]}]
+       ;;           (if success?
+       ;;             (let [response-vec (mapv utils/keywordize-keys (get-parsed-response false))
+       ;;                   acl-vec (filterv #(not= "public" (:user %)) response-vec)
+       ;;                   public-user (first (filter #(= "public" (:user %)) response-vec))
+       ;;                   public-status (or (:role public-user) no-access-level)]
+       ;;               (swap! state assoc :acl-vec acl-vec
+       ;;                      :public-status (= public-status reader-level)
+       ;;                      :count-orig (count acl-vec)))
+       ;;             )
+       ;;           (net/create-handle-ajax-response state :acl-response)
+       ;;           (utils/log "after create-handle"))}))
+(defn render-ok-cancel-form [props state refs this]
+  (let [acl-vec (filterv #(not= "public" (:user %)) (get-in state [:acl-response :parsed]))
+        public-status (as-> (get-in state [:acl-response :parsed]) rv
+                             (filter #(= "public" (:user %)) rv)
+                             (first rv)
+                             (or (:role rv) no-access-level))]
+   [:div {:style {:width 800}}
+    (when (:saving? @state)
+      [comps/Blocker {:banner "Updating..."}])
+    [:div {:style {:paddingBottom "0.5em" :fontSize "90%"}}
+     [:div {:style {:float "left" :width column-width}} "User or Group ID"]
+     [:div {:style {:float "right" :width column-width}} "Access Level"]
+     (common/clear-both)]
+    (map-indexed
+     (fn [i acl-entry]
+       [:div {}
+        [input/TextField
+         {:ref (str "acl-key" i)
+          :style {:float "left" :width column-width
+                  :backgroundColor (when (< i (count acl-vec))
+                                     (:background-light style/colors))}
+          :disabled (< i (count acl-vec))
+          :spellCheck false
+          :defaultValue (:user acl-entry)
+          :predicates [(input/valid-email-or-empty "User ID")]}]
+        (style/create-identity-select
+         {:ref (str "acl-value" i)
+          :style {:float "right" :width column-width :height 33}
+          :defaultValue (:role acl-entry)}
+         access-levels)
+        (common/clear-both)])
+     (acl-vec))
+    [comps/Button {:text "Add new" :icon :add-new
+                   :onClick #(swap! state assoc :acl-vec
+                                    (conj (react/call :capture-ui-state this)
+                                          {:user "" :role reader-level}))}]
+    [:label {:style {:cursor "pointer"}}
+     [:input {:type "checkbox" :ref "publicbox"
+              :style {:marginLeft "2em" :verticalAlign "middle"}
+              :onChange #(swap! state assoc :public-status (-> (@refs "publicbox") .-checked))
+              :checked (:public-status @state)}]
+     [:span {:style {:paddingLeft 6 :verticalAlign "middle"}} "Publicly Readable?"]]]))
 
 (react/defc AgoraPermsEditor
   {:render
@@ -30,65 +84,18 @@
       {:header (str "Permissions for " (:title props))
        :content
        (react/create-element
-        (cond
-          (:acl-vec @state)
-          [:div {:style {:width 800}}
-           (when (:saving? @state)
-             [comps/Blocker {:banner "Updating..."}])
-           [:div {:style {:paddingBottom "0.5em" :fontSize "90%"}}
-            [:div {:style {:float "left" :width column-width}} "User or Group ID"]
-            [:div {:style {:float "right" :width column-width}} "Access Level"]
-            (common/clear-both)]
-           (map-indexed
-            (fn [i acl-entry]
-              [:div {}
-               [input/TextField
-                {:ref (str "acl-key" i)
-                 :style {:float "left" :width column-width
-                         :backgroundColor (when (< i (:count-orig @state))
-                                            (:background-light style/colors))}
-                 :disabled (< i (:count-orig @state))
-                 :spellCheck false
-                 :defaultValue (:user acl-entry)
-                 :predicates [(input/valid-email-or-empty "User ID")]}]
-               (style/create-identity-select
-                {:ref (str "acl-value" i)
-                 :style {:float "right" :width column-width :height 33}
-                 :defaultValue (:role acl-entry)}
-                access-levels)
-               (common/clear-both)])
-            (:acl-vec @state))
-           [comps/Button {:text "Add new" :icon :add-new
-                          :onClick #(swap! state assoc :acl-vec
-                                           (conj (react/call :capture-ui-state this)
-                                                 {:user "" :role reader-level}))}]
-           [:label {:style {:cursor "pointer"}}
-            [:input {:type "checkbox" :ref "publicbox"
-                     :style {:marginLeft "2em" :verticalAlign "middle"}
-                     :onChange #(swap! state assoc :public-status (-> (@refs "publicbox") .-checked))
-                     :checked (:public-status @state)}]
-            [:span {:style {:paddingLeft 6 :verticalAlign "middle"}} "Publicly Readable?"]]
-           (style/create-validation-error-message (:validation-error @state))
-           [comps/ErrorViewer {:error (:save-error @state)}]]
-          (:error @state) (style/create-server-error-message (cond (= (:error @state) "Forbidden") (str "You are unauthorized to edit this " (clojure.string/lower-case (:entityType props)) ".")
-                                                                   :else (:error @state)))
-          :else [comps/Spinner {:text
-                                (str "Loading Permissions for " (:title props) "...")}]))
+        (net/render-ajax
+         @state
+         :acl-response
+         (str "Loading Permissions for " (:title props) "...")
+         (partial render-ok-cancel-form props refs state this)
+         (partial net/error-overwrite (str "You are unauthorized to edit this " (clojure.string/lower-case (:entityType props)) ".") 403)))
        :ok-button (when (:acl-vec @state) {:text "Save" :onClick #(react/call :persist-acl this)})}])
    :component-did-mount
    (fn [{:keys [props state]}]
      (endpoints/call-ajax-orch
       {:endpoint (:load-endpoint props)
-       :on-done (fn [{:keys [success? get-parsed-response status-text]}]
-                  (if success?
-                    (let [response-vec (mapv utils/keywordize-keys (get-parsed-response false))
-                          acl-vec (filterv #(not= "public" (:user %)) response-vec)
-                          public-user (first (filter #(= "public" (:user %)) response-vec))
-                          public-status (or (:role public-user) no-access-level)]
-                      (swap! state assoc :acl-vec acl-vec
-                             :public-status (= public-status reader-level)
-                             :count-orig (count acl-vec)))
-                    (swap! state assoc :error status-text)))}))
+       :on-done (net/create-handle-ajax-response state :acl-response)}))
    :persist-acl
    (fn [{:keys [props state refs this]}]
      (swap! state dissoc :validation-error :save-error)
