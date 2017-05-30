@@ -14,29 +14,37 @@
   (style/create-link {:text label
                       :href (str "#" (string/lower-case label))}))
 
-(def ^:private style-nav
-  [:div {:data-sticky-container "" :style {:float "right" :width 200}}
-   [:div {:data-sticky "" :className "sticky" :data-anchor "guide"
-          :style {:padding "0.5rem" :border style/standard-line :width 200
-                  :maxHeight "calc(100vh - 3rem)" :overflow "auto"}}
-    [:ul {:className "vertical menu" :data-magellan ""}
-     [:li {} [:span {} "Overview"]
-      [:ul {:className "nested vertical menu"}
-       [:li {} (nav-link "Summary")]
-       [:li {} (nav-link "Hierarchy")]]]
-     [:li {} [:span {} "Conventions"]
-      [:ul {:className "nested vertical menu"}
-       [:li {} (nav-link "Units")]
-       [:li {} (nav-link "Links")]
-       [:li {} (nav-link "Switches")]]]
-     [:li {} [:span {} "Styles"]
-      [:ul {:className "nested vertical menu"}
-       [:li {} (nav-link "Colors")]]]
-     [:li {} [:span {} "Components"]
-      [:ul {:className "nested vertical menu"}
-       [:li {} (nav-link "Modals")]
-       [:li {} (nav-link "Infoboxes")]
-       [:li {} (nav-link "Tooltips")]]]]]])
+(react/defc StyleNav
+  {:render
+   (fn []
+     [:div {:data-sticky-container "" :style {:float "right" :width 200}}
+      [:div {:data-sticky "" :className "sticky" :data-anchor "guide"
+             :style {:padding "0.5rem" :border style/standard-line :width 200
+                     :maxHeight "calc(100vh - 3rem)" :overflow "auto"}}
+       [:ul {:className "vertical menu" :data-magellan ""}
+        [:li {} [:span {} "Overview"]
+         [:ul {:className "nested vertical menu"}
+          [:li {} (nav-link "Summary")]
+          [:li {} (nav-link "Hierarchy")]]]
+        [:li {} [:span {} "Conventions"]
+         [:ul {:className "nested vertical menu"}
+          [:li {} (nav-link "Units")]
+          [:li {} (nav-link "Links")]
+          [:li {} (nav-link "Switches")]
+          [:li {} (nav-link "Buttons")]]]
+        [:li {} [:span {} "Styles"]
+         [:ul {:className "nested vertical menu"}
+          [:li {} (nav-link "Colors")]
+          [:li {} (nav-link "Icons")]]]
+        [:li {} [:span {} "Components"]
+         [:ul {:className "nested vertical menu"}
+          [:li {} (nav-link "Modals")]
+          [:li {} (nav-link "Infoboxes")]
+          [:li {} (nav-link "Tooltips")]]]]]])
+   :component-did-mount
+   (fn [{:keys [this]}]
+     (.foundation (js/$ (react/find-dom-node this)))
+     (js* "$(window).trigger('load');"))})
 
 (def ^:private section-break
   [:hr {:style {:border style/standard-line}}])
@@ -61,11 +69,11 @@
    [:h2 {:style {:marginBottom "0.5rem"}} "Overview"]
    (sub-head "Summary")
    [:p {} "FireCloud's font is "
-    [:a {:href "https://fonts.google.com/specimen/Roboto"} "Roboto" icons/external-link-icon]
+    [:a {:href "https://fonts.google.com/specimen/Roboto" :target "_blank"} "Roboto" icons/external-link-icon]
     ", and icons come from "
-    [:a {:href "http://fontawesome.io/icons/"} "Font Awesome" icons/external-link-icon]
+    [:a {:href "http://fontawesome.io/icons/" :target "_blank"} "Font Awesome" icons/external-link-icon]
     ". We use some widgets from "
-    [:a {:href "http://foundation.zurb.com/sites/docs/"} "Foundation" icons/external-link-icon] "."]
+    [:a {:href "http://foundation.zurb.com/sites/docs/" :target "_blank"} "Foundation" icons/external-link-icon] "."]
    [:p {} "When you're working on any part of FireCloud, remember
     that its purpose is to put the user in touch with their data. That is, FireCloud should never come
     between its users and what they came to do. It may seem obvious, but it's important to keep in mind."]
@@ -87,7 +95,7 @@
    [:p {} "We prefer " (code-sample "rem") " over " (code-sample "em") ", " (code-sample "ex") ", "
     (code-sample "px") ", etc. for size values, since these are always the same size wherever they
     are used. If you're unfamiliar with these units, find out more "
-    [:a {:href "https://developer.mozilla.org/en-US/docs/Web/CSS/length"}
+    [:a {:href "https://developer.mozilla.org/en-US/docs/Web/CSS/length" :target "_blank"}
      "at the MDN" icons/external-link-icon] "."]
 
    (sub-head "Links")
@@ -108,7 +116,19 @@
    (code-block "(common/render-foundation-switch {:on-change #(...)})")
    [:p {} "Under the hood, these are just checkboxes, but they should be used for forms that don't
    have a submit button. See the example of workspace notification control: toggling the switch
-   saves the new value."]])
+   saves the new value."]
+
+   (sub-head "Buttons")
+   [:p {} "To create a button, use " (code-sample "comps/Button") "."]
+   [:p {} "When the button is for manipulating an entity (workspace, method, config), follow these
+   conventions when its action is not available:"
+    [:ol {}
+     [:li {} "If the button's action isn't currently possible, but the user can do something to
+     change this, disable it." [:br] "For example, a workspace is locked, so it cannot be deleted."]
+     [:li {:style {:paddingTop "0.5rem"}} "If there's nothing the user can do about it (e.g. they
+     must be granted a new permission), hide the button instead." [:br] "For example, a user is a
+     reader on a workspace, so the delete workspace button is hidden."]]]
+   [:p {} "When the button is for a non-entity action, such as creating a new workspace, always make it visible."]])
 
 (defn- color-swatch [color]
   [:div {:style {:padding "1rem" :backgroundColor (style/colors color) :width "10%"
@@ -117,6 +137,10 @@
                    :padding "0.2rem" :borderRadius "0.2rem"}}
     (name color)]])
 
+(defn- icon-sample [icon]
+  [:div {:style {:padding "0.5rem 1rem" :border style/standard-line :width 175}}
+   (icons/icon {:style {:marginRight "0.5rem"} :className "fa-fw"} icon) (name icon)])
+
 (def ^:private styles
   [:section {}
    [:h2 {:style {:marginBottom "0.5rem"}} "Styles"]
@@ -124,7 +148,17 @@
    [:p {} "Firecloud defines the following colors in " (code-sample "style/colors") ":"]
    [:div {:style {:display "flex" :flexWrap "wrap"}}
     (map color-swatch (sort (keys style/colors)))]
-   [:p {} "Pay attention to the names of the colors, and you'll be fine."]])
+   [:p {} "Pay attention to the names of the colors, and you'll be fine. Reference them like this:"]
+   (code-block "(:color-name style/colors)")
+   [:p {} "Often, " (code-sample "line-default") " isn't used directly. It's common to just use "
+    (code-sample "style/standard-line") " instead."]
+
+   (sub-head "Icons")
+   [:p {} "Firecloud defines the following icons in " (code-sample "icons/icon-keys") ":"]
+   [:div {:style {:display "flex" :flexWrap "wrap"}}
+    (map icon-sample (sort (keys icons/icon-keys)))]
+   [:p {} "Use them like this:"]
+   (code-block "(icons/icon {} :icon-name)")])
 
 (def ^:private components
   [:section {}
@@ -172,7 +206,7 @@
       [:h1 {} "Style Guide"]
       [:p {} "What components should I be using? When do I leave a link underlined? The answers are all here."]
       section-break
-      style-nav
+      [StyleNav]
       [:div {:id "guide" :style {:marginRight 225 :lineHeight "1.4rem"}}
        overview
        section-break
@@ -180,11 +214,7 @@
        section-break
        styles
        section-break
-       components]])
-   :component-did-mount
-   (fn [{:keys [this]}]
-     (.foundation (js/$ (react/find-dom-node this)))
-     (js* "$(window).trigger('load');"))})
+       components]])})
 
 (defn add-nav-paths []
   (nav/defpath

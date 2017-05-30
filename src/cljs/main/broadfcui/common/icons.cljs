@@ -6,7 +6,7 @@
     ))
 
 ;; From http://fontawesome.io/icons/
-(def ^:private icon-keys
+(def icon-keys
   {:add "fa-plus-circle"
    :add-new "fa-plus"
    :alert "fa-exclamation"

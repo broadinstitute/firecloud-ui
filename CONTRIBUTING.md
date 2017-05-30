@@ -27,6 +27,17 @@ We feel the 80-character line length limit in the style guide is more restrictiv
 
 We do not strictly adhere to the guide's suggestion to keep functions under 10 lines of code. In general, however, shorter functions are preferred.
 
+### Naming
+
+React component names are camel-cased, starting with a capital letter: `[comps/Button]`
+
+Methods on components are kebab-cased, and "private" (although this is technically unenforced) methods start with a dash: `:-create-dropdown-ref-handler`
+
+Native cljs methods and structures are kebab-cased: `(common/render-info-box)`
+
+Method and function names should always be verbs, and structures should be nouns.
+
+
 ## React Conventions
 
 ### Styles
