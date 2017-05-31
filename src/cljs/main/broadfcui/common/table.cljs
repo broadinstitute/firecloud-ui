@@ -210,14 +210,15 @@
 
      (update restored :column-meta
              (fn [cols]
-               (let [headers-restored (set (map #(or (:header-key %) (:header %)) cols))
-                     col-headers (set (map #(or (:header-key %) (:header %)) (:columns props)))
+               (let [get-header #(or (:header-key %) (:header %))
+                     headers-restored (set (map get-header cols))
+                     col-headers (set (map get-header (:columns props)))
                      unmentioned-headers (set (remove #(contains? headers-restored %) col-headers))
                      unmentioned-cols (->> (:columns props)
                                            (filter #(contains? unmentioned-headers (:header %)))
                                            (map #(select-keys % [:header]))
                                            (map #(assoc % :width 100 :visible? true)))
-                     extant-cols (filterv #(contains? col-headers (or (:header-key %) (:header %))) cols)]
+                     extant-cols (filterv #(contains? col-headers (get-header %)) cols)]
                  (vec (concat extant-cols unmentioned-cols))))))))
 
 (defn- render-table [{:keys [this state props refs after-update]}]
