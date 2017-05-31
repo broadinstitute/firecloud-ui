@@ -121,13 +121,13 @@
    (create-sub-head "Buttons")
    [:p {} "To create a button, use " (create-code-sample "comps/Button") "."]
    [:p {} "When the button is for manipulating an entity (workspace, method, config), follow these
-   conventions when its action is not available:"
-    [:ol {}
-     [:li {} "If the button's action isn't currently possible, but the user can do something to
+   conventions when its action is not available:"]
+   [:ol {}
+    [:li {} "If the button's action isn't currently possible, but the user can do something to
      change this, disable it." [:br] "For example, a workspace is locked, so it cannot be deleted."]
-     [:li {:style {:paddingTop "0.5rem"}} "If there's nothing the user can do about it (e.g. they
+    [:li {:style {:paddingTop "0.5rem"}} "If there's nothing the user can do about it (e.g. they
      must be granted a new permission), hide the button instead." [:br] "For example, a user is a
-     reader on a workspace, so the delete workspace button is hidden."]]]
+     reader on a workspace, so the delete workspace button is hidden."]]
    [:p {} "When the button is for a non-entity action, such as creating a new workspace, always make it visible."]])
 
 (defn- render-color-swatch [color]
