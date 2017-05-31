@@ -10,14 +10,38 @@
     ))
 
 
+(defn- white-wrap [component]
+  [:div {:style {:backgroundColor "white" :padding "1rem"}}
+   component])
+
+
 (react/defc ConfigChooser
   {:render
-   (fn [{:keys [props]}]
-     [:div {} "Config Chooser!"])
+   (fn [{:keys [props state]}]
+     (let [{:keys [push-page]} props
+           server-response (:server-response @state)
+           {:keys [configs error-message]} server-response]
+       (white-wrap
+        (cond
+          error-message (style/create-server-error-message error-message)
+          configs
+          (ws-common/method-config-selector
+           {:configs configs
+            :render-name (fn [config-id]
+                           (style/create-link
+                            {:text (:name config-id)
+                             :onClick #(push-page {:breadcrumb-text "Confirm"
+                                                   :component [:div {} "Confirm stuff"]})}))})
+          :else [:div {:style {:textAlign "center"}}
+                 [comps/Spinner {:text "Loading configurations..."}]]))))
    :component-did-mount
-   (fn [{:keys [props]}]
-     (utils/log "TODO: load configs for:" (:workspace-id props))
-     )})
+   (fn [{:keys [props state]}]
+     (endpoints/call-ajax-orch
+      {:endpoint (endpoints/list-workspace-method-configs (:workspace-id props))
+       :on-done (fn [{:keys [success? get-parsed-response status-text]}]
+                  (swap! state assoc :server-response
+                         (if success? {:configs (vec (get-parsed-response))}
+                                      {:error-message status-text})))}))})
 
 
 (react/defc WorkspaceChooser
@@ -25,7 +49,7 @@
    (fn [{:keys [props]}]
      (let [{:keys [get-workspaces push-page]} props
            {:keys [result error]} (get-workspaces)]
-       [:div {:style {:backgroundColor "white" :padding "1rem"}}
+       (white-wrap
         (cond error (style/create-server-error-message error)
               (nil? result) [comps/Spinner {:text "Loading workspaces..."}]
               :else (ws-common/workspace-selector
@@ -33,15 +57,10 @@
                       :on-workspace-selected
                       (fn [ws]
                         (push-page {:breadcrumb-text "Choose Method Configuration"
-                                    :component [ConfigChooser (assoc props :workspace-id (ws-common/workspace->id ws))]}))}))]))
+                                    :component [ConfigChooser (assoc props :workspace-id (ws-common/workspace->id ws))]}))})))))
    :component-did-mount
    (fn [{:keys [props]}]
      ((:load-workspaces props)))})
-
-
-(defn- method-repo-display [props]
-  [:div {:style {:backgroundColor "white" :padding "1rem"}}
-   [MethodConfigImporter props]])
 
 
 (defn- source-chooser [{:keys [push-page] :as props}]
@@ -52,7 +71,7 @@
                   :style {:marginRight "1rem"}}]
    [comps/Button {:text "Import from Method Repository"
                   :onClick #(push-page {:breadcrumb-text "Choose Method"
-                                        :component (method-repo-display props)})}]])
+                                        :component (white-wrap [MethodConfigImporter props])})}]])
 
 (react/defc ConfigImporter
   {:get-initial-state
