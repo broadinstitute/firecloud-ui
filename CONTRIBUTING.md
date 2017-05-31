@@ -10,8 +10,8 @@ For ClojureScript code, we follow the [Clojure Style Guide](https://github.com/b
 The [**Lisp Paredit**](https://atom.io/packages/lisp-paredit) package formats code correctly.
 
 **IntelliJ**  
-The [**Cursive**](https://cursive-ide.com) plugin formats code correctly (after a few configuration changes), but is not free.  
-Correct cursive settings are included in this repo in importable form, in the file [`IntelliJ-clojure-style.xml`](IntelliJ-clojure-style.xml).  
+The [**Cursive**](https://cursive-ide.com) plugin formats code correctly (after a few configuration changes), but is not free.
+Correct cursive settings are included in this repo in importable form, in the file [`IntelliJ-clojure-style.xml`](IntelliJ-clojure-style.xml).
 The first time you encounter a `defc`, you must manually tell Cursive how to format it:  
 
 1. Highlight any usage of that symbol  
@@ -19,7 +19,7 @@ The first time you encounter a `defc`, you must manually tell Cursive how to for
 3. Select _Resolve as..._  
 4. Select _def_
 
-<img src="https://cloud.githubusercontent.com/assets/22642695/21731936/f7e5a17c-d424-11e6-973b-bf5897bbf833.png" title="resolve defc as def" width="458"/>
+<img src="https://cloud.githubusercontent.com/assets/22642695/21731936/f7e5a17c-d424-11e6-973b-bf5897bbf833.png" title="resolve defc as def" width="458" height="114"/>
 
 ### Source code layout & organization
 
@@ -33,16 +33,22 @@ React component names are camel-cased, starting with a capital letter: `[comps/B
 
 Methods on components are kebab-cased, and "private" (although this is technically unenforced) methods start with a dash: `:-create-dropdown-ref-handler`
 
-Native cljs methods and structures are kebab-cased: `(common/render-info-box)`
+Native clojure(script) methods and structures are kebab-cased: `(common/render-info-box)`
 
 Method and function names should always be verbs, and structures should be nouns.
 
 
 ## React Conventions
 
-### Styles
+### Don't create a component if you don't have to
 
-We avoid using CSS files. Instead, we use React components to describe the style and behavior of individual page elements, then combine these components to create the complete UI.
+Every React component that's created has a state and props that have to be tracked in memory by the application. When you're creating something, a `def` or `defn` is preferred over a `defc`.
+
+As a quick rule of thumb, if the thing you're creating doesn't have an internal state that needs to be tracked, it shouldn't be a component.
+
+### Styles inside of component definitions
+
+We avoid using CSS files. Instead, we define styles for components in place, along with their logic, so that all of the attributes of a component are described in one place.
 
 Our reasons for this are [outlined in this slide deck](https://speakerdeck.com/vjeux/react-css-in-js).
 
