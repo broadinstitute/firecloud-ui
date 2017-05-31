@@ -14,6 +14,9 @@
   [:div {:style {:backgroundColor "white" :padding "1rem"}}
    component])
 
+(defn- id->str [id]
+  (str (:namespace id) "/" (:name id)))
+
 
 (react/defc ConfigChooser
   {:render
@@ -25,16 +28,13 @@
         (cond
           error-message (style/create-server-error-message error-message)
           configs
-          [:div {}
-           [:div {:style {:fontSize "125%" :marginBottom "0.5rem"}}
-            (str "Method Configurations in " (:namespace workspace-id) "/" (:name workspace-id) ":")]
-           (ws-common/method-config-selector
-            {:configs configs
-             :render-name (fn [config-id]
-                            (style/create-link
-                             {:text (:name config-id)
-                              :onClick #(push-page {:breadcrumb-text "Confirm"
-                                                    :component [:div {} "Confirm stuff"]})}))})]
+          (ws-common/method-config-selector
+           {:configs configs
+            :render-name (fn [config-id]
+                           (style/create-link
+                            {:text (:name config-id)
+                             :onClick #(push-page {:breadcrumb-text (id->str config-id)
+                                                   :component [:div {} "Confirm stuff"]})}))})
           :else [:div {:style {:textAlign "center"}}
                  [comps/Spinner {:text "Loading configurations..."}]]))))
    :component-did-mount
@@ -59,8 +59,9 @@
                      {:workspaces result
                       :on-workspace-selected
                       (fn [ws]
-                        (push-page {:breadcrumb-text "Choose Method Configuration"
-                                    :component [ConfigChooser (assoc props :workspace-id (ws-common/workspace->id ws))]}))
+                        (let [id (ws-common/workspace->id ws)]
+                          (push-page {:breadcrumb-text (id->str id)
+                                      :component [ConfigChooser (assoc props :workspace-id id)]})))
                       :toolbar-items
                       (when (pos? removed-count)
                         [(str removed-count
