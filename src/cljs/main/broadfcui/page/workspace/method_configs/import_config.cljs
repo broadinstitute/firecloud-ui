@@ -5,6 +5,7 @@
     [broadfcui.common.style :as style]
     [broadfcui.endpoints :as endpoints]
     [broadfcui.page.method-repo.method-config-importer :refer [MethodConfigImporter]]
+    [broadfcui.page.workspace.workspace-common :as ws-common]
     [broadfcui.utils :as utils]
     ))
 
@@ -14,9 +15,11 @@
    (fn [{:keys [props]}]
      (let [{:keys [get-workspaces]} props
            {:keys [result error]} (get-workspaces)]
-       (cond error (style/create-server-error-message error)
-             (nil? result) [comps/Spinner {:text "Loading workspaces..."}]
-             :else [:div {} "WorkspaceChooser"])))
+       [:div {:style {:backgroundColor "white" :padding "1rem"}}
+        (cond error (style/create-server-error-message error)
+              (nil? result) [comps/Spinner {:text "Loading workspaces..."}]
+              :else (ws-common/workspace-selector {:workspaces result
+                                                   :on-workspace-selected #(utils/log "selected:" %)}))]))
    :component-did-mount
    (fn [{:keys [props]}]
      ((:load-workspaces props)))})
