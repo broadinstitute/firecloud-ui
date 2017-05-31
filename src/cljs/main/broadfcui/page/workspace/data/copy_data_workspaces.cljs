@@ -10,9 +10,11 @@
     ))
 
 
+(defn- workspace->id [workspace]
+  (select-keys (:workspace workspace) [:namespace :name]))
+
 (defn- remove-self [workspace-id workspace-list]
-  (filter #(not= workspace-id {:namespace (get-in % [:workspace :namespace])
-                               :name (get-in % [:workspace :name])}) workspace-list))
+  (remove (comp (partial = workspace-id) workspace->id) workspace-list))
 
 (defn- filter-workspaces [this-auth-domain workspace-list]
   (filter #(let [src-auth-domain (get-in % [:workspace :authorizationDomain :membersGroupName])]
@@ -20,10 +22,6 @@
               (or (nil? src-auth-domain) (= src-auth-domain this-auth-domain))
               (not= (:accessLevel %) "NO ACCESS")))
     workspace-list))
-
-(defn- workspace->id [workspace]
-  {:namespace (get-in workspace [:workspace :namespace])
-   :name (get-in workspace [:workspace :name])})
 
 (react/defc Page
   {:render
