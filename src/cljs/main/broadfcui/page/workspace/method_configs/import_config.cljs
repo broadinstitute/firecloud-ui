@@ -18,20 +18,23 @@
 (react/defc ConfigChooser
   {:render
    (fn [{:keys [props state]}]
-     (let [{:keys [push-page]} props
+     (let [{:keys [push-page workspace-id]} props
            server-response (:server-response @state)
            {:keys [configs error-message]} server-response]
        (white-wrap
         (cond
           error-message (style/create-server-error-message error-message)
           configs
-          (ws-common/method-config-selector
-           {:configs configs
-            :render-name (fn [config-id]
-                           (style/create-link
-                            {:text (:name config-id)
-                             :onClick #(push-page {:breadcrumb-text "Confirm"
-                                                   :component [:div {} "Confirm stuff"]})}))})
+          [:div {}
+           [:div {:style {:fontSize "125%" :marginBottom "0.5rem"}}
+            (str "Method Configurations in " (:namespace workspace-id) "/" (:name workspace-id) ":")]
+           (ws-common/method-config-selector
+            {:configs configs
+             :render-name (fn [config-id]
+                            (style/create-link
+                             {:text (:name config-id)
+                              :onClick #(push-page {:breadcrumb-text "Confirm"
+                                                    :component [:div {} "Confirm stuff"]})}))})]
           :else [:div {:style {:textAlign "center"}}
                  [comps/Spinner {:text "Loading configurations..."}]]))))
    :component-did-mount
@@ -48,7 +51,7 @@
   {:render
    (fn [{:keys [props]}]
      (let [{:keys [get-workspaces push-page]} props
-           {:keys [result error]} (get-workspaces)]
+           {:keys [result removed-count error]} (get-workspaces)]
        (white-wrap
         (cond error (style/create-server-error-message error)
               (nil? result) [comps/Spinner {:text "Loading workspaces..."}]
@@ -57,7 +60,13 @@
                       :on-workspace-selected
                       (fn [ws]
                         (push-page {:breadcrumb-text "Choose Method Configuration"
-                                    :component [ConfigChooser (assoc props :workspace-id (ws-common/workspace->id ws))]}))})))))
+                                    :component [ConfigChooser (assoc props :workspace-id (ws-common/workspace->id ws))]}))
+                      :toolbar-items
+                      (when (pos? removed-count)
+                        [(str removed-count
+                              " workspace"
+                              (when (> removed-count 1) "s")
+                              " hidden due to permissions")])})))))
    :component-did-mount
    (fn [{:keys [props]}]
      ((:load-workspaces props)))})
@@ -72,6 +81,10 @@
    [comps/Button {:text "Import from Method Repository"
                   :onClick #(push-page {:breadcrumb-text "Choose Method"
                                         :component (white-wrap [MethodConfigImporter props])})}]])
+
+
+(defn- filter-workspaces [workspaces]
+  (remove (comp (partial = "NO ACCESS") :accessLevel) workspaces))
 
 (react/defc ConfigImporter
   {:get-initial-state
@@ -110,7 +123,12 @@
          :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                     (swap! locals assoc :workspaces-status :loaded)
                     (if success?
-                      (swap! state update :workspaces assoc :result (get-parsed-response))
+                      (let [workspaces (get-parsed-response)
+                            filtered (filter-workspaces workspaces)
+                            removed-count (- (count workspaces) (count filtered))]
+                        (swap! state update :workspaces assoc
+                               :result filtered
+                               :removed-count removed-count))
                       (swap! state update :workspaces assoc :error status-text)))})))
    :-get-workspaces
    (fn [{:keys [state]}]
