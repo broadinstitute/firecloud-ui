@@ -95,7 +95,7 @@
                      (swap! state assoc :error status-text)))}))})
 
 
-(defn- render-side-bar [this state refs config editing? props]
+(defn- render-side-bar [{:keys [state refs config editing? props restore-on-cancel]}]
   [:div {:style {:width 290 :float "left"}}
    [:div {:ref "sidebar"}]
    (style/create-unselectable :div {:style {:position (when-not (:sidebar-visible? @state) "fixed")
@@ -129,13 +129,15 @@
         (when editing?
           [comps/SidebarButton {:color :success-state
                                 :text "Save" :icon :done
-                                :onClick #(do (commit state refs config props)
-                                              (stop-editing state))}])
+                                :onClick (fn []
+                                           (commit state refs config props)
+                                           (stop-editing state))}])
         (when editing?
           [comps/SidebarButton {:color :exception-state :margin :top
                                 :text "Cancel Editing" :icon :cancel
-                                :onClick #(do (react/call :load-new-method-template this (:prev-snapshot-id @state))
-                                              (stop-editing state))}])]))])
+                                :onClick (fn []
+                                           (restore-on-cancel (:prev-snapshot-id @state))
+                                           (stop-editing state))}])]))])
 
 
 (defn- input-output-list [values ref-prefix invalid-values editing? all-values]
@@ -214,11 +216,12 @@
 (defn- render-display [this state refs props]
   (let [wrapped-config (:loaded-config @state)
         config (wrapped-config "methodConfiguration")
-        editing? (:editing? @state)]
+        editing? (:editing? @state)
+        restore-on-cancel #(this :load-new-method-template %)]
     [:div {}
      [comps/Blocker {:banner (:blocker @state)}]
      [:div {:style {:padding "1em 2em"}}
-      (render-side-bar this state refs config editing? props)
+      (render-side-bar (utils/restructure state refs config editing? props restore-on-cancel))
       (when-not editing?
         [:div {:style {:float "right"}}
          (launch/render-button {:workspace-id (:workspace-id props)
