@@ -8,6 +8,10 @@
     ))
 
 
+(defn workspace->id [workspace]
+  (select-keys (:workspace workspace) [:namespace :name]))
+
+
 (defn workspace-selector [{:keys [workspaces on-workspace-selected toolbar-items]}]
   (assert workspaces "No workspaces given")
   (assert on-workspace-selected "on-workspace-selected not provided")
@@ -32,4 +36,28 @@
             {:header "Authorization Domain" :starting-width 150
              :column-data (comp :membersGroupName :authorizationDomain :workspace)
              :render #(or % "None")}]}
+    :toolbar {:items toolbar-items}}])
+
+
+(defn config->id [config]
+  (select-keys config [:namespace :name]))
+
+
+(defn method-config-selector [{:keys [configs render-name toolbar-items]}]
+  (assert configs "No configs given")
+  (assert render-name "No name renderer given")
+  [Table
+   {:data configs
+    :body {:empty-message "There are no method configurations to display."
+           :style table-style/table-heavy
+           :columns [{:header "Name" :initial-width 240
+                      :column-data config->id
+                      :as-text :name :sort-by :text
+                      :render render-name}
+                     {:header "Root Entity Type" :initial-width 140
+                      :column-data :rootEntityType}
+                     {:header "Method" :initial-width 800
+                      :column-data (comp (juxt :methodNamespace :methodName :methodVersion) :methodRepoMethod)
+                      :as-text (partial clojure.string/join "/")
+                      :render (partial apply style/render-entity)}]}
     :toolbar {:items toolbar-items}}])

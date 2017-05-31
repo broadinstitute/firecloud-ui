@@ -10,16 +10,30 @@
     ))
 
 
+(react/defc ConfigChooser
+  {:render
+   (fn [{:keys [props]}]
+     [:div {} "Config Chooser!"])
+   :component-did-mount
+   (fn [{:keys [props]}]
+     (utils/log "TODO: load configs for:" (:workspace-id props))
+     )})
+
+
 (react/defc WorkspaceChooser
   {:render
    (fn [{:keys [props]}]
-     (let [{:keys [get-workspaces]} props
+     (let [{:keys [get-workspaces push-page]} props
            {:keys [result error]} (get-workspaces)]
        [:div {:style {:backgroundColor "white" :padding "1rem"}}
         (cond error (style/create-server-error-message error)
               (nil? result) [comps/Spinner {:text "Loading workspaces..."}]
-              :else (ws-common/workspace-selector {:workspaces result
-                                                   :on-workspace-selected #(utils/log "selected:" %)}))]))
+              :else (ws-common/workspace-selector
+                     {:workspaces result
+                      :on-workspace-selected
+                      (fn [ws]
+                        (push-page {:breadcrumb-text "Choose Method Configuration"
+                                    :component [ConfigChooser (assoc props :workspace-id (ws-common/workspace->id ws))]}))}))]))
    :component-did-mount
    (fn [{:keys [props]}]
      ((:load-workspaces props)))})

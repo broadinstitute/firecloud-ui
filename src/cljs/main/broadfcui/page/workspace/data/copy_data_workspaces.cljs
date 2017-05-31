@@ -10,11 +10,8 @@
     ))
 
 
-(defn- workspace->id [workspace]
-  (select-keys (:workspace workspace) [:namespace :name]))
-
 (defn- remove-self [workspace-id workspace-list]
-  (remove (comp (partial = workspace-id) workspace->id) workspace-list))
+  (remove (comp (partial = workspace-id) ws-common/workspace->id) workspace-list))
 
 (defn- filter-workspaces [this-auth-domain workspace-list]
   (filter #(let [src-auth-domain (get-in % [:workspace :authorizationDomain :membersGroupName])]
@@ -31,7 +28,7 @@
          selected-workspace
          [copy-data-entities/SelectType
           (merge (select-keys props [:workspace-id :add-crumb :on-data-imported])
-                 {:selected-workspace-id (workspace->id selected-workspace)
+                 {:selected-workspace-id (ws-common/workspace->id selected-workspace)
                   :selected-workspace-bucket (get-in selected-workspace [:workspace :bucketName])
                   :crumbs (rest (:crumbs props))})]
          (:workspaces @state)
