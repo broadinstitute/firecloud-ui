@@ -229,15 +229,6 @@
                (dissoc props :position :text :tooltip))
         text]))})
 
-(defn question-icon-link [text link & [style]]
-  [:a {:href link
-       :target "_blank"
-       :style (merge style/secondary-icon-style {:marginRight "0.4rem"} style)}
-   [FoundationTooltip
-    {:text (icons/icon {} :help)
-     :style {:border "none" :cursor "pointer"}
-     :tooltip text}]])
-
 (react/defc FoundationDropdown
   {:close
    (fn [{:keys [locals]}]
@@ -338,7 +329,7 @@
 (defn render-info-box [{:keys [text] :as props}]
   (render-icon-dropdown
    (merge {:contents text
-           :icon-name :information :icon-color (:link-active style/colors)}
+           :icon-name :information :icon-color (:button-primary style/colors)}
           props)))
 
 (defn render-dropdown-menu [{:keys [label items width button-style]}]

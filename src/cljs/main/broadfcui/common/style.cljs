@@ -5,7 +5,6 @@
              :background-dark "#4d4d4d"
              :border-light "#cacaca"
              :button-primary "#457fd2"
-             :link-active "#6690c5"
              :line-default "#e6e6e6"
              :running-state "#67688a"
              :success-state "#7aac20"
