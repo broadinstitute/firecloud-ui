@@ -21,8 +21,8 @@
 (react/defc ConfigChooser
   {:render
    (fn [{:keys [props state]}]
-     (let [{:keys [push-page workspace-id]} props
-           server-response (:server-response @state)
+     (let [{:keys [push-page]} props
+           {:keys [server-response]} @state
            {:keys [configs error-message]} server-response]
        (white-wrap
         (cond
