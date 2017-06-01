@@ -92,9 +92,9 @@
   [:section {}
    [:h2 {:style {:marginBottom "0.5rem"}} "Conventions"]
    (create-sub-head "Units")
-   [:p {} "We prefer " (create-code-sample "rem") " over " (create-code-sample "em") ", " (create-code-sample "ex") ", "
-    (create-code-sample "px") ", etc. for size values, since these are always the same size wherever they
-    are used. If you're unfamiliar with these units, find out more "
+   [:p {} "We prefer " (create-code-sample "rem") " over " (create-code-sample "em") ", "
+    (create-code-sample "ex") ", " (create-code-sample "px") ", etc. for size values, since these
+    are always the same size wherever they are used. If you're unfamiliar with these units, find out more "
     [:a {:href "https://developer.mozilla.org/en-US/docs/Web/CSS/length" :target "_blank"}
      "at the MDN" icons/external-link-icon] "."]
 
@@ -128,7 +128,8 @@
     [:li {:style {:paddingTop "0.5rem"}} "If there's nothing the user can do about it (e.g. they
      must be granted a new permission), hide the button instead." [:br] "For example, a user is a
      reader on a workspace, so the delete workspace button is hidden."]]
-   [:p {} "When the button is for a non-entity action, such as creating a new workspace, always make it visible."]])
+   [:p {} "When the button is for a non-entity action, such as creating a new workspace, always make
+   it visible."]])
 
 (defn- render-color-swatch [color]
   [:div {:style {:padding "1rem" :backgroundColor (style/colors color) :width "10%"
@@ -166,8 +167,8 @@
    (create-sub-head "Modals")
    [:p {} "We have a lot of options for creating modals. On a fundamental level, you " [:em {} "could"]
     " just use " (create-code-sample "modal/push-modal") ", but don't do that. You'd have to define the
-    modal from scratch, which would be awful. Instead, use " (create-code-sample "comps/push-message") " and
-    its ilk, which includes methods for quickly creating confirmation modals, alerts, etc."]
+    modal from scratch, which would be awful. Instead, use " (create-code-sample "comps/push-message")
+    " and its ilk, which includes methods for quickly creating confirmation modals, alerts, etc."]
    [:p {} " Any button that spawns a modal should have an ellipsis on the end of its label, "
     [:em {} "unless"] " that modal is just an \"are you sure?\" confirmation."]
    [:p {} "Modal titles, the labels of buttons that open them, and
@@ -204,7 +205,6 @@
        p {margin: 0.5rem 0;}
        .CodeMirror {height: auto; font-family: Menlo, monospace; font-size: 12px;}"]
       [:h1 {} "Style Guide"]
-      [:p {} "What components should I be using? When do I leave a link underlined? The answers are all here."]
       section-break
       [StyleNav]
       [:div {:id "guide" :style {:marginRight 225 :lineHeight "1.4rem"}}

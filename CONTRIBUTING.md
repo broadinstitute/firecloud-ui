@@ -1,5 +1,9 @@
 # Contributing to Firecloud UI
 
+## Firecloud Style Guide
+
+When running in a non-production environment, the style guide can be accessed at `/#styles`, or by hovering at the right edge of the footer.
+
 ## ClojureScript Style Conventions
 
 For ClojureScript code, we follow the [Clojure Style Guide](https://github.com/bbatsov/clojure-style-guide) with exceptions noted here.
