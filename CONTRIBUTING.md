@@ -44,7 +44,7 @@ Method and function names should always be verbs, and structures should be nouns
 
 Every React component that's created has a state and props that have to be tracked in memory by the application. When you're creating something, a `def` or `defn` is preferred over a `defc`.
 
-As a quick rule of thumb, if the thing you're creating doesn't have an internal state that needs to be tracked, it shouldn't be a component.
+As a quick rule of thumb, if the thing you're creating doesn't have an internal state that needs to be tracked, and it doesn't need to respond to lifecycle events (i.e. `component-did-mount`), it shouldn't be a component.
 
 ### Styles inside of component definitions
 
