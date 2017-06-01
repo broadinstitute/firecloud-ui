@@ -51,7 +51,6 @@
     :body {:empty-message "There are no method configurations to display."
            :style table-style/table-heavy
            :columns [{:header "Name" :initial-width 240
-                      :column-data config->id
                       :as-text :name :sort-by :text
                       :render render-name}
                      {:header "Root Entity Type" :initial-width 140

@@ -4,7 +4,7 @@
     [broadfcui.common.components :as comps]
     [broadfcui.common.style :as style]
     [broadfcui.endpoints :as endpoints]
-    [broadfcui.page.method-repo.method-config-importer :refer [MethodConfigImporter]]
+    [broadfcui.page.method-repo.method-repo-table :refer [MethodRepoTable]]
     [broadfcui.page.workspace.workspace-common :as ws-common]
     [broadfcui.utils :as utils]
     ))
@@ -18,7 +18,7 @@
   (str (:namespace id) "/" (:name id)))
 
 
-(react/defc ConfigChooser
+(react/defc WorkspaceConfigChooser
   {:render
    (fn [{:keys [props state]}]
      (let [{:keys [push-page]} props
@@ -30,10 +30,10 @@
           configs
           (ws-common/method-config-selector
            {:configs configs
-            :render-name (fn [config-id]
+            :render-name (fn [config]
                            (style/create-link
-                            {:text (:name config-id)
-                             :onClick #(push-page {:breadcrumb-text (id->str config-id)
+                            {:text (:name config)
+                             :onClick #(push-page {:breadcrumb-text (id->str config)
                                                    :component [:div {} "Confirm stuff"]})}))})
           :else [:div {:style {:textAlign "center"}}
                  [comps/Spinner {:text "Loading configurations..."}]]))))
@@ -61,7 +61,7 @@
                       (fn [ws]
                         (let [id (ws-common/workspace->id ws)]
                           (push-page {:breadcrumb-text (id->str id)
-                                      :component [ConfigChooser (assoc props :workspace-id id)]})))
+                                      :component [WorkspaceConfigChooser (assoc props :workspace-id id)]})))
                       :toolbar-items
                       (when (pos? removed-count)
                         [(str removed-count
@@ -73,6 +73,42 @@
      ((:load-workspaces props)))})
 
 
+(react/defc ConfirmEntity
+  {:render
+   (fn [{:keys [props state]}]
+     (let [{:keys [loaded-entity error]} @state]
+       (white-wrap
+        (cond error (style/create-server-error-message error)
+              (nil? loaded-entity) [comps/Spinner {:text "Loading..."}]
+              :else [comps/EntityDetails {:entity loaded-entity}]))))
+   :component-did-mount
+   (fn [{:keys [props state]}]
+     (let [{:keys [namespace name snapshot-id]} (:id props)]
+       (endpoints/call-ajax-orch
+        {:endpoint ((case (:type props)
+                      :method-config endpoints/get-configuration
+                      :method endpoints/get-agora-method)
+                    namespace name snapshot-id)
+         :headers utils/content-type=json
+         :on-done (fn [{:keys [success? get-parsed-response status-text]}]
+                    (if success?
+                      (swap! state assoc :loaded-entity (get-parsed-response))
+                      (swap! state assoc :error status-text)))})))})
+
+
+(defn- method-chooser [{:keys [push-page] :as props}]
+  [MethodRepoTable
+   {:render-name (fn [{:keys [namespace name snapshotId entityType]}]
+                   (let [id {:namespace namespace
+                             :name name
+                             :snapshot-id snapshotId}
+                         type (if (= entityType "Configuration") :method-config :method)]
+                     (style/create-link
+                      {:text (style/render-name-id name snapshotId)
+                       :onClick #(push-page {:breadcrumb-text (style/render-entity namespace name snapshotId)
+                                             :component [ConfirmEntity (assoc props :type type :id id)]})})))}])
+
+
 (defn- source-chooser [{:keys [push-page] :as props}]
   [:div {}
    [comps/Button {:text "Copy from another Workspace"
@@ -81,7 +117,7 @@
                   :style {:marginRight "1rem"}}]
    [comps/Button {:text "Import from Method Repository"
                   :onClick #(push-page {:breadcrumb-text "Choose Method"
-                                        :component (white-wrap [MethodConfigImporter props])})}]])
+                                        :component (white-wrap (method-chooser props))})}]])
 
 
 (defn- filter-workspaces [workspaces]

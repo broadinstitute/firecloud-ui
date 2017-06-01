@@ -29,11 +29,11 @@
          configs
          (ws-common/method-config-selector
           {:configs configs
-           :render-name (fn [config-id]
-                          (style/create-link {:text (:name config-id)
+           :render-name (fn [config]
+                          (style/create-link {:text (:name config)
                                               :href (nav/get-link :workspace-method-config
                                                                   (:workspace-id props)
-                                                                  config-id)}))
+                                                                  (ws-common/config->id config))}))
            :toolbar-items
            [flex/spring
             [comps/Button

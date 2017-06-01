@@ -20,6 +20,7 @@
       (this :load-data))
     :render
     (fn [{:keys [props state]}]
+      (assert (:render-name props) "render-name not provided")
       (cond
         (:error-message @state) (style/create-server-error-message (:error-message @state))
         (or (nil? (:methods @state)) (nil? (:configs @state)))
@@ -41,7 +42,7 @@
              :sort-by (comp lower-case :namespace)
              :sort-initial :asc
              :as-text :namespace
-             :render (:render-namespace props)}
+             :render (or (:render-namespace props) :namespace)}
             {:header "Synopsis" :initial-width 160 :column-data :synopsis}
             (table-utils/date-column {:header "Created" :column-data :createDate})
             {:header "Referenced Method" :initial-width 250
