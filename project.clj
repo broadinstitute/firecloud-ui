@@ -2,7 +2,7 @@
   :dependencies
   [
    [inflections "0.9.14"]
-   [dmohs/react "1.1.1+15.5.4-0"]
+   [dmohs/react "1.1.2+15.5.4-0"]
    [org.clojure/clojure "1.8.0"]
    [org.clojure/clojurescript "1.9.293"]
    ]
