@@ -94,10 +94,12 @@
              (style/create-form-label (:label field))
              (if (= (:type field) "identity-select")
                (style/create-identity-select {:ref field-name
+                                              :data-test-id "import-root-entity-type-select"
                                               :defaultValue entity-val}
                                              (:options field))
                [input/TextField {:ref field-name
                                  :defaultValue entity-val
+                                 :data-test-id (str "method-config-import-" field-name "-input")
                                  :placeholder "Required"
                                  :predicates [(input/nonempty "Fields")]}])]))
         fields)
@@ -280,6 +282,7 @@
         [Table
          {:persistence-key "method-repo-table" :v 1
           :data (or (:filtered-data @state) [])
+          :data-test-id "method-repo-table"
           :body
           {:columns
            [{:header "Type" :initial-width 100
@@ -295,6 +298,7 @@
                              type (if (= entityType "Configuration") :method-config :method)]
                          (style/create-link
                           {:text (style/render-name-id name snapshotId)
+                           :data-test-id (str name "_" snapshotId)
                            :href (if (:in-workspace? props) "javascript:;" (nav/get-link type id))
                            :onClick (when (:in-workspace? props) #((:on-selected props) type id))})))}
             {:header "Namespace" :initial-width 160
@@ -335,9 +339,9 @@
                                   (swap! state assoc
                                          :filter-group-index index
                                          :filtered-data data))
-                     :filter-groups [{:text "All" :data-test-id "all-methods-and-configs-filter"}
-                                     {:text "Methods Only" :pred (comp (partial = :method) :data-test-id "methods-only-filter" :type )}
-                                     {:text "Configs Only" :pred (comp (partial = :config) :data-test-id "configs-only-filter" :type)}]}]
+                     :filter-groups [{:text "All"}
+                                     {:text "Methods Only" :pred (comp (partial = :method) :type)}
+                                     {:text "Configs Only" :pred (comp (partial = :config) :type)}]}]
                    flex/spring
                    [comps/Button
                     {:text "Create new method..."

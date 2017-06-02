@@ -44,7 +44,7 @@
      {:label [:div {:style {:borderRadius 2
                             :backgroundColor (:background-light style/colors)
                             :color "#000" :textDecoration "none"
-`                            :padding "0.5rem" :border style/standard-line}
+                            :padding "0.5rem" :border style/standard-line}
                     :data-test-id "account-dropdown"}
               (-> auth2 (.-currentUser) (.get) (.getBasicProfile) (.getEmail))
               [:div {:style {:display "inline-block" :marginLeft "1em" :fontSize 8}} "▼"]]

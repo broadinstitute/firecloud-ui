@@ -129,12 +129,13 @@
         (when editing?
           [comps/SidebarButton {:color :success-state
                                 :text "Save" :icon :done
-                                :data-test-id "save-method-config-button"
+                                :data-test-id "save-editted-method-config-button"
                                 :onClick #(do (commit state refs config props)
                                               (stop-editing state))}])
         (when editing?
           [comps/SidebarButton {:color :exception-state :margin :top
                                 :text "Cancel Editing" :icon :cancel
+                                :data-test-id "cancel-edit-method-config-button"
                                 :onClick #(stop-editing state)}])]))])
 
 
@@ -160,7 +161,7 @@
            (when editing?
              (style/create-text-field {:ref (str ref-prefix "_" field-name)
                                        :list "inputs-datalist"
-                                       :data-test-id (str field-name "-text-field")
+                                       :data-test-id (str field-name "-text-input")
                                        :defaultValue field-value
                                        :style {:width 500}}))
            (when-not editing?
@@ -182,9 +183,10 @@
      (create-section
        (if editing?
          (style/create-text-field {:ref "confname" :style {:width 500}
-                                   :data-test-id "method-config-name-field"
+                                   :data-test-id "edit-method-config-name-input"
                                    :defaultValue (config "name")})
-         [:div {:style {:padding "0.5em 0 1em 0"}} (config "name")]))
+         [:div {:style {:padding "0.5em 0 1em 0"}
+                :data-test-id "method-config-name"} (config "name")]))
      (create-section-header "Referenced Method")
      (create-section [MethodDetailsViewer
                       {:ref "methodDetailsViewer"
@@ -200,6 +202,7 @@
      (create-section
        (if editing?
          (style/create-identity-select {:ref "rootentitytype"
+                                        :data-test-id "edit-method-config-root-entity-type-select"
                                         :defaultValue (config "rootEntityType")
                                         :style {:width 500}}
                                        root-entity-types)

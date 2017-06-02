@@ -205,7 +205,6 @@
               (when (= (-> (data "callCaching") (get "effectiveCallCachingMode")) "ReadAndWriteCache")
                 (create-field "Cache Result" (moncommon/format-call-cache (-> (data "callCaching") (get "hit")))))
               (create-field "Started" (moncommon/render-date (data "start")))
-              ;(utils/cljslog data)
               (create-field "Ended" (moncommon/render-date (data "end")))
               [IODetail {:label "Inputs" :data (data "inputs") :call-detail? true}]
               [IODetail {:label "Outputs" :data (data "outputs") :call-detail? true}]

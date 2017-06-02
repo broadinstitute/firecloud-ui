@@ -77,7 +77,7 @@
                                :value (if disabled
                                         "Disabled - selected entity is of root entity type"
                                         (:expression @state))
-                               :data-test-id "define-expression-text-field"
+                               :data-test-id "define-expression-input"
                                :onChange #(let [text (-> % .-target .-value clojure.string/trim)]
                                             (swap! state assoc :expression text))}))
    [:div {:style {:marginTop "1em"}}
@@ -95,7 +95,8 @@
     (when (> wf-count (config/workflow-count-warning-threshold))
        [:div {:style {:textAlign "center"}}
         [:div {:style {:display "inline-flex" :alignItems "center" :margin "1em 0 -1em 0" :padding "0.5em"
-                       :backgroundColor "white" :border style/standard-line :borderRadius 3}}
+                       :backgroundColor "white" :border style/standard-line :borderRadius 3}
+               :data-test-id "number-of-workflows-warning"}
          (icons/icon {:style {:color (:exception-state style/colors) :marginRight 5 :verticalAlign "middle"}}
                      :warning)
          (str "Warning: This will launch " wf-count " workflows")]]))
@@ -116,8 +117,7 @@
      [comps/OKCancelForm
       {:header "Launch Analysis"
        :content (react/create-element (render-form state props refs))
-       :data-test-id "launch-button"
-       :ok-button {:text "Launch" :disabled? (:disabled? props) :onClick #(react/call :launch this)}}])
+       :ok-button {:text "Launch" :disabled? (:disabled? props) :onClick #(react/call :launch this) :data-test-id "launch-button"}}])
    :component-did-mount
    (fn [{:keys [state]}]
      (endpoints/call-ajax-orch
@@ -160,7 +160,7 @@
    (fn [{:keys [props]}]
      [comps/Button
       {:text "Launch Analysis..."
-       :data-test-id "launch-analysis-button"
+       :data-test-id "open-launch-analysis-modal-button"
        :disabled? (:disabled? props)
        :onClick #(modal/push-modal
                   [Form (select-keys props [:config-id :workspace-id
