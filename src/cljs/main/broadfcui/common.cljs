@@ -363,7 +363,8 @@
                              :target (:target props)
                              :onMouseOver #(swap! state assoc :hovering? true)
                              :onMouseOut #(swap! state assoc :hovering? false)
-                             :onClick (:dismiss props)}
+                             :onClick (:dismiss props)
+                             :data-test-id (:data-test-id props)}
                          (:text props)])})]
                 [:div {}
                  (map (fn [item]

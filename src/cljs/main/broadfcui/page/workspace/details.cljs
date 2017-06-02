@@ -29,7 +29,8 @@
           [:div {:style {:backgroundColor "#ccc"
                          :fontSize "small"
                          :padding "4px 0"
-                         :textAlign "center"}}
+                         :textAlign "center"}
+                 :data-test-id "auth-domain-restriction-message"}
            "Access to this workspace is " [:strong {} "restricted"] " to: " this-auth-domain
            (when dbGapProtected " (TCGA Controlled Access Data)")]
           [:div {:style {:height 1 :backgroundColor "#bbb" :marginTop 2}}]])))})
@@ -137,7 +138,8 @@
                        :display "flex" :justifyContent "space-between"}}
          [:div {:style {:fontSize "125%"}}
           "Workspace: "
-          [:span {:style {:fontWeight 500}} (:namespace workspace-id) "/" (:name workspace-id)]]
+          [:span {:style {:fontWeight 500}}
+           [:span {:data-test-id "header-namespace"} (:namespace workspace-id)] "/" [:span {:data-test-id "header-name"} (:name workspace-id)]]]
          [common/FoundationTooltip
           {:tooltip "Adjust notifications for this workspace"
            :position "left"

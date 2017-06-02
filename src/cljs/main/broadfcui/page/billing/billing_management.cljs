@@ -78,6 +78,7 @@
           {:data projects
            :body {:behavior {:reorderable-columns? false}
                   :style table-style/table-light
+                  :data-props {:row (fn [project] {:data-test-id (str (:projectName project) "-row")})}
                   :columns
                   [{:id "Status Icon" :initial-width 16
                     :resizable? false :sortable? false :filterable? false
@@ -108,10 +109,12 @@
                    {:header "Role" :initial-width :auto
                     :column-data #(clojure.string/join ", " (:roles %))}]}
            :toolbar
-           {:items
+           {:filter-bar {:inner {:data-test-id "billing-project-list-filter"}}
+            :items
             [flex/spring
              [comps/Button
               {:text "Create New Billing Project..."
+               :data-test-id "begin-create-billing-project"
                :onClick
                (fn []
                  (if (-> @utils/auth2-atom (aget "currentUser") (js-invoke "get")

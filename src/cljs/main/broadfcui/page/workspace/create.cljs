@@ -57,7 +57,8 @@
          (style/create-select
           {:ref "auth-domain"
            :defaultValue -1
-           :onChange #(swap! state assoc :selected-auth-domain (-> % .-target .-value))}
+           :onChange #(swap! state assoc :selected-auth-domain (-> % .-target .-value))
+           :data-test-id "workspace-auth-domain-select"}
           (:groups @state)
           "Select a Group...")
          [comps/ErrorViewer {:error (:server-error @state)}]

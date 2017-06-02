@@ -41,25 +41,29 @@
 
 (def success-icon
   (icons/icon {:style {:color (:success-state style/colors) :marginRight 4
-                       :width table-style/table-icon-size :height table-style/table-icon-size}}
+                       :width table-style/table-icon-size :height table-style/table-icon-size}
+               :data-test-id "status-icon" :data-test-value "success"}
               :done))
 (def running-icon
   [:span {:style {:display "inline-flex" :alignItems "center" :justifyContent "center" :verticalAlign "middle"
                   :backgroundColor (:running-state style/colors)
                   :width table-style/table-icon-size :height table-style/table-icon-size
-                  :borderRadius 3 :margin "-4px 4px 0 0"}}
+                  :borderRadius 3 :margin "-4px 4px 0 0"}
+          :data-test-id "status-icon" :data-test-value "running"}
    [icons/RunningIcon {:size 12}]])
 (def failure-icon
   [:span {:style {:display "inline-flex" :alignItems "center" :justifyContent "center" :verticalAlign "middle"
                   :backgroundColor (:exception-state style/colors)
                   :width table-style/table-icon-size :height table-style/table-icon-size
-                  :borderRadius 3 :margin "-4px 4px 0 0"}}
+                  :borderRadius 3 :margin "-4px 4px 0 0"}
+          :data-test-id "status-icon" :data-test-value "failure"}
    [icons/ExceptionIcon {:size 12}]])
 (def unknown-icon
   [:span {:style {:display "inline-flex" :alignItems "center" :justifyContent "center" :verticalAlign "middle"
                   :backgroundColor (:background-dark style/colors)
                   :width table-style/table-icon-size :height table-style/table-icon-size
-                  :borderRadius 3 :margin "-4px 4px 0 0"}}
+                  :borderRadius 3 :margin "-4px 4px 0 0"}
+          :data-test-id "status-icon" :data-test-value "unknown"}
    [icons/UnknownIcon {:size 12}]])
 
 

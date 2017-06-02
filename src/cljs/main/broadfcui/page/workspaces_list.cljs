@@ -70,7 +70,8 @@
            [:span {:style {:display "block" :position "absolute" :left -17 :top -9
                            :width (- row-height-px 4) :padding "4px 0"
                            :backgroundColor "white" :color "#666" :fontSize "xx-small"
-                           :transform "rotate(-90deg)"}}
+                           :transform "rotate(-90deg)"}
+                   :data-test-id (str "restricted-" namespace "-" name)}
             "RESTRICTED"]])
         [:div {:style {:paddingLeft 24}}
          [:div {:style {:fontSize "80%"}} namespace]
@@ -202,7 +203,7 @@
                   :cell table-style/clip-text}}
          :toolbar {:style {:display "initial"}
                    :filter-bar {:style {:float "left"}
-                                :inner {:width 300}}
+                                :inner {:width 300 :data-test-id "workspace-list-filter"}}
                    :items [[:div {:style {:float "right"}}
                             [create/Button (select-keys props [:nav-context :billing-projects :disabled-reason])]]
                            [:div {:style {:clear "left" :float "left" :marginTop "0.5rem"}}
