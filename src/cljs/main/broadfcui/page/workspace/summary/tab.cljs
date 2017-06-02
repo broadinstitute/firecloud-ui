@@ -33,7 +33,7 @@
         [:p {:style {:margin 0}} "Are you sure you want to delete this workspace?"]
         [:p {} "Bucket data will be deleted too."]
         [comps/ErrorViewer {:error (:server-error @state)}]]
-       :ok-button {:text "Delete" :onClick #(react/call :delete this)}}])
+       :ok-button {:text "Delete" :onClick #(react/call :delete this) :data-test-id "confirm-delete-workspace-button"}}])
    :delete
    (fn [{:keys [props state]}]
      (swap! state assoc :deleting? true :server-error nil)
@@ -86,6 +86,7 @@
          [comps/SidebarButton
           {:style :light :margin :top :color :button-primary
            :text "Share..." :icon :share
+           :data-test-id "share-workspace-button"
            :disabled? (when (empty? billing-projects) (comps/no-billing-projects-message))
            :onClick #(modal/push-modal
                       [AclEditor {:workspace-id workspace-id
@@ -170,6 +171,7 @@
                                :onClick #(react/call :lock-or-unlock this isLocked)}])
        (when (and owner? (not editing?))
          [comps/SidebarButton {:style :light :margin :top :color (if isLocked :text-lighter :exception-state)
+                               :data-test-id "delete-workspace-button"
                                :text "Delete" :icon :delete
                                :disabled? (when isLocked "This workspace is locked.")
                                :onClick #(modal/push-modal
