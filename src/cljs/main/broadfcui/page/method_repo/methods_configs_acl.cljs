@@ -84,18 +84,19 @@
       {:header (str "Permissions for " (:title props))
        :content
        (react/create-element
-        (net/render-ajax
-         @state
-         :acl-response
-         (str "Loading Permissions for " (:title props) "...")
-         (partial render-ok-cancel-form props refs state this)
-         (partial net/error-overwrite (str "You are unauthorized to edit this " (clojure.string/lower-case (:entityType props)) ".") 403)))
+        (net/render-with-ajax
+         (:acl-response @state)
+         #(render-ok-cancel-form props refs state this)
+         {:loading-text (str "Loading Permissions for " (:title props) "...")
+          :error-override
+          (partial net/overwrite-error (str "You are unauthorized to edit this " (clojure.string/lower-case (:entityType props)) ".") 403)}))
        :ok-button (when (:acl-vec @state) {:text "Save" :onClick #(react/call :persist-acl this)})}])
    :component-did-mount
    (fn [{:keys [props state]}]
      (endpoints/call-ajax-orch
       {:endpoint (:load-endpoint props)
-       :on-done (net/create-handle-ajax-response state :acl-response)}))
+       :on-done (net/handle-ajax-response
+                 (fn [k v] (swap! state assoc-in [:acl-response k] v)))}))
    :persist-acl
    (fn [{:keys [props state refs this]}]
      (swap! state dissoc :validation-error :save-error)

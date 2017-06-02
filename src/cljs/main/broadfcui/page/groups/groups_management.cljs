@@ -59,7 +59,7 @@
                                (swap! state assoc :deleting? true)
                                (endpoints/call-ajax-orch
                                 {:endpoint (endpoints/delete-group groupName)
-                                 :on-done (fn [{:keys [success? state]}]
+                                 :on-done (fn [{:keys [success?]}]
                                             (if success?
                                              (this :-load-data))
                                             )}))})))}]}
@@ -72,26 +72,24 @@
          (fn []
            (modal/push-modal
             [CreateGroupDialog
-             {:on-success #(react/call :-load-data this)}]))}]]}}]])
+             {:on-success #(this :-load-data)}]))}]]}}]])
 
 (react/defc GroupTable
   {:render
    (fn [{:keys [this state]}]
-     (net/render-ajax
-      @state
-      :groups-response
-      "Loading Groups..."
-      (partial render-groups-table this state)
-      nil))
+     (net/render-with-ajax
+      (:groups-response @state)
+      #(render-groups-table this state)
+      {:loading-text "Loading Groups..."}))
    :component-did-mount
    (fn [{:keys [this]}]
      (this :-load-data))
    :-load-data
    (fn [{:keys [state]}]
-     (swap! state dissoc :groups)
      (utils/ajax-orch
       "/groups"
-      {:on-done (net/create-handle-ajax-response state :groups-response)}))})
+      {:on-done (net/handle-ajax-response
+                 (fn [k v] (swap! state assoc-in [:groups-response k] v)))}))})
 
 
 (react/defc Page

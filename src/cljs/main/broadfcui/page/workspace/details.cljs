@@ -16,7 +16,6 @@
     [broadfcui.page.workspace.monitor.tab :as monitor-tab]
     [broadfcui.page.workspace.summary.tab :as summary-tab]
     [broadfcui.utils :as utils]
-    [broadfcui.net :as net]
     ))
 
 (react/defc ProtectedBanner
@@ -109,12 +108,13 @@
                   (swap! state assoc :bucket-status-code status-code :bucket-access? success?))})
      (endpoints/call-ajax-orch
       {:endpoint (endpoints/get-workspace (:workspace-id props))
-       :on-done (fn [{:keys [success? xhr raw-workspace]}]
-                  (net/handle-ajax-state[success? xhr state])
+       :on-done (fn [{:keys [success? get-parsed-response xhr]}]
                   (if success?
-                    (net/render-ajax-state [state :workspace process-workspace raw-workspace])
-                    (net/render-ajax-state [state :workspace-error])
-                  ))}))
+                    (swap! state assoc :workspace (process-workspace (get-parsed-response)))
+                    (swap! state assoc :workspace-error (as-> xhr x
+                                                              (aget x "responseText")
+                                                              (js-invoke js/JSON "parse" x)
+                                                              (aget x "message")))))}))
    :render
    (fn [{:keys [props state locals refs this]}]
      (let [{:keys [workspace-id]} props
