@@ -89,7 +89,10 @@
          #(render-ok-cancel-form props refs state this)
          {:loading-text (str "Loading Permissions for " (:title props) "...")
           :error-override
-          (partial net/overwrite-error (str "You are unauthorized to edit this " (clojure.string/lower-case (:entityType props)) ".") 403)}))
+          #(net/overwrite-error
+            (str "You are unauthorized to edit this "
+                 (clojure.string/lower-case (:entityType props)) ".")
+            403 %)}))
        :ok-button (when (:acl-vec @state) {:text "Save" :onClick #(react/call :persist-acl this)})}])
    :component-did-mount
    (fn [{:keys [props state]}]

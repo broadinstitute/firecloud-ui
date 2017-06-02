@@ -30,8 +30,8 @@
 
 (defn overwrite-error
   ([message] message)
-  ([message code state state-key]
-   (let [current-error (as-> (get-in state [state-key :error]) e
+  ([message code ajax-response]
+   (let [current-error (as-> (:error ajax-response) e
                              (js-invoke js/JSON "parse" e)
                              (js->clj e :keywordize-keys true))]
      (if (= code (:code current-error)) message
