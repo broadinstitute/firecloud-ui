@@ -16,7 +16,7 @@
     [broadfcui.net :as net]
     ))
 
-(defn render-groups-table [this state]
+(defn- render-groups-table [this state]
   [:div {}
    (when (:deleting? @state)
      [comps/Blocker {:banner "Deleting group..."}])

@@ -22,24 +22,9 @@
 (def ^:private access-levels [reader-level owner-level no-access-level])
 
 (def ^:private column-width "calc(50% - 4px)")
-;;:on-done (fn [{:keys [success? get-parsed-response status-text xhr]}]
-       ;;           (if success?
-       ;;             (let [response-vec (mapv utils/keywordize-keys (get-parsed-response false))
-       ;;                   acl-vec (filterv #(not= "public" (:user %)) response-vec)
-       ;;                   public-user (first (filter #(= "public" (:user %)) response-vec))
-       ;;                   public-status (or (:role public-user) no-access-level)]
-       ;;               (swap! state assoc :acl-vec acl-vec
-       ;;                      :public-status (= public-status reader-level)
-       ;;                      :count-orig (count acl-vec)))
-       ;;             )
-       ;;           (net/create-handle-ajax-response state :acl-response)
-       ;;           (utils/log "after create-handle"))}))
-(defn render-ok-cancel-form [props state refs this]
-  (let [acl-vec (filterv #(not= "public" (:user %)) (get-in state [:acl-response :parsed]))
-        public-status (as-> (get-in state [:acl-response :parsed]) rv
-                             (filter #(= "public" (:user %)) rv)
-                             (first rv)
-                             (or (:role rv) no-access-level))]
+
+(defn- render-ok-cancel-form [state refs this]
+  (let [{:keys [acl-vec public-status count-orig]} @state]
    [:div {:style {:width 800}}
     (when (:saving? @state)
       [comps/Blocker {:banner "Updating..."}])
@@ -53,9 +38,9 @@
         [input/TextField
          {:ref (str "acl-key" i)
           :style {:float "left" :width column-width
-                  :backgroundColor (when (< i (count acl-vec))
+                  :backgroundColor (when (< i count-orig)
                                      (:background-light style/colors))}
-          :disabled (< i (count acl-vec))
+          :disabled (< i count-orig)
           :spellCheck false
           :defaultValue (:user acl-entry)
           :predicates [(input/valid-email-or-empty "User ID")]}]
@@ -65,16 +50,16 @@
           :defaultValue (:role acl-entry)}
          access-levels)
         (common/clear-both)])
-     (acl-vec))
+     acl-vec)
     [comps/Button {:text "Add new" :icon :add-new
                    :onClick #(swap! state assoc :acl-vec
-                                    (conj (react/call :capture-ui-state this)
+                                    (conj (this :capture-ui-state)
                                           {:user "" :role reader-level}))}]
     [:label {:style {:cursor "pointer"}}
      [:input {:type "checkbox" :ref "publicbox"
               :style {:marginLeft "2em" :verticalAlign "middle"}
               :onChange #(swap! state assoc :public-status (-> (@refs "publicbox") .-checked))
-              :checked (:public-status @state)}]
+              :checked public-status}]
      [:span {:style {:paddingLeft 6 :verticalAlign "middle"}} "Publicly Readable?"]]]))
 
 (react/defc AgoraPermsEditor
@@ -86,20 +71,27 @@
        (react/create-element
         (net/render-with-ajax
          (:acl-response @state)
-         #(render-ok-cancel-form props refs state this)
+         #(render-ok-cancel-form state refs this)
          {:loading-text (str "Loading Permissions for " (:title props) "...")
           :error-override
           #(net/overwrite-error
             (str "You are unauthorized to edit this "
                  (clojure.string/lower-case (:entityType props)) ".")
             403 %)}))
-       :ok-button (when (:acl-vec @state) {:text "Save" :onClick #(react/call :persist-acl this)})}])
+       :ok-button (when (:acl-vec @state) {:text "Save" :onClick #(this :persist-acl)})}])
    :component-did-mount
    (fn [{:keys [props state]}]
      (endpoints/call-ajax-orch
       {:endpoint (:load-endpoint props)
        :on-done (net/handle-ajax-response
-                 (fn [k v] (swap! state assoc-in [:acl-response k] v)))}))
+                 (fn [k v]
+                   (swap! state assoc-in [:acl-response k] v)
+                   (let [acl-vec (filterv #(not= "public" (:user %)) v)
+                         public-user (first (filter #(= "public" (:user %)) v))
+                         public-status (or (:role public-user) no-access-level)]
+                     (swap! state assoc :acl-vec acl-vec
+                            :public-status (= public-status reader-level)
+                            :count-orig (count acl-vec)))))}))
    :persist-acl
    (fn [{:keys [props state refs this]}]
      (swap! state dissoc :validation-error :save-error)
