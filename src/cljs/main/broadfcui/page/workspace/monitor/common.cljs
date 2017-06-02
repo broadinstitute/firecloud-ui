@@ -17,7 +17,7 @@
 
 (def wf-success-statuses #{"Succeeded"})
 (def wf-running-statuses #{"Running" "Submitted" "Queued" "Launching"})
-(def wf-failure-statuses #{"Failed" "Aborting" "Aborted" "Unknown"})
+(def wf-failure-statuses #{"Failed" "Aborting" "Aborted"})
 (def wf-all-statuses ["Queued" "Launching" "Submitted" "Running" "Aborting" "Succeeded" "Failed" "Aborted"])
 
 (def sub-running-statuses #{"Accepted" "Evaluating" "Submitting" "Submitted"})
@@ -30,31 +30,37 @@
 
 (defn all-success? [submission]
   (and (every? #(contains? wf-success-statuses (% "status")) (submission "workflows"))
-    (zero? (count (submission "notstarted")))))
+       (zero? (count (submission "notstarted")))))
 
 (defn any-running? [submission]
   (some #(contains? wf-running-statuses (% "status")) (submission "workflows")))
 
 (defn any-failed? [submission]
   (or (some #(contains? wf-failure-statuses (% "status")) (submission "workflows"))
-    (pos? (count (submission "notstarted")))))
+      (pos? (count (submission "notstarted")))))
 
-(def ^:private success-icon
-  (icons/icon {:style {:color (:success-state style/colors) :fontSize 12 :marginRight 4
+(def success-icon
+  (icons/icon {:style {:color (:success-state style/colors) :marginRight 4
                        :width table-style/table-icon-size :height table-style/table-icon-size}}
               :done))
-(def ^:private running-icon
+(def running-icon
   [:span {:style {:display "inline-flex" :alignItems "center" :justifyContent "center" :verticalAlign "middle"
                   :backgroundColor (:running-state style/colors)
                   :width table-style/table-icon-size :height table-style/table-icon-size
                   :borderRadius 3 :margin "-4px 4px 0 0"}}
    [icons/RunningIcon {:size 12}]])
-(def ^:private failure-icon
+(def failure-icon
   [:span {:style {:display "inline-flex" :alignItems "center" :justifyContent "center" :verticalAlign "middle"
                   :backgroundColor (:exception-state style/colors)
                   :width table-style/table-icon-size :height table-style/table-icon-size
                   :borderRadius 3 :margin "-4px 4px 0 0"}}
    [icons/ExceptionIcon {:size 12}]])
+(def unknown-icon
+  [:span {:style {:display "inline-flex" :alignItems "center" :justifyContent "center" :verticalAlign "middle"
+                  :backgroundColor (:background-dark style/colors)
+                  :width table-style/table-icon-size :height table-style/table-icon-size
+                  :borderRadius 3 :margin "-4px 4px 0 0"}}
+   [icons/UnknownIcon {:size 12}]])
 
 
 (defn icon-for-wf-status [status]
@@ -63,22 +69,23 @@
     (contains? wf-running-statuses status) running-icon
     (contains? wf-failure-statuses status) failure-icon
     :else (do (utils/log "Unknown workflow status: " status)
-            failure-icon)))
+              unknown-icon)))
 
 (defn icon-for-sub-status [wf-statuses]
   (cond
     (contains? wf-statuses :Failed) failure-icon
+    (contains? wf-statuses :Aborted) failure-icon
     (contains? wf-statuses :Succeeded) success-icon
-    :else (do (utils/log "Unknown submission status")
-            nil)))
+    :else (do (utils/log "Unknown submission status: " wf-statuses)
+              unknown-icon)))
 
 (defn icon-for-project-status [project-status]
-      (cond
-        (= project-status "Error") failure-icon
-        (= project-status "Ready") success-icon
-        (= project-status "Creating") running-icon
-        :else (do (utils/log "Unknown project status")
-                  nil)))
+  (cond
+    (= project-status "Error") failure-icon
+    (= project-status "Ready") success-icon
+    (= project-status "Creating") running-icon
+    :else (do (utils/log "Unknown project status: " project-status)
+              unknown-icon)))
 
 (defn icon-for-call-status [status]
   (cond
@@ -86,12 +93,12 @@
     (contains? call-running-statuses status) running-icon
     (contains? call-failure-statuses status) failure-icon
     :else (do (utils/log "Unknown call status: " status)
-            failure-icon)))
+              unknown-icon)))
 
 
 (defn call-cache-result [cache-status]
-   (if (= cache-status "ReadAndWriteCache") "Enabled" "Disabled"))
+  (if (= cache-status "ReadAndWriteCache") "Enabled" "Disabled"))
 
 (defn format-call-cache [cache-hit]
-   (if cache-hit "Hit" "Miss"))
+  (if cache-hit "Hit" "Miss"))
 

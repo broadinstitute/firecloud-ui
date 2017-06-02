@@ -23,7 +23,7 @@
    (fn [{:keys [props]}]
      (let [{:keys [workspace]} props
            this-auth-domain (get-in workspace [:workspace :authorizationDomain :membersGroupName])
-           dbGapProtected (= this-auth-domain (config/dbgap-authorization-domain))]
+           dbGapProtected (= this-auth-domain config/tcga-authorization-domain)]
        (when this-auth-domain
          [:div {:style {:paddingTop 2}}
           [:div {:style {:backgroundColor "#ccc"
@@ -162,9 +162,7 @@
           (make-tab DATA #(react/call :refresh-workspace this))
           (make-tab ANALYSIS #(react/call :refresh (@refs ANALYSIS)))
           (make-tab CONFIGS #(react/call :refresh (@refs CONFIGS)))
-          (make-tab MONITOR #(react/call :refresh (@refs MONITOR)))]
-         (when (= active-tab ANALYSIS)
-           (analysis-tab/render-track-selection-button #(@refs ANALYSIS)))]
+          (make-tab MONITOR #(react/call :refresh (@refs MONITOR)))]]
         [:div {:style {:marginTop "2rem"}}
          (if-let [error (:workspace-error @state)]
            [:div {:style {:textAlign "center" :color (:exception-state style/colors)}}

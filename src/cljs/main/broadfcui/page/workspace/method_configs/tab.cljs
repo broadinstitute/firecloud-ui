@@ -99,6 +99,7 @@
            (merge (select-keys props [:workspace-id :bucket-access? :on-submission-success])
                   {:key config-id
                    :config-id config-id
+                   :access-level (get-in props [:workspace :accessLevel])
                    :on-rename #(nav/go-to-path :workspace-method-config
                                                workspace-id
                                                (assoc config-id :name %))

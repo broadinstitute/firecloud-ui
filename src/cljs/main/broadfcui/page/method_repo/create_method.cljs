@@ -4,6 +4,7 @@
    [broadfcui.common :as common]
    [broadfcui.common.codemirror :refer [CodeMirror]]
    [broadfcui.common.components :as comps]
+   [broadfcui.common.icons :as icons]
    [broadfcui.common.input :as input]
    [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
@@ -48,9 +49,10 @@
                                :defaultValue (:name defaults)
                                :predicates [(input/nonempty "Method name")]}]]]
            ;;GAWB-1897 removes Type field and makes all MC types "Workflow" until "Task" type is supported
-           (style/create-form-label "Synopsis (optional)")
+           (style/create-form-label "Synopsis (optional, 80 characters max)")
            (style/create-text-field {:ref "synopsis"
                                      :defaultValue (:synopsis defaults)
+                                     :maxLength 80
                                      :style {:width "100%"}})
            (style/create-form-label "Documentation (optional)")
            (style/create-text-area {:ref "documentation"
@@ -101,8 +103,9 @@
            [comps/ErrorViewer {:error (:upload-error @state)}]
            (style/create-validation-error-message (:validation-errors @state))
            [:div {:style {:marginTop "0.8em" :fontSize "88%"}}
-            "WDL must use Docker image digests to allow call caching"
-            (common/question-icon-link "Guide to Call Caching" (config/call-caching-guide-url))]])
+            "WDL must use Docker image digests to allow call caching "
+            [:a {:target "_blank" :href (str (config/call-caching-guide-url))}
+             "Learn about call caching" icons/external-link-icon]]])
          :ok-button (react/create-element
                      [comps/Button {:ref "ok-button"
                                     :text (:ok-text defaults)

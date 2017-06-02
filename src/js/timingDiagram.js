@@ -61,7 +61,7 @@ function timingDiagram(element, response, workflowName, height) {
             var firstEventStart = null;
             var finalEventEnd = null;
 
-            if(callStatus == "Done" || callStatus == "Failed" || callStatus == "RetryableFailure") {
+            if(callStatus == "Done" || callStatus == "Failed" || callStatus == "RetryableFailure" || callStatus == "Aborted" || callStatus == "Bypassed") {
                 executionCallsCount++;
                 //for (var executionEventIndex in executionEvents) {
                 for (executionEventIndex=0, len=executionEvents.length; executionEventIndex < len; executionEventIndex++) {

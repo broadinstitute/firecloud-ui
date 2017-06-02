@@ -98,12 +98,13 @@
                           (:general-response @state) (:profile-response @state) overridden)
            set-checked? (fn [k value] (swap! state assoc-in [:overridden k] value))
            checkbox (fn [k checked?]
-                      (common/render-foundation-switch
-                       {:checked? checked? :on-change (partial set-checked? k)}))
+                      [:input {:type "checkbox" :checked checked?
+                               :onChange #(set-checked? k (aget % "target" "checked"))}])
            row (fn [{:keys [description key value]}]
                  [:tr {}
-                  [:td {} (checkbox key value)]
-                  [:td {:style {:padding "0.5rem"}} description]])]
+                  [:label {}
+                   [:td {} (checkbox key value)]
+                   [:td {:style {:paddingLeft "0.5rem"}} description]]])]
        [:div {}
         [:table {:style {:fontSize "90%"}}
          [:tbody {}

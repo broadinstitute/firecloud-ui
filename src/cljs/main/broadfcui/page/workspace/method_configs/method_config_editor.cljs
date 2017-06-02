@@ -2,7 +2,7 @@
   (:require
     [dmohs.react :as react]
     [clojure.string :refer [trim blank?]]
-    [broadfcui.common :refer [clear-both get-text root-entity-types]]
+    [broadfcui.common :refer [clear-both get-text root-entity-types access-greater-than?]]
     [broadfcui.common.components :as comps]
     [broadfcui.common.overlay :as dialog]
     [broadfcui.common.icons :as icons]
@@ -95,31 +95,33 @@
                      (swap! state assoc :error status-text)))}))})
 
 
-(defn- render-side-bar [state refs config editing? props]
+(defn- render-side-bar [{:keys [state refs config editing? props restore-on-cancel]}]
   [:div {:style {:width 290 :float "left"}}
    [:div {:ref "sidebar"}]
    (style/create-unselectable :div {:style {:position (when-not (:sidebar-visible? @state) "fixed")
                                             :top (when-not (:sidebar-visible? @state) 4)
                                             :width 290}}
-     (let [locked? (:locked? @state)]
+     (let [locked? (:locked? @state)
+           can-edit? (access-greater-than? (:access-level props) "READER")
+           snapshot-id (get-in config ["methodRepoMethod" "methodVersion"])]
        [:div {:style {:lineHeight 1}}
-        (when-not editing?
-          [comps/SidebarButton {:style :light :color :button-primary
-                                :text "Edit Configuration" :icon :edit
-                                :disabled? (when locked? "The workspace is locked")
-                                :onClick #(swap! state assoc :editing? true)}])
-        (when-not editing?
-          [comps/SidebarButton {:style :light :color :exception-state :margin :top
-                                :text "Delete" :icon :delete
-                                :disabled? (when locked? "The workspace is locked")
-                                :onClick #(modal/push-modal
-                                           [delete/DeleteDialog {:config config
-                                                                 :workspace-id (:workspace-id props)
-                                                                 :after-delete (:after-delete props)}])}])
+        (when (and can-edit? (not editing?))
+          [:div {}
+           [comps/SidebarButton {:style :light :color :button-primary
+                                 :text "Edit Configuration" :icon :edit
+                                 :disabled? (when locked? "The workspace is locked")
+                                 :onClick #(swap! state assoc :editing? true :prev-snapshot-id snapshot-id)}]
+           [comps/SidebarButton {:style :light :color :exception-state :margin :top
+                                 :text "Delete" :icon :delete
+                                 :disabled? (when locked? "The workspace is locked")
+                                 :onClick #(modal/push-modal
+                                            [delete/DeleteDialog {:config config
+                                                                  :workspace-id (:workspace-id props)
+                                                                  :after-delete (:after-delete props)}])}]])
 
         (when-not editing?
-          [comps/SidebarButton {:style :light :color :button-primary :margin :top
-                                :text "Publish" :icon :share
+          [comps/SidebarButton {:style :light :color :button-primary :margin (when can-edit? :top)
+                                :text "Publish..." :icon :share
                                 :onClick #(modal/push-modal
                                            [publish/PublishDialog {:config config
                                                                    :workspace-id (:workspace-id props)}])}])
@@ -127,12 +129,15 @@
         (when editing?
           [comps/SidebarButton {:color :success-state
                                 :text "Save" :icon :done
-                                :onClick #(do (commit state refs config props)
-                                              (stop-editing state))}])
+                                :onClick (fn []
+                                           (commit state refs config props)
+                                           (stop-editing state))}])
         (when editing?
           [comps/SidebarButton {:color :exception-state :margin :top
                                 :text "Cancel Editing" :icon :cancel
-                                :onClick #(stop-editing state)}])]))])
+                                :onClick (fn []
+                                           (restore-on-cancel (:prev-snapshot-id @state))
+                                           (stop-editing state))}])]))])
 
 
 (defn- input-output-list [values ref-prefix invalid-values editing? all-values]
@@ -211,11 +216,12 @@
 (defn- render-display [this state refs props]
   (let [wrapped-config (:loaded-config @state)
         config (wrapped-config "methodConfiguration")
-        editing? (:editing? @state)]
+        editing? (:editing? @state)
+        restore-on-cancel #(this :load-new-method-template %)]
     [:div {}
      [comps/Blocker {:banner (:blocker @state)}]
      [:div {:style {:padding "1em 2em"}}
-      (render-side-bar state refs config editing? props)
+      (render-side-bar (utils/restructure state refs config editing? props restore-on-cancel))
       (when-not editing?
         [:div {:style {:float "right"}}
          (launch/render-button {:workspace-id (:workspace-id props)

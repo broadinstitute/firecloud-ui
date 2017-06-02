@@ -107,13 +107,14 @@
                [:p {} "For access to TCGA protected data please apply for access via dbGaP [instructions can be found "
                 [:a {:href "https://wiki.nci.nih.gov/display/TCGA/Application+Process"
                      :target "_blank"}
-                 "here"] "]."]
+                 "here" icons/external-link-icon] "]."]
                [:p {} "After dbGaP approves your application please link your eRA Commons ID in your FireCloud profile page."]]
               [:span {}
                "Please contact "
                [:a {:target "_blank"
                     :href (str "mailto:" (:library:contactEmail data))}
-                (str (:library:datasetCustodian data) " <" (:library:contactEmail data) ">")]
+                (:library:datasetCustodian data) " <" (:library:contactEmail data) ">"
+                (icons/icon {:style {:paddingLeft "0.25rem" :fontSize "80%"}} :email)]
                " and request access for the "
                (:namespace data) "/" (:name data) " workspace."])}))}
        {:href (nav/get-link :workspace-summary (common/row->workspace-id data))}))

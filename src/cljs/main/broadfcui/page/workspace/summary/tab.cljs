@@ -61,7 +61,7 @@
 
 (defn- render-sidebar [state refs this
                        {:keys [workspace billing-projects owner? writer? curator? catalog-with-read? can-share?
-                               workspace-id request-refresh]}]
+                               workspace-id request-refresh user-access-level]}]
   (let [{{:keys [isLocked library-attributes description authorizationDomain]} :workspace
          {:keys [runningSubmissionsCount]} :workspaceSubmissionStats} workspace
         status (common/compute-status workspace)
@@ -82,6 +82,14 @@
        :div {:style {:position (when-not sidebar-visible? "fixed")
                      :top (when-not sidebar-visible? 0)
                      :width 270}}
+       (when (and can-share? (not editing?))
+         [comps/SidebarButton
+          {:style :light :margin :top :color :button-primary
+           :text "Share..." :icon :share
+           :onClick #(modal/push-modal
+                      [AclEditor {:workspace-id workspace-id
+                                  :user-access-level user-access-level
+                                  :request-refresh request-refresh}])}])
        (when (not editing?)
          [comps/SidebarButton
           {:style :light :color :button-primary :margin :top
@@ -160,14 +168,14 @@
                                :onClick #(react/call :lock-or-unlock this isLocked)}])
        (when (and owner? (not editing?))
          [comps/SidebarButton {:style :light :margin :top :color (if isLocked :text-lighter :exception-state)
-                               :text "Delete..." :icon :delete
+                               :text "Delete" :icon :delete
                                :disabled? (when isLocked "This workspace is locked.")
                                :onClick #(modal/push-modal
                                           [DeleteDialog {:workspace-id workspace-id}])}]))]))
 
 
 (defn- render-main [{:keys [workspace curator? owner? writer? reader? can-share? catalog-with-read? bucket-access? editing? submissions-count
-                            user-access-level library-schema request-refresh workspace-id storage-cost]}]
+                            library-schema request-refresh workspace-id storage-cost]}]
   (let [{:keys [owners]
          {:keys [createdBy createdDate bucketName description tags workspace-attributes library-attributes authorizationDomain]} :workspace} workspace
         auth-domain (:membersGroupName authorizationDomain)
@@ -183,16 +191,7 @@
         (str "Workspace Owner" (when (> (count owners) 1) "s"))
         (style/create-paragraph
           [:div {}
-           (interpose ", " owners)
-           (when can-share?
-             [:span {}
-              " ("
-              (style/create-link {:text "Sharing..."
-                                  :onClick #(modal/push-modal
-                                              [AclEditor {:workspace-id workspace-id
-                                                          :user-access-level user-access-level
-                                                          :request-refresh request-refresh}])})
-              ")"])]))
+           (interpose ", " owners)]))
       (render-detail-box
         3
         "Created By"

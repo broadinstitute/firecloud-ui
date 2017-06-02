@@ -29,6 +29,7 @@
                            :top (get-in @state [:position :top])
                            :left (when (= (:anchor-x props) :left) (get-in @state [:position :left]))
                            :right (when (= (:anchor-x props) :right) (get-in @state [:position :right]))
+                           :minHeight 100
                            :maxHeight (- (.. js/window -innerHeight) (get-in @state [:position :top]) 20)
                            :overflowY "auto"}
                           {:transform "translate(-50%, 0px)" :backgroundColor "#fff"

@@ -50,5 +50,5 @@
 (defn forum-url [] (get @config "forumUrl"))
 (defn billing-guide-url [] (get @config "billingGuideUrl"))
 (defn call-caching-guide-url [] (get @config "callCachingGuideUrl"))
-(defn dbgap-authorization-domain [] (get @config "dbGapAuthorizationDomain"))
 (defn alerts-json-url [] (get @config "alertsJsonUrl"))
+(def tcga-authorization-domain "TCGA-dbGaP-Authorized")

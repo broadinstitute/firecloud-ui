@@ -1,5 +1,9 @@
 # Contributing to Firecloud UI
 
+## Firecloud Style Guide
+
+When running in a non-production environment, the style guide can be accessed at `/#styles`, or by hovering at the right edge of the footer.
+
 ## ClojureScript Style Conventions
 
 For ClojureScript code, we follow the [Clojure Style Guide](https://github.com/bbatsov/clojure-style-guide) with exceptions noted here.
@@ -10,8 +14,8 @@ For ClojureScript code, we follow the [Clojure Style Guide](https://github.com/b
 The [**Lisp Paredit**](https://atom.io/packages/lisp-paredit) package formats code correctly.
 
 **IntelliJ**  
-The [**Cursive**](https://cursive-ide.com) plugin formats code correctly (after a few configuration changes), but is not free.  
-Correct cursive settings are included in this repo in importable form, in the file [`IntelliJ-clojure-style.xml`](IntelliJ-clojure-style.xml).  
+The [**Cursive**](https://cursive-ide.com) plugin formats code correctly (after a few configuration changes), but is not free.
+Correct cursive settings are included in this repo in importable form, in the file [`IntelliJ-clojure-style.xml`](IntelliJ-clojure-style.xml).
 The first time you encounter a `defc`, you must manually tell Cursive how to format it:  
 
 1. Highlight any usage of that symbol  
@@ -19,7 +23,7 @@ The first time you encounter a `defc`, you must manually tell Cursive how to for
 3. Select _Resolve as..._  
 4. Select _def_
 
-<img src="https://cloud.githubusercontent.com/assets/22642695/21731936/f7e5a17c-d424-11e6-973b-bf5897bbf833.png" title="resolve defc as def" width="458"/>
+<img src="https://cloud.githubusercontent.com/assets/22642695/21731936/f7e5a17c-d424-11e6-973b-bf5897bbf833.png" title="resolve defc as def" width="458" height="114"/>
 
 ### Source code layout & organization
 
@@ -27,15 +31,28 @@ We feel the 80-character line length limit in the style guide is more restrictiv
 
 We do not strictly adhere to the guide's suggestion to keep functions under 10 lines of code. In general, however, shorter functions are preferred.
 
-## DOM Node (HTML) Conventions
+### Naming
 
-We prefer `rem` units over `em`, `ex`, `px`, etc. for size values, since these adjust with the user's selected font size.
+React component names are camel-cased, starting with a capital letter: `[comps/Button]`
+
+Methods on components are kebab-cased, and "private" (although this is technically unenforced) methods start with a dash: `:-create-dropdown-ref-handler`
+
+Native clojure(script) methods and structures are kebab-cased: `(common/render-info-box)`
+
+Method and function names should always be verbs, and structures should be nouns.
+
 
 ## React Conventions
 
-### Styles
+### Don't create a component if you don't have to
 
-We avoid using CSS files. Instead, we use React components to describe the style and behavior of individual page elements, then combine these components to create the complete UI.
+Every React component that's created has a state and props that have to be tracked in memory by the application. When you're creating something, a `def` or `defn` is preferred over a `defc`.
+
+As a quick rule of thumb, if the thing you're creating doesn't have an internal state that needs to be tracked, and it doesn't need to respond to lifecycle events (i.e. `component-did-mount`), it shouldn't be a component.
+
+### Styles inside of component definitions
+
+We avoid using CSS files. Instead, we define styles for components in place, along with their logic, so that all of the attributes of a component are described in one place.
 
 Our reasons for this are [outlined in this slide deck](https://speakerdeck.com/vjeux/react-css-in-js).
 
@@ -138,6 +155,18 @@ Changing state causes a re-render. If you update state in a lifecycle method, th
 6. ...
 
 So: some lifecycle methods are automatically called every render. Avoid changing state inside of them.
+
+## Gotchas
+
+A list of any "gotchas" that have been found in development. These may be browser bugs (or "features"), or react issues.
+
+### Browser
+
+- A "feature" in browsers is that any `button` inside of a `form` will cause the page to submit, even if you don't define an `on-click` or link attribute on it. Be careful when using buttons inside of forms because the behavior you define may not be the behavior you get.
+
+### React
+
+- See above
 
 ## Tooling Notes
 
