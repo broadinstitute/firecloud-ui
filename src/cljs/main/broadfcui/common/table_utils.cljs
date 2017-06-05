@@ -148,12 +148,11 @@
        [:div {:style (merge {:fontSize "80%" :fontWeight 500} (:body-style props))}
         (map-indexed
           (fn [row-index row]
-            (let [row-style (:row-style props)
-                  row-style (if (fn? row-style) (row-style row-index row) row-style)
-                  row-style (merge {:display "flex" :alignItems "center"} row-style)
-                  div-props (if (contains? props :on-row-click)
-                              {:style row-style :onClick (fn [] ((:on-row-click props) (first row)))}
-                              {:style row-style})]
+            (let [get-row-style #(if (fn? %) (% row-index row) %)
+                  row-style (-> props (:row-style) (get-row-style) (merge {:display "flex" :alignItems "center"}))
+                  div-props (merge {:style row-style}
+                                   (when-let [on-row-click (:on-row-click props)]
+                                     {:onMouseDown (fn [] (on-row-click (first row)))}))]
               [:div div-props
                (map
                  (fn [col]
