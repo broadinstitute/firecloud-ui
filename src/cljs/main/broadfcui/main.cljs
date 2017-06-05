@@ -10,6 +10,7 @@
    [broadfcui.common.modal :as modal]
    [broadfcui.common.notifications :as notifications]
    [broadfcui.common.style :as style]
+   [broadfcui.components.top-banner :as top-banner]
    [broadfcui.config :as config]
    [broadfcui.config.loader :as config-loader]
    [broadfcui.endpoints :as endpoints]
@@ -171,6 +172,7 @@
                    (not (or (nav/is-current-path? :profile)
                             (nav/is-current-path? :status))))
           [NihLinkWarning])
+        [top-banner/Container]
         (when (:config-loaded? @state)
           [notifications/ServiceAlertContainer])
         (when (and (contains? user-status :signed-in) (contains? user-status :refresh-token-saved))
