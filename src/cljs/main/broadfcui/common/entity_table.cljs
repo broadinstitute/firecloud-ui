@@ -65,7 +65,7 @@
                 attr-col-width (->> attributes count (/ (if (= :narrow (:width props)) 500 1000)) int (min 400) (max 100))
                 entity-column {:header (get-in entity-metadata [selected-entity-type :idName]) :starting-width 200
                                :as-text :name :sort-by :text
-                               :content-renderer (or (:entity-name-renderer props) :name) :reorderable? false}
+                               :content-renderer (or (:entity-name-renderer props) :name)}
                 attr-columns (map (fn [k] {:header (name k) :starting-width attr-col-width :sort-by :text
                                            :as-text
                                            (fn [attr-value]
