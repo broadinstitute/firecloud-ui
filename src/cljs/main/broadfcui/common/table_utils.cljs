@@ -149,8 +149,12 @@
         (map-indexed
           (fn [row-index row]
             (let [row-style (:row-style props)
-                  row-style (if (fn? row-style) (row-style row-index row) row-style)]
-              [:div {:style (merge {:display "flex" :alignItems "center"} row-style)}
+                  row-style (if (fn? row-style) (row-style row-index row) row-style)
+                  row-style (merge {:display "flex" :alignItems "center"} row-style)
+                  div-props (if (contains? props :on-row-click)
+                              {:style row-style :onClick (fn [] ((:on-row-click props) (first row)))}
+                              {:style row-style})]
+              [:div div-props
                (map
                  (fn [col]
                    (let [render-content (or (:content-renderer col)

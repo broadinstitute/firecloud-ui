@@ -60,14 +60,12 @@
                     (cond (= (entity->id (first row-data)) (:selected-entity @state)) "yellow"
                       (even? row-index) (:background-light style/colors)
                       :else "#fff")})
-      :entity-name-renderer (fn [e]
-                              (let [entity-id (entity->id e)]
-                                (style/create-link
-                                  {:text (:name entity-id)
-                                   :onClick #(swap! state assoc
-                                                    :selected-entity entity-id
-                                                    :workflow-count (common/count-workflows
-                                                                      e (:root-entity-type props)))})))}]]
+      :on-row-click (fn [e]
+                      (let [entity-id (entity->id e)]
+                        (swap! state assoc
+                               :selected-entity entity-id
+                               :workflow-count (common/count-workflows
+                                                e (:root-entity-type props)))))}]]
    (style/create-form-label "Define Expression")
    (let [disabled (= (:root-entity-type props) (get-in @state [:selected-entity :type]))]
      (style/create-text-field {:placeholder "leave blank for default"
