@@ -23,7 +23,7 @@
       [:div {:style {:display "flex" :align-items "baseline"}}
        [icons/ExceptionIcon {:size 18 :color text-color}]
        [:span {:style {:margin-left "0.5rem" :font-weight "bold" :vertical-align "middle"}}
-        title]
+        (or title "Service Alert")]
        [:span {:style {:color text-color :fontSize "90%" :margin-left "1rem"}}
         message
         (when link
