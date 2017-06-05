@@ -55,6 +55,7 @@
                          [:span {:style {:marginLeft "1em"}}
                           [:a {:href (common/gcs-object->download-url (:bucket-name props) (:object props))
                                :onClick #(utils/set-access-token-cookie (utils/get-access-token))
+                               :onContextMenu #(utils/set-access-token-cookie (utils/get-access-token))
                                :target "_blank"}
                            "Open" icons/external-link-icon]
                           [:span {:style {:fontStyle "italic" :color (:text-light style/colors)}}
