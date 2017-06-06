@@ -152,7 +152,7 @@
                   row-style (-> props (:row-style) (get-row-style) (merge {:display "flex" :alignItems "center"}))
                   div-props (merge {:style row-style}
                                    (when-let [on-row-click (:on-row-click props)]
-                                     {:onMouseDown (fn [] (on-row-click (first row)))}))]
+                                     {:onMouseDown (fn [] (on-row-click row-index row))}))]
               [:div div-props
                (map
                  (fn [col]
