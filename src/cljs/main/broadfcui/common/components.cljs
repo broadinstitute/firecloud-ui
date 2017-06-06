@@ -408,7 +408,7 @@
      (let [{:keys [initial-text placeholder width]} props]
        [:div {:style {:display "inline-flex" :width width}}
         (style/create-search-field
-          {:ref "filter-field" :autoSave "true" :results 5 :autofocus "true"
+          {:ref "filter-field" :autoSave "true" :results 5 :auto-focus "true"
            :placeholder (or placeholder "Filter") :defaultValue initial-text
            :style {:flex "1 0 auto" :borderRadius "3px 0 0 3px" :marginBottom 0}
            :onKeyDown (common/create-key-handler [:enter] #(react/call :apply-filter this))})
@@ -480,7 +480,7 @@
        [:div {:style {:display "inline-flex" :width width}}
         [Typeahead {:ref "typeahead"
                     :field-attributes (utils/deep-merge
-                                       {:autoSave "true" :results 5 :autofocus "true"
+                                       {:autoSave "true" :results 5 :auto-focus "true"
                                         :placeholder "Filter"
                                         :style {:flex "1 0 auto" :width width :borderRadius 3 :marginBottom 0}
                                         :onKeyDown (common/create-key-handler [:enter] #(react/call :apply-filter this))
