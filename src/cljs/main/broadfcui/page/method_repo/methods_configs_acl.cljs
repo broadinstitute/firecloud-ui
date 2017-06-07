@@ -45,11 +45,11 @@
      (endpoints/call-ajax-orch
       {:endpoint (:load-endpoint props)
        :on-done (net/handle-ajax-response
-                 (fn [k v]
-                   (swap! state assoc-in [:acl-response k] v)
-                   (when-not (= :error k)
-                     (let [acl-vec (filterv #(not= "public" (:user %)) v)
-                           public-user (first (filter #(= "public" (:user %)) v))
+                 (fn [{:keys [success? parsed-response] :as response}]
+                   (swap! state assoc :acl-response response)
+                   (when success?
+                     (let [acl-vec (filterv #(not= "public" (:user %)) parsed-response)
+                           public-user (first (filter #(= "public" (:user %)) parsed-response))
                            public-status (or (:role public-user) no-access-level)]
                        (swap! state assoc :acl-vec acl-vec
                               :public-status (= public-status reader-level)

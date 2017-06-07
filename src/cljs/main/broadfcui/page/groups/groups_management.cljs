@@ -30,15 +30,14 @@
    (fn [{:keys [state]}]
      (utils/ajax-orch
       "/groups"
-      {:on-done (net/handle-ajax-response
-                 (fn [k v] (swap! state assoc-in [:groups-response k] v)))}))
+      {:on-done (net/handle-ajax-response #(swap! state assoc :groups-response %))}))
    :-render-groups-table
    (fn [{:keys [this state]}]
      [:div {}
       (when (:deleting? @state)
         [comps/Blocker {:banner "Deleting group..."}])
       [Table
-       {:data (get-in @state [:groups-response :parsed])
+       {:data (get-in @state [:groups-response :parsed-response])
         :body {:behavior {:reorderable-columns? false}
                :style table-style/table-light
                :columns
