@@ -61,7 +61,7 @@
                     (if success?
                       (do ((:on-rename props) name)
                           (swap! state assoc :loaded-config response :blocker nil))
-                      (comps/push-error (style/create-server-error-message (response "message"))))))})))
+                      (comps/push-error-response response))))})))
 
 (react/defc MethodDetailsViewer
   {:get-fields
