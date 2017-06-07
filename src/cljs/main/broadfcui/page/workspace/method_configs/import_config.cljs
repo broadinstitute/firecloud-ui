@@ -4,10 +4,11 @@
     [broadfcui.common.components :as comps]
     [broadfcui.common.style :as style]
     [broadfcui.endpoints :as endpoints]
+    [broadfcui.nav :as nav]
     [broadfcui.page.method-repo.method-repo-table :refer [MethodRepoTable]]
     [broadfcui.page.workspace.workspace-common :as ws-common]
     [broadfcui.utils :as utils]
-    ))
+    [broadfcui.common.modal :as modal]))
 
 
 (defn- white-wrap [component]
@@ -18,6 +19,45 @@
   (str (:namespace id) "/" (:name id)))
 
 
+(react/defc ConfirmWorkspaceConfig
+  {:render
+   (fn [{:keys [state this]}]
+     (let [{:keys [server-response import-error]} @state
+           {:keys [config error-message]} server-response]
+       (cond error-message (style/create-server-error-message error-message)
+             config [:div {}
+                     [:div {} "Confirm config"]
+                     [comps/ErrorViewer {:error import-error}]
+                     [:div {:style {:textAlign "center"}}
+                      [comps/Button {:text "Import"
+                                     :onClick #(this :-import)}]]]
+             :else [:div {:style {:textAlign "center"}}
+                    [comps/Spinner {:text "Loading configuration details..."}]])))
+   :component-did-mount
+   (fn [{:keys [props state]}]
+     (endpoints/call-ajax-orch
+      {:endpoint (endpoints/get-workspace-method-config (:chosen-workspace-id props) (:config props))
+       :on-done (fn [{:keys [success? get-parsed-response status-text]}]
+                  (swap! state assoc :server-response
+                         (if success? {:config (get-parsed-response)}
+                                      {:error-message status-text})))}))
+   :-import
+   (fn [{:keys [props state]}]
+     (let [{:keys [workspace-id]} props
+           {:keys [server-response]} @state
+           {:keys [config]} server-response]
+       (swap! state dissoc :import-error)
+       (endpoints/call-ajax-orch
+        {:endpoint (endpoints/post-workspace-method-config workspace-id)
+         :payload config
+         :headers utils/content-type=json
+         :on-done (fn [{:keys [success? get-parsed-response]}]
+                    (if success?
+                      (do (modal/pop-modal)
+                          (nav/go-to-path :workspace-method-config workspace-id (ws-common/config->id config)))
+                      (swap! state assoc :import-error (get-parsed-response false))))})))})
+
+
 (react/defc WorkspaceConfigChooser
   {:render
    (fn [{:keys [props state]}]
@@ -25,22 +65,23 @@
            {:keys [server-response]} @state
            {:keys [configs error-message]} server-response]
        (white-wrap
-        (cond
-          error-message (style/create-server-error-message error-message)
-          configs
-          (ws-common/method-config-selector
-           {:configs configs
-            :render-name (fn [config]
-                           (style/create-link
-                            {:text (:name config)
-                             :onClick #(push-page {:breadcrumb-text (id->str config)
-                                                   :component [:div {} "Confirm stuff"]})}))})
-          :else [:div {:style {:textAlign "center"}}
-                 [comps/Spinner {:text "Loading configurations..."}]]))))
+        (cond error-message (style/create-server-error-message error-message)
+              configs
+              (ws-common/method-config-selector
+               {:configs configs
+                :render-name
+                (fn [config]
+                  (style/create-link
+                   {:text (:name config)
+                    :onClick #(push-page {:breadcrumb-text (id->str config)
+                                          :component [ConfirmWorkspaceConfig
+                                                      (assoc props :config config)]})}))})
+              :else [:div {:style {:textAlign "center"}}
+                     [comps/Spinner {:text "Loading configurations..."}]]))))
    :component-did-mount
    (fn [{:keys [props state]}]
      (endpoints/call-ajax-orch
-      {:endpoint (endpoints/list-workspace-method-configs (:workspace-id props))
+      {:endpoint (endpoints/list-workspace-method-configs (:chosen-workspace-id props))
        :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                   (swap! state assoc :server-response
                          (if success? {:configs (vec (get-parsed-response))}
@@ -61,7 +102,8 @@
                       (fn [ws]
                         (let [id (ws-common/workspace->id ws)]
                           (push-page {:breadcrumb-text (id->str id)
-                                      :component [WorkspaceConfigChooser (assoc props :workspace-id id)]})))
+                                      :component [WorkspaceConfigChooser
+                                                  (assoc props :chosen-workspace-id id)]})))
                       :toolbar-items
                       (when (pos? removed-count)
                         [(str removed-count
@@ -98,15 +140,16 @@
 
 (defn- method-chooser [{:keys [push-page] :as props}]
   [MethodRepoTable
-   {:render-name (fn [{:keys [namespace name snapshotId entityType]}]
-                   (let [id {:namespace namespace
-                             :name name
-                             :snapshot-id snapshotId}
-                         type (if (= entityType "Configuration") :method-config :method)]
-                     (style/create-link
-                      {:text (style/render-name-id name snapshotId)
-                       :onClick #(push-page {:breadcrumb-text (style/render-entity namespace name snapshotId)
-                                             :component [ConfirmEntity (assoc props :type type :id id)]})})))}])
+   {:render-name
+    (fn [{:keys [namespace name snapshotId entityType]}]
+      (let [id {:namespace namespace
+                :name name
+                :snapshot-id snapshotId}
+            type (if (= entityType "Configuration") :method-config :method)]
+        (style/create-link
+         {:text (style/render-name-id name snapshotId)
+          :onClick #(push-page {:breadcrumb-text (style/render-entity namespace name snapshotId)
+                                :component [ConfirmEntity (assoc props :type type :id id)]})})))}])
 
 
 (defn- source-chooser [{:keys [push-page] :as props}]
@@ -116,7 +159,7 @@
                                         :component [WorkspaceChooser props]})
                   :style {:marginRight "1rem"}}]
    [comps/Button {:text "Import from Method Repository"
-                  :onClick #(push-page {:breadcrumb-text "Choose Method"
+                  :onClick #(push-page {:breadcrumb-text "Method Repository"
                                         :component (white-wrap (method-chooser props))})}]])
 
 
@@ -136,6 +179,7 @@
    (fn [{:keys [state this]}]
      [comps/OKCancelForm
       {:header "Import Method Configuration"
+       :show-cancel? false
        :content
        [:div {}
         [:div {:style {:marginBottom "1rem"}}
