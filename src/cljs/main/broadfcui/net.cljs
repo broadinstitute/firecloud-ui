@@ -12,27 +12,28 @@
                                 (try (js-invoke js/JSON "parse" x) (catch js/Error e e))
                                 (when-not (instance? js/Error x)
                                   (js->clj x :keywordize-keys true)))]
-     (if success?
-       (update-fn :parsed parsed-response)
-       (update-fn :error (:message parsed-response)))
-     (update-fn :error "Error parsing server response"))))
+      (if success?
+        (update-fn :parsed parsed-response)
+        (update-fn :error (select-keys parsed-response [:message :statusCode])))
+      (update-fn :error "Error parsing server response"))))
 
-(defn render-with-ajax [ajax-response render-success & {:keys [loading-text error-override]}]
-  (cond
-    (nil? ajax-response)
-    [comps/Spinner {:text (or loading-text "Loading...")}]
-    (:error ajax-response)
-    (style/create-server-error-message
-     (if error-override
-       (error-override ajax-response)
-       (:error ajax-response)))
-    :else (render-success))) ;;reading the passed key map to properly render state
+(defn render-with-ajax [ajax-response render-success & {:keys [loading-text rephrase-error error-handler]}]
+  (assert (not (and rephrase-error error-handler)) "Provide EITHER error-handler OR rephrase-error")
+  (let [error (:error ajax-response)]
+    (cond
+      (nil? ajax-response)
+      [comps/Spinner {:text (or loading-text "Loading...")}]
+      error
+      (if error-handler
+        (error-handler error)
+        (style/create-server-error-message
+         (if rephrase-error
+           (rephrase-error error)
+           (:message error))))
+      :else (render-success))))
 
-(defn overwrite-error
-  ([message] message)
-  ([message code ajax-response]
-   (let [current-error (as-> (:error ajax-response) e
-                             (js-invoke js/JSON "parse" e)
-                             (js->clj e :keywordize-keys true))]
-     (if (= code (:code current-error)) message
-                                        (:message current-error)))))
+(defn create-error-message-for-code
+  ([message code error]
+   (if (= code (:statusCode error))
+     message
+     (:message error))))

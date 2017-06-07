@@ -34,8 +34,8 @@
          (:acl-response @state)
          #(this :-render-acl-form)
          {:loading-text (str "Loading Permissions for " (:title props) "...")
-          :error-override
-          #(net/overwrite-error
+          :rephrase-error
+          #(net/create-error-message-for-code
             (str "You are unauthorized to edit this "
                  (clojure.string/lower-case (:entityType props)) ".")
             403 %)}))
@@ -47,12 +47,13 @@
        :on-done (net/handle-ajax-response
                  (fn [k v]
                    (swap! state assoc-in [:acl-response k] v)
-                   (let [acl-vec (filterv #(not= "public" (:user %)) v)
-                         public-user (first (filter #(= "public" (:user %)) v))
-                         public-status (or (:role public-user) no-access-level)]
-                     (swap! state assoc :acl-vec acl-vec
-                            :public-status (= public-status reader-level)
-                            :count-orig (count acl-vec)))))}))
+                   (when-not (= :error k)
+                     (let [acl-vec (filterv #(not= "public" (:user %)) v)
+                           public-user (first (filter #(= "public" (:user %)) v))
+                           public-status (or (:role public-user) no-access-level)]
+                       (swap! state assoc :acl-vec acl-vec
+                              :public-status (= public-status reader-level)
+                              :count-orig (count acl-vec))))))}))
    :-render-acl-form
    (fn [{:keys [state refs this]}]
      (let [{:keys [acl-vec public-status count-orig]} @state]
