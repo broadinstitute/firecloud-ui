@@ -59,14 +59,15 @@
                    {:backgroundColor
                     (cond (= (entity->id (first row-data)) (:selected-entity @state)) "yellow"
                       (even? row-index) (:background-light style/colors)
-                      :else "#fff")})
-      :on-row-click (fn [row-index row-data]
-                      (let [row (first row-data)
-                            entity-id (entity->id row)]
+                      :else "#fff")
+                    :cursor "pointer"})
+      :on-row-click (fn [_ row]
+                      (let [entity (first row)
+                            entity-id (entity->id entity)]
                         (swap! state assoc
                                :selected-entity entity-id
                                :workflow-count (common/count-workflows
-                                                row (:root-entity-type props)))))}]]
+                                                entity (:root-entity-type props)))))}]]
    (style/create-form-label "Define Expression")
    (let [disabled (= (:root-entity-type props) (get-in @state [:selected-entity :type]))]
      (style/create-text-field {:placeholder "leave blank for default"

@@ -149,7 +149,7 @@
         (map-indexed
           (fn [row-index row]
             (let [get-row-style #(if (fn? %) (% row-index row) %)
-                  row-style (-> props (:row-style) (get-row-style) (merge {:display "flex" :alignItems "center"}))
+                  row-style (-> props :row-style get-row-style (merge {:display "flex" :alignItems "center"}))
                   div-props (merge {:style row-style}
                                    (when-let [on-row-click (:on-row-click props)]
                                      {:onMouseDown (fn [] (on-row-click row-index row))}))]
