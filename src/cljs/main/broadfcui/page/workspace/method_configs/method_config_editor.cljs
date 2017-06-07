@@ -56,11 +56,12 @@
        :payload new-conf
        :headers utils/content-type=json
        :on-done (fn [{:keys [success? get-parsed-response xhr]}]
-                  (swap! state dissoc :blocker)
-                  (if success?
-                    (do ((:on-rename props) name)
-                        (swap! state assoc :loaded-config (get-parsed-response false) :blocker nil))
-                    (comps/push-error (str "Exception:\n" (.-statusText xhr)))))})))
+                  (let [response (get-parsed-response false)]
+                    (swap! state dissoc :blocker)
+                    (if success?
+                      (do ((:on-rename props) name)
+                          (swap! state assoc :loaded-config response :blocker nil))
+                      (comps/push-error-response response))))})))
 
 (react/defc MethodDetailsViewer
   {:get-fields
