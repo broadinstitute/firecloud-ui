@@ -11,9 +11,9 @@
     [broadfcui.common.modal :as modal]))
 
 
-(defn- white-wrap [component]
+(defn- white-wrap [& components]
   [:div {:style {:backgroundColor "white" :padding "1rem"}}
-   component])
+   components])
 
 (defn- id->str [id]
   (str (:namespace id) "/" (:name id)))
@@ -22,25 +22,41 @@
 (react/defc ConfirmWorkspaceConfig
   {:render
    (fn [{:keys [state this]}]
-     (let [{:keys [server-response import-error]} @state
-           {:keys [config error-message]} server-response]
-       (cond error-message (style/create-server-error-message error-message)
-             config [:div {}
-                     [:div {} "Confirm config"]
-                     [comps/ErrorViewer {:error import-error}]
-                     [:div {:style {:textAlign "center"}}
-                      [comps/Button {:text "Import"
-                                     :onClick #(this :-import)}]]]
-             :else [:div {:style {:textAlign "center"}}
-                    [comps/Spinner {:text "Loading configuration details..."}]])))
+     (let [{:keys [loaded-config config-load-error loaded-method method-load-error import-error]} @state]
+       (cond config-load-error (style/create-server-error-message config-load-error)
+             (not loaded-config) [:div {:style {:textAlign "center"}}
+                                  [comps/Spinner {:text "Loading configuration details..."}]]
+             :else
+             [:div {}
+              [:h4 {} "Confirm Method Configuration:"]
+              (white-wrap
+               [:div {:style {:paddingBottom "0.5rem"}}
+                "Root Entity Type: "
+                [:strong {} (:rootEntityType loaded-config)]]
+               [:div {} "Referenced Method:"]
+               (cond loaded-method [comps/EntityDetails {:entity loaded-method}]
+                     method-load-error (style/create-server-error-message method-load-error)
+                     :else [comps/Spinner {:text "Loading method details..."}]))
+              [comps/ErrorViewer {:error import-error}]
+              (when (and loaded-config loaded-method)
+                [:div {:style {:textAlign "center" :marginTop "1rem"}}
+                 [comps/Button {:text "Import"
+                                :onClick #(this :-import)}]])])))
    :component-did-mount
    (fn [{:keys [props state]}]
      (endpoints/call-ajax-orch
       {:endpoint (endpoints/get-workspace-method-config (:chosen-workspace-id props) (:config props))
        :on-done (fn [{:keys [success? get-parsed-response status-text]}]
-                  (swap! state assoc :server-response
-                         (if success? {:config (get-parsed-response)}
-                                      {:error-message status-text})))}))
+                  (if success?
+                    (swap! state assoc :loaded-config (get-parsed-response))
+                    (swap! state assoc :config-load-error status-text)))})
+     (let [{:keys [methodNamespace methodName methodVersion]} (:methodRepoMethod (:config props))]
+       (endpoints/call-ajax-orch
+        {:endpoint (endpoints/get-agora-method methodNamespace methodName methodVersion)
+         :on-done (fn [{:keys [success? get-parsed-response status-text]}]
+                    (if success?
+                      (swap! state assoc :loaded-method (get-parsed-response))
+                      (swap! state assoc :method-load-error status-text)))})))
    :-import
    (fn [{:keys [props state]}]
      (let [{:keys [workspace-id]} props
