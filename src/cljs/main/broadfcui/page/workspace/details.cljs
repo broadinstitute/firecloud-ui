@@ -9,6 +9,7 @@
     [broadfcui.config :as config]
     [broadfcui.endpoints :as endpoints]
     [broadfcui.nav :as nav]
+    [broadfcui.net :as net]
     [broadfcui.page.notifications :as notifications]
     [broadfcui.page.workspace.analysis.tab :as analysis-tab]
     [broadfcui.page.workspace.data.tab :as data-tab]
@@ -100,22 +101,7 @@
                        :backgroundColor "white"}}])])})
 
 (react/defc WorkspaceDetails
-  {:refresh-workspace
-   (fn [{:keys [props state]}]
-     (endpoints/call-ajax-orch
-      {:endpoint (endpoints/check-bucket-read-access (:workspace-id props))
-       :on-done (fn [{:keys [success? status-code]}]
-                  (swap! state assoc :bucket-status-code status-code :bucket-access? success?))})
-     (endpoints/call-ajax-orch
-      {:endpoint (endpoints/get-workspace (:workspace-id props))
-       :on-done (fn [{:keys [success? get-parsed-response xhr]}]
-                  (if success?
-                    (swap! state assoc :workspace (process-workspace (get-parsed-response)))
-                    (swap! state assoc :workspace-error (as-> xhr x
-                                                              (aget x "responseText")
-                                                              (js-invoke js/JSON "parse" x)
-                                                              (aget x "message")))))}))
-   :render
+  {:render
    (fn [{:keys [props state locals refs this]}]
      (let [{:keys [workspace-id]} props
            {:keys [workspace workspace-error bucket-access?]} @state
@@ -158,8 +144,8 @@
                        :borderTop style/standard-line :borderBottom style/standard-line
                        :padding "0 1.5rem" :justifyContent "space-between"}}
          [:div {:style {:display "flex"}}
-          (make-tab SUMMARY #(react/call :refresh-workspace this))
-          (make-tab DATA #(react/call :refresh-workspace this))
+          (make-tab SUMMARY #(react/call :-refresh-workspace this))
+          (make-tab DATA #(react/call :-refresh-workspace this))
           (make-tab ANALYSIS #(react/call :refresh (@refs ANALYSIS)))
           (make-tab CONFIGS #(react/call :refresh (@refs CONFIGS)))
           (make-tab MONITOR #(react/call :refresh (@refs MONITOR)))]]
@@ -172,14 +158,14 @@
                   [summary-tab/Summary {:key workspace-id :ref SUMMARY
                                         :workspace-id workspace-id
                                         :workspace workspace
-                                        :request-refresh #(react/call :refresh-workspace this)
+                                        :request-refresh #(react/call :-refresh-workspace this)
                                         :bucket-access? bucket-access?}])
              DATA (react/create-element
                    [data-tab/WorkspaceData {:ref DATA
                                             :workspace-id workspace-id
                                             :workspace workspace
                                             :workspace-error workspace-error
-                                            :request-refresh #(this :refresh-workspace)}])
+                                            :request-refresh #(this :-refresh-workspace)}])
              ANALYSIS (react/create-element
                        [analysis-tab/Page {:ref ANALYSIS :workspace-id workspace-id}])
              CONFIGS (react/create-element
@@ -188,7 +174,7 @@
                         :workspace-id workspace-id
                         :workspace workspace
                         :config-id (:config-id props)
-                        :request-refresh #(react/call :refresh-workspace this)
+                        :request-refresh #(react/call :-refresh-workspace this)
                         :bucket-access? bucket-access?
                         :on-submission-success #(nav/go-to-path
                                                  :workspace-submission workspace-id %)}])
@@ -203,7 +189,23 @@
      ;; These tabs don't request a refresh, so if we nav straight there then we need to kick one
      ;; off.
      (when (contains? #{ANALYSIS CONFIGS MONITOR} (:tab-name props))
-       (react/call :refresh-workspace this)))})
+       (react/call :-refresh-workspace this)))
+   :-refresh-workspace
+   (fn [{:keys [props state]}]
+     (endpoints/call-ajax-orch
+      {:endpoint (endpoints/check-bucket-read-access (:workspace-id props))
+       :on-done (net/handle-ajax-response
+                 (fn [{:keys [status-code success?]}]
+                   (swap! state assoc
+                          :bucket-status-code status-code
+                          :bucket-access? success?)))})
+     (endpoints/call-ajax-orch
+      {:endpoint (endpoints/get-workspace (:workspace-id props))
+       :on-done (net/handle-ajax-response
+                 (fn [{:keys [success? parsed-response]}]
+                   (if success?
+                     (swap! state assoc :workspace (process-workspace parsed-response))
+                     (swap! state assoc :workspace-error (:message parsed-response)))))}))})
 
 (defn- ws-path [ws-id]
   (str "workspaces/" (:namespace ws-id) "/" (:name ws-id)))

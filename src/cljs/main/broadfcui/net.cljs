@@ -13,7 +13,7 @@
                                    (when-not (instance? js/Error x)
                                      (js->clj x :keywordize-keys true)))]
       (update-fn (utils/restructure success? status-code parsed-response))
-      (update-fn {:success? false
+      (update-fn {:success? success?
                   :status-code status-code
                   :parsed-response {:message "Error parsing server response"}
                   :original-request xhr}))))
