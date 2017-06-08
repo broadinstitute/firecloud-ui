@@ -158,13 +158,13 @@
 
 (defn- source-chooser [{:keys [push-page] :as props}]
   [:div {}
-   [comps/Button {:text "Copy from another Workspace"
-                  :onClick #(push-page {:breadcrumb-text "Choose Workspace"
-                                        :component [WorkspaceChooser props]})
-                  :style {:marginRight "1rem"}}]
    [comps/Button {:text "Import from Method Repository"
                   :onClick #(push-page {:breadcrumb-text "Method Repository"
-                                        :component (white-wrap (method-chooser props))})}]])
+                                        :component (white-wrap (method-chooser props))})
+                  :style {:marginRight "1rem"}}]
+   [comps/Button {:text "Copy from another Workspace"
+                  :onClick #(push-page {:breadcrumb-text "Choose Workspace"
+                                        :component [WorkspaceChooser props]})}]])
 
 
 (defn- filter-workspaces [workspaces]
