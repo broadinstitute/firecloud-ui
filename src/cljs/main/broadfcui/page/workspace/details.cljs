@@ -194,11 +194,8 @@
    (fn [{:keys [props state]}]
      (endpoints/call-ajax-orch
       {:endpoint (endpoints/check-bucket-read-access (:workspace-id props))
-       :on-done (net/handle-ajax-response
-                 (fn [{:keys [status-code success?]}]
-                   (swap! state assoc
-                          :bucket-status-code status-code
-                          :bucket-access? success?)))})
+       :on-done (fn [{:keys [status-code success?]}]
+                  (swap! state assoc :bucket-status-code status-code :bucket-access? success?))})
      (endpoints/call-ajax-orch
       {:endpoint (endpoints/get-workspace (:workspace-id props))
        :on-done (net/handle-ajax-response
