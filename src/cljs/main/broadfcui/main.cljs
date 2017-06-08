@@ -78,23 +78,29 @@
                                                   :text [:span {} "FireCloud Forum" icons/external-link-icon]}]})]
           (when (= :registered (:registration-status @state))
             [header/GlobalSubmissionStatus])]]
-        (case (:registration-status @state)
-          nil [:div {:style {:margin "2em 0" :textAlign "center"}}
-               [comps/Spinner {:text "Loading user information..."}]]
-          :error [:div {:style {:margin "2em 0"}}
-                  (style/create-server-error-message (.-errorMessage this))]
-          :not-registered (profile-page/render
-                           {:new-registration? true
-                            :on-done #(do (nav/go-to-path :library)
-                                          (js-invoke (aget js/window "location") "reload"))})
-          :update-registered (profile-page/render
-                              {:update-registration? true
-                               :on-done #(do (nav/go-to-path :workspaces)
-                                             (js-invoke (aget js/window "location") "reload"))})
-          :registered
-          (if component
-            [component (make-props)]
-            [:h2 {} "Page not found."]))]))
+        (let [original-destination (aget js/window "location" "hash")
+              had-destination? (> (count original-destination) 0)]
+          (case (:registration-status @state)
+            nil [:div {:style {:margin "2em 0" :textAlign "center"}}
+                 [comps/Spinner {:text "Loading user information..."}]]
+            :error [:div {:style {:margin "2em 0"}}
+                    (style/create-server-error-message (.-errorMessage this))]
+            :not-registered (profile-page/render
+                             {:new-registration? true
+                              :on-done #(do (if had-destination?
+                                              (aset js/window "location" "hash" original-destination)
+                                              (nav/go-to-path :library))
+                                            (js-invoke (aget js/window "location") "reload"))})
+            :update-registered (profile-page/render
+                                {:update-registration? true
+                                 :on-done #(do (if had-destination?
+                                                 (aset js/window "location" "hash" original-destination)
+                                                 (nav/go-to-path :workspaces))
+                                               (js-invoke (aget js/window "location") "reload"))})
+            :registered
+            (if component
+              [component (make-props)]
+              [:h2 {} "Page not found."])))]))
    :component-did-mount
    (fn [{:keys [this state]}]
      (when (nil? (:registration-status @state))
