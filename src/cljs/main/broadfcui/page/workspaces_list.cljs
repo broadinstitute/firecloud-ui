@@ -406,10 +406,7 @@
            {:keys [billing-projects disabled-reason]} server-response]
        (net/render-with-ajax
         (:workspaces-response server-response)
-        #(react/create-element
-          ;error-message (style/create-server-error-message error-message)
-          ;(some nil? [workspaces]) [comps/Spinner {:text "Loading workspaces..."}]
-          ;:else
+        (fn []
           [:div {:style {:padding "0 1rem"}}
            [WorkspaceTable
             (assoc props
@@ -423,16 +420,7 @@
      (endpoints/call-ajax-orch
       {:endpoint endpoints/list-workspaces
        :on-done (net/handle-ajax-response
-                 (fn [workspaces-response]
-                   (swap! state update :server-response assoc :workspaces-response workspaces-response)
-                   #_(if success?
-                       (swap! state update :server-response
-                              assoc :workspaces (map
-                                                 (fn [ws]
-                                                   (assoc ws :status (common/compute-status ws)))
-                                                 parsed-response))
-                       (swap! state update :server-response
-                              assoc :error-message status-text))))})
+                 #(swap! state update :server-response assoc :workspaces-response %))})
      (endpoints/get-billing-projects
       (fn [err-text projects]
         (if err-text
