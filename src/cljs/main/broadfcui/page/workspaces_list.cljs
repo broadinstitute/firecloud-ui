@@ -13,6 +13,7 @@
     [broadfcui.endpoints :as endpoints]
     [broadfcui.common.modal :as modal]
     [broadfcui.nav :as nav]
+    [broadfcui.net :as net]
     [broadfcui.page.workspace.create :as create]
     [broadfcui.persistence :as persistence]
     [broadfcui.utils :as utils]
@@ -398,31 +399,40 @@
      {:server-response {:disabled-reason :not-loaded}})
    :render
    (fn [{:keys [props state]}]
-     (let [server-response (:server-response @state)
-           {:keys [workspaces billing-projects error-message disabled-reason]} server-response]
-       (cond
-         error-message (style/create-server-error-message error-message)
-         (some nil? [workspaces]) [comps/Spinner {:text "Loading workspaces..."}]
-         :else
-         [:div {:style {:padding "0 1rem"}}
-          [WorkspaceTable
-           (assoc props
-             :workspaces workspaces
-             :billing-projects billing-projects
-             :disabled-reason disabled-reason)]])))
+     (let [{:keys [server-response]} @state
+           workspaces (map
+                       (fn [ws] (assoc ws :status (common/compute-status ws)))
+                       (get-in server-response [:workspaces-response :parsed-response]))
+           {:keys [billing-projects disabled-reason]} server-response]
+       (net/render-with-ajax
+        (:workspaces-response server-response)
+        #(react/create-element
+          ;error-message (style/create-server-error-message error-message)
+          ;(some nil? [workspaces]) [comps/Spinner {:text "Loading workspaces..."}]
+          ;:else
+          [:div {:style {:padding "0 1rem"}}
+           [WorkspaceTable
+            (assoc props
+              :workspaces workspaces
+              :billing-projects billing-projects
+              :disabled-reason disabled-reason)]])
+        {:loading-text "Loading workspaces..."
+         :rephrase-error #(get-in % [:workspaces :error-message])})))
    :component-did-mount
    (fn [{:keys [state]}]
      (endpoints/call-ajax-orch
-       {:endpoint endpoints/list-workspaces
-        :on-done (fn [{:keys [success? status-text get-parsed-response]}]
-                   (if success?
-                     (swap! state update :server-response
-                       assoc :workspaces (map
-                                           (fn [ws]
-                                             (assoc ws :status (common/compute-status ws)))
-                                           (get-parsed-response)))
-                     (swap! state update :server-response
-                       assoc :error-message status-text)))})
+      {:endpoint endpoints/list-workspaces
+       :on-done (net/handle-ajax-response
+                 (fn [workspaces-response]
+                   (swap! state update :server-response assoc :workspaces-response workspaces-response)
+                   #_(if success?
+                       (swap! state update :server-response
+                              assoc :workspaces (map
+                                                 (fn [ws]
+                                                   (assoc ws :status (common/compute-status ws)))
+                                                 parsed-response))
+                       (swap! state update :server-response
+                              assoc :error-message status-text))))})
      (endpoints/get-billing-projects
       (fn [err-text projects]
         (if err-text

@@ -201,7 +201,7 @@
        :on-done (net/handle-ajax-response
                  (fn [{:keys [success? parsed-response]}]
                    (if success?
-                     (swap! state assoc :workspace (process-workspace parsed-response))
+                     (swap! state assoc :workspace (process-workspace parsed-response) :workspace-response parsed-response)
                      (swap! state assoc :workspace-error (:message parsed-response)))))}))})
 
 (defn- ws-path [ws-id]
