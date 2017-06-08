@@ -1,22 +1,18 @@
 (ns broadfcui.page.method-repo.method-config-importer
   (:require
     [dmohs.react :as react]
-    [clojure.string :refer [trim lower-case]]
+    [clojure.string :refer [lower-case]]
     [broadfcui.common :refer [clear-both root-entity-types scroll-to-top]]
     [broadfcui.common.components :as comps]
     [broadfcui.common.flex-utils :as flex]
     [broadfcui.common.input :as input]
     [broadfcui.common.modal :as modal]
     [broadfcui.common.style :as style]
-    [broadfcui.common.table.style :as table-style]
-    [broadfcui.common.table.table :refer [Table]]
-    [broadfcui.common.table.utils :as table-utils]
     [broadfcui.endpoints :as endpoints]
     [broadfcui.nav :as nav]
     [broadfcui.page.method-repo.create-method :as create]
     [broadfcui.page.method-repo.method-repo-table :refer [MethodRepoTable]]
     [broadfcui.page.method-repo.methods-configs-acl :as mca]
-    [broadfcui.persistence :as persistence]
     [broadfcui.utils :as utils]
     ))
 
@@ -83,7 +79,7 @@
              {:style :light :color :exception-state
               :text "Redact" :icon :delete :margin :bottom
               :onClick #(modal/push-modal [Redactor {:entity entity :config? config?
-                                                 :on-delete (:on-delete props)}])}]])])
+                                                     :on-delete (:on-delete props)}])}]])])
      [:div {:style {:flex "1 1 auto"}}
       [comps/EntityDetails {:entity entity}]
       [:div {:style {:border style/standard-line
@@ -270,6 +266,10 @@
                      (swap! state assoc :error status-text)))}))})
 
 
+(defn import-form [{:keys [type] :as props}]
+  [(if (= type :method) MethodImportForm ConfigImportForm) props])
+
+
 (react/defc MethodConfigImporter
   {:render
    (fn [{:keys [props state]}]
@@ -280,11 +280,9 @@
         (when id
           [:h3 {} (str (:namespace id) "/" (:name id) " #" (:snapshot-id id))])
         (if id
-          (let [form (if (= type :method) MethodImportForm ConfigImportForm)]
-            [form (merge
-                   (utils/restructure type id)
-                   (select-keys props [:workspace-id :allow-edit :after-import])
-                   {:on-delete #(nav/go-to-path :method-repo)})])
+          (import-form (merge (utils/restructure type id)
+                              (select-keys props [:workspace-id :allow-edit :after-import])
+                              {:on-delete #(nav/go-to-path :method-repo)}))
           [MethodRepoTable
            {:render-name
             (fn [{:keys [namespace name snapshotId entityType]}]

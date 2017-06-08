@@ -5,6 +5,7 @@
     [broadfcui.common.style :as style]
     [broadfcui.endpoints :as endpoints]
     [broadfcui.nav :as nav]
+    [broadfcui.page.method-repo.method-config-importer :as mci]
     [broadfcui.page.method-repo.method-repo-table :refer [MethodRepoTable]]
     [broadfcui.page.workspace.workspace-common :as ws-common]
     [broadfcui.utils :as utils]
@@ -131,27 +132,14 @@
      ((:load-workspaces props)))})
 
 
-(react/defc ConfirmEntity
-  {:render
-   (fn [{:keys [props state]}]
-     (let [{:keys [loaded-entity error]} @state]
-       (white-wrap
-        (cond error (style/create-server-error-message error)
-              (nil? loaded-entity) [comps/Spinner {:text "Loading..."}]
-              :else [comps/EntityDetails {:entity loaded-entity}]))))
-   :component-did-mount
-   (fn [{:keys [props state]}]
-     (let [{:keys [namespace name snapshot-id]} (:id props)]
-       (endpoints/call-ajax-orch
-        {:endpoint ((case (:type props)
-                      :method-config endpoints/get-configuration
-                      :method endpoints/get-agora-method)
-                    namespace name snapshot-id)
-         :headers utils/content-type=json
-         :on-done (fn [{:keys [success? get-parsed-response status-text]}]
-                    (if success?
-                      (swap! state assoc :loaded-entity (get-parsed-response))
-                      (swap! state assoc :error status-text)))})))})
+(defn- confirm-entity [props]
+  (white-wrap
+   (mci/import-form
+    (merge (select-keys props [:type :id :workspace-id])
+           {:allow-edit false
+            :after-import (fn [{:keys [workspace-id config-id]}]
+                            (modal/pop-modal)
+                            (nav/go-to-path :workspace-method-config workspace-id config-id))}))))
 
 
 (defn- method-chooser [{:keys [push-page] :as props}]
@@ -165,7 +153,7 @@
         (style/create-link
          {:text (style/render-name-id name snapshotId)
           :onClick #(push-page {:breadcrumb-text (style/render-entity namespace name snapshotId)
-                                :component [ConfirmEntity (assoc props :type type :id id)]})})))}])
+                                :component (confirm-entity (assoc props :type type :id id))})})))}])
 
 
 (defn- source-chooser [{:keys [push-page] :as props}]
