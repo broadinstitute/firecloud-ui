@@ -62,7 +62,7 @@
                                        :requesting? false}})
                              (:ws-auth-domains props)))})
    :render
-   (fn [{:keys [props state this]}]
+   (fn [{:keys [state this]}]
      [comps/OKCancelForm
       {:header "Request Access"
        :content
@@ -136,7 +136,7 @@
      (react/call :-load-groups this)
      (react/call :-get-access-instructions this))
    :-load-groups
-   (fn [{:keys [state refs after-update]}]
+   (fn [{:keys [state]}]
      (endpoints/get-groups
       (fn [err-text groups]
         (if err-text
@@ -150,7 +150,7 @@
                                                (swap! state assoc :error-message err-text)
                                                (swap! state assoc :ws-instructions instructions)))))
    :-request-access
-   (fn [{:keys [props state refs]} group-name group-index]
+   (fn [{:keys [state]} group-name group-index]
      (swap! state update-in [:ws-auth-domains group-index :data] assoc :requesting? true)
      (endpoints/call-ajax-orch
       {:endpoint (endpoints/request-group-access group-name)
@@ -160,9 +160,9 @@
 
 (react/defc WorkspaceCell
   {:render
-   (fn [{:keys [props this]}]
+   (fn [{:keys [props]}]
      (let [{:keys [data]} props
-           {:keys [status restricted? no-access? hover-text workspace-id auth-domains]} data
+           {:keys [status restricted? no-access? hover-text workspace-id]} data
            {:keys [namespace name]} workspace-id
            color (style/color-for-status status)]
        [:a {:href (if no-access?
@@ -433,7 +433,7 @@
 
 (react/defc Page
   {:render
-   (fn [{:keys [props]}]
+   (fn []
      [:div {:style {:marginTop "1.5rem"}}
       [WorkspaceList]])})
 
