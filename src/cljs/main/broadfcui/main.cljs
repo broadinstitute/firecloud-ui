@@ -79,7 +79,10 @@
           (when (= :registered (:registration-status @state))
             [header/GlobalSubmissionStatus])]]
         (let [original-destination (aget js/window "location" "hash")
-              had-destination? (> (count original-destination) 0)]
+              figure-out-destination (fn [fall-through]
+                                       (when (= (count original-destination) 0)
+                                         (nav/go-to-path fall-through))
+                                       (this :-get-registration-status))]
           (case (:registration-status @state)
             nil [:div {:style {:margin "2em 0" :textAlign "center"}}
                  [comps/Spinner {:text "Loading user information..."}]]
@@ -87,16 +90,10 @@
                     (style/create-server-error-message (.-errorMessage this))]
             :not-registered (profile-page/render
                              {:new-registration? true
-                              :on-done #(do (if had-destination?
-                                              (aset js/window "location" "hash" original-destination)
-                                              (nav/go-to-path :library))
-                                            (js-invoke (aget js/window "location") "reload"))})
+                              :on-done #(figure-out-destination :library)})
             :update-registered (profile-page/render
                                 {:update-registration? true
-                                 :on-done #(do (if had-destination?
-                                                 (aset js/window "location" "hash" original-destination)
-                                                 (nav/go-to-path :workspaces))
-                                               (js-invoke (aget js/window "location") "reload"))})
+                                 :on-done #(figure-out-destination :workspaces)})
             :registered
             (if component
               [component (make-props)]
@@ -104,20 +101,23 @@
    :component-did-mount
    (fn [{:keys [this state]}]
      (when (nil? (:registration-status @state))
-       (endpoints/profile-get
-        (fn [{:keys [success? status-text get-parsed-response]}]
-          (let [parsed-values (when success? (common/parse-profile (get-parsed-response false)))]
-            (cond
-              (and success? (>= (int (:isRegistrationComplete parsed-values)) 3))
-              (swap! state assoc :registration-status :registered)
-              (and success? (some? (:isRegistrationComplete parsed-values))) ; partial profile case
-              (swap! state assoc :registration-status :update-registered)
-              success? ; unregistered case
-              (swap! state assoc :registration-status :not-registered)
-              :else
-              (do
-                (set! (.-errorMessage this) status-text)
-                (swap! state assoc :registration-status :error))))))))})
+       (this :-get-registration-status)))
+   :-get-registration-status
+   (fn [{:keys [this state]}]
+     (endpoints/profile-get
+      (fn [{:keys [success? status-text get-parsed-response]}]
+        (let [parsed-values (when success? (common/parse-profile (get-parsed-response false)))]
+          (cond
+            (and success? (>= (int (:isRegistrationComplete parsed-values)) 3))
+            (swap! state assoc :registration-status :registered)
+            (and success? (some? (:isRegistrationComplete parsed-values))) ; partial profile case
+            (swap! state assoc :registration-status :update-registered)
+            success?                                        ; unregistered case
+            (swap! state assoc :registration-status :not-registered)
+            :else
+            (do
+              (set! (.-errorMessage this) status-text)
+              (swap! state assoc :registration-status :error)))))))})
 
 (defn- show-system-status-dialog [maintenance-mode?]
   (comps/push-ok-cancel-modal
