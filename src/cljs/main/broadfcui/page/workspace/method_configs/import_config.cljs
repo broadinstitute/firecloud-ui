@@ -1,7 +1,9 @@
 (ns broadfcui.page.workspace.method-configs.import-config
   (:require
     [dmohs.react :as react]
+    [broadfcui.common :as common]
     [broadfcui.common.components :as comps]
+    [broadfcui.common.input :as input]
     [broadfcui.common.style :as style]
     [broadfcui.endpoints :as endpoints]
     [broadfcui.nav :as nav]
@@ -34,15 +36,31 @@
                [:div {:style {:paddingBottom "0.5rem"}}
                 "Root Entity Type: "
                 [:strong {} (:rootEntityType loaded-config)]]
-               [:div {} "Referenced Method:"]
+               [:div {:style {:fontSize "120%" :marginBottom "0.5rem"}}
+                "Referenced Method:"]
                (cond loaded-method [comps/EntityDetails {:entity loaded-method}]
                      method-load-error (style/create-server-error-message method-load-error)
-                     :else [comps/Spinner {:text "Loading method details..."}]))
-              [comps/ErrorViewer {:error import-error}]
-              (when (and loaded-config loaded-method)
-                [:div {:style {:textAlign "center" :marginTop "1rem"}}
+                     :else [comps/Spinner {:text "Loading method details..."}])
+               [:div {:style {:fontSize "120%" :margin "1rem 0 0.5rem"}}
+                "Import as:"]
+               [:div {:style {:float "left" :marginRight "0.5rem"}}
+                (style/create-form-label "Namespace")
+                [input/TextField {:ref "namespace"
+                                  :defaultValue (:namespace loaded-config)
+                                  :placeholder "Required"
+                                  :predicates [(input/nonempty "Namespace")]}]]
+               [:div {:style {:float "left"}}
+                (style/create-form-label "Name")
+                [input/TextField {:ref "name"
+                                  :defaultValue (:name loaded-config)
+                                  :placeholder "Required"
+                                  :predicates [(input/nonempty "Name")]}]]
+               (common/clear-both)
+               (style/create-validation-error-message (:validation-error @state))
+               [comps/ErrorViewer {:error import-error}]
+               (when (and loaded-config loaded-method)
                  [comps/Button {:text "Import"
-                                :onClick #(this :-import)}]])])))
+                                :onClick #(this :-import)}]))])))
    :component-did-mount
    (fn [{:keys [props state]}]
      (endpoints/call-ajax-orch
@@ -59,20 +77,24 @@
                       (swap! state assoc :loaded-method (get-parsed-response))
                       (swap! state assoc :method-load-error status-text)))})))
    :-import
-   (fn [{:keys [props state]}]
-     (let [{:keys [workspace-id]} props
-           {:keys [server-response]} @state
-           {:keys [config]} server-response]
-       (swap! state dissoc :import-error)
-       (endpoints/call-ajax-orch
-        {:endpoint (endpoints/post-workspace-method-config workspace-id)
-         :payload config
-         :headers utils/content-type=json
-         :on-done (fn [{:keys [success? get-parsed-response]}]
-                    (if success?
-                      (do (modal/pop-modal)
-                          (nav/go-to-path :workspace-method-config workspace-id (ws-common/config->id config)))
-                      (swap! state assoc :import-error (get-parsed-response false))))})))})
+   (fn [{:keys [props state refs]}]
+     (let [[namespace name & fails] (input/get-and-validate refs "namespace" "name")
+           {:keys [workspace-id]} props
+           {:keys [loaded-config]} @state
+           updated-config (assoc loaded-config :namespace namespace :name name)]
+       (if fails
+         (swap! state assoc :validation-error fails)
+         (do
+           (swap! state dissoc :import-error)
+           (endpoints/call-ajax-orch
+            {:endpoint (endpoints/post-workspace-method-config workspace-id)
+             :payload updated-config
+             :headers utils/content-type=json
+             :on-done (fn [{:keys [success? get-parsed-response]}]
+                        (if success?
+                          (do (modal/pop-modal)
+                              (nav/go-to-path :workspace-method-config workspace-id (ws-common/config->id updated-config)))
+                          (swap! state assoc :import-error (get-parsed-response false))))})))))})
 
 
 (react/defc WorkspaceConfigChooser
