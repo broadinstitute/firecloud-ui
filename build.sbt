@@ -1,6 +1,6 @@
 import Settings._
 
-lazy val root = project.in(file("src/automation"))
+lazy val root = project.in(file("automation"))
   .settings(rootSettings:_*)
 
 name := "root"
