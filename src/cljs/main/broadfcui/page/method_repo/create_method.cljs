@@ -27,6 +27,10 @@
         :else {:header "Create New Method"
                :ok-text "Upload"}))
 
+(defn- build-new-entity-id [get-parsed-response]
+  (let [{:keys [namespace name snapshotId]} (get-parsed-response)]
+    (assoc (utils/restructure namespace name) :snapshot-id snapshotId)))
+
 
 (react/defc CreateMethodDialog
   {:component-will-mount
@@ -142,66 +146,33 @@
        (swap! state assoc :validation-errors fails)
        (when-not fails
          (swap! state assoc :banner "Uploading...")
-         (endpoints/call-ajax-orch
-          {:endpoint endpoints/post-method
-           :payload {:namespace namespace
-                     :name name
-                     :synopsis synopsis
-                     :documentation documentation
-                     :payload wdl
-                     :entityType "Workflow"}
-           :headers utils/content-type=json
-           :on-done
-           (fn [{:keys [success? get-parsed-response]}]
-             (if success?
-               (let [{:keys [namespace name snapshotId]} (get-parsed-response)
-                     new-entity-id {:namespace namespace :name name :snapshot-id snapshotId}
-                     old-entity-id (select-keys (:info @locals) [:namespace :name :snapshotId])]
-                 (this :-after-upload (utils/restructure new-entity-id old-entity-id)))
-               (swap! state assoc
-                      :banner nil
-                      :upload-error (get-parsed-response false))))}))))
-   :-after-upload
-   (fn [{:keys [locals this]} data]
-     (if (:edit-mode? (:info @locals))
-       (this :-set-permissions data)
-       (this :-complete data)))
-   :-set-permissions
-   (fn [{:keys [state this]} {:keys [new-entity-id old-entity-id] :as data}]
-     (swap! state assoc :banner "Loading current permissions...")
-     (let [{:keys [namespace name snapshotId]} old-entity-id]
-       (endpoints/call-ajax-orch
-        {:endpoint (endpoints/get-agora-method-acl namespace name snapshotId false)
-         :on-done (fn [{:keys [success? get-parsed-response]}]
-                    (if success?
-                      (let [permissions (get-parsed-response)]
-                        (swap! state assoc :banner "Setting permissions on new snapshot...")
-                        (endpoints/call-ajax-orch
-                         {:endpoint (endpoints/persist-agora-method-acl
-                                     (assoc new-entity-id
-                                       :snapshotId (:snapshot-id new-entity-id)
-                                       :entityType "Workflow"))
-                          :headers utils/content-type=json
-                          :payload permissions
-                          :on-done (fn [{:keys [success? get-parsed-response]}]
-                                     (if success?
-                                       (this :-redact-old-method data)
-                                       (this :-complete data (get-parsed-response false))))}))
-                      (this :-complete data (get-parsed-response false))))})))
-   :-redact-old-method
-   (fn [{:keys [state refs this]} {:keys [old-entity-id] :as data}]
-     (if ((@refs "redact-checkbox") :checked?)
-       (let [{:keys [namespace name snapshotId]} old-entity-id]
-         (swap! state assoc :banner "Redacting old method...")
-         (endpoints/call-ajax-orch
-          {:endpoint (endpoints/delete-agora-entity false namespace name snapshotId)
-           :on-done (fn [{:keys [success? get-parsed-response]}]
-                      (this :-complete data
-                            (when-not success? (get-parsed-response false))))}))
-       (this :-complete data)))
+         (if (:edit-mode? (:info @locals))
+           (let [{:keys [namespace name snapshotId]} (:info @locals)
+                 redact? ((@refs "redact-checkbox") :checked?)]
+             (endpoints/call-ajax-orch
+              {:endpoint (endpoints/create-new-method-snapshot namespace name snapshotId redact?)
+               :payload (assoc (utils/restructure synopsis documentation) :payload wdl)
+               :headers utils/content-type=json
+               :on-done
+               (fn [{:keys [success? status-code get-parsed-response]}]
+                 (if success?
+                   (this :-complete
+                         (build-new-entity-id get-parsed-response)
+                         (when (= 206 status-code) "Method successfully copied, but error while redacting."))
+                   (swap! state assoc :banner nil :upload-error (get-parsed-response false))))}))
+           (endpoints/call-ajax-orch
+            {:endpoint endpoints/post-method
+             :payload (assoc (utils/restructure namespace name synopsis documentation)
+                        :payload wdl :entityType "Workflow")
+             :headers utils/content-type=json
+             :on-done
+             (fn [{:keys [success? get-parsed-response]}]
+               (if success?
+                 (this :-complete (build-new-entity-id get-parsed-response))
+                 (swap! state assoc :banner nil :upload-error (get-parsed-response false))))})))))
    :-complete
-   (fn [{:keys [props]} {:keys [new-entity-id]} & [error]]
+   (fn [{:keys [props]} new-entity-id & [error-message]]
      (modal/pop-modal)
      ((:on-created props) :method new-entity-id)
-     (when error
-       (comps/push-error-response error)))})
+     (when error-message
+       (comps/push-error error-message)))})

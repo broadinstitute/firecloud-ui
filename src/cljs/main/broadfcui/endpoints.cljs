@@ -486,6 +486,10 @@
     :payload "task wc {File in_file command { cat ${in_file} | wc -l } output { Int count = read_int(stdout()) }}\n"
     :entityType (rand-nth ["Task" "Workflow"])}})
 
+(defn create-new-method-snapshot [namespace name snapshot-id & [redact?]]
+  {:path (str "/methods/" namespace "/" name "/" snapshot-id "?redact=" (boolean redact?))
+   :method :post})
+
 
 (def list-configurations
   {:path "/configurations"
