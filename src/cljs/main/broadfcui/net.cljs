@@ -14,31 +14,30 @@
                                      (js->clj x :keywordize-keys true)))]
       (update-fn (utils/restructure success? status-code status-text parsed-response))
       (update-fn (merge
-                  (utils/restructure success? status-code status-text)
-                  {:parsed-response {:message "Error parsing server response"}
-                   :original-request xhr})))))
+                  (utils/restructure success? status-code status-text xhr)
+                  {:parsed-response {:message "Error parsing server response"}})))))
 
 (defn render-with-ajax
-  ([ajax-response render-success] (render-with-ajax ajax-response render-success {}))
+  ([ajax-response render-success] (render-with-ajax ajax-response render-success nil))
   ([{:keys [success? parsed-response] :as ajax-response}
     render-success
-    {:keys [loading-text rephrase-error error-handler] :as extras}]
-   (assert (not (and rephrase-error error-handler)) "Provide EITHER error-handler OR rephrase-error")
+    {:keys [loading-text rephrase-error handle-error] :as extras}]
+   (assert (not (and rephrase-error handle-error)) "Provide EITHER handle-error OR rephrase-error")
    extras
    (cond
      (nil? ajax-response)
      [comps/Spinner {:text (or loading-text "Loading...")}]
      (not success?)
-     (if error-handler
-       (error-handler parsed-response)
+     (if handle-error
+       (handle-error parsed-response)
        (style/create-server-error-message
         (if rephrase-error
-          (rephrase-error parsed-response)
+          (rephrase-error ajax-response)
           (:message parsed-response))))
      :else (render-success))))
 
-(defn create-error-message-for-code
-  ([messages error]
-   (if-let [message (messages (:statusCode error))]
+(defn map-error-codes-to-messages
+  ([message-map ajax-response]
+   (if-let [message (message-map (:status-code ajax-response))]
      message
-     (:message error))))
+     (get-in ajax-response [:parsed-response :message]))))

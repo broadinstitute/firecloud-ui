@@ -414,7 +414,7 @@
               :billing-projects billing-projects
               :disabled-reason disabled-reason)]])
         {:loading-text "Loading workspaces..."
-         :rephrase-error #(get-in % [:workspaces :error-message])})))
+         :rephrase-error #(get-in % [:parsed-response :workspaces :error-message])})))
    :component-did-mount
    (fn [{:keys [state]}]
      (endpoints/call-ajax-orch
