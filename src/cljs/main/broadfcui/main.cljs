@@ -82,7 +82,7 @@
               on-done (fn [fall-through]
                         (when (empty? original-destination)
                           (nav/go-to-path fall-through))
-                        (this :-get-registration-status))]
+                        (this :-load-registration-status))]
           (case (:registration-status @state)
             nil [:div {:style {:margin "2em 0" :textAlign "center"}}
                  [comps/Spinner {:text "Loading user information..."}]]
@@ -101,7 +101,7 @@
    :component-did-mount
    (fn [{:keys [this state]}]
      (when (nil? (:registration-status @state))
-       (this :-get-registration-status)))
+       (this :-load-registration-status)))
    :-load-registration-status
    (fn [{:keys [this state]}]
      (endpoints/profile-get
