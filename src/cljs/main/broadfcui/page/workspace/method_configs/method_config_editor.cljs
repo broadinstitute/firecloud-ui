@@ -243,14 +243,13 @@
       :sidebar-visible? true})
    :render
    (fn [{:keys [this state refs props]}]
-     (cond
-       (and
-         (:loaded-config @state)
-         (contains? @state :locked?))
-       (render-display this state refs props)
+     (cond (and (every? @state [:loaded-config :methods])
+                (contains? @state :locked?))
+           (render-display this state refs props)
 
-       (:error @state) (style/create-server-error-message (:error @state))
-       :else [:div {:style {:textAlign "center"}} [comps/Spinner {:text "Loading Method Configuration..."}]]))
+           (:error @state) (style/create-server-error-message (:error @state))
+           :else [:div {:style {:textAlign "center"}}
+                  [comps/Spinner {:text "Loading Method Configuration..."}]]))
    :component-did-mount
    (fn [{:keys [state props refs this]}]
      (react/call :load-validated-method-config this)
