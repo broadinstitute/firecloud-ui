@@ -14,8 +14,8 @@
     [broadfcui.common.modal :as modal]))
 
 
-(defn- white-wrap [& components]
-  [:div {:style {:backgroundColor "white" :padding "1rem"}}
+(defn- wrap [& components]
+  [:div {:style {:backgroundColor "white" :padding "1rem" :width "100vw" :maxWidth "calc(100% - 2rem)"}}
    components])
 
 (defn- id->str [id]
@@ -26,13 +26,11 @@
   {:render
    (fn [{:keys [state this]}]
      (let [{:keys [loaded-config config-load-error loaded-method method-load-error import-error]} @state]
-       (cond config-load-error (style/create-server-error-message config-load-error)
-             (not loaded-config) [:div {:style {:textAlign "center"}}
-                                  [comps/Spinner {:text "Loading configuration details..."}]]
-             :else
-             [:div {}
-              [:h4 {} "Confirm Method Configuration:"]
-              (white-wrap
+       (wrap
+        (cond config-load-error (style/create-server-error-message config-load-error)
+              (not loaded-config) [comps/Spinner {:text "Loading configuration details..."}]
+              :else
+              [:div {}
                [:div {:style {:paddingBottom "0.5rem"}}
                 "Root Entity Type: "
                 [:strong {} (:rootEntityType loaded-config)]]
@@ -60,7 +58,7 @@
                [comps/ErrorViewer {:error import-error}]
                (when (and loaded-config loaded-method)
                  [comps/Button {:text "Import"
-                                :onClick #(this :-import)}]))])))
+                                :onClick #(this :-import)}])]))))
    :component-did-mount
    (fn [{:keys [props state]}]
      (endpoints/call-ajax-orch
@@ -103,7 +101,7 @@
      (let [{:keys [push-page]} props
            {:keys [server-response]} @state
            {:keys [configs error-message]} server-response]
-       (white-wrap
+       (wrap
         (cond error-message (style/create-server-error-message error-message)
               configs
               (ws-common/method-config-selector
@@ -115,8 +113,7 @@
                     :onClick #(push-page {:breadcrumb-text (id->str config)
                                           :component [ConfirmWorkspaceConfig
                                                       (assoc props :config config)]})}))})
-              :else [:div {:style {:textAlign "center"}}
-                     [comps/Spinner {:text "Loading configurations..."}]]))))
+              :else [comps/Spinner {:text "Loading configurations..."}]))))
    :component-did-mount
    (fn [{:keys [props state]}]
      (endpoints/call-ajax-orch
@@ -132,7 +129,7 @@
    (fn [{:keys [props]}]
      (let [{:keys [get-workspaces push-page]} props
            {:keys [result removed-count error]} (get-workspaces)]
-       (white-wrap
+       (wrap
         (cond error (style/create-server-error-message error)
               (nil? result) [comps/Spinner {:text "Loading workspaces..."}]
               :else (ws-common/workspace-selector
@@ -155,7 +152,7 @@
 
 
 (defn- confirm-entity [props]
-  (white-wrap
+  (wrap
    (mci/import-form
     (merge (select-keys props [:type :id :workspace-id])
            {:allow-edit false
@@ -182,7 +179,7 @@
   [:div {}
    [comps/Button {:text "Import from Method Repository"
                   :onClick #(push-page {:breadcrumb-text "Method Repository"
-                                        :component (white-wrap (method-chooser props))})
+                                        :component (wrap (method-chooser props))})
                   :style {:marginRight "1rem"}}]
    [comps/Button {:text "Copy from another Workspace"
                   :onClick #(push-page {:breadcrumb-text "Choose Workspace"
