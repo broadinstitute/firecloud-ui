@@ -79,10 +79,10 @@
           (when (= :registered (:registration-status @state))
             [header/GlobalSubmissionStatus])]]
         (let [original-destination (aget js/window "location" "hash")
-              figure-out-destination (fn [fall-through]
-                                       (when (= (count original-destination) 0)
-                                         (nav/go-to-path fall-through))
-                                       (this :-get-registration-status))]
+              on-done (fn [fall-through]
+                        (when (empty? original-destination)
+                          (nav/go-to-path fall-through))
+                        (this :-get-registration-status))]
           (case (:registration-status @state)
             nil [:div {:style {:margin "2em 0" :textAlign "center"}}
                  [comps/Spinner {:text "Loading user information..."}]]
@@ -90,10 +90,10 @@
                     (style/create-server-error-message (.-errorMessage this))]
             :not-registered (profile-page/render
                              {:new-registration? true
-                              :on-done #(figure-out-destination :library)})
+                              :on-done #(on-done :library)})
             :update-registered (profile-page/render
                                 {:update-registration? true
-                                 :on-done #(figure-out-destination :workspaces)})
+                                 :on-done #(on-done :workspaces)})
             :registered
             (if component
               [component (make-props)]
@@ -102,7 +102,7 @@
    (fn [{:keys [this state]}]
      (when (nil? (:registration-status @state))
        (this :-get-registration-status)))
-   :-get-registration-status
+   :-load-registration-status
    (fn [{:keys [this state]}]
      (endpoints/profile-get
       (fn [{:keys [success? status-text get-parsed-response]}]
