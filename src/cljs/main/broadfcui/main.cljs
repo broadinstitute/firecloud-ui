@@ -2,12 +2,13 @@
   (:require
    clojure.string
    [dmohs.react :as react]
+   [org.broadinstitute.uicomps.modal :as modal]
    [broadfcui.auth :as auth]
    [broadfcui.common :as common]
    [broadfcui.common.components :as comps]
    [broadfcui.common.flex-utils :as flex]
    [broadfcui.common.icons :as icons]
-   [broadfcui.common.modal :as modal]
+   [broadfcui.common.modal :as old-modal]
    [broadfcui.common.notifications :as notifications]
    [broadfcui.common.style :as style]
    [broadfcui.components.top-banner :as top-banner]
@@ -219,7 +220,8 @@
                :else [LoggedIn {:component component :make-props make-props}]))]]
          (footer/render-footer)
          ;; As low as possible on the page so it will be the frontmost component when displayed.
-         [modal/Component {:ref "modal"}]]]))
+         [old-modal/Component {:ref "modal"}]
+         [modal/Container {:z-index style/modals-z-index}]]]))
    :component-did-mount
    (fn [{:keys [this refs locals]}]
      ;; pop up the message only when we start getting 503s, not on every 503
@@ -233,7 +235,7 @@
       (fn [_ _ _ maintenance-now?]
         (when maintenance-now?
           (show-system-status-dialog true))))
-     (modal/set-instance! (@refs "modal"))
+     (old-modal/set-instance! (@refs "modal"))
      (swap! locals assoc :hash-change-listener (partial react/call :handle-hash-change this))
      (.addEventListener js/window "hashchange" (:hash-change-listener @locals))
      (aset js/window "testJsException"

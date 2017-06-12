@@ -549,7 +549,8 @@
               :more-above? (> scroll-top 0)
               :more-below? (< (+ scroll-top inner-height) scroll-height))))})
 
-
+;; Deprecated. If you are touching code that uses this, please migrate to use
+;; org.broadinstitute.uicomps.modal.OKCancelForm
 (react/defc OKCancelForm
   {:get-default-props
    (fn []
