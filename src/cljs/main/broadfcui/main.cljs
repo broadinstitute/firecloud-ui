@@ -2,6 +2,7 @@
   (:require
    clojure.string
    [dmohs.react :as react]
+   [org.broadinstitute.uicomps.modal :as modal]
    [broadfcui.auth :as auth]
    [broadfcui.common :as common]
    [broadfcui.common.components :as comps]
@@ -29,7 +30,6 @@
    [broadfcui.page.workspace.details :as workspace-details]
    [broadfcui.page.workspaces-list :as workspaces]
    [broadfcui.utils :as utils]
-   [org.broadinstitute.uicomps.modal :as modal]
    ))
 
 (defn- init-nav-paths []

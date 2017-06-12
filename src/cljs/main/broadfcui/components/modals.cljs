@@ -1,10 +1,10 @@
 (ns broadfcui.components.modals
   (:require
+   [dmohs.react :as r]
+   [org.broadinstitute.uicomps.modal :as modal]
    [broadfcui.common :as common]
    [broadfcui.common.components :as comps]
    [broadfcui.common.style :as style]
-   [dmohs.react :as r]
-   [org.broadinstitute.uicomps.modal :as modal]
    ))
 
 (r/defc OKCancelForm
