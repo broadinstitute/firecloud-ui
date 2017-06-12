@@ -49,22 +49,24 @@
      {:color (:button-primary style/colors)})
    :render
    (fn [{:keys [props]}]
-     (let [{:keys [color icon href disabled? onClick text style class-name]} props]
-       [:a {:className (or class-name "button")
-            :style (merge
-                    {:display "inline-flex" :alignItems "center" :justifyContent "center"
-                     :backgroundColor (if disabled? (:disabled-state style/colors) color)
-                     :cursor (when disabled? "default")
-                     :color (if disabled? (:text-light style/colors) "white")
-                     :fontWeight 500
-                     :minHeight 19 :minWidth 19
-                     :borderRadius 2 :padding (if text "0.7em 1em" "0.4em")
-                     :textDecoration "none"}
-                    (if (map? style) style {}))
-            :href (or href "javascript:;")
-            :onClick (if disabled? (create-error-message disabled?) onClick)
-            :onKeyDown (when (and onClick (not disabled?))
-                         (common/create-key-handler [:space] onClick))}
+     (let [{:keys [color icon disabled? onClick text style class-name]} props]
+       [:a (merge
+            {:className (or class-name "button")
+             :style (merge
+                     {:display "inline-flex" :alignItems "center" :justifyContent "center"
+                      :backgroundColor (if disabled? (:disabled-state style/colors) color)
+                      :cursor (when disabled? "default")
+                      :color (if disabled? (:text-light style/colors) "white")
+                      :fontWeight 500
+                      :minHeight 19 :minWidth 19
+                      :borderRadius 2 :padding (if text "0.7em 1em" "0.4em")
+                      :textDecoration "none"}
+                     (if (map? style) style {}))
+             :href "javascript:;"
+             :onClick (if disabled? (create-error-message disabled?) onClick)
+             :onKeyDown (when (and onClick (not disabled?))
+                          (common/create-key-handler [:space] onClick))}
+            (dissoc props :color :icon :onClick :style :className))
         text
         (some->> icon (icons/icon {:style (if text
                                             {:fontSize 20 :margin "-0.5em -0.3em -0.5em 0.5em"}
