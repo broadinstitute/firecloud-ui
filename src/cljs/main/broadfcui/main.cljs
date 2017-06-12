@@ -78,40 +78,46 @@
                                                   :text [:span {} "FireCloud Forum" icons/external-link-icon]}]})]
           (when (= :registered (:registration-status @state))
             [header/GlobalSubmissionStatus])]]
-        (case (:registration-status @state)
-          nil [:div {:style {:margin "2em 0" :textAlign "center"}}
-               [comps/Spinner {:text "Loading user information..."}]]
-          :error [:div {:style {:margin "2em 0"}}
-                  (style/create-server-error-message (.-errorMessage this))]
-          :not-registered (profile-page/render
-                           {:new-registration? true
-                            :on-done #(do (nav/go-to-path :library)
-                                          (js-invoke (aget js/window "location") "reload"))})
-          :update-registered (profile-page/render
-                              {:update-registration? true
-                               :on-done #(do (nav/go-to-path :workspaces)
-                                             (js-invoke (aget js/window "location") "reload"))})
-          :registered
-          (if component
-            [component (make-props)]
-            [:h2 {} "Page not found."]))]))
+        (let [original-destination (aget js/window "location" "hash")
+              on-done (fn [fall-through]
+                        (when (empty? original-destination)
+                          (nav/go-to-path fall-through))
+                        (this :-get-registration-status))]
+          (case (:registration-status @state)
+            nil [:div {:style {:margin "2em 0" :textAlign "center"}}
+                 [comps/Spinner {:text "Loading user information..."}]]
+            :error [:div {:style {:margin "2em 0"}}
+                    (style/create-server-error-message (.-errorMessage this))]
+            :not-registered (profile-page/render
+                             {:new-registration? true
+                              :on-done #(on-done :library)})
+            :update-registered (profile-page/render
+                                {:update-registration? true
+                                 :on-done #(on-done :workspaces)})
+            :registered
+            (if component
+              [component (make-props)]
+              [:h2 {} "Page not found."])))]))
    :component-did-mount
    (fn [{:keys [this state]}]
      (when (nil? (:registration-status @state))
-       (endpoints/profile-get
-        (fn [{:keys [success? status-text get-parsed-response]}]
-          (let [parsed-values (when success? (common/parse-profile (get-parsed-response false)))]
-            (cond
-              (and success? (>= (int (:isRegistrationComplete parsed-values)) 3))
-              (swap! state assoc :registration-status :registered)
-              (and success? (some? (:isRegistrationComplete parsed-values))) ; partial profile case
-              (swap! state assoc :registration-status :update-registered)
-              success? ; unregistered case
-              (swap! state assoc :registration-status :not-registered)
-              :else
-              (do
-                (set! (.-errorMessage this) status-text)
-                (swap! state assoc :registration-status :error))))))))})
+       (this :-get-registration-status)))
+   :-load-registration-status
+   (fn [{:keys [this state]}]
+     (endpoints/profile-get
+      (fn [{:keys [success? status-text get-parsed-response]}]
+        (let [parsed-values (when success? (common/parse-profile (get-parsed-response false)))]
+          (cond
+            (and success? (>= (int (:isRegistrationComplete parsed-values)) 3))
+            (swap! state assoc :registration-status :registered)
+            (and success? (some? (:isRegistrationComplete parsed-values))) ; partial profile case
+            (swap! state assoc :registration-status :update-registered)
+            success?                                        ; unregistered case
+            (swap! state assoc :registration-status :not-registered)
+            :else
+            (do
+              (set! (.-errorMessage this) status-text)
+              (swap! state assoc :registration-status :error)))))))})
 
 (defn- show-system-status-dialog [maintenance-mode?]
   (comps/push-ok-cancel-modal
