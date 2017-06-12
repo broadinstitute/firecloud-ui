@@ -43,7 +43,7 @@
         (fn [[k v]]
           (if (some #(= k %) common/root-entity-types)
             (cond
-              (and (map? v) (some #(contains? v %) ["shown" "hidden"])) {k v}
+              (map? v) {k (select-keys v ["shown" "hidden"])}
               ;; Default to shown if the shown/hidden key is not present
               (vector? v) {k {"shown" v}}
               :else {})
