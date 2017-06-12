@@ -13,6 +13,7 @@
     [broadfcui.endpoints :as endpoints]
     [broadfcui.common.modal :as modal]
     [broadfcui.nav :as nav]
+    [broadfcui.net :as net]
     [broadfcui.page.workspace.create :as create]
     [broadfcui.persistence :as persistence]
     [broadfcui.utils :as utils]
@@ -61,7 +62,7 @@
                                        :requesting? false}})
                              (:ws-auth-domains props)))})
    :render
-   (fn [{:keys [props state this]}]
+   (fn [{:keys [state this]}]
      [comps/OKCancelForm
       {:header "Request Access"
        :content
@@ -135,7 +136,7 @@
      (react/call :-load-groups this)
      (react/call :-get-access-instructions this))
    :-load-groups
-   (fn [{:keys [state refs after-update]}]
+   (fn [{:keys [state]}]
      (endpoints/get-groups
       (fn [err-text groups]
         (if err-text
@@ -149,7 +150,7 @@
                                                (swap! state assoc :error-message err-text)
                                                (swap! state assoc :ws-instructions instructions)))))
    :-request-access
-   (fn [{:keys [props state refs]} group-name group-index]
+   (fn [{:keys [state]} group-name group-index]
      (swap! state update-in [:ws-auth-domains group-index :data] assoc :requesting? true)
      (endpoints/call-ajax-orch
       {:endpoint (endpoints/request-group-access group-name)
@@ -159,9 +160,9 @@
 
 (react/defc WorkspaceCell
   {:render
-   (fn [{:keys [props this]}]
+   (fn [{:keys [props]}]
      (let [{:keys [data]} props
-           {:keys [status restricted? no-access? hover-text workspace-id auth-domains]} data
+           {:keys [status restricted? no-access? hover-text workspace-id]} data
            {:keys [namespace name]} workspace-id
            color (style/color-for-status status)]
        [:a {:href (if no-access?
@@ -398,31 +399,28 @@
      {:server-response {:disabled-reason :not-loaded}})
    :render
    (fn [{:keys [props state]}]
-     (let [server-response (:server-response @state)
-           {:keys [workspaces billing-projects error-message disabled-reason]} server-response]
-       (cond
-         error-message (style/create-server-error-message error-message)
-         (some nil? [workspaces]) [comps/Spinner {:text "Loading workspaces..."}]
-         :else
-         [:div {:style {:padding "0 1rem"}}
-          [WorkspaceTable
-           (assoc props
-             :workspaces workspaces
-             :billing-projects billing-projects
-             :disabled-reason disabled-reason)]])))
+     (let [{:keys [server-response]} @state
+           workspaces (map
+                       (fn [ws] (assoc ws :status (common/compute-status ws)))
+                       (get-in server-response [:workspaces-response :parsed-response]))
+           {:keys [billing-projects disabled-reason]} server-response]
+       (net/render-with-ajax
+        (:workspaces-response server-response)
+        (fn []
+          [:div {:style {:padding "0 1rem"}}
+           [WorkspaceTable
+            (assoc props
+              :workspaces workspaces
+              :billing-projects billing-projects
+              :disabled-reason disabled-reason)]])
+        {:loading-text "Loading workspaces..."
+         :rephrase-error #(get-in % [:parsed-response :workspaces :error-message])})))
    :component-did-mount
    (fn [{:keys [state]}]
      (endpoints/call-ajax-orch
-       {:endpoint endpoints/list-workspaces
-        :on-done (fn [{:keys [success? status-text get-parsed-response]}]
-                   (if success?
-                     (swap! state update :server-response
-                       assoc :workspaces (map
-                                           (fn [ws]
-                                             (assoc ws :status (common/compute-status ws)))
-                                           (get-parsed-response)))
-                     (swap! state update :server-response
-                       assoc :error-message status-text)))})
+      {:endpoint endpoints/list-workspaces
+       :on-done (net/handle-ajax-response
+                 #(swap! state update :server-response assoc :workspaces-response %))})
      (endpoints/get-billing-projects
       (fn [err-text projects]
         (if err-text
@@ -435,7 +433,7 @@
 
 (react/defc Page
   {:render
-   (fn [{:keys [props]}]
+   (fn []
      [:div {:style {:marginTop "1.5rem"}}
       [WorkspaceList]])})
 
