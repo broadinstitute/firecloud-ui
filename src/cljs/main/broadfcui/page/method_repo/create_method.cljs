@@ -147,7 +147,7 @@
        (when-not fails
          (swap! state assoc :banner "Uploading...")
          (if (:edit-mode? (:info @locals))
-           (let [{:keys [namespace name snapshotId]} (:info @locals)
+           (let [{:keys [snapshotId]} (:info @locals)
                  redact? ((@refs "redact-checkbox") :checked?)]
              (endpoints/call-ajax-orch
               {:endpoint (endpoints/create-new-method-snapshot namespace name snapshotId redact?)
