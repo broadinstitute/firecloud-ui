@@ -21,9 +21,8 @@
   ([ajax-response render-success] (render-with-ajax ajax-response render-success nil))
   ([{:keys [success? parsed-response] :as ajax-response}
     render-success
-    {:keys [loading-text rephrase-error handle-error] :as extras}]
+    {:keys [loading-text rephrase-error handle-error]}]
    (assert (not (and rephrase-error handle-error)) "Provide EITHER handle-error OR rephrase-error")
-   extras
    (cond
      (nil? ajax-response)
      [comps/Spinner {:text (or loading-text "Loading...")}]
