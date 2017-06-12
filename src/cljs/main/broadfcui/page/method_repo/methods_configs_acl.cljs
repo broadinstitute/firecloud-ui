@@ -38,8 +38,7 @@
           #(if (= 403 (:status-code %))
              (str "You are unauthorized to edit this "
                   (clojure.string/lower-case (:entityType props)) ".")
-             (get-in % [:parsed-response :message])
-             )}))
+             (get-in % [:parsed-response :message]))}))
        :ok-button (when (:acl-vec @state) {:text "Save" :onClick #(this :-persist-acl)})}])
    :component-did-mount
    (fn [{:keys [props state]}]
