@@ -104,11 +104,7 @@
          {:ref "entity-table"
           :workspace-id workspace-id
           :column-defaults
-          (try
-            (utils/parse-json-string (get-in workspace [:workspace :workspace-attributes
-                                                        :workspace-column-defaults]))
-            (catch js/Object e
-              (utils/jslog e) nil))
+          (data-utils/get-column-defaults workspace)
           :toolbar
           (fn [built-in]
             (let [layout (fn [item] [:div {:style {:marginRight "1em"}}] item)]
