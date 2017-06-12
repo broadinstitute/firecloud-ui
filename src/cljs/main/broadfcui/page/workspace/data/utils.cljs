@@ -43,7 +43,7 @@
         (fn [[k v]]
           (if (some #(= k %) common/root-entity-types)
             (cond
-              ((every-pred map? (some contains? ["shown" "hidden"])) v) {k v}
+              (and (map? v) (some #(contains? v %) ["shown" "hidden"])) {k v}
               ;; Default to shown if the shown/hidden key is not present
               (vector? v) {k {"shown" v}}
               :else {})
