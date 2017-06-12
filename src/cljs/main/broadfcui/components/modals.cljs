@@ -40,8 +40,10 @@
                      :onKeyDown (common/create-key-handler [:space :enter] dismiss)}
                  cancel-text])
               (when ok-button
-                (cond (string? ok-button) [comps/Button {:text ok-button :ref "ok-button" :class-name "ok-button" :onClick dismiss}]
-                  (fn? ok-button) [comps/Button {:text "OK" :ref "ok-button" :class-name "ok-button" :onClick ok-button}]
+                (cond
+                  (string? ok-button)
+                  [comps/Button {:text ok-button :ref "ok-button" :onClick dismiss}]
+                  (fn? ok-button) [comps/Button {:text "OK" :ref "ok-button" :onClick ok-button}]
                   (map? ok-button) [comps/Button (merge {:ref "ok-button"} ok-button)]
                   :else ok-button))])]]
          :did-mount #(this :-modal-did-mount)
