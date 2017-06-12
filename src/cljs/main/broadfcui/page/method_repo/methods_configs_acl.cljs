@@ -36,9 +36,9 @@
          {:loading-text (str "Loading Permissions for " (:title props) "...")
           :rephrase-error
           #(net/create-error-message-for-code
-            (str "You are unauthorized to edit this "
-                 (clojure.string/lower-case (:entityType props)) ".")
-            403 %)}))
+            {403 (str "You are unauthorized to edit this "
+                      (clojure.string/lower-case (:entityType props)) ".")}
+            %)}))
        :ok-button (when (:acl-vec @state) {:text "Save" :onClick #(this :-persist-acl)})}])
    :component-did-mount
    (fn [{:keys [props state]}]

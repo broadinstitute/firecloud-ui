@@ -20,7 +20,8 @@
 
 (defn render-with-ajax
   ([ajax-response render-success] (render-with-ajax ajax-response render-success {}))
-  ([{:keys [success? parsed-response] :as ajax-response} render-success
+  ([{:keys [success? parsed-response] :as ajax-response}
+    render-success
     {:keys [loading-text rephrase-error error-handler] :as extras}]
    (assert (not (and rephrase-error error-handler)) "Provide EITHER error-handler OR rephrase-error")
    extras
@@ -37,7 +38,7 @@
      :else (render-success))))
 
 (defn create-error-message-for-code
-  ([message code error]
-   (if (= code (:statusCode error))
+  ([messages error]
+   (if-let [message (messages (:statusCode error))]
      message
      (:message error))))
