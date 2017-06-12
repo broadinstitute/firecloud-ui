@@ -1,0 +1,24 @@
+version: '2'
+services:
+  hub:
+    image: selenium/hub
+    ports:
+      - "4444:4444"
+    extra_hosts:
+      - "firecloud-fiab.dsde-$ENV.broadinstitute.org:$DOCKERHOST"
+      - "firecloud-orchestration-fiab.dsde-$ENV.broadinstitute.org:$DOCKERHOST"
+
+  chrome:
+    image: selenium/node-chrome
+    depends_on:
+      - hub
+    links:
+      - hub
+    ports:
+      - 5555
+    environment:
+      HUB_PORT_4444_TCP_ADDR: hub
+      HUB_PORT_4444_TCP_PORT: 4444
+    extra_hosts:
+      - "firecloud-fiab.dsde-$ENV.broadinstitute.org:$DOCKERHOST"
+      - "firecloud-orchestration-fiab.dsde-$ENV.broadinstitute.org:$DOCKERHOST"

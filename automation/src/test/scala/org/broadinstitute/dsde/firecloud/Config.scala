@@ -8,6 +8,7 @@ object Config {
   private val fireCloud = config.getConfig("fireCloud")
   private val accounts = config.getConfig("accounts")
   private val authTokens = config.getConfig("authTokens")
+  private val chromeSettings = config.getConfig("chromeSettings")
 
   object EnvironmentVars {
     val GCLOUD_AUTH_TOKEN = "ya29.Gl1WBGPL_eVgVOXoniFCFSQh-FFtIao5kJfUIfJ5KrIaleWzKxwbWdTy0ZondNtoJp0CDKNG7ODWYy8CU3dMRnIh9tKy6dLdopDNDogJVfHVIB5lcbARotan7dPbOmo"
@@ -45,5 +46,10 @@ object Config {
 
   object Projects {
     val common = "security-spec-test5"
+  }
+
+  object ChromeSettings {
+    val chromedriverHost = chromeSettings.getString("chromedriverHost")
+
   }
 }

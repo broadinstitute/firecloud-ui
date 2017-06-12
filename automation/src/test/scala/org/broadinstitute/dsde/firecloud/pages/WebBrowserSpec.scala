@@ -34,9 +34,10 @@ trait WebBrowserSpec extends WebBrowserUtil {
 
   private def initWebDriver(): WebDriver = {
     val localBrowser = new SystemProperties().get("local.browser")
+    val defaultChrome = Config.ChromeSettings.chromedriverHost
     localBrowser match {
       case Some("true") => new ChromeDriver
-      case _ => new RemoteWebDriver(new URL("http://localhost:4444/wd/hub"), DesiredCapabilities.chrome())
+      case _ => new RemoteWebDriver(new URL(defaultChrome), DesiredCapabilities.chrome())
     }
   }
 
