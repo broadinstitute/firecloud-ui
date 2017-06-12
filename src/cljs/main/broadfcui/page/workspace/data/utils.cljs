@@ -16,20 +16,19 @@
                    (let [attrs (:attributes (get-parsed-response true))]
                      (if (is-entity-set? entity-type)
                        ;; for set entity types we display _only_ the set elements, expanded into separate rows.
-                       (let [items (case entity-type
-                                     "sample_set" (:items (:samples attrs))
-                                     "pair_set" (:items (:pairs attrs))
-                                     "participant_set" (:items (:participants attrs)))]
-                         (update-parent-state :selected-attr-list items :loading-attributes false))
+                       (let [entities (case entity-type
+                                        "sample_set" (:samples attrs)
+                                        "pair_set" (:pairs attrs)
+                                        "participant_set" (:participants attrs))]
+                         (update-parent-state :selected-attr-list (:items entities) :loading-attributes false))
                        ;; otherwise display all attribute values, expanded into separate rows.
                        ;; generate a user-friendly string for list-valued attributes.
                        (let [attr-value-mapper
                              (fn [v]
-                               (if (common/attribute-list? v)
-                                 (let [items (common/attribute-values v)]
-                                   (if (empty? items)
-                                     "0 items"
-                                     (str (count items) " items: " (clojure.string/join ", " items))))
+                               (if-let [items (common/attribute-values v)]
+                                 (if (empty? items)
+                                   "0 items"
+                                   (str (count items) " items: " (clojure.string/join ", " items)))
                                  v))]
                          (update-parent-state :selected-attr-list (utils/map-values attr-value-mapper attrs) :loading-attributes false)))
                      (update-parent-state :server-error (get-parsed-response false) :loading-attributes false))))})))
