@@ -10,29 +10,30 @@
 (r/defc OKCancelForm
   {:get-default-props
    (fn []
-     {:show-cancel? true
+     {:cancel-text "Cancel"
+      :show-cancel? true
       :show-close? true})
    :render
    (fn [{:keys [this props]}]
-     (let [{:keys [header content dismiss ok-button show-cancel? cancel-text show-close?]} props
-           cancel-text (or cancel-text "Cancel")]
+     (let [{:keys [header content dismiss ok-button show-cancel? cancel-text show-close?]} props]
        (modal/render
         {:content
          [:div {}
           [:div {:style {:borderBottom style/standard-line
-                         :padding "20px 48px 18px"
-                         :fontSize "137%" :fontWeight 400 :lineHeight 1}}
+                         :padding "1rem 3rem 1rem"
+                         :fontSize "140%" :fontWeight 400 :lineHeight 1}}
            header
            (when show-close? [comps/XButton {:dismiss dismiss}])]
-          [:div {:style {:padding "22px 48px 40px" :backgroundColor (:background-light style/colors)}}
+          [:div {:style {:padding "1rem 3rem 2rem"
+                         :backgroundColor (:background-light style/colors)}}
            content
            (when (or show-cancel? ok-button)
-             [:div {:style {:marginTop (if ok-button 40 25) :textAlign "center"}}
+             [:div {:style {:marginTop (if ok-button "2rem" "1rem") :textAlign "center"}}
               (when show-cancel?
                 [:a {:className "cancel"
-                     :style {:marginRight (when ok-button 27) :marginTop 2
+                     :style {:marginRight (when ok-button "2rem") :marginTop 2
                              :display "inline-block"
-                             :fontSize "106%" :fontWeight 500 :textDecoration "none"
+                             :fontWeight 500 :textDecoration "none"
                              :color (:button-primary style/colors)}
                      :href "javascript:;"
                      :onClick dismiss
@@ -41,7 +42,7 @@
               (when ok-button
                 (cond (string? ok-button) [comps/Button {:text ok-button :ref "ok-button" :class-name "ok-button" :onClick dismiss}]
                   (fn? ok-button) [comps/Button {:text "OK" :ref "ok-button" :class-name "ok-button" :onClick ok-button}]
-                  (map? ok-button) [comps/Button (merge {:ref "ok-button" :class-name "ok-button"} ok-button)]
+                  (map? ok-button) [comps/Button (merge {:ref "ok-button"} ok-button)]
                   :else ok-button))])]]
          :did-mount #(this :-modal-did-mount)
          :dismiss dismiss})))
