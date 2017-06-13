@@ -90,8 +90,7 @@
              :headers utils/content-type=json
              :on-done (fn [{:keys [success? get-parsed-response]}]
                         (if success?
-                          (do (modal/pop-modal)
-                              (nav/go-to-path :workspace-method-config workspace-id (ws-common/config->id updated-config)))
+                          ((:after-import props) {:config-id (ws-common/config->id updated-config)})
                           (swap! state assoc :import-error (get-parsed-response false))))})))))})
 
 
@@ -154,11 +153,8 @@
 (defn- confirm-entity [props]
   (wrap
    (mci/import-form
-    (merge (select-keys props [:type :id :workspace-id])
-           {:allow-edit false
-            :after-import (fn [{:keys [workspace-id config-id]}]
-                            (modal/pop-modal)
-                            (nav/go-to-path :workspace-method-config workspace-id config-id))}))))
+    (merge (select-keys props [:type :id :workspace-id :after-import])
+           {:allow-edit false}))))
 
 
 (defn- method-chooser [{:keys [push-page] :as props}]
