@@ -6,12 +6,11 @@
     [broadfcui.common.input :as input]
     [broadfcui.common.style :as style]
     [broadfcui.endpoints :as endpoints]
-    [broadfcui.nav :as nav]
     [broadfcui.page.method-repo.method-config-importer :as mci]
     [broadfcui.page.method-repo.method-repo-table :refer [MethodRepoTable]]
     [broadfcui.page.workspace.workspace-common :as ws-common]
     [broadfcui.utils :as utils]
-    [broadfcui.common.modal :as modal]))
+    ))
 
 
 (defn- wrap [& components]
