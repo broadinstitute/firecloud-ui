@@ -104,7 +104,7 @@
          {:ref "entity-table"
           :workspace-id workspace-id
           :column-defaults
-          (data-utils/get-column-defaults workspace)
+          (data-utils/get-column-defaults (get-in workspace [:workspace :workspace-attributes :workspace-column-defaults]))
           :toolbar
           (fn [built-in]
             (let [layout (fn [item] [:div {:style {:marginRight "1em"}}] item)]

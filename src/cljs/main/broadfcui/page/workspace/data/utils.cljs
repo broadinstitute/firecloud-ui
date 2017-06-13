@@ -33,10 +33,10 @@
                          (update-parent-state :selected-attr-list (utils/map-values attr-value-mapper attrs) :loading-attributes false)))
                      (update-parent-state :server-error (get-parsed-response false) :loading-attributes false))))})))
 
-(defn get-column-defaults [workspace]
+(defn get-column-defaults [json-column-defaults]
   (let [parsed
         (try
-          (utils/parse-json-string (get-in workspace [:workspace :workspace-attributes :workspace-column-defaults]))
+          (utils/parse-json-string json-column-defaults)
           (catch js/Object e
             (utils/jslog e) nil))
         validate-schema
