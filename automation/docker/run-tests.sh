@@ -74,11 +74,10 @@ docker run -e DOCKERHOST=$DOCKERHOST \
     --add-host=firecloud-fiab.dsde-${ENV}.broadinstitute.org:${DOCKERHOST} \
     --add-host=firecloud-orchestration-fiab.dsde-${ENV}.broadinstitute.org:${DOCKERHOST} \
     -P --rm -t -e CHROME_URL="http://hub:4444/" \
+    -v $PWD/application.conf:/app/automation/src/test/resources/application.conf \
     -v jar-cache:/root/.ivy -v jar-cache:/root/.ivy2 \
-    -v application.conf:/app/automation/src/test/resources/application.conf \
-    --link docker_hub_1:hub --name swatomation -w /app \
+    --link docker_hub_1:hub --name ${TEST_CONTAINER} -w /app \
     ${TEST_CONTAINER}:latest
-
 
 # Grab exit code of tests
 TEST_EXIT_CODE=$?

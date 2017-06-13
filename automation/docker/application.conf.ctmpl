@@ -10,6 +10,12 @@ accounts {
   notSoSecretPassword = "{{$accounts.Data.testreg_password}}"
 }
 
+authTokens {
+  admin = ""
+  elvin = ""
+  testFireC = ""
+}
+
 chromeSettings {
   chromedriverHost = "http://hub:4444/wd/hub"
 }
