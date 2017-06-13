@@ -6,7 +6,8 @@
     [broadfcui.common.input :as input]
     [broadfcui.common.modal :as modal]
     [broadfcui.common.style :as style]
-    [broadfcui.config :as config]
+    [broadfcui.components.modals :as modals]
+   [broadfcui.config :as config]
     [broadfcui.endpoints :as endpoints]
     [broadfcui.nav :as nav]
     [broadfcui.utils :as utils]
@@ -20,10 +21,11 @@
       :protected-option :not-loaded})
    :render
    (fn [{:keys [props state refs this]}]
-     [comps/OKCancelForm
+     [modals/OKCancelForm
       {:header "Create New Workspace"
        :ok-button {:text "Create Workspace" :onClick #(react/call :create-workspace this)
                    :data-test-id "create-workspace-button"}
+       :dismiss (:dismiss props)
        :get-first-element-dom-node #(@refs "project")
        :content
        (react/create-element
@@ -98,8 +100,11 @@
 
 (react/defc Button
   {:render
-   (fn [{:keys [props]}]
+   (fn [{:keys [props state]}]
      [:div {:style {:display "inline"}}
+      (when (:modal? @state)
+        [CreateDialog (merge (select-keys props [:billing-projects])
+                             {:dismiss #(swap! state dissoc :modal?)})])
       [comps/Button
        {:text (case (:disabled-reason props)
                 :not-loaded [comps/Spinner {:text "Getting billing info..." :style {:margin 0}}]
@@ -111,4 +116,4 @@
                      :not-loaded "Project billing data has not yet been loaded."
                      :no-billing (comps/no-billing-projects-message)
                      "Project billing data failed to load.")
-        :onClick #(modal/push-modal [CreateDialog (select-keys props [:billing-projects])])}]])})
+        :onClick #(swap! state assoc :modal? true)}]])})

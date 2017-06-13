@@ -2,20 +2,23 @@
   (:require
    clojure.string
    [dmohs.react :as react]
+   [org.broadinstitute.uicomps.modal :as modal]
    [broadfcui.auth :as auth]
    [broadfcui.common :as common]
    [broadfcui.common.components :as comps]
    [broadfcui.common.flex-utils :as flex]
    [broadfcui.common.icons :as icons]
-   [broadfcui.common.modal :as modal]
+   [broadfcui.common.modal :as old-modal]
    [broadfcui.common.notifications :as notifications]
    [broadfcui.common.style :as style]
+   [broadfcui.components.top-banner :as top-banner]
    [broadfcui.config :as config]
    [broadfcui.config.loader :as config-loader]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.footer :as footer]
    [broadfcui.header :as header]
    [broadfcui.nav :as nav]
+   [broadfcui.nih-link-warning :refer [NihLinkWarning]]
    [broadfcui.page.billing.billing-management :as billing-management]
    [broadfcui.page.groups.groups-management :as group-management]
    [broadfcui.page.library.library-page :as library-page]
@@ -23,6 +26,7 @@
    [broadfcui.page.notifications :as billing-notifications]
    [broadfcui.page.profile :as profile-page]
    [broadfcui.page.status :as status-page]
+   [broadfcui.page.style-guide :as style-guide]
    [broadfcui.page.workspace.details :as workspace-details]
    [broadfcui.page.workspaces-list :as workspaces]
    [broadfcui.utils :as utils]
@@ -38,6 +42,7 @@
   (billing-notifications/add-nav-paths)
   (profile-page/add-nav-paths)
   (status-page/add-nav-paths)
+  (style-guide/add-nav-paths)
   (workspace-details/add-nav-paths)
   (workspaces/add-nav-paths))
 
@@ -63,9 +68,7 @@
                       :nav-key :method-repo
                       :data-test-id "method-repo-nav-link"
                       :is-selected? #(or (= path "methods")
-                                         (clojure.string/starts-with? path "methods/"))}]
-             :show-nih-link-warning? (not (or (nav/is-current-path? :profile)
-                                              (nav/is-current-path? :status)))}])
+                                         (clojure.string/starts-with? path "methods/"))}]}])
          flex/spring
          [:div {:style {:display "flex" :flexDirection "column" :fontSize "70%" :marginBottom "0.4rem"}}
           [:div {:style {:marginBottom "0.4rem"}}
@@ -79,40 +82,46 @@
                                                   :text [:span {} "FireCloud Forum" icons/external-link-icon]}]})]
           (when (= :registered (:registration-status @state))
             [header/GlobalSubmissionStatus])]]
-        (case (:registration-status @state)
-          nil [:div {:style {:margin "2em 0" :textAlign "center"}}
-               [comps/Spinner {:text "Loading user information..."}]]
-          :error [:div {:style {:margin "2em 0"}}
-                  (style/create-server-error-message (.-errorMessage this))]
-          :not-registered (profile-page/render
-                           {:new-registration? true
-                            :on-done #(do (nav/go-to-path :library)
-                                          (js-invoke (aget js/window "location") "reload"))})
-          :update-registered (profile-page/render
-                              {:update-registration? true
-                               :on-done #(do (nav/go-to-path :workspaces)
-                                             (js-invoke (aget js/window "location") "reload"))})
-          :registered
-          (if component
-            [component (make-props)]
-            [:h2 {} "Page not found."]))]))
+        (let [original-destination (aget js/window "location" "hash")
+              on-done (fn [fall-through]
+                        (when (empty? original-destination)
+                          (nav/go-to-path fall-through))
+                        (this :-load-registration-status))]
+          (case (:registration-status @state)
+            nil [:div {:style {:margin "2em 0" :textAlign "center"}}
+                 [comps/Spinner {:text "Loading user information..."}]]
+            :error [:div {:style {:margin "2em 0"}}
+                    (style/create-server-error-message (.-errorMessage this))]
+            :not-registered (profile-page/render
+                             {:new-registration? true
+                              :on-done #(on-done :library)})
+            :update-registered (profile-page/render
+                                {:update-registration? true
+                                 :on-done #(on-done :workspaces)})
+            :registered
+            (if component
+              [component (make-props)]
+              [:h2 {} "Page not found."])))]))
    :component-did-mount
    (fn [{:keys [this state]}]
      (when (nil? (:registration-status @state))
-       (endpoints/profile-get
-        (fn [{:keys [success? status-text get-parsed-response]}]
-          (let [parsed-values (when success? (common/parse-profile (get-parsed-response false)))]
-            (cond
-              (and success? (>= (int (:isRegistrationComplete parsed-values)) 3))
-              (swap! state assoc :registration-status :registered)
-              (and success? (some? (:isRegistrationComplete parsed-values))) ; partial profile case
-              (swap! state assoc :registration-status :update-registered)
-              success? ; unregistered case
-              (swap! state assoc :registration-status :not-registered)
-              :else
-              (do
-                (set! (.-errorMessage this) status-text)
-                (swap! state assoc :registration-status :error))))))))})
+       (this :-load-registration-status)))
+   :-load-registration-status
+   (fn [{:keys [this state]}]
+     (endpoints/profile-get
+      (fn [{:keys [success? status-text get-parsed-response]}]
+        (let [parsed-values (when success? (common/parse-profile (get-parsed-response false)))]
+          (cond
+            (and success? (>= (int (:isRegistrationComplete parsed-values)) 3))
+            (swap! state assoc :registration-status :registered)
+            (and success? (some? (:isRegistrationComplete parsed-values))) ; partial profile case
+            (swap! state assoc :registration-status :update-registered)
+            success?                                        ; unregistered case
+            (swap! state assoc :registration-status :not-registered)
+            :else
+            (do
+              (set! (.-errorMessage this) status-text)
+              (swap! state assoc :registration-status :error)))))))})
 
 (defn- show-system-status-dialog [maintenance-mode?]
   (comps/push-ok-cancel-modal
@@ -169,6 +178,11 @@
                                public?
                                (contains? (:user-status @state) :signed-in))]
        [:div {}
+        (when (and (contains? user-status :signed-in)
+                   (not (or (nav/is-current-path? :profile)
+                            (nav/is-current-path? :status))))
+          [NihLinkWarning])
+        [top-banner/Container]
         (when (:config-loaded? @state)
           [notifications/ServiceAlertContainer])
         (when (and (contains? user-status :signed-in) (contains? user-status :refresh-token-saved))
@@ -209,7 +223,8 @@
                :else [LoggedIn {:component component :make-props make-props}]))]]
          (footer/render-footer)
          ;; As low as possible on the page so it will be the frontmost component when displayed.
-         [modal/Component {:ref "modal"}]]]))
+         [old-modal/Component {:ref "modal"}]
+         [modal/Container {:z-index style/modals-z-index}]]]))
    :component-did-mount
    (fn [{:keys [this refs locals]}]
      ;; pop up the message only when we start getting 503s, not on every 503
@@ -223,7 +238,7 @@
       (fn [_ _ _ maintenance-now?]
         (when maintenance-now?
           (show-system-status-dialog true))))
-     (modal/set-instance! (@refs "modal"))
+     (old-modal/set-instance! (@refs "modal"))
      (swap! locals assoc :hash-change-listener (partial react/call :handle-hash-change this))
      (.addEventListener js/window "hashchange" (:hash-change-listener @locals))
      (aset js/window "testJsException"

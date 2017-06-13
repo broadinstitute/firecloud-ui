@@ -1,0 +1,19 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "/firecloud-alerts-dev/alerts.json"
+  },
+  "response": {
+    "headers": {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Headers": "Cache-Control"
+    },
+    "jsonBody": [
+      {
+        "title":"Test Alert",
+        "message":"This is just a test alert",
+        "link":"https://software.broadinstitute.org/firecloud/blog"
+      }
+    ]
+  }
+}

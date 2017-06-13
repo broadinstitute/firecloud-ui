@@ -32,7 +32,7 @@
               :onChange #(do (swap! state dissoc :invalid)
                              (when-let [x (:onChange props)]
                                (x %)))}
-             (dissoc props :ref :style :onChange))))})
+             (dissoc props :ref :style :onChange :predicates))))})
 
 (defn get-text [refs & ids]
   (if (= 1 (count ids))

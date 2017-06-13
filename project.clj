@@ -1,10 +1,12 @@
 (defproject org.broadinstitute/firecloud-ui "0.0.1"
   :dependencies
   [
-   [dmohs/react "1.0.2+15.0.2"]
+   [inflections "0.9.14"]
+   [dmohs/react "1.1.2+15.5.4-0"]
+   [frankiesardo/linked "1.2.9"]
+   [org.broadinstitute/react-cljs-modal "2017.06.12"]
    [org.clojure/clojure "1.8.0"]
    [org.clojure/clojurescript "1.9.293"]
-   [inflections "0.9.14"]
    ]
   :plugins [[lein-cljsbuild "1.1.4"] [lein-figwheel "0.5.8"] [lein-resource "16.9.1"]]
   :profiles {:dev
@@ -20,7 +22,7 @@
                   ;; in all dev builds.
                   :main "broadfcuitest.testrunner"
                   :optimizations :none
-                  :asset-path "build"
+                  :asset-path "target/build"
                   :source-map true
                   :preloads [devtools.preload]
                   :external-config {:devtools/config {:features-to-install
@@ -35,24 +37,15 @@
                   ;; out.
                   :optimizations :simple
                   :pretty-print false
-                  :output-dir "build"}}}}}
-             :test-for-release
-             {:cljsbuild
-              {:builds
-               {:client
-                ;; http://jakemccrary.com/blog/2015/12/19/clojurescript-treat-warnings-as-errors/
-                {:warning-handlers [(fn [warning-type env extra]
-                                      (when-let [s (cljs.analyzer/error-message warning-type extra)]
-                                        (binding [*out* *err*]
-                                          (println "WARNING:" (cljs.analyzer/message env s)))
-                                        (System/exit 1)))]}}}}}
-  :target-path "resources/public"
+                  :output-dir "build"}}}}}}
+  :target-path "resources/public/target"
   :clean-targets ^{:protect false} [:target-path]
   :cljsbuild {:builds {:client {:source-paths ["src/cljs/main"]
                                 :compiler {:main "broadfcui.main"
-                                           :output-dir "resources/public/build"
-                                           :output-to "resources/public/compiled.js"}}}}
+                                           :output-dir "resources/public/target/build"
+                                           :output-to "resources/public/target/compiled.js"}}}}
   :resource {:resource-paths ["src/static"]
+             :target-path "resources/public"
              :excludes [#".*\.DS_Store"]
              :skip-stencil [#"src/static/assets/.*"]
              :extra-values {:vtag ~(.getTime (java.util.Date.))}})
