@@ -3,6 +3,7 @@
 # Parameters
 NUM_NODES="${1:-4}"  # default to 4
 ENV="${2:-dev}"  # default to dev
+export ENV=$ENV
 
 #if test runs against a remote FIAB on a GCE node, put IP in param 3
 #if test runs against a local FIAB on a Dokcer, put "local" in param 3
@@ -10,15 +11,19 @@ ENV="${2:-dev}"  # default to dev
 DOCKERHOST="127.0.0.1"
 DOCKERHOST=${3:-$DOCKERHOST}
 export DOCKERHOST=$DOCKERHOST
-TEST_CONTAINER=swatomation
+TEST_CONTAINER=${4:-automation}
+VAULT_TOKEN=$5
+
+if [ -z VAULT_TOKEN ]; then
+    VAULT_TOKEN=$(cat ~/.vault-token)
+fi
 
 if [ $DOCKERHOST == "local" ]
   then
     docker pull chickenmaru/nettools
-    export DOCKERHOST=`docker run --net=python_default -it --rm chickenmaru/nettools sh -c "ip route|grep default|cut -d' ' -f 3"`
+    export DOCKERHOST=`docker run --net=docker_default -it --rm chickenmaru/nettools sh -c "ip route|grep default|cut -d' ' -f 3"`
     echo "Docker Host from Docker Perspective: $DOCKERHOST"
 fi
-export ENV=$ENV
 
 # define some colors to use for output
 RED='\033[0;31m'
@@ -54,6 +59,15 @@ echo "HOST IP: $DOCKERHOST"
 docker-compose -f hub-compose.yml up -d
 docker-compose -f hub-compose.yml scale chrome=$NUM_NODES
 
+# render ctmpls
+docker run --rm -e VAULT_TOKEN=${VAULT_TOKEN} \
+    -e ENVIRONMENT=${ENV} -v $(pwd):/working \
+    broadinstitute/dsde-toolbox:dev consul-template \
+        -config=/etc/consul-template/config/config.json \
+        -template=application.conf.ctmpl:application.conf \
+        -once
+
+# run tests
 docker run -e DOCKERHOST=$DOCKERHOST \
     --net=docker_default \
     -e ENV=$ENV \
@@ -61,6 +75,7 @@ docker run -e DOCKERHOST=$DOCKERHOST \
     --add-host=firecloud-orchestration-fiab.dsde-${ENV}.broadinstitute.org:${DOCKERHOST} \
     -P --rm -t -e CHROME_URL="http://hub:4444/" \
     -v jar-cache:/root/.ivy -v jar-cache:/root/.ivy2 \
+    -v application.conf:/app/automation/src/test/resources/application.conf \
     --link docker_hub_1:hub --name swatomation -w /app \
     ${TEST_CONTAINER}:latest
 

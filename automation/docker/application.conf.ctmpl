@@ -1,0 +1,17 @@
+{{with $environment := env "ENVIRONMENT"}}
+{{with $accounts := vault (printf "secret/dsde/%s/colvin/accounts" $environment)}}
+firecloud {
+  baseUrl = "http://firecloud-fiab.dsde-{{$environment}}.broadinstitute.org/"
+  apiUrl = "https://firecloud-fiab.dsde-{{$environment}}.broadinstitute.org:23443/"
+  rawlsApiUrl = "https://firecloud-fiab.dsde-{{$environment}}.broadinstitute.org:24443"
+}
+
+accounts {
+  notSoSecretPassword = "{{$accounts.Data.testreg_password}}"
+}
+
+chromeSettings {
+  chromedriverHost = "http://hub:4444/wd/hub"
+}
+{{end}}
+{{end}}
