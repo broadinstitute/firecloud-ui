@@ -1,4 +1,3 @@
-import org.broadinstitute.dsde.firecloud.api.AuthToken
 import org.broadinstitute.dsde.firecloud.pages.{WebBrowserSpec, WorkspaceSummaryPage}
 import org.broadinstitute.dsde.firecloud.workspaces.WorkspaceFixtures
 import org.broadinstitute.dsde.firecloud.{CleanUp, Config, Util}
@@ -12,9 +11,9 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures[
       "should be able to create a workspace" in withWebDriver { implicit driver =>
         val projectName = "broad-dsde-dev"
         val workspaceName = "WorkspaceSpec_create_" + randomUuid
-        implicit val authToken = Config.AuthTokens.testFireC
+        implicit val authToken = AuthToken(Config.Accounts.testUser)
 
-        val listPage = signIn(Config.Accounts.testFireC)
+        val listPage = signIn(Config.Accounts.testUser)
         val detailPage = listPage.createWorkspace(projectName, workspaceName)
         register cleanUp api.workspaces.delete(projectName, workspaceName)
 
@@ -49,12 +48,12 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures[
       "should be able to delete the workspace" in withWebDriver { implicit driver =>
         val projectName = Config.Projects.common
         val workspaceName = "WorkspaceSpec_delete_" + Util.makeUuid
-        implicit val authToken = Config.AuthTokens.testFireC
+        implicit val authToken = AuthToken(Config.Accounts.testUser)
 
         api.workspaces.create(projectName, workspaceName)
         register cleanUp api.workspaces.delete(projectName, workspaceName)
 
-        val listPage = signIn(Config.Accounts.testFireC)
+        val listPage = signIn(Config.Accounts.testUser)
         val detailPage = listPage.openWorkspaceDetails(projectName, workspaceName).awaitLoaded()
         detailPage.deleteWorkspace().awaitLoaded()
 

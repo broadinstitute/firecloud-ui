@@ -1,7 +1,8 @@
 package org.broadinstitute.dsde.firecloud.authdomain
 
-import org.broadinstitute.dsde.firecloud.api.{AclEntry, AuthToken, Orchestration, WorkspaceAccessLevel}
+import org.broadinstitute.dsde.firecloud.api.{AclEntry, AuthToken, Orchestration, WorkspaceAccessLevel, service}
 import org.broadinstitute.dsde.firecloud.pages.{WebBrowserSpec, WorkspaceSummaryPage}
+import org.broadinstitute.dsde.firecloud.auth.AuthTokens
 import org.broadinstitute.dsde.firecloud.workspaces.WorkspaceFixtures
 import org.broadinstitute.dsde.firecloud.{CleanUp, Config}
 import org.scalatest._
@@ -13,16 +14,16 @@ class AuthDomainSpec extends FreeSpec with ParallelTestExecution with Matchers
   val authDomain = "dbGapAuthorizedUsers"
 
   // Unless otherwise declared, this auth token will be used for API calls.
-  implicit val authToken: AuthToken = Config.AuthTokens.testFireC
+  implicit val authToken: AuthToken = AuthTokens.fred
 
 
   "A workspace with an authorization domain" - {
 
     "can be created by a user who is in a managed group" in withWebDriver { implicit driver =>
       val workspaceName = "AuthDomainSpec_create_" + randomUuid
-      implicit val authToken = Config.AuthTokens.elvin
+      implicit val authToken = AuthTokens.fred
 
-      val workspaceListPage = signIn(Config.Accounts.elvin)
+      val workspaceListPage = signIn(Config.Accounts.fred)
       val workspaceDetailPage = workspaceListPage.createWorkspace(projectName, workspaceName, Option(authDomain))
       register cleanUp Orchestration.workspaces.delete(projectName, workspaceName)
 
@@ -50,7 +51,7 @@ class AuthDomainSpec extends FreeSpec with ParallelTestExecution with Matchers
 
       "should not be accessible by a user who is in the authorization domain" in withWebDriver { implicit driver =>
         withWorkspace(projectName, Option("AuthDomainSpec"), Option(authDomain)) { workspaceName =>
-          signIn(Config.Accounts.elvin)
+          signIn(Config.Accounts.fred)
 
           val workspaceSummaryPage = new WorkspaceSummaryPage(projectName, workspaceName)
           go to workspaceSummaryPage
@@ -71,7 +72,7 @@ class AuthDomainSpec extends FreeSpec with ParallelTestExecution with Matchers
 
       "should not be visible to a user who is in the authorization domain" in withWebDriver { implicit driver =>
         withWorkspace(projectName, Option("AuthDomainSpec_share"), Option(authDomain)) { workspaceName =>
-          val listPage = signIn(Config.Accounts.elvin)
+          val listPage = signIn(Config.Accounts.fred)
           listPage.filter(workspaceName)
           listPage.ui.hasWorkspace(projectName, workspaceName) shouldEqual false
         }
@@ -82,7 +83,7 @@ class AuthDomainSpec extends FreeSpec with ParallelTestExecution with Matchers
 
       "should be visible but not accessible" in withWebDriver { implicit driver =>
         val projectName = Config.Projects.common
-        implicit val authToken = Config.AuthTokens.elvin
+        implicit val authToken = AuthTokens.fred
 
         withWorkspace(projectName, Option("AuthDomainSpec_reject"), Option(authDomain)) { workspaceName =>
           api.workspaces.updateAcl(projectName, workspaceName, Config.Accounts.dominique.email, WorkspaceAccessLevel.Reader)
@@ -102,8 +103,8 @@ class AuthDomainSpec extends FreeSpec with ParallelTestExecution with Matchers
     "when shared with a user who is in the authorization domain" - {
 
       "should be visible and accessible when shared with single user" in withWebDriver { implicit driver =>
-        withWorkspace(projectName, Option("AuthDomainSpec_share"), Option(authDomain), List(AclEntry(Config.Accounts.elvin.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
-          val listPage = signIn(Config.Accounts.elvin)
+        withWorkspace(projectName, Option("AuthDomainSpec_share"), Option(authDomain), List(AclEntry(Config.Accounts.fred.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
+          val listPage = signIn(Config.Accounts.fred)
           listPage.filter(workspaceName)
           listPage.ui.looksRestricted(projectName, workspaceName) shouldEqual true
 
@@ -114,7 +115,7 @@ class AuthDomainSpec extends FreeSpec with ParallelTestExecution with Matchers
 
       "should be visible and accessible when shared with a group" in withWebDriver { implicit driver =>
         withWorkspace(projectName, Option("AuthDomainSpec_share"), Option(authDomain), List(AclEntry("GROUP_dbGapAuthorizedUsers@dev.test.firecloud.org", WorkspaceAccessLevel.Reader))) { workspaceName =>
-          val listPage = signIn(Config.Accounts.elvin)
+          val listPage = signIn(Config.Accounts.fred)
           listPage.filter(workspaceName)
           listPage.ui.looksRestricted(projectName, workspaceName) shouldEqual true
 
@@ -124,8 +125,8 @@ class AuthDomainSpec extends FreeSpec with ParallelTestExecution with Matchers
       }
 
       "can be cloned" in withWebDriver { implicit driver =>
-        withWorkspace(projectName, Option("AuthDomainSpec_share"), Option(authDomain), List(AclEntry(Config.Accounts.elvin.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
-          val listPage = signIn(Config.Accounts.elvin)
+        withWorkspace(projectName, Option("AuthDomainSpec_share"), Option(authDomain), List(AclEntry(Config.Accounts.fred.email, WorkspaceAccessLevel.Reader))) { workspaceName =>
+          val listPage = signIn(Config.Accounts.fred)
           val summaryPage = listPage.openWorkspaceDetails(projectName, workspaceName)
 
           val cloneWorkspaceName = workspaceName + "_clone"
@@ -140,9 +141,9 @@ class AuthDomainSpec extends FreeSpec with ParallelTestExecution with Matchers
     "cannot lose its authorization domain when cloned" in withWebDriver { implicit driver =>
       withWorkspace(projectName, Option("AuthDomainSpec_share"), Option(authDomain)) { workspaceName =>
         api.workspaces.updateAcl(projectName, workspaceName,
-          Config.Accounts.elvin.email, WorkspaceAccessLevel.Reader)
+          Config.Accounts.fred.email, WorkspaceAccessLevel.Reader)
 
-        val listPage = signIn(Config.Accounts.elvin)
+        val listPage = signIn(Config.Accounts.fred)
         val summaryPage = listPage.openWorkspaceDetails(projectName, workspaceName)
 
         val cloneWorkspaceName = workspaceName + "_clone"

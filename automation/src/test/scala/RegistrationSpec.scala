@@ -10,7 +10,7 @@ class RegistrationSpec extends FlatSpec with WebBrowserSpec {
   behavior of "FireCloud registration page"
 
   it should "allow sign in of registered user" in withWebDriver { implicit driver =>
-    new SignInPage(Config.FireCloud.baseUrl).open.signIn(Config.Accounts.testUserEmail, Config.Accounts.testUserPassword)
+    new SignInPage(Config.FireCloud.baseUrl).open.signIn(Config.Accounts.testUser.email, Config.Accounts.testUser.password)
   }
 
   it should "allow a user to register" in withWebDriver { implicit driver =>

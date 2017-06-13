@@ -1,8 +1,9 @@
 package org.broadinstitute.dsde.firecloud.workspaces
 
 import org.broadinstitute.dsde.firecloud.Util
-import org.broadinstitute.dsde.firecloud.api.{AclEntry, AuthToken}
+import org.broadinstitute.dsde.firecloud.api.{AclEntry, AuthToken, service}
 import org.broadinstitute.dsde.firecloud.pages.WebBrowserSpec
+import org.broadinstitute.dsde.firecloud.auth.AuthToken
 
 /**
   * Fixtures for creating and cleaning up test workspaces.

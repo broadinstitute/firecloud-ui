@@ -5,6 +5,7 @@ import java.net.URL
 import java.util.UUID
 
 import org.broadinstitute.dsde.firecloud.api.Orchestration
+import org.broadinstitute.dsde.firecloud.auth.Credentials
 import org.broadinstitute.dsde.firecloud.{Config, WebBrowserUtil}
 import org.openqa.selenium.WebDriver
 import org.openqa.selenium.chrome.ChromeDriverService
@@ -87,7 +88,7 @@ trait WebBrowserSpec extends WebBrowserUtil {
     * that the user has previously registered and will therefore be taken to
     * the workspace list page.
     */
-  def signIn(credentials: Config.Credentials)(implicit webDriver: WebDriver): WorkspaceListPage = {
+  def signIn(credentials: Credentials)(implicit webDriver: WebDriver): WorkspaceListPage = {
     signIn(credentials.email, credentials.password)
     new WorkspaceListPage
   }

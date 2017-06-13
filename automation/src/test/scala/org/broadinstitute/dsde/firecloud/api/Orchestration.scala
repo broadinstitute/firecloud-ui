@@ -2,6 +2,7 @@ package org.broadinstitute.dsde.firecloud.api
 
 import com.typesafe.scalalogging.LazyLogging
 import org.broadinstitute.dsde.firecloud.Config
+import org.broadinstitute.dsde.firecloud.auth.AuthToken
 
 import scala.concurrent.duration._
 

@@ -1,5 +1,8 @@
 import java.util.UUID
 
+import org.broadinstitute.dsde.firecloud.Config
+import org.broadinstitute.dsde.firecloud.api.workspaces
+import org.broadinstitute.dsde.firecloud.auth.AuthTokens
 import org.broadinstitute.dsde.firecloud.data.TestData
 import org.broadinstitute.dsde.firecloud.pages.{WebBrowserSpec, WorkspaceListPage, WorkspaceMethodConfigPage}
 import org.broadinstitute.dsde.firecloud.{CleanUp, Config}
@@ -7,7 +10,7 @@ import org.scalatest._
 
 class MethodConfigTabSpec extends FreeSpec with WebBrowserSpec with CleanUp {
 
-  val billingProject = "broad-dsde-dev"
+  val billingProject = Config.Projects.default
   val methodConfigName = "test_method" + UUID.randomUUID().toString
   val wrongRootEntityErrorText = "Error: Method configuration expects an entity of type sample, but you gave us an entity of type participant."
   val noExpressionErrorText = "Error: Method configuration expects an entity of type sample, but you gave us an entity of type sample_set."
@@ -15,12 +18,12 @@ class MethodConfigTabSpec extends FreeSpec with WebBrowserSpec with CleanUp {
 
   "launch a simple workflow" in withWebDriver { implicit driver =>
     val wsName = "TestSpec_FireCloud_launch_a_simple_workflow" + UUID.randomUUID.toString
-    implicit val authToken = Config.AuthTokens.testFireC
+    implicit val authToken = AuthTokens.testUser
     api.workspaces.create(billingProject, wsName)
     register cleanUp api.workspaces.delete(billingProject, wsName)
     api.importMetaData(billingProject, wsName, "entities", TestData.SingleParticipant.participantEntity)
 
-    signIn(Config.Accounts.testUserEmail, Config.Accounts.testUserPassword)
+    signIn(Config.Accounts.testUser.email, Config.Accounts.testUser.password)
     val workspaceMethodConfigPage = new WorkspaceMethodConfigPage(billingProject, wsName).open
     val methodConfigDetailsPage = workspaceMethodConfigPage.importMethodConfig(TestData.SimpleMethodConfig.namespace,
       TestData.SimpleMethodConfig.name, TestData.SimpleMethodConfig.snapshotId, methodConfigName, TestData.SimpleMethodConfig.rootEntityType)
@@ -33,12 +36,12 @@ class MethodConfigTabSpec extends FreeSpec with WebBrowserSpec with CleanUp {
 
   "launch modal with no default entities" in withWebDriver { implicit driver =>
     val wsName = "TestSpec_FireCloud_launch_modal_no_default_entities" + UUID.randomUUID.toString
-    implicit val authToken = Config.AuthTokens.testFireC
+    implicit val authToken = AuthTokens.testUser
     api.workspaces.create(billingProject, wsName)
     register cleanUp api.workspaces.delete(billingProject, wsName)
     api.importMetaData(billingProject, wsName, "entities", TestData.SingleParticipant.participantEntity)
 
-    signIn(Config.Accounts.testUserEmail, Config.Accounts.testUserPassword)
+    signIn(Config.Accounts.testUser.email, Config.Accounts.testUser.password)
     val workspaceMethodConfigPage = new WorkspaceMethodConfigPage(billingProject, wsName)
     workspaceMethodConfigPage.open
     val methodConfigDetailsPage = workspaceMethodConfigPage.importMethodConfig(TestData.SimpleMethodConfig.namespace,
@@ -51,7 +54,7 @@ class MethodConfigTabSpec extends FreeSpec with WebBrowserSpec with CleanUp {
 
   "launch modal with workflows warning" in withWebDriver { implicit driver =>
     val wsName = "TestSpec_FireCloud_launch_modal_with_workflows_warning" + UUID.randomUUID.toString
-    implicit val authToken = Config.AuthTokens.testFireC
+    implicit val authToken = AuthTokens.testUser
     api.workspaces.create(billingProject, wsName)
     register cleanUp api.workspaces.delete(billingProject, wsName)
 
@@ -60,7 +63,7 @@ class MethodConfigTabSpec extends FreeSpec with WebBrowserSpec with CleanUp {
     api.importMetaData(billingProject, wsName, "entities", TestData.HundredAndOneSampleSet.sampleSetCreation)
     api.importMetaData(billingProject, wsName, "entities", TestData.HundredAndOneSampleSet.sampleSetMembership)
 
-    signIn(Config.Accounts.testUserEmail, Config.Accounts.testUserPassword)
+    signIn(Config.Accounts.testUser.email, Config.Accounts.testUser.password)
     val workspaceMethodConfigPage = new WorkspaceMethodConfigPage(billingProject, wsName)
     workspaceMethodConfigPage.open
     val methodConfigDetailsPage = workspaceMethodConfigPage.importMethodConfig(TestData.SimpleMethodConfig.namespace,
@@ -76,12 +79,12 @@ class MethodConfigTabSpec extends FreeSpec with WebBrowserSpec with CleanUp {
 
   "launch workflow with wrong root entity" in withWebDriver { implicit driver =>
     val wsName = "TestSpec_FireCloud_launch_workflow_with_wrong_root_entity" + UUID.randomUUID.toString
-    implicit val authToken = Config.AuthTokens.testFireC
+    implicit val authToken = AuthTokens.testUser
     api.workspaces.create(billingProject, wsName)
     register cleanUp api.workspaces.delete(billingProject, wsName)
     api.importMetaData(billingProject, wsName, "entities", TestData.SingleParticipant.participantEntity)
 
-    signIn(Config.Accounts.testUserEmail, Config.Accounts.testUserPassword)
+    signIn(Config.Accounts.testUser.email, Config.Accounts.testUser.password)
     val workspaceListPage = new WorkspaceListPage
     val workspaceMethodConfigPage = new WorkspaceMethodConfigPage(billingProject, wsName)
     workspaceMethodConfigPage.open
@@ -99,7 +102,8 @@ class MethodConfigTabSpec extends FreeSpec with WebBrowserSpec with CleanUp {
 
   "launch workflow on set without expression" in withWebDriver { implicit driver =>
     val wsName = "TestSpec_FireCloud_launch_workflow_on_set_without_expression" + UUID.randomUUID.toString
-    implicit val authToken = Config.AuthTokens.testFireC
+    implicit val authToken = AuthTokens.testUser
+    Orchestration.workspaces.create(wsNamespace, wsName)
 
     api.workspaces.create(billingProject, wsName)
     register cleanUp api.workspaces.delete(billingProject, wsName)
@@ -109,7 +113,7 @@ class MethodConfigTabSpec extends FreeSpec with WebBrowserSpec with CleanUp {
     api.importMetaData(billingProject, wsName, "entities", TestData.HundredAndOneSampleSet.sampleSetCreation)
     api.importMetaData(billingProject, wsName, "entities", TestData.HundredAndOneSampleSet.sampleSetMembership)
 
-    signIn(Config.Accounts.testUserEmail, Config.Accounts.testUserPassword)
+    signIn(Config.Accounts.testUser.email, Config.Accounts.testUser.password)
     val workspaceMethodConfigPage = new WorkspaceMethodConfigPage(billingProject, wsName).open
     val methodConfigDetailsPage = workspaceMethodConfigPage.importMethodConfig(TestData.SimpleMethodConfig.namespace,
       TestData.SimpleMethodConfig.name, TestData.SimpleMethodConfig.snapshotId, methodConfigName, "sample")
@@ -125,12 +129,12 @@ class MethodConfigTabSpec extends FreeSpec with WebBrowserSpec with CleanUp {
 
   "launch workflow with input not defined" in withWebDriver { implicit driver =>
     val wsName = "TestSpec_FireCloud_launch_workflow_input_not_defined" + UUID.randomUUID.toString
-    implicit val authToken = Config.AuthTokens.testFireC
+    implicit val authToken = AuthTokens.testUser
     api.workspaces.create(billingProject, wsName)
     register cleanUp api.workspaces.delete(billingProject, wsName)
     api.importMetaData(billingProject, wsName, "entities", TestData.SingleParticipant.participantEntity)
 
-    signIn(Config.Accounts.testUserEmail, Config.Accounts.testUserPassword)
+    signIn(Config.Accounts.testUser.email, Config.Accounts.testUser.password)
     val workspaceMethodConfigPage = new WorkspaceMethodConfigPage(billingProject, wsName)
     workspaceMethodConfigPage.open
     val methodConfigDetailsPage = workspaceMethodConfigPage.importMethodConfig(TestData.SimpleMethodConfig.namespace,

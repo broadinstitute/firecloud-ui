@@ -10,7 +10,7 @@ import akka.stream.scaladsl.{Sink, _}
 import akka.util.ByteString
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.scala.DefaultScalaModule
-import org.broadinstitute.dsde.firecloud.Config
+import org.broadinstitute.dsde.firecloud.auth.AuthToken
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
@@ -20,7 +20,6 @@ class FireCloudClient {
   implicit val materializer = ActorMaterializer()
   implicit val ec = ExecutionContext.global
 
-  val authHeader = headers.Authorization(OAuth2BearerToken(Config.EnvironmentVars.GCLOUD_AUTH_TOKEN))
   val mapper = new ObjectMapper()
   mapper.registerModule(DefaultScalaModule)
 
