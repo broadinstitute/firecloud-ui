@@ -21,20 +21,15 @@
         (let [loc (.-location js/window)]
           (str (.-protocol loc) "//" (.-host loc) "/#profile/nih-username-token={token}")))))
 
-(defn is-within-last-24-hours? [epoch-time]
-  (< (.now js/Date) (+ epoch-time 1000 * 60 * 60 * 24)))
-
 (react/defc NihLink
   {:render
    (fn [{:keys [state]}]
      (let [status (:nih-status @state)
-           username (get status "linkedNihUsername")
-           expire-time (* (get status "linkExpireTime") 1000)
+           username (:linkedNihUsername status)
+           expire-time (* (:linkExpireTime status) 1000)
            expired? (< expire-time (.now js/Date))
            expiring-soon? (< expire-time (utils/_24-hours-from-now-ms))
-           authorized? (get status "isDbgapAuthorized")
-           linked-recently? (is-within-last-24-hours? (* (get status "lastLinkTime") 1000))
-           pending? (and username (not authorized?) (not expired?) linked-recently?)]
+           datasets (:datasetPermissions status)]
        [:div {}
         [:h3 {} "Linked NIH Account"]
         (cond
@@ -43,29 +38,37 @@
           [components/Spinner {:ref "pending-spinner" :text "Linking NIH account..."}]
           (nil? username)
           [:a {:href (get-nih-link-href)}
-           "Log-In to NIH to link your account"]
+           "Log-In to NIH to link your account" icons/external-link-icon]
           :else
           [:div {}
            [:div {:style {:display "flex"}}
-            [:div {:style {:flex "0 0 20ex"}} "eRA Commons / NIH Username:"]
+            [:div {:style {:flex "0 0 12rem"}} "eRA Commons / NIH Username:"]
             [:div {:style {:flex "0 0 auto"}} username]]
-           [:div {:style {:display "flex" :marginTop "1em"}}
-            [:div {:style {:flex "0 0 20ex"}} "Link Expiration:"]
+           [:div {:style {:display "flex" :marginTop "1rem"}}
+            [:div {:style {:flex "0 0 12rem"}} "Link Expiration:"]
             [:div {:style {:flex "0 0 auto"}}
              (if expired?
                [:span {:style {:color "red"}} "Expired"]
                [:span {:style {:color (when expiring-soon? "red")}} (common/format-date expire-time)])
-             [:br]
-             [:a {:href (get-nih-link-href)}
-              "Log-In to NIH to re-link your account"]]]
-           [:div {:style {:display "flex" :marginTop "1em"}}
-            [:div {:style {:flex "0 0 20ex"}} "dbGaP Authorization:"]
-            [:div {:style {:flex "0 0 auto"}}
-             (cond
-               authorized? [:span {:style {:color (:success-state style/colors)}} "Authorized"]
-               pending? [:span {:style {:color (:success-state style/colors)}}
-                         "Your link was successful; you will be granted access shortly."]
-               :else [:span {:style {:color (:text-light style/colors)}} "Not Authorized"])]]])]))
+             [:div {} [:a {:href (get-nih-link-href)}
+              "Log-In to NIH to re-link your account" icons/external-link-icon]]]]
+           (map
+            (fn [whitelist]
+              [:div {:style {:display "flex" :marginTop "1rem"}}
+               [:div {:style {:flex "0 0 12rem"}} (str (:name whitelist) " Authorization:")]
+               [:div {:style {:flex "0 0 auto"}}
+                (if (:authorized whitelist)
+                  [:span {:style {:color (:success-state style/colors)}} "Authorized"]
+                  [:span {:style {:color (:text-light style/colors)}}
+                   "Not Authorized"
+                   (common/render-info-box
+                    {:text
+                     [:div {} "Your account was linked, but you are not authorized to view
+                     this protected dataset. Please go "
+                      [:a {:href "https://dbgap.ncbi.nlm.nih.gov/aa/wga.cgi?page=login" :target "_blank"}
+                       "here" icons/external-link-icon]
+                      " to check your credentials."]})])]])
+            datasets)])]))
    :component-did-mount
    (fn [{:keys [this props state after-update]}]
      (let [{:keys [nih-token]} props]
@@ -86,7 +89,7 @@
      (endpoints/profile-get-nih-status
       (fn [{:keys [success? status-code status-text get-parsed-response]}]
         (cond
-          success? (swap! state assoc :nih-status (get-parsed-response false))
+          success? (swap! state assoc :nih-status (get-parsed-response))
           (= status-code 404) (swap! state assoc :nih-status :none)
           :else
           (swap! state assoc :error-message status-text)))))
@@ -94,10 +97,10 @@
    (fn [{:keys [this state]} token]
      (endpoints/profile-link-nih-account
       token
-      (fn [{:keys [success?]}]
+      (fn [{:keys [success? get-parsed-response]}]
         (if success?
           (do (swap! state dissoc :pending-nih-username-token :nih-status)
-              (react/call :load-nih-status this))
+            (swap! state assoc :nih-status (get-parsed-response)))
           (swap! state assoc :error-message "Failed to link NIH account")))))})
 
 

@@ -17,12 +17,12 @@
 
 
 (defn- color-for-submission [submission]
-  (cond (contains? moncommon/sub-running-statuses (submission "status")) (:running-state style/colors)
+  (cond (contains? moncommon/sub-running-statuses (:status submission)) (:running-state style/colors)
         (moncommon/all-success? submission) (:success-state style/colors)
         :else (:exception-state style/colors)))
 
 (defn- icon-for-submission [submission]
-  (cond (contains? moncommon/sub-running-statuses (submission "status")) [icons/RunningIcon {:size 36}]
+  (cond (contains? moncommon/sub-running-statuses (:status submission)) [icons/RunningIcon {:size 36}]
         (moncommon/all-success? submission) [icons/CompleteIcon {:size 36}]
         :else [icons/ExceptionIcon {:size 36}]))
 

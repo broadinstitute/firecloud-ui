@@ -29,15 +29,15 @@
 (def google-cloud-context "https://console.cloud.google.com/storage/browser/")
 
 (defn all-success? [submission]
-  (and (every? #(contains? wf-success-statuses (% "status")) (submission "workflows"))
-       (zero? (count (submission "notstarted")))))
+  (and (every? #(contains? wf-success-statuses (:status %)) (:workflows submission))
+       (zero? (count (:notstarted submission)))))
 
 (defn any-running? [submission]
-  (some #(contains? wf-running-statuses (% "status")) (submission "workflows")))
+  (some #(contains? wf-running-statuses (:status %)) (:workflows submission)))
 
 (defn any-failed? [submission]
-  (or (some #(contains? wf-failure-statuses (% "status")) (submission "workflows"))
-      (pos? (count (submission "notstarted")))))
+  (or (some #(contains? wf-failure-statuses (:status %)) (:workflows submission))
+      (pos? (count (:notstarted submission)))))
 
 (def success-icon
   (icons/icon {:style {:color (:success-state style/colors) :marginRight 4

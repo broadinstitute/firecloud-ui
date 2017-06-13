@@ -56,11 +56,12 @@
        :payload new-conf
        :headers utils/content-type=json
        :on-done (fn [{:keys [success? get-parsed-response xhr]}]
-                  (swap! state dissoc :blocker)
-                  (if success?
-                    (do ((:on-rename props) name)
-                        (swap! state assoc :loaded-config (get-parsed-response false) :blocker nil))
-                    (comps/push-error (str "Exception:\n" (.-statusText xhr)))))})))
+                  (let [response (get-parsed-response false)]
+                    (swap! state dissoc :blocker)
+                    (if success?
+                      (do ((:on-rename props) name)
+                          (swap! state assoc :loaded-config response :blocker nil))
+                      (comps/push-error-response response))))})))
 
 (react/defc MethodDetailsViewer
   {:get-fields
@@ -95,14 +96,15 @@
                      (swap! state assoc :error status-text)))}))})
 
 
-(defn- render-side-bar [state refs config editing? props]
+(defn- render-side-bar [{:keys [state refs config editing? props restore-on-cancel]}]
   [:div {:style {:width 290 :float "left"}}
    [:div {:ref "sidebar"}]
    (style/create-unselectable :div {:style {:position (when-not (:sidebar-visible? @state) "fixed")
                                             :top (when-not (:sidebar-visible? @state) 4)
                                             :width 290}}
      (let [locked? (:locked? @state)
-           can-edit? (access-greater-than? (:access-level props) "READER")]
+           can-edit? (access-greater-than? (:access-level props) "READER")
+           snapshot-id (get-in config ["methodRepoMethod" "methodVersion"])]
        [:div {:style {:lineHeight 1}}
         (when (and can-edit? (not editing?))
           [:div {}
@@ -110,7 +112,7 @@
                                  :text "Edit Configuration" :icon :edit
                                  :data-test-id "edit-method-config-button"
                                  :disabled? (when locked? "The workspace is locked")
-                                 :onClick #(swap! state assoc :editing? true)}]
+                                 :onClick #(swap! state assoc :editing? true :prev-snapshot-id snapshot-id)}]
            [comps/SidebarButton {:style :light :color :exception-state :margin :top
                                  :text "Delete" :icon :delete
                                  :disabled? (when locked? "The workspace is locked")
@@ -130,13 +132,16 @@
           [comps/SidebarButton {:color :success-state
                                 :text "Save" :icon :done
                                 :data-test-id "save-editted-method-config-button"
-                                :onClick #(do (commit state refs config props)
-                                              (stop-editing state))}])
+                                :onClick (fn []
+                                           (commit state refs config props)
+                                           (stop-editing state))}])
         (when editing?
           [comps/SidebarButton {:color :exception-state :margin :top
                                 :text "Cancel Editing" :icon :cancel
                                 :data-test-id "cancel-edit-method-config-button"
-                                :onClick #(stop-editing state)}])]))])
+                                :onClick (fn []
+                                           (restore-on-cancel (:prev-snapshot-id @state))
+                                           (stop-editing state))}])]))])
 
 
 (defn- input-output-list [values ref-prefix invalid-values editing? all-values]
@@ -218,11 +223,12 @@
 (defn- render-display [this state refs props]
   (let [wrapped-config (:loaded-config @state)
         config (wrapped-config "methodConfiguration")
-        editing? (:editing? @state)]
+        editing? (:editing? @state)
+        restore-on-cancel #(this :load-new-method-template %)]
     [:div {}
      [comps/Blocker {:banner (:blocker @state)}]
      [:div {:style {:padding "1em 2em"}}
-      (render-side-bar state refs config editing? props)
+      (render-side-bar (utils/restructure state refs config editing? props restore-on-cancel))
       (when-not editing?
         [:div {:style {:float "right"}}
          (launch/render-button {:workspace-id (:workspace-id props)

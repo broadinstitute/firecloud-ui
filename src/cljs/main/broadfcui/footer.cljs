@@ -23,6 +23,7 @@
              :onClick #(do (swap! utils/use-live-data? not) (swap! state assoc :foo 1))}
          (if @utils/use-live-data? "off" "on")]]
        [:div {}
+        [:a {:href "#styles" :style {:textDecoration "none" :display "block"}} "Style Guide"]
         [:a {:href "#status" :style {:textDecoration "none"}} "Status Page"]]]])})
 
 (defn render-footer []

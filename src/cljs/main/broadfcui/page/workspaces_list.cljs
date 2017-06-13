@@ -11,7 +11,9 @@
     [broadfcui.common.table.table :refer [Table]]
     [broadfcui.config :as config]
     [broadfcui.endpoints :as endpoints]
+    [broadfcui.common.modal :as modal]
     [broadfcui.nav :as nav]
+    [broadfcui.net :as net]
     [broadfcui.page.workspace.create :as create]
     [broadfcui.persistence :as persistence]
     [broadfcui.utils :as utils]
@@ -20,24 +22,26 @@
 
 (def row-height-px 56)
 
-(def dbGap-disabled-text
+(def tcga-disabled-text
   (str "This workspace contains controlled access data. You can only access the contents of this workspace if you are "
        "dbGaP authorized for TCGA data and have linked your FireCloud account to your eRA Commons account."))
 
-(def non-dbGap-disabled-text "This workspace is protected. To access the data, please contact help@firecloud.org.")
+(def non-dbGap-disabled-text "Click to request access.")
 
 (react/defc StatusCell
   {:render
    (fn [{:keys [props]}]
      (let [{:keys [data]} props
-           {:keys [status disabled? hover-text workspace-id]} data]
-       [:a {:href (if disabled?
+           {:keys [status no-access? hover-text workspace-id]} data]
+       [:a {:href (if no-access?
                     "javascript:;"
                     (nav/get-link :workspace-summary workspace-id))
             :style {:display "block" :position "relative"
-                    :backgroundColor (if disabled? (:disabled-state style/colors) (style/color-for-status status))
-                    :margin "2px 0 2px 2px" :height (- row-height-px 4)
-                    :cursor (when disabled? "default")}
+                    :backgroundColor (if no-access?
+                                       (:disabled-state style/colors)
+                                       (style/color-for-status status))
+                    :cursor (when no-access? "default")
+                    :margin "2px 0 2px 2px" :height (- row-height-px 4)}
             :title hover-text}
         [:span {:style {:position "absolute" :top 0 :right 0 :bottom 0 :left 0
                         :backgroundColor "rgba(0,0,0,0.2)"}}]
@@ -47,21 +51,127 @@
             "Running" [icons/RunningIcon]
             "Exception" [icons/ExceptionIcon]))]))})
 
+(react/defc RequestAuthDomainAccessDialog
+  {:get-initial-state
+   (fn [{:keys [props state]}]
+     {:ws-auth-domains (vec (map
+                             (fn [group]
+                               {:name group
+                                :data {:member? (contains? (:my-auth-domains @state) group)
+                                       :requested? false
+                                       :requesting? false}})
+                             (:ws-auth-domains props)))})
+   :render
+   (fn [{:keys [state this]}]
+     [comps/OKCancelForm
+      {:header "Request Access"
+       :content
+       (react/create-element
+        (let [{:keys [my-auth-domains ws-instructions error]} @state]
+          (cond
+            (not (or (and my-auth-domains ws-instructions) error))
+            [comps/Spinner {:text "Loading authorization domains..."}]
+            error
+            (case (:code error)
+              (:unknown :parse-error)
+              [:div {:style {:color (:exception-state style/colors)}}
+               "Error:" [:div {} (:details error)]]
+              [comps/ErrorViewer {:error (:details error)}])
+            :else
+            [:div {:style {:width 750}}
+             [:div {} "You cannot access this workspace because it contains restricted data.
+                         You need permission from the admin(s) of all of the Authorization Domains
+                         protecting the workspace."]
+             (let [simple-th (fn [text]
+                               [:th {:style {:textAlign "left" :padding "0 0.5rem"
+                                             :borderBottom style/standard-line}}
+                                text])
+                   simple-td (fn [text]
+                               [:td {}
+                                [:label {:style {:display "block" :padding "1rem 0.5rem"
+                                                 :width "33%"}}
+                                 text]])
+                   instructions (reduce
+                                 (fn [m ad]
+                                   (assoc m (keyword (:groupName ad)) (:instructions ad))) {}
+                                 ws-instructions)]
+               [:table {:style {:width "100%" :borderCollapse "collapse"
+                                :margin "1em 0 1em 0"}}
+                [:thead {}
+                 [:tr {}
+                  (simple-th "Authorization Domain")
+                  (simple-th "Access")
+                  (simple-th "")]]
+                [:tbody {}
+                 (map-indexed (fn [i auth-domain]
+                                (let [{:keys [member? requested? requesting?]} (:data auth-domain)
+                                      name (:name auth-domain)
+                                      instruction ((keyword name) instructions)]
+                                  [:tr {}
+                                   (simple-td name)
+                                   (simple-td (if member? "Yes" "No"))
+                                   (if instruction
+                                     [:td {:style {:width "34%"}}
+                                      (when-not member?
+                                        [:div {:style {:fontSize "85%"}}
+                                         "Learn how to apply for this Authorization Domain  "
+                                         [:a {:href instruction :target "_blank"} "here"] "."])]
+                                     [:td {:style {:width "34%"}}
+                                      (when-not member?
+                                        [:div {}
+                                         [comps/Button {:style {:width "125px"}
+                                                        :disabled? (or requested? requesting?)
+                                                        :text (if requested? "Request Sent" "Request Access")
+                                                        :onClick #(react/call :-request-access this name i)}]
+                                         (when requesting? [comps/Spinner])
+                                         (when requested?
+                                           (common/render-info-box
+                                            {:text [:div {}
+                                                    "Your request has been submitted. When you are granted
+                                                    access, the " [:strong {} "Access Level"] " displayed on
+                                                     the Workspace list will be updated."]}))])])]))
+                              (:ws-auth-domains @state))]])])))}])
+   :component-did-mount
+   (fn [{:keys [this]}]
+     (react/call :-load-groups this)
+     (react/call :-get-access-instructions this))
+   :-load-groups
+   (fn [{:keys [state]}]
+     (endpoints/get-groups
+      (fn [err-text groups]
+        (if err-text
+          (swap! state assoc :error-message err-text)
+          (swap! state assoc :my-auth-domains (map :groupName groups))))))
+   :-get-access-instructions
+   (fn [{:keys [props state]}]
+     (endpoints/get-ws-access-instructions (:workspace-id props)
+                                           (fn [err-text instructions]
+                                             (if err-text
+                                               (swap! state assoc :error-message err-text)
+                                               (swap! state assoc :ws-instructions instructions)))))
+   :-request-access
+   (fn [{:keys [state]} group-name group-index]
+     (swap! state update-in [:ws-auth-domains group-index :data] assoc :requesting? true)
+     (endpoints/call-ajax-orch
+      {:endpoint (endpoints/request-group-access group-name)
+       :on-done (fn []
+                  (swap! state update-in [:ws-auth-domains group-index :data]
+                         assoc :requesting? false :requested? true))}))})
 
 (react/defc WorkspaceCell
   {:render
    (fn [{:keys [props]}]
      (let [{:keys [data]} props
-           {:keys [status restricted? disabled? hover-text workspace-id]} data
+           {:keys [status restricted? no-access? hover-text workspace-id]} data
            {:keys [namespace name]} workspace-id
            color (style/color-for-status status)]
-       [:a {:href (if disabled?
+       [:a {:href (if no-access?
                     "javascript:;"
                     (nav/get-link :workspace-summary workspace-id))
             :style {:display "flex" :alignItems "center"
-                    :backgroundColor (if disabled? (:disabled-state style/colors) color)
+                    :backgroundColor (if no-access? (:disabled-state style/colors) color)
+                    :cursor (when no-access? "default")
                     :color "white" :textDecoration "none"
-                    :cursor (when disabled? "default")
                     :height (- row-height-px 4)
                     :margin "2px 0"}
             :title hover-text}
@@ -75,7 +185,13 @@
             "RESTRICTED"]])
         [:div {:style {:paddingLeft 24}}
          [:div {:style {:fontSize "80%"}} namespace]
-         [:div {:style {:fontWeight 600}} name]]]))})
+         [:div {:style {:fontWeight 600}} name]]]))
+   :-show-request-access-modal
+   (fn [{:keys [props]}]
+     (modal/push-modal
+      [RequestAuthDomainAccessDialog
+       {:workspace-id (get-in props [:data :workspace-id])
+        :ws-auth-domains (get-in props [:data :auth-domains])}]))})
 
 (defn- get-workspace-name-string [column-data]
   (str (get-in column-data [:workspace-id :namespace]) "/" (get-in column-data [:workspace-id :name])))
@@ -149,14 +265,19 @@
          :body
          {:columns
           (let [column-data (fn [ws]
-                              (let [disabled? (= (:accessLevel ws) "NO ACCESS")]
+                              (let [no-access? (= (:accessLevel ws) "NO ACCESS")
+                                    tcga? (and no-access? (= (get-in ws [:workspace :authorizationDomain :membersGroupName])
+                                                                 config/tcga-authorization-domain))]
                                 {:workspace-id (select-keys (:workspace ws) [:namespace :name])
-                                 :href (let [x (:workspace ws)] (str (:namespace x) ":" (:name x)))
                                  :status (:status ws)
-                                 :disabled? disabled?
-                                 :hover-text (when disabled? (if (= (get-in ws [:workspace :authorizationDomain :membersGroupName]) (config/dbgap-authorization-domain))
-                                                               dbGap-disabled-text
-                                                               non-dbGap-disabled-text))
+                                 ;; this will very soon return multiple auth domains, so im future-proofing it now
+                                 :auth-domains [(get-in ws [:workspace :authorizationDomain :membersGroupName])]
+                                 :no-access? no-access?
+                                 :access-level (:accessLevel ws)
+                                 :hover-text (when no-access?
+                                               (if tcga?
+                                                 tcga-disabled-text
+                                                 non-dbGap-disabled-text))
                                  :restricted? (some? (get-in ws [:workspace :authorizationDomain :membersGroupName]))}))]
             ;; All of this margining is terrible, but since this table
             ;; will be redesigned soon I'm leaving it as-is.
@@ -186,11 +307,18 @@
               :as-text common/format-date}
              {:id "Access Level" :header [:span {:style {:marginLeft 14}} "Access Level"]
               :initial-width 132 :resizable? false
-              :column-data :accessLevel
+              :column-data column-data
               :sort-by (zipmap access-levels (range)) :sort-initial :asc
-              :render (fn [access-level]
-                        [:div {:style {:paddingLeft 14}}
-                         (prettify access-level)])}])
+              :render (fn [data]
+                        (let [access-level (:access-level data)]
+                          [:div {:style {:paddingLeft 14}}
+                           (if (= access-level "NO ACCESS")
+                             (style/create-link {:text (prettify access-level)
+                                                 :onClick #(modal/push-modal
+                                                            [RequestAuthDomainAccessDialog
+                                                             {:workspace-id (:workspace-id data)
+                                                              :ws-auth-domains (:auth-domains data)}])})
+                             (prettify access-level))]))}])
           :behavior {:reorderable-columns? false}
           :style {:header-row {:color (:text-lighter style/colors) :fontSize "90%"}
                   :header-cell {:padding "0.4rem 0"}
@@ -272,31 +400,28 @@
      {:server-response {:disabled-reason :not-loaded}})
    :render
    (fn [{:keys [props state]}]
-     (let [server-response (:server-response @state)
-           {:keys [workspaces billing-projects error-message disabled-reason]} server-response]
-       (cond
-         error-message (style/create-server-error-message error-message)
-         (some nil? [workspaces]) [comps/Spinner {:text "Loading workspaces..."}]
-         :else
-         [:div {:style {:padding "0 1rem"}}
-          [WorkspaceTable
-           (assoc props
-             :workspaces workspaces
-             :billing-projects billing-projects
-             :disabled-reason disabled-reason)]])))
+     (let [{:keys [server-response]} @state
+           workspaces (map
+                       (fn [ws] (assoc ws :status (common/compute-status ws)))
+                       (get-in server-response [:workspaces-response :parsed-response]))
+           {:keys [billing-projects disabled-reason]} server-response]
+       (net/render-with-ajax
+        (:workspaces-response server-response)
+        (fn []
+          [:div {:style {:padding "0 1rem"}}
+           [WorkspaceTable
+            (assoc props
+              :workspaces workspaces
+              :billing-projects billing-projects
+              :disabled-reason disabled-reason)]])
+        {:loading-text "Loading workspaces..."
+         :rephrase-error #(get-in % [:parsed-response :workspaces :error-message])})))
    :component-did-mount
    (fn [{:keys [state]}]
      (endpoints/call-ajax-orch
-       {:endpoint endpoints/list-workspaces
-        :on-done (fn [{:keys [success? status-text get-parsed-response]}]
-                   (if success?
-                     (swap! state update :server-response
-                       assoc :workspaces (map
-                                           (fn [ws]
-                                             (assoc ws :status (common/compute-status ws)))
-                                           (get-parsed-response)))
-                     (swap! state update :server-response
-                       assoc :error-message status-text)))})
+      {:endpoint endpoints/list-workspaces
+       :on-done (net/handle-ajax-response
+                 #(swap! state update :server-response assoc :workspaces-response %))})
      (endpoints/get-billing-projects
       (fn [err-text projects]
         (if err-text
@@ -309,7 +434,7 @@
 
 (react/defc Page
   {:render
-   (fn [{:keys [props]}]
+   (fn []
      [:div {:style {:marginTop "1.5rem"}}
       [WorkspaceList]])})
 

@@ -157,7 +157,7 @@
                  :value (str "Download '" selected-entity-type "' metadata")}]]))
    :-render-entity
    (fn [{:keys [props state this]} e]
-     (let [entity-name (:name e)
+     (let [entity-name (or (:name e) (:entityName e))
            entity-type (:entityType e)
            {:keys [workspace-id]} props
            update-parent-state (partial this :update-state)]

@@ -117,7 +117,7 @@
               [comps/TextFilter (merge
                                  {:initial-text (:filter-text query-params)
                                   :data-test-id (:data-test-id props)
-                                  :on-filter #(swap! state update :query-params assoc :filter-text %)}
+                                  :on-filter #(swap! state update :query-params assoc :filter-text % :page-number 1)}
                                  (:inner filter-bar-props))]]))
          (list* (:items toolbar))]
         [:div {:style {:overflowX "auto"}}
