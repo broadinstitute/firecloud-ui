@@ -20,7 +20,7 @@
                           :ok-text "Create New Method"}
                          (select-keys duplicate [:synopsis :documentation :payload]))
         snapshot (merge {:header "Edit Method"
-                         :ok-text "Create New Snapshot"
+                         :ok-text "Save As New Snapshot"
                          :locked #{:namespace :name}
                          :edit-mode? true}
                         (select-keys snapshot [:namespace :name :snapshotId :synopsis :documentation :payload]))
