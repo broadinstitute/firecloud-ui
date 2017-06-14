@@ -142,12 +142,10 @@
   {:path (str "/workspaces/" (ws-path workspace-id) "/methodconfigs")
    :method :post})
 
-(defn get-workspace-method-config [workspace-id config]
+(defn get-workspace-method-config [workspace-id config-id]
   {:path (str "/workspaces/" (ws-path workspace-id)
-           "/method_configs/" (config "namespace") "/" (config "name"))
-   :method :get
-   :mock-data
-   (assoc config "methodRepoMethod" (config "methodStoreMethod"))})
+           "/method_configs/" (:namespace config-id) "/" (:name config-id))
+   :method :get})
 
 (defn update-workspace-method-config [workspace-id config]
   {:path (str "/workspaces/" (ws-path workspace-id)
