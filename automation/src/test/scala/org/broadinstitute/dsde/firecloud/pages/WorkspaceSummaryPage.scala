@@ -41,6 +41,10 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
     // TODO: finish this
   }
 
+  def clone(billingProjectName: String, newWorkspaceName: String, authDomain: Option[String] = None): WorkspaceSummaryPage = {
+    ui.clickCloneWorkspaceButton().cloneWorkspace(billingProjectName, newWorkspaceName, authDomain)
+  }
+
 
   trait UI extends super.UI {
     private val authDomainRestrictionMessage = testId("auth-domain-restriction-message")
@@ -48,6 +52,7 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
     private val nameHeader = testId("header-name")
     private val publishButtonQuery = testId("publish-button")
     private val shareWorkspaceButton = testId("share-workspace-button")
+    private val cloneWorkspaceButton = testId("open-clone-workspace-modal-button")
 
     def clickDeleteWorkspaceButton(): WorkspaceDeleteModal = {
       click on (await enabled deleteWorkspaceButtonQuery)
@@ -61,6 +66,11 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
 
     def clickShareWorkspaceButton(): Unit = {
       click on (await enabled shareWorkspaceButton)
+    }
+
+    def clickCloneWorkspaceButton(): CloneWorkspaceModal = {
+      click on (await enabled cloneWorkspaceButton)
+      new CloneWorkspaceModal
     }
 
     def hasPublishButton: Boolean = {
@@ -100,5 +110,50 @@ class WorkspaceDeleteModal(implicit webDriver: WebDriver) extends FireCloudView 
     def clickConfirmDeleteButton(): Unit = {
       click on (await enabled confirmDeleteButtonQuery)
     }
+  }
+}
+
+class CloneWorkspaceModal(implicit webDriver: WebDriver) extends FireCloudView {
+
+  /**
+    * Clones a new workspace. Returns after the FireCloud busy spinner
+    * disappears.
+    *
+    * @param workspaceName the name for the new workspace
+    * @param billingProjectName the billing project for the workspace
+    */
+  def cloneWorkspace(billingProjectName: String, workspaceName: String, authDomain: Option[String] = None): WorkspaceSummaryPage = {
+    ui.selectBillingProject(billingProjectName)
+    ui.fillWorkspaceName(workspaceName)
+    authDomain foreach { ui.selectAuthDomain(_) }
+
+    ui.clickCloneWorkspaceButton()
+    await toggle(spinner, 15)
+    new WorkspaceSummaryPage(billingProjectName, workspaceName)
+  }
+
+  object ui {
+    private val authDomainSelect = testId("workspace-auth-domain-select")
+    private val billingProjectSelect = testId("billing-project-select")
+    private val cloneWorkspaceButton: Query = testId("clone-workspace-button")
+    private val workspaceNameInput: Query = testId("workspace-name-input")
+
+    def clickCloneWorkspaceButton(): Unit = {
+      click on cloneWorkspaceButton
+    }
+
+    def fillWorkspaceName(workspaceName: String): Unit = {
+      textField(workspaceNameInput).value = workspaceName
+    }
+
+    def selectAuthDomain(authDomain: String): Unit = {
+      singleSel(authDomainSelect).value = option value authDomain
+    }
+
+    def selectBillingProject(billingProjectName: String): Unit = {
+      singleSel(billingProjectSelect).value = option value billingProjectName
+    }
+
+
   }
 }

@@ -19,7 +19,8 @@
    (fn [{:keys [props refs state this]}]
      [comps/OKCancelForm
       {:header "Clone Workspace to:"
-       :ok-button {:text "Clone" :onClick #(react/call :do-clone this)}
+       :ok-button {:text "Clone" :onClick #(react/call :do-clone this)
+                   :data-test-id "clone-workspace-button"}
        :get-first-element-dom-node #(@refs "project")
        :content
        (react/create-element
@@ -28,11 +29,13 @@
             [comps/Blocker {:banner "Cloning..."}])
           (style/create-form-label "Billing Project")
           (style/create-select {:ref "project"
+                                :data-test-id "billing-project-select"
                                 :value (:selected-project @state)
                                 :onChange #(swap! state assoc :selected-project (-> % .-target .-value))}
                                (:billing-projects props))
           (style/create-form-label "Name")
           [input/TextField {:ref "name" :autoFocus true
+                            :data-test-id "workspace-name-input"
                             :style {:width "100%"}
                             :defaultValue (str (get-in props [:workspace-id :name])"_copy")
                             :placeholder "Required"
@@ -41,6 +44,7 @@
           (style/create-textfield-hint "Only letters, numbers, underscores, and dashes allowed")
           (style/create-form-label "Description (optional)")
           (style/create-text-area {:style {:width "100%"} :rows 5 :ref "wsDescription"
+                                   :data-test-id "workspace-description-text-field"
                                    :defaultValue (:description props)})
           [:div {:style {:display "flex"}}
           (style/create-form-label (str "Authorization Domain" (when-not (:auth-domain props) " (optional)")))
@@ -57,6 +61,7 @@
             [:strong {} auth-domain] " from this workspace"]
            (style/create-select
             {:ref "auth-domain"
+             :data-test-id "workspace-auth-domain-select"
              :defaultValue -1
              :onChange #(swap! state assoc :selected-auth-domain (-> % .-target .-value))}
             (:groups @state)

@@ -152,7 +152,7 @@
        (when-not editing?
          [comps/SidebarButton
           {:style :light :margin :top :color :button-primary
-           :text "Clone..." :icon :clone
+           :text "Clone..." :icon :clone :data-test-id "open-clone-workspace-modal-button"
            :disabled? (when (empty? billing-projects) (comps/no-billing-projects-message))
            :onClick #(modal/push-modal
                       [WorkspaceCloner

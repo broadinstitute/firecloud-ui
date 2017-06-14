@@ -1,5 +1,5 @@
 import org.broadinstitute.dsde.firecloud.api.service
-import org.broadinstitute.dsde.firecloud.pages.WebBrowserSpec
+import org.broadinstitute.dsde.firecloud.pages.{WebBrowserSpec, WorkspaceSummaryPage}
 import org.broadinstitute.dsde.firecloud.{CleanUp, Config, Util}
 import org.scalatest._
 
@@ -23,6 +23,24 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with CleanUp
         listPage.open
         listPage.filter(workspaceName)
         listPage.ui.hasWorkspace(projectName, workspaceName) shouldBe true
+      }
+
+      "should be able to clone a workspace" in withWebDriver { implicit driver =>
+        val billingProject = "broad-dsde-dev"
+        val wsName = "WorkspaceSpec_to_be_cloned_" + randomUuid
+        val wsNameCloned = "WorkspaceSpec_clone_" + randomUuid
+        implicit val authToken = Config.AuthTokens.testFireC
+        service.workspaces.create(billingProject, wsName)
+        register cleanUp service.workspaces.delete(billingProject, wsName)
+
+        val listPage = signIn(Config.Accounts.testFireC)
+        val workspaceSummaryPage = new WorkspaceSummaryPage(billingProject, wsName).open
+        workspaceSummaryPage.clone(billingProject, wsNameCloned)
+        register cleanUp service.workspaces.delete(billingProject, wsNameCloned)
+
+        listPage.open
+        listPage.filter(wsNameCloned)
+        listPage.ui.hasWorkspace(billingProject, wsNameCloned) shouldBe true
       }
     }
 

@@ -419,6 +419,7 @@
            :style {:flex "1 0 auto" :borderRadius "3px 0 0 3px" :marginBottom 0}
            :onKeyDown (common/create-key-handler [:enter] #(react/call :apply-filter this))})
         [Button {:icon :search :onClick #(react/call :apply-filter this)
+                 :data-test-id (str (:data-test-id props) "-search-button")
                  :style {:flex "0 0 auto" :borderRadius "0 3px 3px 0"}}]]))
    :apply-filter
    (fn [{:keys [props refs]}]
