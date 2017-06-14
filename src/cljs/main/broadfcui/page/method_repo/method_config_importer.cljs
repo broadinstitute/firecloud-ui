@@ -45,15 +45,15 @@
 
 (defn- create-import-form [state props this locals entity config? fields]
   (let [{:keys [workspace-id]} props
-         currentEmail (-> @utils/auth2-atom (.-currentUser) (.get) (.getBasicProfile) (.getEmail))
-         owners (set (:managers entity))
-         owner? (contains? owners currentEmail)]
+        workflow? (= "Workflow" (:entityType entity))
+        owner? (contains? (set (:managers entity)) (utils/get-user-email))
+        any-actions? (or workflow? owner?)]
     [:div {:style {:display "flex"}}
      (when (:blocking-text @state)
        [comps/Blocker {:banner (:blocking-text @state)}])
-     (when (:allow-edit props)
+     (when (and any-actions? (:allow-edit props))
        [:div {:style {:flex "0 0 290px" :paddingRight "1rem"}}
-        (when (= "Workflow" (:entityType entity))
+        (when workflow?
           [comps/SidebarButton
            {:style :light :color :button-primary
             :text "Clone..." :icon :clone :margin :bottom
@@ -63,7 +63,16 @@
                                                         (nav/go-to-path :method id)
                                                         (scroll-to-top))}])}])
         (when owner?
-          [:div {}
+          (list
+           (when workflow?
+             [comps/SidebarButton
+              {:style :light :color :button-primary
+               :text "Edit..." :icon :edit :margin :bottom
+               :onClick #(modal/push-modal [create/CreateMethodDialog
+                                            {:snapshot entity
+                                             :on-created (fn [_ id]
+                                                           (nav/go-to-path :method id)
+                                                           (scroll-to-top))}])}])
             [comps/SidebarButton
              {:style :light :color :button-primary
               :text "Permissions..." :icon :settings :margin :bottom
@@ -79,7 +88,7 @@
              {:style :light :color :exception-state
               :text "Redact" :icon :delete :margin :bottom
               :onClick #(modal/push-modal [Redactor {:entity entity :config? config?
-                                                     :on-delete (:on-delete props)}])}]])])
+                                                 :on-delete (:on-delete props)}])}]))])
      [:div {:style {:flex "1 1 auto"}}
       [comps/EntityDetails {:entity entity}]
       [:div {:style {:border style/standard-line
