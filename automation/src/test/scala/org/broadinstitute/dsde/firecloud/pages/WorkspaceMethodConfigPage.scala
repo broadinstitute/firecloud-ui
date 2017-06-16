@@ -45,7 +45,7 @@ class ImportMethodConfigModal(implicit webDriver: WebDriver) extends FireCloudVi
 
   object gestures {
 
-    private val methodSearchInputQuery: Query = testId("method-repo-table-search-input")
+    private val methodSearchInputQuery: Query = testId("method-repo-filter-input")
     private val methodConfigNameInputQuery: Query = testId("method-config-import-name-input")
     private val importMethodConfigButtonQuery: Query = testId("import-button")
     private val rootEntityTypeSelectQuery: Query = testId("import-root-entity-type-select")

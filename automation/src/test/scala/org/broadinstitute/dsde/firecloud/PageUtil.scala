@@ -7,7 +7,7 @@ import org.scalatest.selenium.WebBrowser.go
 /**
   * Mix-in utilities for ScalaTest's Page.
   */
-trait PageUtil[P <: Page] { this: P =>
+trait PageUtil[P <: Page] { self: P =>
 
   /**
     * Sends the browser to the URL for this Page object. Returns the page

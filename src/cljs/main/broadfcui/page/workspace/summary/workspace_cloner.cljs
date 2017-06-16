@@ -58,7 +58,7 @@
          (if-let [auth-domain (:auth-domain props)]
            [:div {:style {:fontStyle "italic" :fontSize "80%"}}
             "The cloned workspace will automatically inherit the Authorization Domain "
-            [:strong {} auth-domain] " from this workspace"]
+            [:strong {:data-test-id "required-auth-domain"} auth-domain] " from this workspace"]
            (style/create-select
             {:ref "auth-domain"
              :data-test-id "workspace-auth-domain-select"

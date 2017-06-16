@@ -410,16 +410,16 @@
      (set! (.-value (@refs "filter-field")) text))
    :render
    (fn [{:keys [props this]}]
-     (let [{:keys [initial-text placeholder width]} props]
+     (let [{:keys [initial-text placeholder width data-test-id]} props]
        [:div {:style {:display "inline-flex" :width width}}
         (style/create-search-field
           {:ref "filter-field" :autoSave "true" :results 5 :auto-focus "true"
-           :data-test-id (str (:data-test-id props) "-search-input")
+           :data-test-id (str data-test-id "-input")
            :placeholder (or placeholder "Filter") :defaultValue initial-text
            :style {:flex "1 0 auto" :borderRadius "3px 0 0 3px" :marginBottom 0}
            :onKeyDown (common/create-key-handler [:enter] #(react/call :apply-filter this))})
         [Button {:icon :search :onClick #(react/call :apply-filter this)
-                 :data-test-id (str (:data-test-id props) "-search-button")
+                 :data-test-id (str data-test-id "-button")
                  :style {:flex "0 0 auto" :borderRadius "0 3px 3px 0"}}]]))
    :apply-filter
    (fn [{:keys [props refs]}]
@@ -590,7 +590,7 @@
             (when ok-button
               (cond (string? ok-button) [Button {:text ok-button :ref "ok-button" :class-name "ok-button" :onClick modal/pop-modal}]
                     (fn? ok-button) [Button {:text "OK" :ref "ok-button" :class-name "ok-button" :onClick ok-button}]
-                    (map? ok-button) [Button (merge {:ref "ok-button" :class-name "ok-button"} ok-button)]
+                    (map? ok-button) [Button (merge {:text "OK" :ref "ok-button" :class-name "ok-button"} ok-button)]
                     :else ok-button))])]]))
    :component-did-mount
    (fn [{:keys [props refs]}]

@@ -337,7 +337,8 @@
                          "N/A"))}]
            :style table-style/table-heavy}
           :toolbar
-          {:items [[comps/FilterGroupBar
+          {:filter-bar {:inner {:data-test-id "method-repo-filter"}}
+           :items [[comps/FilterGroupBar
                     {:data (concat (:methods @state) (:configs @state))
                      :selected-index (:filter-group-index @state)
                      :on-change (fn [index data]

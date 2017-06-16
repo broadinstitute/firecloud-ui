@@ -1,10 +1,11 @@
-import org.broadinstitute.dsde.firecloud.api.service
+import org.broadinstitute.dsde.firecloud.api.AuthToken
 import org.broadinstitute.dsde.firecloud.pages.{WebBrowserSpec, WorkspaceSummaryPage}
+import org.broadinstitute.dsde.firecloud.workspaces.WorkspaceFixtures
 import org.broadinstitute.dsde.firecloud.{CleanUp, Config, Util}
 import org.scalatest._
 
-class WorkspaceSpec extends FreeSpec with WebBrowserSpec with CleanUp
-  with Matchers {
+class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures[WorkspaceSpec]
+  with CleanUp with Matchers {
 
   "A user" - {
     "with a billing project" - {
@@ -15,7 +16,7 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with CleanUp
 
         val listPage = signIn(Config.Accounts.testFireC)
         val detailPage = listPage.createWorkspace(projectName, workspaceName)
-        register cleanUp service.workspaces.delete(projectName, workspaceName)
+        register cleanUp api.workspaces.delete(projectName, workspaceName)
 
         detailPage.awaitLoaded()
         detailPage.ui.readWorkspaceName shouldEqual workspaceName
@@ -30,13 +31,13 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with CleanUp
         val wsName = "WorkspaceSpec_to_be_cloned_" + randomUuid
         val wsNameCloned = "WorkspaceSpec_clone_" + randomUuid
         implicit val authToken = Config.AuthTokens.testFireC
-        service.workspaces.create(billingProject, wsName)
-        register cleanUp service.workspaces.delete(billingProject, wsName)
+        api.workspaces.create(billingProject, wsName)
+        register cleanUp api.workspaces.delete(billingProject, wsName)
 
         val listPage = signIn(Config.Accounts.testFireC)
         val workspaceSummaryPage = new WorkspaceSummaryPage(billingProject, wsName).open
-        workspaceSummaryPage.clone(billingProject, wsNameCloned)
-        register cleanUp service.workspaces.delete(billingProject, wsNameCloned)
+        workspaceSummaryPage.cloneWorkspace(billingProject, wsNameCloned)
+        register cleanUp api.workspaces.delete(billingProject, wsNameCloned)
 
         listPage.open
         listPage.filter(wsNameCloned)
@@ -50,8 +51,8 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with CleanUp
         val workspaceName = "WorkspaceSpec_delete_" + Util.makeUuid
         implicit val authToken = Config.AuthTokens.testFireC
 
-        service.workspaces.create(projectName, workspaceName)
-        register cleanUp service.workspaces.delete(projectName, workspaceName)
+        api.workspaces.create(projectName, workspaceName)
+        register cleanUp api.workspaces.delete(projectName, workspaceName)
 
         val listPage = signIn(Config.Accounts.testFireC)
         val detailPage = listPage.openWorkspaceDetails(projectName, workspaceName).awaitLoaded()
@@ -60,6 +61,18 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with CleanUp
         listPage.validateLocation()
         listPage.filter(workspaceName)
         listPage.ui.hasWorkspace(projectName, workspaceName) shouldBe false
+      }
+    }
+  }
+
+  // Experimental
+  "A cloned workspace" - {
+    "should retain the source workspace's authorization domain" in withWebDriver { implicit driver =>
+      implicit val authToken: AuthToken = Config.AuthTokens.testFireC
+      withClonedWorkspace(Config.Projects.common, Option("AuthDomainSpec_share")) { cloneWorkspaceName =>
+        val listPage = signIn(Config.Accounts.testFireC)
+        val summaryPage = listPage.openWorkspaceDetails(Config.Projects.common, cloneWorkspaceName).awaitLoaded()
+        // assert that user who cloned the workspace is the owner
       }
     }
   }

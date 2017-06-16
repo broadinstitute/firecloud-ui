@@ -1,12 +1,13 @@
 package org.broadinstitute.dsde.firecloud.workspaces
 
 import org.broadinstitute.dsde.firecloud.Util
-import org.broadinstitute.dsde.firecloud.api.{AuthToken, service}
+import org.broadinstitute.dsde.firecloud.api.{AclEntry, AuthToken}
+import org.broadinstitute.dsde.firecloud.pages.WebBrowserSpec
 
 /**
   * Fixtures for creating and cleaning up test workspaces.
   */
-trait WorkspaceFixtures {
+trait WorkspaceFixtures[A <: WebBrowserSpec] { self: A =>
 
   /**
     * Loan method that creates a workspace that will be cleaned up after the
@@ -19,13 +20,25 @@ trait WorkspaceFixtures {
     * @param testCode test code to run
     * @param token auth token for service API calls
     */
-  def withWorkspace(namespace: String, namePrefix: Option[String] = None, authDomain: Option[String] = None)(testCode: (String) => Any)(implicit token: AuthToken): Unit = {
+  def withWorkspace(namespace: String, namePrefix: Option[String] = None,
+                    authDomain: Option[String] = None, aclEntries: List[AclEntry] = List())
+                   (testCode: (String) => Any)(implicit token: AuthToken): Unit = {
     val workspaceName = namePrefix.getOrElse("") + "_" + Util.makeUuid
-    service.workspaces.create(namespace, workspaceName, authDomain)
+    api.workspaces.create(namespace, workspaceName, authDomain)
+    api.workspaces.updateAcl(namespace, workspaceName, aclEntries)
     try {
       testCode(workspaceName)
     } finally {
-      service.workspaces.delete(namespace, workspaceName)
+      api.workspaces.delete(namespace, workspaceName)
+    }
+  }
+
+  def withClonedWorkspace(namespace: String, namePrefix: Option[String] = None,
+                          authDomain: Option[String] = None)
+                         (testCode: (String) => Any)(implicit token: AuthToken): Unit = {
+    withWorkspace(namespace, namePrefix, authDomain) { _ =>
+      val cloneNamePrefix = Option(namePrefix.map(_ + "_clone").getOrElse("clone"))
+      withWorkspace(namespace, cloneNamePrefix, authDomain)(testCode)
     }
   }
 }

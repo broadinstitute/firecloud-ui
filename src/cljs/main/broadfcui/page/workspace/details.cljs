@@ -152,7 +152,8 @@
           (make-tab MONITOR #(react/call :refresh (@refs MONITOR)))]]
         [:div {:style {:marginTop "2rem"}}
          (if-let [error (:workspace-error @state)]
-           [:div {:style {:textAlign "center" :color (:exception-state style/colors)}}
+           [:div {:style {:textAlign "center" :color (:exception-state style/colors)}
+                  :data-test-id "workspace-details-error"}
             "Error loading workspace: " error]
            (condp = active-tab
              nil (react/create-element

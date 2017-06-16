@@ -88,7 +88,10 @@ class BillingManagementPage(implicit webDriver: WebDriver) extends Authenticated
     }
 
     def readCreationStatusForProject(projectName: String): Option[String] = {
-      xpath(s"//div[@data-test-id='$projectName-row']//span[@data-test-id='status-icon']").element.attribute("data-test-value")
+      for {
+        e <- find(xpath(s"//div[@data-test-id='$projectName-row']//span[@data-test-id='status-icon']"))
+        v <- e.attribute("data-test-value")
+      } yield v
     }
   }
   object ui extends UI

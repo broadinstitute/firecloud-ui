@@ -21,7 +21,7 @@ abstract class AuthenticatedPage(implicit webDriver: WebDriver) extends FireClou
     private val signOutLink = testId("sign-out")
 
     def checkAccountDropdown: Boolean = {
-      accountDropdown.findElement.isDefined
+      find(accountDropdown).isDefined
     }
 
     def clickAccountDropdown(): Unit = {

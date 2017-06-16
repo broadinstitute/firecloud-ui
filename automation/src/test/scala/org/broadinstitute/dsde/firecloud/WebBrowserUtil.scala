@@ -11,6 +11,10 @@ import org.scalatest.selenium.WebBrowser
 trait WebBrowserUtil extends WebBrowser {
   val defaultTimeOutInSeconds: Long = 10
 
+  /**
+    * Override of the base find() method to retry in the case of a
+    * StaleElementReferenceException.
+    */
   abstract override def find(query: Query)(implicit driver: WebDriver): Option[Element] = {
     try {
       super.find(query)
@@ -46,12 +50,15 @@ trait WebBrowserUtil extends WebBrowser {
     }
 
     /**
-      * Waits for an element to be enabled.
+      * Waits for an element to be enabled. Returns the element found by the
+      * query to facilitate call chaining, e.g.:
+      *
+      *   click on (await enabled id("my-button"))
       *
       * @param query Query to locate the element
       * @param timeOutInSeconds number of seconds to wait for the enabled element
       * @param webDriver implicit WebDriver for the WebDriverWait
-      * @return
+      * @return the found element
       */
     def enabled(query: Query, timeOutInSeconds: Long = defaultTimeOutInSeconds)(implicit webDriver: WebDriver): Element = {
       val wait = new WebDriverWait(webDriver, timeOutInSeconds)
@@ -88,16 +95,7 @@ trait WebBrowserUtil extends WebBrowser {
       * @param webDriver implicit WebDriver for the WebDriverWait
       */
     def text(text: String, timeOutInSeconds: Long = defaultTimeOutInSeconds)(implicit webDriver: WebDriver): Unit = {
-      def textExists: Boolean = {
-        try {
-          xpath(s"//*[contains(text(),'$text')]").element
-        } catch {
-          case e: TestFailedException => return false
-        }
-        true
-      }
-
-      await condition (textExists, timeOutInSeconds)
+      await condition (find(withText(text)).isDefined, timeOutInSeconds)
     }
 
     /**
@@ -120,6 +118,10 @@ trait WebBrowserUtil extends WebBrowser {
         }
       }
     }
+  }
+
+  def enabled(q: Query)(implicit webDriver: WebDriver): Boolean = {
+    find(q).exists(_.isEnabled)
   }
 
   /**
@@ -156,6 +158,10 @@ trait WebBrowserUtil extends WebBrowser {
 
   def typeSelector(selector: String)(implicit webDriver: WebDriver): Query = {
     cssSelector(s"[type='$selector']")
+  }
+
+  def withText(text: String)(implicit webDriver: WebDriver): Query = {
+    xpath(s"//*[contains(text(),'$text'")
   }
 
   /**

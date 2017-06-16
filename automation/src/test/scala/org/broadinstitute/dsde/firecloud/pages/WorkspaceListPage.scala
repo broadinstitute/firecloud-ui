@@ -66,8 +66,8 @@ class WorkspaceListPage(implicit webDriver: WebDriver) extends AuthenticatedPage
 
   trait UI extends super.UI {
     private val createWorkspaceButton = testId("open-create-workspace-modal-button")
-    private val filterButton = testId("workspace-list-filter-search-button")
-    private val filterInput = testId("workspace-list-filter-search-input")
+    private val filterButton = testId("workspace-list-filter-button")
+    private val filterInput = testId("workspace-list-filter-input")
     private def restrictedWorkspaceTestId(ns: String, n: String) = { s"restricted-$ns-$n" }
 
     def clickCreateWorkspaceButton(): CreateWorkspaceModal = {

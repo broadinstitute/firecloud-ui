@@ -80,10 +80,15 @@ trait Orchestration extends FireCloudClient with LazyLogging {
     }
 
     def updateAcl(namespace: String, name: String, email: String, accessLevel: WorkspaceAccessLevel.Value)(implicit token: AuthToken): Unit = {
+      updateAcl(namespace, name, List(AclEntry(email, accessLevel)))
+    }
+
+    def updateAcl(namespace: String, name: String, aclEntries: List[AclEntry] = List())(implicit token: AuthToken): Unit = {
       patchRequest(Config.FireCloud.apiUrl + s"api/workspaces/$namespace/$name/acl",
-        List(Map("email" -> email, "accessLevel" -> accessLevel.toString)))
+        aclEntries.map(e => Map("email" -> e.email, "accessLevel" -> e.accessLevel.toString)))
     }
   }
+
 
   /*
    *  Library requests
@@ -117,7 +122,6 @@ trait Orchestration extends FireCloudClient with LazyLogging {
 
 }
 object Orchestration extends Orchestration
-object service extends Orchestration
 
 /**
   * Dictionary of access level values expected by the web service API.
@@ -129,3 +133,4 @@ object WorkspaceAccessLevel extends Enumeration {
   val Writer = Value("WRITER")
 }
 
+case class AclEntry(email: String, accessLevel: WorkspaceAccessLevel.Value)

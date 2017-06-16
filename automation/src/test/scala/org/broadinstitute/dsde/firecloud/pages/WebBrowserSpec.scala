@@ -3,6 +3,7 @@ package org.broadinstitute.dsde.firecloud.pages
 import java.net.URL
 import java.util.UUID
 
+import org.broadinstitute.dsde.firecloud.api.Orchestration
 import org.broadinstitute.dsde.firecloud.{Config, WebBrowserUtil}
 import org.openqa.selenium.WebDriver
 import org.openqa.selenium.chrome.ChromeDriver
@@ -15,6 +16,8 @@ import scala.util.Random
   * Base spec for writing FireCloud web browser tests.
   */
 trait WebBrowserSpec extends WebBrowserUtil {
+
+  val api = Orchestration
 
   /**
     * Executes a test in a fixture with a managed WebDriver. A test that uses

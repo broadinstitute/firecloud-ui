@@ -140,7 +140,7 @@ class LaunchAnalysisModal(implicit webDriver: WebDriver) extends FireCloudView {
   object gestures {
     private val participantRootEntityFilterButtonQuery: Query = testId("participant-filter-button")
     private val participantSetRootEntityFilterButtonQuery: Query = testId("participant_set-filter-button")
-    private val entitySearchInputQuery: Query = testId("entity-table-search-input")
+    private val entitySearchInputQuery: Query = testId("entity-table-input")
     private val expressionInputQuery: Query = testId("define-expression-input")
     private val emptyDefaultEntitiesMessageQuery: Query = testId("message-well")
     private val launchAnalysisButtonQuery: Query = testId("launch-button")
