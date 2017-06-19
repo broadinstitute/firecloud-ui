@@ -20,13 +20,14 @@
      {:file-input-key (gensym "file-input-")})
    :render
    (fn [{:keys [state refs this]}]
-     [:div {:style {:textAlign "center"}}
+     [:div {:style {:textAlign "center"} :data-test-id "data-upload-container"}
       (when (:loading? @state)
         [comps/Blocker {:banner "Uploading file..."}])
       ;; This key is changed every time a file is selected causing React to completely replace the
       ;; element. Otherwise, if a user selects the same file (even after having modified it), the
       ;; browser will not fire the onChange event.
       [:input {:key (:file-input-key @state)
+               :data-test-id "data-upload-input"
                :type "file" :name "entities" :ref "entities"
                :style {:display "none"}
                :onChange (fn [e]
@@ -54,13 +55,14 @@
             [:em {} "(file truncated for preview)"])]])
       (when (and (:file @state) (not (:upload-result @state)))
         [comps/Button {:text "Upload"
+                       :data-test-id "confirm-upload-metadata-button"
                        :onClick #(react/call :do-upload this)}])
       (if-let [result (:upload-result @state)]
         (if (:success? result)
           (style/create-flexbox
            {:style {:justifyContent "center" :paddingTop "1em"}}
            (icons/icon {:style {:fontSize "200%" :color (:success-state style/colors)}} :done)
-           [:span {:style {:marginLeft "1em"}} "Success!"])
+           [:span {:style {:marginLeft "1em"} :data-test-id "upload-success-message"} "Success!"])
           [:div {:style {:paddingTop "1em"}}
            [comps/ErrorViewer {:error (:error result)}]]))])
    :do-upload

@@ -23,4 +23,18 @@ class RegistrationSpec extends FlatSpec with WebBrowserSpec {
 
     new DataLibraryPage().validateLocation()
   }
+
+  it should "not allow an unregistered user access" in withWebDriver { implicit driver =>
+
+
+  }
+
+  it should "allow a signed-in user to log out" in withWebDriver { implicit driver =>
+
+  }
+
+
+
+
+
 }

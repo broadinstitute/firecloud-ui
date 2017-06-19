@@ -1,13 +1,14 @@
 package org.broadinstitute.dsde.firecloud.pages
 
+import java.io.File
 import java.net.URL
 import java.util.UUID
 
 import org.broadinstitute.dsde.firecloud.api.Orchestration
 import org.broadinstitute.dsde.firecloud.{Config, WebBrowserUtil}
 import org.openqa.selenium.WebDriver
-import org.openqa.selenium.chrome.ChromeDriver
-import org.openqa.selenium.remote.{DesiredCapabilities, RemoteWebDriver}
+import org.openqa.selenium.chrome.ChromeDriverService
+import org.openqa.selenium.remote.{DesiredCapabilities, LocalFileDetector, RemoteWebDriver}
 
 import scala.sys.SystemProperties
 import scala.util.Random
@@ -27,21 +28,27 @@ trait WebBrowserSpec extends WebBrowserUtil {
     * @param testCode the test code to run
     */
   def withWebDriver(testCode: (WebDriver) => Any): Unit = {
-    implicit val webDriver = initWebDriver()
+    //this needs to be changed!
+    val service = new ChromeDriverService.Builder().usingDriverExecutable(new File("/usr/local/bin/chromedriver")).usingAnyFreePort().build()
+    service.start()
+    implicit val webDriver = initWebDriver(service)
     try {
       testCode(webDriver)
     } finally {
       webDriver.quit()
+      service.stop()
     }
   }
 
-  private def initWebDriver(): WebDriver = {
+  private def initWebDriver(service: ChromeDriverService): WebDriver = {
     val localBrowser = new SystemProperties().get("local.browser")
     val defaultChrome = Config.ChromeSettings.chromedriverHost
-    localBrowser match {
-      case Some("true") => new ChromeDriver
+    val driver = localBrowser match {
+      case Some("true") => new RemoteWebDriver(service.getUrl, DesiredCapabilities.chrome())
       case _ => new RemoteWebDriver(new URL(defaultChrome), DesiredCapabilities.chrome())
     }
+    driver.setFileDetector(new LocalFileDetector())
+    driver
   }
 
   /**
