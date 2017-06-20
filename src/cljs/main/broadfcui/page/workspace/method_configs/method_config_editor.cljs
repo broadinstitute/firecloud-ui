@@ -4,7 +4,6 @@
     [clojure.string :refer [trim blank?]]
     [broadfcui.common :refer [clear-both get-text root-entity-types access-greater-than?]]
     [broadfcui.common.components :as comps]
-    [broadfcui.common.overlay :as dialog]
     [broadfcui.common.icons :as icons]
     [broadfcui.common.modal :as modal]
     [broadfcui.common.style :as style]
@@ -13,7 +12,6 @@
     [broadfcui.page.workspace.method-configs.launch-analysis :as launch]
     [broadfcui.page.workspace.method-configs.publish :as publish]
     [broadfcui.utils :as utils]
-    [broadfcui.config :as gconfig]
     ))
 
 (defn- filter-empty [list]
@@ -42,7 +40,7 @@
                      (map (juxt identity #(get-text refs (str "out_" %))))
                      (filter (comp not empty? val))
                      (into {}))
-        method-ref (merge method (react/call :get-fields (@refs "methodDetailsViewer")))
+        method-ref (merge method ((@refs "methodDetailsViewer") :get-fields))
         new-conf (assoc config
                    "name" name
                    "rootEntityType" rootEntityType
@@ -55,7 +53,7 @@
       {:endpoint (endpoints/update-workspace-method-config workspace-id config)
        :payload new-conf
        :headers utils/content-type=json
-       :on-done (fn [{:keys [success? get-parsed-response xhr]}]
+       :on-done (fn [{:keys [success? get-parsed-response]}]
                   (let [response (get-parsed-response false)]
                     (swap! state dissoc :blocker)
                     (if success?
@@ -66,7 +64,7 @@
 (react/defc MethodDetailsViewer
   {:get-fields
    (fn [{:keys [refs]}]
-     (react/call :get-fields (@refs "methodDetails")))
+     ((@refs "methodDetails") :get-fields))
    :render
    (fn [{:keys [props state]}]
      (cond
@@ -80,15 +78,15 @@
        (:error @state) (style/create-server-error-message (:error @state))
         :else [comps/Spinner {:text "Loading details..."}]))
    :component-did-mount
-   (fn [{:keys [this props state]}]
-     (react/call :load-agora-method this props state))
+   (fn [{:keys [this]}]
+     (this :load-agora-method))
    :load-agora-method
-   (fn [{:keys [state]} method-ref]
+   (fn [{:keys [props state]}]
      (endpoints/call-ajax-orch
        {:endpoint (endpoints/get-agora-method
-                    (:namespace method-ref)
-                    (:name method-ref)
-                    (:snapshotId method-ref))
+                    (:namespace props)
+                    (:name props)
+                    (:snapshotId props))
         :headers utils/content-type=json
         :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                    (if success?
@@ -196,7 +194,7 @@
                        :methods methods
                        :editing? editing?
                        :wdl-parse-error wdl-parse-error
-                       :onSnapshotIdChange #(react/call :load-new-method-template this %)}])
+                       :onSnapshotIdChange #(this :load-new-method-template %)}])
      (create-section-header "Root Entity Type")
      (create-section
        (if editing?
@@ -252,23 +250,21 @@
                   [comps/Spinner {:text "Loading Method Configuration..."}]]))
    :component-did-mount
    (fn [{:keys [state props refs this]}]
-     (react/call :load-validated-method-config this)
+     (this :load-validated-method-config)
      (endpoints/call-ajax-orch
        {:endpoint (endpoints/get-workspace (:workspace-id props))
         :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                    (if success?
-                     (swap! state assoc :locked? (get-in (get-parsed-response false) ["workspace" "isLocked"]))
+                     (swap! state assoc :locked? (get-in (get-parsed-response) [:workspace :isLocked]))
                      (swap! state assoc :error status-text)))})
      (endpoints/call-ajax-orch
        {:endpoint endpoints/list-methods
         :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                    (if success?
-                     (swap! state assoc :methods (->> (get-parsed-response false)
-                                                      (map utils/keywordize-keys)
+                     (swap! state assoc :methods (->> (get-parsed-response)
                                                       (map #(select-keys % [:namespace :name :snapshotId]))
                                                       (group-by (juxt :namespace :name))
-                                                      (map (fn [[k v]] [k (map :snapshotId v)]))
-                                                      (into {})))
+                                                      (utils/map-values (partial map :snapshotId))))
                      (swap! state assoc :error-message status-text)))})
      (set! (.-onScrollHandler this)
            (fn []
@@ -294,7 +290,7 @@
                                :on-done (fn [{:keys [success? get-parsed-response]}]
                                             (if success?
                                               (swap! state assoc :loaded-config response :inputs-outputs (get-parsed-response false))
-                                              (swap! state assoc :error ((get-parsed-response false) "message"))))}))
+                                              (swap! state assoc :error (:message (get-parsed-response)))))}))
                        (swap! state assoc :error status-text)))}))
    :load-new-method-template
    (fn [{:keys [state refs]} new-snapshot-id]
@@ -308,9 +304,9 @@
                        "methodName" method-name
                        "methodVersion" new-snapshot-id}]
        (swap! state assoc :blocker "Updating...")
-       (react/call :load-agora-method (@refs "methodDetailsViewer") {:namespace method-namespace
-                                                                     :name method-name
-                                                                     :snapshotId new-snapshot-id})
+       ((@refs "methodDetailsViewer") :load-agora-method  {:namespace method-namespace
+                                                           :name method-name
+                                                           :snapshotId new-snapshot-id})
        (endpoints/call-ajax-orch
          {:endpoint (endpoints/create-template method-ref)
           :payload method-ref
@@ -333,7 +329,7 @@
                                                                    "invalidOutputs" {}
                                                                    "validOutputs" {})
                                                   :inputs-outputs (get-parsed-response false))
-                                           (swap! state assoc :error ((get-parsed-response false) "message")))))})
+                                           (swap! state assoc :error (:message (get-parsed-response))))))})
                          (do
                            (swap! state assoc :blocker nil :wdl-parse-error (response "message"))
                            (comps/push-error (style/create-server-error-message (response "message")))))))})))})
