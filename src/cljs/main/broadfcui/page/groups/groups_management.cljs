@@ -28,6 +28,7 @@
      (this :-load-data))
    :-load-data
    (fn [{:keys [state]}]
+     (swap! state dissoc :deleting?)
      (utils/ajax-orch
       "/groups"
       {:on-done (net/handle-ajax-response #(swap! state assoc :groups-response %))}))
