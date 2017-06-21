@@ -65,24 +65,25 @@
          [:div {:style {:float "right" :width column-width}} "Access Level"]
          (common/clear-both)]
         (map-indexed
-         (fn [i acl-entry]
-           [:div {}
-            [input/TextField
-             {:ref (str "acl-key" i)
-              :style {:float "left" :width column-width
-                      :backgroundColor (when (< i count-orig)
-                                         (:background-light style/colors))}
-              :disabled (< i count-orig)
-              :spellCheck false
-              :defaultValue (:user acl-entry)
-              :predicates [(input/valid-email-or-empty "User ID")]}]
-            (style/create-identity-select
-             {:ref (str "acl-value" i)
-              :style {:float "right" :width column-width :height 33}
-              :defaultValue (:role acl-entry)}
-             access-levels)
-            (common/clear-both)])
-         acl-vec)
+          (fn [i acl-entry]
+            [:div {}
+             [input/TextField
+              {:ref (str "acl-key" i)
+               :style {:float "left" :width column-width
+                       :backgroundColor (when (< i count-orig)
+                                          (:background-light style/colors))}
+               :disabled (< i count-orig)
+               :spellCheck false
+               :defaultValue (:user acl-entry)
+               :predicates [(input/valid-email-or-empty "User ID")]}]
+             (style/create-identity-select
+               {:ref (str "acl-value" i)
+                :style {:float "right" :width column-width :height 33}
+                :disabled (= (utils/get-user-email) (:user acl-entry))
+                :defaultValue (:role acl-entry)}
+               access-levels)
+             (common/clear-both)])
+          acl-vec)
         [comps/Button {:text "Add new" :icon :add-new
                        :onClick #(swap! state assoc :acl-vec
                                         (conj (this :-capture-ui-state)
@@ -92,7 +93,8 @@
                   :style {:marginLeft "2em" :verticalAlign "middle"}
                   :onChange #(swap! state assoc :public-status (-> (@refs "publicbox") .-checked))
                   :checked public-status}]
-         [:span {:style {:paddingLeft 6 :verticalAlign "middle"}} "Publicly Readable?"]]]))
+         [:span {:style {:paddingLeft 6 :verticalAlign "middle"}} "Publicly Readable?"]]
+        (style/create-server-error-message (:persist-error @state))]))
    :-persist-acl
    (fn [{:keys [props state refs this]}]
      (swap! state dissoc :validation-error :save-error)
@@ -111,8 +113,11 @@
               :payload non-empty-acls-w-public
               :on-done (net/handle-ajax-response
                          (fn [{:keys [success? parsed-response] :as response}]
-                           (swap! state assoc :acl-response response)
-                           (swap! state dissoc :saving?)))})))))
+                           (if success?
+                             (modal/pop-modal)
+                             (do
+                               (swap! state assoc :persist-error (:message parsed-response))
+                               (swap! state dissoc :saving?)))))})))))
    :-capture-ui-state
    (fn [{:keys [state refs]}]
      (mapv
