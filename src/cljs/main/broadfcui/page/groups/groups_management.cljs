@@ -76,7 +76,8 @@
                                   (endpoints/call-ajax-orch
                                    {:endpoint (endpoints/delete-group groupName)
                                     :on-done (fn [{:keys [success?]}]
-                                               (if success?
+                                               (swap! state dissoc :deleting?)
+                                               (when success?
                                                  (this :-load-data)))}))})))}]}
         :toolbar
         {:items

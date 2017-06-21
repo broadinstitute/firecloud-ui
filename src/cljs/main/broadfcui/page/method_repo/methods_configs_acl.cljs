@@ -106,14 +106,13 @@
                                               (if (:public-status @state) reader-level no-access-level)})]
            (swap! state assoc :saving? true)
            (endpoints/call-ajax-orch
-            {:endpoint (:save-endpoint props)
-             :headers utils/content-type=json
-             :payload non-empty-acls-w-public
-             :on-done (fn [{:keys [success? get-parsed-response]}]
-                        (swap! state dissoc :saving?)
-                        (if success?
-                          (modal/pop-modal)
-                          (swap! state assoc :save-error (get-parsed-response false))))})))))
+             {:endpoint (:save-endpoint props)
+              :headers utils/content-type=json
+              :payload non-empty-acls-w-public
+              :on-done (net/handle-ajax-response
+                         (fn [{:keys [success? parsed-response] :as response}]
+                           (swap! state assoc :acl-response response)
+                           (swap! state dissoc :saving?)))})))))
    :-capture-ui-state
    (fn [{:keys [state refs]}]
      (mapv
