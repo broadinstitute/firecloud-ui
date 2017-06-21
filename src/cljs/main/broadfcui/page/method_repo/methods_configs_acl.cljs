@@ -79,6 +79,7 @@
             (style/create-identity-select
              {:ref (str "acl-value" i)
               :style {:float "right" :width column-width :height 33}
+              :disabled (= (utils/get-user-email) (:user acl-entry))
               :defaultValue (:role acl-entry)}
              access-levels)
             (common/clear-both)])
@@ -92,7 +93,8 @@
                   :style {:marginLeft "2em" :verticalAlign "middle"}
                   :onChange #(swap! state assoc :public-status (-> (@refs "publicbox") .-checked))
                   :checked public-status}]
-         [:span {:style {:paddingLeft 6 :verticalAlign "middle"}} "Publicly Readable?"]]]))
+         [:span {:style {:paddingLeft 6 :verticalAlign "middle"}} "Publicly Readable?"]]
+        (style/create-server-error-message (:persist-error @state))]))
    :-persist-acl
    (fn [{:keys [props state refs this]}]
      (swap! state dissoc :validation-error :save-error)
@@ -106,13 +108,16 @@
                                               (if (:public-status @state) reader-level no-access-level)})]
            (swap! state assoc :saving? true)
            (endpoints/call-ajax-orch
-             {:endpoint (:save-endpoint props)
-              :headers utils/content-type=json
-              :payload non-empty-acls-w-public
-              :on-done (net/handle-ajax-response
-                         (fn [{:keys [success? parsed-response] :as response}]
-                           (swap! state assoc :acl-response response)
-                           (swap! state dissoc :saving?)))})))))
+            {:endpoint (:save-endpoint props)
+             :headers utils/content-type=json
+             :payload non-empty-acls-w-public
+             :on-done (net/handle-ajax-response
+                       (fn [{:keys [success? parsed-response] :as response}]
+                         (if success?
+                           (modal/pop-modal)
+                           (do
+                             (swap! state assoc :persist-error (:message parsed-response))
+                             (swap! state dissoc :saving?)))))})))))
    :-capture-ui-state
    (fn [{:keys [state refs]}]
      (mapv
