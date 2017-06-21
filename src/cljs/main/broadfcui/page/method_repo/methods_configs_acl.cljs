@@ -56,34 +56,34 @@
                               :count-orig (count acl-vec))))))}))
    :-render-acl-form
    (fn [{:keys [state refs this]}]
-    (let [{:keys [acl-vec public-status count-orig]} @state]
-     [:div {:style {:width 800}}
-      (when (:saving? @state)
-       [comps/Blocker {:banner "Updating..."}])
-      [:div {:style {:paddingBottom "0.5em" :fontSize "90%"}}
-       [:div {:style {:float "left" :width column-width}} "User or Group ID"]
-       [:div {:style {:float "right" :width column-width}} "Access Level"]
-       (common/clear-both)]
-      (map-indexed
-       (fn [i acl-entry]
-        [:div {}
-         [input/TextField
-          {:ref (str "acl-key" i)
-           :style {:float "left" :width column-width
-                   :backgroundColor (when (< i count-orig)
-                                     (:background-light style/colors))}
-           :disabled (< i count-orig)
-           :spellCheck false
-           :defaultValue (:user acl-entry)
-           :predicates [(input/valid-email-or-empty "User ID")]}]
-         (style/create-identity-select
-          {:ref (str "acl-value" i)
-           :style {:float "right" :width column-width :height 33}
-           :disabled (= (utils/get-user-email) (:user acl-entry))
-           :defaultValue (:role acl-entry)}
-          access-levels)
-         (common/clear-both)])
-       acl-vec)
+     (let [{:keys [acl-vec public-status count-orig]} @state]
+       [:div {:style {:width 800}}
+        (when (:saving? @state)
+          [comps/Blocker {:banner "Updating..."}])
+        [:div {:style {:paddingBottom "0.5em" :fontSize "90%"}}
+         [:div {:style {:float "left" :width column-width}} "User or Group ID"]
+         [:div {:style {:float "right" :width column-width}} "Access Level"]
+         (common/clear-both)]
+        (map-indexed
+          (fn [i acl-entry]
+            [:div {}
+             [input/TextField
+              {:ref (str "acl-key" i)
+               :style {:float "left" :width column-width
+                       :backgroundColor (when (< i count-orig)
+                                          (:background-light style/colors))}
+               :disabled (< i count-orig)
+               :spellCheck false
+               :defaultValue (:user acl-entry)
+               :predicates [(input/valid-email-or-empty "User ID")]}]
+             (style/create-identity-select
+               {:ref (str "acl-value" i)
+                :style {:float "right" :width column-width :height 33}
+                :disabled (= (utils/get-user-email) (:user acl-entry))
+                :defaultValue (:role acl-entry)}
+               access-levels)
+             (common/clear-both)])
+          acl-vec)
         [comps/Button {:text "Add new" :icon :add-new
                        :onClick #(swap! state assoc :acl-vec
                                         (conj (this :-capture-ui-state)
