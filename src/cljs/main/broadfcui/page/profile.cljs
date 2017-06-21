@@ -219,6 +219,7 @@
            [components/Spinner {:text "Saving..."}]
            :else
            [components/Button {:text (if new? "Register" "Save Profile")
+                               :data-test-id "register-button"
                                :onClick #(react/call :save this)}])]]))
    :save
    (fn [{:keys [props state refs]}]

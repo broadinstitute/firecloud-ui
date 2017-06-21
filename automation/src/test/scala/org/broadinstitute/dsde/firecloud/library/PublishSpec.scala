@@ -17,11 +17,11 @@ class PublishAsCuratorSpec() extends FreeSpec with WebBrowserSpec with BeforeAnd
 
   val unpubName = "unpub-" + UUID.randomUUID.toString + "-Publish"
   val unpubWAttributesName = "unpub-withAttributes" + UUID.randomUUID.toString + "-Publish"
-  val namespace = "broad-dsde-qa"
+  val namespace = Config.Projects.default
+  implicit val authToken = AuthToken(Config.Users.curator)
 
   override def beforeAll(): Unit = {
     // create workspaces
-    implicit val authToken = AuthToken(Config.Accounts.curator)
     Orchestration.workspaces.create(namespace, unpubName)
     Orchestration.workspaces.create(namespace, unpubWAttributesName)
     Orchestration.setLibraryAttributes(namespace, unpubWAttributesName, Library.metadata)
@@ -34,7 +34,6 @@ class PublishAsCuratorSpec() extends FreeSpec with WebBrowserSpec with BeforeAnd
   }
 
   override def afterAll(): Unit = {
-    implicit val authToken = AuthToken(Config.Accounts.curator)
     Orchestration.workspaces.delete(namespace, unpubName)
     Orchestration.workspaces.delete(namespace, unpubWAttributesName)
   }
@@ -44,7 +43,7 @@ class PublishAsCuratorSpec() extends FreeSpec with WebBrowserSpec with BeforeAnd
     "on an unpublished workspace" - {
       "without required library attributes" - {
         "publish should open error modal " in withWebDriver { implicit driver =>
-          signIn(Config.Accounts.curator)
+          signIn(Config.Users.curator)
           val page = new WorkspaceSummaryPage(namespace, unpubName)
           page.open
           val errormodal = page.ui.clickPublishButton()
@@ -52,9 +51,8 @@ class PublishAsCuratorSpec() extends FreeSpec with WebBrowserSpec with BeforeAnd
         }
       }
       "with required library attributes" - {
-        //withLibraryMetadata(wsname) { wsname2 =>
         "should be publishable " in withWebDriver { implicit driver =>
-          signIn(Config.Accounts.curator)
+          signIn(Config.Users.curator)
           val page = new WorkspaceSummaryPage(namespace, unpubWAttributesName)
           page.open
           assert(page.ui.hasPublishButton)
@@ -71,17 +69,17 @@ class PublishAsNonCuratorSpec() extends FreeSpec with WebBrowserSpec with Before
   implicit val ec = ExecutionContext.global
 
   val unpubName = "unpub-" + UUID.randomUUID.toString + "-Publish"
-  val unpubWAttributesName = "unpub-withAttributes" + UUID.randomUUID.toString + "-Publish"
-  val namespace = "broad-dsde-qa"
+  val unpubWAttributesName = "unpub-withAttributes-" + UUID.randomUUID.toString + "-Publish"
+  val namespace = Config.Projects.default
+  implicit val authToken = AuthToken(Config.Users.harry)
 
   override def beforeAll(): Unit = {
     // create workspaces
-    implicit val authToken = AuthToken(Config.Accounts.curator)
     Orchestration.workspaces.create(namespace, unpubName)
-    Orchestration.updateAcl(namespace, unpubName, Config.Accounts.harry.email, "WRITER", false)
+    Orchestration.updateAcl(namespace, unpubName, Config.Users.ron.email, "WRITER", false)
     Orchestration.workspaces.create(namespace, unpubWAttributesName)
     Orchestration.setLibraryAttributes(namespace, unpubWAttributesName, Library.metadata)
-    Orchestration.updateAcl(namespace, unpubWAttributesName, Config.Accounts.harry.email, "WRITER", false)
+    Orchestration.updateAcl(namespace, unpubWAttributesName, Config.Users.ron.email, "WRITER", false)
   }
 
   override def beforeEach(): Unit = {
@@ -91,7 +89,6 @@ class PublishAsNonCuratorSpec() extends FreeSpec with WebBrowserSpec with Before
   }
 
   override def afterAll(): Unit = {
-    implicit val authToken = AuthToken(Config.Accounts.curator)
     Orchestration.workspaces.delete(namespace, unpubName)
     Orchestration.workspaces.delete(namespace, unpubWAttributesName)
   }
@@ -101,7 +98,7 @@ class PublishAsNonCuratorSpec() extends FreeSpec with WebBrowserSpec with Before
     "An unpublished workspace" - {
       "with required org.broadinstitute.dsde.firecloud.library attributes" - {
         "should not be publishable " in withWebDriver { implicit driver =>
-          signIn(Config.Accounts.harry)
+          signIn(Config.Users.ron)
 
           val page = new WorkspaceSummaryPage(namespace, unpubName)
           page.open

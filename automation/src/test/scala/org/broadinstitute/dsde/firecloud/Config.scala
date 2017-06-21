@@ -15,19 +15,39 @@ object Config {
     val qaEmail = gcsConfig.getString("qaEmail")
   }
 
-  // TODO change to users
-  object Accounts {
+  object Projects {
+    val default = gcsConfig.getString("serviceProject")
+    val common = default
+    val billingAccount = gcsConfig.getString("billingAccount")
+  }
 
-    val dumbledore = Credentials("dumbledore.admin@quality.firecloud.org", accounts.getString("notSoSecretPassword"))
+  object Users {
+    val notSoSecretPassword = accounts.getString("notSoSecretPassword")
+
+    val dumbledore = Credentials(accounts.getString("dumbledore"), notSoSecretPassword)
+    val voldemort = Credentials(accounts.getString("voldemort"), notSoSecretPassword)
     val admin = dumbledore
-    val hermione = Credentials("hermione.owner@quality.firecloud.org", accounts.getString("notSoSecretPassword"))
+
+    val hermione = Credentials(accounts.getString("hermione"), notSoSecretPassword)
     val owner = hermione
-    // TODO change these to correct users
-    val curator = hermione
-    val harry = hermione
+
+    val mcgonagall = Credentials(accounts.getString("mcgonagall"), notSoSecretPassword)
+    val snape = Credentials(accounts.getString("snape"), notSoSecretPassword)
+    val curator = mcgonagall
+
+    val harry = Credentials(accounts.getString("harry"), notSoSecretPassword)
+    val ron = Credentials(accounts.getString("ron"), notSoSecretPassword)
+    val draco = Credentials(accounts.getString("draco"), notSoSecretPassword)
+
+    val fred = Credentials(accounts.getString("fred"), notSoSecretPassword)
+    val george = Credentials(accounts.getString("george"), notSoSecretPassword)
+    val bill = Credentials(accounts.getString("bill"), notSoSecretPassword)
+
+    val lunaTemp = Credentials(accounts.getString("luna"), notSoSecretPassword)
+    val nevilleTemp = Credentials(accounts.getString("neville"), notSoSecretPassword)
     val testUser = harry
     val dominique = harry
-    val elvin = harry
+    val elvin = fred
   }
 
   object FireCloud {
@@ -35,12 +55,7 @@ object Config {
     val local_API= "http://localhost:8080/"
     val apiUrl = fireCloud.getString("apiUrl")
     val rawlsApiUrl = fireCloud.getString("rawlsApiUrl")
-    val THURLOE_API="https://firecloud-fiab.dsde-dev.broadinstitute.org:25443/"
-  }
-
-  object Projects {
-    val common = "security-spec-test5"
-    val default = "broad-dsde-qa"
+    val THURLOE_API=fireCloud.getString("thurloeApiUrl")
   }
 
   object ChromeSettings {

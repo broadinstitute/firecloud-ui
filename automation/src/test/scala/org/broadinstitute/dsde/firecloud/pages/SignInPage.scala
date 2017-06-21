@@ -77,7 +77,12 @@ class GoogleSignInPopup(implicit webDriver: WebDriver) extends WebBrowser with W
     * TODO: make this work when there is more than one window
     */
   def returnFromSignIn(): Unit = {
-    await condition (windowHandles.size == 1)
+    await condition (windowHandles.size == 1 || enabled(id("submit_approve_access")))
+    if (windowHandles.size > 1) {
+      click on id("submit_approve_access")
+      await condition(windowHandles.size == 1)
+    }
+
     switch to window(windowHandles.head)
   }
 }

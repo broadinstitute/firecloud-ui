@@ -27,7 +27,7 @@ class RegistrationPage(implicit webDriver: WebDriver) extends FireCloudView {
     gestures.fillProgramLocationCity(city)
     gestures.fillProgramLocationState(state)
     gestures.fillProgramLocationCountry(country)
-//    gestures.clickRegisterButton()
+    gestures.clickRegisterButton()
     waitUntilRegistrationComplete()
   }
 
@@ -36,7 +36,6 @@ class RegistrationPage(implicit webDriver: WebDriver) extends FireCloudView {
     * This is intended to be called after clicking the "Register" button.
     */
   def waitUntilRegistrationComplete(): Unit = {
-    await toggle spinner
     await toggle text("Profile Saved")
   }
 

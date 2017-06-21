@@ -2,7 +2,7 @@ package org.broadinstitute.dsde.firecloud
 
 import com.typesafe.scalalogging.LazyLogging
 import org.broadinstitute.dsde.firecloud.api.Rawls
-import org.broadinstitute.dsde.firecloud.auth.AuthToken
+import org.broadinstitute.dsde.firecloud.auth.AuthTokens
 import org.broadinstitute.dsde.firecloud.pages.{BillingManagementPage, WebBrowserSpec}
 import org.scalatest.{FreeSpec, Matchers}
 
@@ -15,15 +15,15 @@ class BillingSpec extends FreeSpec with WebBrowserSpec with CleanUp
   "A user" - {
     "with a billing account" - {
       "should be able to create a billing project" in withWebDriver { implicit driver =>
-        implicit val authToken = AuthToken(Config.Accounts.dumbledore)
-        signIn(Config.Accounts.dumbledore)
+        implicit val authToken = AuthTokens.owner
+        signIn(Config.Users.owner)
 
         val billingPage = new BillingManagementPage().open
         val projectName = "billing-spec-create-" + makeRandomId()
         logger.info(s"Creating billing project: $projectName")
 
-        billingPage.createBillingProject(projectName, "Broad Institute - 8201528")
-        register cleanUp Rawls.admin.deleteBillingProject(projectName)
+        billingPage.createBillingProject(projectName, Config.Projects.billingAccount)
+        register cleanUp Rawls.admin.deleteBillingProject(projectName)(AuthTokens.dumbledore)
 
         val status = billingPage.waitForCreateCompleted(projectName)
         status shouldEqual "success"

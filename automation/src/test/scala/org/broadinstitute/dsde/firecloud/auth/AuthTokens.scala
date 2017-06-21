@@ -8,8 +8,20 @@ import scala.collection.JavaConversions._
 
 
 object AuthTokens {
-  val elvin = AuthToken(Config.Accounts.elvin)
-  val testUser = AuthToken(Config.Accounts.testUser)
+  val dumbledore = AuthToken(Config.Users.dumbledore)
+  val admin = dumbledore
+  val hermione = AuthToken(Config.Users.hermione)
+  val owner = hermione
+  // TODO change these to correct users
+  val mcgonagall = AuthToken(Config.Users.mcgonagall)
+  val curator = mcgonagall
+  val harry = AuthToken(Config.Users.harry)
+  val testUser = harry
+  val dominique = harry
+  val fred = AuthToken(Config.Users.fred)
+  val elvin = fred
+  val lunaTemp = AuthToken(Config.Users.lunaTemp)
+  val nevilleTemp = AuthToken(Config.Users.nevilleTemp)
 }
 
 case class AuthToken(value: String)
