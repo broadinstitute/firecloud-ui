@@ -35,10 +35,9 @@
          #(this :-render-acl-form)
          {:loading-text (str "Loading Permissions for " (:title props) "...")
           :rephrase-error
-          #(if (= 403 (:status-code %))
-             (str "You are unauthorized to edit this "
-                  (clojure.string/lower-case (:entityType props)) ".")
-             (get-in % [:parsed-response :message]))}))
+          #(net/map-error-codes-to-messages
+             {403 (str "You are unauthorized to edit this "
+                       (clojure.string/lower-case (:entityType props)) ".")} %)}))
        :ok-button (when (:acl-vec @state) {:text "Save" :onClick #(this :-persist-acl)})}])
    :component-did-mount
    (fn [{:keys [props state]}]
@@ -106,14 +105,13 @@
                                               (if (:public-status @state) reader-level no-access-level)})]
            (swap! state assoc :saving? true)
            (endpoints/call-ajax-orch
-            {:endpoint (:save-endpoint props)
-             :headers utils/content-type=json
-             :payload non-empty-acls-w-public
-             :on-done (fn [{:keys [success? get-parsed-response]}]
-                        (swap! state dissoc :saving?)
-                        (if success?
-                          (modal/pop-modal)
-                          (swap! state assoc :save-error (get-parsed-response false))))})))))
+             {:endpoint (:save-endpoint props)
+              :headers utils/content-type=json
+              :payload non-empty-acls-w-public
+              :on-done (net/handle-ajax-response
+                         (fn [{:keys [success? parsed-response] :as response}]
+                           (swap! state assoc :acl-response response)
+                           (swap! state dissoc :saving?)))})))))
    :-capture-ui-state
    (fn [{:keys [state refs]}]
      (mapv
