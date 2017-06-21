@@ -55,13 +55,15 @@
              [input/TextField {:ref "namespace" :style {:width "100%"}
                                :defaultValue (:namespace info)
                                :disabled (contains? (:locked info) :namespace)
-                               :predicates [(input/nonempty "Method namespace")]}]]
+                               :predicates [(input/nonempty "Method namespace")]}]
+             (style/create-textfield-hint "Only letters, numbers, underscores, and dashes allowed")]
             [:div {:style {:flex "1 0 auto"}}
              (style/create-form-label "Name")
              [input/TextField {:ref "name" :style {:autoFocus true :width "100%"}
                                :defaultValue (:name info)
                                :disabled (contains? (:locked info) :name)
-                               :predicates [(input/nonempty "Method name")]}]]]
+                               :predicates [(input/nonempty "Method name")]}]
+             (style/create-textfield-hint "Only letters, numbers, underscores, and dashes allowed")]]
            ;;GAWB-1897 removes Type field and makes all MC types "Workflow" until "Task" type is supported
            (style/create-form-label "Synopsis (optional, 80 characters max)")
            (style/create-text-field {:ref "synopsis"
