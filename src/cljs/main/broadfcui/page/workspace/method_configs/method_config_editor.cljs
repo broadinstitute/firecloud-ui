@@ -15,8 +15,8 @@
     [broadfcui.utils :as utils]
     ))
 
-(defn- filter-empty [list]
-  (vec (remove blank? (map trim list))))
+(defn- filter-empty [coll]
+  (->> coll (map trim) (remove blank?) vec))
 
 (defn- create-section-header [text]
   [:div {:style {:fontSize "125%" :fontWeight 500}} text])
@@ -31,27 +31,27 @@
      ((@refs "methodDetails") :get-fields))
    :render
    (fn [{:keys [props state]}]
-     (cond
-       (:loaded-method @state)
-       [comps/EntityDetails
-        (merge {:ref "methodDetails"
-                :snapshots (get (:methods props) (replace (:loaded-method @state) [:namespace :name]))
-                :entity (:loaded-method @state)}
-               (select-keys props [:editing? :wdl-parse-error :onSnapshotIdChange]))]
-       (:error @state) (style/create-server-error-message (:error @state))
-       :else [comps/Spinner {:text "Loading details..."}]))
+     (let [{:keys [loaded-method error]} @state]
+       (cond loaded-method [comps/EntityDetails
+                            (merge {:ref "methodDetails"
+                                    :snapshots (get (:methods props)
+                                                    (replace loaded-method [:namespace :name]))
+                                    :entity loaded-method}
+                                   (select-keys props [:editing? :wdl-parse-error :onSnapshotIdChange]))]
+             error (style/create-server-error-message error)
+             :else [comps/Spinner {:text "Loading details..."}])))
    :component-did-mount
    (fn [{:keys [this]}]
      (this :load-agora-method))
    :load-agora-method
    (fn [{:keys [props state]}]
      (endpoints/call-ajax-orch
-       {:endpoint (endpoints/get-agora-method (:namespace props) (:name props) (:snapshotId props))
-        :headers utils/content-type=json
-        :on-done (fn [{:keys [success? get-parsed-response status-text]}]
-                   (if success?
-                     (swap! state assoc :loaded-method (get-parsed-response))
-                     (swap! state assoc :error status-text)))}))})
+      {:endpoint (endpoints/get-agora-method (:namespace props) (:name props) (:snapshotId props))
+       :headers utils/content-type=json
+       :on-done (fn [{:keys [success? get-parsed-response status-text]}]
+                  (if success?
+                    (swap! state assoc :loaded-method (get-parsed-response))
+                    (swap! state assoc :error status-text)))}))})
 
 
 (defn- input-output-list [{:keys [values ref-prefix invalid-values editing? all-values]}]
@@ -105,9 +105,8 @@
                   [comps/Spinner {:text "Loading Method Configuration..."}]]))
    :-render-display
    (fn [{:keys [props state this]}]
-     (let [wrapped-config (:loaded-config @state)
-           config (:methodConfiguration wrapped-config)
-           editing? (:editing? @state)]
+     (let [{:keys [loaded-config editing?]} @state
+           config (:methodConfiguration loaded-config)]
        [:div {}
         [comps/Blocker {:banner (:blocker @state)}]
         [:div {:style {:padding "1em 2em"}}
