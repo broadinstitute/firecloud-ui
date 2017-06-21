@@ -35,8 +35,3 @@
           (:message parsed-response))))
      :else (render-success))))
 
-(defn map-error-codes-to-messages
-  ([message-map ajax-response]
-   (if-let [message (message-map (:status-code ajax-response))]
-     message
-     (get-in ajax-response [:parsed-response :message]))))

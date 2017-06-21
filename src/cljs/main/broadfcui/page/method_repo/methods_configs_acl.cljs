@@ -35,9 +35,10 @@
          #(this :-render-acl-form)
          {:loading-text (str "Loading Permissions for " (:title props) "...")
           :rephrase-error
-          #(net/map-error-codes-to-messages
-             {403 (str "You are unauthorized to edit this "
-                       (clojure.string/lower-case (:entityType props)) ".")} %)}))
+          #(if (= 403 (:status-code %))
+             (str "You are unauthorized to edit this "
+                  (clojure.string/lower-case (:entityType props)) ".")
+             (get-in % [:parsed-response :message]))}))
        :ok-button (when (:acl-vec @state) {:text "Save" :onClick #(this :-persist-acl)})}])
    :component-did-mount
    (fn [{:keys [props state]}]

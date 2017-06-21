@@ -28,7 +28,6 @@
      (this :-load-data))
    :-load-data
    (fn [{:keys [state]}]
-     (swap! state dissoc :deleting?)
      (utils/ajax-orch
       "/groups"
       {:on-done (net/handle-ajax-response #(swap! state assoc :groups-response %))}))
@@ -77,7 +76,8 @@
                                   (endpoints/call-ajax-orch
                                    {:endpoint (endpoints/delete-group groupName)
                                     :on-done (fn [{:keys [success?]}]
-                                               (if success?
+                                               (swap! state dissoc :deleting?)
+                                               (when success?
                                                  (this :-load-data)))}))})))}]}
         :toolbar
         {:items
