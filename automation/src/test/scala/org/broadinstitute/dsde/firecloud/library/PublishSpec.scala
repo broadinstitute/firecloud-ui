@@ -3,28 +3,27 @@ package org.broadinstitute.dsde.firecloud.library
 import java.util.UUID
 
 import org.broadinstitute.dsde.firecloud.Config
-import org.broadinstitute.dsde.firecloud.api._
 import org.broadinstitute.dsde.firecloud.auth.AuthToken
 import org.broadinstitute.dsde.firecloud.data.Library
 import org.broadinstitute.dsde.firecloud.pages._
 import org.scalatest._
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, ExecutionContextExecutor}
 
 
 class PublishAsCuratorSpec() extends FreeSpec with WebBrowserSpec with BeforeAndAfterAll with BeforeAndAfterEach {
-  implicit val ec = ExecutionContext.global
+  implicit val ec: ExecutionContextExecutor = ExecutionContext.global
 
-  val unpubName = "unpub-" + UUID.randomUUID.toString + "-Publish"
-  val unpubWAttributesName = "unpub-withAttributes" + UUID.randomUUID.toString + "-Publish"
-  val namespace = Config.Projects.default
+  val unpubName: String = "unpub-" + UUID.randomUUID.toString + "-Publish"
+  val unpubWAttributesName: String = "unpub-withAttributes" + UUID.randomUUID.toString + "-Publish"
+  val namespace: String = Config.Projects.default
   implicit val authToken = AuthToken(Config.Users.curator)
 
   override def beforeAll(): Unit = {
     // create workspaces
-    Orchestration.workspaces.create(namespace, unpubName)
-    Orchestration.workspaces.create(namespace, unpubWAttributesName)
-    Orchestration.setLibraryAttributes(namespace, unpubWAttributesName, Library.metadata)
+    api.workspaces.create(namespace, unpubName)
+    api.workspaces.create(namespace, unpubWAttributesName)
+    api.setLibraryAttributes(namespace, unpubWAttributesName, Library.metadata)
   }
 
   override def beforeEach(): Unit = {
@@ -34,8 +33,8 @@ class PublishAsCuratorSpec() extends FreeSpec with WebBrowserSpec with BeforeAnd
   }
 
   override def afterAll(): Unit = {
-    Orchestration.workspaces.delete(namespace, unpubName)
-    Orchestration.workspaces.delete(namespace, unpubWAttributesName)
+    api.workspaces.delete(namespace, unpubName)
+    api.workspaces.delete(namespace, unpubWAttributesName)
   }
 
 
@@ -66,20 +65,20 @@ class PublishAsCuratorSpec() extends FreeSpec with WebBrowserSpec with BeforeAnd
 
 class PublishAsNonCuratorSpec() extends FreeSpec with WebBrowserSpec with BeforeAndAfterAll with BeforeAndAfterEach {
 
-  implicit val ec = ExecutionContext.global
+  implicit val ec: ExecutionContextExecutor = ExecutionContext.global
 
-  val unpubName = "unpub-" + UUID.randomUUID.toString + "-Publish"
-  val unpubWAttributesName = "unpub-withAttributes-" + UUID.randomUUID.toString + "-Publish"
-  val namespace = Config.Projects.default
+  val unpubName: String = "unpub-" + UUID.randomUUID.toString + "-Publish"
+  val unpubWAttributesName: String = "unpub-withAttributes-" + UUID.randomUUID.toString + "-Publish"
+  val namespace: String = Config.Projects.default
   implicit val authToken = AuthToken(Config.Users.harry)
 
   override def beforeAll(): Unit = {
     // create workspaces
-    Orchestration.workspaces.create(namespace, unpubName)
-    Orchestration.updateAcl(namespace, unpubName, Config.Users.ron.email, "WRITER", false)
-    Orchestration.workspaces.create(namespace, unpubWAttributesName)
-    Orchestration.setLibraryAttributes(namespace, unpubWAttributesName, Library.metadata)
-    Orchestration.updateAcl(namespace, unpubWAttributesName, Config.Users.ron.email, "WRITER", false)
+    api.workspaces.create(namespace, unpubName)
+    api.updateAcl(namespace, unpubName, Config.Users.ron.email, "WRITER", canshare = false)
+    api.workspaces.create(namespace, unpubWAttributesName)
+    api.setLibraryAttributes(namespace, unpubWAttributesName, Library.metadata)
+    api.updateAcl(namespace, unpubWAttributesName, Config.Users.ron.email, "WRITER", canshare = false)
   }
 
   override def beforeEach(): Unit = {
@@ -89,8 +88,8 @@ class PublishAsNonCuratorSpec() extends FreeSpec with WebBrowserSpec with Before
   }
 
   override def afterAll(): Unit = {
-    Orchestration.workspaces.delete(namespace, unpubName)
-    Orchestration.workspaces.delete(namespace, unpubWAttributesName)
+    api.workspaces.delete(namespace, unpubName)
+    api.workspaces.delete(namespace, unpubWAttributesName)
   }
 
 

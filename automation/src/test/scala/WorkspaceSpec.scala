@@ -1,4 +1,4 @@
-import org.broadinstitute.dsde.firecloud.auth.AuthTokens
+import org.broadinstitute.dsde.firecloud.auth.{AuthToken, AuthTokens}
 import org.broadinstitute.dsde.firecloud.pages.{WebBrowserSpec, WorkspaceSummaryPage}
 import org.broadinstitute.dsde.firecloud.workspaces.WorkspaceFixtures
 import org.broadinstitute.dsde.firecloud.{CleanUp, Config, Util}
@@ -7,8 +7,8 @@ import org.scalatest._
 class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures[WorkspaceSpec]
   with CleanUp with Matchers {
 
-  implicit val authToken = AuthTokens.harry
-  val billingProject = Config.Projects.default
+  implicit val authToken: AuthToken = AuthTokens.harry
+  val billingProject: String = Config.Projects.default
 
   "A user" - {
     "with a billing project" - {

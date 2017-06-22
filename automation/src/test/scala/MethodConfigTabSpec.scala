@@ -1,6 +1,6 @@
 import java.util.UUID
 
-import org.broadinstitute.dsde.firecloud.auth.AuthTokens
+import org.broadinstitute.dsde.firecloud.auth.{AuthToken, AuthTokens, Credentials}
 import org.broadinstitute.dsde.firecloud.data.TestData
 import org.broadinstitute.dsde.firecloud.pages.{WebBrowserSpec, WorkspaceListPage, WorkspaceMethodConfigPage}
 import org.broadinstitute.dsde.firecloud.{CleanUp, Config}
@@ -8,13 +8,13 @@ import org.scalatest._
 
 class MethodConfigTabSpec extends FreeSpec with WebBrowserSpec with CleanUp {
 
-  val billingProject = Config.Projects.default
-  val methodConfigName = "test_method" + UUID.randomUUID().toString
-  val wrongRootEntityErrorText = "Error: Method configuration expects an entity of type sample, but you gave us an entity of type participant."
-  val noExpressionErrorText = "Error: Method configuration expects an entity of type sample, but you gave us an entity of type sample_set."
+  val billingProject: String = Config.Projects.default
+  val methodConfigName: String = "test_method" + UUID.randomUUID().toString
+  val wrongRootEntityErrorText: String = "Error: Method configuration expects an entity of type sample, but you gave us an entity of type participant."
+  val noExpressionErrorText: String = "Error: Method configuration expects an entity of type sample, but you gave us an entity of type sample_set."
 
-  implicit val authToken = AuthTokens.hermione
-  val uiUser = Config.Users.hermione
+  implicit val authToken: AuthToken = AuthTokens.hermione
+  val uiUser: Credentials = Config.Users.hermione
 
   "launch a simple workflow" in withWebDriver { implicit driver =>
     val wsName = "TestSpec_FireCloud_launch_a_simple_workflow" + UUID.randomUUID.toString

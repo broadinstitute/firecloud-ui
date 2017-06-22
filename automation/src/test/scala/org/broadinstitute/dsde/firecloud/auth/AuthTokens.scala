@@ -12,7 +12,6 @@ object AuthTokens {
   val admin = dumbledore
   val hermione = AuthToken(Config.Users.hermione)
   val owner = hermione
-  // TODO change these to correct users
   val mcgonagall = AuthToken(Config.Users.mcgonagall)
   val curator = mcgonagall
   val harry = AuthToken(Config.Users.harry)
@@ -20,6 +19,8 @@ object AuthTokens {
   val dominique = harry
   val fred = AuthToken(Config.Users.fred)
   val elvin = fred
+  val george = AuthToken(Config.Users.george)
+  val bill = AuthToken(Config.Users.bill)
   val lunaTemp = AuthToken(Config.Users.lunaTemp)
   val nevilleTemp = AuthToken(Config.Users.nevilleTemp)
 }

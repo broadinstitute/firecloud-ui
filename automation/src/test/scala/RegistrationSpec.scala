@@ -1,5 +1,4 @@
 import org.broadinstitute.dsde.firecloud.Config
-import org.broadinstitute.dsde.firecloud.auth.AuthTokens
 import org.broadinstitute.dsde.firecloud.pages.{DataLibraryPage, RegistrationPage, SignInPage, WebBrowserSpec}
 import org.scalatest.FlatSpec
 

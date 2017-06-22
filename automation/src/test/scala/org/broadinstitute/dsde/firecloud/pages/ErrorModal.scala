@@ -5,7 +5,7 @@ import org.openqa.selenium.WebDriver
 
 class ErrorModal (implicit webDriver: WebDriver) extends FireCloudView {
 
-  def validateLocation(): Boolean = {
+  def validateLocation: Boolean = {
     testId("push-error").element != null
   }
 
