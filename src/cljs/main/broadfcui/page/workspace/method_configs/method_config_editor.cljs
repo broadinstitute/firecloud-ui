@@ -172,7 +172,7 @@
                                                 (swap! state assoc :editing? false))}]))]))]))
    :-render-main
    (fn [{:keys [state this]}]
-     (let [{:keys [editing? loaded-config wdl-parse-error inputs-outputs]} @state
+     (let [{:keys [editing? loaded-config wdl-parse-error inputs-outputs methods]} @state
            config (:methodConfiguration loaded-config)
            {:keys [methodRepoMethod]} config]
        [:div {:style {:marginLeft 330}}
