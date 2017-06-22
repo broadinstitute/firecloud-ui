@@ -101,7 +101,7 @@
      (let [acl-vec (this :-capture-ui-state)
            failure (apply input/validate refs (map #(str "acl-key" %) (range (count acl-vec))))]
        (if failure
-         (swap! state assoc :validation-error failure)
+         (swap! state assoc :persist-error failure)
          (let [non-empty-acls (filterv #(not (empty? (:user %))) acl-vec)
                non-empty-acls-w-public (conj non-empty-acls
                                              {:user "public" :role

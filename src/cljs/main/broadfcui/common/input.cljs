@@ -82,6 +82,6 @@
 
 (defn valid-email-or-empty [field-name & [strictness]]
   {:test (fn [test] (or (empty? test) (is-valid-email? test strictness)))
-   :message (str field-name " is not a valid email address (or empty)")})
+   :message (str field-name " is not a valid email address")})
 
 
