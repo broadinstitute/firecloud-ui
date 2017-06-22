@@ -168,7 +168,7 @@
        [:a {:href (if no-access?
                     "javascript:;"
                     (nav/get-link :workspace-summary workspace-id))
-            :onClick (if no-access? #(react/call :-show-request-access-modal this workspace-id))
+            :onClick (if no-access? #(this :-show-request-access-modal workspace-id))
             :style {:display "flex" :alignItems "center"
                     :backgroundColor (if no-access? (:disabled-state style/colors) color)
                     :color "white" :textDecoration "none"
