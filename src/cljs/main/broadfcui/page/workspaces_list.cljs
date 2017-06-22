@@ -160,7 +160,7 @@
 
 (react/defc WorkspaceCell
   {:render
-   (fn [{:keys [props]}]
+   (fn [{:keys [props this]}]
      (let [{:keys [data]} props
            {:keys [status restricted? no-access? hover-text workspace-id]} data
            {:keys [namespace name]} workspace-id
@@ -168,9 +168,9 @@
        [:a {:href (if no-access?
                     "javascript:;"
                     (nav/get-link :workspace-summary workspace-id))
+            :onClick (if no-access? #(react/call :-show-request-access-modal this workspace-id))
             :style {:display "flex" :alignItems "center"
                     :backgroundColor (if no-access? (:disabled-state style/colors) color)
-                    :cursor (when no-access? "default")
                     :color "white" :textDecoration "none"
                     :height (- row-height-px 4)
                     :margin "2px 0"}
