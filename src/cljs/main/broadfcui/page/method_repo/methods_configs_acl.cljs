@@ -75,13 +75,15 @@
               :disabled (< i count-orig)
               :spellCheck false
               :defaultValue (:user acl-entry)
-              :predicates [(input/valid-email-or-empty "User ID")]}]
-            (style/create-identity-select
-             {:ref (str "acl-value" i)
-              :style {:float "right" :width column-width :height 33}
-              :disabled (= (utils/get-user-email) (:user acl-entry))
-              :defaultValue (:role acl-entry)}
-             access-levels)
+              :predicates [(input/valid-email "User ID")]}]
+            (let [disabled? (= (utils/get-user-email) (:user acl-entry))]
+              (style/create-identity-select
+               {:ref (str "acl-value" i)
+                :style {:float "right" :width column-width :height 33}
+                :disabled disabled?
+                :title (when disabled? "You cannot edit your own permissions.")
+                :defaultValue (:role acl-entry)}
+               access-levels))
             (common/clear-both)])
          acl-vec)
         [comps/Button {:text "Add new" :icon :add-new
@@ -101,7 +103,7 @@
      (let [acl-vec (this :-capture-ui-state)
            failure (apply input/validate refs (map #(str "acl-key" %) (range (count acl-vec))))]
        (if failure
-         (swap! state assoc :validation-error failure)
+         (swap! state assoc :persist-error failure)
          (let [non-empty-acls (filterv #(not (empty? (:user %))) acl-vec)
                non-empty-acls-w-public (conj non-empty-acls
                                              {:user "public" :role
