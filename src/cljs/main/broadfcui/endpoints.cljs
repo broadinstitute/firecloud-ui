@@ -144,7 +144,7 @@
 
 (defn get-workspace-method-config [workspace-id config-id]
   {:path (str "/workspaces/" (id-path workspace-id)
-           "/method_configs/" (:namespace config-id) "/" (:name config-id))
+              "/method_configs/" (id-path config-id))
    :method :get})
 
 (defn update-workspace-method-config [workspace-id config-id]
