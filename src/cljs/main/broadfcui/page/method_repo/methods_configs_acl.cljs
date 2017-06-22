@@ -75,7 +75,7 @@
               :disabled (< i count-orig)
               :spellCheck false
               :defaultValue (:user acl-entry)
-              :predicates [(input/valid-email "User ID")]}]
+              :predicates [(input/valid-email-or-empty "User ID")]}]
             (let [disabled? (= (utils/get-user-email) (:user acl-entry))]
               (style/create-identity-select
                {:ref (str "acl-value" i)
