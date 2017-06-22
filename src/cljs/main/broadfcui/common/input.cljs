@@ -78,10 +78,10 @@
   (re-matches (get strictnesses strictness (:simple strictnesses)) (clojure.string/lower-case test)))
 
 (defn valid-email [field-name & [strictness]]
-  {:test #(is-valid-email? % strictness) :message (str field-name " is not a valid email address")})
+  {:test #(is-valid-email? % strictness) :message (str field-name " must be a valid email address")})
 
 (defn valid-email-or-empty [field-name & [strictness]]
   {:test (fn [test] (or (empty? test) (is-valid-email? test strictness)))
-   :message (str field-name " is not a valid email address (or empty)")})
+   :message (str field-name " must be a valid email address")})
 
 
