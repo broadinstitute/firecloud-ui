@@ -60,12 +60,12 @@ docker-compose -f hub-compose.yml up -d
 docker-compose -f hub-compose.yml scale chrome=$NUM_NODES
 
 # render ctmpls
-docker run --rm -e VAULT_TOKEN=${VAULT_TOKEN} \
-    -e ENVIRONMENT=${ENV} -v $(pwd):/working \
-    broadinstitute/dsde-toolbox:dev consul-template \
-        -config=/etc/consul-template/config/config.json \
-        -template=application.conf.ctmpl:application.conf \
-        -once
+#docker run --rm -e VAULT_TOKEN=${VAULT_TOKEN} \
+    #-e ENVIRONMENT=${ENV} -v $(pwd):/working \
+    #broadinstitute/dsde-toolbox:dev consul-template \
+        #-config=/etc/consul-template/config/config.json \
+        #-template=application.conf.ctmpl:application.conf \
+        #-once
 
 # run tests
 docker run -e DOCKERHOST=$DOCKERHOST \
@@ -75,6 +75,7 @@ docker run -e DOCKERHOST=$DOCKERHOST \
     --add-host=firecloud-orchestration-fiab.dsde-${ENV}.broadinstitute.org:${DOCKERHOST} \
     -P --rm -t -e CHROME_URL="http://hub:4444/" \
     -v $PWD/application.conf:/app/automation/src/test/resources/application.conf \
+    -v $PWD/firecloud-qa.pem:/app/automation/src/test/resources/firecloud-qa.pem \
     -v jar-cache:/root/.ivy -v jar-cache:/root/.ivy2 \
     --link docker_hub_1:hub --name ${TEST_CONTAINER} -w /app \
     ${TEST_CONTAINER}:latest

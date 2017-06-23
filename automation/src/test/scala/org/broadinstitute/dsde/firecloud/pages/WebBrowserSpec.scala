@@ -29,15 +29,15 @@ trait WebBrowserSpec extends WebBrowserUtil {
     * @param testCode the test code to run
     */
   def withWebDriver(testCode: (WebDriver) => Any): Unit = {
-    val localBrowser = new SystemProperties().get("local.browser")
-    localBrowser match {
-      case Some("true") => runLocalChrome(testCode)
+    val headless = new SystemProperties().get("headless")
+    headless match {
+      case Some("false") => runLocalChrome(testCode)
       case _ => runHeadless(testCode)
     }
   }
 
   private def runLocalChrome(testCode: (WebDriver) => Any) = {
-    val service = new ChromeDriverService.Builder().usingDriverExecutable(new File(Config.ChromeSettings.localChrome)).usingAnyFreePort().build()
+    val service = new ChromeDriverService.Builder().usingDriverExecutable(new File(Config.ChromeSettings.chromDriverPath)).usingAnyFreePort().build()
     service.start()
     val driver = new RemoteWebDriver(service.getUrl, DesiredCapabilities.chrome())
     driver.setFileDetector(new LocalFileDetector())

@@ -6,7 +6,7 @@ import org.broadinstitute.dsde.firecloud.auth.Credentials
 object Config {
   private val config = ConfigFactory.load()
   private val fireCloud = config.getConfig("fireCloud")
-  private val accounts = config.getConfig("accounts")
+  private val users = config.getConfig("users")
   private val chromeSettings = config.getConfig("chromeSettings")
   private val gcsConfig = config.getConfig("gcs")
 
@@ -22,29 +22,29 @@ object Config {
   }
 
   object Users {
-    val notSoSecretPassword = accounts.getString("notSoSecretPassword")
+    val notSoSecretPassword = users.getString("notSoSecretPassword")
 
-    val dumbledore = Credentials(accounts.getString("dumbledore"), notSoSecretPassword)
-    val voldemort = Credentials(accounts.getString("voldemort"), notSoSecretPassword)
+    val dumbledore = Credentials(users.getString("dumbledore"), notSoSecretPassword)
+    val voldemort = Credentials(users.getString("voldemort"), notSoSecretPassword)
     val admin = dumbledore
 
-    val hermione = Credentials(accounts.getString("hermione"), notSoSecretPassword)
+    val hermione = Credentials(users.getString("hermione"), notSoSecretPassword)
     val owner = hermione
 
-    val mcgonagall = Credentials(accounts.getString("mcgonagall"), notSoSecretPassword)
-    val snape = Credentials(accounts.getString("snape"), notSoSecretPassword)
+    val mcgonagall = Credentials(users.getString("mcgonagall"), notSoSecretPassword)
+    val snape = Credentials(users.getString("snape"), notSoSecretPassword)
     val curator = mcgonagall
 
-    val harry = Credentials(accounts.getString("harry"), notSoSecretPassword)
-    val ron = Credentials(accounts.getString("ron"), notSoSecretPassword)
-    val draco = Credentials(accounts.getString("draco"), notSoSecretPassword)
+    val harry = Credentials(users.getString("harry"), notSoSecretPassword)
+    val ron = Credentials(users.getString("ron"), notSoSecretPassword)
+    val draco = Credentials(users.getString("draco"), notSoSecretPassword)
 
-    val fred = Credentials(accounts.getString("fred"), notSoSecretPassword)
-    val george = Credentials(accounts.getString("george"), notSoSecretPassword)
-    val bill = Credentials(accounts.getString("bill"), notSoSecretPassword)
+    val fred = Credentials(users.getString("fred"), notSoSecretPassword)
+    val george = Credentials(users.getString("george"), notSoSecretPassword)
+    val bill = Credentials(users.getString("bill"), notSoSecretPassword)
 
-    val lunaTemp = Credentials(accounts.getString("luna"), notSoSecretPassword)
-    val nevilleTemp = Credentials(accounts.getString("neville"), notSoSecretPassword)
+    val lunaTemp = Credentials(users.getString("luna"), notSoSecretPassword)
+    val nevilleTemp = Credentials(users.getString("neville"), notSoSecretPassword)
     val testUser = harry
     val dominique = harry
     val elvin = fred
@@ -60,6 +60,6 @@ object Config {
 
   object ChromeSettings {
     val chromedriverHost = chromeSettings.getString("chromedriverHost")
-
+    val chromDriverPath = chromeSettings.getString("chromedriverPath")
   }
 }
