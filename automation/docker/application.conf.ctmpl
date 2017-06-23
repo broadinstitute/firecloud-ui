@@ -1,23 +1,30 @@
 {{with $environment := env "ENVIRONMENT"}}
 {{with $accounts := vault (printf "secret/dsde/%s/colvin/accounts" $environment)}}
-firecloud {
-  baseUrl = "http://firecloud-fiab.dsde-{{$environment}}.broadinstitute.org/"
+{{with $users := vault (printf "secret/dsde/firecloud/%s/common/users" $environment)}}
+fireCloud {
+  baseUrl = "https://firecloud-fiab.dsde-{{$environment}}.broadinstitute.org:22443/"
   apiUrl = "https://firecloud-fiab.dsde-{{$environment}}.broadinstitute.org:23443/"
-  rawlsApiUrl = "https://firecloud-fiab.dsde-{{$environment}}.broadinstitute.org:24443"
+  rawlsApiUrl = "https://firecloud-fiab.dsde-{{$environment}}.broadinstitute.org:24443/"
+  thurloeApiUrl = "https://firecloud-fiab.dsde-{{$environment}}.broadinstitute.org:25443/"
 }
 
-accounts {
-  notSoSecretPassword = "{{$accounts.Data.testreg_password}}"
+gcs {
+  serviceProject = "broad-dsde-{{$environment}}"
+  qaEmail = "{{$users.Data.service_acct_email}}"
+  qaPemFile = "/app/automation/src/test/resources/firecloud-qa.pem"
+  billingAccount = "{{users.Data.billing_acct}}"
 }
 
-authTokens {
-  admin = ""
-  elvin = ""
-  testFireC = ""
+users {
+  notSoSecretPassword = "{{$users.Data.users_passwd}}"
+  {{$users.Data.users}}
 }
 
 chromeSettings {
   chromedriverHost = "http://hub:4444/wd/hub"
+  chromedriverPath = "usr/local/bin/chromedriver"
 }
+
+{{end}}
 {{end}}
 {{end}}
