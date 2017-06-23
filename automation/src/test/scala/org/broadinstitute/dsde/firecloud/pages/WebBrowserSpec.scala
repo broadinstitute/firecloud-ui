@@ -28,28 +28,37 @@ trait WebBrowserSpec extends WebBrowserUtil {
     * @param testCode the test code to run
     */
   def withWebDriver(testCode: (WebDriver) => Any): Unit = {
-    //this needs to be changed!
-    val service = new ChromeDriverService.Builder().usingDriverExecutable(new File("/usr/local/bin/chromedriver")).usingAnyFreePort().build()
+    val localBrowser = new SystemProperties().get("local.browser")
+    localBrowser match {
+      case Some("true") => runLocalChrome(testCode)
+      case _ => runHeadless(testCode)
+    }
+  }
+
+  private def runLocalChrome(testCode: (WebDriver) => Any) = {
+    val service = new ChromeDriverService.Builder().usingDriverExecutable(new File(Config.ChromeSettings.localChrome)).usingAnyFreePort().build()
     service.start()
-    implicit val webDriver = initWebDriver(service)
+    val driver = new RemoteWebDriver(service.getUrl, DesiredCapabilities.chrome())
+    driver.setFileDetector(new LocalFileDetector())
     try {
-      testCode(webDriver)
+      testCode(driver)
     } finally {
-      webDriver.quit()
+      driver.quit()
       service.stop()
     }
   }
 
-  private def initWebDriver(service: ChromeDriverService): WebDriver = {
-    val localBrowser = new SystemProperties().get("local.browser")
+  private def runHeadless(testCode: (WebDriver) => Any) = {
     val defaultChrome = Config.ChromeSettings.chromedriverHost
-    val driver = localBrowser match {
-      case Some("true") => new RemoteWebDriver(service.getUrl, DesiredCapabilities.chrome())
-      case _ => new RemoteWebDriver(new URL(defaultChrome), DesiredCapabilities.chrome())
-    }
+    val driver = new RemoteWebDriver(new URL(defaultChrome), DesiredCapabilities.chrome())
     driver.setFileDetector(new LocalFileDetector())
-    driver
+    try {
+      testCode(driver)
+    } finally {
+      driver.quit()
+    }
   }
+
 
   /**
     * Make a random alpha-numeric (lowercase) string to be used as a semi-unique
