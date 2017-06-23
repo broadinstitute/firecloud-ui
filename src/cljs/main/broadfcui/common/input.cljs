@@ -71,6 +71,12 @@
 
 (def hint-alphanumeric_- "Only letters, numbers, underscores, and dashes allowed")
 
+(defn alphanumeric_-period [field-name]
+  {:test #(re-matches #"[A-Za-z0-9_\-.]*" %)
+   :message (str field-name " may only contain letters, numbers, underscores, dashes, and periods.")})
+
+(def hint-alphanumeric_-period "Only letters, numbers, underscores, dashes, and periods allowed")
+
 (def ^:private strictnesses
   {:simple #"^\S+@\S+\.\S+$"
    :strict #"^([\w-]+(?:\.[\w-]+)*)@((?:[\w-]+\.)*\w[\w-]{0,66})\.([a-z]{2,6}(?:\.[a-z]{2})?)$"})
