@@ -54,8 +54,8 @@
                         (react/create-element
                          [:span {:style {:marginLeft "1em"}}
                           [:a {:href (common/gcs-object->download-url (:bucket-name props) (:object props))
-                               :onClick #(utils/refresh-access-token)
-                               :onContextMenu #(utils/refresh-access-token)
+                               :onClick utils/refresh-access-token
+                               :onContextMenu utils/refresh-access-token
                                :target "_blank"}
                            "Open" icons/external-link-icon]
                           [:span {:style {:fontStyle "italic" :color (:text-light style/colors)}}
