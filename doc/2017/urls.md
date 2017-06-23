@@ -9,6 +9,10 @@ To avoid duplicating code, we need to engineer a solution that meets the followi
  - It must handle URL **construction** and **parsing**, since these operations have to be symmetric and should therefore be defined in close proximity.
  - Ideally, it should not prevent a developer outside of the Broad from starting up the UI (the definitions should exist in an accessible location for any developer who clones the UI repo).
 
+## Decision
+
+We chose Option 2 (Code Comments), described below.
+
 ## Option 1: JSON-Based URL Definitions
 
 The UI and any services needing to construct URLs do so from a JSON file following this example:
@@ -50,3 +54,7 @@ Notes:
 ### Location
 
 This JSON file would exist within the UI repo. It may be consumed by other services by downloading it from http://ui-host.example.com/urls.json.
+
+## Option 2: Code Comments
+
+We can simply annotate the code locations of URL definitions and usage to remind the developer that changing one requires a corresponding change in the other.
