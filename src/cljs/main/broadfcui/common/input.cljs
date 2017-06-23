@@ -69,6 +69,7 @@
   {:test #(re-matches #"[A-Za-z0-9_\-]*" %)
    :message (str field-name " may only contain letters, numbers, underscores, and dashes.")})
 
+(def hint-alphanumeric_- "Only letters, numbers, underscores, and dashes allowed")
 
 (def ^:private strictnesses
   {:simple #"^\S+@\S+\.\S+$"

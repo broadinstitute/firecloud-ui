@@ -38,7 +38,7 @@
                             :placeholder "Required"
                             :predicates [(input/nonempty "Workspace name")
                                          (input/alphanumeric_- "Workspace name")]}]
-          (style/create-textfield-hint "Only letters, numbers, underscores, and dashes allowed")
+          (style/create-textfield-hint input/hint-alphanumeric_-)
           (style/create-form-label "Description (optional)")
           (style/create-text-area {:style {:width "100%"} :rows 5 :ref "wsDescription"
                                    :defaultValue (:description props)})
