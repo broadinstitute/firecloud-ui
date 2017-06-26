@@ -125,8 +125,10 @@
        (assert bucket-name "No bucket name provided")
        (assert object "No GCS object provided")
        [:div (or (:attributes props) {})
-        [:a {:href "javascript:;" :onClick #(modal/push-modal [PreviewDialog props])}
+        [:a {:href (str "gs://" bucket-name "/" object)
+             :onClick (fn [e]
+                        (.preventDefault e)
+                        (modal/push-modal [PreviewDialog props]))}
          (if (= bucket-name workspace-bucket)
            object
            (if link-label (str link-label) (str "gs://" bucket-name "/" object)))]]))})
-
