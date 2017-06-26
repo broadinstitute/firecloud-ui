@@ -21,7 +21,7 @@ users {
 
 chromeSettings {
   chromedriverHost = "http://hub:4444/wd/hub"
-  chromedriverPath = "usr/local/bin/chromedriver"
+  chromedriverPath = "/usr/local/bin/chromedriver"
 }
 
 {{end}}
