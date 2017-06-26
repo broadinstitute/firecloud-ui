@@ -208,7 +208,7 @@
           (let [column-data (fn [ws]
                               (let [no-access? (= (:accessLevel ws) "NO ACCESS")
                                     tcga? (and no-access? (= (get-in ws [:workspace :authorizationDomain :membersGroupName])
-                                                                 config/tcga-authorization-domain))]
+                                                             config/tcga-authorization-domain))]
                                 {:workspace-id (select-keys (:workspace ws) [:namespace :name])
                                  :status (:status ws)
                                  ;; this will very soon return multiple auth domains, so im future-proofing it now
@@ -250,13 +250,12 @@
               :initial-width 132 :resizable? false
               :column-data column-data
               :sort-by (zipmap access-levels (range)) :sort-initial :asc
-              :render (fn [data]
-                        (let [{:keys [access-level workspace-id auth-domains]} data]
-                          [:div {:style {:paddingLeft 14}}
-                           (if (= access-level "NO ACCESS")
-                             (style/create-link {:text (prettify access-level)
-                                                 :onClick #(this :-show-request-access-modal workspace-id auth-domains)})
-                             (prettify access-level))]))}])
+              :render (fn [{:keys [access-level workspace-id auth-domains]}]
+                        [:div {:style {:paddingLeft 14}}
+                         (if (= access-level "NO ACCESS")
+                           (style/create-link {:text (prettify access-level)
+                                               :onClick #(this :-show-request-access-modal workspace-id auth-domains)})
+                           (prettify access-level))])}])
           :behavior {:reorderable-columns? false}
           :style {:header-row {:color (:text-lighter style/colors) :fontSize "90%"}
                   :header-cell {:padding "0.4rem 0"}
