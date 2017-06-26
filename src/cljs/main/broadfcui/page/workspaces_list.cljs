@@ -251,13 +251,11 @@
               :column-data column-data
               :sort-by (zipmap access-levels (range)) :sort-initial :asc
               :render (fn [data]
-                        (let [access-level (:access-level data)
-                              workspace-id (:workspace-id data)
-                              ws-auth-domains (:auth-domains data)]
+                        (let [{:keys [access-level workspace-id auth-domains]} data]
                           [:div {:style {:paddingLeft 14}}
                            (if (= access-level "NO ACCESS")
                              (style/create-link {:text (prettify access-level)
-                                                 :onClick #(this :-show-request-access-modal workspace-id ws-auth-domains)})
+                                                 :onClick #(this :-show-request-access-modal workspace-id auth-domains)})
                              (prettify access-level))]))}])
           :behavior {:reorderable-columns? false}
           :style {:header-row {:color (:text-lighter style/colors) :fontSize "90%"}
