@@ -1,5 +1,4 @@
 {{with $environment := env "ENVIRONMENT"}}
-{{with $accounts := vault (printf "secret/dsde/%s/colvin/accounts" $environment)}}
 {{with $users := vault (printf "secret/dsde/firecloud/%s/common/users" $environment)}}
 fireCloud {
   baseUrl = "https://firecloud-fiab.dsde-{{$environment}}.broadinstitute.org:22443/"
@@ -12,7 +11,7 @@ gcs {
   serviceProject = "broad-dsde-{{$environment}}"
   qaEmail = "{{$users.Data.service_acct_email}}"
   qaPemFile = "/app/automation/src/test/resources/firecloud-qa.pem"
-  billingAccount = "{{users.Data.billing_acct}}"
+  billingAccount = "{{$users.Data.billing_acct}}"
 }
 
 users {
@@ -25,6 +24,5 @@ chromeSettings {
   chromedriverPath = "usr/local/bin/chromedriver"
 }
 
-{{end}}
 {{end}}
 {{end}}
