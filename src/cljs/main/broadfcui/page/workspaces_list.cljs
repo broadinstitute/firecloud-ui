@@ -182,6 +182,12 @@
        (apply clojure.set/union)))
 
 
+(defn- push-request-access-modal [workspace-id auth-domains]
+  (modal/push-modal
+   [RequestAuthDomainAccessDialog
+    {:workspace-id workspace-id
+     :ws-auth-domains auth-domains}]))
+
 (react/defc WorkspaceTable
   {:get-initial-state
    (fn []
@@ -254,7 +260,7 @@
                         [:div {:style {:paddingLeft 14}}
                          (if (= access-level "NO ACCESS")
                            (style/create-link {:text (prettify access-level)
-                                               :onClick #(this :-show-request-access-modal workspace-id auth-domains)})
+                                               :onClick #(push-request-access-modal workspace-id auth-domains)})
                            (prettify access-level))])}])
           :behavior {:reorderable-columns? false}
           :style {:header-row {:color (:text-lighter style/colors) :fontSize "90%"}
@@ -287,7 +293,7 @@
      [:a {:href (if no-access?
                   "javascript:;"
                   (nav/get-link :workspace-summary workspace-id))
-          :onClick (if no-access? #(this :-show-request-access-modal workspace-id auth-domains))
+          :onClick (if no-access? #(push-request-access-modal workspace-id auth-domains))
           :style {:display "block" :position "relative"
                   :backgroundColor (if no-access?
                                      (:disabled-state style/colors)
@@ -309,7 +315,7 @@
        [:a {:href (if no-access?
                     "javascript:;"
                     (nav/get-link :workspace-summary workspace-id))
-            :onClick (if no-access? #(this :-show-request-access-modal workspace-id auth-domains))
+            :onClick (if no-access? #(push-request-access-modal workspace-id auth-domains))
             :style {:display "flex" :alignItems "center"
                     :backgroundColor (if no-access? (:disabled-state style/colors) color)
                     :color "white" :textDecoration "none"
@@ -373,13 +379,7 @@
                         (fn [ws]
                           (let [ws-tags (set (get-in ws [:workspace :attributes :tag:tags :items]))]
                             (every? (partial contains? ws-tags) selected-tags))))]
-       (filter (apply every-pred tag-filter checkbox-filters) workspaces)))
-   :-show-request-access-modal
-   (fn [_ workspace-id auth-domains]
-     (modal/push-modal
-      [RequestAuthDomainAccessDialog
-       {:workspace-id workspace-id
-        :ws-auth-domains auth-domains}]))})
+       (filter (apply every-pred tag-filter checkbox-filters) workspaces)))})
 
 
 (react/defc WorkspaceList
