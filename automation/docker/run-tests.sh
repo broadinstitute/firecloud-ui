@@ -41,6 +41,7 @@ startup() {
         echo "Tests are already running on this host.  Kill current tests or try again later."
         exit 1
     fi
+    rm -rf $WORKING_DIR/target/ $WORKING_DIR/failure_screenshots/
 }
 # kill and remove any running containers
 cleanup () {
