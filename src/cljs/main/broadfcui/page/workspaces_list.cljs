@@ -30,17 +30,17 @@
 
 (react/defc StatusCell
   {:render
-   (fn [{:keys [props]}]
-     (let [{:keys [data]} props
+   (fn [{:keys [props this]}]
+     (let [{:keys [data show-request-access-modal]} props
            {:keys [status no-access? hover-text workspace-id]} data]
        [:a {:href (if no-access?
                     "javascript:;"
                     (nav/get-link :workspace-summary workspace-id))
+            :onClick (if no-access? show-request-access-modal)
             :style {:display "block" :position "relative"
                     :backgroundColor (if no-access?
                                        (:disabled-state style/colors)
                                        (style/color-for-status status))
-                    :cursor (when no-access? "default")
                     :margin "2px 0 2px 2px" :height (- row-height-px 4)}
             :title hover-text}
         [:span {:style {:position "absolute" :top 0 :right 0 :bottom 0 :left 0
@@ -70,7 +70,7 @@
         (let [{:keys [my-auth-domains ws-instructions error]} @state]
           (cond
             (not (or (and my-auth-domains ws-instructions) error))
-            [comps/Spinner {:text "Loading authorization domains..."}]
+            [comps/Spinner {:text "Loading Authorization Domains..."}]
             error
             (case (:code error)
               (:unknown :parse-error)
@@ -161,14 +161,14 @@
 (react/defc WorkspaceCell
   {:render
    (fn [{:keys [props this]}]
-     (let [{:keys [data]} props
+     (let [{:keys [data show-request-access-modal]} props
            {:keys [status restricted? no-access? hover-text workspace-id]} data
            {:keys [namespace name]} workspace-id
            color (style/color-for-status status)]
        [:a {:href (if no-access?
                     "javascript:;"
                     (nav/get-link :workspace-summary workspace-id))
-            :onClick (if no-access? #(this :-show-request-access-modal workspace-id))
+            :onClick (if no-access? show-request-access-modal)
             :style {:display "flex" :alignItems "center"
                     :backgroundColor (if no-access? (:disabled-state style/colors) color)
                     :color "white" :textDecoration "none"
@@ -184,13 +184,7 @@
             "RESTRICTED"]])
         [:div {:style {:paddingLeft 24}}
          [:div {:style {:fontSize "80%"}} namespace]
-         [:div {:style {:fontWeight 600}} name]]]))
-   :-show-request-access-modal
-   (fn [{:keys [props]}]
-     (modal/push-modal
-      [RequestAuthDomainAccessDialog
-       {:workspace-id (get-in props [:data :workspace-id])
-        :ws-auth-domains (get-in props [:data :auth-domains])}]))})
+         [:div {:style {:fontWeight 600}} name]]]))})
 
 (defn- get-workspace-name-string [column-data]
   (str (get-in column-data [:workspace-id :namespace]) "/" (get-in column-data [:workspace-id :name])))
@@ -283,12 +277,23 @@
             [{:id "Status" :header [:span {:style {:marginLeft 7}} "Status"]
               :sortable? false :resizable? false :filterable? false :initial-width row-height-px
               :column-data column-data :as-text :status
-              :render (fn [data] [StatusCell (utils/restructure data nav-context)])}
+              :render (fn [data]
+                        [StatusCell
+                         (assoc
+                           (utils/restructure data nav-context)
+                           :show-request-access-modal #(this :-show-request-access-modal
+                                                             (:workspace-id data)
+                                                             (:auth-domains data)))])}
              {:id "Workspace" :header [:span {:style {:marginLeft 24}} "Workspace"]
               :initial-width 300
               :column-data column-data :as-text get-workspace-name-string
               :sort-by #(mapv clojure.string/lower-case (replace (:workspace-id %) [:namespace :name]))
-              :render (fn [data] [WorkspaceCell (utils/restructure data nav-context)])}
+              :render (fn [data] [WorkspaceCell
+                                  (assoc
+                                    (utils/restructure data nav-context)
+                                    :show-request-access-modal #(this :-show-request-access-modal
+                                                                      (:workspace-id data)
+                                                                      (:auth-domains data)))])}
              {:id "Description" :header [:span {:style {:marginLeft 14}} "Description"]
               :initial-width 350
               :column-data get-workspace-description
@@ -309,14 +314,13 @@
               :column-data column-data
               :sort-by (zipmap access-levels (range)) :sort-initial :asc
               :render (fn [data]
-                        (let [access-level (:access-level data)]
+                        (let [access-level (:access-level data)
+                              workspace-id (:workspace-id data)
+                              ws-auth-domains (:auth-domains data)]
                           [:div {:style {:paddingLeft 14}}
                            (if (= access-level "NO ACCESS")
                              (style/create-link {:text (prettify access-level)
-                                                 :onClick #(modal/push-modal
-                                                            [RequestAuthDomainAccessDialog
-                                                             {:workspace-id (:workspace-id data)
-                                                              :ws-auth-domains (:auth-domains data)}])})
+                                                 :onClick #(this :-show-request-access-modal workspace-id ws-auth-domains)})
                              (prettify access-level))]))}])
           :behavior {:reorderable-columns? false}
           :style {:header-row {:color (:text-lighter style/colors) :fontSize "90%"}
@@ -390,7 +394,13 @@
                         (fn [ws]
                           (let [ws-tags (set (get-in ws [:workspace :attributes :tag:tags :items]))]
                             (every? (partial contains? ws-tags) selected-tags))))]
-       (filter (apply every-pred tag-filter checkbox-filters) workspaces)))})
+       (filter (apply every-pred tag-filter checkbox-filters) workspaces)))
+   :-show-request-access-modal
+   (fn [{:keys [props]} workspace-id auth-domains]
+     (modal/push-modal
+      [RequestAuthDomainAccessDialog
+       {:workspace-id workspace-id
+        :ws-auth-domains auth-domains}]))})
 
 
 (react/defc WorkspaceList
