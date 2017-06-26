@@ -288,8 +288,7 @@
    (fn [{:keys [state]}]
      (persistence/save {:key persistence-key :state state}))
    :-render-status-cell
-   (fn [{:keys [this]}
-        {:keys [status no-access? hover-text workspace-id auth-domains]}]
+   (fn [_ {:keys [status no-access? hover-text workspace-id auth-domains]}]
      [:a {:href (if no-access?
                   "javascript:;"
                   (nav/get-link :workspace-summary workspace-id))
@@ -308,8 +307,7 @@
                       "Running" [icons/RunningIcon]
                       "Exception" [icons/ExceptionIcon]))])
    :-render-workspace-cell
-   (fn [{:keys [this]}
-        {:keys [status restricted? no-access? hover-text workspace-id auth-domains]}]
+   (fn [_ {:keys [status restricted? no-access? hover-text workspace-id auth-domains]}]
      (let [{:keys [namespace name]} workspace-id
            color (style/color-for-status status)]
        [:a {:href (if no-access?
