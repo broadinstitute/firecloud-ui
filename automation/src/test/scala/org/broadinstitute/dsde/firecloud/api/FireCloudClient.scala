@@ -25,8 +25,7 @@ class FireCloudClient {
 
   // TODO: Is this okay here or should it be in a separate object and explicitly imported?
   implicit class JsonStringUtil(s: String) {
-    def fromJsonMapAs[A](key: String): Option[A] =
-      parseJsonAsMap.get(key)
+    def fromJsonMapAs[A](key: String): Option[A] = parseJsonAsMap.get(key)
 
     def parseJsonAsMap[A]: Map[String, A] = mapper.readValue(s, classOf[Map[String, A]])
   }
