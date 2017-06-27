@@ -3,9 +3,9 @@
 {{with $secrets := vault (printf "secret/dsde/firecloud/%s/common/secrets" $environment)}}
 fireCloud {
   baseUrl = "https://firecloud-fiab.dsde-{{$environment}}.broadinstitute.org:22443/"
-  orchApiUrl = "https://firecloud-fiab.dsde-{{$environment}}.broadinstitute.org:23443/"
-  rawlsApiUrl = "https://firecloud-fiab.dsde-{{$environment}}.broadinstitute.org:24443/"
-  thurloeApiUrl = "https://firecloud-fiab.dsde-{{$environment}}.broadinstitute.org:25443/"
+  orchApiUrl = "https://firecloud-orchestration-fiab.dsde-{{$environment}}.broadinstitute.org:23443/"
+  rawlsApiUrl = "https://rawls.dsde-{{$environment}}.broadinstitute.org:24443/"
+  thurloeApiUrl = "https://thurloe.dsde-{{$environment}}.broadinstitute.org:25443/"
   fireCloudId = "{{$secrets.Data.firecloud_id}}"
 }
 

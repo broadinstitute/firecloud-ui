@@ -40,11 +40,11 @@ class FireCloudClient {
       case true =>
         val byteStringSink: Sink[ByteString, Future[ByteString]] = Sink.fold(ByteString("")) { (z, i) => z.concat(i) }
         val entityFuture = response.entity.dataBytes.runWith(byteStringSink)
-        Await.result(entityFuture, 50.millis).decodeString("UTF-8")
+        Await.result(entityFuture, 100.millis).decodeString("UTF-8")
       case _ =>
         val byteStringSink: Sink[ByteString, Future[ByteString]] = Sink.fold(ByteString("")) { (z, i) => z.concat(i) }
         val entityFuture = response.entity.dataBytes.runWith(byteStringSink)
-        throw new APIException(Await.result(entityFuture, 50.millis).decodeString("UTF-8"))
+        throw new APIException(Await.result(entityFuture, 100.millis).decodeString("UTF-8"))
     }
   }
 

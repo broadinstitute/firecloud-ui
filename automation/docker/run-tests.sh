@@ -74,10 +74,13 @@ docker run -e DOCKERHOST=$DOCKERHOST \
     -e ENV=$ENV \
     --add-host=firecloud-fiab.dsde-${ENV}.broadinstitute.org:${DOCKERHOST} \
     --add-host=firecloud-orchestration-fiab.dsde-${ENV}.broadinstitute.org:${DOCKERHOST} \
+    --add-host=rawls.dsde-${ENV}.broadinstitute.org:${DOCKERHOST} \
+    --add-host=thurloe.dsde-${ENV}.broadinstitute.org:${DOCKERHOST} \
     -P --rm -t -e CHROME_URL="http://hub:4444/" \
     -v $WORKING_DIR/target/application.conf:/app/automation/src/test/resources/application.conf \
     -v $WORKING_DIR/target/firecloud-account.pem:/app/automation/src/test/resources/firecloud-${ENV}.pem \
     -v $WORKING_DIR/failure_screenshots:/app/failure_screenshots \
+    -v jar-cache:/root/.ivy -v jar-cache:/root/.ivy2 \
     --link docker_hub_1:hub --name ${TEST_CONTAINER} -w /app \
     ${TEST_CONTAINER}:latest
 
