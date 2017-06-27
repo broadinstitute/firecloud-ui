@@ -141,6 +141,9 @@
                              :useCallCache (react/call :checked? (@refs "callCache-check"))}
                        (when-not (clojure.string/blank? expression) {:expression expression}))]
          (swap! state assoc :launching? true :launch-server-error nil)
+         (utils/log payload)
+         (utils/log expression)
+         (utils/log config-id)
          (endpoints/call-ajax-orch
            {:endpoint (endpoints/create-submission (:workspace-id props))
             :payload payload

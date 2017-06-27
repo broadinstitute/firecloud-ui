@@ -32,15 +32,13 @@
   (let [workspace-id (:workspace-id props)
         method (get-in config ["methodRepoMethod"])
         [name rootEntityType] (get-text refs "confname" "rootentitytype")
-        inputs (->> ((:inputs-outputs @state) "inputs")
+        inputs (utils/log (->> ((:inputs-outputs @state) "inputs")
                     (map #(% "name"))
                     (map (juxt identity #(get-text refs (str "in_" %))))
-                    (filter (comp not empty? val))
-                    (into {}))
+                    (into {})))
         outputs (->> ((:inputs-outputs @state) "outputs")
                      (map #(% "name"))
                      (map (juxt identity #(get-text refs (str "out_" %))))
-                     (filter (comp not empty? val))
                      (into {}))
         method-ref (merge method (react/call :get-fields (@refs "methodDetailsViewer")))
         new-conf (assoc config
@@ -156,7 +154,7 @@
                           :backgroundColor (:background-light style/colors)
                           :border style/standard-line :borderRadius 2}}
             (str field-name ": (" (when optional? "optional ") type ")")]
-           (when (and error (not editing?))
+           (when (and (not optional?) error (not editing?))
              (icons/icon {:style {:marginLeft "0.5rem" :alignSelf "center"
                                   :color (:exception-state style/colors)}}
                          :error))
@@ -167,7 +165,7 @@
                                        :style {:width 500}}))
            (when-not editing?
              (or field-value [:span {:style {:fontStyle "italic"}} "No value entered"]))]
-          (when error
+          (when (and (not optional?) error)
             [:div {:style {:padding "0.5em" :marginBottom "0.5rem"
                            :backgroundColor (:exception-state style/colors)
                            :display "inline-block"
@@ -297,13 +295,13 @@
                                               (swap! state assoc :error ((get-parsed-response false) "message"))))}))
                        (swap! state assoc :error status-text)))}))
    :load-new-method-template
-   (fn [{:keys [state refs]} new-snapshot-id]
+   (fn [{:keys [state refs props]} new-snapshot-id]
      (let [[method-namespace method-name] (map (fn [key]
                                                  (get-in (:loaded-config @state)
                                                          ["methodConfiguration" "methodRepoMethod" key]))
                                                ["methodNamespace" "methodName"])
            config-namespace+name (select-keys (get-in @state [:loaded-config "methodConfiguration"])
-                                              ["namespace" "name"])
+                                              ["namespace" "name" "rootEntityType"])
            method-ref {"methodNamespace" method-namespace
                        "methodName" method-name
                        "methodVersion" new-snapshot-id}]
@@ -319,21 +317,23 @@
                      (let [response (get-parsed-response false)]
                        (if success?
                          (endpoints/call-ajax-orch
-                           {:endpoint endpoints/get-inputs-outputs
-                            :payload (response "methodRepoMethod")
-                            :headers utils/content-type=json
-                            :on-done (fn [{:keys [success? get-parsed-response]}]
-                                       (swap! state dissoc :blocker :wdl-parse-error)
-                                       (let [template {"methodConfiguration" (merge response config-namespace+name)}]
+                           {:endpoint (endpoints/get-validated-workspace-method-config (:workspace-id props) (:config-id props))
+                            :on-done (fn [{:keys [success? get-parsed-response status-text]}]
+                                       (let [valid-response (get-parsed-response false)]
                                          (if success?
-                                           (swap! state assoc
-                                                  :loaded-config (assoc template
-                                                                   "invalidInputs" {}
-                                                                   "validInputs" {}
-                                                                   "invalidOutputs" {}
-                                                                   "validOutputs" {})
-                                                  :inputs-outputs (get-parsed-response false))
-                                           (swap! state assoc :error ((get-parsed-response false) "message")))))})
+                                           (endpoints/call-ajax-orch
+                                             {:endpoint endpoints/get-inputs-outputs
+                                              :payload (response "methodRepoMethod")
+                                              :headers utils/content-type=json
+                                              :on-done (fn [{:keys [success? get-parsed-response]}]
+                                                         (swap! state dissoc :blocker :wdl-parse-error)
+                                                         (let [template {"methodConfiguration" (merge response config-namespace+name)}]
+                                                           (if success?
+                                                             (swap! state assoc
+                                                                    :loaded-config (merge template (dissoc valid-response "methodConfiguration"))
+                                                                    :inputs-outputs (get-parsed-response false))
+                                                             (swap! state assoc :error ((get-parsed-response false) "message")))))})
+                                           (swap! state assoc :error status-text))))})
                          (do
                            (swap! state assoc :blocker nil :wdl-parse-error (response "message"))
                            (comps/push-error (style/create-server-error-message (response "message")))))))})))})
