@@ -1,5 +1,6 @@
 package org.broadinstitute.dsde.firecloud.pages
 
+import com.typesafe.scalalogging.LazyLogging
 import org.openqa.selenium.WebDriver
 
 /**
@@ -16,30 +17,26 @@ class RegistrationPage(implicit webDriver: WebDriver) extends FireCloudView {
                institute: String, institutionalProgram: String, nonProfitStatus: Boolean,
                principalInvestigator: String, city: String, state: String,
                country: String): Unit = {
-    gestures.fillFirstName(firstName)
-    gestures.fillLastName(lastName)
-    gestures.fillTitle(title)
-    gestures.fillContactEmail(contactEmail)
-    gestures.fillInstitute(institute)
-    gestures.fillInstitutionalProgram(institutionalProgram)
-    gestures.selectNonProfitStatus(nonProfitStatus)
-    gestures.fillPrincipalInvestigator(principalInvestigator)
-    gestures.fillProgramLocationCity(city)
-    gestures.fillProgramLocationState(state)
-    gestures.fillProgramLocationCountry(country)
-    gestures.clickRegisterButton()
-    waitUntilRegistrationComplete()
+    ui.fillFirstName(firstName)
+    ui.fillLastName(lastName)
+    ui.fillTitle(title)
+    ui.fillContactEmail(contactEmail)
+    ui.fillInstitute(institute)
+    ui.fillInstitutionalProgram(institutionalProgram)
+    ui.selectNonProfitStatus(nonProfitStatus)
+    ui.fillPrincipalInvestigator(principalInvestigator)
+    ui.fillProgramLocationCity(city)
+    ui.fillProgramLocationState(state)
+    ui.fillProgramLocationCountry(country)
+    ui.clickRegisterButton()
   }
 
-  /**
-    * Waits for the registration page indicates that registration is complete.
-    * This is intended to be called after clicking the "Register" button.
-    */
-  def waitUntilRegistrationComplete(): Unit = {
-    await toggle text("Profile Saved")
+  def registerWait(): Unit = {
+    await condition ui.registrationCompleteMessageIsPresent()
+    await condition !ui.registrationCompleteMessageIsPresent()
   }
 
-  object gestures {
+  object ui extends LazyLogging {
 
     private val contactEmailInput = testId("contactEmail")
     private val firstNameInput = testId("firstName")
@@ -52,6 +49,7 @@ class RegistrationPage(implicit webDriver: WebDriver) extends FireCloudView {
     private val programLocationCountryInput = testId("programLocationCountry")
     private val programLocationStateInput = testId("programLocationState")
     private val registerButton = testId("register-button")
+    private val registrationCompleteMessage = withText("Profile saved")
     private val titleInput = testId("title")
 
     def clickRegisterButton(): Unit = {
@@ -97,6 +95,10 @@ class RegistrationPage(implicit webDriver: WebDriver) extends FireCloudView {
 
     def fillTitle(title: String): Unit = {
       textField(titleInput).value = title
+    }
+
+    def registrationCompleteMessageIsPresent(): Boolean = {
+      find(registrationCompleteMessage).isDefined
     }
 
     def selectNonProfitStatus(nonProfit: Boolean): Unit = {

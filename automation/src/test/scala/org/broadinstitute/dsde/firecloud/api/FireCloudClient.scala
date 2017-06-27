@@ -13,32 +13,43 @@ import com.fasterxml.jackson.module.scala.DefaultScalaModule
 import org.broadinstitute.dsde.firecloud.auth.AuthToken
 
 import scala.concurrent.duration._
-import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.concurrent.{Await, ExecutionContext, ExecutionContextExecutor, Future}
 
 class FireCloudClient {
   implicit val system = ActorSystem()
   implicit val materializer = ActorMaterializer()
-  implicit val ec = ExecutionContext.global
+  implicit val ec: ExecutionContextExecutor = ExecutionContext.global
 
   val mapper = new ObjectMapper()
   mapper.registerModule(DefaultScalaModule)
+
+  // TODO: Is this okay here or should it be in a separate object and explicitly imported?
+  implicit class JsonStringUtil(s: String) {
+    def fromJsonMapAs[A](key: String): Option[A] =
+      parseJsonAsMap.get(key)
+
+    def parseJsonAsMap[A]: Map[String, A] = mapper.readValue(s, classOf[Map[String, A]])
+  }
 
   private def makeAuthHeader(token: AuthToken): Authorization = {
     headers.Authorization(OAuth2BearerToken(token.value))
   }
 
   private def sendRequest(httpRequest: HttpRequest) : String = {
-    val response = Await.result(Http().singleRequest(httpRequest), 60.seconds)
+    val response = Await.result(Http().singleRequest(httpRequest), 5.minutes)
     response.status.isSuccess() match {
       case true =>
         val byteStringSink: Sink[ByteString, Future[ByteString]] = Sink.fold(ByteString("")) { (z, i) => z.concat(i) }
         val entityFuture = response.entity.dataBytes.runWith(byteStringSink)
         Await.result(entityFuture, 50.millis).decodeString("UTF-8")
-      case _ => throw new APIException(response.entity.toString)
+      case _ =>
+        val byteStringSink: Sink[ByteString, Future[ByteString]] = Sink.fold(ByteString("")) { (z, i) => z.concat(i) }
+        val entityFuture = response.entity.dataBytes.runWith(byteStringSink)
+        throw new APIException(Await.result(entityFuture, 50.millis).decodeString("UTF-8"))
     }
   }
 
-  private def requestWithJsonContent(method: HttpMethod, uri:String, content:Any)(implicit token: AuthToken): String = {
+  private def requestWithJsonContent(method: HttpMethod, uri: String, content: Any, httpHeaders: List[HttpHeader] = List())(implicit token: AuthToken): String = {
     val req = HttpRequest(method, uri, List(makeAuthHeader(token)), HttpEntity(ContentTypes.`application/json`, mapper.writeValueAsString(content)))
     sendRequest(req)
   }
@@ -60,28 +71,28 @@ class FireCloudClient {
     sendRequest(req)
   }
 
-  private def requestBasic(method: HttpMethod, uri:String)(implicit token: AuthToken): String = {
-    val req = HttpRequest(method, uri, List(makeAuthHeader(token)))
+  private def requestBasic(method: HttpMethod, uri: String, httpHeaders: List[HttpHeader] = List())(implicit token: AuthToken): String = {
+    val req = HttpRequest(method, uri, List(makeAuthHeader(token)) ++ httpHeaders)
     sendRequest(req)
   }
 
-  def patchRequest(uri: String, content: Any)(implicit token: AuthToken): String = {
-    requestWithJsonContent(PATCH, uri, content)
+  def patchRequest(uri: String, content: Any, httpHeaders: List[HttpHeader] = List())(implicit token: AuthToken): String = {
+    requestWithJsonContent(PATCH, uri, content, httpHeaders)
   }
 
-  def postRequest(uri: String, content: Any = None)(implicit token: AuthToken): String = {
-    requestWithJsonContent(POST, uri, content)
+  def postRequest(uri: String, content: Any = None, httpHeaders: List[HttpHeader] = List())(implicit token: AuthToken): String = {
+    requestWithJsonContent(POST, uri, content, httpHeaders)
   }
 
-  def putRequest(uri: String, content: Any = None)(implicit token: AuthToken): String = {
-    requestWithJsonContent(PUT, uri, content)
+  def putRequest(uri: String, content: Any = None, httpHeaders: List[HttpHeader] = List())(implicit token: AuthToken): String = {
+    requestWithJsonContent(PUT, uri, content, httpHeaders)
   }
 
-  def deleteRequest(uri: String)(implicit token: AuthToken): String = {
-    requestBasic(DELETE, uri)
+  def deleteRequest(uri: String, httpHeaders: List[HttpHeader] = List())(implicit token: AuthToken): String = {
+    requestBasic(DELETE, uri, httpHeaders)
   }
 
-  def getRequest(uri: String)(implicit token: AuthToken): String = {
-    requestBasic(GET, uri)
+  def getRequest(uri: String, httpHeaders: List[HttpHeader] = List())(implicit token: AuthToken): String = {
+    requestBasic(GET, uri, httpHeaders)
   }
 }

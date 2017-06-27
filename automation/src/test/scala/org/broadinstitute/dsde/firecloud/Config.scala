@@ -51,11 +51,12 @@ object Config {
   }
 
   object FireCloud {
-    val baseUrl = fireCloud.getString("baseUrl")
-    val local_API= "http://localhost:8080/"
-    val apiUrl = fireCloud.getString("apiUrl")
-    val rawlsApiUrl = fireCloud.getString("rawlsApiUrl")
-    val THURLOE_API=fireCloud.getString("thurloeApiUrl")
+    val baseUrl: String = fireCloud.getString("baseUrl")
+    val local_API = "http://localhost:8080/"
+    val apiUrl: String = fireCloud.getString("apiUrl")
+    val fireCloudId: String = fireCloud.getString("fireCloudId")
+    val rawlsApiUrl: String = fireCloud.getString("rawlsApiUrl")
+    val thurloeApiUrl: String = fireCloud.getString("thurloeApiUrl")
   }
 
   object ChromeSettings {

@@ -12,13 +12,9 @@ class SignInPage(val baseUrl: String)(implicit webDriver: WebDriver) extends Fir
   override val url: String = baseUrl
 
   /**
-    * Sign in to FireCloud. Returns once a valid AuthenticatedPage is detected.
-    * TODO: Make the above doc not lies.
+    * Sign in to FireCloud. Returns when control is handed back to FireCloud after Google sign-in is done.
     */
   def signIn(email: String, password: String): Unit = {
-    // TODO: Do we want pages to navigate to themselves or should the caller do that? I'm leaning toward making the caller do it.
-//    if (find(testId(SIGN_IN_BUTTON_ID)).isEmpty)
-//      go to this
     val popup = beginSignIn()
     popup.signIn(email, password)
     await enabled testId("account-dropdown")

@@ -71,13 +71,13 @@ trait Orchestration extends FireCloudClient with LazyLogging {
 
       val request = Map("namespace" -> namespace,
         "name" -> name, "attributes" -> Map.empty) ++ authDomainMap
-      postRequest(Config.FireCloud.local_API + s"api/workspaces", request)
+      postRequest(Config.FireCloud.apiUrl + s"api/workspaces", request)
     }
 
     def delete(namespace: String, name: String)(implicit token: AuthToken): Unit = {
       logger.info(s"Deleting workspace: $namespace/$name")
 
-      deleteRequest(Config.FireCloud.local_API + s"api/workspaces/$namespace/$name")
+      deleteRequest(Config.FireCloud.apiUrl + s"api/workspaces/$namespace/$name")
     }
 
     def updateAcl(namespace: String, name: String, email: String, accessLevel: WorkspaceAccessLevel.Value)(implicit token: AuthToken): Unit = {

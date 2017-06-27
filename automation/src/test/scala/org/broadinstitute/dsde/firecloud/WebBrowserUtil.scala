@@ -161,7 +161,7 @@ trait WebBrowserUtil extends WebBrowser {
   }
 
   def withText(text: String)(implicit webDriver: WebDriver): Query = {
-    xpath(s"//*[contains(text(),'$text'")
+    xpath(s"//*[contains(text(),'$text')]")
   }
 
   /**
