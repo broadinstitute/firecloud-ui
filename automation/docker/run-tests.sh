@@ -62,6 +62,7 @@ docker-compose -f hub-compose.yml up -d
 docker-compose -f hub-compose.yml scale chrome=$NUM_NODES
 
 # render ctmpls
+docker pull broadinstitute/dsde-toolbox:dev
 docker run --rm -e VAULT_TOKEN=${VAULT_TOKEN} \
     -e ENVIRONMENT=${ENV} -v ${WORKING_DIR}:/working \
     -e OUT_PATH=/working/target -e INPUT_PATH=/working \
