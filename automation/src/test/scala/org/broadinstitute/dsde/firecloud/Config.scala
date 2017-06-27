@@ -52,9 +52,8 @@ object Config {
 
   object FireCloud {
     val baseUrl: String = fireCloud.getString("baseUrl")
-    val local_API = "http://localhost:8080/"
-    val apiUrl: String = fireCloud.getString("apiUrl")
     val fireCloudId: String = fireCloud.getString("fireCloudId")
+    val orchApiUrl: String = fireCloud.getString("orchApiUrl")
     val rawlsApiUrl: String = fireCloud.getString("rawlsApiUrl")
     val thurloeApiUrl: String = fireCloud.getString("thurloeApiUrl")
   }

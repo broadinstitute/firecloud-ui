@@ -31,14 +31,14 @@ trait Orchestration extends FireCloudClient with LazyLogging {
     }
 
     def addUserToBillingProject(projectName: String, email: String, role: BillingProjectRole.Value)(implicit token: AuthToken): Unit = {
-      putRequest(Config.FireCloud.apiUrl + s"api/billing/$projectName/${role.toString}/$email")
+      putRequest(Config.FireCloud.orchApiUrl + s"api/billing/$projectName/${role.toString}/$email")
     }
 
     def createBillingProject(projectName: String, billingAccount: String)(implicit token: AuthToken): Unit = {
-      postRequest(Config.FireCloud.apiUrl + "api/billing", Map("projectName" -> projectName, "billingAccount" -> billingAccount))
+      postRequest(Config.FireCloud.orchApiUrl + "api/billing", Map("projectName" -> projectName, "billingAccount" -> billingAccount))
 
       retry(Seq.fill(30)(10.seconds)) { () =>
-        val response: String = getRequest(Config.FireCloud.apiUrl + "api/profile/billing")
+        val response: String = getRequest(Config.FireCloud.orchApiUrl + "api/profile/billing")
         val projects: List[Map[String, Object]] = responseAsList(response)
         projects.exists((e) =>
           e.exists(_ == ("creationStatus", "Ready")) && e.exists(_ == ("projectName", projectName)))
@@ -57,7 +57,7 @@ trait Orchestration extends FireCloudClient with LazyLogging {
     }
 
     def addUserToGroup(groupName: String, email: String, role: GroupRole.Value)(implicit token: AuthToken): Unit = {
-      putRequest(Config.FireCloud.apiUrl + s"api/groups/$groupName/${role.toString}/$email")
+      putRequest(Config.FireCloud.orchApiUrl + s"api/groups/$groupName/${role.toString}/$email")
     }
   }
 
@@ -71,13 +71,13 @@ trait Orchestration extends FireCloudClient with LazyLogging {
 
       val request = Map("namespace" -> namespace,
         "name" -> name, "attributes" -> Map.empty) ++ authDomainMap
-      postRequest(Config.FireCloud.apiUrl + s"api/workspaces", request)
+      postRequest(Config.FireCloud.orchApiUrl + s"api/workspaces", request)
     }
 
     def delete(namespace: String, name: String)(implicit token: AuthToken): Unit = {
       logger.info(s"Deleting workspace: $namespace/$name")
 
-      deleteRequest(Config.FireCloud.apiUrl + s"api/workspaces/$namespace/$name")
+      deleteRequest(Config.FireCloud.orchApiUrl + s"api/workspaces/$namespace/$name")
     }
 
     def updateAcl(namespace: String, name: String, email: String, accessLevel: WorkspaceAccessLevel.Value)(implicit token: AuthToken): Unit = {
@@ -85,7 +85,7 @@ trait Orchestration extends FireCloudClient with LazyLogging {
     }
 
     def updateAcl(namespace: String, name: String, aclEntries: List[AclEntry] = List())(implicit token: AuthToken): Unit = {
-      patchRequest(Config.FireCloud.apiUrl + s"api/workspaces/$namespace/$name/acl",
+      patchRequest(Config.FireCloud.orchApiUrl + s"api/workspaces/$namespace/$name/acl",
         aclEntries.map(e => Map("email" -> e.email, "accessLevel" -> e.accessLevel.toString)))
     }
   }
@@ -96,15 +96,15 @@ trait Orchestration extends FireCloudClient with LazyLogging {
    */
 
   def setLibraryAttributes(ns: String, name: String, attributes: Map[String, Any])(implicit token: AuthToken): String = {
-    putRequest(Config.FireCloud.apiUrl + "api/library/" + ns + "/" + name + "/metadata", attributes)
+    putRequest(Config.FireCloud.orchApiUrl + "api/library/" + ns + "/" + name + "/metadata", attributes)
   }
 
   def setDiscoverableGroups(ns: String, name: String, groupNames: List[String])(implicit token: AuthToken): String = {
-    putRequest(Config.FireCloud.apiUrl + "api/library/" + ns + "/" + name + "/discoverableGroups", groupNames)
+    putRequest(Config.FireCloud.orchApiUrl + "api/library/" + ns + "/" + name + "/discoverableGroups", groupNames)
   }
 
   def publishWorkspace(ns: String, name: String)(implicit token: AuthToken): String = {
-    postRequest(Config.FireCloud.apiUrl + "api/library/" + ns + "/" + name + "/published")
+    postRequest(Config.FireCloud.orchApiUrl + "api/library/" + ns + "/" + name + "/published")
   }
 
 
@@ -114,11 +114,11 @@ trait Orchestration extends FireCloudClient with LazyLogging {
 
   def updateAcl(ns: String, name: String, userEmail: String, level: String, canshare: Boolean)(implicit token: AuthToken) = {
     val payload = Seq(Map("email" -> userEmail, "accessLevel" -> level, "canShare" -> canshare))
-    patchRequest(Config.FireCloud.apiUrl + "api/workspaces/" + ns + "/" + name + "/acl", payload)
+    patchRequest(Config.FireCloud.orchApiUrl + "api/workspaces/" + ns + "/" + name + "/acl", payload)
   }
 
   def importMetaData(ns: String, wsName: String, fileName: String, fileContent: String)(implicit token: AuthToken) = {
-    postRequestWithMultipart(Config.FireCloud.local_API + "api/workspaces/" + ns + "/" + wsName + "/" + "importEntities", fileName, fileContent)
+    postRequestWithMultipart(Config.FireCloud.orchApiUrl + "api/workspaces/" + ns + "/" + wsName + "/" + "importEntities", fileName, fileContent)
   }
 
 }
