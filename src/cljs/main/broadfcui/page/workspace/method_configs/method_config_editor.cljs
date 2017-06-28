@@ -173,7 +173,7 @@
    :-render-main
    (fn [{:keys [props state this]}]
      (let [workspace-attributes (->> props :workspace :workspace :workspace-attributes keys (map name))
-           {:keys [editing? loaded-config wdl-parse-error inputs-outputs methods]} @state
+           {:keys [editing? loaded-config wdl-parse-error inputs-outputs methods data-attributes]} @state
            config (:methodConfiguration loaded-config)
            {:keys [methodRepoMethod]} config]
        [:div {:style {:marginLeft 330}}
@@ -201,6 +201,8 @@
            [:div {:style {:padding "0.5em 0 1em 0"}} (:rootEntityType config)]))
         [:datalist {:id "inputs-datalist"}
          [:option {:value "this."}]
+         (map (fn [data-attr] [:option {:value (str "this." data-attr)}])
+              data-attributes)
          [:option {:value "workspace."}]
          (map (fn [ws-attr] [:option {:value (str "workspace." ws-attr)}])
               workspace-attributes)]
@@ -233,7 +235,19 @@
                                                      (map #(select-keys % [:namespace :name :snapshotId]))
                                                      (group-by (juxt :namespace :name))
                                                      (utils/map-values (partial map :snapshotId))))
+                    ;; FIXME: :error-message is unused
                     (swap! state assoc :error-message status-text)))})
+     (endpoints/call-ajax-orch
+      {:endpoint (endpoints/get-entity-types (:workspace-id props))
+       :on-done (fn [{:keys [success? get-parsed-response status-text]}]
+                  (if success?
+                    (swap! state assoc :data-attributes (->> (get-parsed-response)
+                                                             vals
+                                                             (map :attributeNames)
+                                                             flatten
+                                                             sort))
+                    ;; FIXME: :data-attribute-load-error is unused
+                    (swap! state assoc :data-attribute-load-error status-text)))})
      (set! (.-onScrollHandler this)
            (fn []
              (when-let [sidebar (@refs "sidebar")]
