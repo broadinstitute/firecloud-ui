@@ -11,7 +11,7 @@ class AuthDomainSpec extends FreeSpec with ParallelTestExecution with Matchers
   with CleanUp with WebBrowserSpec with WorkspaceFixtures[AuthDomainSpec] {
 
   val projectName: String = Config.Projects.common
-  val authDomain = "TCGA-dbGaP-Authorized"
+  val authDomain = "Test-Auth-Domain"
 
   // Unless otherwise declared, this auth token will be used for API calls.
   implicit val authToken: AuthToken = AuthTokens.fred
