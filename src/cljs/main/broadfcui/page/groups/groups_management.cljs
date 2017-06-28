@@ -71,14 +71,24 @@
                      (style/create-link
                       {:text (icons/icon {} :delete)
                        :style {:float "right"}
-                       :onClick (fn []
-                                  (swap! state assoc :deleting? true)
-                                  (endpoints/call-ajax-orch
-                                   {:endpoint (endpoints/delete-group groupName)
-                                    :on-done (fn [{:keys [success?]}]
-                                               (swap! state dissoc :deleting?)
-                                               (when success?
-                                                 (this :-load-data)))}))})))}]}
+                       :onClick (fn [_]
+                                  (comps/push-confirm
+                                   {:text "Are you sure you want to delete this group?"
+                                    :on-confirm (fn []
+                                                  (swap! state assoc :deleting? true)
+                                                  (endpoints/call-ajax-orch
+                                                   {:endpoint (endpoints/delete-group groupName)
+                                                    :on-done (net/handle-ajax-response
+                                                              (fn [{:keys [success? status-text status-code]}]
+                                                                (swap! state dissoc :deleting?)
+                                                                (modal/pop-modal)
+                                                                (if success?
+                                                                  (this :-load-data)
+                                                                  (comps/push-error
+                                                                   (if (= 409 status-code)
+                                                                     "Sorry you are unable to delete this group because it is in use"
+                                                                     (status-text))))))}))}))
+                       })))}]}
         :toolbar
         {:items
          [flex/spring
