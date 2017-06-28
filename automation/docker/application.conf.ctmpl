@@ -1,12 +1,14 @@
 {{with $environment := env "ENVIRONMENT"}}
 {{with $users := vault (printf "secret/dsde/firecloud/%s/common/users" $environment)}}
 {{with $secrets := vault (printf "secret/dsde/firecloud/%s/common/secrets" $environment)}}
+{{with $authDomain := vault (printf "secret/dsde/firecloud/%s/common/auth_domain" $environment)}}
 fireCloud {
   baseUrl = "https://firecloud-fiab.dsde-{{$environment}}.broadinstitute.org:22443/"
   orchApiUrl = "https://firecloud-orchestration-fiab.dsde-{{$environment}}.broadinstitute.org:23443/"
   rawlsApiUrl = "https://rawls.dsde-{{$environment}}.broadinstitute.org:24443/"
   thurloeApiUrl = "https://thurloe.dsde-{{$environment}}.broadinstitute.org:25443/"
   fireCloudId = "{{$secrets.Data.firecloud_id}}"
+  authDomain = "{{$authDomain.Data.value}}"
 }
 
 gcs {
@@ -25,7 +27,7 @@ chromeSettings {
   chromedriverHost = "http://hub:4444/wd/hub"
   chromedriverPath = "/usr/local/bin/chromedriver"
 }
-
+{{end}}
 {{end}}
 {{end}}
 {{end}}
