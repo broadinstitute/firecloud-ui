@@ -171,8 +171,9 @@
                                      :text "Cancel Editing" :icon :cancel
                                      :onClick #(this :-cancel-editing)}]))]))]))
    :-render-main
-   (fn [{:keys [state this]}]
-     (let [{:keys [editing? loaded-config wdl-parse-error inputs-outputs methods]} @state
+   (fn [{:keys [props state this]}]
+     (let [workspace-attributes (->> props :workspace :workspace :workspace-attributes keys (map name))
+           {:keys [editing? loaded-config wdl-parse-error inputs-outputs methods]} @state
            config (:methodConfiguration loaded-config)
            {:keys [methodRepoMethod]} config]
        [:div {:style {:marginLeft 330}}
@@ -200,7 +201,9 @@
            [:div {:style {:padding "0.5em 0 1em 0"}} (:rootEntityType config)]))
         [:datalist {:id "inputs-datalist"}
          [:option {:value "this."}]
-         [:option {:value "workspace."}]]
+         [:option {:value "workspace."}]
+         (map (fn [ws-attr] [:option {:value (str "workspace." ws-attr)}])
+              workspace-attributes)]
         (create-section-header "Inputs")
         (input-output-list {:values (:inputs config)
                             :all-values (:inputs inputs-outputs)
