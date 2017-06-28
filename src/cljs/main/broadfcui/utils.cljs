@@ -42,12 +42,6 @@
          [nil e])))))
 
 
-(defn keywordize-keys [m]
-  (into {} (map (fn [[k v]]
-                  [(keyword k) (if (map? v) (keywordize-keys v) v)])
-                m)))
-
-
 (defn local-storage-write
   ([k v] (local-storage-write k v false))
   ([k v stringify?]

@@ -23,7 +23,7 @@
         :onClick
         #(do (swap! state assoc :deleting? true :error nil)
           (endpoints/call-ajax-orch
-            {:endpoint (endpoints/delete-workspace-method-config (:workspace-id props) (:config props))
+            {:endpoint (endpoints/delete-workspace-method-config (:workspace-id props) (:config-id props))
              :on-done (fn [{:keys [success? get-parsed-response]}]
                         (swap! state dissoc :deleting?)
                         (if success?

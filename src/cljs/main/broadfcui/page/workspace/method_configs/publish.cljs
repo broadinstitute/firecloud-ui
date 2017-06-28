@@ -1,7 +1,6 @@
 (ns broadfcui.page.workspace.method-configs.publish
   (:require
     [dmohs.react :as react]
-    [broadfcui.common :as common]
     [broadfcui.common.components :as comps]
     [broadfcui.common.input :as input]
     [broadfcui.common.modal :as modal]
@@ -14,8 +13,8 @@
 (react/defc PublishDialog
   {:render
    (fn [{:keys [props state refs]}]
-     (let [{:keys [workspace-id config]} props
-           {:strs [namespace name]} config]
+     (let [{:keys [workspace-id config-id]} props
+           {:keys [namespace name]} config-id]
        [comps/OKCancelForm
         {:header "Publish Method Configuration"
          :get-first-element-dom-node #(react/call :access-field (@refs "mcNamespace"))
@@ -42,11 +41,11 @@
              (when-not fails
                (swap! state assoc :publishing? true :error nil)
                (endpoints/call-ajax-orch
-                 {:endpoint (endpoints/copy-method-config-to-repo workspace-id config)
+                 {:endpoint (endpoints/copy-method-config-to-repo workspace-id)
                   :headers utils/content-type=json
-                  :payload  {:configurationNamespace ns,
-                             :configurationName n,
-                             :sourceNamespace namespace,
+                  :payload  {:configurationNamespace ns
+                             :configurationName n
+                             :sourceNamespace namespace
                              :sourceName name}
                   :on-done  (fn [{:keys [success? get-parsed-response]}]
                               (swap! state dissoc :publishing?)

@@ -24,8 +24,8 @@
       :endpoint :raw-data :payload)))
 
 
-(defn- ws-path [workspace-id]
-  (str (:namespace workspace-id) "/" (:name workspace-id)))
+(defn- id-path [id]
+  (str (:namespace id) "/" (:name id)))
 
 (def list-workspaces
   {:path "/workspaces"
@@ -65,7 +65,7 @@
     :createdDate (.toISOString (js/Date.))}})
 
 (defn get-workspace [workspace-id]
-  {:path (str "/workspaces/" (ws-path workspace-id))
+  {:path (str "/workspaces/" (id-path workspace-id))
    :method :get
    :mock-data
    {:accessLevel "OWNER"
@@ -88,11 +88,11 @@
                                 "you@broadinstitute.org"])}})
 
 (defn delete-workspace [workspace-id]
-  {:path (str "/workspaces/" (ws-path workspace-id))
+  {:path (str "/workspaces/" (id-path workspace-id))
    :method :delete})
 
 (defn get-workspace-acl [workspace-id]
-  {:path (str "/workspaces/" (ws-path workspace-id) "/acl")
+  {:path (str "/workspaces/" (id-path workspace-id) "/acl")
    :method :get
    :mock-data
    (into {} (map (fn [i] [(str "user" i "@broadinstitute.org")
@@ -100,24 +100,24 @@
                     (range (inc (rand-int 5)))))})
 
 (defn check-bucket-read-access [workspace-id]
-      {:path (str "/workspaces/" (ws-path workspace-id) "/checkBucketReadAccess")
+      {:path (str "/workspaces/" (id-path workspace-id) "/checkBucketReadAccess")
        :method :get})
 
 (defn update-workspace-acl [workspace-id invite-new?]
-  {:path (str "/workspaces/" (ws-path workspace-id) "/acl?inviteUsersNotFound=" (true? invite-new?))
+  {:path (str "/workspaces/" (id-path workspace-id) "/acl?inviteUsersNotFound=" (true? invite-new?))
    :method :patch})
 
 (defn clone-workspace [workspace-id]
-  {:path (str "/workspaces/" (ws-path workspace-id) "/clone")
+  {:path (str "/workspaces/" (id-path workspace-id) "/clone")
    :method :post})
 
 (defn lock-or-unlock-workspace [workspace-id locked-now?]
-  {:path (str "/workspaces/" (ws-path workspace-id) (if locked-now? "/unlock" "/lock"))
+  {:path (str "/workspaces/" (id-path workspace-id) (if locked-now? "/unlock" "/lock"))
    :method :put})
 
 
 (defn list-workspace-method-configs [workspace-id]
-  {:path (str "/workspaces/" (ws-path workspace-id) "/methodconfigs")
+  {:path (str "/workspaces/" (id-path workspace-id) "/methodconfigs")
    :method :get
    :mock-data
    (map
@@ -139,47 +139,27 @@
      (range (rand-int 50)))})
 
 (defn post-workspace-method-config [workspace-id]
-  {:path (str "/workspaces/" (ws-path workspace-id) "/methodconfigs")
+  {:path (str "/workspaces/" (id-path workspace-id) "/methodconfigs")
    :method :post})
 
 (defn get-workspace-method-config [workspace-id config-id]
-  {:path (str "/workspaces/" (ws-path workspace-id)
-           "/method_configs/" (:namespace config-id) "/" (:name config-id))
+  {:path (str "/workspaces/" (id-path workspace-id)
+              "/method_configs/" (id-path config-id))
    :method :get})
 
-(defn update-workspace-method-config [workspace-id config]
-  {:path (str "/workspaces/" (ws-path workspace-id)
-           "/method_configs/" (config "namespace") "/" (config "name"))
-   :method :put
-   :mock-data
-   {:methodConfiguration {:name (str (config "name"))
-                          :namespace (rand-nth ["Broad" "nci" "public"])
-                          :rootEntityType (rand-nth ["sample" "participant"])
-                          :methodRepoMethod {:methodNamespace (str (config "namespace"))
-                                             :methodName (str (config "name"))
-                                             :methodVersion (str "ms_v_1")}
-                          :methodStoreConfig {:methodConfigNamespace (str (config "namespace"))
-                                              :methodConfigName (str (config "name"))
-                                              :methodConfigVersion (str "msc_v_1")}
-                          ;; Real data doesn't have the following fields, but for mock data we carry the same
-                          ;; objects around, so initialize them here for convenience
-                          :inputs {"Input 1" "workspace.foo"
-                                   "Input 2" "workspace.baz"
-                                   "Input 3" "workspace.f00"}
-                          :outputs {"Output 1" "workspace.bla"
-                                    "Output 2" "workspace.bar"
-                                    "Output 3" "workspace.f0o"}
-                          :prerequisites {"unused 1" "Predicate 1"
-                                          "unused 2" "Predicate 2"}}}})
+(defn update-workspace-method-config [workspace-id config-id]
+  {:path (str "/workspaces/" (id-path workspace-id)
+              "/method_configs/" (id-path config-id))
+   :method :put})
 
-(defn delete-workspace-method-config [workspace-id config]
-  {:path (str "/workspaces/" (ws-path workspace-id)
-           "/method_configs/" (config "namespace") "/" (config "name"))
+(defn delete-workspace-method-config [workspace-id config-id]
+  {:path (str "/workspaces/" (id-path workspace-id)
+              "/method_configs/" (id-path config-id))
    :method :delete})
 
 (defn get-validated-workspace-method-config [workspace-id config-id]
-  {:path (str "/workspaces/" (ws-path workspace-id)
-           "/method_configs/" (:namespace config-id) "/" (:name config-id) "/validate")
+  {:path (str "/workspaces/" (id-path workspace-id)
+              "/method_configs/" (id-path config-id) "/validate")
    :method :get
    :mock-data
    {:methodConfiguration {:name (:name config-id)
@@ -209,37 +189,37 @@
                                {"Output 3" "Failed at line 1, column 1: `workspace.' expected but `t' found"}])}})
 
 (defn update-workspace-attrs [workspace-id]
-  {:path (str "/workspaces/" (ws-path workspace-id) "/updateAttributes")
+  {:path (str "/workspaces/" (id-path workspace-id) "/updateAttributes")
    :method :patch})
 
 (defn set-workspace-attributes [workspace-id]
-  {:path (str "/workspaces/" (ws-path workspace-id) "/setAttributes")
+  {:path (str "/workspaces/" (id-path workspace-id) "/setAttributes")
    :method :patch})
 
 (defn get-workspace-genomic-operations [workspace-id job-id]
-  {:path (str "/workspaces/" (ws-path workspace-id) "/genomics/operations/" job-id)
+  {:path (str "/workspaces/" (id-path workspace-id) "/genomics/operations/" job-id)
    :method :get})
 
 (defn import-entities [workspace-id]
-  {:path (str "/workspaces/" (ws-path workspace-id) "/importEntities")
+  {:path (str "/workspaces/" (id-path workspace-id) "/importEntities")
    :method :post
    :mock-data
    [{:entityName "foo" :entityType "bar" :succeeded false :message "ohno"}
     {:entityName "bar" :entityType "baz" :succeeded true :message "hooray"}]})
 
 (defn import-attributes [workspace-id]
-  {:path (str "/workspaces/" (ws-path workspace-id) "/importAttributesTSV")
+  {:path (str "/workspaces/" (id-path workspace-id) "/importAttributesTSV")
    :method :post})
 
 (defn get-entity-types [workspace-id]
-  {:path (str "/workspaces/" (ws-path workspace-id) "/entities")
+  {:path (str "/workspaces/" (id-path workspace-id) "/entities")
    :method :get
    :mock-data {"participant" (rand-int 100)
                "sample" (rand-int 100)
                "pair" (rand-int 10)}})
 
 (defn get-entities-of-type [workspace-id type]
-  {:path (str "/workspaces/" (ws-path workspace-id) "/entities/" type)
+  {:path (str "/workspaces/" (id-path workspace-id) "/entities/" type)
    :method :get
    :mock-data
    (map (fn [i]
@@ -249,7 +229,7 @@
      (range (rand-int 20)))})
 
 (defn get-entity [workspace-id type entity-name]
-  {:path (str "/workspaces/" (ws-path workspace-id) "/entities/" type "/" entity-name)
+  {:path (str "/workspaces/" (id-path workspace-id) "/entities/" type "/" entity-name)
    :method :get
    :mock-data
      {:entityType "sample"
@@ -276,7 +256,7 @@
   (assert (= #{"page" "pageSize" "sortField" "sortDirection" "filterTerms"}
              (set (keys query-parameters)))
           (str "Malformed query parameters: " query-parameters))
-  {:path (str "/workspaces/" (ws-path workspace-id) "/entityQuery/" type "?"
+  {:path (str "/workspaces/" (id-path workspace-id) "/entityQuery/" type "?"
               (clojure.string/join "&" (keep (fn [[k v]]
                                                (some->> v str not-empty (str k "=")))
                                              query-parameters)))
@@ -295,7 +275,7 @@
                          (range pageSize)))})})
 
 (defn get-entities-by-type [workspace-id]
-  {:path (str "/workspaces/" (ws-path workspace-id) "/entities_with_type")
+  {:path (str "/workspaces/" (id-path workspace-id) "/entities_with_type")
    :method :get
    :mock-data
    (map
@@ -306,12 +286,12 @@
      (range (rand-int 20)))})
 
 (defn delete-entities [workspace-id]
-  {:path (str "/workspaces/" (ws-path workspace-id) "/entities/delete")
+  {:path (str "/workspaces/" (id-path workspace-id) "/entities/delete")
    :method :post})
 
 
 (defn list-submissions [workspace-id]
-  {:path (str "/workspaces/" (ws-path workspace-id) "/submissions")
+  {:path (str "/workspaces/" (id-path workspace-id) "/submissions")
    :method :get
    :mock-data
    (map
@@ -336,7 +316,7 @@
      (range (rand-int 50)))})
 
 (defn count-submissions [workspace-id]
-  {:path (str "/workspaces/" (ws-path workspace-id) "/submissionsCount")
+  {:path (str "/workspaces/" (id-path workspace-id) "/submissionsCount")
    :method :get
    :mock-data
    [{:Done (rand-int 10)
@@ -345,7 +325,7 @@
      :Aborting (rand-int 10)}]})
 
 (defn create-submission [workspace-id]
-  {:path (str "/workspaces/" (ws-path workspace-id) "/submissions")
+  {:path (str "/workspaces/" (id-path workspace-id) "/submissions")
    :method :post
    :mock-data
    [{:workspaceName {:namespace "broad-dsde-dev"
@@ -369,7 +349,7 @@
      :submitter "davidan@broadinstitute.org"}]})
 
 (defn get-submission [workspace-id submission-id]
-  {:path (str "/workspaces/" (ws-path workspace-id) "/submissions/" submission-id)
+  {:path (str "/workspaces/" (id-path workspace-id) "/submissions/" submission-id)
    :method :get
    :mock-data
    {:submissionId submission-id
@@ -403,7 +383,7 @@
     :status (rand-nth ["Accepted" "Evaluating" "Submitting" "Submitted" "Done"])}})
 
 (defn get-workflow-details [workspace-id submission-id workflow-id]
-  {:path (str "/workspaces/" (ws-path workspace-id) "/submissions/" submission-id
+  {:path (str "/workspaces/" (id-path workspace-id) "/submissions/" submission-id
               "/workflows/" workflow-id)
    :method :get
    :mock-data
@@ -442,11 +422,11 @@
     :end (rand-nth [(rand-recent-time) nil])}})
 
 (defn abort-submission [workspace-id submission-id]
-  {:path (str "/workspaces/" (ws-path workspace-id) "/submissions/" submission-id)
+  {:path (str "/workspaces/" (id-path workspace-id) "/submissions/" submission-id)
    :method :delete})
 
 (defn storage-cost-estimate [workspace-id]
-  {:path (str "/workspaces/" (ws-path workspace-id) "/storageCostEstimate")
+  {:path (str "/workspaces/" (id-path workspace-id) "/storageCostEstimate")
    :method :get})
 
 
@@ -539,7 +519,7 @@
     :entityType "Task"}})
 
 (defn copy-method-config-to-workspace [workspace-id]
-  {:path (str "/workspaces/" (ws-path workspace-id) "/method_configs/copyFromMethodRepo")
+  {:path (str "/workspaces/" (id-path workspace-id) "/method_configs/copyFromMethodRepo")
    :method :post
    :mock-data
    {:name "Mock Configuration"
@@ -550,8 +530,8 @@
     :createDate (rand-recent-time)
     :owner (rand-nth ["thibault@broadinstitute.org" "esalinas@broadinstitute.org"])}})
 
-(defn copy-method-config-to-repo [workspace-id config]
-      {:path (str "/workspaces/" (ws-path workspace-id)
+(defn copy-method-config-to-repo [workspace-id]
+      {:path (str "/workspaces/" (id-path workspace-id)
                   "/method_configs/copyToMethodRepo")
        :method :post})
 
@@ -629,7 +609,7 @@
 
 
 (defn copy-entity-to-workspace [workspace-id re-link-soft-conflicts?]
-  {:path (str "/workspaces/" (ws-path workspace-id)
+  {:path (str "/workspaces/" (id-path workspace-id)
               "/entities/copy?linkExistingEntities=" (boolean re-link-soft-conflicts?))
    :method :post})
 
@@ -717,7 +697,7 @@
 
 (defn get-ws-access-instructions [workspace-id on-done]
   (call-ajax-orch
-   {:endpoint {:path (str "/workspaces/" (ws-path workspace-id) "/accessInstructions")
+   {:endpoint {:path (str "/workspaces/" (id-path workspace-id) "/accessInstructions")
                :method :get}
     :on-done (fn [{:keys [success? status-text get-parsed-response]}]
                (if success?
@@ -822,19 +802,19 @@
      :on-done on-done}))
 
 (defn save-library-metadata [workspace-id]
-  {:path (str "/library/" (ws-path workspace-id) "/metadata")
+  {:path (str "/library/" (id-path workspace-id) "/metadata")
    :method :put})
 
 (defn save-discoverable-by-groups [workspace-id]
-  {:path (str "/library/" (ws-path workspace-id) "/discoverableGroups")
+  {:path (str "/library/" (id-path workspace-id) "/discoverableGroups")
    :method :put})
 
 (defn publish-workspace [workspace-id]
-  {:path (str "/library/" (ws-path workspace-id) "/published")
+  {:path (str "/library/" (id-path workspace-id) "/published")
    :method :post})
 
 (defn unpublish-workspace [workspace-id]
-  {:path (str "/library/" (ws-path workspace-id) "/published")
+  {:path (str "/library/" (id-path workspace-id) "/published")
    :method :delete})
 
 (def get-library-curator-status
