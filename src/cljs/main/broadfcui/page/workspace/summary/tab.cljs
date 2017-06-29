@@ -8,17 +8,19 @@
    [broadfcui.common.markdown :refer [MarkdownView MarkdownEditor]]
    [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
+   [broadfcui.components.collapse :refer [Collapse]]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.nav :as nav]
    [broadfcui.page.workspace.monitor.common :as moncommon :refer [all-success? any-running? any-failed?]]
    [broadfcui.page.workspace.summary.acl-editor :refer [AclEditor]]
    [broadfcui.page.workspace.summary.attribute-editor :as attributes]
    [broadfcui.page.workspace.summary.catalog.wizard :refer [CatalogWizard]]
-   [broadfcui.page.workspace.summary.publish :as publish]
    [broadfcui.page.workspace.summary.library-utils :as library-utils]
    [broadfcui.page.workspace.summary.library-view :refer [LibraryView]]
+   [broadfcui.page.workspace.summary.publish :as publish]
    [broadfcui.page.workspace.summary.workspace-cloner :refer [WorkspaceCloner]]
-   [broadfcui.utils :as utils]))
+   [broadfcui.utils :as utils]
+   ))
 
 
 (react/defc DeleteDialog
@@ -193,7 +195,7 @@
     [:div {:style {:flex "1 1 auto" :overflow "hidden"}}
      [:div {:style {:display "flex"}}
       (render-detail-box
-       "Access"
+       "Workspace Access"
 
        "Access Level"
        (style/prettify-access-level user-access-level)
@@ -207,7 +209,7 @@
         [:div {} (common/format-date createdDate)]])
 
       (render-detail-box
-       "Data"
+       "Storage & Analysis"
 
        "Google Bucket"
        [:div {}
@@ -233,20 +235,24 @@
             [:ul {:style {:marginTop 0}}
              (for [[status subs] (sort submissions-count)]
                [:li {} (str subs " " status)])])]))]
-     [:div {} (style/create-section-header "Tags")
-      (style/create-paragraph
-       (cond editing? [comps/TagAutocomplete {:tags processed-tags :ref "tags-autocomplete"}]
-             (empty? processed-tags) [:em {} "No tags provided"]
-             :else [:div {}
-                    (for [tag processed-tags]
-                      [:div {:style {:display "inline-block" :background (:tag-background style/colors)
-                                     :color (:tag-foreground style/colors) :margin "0.1rem 0.1rem"
-                                     :borderRadius 3 :padding "0.2rem 0.5rem"}} tag])]))]
+     [Collapse
+      {:style {:marginBottom "2rem"}
+       :title (style/create-section-header "Tags")
+       :contents
+       [:div {:style {:marginTop "1rem" :fontSize "90%" :lineHeight 1.5}}
+        (cond editing? (react/create-element [comps/TagAutocomplete
+                                              {:tags processed-tags :ref "tags-autocomplete"}])
+              (empty? processed-tags) [:em {} "No tags provided"]
+              :else [:div {}
+                     (for [tag processed-tags]
+                       [:div {:style {:display "inline-block" :background (:tag-background style/colors)
+                                      :color (:tag-foreground style/colors) :margin "0.1rem 0.1rem"
+                                      :borderRadius 3 :padding "0.2rem 0.5rem"}} tag])])]}]
 
      (when editing? [:div {:style {:marginBottom "10px"}} common/PHI-warning])
 
 
-     [common/Expando
+     [Collapse
       {:style {:marginBottom "2rem"}
        :title (style/create-section-header "Description")
        :contents

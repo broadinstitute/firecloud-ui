@@ -3,13 +3,13 @@
     clojure.set
     [clojure.string :refer [join trim split]]
     [dmohs.react :as react]
-    [broadfcui.common :as common]
     [broadfcui.common.components :as comps]
     [broadfcui.common.icons :as icons]
     [broadfcui.common.modal :as modal]
     [broadfcui.common.style :as style]
     [broadfcui.common.table :as table]
     [broadfcui.common.table-utils :as table-utils]
+    [broadfcui.components.collapse :refer [Collapse]]
     [broadfcui.config :as config]
     [broadfcui.page.workspace.data.import-data :as import-data]
     [broadfcui.utils :as utils]
@@ -104,7 +104,7 @@
    :render
    (fn [{:keys [props state after-update]}]
      (let [{:keys [editing? writer?]} props]
-       [common/Expando
+       [Collapse
         {:style {:marginBottom "2rem"}
          :default-hidden? true
          :title
