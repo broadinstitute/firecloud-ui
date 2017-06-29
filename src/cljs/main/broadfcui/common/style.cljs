@@ -45,11 +45,6 @@
                  :fontSize "90%" :lineHeight 1.5}}
    children])
 
-(defn create-well [props & children]
-  [:div (deep-merge {:style {:border standard-line :padding "1rem" :margin "1rem"}}
-                    props)
-   children])
-
 (defn create-textfield-hint [text]
   [:div {:style {:fontSize "80%" :fontStyle "italic" :margin "-1.3ex 0 1ex 0"}} text])
 

@@ -179,24 +179,16 @@
   (let [{:keys [owners]
          {:keys [createdBy createdDate bucketName description tags workspace-attributes library-attributes]} :workspace} workspace
         render-detail-box (fn [title & children]
-                            (apply
-                             style/create-well
-                             {:style {:flexBasis "50%" :margin 0 :border "none" :padding 0 :paddingRight "2rem" :marginBottom "1rem"}}
-                             [:div {:style {
-                                            :borderBottom style/standard-line
-                                            ;:background (:background-light style/colors)
-                                            ;:margin "-1rem -1rem 0"
-                                            ;:padding "1rem"
-                                            :paddingBottom "0.5rem"
-                                            ;:color (:text-light style/colors)
-                                            }}
+                            [:div
+                             {:style {:flexBasis "50%" :paddingRight "2rem" :marginBottom "2rem"}}
+                             [:div {:style {:paddingBottom "0.5rem"}}
                               (style/create-section-header title)]
                              (map-indexed
                               (fn [i child]
                                 (if (even? i)
                                   [:div {:style {:fontWeight 500 :paddingTop "0.5rem"}} child]
                                   [:div {:style {:fontSize "90%" :lineHeight 1.5}} child]))
-                              children)))
+                              children)])
         processed-tags (flatten (map :items (vals tags)))]
     [:div {:style {:flex "1 1 auto" :overflow "hidden"}}
      [:div {:style {:display "flex"}}
