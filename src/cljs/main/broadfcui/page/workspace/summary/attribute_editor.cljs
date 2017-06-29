@@ -104,10 +104,13 @@
    :render
    (fn [{:keys [props state after-update]}]
      (let [{:keys [editing? writer?]} props]
-       [:div {}
-        (style/create-section-header
-         [:div {}
-          "Workspace Attributes"
+       [common/Expando
+        {:style {:marginBottom "2rem"}
+         :default-hidden? true
+         :title
+         [:div {:style {:flexShrink 0}} (style/create-section-header "Workspace Attributes")]
+         :title-expand
+         [:div {:style {:flexGrow 1 :fontSize "125%" :fontWeight 500}}
           (when-not editing?
             [:span {:style {:fontSize "initial" :fontWeight "initial"}}
              [:a {:style {:textDecoration "none" :marginLeft "1em"}
@@ -124,11 +127,11 @@
                                          [comps/OKCancelForm
                                           {:header "Import Attributes" :show-cancel? true :cancel-text "Close"
                                            :content [:div {:style {:width 720 :backgroundColor "white" :padding "1em"}}
-                                                      [import-data/Page (merge (select-keys props [:workspace-id])
-                                                                               {:on-data-imported (:request-refresh props)}
-                                                                               {:import-type "workspace-attributes"})]]}])}])])])
-        (style/create-paragraph
-         [:div {}
+                                                     [import-data/Page (merge (select-keys props [:workspace-id])
+                                                                              {:on-data-imported (:request-refresh props)}
+                                                                              {:import-type "workspace-attributes"})]]}])}])])]
+         :contents
+         [:div {:style {:marginTop "1rem" :fontSize "90%" :lineHeight 1.}}
           (if editing?
             [:div {:style {:marginBottom "0.25em"}}
              [comps/Button {:icon :add-new :text "Add new"
@@ -190,7 +193,7 @@
                     (:workspace-attributes props))
             :->row (if editing?
                      (juxt :index identity identity identity)
-                     identity)}]])]))
+                     identity)}]]}]))
    :component-did-update
    (fn [{:keys [prev-props props state]}]
      (when (and (not (:editing? prev-props)) (:editing? props))

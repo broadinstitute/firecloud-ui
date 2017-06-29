@@ -175,79 +175,95 @@
 
 
 (defn- render-main [{:keys [workspace curator? owner? writer? reader? can-share? catalog-with-read? bucket-access? editing? submissions-count
-                            library-schema request-refresh workspace-id storage-cost]}]
+                            library-schema request-refresh workspace-id storage-cost user-access-level]}]
   (let [{:keys [owners]
-         {:keys [createdBy createdDate bucketName description tags workspace-attributes library-attributes authorizationDomain]} :workspace} workspace
-        auth-domain (:membersGroupName authorizationDomain)
-        render-detail-box (fn [order title & children]
-                            [:div {:style {:flexBasis "50%" :order order}}
-                             (style/create-section-header title)
-                             children])
+         {:keys [createdBy createdDate bucketName description tags workspace-attributes library-attributes]} :workspace} workspace
+        render-detail-box (fn [title & children]
+                            (apply
+                             style/create-well
+                             {:style {:flexBasis "50%" :margin 0 :border "none" :padding 0 :paddingRight "2rem" :marginBottom "1rem"}}
+                             [:div {:style {
+                                            :borderBottom style/standard-line
+                                            ;:background (:background-light style/colors)
+                                            ;:margin "-1rem -1rem 0"
+                                            ;:padding "1rem"
+                                            :paddingBottom "0.5rem"
+                                            ;:color (:text-light style/colors)
+                                            }}
+                              (style/create-section-header title)]
+                             (map-indexed
+                              (fn [i child]
+                                (if (even? i)
+                                  [:div {:style {:fontWeight 500 :paddingTop "0.5rem"}} child]
+                                  [:div {:style {:fontSize "90%" :lineHeight 1.5}} child]))
+                              children)))
         processed-tags (flatten (map :items (vals tags)))]
     [:div {:style {:flex "1 1 auto" :overflow "hidden"}}
-     [:div {:style {:display "flex" :flexWrap "wrap"}}
+     [:div {:style {:display "flex"}}
       (render-detail-box
-        1
-        (str "Workspace Owner" (when (> (count owners) 1) "s"))
-        (style/create-paragraph
-          [:div {}
-           (interpose ", " owners)]))
+       "Access"
+
+       "Access Level"
+       (style/prettify-access-level user-access-level)
+
+       (str "Workspace Owner" (when (> (count owners) 1) "s"))
+       (interpose ", " owners)
+
+       "Created By"
+       [:div {}
+        [:div {} createdBy]
+        [:div {} (common/format-date createdDate)]])
+
       (render-detail-box
-        3
-        "Created By"
-        (style/create-paragraph
-          [:div {} createdBy]
-          [:div {} (common/format-date createdDate)]))
-      (render-detail-box
-        2
-        "Google Bucket"
-        (style/create-paragraph
-          (case bucket-access?
-            nil [:div {:style {:position "absolute" :marginTop "-1.5em"}}
-                 [comps/Spinner {:height "1.5ex"}]]
-            true (style/create-link {:text bucketName
-                                     :href (str moncommon/google-cloud-context bucketName "/")
-                                     :style {:color "-webkit-link" :textDecoration "underline"}
-                                     :title "Click to open the Google Cloud Storage browser for this bucket"
-                                     :target "_blank"})
-            false bucketName)
-          (when (not reader?)
-            [:div {}
-             [:div {} (str "Total Estimated Storage Fee per month = " storage-cost)]
-             [:div {:style {:fontSize "80%"}} (str "Note: the billing account associated with " (:namespace workspace-id) " will be charged.")]])))
-      (render-detail-box
-        4
-        "Analysis Submissions"
-        (style/create-paragraph
-          (let [count-all (apply + (vals submissions-count))]
-            [:div {}
-             (str count-all " Submission" (when-not (= 1 count-all) "s"))
-             (when (pos? count-all)
-               [:ul {:style {:marginTop 0}}
-                (for [[status subs] (sort submissions-count)]
-                  [:li {} (str subs " " status)])])])))
-      (render-detail-box
-        5
-        "Tags"
-        (style/create-paragraph
-          (cond editing? [comps/TagAutocomplete {:tags processed-tags :ref "tags-autocomplete"}]
-                (empty? processed-tags) [:em {} "No tags provided"]
-                :else [:div {}
-                       (for [tag processed-tags]
-                         [:div {:style {:display "inline-block" :background (:tag-background style/colors)
-                                        :color (:tag-foreground style/colors) :margin "0.1rem 0.1rem"
-                                        :borderRadius 3 :padding "0.2rem 0.5rem"}} tag])])))]
+       "Data"
+
+       "Google Bucket"
+       [:div {}
+        (case bucket-access?
+          nil [:div {:style {:position "absolute" :marginTop "-1.5em"}}
+               [comps/Spinner {:height "1.5ex"}]]
+          true (style/create-link {:text bucketName
+                                   :href (str moncommon/google-cloud-context bucketName "/")
+                                   :style {:color "-webkit-link" :textDecoration "underline"}
+                                   :title "Click to open the Google Cloud Storage browser for this bucket"
+                                   :target "_blank"})
+          false bucketName)
+        (when (not reader?)
+          [:div {:style {:lineHeight "initial"}}
+           [:div {} (str "Total Estimated Storage Fee per month = " storage-cost)]
+           [:div {:style {:fontSize "80%"}} (str "Note: the billing account associated with " (:namespace workspace-id) " will be charged.")]])]
+
+       "Analysis Submissions"
+       (let [count-all (apply + (vals submissions-count))]
+         [:div {}
+          (str count-all " Submission" (when-not (= 1 count-all) "s"))
+          (when (pos? count-all)
+            [:ul {:style {:marginTop 0}}
+             (for [[status subs] (sort submissions-count)]
+               [:li {} (str subs " " status)])])]))]
+     [:div {} (style/create-section-header "Tags")
+      (style/create-paragraph
+       (cond editing? [comps/TagAutocomplete {:tags processed-tags :ref "tags-autocomplete"}]
+             (empty? processed-tags) [:em {} "No tags provided"]
+             :else [:div {}
+                    (for [tag processed-tags]
+                      [:div {:style {:display "inline-block" :background (:tag-background style/colors)
+                                     :color (:tag-foreground style/colors) :margin "0.1rem 0.1rem"
+                                     :borderRadius 3 :padding "0.2rem 0.5rem"}} tag])]))]
 
      (when editing? [:div {:style {:marginBottom "10px"}} common/PHI-warning])
 
 
-     (style/create-section-header "Description")
-     (style/create-paragraph
-       (let [description (not-empty description)]
-         (cond editing? (react/create-element [MarkdownEditor
-                                               {:ref "description" :initial-text description}])
-               description [MarkdownView {:text description}]
-               :else [:span {:style {:fontStyle "italic"}} "No description provided"])))
+     [common/Expando
+      {:style {:marginBottom "2rem"}
+       :title (style/create-section-header "Description")
+       :contents
+       [:div {:style {:marginTop "1rem" :fontSize "90%" :lineHeight 1.5}}
+        (let [description (not-empty description)]
+          (cond editing? (react/create-element [MarkdownEditor
+                                                {:ref "description" :initial-text description}])
+                description [MarkdownView {:text description}]
+                :else [:span {:style {:fontStyle "italic"}} "No description provided"]))]}]
      (when-not (empty? library-attributes)
        [LibraryView (utils/restructure
                      library-attributes
