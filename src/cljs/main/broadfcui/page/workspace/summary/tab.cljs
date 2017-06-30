@@ -1,26 +1,26 @@
 (ns broadfcui.page.workspace.summary.tab
   (:require
-   [clojure.set :refer [difference]]
-   [dmohs.react :as react]
-   [broadfcui.common :as common]
-   [broadfcui.common.components :as comps]
-   [broadfcui.common.icons :as icons]
-   [broadfcui.common.markdown :refer [MarkdownView MarkdownEditor]]
-   [broadfcui.common.modal :as modal]
-   [broadfcui.common.style :as style]
-   [broadfcui.components.collapse :refer [Collapse]]
-   [broadfcui.endpoints :as endpoints]
-   [broadfcui.nav :as nav]
-   [broadfcui.page.workspace.monitor.common :as moncommon :refer [all-success? any-running? any-failed?]]
-   [broadfcui.page.workspace.summary.acl-editor :refer [AclEditor]]
-   [broadfcui.page.workspace.summary.attribute-editor :as attributes]
-   [broadfcui.page.workspace.summary.catalog.wizard :refer [CatalogWizard]]
-   [broadfcui.page.workspace.summary.library-utils :as library-utils]
-   [broadfcui.page.workspace.summary.library-view :refer [LibraryView]]
-   [broadfcui.page.workspace.summary.publish :as publish]
-   [broadfcui.page.workspace.summary.workspace-cloner :refer [WorkspaceCloner]]
-   [broadfcui.utils :as utils]
-   ))
+    [clojure.set :refer [difference]]
+    [dmohs.react :as react]
+    [broadfcui.common :as common]
+    [broadfcui.common.components :as comps]
+    [broadfcui.common.icons :as icons]
+    [broadfcui.common.markdown :refer [MarkdownView MarkdownEditor]]
+    [broadfcui.common.modal :as modal]
+    [broadfcui.common.style :as style]
+    [broadfcui.components.collapse :refer [Collapse]]
+    [broadfcui.endpoints :as endpoints]
+    [broadfcui.nav :as nav]
+    [broadfcui.page.workspace.monitor.common :as moncommon :refer [all-success? any-running? any-failed?]]
+    [broadfcui.page.workspace.summary.acl-editor :refer [AclEditor]]
+    [broadfcui.page.workspace.summary.attribute-editor :as attributes]
+    [broadfcui.page.workspace.summary.catalog.wizard :refer [CatalogWizard]]
+    [broadfcui.page.workspace.summary.library-utils :as library-utils]
+    [broadfcui.page.workspace.summary.library-view :refer [LibraryView]]
+    [broadfcui.page.workspace.summary.publish :as publish]
+    [broadfcui.page.workspace.summary.workspace-cloner :refer [WorkspaceCloner]]
+    [broadfcui.utils :as utils]
+    ))
 
 
 (react/defc DeleteDialog
@@ -40,25 +40,25 @@
    (fn [{:keys [props state]}]
      (swap! state assoc :deleting? true :server-error nil)
      (endpoints/call-ajax-orch
-       {:endpoint (endpoints/delete-workspace (:workspace-id props))
-        :on-done (fn [{:keys [success? get-parsed-response]}]
-                   (swap! state dissoc :deleting?)
-                   (if success?
-                     (do (modal/pop-modal) (nav/go-to-path :workspaces))
-                     (swap! state assoc :server-error (get-parsed-response false))))}))})
+      {:endpoint (endpoints/delete-workspace (:workspace-id props))
+       :on-done (fn [{:keys [success? get-parsed-response]}]
+                  (swap! state dissoc :deleting?)
+                  (if success?
+                    (do (modal/pop-modal) (nav/go-to-path :workspaces))
+                    (swap! state assoc :server-error (get-parsed-response false))))}))})
 
 
 (defn- save-attributes [{:keys [new-attributes state workspace-id request-refresh]}]
   (swap! state assoc :updating-attrs? true)
   (endpoints/call-ajax-orch
-    {:endpoint (endpoints/set-workspace-attributes workspace-id)
-     :payload new-attributes
-     :headers utils/content-type=json
-     :on-done (fn [{:keys [success? get-parsed-response]}]
-                (swap! state dissoc :updating-attrs? :editing?)
-                (if success?
-                  (request-refresh)
-                  (comps/push-error-response (get-parsed-response false))))}))
+   {:endpoint (endpoints/set-workspace-attributes workspace-id)
+    :payload new-attributes
+    :headers utils/content-type=json
+    :on-done (fn [{:keys [success? get-parsed-response]}]
+               (swap! state dissoc :updating-attrs? :editing?)
+               (if success?
+                 (request-refresh)
+                 (comps/push-error-response (get-parsed-response false))))}))
 
 
 (defn- render-sidebar [state refs this
@@ -81,99 +81,99 @@
                          :color (style/color-for-status status)}]
      [:div {:ref "sidebar"}]
      (style/create-unselectable
-       :div {:style {:position (when-not sidebar-visible? "fixed")
-                     :top (when-not sidebar-visible? 0)
-                     :width 270}}
-       (when (and can-share? (not editing?))
-         [comps/SidebarButton
-          {:style :light :margin :top :color :button-primary
-           :text "Share..." :icon :share
-           :onClick #(modal/push-modal
-                      [AclEditor {:workspace-id workspace-id
-                                  :user-access-level user-access-level
-                                  :request-refresh request-refresh}])}])
-       (when (not editing?)
-         [comps/SidebarButton
-          {:style :light :color :button-primary :margin :top
-           :icon :catalog :text "Catalog Dataset..."
-           :onClick #(modal/push-modal [CatalogWizard (utils/restructure
-                                                       library-schema
-                                                       workspace
-                                                       workspace-id
-                                                       can-share?
-                                                       owner?
-                                                       curator?
-                                                       writer?
-                                                       catalog-with-read?
-                                                       request-refresh)])}])
-       (when (and publishable? (not editing?))
-         (let [working-attributes (library-utils/get-initial-attributes workspace)
-               questions (->> (range (count (:wizard library-schema)))
-                                  (map (comp first (partial library-utils/get-questions-for-page working-attributes library-schema)))
-                                  (apply concat))
-               required-attributes (library-utils/find-required-attributes library-schema)]
-           (if (:library:published library-attributes)
-             [publish/UnpublishButton {:workspace-id workspace-id
-                                       :request-refresh request-refresh}]
-             [publish/PublishButton {:disabled? (cond
-                                                  (empty? library-attributes)
-                                                    "Dataset attributes must be created before publishing."
-                                                  (seq (library-utils/validate-required
-                                                              (library-utils/remove-empty-values working-attributes)
-                                                              questions required-attributes))
-                                                    "All required dataset attributes must be set before publishing.")
-                                     :workspace-id workspace-id
-                                     :request-refresh request-refresh}])))
-       (when (or owner? writer?)
-         (if (not editing?)
+      :div {:style {:position (when-not sidebar-visible? "fixed")
+                    :top (when-not sidebar-visible? 0)
+                    :width 270}}
+      (when (and can-share? (not editing?))
+        [comps/SidebarButton
+         {:style :light :margin :top :color :button-primary
+          :text "Share..." :icon :share
+          :onClick #(modal/push-modal
+                     [AclEditor {:workspace-id workspace-id
+                                 :user-access-level user-access-level
+                                 :request-refresh request-refresh}])}])
+      (when (not editing?)
+        [comps/SidebarButton
+         {:style :light :color :button-primary :margin :top
+          :icon :catalog :text "Catalog Dataset..."
+          :onClick #(modal/push-modal [CatalogWizard (utils/restructure
+                                                      library-schema
+                                                      workspace
+                                                      workspace-id
+                                                      can-share?
+                                                      owner?
+                                                      curator?
+                                                      writer?
+                                                      catalog-with-read?
+                                                      request-refresh)])}])
+      (when (and publishable? (not editing?))
+        (let [working-attributes (library-utils/get-initial-attributes workspace)
+              questions (->> (range (count (:wizard library-schema)))
+                             (map (comp first (partial library-utils/get-questions-for-page working-attributes library-schema)))
+                             (apply concat))
+              required-attributes (library-utils/find-required-attributes library-schema)]
+          (if (:library:published library-attributes)
+            [publish/UnpublishButton {:workspace-id workspace-id
+                                      :request-refresh request-refresh}]
+            [publish/PublishButton {:disabled? (cond
+                                                 (empty? library-attributes)
+                                                 "Dataset attributes must be created before publishing."
+                                                 (seq (library-utils/validate-required
+                                                       (library-utils/remove-empty-values working-attributes)
+                                                       questions required-attributes))
+                                                 "All required dataset attributes must be set before publishing.")
+                                    :workspace-id workspace-id
+                                    :request-refresh request-refresh}])))
+      (when (or owner? writer?)
+        (if (not editing?)
+          [comps/SidebarButton
+           {:style :light :color :button-primary :margin :top
+            :text "Edit" :icon :edit
+            :onClick #(swap! state assoc :editing? true)}]
+          [:div {}
            [comps/SidebarButton
             {:style :light :color :button-primary :margin :top
-             :text "Edit" :icon :edit
-             :onClick #(swap! state assoc :editing? true)}]
-           [:div {}
-            [comps/SidebarButton
-             {:style :light :color :button-primary :margin :top
-              :text "Save" :icon :done
-              :onClick (fn [_]
-                         (let [{:keys [success error]} (react/call :get-attributes (@refs "workspace-attribute-editor"))
-                               new-description (react/call :get-text (@refs "description"))
-                               new-tags (react/call :get-tags (@refs "tags-autocomplete"))]
-                           (if error
-                             (comps/push-error error)
-                             (save-attributes {:new-attributes (assoc success :description new-description :tag:tags new-tags)
-                                               :state state
-                                               :workspace-id workspace-id
-                                               :request-refresh request-refresh}))))}]
-            [comps/SidebarButton
-             {:style :light :color :exception-state :margin :top
-              :text "Cancel Editing" :icon :cancel
-              :onClick #(swap! state dissoc :editing?)}]]))
-       (when-not editing?
-         [comps/SidebarButton
-          {:style :light :margin :top :color :button-primary
-           :text "Clone..." :icon :clone
-           :disabled? (when (empty? billing-projects) (comps/no-billing-projects-message))
-           :onClick #(modal/push-modal
-                      [WorkspaceCloner
-                       {:on-success (fn [namespace name]
-                                      (swap! state dissoc :cloning?)
-                                      (nav/go-to-path :workspace-summary
-                                                      (utils/restructure namespace name)))
-                        :workspace-id workspace-id
-                        :description description
-                        :auth-domain (:membersGroupName authorizationDomain)
-                        :billing-projects billing-projects}])}])
-       (when (and owner? (not editing?))
-         [comps/SidebarButton {:style :light :margin :top :color :button-primary
-                               :text (if isLocked "Unlock" "Lock")
-                               :icon (if isLocked :unlock :lock)
-                               :onClick #(react/call :lock-or-unlock this isLocked)}])
-       (when (and owner? (not editing?))
-         [comps/SidebarButton {:style :light :margin :top :color (if isLocked :text-lighter :exception-state)
-                               :text "Delete" :icon :delete
-                               :disabled? (when isLocked "This workspace is locked.")
-                               :onClick #(modal/push-modal
-                                          [DeleteDialog {:workspace-id workspace-id}])}]))]))
+             :text "Save" :icon :done
+             :onClick (fn [_]
+                        (let [{:keys [success error]} (react/call :get-attributes (@refs "workspace-attribute-editor"))
+                              new-description (react/call :get-text (@refs "description"))
+                              new-tags (react/call :get-tags (@refs "tags-autocomplete"))]
+                          (if error
+                            (comps/push-error error)
+                            (save-attributes {:new-attributes (assoc success :description new-description :tag:tags new-tags)
+                                              :state state
+                                              :workspace-id workspace-id
+                                              :request-refresh request-refresh}))))}]
+           [comps/SidebarButton
+            {:style :light :color :exception-state :margin :top
+             :text "Cancel Editing" :icon :cancel
+             :onClick #(swap! state dissoc :editing?)}]]))
+      (when-not editing?
+        [comps/SidebarButton
+         {:style :light :margin :top :color :button-primary
+          :text "Clone..." :icon :clone
+          :disabled? (when (empty? billing-projects) (comps/no-billing-projects-message))
+          :onClick #(modal/push-modal
+                     [WorkspaceCloner
+                      {:on-success (fn [namespace name]
+                                     (swap! state dissoc :cloning?)
+                                     (nav/go-to-path :workspace-summary
+                                                     (utils/restructure namespace name)))
+                       :workspace-id workspace-id
+                       :description description
+                       :auth-domain (:membersGroupName authorizationDomain)
+                       :billing-projects billing-projects}])}])
+      (when (and owner? (not editing?))
+        [comps/SidebarButton {:style :light :margin :top :color :button-primary
+                              :text (if isLocked "Unlock" "Lock")
+                              :icon (if isLocked :unlock :lock)
+                              :onClick #(react/call :lock-or-unlock this isLocked)}])
+      (when (and owner? (not editing?))
+        [comps/SidebarButton {:style :light :margin :top :color (if isLocked :text-lighter :exception-state)
+                              :text "Delete" :icon :delete
+                              :disabled? (when isLocked "This workspace is locked.")
+                              :onClick #(modal/push-modal
+                                         [DeleteDialog {:workspace-id workspace-id}])}]))]))
 
 
 (defn- render-main [{:keys [workspace curator? owner? writer? reader? can-share? catalog-with-read? bucket-access? editing? submissions-count
@@ -321,15 +321,15 @@
    (fn [{:keys [props state this]} locked-now?]
      (swap! state assoc :locking? locked-now?)
      (endpoints/call-ajax-orch
-       {:endpoint (endpoints/lock-or-unlock-workspace (:workspace-id props) locked-now?)
-        :on-done (fn [{:keys [success? status-text status-code]}]
-                   (when-not success?
-                     (if (and (= status-code 409) (not locked-now?))
-                       (comps/push-error
-                         "Could not lock workspace, one or more analyses are currently running")
-                       (comps/push-error (str "Error: " status-text))))
-                   (swap! state dissoc :locking?)
-                   (react/call :refresh this))}))
+      {:endpoint (endpoints/lock-or-unlock-workspace (:workspace-id props) locked-now?)
+       :on-done (fn [{:keys [success? status-text status-code]}]
+                  (when-not success?
+                    (if (and (= status-code 409) (not locked-now?))
+                      (comps/push-error
+                       "Could not lock workspace, one or more analyses are currently running")
+                      (comps/push-error (str "Error: " status-text))))
+                  (swap! state dissoc :locking?)
+                  (react/call :refresh this))}))
    :component-did-mount
    (fn [{:keys [state refs locals this]}]
      (react/call :refresh this)
@@ -352,11 +352,11 @@
      (swap! state dissoc :server-response)
      ((:request-refresh props))
      (endpoints/call-ajax-orch
-       {:endpoint (endpoints/count-submissions (:workspace-id props))
-        :on-done (fn [{:keys [success? status-text get-parsed-response]}]
-                   (if success?
-                     (swap! state update :server-response assoc :submissions-count (get-parsed-response false))
-                     (swap! state update :server-response assoc :server-error status-text)))})
+      {:endpoint (endpoints/count-submissions (:workspace-id props))
+       :on-done (fn [{:keys [success? status-text get-parsed-response]}]
+                  (if success?
+                    (swap! state update :server-response assoc :submissions-count (get-parsed-response false))
+                    (swap! state update :server-response assoc :server-error status-text)))})
      (endpoints/get-billing-projects
       (fn [err-text projects]
         (if err-text
@@ -364,27 +364,27 @@
           (swap! state update :server-response
                  assoc :billing-projects (map :projectName projects)))))
      (endpoints/get-library-attributes
-       (fn [{:keys [success? get-parsed-response]}]
-         (if success?
-           (let [response (get-parsed-response)]
-             (swap! state update :server-response assoc :library-schema
-                    (-> response
-                        (update-in [:display :primary] (partial map keyword))
-                        (update-in [:display :secondary] (partial map keyword)))))
-           (swap! state update :server-response assoc :server-error "Unable to load library schema"))))
+      (fn [{:keys [success? get-parsed-response]}]
+        (if success?
+          (let [response (get-parsed-response)]
+            (swap! state update :server-response assoc :library-schema
+                   (-> response
+                       (update-in [:display :primary] (partial map keyword))
+                       (update-in [:display :secondary] (partial map keyword)))))
+          (swap! state update :server-response assoc :server-error "Unable to load library schema"))))
      (endpoints/call-ajax-orch
-       {:endpoint endpoints/get-library-curator-status
-        :on-done (fn [{:keys [success? get-parsed-response]}]
-                   (if success?
-                     (swap! state update :server-response assoc :curator? (:curator (get-parsed-response)))
-                     (swap! state update :server-response assoc :server-error "Unable to determine curator status")))})
+      {:endpoint endpoints/get-library-curator-status
+       :on-done (fn [{:keys [success? get-parsed-response]}]
+                  (if success?
+                    (swap! state update :server-response assoc :curator? (:curator (get-parsed-response)))
+                    (swap! state update :server-response assoc :server-error "Unable to determine curator status")))})
      (when (not (reader? (:workspace props)))
        (endpoints/call-ajax-orch
-         {:endpoint (endpoints/storage-cost-estimate (:workspace-id props))
-          :on-done (fn [{:keys [success? status-text raw-response]}]
-                     (let [[response parse-error?] (utils/parse-json-string raw-response false false)]
-                       (swap! state update :server-response assoc :storage-cost
-                              (if parse-error?
-                                (str "Error parsing JSON response with status: " status-text)
-                                (let [key (if success? "estimate" "message")]
-                                  (get response key (str "Error: \"" key "\" not found in JSON response with status: " status-text)))))))})))})
+        {:endpoint (endpoints/storage-cost-estimate (:workspace-id props))
+         :on-done (fn [{:keys [success? status-text raw-response]}]
+                    (let [[response parse-error?] (utils/parse-json-string raw-response false false)]
+                      (swap! state update :server-response assoc :storage-cost
+                             (if parse-error?
+                               (str "Error parsing JSON response with status: " status-text)
+                               (let [key (if success? "estimate" "message")]
+                                 (get response key (str "Error: \"" key "\" not found in JSON response with status: " status-text)))))))})))})
