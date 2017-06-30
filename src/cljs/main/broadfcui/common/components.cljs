@@ -446,14 +446,15 @@
    :component-did-mount
    (fn [{:keys [props refs]}]
      (when (not (:disabled props))
-       (let [{:keys [remote render-display behavior empty-message render-suggestion on-select typeahead-events]} props
+       (let [{:keys [remote local render-display behavior empty-message render-suggestion on-select typeahead-events]} props
              whitespace-tokenizer (aget Bloodhound "tokenizers" "whitespace")]
          (.typeahead (js/$ (@refs "field"))
                      (clj->js behavior)
                      (clj->js
                       {:source (Bloodhound. (clj->js {:datumTokenizer whitespace-tokenizer
                                                       :queryTokenizer whitespace-tokenizer
-                                                      :remote remote}))
+                                                      :remote remote
+                                                      :local local}))
                        :display render-display
                        :templates {:empty (str "<div style='padding: 0.5em'>" empty-message "</div>")
                                    :suggestion render-suggestion}}))
