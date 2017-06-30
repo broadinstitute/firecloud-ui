@@ -16,7 +16,7 @@ VAULT_TOKEN=$5
 HOST_NAME=$6
 WORKING_DIR=${7:-$PWD}
 
-if [ -z VAULT_TOKEN ]; then
+if [ -z $VAULT_TOKEN ]; then
     VAULT_TOKEN=$(cat ~/.vault-token)
 fi
 
