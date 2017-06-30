@@ -22,5 +22,5 @@
           title]
          (when visible? title-expand)]
         [:div {:style {:display (when-not visible? "none")
-                       :marginLeft "1.25rem"}}              ; to match the disclosure triangle
+                       :marginLeft "1.25rem"}} ; to match the disclosure triangle
          contents]]))})
