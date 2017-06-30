@@ -441,8 +441,9 @@
       :typeahead-events ["typeahead:select" "typeahead:change"]})
    :render
    (fn [{:keys [props]}]
-     (style/create-search-field (merge {:ref "field" :className "typeahead" :disabled (:disabled props)}
-                                       (:field-attributes props))))
+     (let [{:keys [disabled field-attributes]} props]
+       (style/create-search-field (merge {:ref "field" :className "typeahead" :disabled disabled}
+                                         field-attributes))))
    :component-did-mount
    (fn [{:keys [props refs]}]
      (when (not (:disabled props))
@@ -464,7 +465,10 @@
                           (fn []
                             (.typeahead (js/$ (@refs "field")) "close")
                             #(when (and (empty? (.. % -currentTarget -value)) (:on-clear props))
-                               ((:on-clear props)))))))})
+                               ((:on-clear props)))))))
+   :component-will-unmount
+   (fn [{:keys [refs]}]
+     (.typeahead (js/$ (@refs "field")) "destroy"))})
 
 
 (react/defc AutocompleteFilter
