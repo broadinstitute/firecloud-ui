@@ -10,23 +10,30 @@ class WorkspaceDataPage(namespace: String, name: String)(implicit webDriver: Web
   override val url: String = s"${Config.FireCloud.baseUrl}#workspaces/$namespace/$name/data"
 
   def importFile(file: String) = {
-    val importModal = gestures.clickImportMetadataButton()
+    val importModal = ui.clickImportMetadataButton()
     importModal.importFile(file)
   }
 
   def getNumberOfParticipants(): Int = {
-    gestures.getNumberOfParticipants()
+    ui.getNumberOfParticipants()
   }
 
+  override def awaitLoaded(): WorkspaceDataPage = {
+    await condition ui.hasimportMetadataButton()
+    this
+  }
 
-
-  object gestures {
+  trait UI extends super.UI {
 
     private val importMetadataButtonQuery = testId("import-metadata-button")
     private val participantFilterButtonQuery = testId("participant-filter-button")
 
+    def hasimportMetadataButton(): Boolean = {
+      find(importMetadataButtonQuery).isDefined
+    }
+
     def clickImportMetadataButton(): ImportMetadataModal = {
-      click on (await enabled importMetadataButtonQuery)
+      click on importMetadataButtonQuery
       new ImportMetadataModal
     }
 
@@ -36,6 +43,7 @@ class WorkspaceDataPage(namespace: String, name: String)(implicit webDriver: Web
       filterString.replaceAll("\\D+","").toInt
     }
   }
+  object ui extends UI
 }
 
 /**
@@ -48,14 +56,14 @@ class ImportMetadataModal(implicit webDriver: WebDriver) extends FireCloudView {
     * busy spinner disappears.
     */
   def importFile(file: String): Unit = {
-    gestures.clickImportFromFileButton()
-    gestures.uploadData(file)
-    gestures.clickUploadMetaData()
-    assert(gestures.isUploadSuccessMessagePresent)
-    gestures.clickXButton()
+    ui.clickImportFromFileButton()
+    ui.uploadData(file)
+    ui.clickUploadMetaData()
+    assert(ui.isUploadSuccessMessagePresent)
+    ui.clickXButton()
   }
 
-  object gestures {
+  object ui {
 
     private val importFromFileButtonQuery: Query = testId("import-from-file-button")
     private val copyFromAnotherWorkspaceButtonQuery: Query = testId("copy-from-another-workspace-button")
@@ -71,7 +79,7 @@ class ImportMetadataModal(implicit webDriver: WebDriver) extends FireCloudView {
     }
 
     def clickImportFromFileButton() = {
-      click on (await enabled importFromFileButtonQuery)
+      click on importFromFileButtonQuery
     }
 
     def clickCopyFromAnotherWorkspaceButton() = {
@@ -100,6 +108,5 @@ class ImportMetadataModal(implicit webDriver: WebDriver) extends FireCloudView {
       find(uploadSuccessMessageQuery).size == 1
     }
   }
-
 }
 

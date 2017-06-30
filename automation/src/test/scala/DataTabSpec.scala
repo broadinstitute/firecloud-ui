@@ -1,6 +1,6 @@
+import org.broadinstitute.dsde.firecloud.auth.AuthTokens
 import org.broadinstitute.dsde.firecloud.pages.{WebBrowserSpec, WorkspaceDataPage}
 import org.broadinstitute.dsde.firecloud.{CleanUp, Config, WebBrowserUtil}
-import org.broadinstitute.dsde.firecloud.auth.AuthTokens
 import org.scalatest.selenium.WebBrowser
 import org.scalatest.{FlatSpec, ParallelTestExecution, ShouldMatchers}
 
@@ -9,7 +9,7 @@ class DataTabSpec extends FlatSpec with WebBrowserSpec with ParallelTestExecutio
   behavior of "Data"
 
   it should "import a participants file" in withWebDriver { implicit driver =>
-    val url = getClass.getResource("org/broadinstitute/dsde/firecloud/data/participants.txt")
+    val filename = "automation/src/test/resources/participants.txt"
 
     val billingProject = Config.Projects.default
     val wsName = "TestSpec_FireCloud_import_participants_file_" + randomUuid
@@ -19,8 +19,9 @@ class DataTabSpec extends FlatSpec with WebBrowserSpec with ParallelTestExecutio
 
     val workspaceListPage = signIn(Config.Users.testUser.email, Config.Users.testUser.password)
     val workspaceDataTab = new WorkspaceDataPage(billingProject, wsName).open
-    workspaceDataTab.importFile(url.getPath)
+    workspaceDataTab.importFile(filename)
     assert(workspaceDataTab.getNumberOfParticipants() == 1)
+
     //more checks should be added here
   }
 }
