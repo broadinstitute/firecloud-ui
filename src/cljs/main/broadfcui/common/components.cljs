@@ -125,7 +125,7 @@
    (fn [{:keys [props state]}]
      (swap! state assoc :show-requested? true)
      (js/setTimeout #(when (:show-requested? @state)
-                      (swap! state assoc :showing? true))
+                       (swap! state assoc :showing? true))
                     (:delay-time-ms props)))
    :hide
    (fn [{:keys [state]}]
@@ -239,18 +239,18 @@
 (react/defc StackTraceViewer
   {:render
    (fn [{:keys [props state]}]
-       (if (:expanded? @state)
-         [:div {:style {:overflowX "auto"}}
-          [:div {} "Stack Trace:"]
-          (map
-            (fn [line]
-                (let [[class method file num]
-                      (map line ["className" "methodName" "fileName" "lineNumber"])]
-                     [:div {:style {:marginLeft "1em" :whiteSpace "nowrap"}}
-                      (str "at " class "." method " (" file ":" num ")")]))
-            (:lines props))
-          (style/create-link {:text "Hide Stack Trace" :onClick #(swap! state assoc :expanded? false)})]
-         [:div {} (style/create-link {:text "Show Stack Trace" :onClick #(swap! state assoc :expanded? true)})]))})
+     (if (:expanded? @state)
+       [:div {:style {:overflowX "auto"}}
+        [:div {} "Stack Trace:"]
+        (map
+         (fn [line]
+           (let [[class method file num]
+                 (map line ["className" "methodName" "fileName" "lineNumber"])]
+             [:div {:style {:marginLeft "1em" :whiteSpace "nowrap"}}
+              (str "at " class "." method " (" file ":" num ")")]))
+         (:lines props))
+        (style/create-link {:text "Hide Stack Trace" :onClick #(swap! state assoc :expanded? false)})]
+       [:div {} (style/create-link {:text "Show Stack Trace" :onClick #(swap! state assoc :expanded? true)})]))})
 
 
 (declare CauseViewer)
@@ -259,20 +259,20 @@
 (react/defc CauseViewer
   {:render
    (fn [{:keys [props state]}]
-       (if (:expanded? @state)
-         (let [[source causes stack-trace message]
-               (map props ["source" "causes" "stackTrace" "message"])]
-              [:div {:style {:marginLeft "1em"}}
-               [:div {} "Message: " message]
-               (when source [:div {} "Source: " source])
-               (when (seq causes)
-                     [:div {}
-                      [:div {} (str "Cause" (when (> (count causes) 1) "s") ":")]
-                      (map (fn [cause] [CauseViewer cause]) causes)])
-               (when (seq stack-trace)
-                     [StackTraceViewer {:lines stack-trace}])
-               (style/create-link {:text "Hide Cause" :onClick #(swap! state assoc :expanded? false)})])
-         [:div {} (style/create-link {:text "Show Cause" :onClick #(swap! state assoc :expanded? true)})]))})
+     (if (:expanded? @state)
+       (let [[source causes stack-trace message]
+             (map props ["source" "causes" "stackTrace" "message"])]
+         [:div {:style {:marginLeft "1em"}}
+          [:div {} "Message: " message]
+          (when source [:div {} "Source: " source])
+          (when (seq causes)
+            [:div {}
+             [:div {} (str "Cause" (when (> (count causes) 1) "s") ":")]
+             (map (fn [cause] [CauseViewer cause]) causes)])
+          (when (seq stack-trace)
+            [StackTraceViewer {:lines stack-trace}])
+          (style/create-link {:text "Hide Cause" :onClick #(swap! state assoc :expanded? false)})])
+       [:div {} (style/create-link {:text "Show Cause" :onClick #(swap! state assoc :expanded? true)})]))})
 
 (react/defc ErrorViewer
   {:render
@@ -380,8 +380,8 @@
    (fn [{:keys [props state locals]}]
      (let [{:keys [left]} props
            on-mouse-up #(when (:dragging? @state)
-                         (common/restore-text-selection (:text-selection @state))
-                         (swap! state dissoc :dragging? :text-selection))
+                          (common/restore-text-selection (:text-selection @state))
+                          (swap! state dissoc :dragging? :text-selection))
            on-mouse-move (fn [e]
                            (when (:dragging? @state)
                              (let [start-pos (:mouse-pos @state)
@@ -408,10 +408,10 @@
      (let [{:keys [initial-text placeholder width]} props]
        [:div {:style {:display "inline-flex" :width width}}
         (style/create-search-field
-          {:ref "filter-field" :autoSave "true" :results 5 :auto-focus "true"
-           :placeholder (or placeholder "Filter") :defaultValue initial-text
-           :style {:flex "1 0 auto" :borderRadius "3px 0 0 3px" :marginBottom 0}
-           :onKeyDown (common/create-key-handler [:enter] #(react/call :apply-filter this))})
+         {:ref "filter-field" :autoSave "true" :results 5 :auto-focus "true"
+          :placeholder (or placeholder "Filter") :defaultValue initial-text
+          :style {:flex "1 0 auto" :borderRadius "3px 0 0 3px" :marginBottom 0}
+          :onKeyDown (common/create-key-handler [:enter] #(react/call :apply-filter this))})
         [Button {:icon :search :onClick #(react/call :apply-filter this)
                  :style {:flex "0 0 auto" :borderRadius "0 3px 3px 0"}}]]))
    :apply-filter
@@ -463,7 +463,7 @@
                           (fn []
                             (.typeahead (js/$ (@refs "field")) "close")
                             #(when (and (empty? (.. % -currentTarget -value)) (:on-clear props))
-                              ((:on-clear props)))))))})
+                               ((:on-clear props)))))))})
 
 
 (react/defc AutocompleteFilter
@@ -616,9 +616,9 @@
 
 (defn push-message [{:keys [header message]}]
   (push-ok-cancel-modal
-    {:header (or header "Message")
-     :content [:div {:style {:maxWidth 500}} message]
-     :show-cancel? false :ok-button "OK"}))
+   {:header (or header "Message")
+    :content [:div {:style {:maxWidth 500}} message]
+    :show-cancel? false :ok-button "OK"}))
 
 (defn push-error [content]
   (push-ok-cancel-modal
@@ -634,9 +634,9 @@
 
 (defn push-confirm [{:keys [header text on-confirm]}]
   (push-ok-cancel-modal
-    {:header (or header "Confirm")
-     :content [:div {:style {:maxWidth 500}} text]
-     :ok-button on-confirm}))
+   {:header (or header "Confirm")
+    :content [:div {:style {:maxWidth 500}} text]
+    :ok-button on-confirm}))
 
 (defn renderable? [thing]
   (or (react/valid-element? thing)
