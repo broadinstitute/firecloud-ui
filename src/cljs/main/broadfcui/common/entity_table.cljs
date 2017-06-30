@@ -28,9 +28,9 @@
 (react/defc EntityTable
   {:update-data
    (fn [{:keys [refs after-update]} reinitialize?]
-       (react/call :refresh-rows (@refs "table"))
-       (when reinitialize?
-             (after-update #(react/call :reinitialize (@refs "table")))))
+     (react/call :refresh-rows (@refs "table"))
+     (when reinitialize?
+       (after-update #(react/call :reinitialize (@refs "table")))))
    :refresh
    (fn [{:keys [props state this after-update]} & [entity-type reinitialize?]]
      (endpoints/call-ajax-orch
