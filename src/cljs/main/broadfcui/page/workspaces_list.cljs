@@ -1,6 +1,6 @@
 (ns broadfcui.page.workspaces-list
   (:require
-    [clojure.string :refer [split join split-lines]]
+    [clojure.string :refer [split-lines]]
     [dmohs.react :as react]
     [broadfcui.common :as common]
     [broadfcui.common.components :as comps]
@@ -141,14 +141,6 @@
 (defn- get-workspace-description [ws]
   (not-empty (get-in ws [:workspace :attributes :description])))
 
-;; An obnoxious amount of effort due to "PROJECT_OWNER" vs. "NO ACCESS"
-(defn- prettify [s]
-  (as-> s $
-        (clojure.string/replace $ "_" " ")
-        (split $ #"\b")
-        (map clojure.string/capitalize $)
-        (join $)))
-
 
 (def ^:private access-levels ["PROJECT_OWNER" "OWNER" "WRITER" "READER" "NO ACCESS"])
 
@@ -159,7 +151,7 @@
     :predicate (fn [ws option] (= (:status ws) option))}
    {:title "Access"
     :options access-levels
-    :render prettify
+    :render style/prettify-access-level
     :predicate (fn [ws option] (= (:accessLevel ws) option))}
    {:title "Publishing"
     :options [true false]
@@ -259,9 +251,9 @@
               :render (fn [{:keys [access-level workspace-id auth-domains]}]
                         [:div {:style {:paddingLeft 14}}
                          (if (= access-level "NO ACCESS")
-                           (style/create-link {:text (prettify access-level)
+                           (style/create-link {:text (style/prettify-access-level access-level)
                                                :onClick #(push-request-access-modal workspace-id auth-domains)})
-                           (prettify access-level))])}])
+                           (style/prettify-access-level access-level))])}])
           :behavior {:reorderable-columns? false}
           :style {:header-row {:color (:text-lighter style/colors) :fontSize "90%"}
                   :header-cell {:padding "0.4rem 0"}

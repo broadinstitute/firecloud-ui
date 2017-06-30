@@ -1,5 +1,6 @@
 (ns broadfcui.common.style
-  (:require [broadfcui.utils :as utils :refer [deep-merge]]))
+  (:require [broadfcui.utils :as utils :refer [deep-merge]]
+            [clojure.string :as string]))
 
 (def colors {:background-light "#f4f4f4"
              :background-dark "#4d4d4d"
@@ -40,7 +41,7 @@
   [:div {:style {:fontSize "125%" :fontWeight 500}} text])
 
 (defn create-paragraph [& children]
-  [:div {:style {:margin "17px 0 0.33333em 0" :paddingBottom "2.5em"
+  [:div {:style {:margin "1rem 0 2rem"
                  :fontSize "90%" :lineHeight 1.5}}
    children])
 
@@ -137,6 +138,14 @@
                    :style {:textDecoration "none" :color (:button-primary colors)}}
                   (dissoc attributes :text))
    text])
+
+;; An obnoxious amount of effort due to "PROJECT_OWNER" vs. "NO ACCESS"
+(defn prettify-access-level [s]
+  (as-> s $
+        (string/replace $ "_" " ")
+        (string/split $ #"\b")
+        (map string/capitalize $)
+        (string/join $)))
 
 (defn render-name-id [name snapshot-id]
   [:div {}
