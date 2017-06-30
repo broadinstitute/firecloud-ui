@@ -14,36 +14,37 @@
 (def ^:private comparison-ops ["<=" ">=" "==" "<" ">" "!="])
 (def ^:private arithmetic-ops ["+" "-" "*" "**" "/" "//" "%" "<<" ">>" "&" "|" "^" "~"])
 (def ^:private all-ops-regex (->> [assignment-ops comparison-ops arithmetic-ops]
-                               (apply concat)
-                               (map regex-escape)
-                               (interpose "|")
-                               (apply str)))
+                                  (apply concat)
+                                  (map regex-escape)
+                                  (interpose "|")
+                                  (apply str)))
 
-(js-invoke CodeMirror-js "defineMode" "wdl"
-  (fn []
-    #js{:token (fn [stream]
-                 (.eatSpace stream)
-                 (cond
-                   (.match stream #"#.*")
-                   "comment"
-                   (or (.match stream #"\"(?:[^\"\\]|\\.)*\"") (.match stream "'(?:[^'\\]|\\.)*'"))
-                   "string"
-                   (.match stream (re-pattern (str "(?:" all-ops-regex ")")))
-                   "operator"
-                   (.match stream #"(?:import|as|true|false|input|output|call|command|output|runtime|task|workflow)\b")
-                   "keyword"
-                   (.match stream #"(?:Array|Boolean|File|Float|Int|Map|Object|String|Uri)\b")
-                   "builtin"
-                   (.match stream #"[A-Za-z_][A-Za-z0-9_]*")
-                   "variable"
-                   (.match stream #"\$\{.*?\}")
-                   "variable-3"
-                   (.match stream #"[\{\}]")
-                   "bracket"
-                   (.match stream #"[0-9]*\.?[0-9]+")
-                   "number"
-                   :else
-                   (do (.next stream) nil)))}))
+(js-invoke
+ CodeMirror-js "defineMode" "wdl"
+ (fn []
+   #js{:token (fn [stream]
+                (.eatSpace stream)
+                (cond
+                  (.match stream #"#.*")
+                  "comment"
+                  (or (.match stream #"\"(?:[^\"\\]|\\.)*\"") (.match stream "'(?:[^'\\]|\\.)*'"))
+                  "string"
+                  (.match stream (re-pattern (str "(?:" all-ops-regex ")")))
+                  "operator"
+                  (.match stream #"(?:import|as|true|false|input|output|call|command|output|runtime|task|workflow)\b")
+                  "keyword"
+                  (.match stream #"(?:Array|Boolean|File|Float|Int|Map|Object|String|Uri)\b")
+                  "builtin"
+                  (.match stream #"[A-Za-z_][A-Za-z0-9_]*")
+                  "variable"
+                  (.match stream #"\$\{.*?\}")
+                  "variable-3"
+                  (.match stream #"[\{\}]")
+                  "bracket"
+                  (.match stream #"[0-9]*\.?[0-9]+")
+                  "number"
+                  :else
+                  (do (.next stream) nil)))}))
 
 (react/defc CodeMirror
   {:add-listener
