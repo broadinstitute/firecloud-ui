@@ -16,6 +16,13 @@ class WorkspaceMethodConfigPage(namespace: String, name: String)(implicit webDri
     new MethodConfigDetailsPage(namespace, name, methodNamespace, methodConfigName)
   }
 
+  def importMethodConfig(methodNamespace: String, methodName: String, snapshotId: Int, methodConfigName: String): MethodConfigDetailsPage = {
+    val importModal = gestures.clickimportConfigButton()
+    importModal.importMethodOrConfig(methodNamespace, methodName, snapshotId, methodConfigName)
+    new MethodConfigDetailsPage(namespace, name, methodNamespace, methodConfigName)
+  }
+
+//  def is_method_config_present
 
   trait UI extends super.UI {
     private val openImportConfigModalButtonQuery: Query = testId("import-config-button")
@@ -54,8 +61,8 @@ class ImportMethodConfigModal(implicit webDriver: WebDriver) extends FireCloudVi
     *
     */
   def importMethodConfig(methodNamespace: String, methodName: String, snapshotId: Int, methodConfigName: String, rootEntityType: String): Unit = {
-    ui.searchMethod(methodName)
-    ui.selectMethod(methodName, snapshotId)
+    ui.searchMethodOrConfig(methodName)
+    ui.selectMethodOrConfig(methodName, snapshotId)
     ui.fillMethodConfigName(methodConfigName)
     ui.chooseRootEntityType(rootEntityType)
     ui.clickimportMethodConfigButton()
@@ -68,14 +75,14 @@ class ImportMethodConfigModal(implicit webDriver: WebDriver) extends FireCloudVi
     private val importMethodConfigButtonQuery: Query = testId("import-button")
     private val rootEntityTypeSelectQuery: Query = testId("import-root-entity-type-select")
 
-    def searchMethod(searchQuery: String): Unit = {
+    def searchMethodOrConfig(searchQuery: String): Unit = {
       await enabled methodSearchInputQuery
         searchField(methodSearchInputQuery).value = searchQuery
       pressKeys("\n")
     }
 
-    def selectMethod(methodName: String, snapshotId: Int): Unit = {
-      val methodLinkQuery: Query = testId(methodName + "_" + snapshotId)
+    def selectMethodOrConfig(methodName: String, snapshotId: Int): Unit = {
+      val methodLinkQuery: Query = testId(methodName + "_" + snapshotId) //TODO: update the testID to have a prefix for the import method configuration modal table row.... OR a <Namespace>-<name>_<snapshotid>
       click on testId(methodName + "_" + snapshotId)
     }
 
@@ -95,7 +102,6 @@ class ImportMethodConfigModal(implicit webDriver: WebDriver) extends FireCloudVi
 
     def clickimportMethodConfigButton(): Unit = {
       click on (await enabled importMethodConfigButtonQuery)
-      await enabled testId("edit-method-config-button")
     }
 
   }

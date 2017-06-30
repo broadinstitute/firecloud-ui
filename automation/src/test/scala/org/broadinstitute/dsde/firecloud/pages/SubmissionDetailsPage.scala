@@ -12,9 +12,10 @@ class SubmissionDetailsPage(namespace: String, name: String)(implicit webDriver:
   private val WAITING_STATS = Array("Queued","Launching")
   private val WORKING_STATS = Array("Submitted", "Running", "Aborting")
   private val SUCCESS_STATS = Array("Succeeded")
-  private val FAILED_STATS  = Array("Failed", "Aborted")
+  private val FAILED_STATS  = Array("Failed")
+  private val ABORTED_STATS  = Array("Aborted")
 
-  private val SUBMISSION_COMPLETE_STATS = Array("Done")
+  private val SUBMISSION_COMPLETE_STATS = Array("Done") ++ SUCCESS_STATS ++ FAILED_STATS ++ ABORTED_STATS
 
   def isSubmissionDone():Boolean = {
     val status = ui.getSubmissionStatus()
@@ -35,16 +36,27 @@ class SubmissionDetailsPage(namespace: String, name: String)(implicit webDriver:
     FAILED_STATS.contains(status)
   }
 
+  def verifyWorkflowAborted(): Boolean = {
+    val status = gestures.getWorkflowStatus()
+    ABORTED_STATS.contains(status)
+  }
+
   def waitUntilSubmissionCompletes() = {
     while (!isSubmissionDone()) {
       open
     }
   }
 
+  def abortSubmission() = {
+    gestures.abortSubmission()
+  }
+
   trait UI extends super.UI {
     private val submissionStatusQuery: Query = testId("submission-status")
     private val workflowStatusQuery: Query = testId("workflow-status")
     private val submissionIdQuery: Query = testId("submission-id")
+    private val submissionAbortButtonQuery: Query = testId("submission-abort-button")
+    private val submissionAbortModalConfirmButtonQuery: Query = testId("submission-abort-modal-confirm-button")
 
     def getSubmissionStatus(): String = {
       await enabled submissionStatusQuery
@@ -63,6 +75,12 @@ class SubmissionDetailsPage(namespace: String, name: String)(implicit webDriver:
       await enabled submissionIdQuery
       val submissionIdElement = find(submissionIdQuery)
       submissionIdElement.get.text
+    }
+
+    def abortSubmission() = {
+      await enabled submissionAbortButtonQuery
+      click on submissionAbortButtonQuery
+      click on submissionAbortModalConfirmButtonQuery
     }
   }
   object ui extends UI

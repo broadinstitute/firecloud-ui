@@ -38,7 +38,7 @@ class BillingManagementPage(implicit webDriver: WebDriver) extends Authenticated
     *
     * @param text the text to filter by
     */
-  def filter(text: String): Unit = {
+  override def filter(text: String): Unit = {
     ui.fillFilterText(text)
     ui.clickFilterButton()
   }
@@ -64,10 +64,33 @@ class BillingManagementPage(implicit webDriver: WebDriver) extends Authenticated
   }
 
 
+  def openBillingProject(projectName: String) = {
+    filter(projectName)
+    ui.openBillingProject(projectName)
+  }
+
+
+  def addUserToBillingProject(userEmail: String, role: String) = {
+    ui.openAddUserDialog()
+    ui.fillUserEmail(userEmail)
+    ui.selectRole(role)
+    ui.confirmAddUserDialog()
+  }
+
+  def isUserInBillingProject(userEmail: String) = {
+//    filter(userEmail)
+    userEmail == ui.findUser(userEmail)
+  }
+
+
   trait UI extends super.UI {
     private val createBillingProjectButton: Query = testId("begin-create-billing-project")
     private val filterButton = testId("billing-project-list-filter-button")
     private val filterInput = testId("billing-project-list-filter-input")
+    private val addUserButton = testId("billing-project-add-user-button")
+    private val addUserModalEmailInput = testId("billing-project-add-user-modal-user-email-input")
+    private val addUserModalRoleSelect = testId("billing-project-add-user-modal-user-role-select")
+    private val addUserModalConfirmButton = testId("billing-project-add-user-modal-confirm-button")
 
     def clickCreateBillingProjectButton(): CreateBillingProjectModal = {
       click on createBillingProjectButton
@@ -92,6 +115,32 @@ class BillingManagementPage(implicit webDriver: WebDriver) extends Authenticated
         e <- find(xpath(s"//div[@data-test-id='$projectName-row']//span[@data-test-id='status-icon']"))
         v <- e.attribute("data-test-value")
       } yield v
+    }
+
+    def openBillingProject(projectName: String) = {
+      val billingProjectLink = testId(projectName + "-link")
+      click on (await enabled billingProjectLink)
+    }
+
+    def openAddUserDialog() = {
+      click on (await enabled addUserButton)
+    }
+
+    def fillUserEmail(email: String) = {
+      textField(addUserModalEmailInput).value = email
+    }
+
+    def selectRole(role: String) = {
+      singleSel(addUserModalRoleSelect).value = option value role
+    }
+
+    def confirmAddUserDialog() = {
+      click on addUserModalConfirmButton
+    }
+
+    def findUser(userEmail: String): String = {
+      val userEmailText = testId(userEmail)
+      find(userEmailText).get.text
     }
   }
   object ui extends UI

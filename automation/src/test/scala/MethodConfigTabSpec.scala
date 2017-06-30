@@ -2,7 +2,7 @@ import java.util.UUID
 
 import org.broadinstitute.dsde.firecloud.auth.{AuthToken, AuthTokens, Credentials}
 import org.broadinstitute.dsde.firecloud.data.TestData
-import org.broadinstitute.dsde.firecloud.pages.{WebBrowserSpec, WorkspaceListPage, WorkspaceMethodConfigPage}
+import org.broadinstitute.dsde.firecloud.pages.{WebBrowserSpec, WorkspaceListPage, WorkspaceMethodConfigPage, SubmissionDetailsPage}
 import org.broadinstitute.dsde.firecloud.{CleanUp, Config}
 import org.scalatest._
 
@@ -142,18 +142,112 @@ class MethodConfigTabSpec extends FreeSpec with WebBrowserSpec with CleanUp {
     launchModal.closeModal()
   }
 
+  // This testcase requires pulling in new code from develop branch
   "import a method config from a workspace" in withWebDriver { implicit driver =>
 
   }
 
   "import a method config into a workspace from the method repo" in withWebDriver { implicit driver =>
+    val wsName = "TestSpec_FireCloud_import_method_config_from_workspace" + UUID.randomUUID.toString
+    api.workspaces.create(billingProject, wsName)
+    register cleanUp api.workspaces.delete(billingProject, wsName)
+    api.importMetaData(billingProject, wsName, "entities", TestData.SingleParticipant.participantEntity)
+
+    signIn(uiUser)
+    val workspaceMethodConfigPage = new WorkspaceMethodConfigPage(billingProject, wsName).open
+    val methodConfigDetailsPage = workspaceMethodConfigPage.importMethodConfig(TestData.SimpleMethodConfig.namespace,
+      TestData.SimpleMethodConfig.name, TestData.SimpleMethodConfig.snapshotId, methodConfigName)
+    //    methodConfigDetailsPage.editMethodConfig(inputs = Some(TestData.SimpleMethodConfig.inputs)) // not needed for config
+
+    assert(methodConfigDetailsPage.isLoaded)
+  }
+
+  "import a method into a workspace from the method repo" in withWebDriver { implicit driver =>
+    val wsName = "TestSpec_FireCloud_import_method_from_workspace" + UUID.randomUUID.toString
+    api.workspaces.create(billingProject, wsName)
+    register cleanUp api.workspaces.delete(billingProject, wsName)
+    api.importMetaData(billingProject, wsName, "entities", TestData.SingleParticipant.participantEntity)
+
+    signIn(uiUser)
+    val workspaceMethodConfigPage = new WorkspaceMethodConfigPage(billingProject, wsName).open
+    val methodConfigDetailsPage = workspaceMethodConfigPage.importMethod(TestData.SimpleMethod.namespace,
+      TestData.SimpleMethod.name, TestData.SimpleMethod.snapshotId, methodConfigName, TestData.SimpleMethod.rootEntityType)
+    methodConfigDetailsPage.editMethodConfig(inputs = Some(TestData.SimpleMethod.inputs))
+
+    assert(methodConfigDetailsPage.isLoaded)
+  }
+
+  "launch a method config into a workspace from the method repo" in withWebDriver { implicit driver =>
+    val wsName = "TestSpec_FireCloud_import_method_config_from_workspace" + UUID.randomUUID.toString
+    api.workspaces.create(billingProject, wsName)
+    register cleanUp api.workspaces.delete(billingProject, wsName)
+    api.importMetaData(billingProject, wsName, "entities", TestData.SingleParticipant.participantEntity)
+
+    signIn(uiUser)
+    val workspaceMethodConfigPage = new WorkspaceMethodConfigPage(billingProject, wsName).open
+    val methodConfigDetailsPage = workspaceMethodConfigPage.importMethodConfig(TestData.SimpleMethodConfig.namespace,
+      TestData.SimpleMethodConfig.name, TestData.SimpleMethodConfig.snapshotId, methodConfigName)
+    //    methodConfigDetailsPage.editMethodConfig(inputs = Some(TestData.SimpleMethodConfig.inputs)) // not needed for config
+    val submissionDetailsPage = methodConfigDetailsPage.launchAnalysis(TestData.SimpleMethodConfig.rootEntityType, TestData.SingleParticipant.entityId)
+
+    submissionDetailsPage.waitUntilSubmissionCompletes()
+    assert(submissionDetailsPage.verifyWorkflowSucceeded())
+  }
+
+  "launch a method into a workspace from the method repo" in withWebDriver { implicit driver =>
+    val wsName = "TestSpec_FireCloud_import_method_from_workspace" + UUID.randomUUID.toString
+    api.workspaces.create(billingProject, wsName)
+    register cleanUp api.workspaces.delete(billingProject, wsName)
+    api.importMetaData(billingProject, wsName, "entities", TestData.SingleParticipant.participantEntity)
+
+    signIn(uiUser)
+    val workspaceMethodConfigPage = new WorkspaceMethodConfigPage(billingProject, wsName).open
+    val methodConfigDetailsPage = workspaceMethodConfigPage.importMethod(TestData.SimpleMethod.namespace,
+      TestData.SimpleMethod.name, TestData.SimpleMethod.snapshotId, methodConfigName, TestData.SimpleMethod.rootEntityType)
+    methodConfigDetailsPage.editMethodConfig(inputs = Some(TestData.SimpleMethod.inputs))
+    val submissionDetailsPage = methodConfigDetailsPage.launchAnalysis(TestData.SimpleMethod.rootEntityType, TestData.SingleParticipant.entityId)
+
+    submissionDetailsPage.waitUntilSubmissionCompletes()
+    assert(submissionDetailsPage.verifyWorkflowSucceeded())
+  }
+
+  "abort a workflow" in withWebDriver { implicit driver =>
+    val wsName = "TestSpec_FireCloud_abort_workflow" + UUID.randomUUID.toString
+    val shouldUseCallCaching = false
+    api.workspaces.create(billingProject, wsName)
+    register cleanUp api.workspaces.delete(billingProject, wsName)
+    api.importMetaData(billingProject, wsName, "entities", TestData.SingleParticipant.participantEntity)
+
+    signIn(uiUser)
+    val workspaceMethodConfigPage = new WorkspaceMethodConfigPage(billingProject, wsName).open
+    val methodConfigDetailsPage = workspaceMethodConfigPage.importMethod(TestData.SimpleMethod.namespace,
+      TestData.SimpleMethod.name, TestData.SimpleMethod.snapshotId, methodConfigName, TestData.SimpleMethod.rootEntityType)
+    methodConfigDetailsPage.editMethodConfig(inputs = Some(TestData.SimpleMethod.inputs))
+    val submissionDetailsPage = methodConfigDetailsPage.launchAnalysis(TestData.SimpleMethod.rootEntityType, TestData.SingleParticipant.entityId, "", shouldUseCallCaching)
+
+    submissionDetailsPage.abortSubmission()
+    submissionDetailsPage.waitUntilSubmissionCompletes()
+    assert(submissionDetailsPage.verifyWorkflowAborted())
 
   }
 
   // negative tests
 
-  "delete a method config from a workspace" in withWebDriver { implicit driver =>
+  "delete a method from a workspace" in withWebDriver { implicit driver =>
+    val wsName = "TestSpec_FireCloud_delete_method_from_workspace" + UUID.randomUUID.toString
+    api.workspaces.create(billingProject, wsName)
+    register cleanUp api.workspaces.delete(billingProject, wsName)
+    api.importMetaData(billingProject, wsName, "entities", TestData.SingleParticipant.participantEntity)
 
+    signIn(uiUser)
+    val workspaceMethodConfigPage = new WorkspaceMethodConfigPage(billingProject, wsName).open
+    val methodConfigDetailsPage = workspaceMethodConfigPage.importMethod(TestData.SimpleMethod.namespace,
+      TestData.SimpleMethod.name, TestData.SimpleMethod.snapshotId, methodConfigName, TestData.SimpleMethod.rootEntityType)
+    methodConfigDetailsPage.editMethodConfig(inputs = Some(TestData.SimpleMethod.inputs))
+    methodConfigDetailsPage.deleteMethodConfig()
+
+    workspaceMethodConfigPage.filter(methodConfigName)
+    assert( find(methodConfigName).size == 0 )
   }
 
 
