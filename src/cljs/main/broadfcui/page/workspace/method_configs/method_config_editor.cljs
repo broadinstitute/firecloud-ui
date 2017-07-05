@@ -297,7 +297,7 @@
                        :methodName method-name
                        :methodVersion new-snapshot-id}]
        (swap! state assoc :blocker "Updating...")
-       (react/call :load-agora-method (@refs "methodDetailsViewer") {:namespace method-namespace
+       ((@refs "methodDetailsViewer") :load-agora-method {:namespace method-namespace
                                                           :name method-name
                                                           :snapshotId new-snapshot-id})
        (endpoints/call-ajax-orch
