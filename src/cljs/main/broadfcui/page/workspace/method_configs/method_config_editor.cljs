@@ -41,17 +41,22 @@
              error (style/create-server-error-message error)
              :else [comps/Spinner {:text "Loading details..."}])))
    :component-did-mount
-   (fn [{:keys [this props]}]
-     (this :load-agora-method props))
+   (fn [{:keys [this]}]
+     (this :load-agora-method))
    :load-agora-method
-   (fn [{:keys [state]} method-ref]
-     (endpoints/call-ajax-orch
-      {:endpoint (endpoints/get-agora-method (:namespace method-ref) (:name method-ref) (:snapshotId method-ref))
-       :headers utils/content-type=json
-       :on-done (fn [{:keys [success? get-parsed-response status-text]}]
-                  (if success?
-                    (swap! state assoc :loaded-method (get-parsed-response))
-                    (swap! state assoc :error status-text)))}))})
+   (fn [{:keys [props state]} & [method-ref]]
+     (let [location (if (nil? method-ref) props method-ref)
+           namespace (:namespace location)
+           name (:name location)
+           snapshotId (:snapshotId location)]
+       (endpoints/call-ajax-orch
+         {:endpoint (endpoints/get-agora-method namespace name snapshotId)
+          :headers utils/content-type=json
+          :on-done (fn [{:keys [success? get-parsed-response status-text]}]
+                     (if success?
+                       (swap! state assoc :loaded-method (get-parsed-response))
+                       (swap! state assoc :error status-text)))})))})
+
 
 (defn- input-output-list [{:keys [values ref-prefix invalid-values editing? all-values]}]
   (create-section
