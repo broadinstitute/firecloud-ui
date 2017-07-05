@@ -3,7 +3,7 @@
     [dmohs.react :as react]
     [broadfcui.common :as common]
     [broadfcui.common.entity-table :as entity-table]
-    [broadfcui.common.gcs-file-preview :as gfp]
+    [broadfcui.common.gcs-file-preview :refer [GCSFilePreviewLink]]
     [broadfcui.common.icons :as icons]
     [broadfcui.common.style :as style]
     [broadfcui.common.table :as table]
@@ -88,7 +88,7 @@
                                    :content-renderer
                                    (fn [attr-value]
                                      (if-let [parsed (common/parse-gcs-uri attr-value)]
-                                       [gfp/GCSFilePreviewLink (assoc parsed
+                                       [GCSFilePreviewLink (assoc parsed
                                                              :attributes {:style {:display "inline"}}
                                                              :link-label attr-value)]
                                        attr-value))}])

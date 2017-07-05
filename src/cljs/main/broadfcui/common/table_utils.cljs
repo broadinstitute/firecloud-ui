@@ -5,7 +5,7 @@
     [broadfcui.common :as common]
     [broadfcui.common.components :as comps]
     [broadfcui.common.flex-utils :as flex]
-    [broadfcui.common.gcs-file-preview :as gcs-file-preview]
+    [broadfcui.common.gcs-file-preview :refer [GCSFilePreviewLink]]
     [broadfcui.common.icons :as icons]
     [broadfcui.common.style :as style]
     [broadfcui.utils :as utils]
@@ -131,7 +131,7 @@
   (fn [maybe-uri]
     (if (string? maybe-uri)
       (if-let [parsed (common/parse-gcs-uri maybe-uri)]
-        [gcs-file-preview/GCSFilePreviewLink
+        [GCSFilePreviewLink
          (assoc parsed
            :workspace-bucket workspace-bucket
            :attributes {:style {:direction "rtl" :marginRight "0.5em"
