@@ -7,7 +7,7 @@ clean_up () {
 }
 
 compose_exec() {
-  docker-compose -p fcuitests -f scripts/.tests-compose.yaml exec $@
+  docker-compose -T -p fcuitests -f scripts/.tests-compose.yaml exec $@
 }
 
 trap clean_up EXIT HUP INT QUIT PIPE TERM 0 20
