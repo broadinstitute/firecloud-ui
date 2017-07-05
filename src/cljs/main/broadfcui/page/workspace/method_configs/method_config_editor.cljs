@@ -45,10 +45,7 @@
      (this :load-agora-method))
    :load-agora-method
    (fn [{:keys [props state]} & [method-ref]]
-     (let [location (if (nil? method-ref) props method-ref)
-           namespace (:namespace location)
-           name (:name location)
-           snapshotId (:snapshotId location)]
+     (let [{:keys [namespace name snapshotId]} (or method-ref props)]
        (endpoints/call-ajax-orch
          {:endpoint (endpoints/get-agora-method namespace name snapshotId)
           :headers utils/content-type=json
