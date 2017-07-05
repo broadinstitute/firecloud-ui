@@ -45,7 +45,6 @@
      (react/call :load-agora-method this props state))
    :load-agora-method
    (fn [{:keys [state]} method-ref]
-     (utils/log "get-agora-method " method-ref)
      (endpoints/call-ajax-orch
       {:endpoint (endpoints/get-agora-method (:namespace method-ref) (:name method-ref) (:snapshotId method-ref))
        :headers utils/content-type=json
@@ -169,7 +168,7 @@
                  [comps/SidebarButton {:color :exception-state :margin :top
                                        :text "Cancel Editing" :icon :cancel
                                        :onClick (fn []
-                                                  (this :load-new-method-template (utils/log (:prev-snapshot-id @state)))
+                                                  (this :load-new-method-template (:prev-snapshot-id @state))
                                                   (swap! state assoc :editing? false))}]))]))]))
    :-render-main
    (fn [{:keys [state this]}]
@@ -268,25 +267,24 @@
                      (swap! state dissoc :blocker :editing?)
                      (if success?
                        (do ((:on-rename props) name)
-                           (swap! state assoc :loaded-config (get-parsed-response) :blocker nil)
-                           (utils/log))
+                           (swap! state assoc :loaded-config (get-parsed-response) :blocker nil))
                        (comps/push-error-response (get-parsed-response false))))})))
    :load-validated-method-config
    (fn [{:keys [state props]}]
      (endpoints/call-ajax-orch
-       {:endpoint (endpoints/get-validated-workspace-method-config (:workspace-id props) (:config-id props))
-        :on-done (fn [{:keys [success? get-parsed-response status-text]}]
-                   (if success?
-                     (let [response (get-parsed-response)]
-                       (endpoints/call-ajax-orch
-                         {:endpoint endpoints/get-inputs-outputs
-                          :payload (get-in response [:methodConfiguration :methodRepoMethod])
-                          :headers utils/content-type=json
-                          :on-done (fn [{:keys [success? get-parsed-response]}]
-                                     (if success?
-                                       (swap! state assoc :loaded-config (utils/log response) :inputs-outputs (get-parsed-response))
-                                       (swap! state assoc :error (:message (get-parsed-response)))))}))
-                     (swap! state assoc :error status-text)))}))
+      {:endpoint (endpoints/get-validated-workspace-method-config (:workspace-id props) (:config-id props))
+       :on-done (fn [{:keys [success? get-parsed-response status-text]}]
+                  (if success?
+                    (let [response (get-parsed-response)]
+                      (endpoints/call-ajax-orch
+                       {:endpoint endpoints/get-inputs-outputs
+                        :payload (get-in response [:methodConfiguration :methodRepoMethod])
+                        :headers utils/content-type=json
+                        :on-done (fn [{:keys [success? get-parsed-response]}]
+                                   (if success?
+                                     (swap! state assoc :loaded-config response :inputs-outputs (get-parsed-response))
+                                     (swap! state assoc :error (:message (get-parsed-response)))))}))
+                    (swap! state assoc :error status-text)))}))
    :load-new-method-template
    (fn [{:keys [state refs props]} new-snapshot-id]
      (let [[method-namespace method-name] (map (fn [key]
@@ -299,8 +297,6 @@
                        :methodName method-name
                        :methodVersion new-snapshot-id}]
        (swap! state assoc :blocker "Updating...")
-       (utils/log "METHOD REF")
-       (utils/log method-ref)
        (react/call :load-agora-method (@refs "methodDetailsViewer") {:namespace method-namespace
                                                           :name method-name
                                                           :snapshotId new-snapshot-id})
@@ -325,7 +321,6 @@
                                                          (let [template {:methodConfiguration (merge valid-response config-namespace+name)}]
                                                            (if success?
                                                                (swap! state assoc
-                                                                      ;:loaded-config (utils/log (merge template (dissoc valid-response :methodConfiguration)))
                                                                       :loaded-config valid-response
                                                                       :inputs-outputs (get-parsed-response)))
                                                              (swap! state assoc :error (:message (get-parsed-response)))))})
