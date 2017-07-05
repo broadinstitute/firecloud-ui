@@ -8,7 +8,7 @@
     [broadfcui.endpoints :as endpoints]
     [broadfcui.nav :as nav]
     [broadfcui.page.workspace.method-configs.import-config :as import-config]
-    [broadfcui.page.workspace.method-configs.method-config-editor :as mce]
+    [broadfcui.page.workspace.method-configs.method-config-editor :refer [MethodConfigEditor]]
     [broadfcui.page.workspace.workspace-common :as ws-common]
     [broadfcui.utils :as utils]
     ))
@@ -74,7 +74,7 @@
      (let [{:keys [config-id workspace-id]} props]
        [:div {:style {:padding "1rem 1.5rem"}}
         (if config-id
-          [mce/MethodConfigEditor
+          [MethodConfigEditor
            (merge (select-keys props [:workspace-id :bucket-access? :on-submission-success])
                   {:key config-id
                    :config-id config-id
