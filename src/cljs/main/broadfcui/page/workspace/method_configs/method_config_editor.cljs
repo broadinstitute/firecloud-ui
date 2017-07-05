@@ -41,8 +41,8 @@
              error (style/create-server-error-message error)
              :else [comps/Spinner {:text "Loading details..."}])))
    :component-did-mount
-   (fn [{:keys [this props state]}]
-     (react/call :load-agora-method this props state))
+   (fn [{:keys [this props]}]
+     (this :load-agora-method props))
    :load-agora-method
    (fn [{:keys [state]} method-ref]
      (endpoints/call-ajax-orch
@@ -52,7 +52,6 @@
                   (if success?
                     (swap! state assoc :loaded-method (get-parsed-response))
                     (swap! state assoc :error status-text)))}))})
-
 
 (defn- input-output-list [{:keys [values ref-prefix invalid-values editing? all-values]}]
   (create-section
