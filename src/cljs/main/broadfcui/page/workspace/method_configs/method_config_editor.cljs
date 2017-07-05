@@ -21,7 +21,7 @@
 (defn- create-section-header [text]
   [:div {:style {:fontSize "125%" :fontWeight 500}} text])
 
-(defn- create-section [& children]
+(defn- create-section [children]
   [:div {:style {:padding "1em 0 2em 0"}} children])
 
 
@@ -224,38 +224,37 @@
         {:keys [values ref-prefix invalid-values all-values]}]
      (let [{:keys [editing? suggestions]} @state]
        (create-section
-        [:div {}
-         (map
-          (fn [{:keys [name inputType outputType optional]}]
-            (let [type (or inputType outputType)
-                  name-kwd (keyword name)
-                  field-value (get values name-kwd "")
-                  error (get invalid-values name-kwd)]
-              [:div {:key name :style {:marginBottom "1rem"}}
-               [:div {}
-                [:div {:style {:margin "0 0.5rem 0.5rem 0" :padding "0.5rem" :display "inline-block"
-                               :backgroundColor (:background-light style/colors)
+        (map
+         (fn [{:keys [name inputType outputType optional]}]
+           (let [type (or inputType outputType)
+                 name-kwd (keyword name)
+                 field-value (get values name-kwd "")
+                 error (get invalid-values name-kwd)]
+             [:div {:key name :style {:marginBottom "1rem"}}
+              (list
+               [:div {:style {:margin "0 0.5rem 0.5rem 0" :padding "0.5rem" :display "inline-block"
+                              :backgroundColor (:background-light style/colors)
+                              :border style/standard-line :borderRadius 2}}
+                (str name ": (" (when optional "optional ") type ")")]
+               (when (and error (not editing?) (not optional))
+                 (icons/icon {:style {:marginLeft "0.5rem" :alignSelf "center"
+                                      :color (:exception-state style/colors)}}
+                             :error))
+               (when editing?
+                 [comps/Typeahead {:ref (str ref-prefix "_" name)
+                                   :field-attributes {:defaultValue field-value
+                                                      :style {:width 500 :margin 0}}
+                                   :local suggestions
+                                   :behavior {:minLength 1}}])
+               (when-not editing?
+                 (or field-value [:span {:style {:fontStyle "italic"}} "No value entered"])))
+              (when (and error (not optional))
+                [:div {:style {:padding "0.5em" :marginBottom "0.5rem"
+                               :backgroundColor (:exception-state style/colors)
+                               :display "inline-block"
                                :border style/standard-line :borderRadius 2}}
-                 (str name ": (" (when optional "optional ") type ")")]
-                (when (and error (not editing?) (not optional))
-                  (icons/icon {:style {:marginLeft "0.5rem" :alignSelf "center"
-                                       :color (:exception-state style/colors)}}
-                              :error))
-                (when editing?
-                  [comps/Typeahead {:ref (str ref-prefix "_" name)
-                                    :field-attributes {:defaultValue field-value
-                                                       :style {:width 500}}
-                                    :local suggestions
-                                    :behavior {:minLength 1}}])
-                (when-not editing?
-                  (or field-value [:span {:style {:fontStyle "italic"}} "No value entered"]))]
-               (when (and error (not optional))
-                 [:div {:style {:padding "0.5em" :marginBottom "0.5rem"
-                                :backgroundColor (:exception-state style/colors)
-                                :display "inline-block"
-                                :border style/standard-line :borderRadius 2}}
-                  error])]))
-          all-values)])))
+                 error])]))
+         all-values))))
    :-commit
    (fn [{:keys [props state refs]}]
      (let [{:keys [workspace-id]} props
