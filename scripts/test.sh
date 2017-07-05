@@ -24,8 +24,10 @@ docker cp src fcuitests_clojure-node_1:/w
 docker cp webpack.config.js fcuitests_clojure-node_1:/w
 docker cp package.json fcuitests_clojure-node_1:/w
 
-#compose_exec clojure-node npm install
-#compose_exec clojure-node npm run webpack -- -p
+############ These aren't needed for unit tests
+# compose_exec clojure-node npm install
+# compose_exec clojure-node npm run webpack -- -p
+
 compose_exec clojure-node sh -c 'lein cljsbuild once 2>&1 | tee /tmp/cljsbuild.log'
 set +e
 compose_exec clojure-node grep WARNING /tmp/cljsbuild.log
