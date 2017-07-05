@@ -1,7 +1,7 @@
 (ns broadfcui.common.components
   (:require
-    [clojure.string :refer [blank?]]
     [dmohs.react :as react]
+    [clojure.string :as string]
     [broadfcui.common :as common]
     [broadfcui.common.codemirror :refer [CodeMirror]]
     [broadfcui.common.icons :as icons]
@@ -231,7 +231,7 @@
           (make-field :synopsis "Synopsis")]]
         [:div {:style {:fontWeight 500 :padding "0.5rem 0 0.3rem 0"}}
          "Documentation:"]
-        (if (blank? (:documentation entity))
+        (if (string/blank? (:documentation entity))
           [:div {:style {:fontStyle "italic" :fontSize "90%"}} "No documentation provided"]
           [:div {:style {:fontSize "90%"}} (:documentation entity)])]))})
 

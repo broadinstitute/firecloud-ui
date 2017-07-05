@@ -1,8 +1,8 @@
 (ns broadfcui.page.method-repo.method-config-importer
   (:require
     [dmohs.react :as react]
-    [clojure.string :refer [lower-case]]
-    [broadfcui.common :refer [clear-both root-entity-types scroll-to-top]]
+    [clojure.string :as string]
+    [broadfcui.common :as common]
     [broadfcui.common.components :as comps]
     [broadfcui.common.flex-utils :as flex]
     [broadfcui.common.input :as input]
@@ -36,12 +36,12 @@
      (let [{:keys [name namespace snapshotId]} (:entity props)]
        (swap! state assoc :redacting? true :error nil)
        (endpoints/call-ajax-orch
-         {:endpoint (endpoints/delete-agora-entity (:config? props) namespace name snapshotId)
-          :on-done (fn [{:keys [success? get-parsed-response]}]
-                     (swap! state dissoc :redacting?)
-                     (if success?
-                       (do (modal/pop-modal) ((:on-delete props)))
-                       (swap! state assoc :error (get-parsed-response false))))})))})
+        {:endpoint (endpoints/delete-agora-entity (:config? props) namespace name snapshotId)
+         :on-done (fn [{:keys [success? get-parsed-response]}]
+                    (swap! state dissoc :redacting?)
+                    (if success?
+                      (do (modal/pop-modal) ((:on-delete props)))
+                      (swap! state assoc :error (get-parsed-response false))))})))})
 
 (defn- create-import-form [state props this locals entity config? fields]
   (let [{:keys [workspace-id]} props
@@ -61,7 +61,7 @@
                                          {:duplicate entity
                                           :on-created (fn [_ id]
                                                         (nav/go-to-path :method id)
-                                                        (scroll-to-top))}])}])
+                                                        (common/scroll-to-top))}])}])
         (when owner?
           (list
            (when workflow?
@@ -72,23 +72,23 @@
                                             {:snapshot entity
                                              :on-created (fn [_ id]
                                                            (nav/go-to-path :method id)
-                                                           (scroll-to-top))}])}])
-            [comps/SidebarButton
-             {:style :light :color :button-primary
-              :text "Permissions..." :icon :settings :margin :bottom
-              :onClick #(modal/push-modal
-                         [mca/AgoraPermsEditor
-                          {:save-endpoint (endpoints/persist-agora-method-acl entity)
-                           :load-endpoint (let [{:keys [name namespace snapshotId]} entity]
-                                            (endpoints/get-agora-method-acl namespace name snapshotId config?))
-                           :entityType (:entityType entity)
-                           :entityName (mca/get-ordered-name entity)
-                           :title (str (:entityType entity) " " (mca/get-ordered-name entity))}])}]
-            [comps/SidebarButton
-             {:style :light :color :exception-state
-              :text "Redact" :icon :delete :margin :bottom
-              :onClick #(modal/push-modal [Redactor {:entity entity :config? config?
-                                                 :on-delete (:on-delete props)}])}]))])
+                                                           (common/scroll-to-top))}])}])
+           [comps/SidebarButton
+            {:style :light :color :button-primary
+             :text "Permissions..." :icon :settings :margin :bottom
+             :onClick #(modal/push-modal
+                        [mca/AgoraPermsEditor
+                         {:save-endpoint (endpoints/persist-agora-method-acl entity)
+                          :load-endpoint (let [{:keys [name namespace snapshotId]} entity]
+                                           (endpoints/get-agora-method-acl namespace name snapshotId config?))
+                          :entityType (:entityType entity)
+                          :entityName (mca/get-ordered-name entity)
+                          :title (str (:entityType entity) " " (mca/get-ordered-name entity))}])}]
+           [comps/SidebarButton
+            {:style :light :color :exception-state
+             :text "Redact" :icon :delete :margin :bottom
+             :onClick #(modal/push-modal [Redactor {:entity entity :config? config?
+                                                    :on-delete (:on-delete props)}])}]))])
      [:div {:style {:flex "1 1 auto"}}
       [comps/EntityDetails {:entity entity}]
       [:div {:style {:border style/standard-line
@@ -112,9 +112,9 @@
                                  :placeholder "Required"
                                  :predicates [(input/nonempty "Fields")]}])]))
         fields)
-       (clear-both)
+       (common/clear-both)
        (when-not workspace-id
-         (let [sorted-ws-list (sort-by (comp (partial mapv lower-case)
+         (let [sorted-ws-list (sort-by (comp (partial mapv string/lower-case)
                                              (juxt :namespace :name)
                                              :workspace)
                                        (:workspaces-list @state))]
@@ -147,11 +147,11 @@
    (fn [{:keys [props state this locals]}]
      (cond
        (and
-         (:loaded-config @state)
-         (or (:workspace-id props) (:workspaces-list @state)))
+        (:loaded-config @state)
+        (or (:workspace-id props) (:workspaces-list @state)))
        (create-import-form state props this locals (:loaded-config @state) true
-         [{:label "Configuration Namespace" :key :namespace}
-          {:label "Configuration Name" :key :name}])
+                           [{:label "Configuration Namespace" :key :namespace}
+                            {:label "Configuration Name" :key :name}])
        (:error @state) (style/create-server-error-message (:error @state))
        :else [comps/Spinner {:text "Loading configuration details..."}]))
    :perform-copy
@@ -166,39 +166,39 @@
          (do
            (swap! state assoc :blocking-text (if (:workspace-id props) "Importing..." "Exporting..."))
            (endpoints/call-ajax-orch
-             {:endpoint (endpoints/copy-method-config-to-workspace workspace-id)
-              :payload {"configurationNamespace" (:namespace loaded-config)
-                        "configurationName" (:name loaded-config)
-                        "configurationSnapshotId" (:snapshotId loaded-config)
-                        "destinationNamespace" namespace
-                        "destinationName" name}
-              :headers utils/content-type=json
-              :on-done (fn [{:keys [success? get-parsed-response]}]
-                         (swap! state dissoc :blocking-text)
-                         (if success?
-                           (when after-import (after-import {:config-id {:namespace namespace :name name}
-                                                             :workspace-id workspace-id}))
-                           (swap! state assoc :server-error (get-parsed-response false))))})))))
+            {:endpoint (endpoints/copy-method-config-to-workspace workspace-id)
+             :payload {"configurationNamespace" (:namespace loaded-config)
+                       "configurationName" (:name loaded-config)
+                       "configurationSnapshotId" (:snapshotId loaded-config)
+                       "destinationNamespace" namespace
+                       "destinationName" name}
+             :headers utils/content-type=json
+             :on-done (fn [{:keys [success? get-parsed-response]}]
+                        (swap! state dissoc :blocking-text)
+                        (if success?
+                          (when after-import (after-import {:config-id {:namespace namespace :name name}
+                                                            :workspace-id workspace-id}))
+                          (swap! state assoc :server-error (get-parsed-response false))))})))))
    :component-did-mount
    (fn [{:keys [props state]}]
      (when-not (:workspace-id props)
        (endpoints/call-ajax-orch
-         {:endpoint endpoints/list-workspaces
-          :on-done (fn [{:keys [success? get-parsed-response status-text]}]
-                     (if success?
-                       (let [ws-list (get-parsed-response)]
-                         (swap! state assoc :workspaces-list ws-list :selected-workspace (first ws-list)))
-                       (swap! state assoc :error status-text)))}))
+        {:endpoint endpoints/list-workspaces
+         :on-done (fn [{:keys [success? get-parsed-response status-text]}]
+                    (if success?
+                      (let [ws-list (get-parsed-response)]
+                        (swap! state assoc :workspaces-list ws-list :selected-workspace (first ws-list)))
+                      (swap! state assoc :error status-text)))}))
      (endpoints/call-ajax-orch
-       {:endpoint (endpoints/get-configuration
-                   (get-in props [:id :namespace])
-                   (get-in props [:id :name])
-                   (get-in props [:id :snapshot-id]))
-        :headers utils/content-type=json
-        :on-done (fn [{:keys [success? get-parsed-response status-text]}]
-                   (if success?
-                     (swap! state assoc :loaded-config (get-parsed-response))
-                     (swap! state assoc :error status-text)))}))})
+      {:endpoint (endpoints/get-configuration
+                  (get-in props [:id :namespace])
+                  (get-in props [:id :name])
+                  (get-in props [:id :snapshot-id]))
+       :headers utils/content-type=json
+       :on-done (fn [{:keys [success? get-parsed-response status-text]}]
+                  (if success?
+                    (swap! state assoc :loaded-config (get-parsed-response))
+                    (swap! state assoc :error status-text)))}))})
 
 
 (react/defc MethodImportForm
@@ -206,12 +206,12 @@
    (fn [{:keys [props state this locals]}]
      (cond
        (and
-         (:loaded-method @state)
-         (or (:workspace-id props) (:workspaces-list @state)))
+        (:loaded-method @state)
+        (or (:workspace-id props) (:workspaces-list @state)))
        (create-import-form state props this locals (:loaded-method @state) false
-         [{:label "Configuration Namespace" :key :namespace}
-          {:label "Configuration Name" :key :name}
-          {:label "Root Entity Type" :key :rootEntityType :type "identity-select" :options root-entity-types}])
+                           [{:label "Configuration Namespace" :key :namespace}
+                            {:label "Configuration Name" :key :name}
+                            {:label "Root Entity Type" :key :rootEntityType :type "identity-select" :options common/root-entity-types}])
 
        (:error @state) (style/create-server-error-message (:error @state))
        :else [comps/Spinner {:text "Creating template..."}]))
@@ -227,52 +227,52 @@
          (do
            (swap! state assoc :blocking-text (if (:workspace-id props) "Importing..." "Exporting..."))
            (endpoints/call-ajax-orch
-             {:endpoint (endpoints/create-template (:loaded-method @state))
-              :payload (assoc (:loaded-method @state)
-                              "methodNamespace" (get-in @state [:loaded-method :namespace])
-                              "methodName" (get-in @state [:loaded-method :name])
-                              "methodVersion" (get-in @state [:loaded-method :snapshotId]))
-              :headers utils/content-type=json
-              :on-done (fn [{:keys [success? get-parsed-response]}]
-                         (let [response (get-parsed-response)]
-                           (if-not success?
-                             (do
-                               (swap! state dissoc :blocking-text)
-                               (modal/pop-modal)
-                               (comps/push-error (style/create-server-error-message (:message response))))
-                             (endpoints/call-ajax-orch
-                               {:endpoint (endpoints/post-workspace-method-config workspace-id)
-                                :payload (assoc response
-                                           :namespace namespace
-                                           :name name
-                                           :rootEntityType rootEntityType)
-                                :headers utils/content-type=json
-                                :on-done (fn [{:keys [success? get-parsed-response]}]
-                                           (swap! state dissoc :blocking-text)
-                                           (if success?
-                                             (when after-import (after-import {:config-id {:namespace namespace :name name}
-                                                                               :workspace-id workspace-id}))
-                                             (swap! state assoc :server-error (get-parsed-response false))))}))))})))))
+            {:endpoint (endpoints/create-template (:loaded-method @state))
+             :payload (assoc (:loaded-method @state)
+                        "methodNamespace" (get-in @state [:loaded-method :namespace])
+                        "methodName" (get-in @state [:loaded-method :name])
+                        "methodVersion" (get-in @state [:loaded-method :snapshotId]))
+             :headers utils/content-type=json
+             :on-done (fn [{:keys [success? get-parsed-response]}]
+                        (let [response (get-parsed-response)]
+                          (if-not success?
+                            (do
+                              (swap! state dissoc :blocking-text)
+                              (modal/pop-modal)
+                              (comps/push-error (style/create-server-error-message (:message response))))
+                            (endpoints/call-ajax-orch
+                             {:endpoint (endpoints/post-workspace-method-config workspace-id)
+                              :payload (assoc response
+                                         :namespace namespace
+                                         :name name
+                                         :rootEntityType rootEntityType)
+                              :headers utils/content-type=json
+                              :on-done (fn [{:keys [success? get-parsed-response]}]
+                                         (swap! state dissoc :blocking-text)
+                                         (if success?
+                                           (when after-import (after-import {:config-id {:namespace namespace :name name}
+                                                                             :workspace-id workspace-id}))
+                                           (swap! state assoc :server-error (get-parsed-response false))))}))))})))))
    :component-did-mount
    (fn [{:keys [props state]}]
      (when-not (:workspace-id props)
        (endpoints/call-ajax-orch
-         {:endpoint endpoints/list-workspaces
-          :on-done (fn [{:keys [success? get-parsed-response status-text]}]
-                     (if success?
-                       (let [ws-list (get-parsed-response)]
-                         (swap! state assoc :workspaces-list ws-list :selected-workspace (first ws-list)))
-                       (swap! state assoc :error status-text)))}))
+        {:endpoint endpoints/list-workspaces
+         :on-done (fn [{:keys [success? get-parsed-response status-text]}]
+                    (if success?
+                      (let [ws-list (get-parsed-response)]
+                        (swap! state assoc :workspaces-list ws-list :selected-workspace (first ws-list)))
+                      (swap! state assoc :error status-text)))}))
      (endpoints/call-ajax-orch
-       {:endpoint (endpoints/get-agora-method
-                   (get-in props [:id :namespace])
-                   (get-in props [:id :name])
-                   (get-in props [:id :snapshot-id]))
-        :headers utils/content-type=json
-        :on-done (fn [{:keys [success? get-parsed-response status-text]}]
-                   (if success?
-                     (swap! state assoc :loaded-method (get-parsed-response))
-                     (swap! state assoc :error status-text)))}))})
+      {:endpoint (endpoints/get-agora-method
+                  (get-in props [:id :namespace])
+                  (get-in props [:id :name])
+                  (get-in props [:id :snapshot-id]))
+       :headers utils/content-type=json
+       :on-done (fn [{:keys [success? get-parsed-response status-text]}]
+                  (if success?
+                    (swap! state assoc :loaded-method (get-parsed-response))
+                    (swap! state assoc :error status-text)))}))})
 
 
 (defn import-form [{:keys [type] :as props}]

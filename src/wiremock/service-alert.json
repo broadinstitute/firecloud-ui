@@ -10,9 +10,9 @@
     },
     "jsonBody": [
       {
-        "title":"Test Alert",
-        "message":"This is just a test alert",
-        "link":"https://software.broadinstitute.org/firecloud/blog"
+        "title": "Test Alert",
+        "message": "This is just a test alert",
+        "link": "https://software.broadinstitute.org/firecloud/blog"
       }
     ]
   }

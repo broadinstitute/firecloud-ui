@@ -5,8 +5,8 @@
     [broadfcui.common.components :as comps]
     [broadfcui.common.icons :as icons]
     [broadfcui.common.overlay :as overlay]
-    [broadfcui.common.table.utils :as table-utils]
     [broadfcui.common.style :as style]
+    [broadfcui.common.table.utils :as table-utils]
     [broadfcui.utils :as utils]
     ))
 

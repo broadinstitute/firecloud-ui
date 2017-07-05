@@ -2,7 +2,8 @@
   (:require
     [dmohs.react :as react]
     [broadfcui.common :as common]
-    [broadfcui.utils :as utils]))
+    [broadfcui.utils :as utils]
+    ))
 
 
 (defonce ^:private instance (atom nil))

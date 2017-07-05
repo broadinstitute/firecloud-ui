@@ -1,19 +1,20 @@
 (ns broadfcui.page.library.library-page
   (:require
-    [clojure.set]
     [dmohs.react :as react]
+    [clojure.set :as set]
+    [clojure.string :as string]
     [broadfcui.common :as common]
     [broadfcui.common.components :as comps]
-    [broadfcui.endpoints :as endpoints]
     [broadfcui.common.flex-utils :as flex]
+    [broadfcui.common.icons :as icons]
     [broadfcui.common.style :as style]
     [broadfcui.common.table.style :as table-style]
     [broadfcui.common.table.table :refer [Table]]
     [broadfcui.config :as config]
+    [broadfcui.endpoints :as endpoints]
     [broadfcui.nav :as nav]
     [broadfcui.persistence :as persistence]
     [broadfcui.utils :as utils]
-    [broadfcui.common.icons :as icons]
     ))
 
 
@@ -62,7 +63,7 @@
                         :column-data keyname
                         :render (fn [field]
                                   (if (sequential? field)
-                                    (clojure.string/join ", " field)
+                                    (string/join ", " field)
                                     field))})
                      extra-columns))
           :style {:header-row {:fontWeight 500 :fontSize "90%"
@@ -157,11 +158,11 @@
 
 (defn encode [text]
   ;; character replacements modeled after Lucene's SimpleHTMLEncoder.
-  (clojure.string/escape text {\" "&quot;" \& "&amp;" \< "&lt;", \> "&gt;", \\ "&#x27;" \/ "&#x2F;"}))
+  (string/escape text {\" "&quot;" \& "&amp;" \< "&lt;", \> "&gt;", \\ "&#x27;" \/ "&#x2F;"}))
 
 (defn highlight-suggestion [suggestion highlight]
-  (if (not (clojure.string/blank? highlight))
-    (clojure.string/replace (encode suggestion) (encode highlight) (str "<strong>" (encode highlight) "</strong>"))
+  (if (not (string/blank? highlight))
+    (string/replace (encode suggestion) (encode highlight) (str "<strong>" (encode highlight) "</strong>"))
     (encode suggestion)))
 
 (react/defc SearchSection
@@ -212,7 +213,7 @@
      (let [size (:numOtherDocs props)
            title (:title props)
            all-buckets (mapv :key (:buckets props))
-           hidden-items (clojure.set/difference (:selected-items props) (set all-buckets))
+           hidden-items (set/difference (:selected-items props) (set all-buckets))
            hidden-items-formatted (mapv (fn [item] {:key item}) hidden-items)]
        [:div {:style {:paddingBottom "1em"}}
         [:hr {}]
@@ -221,17 +222,17 @@
          (style/create-link {:text "Clear" :onClick #(this :clear-all)})]
         [:div {:style {:paddingTop "1em"}}
          (map
-           (fn [{:keys [key doc_count]}]
-             [:div {:style {:paddingTop 5}}
-              [:label {:style {:display "inline-block" :width "calc(100% - 30px)"
-                               :textOverflow "ellipsis" :overflow "hidden" :whiteSpace "nowrap"}
-                       :title key}
-               [:input {:type "checkbox"
-                        :checked (contains? (:selected-items props) key)
-                        :onChange #(this :update-selected key (.. % -target -checked))}]
-               [:span {:style {:marginLeft "0.3em"}} key]]
-              (some-> doc_count style/render-count)])
-           (concat (:buckets props) hidden-items-formatted))
+          (fn [{:keys [key doc_count]}]
+            [:div {:style {:paddingTop 5}}
+             [:label {:style {:display "inline-block" :width "calc(100% - 30px)"
+                              :textOverflow "ellipsis" :overflow "hidden" :whiteSpace "nowrap"}
+                      :title key}
+              [:input {:type "checkbox"
+                       :checked (contains? (:selected-items props) key)
+                       :onChange #(this :update-selected key (.. % -target -checked))}]
+              [:span {:style {:marginLeft "0.3em"}} key]]
+             (some-> doc_count style/render-count)])
+          (concat (:buckets props) hidden-items-formatted))
          [:div {:style {:paddingTop 5}}
           (if (:expanded? props)
             (when (> (count (:buckets props)) 5)
@@ -354,8 +355,8 @@
 
 (defn add-nav-paths []
   (nav/defpath
-    :library
-    {:component Page
-     :regex #"library"
-     :make-props (fn [_] {})
-     :make-path (fn [] "library")}))
+   :library
+   {:component Page
+    :regex #"library"
+    :make-props (fn [_] {})
+    :make-path (fn [] "library")}))

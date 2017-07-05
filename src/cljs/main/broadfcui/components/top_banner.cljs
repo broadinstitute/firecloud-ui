@@ -1,14 +1,13 @@
 (ns broadfcui.components.top-banner
   (:require
-   [broadfcui.common.icons :as icons]
-   [broadfcui.common.style :as style]
-   [dmohs.react :as r]
-   [linked.core :as linked]
-   ))
+    [dmohs.react :as react]
+    [broadfcui.common.icons :as icons]
+    [broadfcui.common.style :as style]
+    ))
 
 (defonce ^:private instance nil)
 
-(r/defc Container
+(react/defc Container
   {:add
    (fn [{:keys [props state]} id content]
      (swap! state update :stack assoc id content))
@@ -29,7 +28,7 @@
    (fn [{:keys [this]}]
      (set! instance nil))})
 
-(r/defc Banner
+(react/defc Banner
   {:render
    (fn [{:keys [props]}]
      nil)
@@ -45,7 +44,7 @@
      (instance :remove (:id @locals)))})
 
 (defn render [content]
-  (let [element (if (r/valid-element? content) content (r/create-element content))]
+  (let [element (if (react/valid-element? content) content (react/create-element content))]
     [Banner {:content element}]))
 
 (defn render-warning [{:keys [title message link]}]

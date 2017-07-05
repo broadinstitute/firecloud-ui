@@ -1,6 +1,5 @@
 (ns broadfcui.page.workspace.summary.tab
   (:require
-    [clojure.set :refer [difference]]
     [dmohs.react :as react]
     [broadfcui.common :as common]
     [broadfcui.common.components :as comps]
@@ -11,7 +10,7 @@
     [broadfcui.components.collapse :refer [Collapse]]
     [broadfcui.endpoints :as endpoints]
     [broadfcui.nav :as nav]
-    [broadfcui.page.workspace.monitor.common :as moncommon :refer [all-success? any-running? any-failed?]]
+    [broadfcui.page.workspace.monitor.common :as moncommon]
     [broadfcui.page.workspace.summary.acl-editor :refer [AclEditor]]
     [broadfcui.page.workspace.summary.attribute-editor :as attributes]
     [broadfcui.page.workspace.summary.catalog.wizard :refer [CatalogWizard]]
@@ -303,7 +302,7 @@
                catalog-with-read? (and (or writer? (reader? workspace)) (:catalog workspace))
                user-access-level (:accessLevel workspace)
                derived (merge {:reader? (reader? (:workspace props)) :request-refresh #(react/call :refresh this)}
-                              (utils/restructure owner?  writer? can-share? catalog-with-read? user-access-level))]
+                              (utils/restructure owner? writer? can-share? catalog-with-read? user-access-level))]
            [:div {:style {:margin "2.5rem 1.5rem" :display "flex"}}
             (render-sidebar state refs this
                             (merge (select-keys props [:workspace :workspace-id])
@@ -348,7 +347,7 @@
    (fn [{:keys [locals]}]
      (.removeEventListener js/window "scroll" (:scroll-handler @locals)))
    :refresh
-   (fn [{:keys [props state refs]}]
+   (fn [{:keys [props state]}]
      (swap! state dissoc :server-response)
      ((:request-refresh props))
      (endpoints/call-ajax-orch

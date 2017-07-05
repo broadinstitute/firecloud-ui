@@ -1,27 +1,27 @@
 span.twitter-typeahead {
-  width: 100%;
+    width: 100%;
 }
 
 div.tt-menu.tt-open {
-  position: relative;
-  display: block;
-  background-color: white;
-  width: 100%;
-  border-radius: 3px;
-  box-shadow: 0 3px 6px 0 rgba(0, 0, 0, 0.15);
-  border: 1px solid #cacaca;
+    position: relative;
+    display: block;
+    background-color: white;
+    width: 100%;
+    border-radius: 3px;
+    box-shadow: 0 3px 6px 0 rgba(0, 0, 0, 0.15);
+    border: 1px solid #cacaca;
 }
 
 div.tt-suggestion {
-  cursor: pointer;
-  padding: 8px;
+    cursor: pointer;
+    padding: 8px;
 }
 
 div.tt-suggestion:hover {
-  background-color: #ddd;
+    background-color: #ddd;
 }
 
 div.tt-suggestion.tt-cursor {
-  padding-left: 4px;
-  border-left: 4px #457fd2 solid;
+    padding-left: 4px;
+    border-left: 4px #457fd2 solid;
 }

@@ -5,7 +5,7 @@
     [broadfcui.common.components :as comps]
     [broadfcui.common.modal :as modal]
     [broadfcui.page.workspace.analysis.igv :refer [IGVContainer]]
-    [broadfcui.page.workspace.analysis.track-selector :refer [TrackSelectionDialog]]
+    [broadfcui.page.workspace.analysis.track-selector :as track-selector]
     [broadfcui.utils :as utils]
     ))
 
@@ -18,7 +18,7 @@
    :show-track-selection-dialog
    (fn [{:keys [props state]}]
      (modal/push-modal
-      [TrackSelectionDialog
+      [track-selector/TrackSelectionDialog
        (assoc props
          :tracks (:tracks @state)
          :on-ok #(swap! state assoc :tracks %))]))

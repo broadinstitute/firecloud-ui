@@ -1,13 +1,11 @@
 (ns broadfcui.page.workspace.data.copy-data-entities
   (:require
-    [clojure.set :refer [union]]
-    [clojure.string :refer [capitalize]]
-    [clojure.walk :refer [postwalk]]
     [dmohs.react :as react]
+    [clojure.string :as string]
+    [clojure.walk :as walk]
     [broadfcui.common :as common]
     [broadfcui.common.components :as comps]
     [broadfcui.common.modal :as modal]
-    [broadfcui.common.style :as style]
     [broadfcui.endpoints :as endpoints]
     [broadfcui.page.workspace.data.entity-selector :refer [EntitySelector]]
     [broadfcui.utils :as utils]
@@ -24,7 +22,7 @@
         [EntitySelector {:ref "EntitySelector"
                          :type (:type props)
                          :selected-workspace-bucket (:selected-workspace-bucket props)
-                         :left-text (str (capitalize (:type props)) "s in " (:namespace swid) "/" (:name swid))
+                         :left-text (str (string/capitalize (:type props)) "s in " (:namespace swid) "/" (:name swid))
                          :right-text "To be imported"
                          :id-name (:id-name props)
                          :entities (:entity-list props)}]
@@ -54,7 +52,7 @@
                   (react/call :show-import-result this (get-parsed-response false) selected))}))
    :show-import-result
    (fn [{:keys [this props]} parsed-response selected]
-     (let [formatted-response (postwalk
+     (let [formatted-response (walk/postwalk
                                #(case %
                                   "entityName" "ID"
                                   "entityType" "Type"
@@ -63,7 +61,7 @@
                                parsed-response)
            copied (formatted-response "entitiesCopied")
            hard-conflicts (formatted-response "hardConflicts")
-           soft-conflicts (postwalk
+           soft-conflicts (walk/postwalk
                            #(if (= (second %) []) nil %)
                            (formatted-response "softConflicts"))
            import-type (:type props)]
@@ -149,11 +147,11 @@
    :load-entities
    (fn [{:keys [state props]}]
      (endpoints/call-ajax-orch
-       {:endpoint (endpoints/get-entities-of-type (:selected-workspace-id props) (:type props))
-        :on-done (fn [{:keys [success? get-parsed-response]}]
-                   (if success?
-                     (swap! state assoc :entity-list (get-parsed-response false))
-                     (swap! state assoc :server-error (get-parsed-response false))))}))})
+      {:endpoint (endpoints/get-entities-of-type (:selected-workspace-id props) (:type props))
+       :on-done (fn [{:keys [success? get-parsed-response]}]
+                  (if success?
+                    (swap! state assoc :entity-list (get-parsed-response false))
+                    (swap! state assoc :server-error (get-parsed-response false))))}))})
 
 
 (react/defc SelectType
@@ -170,11 +168,11 @@
           [:h3 {} "Choose type:"]
           [:div {}
            (map
-             (fn [[type {:strs [count]}]]
-               [:div {:style {:display "inline-block" :margin "0px 1em"}}
-                [comps/Button {:text (str type " (" count ")")
-                               :onClick #((:add-crumb props) {:text type})}]])
-             (:entity-types @state))]]
+            (fn [[type {:strs [count]}]]
+              [:div {:style {:display "inline-block" :margin "0px 1em"}}
+               [comps/Button {:text (str type " (" count ")")
+                              :onClick #((:add-crumb props) {:text type})}]])
+            (:entity-types @state))]]
 
          (:server-error @state)
          [comps/ErrorViewer {:error (:server-error @state)}]
@@ -184,6 +182,6 @@
    :component-did-mount
    (fn [{:keys [props state]}]
      (endpoints/call-ajax-orch
-       {:endpoint (endpoints/get-entity-types (:selected-workspace-id props))
-        :on-done (fn [{:keys [success? get-parsed-response]}]
-                   (swap! state assoc (if success? :entity-types :server-error) (get-parsed-response false)))}))})
+      {:endpoint (endpoints/get-entity-types (:selected-workspace-id props))
+       :on-done (fn [{:keys [success? get-parsed-response]}]
+                  (swap! state assoc (if success? :entity-types :server-error) (get-parsed-response false)))}))})

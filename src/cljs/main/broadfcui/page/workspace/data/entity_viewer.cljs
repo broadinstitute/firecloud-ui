@@ -1,15 +1,13 @@
 (ns broadfcui.page.workspace.data.entity-viewer
   (:require
     [dmohs.react :as react]
-    [clojure.set :refer [union]]
-    clojure.string
     [broadfcui.common :as common]
-    [broadfcui.common.entity-table :as entity-table :refer [EntityTable]]
-    [broadfcui.common.gcs-file-preview :refer [GCSFilePreviewLink]]
+    [broadfcui.common.entity-table :as entity-table]
+    [broadfcui.common.gcs-file-preview :as gfp]
+    [broadfcui.common.icons :as icons]
     [broadfcui.common.style :as style]
     [broadfcui.common.table :as table]
     [broadfcui.page.workspace.data.utils :as data-utils]
-    [broadfcui.common.icons :as icons]
     [broadfcui.utils :as utils]
     ))
 
@@ -67,7 +65,7 @@
                          :color (:text-light style/colors)}}
              (icons/icon {} :angle-left)]))
         [:div {:style {:display "inline-block" :fontWeight "bold" :padding "1rem 0 0 1rem" :marginBottom "1em"}} entity-name]
-        [table/Table {:key entity-type                      ; key to enforce re-evaluating columns when changing entity types
+        [table/Table {:key entity-type ; key to enforce re-evaluating columns when changing entity types
                       :reorderable-columns? false
                       :width :narrow
                       :pagination :none
@@ -90,7 +88,7 @@
                                    :content-renderer
                                    (fn [attr-value]
                                      (if-let [parsed (common/parse-gcs-uri attr-value)]
-                                       [GCSFilePreviewLink (assoc parsed
+                                       [gfp/GCSFilePreviewLink (assoc parsed
                                                              :attributes {:style {:display "inline"}}
                                                              :link-label attr-value)]
                                        attr-value))}])
@@ -98,9 +96,9 @@
                       :->row
                       (fn [entity]
                         (cond
-                          (map? entity)                     ; entity is a member of a set
+                          (map? entity) ; entity is a member of a set
                           [(item-link (:entityType entity) (:entityName entity))]
-                          (map? (last entity))              ; entity is a set
+                          (map? (last entity)) ; entity is a set
                           (let [item-type (:entityType (last entity))]
                             [item-type
                              (item-link item-type (:entityName (last entity)))])

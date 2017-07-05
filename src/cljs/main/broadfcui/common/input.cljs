@@ -1,6 +1,5 @@
 (ns broadfcui.common.input
   (:require
-    [clojure.string :refer [trim]]
     [dmohs.react :as react]
     [broadfcui.common :as common]
     [broadfcui.common.style :as style]

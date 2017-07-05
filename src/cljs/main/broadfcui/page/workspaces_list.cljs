@@ -1,17 +1,17 @@
 (ns broadfcui.page.workspaces-list
   (:require
-    [clojure.string :refer [split-lines]]
     [dmohs.react :as react]
+    [clojure.string :as string]
     [broadfcui.common :as common]
     [broadfcui.common.components :as comps]
     [broadfcui.common.filter :as filter]
     [broadfcui.common.icons :as icons]
+    [broadfcui.common.modal :as modal]
     [broadfcui.common.style :as style]
     [broadfcui.common.table.style :as table-style]
     [broadfcui.common.table.table :refer [Table]]
     [broadfcui.config :as config]
     [broadfcui.endpoints :as endpoints]
-    [broadfcui.common.modal :as modal]
     [broadfcui.nav :as nav]
     [broadfcui.net :as net]
     [broadfcui.page.workspace.create :as create]
@@ -235,7 +235,7 @@
               :render (fn [description]
                         [:div {:style {:paddingLeft 14}}
                          (if description
-                           (-> description split-lines first)
+                           (-> description string/split-lines first)
                            [:span {:style {:fontStyle "italic"}}
                             "No description provided"])])}
              {:id "Last Modified" :header [:span {:style {:marginLeft 14}} "Last Modified"]
@@ -419,8 +419,8 @@
 (defn add-nav-paths []
   (nav/defredirect {:regex #"workspaces" :make-path (fn [] "")})
   (nav/defpath
-    :workspaces
-    {:component Page
-     :regex #""
-     :make-props (fn [] {})
-     :make-path (fn [] "")}))
+   :workspaces
+   {:component Page
+    :regex #""
+    :make-props (fn [] {})
+    :make-path (fn [] "")}))
