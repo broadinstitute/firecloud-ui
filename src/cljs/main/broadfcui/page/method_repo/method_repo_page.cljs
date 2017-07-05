@@ -3,7 +3,7 @@
     [dmohs.react :as react]
     [broadfcui.common.components :as comps]
     [broadfcui.common.modal :as modal]
-    [broadfcui.page.method-repo.method-config-importer :as mci]
+    [broadfcui.page.method-repo.method-config-importer :refer [MethodConfigImporter]]
     [broadfcui.nav :as nav]
     [broadfcui.utils :as utils]
     ))
@@ -13,7 +13,7 @@
   {:render
    (fn [{:keys [props]}]
      [:div {:style {:padding "1.5rem 1rem 0"}}
-      [mci/MethodConfigImporter
+      [MethodConfigImporter
        (merge
         (select-keys props [:id :type])
         {:allow-edit true
