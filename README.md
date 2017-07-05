@@ -68,3 +68,5 @@ To compile and build the `broadinstitute/firecloud-ui` docker image, run
 ```
 ./script/build.sh compile -d build
 ```
+
+
