@@ -68,11 +68,10 @@
        [:div {:style {:padding "1rem 1.5rem" :display "flex"}}
         (when (:loading-attributes @state)
           [comps/Blocker {:banner "Loading..."}])
-        (cond
-          workspace-error (style/create-server-error-message workspace-error)
-          workspace (this :-render-data)
-          :else
-          [:div {:style {:textAlign "center"}} [comps/Spinner {:text "Checking workspace..."}]])
+        (cond workspace-error (style/create-server-error-message workspace-error)
+              workspace (this :-render-data)
+              :else [:div {:style {:textAlign "center"}}
+                     [comps/Spinner {:text "Checking workspace..."}]])
         (when (:selected-entity @state)
           (let [{:keys [selected-entity-type selected-entity selected-attr-list]} @state]
             [EntityViewer {:workspace-id workspace-id
