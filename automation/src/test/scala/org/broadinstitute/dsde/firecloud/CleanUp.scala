@@ -28,7 +28,7 @@ trait CleanUp extends SuiteMixin with LazyLogging { this: Suite =>
         try {
           f()
         } catch {
-          case e: Throwable => logger.warn("Failure in clean-up function", e)
+          case e: Throwable => logger.warn(s"Failure in clean-up function: ${e.getMessage}")
         }
       }
       // TODO: is this okay if tests are run in parallel?
