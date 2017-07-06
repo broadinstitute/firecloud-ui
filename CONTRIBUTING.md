@@ -185,6 +185,9 @@ Changing state causes a re-render. If you update state in a lifecycle method, th
 
 So: some lifecycle methods are automatically called every render. Avoid changing state inside of them.
 
+## JavaScript and (S)CSS
+We adhere to Google's official style guide on [JS](https://google.github.io/styleguide/jsguide.html) & [CSS](https://google.github.io/styleguide/htmlcssguide.html), which dictate two-space indentation. We indent 4 spaces for html, because 2 spaces looks weird.
+
 ## Gotchas
 
 A list of any "gotchas" that have been found in development. These may be browser bugs (or "features"), or react issues.

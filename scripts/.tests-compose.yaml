@@ -4,8 +4,6 @@ services:
     image: broadinstitute/clojure-node
     volumes:
       - work:/w
-######## Not needed for unit tests
-#      - node-modules:/w/node_modules
       - jar-cache:/root/.m2
     working_dir: /w
     command: bash
@@ -37,6 +35,3 @@ volumes:
   work:
   jar-cache:
     external: true
-######## Not needed for unit tests
-#  node-modules:
-#    external: true

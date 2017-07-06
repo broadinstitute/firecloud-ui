@@ -16,20 +16,10 @@ docker-compose -p fcuitests -f scripts/.tests-compose.yaml pull
 
 docker volume create --name=jar-cache
 
-############ Not needed for unit tests
-# docker volume create --name=node-modules
-
 docker-compose -p fcuitests -f scripts/.tests-compose.yaml up -d
 
 docker cp project.clj fcuitests_clojure-node_1:/w
 docker cp src fcuitests_clojure-node_1:/w
-
-############ Not needed for unit tests
-# docker cp webpack.config.js fcuitests_clojure-node_1:/w
-# docker cp package.json fcuitests_clojure-node_1:/w
-#
-# compose_exec clojure-node npm install
-# compose_exec clojure-node npm run webpack -- -p
 
 compose_exec clojure-node sh -c 'lein cljsbuild once 2>&1 | tee /tmp/cljsbuild.log'
 set +e
