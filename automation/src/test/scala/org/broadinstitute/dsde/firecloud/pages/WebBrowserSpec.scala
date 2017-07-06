@@ -62,6 +62,9 @@ trait WebBrowserSpec extends WebBrowserUtil with LazyLogging { self: Suite =>
       withScreenshot {
         testCode(driver)
       }
+    } catch {
+      case t: Throwable =>
+        logger.error(s"Failure in $suiteName", t)
     } finally {
       driver.quit()
     }
@@ -108,14 +111,19 @@ trait WebBrowserSpec extends WebBrowserUtil with LazyLogging { self: Suite =>
     try {
       f
     } catch {
-      case e: Throwable =>
+      case t: Throwable =>
         val date = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss-SSS").format(new java.util.Date())
-        val tmpFile = new Augmenter().augment(driver).asInstanceOf[TakesScreenshot].getScreenshotAs(OutputType.FILE)
         val fileName = s"failure_screenshots/${date}_$suiteName.png"
-        logger.error(s"Failure screenshot saved to $fileName")
-        new FileOutputStream(new File(fileName)).getChannel.transferFrom(
-          new FileInputStream(tmpFile).getChannel, 0, Long.MaxValue)
-        throw e
+        try {
+          val tmpFile = new Augmenter().augment(driver).asInstanceOf[TakesScreenshot].getScreenshotAs(OutputType.FILE)
+          logger.error(s"Failure screenshot saved to $fileName")
+          new FileOutputStream(new File(fileName)).getChannel.transferFrom(
+            new FileInputStream(tmpFile).getChannel, 0, Long.MaxValue)
+        } catch {
+          case t: Throwable =>
+            logger.error(s"FAILED TO SAVE SCREENSHOT $fileName: ${t.getMessage}")
+        }
+        throw t
     }
   }
 }

@@ -107,7 +107,6 @@ class CreateBillingProjectModal(implicit webDriver: WebDriver) extends FireCloud
     ui.fillProjectName(projectName)
     ui.selectBillingAccount(billingAccountName)
     ui.clickCreateButton()
-    await toggle spinner
   }
 
 
