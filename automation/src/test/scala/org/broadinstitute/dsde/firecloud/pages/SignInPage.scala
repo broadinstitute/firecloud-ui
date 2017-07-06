@@ -73,7 +73,17 @@ class GoogleSignInPopup(implicit webDriver: WebDriver) extends WebBrowser with W
     * TODO: make this work when there is more than one window
     */
   def returnFromSignIn(): Unit = {
-    await condition (windowHandles.size == 1 || enabled(id("submit_approve_access")))
+    /*
+     * The sign-in popup may go away at any time which could cause any calls
+     * such as findElement to fail with NullPointerException. Therefore, the
+     * only safe check we can make is on the number of windows.
+     */
+    await condition (windowHandles.size == 1, 30)
+
+    /*
+     * If there is still more than 1 window after 30 seconds, we most likely
+     * need to approve access to continue.
+     */
     if (windowHandles.size > 1) {
       click on id("submit_approve_access")
       await condition(windowHandles.size == 1)
