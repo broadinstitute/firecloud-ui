@@ -65,22 +65,13 @@
                         (concat ["this." "workspace."]))})
    :render
    (fn [{:keys [state this]}]
-     (cond (and (every? @state [:loaded-config :methods])
-                (contains? @state :locked?))
-           (this :-render-display)
-
+     (cond (every? @state [:loaded-config :methods]) (this :-render-display)
            (:error @state) (style/create-server-error-message (:error @state))
            :else [:div {:style {:textAlign "center"}}
                   [comps/Spinner {:text "Loading Method Configuration..."}]]))
    :component-did-mount
    (fn [{:keys [state props refs this]}]
      (this :-load-validated-method-config)
-     (endpoints/call-ajax-orch
-      {:endpoint (endpoints/get-workspace (:workspace-id props))
-       :on-done (fn [{:keys [success? get-parsed-response status-text]}]
-                  (if success?
-                    (swap! state assoc :locked? (get-in (get-parsed-response) [:workspace :isLocked]))
-                    (swap! state assoc :error status-text)))})
      (endpoints/call-ajax-orch
       {:endpoint endpoints/list-methods
        :on-done (fn [{:keys [success? get-parsed-response status-text]}]
@@ -116,17 +107,19 @@
    :-render-display
    (fn [{:keys [props state this]}]
      (let [{:keys [loaded-config editing?]} @state
-           config (:methodConfiguration loaded-config)]
+           config (:methodConfiguration loaded-config)
+           locked? (get-in props [:workspace :workspace :isLocked])]
        [:div {}
         [comps/Blocker {:banner (:blocker @state)}]
         [:div {:style {:padding "1em 2em"}}
-         (this :-render-sidebar)
+         (this :-render-sidebar locked?)
          (when-not editing?
            [:div {:style {:float "right"}}
             (launch/render-button {:workspace-id (:workspace-id props)
                                    :config-id (ws-common/config->id config)
                                    :root-entity-type (:rootEntityType config)
-                                   :disabled? (cond (:locked? @state) "This workspace is locked."
+                                   :disabled? (cond locked?
+                                                    "This workspace is locked."
                                                     (not (:bucket-access? props))
                                                     (str "You do not currently have access"
                                                          " to the Google Bucket associated with this workspace."))
@@ -134,51 +127,47 @@
          (this :-render-main)
          (common/clear-both)]]))
    :-render-sidebar
-   (fn [{:keys [props state this]}]
+   (fn [{:keys [props state this]} locked?]
      (let [{:keys [editing? loaded-config inputs-outputs]} @state
-           config (:methodConfiguration loaded-config)]
+           config (:methodConfiguration loaded-config)
+           can-edit? (common/access-greater-than? (:access-level props) "READER")
+           snapshot-id (get-in config [:methodRepoMethod :methodVersion])
+           config-id (ws-common/config->id config)]
        [:div {:style {:width 290 :float "left"}}
         [:div {:ref "sidebar"}]
-        (style/create-unselectable
-         :div
-         {:style {:position (when-not (:sidebar-visible? @state) "fixed")
-                  :top (when-not (:sidebar-visible? @state) 4)
-                  :width 290}}
-         (let [{:keys [locked?]} @state
-               can-edit? (common/access-greater-than? (:access-level props) "READER")
-               snapshot-id (get-in config [:methodRepoMethod :methodVersion])
-               config-id (ws-common/config->id config)]
-           [:div {}
-            (when (and can-edit? (not editing?))
-              (list
-               [comps/SidebarButton {:style :light :color :button-primary
-                                     :text "Edit Configuration" :icon :edit
-                                     :disabled? (when locked? "The workspace is locked")
-                                     :onClick #(swap! state assoc :editing? true :original-config loaded-config
-                                                      :original-inputs-outputs inputs-outputs)}]
-               [comps/SidebarButton {:style :light :color :exception-state :margin :top
-                                     :text "Delete" :icon :delete
-                                     :disabled? (when locked? "The workspace is locked")
-                                     :onClick #(modal/push-modal
-                                                [delete/DeleteDialog {:config-id config-id
-                                                                      :workspace-id (:workspace-id props)
-                                                                      :after-delete (:after-delete props)}])}]))
-
-            (when-not editing?
-              [comps/SidebarButton {:style :light :color :button-primary :margin (when can-edit? :top)
-                                    :text "Publish..." :icon :share
-                                    :onClick #(modal/push-modal
-                                               [publish/PublishDialog {:config-id config-id
-                                                                       :workspace-id (:workspace-id props)}])}])
-
-            (when editing?
-              (list
-               [comps/SidebarButton {:color :success-state
-                                     :text "Save" :icon :done
-                                     :onClick #(this :-commit)}]
-               [comps/SidebarButton {:color :exception-state :margin :top
-                                     :text "Cancel Editing" :icon :cancel
-                                     :onClick #(this :-cancel-editing)}]))]))]))
+        (apply style/create-unselectable :div
+               {:style {:position (when-not (:sidebar-visible? @state) "fixed")
+                        :top (when-not (:sidebar-visible? @state) 4)
+                        :width 290}}
+               (if editing?
+                 (list
+                  [comps/SidebarButton {:color :success-state
+                                        :text "Save" :icon :done
+                                        :onClick #(this :-commit)}]
+                  [comps/SidebarButton {:color :exception-state :margin :top
+                                        :text "Cancel Editing" :icon :cancel
+                                        :onClick #(this :-cancel-editing)}])
+                 (conj
+                  (when can-edit?
+                    [[comps/SidebarButton {:style :light :color :button-primary
+                                           :text "Edit Configuration" :icon :edit
+                                           :disabled? (when locked? "The workspace is locked")
+                                           :onClick #(swap! state assoc
+                                                            :editing? true
+                                                            :original-config loaded-config
+                                                            :original-inputs-outputs inputs-outputs)}]
+                     [comps/SidebarButton {:style :light :color :exception-state :margin :top
+                                           :text "Delete" :icon :delete
+                                           :disabled? (when locked? "The workspace is locked")
+                                           :onClick #(modal/push-modal
+                                                      [delete/DeleteDialog {:config-id config-id
+                                                                            :workspace-id (:workspace-id props)
+                                                                            :after-delete (:after-delete props)}])}]])
+                  [comps/SidebarButton {:style :light :color :button-primary :margin (when can-edit? :top)
+                                        :text "Publish..." :icon :share
+                                        :onClick #(modal/push-modal
+                                                   [publish/PublishDialog {:config-id config-id
+                                                                           :workspace-id (:workspace-id props)}])}])))]))
    :-render-main
    (fn [{:keys [state this]}]
      (let [{:keys [editing? loaded-config wdl-parse-error inputs-outputs methods]} @state
