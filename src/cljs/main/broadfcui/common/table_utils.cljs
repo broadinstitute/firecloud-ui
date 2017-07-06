@@ -1,15 +1,15 @@
 (ns broadfcui.common.table-utils
   (:require
-   [dmohs.react :as react]
-   [inflections.core :refer [pluralize]]
-   [broadfcui.common :as common]
-   [broadfcui.common.gcs-file-preview :refer [GCSFilePreviewLink]]
-   [broadfcui.common.components :as comps]
-   [broadfcui.common.flex-utils :as flex]
-   [broadfcui.common.style :as style]
-   [broadfcui.common.icons :as icons]
-   [broadfcui.utils :as utils]
-   ))
+    [dmohs.react :as react]
+    [inflections.core :as inflections]
+    [broadfcui.common :as common]
+    [broadfcui.common.components :as comps]
+    [broadfcui.common.flex-utils :as flex]
+    [broadfcui.common.gcs-file-preview :refer [GCSFilePreviewLink]]
+    [broadfcui.common.icons :as icons]
+    [broadfcui.common.style :as style]
+    [broadfcui.utils :as utils]
+    ))
 
 
 (def ^:private rows-per-page-options [10 20 100 500])
@@ -42,7 +42,7 @@
               view-component
               [:div {:style {:display "inline-flex"}}
                [:b {:style {:marginRight "1ex"}} (str left-num " - " right-num)]
-               (str "of " (pluralize num-visible-rows " result")
+               (str "of " (inflections/pluralize num-visible-rows " result")
                     (when-not (= num-visible-rows num-total-rows)
                       (str " (filtered from " num-total-rows " total)")))]
               page-component
@@ -131,11 +131,12 @@
   (fn [maybe-uri]
     (if (string? maybe-uri)
       (if-let [parsed (common/parse-gcs-uri maybe-uri)]
-        [GCSFilePreviewLink (assoc parsed
-                              :workspace-bucket workspace-bucket
-                              :attributes {:style {:direction "rtl" :marginRight "0.5em"
-                                                   :overflow "hidden" :textOverflow "ellipsis"
-                                                   :textAlign "left"}})]
+        [GCSFilePreviewLink
+         (assoc parsed
+           :workspace-bucket workspace-bucket
+           :attributes {:style {:direction "rtl" :marginRight "0.5em"
+                                :overflow "hidden" :textOverflow "ellipsis"
+                                :textAlign "left"}})]
         maybe-uri)
       (default-render maybe-uri))))
 
@@ -147,29 +148,29 @@
        nil
        [:div {:style (merge {:fontSize "80%" :fontWeight 500} (:body-style props))}
         (map-indexed
-          (fn [row-index row]
-            (let [get-row-style #(if (fn? %) (% row-index row) %)
-                  row-style (-> props :row-style get-row-style (merge {:display "flex" :alignItems "center"}))
-                  div-props (merge {:style row-style}
-                                   (when-let [on-row-click (:on-row-click props)]
-                                     {:onMouseDown (fn [] (on-row-click row-index row))}))]
-              [:div div-props
-               (map
-                 (fn [col]
-                   (let [render-content (or (:content-renderer col)
+         (fn [row-index row]
+           (let [get-row-style #(if (fn? %) (% row-index row) %)
+                 row-style (-> props :row-style get-row-style (merge {:display "flex" :alignItems "center"}))
+                 div-props (merge {:style row-style}
+                                  (when-let [on-row-click (:on-row-click props)]
+                                    {:onMouseDown (fn [] (on-row-click row-index row))}))]
+             [:div div-props
+              (map
+               (fn [col]
+                 (let [render-content (or (:content-renderer col)
                                           (:as-text col)
                                           default-render)
-                         render-title (or (:as-text col)
-                                          default-render)]
-                     (render-cell
-                       {:width (:width col)
-                        :content (render-content (get row (:declared-index col)))
-                        :title (render-title (get row (:declared-index col)))
-                        :cell-padding-left (or (:cell-padding-left props) 0)
-                        :content-container-style (merge
-                                                   {:padding (str "0.6em 0 0.6em " (or (:cell-padding-left props) 0))}
-                                                   (:cell-content-style props))})))
-                 (:columns props))]))
+                       render-title (or (:as-text col)
+                                        default-render)]
+                   (render-cell
+                    {:width (:width col)
+                     :content (render-content (get row (:declared-index col)))
+                     :title (render-title (get row (:declared-index col)))
+                     :cell-padding-left (or (:cell-padding-left props) 0)
+                     :content-container-style (merge
+                                               {:padding (str "0.6em 0 0.6em " (or (:cell-padding-left props) 0))}
+                                               (:cell-content-style props))})))
+               (:columns props))]))
          (:rows props))]))})
 
 
@@ -180,40 +181,40 @@
                     :color "#fff" :backgroundColor (:background-dark style/colors)}
                    (:header-row-style props))}
      (map-indexed
-       (fn [index column]
-         (let [{:keys [header header-key width starting-width sort-by visible?]} column
-               sort-key (or header-key header)
-               onResizeMouseDown
-               (when (get column :resizable? (:resizable-columns? props))
-                 (fn [e]
-                   (swap! state assoc :dragging? true :mouse-x (.-clientX e) :drag-column index
-                          :saved-user-select-state (common/disable-text-selection))))]
-           (when visible?
-             (render-cell
-              {:width width
-               :content header
-               :cell-style (when onResizeMouseDown {:borderRight (str "1px solid " (or (:resize-tab-color props) "#777777"))
-                                                    :marginRight -1})
-               :cell-padding-left (or (:cell-padding-left props) 0)
-               :content-container-style (merge
-                                         {:padding (str "0.8em 0 0.8em "
-                                                        (or (:cell-padding-left props) 0))}
-                                         (:header-style props))
-               :onResizeMouseDown onResizeMouseDown
-               :onResizeDoubleClick #(swap! state assoc-in [:column-meta index :width] starting-width)
-               :onSortClick (when (and (or sort-by
-                                           (:sortable-columns? props))
-                                       (not= :none sort-by))
-                              (fn [_]
-                                (if (= sort-key sort-column)
-                                  (case sort-order
-                                    :asc (swap! state update :query-params assoc :sort-order :desc)
-                                    :desc (if (:always-sort? props)
-                                            (swap! state update :query-params assoc :sort-order :asc)
-                                            (swap! state update :query-params dissoc :sort-column :sort-order)))
-                                  (swap! state update :query-params assoc :sort-column sort-key :sort-order :asc))))
-               :sortOrder (when (= sort-key sort-column) sort-order)}))))
-       (react/call :get-ordered-columns this))
+      (fn [index column]
+        (let [{:keys [header header-key width starting-width sort-by visible?]} column
+              sort-key (or header-key header)
+              onResizeMouseDown
+              (when (get column :resizable? (:resizable-columns? props))
+                (fn [e]
+                  (swap! state assoc :dragging? true :mouse-x (.-clientX e) :drag-column index
+                         :saved-user-select-state (common/disable-text-selection))))]
+          (when visible?
+            (render-cell
+             {:width width
+              :content header
+              :cell-style (when onResizeMouseDown {:borderRight (str "1px solid " (or (:resize-tab-color props) "#777777"))
+                                                   :marginRight -1})
+              :cell-padding-left (or (:cell-padding-left props) 0)
+              :content-container-style (merge
+                                        {:padding (str "0.8em 0 0.8em "
+                                                       (or (:cell-padding-left props) 0))}
+                                        (:header-style props))
+              :onResizeMouseDown onResizeMouseDown
+              :onResizeDoubleClick #(swap! state assoc-in [:column-meta index :width] starting-width)
+              :onSortClick (when (and (or sort-by
+                                          (:sortable-columns? props))
+                                      (not= :none sort-by))
+                             (fn [_]
+                               (if (= sort-key sort-column)
+                                 (case sort-order
+                                   :asc (swap! state update :query-params assoc :sort-order :desc)
+                                   :desc (if (:always-sort? props)
+                                           (swap! state update :query-params assoc :sort-order :asc)
+                                           (swap! state update :query-params dissoc :sort-column :sort-order)))
+                                 (swap! state update :query-params assoc :sort-column sort-key :sort-order :asc))))
+              :sortOrder (when (= sort-key sort-column) sort-order)}))))
+      (react/call :get-ordered-columns this))
      (common/clear-both)]))
 
 

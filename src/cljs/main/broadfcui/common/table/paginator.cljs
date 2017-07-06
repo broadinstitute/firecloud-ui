@@ -1,6 +1,6 @@
 (ns broadfcui.common.table.paginator
   (:require
-    [inflections.core :refer [pluralize]]
+    [inflections.core :as inflections]
     [broadfcui.common.icons :as icons]
     [broadfcui.common.style :as style]
     [broadfcui.utils :as utils]
@@ -26,7 +26,7 @@
         left-num (if (zero? right-num) 0 (inc (* (dec page-number) rows-per-page)))]
     [:div {:style {:display "inline-flex"}}
      [:strong {:style {:marginRight "0.3rem"}} (str left-num " - " right-num)]
-     (str " of " (pluralize filtered-count " result")
+     (str " of " (inflections/pluralize filtered-count " result")
           (when-not (= filtered-count total-count)
             (str " (filtered from " total-count " total)")))]))
 

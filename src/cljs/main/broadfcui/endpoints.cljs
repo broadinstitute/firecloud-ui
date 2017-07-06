@@ -10,18 +10,18 @@
 
 (defn call-ajax-orch [{:keys [endpoint] :as arg-map}]
   (utils/ajax-orch
-    (:path endpoint)
-    (dissoc
-      (assoc arg-map
-        :method (:method endpoint)
-        :data (if-let [raw-data (:raw-data arg-map)]
-                raw-data
-                (if-let [payload (:payload arg-map)]
-                  (utils/->json-string payload)))
-        :canned-response {:status 200 :delay-ms (rand-int 2000)
-                          :responseText (if-let [mock-data (:mock-data endpoint)]
-                                          (utils/->json-string mock-data))})
-      :endpoint :raw-data :payload)))
+   (:path endpoint)
+   (dissoc
+    (assoc arg-map
+      :method (:method endpoint)
+      :data (if-let [raw-data (:raw-data arg-map)]
+              raw-data
+              (if-let [payload (:payload arg-map)]
+                (utils/->json-string payload)))
+      :canned-response {:status 200 :delay-ms (rand-int 2000)
+                        :responseText (if-let [mock-data (:mock-data endpoint)]
+                                        (utils/->json-string mock-data))})
+    :endpoint :raw-data :payload)))
 
 
 (defn- id-path [id]
@@ -32,27 +32,27 @@
    :method :get
    :mock-data
    (map
-     (fn [i]
-       (let [ns (rand-nth ["broad" "public" "nci"])]
-         {:accessLevel (rand-nth ["OWNER" "WRITER" "READER"])
-          :workspace {:workspaceId "ce601ccd-f6d5-40ac-ad2b-89beca5c4053"
-                      :name (str "Workspace " (inc i))
-                      :isLocked (> (rand) 0.8)
-                      :attributes {"Attribute1" "[some value]"
-                                   "Attribute2" "[some value]"
-                                   "Attribute3" "[some value]"
-                                   "description" (str "This is a test workspace " i)}
-                      :createdBy "somebody@broadinstitute.org"
-                      :bucketName "unavailable"
-                      :namespace ns
-                      :createdDate (rand-recent-time)}
-          :workspaceSubmissionStats {:runningSubmissionsCount (rand-int 2)
-                                     :lastSuccessDate (rand-nth [nil (rand-recent-time)])
-                                     :lastFailureDate (rand-nth [nil (rand-recent-time)])}
-          :owners (utils/rand-subset ["test@broadinstitute.org"
-                                      "test2@broadinstitute.org"
-                                      "you@broadinstitute.org"])}))
-     (range (rand-int 100)))})
+    (fn [i]
+      (let [ns (rand-nth ["broad" "public" "nci"])]
+        {:accessLevel (rand-nth ["OWNER" "WRITER" "READER"])
+         :workspace {:workspaceId "ce601ccd-f6d5-40ac-ad2b-89beca5c4053"
+                     :name (str "Workspace " (inc i))
+                     :isLocked (> (rand) 0.8)
+                     :attributes {"Attribute1" "[some value]"
+                                  "Attribute2" "[some value]"
+                                  "Attribute3" "[some value]"
+                                  "description" (str "This is a test workspace " i)}
+                     :createdBy "somebody@broadinstitute.org"
+                     :bucketName "unavailable"
+                     :namespace ns
+                     :createdDate (rand-recent-time)}
+         :workspaceSubmissionStats {:runningSubmissionsCount (rand-int 2)
+                                    :lastSuccessDate (rand-nth [nil (rand-recent-time)])
+                                    :lastFailureDate (rand-nth [nil (rand-recent-time)])}
+         :owners (utils/rand-subset ["test@broadinstitute.org"
+                                     "test2@broadinstitute.org"
+                                     "you@broadinstitute.org"])}))
+    (range (rand-int 100)))})
 
 (defn create-workspace [namespace name]
   {:path "/workspaces"
@@ -96,12 +96,12 @@
    :method :get
    :mock-data
    (into {} (map (fn [i] [(str "user" i "@broadinstitute.org")
-                                (rand-nth ["OWNER" "WRITER" "READER"])])
-                    (range (inc (rand-int 5)))))})
+                          (rand-nth ["OWNER" "WRITER" "READER"])])
+                 (range (inc (rand-int 5)))))})
 
 (defn check-bucket-read-access [workspace-id]
-      {:path (str "/workspaces/" (id-path workspace-id) "/checkBucketReadAccess")
-       :method :get})
+  {:path (str "/workspaces/" (id-path workspace-id) "/checkBucketReadAccess")
+   :method :get})
 
 (defn update-workspace-acl [workspace-id invite-new?]
   {:path (str "/workspaces/" (id-path workspace-id) "/acl?inviteUsersNotFound=" (true? invite-new?))
@@ -121,22 +121,22 @@
    :method :get
    :mock-data
    (map
-     (fn [i]
-       {:name (str "Configuration " (inc i))
-        :namespace (rand-nth ["Broad" "nci" "public"])
-        :rootEntityType (rand-nth ["sample" "participant"])
-        :methodRepoMethod {:methodNamespace (rand-nth ["Broad" "nci" "public"])
-                           :methodName (rand-nth ["foo" "bar" "baz"])
-                           :methodVersion (rand-int 50)}
-        ;; Real data doesn't have the following fields, but for mock data we carry the same
-        ;; objects around, so initialize them here for convenience
-        :inputs {"Input 1" "[some value]"
-                 "Input 2" "[some value]"}
-        :outputs {"Output 1" "[some value]"
-                  "Output 2" "[some value]"}
-        :prerequisites {"unused 1" "Predicate 1"
-                        "unused 2" "Predicate 2"}})
-     (range (rand-int 50)))})
+    (fn [i]
+      {:name (str "Configuration " (inc i))
+       :namespace (rand-nth ["Broad" "nci" "public"])
+       :rootEntityType (rand-nth ["sample" "participant"])
+       :methodRepoMethod {:methodNamespace (rand-nth ["Broad" "nci" "public"])
+                          :methodName (rand-nth ["foo" "bar" "baz"])
+                          :methodVersion (rand-int 50)}
+       ;; Real data doesn't have the following fields, but for mock data we carry the same
+       ;; objects around, so initialize them here for convenience
+       :inputs {"Input 1" "[some value]"
+                "Input 2" "[some value]"}
+       :outputs {"Output 1" "[some value]"
+                 "Output 2" "[some value]"}
+       :prerequisites {"unused 1" "Predicate 1"
+                       "unused 2" "Predicate 2"}})
+    (range (rand-int 50)))})
 
 (defn post-workspace-method-config [workspace-id]
   {:path (str "/workspaces/" (id-path workspace-id) "/methodconfigs")
@@ -226,31 +226,31 @@
           {:entityType type
            :name (str "entity" (inc i))
            :attributes {}})
-     (range (rand-int 20)))})
+        (range (rand-int 20)))})
 
 (defn get-entity [workspace-id type entity-name]
   {:path (str "/workspaces/" (id-path workspace-id) "/entities/" type "/" entity-name)
    :method :get
    :mock-data
-     {:entityType "sample"
-        :name "HCC_4532"
-        :attributes {:participant {:entityType "participant" :entityName (str "subject_" (rand-int 1000))}}
-        :sample_type "tumor"
-        :ref_fasta "gs://cancer-exome-pipeline-demo-data/Homo_sapiens_assembly19.fasta"
-        :ref_dict "gs://cancer-exome-pipeline-demo-data/Homo_sapiens_assembly19.dict"
-        :ref_intervals "gs://cancer-exome-pipeline-demo-data/panel_100_genes.interval_list"
-        :ref_ann "gs://cancer-exome-pipeline-demo-data/Homo_sapiens_assembly19.fasta.64.ann"
-        :dna "gs://fc-d1f53ee4-4abe-4de0-91b2-597a609deddc/inDNA"
-        :ref_sa "gs://cancer-exome-pipeline-demo-data/Homo_sapiens_assembly19.fasta.64.sa"
-        :fastq2 "gs://cancer-exome-pipeline-demo-data/HCC1143.100_gene_250bp_pad_2.fastq"
-        :library "test_library"
-        :strip_unpaired "TRUE"
-        :sample "HCC_4532"
-        :ref_bwt "gs://cancer-exome-pipeline-demo-data/Homo_sapiens_assembly19.fasta.64.bwt"
-        :platform "illumina"
-        :bai "gs://cancer-exome-pipeline-demo-data/HCC1143.100_gene_250bp_pad.bai"
-        :bam "gs://cancer-exome-pipeline-demo-data/HCC1143.100_gene_250bp_pad.bam"
-        :ref_pac "gs://cancer-exome-pipeline-demo-data/Homo_sapiens_assembly19.fasta.64.pac"}})
+   {:entityType "sample"
+    :name "HCC_4532"
+    :attributes {:participant {:entityType "participant" :entityName (str "subject_" (rand-int 1000))}}
+    :sample_type "tumor"
+    :ref_fasta "gs://cancer-exome-pipeline-demo-data/Homo_sapiens_assembly19.fasta"
+    :ref_dict "gs://cancer-exome-pipeline-demo-data/Homo_sapiens_assembly19.dict"
+    :ref_intervals "gs://cancer-exome-pipeline-demo-data/panel_100_genes.interval_list"
+    :ref_ann "gs://cancer-exome-pipeline-demo-data/Homo_sapiens_assembly19.fasta.64.ann"
+    :dna "gs://fc-d1f53ee4-4abe-4de0-91b2-597a609deddc/inDNA"
+    :ref_sa "gs://cancer-exome-pipeline-demo-data/Homo_sapiens_assembly19.fasta.64.sa"
+    :fastq2 "gs://cancer-exome-pipeline-demo-data/HCC1143.100_gene_250bp_pad_2.fastq"
+    :library "test_library"
+    :strip_unpaired "TRUE"
+    :sample "HCC_4532"
+    :ref_bwt "gs://cancer-exome-pipeline-demo-data/Homo_sapiens_assembly19.fasta.64.bwt"
+    :platform "illumina"
+    :bai "gs://cancer-exome-pipeline-demo-data/HCC1143.100_gene_250bp_pad.bai"
+    :bam "gs://cancer-exome-pipeline-demo-data/HCC1143.100_gene_250bp_pad.bam"
+    :ref_pac "gs://cancer-exome-pipeline-demo-data/Homo_sapiens_assembly19.fasta.64.pac"}})
 
 (defn get-entities-paginated [workspace-id type query-parameters]
   (assert (= #{"page" "pageSize" "sortField" "sortDirection" "filterTerms"}
@@ -279,11 +279,11 @@
    :method :get
    :mock-data
    (map
-     (fn [i]
-       {:entityType (rand-nth ["sample" "participant"])
-        :name (str "entity" (inc i))
-        :attributes {}})
-     (range (rand-int 20)))})
+    (fn [i]
+      {:entityType (rand-nth ["sample" "participant"])
+       :name (str "entity" (inc i))
+       :attributes {}})
+    (range (rand-int 20)))})
 
 (defn delete-entities [workspace-id]
   {:path (str "/workspaces/" (id-path workspace-id) "/entities/delete")
@@ -295,25 +295,25 @@
    :method :get
    :mock-data
    (map
-     (fn [i]
-       {:workspaceName workspace-id
-        :methodConfigurationNamespace (rand-nth ["Broad" "nci" "public"])
-        :methodConfigurationName (str "test_config" (inc i))
-        :submissionDate (rand-recent-time)
-        :submissionId "46bfd579-b1d7-4f92-aab0-e44dd092b52a"
-        :notstarted []
-        :workflows [{:messages []
-                     :workspaceName workspace-id
-                     :statusLastChangedDate (rand-recent-time)
-                     :workflowEntity {:entityType "sample"
-                                      :entityName "sample_01"}
-                     :status "Succeeded"
-                     :workflowId "97adf170-ee40-40a5-9539-76b72802e124"}]
-        :status (rand-nth ["Accepted" "Evaluating" "Submitting" "Submitted" "Done"])
-        :submissionEntity {:entityType "sample"
-                           :entityName (str "sample_" (inc i))}
-        :submitter "abaumann@broadinstitute.org"})
-     (range (rand-int 50)))})
+    (fn [i]
+      {:workspaceName workspace-id
+       :methodConfigurationNamespace (rand-nth ["Broad" "nci" "public"])
+       :methodConfigurationName (str "test_config" (inc i))
+       :submissionDate (rand-recent-time)
+       :submissionId "46bfd579-b1d7-4f92-aab0-e44dd092b52a"
+       :notstarted []
+       :workflows [{:messages []
+                    :workspaceName workspace-id
+                    :statusLastChangedDate (rand-recent-time)
+                    :workflowEntity {:entityType "sample"
+                                     :entityName "sample_01"}
+                    :status "Succeeded"
+                    :workflowId "97adf170-ee40-40a5-9539-76b72802e124"}]
+       :status (rand-nth ["Accepted" "Evaluating" "Submitting" "Submitted" "Done"])
+       :submissionEntity {:entityType "sample"
+                          :entityName (str "sample_" (inc i))}
+       :submitter "abaumann@broadinstitute.org"})
+    (range (rand-int 50)))})
 
 (defn count-submissions [workspace-id]
   {:path (str "/workspaces/" (id-path workspace-id) "/submissionsCount")
@@ -367,7 +367,7 @@
                                         :entityName (str "sample_" i)}
                        :status (rand-nth ["Succeeded" "Submitted" "Running" "Launching" "Queued" "Aborting" "Failed" "Aborted" "Unknown"])
                        :workflowId "97adf170-ee40-40a5-9539-76b72802e124"})
-                 (range (rand-int 10)))
+                    (range (rand-int 10)))
     :notstarted (map (fn [i]
                        {:entityType (rand-nth ["Sample" "Participant"])
                         :entityName (str "entity " i)
@@ -379,7 +379,7 @@
                                             "inputName" (rand-nth ["input1" "input2"])}]
                         :errors (utils/rand-subset ["Prerequisites not met" "Server error"
                                                     "I didn't feel like it" "Syntax error"])})
-                  (range (rand-int 5)))
+                     (range (rand-int 5)))
     :status (rand-nth ["Accepted" "Evaluating" "Submitting" "Submitted" "Done"])}})
 
 (defn get-workflow-details [workspace-id submission-id workflow-id]
@@ -435,17 +435,17 @@
    :method :get
    :mock-data
    (map
-     (fn [i]
-       {:namespace (rand-nth ["broad" "public" "nci"])
-        :name (str "Method " (inc i))
-        :snapshotId (rand-int 100)
-        :synopsis (str (rand-nth ["variant caller synopsis", "gene analyzer synopsis", "mutect synopsis"]) " " (inc i))
-        :documentation (str "Documentation for method " (inc i))
-        :createDate (rand-recent-time)
-        :url "http://agora.broadinstitute.org/methods/someurl"
-        :payload "task wc {File in_file command { cat ${in_file} | wc -l } output { Int count = read_int(stdout()) }}\n"
-        :entityType (rand-nth ["Task" "Workflow"])})
-     (range (rand-int 100)))})
+    (fn [i]
+      {:namespace (rand-nth ["broad" "public" "nci"])
+       :name (str "Method " (inc i))
+       :snapshotId (rand-int 100)
+       :synopsis (str (rand-nth ["variant caller synopsis", "gene analyzer synopsis", "mutect synopsis"]) " " (inc i))
+       :documentation (str "Documentation for method " (inc i))
+       :createDate (rand-recent-time)
+       :url "http://agora.broadinstitute.org/methods/someurl"
+       :payload "task wc {File in_file command { cat ${in_file} | wc -l } output { Int count = read_int(stdout()) }}\n"
+       :entityType (rand-nth ["Task" "Workflow"])})
+    (range (rand-int 100)))})
 
 (def post-method
   {:path "/methods"
@@ -476,25 +476,25 @@
    :method :get
    :mock-data
    (map
-     (fn [i]
-       {:method {:namespace (rand-nth ["broad" "public" "nci"])
-                 :name (str "Method " (rand-int 100))
-                 :snapshotId (rand-int 100)
-                 :synopsis (str (rand-nth ["variant caller synopsis", "gene analyzer synopsis", "mutect synopsis"]) " " (inc i))
-                 :documentation (str "Documentation for method " (inc i))
-                 :createDate (rand-recent-time)
-                 :url "http://agora.broadinstitute.org/methods/someurl"
-                 :payload "task wc {File in_file command { cat ${in_file} | wc -l } output { Int count = read_int(stdout()) }}\n"
-                 :entityType (rand-nth ["Task" "Workflow"])}
-        :namespace (rand-nth ["Broad" "nci" "public" "ISB"])
-        :name (str "Configuration " (inc i))
-        :snapshotId (rand-int 100)
-        :synopsis (str (rand-nth ["variant caller synopsis", "gene analyzer synopsis", "mutect synopsis"]) " " (inc i))
-        :documentation (str "Documentation for config " (inc i))
-        :createDate (rand-recent-time)
-        :payload "task wc {File in_file command { cat ${in_file} | wc -l } output { Int count = read_int(stdout()) }}\n"
-        :entityType "Task"})
-     (range (rand-int 50)))})
+    (fn [i]
+      {:method {:namespace (rand-nth ["broad" "public" "nci"])
+                :name (str "Method " (rand-int 100))
+                :snapshotId (rand-int 100)
+                :synopsis (str (rand-nth ["variant caller synopsis", "gene analyzer synopsis", "mutect synopsis"]) " " (inc i))
+                :documentation (str "Documentation for method " (inc i))
+                :createDate (rand-recent-time)
+                :url "http://agora.broadinstitute.org/methods/someurl"
+                :payload "task wc {File in_file command { cat ${in_file} | wc -l } output { Int count = read_int(stdout()) }}\n"
+                :entityType (rand-nth ["Task" "Workflow"])}
+       :namespace (rand-nth ["Broad" "nci" "public" "ISB"])
+       :name (str "Configuration " (inc i))
+       :snapshotId (rand-int 100)
+       :synopsis (str (rand-nth ["variant caller synopsis", "gene analyzer synopsis", "mutect synopsis"]) " " (inc i))
+       :documentation (str "Documentation for config " (inc i))
+       :createDate (rand-recent-time)
+       :payload "task wc {File in_file command { cat ${in_file} | wc -l } output { Int count = read_int(stdout()) }}\n"
+       :entityType "Task"})
+    (range (rand-int 50)))})
 
 (defn get-configuration [namespace name snapshot-id]
   {:path (str "/configurations/" namespace "/" name "/" snapshot-id)
@@ -531,9 +531,9 @@
     :owner (rand-nth ["thibault@broadinstitute.org" "esalinas@broadinstitute.org"])}})
 
 (defn copy-method-config-to-repo [workspace-id]
-      {:path (str "/workspaces/" (id-path workspace-id)
-                  "/method_configs/copyToMethodRepo")
-       :method :post})
+  {:path (str "/workspaces/" (id-path workspace-id)
+              "/method_configs/copyToMethodRepo")
+   :method :post})
 
 (defn create-template [method]
   {:path "/template"
@@ -569,12 +569,12 @@
                :outputType "File"}]}})
 
 (defn get-agora-method-acl [ns n sid is-conf]
-  {:path (str "/" (if is-conf "configurations" "methods"  ) "/" ns "/" n "/" sid "/permissions"  )
+  {:path (str "/" (if is-conf "configurations" "methods") "/" ns "/" n "/" sid "/permissions")
    :method :get
    :mock-data
    (let [random-data (map (fn [i] {:user (str "user" i "@broadinstitute.org")
                                    :role (rand-nth ["READER" "OWNER" "NO ACCESS"])})
-                       (range (inc (rand-int 5))))
+                          (range (inc (rand-int 5))))
          add-public? (rand-nth [true false])
          public-value (rand-nth ["READER" "NO ACCESS"])
          public-map {:user "public" :role public-value}]
@@ -583,11 +583,11 @@
        random-data))})
 
 (defn get-agora-namespace-acl [namespace is-conf?]
-  {:path (str "/" (if is-conf? "configurations" "methods" ) "/" namespace "/permissions")
+  {:path (str "/" (if is-conf? "configurations" "methods") "/" namespace "/permissions")
    :method :get})
 
 (defn post-agora-namespace-acl [namespace is-conf?]
-  {:path (str "/" (if is-conf? "configurations" "methods" ) "/" namespace "/permissions")
+  {:path (str "/" (if is-conf? "configurations" "methods") "/" namespace "/permissions")
    :method :post})
 
 
@@ -633,7 +633,7 @@
       :size (rand-int 1000000000)
       :md5Hash "wVDkfF0kkuCJPazkScLgzQ=="
       :mediaLink (str "https://www.googleapis.com/download/storage/v1/b/" bucket
-                   "/o/" name "?generation=" generation "&alt=media")
+                      "/o/" name "?generation=" generation "&alt=media")
       :contentLanguage "en"
       :owner {:entity "user-00b4903a972fe36b39dff1717b25449fb5d31ca67369e9a60cb0dc4590461a0d"
               :entityId "00b4903a972fe36b39dff1717b25449fb5d31ca67369e9a60cb0dc4590461a0d"}
@@ -644,30 +644,30 @@
 (defn profile-get
   ([on-done]
    (utils/ajax-orch
-     "/profile"
-     {:on-done on-done
-      :canned-response
-      {:status 200 :delay-ms (rand-int 2000)
-       :responseText
-       (utils/->json-string
-         {:userId "55"
-          :keyValuePairs
-          (map (fn [[k v]] {:key k :value v})
-               {:isRegistrationComplete "1" :name "John Doe" :email "jdoe@example.com"
-                :googleProjectIds ["14" "7"] :institution "Broad Institute"
-                :pi "Jane Doe"})})}}
-     :service-prefix "/register")))
+    "/profile"
+    {:on-done on-done
+     :canned-response
+     {:status 200 :delay-ms (rand-int 2000)
+      :responseText
+      (utils/->json-string
+       {:userId "55"
+        :keyValuePairs
+        (map (fn [[k v]] {:key k :value v})
+             {:isRegistrationComplete "1" :name "John Doe" :email "jdoe@example.com"
+              :googleProjectIds ["14" "7"] :institution "Broad Institute"
+              :pi "Jane Doe"})})}}
+    :service-prefix "/register")))
 
 
 (defn profile-set [payload on-done]
   (utils/ajax-orch
-    "/profile"
-    {:method :post
-     :data (utils/->json-string payload)
-     :on-done on-done
-     :headers utils/content-type=json
-     :canned-response {:status (rand-nth [200 200 500]) :delay-ms (rand-int 2000)}}
-    :service-prefix "/register"))
+   "/profile"
+   {:method :post
+    :data (utils/->json-string payload)
+    :on-done on-done
+    :headers utils/content-type=json
+    :canned-response {:status (rand-nth [200 200 500]) :delay-ms (rand-int 2000)}}
+   :service-prefix "/register"))
 
 
 (defn profile-get-nih-status [on-done]
@@ -790,16 +790,16 @@
 
 (defn get-library-attributes [on-done]
   (utils/ajax-orch
-    "/library-attributedefinitions-v1"
-    {:method :get
-     :on-done on-done}
-    :service-prefix "/schemas"))
+   "/library-attributedefinitions-v1"
+   {:method :get
+    :on-done on-done}
+   :service-prefix "/schemas"))
 
 (defn get-consent [orsp-id on-done]
   (utils/ajax-orch
-    (str "/duos/consent/orsp/" (js/encodeURIComponent orsp-id))
-    {:method :get
-     :on-done on-done}))
+   (str "/duos/consent/orsp/" (js/encodeURIComponent orsp-id))
+   {:method :get
+    :on-done on-done}))
 
 (defn save-library-metadata [workspace-id]
   {:path (str "/library/" (id-path workspace-id) "/metadata")
@@ -824,7 +824,7 @@
 
 (def search-datasets
   {:path "/library/search"
-   :method :post })
+   :method :post})
 
 (defn submissions-queue-status []
   {:path "/submissions/queueStatus"

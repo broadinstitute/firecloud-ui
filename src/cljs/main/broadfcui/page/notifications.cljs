@@ -1,13 +1,13 @@
 (ns broadfcui.page.notifications
   (:require
-   [broadfcui.common :as common]
-   [broadfcui.common.components :as comps]
-   [broadfcui.common.icons :as icons]
-   [broadfcui.common.style :as style]
-   [broadfcui.nav :as nav]
-   [broadfcui.utils :as utils]
-   [dmohs.react :as r]
-   ))
+    [dmohs.react :as react]
+    [broadfcui.common :as common]
+    [broadfcui.common.components :as comps]
+    [broadfcui.common.icons :as icons]
+    [broadfcui.common.style :as style]
+    [broadfcui.nav :as nav]
+    [broadfcui.utils :as utils]
+    ))
 
 (def notification-details
   {"WorkspaceChangedNotification"
@@ -82,7 +82,7 @@
     :data (js-invoke js/JSON "stringify" (clj->js data))
     :on-done on-done}))
 
-(r/defc Page
+(react/defc Page
   {:render
    (fn [{:keys [this] :as m}]
      [:div {:style style/thin-page-style}
@@ -141,7 +141,7 @@
   (let [[_ id ws-namespace ws-name] (clojure.string/split k #"/")]
     {:id id :workspace-id {:namespace ws-namespace :name ws-name}}))
 
-(r/defc WorkspaceComponent
+(react/defc WorkspaceComponent
   {:get-initial-state
    (fn []
      {:save-disabled? true})
@@ -205,8 +205,8 @@
 
 (defn add-nav-paths []
   (nav/defpath
-    :notifications
-    {:component Page
-     :regex #"notifications"
-     :make-props (constantly nil)
-     :make-path (constantly "notifications")}))
+   :notifications
+   {:component Page
+    :regex #"notifications"
+    :make-props (constantly nil)
+    :make-path (constantly "notifications")}))

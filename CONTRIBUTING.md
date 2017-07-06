@@ -41,6 +41,35 @@ Native clojure(script) methods and structures are kebab-cased: `(common/render-i
 
 Method and function names should always be verbs, and structures should be nouns.
 
+### Requiring Namespaces
+
+The order for required namespaces is as follows:
+
+1. `[dmohs.react :as react]`
+2. any third-party libraries
+3. any internal clojure namespaces
+4. any broadfcui namespaces
+
+Within each section, all lines should be alphabetized. Leave the closing double paren on its own line, to avoid excess line changes in git. The only unused namespace that can be left in a `require` is `utils`.
+
+Avoid `refer`ing to a function from the namespace, except when a namespace contains only one public member.
+
+When requiring a namespace, we _generally_ require it as its full name. Some exceptions to this are `components`, which is required as `comps`, and `monitor.common` as `moncommon`. Common sense applies.
+
+A full namespace declaration should look like this:
+
+```cljs
+(ns broadfcui.new-namespace
+  (:require
+    [dmohs.react :as react]
+    [inflections.core :as inflections]
+    [clojure.string :as string]
+    [broadfcui.common :as common]
+    [broadfcui.components :as comps]
+    [broadfcui.utils :as utils]
+    ))
+```
+
 
 ## React Conventions
 
@@ -63,9 +92,9 @@ A React component's state is considered private to that component. Do not pass t
 Avoid this:
 
 ```clojure
-(r/defc Foo ...)
+(react/defc Foo ...)
 
-(r/defc Bar
+(react/defc Bar
   {:render
    (fn [{:keys [state]}]
      [Foo {:parent-state state}])})
@@ -74,9 +103,9 @@ Avoid this:
 Instead, do something like this:
 
 ```clojure
-(r/defc Foo ...)
+(react/defc Foo ...)
 
-(r/defc Bar
+(react/defc Bar
   {:render
    (fn [{:keys [state]}]
      [Foo {:handle-some-action (fn [value] (swap! state ...))}])})
@@ -85,14 +114,14 @@ Instead, do something like this:
 ### React elements are not DOM nodes
 
 ```clojure
-(r/defc Foo
+(react/defc Foo
   {:render
    (fn []
      [:div {}
 ;;   ^ This is not a real <div> element. It is a vector that will be
 ;;     turned into a React element by the function that calls `render`
 ;;     on this component.
-      (r/create-element :div {})])})
+      (react/create-element :div {})])})
 ;;     ^ Likewise, this is not a real <div> either. This creates a
 ;;       React element directly.
 ```
@@ -155,6 +184,9 @@ Changing state causes a re-render. If you update state in a lifecycle method, th
 6. ...
 
 So: some lifecycle methods are automatically called every render. Avoid changing state inside of them.
+
+## JavaScript and (S)CSS
+We adhere to Google's official style guide on [JS](https://google.github.io/styleguide/jsguide.html) & [CSS](https://google.github.io/styleguide/htmlcssguide.html), which dictate two-space indentation. We indent 4 spaces for html, because 2 spaces looks weird.
 
 ## Gotchas
 

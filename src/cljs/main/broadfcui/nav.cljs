@@ -1,8 +1,7 @@
 (ns broadfcui.nav
   (:require
-   clojure.string
-   [dmohs.react :as r]
-   [broadfcui.utils :as utils]))
+    [broadfcui.utils :as utils]
+    ))
 
 (defonce all-path-handlers (atom {}))
 
@@ -34,9 +33,9 @@
                               (when-let [matches (re-matches (:regex handler) cleaned)]
                                 (let [make-props (:make-props handler)]
                                   (assoc handler
-                                         :key k
-                                         ;; First match is the entire string, so toss that one.
-                                         :make-props #(apply make-props (rest matches))))))
+                                    :key k
+                                    ;; First match is the entire string, so toss that one.
+                                    :make-props #(apply make-props (rest matches))))))
                             @all-path-handlers))]
     (assert (not (> (count matching-handlers) 1))
             (str "Multiple keys matched path: " (map :key matching-handlers)))
@@ -67,8 +66,8 @@
                               (when-let [matches (re-matches (:regex handler) cleaned)]
                                 (let [make-path (:make-path handler)]
                                   (assoc handler
-                                         ;; First match is the entire string, so toss that one.
-                                         :make-path #(apply make-path (rest matches))))))
+                                    ;; First match is the entire string, so toss that one.
+                                    :make-path #(apply make-path (rest matches))))))
                             @all-redirects))]
     (assert (not (> (count matching-handlers) 1))
             (str "Multiple redirects matched path: " (map :regex matching-handlers)))

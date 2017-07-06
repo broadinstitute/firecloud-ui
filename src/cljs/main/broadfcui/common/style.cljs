@@ -1,6 +1,8 @@
 (ns broadfcui.common.style
-  (:require [broadfcui.utils :as utils :refer [deep-merge]]
-            [clojure.string :as string]))
+  (:require
+    [clojure.string :as string]
+    [broadfcui.utils :as utils]
+    ))
 
 (def colors {:background-light "#f4f4f4"
              :background-dark "#4d4d4d"
@@ -77,23 +79,24 @@
              {} props))
 
 (defn create-text-field [props]
-  [:input (deep-merge {:type "text" :style input-text-style} (replace-nil-value-key props))])
+  [:input (utils/deep-merge {:type "text" :style input-text-style} (replace-nil-value-key props))])
 
 (defn create-search-field [props]
-  [:input (deep-merge {:type "search" :style (assoc input-text-style :WebkitAppearance "none")} (replace-nil-value-key props))])
+  [:input (utils/deep-merge {:type "search" :style (assoc input-text-style :WebkitAppearance "none")}
+                            (replace-nil-value-key props))])
 
 (defn create-text-area [props]
-  [:textarea (deep-merge {:style input-text-style} props)])
+  [:textarea (utils/deep-merge {:style input-text-style} props)])
 
 (defn create-select [props options & placeholder]
   (let [option-elements (map-indexed (fn [i opt] [:option {:value i} opt]) options)]
-    [:select (deep-merge {:style select-style} props)
+    [:select (utils/deep-merge {:style select-style} props)
      (if-not (empty? placeholder)
        (cons [:option {:value -1 :disabled true} (first placeholder)] option-elements)
        option-elements)]))
 
 (defn create-identity-select [props options]
-  [:select (deep-merge {:style select-style} props)
+  [:select (utils/deep-merge {:style select-style} props)
    (map (fn [opt] [:option {:value opt} opt]) options)])
 
 (defn create-server-error-message [message]
@@ -110,33 +113,34 @@
    message])
 
 (defn center [props & children]
-  [:div (deep-merge props {:style {:position "absolute" :top "50%" :left "50%"
-                                   :transform "translate(-50%, -50%)"}})
+  [:div (utils/deep-merge props {:style {:position "absolute" :top "50%" :left "50%"
+                                         :transform "translate(-50%, -50%)"}})
    children])
 
 (defn create-flexbox [attributes & children]
-  [:div (deep-merge attributes {:style {:display "flex" :alignItems "center"}})
+  [:div (utils/deep-merge attributes {:style {:display "flex" :alignItems "center"}})
    children])
 
 (defn left-ellipses [props & children]
-  [:div (deep-merge props {:style {:overflow "hidden" :textOverflow "ellipsis" :whiteSpace "nowrap"
-                                   :direction "rtl" :textAlign "left"}})
+  [:div (utils/deep-merge props {:style {:overflow "hidden" :textOverflow "ellipsis"
+                                         :whiteSpace "nowrap" :direction "rtl" :textAlign "left"}})
    children])
 
 (defn right-ellipses [props & children]
-  [:div (deep-merge props {:style {:overflow "hidden" :textOverflow "ellipsis" :whiteSpace "nowrap"}})
+  [:div (utils/deep-merge props {:style {:overflow "hidden" :textOverflow "ellipsis"
+                                         :whiteSpace "nowrap"}})
    children])
 
 (defn create-unselectable [type props & children]
-  [type (deep-merge {:style {:userSelect "none" :MozUserSelect "none"
-                             :WebkitTouchCallout "none" :WebkitUserSelect "none"
-                             :KhtmlUserSelect "none" :MsUserSelect "none"}} props)
+  [type (utils/deep-merge {:style {:userSelect "none" :MozUserSelect "none"
+                                   :WebkitTouchCallout "none" :WebkitUserSelect "none"
+                                   :KhtmlUserSelect "none" :MsUserSelect "none"}} props)
    children])
 
 (defn create-link [{:keys [text] :as attributes}]
-  [:a (deep-merge {:href "javascript:;"
-                   :style {:textDecoration "none" :color (:button-primary colors)}}
-                  (dissoc attributes :text))
+  [:a (utils/deep-merge {:href "javascript:;"
+                         :style {:textDecoration "none" :color (:button-primary colors)}}
+                        (dissoc attributes :text))
    text])
 
 ;; An obnoxious amount of effort due to "PROJECT_OWNER" vs. "NO ACCESS"
@@ -177,5 +181,5 @@
 (defn render-text-logo []
   [:div {:style {:display "inline-block"}}
    [:a {:href "/#" :style {:fontSize 32 :color (:button-primary colors)
-                          :fontWeight "bold" :textDecoration "none" :height 38}}
+                           :fontWeight "bold" :textDecoration "none" :height 38}}
     "FireCloud"]])

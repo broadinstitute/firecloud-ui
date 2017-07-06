@@ -1,36 +1,36 @@
 (ns broadfcui.main
   (:require
-   clojure.string
-   [dmohs.react :as react]
-   [org.broadinstitute.uicomps.modal :as modal]
-   [broadfcui.auth :as auth]
-   [broadfcui.common :as common]
-   [broadfcui.common.components :as comps]
-   [broadfcui.common.flex-utils :as flex]
-   [broadfcui.common.icons :as icons]
-   [broadfcui.common.modal :as old-modal]
-   [broadfcui.common.notifications :as notifications]
-   [broadfcui.common.style :as style]
-   [broadfcui.components.top-banner :as top-banner]
-   [broadfcui.config :as config]
-   [broadfcui.config.loader :as config-loader]
-   [broadfcui.endpoints :as endpoints]
-   [broadfcui.footer :as footer]
-   [broadfcui.header :as header]
-   [broadfcui.nav :as nav]
-   [broadfcui.nih-link-warning :refer [NihLinkWarning]]
-   [broadfcui.page.billing.billing-management :as billing-management]
-   [broadfcui.page.groups.groups-management :as group-management]
-   [broadfcui.page.library.library-page :as library-page]
-   [broadfcui.page.method-repo.method-repo-page :as method-repo]
-   [broadfcui.page.notifications :as billing-notifications]
-   [broadfcui.page.profile :as profile-page]
-   [broadfcui.page.status :as status-page]
-   [broadfcui.page.style-guide :as style-guide]
-   [broadfcui.page.workspace.details :as workspace-details]
-   [broadfcui.page.workspaces-list :as workspaces]
-   [broadfcui.utils :as utils]
-   ))
+    [dmohs.react :as react]
+    [org.broadinstitute.uicomps.modal :as modal]
+    [clojure.string :as string]
+    [broadfcui.auth :as auth]
+    [broadfcui.common :as common]
+    [broadfcui.common.components :as comps]
+    [broadfcui.common.flex-utils :as flex]
+    [broadfcui.common.icons :as icons]
+    [broadfcui.common.modal :as old-modal]
+    [broadfcui.common.notifications :as notifications]
+    [broadfcui.common.style :as style]
+    [broadfcui.components.top-banner :as top-banner]
+    [broadfcui.config :as config]
+    [broadfcui.config.loader :as config-loader]
+    [broadfcui.endpoints :as endpoints]
+    [broadfcui.footer :as footer]
+    [broadfcui.header :as header]
+    [broadfcui.nav :as nav]
+    [broadfcui.nih-link-warning :refer [NihLinkWarning]]
+    [broadfcui.page.billing.billing-management :as billing-management]
+    [broadfcui.page.groups.groups-management :as group-management]
+    [broadfcui.page.library.library-page :as library-page]
+    [broadfcui.page.method-repo.method-repo-page :as method-repo]
+    [broadfcui.page.notifications :as billing-notifications]
+    [broadfcui.page.profile :as profile-page]
+    [broadfcui.page.status :as status-page]
+    [broadfcui.page.style-guide :as style-guide]
+    [broadfcui.page.workspace.details :as workspace-details]
+    [broadfcui.page.workspaces-list :as workspaces]
+    [broadfcui.utils :as utils]
+    ))
 
 (defn- init-nav-paths []
   (nav/clear-paths)
@@ -58,14 +58,14 @@
             {:items [{:label "Workspaces"
                       :nav-key :workspaces
                       :is-selected? #(or (empty? path)
-                                         (clojure.string/starts-with? path "workspaces/"))}
+                                         (string/starts-with? path "workspaces/"))}
                      {:label "Data Library"
                       :nav-key :library
                       :is-selected? #(= path "library")}
                      {:label "Method Repository"
                       :nav-key :method-repo
                       :is-selected? #(or (= path "methods")
-                                         (clojure.string/starts-with? path "methods/"))}]}])
+                                         (string/starts-with? path "methods/"))}]}])
          flex/spring
          [:div {:style {:display "flex" :flexDirection "column" :fontSize "70%" :marginBottom "0.4rem"}}
           [:div {:style {:marginBottom "0.4rem"}}
@@ -113,7 +113,7 @@
             (swap! state assoc :registration-status :registered)
             (and success? (some? (:isRegistrationComplete parsed-values))) ; partial profile case
             (swap! state assoc :registration-status :update-registered)
-            success?                                        ; unregistered case
+            success? ; unregistered case
             (swap! state assoc :registration-status :not-registered)
             :else
             (do
@@ -122,17 +122,17 @@
 
 (defn- show-system-status-dialog [maintenance-mode?]
   (comps/push-ok-cancel-modal
-    {:header (if maintenance-mode? "Maintenance Mode" "Server Unavailable")
-     :show-cancel? false
-     :content (if maintenance-mode?
-                [:div {:style {:width 500}} "FireCloud is currently undergoing planned maintenance.
+   {:header (if maintenance-mode? "Maintenance Mode" "Server Unavailable")
+    :show-cancel? false
+    :content (if maintenance-mode?
+               [:div {:style {:width 500}} "FireCloud is currently undergoing planned maintenance.
                    We should be back online shortly. For more information, please see "
-                 [:a {:href "http://status.firecloud.org/" :target "_blank"}
-                  "http://status.firecloud.org/"] "."]
-                [:div {:style {:width 500}} "FireCloud service is temporarily unavailable.  If this problem persists, check "
-                 [:a {:href "http://status.firecloud.org/" :target "_blank"}
-                  "http://status.firecloud.org/"]
-                 " for more information."])}))
+                [:a {:href "http://status.firecloud.org/" :target "_blank"}
+                 "http://status.firecloud.org/"] "."]
+               [:div {:style {:width 500}} "FireCloud service is temporarily unavailable.  If this problem persists, check "
+                [:a {:href "http://status.firecloud.org/" :target "_blank"}
+                 "http://status.firecloud.org/"]
+                " for more information."])}))
 
 
 (defn- show-js-exception [e]
@@ -143,8 +143,8 @@
              "Something Went Wrong"]
     :content [:div {:style {:width 800}}
               "A JavaScript error occurred; please try reloading the page. If the error persists, please report it to our "
-               [:a {:href (config/forum-url)
-                    :target "_blank" :style {}} "forum" icons/external-link-icon] " for help. Details of the error message are below."
+              [:a {:href (config/forum-url)
+                   :target "_blank" :style {}} "forum" icons/external-link-icon] " for help. Details of the error message are below."
               [:div {:style {:fontFamily "monospace" :whiteSpace "pre" :overflow "auto"
                              :backgroundColor "black" :color "white"
                              :padding "0.5rem" :marginTop "0.5rem" :borderRadius "0.3rem"}}

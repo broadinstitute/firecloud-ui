@@ -1,13 +1,10 @@
 (ns broadfcui.page.groups.create-group
   (:require
     [dmohs.react :as react]
-    clojure.string
     [broadfcui.common.components :as comps]
     [broadfcui.common.input :as input]
-    [broadfcui.common.icons :as icons]
     [broadfcui.common.modal :as modal]
     [broadfcui.common.style :as style]
-    [broadfcui.config :as config]
     [broadfcui.endpoints :as endpoints]
     [broadfcui.utils :as utils]
     ))

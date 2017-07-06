@@ -15,11 +15,11 @@
                    (let [possible-idx (first new-list)
                          parsed (common/parse-gcs-uri possible-idx)]
                      (endpoints/call-ajax-orch
-                       {:endpoint (endpoints/get-gcs-stats (:bucket-name parsed) (:object parsed))
-                        :on-done (fn [{:keys [success?]}]
-                                   (if success?
-                                     (on-success possible-idx)
-                                     (swap! possible-idxs rest)))})))))
+                      {:endpoint (endpoints/get-gcs-stats (:bucket-name parsed) (:object parsed))
+                       :on-done (fn [{:keys [success?]}]
+                                  (if success?
+                                    (on-success possible-idx)
+                                    (swap! possible-idxs rest)))})))))
     (reset! possible-idxs options)))
 
 (defn- find-bai [{:keys [track-url] :as args}]

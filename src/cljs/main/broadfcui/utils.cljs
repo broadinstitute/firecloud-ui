@@ -2,8 +2,9 @@
   (:require-macros
    [broadfcui.utils :refer [log jslog cljslog pause restructure]])
   (:require
+    [clojure.string :as string]
     cljs.pprint
-    [clojure.string :refer [join lower-case split]]
+    goog.net.cookies
     [broadfcui.config :as config]
     ))
 
@@ -18,12 +19,12 @@
 
 
 (defn contains-ignore-case [s what]
-  (contains (lower-case s) (lower-case what)))
+  (contains (string/lower-case s) (string/lower-case what)))
 
 
 (defn matches-filter-text [filter-text source]
-  (let [lc-source (lower-case source)]
-    (every? (fn [word] (contains lc-source word)) (split (lower-case filter-text) #"\s+"))))
+  (let [lc-source (string/lower-case source)]
+    (every? (fn [word] (contains lc-source word)) (string/split (string/lower-case filter-text) #"\s+"))))
 
 
 (defn ->json-string [x]
@@ -100,7 +101,7 @@
 (defn get-cookie-domain []
   (if (= "local.broadinstitute.org" js/window.location.hostname)
     "local.broadinstitute.org"
-    (join "." (rest (split js/window.location.hostname ".")))))
+    (string/join "." (rest (string/split js/window.location.hostname ".")))))
 
 (defn delete-access-token-cookie []
   (.remove goog.net.cookies "FCtoken" "/" (get-cookie-domain)))
@@ -118,7 +119,7 @@
 (defn ajax [arg-map]
   (let [url (:url arg-map)
         on-done (:on-done arg-map)
-        method (if-let [method (:method arg-map)] (clojure.string/upper-case (name method)) "GET")
+        method (if-let [method (:method arg-map)] (string/upper-case (name method)) "GET")
         headers (:headers arg-map)
         data (:data arg-map)
         with-credentials? (:with-credentials? arg-map)
@@ -147,10 +148,10 @@
       (if canned-response-params
         (do
           (jslog "Mocking AJAX Request:"
-            (merge
-              {:method method :url url}
-              (when headers {:headers headers})
-              (when data {:data data})))
+                 (merge
+                  {:method method :url url}
+                  (when headers {:headers headers})
+                  (when data {:data data})))
           (if-let [delay-ms (:delay-ms canned-response-params)]
             (js/setTimeout call-on-done delay-ms)
             (call-on-done)))
@@ -186,24 +187,24 @@
 (defn ajax-orch [path arg-map & {:keys [service-prefix] :or {service-prefix "/api"}}]
   (assert (= (subs path 0 1) "/") (str "Path must start with '/': " path))
   (let [on-done (:on-done arg-map)]
-    (ajax (assoc
-           arg-map :url (str (config/api-url-root) service-prefix path)
-           :headers (merge {"Authorization" (str "Bearer " (get-access-token))}
-                           (:headers arg-map))
-           :on-done (fn [{:keys [status-code status-text raw-response] :as m}]
-                      (when (and (not @server-down?)  (not @maintenance-mode?))
-                        (cond
-                          (check-maintenance-mode status-code status-text) (reset! maintenance-mode? true)
-                          (check-server-down status-code) (reset! server-down? true)))
-                      (on-done m))))))
+    (ajax (assoc arg-map
+            :url (str (config/api-url-root) service-prefix path)
+            :headers (merge {"Authorization" (str "Bearer " (get-access-token))}
+                            (:headers arg-map))
+            :on-done (fn [{:keys [status-code status-text raw-response] :as m}]
+                       (when (and (not @server-down?) (not @maintenance-mode?))
+                         (cond
+                           (check-maintenance-mode status-code status-text) (reset! maintenance-mode? true)
+                           (check-server-down status-code) (reset! server-down? true)))
+                       (on-done m))))))
 
 
 (defn deep-merge [& maps]
   (doseq [x maps] (assert (or (nil? x) (map? x)) (str "not a map: " x)))
   (apply
-    merge-with
-    (fn [x1 x2] (if (and (map? x1) (map? x2)) (deep-merge x1 x2) x2))
-    maps))
+   merge-with
+   (fn [x1 x2] (if (and (map? x1) (map? x2)) (deep-merge x1 x2) x2))
+   maps))
 
 
 (defn generate-form-data
@@ -216,7 +217,7 @@
 
 
 (defn map-to-string [m]
-  (join ", " (map (fn [k] (str k "→" (get m k))) (keys m))))
+  (string/join ", " (map (fn [k] (str k "→" (get m k))) (keys m))))
 
 
 (defn distance [x1 y1 x2 y2]

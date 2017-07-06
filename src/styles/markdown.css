@@ -4,10 +4,10 @@ https://github.com/sindresorhus/github-markdown-css
 */
 
 .markdown-body.firecloud-markdown {
-  font-size: inherit;
-  font-family: inherit;
+    font-size: inherit;
+    font-family: inherit;
 }
 
 .markdown-body.firecloud-markdown a {
-  color: #6690c5;
+    color: #6690c5;
 }
