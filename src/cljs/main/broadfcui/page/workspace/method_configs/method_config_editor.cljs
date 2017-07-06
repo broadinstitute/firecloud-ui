@@ -47,12 +47,12 @@
    (fn [{:keys [props state]} & [method-ref]]
      (let [{:keys [namespace name snapshotId]} (or method-ref props)]
        (endpoints/call-ajax-orch
-         {:endpoint (endpoints/get-agora-method namespace name snapshotId)
-          :headers utils/content-type=json
-          :on-done (fn [{:keys [success? get-parsed-response status-text]}]
-                     (if success?
-                       (swap! state assoc :loaded-method (get-parsed-response))
-                       (swap! state assoc :error status-text)))})))})
+        {:endpoint (endpoints/get-agora-method namespace name snapshotId)
+         :headers utils/content-type=json
+         :on-done (fn [{:keys [success? get-parsed-response status-text]}]
+                    (if success?
+                      (swap! state assoc :loaded-method (get-parsed-response))
+                      (swap! state assoc :error status-text)))})))})
 
 
 (defn- input-output-list [{:keys [values ref-prefix invalid-values editing? all-values]}]
@@ -155,11 +155,11 @@
                                                                       :after-delete (:after-delete props)}])}]))
 
             (when-not editing?
-             [comps/SidebarButton {:style :light :color :button-primary :margin (when can-edit? :top)
-                                   :text "Publish..." :icon :share
-                                   :onClick #(modal/push-modal
-                                              [publish/PublishDialog {:config-id config-id
-                                                                      :workspace-id (:workspace-id props)}])}])
+              [comps/SidebarButton {:style :light :color :button-primary :margin (when can-edit? :top)
+                                    :text "Publish..." :icon :share
+                                    :onClick #(modal/push-modal
+                                               [publish/PublishDialog {:config-id config-id
+                                                                       :workspace-id (:workspace-id props)}])}])
 
             (when editing?
               (list
@@ -261,7 +261,7 @@
                     :inputs (deref-vals :inputs "in")
                     :outputs (deref-vals :outputs "out")
                     :methodRepoMethod (merge (:methodRepoMethod config)
-                                              ((@refs "methodDetailsViewer") :get-fields))
+                                             ((@refs "methodDetailsViewer") :get-fields))
                     :workspaceName workspace-id)
          :headers utils/content-type=json
          :on-done (fn [{:keys [success? get-parsed-response]}]
@@ -302,30 +302,30 @@
                                                           :name method-name
                                                           :snapshotId new-snapshot-id})
        (endpoints/call-ajax-orch
-         {:endpoint (endpoints/create-template method-ref)
-          :payload method-ref
-          :headers utils/content-type=json
-          :on-done (fn [{:keys [success? get-parsed-response]}]
-                     (let [response (get-parsed-response)]
-                       (if success?
-                         (endpoints/call-ajax-orch
-                           {:endpoint (endpoints/get-validated-workspace-method-config (:workspace-id props) (:config-id props))
-                            :on-done (fn [{:keys [success? get-parsed-response status-text]}]
-                                       (let [valid-response (get-parsed-response)]
-                                         (if success?
-                                           (endpoints/call-ajax-orch
-                                             {:endpoint endpoints/get-inputs-outputs
-                                              :payload (:methodRepoMethod response)
-                                              :headers utils/content-type=json
-                                              :on-done (fn [{:keys [success? get-parsed-response]}]
-                                                         (swap! state dissoc :blocker :wdl-parse-error)
-                                                         (let [template {:methodConfiguration (merge valid-response config-namespace+name)}]
-                                                           (if success?
-                                                               (swap! state assoc
-                                                                      :loaded-config valid-response
-                                                                      :inputs-outputs (get-parsed-response)))
-                                                             (swap! state assoc :error (:message (get-parsed-response)))))})
-                                           (swap! state assoc :error status-text))))})
-                         (do
-                           (swap! state assoc :blocker nil :wdl-parse-error (:message response))
-                           (comps/push-error (style/create-server-error-message (:message response)))))))})))})
+        {:endpoint (endpoints/create-template method-ref)
+         :payload method-ref
+         :headers utils/content-type=json
+         :on-done (fn [{:keys [success? get-parsed-response]}]
+                    (let [response (get-parsed-response)]
+                      (if success?
+                        (endpoints/call-ajax-orch
+                         {:endpoint (endpoints/get-validated-workspace-method-config (:workspace-id props) (:config-id props))
+                          :on-done (fn [{:keys [success? get-parsed-response status-text]}]
+                                     (let [valid-response (get-parsed-response)]
+                                       (if success?
+                                         (endpoints/call-ajax-orch
+                                          {:endpoint endpoints/get-inputs-outputs
+                                           :payload (:methodRepoMethod response)
+                                           :headers utils/content-type=json
+                                           :on-done (fn [{:keys [success? get-parsed-response]}]
+                                                      (swap! state dissoc :blocker :wdl-parse-error)
+                                                      (let [template {:methodConfiguration (merge valid-response config-namespace+name)}]
+                                                        (if success?
+                                                          (swap! state assoc
+                                                                 :loaded-config valid-response
+                                                                 :inputs-outputs (get-parsed-response)))
+                                                        (swap! state assoc :error (:message (get-parsed-response)))))})
+                                         (swap! state assoc :error status-text))))})
+                        (do
+                          (swap! state assoc :blocker nil :wdl-parse-error (:message response))
+                          (comps/push-error (style/create-server-error-message (:message response)))))))})))})
