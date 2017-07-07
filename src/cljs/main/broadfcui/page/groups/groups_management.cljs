@@ -35,8 +35,6 @@
    :-render-groups-table
    (fn [{:keys [this state]}]
      [:div {}
-      (when (:deleting? @state)
-        [comps/Blocker {:banner "Deleting group..."}])
       (when (:modal? @state)
         [modals/RenderMessage
          {:text "Are you sure you want to delete this group?"
@@ -50,6 +48,9 @@
                              "Sorry you are unable to delete this group because it is in use"
                              (get-in % [:parsed-response :message]))}))
           :on-dismiss #(swap! state dissoc :modal?)}])
+      (when (:error? @state)
+        [modals/RenderError
+         {:text (:parsed-response state)}])
       [Table
        {:data (get-in @state [:groups-response :parsed-response])
         :body {:behavior {:reorderable-columns? false}
@@ -110,8 +111,7 @@
                    (swap! state dissoc :modal?)
                    (if success?
                      (this :-load-data)
-                     [modals/RenderError
-                      {:text parsed-response}]
+                     (swap! state assoc :error? true)
                      )
                    ))}))
    })
