@@ -607,7 +607,7 @@
 
 (defn no-billing-projects-message []
   [:div {:style {:textAlign "center"}}
-   (str "You must have a billing project associated with your account to create a new workspace. ")
+   "You must have a billing project associated with your account to create a new workspace." [:br]
    [:a {:target "_blank" :href (str (config/billing-guide-url))}
     "Learn how to create a billing project." icons/external-link-icon]])
 
