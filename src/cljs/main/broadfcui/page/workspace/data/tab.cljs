@@ -5,6 +5,7 @@
     [broadfcui.common :as common]
     [broadfcui.common.components :as comps]
     [broadfcui.common.entity-table :refer [EntityTable]]
+    [broadfcui.common.flex-utils :as flex]
     [broadfcui.common.icons :as icons]
     [broadfcui.common.modal :as modal]
     [broadfcui.common.style :as style]
@@ -90,8 +91,7 @@
         (select-keys props [:workspace-id])
         {:this-auth-domain (get-in props [:workspace :workspace :authorizationDomain :membersGroupName])
          :import-type "data"
-         :on-data-imported #(react/call :refresh (@refs "entity-table")
-                                        (or % (:selected-entity-type @state)) true)})]))
+         :on-data-imported #((@refs "entity-table") :refresh (or % (:selected-entity-type @state)) true)})]))
    :-render-data
    (fn [{:keys [props this state]}]
      (let [{:keys [workspace workspace-id]} props]
@@ -101,17 +101,13 @@
           :workspace-id workspace-id
           :column-defaults
           (data-utils/get-column-defaults (get-in workspace [:workspace :workspace-attributes :workspace-column-defaults]))
-          :toolbar
-          (fn [built-in]
-            (let [layout (fn [item] [:div {:style {:marginRight "1em"}}] item)]
-              [:div {:style {:display "flex" :alignItems "center" :marginBottom "1em"}}
-               (map layout (vals built-in))
-               (when (:selected-entity-type @state) (this :-render-download-link))
-               [:div {:style {:flexGrow 1}}]
-               [comps/Button {:text "Import Metadata..."
-                              :disabled? (when (get-in workspace [:workspace :isLocked]) "This workspace is locked.")
-                              :onClick #(this :-handle-import-data-click)}]]))
-          :on-filter-change #(swap! state assoc :selected-entity-type % :selected-entity nil :selected-attr-list nil)
+          :toolbar-items
+          [(when (:selected-entity-type @state) (this :-render-download-link))
+           flex/spring
+           [comps/Button {:text "Import Metadata..."
+                          :disabled? (when (get-in workspace [:workspace :isLocked]) "This workspace is locked.")
+                          :onClick #(this :-handle-import-data-click)}]]
+          :on-entity-type-selected #(swap! state assoc :selected-entity-type % :selected-entity nil :selected-attr-list nil)
           :attribute-renderer (table-utils/render-gcs-links (get-in workspace [:workspace :bucketName]))
           :linked-entity-renderer
           (fn [entity]

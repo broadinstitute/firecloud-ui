@@ -45,6 +45,8 @@
                              :entity-types entity-types
                              :selected-entity-type selected-entity-type
                              :selected-filter-index (utils/index-of entity-types selected-entity-type))
+                      (when-let [f (:on-entity-type-selected props)]
+                        (f selected-entity-type))
                       (after-update #(this :update-data reinitialize?)))
                     (swap! state assoc :server-error (get-parsed-response false))))}))
    :get-default-props
@@ -108,16 +110,20 @@
                           attributes))
                :column-defaults (get (:column-defaults props) (some-> selected-entity-type name))}
               :toolbar
-              {:items [[comps/FilterGroupBar
-                        {:filter-groups (map (fn [entity-type]
-                                               {:text (name entity-type)
-                                                :count-override (get-in entity-metadata [entity-type :count])})
-                                             entity-types)
-                         :selected-index (:selected-filter-index @state)
-                         :on-change (fn [index _]
-                                      (swap! state assoc
-                                             :selected-filter-index index
-                                             :selected-entity-type (nth entity-types index)))}]]}}]))]))
+              {:items (cons [comps/FilterGroupBar
+                             {:filter-groups (map (fn [entity-type]
+                                                    {:text (name entity-type)
+                                                     :count-override (get-in entity-metadata [entity-type :count])})
+                                                  entity-types)
+                              :selected-index (:selected-filter-index @state)
+                              :on-change (fn [index _]
+                                           (let [selected-entity-type (nth entity-types index)]
+                                             (swap! state assoc
+                                                    :selected-filter-index index
+                                                    :selected-entity-type selected-entity-type)
+                                             (when-let [f (:on-entity-type-selected props)]
+                                               (f selected-entity-type))))}]
+                            (:toolbar-items props))}}]))]))
    :component-did-mount
    (fn [{:keys [props this]}]
      (this :refresh (:initial-entity-type props)))
