@@ -24,7 +24,7 @@ class MethodConfigTabSpec extends FreeSpec with WebBrowserSpec with CleanUp {
 
     signIn(uiUser)
     val workspaceMethodConfigPage = new WorkspaceMethodConfigPage(billingProject, wsName).open
-    val methodConfigDetailsPage = workspaceMethodConfigPage.importMethodConfig(TestData.SimpleMethodConfig.namespace,
+    val methodConfigDetailsPage = workspaceMethodConfigPage.importMethodConfigFromRepo(TestData.SimpleMethodConfig.namespace,
       TestData.SimpleMethodConfig.name, TestData.SimpleMethodConfig.snapshotId, methodConfigName, TestData.SimpleMethodConfig.rootEntityType)
     methodConfigDetailsPage.editMethodConfig(inputs = Some(TestData.SimpleMethodConfig.inputs))
     val submissionDetailsPage = methodConfigDetailsPage.launchAnalysis(TestData.SimpleMethodConfig.rootEntityType, TestData.SingleParticipant.entityId)
@@ -42,7 +42,7 @@ class MethodConfigTabSpec extends FreeSpec with WebBrowserSpec with CleanUp {
     signIn(uiUser)
     val workspaceMethodConfigPage = new WorkspaceMethodConfigPage(billingProject, wsName)
     workspaceMethodConfigPage.open
-    val methodConfigDetailsPage = workspaceMethodConfigPage.importMethodConfig(TestData.SimpleMethodConfig.namespace,
+    val methodConfigDetailsPage = workspaceMethodConfigPage.importMethodConfigFromRepo(TestData.SimpleMethodConfig.namespace,
       TestData.SimpleMethodConfig.name, TestData.SimpleMethodConfig.snapshotId, methodConfigName, "participant_set")
     methodConfigDetailsPage.editMethodConfig(inputs = Some(TestData.SimpleMethodConfig.inputs))
     val launchModal = methodConfigDetailsPage.openlaunchModal()
@@ -63,7 +63,7 @@ class MethodConfigTabSpec extends FreeSpec with WebBrowserSpec with CleanUp {
     signIn(uiUser)
     val workspaceMethodConfigPage = new WorkspaceMethodConfigPage(billingProject, wsName)
     workspaceMethodConfigPage.open
-    val methodConfigDetailsPage = workspaceMethodConfigPage.importMethodConfig(TestData.SimpleMethodConfig.namespace,
+    val methodConfigDetailsPage = workspaceMethodConfigPage.importMethodConfigFromRepo(TestData.SimpleMethodConfig.namespace,
       TestData.SimpleMethodConfig.name, TestData.SimpleMethodConfig.snapshotId, methodConfigName, "sample")
     methodConfigDetailsPage.editMethodConfig(inputs = Some(TestData.SimpleMethodConfig.inputs))
 
@@ -84,7 +84,7 @@ class MethodConfigTabSpec extends FreeSpec with WebBrowserSpec with CleanUp {
     val workspaceListPage = new WorkspaceListPage
     val workspaceMethodConfigPage = new WorkspaceMethodConfigPage(billingProject, wsName)
     workspaceMethodConfigPage.open
-    val methodConfigDetailsPage = workspaceMethodConfigPage.importMethodConfig(TestData.SimpleMethodConfig.namespace,
+    val methodConfigDetailsPage = workspaceMethodConfigPage.importMethodConfigFromRepo(TestData.SimpleMethodConfig.namespace,
       TestData.SimpleMethodConfig.name, TestData.SimpleMethodConfig.snapshotId, methodConfigName, "sample")
     methodConfigDetailsPage.editMethodConfig(inputs = Some(TestData.SimpleMethodConfig.inputs))
 
@@ -109,7 +109,7 @@ class MethodConfigTabSpec extends FreeSpec with WebBrowserSpec with CleanUp {
 
     signIn(uiUser)
     val workspaceMethodConfigPage = new WorkspaceMethodConfigPage(billingProject, wsName).open
-    val methodConfigDetailsPage = workspaceMethodConfigPage.importMethodConfig(TestData.SimpleMethodConfig.namespace,
+    val methodConfigDetailsPage = workspaceMethodConfigPage.importMethodConfigFromRepo(TestData.SimpleMethodConfig.namespace,
       TestData.SimpleMethodConfig.name, TestData.SimpleMethodConfig.snapshotId, methodConfigName, "sample")
     methodConfigDetailsPage.editMethodConfig(inputs = Some(TestData.SimpleMethodConfig.inputs))
 
@@ -130,7 +130,7 @@ class MethodConfigTabSpec extends FreeSpec with WebBrowserSpec with CleanUp {
     signIn(uiUser)
     val workspaceMethodConfigPage = new WorkspaceMethodConfigPage(billingProject, wsName)
     workspaceMethodConfigPage.open
-    val methodConfigDetailsPage = workspaceMethodConfigPage.importMethodConfig(TestData.SimpleMethodConfig.namespace,
+    val methodConfigDetailsPage = workspaceMethodConfigPage.importMethodConfigFromRepo(TestData.SimpleMethodConfig.namespace,
       TestData.SimpleMethodConfig.name, TestData.SimpleMethodConfig.snapshotId, methodConfigName, TestData.SimpleMethodConfig.rootEntityType)
     val submissionDetailsPage = methodConfigDetailsPage.launchAnalysis(TestData.SimpleMethodConfig.rootEntityType, TestData.SingleParticipant.entityId)
     assert(submissionDetailsPage.verifyWorkflowFailed())

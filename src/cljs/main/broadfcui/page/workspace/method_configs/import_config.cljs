@@ -166,6 +166,7 @@
             type (if (= entityType "Configuration") :method-config :method)]
         (style/create-link
          {:text (style/render-name-id name snapshotId)
+          :data-test-id (str name "_" snapshotId)
           :onClick #(push-page {:breadcrumb-text (style/render-entity namespace name snapshotId)
                                 :component (confirm-entity (assoc props :type type :id id))})})))}])
 
@@ -173,10 +174,12 @@
 (defn- source-chooser [{:keys [push-page] :as props}]
   [:div {}
    [comps/Button {:text "Import from Method Repository"
+                  :data-test-id "import-from-repo-button"
                   :onClick #(push-page {:breadcrumb-text "Method Repository"
                                         :component (wrap (method-chooser props))})
                   :style {:marginRight "1rem"}}]
    [comps/Button {:text "Copy from another Workspace"
+                  :data-test-id "copy-from-workspace-button"
                   :onClick #(push-page {:breadcrumb-text "Choose Workspace"
                                         :component [WorkspaceChooser props]})}]])
 

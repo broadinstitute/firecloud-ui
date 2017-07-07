@@ -10,22 +10,39 @@ class WorkspaceMethodConfigPage(namespace: String, name: String)(implicit webDri
   override val url: String = s"${Config.FireCloud.baseUrl}#workspaces/$namespace/$name/method-configs"
 
 //To-Do: Make this accept method namespace and participant
-  def importMethodConfig(methodNamespace: String, methodName: String, snapshotId: Int, methodConfigName: String, rootEntityType: String): MethodConfigDetailsPage = {
-    val importModal = gestures.clickimportConfigButton()
-    importModal.importMethodConfig(methodNamespace, methodName, snapshotId, methodConfigName, rootEntityType)
+  def importMethodConfigFromRepo(methodNamespace: String, methodName: String, snapshotId: Int, methodConfigName: String, rootEntityType: String): MethodConfigDetailsPage = {
+    val chooseSourceModal = gestures.clickImportConfigButton()
+    chooseSourceModal.chooseConfigFromRepo(methodNamespace, methodName, snapshotId, methodConfigName, rootEntityType)
     new MethodConfigDetailsPage(namespace, name, methodNamespace, methodConfigName)
   }
 
 
   object gestures {
     private val openImportConfigModalButtonQuery: Query = testId("import-config-button")
-    def clickimportConfigButton(): ImportMethodConfigModal = {
+    def clickImportConfigButton(): ImportMethodChooseSourceModel = {
       click on (await enabled openImportConfigModalButtonQuery)
-      new ImportMethodConfigModal()
+      new ImportMethodChooseSourceModel()
     }
   }
 }
 
+class ImportMethodChooseSourceModel(implicit webDriver: WebDriver) extends FireCloudView {
+
+  def chooseConfigFromRepo(methodNamespace: String, methodName: String, snapshotId: Int, methodConfigName: String, rootEntityType: String): Unit = {
+    val importModel = gestures.clickChooseFromRepoButton()
+    importModel.importMethodConfig(methodNamespace, methodName, snapshotId, methodConfigName, rootEntityType)
+  }
+  object gestures {
+    private val chooseConfigFromRepoModalButtonQuery: Query = testId("import-from-repo-button")
+    private val chooseConfigFromWorkspaceModalButtonQuery: Query = testId("copy-from-workspace-button")
+
+    def clickChooseFromRepoButton(): ImportMethodConfigModal = {
+      click on (await enabled chooseConfigFromRepoModalButtonQuery)
+      new ImportMethodConfigModal()
+    }
+  }
+
+}
 
 /**
   * Page class for the import method config modal.
@@ -45,7 +62,7 @@ class ImportMethodConfigModal(implicit webDriver: WebDriver) extends FireCloudVi
 
   object gestures {
 
-    private val methodSearchInputQuery: Query = testId("method-repo-filter-input")
+    private val methodSearchInputQuery: Query = testId("method-repo-table-input")
     private val methodConfigNameInputQuery: Query = testId("method-config-import-name-input")
     private val importMethodConfigButtonQuery: Query = testId("import-button")
     private val rootEntityTypeSelectQuery: Query = testId("import-root-entity-type-select")

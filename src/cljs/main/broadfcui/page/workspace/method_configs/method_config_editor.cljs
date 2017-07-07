@@ -76,7 +76,7 @@
            (when editing?
              (style/create-text-field {:ref (str ref-prefix "_" name)
                                        :list "inputs-datalist"
-                                       :data-test-id (str field-name "-text-input")
+                                       :data-test-id (str name "-text-input")
                                        :defaultValue field-value
                                        :style {:width 500}}))
            (when-not editing?

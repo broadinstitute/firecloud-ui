@@ -60,8 +60,7 @@
                          "N/A"))}]
            :style table-style/table-heavy}
           :toolbar
-          {:data-test-id "method-repo-filter"
-           :items (cons [comps/FilterGroupBar
+          {:items (cons [comps/FilterGroupBar
                          {:data (concat (:methods @state) (:configs @state))
                           :selected-index (:filter-group-index @state)
                           :on-change (fn [index data]

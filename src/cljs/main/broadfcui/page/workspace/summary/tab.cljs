@@ -87,6 +87,7 @@
       (when (and can-share? (not editing?))
         [comps/SidebarButton
          {:style :light :margin :top :color :button-primary
+          :data-test-id "share-workspace-button"
           :text "Share..." :icon :share
           :onClick #(modal/push-modal
                      [AclEditor {:workspace-id workspace-id
@@ -172,6 +173,7 @@
       (when (and owner? (not editing?))
         [comps/SidebarButton {:style :light :margin :top :color (if isLocked :text-lighter :exception-state)
                               :text "Delete" :icon :delete
+                              :data-test-id "delete-workspace-button"
                               :disabled? (when isLocked "This workspace is locked.")
                               :onClick #(modal/push-modal
                                          [DeleteDialog {:workspace-id workspace-id}])}]))]))
