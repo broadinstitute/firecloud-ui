@@ -33,10 +33,15 @@
         (container (this :-render-page-component) "center")
         (container (this :-render-rows-component) "right")]))
    :component-did-mount
-   (fn [{:keys [refs this]}]
-     (this :-check-size)
-     (.addEventListener (@refs "content-container") "onresize"
-                        #(this :-check-size)))
+   (fn [{:keys [props state refs]}]
+     (let [check-size #(let [width (.-offsetWidth (@refs "content-container"))
+                             narrow? (< width (:width-threshold props))
+                             current-narrow? (:narrow? @state)]
+                         (when (or (nil? current-narrow?) ;; to handle initialization
+                                   (not= narrow? current-narrow?))
+                           (swap! state assoc :narrow? narrow?)))]
+       (check-size)
+       (.addEventListener (@refs "content-container") "onresize" check-size)))
    :-render-view-component
    (fn [{:keys [props]}]
      (let [{:keys [page-number rows-per-page filtered-count total-count]} props
@@ -95,12 +100,4 @@
           :style {:width 60 :marginRight "0.75rem"}
           :onChange #(per-page-selected (-> % .-target .-value int))}
          per-page-options)
-        "per page"]))
-   :-check-size
-   (fn [{:keys [props state refs]}]
-     (let [width (.-offsetWidth (@refs "content-container"))
-           narrow? (< width (:width-threshold props))
-           current-narrow? (:narrow? @state)]
-       (when (or (nil? current-narrow?) ;; to handle initialization
-                 (not= narrow? current-narrow?))
-         (swap! state assoc :narrow? narrow?))))})
+        "per page"]))})
