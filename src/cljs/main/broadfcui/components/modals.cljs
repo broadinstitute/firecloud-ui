@@ -4,8 +4,9 @@
    [org.broadinstitute.uicomps.modal :as modal]
    [broadfcui.common :as common]
    [broadfcui.common.components :as comps]
-   [broadfcui.common.style :as style]
-   ))
+   [broadfcui.common.style :as style]))
+
+
 
 (r/defc OKCancelForm
   {:get-default-props
@@ -67,3 +68,26 @@
                                      (fn [e] (.preventDefault e)
                                        (when (:cycle-focus? props)
                                          (.focus (get-first)))))))))})
+
+(r/defc RenderError
+  {:render
+   (fn [{:keys [props]}]
+     (let [{:keys [header text on-dismiss]} props]
+       [OKCancelForm
+        {:header (or header "Error")
+         :content [:div {:style {:maxWidth "50vs"}} text]
+         :dismiss on-dismiss
+         :show-cancel? false :ok-button "OK"}]))})
+
+(r/defc RenderMessage
+  {:render
+   (fn [{:keys [props]}]
+     (let [{:keys [header text on-confirm on-dismiss]} props]
+      [OKCancelForm
+       {:header (or header "Confirm")
+        :content [:div {:style {:maxWidth 500}} text]
+        :ok-button on-confirm
+        :dismiss on-dismiss}]))})
+
+
+

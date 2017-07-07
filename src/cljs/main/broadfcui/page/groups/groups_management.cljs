@@ -5,6 +5,7 @@
     [broadfcui.common.flex-utils :as flex]
     [broadfcui.common.icons :as icons]
     [broadfcui.common.management-utils :refer [MembershipManagementPage]]
+    [broadfcui.components.modals :as modals]
     [broadfcui.common.modal :as modal]
     [broadfcui.common.style :as style]
     [broadfcui.common.table.table :refer [Table]]
@@ -13,8 +14,8 @@
     [broadfcui.nav :as nav]
     [broadfcui.page.groups.create-group :refer [CreateGroupDialog]]
     [broadfcui.utils :as utils]
-    [broadfcui.net :as net]
-    ))
+    [broadfcui.net :as net]))
+
 
 (react/defc GroupTable
   {:render
@@ -36,6 +37,19 @@
      [:div {}
       (when (:deleting? @state)
         [comps/Blocker {:banner "Deleting group..."}])
+      (when (:modal? @state)
+        [modals/RenderMessage
+         {:text "Are you sure you want to delete this group?"
+          :on-confirm (fn []
+                        (net/render-with-ajax
+                         (:group-response @state)
+                         #(this :-delete-group)
+                         {:loading-text "Deleting group..."
+                          :rephrase-error
+                          #(if (= 409 (:status-code %))
+                             "Sorry you are unable to delete this group because it is in use"
+                             (get-in % [:parsed-response :message]))}))
+          :on-dismiss #(swap! state dissoc :modal?)}])
       [Table
        {:data (get-in @state [:groups-response :parsed-response])
         :body {:behavior {:reorderable-columns? false}
@@ -71,24 +85,9 @@
                      (style/create-link
                       {:text (icons/icon {} :delete)
                        :style {:float "right"}
-                       :onClick (fn [_]
-                                  (comps/push-confirm
-                                   {:text "Are you sure you want to delete this group?"
-                                    :on-confirm (fn []
-                                                  (swap! state assoc :deleting? true)
-                                                  (endpoints/call-ajax-orch
-                                                   {:endpoint (endpoints/delete-group groupName)
-                                                    :on-done (net/handle-ajax-response
-                                                              (fn [{:keys [success? status-text status-code]}]
-                                                                (swap! state dissoc :deleting?)
-                                                                (modal/pop-modal)
-                                                                (if success?
-                                                                  (this :-load-data)
-                                                                  (comps/push-error
-                                                                   (if (= 409 status-code)
-                                                                     "Sorry you are unable to delete this group because it is in use"
-                                                                     (status-text))))))}))}))
-                       })))}]}
+                       :onClick #(do
+                                   (swap! state assoc :group-name groupName)
+                                   (swap! state assoc :modal? true))})))}]}
         :toolbar
         {:items
          [flex/spring
@@ -98,7 +97,25 @@
             (fn []
               (modal/push-modal
                [CreateGroupDialog
-                {:on-success #(this :-load-data)}]))}]]}}]])})
+                {:on-success #(this :-load-data)}]))}]]}}]])
+   :-delete-group
+   (fn [{:keys [state this]}]
+     (utils/log (:group-response @state))
+     (swap! state assoc :deleting? true)
+     (endpoints/call-ajax-orch
+      {:endpoint (endpoints/delete-group (:group-name @state))
+       :on-done (net/handle-ajax-response
+                 (fn [{:keys [success? status-code parsed-response]}]
+                   (swap! state dissoc :deleting?)
+                   (swap! state dissoc :modal?)
+                   (if success?
+                     (this :-load-data)
+                     [modals/RenderError
+                      {:text parsed-response}]
+                     )
+                   ))}))
+   })
+
 
 
 (react/defc Page
