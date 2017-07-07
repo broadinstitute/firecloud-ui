@@ -29,9 +29,11 @@
 (react/defc Page
   {:render
    (fn [{:keys [props state]}]
-     (let [{:keys [status-code status-text parsed-response]} @state
+     (let [{:keys [status-code status-text response-text parsed-response]} @state
            orch-ok? (:ok parsed-response)
-           orch-errors [(str "Server Response: " status-code) (str "Error: " status-text)]
+           orch-errors [(str "Status Code: " status-code)
+                        (str "Status Text: " status-text)
+                        (str "Response Text: " response-text)]
            rawls-ok? (get-in parsed-response [:systems :Rawls :ok])
            rawls-errors (get-in parsed-response [:systems :Rawls :messages])
            agora-ok? (get-in parsed-response [:systems :Agora :ok])
@@ -52,10 +54,11 @@
    (fn [{:keys [props state]}]
      (utils/ajax {:url (str (config/api-url-root) "/status")
                   :method "GET"
-                  :on-done (fn [{:keys [status-code status-text get-parsed-response]}]
+                  :on-done (fn [{:keys [status-code status-text raw-response get-parsed-response]}]
                              (swap! state assoc
                                     :status-code status-code
                                     :status-text status-text
+                                    :response-text raw-response
                                     :parsed-response (get-parsed-response)))}))})
 
 (defn add-nav-paths []
