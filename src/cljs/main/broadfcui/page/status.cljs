@@ -3,6 +3,7 @@
     [dmohs.react :as react]
     [broadfcui.common.components :as comps]
     [broadfcui.common.style :as style]
+    [broadfcui.config :as config]
     [broadfcui.nav :as nav]
     [broadfcui.utils :as utils]
     ))
@@ -15,44 +16,49 @@
       [:div {}
        (:label props) ": "
        (cond
-         (nil? (:response @state))
+         (nil? (:success? props))
          [comps/Spinner]
-         (not (:success? (:response @state)))
+         (not (:success? props))
          [:span {} [:span {:style {:color "red"}} "Error"]
-          (when-not (:show-error-details? @state)
-            [:span {}
-             " ("
-             (style/create-link
-              {:onClick #(swap! state assoc :show-error-details? true)
-               :text "show details"})
-             ")"])]
+          (when (:errors props)
+            [:ul {}
+             (map (fn [e] [:li {:style {:fontSize "smaller"}} e])
+                  (:errors props))])]
          :else
-         [:span {:style {:color "green"}} "Okay"])]
-      (when (:show-error-details? @state)
-        (let [response (:response @state)]
-          [:div {:style {:backgroundColor "#eee" :padding 6 :fontSize "smaller"}}
-           [:div {} "Status code: " (:status-code response)]
-           [:div {} "Status text: " (:status-text response)]
-           [:div {} "Response text:" [:br] (-> (:xhr response) .-responseText)]]))])
-   :component-did-mount
-   (fn [{:keys [props state]}]
-     (if (= (:path (:request props)) "/profile")
-       (utils/ajax-orch (:path (:request props))
-                        {:on-done #(swap! state assoc :response %)}
-                        :service-prefix "/register")
-       (utils/ajax-orch (:path (:request props))
-                        {:on-done #(swap! state assoc :response %)})))})
+         [:span {:style {:color "green"}} "Okay"])]])})
 
 (react/defc Page
   {:render
-   (fn [_]
+   (fn [{:keys [props state]}]
+     (let [{:keys [success? parsed-response status-text status-code]} @state
+           orch-ok? (:ok parsed-response)
+           orch-errors [(str "Server Response: " status-code) (str "Error: " status-text)]
+           rawls-ok? (and orch-ok? (get-in parsed-response [:systems :Rawls :ok]))
+           rawls-errors (get-in parsed-response [:systems :Rawls :messages])
+           agora-ok? (and orch-ok? (get-in parsed-response [:systems :Agora :ok]))
+           agora-errors (get-in parsed-response [:systems :Agora :messages])
+           thurloe-ok? (and orch-ok? (get-in parsed-response [:systems :Thurloe :ok]))
+           thurloe-errors (get-in parsed-response [:systems :Thurloe :messages])
+           search-ok? (and orch-ok? (get-in parsed-response [:systems :Search :ok]))
+           search-errors (get-in parsed-response [:systems :Search :messages])]
      [:div {:style {:padding "1em"}}
       [:h2 {} "Service Status"]
       [:div {}
-       [StatusLine {:label "Orchestration" :request {:path "/status"}}]
-       [StatusLine {:label "Rawls" :request {:path "/workspaces"}}]
-       [StatusLine {:label "Agora" :request {:path "/methods"}}]
-       [StatusLine {:label "Thurloe" :request {:path "/profile"}}]]])})
+         [StatusLine {:label "Orchestration" :success? orch-ok?    :errors orch-errors}]
+         [StatusLine {:label "Rawls"         :success? rawls-ok?   :errors rawls-errors}]
+         [StatusLine {:label "Agora"         :success? agora-ok?   :errors agora-errors}]
+         [StatusLine {:label "Thurloe"       :success? thurloe-ok? :errors thurloe-errors}]
+         [StatusLine {:label "Search"        :success? search-ok?  :errors search-errors}]]]))
+   :component-did-mount
+   (fn [{:keys [props state]}]
+     (utils/ajax {:url (str (config/api-url-root) "/status")
+                  :method "GET"
+                  :on-done (fn [{:keys [status-code success? status-text get-parsed-response]}]
+                             (swap! state assoc
+                                    :status-code status-code
+                                    :success? success?
+                                    :status-text status-text
+                                    :parsed-response (get-parsed-response)))}))})
 
 (defn add-nav-paths []
   (nav/defpath
