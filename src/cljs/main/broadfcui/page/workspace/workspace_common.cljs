@@ -1,9 +1,9 @@
 (ns broadfcui.page.workspace.workspace-common
   (:require
+    [broadfcui.common.style :as style]
     [broadfcui.common.table.style :as table-style]
     [broadfcui.common.table.table :refer [Table]]
     [broadfcui.common.table.utils :as table-utils]
-    [broadfcui.common.style :as style]
     [broadfcui.utils :as utils]
     ))
 

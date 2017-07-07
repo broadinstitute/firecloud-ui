@@ -1,10 +1,10 @@
 (ns broadfcui.page.billing.create-project
   (:require
     [dmohs.react :as react]
-    clojure.string
+    [clojure.string :as string]
     [broadfcui.common.components :as comps]
-    [broadfcui.common.input :as input]
     [broadfcui.common.icons :as icons]
+    [broadfcui.common.input :as input]
     [broadfcui.common.modal :as modal]
     [broadfcui.common.style :as style]
     [broadfcui.config :as config]
@@ -31,8 +31,8 @@
             :else
             (if (empty? billing-accounts)
               [:div {} "You do not have any billing accounts available. "
-                [:a {:target "_blank" :href (str (config/billing-guide-url))} "Learn how to create a billing account."
-                 icons/external-link-icon]]
+               [:a {:target "_blank" :href (str (config/billing-guide-url))} "Learn how to create a billing account."
+                icons/external-link-icon]]
               [:div {:style {:width 750}}
                (when (:creating? @state)
                  [comps/Blocker {:banner "Creating billing account..."}])
@@ -42,7 +42,7 @@
                                  :style {:width "100%" :marginTop "1em" :marginBottom 0}
                                  :predicates [{:test #(<= 6 (count %) 30) :message "Name must be 6-30 characters long"}
                                               {:test #(re-matches #"[a-z0-9\-]*" %) :message "Name contains invalid characters"}
-                                              {:test #(and (not (clojure.string/blank? %)) (re-matches #"[a-z]" (first %))) :message "Name must start with a letter"}]}]
+                                              {:test #(and (not (string/blank? %)) (re-matches #"[a-z]" (first %))) :message "Name must start with a letter"}]}]
                (style/create-validation-error-message (:validation-errors @state))
                [:div {:style {:marginBottom "1.5em"
                               :color (if (:validation-errors @state) (:exception-state style/colors) (:text-lighter style/colors))
@@ -82,7 +82,7 @@
                              [:a
                               {:href (str
                                       "https://console.developers.google.com/billing/"
-                                      (second (clojure.string/split (account "accountName") #"/")))
+                                      (second (string/split (account "accountName") #"/")))
                                :target "_blank"}
                               (icons/icon {:style {:textDecoration "none" :color (:button-primary style/colors)}} :new-window)]]])
                          billing-accounts)]]

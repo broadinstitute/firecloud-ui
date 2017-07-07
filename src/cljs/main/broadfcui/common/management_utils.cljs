@@ -7,8 +7,8 @@
     [broadfcui.common.input :as input]
     [broadfcui.common.modal :as modal]
     [broadfcui.common.style :as style]
-    [broadfcui.common.table.table :as table]
     [broadfcui.common.table.style :as table-style]
+    [broadfcui.common.table.table :as table]
     [broadfcui.endpoints :as endpoints]
     [broadfcui.utils :as utils]
     ))

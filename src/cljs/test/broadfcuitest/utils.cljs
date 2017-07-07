@@ -1,7 +1,7 @@
 (ns broadfcuitest.utils
   (:require
-   cljs.test
-   ))
+    cljs.test
+    ))
 
 ;; cljs.test gets mad if *print-fn* is undefined.
 (enable-console-print!)

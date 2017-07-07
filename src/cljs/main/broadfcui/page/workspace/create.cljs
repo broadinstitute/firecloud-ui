@@ -1,17 +1,16 @@
 (ns broadfcui.page.workspace.create
   (:require
-   [dmohs.react :as react]
-   [broadfcui.common :as common]
-   [broadfcui.common.components :as comps]
-   [broadfcui.common.input :as input]
-   [broadfcui.common.modal :as modal]
-   [broadfcui.common.style :as style]
-   [broadfcui.components.modals :as modals]
-   [broadfcui.config :as config]
-   [broadfcui.endpoints :as endpoints]
-   [broadfcui.nav :as nav]
-   [broadfcui.utils :as utils]
-   ))
+    [dmohs.react :as react]
+    [broadfcui.common :as common]
+    [broadfcui.common.components :as comps]
+    [broadfcui.common.input :as input]
+    [broadfcui.common.modal :as modal]
+    [broadfcui.common.style :as style]
+    [broadfcui.components.modals :as modals]
+    [broadfcui.endpoints :as endpoints]
+    [broadfcui.nav :as nav]
+    [broadfcui.utils :as utils]
+    ))
 
 
 (react/defc CreateDialog
