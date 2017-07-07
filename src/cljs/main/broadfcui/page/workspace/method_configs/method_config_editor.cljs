@@ -45,14 +45,14 @@
      (this :load-agora-method))
    :load-agora-method
    (fn [{:keys [props state]} & [method-ref]]
-     (let [{:keys [methodNamespace methodName methodVersion]} (or method-ref props)]
+     (let [{:keys [namespace name snapshotId]} (or method-ref props)]
        (endpoints/call-ajax-orch
-        {:endpoint (endpoints/get-agora-method methodNamespace methodName methodVersion)
-         :headers utils/content-type=json
-         :on-done (fn [{:keys [success? get-parsed-response status-text]}]
-                    (if success?
-                      (swap! state assoc :loaded-method (get-parsed-response))
-                      (swap! state assoc :error status-text)))})))})
+         {:endpoint (endpoints/get-agora-method namespace name snapshotId)
+          :headers utils/content-type=json
+          :on-done (fn [{:keys [success? get-parsed-response status-text]}]
+                     (if success?
+                       (swap! state assoc :loaded-method (utils/log (get-parsed-response)))
+                       (swap! state assoc :error status-text)))})))})
 
 
 (defn- input-output-list [{:keys [values ref-prefix invalid-values editing? all-values]}]
@@ -145,11 +145,8 @@
                [comps/SidebarButton {:style :light :color :button-primary
                                      :text "Edit Configuration" :icon :edit
                                      :disabled? (when locked? "The workspace is locked")
-                                     :onClick (fn []
-                                                (swap! state assoc :editing? true :original-config loaded-config
-                                                                                  :original-inputs-outputs inputs-outputs)
-                                                (utils/log "LOADED CONFIG AT SAVING:  " loaded-config)
-                                                (utils/log "INPUTS OUTPUTS AT SAVING:  " inputs-outputs))}]
+                                     :onClick #(swap! state assoc :editing? true :original-config loaded-config
+                                                      :original-inputs-outputs inputs-outputs)}]
                [comps/SidebarButton {:style :light :color :exception-state :margin :top
                                      :text "Delete" :icon :delete
                                      :disabled? (when locked? "The workspace is locked")
@@ -190,9 +187,9 @@
         (create-section-header "Referenced Method")
         (create-section [MethodDetailsViewer
                          (merge {:ref "methodDetailsViewer"
-                                 :methodName (:methodName methodRepoMethod)
-                                 :methodNamespace (:methodNamespace methodRepoMethod)
-                                 :methodVersion (:methodVersion methodRepoMethod)
+                                 :name (:methodName methodRepoMethod)
+                                 :namespace (:methodNamespace methodRepoMethod)
+                                 :snapshotId (:methodVersion methodRepoMethod)
                                  :onSnapshotIdChange #(this :load-new-method-template %)}
                                 (utils/restructure config methods editing? wdl-parse-error))])
         (create-section-header "Root Entity Type")
@@ -302,8 +299,9 @@
                        :methodName method-name
                        :methodVersion new-snapshot-id}]
        (swap! state assoc :blocker "Updating...")
-       ((@refs "methodDetailsViewer") :load-agora-method method-ref)
-
+       ((@refs "methodDetailsViewer") :load-agora-method {:namespace method-namespace
+                                                          :name method-name
+                                                          :snapshotId new-snapshot-id})
        (endpoints/call-ajax-orch
         {:endpoint (endpoints/create-template method-ref)
          :payload method-ref
