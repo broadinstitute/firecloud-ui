@@ -49,7 +49,7 @@
      [:div {:style {:padding "1em"}}
       [:h2 {} "Service Status"]
       [:div {}
-       [StatusLine {:label "Orchestration" :request {:path "/status/ping"}}]
+       [StatusLine {:label "Orchestration" :request {:path "/status"}}]
        [StatusLine {:label "Rawls" :request {:path "/workspaces"}}]
        [StatusLine {:label "Agora" :request {:path "/methods"}}]
        [StatusLine {:label "Thurloe" :request {:path "/profile"}}]]])})
