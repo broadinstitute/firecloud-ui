@@ -11,7 +11,7 @@
 
 (react/defc StatusLine
   {:render
-   (fn [{:keys [props state]}]
+   (fn [{:keys [props]}]
      [:div {:style {:marginTop "0.5em"}}
       [:div {}
        (:label props) ": "
