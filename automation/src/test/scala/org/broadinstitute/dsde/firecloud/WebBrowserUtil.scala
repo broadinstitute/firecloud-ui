@@ -9,7 +9,7 @@ import org.scalatest.selenium.WebBrowser
   * Mix-in utilities for ScalaTest's WebBrowser.
   */
 trait WebBrowserUtil extends WebBrowser {
-  val defaultTimeOutInSeconds: Long = 10
+  val defaultTimeOutInSeconds: Long = 11
 
   /**
     * Override of the base find() method to retry in the case of a
@@ -161,7 +161,7 @@ trait WebBrowserUtil extends WebBrowser {
   }
 
   def withText(text: String)(implicit webDriver: WebDriver): Query = {
-    xpath(s"//*[contains(text(),'$text'")
+    xpath(s"//*[contains(text(),'$text')]")
   }
 
   /**

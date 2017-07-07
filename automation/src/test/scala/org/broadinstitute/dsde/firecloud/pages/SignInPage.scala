@@ -12,13 +12,9 @@ class SignInPage(val baseUrl: String)(implicit webDriver: WebDriver) extends Fir
   override val url: String = baseUrl
 
   /**
-    * Sign in to FireCloud. Returns once a valid AuthenticatedPage is detected.
-    * TODO: Make the above doc not lies.
+    * Sign in to FireCloud. Returns when control is handed back to FireCloud after Google sign-in is done.
     */
   def signIn(email: String, password: String): Unit = {
-    // TODO: Do we want pages to navigate to themselves or should the caller do that? I'm leaning toward making the caller do it.
-//    if (find(testId(SIGN_IN_BUTTON_ID)).isEmpty)
-//      go to this
     val popup = beginSignIn()
     popup.signIn(email, password)
     await enabled testId("account-dropdown")
@@ -77,7 +73,22 @@ class GoogleSignInPopup(implicit webDriver: WebDriver) extends WebBrowser with W
     * TODO: make this work when there is more than one window
     */
   def returnFromSignIn(): Unit = {
-    await condition (windowHandles.size == 1)
+    /*
+     * The sign-in popup may go away at any time which could cause any calls
+     * such as findElement to fail with NullPointerException. Therefore, the
+     * only safe check we can make is on the number of windows.
+     */
+    await condition (windowHandles.size == 1, 30)
+
+    /*
+     * If there is still more than 1 window after 30 seconds, we most likely
+     * need to approve access to continue.
+     */
+    if (windowHandles.size > 1) {
+      click on id("submit_approve_access")
+      await condition(windowHandles.size == 1)
+    }
+
     switch to window(windowHandles.head)
   }
 }

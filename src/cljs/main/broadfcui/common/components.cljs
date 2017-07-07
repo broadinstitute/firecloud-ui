@@ -50,7 +50,7 @@
      {:color (:button-primary style/colors)})
    :render
    (fn [{:keys [props]}]
-     (let [{:keys [color icon disabled? onClick text style class-name]} props]
+     (let [{:keys [color icon disabled? onClick text style class-name data-test-id]} props]
        [:a (merge
             {:className (or class-name "button")
              :style (merge
@@ -63,6 +63,7 @@
                       :borderRadius 2 :padding (if text "0.7em 1em" "0.4em")
                       :textDecoration "none"}
                      (if (map? style) style {}))
+             :data-test-id data-test-id
              :href "javascript:;"
              :onClick (if disabled? (create-error-message disabled?) onClick)
              :onKeyDown (when (and onClick (not disabled?))

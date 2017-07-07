@@ -14,6 +14,8 @@ object Dependencies {
     "com.fasterxml.jackson.core" % "jackson-core" % jacksonV,
     "com.fasterxml.jackson.module" % "jackson-module-scala_2.11" % jacksonV,
     "ch.qos.logback" % "logback-classic" % "1.1.3",
+    "com.google.apis" % "google-api-services-oauth2" % "v1-rev112-1.20.0",
+    "com.google.api-client" % "google-api-client" % "1.22.0" exclude("com.google.guava", "guava-jdk5"),
 //    "com.getsentry.raven" % "raven-logback" % "7.8.6",
 //    "com.typesafe.scala-logging" %% "scala-logging-slf4j" % "2.1.2",
 //    "org.broadinstitute.dsde.vault" %%  "vault-common"  % "0.1-19-ca8b927",

@@ -1,14 +1,18 @@
 package org.broadinstitute.dsde.firecloud.pages
 
-import java.io.File
+import java.io.{File, FileInputStream, FileOutputStream}
 import java.net.URL
+import java.text.SimpleDateFormat
 import java.util.UUID
 
+import com.typesafe.scalalogging.LazyLogging
 import org.broadinstitute.dsde.firecloud.api.Orchestration
+import org.broadinstitute.dsde.firecloud.auth.Credentials
 import org.broadinstitute.dsde.firecloud.{Config, WebBrowserUtil}
-import org.openqa.selenium.WebDriver
+import org.openqa.selenium.{OutputType, TakesScreenshot, WebDriver}
 import org.openqa.selenium.chrome.ChromeDriverService
-import org.openqa.selenium.remote.{DesiredCapabilities, LocalFileDetector, RemoteWebDriver}
+import org.openqa.selenium.remote.{Augmenter, DesiredCapabilities, LocalFileDetector, RemoteWebDriver}
+import org.scalatest.Suite
 
 import scala.sys.SystemProperties
 import scala.util.Random
@@ -16,7 +20,7 @@ import scala.util.Random
 /**
   * Base spec for writing FireCloud web browser tests.
   */
-trait WebBrowserSpec extends WebBrowserUtil {
+trait WebBrowserSpec extends WebBrowserUtil with LazyLogging { self: Suite =>
 
   val api = Orchestration
 
@@ -28,20 +32,22 @@ trait WebBrowserSpec extends WebBrowserUtil {
     * @param testCode the test code to run
     */
   def withWebDriver(testCode: (WebDriver) => Any): Unit = {
-    val localBrowser = new SystemProperties().get("local.browser")
-    localBrowser match {
-      case Some("true") => runLocalChrome(testCode)
+    val headless = new SystemProperties().get("headless")
+    headless match {
+      case Some("false") => runLocalChrome(testCode)
       case _ => runHeadless(testCode)
     }
   }
 
   private def runLocalChrome(testCode: (WebDriver) => Any) = {
-    val service = new ChromeDriverService.Builder().usingDriverExecutable(new File(Config.ChromeSettings.localChrome)).usingAnyFreePort().build()
+    val service = new ChromeDriverService.Builder().usingDriverExecutable(new File(Config.ChromeSettings.chromDriverPath)).usingAnyFreePort().build()
     service.start()
-    val driver = new RemoteWebDriver(service.getUrl, DesiredCapabilities.chrome())
+    implicit val driver = new RemoteWebDriver(service.getUrl, DesiredCapabilities.chrome())
     driver.setFileDetector(new LocalFileDetector())
     try {
-      testCode(driver)
+      withScreenshot {
+        testCode(driver)
+      }
     } finally {
       driver.quit()
       service.stop()
@@ -50,10 +56,16 @@ trait WebBrowserSpec extends WebBrowserUtil {
 
   private def runHeadless(testCode: (WebDriver) => Any) = {
     val defaultChrome = Config.ChromeSettings.chromedriverHost
-    val driver = new RemoteWebDriver(new URL(defaultChrome), DesiredCapabilities.chrome())
+    implicit val driver = new RemoteWebDriver(new URL(defaultChrome), DesiredCapabilities.chrome())
     driver.setFileDetector(new LocalFileDetector())
     try {
-      testCode(driver)
+      withScreenshot {
+        testCode(driver)
+      }
+    } catch {
+      case t: Throwable =>
+        logger.error(s"Failure in $suiteName", t)
+        throw t
     } finally {
       driver.quit()
     }
@@ -87,8 +99,32 @@ trait WebBrowserSpec extends WebBrowserUtil {
     * that the user has previously registered and will therefore be taken to
     * the workspace list page.
     */
-  def signIn(credentials: Config.Credentials)(implicit webDriver: WebDriver): WorkspaceListPage = {
+  def signIn(credentials: Credentials)(implicit webDriver: WebDriver): WorkspaceListPage = {
     signIn(credentials.email, credentials.password)
     new WorkspaceListPage
+  }
+
+  /**
+    * Override of withScreenshot that works with a remote Chrome driver and
+    * lets us control the image file name.
+    */
+  override def withScreenshot(f: => Unit)(implicit driver: WebDriver): Unit = {
+    try {
+      f
+    } catch {
+      case t: Throwable =>
+        val date = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss-SSS").format(new java.util.Date())
+        val fileName = s"failure_screenshots/${date}_$suiteName.png"
+        try {
+          val tmpFile = new Augmenter().augment(driver).asInstanceOf[TakesScreenshot].getScreenshotAs(OutputType.FILE)
+          logger.error(s"Failure screenshot saved to $fileName")
+          new FileOutputStream(new File(fileName)).getChannel.transferFrom(
+            new FileInputStream(tmpFile).getChannel, 0, Long.MaxValue)
+        } catch {
+          case t: Throwable =>
+            logger.error(s"FAILED TO SAVE SCREENSHOT $fileName: ${t.getMessage}")
+        }
+        throw t
+    }
   }
 }

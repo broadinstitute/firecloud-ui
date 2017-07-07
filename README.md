@@ -68,3 +68,28 @@ To compile and build the `broadinstitute/firecloud-ui` docker image, run
 ```
 ./script/build.sh compile -d build
 ```
+
+## Selenium tests
+
+Selenium tests are found in the `automation` directory.  They should run against a firecloud-in-a-box (FiaB).
+
+### Running with docker
+
+First build the docker image
+```
+docker build -f Dockerfile-tests -t automation .
+```
+
+Then run the run-tests script with the newly created image.  This script will render the `application.conf` and `firecloud-account.pem` from vault to be used by the test container.  Note that if you are running outside of docker you will need to generate these files manually.
+```
+cd automation/docker
+./run-tests.sh 4 qa <ip of FiaB>
+```
+
+### Running locally
+Note that you will need to render `automation/docker/application.conf.ctmpl` and copy it to `automation/src/resources/`, as well as `automation/src/firecloud-account.pem.ctmpl`, which should be saved in `/etc`.
+Your local `/etc/hosts` file will need to be configured so that Firecloud DNS names are pointing to the IP of your running FiaB.  For more 
+```
+sbt test -Djsse.enableSNIExtension=false -Dheadless=false
+sbt clean
+```

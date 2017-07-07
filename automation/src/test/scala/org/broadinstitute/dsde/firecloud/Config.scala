@@ -1,55 +1,66 @@
 package org.broadinstitute.dsde.firecloud
 
 import com.typesafe.config.ConfigFactory
-import org.broadinstitute.dsde.firecloud.api.AuthToken
+import org.broadinstitute.dsde.firecloud.auth.Credentials
 
 object Config {
   private val config = ConfigFactory.load()
   private val fireCloud = config.getConfig("fireCloud")
-  private val accounts = config.getConfig("accounts")
-  private val authTokens = config.getConfig("authTokens")
+  private val users = config.getConfig("users")
   private val chromeSettings = config.getConfig("chromeSettings")
+  private val gcsConfig = config.getConfig("gcs")
 
-  object EnvironmentVars {
-    val GCLOUD_AUTH_TOKEN = "ya29.Gl1WBGPL_eVgVOXoniFCFSQh-FFtIao5kJfUIfJ5KrIaleWzKxwbWdTy0ZondNtoJp0CDKNG7ODWYy8CU3dMRnIh9tKy6dLdopDNDogJVfHVIB5lcbARotan7dPbOmo"
-  }
-
-  case class Credentials(email: String, password: String)
-
-  object Accounts {
-//    private val accounts = config.getConfig("accounts")
-    val curatorUserEmail = "test.firec@gmail.com"
-    val curatorUserPassword = accounts.getString("notSoSecretPassword")
-    val testUserEmail = "test.firec@gmail.com"
-    val testUserPassword = accounts.getString("notSoSecretPassword")
-    val adminUserEmail = "b.adm.firec@gmail.com"
-    val adminUserPassword = accounts.getString("notSoSecretPassword")
-
-    val testFireC = Credentials("test.firec@gmail.com", accounts.getString("notSoSecretPassword"))
-    val dominique = Credentials("dominique.testerson@gmail.com", accounts.getString("notSoSecretPassword"))
-    val elvin = Credentials("elvin.testerson@gmail.com", accounts.getString("notSoSecretPassword"))
-  }
-
-  object AuthTokens {
-    val admin = AuthToken(authTokens.getString("admin"))
-    val elvin = AuthToken(authTokens.getString("elvin"))
-    val testFireC = AuthToken(authTokens.getString("testFireC"))
-  }
-
-  object FireCloud {
-    val baseUrl = fireCloud.getString("baseUrl")
-    val local_API= "http://localhost:8080/"
-    val apiUrl = fireCloud.getString("apiUrl")
-    val rawlsApiUrl = fireCloud.getString("rawlsApiUrl")
-    val THURLOE_API="https://firecloud-fiab.dsde-dev.broadinstitute.org:25443/"
+  object GCS {
+    val pathToQAPem = gcsConfig.getString("qaPemFile")
+    val qaEmail = gcsConfig.getString("qaEmail")
   }
 
   object Projects {
-    val common = "security-spec-test5"
+    val default = gcsConfig.getString("serviceProject")
+    val common = default
+    val billingAccount = gcsConfig.getString("billingAccount")
+  }
+
+  object Users {
+    val notSoSecretPassword = users.getString("notSoSecretPassword")
+
+    val dumbledore = Credentials(users.getString("dumbledore"), notSoSecretPassword)
+    val voldemort = Credentials(users.getString("voldemort"), notSoSecretPassword)
+    val admin = dumbledore
+
+    val hermione = Credentials(users.getString("hermione"), notSoSecretPassword)
+    val owner = hermione
+
+    val mcgonagall = Credentials(users.getString("mcgonagall"), notSoSecretPassword)
+    val snape = Credentials(users.getString("snape"), notSoSecretPassword)
+    val curator = mcgonagall
+
+    val harry = Credentials(users.getString("harry"), notSoSecretPassword)
+    val ron = Credentials(users.getString("ron"), notSoSecretPassword)
+    val draco = Credentials(users.getString("draco"), notSoSecretPassword)
+
+    val fred = Credentials(users.getString("fred"), notSoSecretPassword)
+    val george = Credentials(users.getString("george"), notSoSecretPassword)
+    val bill = Credentials(users.getString("bill"), notSoSecretPassword)
+
+    val lunaTemp = Credentials(users.getString("luna"), notSoSecretPassword)
+    val nevilleTemp = Credentials(users.getString("neville"), notSoSecretPassword)
+    val testUser = harry
+    val dominique = harry
+    val elvin = fred
+  }
+
+  object FireCloud {
+    val baseUrl: String = fireCloud.getString("baseUrl")
+    val fireCloudId: String = fireCloud.getString("fireCloudId")
+    val orchApiUrl: String = fireCloud.getString("orchApiUrl")
+    val rawlsApiUrl: String = fireCloud.getString("rawlsApiUrl")
+    val thurloeApiUrl: String = fireCloud.getString("thurloeApiUrl")
+    val authDomain: String = fireCloud.getString("authDomain")
   }
 
   object ChromeSettings {
     val chromedriverHost = chromeSettings.getString("chromedriverHost")
-
+    val chromDriverPath = chromeSettings.getString("chromedriverPath")
   }
 }
