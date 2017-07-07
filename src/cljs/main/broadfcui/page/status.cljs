@@ -21,9 +21,8 @@
          (not (:success? props))
          [:span {} [:span {:style {:color "red"}} "Error"]
           (when (:errors props)
-            [:ul {}
-             (map (fn [e] [:li {:style {:fontSize "smaller"}} e])
-                  (:errors props))])]
+            [:div {:style {:backgroundColor "#eee" :padding 6 :fontSize "smaller"}}
+              [:ul {} (map (fn [e] [:li {} e]) (:errors props))]])]
          :else
          [:span {:style {:color "green"}} "Okay"])]])})
 
