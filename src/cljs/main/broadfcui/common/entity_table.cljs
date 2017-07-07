@@ -98,11 +98,11 @@
                                          (common/attribute-list? attr-value)
                                          (let [items (map render-list-item (common/attribute-values attr-value))
                                                c (count items)
-                                               entity-type (case selected-entity-type
-                                                             :sample_set "sample"
-                                                             :pair_set "pair"
-                                                             :participant_set "participant"
-                                                             "item")]
+                                               entity-type (or (some-> selected-entity-type
+                                                                       name
+                                                                       common/set-type->membership-attribute
+                                                                       inflections/singular)
+                                                               "item")]
                                            (str (inflections/pluralize c entity-type)
                                                 (when (and (pos? c) (= entity-type "item"))
                                                   (str ": " (string/join ", " items)))))
