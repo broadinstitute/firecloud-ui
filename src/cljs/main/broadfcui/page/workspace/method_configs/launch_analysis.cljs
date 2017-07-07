@@ -54,15 +54,14 @@
     [EntityTable
      {:workspace-id (:workspace-id props)
       :initial-entity-type (:root-entity-type props)
-      :row-style (fn [row-index row-data]
-                   {:backgroundColor
-                    (cond (= (entity->id (first row-data)) (:selected-entity @state)) "yellow"
-                          (even? row-index) (:background-light style/colors)
-                          :else "#fff")
-                    :cursor "pointer"})
-      :on-row-click (fn [_ row]
-                      (let [entity (first row)
-                            entity-id (entity->id entity)]
+      :style {:body-row (fn [{:keys [index row]}]
+                          {:backgroundColor
+                           (cond (= (entity->id row) (:selected-entity @state)) "yellow"
+                                 (even? index) (:background-light style/colors)
+                                 :else "#fff")
+                           :cursor "pointer"})}
+      :on-row-click (fn [_ entity]
+                      (let [entity-id (entity->id entity)]
                         (swap! state assoc
                                :selected-entity entity-id
                                :workflow-count (common/count-workflows

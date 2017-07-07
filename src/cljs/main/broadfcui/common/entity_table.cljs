@@ -72,7 +72,7 @@
               :v 1
               :fetch-data (this :-pagination)
               :body
-              {:style table-style/table-heavy
+              {:style (merge table-style/table-heavy (:style props))
                :columns
                (into [{:header (get-in entity-metadata [selected-entity-type :idName])
                        :initial-width 200
@@ -108,7 +108,10 @@
                                                   (str ": " (string/join ", " items)))))
                                          :else ((:attribute-renderer props) attr-value)))})
                           attributes))
-               :column-defaults (get (:column-defaults props) (some-> selected-entity-type name))}
+               ;; TODO: reimplement this
+               :column-defaults (get (:column-defaults props) (some-> selected-entity-type name))
+               ;; TODO: document this
+               :on-row-click (:on-row-click props)}
               :toolbar
               {:items (cons [comps/FilterGroupBar
                              {:filter-groups (map (fn [entity-type]

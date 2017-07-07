@@ -51,13 +51,15 @@
     joined-columns)])
 
 
-(defn- body [{:keys [rows joined-columns style]}]
+(defn- body [{:keys [rows joined-columns style on-row-click]}]
   [:div {:style (:body style)}
    (map-indexed
     (fn [index row]
       [:div {:style (merge {:display "flex"}
                            (:row style)
-                           ((or (:body-row style) identity) (utils/restructure index row)))}
+                           ((or (:body-row style) identity) (utils/restructure index row)))
+             :onClick (when on-row-click
+                        #(on-row-click index row))}
        (map
         (fn [{:keys [width visible? column-data render as-text]}]
           (when visible?
