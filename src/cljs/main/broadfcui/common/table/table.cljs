@@ -6,7 +6,7 @@
     [broadfcui.common.style :as style]
     [broadfcui.common.table.body :as body]
     [broadfcui.common.table.column-editor :refer [ColumnEditButton]]
-    [broadfcui.common.table.paginator :as paginator]
+    [broadfcui.common.table.paginator :refer [Paginator]]
     [broadfcui.common.table.utils :as table-utils]
     [broadfcui.persistence :as persistence]
     [broadfcui.utils :as utils]
@@ -34,7 +34,8 @@
                                            :style {:padding "0.4rem 0.8rem 0.4rem 0.4rem"}}
                                   :anchor :left}
              :filter-bar {:style {:marginRight "1rem"}}}
-   :paginator {:style {:marginTop "1rem"}
+   :paginator {:style {:marginTop "1.5rem"}
+               :width-threshold 700
                :per-page-options [10 20 100 500]}})
 
 (def ^:private all-query-params #{:page-number :rows-per-page :filter-text :sort-column :sort-order})
@@ -129,14 +130,13 @@
              (utils/restructure rows column-display update-column-display fixed-column-count allow-no-sort? loading?)
              {:set-sort (fn [col order] (swap! state update :query-params
                                                merge {:sort-column col :sort-order order}))})])]
-        (paginator/paginator
-         (merge
-          paginator
-          (select-keys query-params [:rows-per-page :page-number])
-          (utils/restructure total-count filtered-count)
-          {:page-selected #(swap! state assoc-in [:query-params :page-number] %)
-           :per-page-selected #(swap! state update :query-params
-                                      merge {:rows-per-page % :page-number 1})}))]))
+        [Paginator
+         (merge paginator
+                (select-keys query-params [:rows-per-page :page-number])
+                (utils/restructure total-count filtered-count)
+                {:page-selected #(swap! state assoc-in [:query-params :page-number] %)
+                 :per-page-selected #(swap! state update :query-params
+                                            merge {:rows-per-page % :page-number 1})})]]))
    :component-did-mount
    (fn [{:keys [this]}]
      (this :refresh-rows))
