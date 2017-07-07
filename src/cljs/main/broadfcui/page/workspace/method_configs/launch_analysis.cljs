@@ -37,7 +37,7 @@
         (row "Workflows ahead of yours:" queue-position)
         (row "Queue status:" (str queued " Queued; " active " Active"))])]))
 
-(defn- render-form [state props refs]
+(defn- render-form [state props]
   [:div {:style {:width 1000}}
    (when (:launching? @state)
      [comps/Blocker {:banner "Launching analysis..."}])
@@ -110,10 +110,10 @@
 
 (react/defc Form
   {:render
-   (fn [{:keys [props state refs this]}]
+   (fn [{:keys [props state this]}]
      [comps/OKCancelForm
       {:header "Launch Analysis"
-       :content (react/create-element (render-form state props refs))
+       :content (react/create-element (render-form state props))
        :ok-button {:text "Launch" :disabled? (:disabled? props) :onClick #(react/call :launch this)}}])
    :component-did-mount
    (fn [{:keys [state]}]

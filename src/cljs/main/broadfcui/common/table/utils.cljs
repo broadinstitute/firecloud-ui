@@ -88,3 +88,9 @@
           :initial-width 200
           :as-text #(common/format-date % (:format props))}
          props))
+
+
+(defn default-render [data]
+  (cond (map? data) (utils/map-to-string data)
+        (sequential? data) (clojure.string/join ", " data)
+        :else (str data)))
