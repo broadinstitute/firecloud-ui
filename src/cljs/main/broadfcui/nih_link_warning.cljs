@@ -1,11 +1,11 @@
 (ns broadfcui.nih-link-warning
   (:require
-   [dmohs.react :as react]
-   [broadfcui.common.duration :as duration]
-   [broadfcui.endpoints :as endpoints]
-   [broadfcui.page.profile :as profile]
-   [broadfcui.utils :as utils]
-   ))
+    [dmohs.react :as react]
+    [broadfcui.common.duration :as duration]
+    [broadfcui.endpoints :as endpoints]
+    [broadfcui.page.profile :as profile]
+    [broadfcui.utils :as utils]
+    ))
 
 (react/defc NihLinkWarning
   {:render

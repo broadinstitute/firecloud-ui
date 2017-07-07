@@ -1,9 +1,9 @@
 (ns broadfcui.net
   (:require
-  [broadfcui.common.components :as comps]
-  [broadfcui.common.style :as style]
-  [broadfcui.utils :as utils]
-  ))
+    [broadfcui.common.components :as comps]
+    [broadfcui.common.style :as style]
+    [broadfcui.utils :as utils]
+    ))
 
 (defn handle-ajax-response [update-fn]
   (fn [{:keys [xhr status-code status-text success?]}]
@@ -35,8 +35,3 @@
           (:message parsed-response))))
      :else (render-success))))
 
-(defn map-error-codes-to-messages
-  ([message-map ajax-response]
-   (if-let [message (message-map (:status-code ajax-response))]
-     message
-     (get-in ajax-response [:parsed-response :message]))))

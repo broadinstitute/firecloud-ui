@@ -21,16 +21,16 @@
         :onClick (fn [_]
                    (swap! state assoc :publishing? true)
                    (endpoints/call-ajax-orch
-                     {:endpoint (endpoints/publish-workspace (:workspace-id props))
-                      :on-done (fn [{:keys [success? get-parsed-response]}]
-                                 (swap! state dissoc :publishing?)
-                                 (if success?
-                                   (do (comps/push-message
-                                        {:header "Success!"
-                                         :message "Successfully published to Library"})
-                                       ((:request-refresh props)))
-                                   (comps/push-error-response
-                                    (get-parsed-response false))))}))}]])})
+                    {:endpoint (endpoints/publish-workspace (:workspace-id props))
+                     :on-done (fn [{:keys [success? get-parsed-response]}]
+                                (swap! state dissoc :publishing?)
+                                (if success?
+                                  (do (comps/push-message
+                                       {:header "Success!"
+                                        :message "Successfully published to Library"})
+                                      ((:request-refresh props)))
+                                  (comps/push-error-response
+                                   (get-parsed-response false))))}))}]])})
 
 (react/defc UnpublishButton
   {:render
@@ -45,13 +45,13 @@
         :onClick (fn [_]
                    (swap! state assoc :unpublishing? true)
                    (endpoints/call-ajax-orch
-                     {:endpoint (endpoints/unpublish-workspace (:workspace-id props))
-                      :on-done (fn [{:keys [success? get-parsed-response]}]
-                                 (swap! state dissoc :unpublishing?)
-                                 (if success?
-                                   (do (comps/push-message
-                                        {:header "Success!"
-                                         :message "This dataset is no longer displayed in the Data Library catalog."})
-                                       ((:request-refresh props)))
-                                   (comps/push-error-response
-                                    (get-parsed-response false))))}))}]])})
+                    {:endpoint (endpoints/unpublish-workspace (:workspace-id props))
+                     :on-done (fn [{:keys [success? get-parsed-response]}]
+                                (swap! state dissoc :unpublishing?)
+                                (if success?
+                                  (do (comps/push-message
+                                       {:header "Success!"
+                                        :message "This dataset is no longer displayed in the Data Library catalog."})
+                                      ((:request-refresh props)))
+                                  (comps/push-error-response
+                                   (get-parsed-response false))))}))}]])})

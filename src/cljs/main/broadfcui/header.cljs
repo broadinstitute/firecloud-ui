@@ -1,16 +1,15 @@
 (ns broadfcui.header
   (:require
-   [broadfcui.common :as common]
-   [broadfcui.common.components :as comps]
-   [broadfcui.common.style :as style]
-   [broadfcui.config :as config]
-   [broadfcui.endpoints :as endpoints]
-   [broadfcui.nav :as nav]
-   [broadfcui.utils :as utils]
-   [dmohs.react :as r]
-   ))
+    [dmohs.react :as react]
+    [broadfcui.common :as common]
+    [broadfcui.common.style :as style]
+    [broadfcui.config :as config]
+    [broadfcui.endpoints :as endpoints]
+    [broadfcui.nav :as nav]
+    [broadfcui.utils :as utils]
+    ))
 
-(r/defc TopNavBarLink
+(react/defc TopNavBarLink
   {:render
    (fn [{:keys [props state]}]
      [:a {:href (:href props)
@@ -22,7 +21,7 @@
           :onMouseOut #(swap! state assoc :hovering? false)}
       (:name props)])})
 
-(r/defc TopNavBar
+(react/defc TopNavBar
   {:render
    (fn [{:keys [props]}]
      [:div {}
@@ -53,7 +52,7 @@
               {:href (nav/get-link :notifications) :text "Notifications"}
               {:text "Sign Out" :dismiss #(.signOut auth2) :data-test-id "sign-out"}]})))
 
-(r/defc GlobalSubmissionStatus
+(react/defc GlobalSubmissionStatus
   {:render
    (fn [{:keys [state]}]
      (let [{:keys [status-error status-code status-counts]} @state
@@ -62,9 +61,9 @@
          [:div {}
           (str "Workflows: "
                (cond status-error status-error
-                 status-counts (str queued " Queued; " active " Active; "
-                                    queue-position " ahead of yours")
-                 :else "loading..."))])))
+                     status-counts (str queued " Queued; " active " Active; "
+                                        queue-position " ahead of yours")
+                     :else "loading..."))])))
    :component-did-mount
    (fn [{:keys [this locals]}]
      ;; Call once for initial load

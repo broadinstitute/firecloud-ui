@@ -1,6 +1,5 @@
 (ns broadfcui.page.workspace.summary.catalog.wizard
   (:require
-    [clojure.string :refer [join split trim]]
     [dmohs.react :as react]
     [broadfcui.common.components :as comps]
     [broadfcui.common.flex-utils :as flex]
@@ -9,7 +8,8 @@
     [broadfcui.endpoints :as endpoints]
     [broadfcui.page.workspace.summary.catalog.questions :refer [Questions]]
     [broadfcui.page.workspace.summary.library-utils :as library-utils]
-    [broadfcui.utils :as utils]))
+    [broadfcui.utils :as utils]
+    ))
 
 
 (defn- render-wizard-breadcrumbs [{:keys [library-schema page-num pages-seen]}]

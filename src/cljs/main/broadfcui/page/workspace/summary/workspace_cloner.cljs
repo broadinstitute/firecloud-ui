@@ -6,7 +6,6 @@
     [broadfcui.common.input :as input]
     [broadfcui.common.modal :as modal]
     [broadfcui.common.style :as style]
-    [broadfcui.config :as config]
     [broadfcui.endpoints :as endpoints]
     [broadfcui.utils :as utils]
     ))
@@ -24,37 +23,37 @@
        :get-first-element-dom-node #(@refs "project")
        :content
        (react/create-element
-         [:div {}
-          (when (:working? @state)
-            [comps/Blocker {:banner "Cloning..."}])
-          (style/create-form-label "Billing Project")
-          (style/create-select {:ref "project"
-                                :data-test-id "billing-project-select"
-                                :value (:selected-project @state)
-                                :onChange #(swap! state assoc :selected-project (-> % .-target .-value))}
-                               (:billing-projects props))
-          (style/create-form-label "Name")
-          [input/TextField {:ref "name" :autoFocus true
-                            :data-test-id "workspace-name-input"
-                            :style {:width "100%"}
-                            :defaultValue (str (get-in props [:workspace-id :name])"_copy")
-                            :placeholder "Required"
-                            :predicates [(input/nonempty "Workspace name")
-                                         (input/alphanumeric_- "Workspace name")]}]
-          (style/create-textfield-hint "Only letters, numbers, underscores, and dashes allowed")
-          (style/create-form-label "Description (optional)")
-          (style/create-text-area {:style {:width "100%"} :rows 5 :ref "wsDescription"
-                                   :data-test-id "workspace-description-text-field"
-                                   :defaultValue (:description props)})
-          [:div {:style {:display "flex"}}
+        [:div {}
+         (when (:working? @state)
+           [comps/Blocker {:banner "Cloning..."}])
+         (style/create-form-label "Billing Project")
+         (style/create-select {:ref "project"
+                               :data-test-id "billing-project-select"
+                               :value (:selected-project @state)
+                               :onChange #(swap! state assoc :selected-project (-> % .-target .-value))}
+                              (:billing-projects props))
+         (style/create-form-label "Name")
+         [input/TextField {:ref "name" :autoFocus true
+                           :data-test-id "workspace-name-input"
+                           :style {:width "100%"}
+                           :defaultValue (str (get-in props [:workspace-id :name]) "_copy")
+                           :placeholder "Required"
+                           :predicates [(input/nonempty "Workspace name")
+                                        (input/alphanumeric_- "Workspace name")]}]
+         (style/create-textfield-hint input/hint-alphanumeric_-)
+         (style/create-form-label "Description (optional)")
+         (style/create-text-area {:style {:width "100%"} :rows 5 :ref "wsDescription"
+                                  :data-test-id "workspace-description-text-field"
+                                  :defaultValue (:description props)})
+         [:div {:style {:display "flex"}}
           (style/create-form-label (str "Authorization Domain" (when-not (:auth-domain props) " (optional)")))
           (common/render-info-box
-            {:text [:div {} [:strong {} "Note:"]
-                    [:div {} "An Authorization Domain can only be set when creating a workspace.
+           {:text [:div {} [:strong {} "Note:"]
+                   [:div {} "An Authorization Domain can only be set when creating a workspace.
                      Once set, it cannot be changed."]
-                    (style/create-link {:href "https://software.broadinstitute.org/firecloud/documentation/article?id=9524"
-                                        :target "_blank"
-                                        :text "Read more about Authorization Domains"})]})]
+                   (style/create-link {:href "https://software.broadinstitute.org/firecloud/documentation/article?id=9524"
+                                       :target "_blank"
+                                       :text "Read more about Authorization Domains"})]})]
          (if-let [auth-domain (:auth-domain props)]
            [:div {:style {:fontStyle "italic" :fontSize "80%"}}
             "The cloned workspace will automatically inherit the Authorization Domain "

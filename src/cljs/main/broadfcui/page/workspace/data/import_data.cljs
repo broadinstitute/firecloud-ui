@@ -1,12 +1,10 @@
 (ns broadfcui.page.workspace.data.import-data
   (:require
-    [clojure.string]
     [dmohs.react :as react]
     [broadfcui.common :as common]
     [broadfcui.common.components :as comps]
     [broadfcui.common.icons :as icons]
     [broadfcui.common.style :as style]
-    [broadfcui.config :as config]
     [broadfcui.endpoints :as endpoints]
     [broadfcui.utils :as utils]
     ))

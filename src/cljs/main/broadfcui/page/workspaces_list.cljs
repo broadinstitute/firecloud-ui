@@ -1,17 +1,17 @@
 (ns broadfcui.page.workspaces-list
   (:require
-    [clojure.string :refer [split join split-lines]]
     [dmohs.react :as react]
+    [clojure.string :as string]
     [broadfcui.common :as common]
     [broadfcui.common.components :as comps]
     [broadfcui.common.filter :as filter]
     [broadfcui.common.icons :as icons]
+    [broadfcui.common.modal :as modal]
     [broadfcui.common.style :as style]
     [broadfcui.common.table.style :as table-style]
     [broadfcui.common.table.table :refer [Table]]
     [broadfcui.config :as config]
     [broadfcui.endpoints :as endpoints]
-    [broadfcui.common.modal :as modal]
     [broadfcui.nav :as nav]
     [broadfcui.net :as net]
     [broadfcui.page.workspace.create :as create]
@@ -27,29 +27,6 @@
        "dbGaP authorized for TCGA data and have linked your FireCloud account to your eRA Commons account."))
 
 (def non-dbGap-disabled-text "Click to request access.")
-
-(react/defc StatusCell
-  {:render
-   (fn [{:keys [props]}]
-     (let [{:keys [data]} props
-           {:keys [status no-access? hover-text workspace-id]} data]
-       [:a {:href (if no-access?
-                    "javascript:;"
-                    (nav/get-link :workspace-summary workspace-id))
-            :style {:display "block" :position "relative"
-                    :backgroundColor (if no-access?
-                                       (:disabled-state style/colors)
-                                       (style/color-for-status status))
-                    :cursor (when no-access? "default")
-                    :margin "2px 0 2px 2px" :height (- row-height-px 4)}
-            :title hover-text}
-        [:span {:style {:position "absolute" :top 0 :right 0 :bottom 0 :left 0
-                        :backgroundColor "rgba(0,0,0,0.2)"}}]
-        (style/center {}
-          (case status
-            "Complete" [icons/CompleteIcon]
-            "Running" [icons/RunningIcon]
-            "Exception" [icons/ExceptionIcon]))]))})
 
 (react/defc RequestAuthDomainAccessDialog
   {:get-initial-state
@@ -70,7 +47,7 @@
         (let [{:keys [my-auth-domains ws-instructions error]} @state]
           (cond
             (not (or (and my-auth-domains ws-instructions) error))
-            [comps/Spinner {:text "Loading authorization domains..."}]
+            [comps/Spinner {:text "Loading Authorization Domains..."}]
             error
             (case (:code error)
               (:unknown :parse-error)
@@ -158,54 +135,11 @@
                   (swap! state update-in [:ws-auth-domains group-index :data]
                          assoc :requesting? false :requested? true))}))})
 
-(react/defc WorkspaceCell
-  {:render
-   (fn [{:keys [props]}]
-     (let [{:keys [data]} props
-           {:keys [status restricted? no-access? hover-text workspace-id]} data
-           {:keys [namespace name]} workspace-id
-           color (style/color-for-status status)]
-       [:a {:href (if no-access?
-                    "javascript:;"
-                    (nav/get-link :workspace-summary workspace-id))
-            :style {:display "flex" :alignItems "center"
-                    :backgroundColor (if no-access? (:disabled-state style/colors) color)
-                    :cursor (when no-access? "default")
-                    :color "white" :textDecoration "none"
-                    :height (- row-height-px 4)
-                    :margin "2px 0"}
-            :title hover-text}
-        (when restricted?
-          [:span {:style {:display "block" :position "relative"}}
-           [:span {:style {:display "block" :position "absolute" :left -17 :top -9
-                           :width (- row-height-px 4) :padding "4px 0"
-                           :backgroundColor "white" :color "#666" :fontSize "xx-small"
-                           :transform "rotate(-90deg)"}
-                   :data-test-id (str "restricted-" namespace "-" name)}
-            "RESTRICTED"]])
-        [:div {:style {:paddingLeft 24}}
-         [:div {:style {:fontSize "80%"}} namespace]
-         [:div {:style {:fontWeight 600}} name]]]))
-   :-show-request-access-modal
-   (fn [{:keys [props]}]
-     (modal/push-modal
-      [RequestAuthDomainAccessDialog
-       {:workspace-id (get-in props [:data :workspace-id])
-        :ws-auth-domains (get-in props [:data :auth-domains])}]))})
-
 (defn- get-workspace-name-string [column-data]
   (str (get-in column-data [:workspace-id :namespace]) "/" (get-in column-data [:workspace-id :name])))
 
 (defn- get-workspace-description [ws]
   (not-empty (get-in ws [:workspace :attributes :description])))
-
-;; An obnoxious amount of effort due to "PROJECT_OWNER" vs. "NO ACCESS"
-(defn- prettify [s]
-  (as-> s $
-        (clojure.string/replace $ "_" " ")
-        (split $ #"\b")
-        (map clojure.string/capitalize $)
-        (join $)))
 
 
 (def ^:private access-levels ["PROJECT_OWNER" "OWNER" "WRITER" "READER" "NO ACCESS"])
@@ -217,7 +151,7 @@
     :predicate (fn [ws option] (= (:status ws) option))}
    {:title "Access"
     :options access-levels
-    :render prettify
+    :render style/prettify-access-level
     :predicate (fn [ws option] (= (:accessLevel ws) option))}
    {:title "Publishing"
     :options [true false]
@@ -240,6 +174,12 @@
        (apply clojure.set/union)))
 
 
+(defn- push-request-access-modal [workspace-id auth-domains]
+  (modal/push-modal
+   [RequestAuthDomainAccessDialog
+    {:workspace-id workspace-id
+     :ws-auth-domains auth-domains}]))
+
 (react/defc WorkspaceTable
   {:get-initial-state
    (fn []
@@ -257,8 +197,7 @@
             :total-count (count (:workspaces props))))
    :render
    (fn [{:keys [props state this locals]}]
-     (let [{:keys [nav-context]} props
-           {:keys [filters-expanded?]} @state]
+     (let [{:keys [filters-expanded?]} @state]
        [Table
         {:persistence-key "workspace-table" :v 2
          :data (this :-filter-workspaces) :total-count (:total-count @locals)
@@ -267,7 +206,7 @@
           (let [column-data (fn [ws]
                               (let [no-access? (= (:accessLevel ws) "NO ACCESS")
                                     tcga? (and no-access? (= (get-in ws [:workspace :authorizationDomain :membersGroupName])
-                                                                 config/tcga-authorization-domain))]
+                                                             config/tcga-authorization-domain))]
                                 {:workspace-id (select-keys (:workspace ws) [:namespace :name])
                                  :status (:status ws)
                                  ;; this will very soon return multiple auth domains, so im future-proofing it now
@@ -284,19 +223,19 @@
             [{:id "Status" :header [:span {:style {:marginLeft 7}} "Status"]
               :sortable? false :resizable? false :filterable? false :initial-width row-height-px
               :column-data column-data :as-text :status
-              :render (fn [data] [StatusCell (utils/restructure data nav-context)])}
+              :render #(this :-render-status-cell %)}
              {:id "Workspace" :header [:span {:style {:marginLeft 24}} "Workspace"]
               :initial-width 300
               :column-data column-data :as-text get-workspace-name-string
               :sort-by #(mapv clojure.string/lower-case (replace (:workspace-id %) [:namespace :name]))
-              :render (fn [data] [WorkspaceCell (utils/restructure data nav-context)])}
+              :render #(this :-render-workspace-cell %)}
              {:id "Description" :header [:span {:style {:marginLeft 14}} "Description"]
               :initial-width 350
               :column-data get-workspace-description
               :render (fn [description]
                         [:div {:style {:paddingLeft 14}}
                          (if description
-                           (-> description split-lines first)
+                           (-> description string/split-lines first)
                            [:span {:style {:fontStyle "italic"}}
                             "No description provided"])])}
              {:id "Last Modified" :header [:span {:style {:marginLeft 14}} "Last Modified"]
@@ -309,16 +248,12 @@
               :initial-width 132 :resizable? false
               :column-data column-data
               :sort-by (zipmap access-levels (range)) :sort-initial :asc
-              :render (fn [data]
-                        (let [access-level (:access-level data)]
-                          [:div {:style {:paddingLeft 14}}
-                           (if (= access-level "NO ACCESS")
-                             (style/create-link {:text (prettify access-level)
-                                                 :onClick #(modal/push-modal
-                                                            [RequestAuthDomainAccessDialog
-                                                             {:workspace-id (:workspace-id data)
-                                                              :ws-auth-domains (:auth-domains data)}])})
-                             (prettify access-level))]))}])
+              :render (fn [{:keys [access-level workspace-id auth-domains]}]
+                        [:div {:style {:paddingLeft 14}}
+                         (if (= access-level "NO ACCESS")
+                           (style/create-link {:text (style/prettify-access-level access-level)
+                                               :onClick #(push-request-access-modal workspace-id auth-domains)})
+                           (style/prettify-access-level access-level))])}])
           :behavior {:reorderable-columns? false}
           :style {:header-row {:color (:text-lighter style/colors) :fontSize "90%"}
                   :header-cell {:padding "0.4rem 0"}
@@ -339,12 +274,56 @@
                                                 :onClick #(swap! state update :filters-expanded? not)})]
                            [:div {:style {:clear "both"}}]
                            (when filters-expanded?
-                             (this :-side-filters))]}
+                             (this :-render-side-filters))]}
          :paginator {:style {:clear "both"}}}]))
    :component-did-update
    (fn [{:keys [state]}]
      (persistence/save {:key persistence-key :state state}))
-   :-side-filters
+   :-render-status-cell
+   (fn [_ {:keys [status no-access? hover-text workspace-id auth-domains]}]
+     [:a {:href (if no-access?
+                  "javascript:;"
+                  (nav/get-link :workspace-summary workspace-id))
+          :onClick (if no-access? #(push-request-access-modal workspace-id auth-domains))
+          :style {:display "block" :position "relative"
+                  :backgroundColor (if no-access?
+                                     (:disabled-state style/colors)
+                                     (style/color-for-status status))
+                  :margin "2px 0 2px 2px" :height (- row-height-px 4)}
+          :title hover-text}
+      [:span {:style {:position "absolute" :top 0 :right 0 :bottom 0 :left 0
+                      :backgroundColor "rgba(0,0,0,0.2)"}}]
+      (style/center {}
+                    (case status
+                      "Complete" [icons/CompleteIcon]
+                      "Running" [icons/RunningIcon]
+                      "Exception" [icons/ExceptionIcon]))])
+   :-render-workspace-cell
+   (fn [_ {:keys [status restricted? no-access? hover-text workspace-id auth-domains]}]
+     (let [{:keys [namespace name]} workspace-id
+           color (style/color-for-status status)]
+       [:a {:href (if no-access?
+                    "javascript:;"
+                    (nav/get-link :workspace-summary workspace-id))
+            :onClick (if no-access? #(push-request-access-modal workspace-id auth-domains))
+            :style {:display "flex" :alignItems "center"
+                    :backgroundColor (if no-access? (:disabled-state style/colors) color)
+                    :color "white" :textDecoration "none"
+                    :height (- row-height-px 4)
+                    :margin "2px 0"}
+            :title hover-text}
+        (when restricted?
+          [:span {:style {:display "block" :position "relative"}}
+           [:span {:style {:display "block" :position "absolute" :left -17 :top -9
+                           :width (- row-height-px 4) :padding "4px 0"
+                           :backgroundColor "white" :color "#666" :fontSize "xx-small"
+                           :transform "rotate(-90deg)"}
+                   :data-test-id (str "restricted-" namespace "-" name)}
+            "RESTRICTED"]])
+        [:div {:style {:paddingLeft 24}}
+         [:div {:style {:fontSize "80%"}} namespace]
+         [:div {:style {:fontWeight 600}} name]]]))
+   :-render-side-filters
    (fn [{:keys [state refs locals]}]
      (let [{:keys [filters]} @state]
        (apply
@@ -441,8 +420,8 @@
 (defn add-nav-paths []
   (nav/defredirect {:regex #"workspaces" :make-path (fn [] "")})
   (nav/defpath
-    :workspaces
-    {:component Page
-     :regex #""
-     :make-props (fn [] {})
-     :make-path (fn [] "")}))
+   :workspaces
+   {:component Page
+    :regex #""
+    :make-props (fn [] {})
+    :make-path (fn [] "")}))

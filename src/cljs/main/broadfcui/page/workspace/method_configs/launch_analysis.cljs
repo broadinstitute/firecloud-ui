@@ -1,7 +1,6 @@
 (ns broadfcui.page.workspace.method-configs.launch-analysis
   (:require
-    [clojure.set :refer [union]]
-    clojure.string
+    [clojure.string :as string]
     [dmohs.react :as react]
     [broadfcui.common :as common]
     [broadfcui.common.components :as comps]
@@ -47,9 +46,9 @@
                   :padding "1em" :marginBottom "0.5em"}}
     [:div {:style {:marginBottom "1em" :fontSize "140%" :float "left"}}
      (str "Selected: "
-       (if-let [e (:selected-entity @state)]
-         (str (:name e) " (" (:type e) ")")
-         "None"))]
+          (if-let [e (:selected-entity @state)]
+            (str (:name e) " (" (:type e) ")")
+            "None"))]
     (queue-status-table state)
     (common/clear-both)
     [EntityTable
@@ -58,8 +57,8 @@
       :row-style (fn [row-index row-data]
                    {:backgroundColor
                     (cond (= (entity->id (first row-data)) (:selected-entity @state)) "yellow"
-                      (even? row-index) (:background-light style/colors)
-                      :else "#fff")
+                          (even? row-index) (:background-light style/colors)
+                          :else "#fff")
                     :cursor "pointer"})
       :on-row-click (fn [_ row]
                       (let [entity (first row)
@@ -78,7 +77,7 @@
                                         "Disabled - selected entity is of root entity type"
                                         (:expression @state))
                                :data-test-id "define-expression-input"
-                               :onChange #(let [text (-> % .-target .-value clojure.string/trim)]
+                               :onChange #(let [text (-> % .-target .-value string/trim)]
                                             (swap! state assoc :expression text))}))
    [:div {:style {:marginTop "1em"}}
     [comps/Checkbox
@@ -92,7 +91,7 @@
                        :not-available "This option is not available for your account."
                        nil)}]]
    (when-let [wf-count (:workflow-count @state)]
-    (when (> wf-count (config/workflow-count-warning-threshold))
+     (when (> wf-count (config/workflow-count-warning-threshold))
        [:div {:style {:textAlign "center"}}
         [:div {:style {:display "inline-flex" :alignItems "center" :margin "1em 0 -1em 0" :padding "0.5em"
                        :backgroundColor "white" :border style/standard-line :borderRadius 3}
@@ -101,7 +100,7 @@
                      :warning)
          (str "Warning: This will launch " wf-count " workflows")]]))
    [:div {:style {:textAlign "right" :fontSize "80%"}}
-    (style/create-link {:text  (str "Cromwell Version: " (:cromwell-version @state))
+    (style/create-link {:text (str "Cromwell Version: " (:cromwell-version @state))
                         :target "_blank"
                         :href (str "https://github.com/broadinstitute/cromwell/releases/tag/"
                                    (:cromwell-version @state))})]
@@ -109,7 +108,7 @@
    [comps/ErrorViewer {:error (:launch-server-error @state)}]])
 
 (defn- parse-cromwell-ver [cromwell-ver-response]
-  (first (clojure.string/split (:cromwell cromwell-ver-response) #"-")) )
+  (first (string/split (:cromwell cromwell-ver-response) #"-")))
 
 (react/defc Form
   {:render
@@ -121,16 +120,16 @@
    :component-did-mount
    (fn [{:keys [state]}]
      (endpoints/call-ajax-orch
-       {:endpoint (endpoints/submissions-queue-status)
-        :on-done (fn [{:keys [success? status-text get-parsed-response]}]
-                   (if success?
-                     (swap! state assoc :queue-status (common/queue-status-counts (get-parsed-response false)))
-                     (swap! state assoc :queue-error status-text)))})
+      {:endpoint (endpoints/submissions-queue-status)
+       :on-done (fn [{:keys [success? status-text get-parsed-response]}]
+                  (if success?
+                    (swap! state assoc :queue-status (common/queue-status-counts (get-parsed-response false)))
+                    (swap! state assoc :queue-error status-text)))})
      (endpoints/call-ajax-orch
-       {:endpoint (endpoints/cromwell-version)
-        :on-done (fn [{:keys [success? get-parsed-response]}]
-                   (when success?
-                     (swap! state assoc :cromwell-version (parse-cromwell-ver (get-parsed-response)))))}))
+      {:endpoint (endpoints/cromwell-version)
+       :on-done (fn [{:keys [success? get-parsed-response]}]
+                  (when success?
+                    (swap! state assoc :cromwell-version (parse-cromwell-ver (get-parsed-response)))))}))
    :launch
    (fn [{:keys [props state refs]}]
      (if-let [entity (:selected-entity @state)]
@@ -141,17 +140,17 @@
                              :entityType (:type entity)
                              :entityName (:name entity)
                              :useCallCache (react/call :checked? (@refs "callCache-check"))}
-                       (when-not (clojure.string/blank? expression) {:expression expression}))]
+                            (when-not (string/blank? expression) {:expression expression}))]
          (swap! state assoc :launching? true :launch-server-error nil)
          (endpoints/call-ajax-orch
-           {:endpoint (endpoints/create-submission (:workspace-id props))
-            :payload payload
-            :headers utils/content-type=json
-            :on-done (fn [{:keys [success? get-parsed-response]}]
-                       (swap! state dissoc :launching?)
-                       (if success?
-                         (do (modal/pop-modal) ((:on-success props) ((get-parsed-response false) "submissionId")))
-                         (swap! state assoc :launch-server-error (get-parsed-response false))))}))
+          {:endpoint (endpoints/create-submission (:workspace-id props))
+           :payload payload
+           :headers utils/content-type=json
+           :on-done (fn [{:keys [success? get-parsed-response]}]
+                      (swap! state dissoc :launching?)
+                      (if success?
+                        (do (modal/pop-modal) ((:on-success props) ((get-parsed-response false) "submissionId")))
+                        (swap! state assoc :launch-server-error (get-parsed-response false))))}))
        (swap! state assoc :validation-errors ["Please select an entity"])))})
 
 

@@ -7,7 +7,6 @@
     [broadfcui.common.modal :as modal]
     [broadfcui.common.style :as style]
     [broadfcui.components.modals :as modals]
-   [broadfcui.config :as config]
     [broadfcui.endpoints :as endpoints]
     [broadfcui.nav :as nav]
     [broadfcui.utils :as utils]
@@ -43,7 +42,7 @@
                            :data-test-id "workspace-name-input"
                            :predicates [(input/nonempty "Workspace name")
                                         (input/alphanumeric_- "Workspace name")]}]
-         (style/create-textfield-hint "Only letters, numbers, underscores, and dashes allowed")
+         (style/create-textfield-hint input/hint-alphanumeric_-)
          (style/create-form-label "Description (optional)")
          (style/create-text-area {:style {:width "100%"} :rows 5 :ref "wsDescription"
                                   :data-test-id "workspace-description-text-field"})

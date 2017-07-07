@@ -15,13 +15,13 @@
 (defonce ^:private renderer (renderer-js.))
 
 (set! (.-link renderer)
-  (fn [href title text]
-    ;; whitelist http/https to guard agaisnt XSS
-    (if-not (re-matches #"^https?://.*" href)
-      text
-      (str "<a href='" (js/encodeURI href) "' title='" title "' target='_blank'>"
-           text
-           "</a>"))))
+      (fn [href title text]
+        ;; whitelist http/https to guard agaisnt XSS
+        (if-not (re-matches #"^https?://.*" href)
+          text
+          (str "<a href='" (js/encodeURI href) "' title='" title "' target='_blank'>"
+               text
+               "</a>"))))
 
 (js-invoke marked "setOptions"
            #js{:sanitize true :renderer renderer})

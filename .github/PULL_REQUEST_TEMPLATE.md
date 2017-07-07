@@ -1,5 +1,6 @@
 - [ ] **Submitter**: Include the JIRA issue number in the PR description
 - [ ] **Submitter**: Check documentation and code comments. Add explanatory PR comments if helpful.
+- [ ] **Submitter**: If you changed a URL that is used elsewhere (e.g. in an email), comment about where it is used and ensure the dependent code is updated.
 - [ ] **Submitter**: JIRA ticket checks:
   * Acceptance criteria exists and is met
   * Note any changes to implementation from the description
@@ -13,8 +14,6 @@
   * Encryption
   * Audit trails
 - [ ] **Submitter**: If you're adding new libraries, sign us up to security updates for them
-- [ ] Tell the tech lead (TL) that the PR exists if they wants to look at it
-- [ ] Anoint a lead reviewer (LR). **Assign PR to LR**
 * Review cycle:
   * LR reviews
   * Rest of team may comment on PR at will
@@ -26,7 +25,6 @@
 - [ ] **TL** sign off
 - [ ] **LR** sign off
 - [ ] **Product Owner** sign off
-- [ ] **Assign to submitter** to finalize
 - [ ] **Submitter**: Verify all tests go green, including CI tests
 - [ ] **Submitter**: Squash commits and merge to develop
 - [ ] **Submitter**: Delete branch after merge

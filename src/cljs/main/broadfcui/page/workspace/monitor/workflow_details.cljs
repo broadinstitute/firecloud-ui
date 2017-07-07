@@ -1,7 +1,7 @@
 (ns broadfcui.page.workspace.monitor.workflow-details
   (:require
     [dmohs.react :as react]
-    [clojure.walk :refer [prewalk]]
+    [clojure.walk :as walk]
     [clojure.string :as string]
     [broadfcui.common :as common]
     [broadfcui.common.codemirror :refer [CodeMirror]]
@@ -86,11 +86,11 @@
    (fn [{:keys [props state]}]
      [:div {}
       (create-field
-        (:label props)
-        (if (empty? (:data props))
-          "Not Available"
-          (style/create-link {:text (if (:expanded @state) "Hide" "Show")
-                              :onClick #(swap! state update :expanded not)})))
+       (:label props)
+       (if (empty? (:data props))
+         "Not Available"
+         (style/create-link {:text (if (:expanded @state) "Hide" "Show")
+                             :onClick #(swap! state update :expanded not)})))
       [:div {:ref "chart-container" :style {:padding "0.25em 0 0 0"}}]])
    :component-did-mount #((:this %) :-update-element)
    :component-did-update #((:this %) :-update-element)
@@ -113,9 +113,9 @@
         (create-field "JES log" (display-value (first (vals log-map)) log-name)))
       [:div {:style {:paddingBottom "0.25em"}} "Backend logs:"
        (map
-         (fn [[name value]]
-           (create-field name (display-value value)))
-         log-map)])))
+        (fn [[name value]]
+          (create-field name (display-value value)))
+        log-map)])))
 
 (react/defc Failures
   {:get-initial-state
@@ -125,25 +125,25 @@
    (fn [{:keys [props state]}]
      [:div {}
       (create-field
-        "Failures"
-        (style/create-link {:text (if (:expanded @state) "Hide" "Show")
-                            :onClick #(swap! state assoc :expanded (not (:expanded @state)))}))
+       "Failures"
+       (style/create-link {:text (if (:expanded @state) "Hide" "Show")
+                           :onClick #(swap! state assoc :expanded (not (:expanded @state)))}))
       (when (:expanded @state)
         [comps/Tree {:start-collapsed? false
                      :highlight-ends false
-                     :data (prewalk
-                             (fn [elem]
-                               (cond
-                                 ;; reorder map elements to message then causedBy
-                                 (map? elem) (select-keys elem ["message" "causedBy"])
-                                 ;; remove empty causedBy[] arrays - prewalk means this executes after the above
-                                 (= (second elem) []) nil
-                                 :else elem))
-                             (:data props))}])])})
+                     :data (walk/prewalk
+                            (fn [elem]
+                              (cond
+                                ;; reorder map elements to message then causedBy
+                                (map? elem) (select-keys elem ["message" "causedBy"])
+                                ;; remove empty causedBy[] arrays - prewalk means this executes after the above
+                                (= (second elem) []) nil
+                                :else elem))
+                            (:data props))}])])})
 
 (react/defc OperationDialog
   {:render
-   (fn [{:keys [props state]}]
+   (fn [{:keys [state]}]
      [comps/OKCancelForm
       {:header "Operation Details"
        :content
@@ -195,33 +195,33 @@
                           :onClick #(swap! state assoc :expanded (not (:expanded @state)))})
       (when (:expanded @state)
         (map-indexed
-          (fn [index data]
-            [:div {:style {:padding "0.5em 0 0 0.5em"}}
-             [:div {:style {:paddingBottom "0.25em"}} (str "Call #" (inc index) ":")]
-             [:div {:style {:paddingLeft "0.5em"}}
-              (create-field "Operation" (operation-link (:workspace-id props) (data "jobId")))
-              (let [status (data "executionStatus")]
-                (create-field "Status" (moncommon/icon-for-call-status status) status))
-              (when (= (-> (data "callCaching") (get "effectiveCallCachingMode")) "ReadAndWriteCache")
-                (create-field "Cache Result" (moncommon/format-call-cache (-> (data "callCaching") (get "hit")))))
-              (create-field "Started" (moncommon/render-date (data "start")))
-              (create-field "Ended" (moncommon/render-date (data "end")))
-              [IODetail {:label "Inputs" :data (data "inputs") :call-detail? true}]
-              [IODetail {:label "Outputs" :data (data "outputs") :call-detail? true}]
-              (create-field "stdout" (display-value (data "stdout") (last (string/split (data "stdout") #"/"))))
-              (create-field "stderr" (display-value (data "stderr") (last (string/split (data "stderr") #"/"))))
-              (backend-logs data)
-              (when-let [failures (data "failures")]
-                [Failures {:data failures}])]])
-        (:data props)))])})
+         (fn [index data]
+           [:div {:style {:padding "0.5em 0 0 0.5em"}}
+            [:div {:style {:paddingBottom "0.25em"}} (str "Call #" (inc index) ":")]
+            [:div {:style {:paddingLeft "0.5em"}}
+             (create-field "Operation" (operation-link (:workspace-id props) (data "jobId")))
+             (let [status (data "executionStatus")]
+               (create-field "Status" (moncommon/icon-for-call-status status) status))
+             (when (= (-> (data "callCaching") (get "effectiveCallCachingMode")) "ReadAndWriteCache")
+               (create-field "Cache Result" (moncommon/format-call-cache (-> (data "callCaching") (get "hit")))))
+             (create-field "Started" (moncommon/render-date (data "start")))
+             ;(utils/cljslog data)
+             (create-field "Ended" (moncommon/render-date (data "end")))
+             [IODetail {:label "Inputs" :data (data "inputs") :call-detail? true}]
+             [IODetail {:label "Outputs" :data (data "outputs") :call-detail? true}]
+             (create-field "stdout" (display-value (data "stdout") (last (string/split (data "stdout") #"/"))))
+             (create-field "stderr" (display-value (data "stderr") (last (string/split (data "stderr") #"/"))))
+             (backend-logs data)
+             (when-let [failures (data "failures")]
+               [Failures {:data failures}])]])
+         (:data props)))])})
 
 
 (defn- render-workflow-detail [workflow raw-data workflow-name submission-id bucketName workspace-id]
   [:div {:style {:padding "1em" :border style/standard-line :borderRadius 4
                  :backgroundColor (:background-light style/colors)}}
    [:div {}
-    (let [calls (workflow "calls")
-          inputs (first (first (workflow "calls")))
+    (let [inputs (first (first (workflow "calls")))
           input-names (string/split inputs ".")
           workflow-name (first input-names)]
       (create-field "Workflow ID"
@@ -260,11 +260,8 @@
 
 (react/defc WorkflowDetails
   {:render
-
-   (fn [{:keys [state props proxy-mappings]}]
-     (let [server-response (:server-response @state)
-           submission-id (props "submission-id")
-           bucketName (props "bucketName")]
+   (fn [{:keys [state props]}]
+     (let [server-response (:server-response @state)]
        (cond
          (nil? server-response)
          [:div {} [comps/Spinner {:text "Loading workflow details..."}]]
@@ -277,14 +274,14 @@
    :component-did-mount
    (fn [{:keys [props state]}]
      (endpoints/call-ajax-orch
-       {:endpoint
-        (endpoints/get-workflow-details
-          (:workspace-id props) (:submission-id props) (:workflow-id props))
-        :on-done (fn [{:keys [success? get-parsed-response status-text raw-response]}]
-                   (swap! state assoc :server-response
-                          {:success? success?
-                           :response (if success? (get-parsed-response false) status-text)
-                           :raw-response raw-response}))}))})
+      {:endpoint
+       (endpoints/get-workflow-details
+        (:workspace-id props) (:submission-id props) (:workflow-id props))
+       :on-done (fn [{:keys [success? get-parsed-response status-text raw-response]}]
+                  (swap! state assoc :server-response
+                         {:success? success?
+                          :response (if success? (get-parsed-response false) status-text)
+                          :raw-response raw-response}))}))})
 
 
 (defn render [props]

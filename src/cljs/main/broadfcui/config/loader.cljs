@@ -1,13 +1,13 @@
 (ns broadfcui.config.loader
   (:require
-   [broadfcui.common.components :as comps]
-   [broadfcui.common.style :as style]
-   [broadfcui.config :as config]
-   [broadfcui.utils :as utils]
-   [dmohs.react :as r]
-   ))
+    [dmohs.react :as react]
+    [broadfcui.common.components :as comps]
+    [broadfcui.common.style :as style]
+    [broadfcui.config :as config]
+    [broadfcui.utils :as utils]
+    ))
 
-(r/defc Component
+(react/defc Component
   {:render
    (fn [{:keys [state]}]
      [:div {:style {:padding "40px 0"}}

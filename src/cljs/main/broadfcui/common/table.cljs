@@ -257,7 +257,7 @@
                                   (if (= :all column-index)
                                     ;; if you have explicitly set a column to not be reorderable, then we will always
                                     ;; display it (even if you've clicked on none)
-                                    (swap! state update :column-meta #(vec (map merge  %
+                                    (swap! state update :column-meta #(vec (map merge %
                                                                                 (map (fn [column]
                                                                                        (if (= (:reorderable? column) false)
                                                                                          {:visible? true}

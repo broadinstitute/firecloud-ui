@@ -1,7 +1,7 @@
 (ns broadfcui.common.components
   (:require
-    [clojure.string :refer [blank?]]
     [dmohs.react :as react]
+    [clojure.string :as string]
     [broadfcui.common :as common]
     [broadfcui.common.codemirror :refer [CodeMirror]]
     [broadfcui.common.icons :as icons]
@@ -50,25 +50,23 @@
      {:color (:button-primary style/colors)})
    :render
    (fn [{:keys [props]}]
-     (let [{:keys [color icon disabled? onClick text style class-name data-test-id]} props]
-       [:a (merge
-            {:className (or class-name "button")
-             :style (merge
-                     {:display "inline-flex" :alignItems "center" :justifyContent "center"
-                      :backgroundColor (if disabled? (:disabled-state style/colors) color)
-                      :cursor (when disabled? "default")
-                      :color (if disabled? (:text-light style/colors) "white")
-                      :fontWeight 500
-                      :minHeight 19 :minWidth 19
-                      :borderRadius 2 :padding (if text "0.7em 1em" "0.4em")
-                      :textDecoration "none"}
-                     (if (map? style) style {}))
-             :data-test-id data-test-id
-             :href "javascript:;"
-             :onClick (if disabled? (create-error-message disabled?) onClick)
-             :onKeyDown (when (and onClick (not disabled?))
-                          (common/create-key-handler [:space] onClick))}
-            (dissoc props :color :icon :onClick :style :className))
+     (let [{:keys [color icon href disabled? onClick text style class-name data-test-id]} props]
+       [:a {:className (or class-name "button")
+            :style (merge
+                    {:display "inline-flex" :alignItems "center" :justifyContent "center"
+                     :backgroundColor (if disabled? (:disabled-state style/colors) color)
+                     :cursor (when disabled? "default")
+                     :color (if disabled? (:text-light style/colors) "white")
+                     :fontWeight 500
+                     :minHeight 19 :minWidth 19
+                     :borderRadius 2 :padding (if text "0.7em 1em" "0.4em")
+                     :textDecoration "none"}
+                    (if (map? style) style {}))
+            :data-test-id data-test-id
+            :href (or href "javascript:;")
+            :onClick (if disabled? (create-error-message disabled?) onClick)
+            :onKeyDown (when (and onClick (not disabled?))
+                         (common/create-key-handler [:space] onClick))}
         text
         (some->> icon (icons/icon {:style (if text
                                             {:fontSize 20 :margin "-0.5em -0.3em -0.5em 0.5em"}
@@ -129,7 +127,7 @@
    (fn [{:keys [props state]}]
      (swap! state assoc :show-requested? true)
      (js/setTimeout #(when (:show-requested? @state)
-                      (swap! state assoc :showing? true))
+                       (swap! state assoc :showing? true))
                     (:delay-time-ms props)))
    :hide
    (fn [{:keys [state]}]
@@ -216,7 +214,8 @@
               [:div {:style {:flex "1 1 auto" :overflow "hidden" :textOverflow "ellipsis"
                              :whiteSpace (when-not wrap? "nowrap")}}
                (if (and editing? dropdown?)
-                 (style/create-identity-select {:ref key :data-test-id "edit-method-config-snapshot-id-select"
+                 (style/create-identity-select {:ref key
+                                                :data-test-id "edit-method-config-snapshot-id-select"
                                                 :style {:width 100}
                                                 :defaultValue (key entity)
                                                 :onChange (when-let [f (:onSnapshotIdChange props)]
@@ -237,7 +236,7 @@
           (make-field :synopsis "Synopsis")]]
         [:div {:style {:fontWeight 500 :padding "0.5rem 0 0.3rem 0"}}
          "Documentation:"]
-        (if (blank? (:documentation entity))
+        (if (string/blank? (:documentation entity))
           [:div {:style {:fontStyle "italic" :fontSize "90%"}} "No documentation provided"]
           [:div {:style {:fontSize "90%"}} (:documentation entity)])]))})
 
@@ -245,18 +244,18 @@
 (react/defc StackTraceViewer
   {:render
    (fn [{:keys [props state]}]
-       (if (:expanded? @state)
-         [:div {:style {:overflowX "auto"}}
-          [:div {} "Stack Trace:"]
-          (map
-            (fn [line]
-                (let [[class method file num]
-                      (map line ["className" "methodName" "fileName" "lineNumber"])]
-                     [:div {:style {:marginLeft "1em" :whiteSpace "nowrap"}}
-                      (str "at " class "." method " (" file ":" num ")")]))
-            (:lines props))
-          (style/create-link {:text "Hide Stack Trace" :onClick #(swap! state assoc :expanded? false)})]
-         [:div {} (style/create-link {:text "Show Stack Trace" :onClick #(swap! state assoc :expanded? true)})]))})
+     (if (:expanded? @state)
+       [:div {:style {:overflowX "auto"}}
+        [:div {} "Stack Trace:"]
+        (map
+         (fn [line]
+           (let [[class method file num]
+                 (map line ["className" "methodName" "fileName" "lineNumber"])]
+             [:div {:style {:marginLeft "1em" :whiteSpace "nowrap"}}
+              (str "at " class "." method " (" file ":" num ")")]))
+         (:lines props))
+        (style/create-link {:text "Hide Stack Trace" :onClick #(swap! state assoc :expanded? false)})]
+       [:div {} (style/create-link {:text "Show Stack Trace" :onClick #(swap! state assoc :expanded? true)})]))})
 
 
 (declare CauseViewer)
@@ -265,20 +264,20 @@
 (react/defc CauseViewer
   {:render
    (fn [{:keys [props state]}]
-       (if (:expanded? @state)
-         (let [[source causes stack-trace message]
-               (map props ["source" "causes" "stackTrace" "message"])]
-              [:div {:style {:marginLeft "1em"}}
-               [:div {} "Message: " message]
-               (when source [:div {} "Source: " source])
-               (when (seq causes)
-                     [:div {}
-                      [:div {} (str "Cause" (when (> (count causes) 1) "s") ":")]
-                      (map (fn [cause] [CauseViewer cause]) causes)])
-               (when (seq stack-trace)
-                     [StackTraceViewer {:lines stack-trace}])
-               (style/create-link {:text "Hide Cause" :onClick #(swap! state assoc :expanded? false)})])
-         [:div {} (style/create-link {:text "Show Cause" :onClick #(swap! state assoc :expanded? true)})]))})
+     (if (:expanded? @state)
+       (let [[source causes stack-trace message]
+             (map props ["source" "causes" "stackTrace" "message"])]
+         [:div {:style {:marginLeft "1em"}}
+          [:div {} "Message: " message]
+          (when source [:div {} "Source: " source])
+          (when (seq causes)
+            [:div {}
+             [:div {} (str "Cause" (when (> (count causes) 1) "s") ":")]
+             (map (fn [cause] [CauseViewer cause]) causes)])
+          (when (seq stack-trace)
+            [StackTraceViewer {:lines stack-trace}])
+          (style/create-link {:text "Hide Cause" :onClick #(swap! state assoc :expanded? false)})])
+       [:div {} (style/create-link {:text "Show Cause" :onClick #(swap! state assoc :expanded? true)})]))})
 
 (react/defc ErrorViewer
   {:render
@@ -386,8 +385,8 @@
    (fn [{:keys [props state locals]}]
      (let [{:keys [left]} props
            on-mouse-up #(when (:dragging? @state)
-                         (common/restore-text-selection (:text-selection @state))
-                         (swap! state dissoc :dragging? :text-selection))
+                          (common/restore-text-selection (:text-selection @state))
+                          (swap! state dissoc :dragging? :text-selection))
            on-mouse-move (fn [e]
                            (when (:dragging? @state)
                              (let [start-pos (:mouse-pos @state)
@@ -414,11 +413,11 @@
      (let [{:keys [initial-text placeholder width data-test-id]} props]
        [:div {:style {:display "inline-flex" :width width}}
         (style/create-search-field
-          {:ref "filter-field" :autoSave "true" :results 5 :auto-focus "true"
-           :data-test-id (str data-test-id "-input")
-           :placeholder (or placeholder "Filter") :defaultValue initial-text
-           :style {:flex "1 0 auto" :borderRadius "3px 0 0 3px" :marginBottom 0}
-           :onKeyDown (common/create-key-handler [:enter] #(react/call :apply-filter this))})
+         {:ref "filter-field" :autoSave "true" :results 5 :auto-focus "true"
+          :data-test-id (str data-test-id "-input")
+          :placeholder (or placeholder "Filter") :defaultValue initial-text
+          :style {:flex "1 0 auto" :borderRadius "3px 0 0 3px" :marginBottom 0}
+          :onKeyDown (common/create-key-handler [:enter] #(react/call :apply-filter this))})
         [Button {:icon :search :onClick #(react/call :apply-filter this)
                  :data-test-id (str data-test-id "-button")
                  :style {:flex "0 0 auto" :borderRadius "0 3px 3px 0"}}]]))
@@ -471,7 +470,7 @@
                           (fn []
                             (.typeahead (js/$ (@refs "field")) "close")
                             #(when (and (empty? (.. % -currentTarget -value)) (:on-clear props))
-                              ((:on-clear props)))))))})
+                               ((:on-clear props)))))))})
 
 
 (react/defc AutocompleteFilter
@@ -591,7 +590,7 @@
             (when ok-button
               (cond (string? ok-button) [Button {:text ok-button :ref "ok-button" :class-name "ok-button" :onClick modal/pop-modal}]
                     (fn? ok-button) [Button {:text "OK" :ref "ok-button" :class-name "ok-button" :onClick ok-button}]
-                    (map? ok-button) [Button (merge {:text "OK" :ref "ok-button" :class-name "ok-button"} ok-button)]
+                    (map? ok-button) [Button (merge {:ref "ok-button" :class-name "ok-button"} ok-button)]
                     :else ok-button))])]]))
    :component-did-mount
    (fn [{:keys [props refs]}]
@@ -624,9 +623,9 @@
 
 (defn push-message [{:keys [header message]}]
   (push-ok-cancel-modal
-    {:header (or header "Message")
-     :content [:div {:style {:maxWidth 500}} message]
-     :show-cancel? false :ok-button "OK"}))
+   {:header (or header "Message")
+    :content [:div {:style {:maxWidth 500}} message]
+    :show-cancel? false :ok-button "OK"}))
 
 (defn push-error [content]
   (push-ok-cancel-modal
@@ -642,9 +641,9 @@
 
 (defn push-confirm [{:keys [header text on-confirm]}]
   (push-ok-cancel-modal
-    {:header (or header "Confirm")
-     :content [:div {:style {:maxWidth 500}} text]
-     :ok-button on-confirm}))
+   {:header (or header "Confirm")
+    :content [:div {:style {:maxWidth 500}} text]
+    :ok-button on-confirm}))
 
 (defn renderable? [thing]
   (or (react/valid-element? thing)

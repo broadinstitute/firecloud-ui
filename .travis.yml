@@ -1,7 +1,0 @@
-services:
-  - docker
-
-sudo: false
-
-script:
-  - scripts/test.sh

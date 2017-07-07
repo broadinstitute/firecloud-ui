@@ -1,15 +1,15 @@
 (ns broadfcui.auth
   (:require
-   [broadfcui.common.components :as comps]
-   [broadfcui.common.style :as style]
-   [broadfcui.config :as config]
-   [broadfcui.nav :as nav]
-   [broadfcui.utils :as utils]
-   clojure.string
-   [dmohs.react :as r]
-   ))
+    [dmohs.react :as react]
+    [clojure.string :as string]
+    [broadfcui.common.components :as comps]
+    [broadfcui.common.style :as style]
+    [broadfcui.config :as config]
+    [broadfcui.nav :as nav]
+    [broadfcui.utils :as utils]
+    ))
 
-(r/defc GoogleAuthLibLoader
+(react/defc GoogleAuthLibLoader
   {:render
    (fn []
      [:div {:style {:padding "40px 0"}}
@@ -20,7 +20,7 @@
    :-handle-auth2-loaded
    (fn [{:keys [props]}]
      (let [{:keys [on-loaded]} props
-           scopes (clojure.string/join
+           scopes (string/join
                    " "
                    ["email" "profile"
                     "https://www.googleapis.com/auth/devstorage.full_control"
@@ -30,7 +30,7 @@
        (utils/set-google-auth2-instance! auth2)
        (on-loaded auth2)))})
 
-(r/defc Policy
+(react/defc Policy
   {:render
    (fn [{:keys [state]}]
      [:div {:style {:maxWidth 600 :paddingTop "2em"}}
@@ -56,7 +56,7 @@
        [:a {:href "http://cancergenome.nih.gov/pdfs/Data_Use_Certv082014" :target "_blank"}
         "DATA USE CERTIFICATION AGREEMENT (DUCA)"] "."]])})
 
-(r/defc LoggedOut
+(react/defc LoggedOut
   {:render
    (fn [{:keys [this props]}]
      ;; Google's code complains if the sign-in button goes missing, so we hide this component rather
@@ -89,20 +89,20 @@
                                           :prompt "select_account"}))
            (.then (fn [response]
                     (utils/ajax {:url (str (config/api-url-root) "/handle-oauth-code")
-                             :method "POST"
-                             :data (utils/->json-string
-                                    {:code (.-code response)
-                                     :redirectUri (.. js/window -location -origin)})
-                             :on-done (fn [{:keys [success?]}]
-                                        (when success?
-                                          (swap! locals assoc :refresh-token-saved? true)
-                                          (let [signed-in? (-> auth2
-                                                               (aget "currentUser")
-                                                               (js-invoke "get")
-                                                               (js-invoke "isSignedIn"))]
-                                            (on-change signed-in? true))))}))))))})
+                                 :method "POST"
+                                 :data (utils/->json-string
+                                        {:code (.-code response)
+                                         :redirectUri (.. js/window -location -origin)})
+                                 :on-done (fn [{:keys [success?]}]
+                                            (when success?
+                                              (swap! locals assoc :refresh-token-saved? true)
+                                              (let [signed-in? (-> auth2
+                                                                   (aget "currentUser")
+                                                                   (js-invoke "get")
+                                                                   (js-invoke "isSignedIn"))]
+                                                (on-change signed-in? true))))}))))))})
 
-(r/defc UserStatus
+(react/defc UserStatus
   {:render
    (fn [{:keys [state]}]
      [:div {:style {:padding "40px 0"}}
@@ -116,17 +116,17 @@
    :component-did-mount
    (fn [{:keys [props state]}]
      (utils/ajax-orch "/me"
-                  {:on-done (fn [{:keys [success? status-code]}]
-                              (if success?
-                                ((:on-success props))
-                                (case status-code
-                                  403 (swap! state assoc :error :not-active)
-                                  ;; 404 means "not yet registered"
-                                  404 ((:on-success props))
-                                  (swap! state assoc :error true))))}
-                  :service-prefix ""))})
+                      {:on-done (fn [{:keys [success? status-code]}]
+                                  (if success?
+                                    ((:on-success props))
+                                    (case status-code
+                                      403 (swap! state assoc :error :not-active)
+                                      ;; 404 means "not yet registered"
+                                      404 ((:on-success props))
+                                      (swap! state assoc :error true))))}
+                      :service-prefix ""))})
 
-(r/defc RefreshCredentials
+(react/defc RefreshCredentials
   {:get-initial-state
    (fn []
      {:hidden? true})
@@ -140,11 +140,11 @@
    :component-did-mount
    (fn [{:keys [state]}]
      (utils/ajax-orch "/refresh-token-status"
-                  {:on-done (fn [{:keys [raw-response]}]
-                              (let [[parsed _]
-                                    (utils/parse-json-string raw-response true false)]
-                                (when (and parsed (:requiresRefresh parsed))
-                                  (swap! state dissoc :hidden?))))}))
+                      {:on-done (fn [{:keys [raw-response]}]
+                                  (let [[parsed _]
+                                        (utils/parse-json-string raw-response true false)]
+                                    (when (and parsed (:requiresRefresh parsed))
+                                      (swap! state dissoc :hidden?))))}))
    :-re-auth
    (fn [{:keys [props state]}]
      (-> (:auth2 props)
@@ -152,17 +152,17 @@
                                         :prompt "consent"}))
          (.then (fn [response]
                   (utils/ajax {:url (str (config/api-url-root) "/handle-oauth-code")
-                           :method "POST"
-                           :data (utils/->json-string
-                                  {:code (.-code response)
-                                   :redirectUri (.. js/window -location -origin)})
-                           :on-done #(swap! state assoc :hidden? true)})))))})
+                               :method "POST"
+                               :data (utils/->json-string
+                                      {:code (.-code response)
+                                       :redirectUri (.. js/window -location -origin)})
+                               :on-done #(swap! state assoc :hidden? true)})))))})
 
 (defn add-nav-paths []
   (nav/defpath
-    :policy
-    {:public? true
-     :component Policy
-     :regex #"policy"
-     :make-props (fn [_] {})
-     :make-path (fn [] "policy")}))
+   :policy
+   {:public? true
+    :component Policy
+    :regex #"policy"
+    :make-props (fn [_] {})
+    :make-path (fn [] "policy")}))

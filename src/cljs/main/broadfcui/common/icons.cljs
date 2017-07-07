@@ -50,7 +50,7 @@
    })
 
 (defn icon [attributes key]
-  [:span (assoc attributes :className (str (icon-keys key) " fa "  (:className attributes)))])
+  [:span (assoc attributes :className (str (icon-keys key) " fa " (:className attributes)))])
 
 (def external-link-icon
   (icon {:style {:paddingLeft "0.25rem" :fontSize "80%"}} :external-link))
@@ -79,13 +79,14 @@
            spacer [:div {:style {:height spacer-height}}]]
        [:span {:style {:display "inline-block" :position "relative" :verticalAlign "middle"
                        :height (:size props) :width (:size props)}}
-        (style/center {}
-          [:div {}
-           (hamburger "white")
-           spacer
-           (hamburger (:color props))
-           spacer
-           (hamburger (:color props))])]))})
+        (style/center
+         {}
+         [:div {}
+          (hamburger "white")
+          spacer
+          (hamburger (:color props))
+          spacer
+          (hamburger (:color props))])]))})
 
 (react/defc ExceptionIcon
   {:get-default-props

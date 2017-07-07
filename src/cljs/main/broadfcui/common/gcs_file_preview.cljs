@@ -1,14 +1,14 @@
 (ns broadfcui.common.gcs-file-preview
   (:require
     [dmohs.react :as react]
+    [clojure.string :as string]
     [broadfcui.common :as common]
-    [broadfcui.common.components :as comps :refer [Spinner]]
+    [broadfcui.common.components :as comps]
     [broadfcui.common.icons :as icons]
     [broadfcui.common.modal :as modal]
     [broadfcui.common.style :as style]
     [broadfcui.endpoints :as endpoints]
     [broadfcui.utils :as utils]
-    [clojure.string :as str]
     ))
 
 (def ^:private preview-byte-count 20000)
@@ -26,7 +26,7 @@
                        [:div {}
                         [:div {:style {:display "inline-block" :width 185}} (str label ": ")]
                         contents])
-             data-empty (or (= data-size "0") (str/blank? data-size))]
+             data-empty (or (= data-size "0") (string/blank? data-size))]
          [:div {:style {:width 700 :overflow "auto"}}
           (labeled "Google Bucket" (:bucket-name props))
           (labeled "Object" (:object props))
@@ -44,7 +44,7 @@
                                             :backgroundColor "#fff" :padding "1em" :borderRadius 8}}
                (str (if (> data-size preview-byte-count) "...") (:preview @state))]))]
           (when (:loading? @state)
-            [Spinner {:text "Getting file info..."}])
+            [comps/Spinner {:text "Getting file info..."}])
           (when data
             [:div {:style {:marginTop "1em"}}
              (labeled "File size"
@@ -54,7 +54,8 @@
                         (react/create-element
                          [:span {:style {:marginLeft "1em"}}
                           [:a {:href (common/gcs-object->download-url (:bucket-name props) (:object props))
-                               :onClick #(utils/set-access-token-cookie (utils/get-access-token))
+                               :onClick utils/refresh-access-token
+                               :onContextMenu utils/refresh-access-token
                                :target "_blank"}
                            "Open" icons/external-link-icon]
                           [:span {:style {:fontStyle "italic" :color (:text-light style/colors)}}
@@ -107,12 +108,12 @@
                             (js/encodeURIComponent (:object props)) "?alt=media")
                   :headers {"Authorization" (str "Bearer " (utils/get-access-token))
                             "Range" (str "bytes=-" preview-byte-count)}
-                  :on-done (fn [{:keys [success? status-text raw-response]}]
+                  :on-done (fn [{:keys [raw-response]}]
                              (swap! state assoc :preview raw-response
                                     :preview-line-count (count (clojure.string/split raw-response #"\n+")))
                              (after-update
                               (fn []
-                                (when-not (str/blank? (@refs "preview"))
+                                (when-not (string/blank? (@refs "preview"))
                                   (aset (@refs "preview") "scrollTop" (aget (@refs "preview") "scrollHeight"))))))}))})
 
 
@@ -124,8 +125,10 @@
        (assert bucket-name "No bucket name provided")
        (assert object "No GCS object provided")
        [:div (or (:attributes props) {})
-        [:a {:href "javascript:;" :onClick #(modal/push-modal [PreviewDialog props])}
+        [:a {:href (str "gs://" bucket-name "/" object)
+             :onClick (fn [e]
+                        (.preventDefault e)
+                        (modal/push-modal [PreviewDialog props]))}
          (if (= bucket-name workspace-bucket)
            object
            (if link-label (str link-label) (str "gs://" bucket-name "/" object)))]]))})
-

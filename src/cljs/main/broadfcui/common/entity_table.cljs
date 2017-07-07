@@ -1,13 +1,12 @@
 (ns broadfcui.common.entity-table
   (:require
-    [clojure.set :refer [union]]
-    [clojure.string :refer [blank?]]
     [dmohs.react :as react]
+    [clojure.string :as string]
     [broadfcui.common :as common]
     [broadfcui.common.components :as comps]
     [broadfcui.common.style :as style]
     [broadfcui.common.table :refer [Table]]
-    [broadfcui.common.table-utils :refer [default-render]]
+    [broadfcui.common.table-utils :as table-utils]
     [broadfcui.endpoints :as endpoints]
     [broadfcui.utils :as utils]
     ))
@@ -28,9 +27,9 @@
 (react/defc EntityTable
   {:update-data
    (fn [{:keys [refs after-update]} reinitialize?]
-       (react/call :refresh-rows (@refs "table"))
-       (when reinitialize?
-             (after-update #(react/call :reinitialize (@refs "table")))))
+     (react/call :refresh-rows (@refs "table"))
+     (when reinitialize?
+       (after-update #(react/call :reinitialize (@refs "table")))))
    :refresh
    (fn [{:keys [props state this after-update]} & [entity-type reinitialize?]]
      (endpoints/call-ajax-orch
@@ -49,7 +48,7 @@
    :get-default-props
    (fn []
      {:empty-message "There are no entities to display."
-      :attribute-renderer default-render})
+      :attribute-renderer table-utils/default-render})
    :render
    (fn [{:keys [props state this]}]
      (let [{:keys [server-response]} @state
@@ -132,7 +131,7 @@
        (fn [{:keys [current-page rows-per-page filter-text sort-column sort-order filter-group-index]} callback]
          (if (empty? entity-types)
            (callback {:group-count 0 :filtered-count 0 :rows []})
-           (let [type (if (blank? filter-group-index)
+           (let [type (if (string/blank? filter-group-index)
                         (:initial-entity-type props)
                         (nth entity-types filter-group-index))]
              (endpoints/call-ajax-orch

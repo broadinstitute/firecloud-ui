@@ -17,7 +17,7 @@
      (let [{:keys [content width dismiss-self get-anchor-dom-node]} props
            anchored? (not (nil? get-anchor-dom-node))]
        (assert (react/valid-element? content)
-         (subs (str "Not a react element: " content) 0 200))
+               (subs (str "Not a react element: " content) 0 200))
        (when (or (not anchored?) (:position @state))
          [:div {:style {:backgroundColor "rgba(210, 210, 210, 0.4)"
                         :position "absolute" :zIndex 8888
@@ -48,16 +48,20 @@
      (when-let [get-first (:get-first-element-dom-node props)]
        (common/focus-and-select (get-first))
        (when-let [get-last (:get-last-element-dom-node props)]
-         (.addEventListener (get-first) "keydown" (common/create-key-handler [:tab] #(.-shiftKey %)
-                                                    (fn [e] (.preventDefault e)
-                                                      (when (:cycle-focus? props)
-                                                        (.focus (get-last))))))
-         (.addEventListener (get-last) "keydown" (common/create-key-handler [:tab] #(not (.-shiftKey %))
-                                                   (fn [e] (.preventDefault e)
+         (.addEventListener (get-first) "keydown" (common/create-key-handler
+                                                   [:tab] #(.-shiftKey %)
+                                                   (fn [e]
+                                                     (.preventDefault e)
                                                      (when (:cycle-focus? props)
-                                                       (.focus (get-first))))))))
+                                                       (.focus (get-last))))))
+         (.addEventListener (get-last) "keydown" (common/create-key-handler
+                                                  [:tab] #(not (.-shiftKey %))
+                                                  (fn [e]
+                                                    (.preventDefault e)
+                                                    (when (:cycle-focus? props)
+                                                      (.focus (get-first))))))))
      (swap! locals assoc :onKeyDownHandler
-       (common/create-key-handler [:esc] (:dismiss-self props)))
+            (common/create-key-handler [:esc] (:dismiss-self props)))
      (.addEventListener js/window "keydown" (:onKeyDownHandler @locals)))
    :component-will-unmount
    (fn [{:keys [locals]}]

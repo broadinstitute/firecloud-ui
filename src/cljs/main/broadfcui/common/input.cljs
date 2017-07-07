@@ -1,6 +1,5 @@
 (ns broadfcui.common.input
   (:require
-    [clojure.string :refer [trim]]
     [dmohs.react :as react]
     [broadfcui.common :as common]
     [broadfcui.common.style :as style]
@@ -70,6 +69,13 @@
   {:test #(re-matches #"[A-Za-z0-9_\-]*" %)
    :message (str field-name " may only contain letters, numbers, underscores, and dashes.")})
 
+(def hint-alphanumeric_- "Only letters, numbers, underscores, and dashes allowed")
+
+(defn alphanumeric_-period [field-name]
+  {:test #(re-matches #"[A-Za-z0-9_\-.]*" %)
+   :message (str field-name " may only contain letters, numbers, underscores, dashes, and periods.")})
+
+(def hint-alphanumeric_-period "Only letters, numbers, underscores, dashes, and periods allowed")
 
 (def ^:private strictnesses
   {:simple #"^\S+@\S+\.\S+$"
@@ -79,10 +85,10 @@
   (re-matches (get strictnesses strictness (:simple strictnesses)) (clojure.string/lower-case test)))
 
 (defn valid-email [field-name & [strictness]]
-  {:test #(is-valid-email? % strictness) :message (str field-name " is not a valid email address")})
+  {:test #(is-valid-email? % strictness) :message (str field-name " must be a valid email address")})
 
 (defn valid-email-or-empty [field-name & [strictness]]
   {:test (fn [test] (or (empty? test) (is-valid-email? test strictness)))
-   :message (str field-name " is not a valid email address (or empty)")})
+   :message (str field-name " must be a valid email address")})
 
 

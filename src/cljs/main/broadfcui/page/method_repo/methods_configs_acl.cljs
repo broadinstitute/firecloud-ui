@@ -1,19 +1,18 @@
 (ns broadfcui.page.method-repo.methods-configs-acl
   (:require
-   [dmohs.react :as react]
-   [clojure.string :refer [trim]]
-   [broadfcui.common :as common]
-   [broadfcui.common.components :as comps]
-   [broadfcui.common.input :as input]
-   [broadfcui.common.modal :as modal]
-   [broadfcui.common.style :as style]
-   [broadfcui.endpoints :as endpoints]
-   [broadfcui.utils :as utils]
-   [broadfcui.net :as net]
-   ))
+    [dmohs.react :as react]
+    [broadfcui.common :as common]
+    [broadfcui.common.components :as comps]
+    [broadfcui.common.input :as input]
+    [broadfcui.common.modal :as modal]
+    [broadfcui.common.style :as style]
+    [broadfcui.endpoints :as endpoints]
+    [broadfcui.net :as net]
+    [broadfcui.utils :as utils]
+    ))
 
 
-(defn- get-ordered-name [entity]
+(defn get-ordered-name [entity]
   (clojure.string/join ":" (replace entity [:namespace :name :snapshotId])))
 
 (def ^:private reader-level "READER")
@@ -76,11 +75,14 @@
               :spellCheck false
               :defaultValue (:user acl-entry)
               :predicates [(input/valid-email-or-empty "User ID")]}]
-            (style/create-identity-select
-             {:ref (str "acl-value" i)
-              :style {:float "right" :width column-width :height 33}
-              :defaultValue (:role acl-entry)}
-             access-levels)
+            (let [disabled? (= (utils/get-user-email) (:user acl-entry))]
+              (style/create-identity-select
+               {:ref (str "acl-value" i)
+                :style {:float "right" :width column-width :height 33}
+                :disabled disabled?
+                :title (when disabled? "You cannot edit your own permissions.")
+                :defaultValue (:role acl-entry)}
+               access-levels))
             (common/clear-both)])
          acl-vec)
         [comps/Button {:text "Add new" :icon :add-new
@@ -92,14 +94,15 @@
                   :style {:marginLeft "2em" :verticalAlign "middle"}
                   :onChange #(swap! state assoc :public-status (-> (@refs "publicbox") .-checked))
                   :checked public-status}]
-         [:span {:style {:paddingLeft 6 :verticalAlign "middle"}} "Publicly Readable?"]]]))
+         [:span {:style {:paddingLeft 6 :verticalAlign "middle"}} "Publicly Readable?"]]
+        (style/create-server-error-message (:persist-error @state))]))
    :-persist-acl
    (fn [{:keys [props state refs this]}]
      (swap! state dissoc :validation-error :save-error)
      (let [acl-vec (this :-capture-ui-state)
            failure (apply input/validate refs (map #(str "acl-key" %) (range (count acl-vec))))]
        (if failure
-         (swap! state assoc :validation-error failure)
+         (swap! state assoc :persist-error failure)
          (let [non-empty-acls (filterv #(not (empty? (:user %))) acl-vec)
                non-empty-acls-w-public (conj non-empty-acls
                                              {:user "public" :role
@@ -109,11 +112,13 @@
             {:endpoint (:save-endpoint props)
              :headers utils/content-type=json
              :payload non-empty-acls-w-public
-             :on-done (fn [{:keys [success? get-parsed-response]}]
-                        (swap! state dissoc :saving?)
-                        (if success?
-                          (modal/pop-modal)
-                          (swap! state assoc :save-error (get-parsed-response false))))})))))
+             :on-done (net/handle-ajax-response
+                       (fn [{:keys [success? parsed-response]}]
+                         (if success?
+                           (modal/pop-modal)
+                           (do
+                             (swap! state assoc :persist-error (:message parsed-response))
+                             (swap! state dissoc :saving?)))))})))))
    :-capture-ui-state
    (fn [{:keys [state refs]}]
      (mapv
