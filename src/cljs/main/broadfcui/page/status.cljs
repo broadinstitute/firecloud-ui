@@ -44,11 +44,11 @@
      [:div {:style {:padding "1em"}}
       [:h2 {} "Service Status"]
       [:div {}
-         [StatusLine {:label "Orchestration" :success? orch-ok?    :errors orch-errors}]
-         [StatusLine {:label "Rawls"         :success? rawls-ok?   :errors rawls-errors}]
-         [StatusLine {:label "Agora"         :success? agora-ok?   :errors agora-errors}]
-         [StatusLine {:label "Thurloe"       :success? thurloe-ok? :errors thurloe-errors}]
-         [StatusLine {:label "Search"        :success? search-ok?  :errors search-errors}]]]))
+        [StatusLine {:label "Orchestration" :success? orch-ok?    :errors orch-errors}]
+        [StatusLine {:label "Rawls"         :success? rawls-ok?   :errors rawls-errors}]
+        [StatusLine {:label "Agora"         :success? agora-ok?   :errors agora-errors}]
+        [StatusLine {:label "Thurloe"       :success? thurloe-ok? :errors thurloe-errors}]
+        [StatusLine {:label "Search"        :success? search-ok?  :errors search-errors}]]]))
    :component-did-mount
    (fn [{:keys [props state]}]
      (utils/ajax {:url (str (config/api-url-root) "/status")
