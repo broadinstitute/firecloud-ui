@@ -29,16 +29,16 @@
 (react/defc Page
   {:render
    (fn [{:keys [props state]}]
-     (let [{:keys [success? parsed-response status-text status-code]} @state
+     (let [{:keys [status-code status-text parsed-response]} @state
            orch-ok? (:ok parsed-response)
            orch-errors [(str "Server Response: " status-code) (str "Error: " status-text)]
-           rawls-ok? (and orch-ok? (get-in parsed-response [:systems :Rawls :ok]))
+           rawls-ok? (get-in parsed-response [:systems :Rawls :ok])
            rawls-errors (get-in parsed-response [:systems :Rawls :messages])
-           agora-ok? (and orch-ok? (get-in parsed-response [:systems :Agora :ok]))
+           agora-ok? (get-in parsed-response [:systems :Agora :ok])
            agora-errors (get-in parsed-response [:systems :Agora :messages])
-           thurloe-ok? (and orch-ok? (get-in parsed-response [:systems :Thurloe :ok]))
+           thurloe-ok? (get-in parsed-response [:systems :Thurloe :ok])
            thurloe-errors (get-in parsed-response [:systems :Thurloe :messages])
-           search-ok? (and orch-ok? (get-in parsed-response [:systems :Search :ok]))
+           search-ok? (get-in parsed-response [:systems :Search :ok])
            search-errors (get-in parsed-response [:systems :Search :messages])]
      [:div {:style {:padding "1em"}}
       [:h2 {} "Service Status"]
@@ -52,10 +52,9 @@
    (fn [{:keys [props state]}]
      (utils/ajax {:url (str (config/api-url-root) "/status")
                   :method "GET"
-                  :on-done (fn [{:keys [status-code success? status-text get-parsed-response]}]
+                  :on-done (fn [{:keys [status-code status-text get-parsed-response]}]
                              (swap! state assoc
                                     :status-code status-code
-                                    :success? success?
                                     :status-text status-text
                                     :parsed-response (get-parsed-response)))}))})
 
