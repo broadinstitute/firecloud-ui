@@ -8,6 +8,7 @@
     [broadfcui.common.modal :as modal]
     [broadfcui.common.style :as style]
     [broadfcui.components.collapse :refer [Collapse]]
+    [broadfcui.components.sticky :refer [Sticky]]
     [broadfcui.endpoints :as endpoints]
     [broadfcui.nav :as nav]
     [broadfcui.page.workspace.monitor.common :as moncommon]
@@ -62,7 +63,7 @@
 
 (defn- render-sidebar [state refs this
                        {:keys [workspace billing-projects owner? writer? curator? catalog-with-read? can-share?
-                               workspace-id request-refresh user-access-level]}]
+                               workspace-id request-refresh user-access-level label-id body-id]}]
   (let [{{:keys [isLocked library-attributes description authorizationDomain]} :workspace
          {:keys [runningSubmissionsCount]} :workspaceSubmissionStats} workspace
         status (common/compute-status workspace)
@@ -70,113 +71,116 @@
         {:keys [sidebar-visible? editing?]
          {:keys [library-schema]} :server-response} @state]
     [:div {:style {:flex "0 0 270px" :paddingRight 30}}
-     [comps/StatusLabel {:text (str status
-                                    (when (= status "Running")
-                                      (str " (" runningSubmissionsCount ")")))
-                         :icon (case status
-                                 "Complete" [icons/CompleteIcon {:size 36}]
-                                 "Running" [icons/RunningIcon {:size 36}]
-                                 "Exception" [icons/ExceptionIcon {:size 32}])
-                         :color (style/color-for-status status)}]
-     [:div {:ref "sidebar"}]
-     (style/create-unselectable
-      :div {:style {:position (when-not sidebar-visible? "fixed")
-                    :top (when-not sidebar-visible? 0)
-                    :width 270}}
-      (when (and can-share? (not editing?))
-        [comps/SidebarButton
-         {:style :light :margin :top :color :button-primary
-          :text "Share..." :icon :share
-          :onClick #(modal/push-modal
-                     [AclEditor {:workspace-id workspace-id
-                                 :user-access-level user-access-level
-                                 :request-refresh request-refresh}])}])
-      (when (not editing?)
-        [comps/SidebarButton
-         {:style :light :color :button-primary :margin :top
-          :icon :catalog :text "Catalog Dataset..."
-          :onClick #(modal/push-modal [CatalogWizard (utils/restructure
-                                                      library-schema
-                                                      workspace
-                                                      workspace-id
-                                                      can-share?
-                                                      owner?
-                                                      curator?
-                                                      writer?
-                                                      catalog-with-read?
-                                                      request-refresh)])}])
-      (when (and publishable? (not editing?))
-        (let [working-attributes (library-utils/get-initial-attributes workspace)
-              questions (->> (range (count (:wizard library-schema)))
-                             (map (comp first (partial library-utils/get-questions-for-page working-attributes library-schema)))
-                             (apply concat))
-              required-attributes (library-utils/find-required-attributes library-schema)]
-          (if (:library:published library-attributes)
-            [publish/UnpublishButton {:workspace-id workspace-id
-                                      :request-refresh request-refresh}]
-            [publish/PublishButton {:disabled? (cond
-                                                 (empty? library-attributes)
-                                                 "Dataset attributes must be created before publishing."
-                                                 (seq (library-utils/validate-required
-                                                       (library-utils/remove-empty-values working-attributes)
-                                                       questions required-attributes))
-                                                 "All required dataset attributes must be set before publishing.")
-                                    :workspace-id workspace-id
-                                    :request-refresh request-refresh}])))
-      (when (or owner? writer?)
-        (if (not editing?)
+     [:span {:id label-id}
+      [comps/StatusLabel {:id label-id
+                          :text (str status
+                                     (when (= status "Running")
+                                       (str " (" runningSubmissionsCount ")")))
+                          :icon (case status
+                                  "Complete" [icons/CompleteIcon {:size 36}]
+                                  "Running" [icons/RunningIcon {:size 36}]
+                                  "Exception" [icons/ExceptionIcon {:size 32}])
+                          :color (style/color-for-status status)}]]
+     [Sticky
+      {:outer-style {:width 270 :backgroudColor "#fff"}
+       :sticky-props {:data-check-every 1
+                      :data-top-anchor (str label-id ":bottom") :data-bottom-anchor body-id}
+       :contents
+       [:div {:style {:width 270 :background "#fff"}}
+        (when (and can-share? (not editing?))
+          [comps/SidebarButton
+           {:style :light :margin :top :color :button-primary
+            :text "Share..." :icon :share
+            :onClick #(modal/push-modal
+                       [AclEditor {:workspace-id workspace-id
+                                   :user-access-level user-access-level
+                                   :request-refresh request-refresh}])}])
+        (when (not editing?)
           [comps/SidebarButton
            {:style :light :color :button-primary :margin :top
-            :text "Edit" :icon :edit
-            :onClick #(swap! state assoc :editing? true)}]
-          [:div {}
-           [comps/SidebarButton
-            {:style :light :color :button-primary :margin :top
-             :text "Save" :icon :done
-             :onClick (fn [_]
-                        (let [{:keys [success error]} (react/call :get-attributes (@refs "workspace-attribute-editor"))
-                              new-description (react/call :get-text (@refs "description"))
-                              new-tags (react/call :get-tags (@refs "tags-autocomplete"))]
-                          (if error
-                            (comps/push-error error)
-                            (save-attributes {:new-attributes (assoc success :description new-description :tag:tags new-tags)
-                                              :state state
-                                              :workspace-id workspace-id
-                                              :request-refresh request-refresh}))))}]
-           [comps/SidebarButton
-            {:style :light :color :exception-state :margin :top
-             :text "Cancel Editing" :icon :cancel
-             :onClick #(swap! state dissoc :editing?)}]]))
-      (when-not editing?
-        [comps/SidebarButton
-         {:style :light :margin :top :color :button-primary
-          :text "Clone..." :icon :clone
-          :disabled? (when (empty? billing-projects) (comps/no-billing-projects-message))
-          :onClick #(modal/push-modal
-                     [WorkspaceCloner
-                      {:on-success (fn [namespace name]
-                                     (swap! state dissoc :cloning?)
-                                     (nav/go-to-path :workspace-summary
-                                                     (utils/restructure namespace name)))
-                       :workspace-id workspace-id
-                       :description description
-                       :auth-domain (:membersGroupName authorizationDomain)
-                       :billing-projects billing-projects}])}])
-      (when (and owner? (not editing?))
-        [comps/SidebarButton {:style :light :margin :top :color :button-primary
-                              :text (if isLocked "Unlock" "Lock")
-                              :icon (if isLocked :unlock :lock)
-                              :onClick #(react/call :lock-or-unlock this isLocked)}])
-      (when (and owner? (not editing?))
-        [comps/SidebarButton {:style :light :margin :top :color (if isLocked :text-lighter :exception-state)
-                              :text "Delete" :icon :delete
-                              :disabled? (when isLocked "This workspace is locked.")
-                              :onClick #(modal/push-modal
-                                         [DeleteDialog {:workspace-id workspace-id}])}]))]))
+            :icon :catalog :text "Catalog Dataset..."
+            :onClick #(modal/push-modal [CatalogWizard (utils/restructure
+                                                        library-schema
+                                                        workspace
+                                                        workspace-id
+                                                        can-share?
+                                                        owner?
+                                                        curator?
+                                                        writer?
+                                                        catalog-with-read?
+                                                        request-refresh)])}])
+        (when (and publishable? (not editing?))
+          (let [working-attributes (library-utils/get-initial-attributes workspace)
+                questions (->> (range (count (:wizard library-schema)))
+                               (map (comp first (partial library-utils/get-questions-for-page working-attributes library-schema)))
+                               (apply concat))
+                required-attributes (library-utils/find-required-attributes library-schema)]
+            (if (:library:published library-attributes)
+              [publish/UnpublishButton {:workspace-id workspace-id
+                                        :request-refresh request-refresh}]
+              [publish/PublishButton {:disabled? (cond
+                                                   (empty? library-attributes)
+                                                   "Dataset attributes must be created before publishing."
+                                                   (seq (library-utils/validate-required
+                                                         (library-utils/remove-empty-values working-attributes)
+                                                         questions required-attributes))
+                                                   "All required dataset attributes must be set before publishing.")
+                                      :workspace-id workspace-id
+                                      :request-refresh request-refresh}])))
+        (when (or owner? writer?)
+          (if (not editing?)
+            [comps/SidebarButton
+             {:style :light :color :button-primary :margin :top
+              :text "Edit" :icon :edit
+              :onClick #(swap! state assoc :editing? true)}]
+            [:div {}
+             [comps/SidebarButton
+              {:style :light :color :button-primary :margin :top
+               :text "Save" :icon :done
+               :onClick (fn [_]
+                          (let [{:keys [success error]} (react/call :get-attributes (@refs "workspace-attribute-editor"))
+                                new-description (react/call :get-text (@refs "description"))
+                                new-tags (react/call :get-tags (@refs "tags-autocomplete"))]
+                            (if error
+                              (comps/push-error error)
+                              (save-attributes {:new-attributes (assoc success :description new-description :tag:tags new-tags)
+                                                :state state
+                                                :workspace-id workspace-id
+                                                :request-refresh request-refresh}))))}]
+             [comps/SidebarButton
+              {:style :light :color :exception-state :margin :top
+               :text "Cancel Editing" :icon :cancel
+               :onClick #(swap! state dissoc :editing?)}]]))
+        (when-not editing?
+          [comps/SidebarButton
+           {:style :light :margin :top :color :button-primary
+            :text "Clone..." :icon :clone
+            :disabled? (when (empty? billing-projects) (comps/no-billing-projects-message))
+            :onClick #(modal/push-modal
+                       [WorkspaceCloner
+                        {:on-success (fn [namespace name]
+                                       (swap! state dissoc :cloning?)
+                                       (nav/go-to-path :workspace-summary
+                                                       (utils/restructure namespace name)))
+                         :workspace-id workspace-id
+                         :description description
+                         :auth-domain (:membersGroupName authorizationDomain)
+                         :billing-projects billing-projects}])}])
+        (when (and owner? (not editing?))
+          [comps/SidebarButton {:style :light :margin :top :color :button-primary
+                                :text (if isLocked "Unlock" "Lock")
+                                :icon (if isLocked :unlock :lock)
+                                :onClick #(react/call :lock-or-unlock this isLocked)}])
+        (when (and owner? (not editing?))
+          [comps/SidebarButton {:style :light :margin :top :color (if isLocked :text-lighter :exception-state)
+                                :text "Delete" :icon :delete
+                                :disabled? (when isLocked "This workspace is locked.")
+                                :onClick #(modal/push-modal
+                                           [DeleteDialog {:workspace-id workspace-id}])}])]}]]))
 
 
 (defn- render-main [{:keys [workspace curator? owner? writer? reader? can-share? catalog-with-read? bucket-access? editing? submissions-count
-                            library-schema request-refresh workspace-id storage-cost user-access-level]}]
+                            library-schema request-refresh workspace-id storage-cost user-access-level body-id]}]
   (let [{:keys [owners]
          {:keys [createdBy createdDate bucketName description tags workspace-attributes library-attributes]} :workspace} workspace
         render-detail-box (fn [title & children]
@@ -191,7 +195,7 @@
                                   [:div {:style {:fontSize "90%" :lineHeight 1.5}} child]))
                               children)])
         processed-tags (flatten (map :items (vals tags)))]
-    [:div {:style {:flex "1 1 auto" :overflow "hidden"}}
+    [:div {:style {:flex "1 1 auto" :overflow "hidden"} :id body-id}
      [:div {:style {:display "flex"}}
       (render-detail-box
        "Workspace Access"
@@ -283,10 +287,12 @@
 (react/defc Summary
   {:get-initial-state
    (fn []
-     {:sidebar-visible? true})
+     {:sidebar-visible? true
+      :label-id (gensym "status")
+      :body-id (gensym "summary")})
    :render
    (fn [{:keys [refs state props this]}]
-     (let [{:keys [server-response]} @state
+     (let [{:keys [server-response label-id body-id]} @state
            {:keys [workspace]} props
            {:keys [submissions-count billing-projects library-schema curator? server-error]} server-response]
        (cond
@@ -302,7 +308,8 @@
                catalog-with-read? (and (or writer? (reader? workspace)) (:catalog workspace))
                user-access-level (:accessLevel workspace)
                derived (merge {:reader? (reader? (:workspace props)) :request-refresh #(react/call :refresh this)}
-                              (utils/restructure owner? writer? can-share? catalog-with-read? user-access-level))]
+                              (utils/restructure owner? writer? can-share? catalog-with-read?
+                                                 user-access-level label-id body-id))]
            [:div {:style {:margin "2.5rem 1.5rem" :display "flex"}}
             (render-sidebar state refs this
                             (merge (select-keys props [:workspace :workspace-id])
@@ -331,21 +338,7 @@
                   (react/call :refresh this))}))
    :component-did-mount
    (fn [{:keys [state refs locals this]}]
-     (react/call :refresh this)
-     (swap! locals assoc :scroll-handler
-            (fn []
-              (when-let [sidebar (@refs "sidebar")]
-                (let [visible (< (.-scrollY js/window) (.-offsetTop sidebar))]
-                  (when-not (= visible (:sidebar-visible? @state))
-                    (swap! state assoc :sidebar-visible? visible))))))
-     (.addEventListener js/window "scroll" (:scroll-handler @locals)))
-
-   :component-did-update
-   (fn [{:keys [locals]}]
-     ((:scroll-handler @locals)))
-   :component-will-unmount
-   (fn [{:keys [locals]}]
-     (.removeEventListener js/window "scroll" (:scroll-handler @locals)))
+     (react/call :refresh this))
    :refresh
    (fn [{:keys [props state]}]
      (swap! state dissoc :server-response)

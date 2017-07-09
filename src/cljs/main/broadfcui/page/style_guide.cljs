@@ -6,6 +6,7 @@
     [broadfcui.common.codemirror :refer [CodeMirror]]
     [broadfcui.common.icons :as icons]
     [broadfcui.common.style :as style]
+    [broadfcui.components.sticky :refer [Sticky]]
     [broadfcui.nav :as nav]
     [broadfcui.utils :as utils]
     ))
@@ -14,37 +15,32 @@
   (style/create-link {:text label
                       :href (str "#" (string/lower-case label))}))
 
-(react/defc StyleNav
-  {:render
-   (fn []
-     [:div {:data-sticky-container "" :style {:float "right" :width 200}}
-      [:div {:data-sticky "" :className "sticky" :data-anchor "guide"
-             :style {:padding "0.5rem" :border style/standard-line :width 200
-                     :maxHeight "calc(100vh - 3rem)" :overflow "auto"}}
-       [:ul {:className "vertical menu" :data-magellan ""}
-        [:li {} [:span {} "Overview"]
-         [:ul {:className "nested vertical menu"}
-          [:li {} (create-nav-link "Summary")]
-          [:li {} (create-nav-link "Hierarchy")]]]
-        [:li {} [:span {} "Conventions"]
-         [:ul {:className "nested vertical menu"}
-          [:li {} (create-nav-link "Units")]
-          [:li {} (create-nav-link "Links")]
-          [:li {} (create-nav-link "Switches")]
-          [:li {} (create-nav-link "Buttons")]]]
-        [:li {} [:span {} "Styles"]
-         [:ul {:className "nested vertical menu"}
-          [:li {} (create-nav-link "Colors")]
-          [:li {} (create-nav-link "Icons")]]]
-        [:li {} [:span {} "Components"]
-         [:ul {:className "nested vertical menu"}
-          [:li {} (create-nav-link "Modals")]
-          [:li {} (create-nav-link "Infoboxes")]
-          [:li {} (create-nav-link "Tooltips")]]]]]])
-   :component-did-mount
-   (fn [{:keys [this]}]
-     (.foundation (js/$ (react/find-dom-node this)))
-     (js* "$(window).trigger('load');"))})
+(defn- style-nav [body-id]
+  [Sticky
+   {:outer-style {:float "right" :width 200}
+    :anchor body-id
+    :inner-style {:padding "0.5rem" :border style/standard-line :width 200
+                  :maxHeight "calc(100vh - 3rem)" :overflow "auto"}
+    :contents [:ul {:className "vertical menu" :data-magellan ""}
+               [:li {} [:span {} "Overview"]
+                [:ul {:className "nested vertical menu"}
+                 [:li {} (create-nav-link "Summary")]
+                 [:li {} (create-nav-link "Hierarchy")]]]
+               [:li {} [:span {} "Conventions"]
+                [:ul {:className "nested vertical menu"}
+                 [:li {} (create-nav-link "Units")]
+                 [:li {} (create-nav-link "Links")]
+                 [:li {} (create-nav-link "Switches")]
+                 [:li {} (create-nav-link "Buttons")]]]
+               [:li {} [:span {} "Styles"]
+                [:ul {:className "nested vertical menu"}
+                 [:li {} (create-nav-link "Colors")]
+                 [:li {} (create-nav-link "Icons")]]]
+               [:li {} [:span {} "Components"]
+                [:ul {:className "nested vertical menu"}
+                 [:li {} (create-nav-link "Modals")]
+                 [:li {} (create-nav-link "Infoboxes")]
+                 [:li {} (create-nav-link "Tooltips")]]]]}])
 
 (def ^:private section-break
   [:hr {:style {:border style/standard-line}}])
@@ -195,26 +191,30 @@
    figure out either from context or from clicking, but we want to be explicit."]])
 
 (react/defc Page
-  {:render
-   (fn [_]
-     [:div {:style {:padding "1rem"}}
-      [:style {} ; Yeah, yeah, they're overrides, so sue me.
-       ".menu .active {background-color: #457fd2; color: white !important;}
-       .menu {padding: 0;}
-       .menu > li > span {display: block; padding: 0.7rem 1rem; line-height: 1;}
-       p {margin: 0.5rem 0;}
-       .CodeMirror {height: auto; font-family: Menlo, monospace; font-size: 12px;}"]
-      [:h1 {} "Style Guide"]
-      section-break
-      [StyleNav]
-      [:div {:id "guide" :style {:marginRight 225 :lineHeight "1.4rem"}}
-       overview
-       section-break
-       conventions
-       section-break
-       styles
-       section-break
-       components]])})
+  {:get-initial-state
+   (fn []
+     {:body-id (gensym "style")})
+   :render
+   (fn [{:keys [state]}]
+     (let [{:keys [body-id]} @state]
+       [:div {:style {:padding "1rem"}}
+        [:style {}                                          ; Yeah, yeah, they're overrides, so sue me.
+         ".menu .active {background-color: #457fd2; color: white !important;}
+         .menu {padding: 0;}
+         .menu > li > span {display: block; padding: 0.7rem 1rem; line-height: 1;}
+         p {margin: 0.5rem 0;}
+         .CodeMirror {height: auto; font-family: Menlo, monospace; font-size: 12px;}"]
+        [:h1 {} "Style Guide"]
+        section-break
+        (style-nav body-id)
+        [:div {:id body-id :style {:marginRight 225 :lineHeight "1.4rem"}}
+         overview
+         section-break
+         conventions
+         section-break
+         styles
+         section-break
+         components]]))})
 
 (defn add-nav-paths []
   (nav/defpath
