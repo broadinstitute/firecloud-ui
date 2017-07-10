@@ -34,8 +34,24 @@ class FireCloudClient {
     headers.Authorization(OAuth2BearerToken(token.value))
   }
 
-  private def sendRequest(httpRequest: HttpRequest) : String = {
-    val response = Await.result(Http().singleRequest(httpRequest), 5.minutes)
+  private def sendRequest(httpRequest: HttpRequest): HttpResponse = {
+    Await.result(Http().singleRequest(httpRequest), 5.minutes)
+  }
+
+  private def handleResponse(response: HttpResponse): String = {
+    response.status.isSuccess() match {
+      case true =>
+        val byteStringSink: Sink[ByteString, Future[ByteString]] = Sink.fold(ByteString("")) { (z, i) => z.concat(i) }
+        val entityFuture = response.entity.dataBytes.runWith(byteStringSink)
+        Await.result(entityFuture, 100.millis).decodeString("UTF-8")
+      case _ =>
+        val byteStringSink: Sink[ByteString, Future[ByteString]] = Sink.fold(ByteString("")) { (z, i) => z.concat(i) }
+        val entityFuture = response.entity.dataBytes.runWith(byteStringSink)
+        throw new APIException(Await.result(entityFuture, 100.millis).decodeString("UTF-8"))
+    }
+  }
+
+  def parseResponse(response: HttpResponse): String = {
     response.status.isSuccess() match {
       case true =>
         val byteStringSink: Sink[ByteString, Future[ByteString]] = Sink.fold(ByteString("")) { (z, i) => z.concat(i) }
@@ -50,7 +66,7 @@ class FireCloudClient {
 
   private def requestWithJsonContent(method: HttpMethod, uri: String, content: Any, httpHeaders: List[HttpHeader] = List())(implicit token: AuthToken): String = {
     val req = HttpRequest(method, uri, List(makeAuthHeader(token)), HttpEntity(ContentTypes.`application/json`, mapper.writeValueAsString(content)))
-    sendRequest(req)
+    handleResponse(sendRequest(req))
   }
 
   def postRequestWithMultipart(uri:String, name: String, content: String)(implicit token: AuthToken): String = {
@@ -67,10 +83,10 @@ class FireCloudClient {
     //val formData = Multipart.FormData.fromPath("participants", ContentType.parse("text/tab-separated-values"), "")
     val requestEntity = formData.toEntity()
     val req = HttpRequest(POST, uri, List(makeAuthHeader(token)), requestEntity)
-    sendRequest(req)
+    handleResponse(sendRequest(req))
   }
 
-  private def requestBasic(method: HttpMethod, uri: String, httpHeaders: List[HttpHeader] = List())(implicit token: AuthToken): String = {
+  private def requestBasic(method: HttpMethod, uri: String, httpHeaders: List[HttpHeader] = List())(implicit token: AuthToken): HttpResponse = {
     val req = HttpRequest(method, uri, List(makeAuthHeader(token)) ++ httpHeaders)
     sendRequest(req)
   }
@@ -88,10 +104,10 @@ class FireCloudClient {
   }
 
   def deleteRequest(uri: String, httpHeaders: List[HttpHeader] = List())(implicit token: AuthToken): String = {
-    requestBasic(DELETE, uri, httpHeaders)
+    handleResponse(requestBasic(DELETE, uri, httpHeaders))
   }
 
-  def getRequest(uri: String, httpHeaders: List[HttpHeader] = List())(implicit token: AuthToken): String = {
+  def getRequest(uri: String, httpHeaders: List[HttpHeader] = List())(implicit token: AuthToken): HttpResponse = {
     requestBasic(GET, uri, httpHeaders)
   }
 }

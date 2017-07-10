@@ -2,18 +2,28 @@ import org.broadinstitute.dsde.firecloud.api.{Rawls, Thurloe}
 import org.broadinstitute.dsde.firecloud.auth.{AuthToken, AuthTokens}
 import org.broadinstitute.dsde.firecloud.{CleanUp, Config}
 import org.broadinstitute.dsde.firecloud.pages.{DataLibraryPage, RegistrationPage, WebBrowserSpec}
-import org.scalatest.{FreeSpec, Matchers}
+import org.scalatest.{BeforeAndAfter, FreeSpec, Matchers}
+
+import scala.util.Try
 
 /**
   * Tests for new user registration scenarios.
   */
-class RegistrationSpec extends FreeSpec with Matchers with WebBrowserSpec with CleanUp {
+class RegistrationSpec extends FreeSpec with BeforeAndAfter with Matchers with WebBrowserSpec with CleanUp {
 
   val email = Config.Users.lunaTemp.email
   val password = Config.Users.lunaTemp.password
   val subjectId = "117891551413045861932"
 
   implicit val authToken: AuthToken = AuthTokens.admin
+
+  // Clean-up anything left over from any previous failures.
+  before {
+    if (Rawls.admin.doesUserExist(subjectId).getOrElse(false)) {
+      Try(Rawls.admin.deleteUser(subjectId)) recover { case _ => () }
+    }
+    Thurloe.keyValuePairs.deleteAll(subjectId)
+  }
 
   private def registerCleanUpForDeleteUser(subjectId: String): Unit = {
     register cleanUp Rawls.admin.deleteUser(subjectId)
