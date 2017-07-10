@@ -35,22 +35,26 @@
    :-render-groups-table
    (fn [{:keys [this state]}]
      [:div {}
-      (when (:modal? @state)
+      (cond
+        (:modal? @state)
         [modals/RenderMessage
          {:text "Are you sure you want to delete this group?"
           :on-confirm (fn []
                         (net/render-with-ajax
                          (:group-response @state)
-                         #(this :-delete-group)
+                         (this :-delete-group)
                          {:loading-text "Deleting group..."
                           :rephrase-error
                           #(if (= 409 (:status-code %))
                              "Sorry you are unable to delete this group because it is in use"
                              (get-in % [:parsed-response :message]))}))
-          :on-dismiss #(swap! state dissoc :modal?)}])
-      (when (:error? @state)
-        [modals/RenderError
-         {:text (:parsed-response state)}])
+          :on-dismiss #(swap! state dissoc :modal?)}]
+        (:error? @state)
+        (do
+          [modals/RenderError
+           {:text (:error-message @state)
+            :on-confirm #(swap! state dissoc :error? :modal?)
+            :on-dismiss #(swap! state dissoc :modal? :error?)}]))
       [Table
        {:data (get-in @state [:groups-response :parsed-response])
         :body {:behavior {:reorderable-columns? false}
@@ -101,7 +105,6 @@
                 {:on-success #(this :-load-data)}]))}]]}}]])
    :-delete-group
    (fn [{:keys [state this]}]
-     (utils/log (:group-response @state))
      (swap! state assoc :deleting? true)
      (endpoints/call-ajax-orch
       {:endpoint (endpoints/delete-group (:group-name @state))
@@ -111,7 +114,9 @@
                    (swap! state dissoc :modal?)
                    (if success?
                      (this :-load-data)
-                     (swap! state assoc :error? true)
+                     (do
+                       (swap! state assoc :error-message (:message parsed-response))
+                       (swap! state assoc :error? true))
                      )
                    ))}))
    })
