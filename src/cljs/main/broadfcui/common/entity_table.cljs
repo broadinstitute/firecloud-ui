@@ -71,10 +71,16 @@
                                  (str (common/workspace-id->string (:workspace-id props)) ":data" selected-entity-type))
               :v 1
               :fetch-data (this :-pagination)
+              :load-on-mount false
               :body
               {:style (merge table-style/table-heavy (:style props))
+               ;; this :behavior and the 'or' guard on the first column are to make things
+               ;; behave when there is no data (and thus no entity-types)
+               :behavior (let [controls? (not (empty? entity-types))]
+                           {:reorderable-columns? controls?
+                            :filterable? controls?})
                :columns
-               (into [{:header (get-in entity-metadata [selected-entity-type :idName])
+               (into [{:header (or (get-in entity-metadata [selected-entity-type :idName]) "No data")
                        :initial-width 200
                        :as-text :name :sort-by :text
                        :render (or (:entity-name-renderer props) :name)}]
@@ -130,6 +136,13 @@
    :component-did-mount
    (fn [{:keys [props this]}]
      (this :refresh (:initial-entity-type props)))
+   :component-did-update
+   (fn [{:keys [state prev-state this]}]
+     (let [prev-index (:selected-filter-index prev-state)
+           this-index (:selected-filter-index @state)]
+       (when (and prev-index
+                  (not= prev-index this-index))
+         (this :update-data))))
    :-pagination
    (fn [{:keys [props state]}]
      (let [{:keys [entity-types selected-filter-index]} @state]

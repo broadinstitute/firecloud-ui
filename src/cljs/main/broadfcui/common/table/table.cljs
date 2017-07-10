@@ -17,7 +17,7 @@
 ;; https://broadinstitute.atlassian.net/wiki/display/GAWB/The+Table+UI+component
 
 
-;; Define default props this way because we need to do a deep-merge,
+;; Define nested default props this way because we need to do a deep-merge,
 ;; instead of React's regular merge.
 (def ^:private default-props
   {:body {:empty-message "There are no rows to display."
@@ -67,6 +67,9 @@
                                        :rows results
                                        :loading? false
                                        :query-params query-params))})))
+   :get-default-props
+   (fn []
+     {:load-on-mount true})
    :get-initial-state
    (fn [{:keys [props]}]
      (assoc
@@ -138,8 +141,9 @@
                  :per-page-selected #(swap! state update :query-params
                                             merge {:rows-per-page % :page-number 1})})]]))
    :component-did-mount
-   (fn [{:keys [this]}]
-     (this :refresh-rows))
+   (fn [{:keys [props this]}]
+     (when (:load-on-mount props)
+       (this :refresh-rows)))
    :component-did-update
    (fn [{:keys [props state prev-props prev-state this]}]
      (let [data-change? (not= (:data props) (:data prev-props))]
