@@ -38,7 +38,7 @@ trait Orchestration extends FireCloudClient with LazyLogging {
       postRequest(Config.FireCloud.orchApiUrl + "api/billing", Map("projectName" -> projectName, "billingAccount" -> billingAccount))
 
       retry(Seq.fill(30)(10.seconds)) { () =>
-        val response: String = getRequest(Config.FireCloud.orchApiUrl + "api/profile/billing")
+        val response: String = parseResponse(getRequest(Config.FireCloud.orchApiUrl + "api/profile/billing"))
         val projects: List[Map[String, Object]] = responseAsList(response)
         projects.exists((e) =>
           e.exists(_ == ("creationStatus", "Ready")) && e.exists(_ == ("projectName", projectName)))

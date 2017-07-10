@@ -48,7 +48,7 @@ object Thurloe extends FireCloudClient with LazyLogging {
           case _ => None
         }
 
-      val response: String = getRequest(url + s"api/thurloe/$subjectId", thurloeHeaders)
+      val response: String = parseResponse(getRequest(url + s"api/thurloe/$subjectId", thurloeHeaders))
 
       /*
        * "keyValuePairs" contains a list of maps, each with 2 entries: one for
