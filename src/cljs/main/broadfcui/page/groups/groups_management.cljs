@@ -38,7 +38,7 @@
      [:div {}
       (cond
         (:modal? @state)
-        [modals/RenderMessage
+        (modals/render-message
          {:text "Are you sure you want to delete this group?"
           :on-confirm (fn []
                         (net/render-with-ajax
@@ -49,13 +49,13 @@
                           #(if (= 409 (:status-code %))
                              "Sorry you are unable to delete this group because it is in use"
                              (get-in % [:parsed-response :message]))}))
-          :on-dismiss #(swap! state dissoc :modal?)}]
+          :on-dismiss #(swap! state dissoc :modal?)})
         (:error? @state)
         (do
-          [modals/RenderError
+          (modals/render-error
            {:text (:error-message @state)
             :on-confirm #(swap! state dissoc :error? :modal?)
-            :on-dismiss #(swap! state dissoc :modal? :error?)}]))
+            :on-dismiss #(swap! state dissoc :modal? :error?)})))
       [Table
        {:data (get-in @state [:groups-response :parsed-response])
         :body {:behavior {:reorderable-columns? false}
@@ -111,8 +111,7 @@
       {:endpoint (endpoints/delete-group (:group-name @state))
        :on-done (net/handle-ajax-response
                  (fn [{:keys [success? status-code parsed-response]}]
-                   (swap! state dissoc :deleting?)
-                   (swap! state dissoc :modal?)
+                   (swap! state dissoc :deleting? :modal?)
                    (if success?
                      (this :-load-data)
                      (do

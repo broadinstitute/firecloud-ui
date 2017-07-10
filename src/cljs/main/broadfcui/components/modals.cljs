@@ -5,7 +5,8 @@
     [broadfcui.common :as common]
     [broadfcui.common.components :as comps]
     [broadfcui.common.style :as style]
-    ))
+    [broadfcui.utils :as utils]
+    [broadfcui.common.icons :as icons]))
 
 
 (react/defc OKCancelForm
@@ -69,25 +70,24 @@
                                        (when (:cycle-focus? props)
                                          (.focus (get-first)))))))))})
 
-(react/defn RenderError
-  {:render
-   (fn [{:keys [props]}]
-     (let [{:keys [header text on-dismiss]} props]
-       [OKCancelForm
-        {:header (or header "Error")
-         :content [:div {:style {:maxWidth "50vs"}} text]
-         :dismiss on-dismiss
-         :show-cancel? false :ok-button "OK"}]))})
+(defn render-error [props]
+  (let [{:keys [header text on-dismiss]} props]
+    [OKCancelForm
+     {:header [:div {:style {:display "inline-flex" :align-items "center"}}
+               (icons/icon {:style {:color (:exception-state style/colors)
+                                    :marginRight "0.5em"}} :error)
+               (or header "Error")]
+      :content [:div {:style {:maxWidth "50vs"}} text]
+      :dismiss on-dismiss
+      :show-cancel? false :ok-button "OK"}]))
 
-(react/defn RenderMessage
-  {:render
-   (fn [{:keys [props]}]
-     (let [{:keys [header text on-confirm on-dismiss]} props]
-      [OKCancelForm
-       {:header (or header "Confirm")
-        :content [:div {:style {:maxWidth 500}} text]
-        :ok-button on-confirm
-        :dismiss on-dismiss}]))})
+(defn render-message [props]
+  (let [{:keys [header text on-confirm on-dismiss]} props]
+    [OKCancelForm
+     {:header (or header "Confirm")
+      :content [:div {:style {:maxWidth 500}} text]
+      :ok-button on-confirm
+      :dismiss on-dismiss}]))
 
 
 
