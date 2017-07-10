@@ -4,9 +4,9 @@
     [broadfcui.common.components :as comps]
     [broadfcui.common.flex-utils :as flex]
     [broadfcui.common.icons :as icons]
-    [broadfcui.components.modals :as modals]
     [broadfcui.common.management-utils :as management-utils]
     [broadfcui.common.modal :as modal]
+    [broadfcui.components.modals :as modals]
     [broadfcui.common.style :as style]
     [broadfcui.common.table.style :as table-style]
     [broadfcui.common.table.table :refer [Table]]
@@ -15,7 +15,6 @@
     [broadfcui.net :as net]
     [broadfcui.page.groups.create-group :refer [CreateGroupDialog]]
     [broadfcui.utils :as utils]
-    [broadfcui.net :as net]
     ))
 
 (react/defc GroupTable
@@ -116,12 +115,7 @@
                      (this :-load-data)
                      (do
                        (swap! state assoc :error-message (:message parsed-response))
-                       (swap! state assoc :error? true))
-                     )
-                   ))}))
-   })
-
-
+                       (swap! state assoc :error? true)))))}))})
 
 (react/defc Page
   {:render
