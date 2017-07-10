@@ -7,7 +7,7 @@ clean_up () {
 }
 
 compose_exec() {
-  docker-compose -p fcuitests -f scripts/.tests-compose.yaml exec $@
+  docker-compose -p fcuitests -f scripts/.tests-compose.yaml exec -T $@
 }
 
 trap clean_up EXIT HUP INT QUIT PIPE TERM 0 20
@@ -15,17 +15,12 @@ trap clean_up EXIT HUP INT QUIT PIPE TERM 0 20
 docker-compose -p fcuitests -f scripts/.tests-compose.yaml pull
 
 docker volume create --name=jar-cache
-docker volume create --name=node-modules
 
 docker-compose -p fcuitests -f scripts/.tests-compose.yaml up -d
 
 docker cp project.clj fcuitests_clojure-node_1:/w
 docker cp src fcuitests_clojure-node_1:/w
-docker cp webpack.config.js fcuitests_clojure-node_1:/w
-docker cp package.json fcuitests_clojure-node_1:/w
 
-compose_exec clojure-node npm install
-compose_exec clojure-node npm run webpack -- -p
 compose_exec clojure-node sh -c 'lein cljsbuild once 2>&1 | tee /tmp/cljsbuild.log'
 set +e
 compose_exec clojure-node grep WARNING /tmp/cljsbuild.log

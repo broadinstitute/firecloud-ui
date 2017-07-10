@@ -4,8 +4,8 @@
     [broadfcui.common :as common]
     [broadfcui.common.components :as comps]
     [broadfcui.common.style :as style]
-    [broadfcui.common.table.table :refer [Table]]
     [broadfcui.common.table.style :as table-style]
+    [broadfcui.common.table.table :refer [Table]]
     [broadfcui.endpoints :as endpoints]
     [broadfcui.nav :as nav]
     [broadfcui.page.workspace.monitor.common :as moncommon]
@@ -81,11 +81,11 @@
    :load-submissions
    (fn [{:keys [props state]}]
      (endpoints/call-ajax-orch
-       {:endpoint (endpoints/list-submissions (:workspace-id props))
-        :on-done (fn [{:keys [success? status-text get-parsed-response]}]
-                   (swap! state assoc :server-response (if success?
-                                                         {:submissions (get-parsed-response)}
-                                                         {:error-message status-text})))}))})
+      {:endpoint (endpoints/list-submissions (:workspace-id props))
+       :on-done (fn [{:keys [success? status-text get-parsed-response]}]
+                  (swap! state assoc :server-response (if success?
+                                                        {:submissions (get-parsed-response)}
+                                                        {:error-message status-text})))}))})
 
 
 (react/defc Page

@@ -4,11 +4,11 @@
     [broadfcui.common :as common]
     [broadfcui.common.components :as comps]
     [broadfcui.common.flex-utils :as flex]
-    [broadfcui.common.management-utils :refer [MembershipManagementPage]]
+    [broadfcui.common.management-utils :as management-utils]
     [broadfcui.common.modal :as modal]
     [broadfcui.common.style :as style]
-    [broadfcui.common.table.table :refer [Table]]
     [broadfcui.common.table.style :as table-style]
+    [broadfcui.common.table.table :refer [Table]]
     [broadfcui.endpoints :as endpoints]
     [broadfcui.nav :as nav]
     [broadfcui.page.billing.create-project :refer [CreateBillingProjectDialog]]
@@ -162,7 +162,7 @@
          [:div {:style {:fontSize "1.2em"}} (when project-name "Billing Project: ")
           [:span {:style {:fontWeight 500}} (if project-name project-name "Billing Management")]]]
         (if project-name
-          [MembershipManagementPage
+          [management-utils/MembershipManagementPage
            {:admin-term "Owner"
             :user-term "User"
             :group-name project-name

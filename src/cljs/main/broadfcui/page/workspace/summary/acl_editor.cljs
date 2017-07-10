@@ -2,10 +2,10 @@
   (:require
     [dmohs.react :as react]
     [broadfcui.common :as common]
+    [broadfcui.common.components :as comps]
     [broadfcui.common.input :as input]
     [broadfcui.common.modal :as modal]
     [broadfcui.common.style :as style]
-    [broadfcui.common.components :as comps]
     [broadfcui.endpoints :as endpoints]
     [broadfcui.utils :as utils]
     ))
@@ -38,7 +38,7 @@
       [:datalist {:id "groups-datalist"}
        (when-let [groups (:user-groups @state)]
          (map (fn [group]
-               [:option {:value (:groupEmail group)}])
+                [:option {:value (:groupEmail group)}])
               groups))]
       (map-indexed
        (fn [i acl-entry]
@@ -115,9 +115,9 @@
    (fn [{:keys [props state this]}]
      (if (or (:non-project-owner-acl-vec @state) (:project-owner-acl-vec @state))
        (let [persist-acl #(react/call :persist-acl this %)]
-        (if (:offering-invites? @state)
-          (render-invite-offer (:workspace-id props) state persist-acl)
-          (render-acl-content (:workspace-id props) (:user-access-level props) state persist-acl)))
+         (if (:offering-invites? @state)
+           (render-invite-offer (:workspace-id props) state persist-acl)
+           (render-acl-content (:workspace-id props) (:user-access-level props) state persist-acl)))
        [:div {:style {:padding "2em"}}
         (if (:load-error @state)
           (style/create-server-error-message (:load-error @state))

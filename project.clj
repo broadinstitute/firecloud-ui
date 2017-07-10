@@ -3,8 +3,7 @@
   [
    [inflections "0.9.14"]
    [dmohs/react "1.1.2+15.5.4-0"]
-   [frankiesardo/linked "1.2.9"]
-   [org.broadinstitute/react-cljs-modal "2017.06.12"]
+   [org.broadinstitute/react-cljs-modal "2017.06.28"]
    [org.clojure/clojure "1.8.0"]
    [org.clojure/clojurescript "1.9.293"]
    ]

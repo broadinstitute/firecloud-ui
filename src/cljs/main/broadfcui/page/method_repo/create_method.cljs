@@ -1,17 +1,17 @@
 (ns broadfcui.page.method-repo.create-method
   (:require
-   [dmohs.react :as react]
-   [broadfcui.common :as common]
-   [broadfcui.common.codemirror :refer [CodeMirror]]
-   [broadfcui.common.components :as comps]
-   [broadfcui.common.icons :as icons]
-   [broadfcui.common.input :as input]
-   [broadfcui.common.modal :as modal]
-   [broadfcui.common.style :as style]
-   [broadfcui.config :as config]
-   [broadfcui.endpoints :as endpoints]
-   [broadfcui.utils :as utils]
-   ))
+    [dmohs.react :as react]
+    [broadfcui.common :as common]
+    [broadfcui.common.codemirror :refer [CodeMirror]]
+    [broadfcui.common.components :as comps]
+    [broadfcui.common.icons :as icons]
+    [broadfcui.common.input :as input]
+    [broadfcui.common.modal :as modal]
+    [broadfcui.common.style :as style]
+    [broadfcui.config :as config]
+    [broadfcui.endpoints :as endpoints]
+    [broadfcui.utils :as utils]
+    ))
 
 
 (defn- build-info [{:keys [duplicate snapshot]}]

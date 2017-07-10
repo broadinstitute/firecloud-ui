@@ -1,13 +1,13 @@
 (ns broadfcui.common.table.table
   (:require
-    [clojure.set :refer [difference subset?]]
     [dmohs.react :as react]
+    [clojure.set :as set]
     [broadfcui.common.components :as comps]
+    [broadfcui.common.style :as style]
     [broadfcui.common.table.body :as body]
     [broadfcui.common.table.column-editor :refer [ColumnEditButton]]
     [broadfcui.common.table.paginator :as paginator]
     [broadfcui.common.table.utils :as table-utils]
-    [broadfcui.common.style :as style]
     [broadfcui.persistence :as persistence]
     [broadfcui.utils :as utils]
     ))
@@ -43,7 +43,7 @@
 (react/defc Table
   {:update-query-params
    (fn [{:keys [state]} new-params]
-     (assert (subset? (set (keys new-params)) all-query-params) "Unknown key passed to :update-query-params")
+     (assert (set/subset? (set (keys new-params)) all-query-params) "Unknown key passed to :update-query-params")
      (let [old-state (:query-params @state)
            new-state (merge old-state new-params)
            different? (not= old-state new-state)]
@@ -88,7 +88,7 @@
                              :filter-text ""
                              :sort-column (table-utils/resolve-id initial-sort-column)
                              :sort-order initial-sort-order}
-                            (difference all-query-params (-> props :body :external-query-params)))
+                            (set/difference all-query-params (-> props :body :external-query-params)))
              :column-display (table-utils/build-column-display columns)}
             (when-let [v (:v props)] {:v v})))})
        :rows []))

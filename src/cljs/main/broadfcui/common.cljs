@@ -1,11 +1,11 @@
 (ns broadfcui.common
   (:require
-   [dmohs.react :as react]
-   [broadfcui.utils :as utils]
-   [broadfcui.config :as config]
-   [broadfcui.common.icons :as icons]
-   [broadfcui.common.style :as style]
-   ))
+    [dmohs.react :as react]
+    [broadfcui.common.icons :as icons]
+    [broadfcui.common.style :as style]
+    [broadfcui.config :as config]
+    [broadfcui.utils :as utils]
+    ))
 
 
 (def keymap
@@ -24,9 +24,9 @@
   (if (= 1 (count ids))
     (-> (react/find-dom-node (@refs (first ids))) .-value clojure.string/trim)
     (map
-      (fn [id]
-        (-> (react/find-dom-node (@refs id)) .-value clojure.string/trim))
-      ids)))
+     (fn [id]
+       (-> (react/find-dom-node (@refs id)) .-value clojure.string/trim))
+     ids)))
 
 (defn clear-both [] [:div {:style {:clear "both"}}])
 
@@ -45,8 +45,8 @@
       (.scrollTo js/window end-x end-y)
       (let [point (smooth-step start-time end-time (js/Date.now))]
         (.scrollTo js/window
-          (+ start-x (* point (- end-x start-x)))
-          (+ start-y (* point (- end-y start-y))))
+                   (+ start-x (* point (- end-x start-x)))
+                   (+ start-y (* point (- end-y start-y))))
         (js/setTimeout #(animate start-time end-time start-x start-y end-x end-y) 10)))))
 
 (defn scroll-to
@@ -68,9 +68,9 @@
    (let [elem-center-x (+ (.-offsetLeft elem) (/ (.-offsetWidth elem) 2))
          elem-center-y (+ (.-offsetTop elem) (/ (.-offsetHeight elem) 2))]
      (scroll-to
-       (- elem-center-x (/ (.-innerWidth js/window) 2))
-       (- elem-center-y (/ (.-innerHeight js/window) 2))
-       duration))))
+      (- elem-center-x (/ (.-innerWidth js/window) 2))
+      (- elem-center-y (/ (.-innerHeight js/window) 2))
+      duration))))
 
 
 (def ^:private user-select-keys ["userSelect" "webkitTouchCallout" "webkitUserSelect"
@@ -210,11 +210,11 @@
 (def PHI-warning
   [:div {:style {:display "flex" :marginBottom ".5rem" :alignItems "center" :justifyContent "space-around"
                  :padding "1rem" :backgroundColor (:background-light style/colors)}}
-    (icons/icon {:style {:fontSize 22 :color (:exception-state style/colors) :marginRight "1rem"}}
-                :alert)
-    [:span {:style {:fontWeight 500}}
-      "FireCloud is not intended to host personally identifiable information. Do not use any patient
-       identifier, including name, social security number, or medical record number."]])
+   (icons/icon {:style {:fontSize 22 :color (:exception-state style/colors) :marginRight "1rem"}}
+               :alert)
+   [:span {:style {:fontWeight 500}}
+    "FireCloud is not intended to host personally identifiable information. Do not use any patient
+     identifier, including name, social security number, or medical record number."]])
 
 (react/defc FoundationTooltip
   {:component-did-mount

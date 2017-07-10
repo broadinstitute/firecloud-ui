@@ -1,7 +1,7 @@
 (ns broadfcui.page.method-repo.method-repo-table
   (:require
     [dmohs.react :as react]
-    [clojure.string :refer [lower-case]]
+    [clojure.string :as string]
     [broadfcui.common.components :as comps]
     [broadfcui.common.style :as style]
     [broadfcui.common.table.style :as table-style]
@@ -34,12 +34,12 @@
            [{:header "Type" :initial-width 100
              :column-data :entityType}
             {:header "Name" :initial-width 350
-             :sort-by (juxt (comp lower-case :name) (comp int :snapshotId))
+             :sort-by (juxt (comp string/lower-case :name) (comp int :snapshotId))
              :filter-by (fn [{:keys [name snapshotId]}] (str name " " (int snapshotId)))
              :as-text (fn [{:keys [name snapshotId]}] (str name " Snapshot ID: " snapshotId))
              :render (:render-name props)}
             {:header "Namespace" :initial-width 160
-             :sort-by (comp lower-case :namespace)
+             :sort-by (comp string/lower-case :namespace)
              :sort-initial :asc
              :as-text :namespace
              :render (or (:render-namespace props) :namespace)}

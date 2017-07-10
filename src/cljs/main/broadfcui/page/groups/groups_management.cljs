@@ -4,18 +4,19 @@
     [broadfcui.common.components :as comps]
     [broadfcui.common.flex-utils :as flex]
     [broadfcui.common.icons :as icons]
-    [broadfcui.common.management-utils :refer [MembershipManagementPage]]
     [broadfcui.components.modals :as modals]
+    [broadfcui.common.management-utils :as management-utils]
     [broadfcui.common.modal :as modal]
     [broadfcui.common.style :as style]
-    [broadfcui.common.table.table :refer [Table]]
     [broadfcui.common.table.style :as table-style]
+    [broadfcui.common.table.table :refer [Table]]
     [broadfcui.endpoints :as endpoints]
     [broadfcui.nav :as nav]
+    [broadfcui.net :as net]
     [broadfcui.page.groups.create-group :refer [CreateGroupDialog]]
     [broadfcui.utils :as utils]
-    [broadfcui.net :as net]))
-
+    [broadfcui.net :as net]
+    ))
 
 (react/defc GroupTable
   {:render
@@ -132,7 +133,7 @@
          [:div {:style {:fontSize "1.2em"}} (when group-name "Group: ")
           [:span {:style {:fontWeight 500}} (if group-name group-name "Group Management")]]]
         (if group-name
-          [MembershipManagementPage
+          [management-utils/MembershipManagementPage
            {:group-name group-name
             :admin-term "Admin"
             :user-term "Member"

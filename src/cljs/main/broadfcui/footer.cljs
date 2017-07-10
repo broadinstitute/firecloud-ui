@@ -1,14 +1,13 @@
 (ns broadfcui.footer
   (:require
-   [broadfcui.common.components :as comps]
-   [broadfcui.common.style :as style]
-   [broadfcui.config :as config]
-   [broadfcui.nav :as nav]
-   [broadfcui.utils :as utils]
-   [dmohs.react :as r]
-   ))
+    [dmohs.react :as react]
+    [broadfcui.common.style :as style]
+    [broadfcui.config :as config]
+    [broadfcui.nav :as nav]
+    [broadfcui.utils :as utils]
+    ))
 
-(r/defc PopUpFooterControl
+(react/defc PopUpFooterControl
   {:render
    (fn [{:keys [state]}]
      [:div {:style {:minWidth 50 :minHeight 20}
@@ -31,7 +30,7 @@
         startyear 2015
         yeartext (if (= startyear thisyear) (str startyear) (str startyear "-" thisyear))
         spacer [:span {:style {:padding "0 0.6em"}} "|"]
-        Link (r/create-class
+        Link (react/create-class
               {:render
                (fn [{:keys [props state]}]
                  [:a {:href (:href props)
@@ -39,7 +38,7 @@
                       :style {:color (:text-lightest style/colors)
                               :textDecoration (when-not (:hovering? @state) "none")}
                       :onMouseOver #(swap! state assoc :hovering? true)
-                      :onMouseOut  #(swap! state assoc :hovering? false)}
+                      :onMouseOut #(swap! state assoc :hovering? false)}
                   (:text props)])})]
     [:div {:style {:borderTop (str "2px solid " (:line-default style/colors))
                    :padding "1em 25px 2em 25px"

@@ -1,17 +1,17 @@
 (ns broadfcui.page.workspaces-list
   (:require
-    [clojure.string :refer [split join split-lines]]
     [dmohs.react :as react]
+    [clojure.string :as string]
     [broadfcui.common :as common]
     [broadfcui.common.components :as comps]
     [broadfcui.common.filter :as filter]
     [broadfcui.common.icons :as icons]
+    [broadfcui.common.modal :as modal]
     [broadfcui.common.style :as style]
     [broadfcui.common.table.style :as table-style]
     [broadfcui.common.table.table :refer [Table]]
     [broadfcui.config :as config]
     [broadfcui.endpoints :as endpoints]
-    [broadfcui.common.modal :as modal]
     [broadfcui.nav :as nav]
     [broadfcui.net :as net]
     [broadfcui.page.workspace.create :as create]
@@ -141,14 +141,6 @@
 (defn- get-workspace-description [ws]
   (not-empty (get-in ws [:workspace :attributes :description])))
 
-;; An obnoxious amount of effort due to "PROJECT_OWNER" vs. "NO ACCESS"
-(defn- prettify [s]
-  (as-> s $
-        (clojure.string/replace $ "_" " ")
-        (split $ #"\b")
-        (map clojure.string/capitalize $)
-        (join $)))
-
 
 (def ^:private access-levels ["PROJECT_OWNER" "OWNER" "WRITER" "READER" "NO ACCESS"])
 
@@ -159,7 +151,7 @@
     :predicate (fn [ws option] (= (:status ws) option))}
    {:title "Access"
     :options access-levels
-    :render prettify
+    :render style/prettify-access-level
     :predicate (fn [ws option] (= (:accessLevel ws) option))}
    {:title "Publishing"
     :options [true false]
@@ -243,7 +235,7 @@
               :render (fn [description]
                         [:div {:style {:paddingLeft 14}}
                          (if description
-                           (-> description split-lines first)
+                           (-> description string/split-lines first)
                            [:span {:style {:fontStyle "italic"}}
                             "No description provided"])])}
              {:id "Last Modified" :header [:span {:style {:marginLeft 14}} "Last Modified"]
@@ -259,9 +251,9 @@
               :render (fn [{:keys [access-level workspace-id auth-domains]}]
                         [:div {:style {:paddingLeft 14}}
                          (if (= access-level "NO ACCESS")
-                           (style/create-link {:text (prettify access-level)
+                           (style/create-link {:text (style/prettify-access-level access-level)
                                                :onClick #(push-request-access-modal workspace-id auth-domains)})
-                           (prettify access-level))])}])
+                           (style/prettify-access-level access-level))])}])
           :behavior {:reorderable-columns? false}
           :style {:header-row {:color (:text-lighter style/colors) :fontSize "90%"}
                   :header-cell {:padding "0.4rem 0"}
@@ -427,8 +419,8 @@
 (defn add-nav-paths []
   (nav/defredirect {:regex #"workspaces" :make-path (fn [] "")})
   (nav/defpath
-    :workspaces
-    {:component Page
-     :regex #""
-     :make-props (fn [] {})
-     :make-path (fn [] "")}))
+   :workspaces
+   {:component Page
+    :regex #""
+    :make-props (fn [] {})
+    :make-path (fn [] "")}))

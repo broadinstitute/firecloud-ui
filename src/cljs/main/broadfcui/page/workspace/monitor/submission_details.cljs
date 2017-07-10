@@ -1,19 +1,20 @@
 (ns broadfcui.page.workspace.monitor.submission-details
-    (:require
-      [dmohs.react :as react]
-      [clojure.string :as string]
-      [broadfcui.common :as common]
-      [broadfcui.common.components :as comps]
-      [broadfcui.common.duration :as duration]
-      [broadfcui.common.icons :as icons]
-      [broadfcui.common.modal :as modal]
-      [broadfcui.common.style :as style]
-      [broadfcui.common.table :refer [Table]]
-      [broadfcui.nav :as nav]
-      [broadfcui.page.workspace.monitor.common :as moncommon]
-      [broadfcui.page.workspace.monitor.workflow-details :as workflow-details]
-      [broadfcui.endpoints :as endpoints]
-      [broadfcui.utils :as utils]))
+  (:require
+    [dmohs.react :as react]
+    [clojure.string :as string]
+    [broadfcui.common :as common]
+    [broadfcui.common.components :as comps]
+    [broadfcui.common.duration :as duration]
+    [broadfcui.common.icons :as icons]
+    [broadfcui.common.modal :as modal]
+    [broadfcui.common.style :as style]
+    [broadfcui.common.table :refer [Table]]
+    [broadfcui.endpoints :as endpoints]
+    [broadfcui.nav :as nav]
+    [broadfcui.page.workspace.monitor.common :as moncommon]
+    [broadfcui.page.workspace.monitor.workflow-details :as workflow-details]
+    [broadfcui.utils :as utils]
+    ))
 
 
 (defn- color-for-submission [submission]
@@ -58,34 +59,34 @@
                   (fn [entity]
                     (str (:entityName entity) " (" (:entityType entity) ")"))
                   :sort-by :text}
-                  {:header "Last Changed" :starting-width 280 :as-text moncommon/render-date}
-                  {:header "Status" :starting-width 120
-                   :content-renderer (fn [status]
-                                       [:div {}
-                                        (moncommon/icon-for-wf-status status)
-                                        status])}
-                  {:header "Messages" :starting-width 300
-                   :content-renderer (fn [message-list]
-                                       [:div {}
-                                        (map (fn [message]
-                                               [:div {} message])
-                                             message-list)])}
-                  {:header "Workflow ID" :starting-width 300
-                   :as-text
-                   (fn [workflow] (:workflowId workflow))
-                   :sort-by :text
-                   :content-renderer
-                   (fn [workflow]
-                     (let [{:keys [submission-id bucketName]} props
-                           inputs (second (second (first (:inputResolutions workflow))))
-                           input-names (string/split inputs ".")
-                           workflow-name (first input-names)
-                           workflowId (:workflowId workflow)]
-                       (style/create-link {:text workflowId
-                                           :target "_blank"
-                                           :style {:color "-webkit-link" :textDecoration "underline"}
-                                           :href (str moncommon/google-cloud-context bucketName "/" submission-id "/"
-                                                      workflow-name "/" workflowId "/")})))}]
+                 {:header "Last Changed" :starting-width 280 :as-text moncommon/render-date}
+                 {:header "Status" :starting-width 120
+                  :content-renderer (fn [status]
+                                      [:div {}
+                                       (moncommon/icon-for-wf-status status)
+                                       status])}
+                 {:header "Messages" :starting-width 300
+                  :content-renderer (fn [message-list]
+                                      [:div {}
+                                       (map (fn [message]
+                                              [:div {} message])
+                                            message-list)])}
+                 {:header "Workflow ID" :starting-width 300
+                  :as-text
+                  (fn [workflow] (:workflowId workflow))
+                  :sort-by :text
+                  :content-renderer
+                  (fn [workflow]
+                    (let [{:keys [submission-id bucketName]} props
+                          inputs (second (second (first (:inputResolutions workflow))))
+                          input-names (string/split inputs ".")
+                          workflow-name (first input-names)
+                          workflowId (:workflowId workflow)]
+                      (style/create-link {:text workflowId
+                                          :target "_blank"
+                                          :style {:color "-webkit-link" :textDecoration "underline"}
+                                          :href (str moncommon/google-cloud-context bucketName "/" submission-id "/"
+                                                     workflow-name "/" workflowId "/")})))}]
        :filter-groups
        (vec (cons {:text "All" :pred (constantly true)}
                   (map (fn [status] {:text status :pred #(= status (:status %))})

@@ -1,14 +1,14 @@
 (ns broadfcui.components.modals
   (:require
-   [dmohs.react :as r]
-   [org.broadinstitute.uicomps.modal :as modal]
-   [broadfcui.common :as common]
-   [broadfcui.common.components :as comps]
-   [broadfcui.common.style :as style]))
+    [dmohs.react :as react]
+    [org.broadinstitute.uicomps.modal :as modal]
+    [broadfcui.common :as common]
+    [broadfcui.common.components :as comps]
+    [broadfcui.common.style :as style]
+    ))
 
 
-
-(r/defc OKCancelForm
+(react/defc OKCancelForm
   {:get-default-props
    (fn []
      {:cancel-text "Cancel"
@@ -54,7 +54,7 @@
      (when-let [get-first (:get-first-element-dom-node props)]
        (common/focus-and-select (get-first))
        (when-let [get-last (or (:get-last-element-dom-node props)
-                               #(r/find-dom-node (@refs "ok-button")))]
+                               #(react/find-dom-node (@refs "ok-button")))]
          (.addEventListener
           (get-first) "keydown"
           (common/create-key-handler [:tab] #(.-shiftKey %)

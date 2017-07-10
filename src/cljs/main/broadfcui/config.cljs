@@ -1,13 +1,13 @@
 (ns broadfcui.config
   (:require
-   clojure.set
-   clojure.string
-   ))
+    [clojure.set :as set]
+    [clojure.string :as string]
+    ))
 
 (defn- non-empty-string?
   [s]
   (when (string? s)
-    (not (empty? (clojure.string/trim s)))))
+    (not (empty? (string/trim s)))))
 
 (def validators
   {:boolean {:message "must be a boolean" :check boolean?}
@@ -23,13 +23,13 @@
                   "callCachingGuideUrl" :string "alertsPollInterval" :integer "forumUrl" :string "authDomainGuideUrl" :string}
         all (merge required optional)
         missing-required (filter #(not (contains? config-keys %)) (keys required))
-        extra (clojure.set/difference config-keys (set (keys all)))
+        extra (set/difference config-keys (set (keys all)))
         invalid (filter (fn [k]
                           (let [validator (get all k)
                                 check (get-in validators [validator :check])]
                             (when-not (check (get config k))
                               k)))
-                        (clojure.set/intersection config-keys (set (keys all))))]
+                        (set/intersection config-keys (set (keys all))))]
     [(not (or (seq missing-required) (seq extra) (seq invalid)))
      (concat
       (map #(str "missing required key " %) missing-required)

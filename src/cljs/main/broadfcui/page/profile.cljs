@@ -1,7 +1,7 @@
 (ns broadfcui.page.profile
   (:require
-    clojure.string
     [dmohs.react :as react]
+    [clojure.string :as string]
     [broadfcui.common :as common]
     [broadfcui.common.components :as components]
     [broadfcui.common.icons :as icons]
@@ -50,8 +50,9 @@
              (if expired?
                [:span {:style {:color "red"}} "Expired"]
                [:span {:style {:color (when expiring-soon? "red")}} (common/format-date expire-time)])
-             [:div {} [:a {:href (get-nih-link-href)}
-              "Log-In to NIH to re-link your account" icons/external-link-icon]]]]
+             [:div {}
+              [:a {:href (get-nih-link-href)}
+               "Log-In to NIH to re-link your account" icons/external-link-icon]]]]
            (map
             (fn [whitelist]
               [:div {:style {:display "flex" :marginTop "1rem"}}
@@ -100,7 +101,7 @@
       (fn [{:keys [success? get-parsed-response]}]
         (if success?
           (do (swap! state dissoc :pending-nih-username-token :nih-status)
-            (swap! state assoc :nih-status (get-parsed-response)))
+              (swap! state assoc :nih-status (get-parsed-response)))
           (swap! state assoc :error-message "Failed to link NIH account")))))})
 
 
@@ -111,7 +112,7 @@
            :programLocationState :programLocationCountry :pi))
    :get-values
    (fn [{:keys [state]}]
-     (reduce-kv (fn [r k v] (assoc r k (clojure.string/trim v))) {} (:values @state)))
+     (reduce-kv (fn [r k v] (assoc r k (string/trim v))) {} (:values @state)))
    :validation-errors
    (fn [{:keys [refs this]}]
      (apply input/validate refs (map name (react/call :get-field-keys this))))
@@ -205,11 +206,12 @@
             [components/ErrorViewer {:error (:server-error @state)}]])
          (when (:validation-errors @state)
            [:div {:style {:marginBottom "1em"}}
-            (style/create-flexbox {}
-              [:span {:style {:paddingRight "1ex"}}
-               (icons/icon {:style {:color (:exception-state style/colors)}}
-                           :warning)]
-              "Validation Errors:")
+            (style/create-flexbox
+             {}
+             [:span {:style {:paddingRight "1ex"}}
+              (icons/icon {:style {:color (:exception-state style/colors)}}
+                          :warning)]
+             "Validation Errors:")
             [:ul {}
              (map (fn [e] [:li {} e]) (:validation-errors @state))]])
          (cond
@@ -247,8 +249,8 @@
 
 (defn add-nav-paths []
   (nav/defpath
-    :profile
-    {:component Page
-     :regex #"profile(?:/nih-username-token=([^\s/&]+))?"
-     :make-props (fn [nih-token] (utils/restructure nih-token))
-     :make-path (fn [] "profile")}))
+   :profile
+   {:component Page
+    :regex #"profile(?:/nih-username-token=([^\s/&]+))?"
+    :make-props (fn [nih-token] (utils/restructure nih-token))
+    :make-path (fn [] "profile")}))

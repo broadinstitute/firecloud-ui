@@ -102,9 +102,9 @@
    :component-did-mount
    (fn [{:keys [props state locals]}]
      (let [mouse-up #(when (:drag-index @state)
-                      ((:reorder props) (:drag-index @state) (:drop-index @state))
-                      (common/restore-text-selection (:text-selection @state))
-                      (swap! state dissoc :drag-index :drop-index :drag-url :text-selection))]
+                       ((:reorder props) (:drag-index @state) (:drop-index @state))
+                       (common/restore-text-selection (:text-selection @state))
+                       (swap! state dissoc :drag-index :drop-index :drag-url :text-selection))]
        (swap! locals assoc :mouse-up mouse-up)
        (.addEventListener js/window "mouseup" mouse-up)))
    :component-will-unmount
@@ -130,29 +130,29 @@
                               (some keyword?))
                        (swap! state assoc :index-error true)
                        (do ((:on-ok props) (:tracks @state))
-                         (modal/pop-modal))))}
+                           (modal/pop-modal))))}
        :content
        (react/create-element
-         [:div {:style {:width "80vw"}}
-          [:div {:style {:background "white" :border style/standard-line}}
-           [comps/SplitPane
-            {:left [Left {:workspace-id (:workspace-id props)
-                          :tracks (:tracks @state)
-                          :on-select (fn [track-url]
-                                       (let [index-atom (atom :pending)]
-                                         (swap! state assoc :loading? true)
-                                         (add-watch index-atom :loader #(swap! state dissoc :loading?))
-                                         (igv-utils/find-index-file {:track-url track-url
-                                                                     :on-success #(reset! index-atom %)
-                                                                     :on-error #(reset! index-atom :error)})
-                                         (swap! state update :tracks conj
-                                                {:track-url track-url :index-url index-atom
-                                                 :requires-index? (.endsWith track-url ".bam")})))}]
-             :right [Right {:tracks (:tracks @state)
-                            :reorder (fn [start-index end-index]
-                                       (swap! state update :tracks utils/move start-index end-index))
-                            :on-remove #(swap! state update :tracks utils/delete %)}]
-             :initial-slider-position 700}]]
-          (when (:index-error @state)
-            [:div {:style {:textAlign "center" :color (:exception-state style/colors) :marginTop "1em"}}
-             "All .bam tracks must have associated index (.bai) files."])])}])})
+        [:div {:style {:width "80vw"}}
+         [:div {:style {:background "white" :border style/standard-line}}
+          [comps/SplitPane
+           {:left [Left {:workspace-id (:workspace-id props)
+                         :tracks (:tracks @state)
+                         :on-select (fn [track-url]
+                                      (let [index-atom (atom :pending)]
+                                        (swap! state assoc :loading? true)
+                                        (add-watch index-atom :loader #(swap! state dissoc :loading?))
+                                        (igv-utils/find-index-file {:track-url track-url
+                                                                    :on-success #(reset! index-atom %)
+                                                                    :on-error #(reset! index-atom :error)})
+                                        (swap! state update :tracks conj
+                                               {:track-url track-url :index-url index-atom
+                                                :requires-index? (.endsWith track-url ".bam")})))}]
+            :right [Right {:tracks (:tracks @state)
+                           :reorder (fn [start-index end-index]
+                                      (swap! state update :tracks utils/move start-index end-index))
+                           :on-remove #(swap! state update :tracks utils/delete %)}]
+            :initial-slider-position 700}]]
+         (when (:index-error @state)
+           [:div {:style {:textAlign "center" :color (:exception-state style/colors) :marginTop "1em"}}
+            "All .bam tracks must have associated index (.bai) files."])])}])})

@@ -2,8 +2,8 @@
   (:require
     [dmohs.react :as react]
     [broadfcui.common.components :as comps]
-    [broadfcui.endpoints :as endpoints]
     [broadfcui.common.style :as style]
+    [broadfcui.endpoints :as endpoints]
     [broadfcui.page.workspace.data.copy-data-entities :as copy-data-entities]
     [broadfcui.page.workspace.workspace-common :as ws-common]
     [broadfcui.utils :as utils]
@@ -18,7 +18,7 @@
              (and
               (or (nil? src-auth-domain) (= src-auth-domain this-auth-domain))
               (not= (:accessLevel %) "NO ACCESS")))
-    workspace-list))
+          workspace-list))
 
 (react/defc Page
   {:render
@@ -55,11 +55,11 @@
    :component-did-mount
    (fn [{:keys [state props]}]
      (endpoints/call-ajax-orch
-       {:endpoint endpoints/list-workspaces
-        :on-done (fn [{:keys [success? status-text get-parsed-response]}]
-                   (if success?
-                     (let [all-workspaces (remove-self (:workspace-id props) (get-parsed-response))
-                           filtered-workspaces (filter-workspaces (:this-auth-domain props) all-workspaces)]
-                       (swap! state assoc :workspaces filtered-workspaces
-                         :num-filtered (- (count all-workspaces) (count filtered-workspaces))))
-                     (swap! state assoc :error-message status-text)))}))})
+      {:endpoint endpoints/list-workspaces
+       :on-done (fn [{:keys [success? status-text get-parsed-response]}]
+                  (if success?
+                    (let [all-workspaces (remove-self (:workspace-id props) (get-parsed-response))
+                          filtered-workspaces (filter-workspaces (:this-auth-domain props) all-workspaces)]
+                      (swap! state assoc :workspaces filtered-workspaces
+                             :num-filtered (- (count all-workspaces) (count filtered-workspaces))))
+                    (swap! state assoc :error-message status-text)))}))})

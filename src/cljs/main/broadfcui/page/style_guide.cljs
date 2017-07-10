@@ -1,14 +1,14 @@
 (ns broadfcui.page.style-guide
   (:require
     [dmohs.react :as react]
+    [clojure.string :as string]
     [broadfcui.common :as common]
     [broadfcui.common.codemirror :refer [CodeMirror]]
-    [broadfcui.common.components :as comps]
     [broadfcui.common.icons :as icons]
     [broadfcui.common.style :as style]
     [broadfcui.nav :as nav]
-    [broadfcui.utils :as u]
-    [clojure.string :as string]))
+    [broadfcui.utils :as utils]
+    ))
 
 (defn- create-nav-link [label]
   (style/create-link {:text label
@@ -198,7 +198,7 @@
   {:render
    (fn [_]
      [:div {:style {:padding "1rem"}}
-      [:style {}                                            ; Yeah, yeah, they're overrides, so sue me.
+      [:style {} ; Yeah, yeah, they're overrides, so sue me.
        ".menu .active {background-color: #457fd2; color: white !important;}
        .menu {padding: 0;}
        .menu > li > span {display: block; padding: 0.7rem 1rem; line-height: 1;}
@@ -218,8 +218,8 @@
 
 (defn add-nav-paths []
   (nav/defpath
-    :styles
-    {:component Page
-     :regex #"styles\S*"
-     :make-props (fn [] {})
-     :make-path (fn [] "styles")}))
+   :styles
+   {:component Page
+    :regex #"styles\S*"
+    :make-props (fn [] {})
+    :make-path (fn [] "styles")}))
