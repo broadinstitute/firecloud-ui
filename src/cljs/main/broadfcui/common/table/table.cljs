@@ -79,22 +79,35 @@
                      (or (not (:v props))
                          (= (:v props) (:v stored-value))))
         :initial
-        #(let [columns (-> props :body :columns)
-               initial-sort-column (or (first (filter :sort-initial columns))
-                                       (when-not (-> props :body :behavior :allow-no-sort?)
-                                         (first columns)))
-               initial-sort-order (when initial-sort-column
-                                    (get initial-sort-column :sort-initial :asc))]
-           (merge
-            {:query-params (select-keys
-                            {:page-number 1
-                             :rows-per-page 20
-                             :filter-text ""
-                             :sort-column (table-utils/resolve-id initial-sort-column)
-                             :sort-order initial-sort-order}
-                            (set/difference all-query-params (-> props :body :external-query-params)))
-             :column-display (table-utils/build-column-display columns)}
-            (when-let [v (:v props)] {:v v})))})
+        (fn []
+          (let [columns (-> props :body :columns)
+                processed-columns (if-let [defaults (-> props :body :column-defaults)]
+                                    (let [by-header (utils/index-by :header columns)
+                                          default-showing (doall
+                                                           (->> (defaults "shown")
+                                                                (replace by-header)
+                                                                (map #(assoc % :show-initial? true))))
+                                          default-hiding (doall
+                                                          (->> (defaults "hidden")
+                                                               (replace by-header)
+                                                               (map #(assoc % :show-initial? false))))]
+                                      (concat default-showing default-hiding))
+                                    columns)
+                initial-sort-column (or (first (filter :sort-initial processed-columns))
+                                        (when-not (-> props :body :behavior :allow-no-sort?)
+                                          (first processed-columns)))
+                initial-sort-order (when initial-sort-column
+                                     (get initial-sort-column :sort-initial :asc))]
+            (merge
+             {:query-params (select-keys
+                             {:page-number 1
+                              :rows-per-page 20
+                              :filter-text ""
+                              :sort-column (table-utils/resolve-id initial-sort-column)
+                              :sort-order initial-sort-order}
+                             (set/difference all-query-params (-> props :body :external-query-params)))
+              :column-display (table-utils/build-column-display processed-columns)}
+             (when-let [v (:v props)] {:v v}))))})
        :rows []))
    :render
    (fn [{:keys [props state]}]

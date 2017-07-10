@@ -114,9 +114,7 @@
                                                   (str ": " (string/join ", " items)))))
                                          :else ((:attribute-renderer props) attr-value)))})
                           attributes))
-               ;; TODO: reimplement this
                :column-defaults (get (:column-defaults props) (some-> selected-entity-type name))
-               ;; TODO: document this
                :on-row-click (:on-row-click props)}
               :toolbar
               {:items (cons [comps/FilterGroupBar
