@@ -69,7 +69,7 @@
                                        (when (:cycle-focus? props)
                                          (.focus (get-first)))))))))})
 
-(react/defc RenderError
+(react/defn RenderError
   {:render
    (fn [{:keys [props]}]
      (let [{:keys [header text on-dismiss]} props]
@@ -79,7 +79,7 @@
          :dismiss on-dismiss
          :show-cancel? false :ok-button "OK"}]))})
 
-(react/defc RenderMessage
+(react/defn RenderMessage
   {:render
    (fn [{:keys [props]}]
      (let [{:keys [header text on-confirm on-dismiss]} props]

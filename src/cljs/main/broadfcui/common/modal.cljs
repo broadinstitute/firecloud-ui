@@ -11,10 +11,11 @@
 (defn set-instance! [x]
   (reset! instance x))
 
+;; Deprecated (moving to modals/components)
 (defn push-modal [child]
   ;; Forces create-element so the caller can refer to refs in the dialog.
   (react/call :push-modal @instance (react/create-element child)))
-
+;; Deprecated (moving to modals/components
 (defn pop-modal []
   (react/call :pop-modal @instance))
 
