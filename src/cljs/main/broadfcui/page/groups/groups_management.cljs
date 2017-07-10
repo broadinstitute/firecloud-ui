@@ -20,20 +20,6 @@
 (react/defc GroupTable
   {:render
    (fn [{:keys [this state]}]
-     (net/render-with-ajax
-      (:groups-response @state)
-      #(this :-render-groups-table)
-      {:loading-text "Loading Groups..."}))
-   :component-did-mount
-   (fn [{:keys [this]}]
-     (this :-load-data))
-   :-load-data
-   (fn [{:keys [state]}]
-     (utils/ajax-orch
-      "/groups"
-      {:on-done (net/handle-ajax-response #(swap! state assoc :groups-response %))}))
-   :-render-groups-table
-   (fn [{:keys [this state]}]
      [:div {}
       (cond
         (:modal? @state)
@@ -47,62 +33,74 @@
                           :rephrase-error
                           #(if (= 409 (:status-code %))
                              "Sorry you are unable to delete this group because it is in use"
-                             (get-in % [:parsed-response :message]))}))
-          :on-dismiss #(swap! state dissoc :modal?)})
+                             (get-in % [:parsed-response :message]))}))})
         (:error? @state)
-        (do
-          (modals/render-error
-           {:text (:error-message @state)
-            :on-confirm #(swap! state dissoc :error? :modal?)
-            :on-dismiss #(swap! state dissoc :modal? :error?)})))
-      [Table
-       {:data (get-in @state [:groups-response :parsed-response])
-        :body {:behavior {:reorderable-columns? false}
-               :style table-style/table-light
-               :columns
-               [{:header "Group Name" :initial-width 300 :sort-initial :asc
-                 :sort-by :text
-                 :as-text :groupName
-                 :render
-                 (fn [{:keys [groupName role]}]
-                   (if
-                    (= role "Admin")
-                     (style/create-link {:text groupName
-                                         :href (nav/get-link :group groupName)})
-                     groupName))}
-                {:header "Role" :initial-width 100
-                 :as-text :role}
-                {:header "Email for Sharing Workspaces" :initial-width :auto
-                 :resizable? false
-                 :as-text :groupEmail
-                 :render
-                 (fn [{:keys [groupEmail]}]
-                   [:span {:style {:fontWeight "normal"}} groupEmail])}
-                {:id "delete group" :initial-width 30
-                 :filterable? false :sortable? false :resizable? false
-                 :as-text
-                 (fn [{:keys [groupName role]}]
-                   (when (= role "Admin")
-                     (str "Delete group " groupName)))
-                 :render
-                 (fn [{:keys [groupName role]}]
-                   (when (= role "Admin")
-                     (style/create-link
-                      {:text (icons/icon {} :delete)
-                       :style {:float "right"}
-                       :onClick #(do
-                                   (swap! state assoc :group-name groupName)
-                                   (swap! state assoc :modal? true))})))}]}
-        :toolbar
-        {:items
-         [flex/spring
-          [comps/Button
-           {:text "Create New Group..."
-            :onClick
-            (fn []
-              (modal/push-modal
-               [CreateGroupDialog
-                {:on-success #(this :-load-data)}]))}]]}}]])
+        (modals/render-error
+         {:text (:error-message @state)
+          :on-confirm #(swap! state dissoc :error? :modal?)
+          :on-dismiss #(swap! state dissoc :error? :modal?)}))
+     (net/render-with-ajax
+      (:groups-response @state)
+      #(this :-render-groups-table)
+      {:loading-text "Loading Groups..."})])
+   :component-did-mount
+   (fn [{:keys [this]}]
+     (this :-load-data))
+   :-load-data
+   (fn [{:keys [state]}]
+     (utils/ajax-orch
+      "/groups"
+      {:on-done (net/handle-ajax-response #(swap! state assoc :groups-response %))}))
+   :-render-groups-table
+   (fn [{:keys [this state]}]
+     [Table
+      {:data (get-in @state [:groups-response :parsed-response])
+       :body {:behavior {:reorderable-columns? false}
+              :style table-style/table-light
+              :columns
+              [{:header "Group Name" :initial-width 300 :sort-initial :asc
+                :sort-by :text
+                :as-text :groupName
+                :render
+                (fn [{:keys [groupName role]}]
+                  (if
+                   (= role "Admin")
+                    (style/create-link {:text groupName
+                                        :href (nav/get-link :group groupName)})
+                    groupName))}
+               {:header "Role" :initial-width 100
+                :as-text :role}
+               {:header "Email for Sharing Workspaces" :initial-width :auto
+                :resizable? false
+                :as-text :groupEmail
+                :render
+                (fn [{:keys [groupEmail]}]
+                  [:span {:style {:fontWeight "normal"}} groupEmail])}
+               {:id "delete group" :initial-width 30
+                :filterable? false :sortable? false :resizable? false
+                :as-text
+                (fn [{:keys [groupName role]}]
+                  (when (= role "Admin")
+                    (str "Delete group " groupName)))
+                :render
+                (fn [{:keys [groupName role]}]
+                  (when (= role "Admin")
+                    (style/create-link
+                     {:text (icons/icon {} :delete)
+                      :style {:float "right"}
+                      :onClick #(do
+                                  (swap! state assoc :group-name groupName)
+                                  (swap! state assoc :modal? true))})))}]}
+       :toolbar
+       {:items
+        [flex/spring
+         [comps/Button
+          {:text "Create New Group..."
+           :onClick
+           (fn []
+             (modal/push-modal
+              [CreateGroupDialog
+               {:on-success #(this :-load-data)}]))}]]}}])
    :-delete-group
    (fn [{:keys [state this]}]
      (swap! state assoc :deleting? true)
