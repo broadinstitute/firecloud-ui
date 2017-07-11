@@ -9,28 +9,28 @@ class MethodConfigDetailsPage(namespace: String, name: String, methodConfigNames
   override val url: String = s"${Config.FireCloud.baseUrl}#workspaces/$namespace/$name/method-configs/$methodConfigNamespace/$methodConfigName"
 
   def launchAnalysis(rootEntityType: String, entityId: String) = {
-    val launchModal = gestures.openLaunchAnalysisModal()
+    val launchModal = ui.openLaunchAnalysisModal()
     launchModal.launchAnalysis(rootEntityType, entityId)
     new SubmissionDetailsPage(namespace, name)
   }
 
   def editMethodConfig(newName: Option[String] = None, newSnapshotId: Option[Int] = None, newRootEntityType: Option[String] = None,
                        inputs: Option[Map[String, String]] = None, outputs: Option[Map[String, String]] = None) = {
-    gestures.openEditMode()
-    if (newName != None) { gestures.changeMethodConfigName(newName.get) }
-    if (newSnapshotId != None) { gestures.changeSnapshotId(newSnapshotId.get) }
-    if (newRootEntityType != None) { gestures.changeRootEntityType(newRootEntityType.get)}
-    if (inputs != None) { gestures.changeInputsOutputs(inputs.get)  }
-    if (outputs != None) { gestures.changeInputsOutputs(outputs.get)}
-    gestures.saveEdits()
+    ui.openEditMode()
+    if (newName != None) { ui.changeMethodConfigName(newName.get) }
+    if (newSnapshotId != None) { ui.changeSnapshotId(newSnapshotId.get) }
+    if (newRootEntityType != None) { ui.changeRootEntityType(newRootEntityType.get)}
+    if (inputs != None) { ui.changeInputsOutputs(inputs.get)  }
+    if (outputs != None) { ui.changeInputsOutputs(outputs.get)}
+    ui.saveEdits()
 
   }
 
   def openlaunchModal() = {
-    gestures.openLaunchAnalysisModal()
+    ui.openLaunchAnalysisModal()
   }
 
-  object gestures {
+  trait UI extends super.UI {
     private val methodConfigNameTextQuery: Query = testId("method-config-name")
     private val openLaunchAnalysisModalButtonQuery: Query = testId("open-launch-analysis-modal-button")
     private val openEditModeQuery: Query = testId("edit-method-config-button")
@@ -83,6 +83,7 @@ class MethodConfigDetailsPage(namespace: String, name: String, methodConfigNames
     }
 
   }
+  object ui extends UI
 
 }
 
@@ -97,47 +98,47 @@ class LaunchAnalysisModal(implicit webDriver: WebDriver) extends FireCloudView {
     *
     */
   def launchAnalysis(rootEntityType: String, entityId: String, expression: String = ""): Unit = { //Use Option(String) for expression?
-    gestures.filterRootEntityType(rootEntityType)
-    gestures.searchEntity(entityId)
-    gestures.selectEntity(entityId)
-    if (!expression.isEmpty()) { gestures.fillExpression(expression) }
-    gestures.clicklaunchButton()
+    ui.filterRootEntityType(rootEntityType)
+    ui.searchEntity(entityId)
+    ui.selectEntity(entityId)
+    if (!expression.isEmpty()) { ui.fillExpression(expression) }
+    ui.clicklaunchButton()
   }
 
   def filterRootEntityType(rootEntityType: String) = {
-    gestures.filterRootEntityType(rootEntityType)
+    ui.filterRootEntityType(rootEntityType)
   }
 
   def searchAndSelectEntity(entityId: String) = {
-    gestures.searchEntity(entityId)
-    gestures.selectEntity(entityId)
+    ui.searchEntity(entityId)
+    ui.selectEntity(entityId)
   }
 
   def fillExpressionField(expression: String) = {
-    gestures.fillExpression(expression)
+    ui.fillExpression(expression)
   }
 
   def clickLaunchButton() = {
-    gestures.clicklaunchButton()
+    ui.clicklaunchButton()
   }
 
   def verifyNoDefaultEntityMessage(): Boolean = {
-    gestures.isNoDefaultEntitiesMessagePresent()
+    ui.isNoDefaultEntitiesMessagePresent()
   }
 
   def verifyWorkflowsWarning(): Boolean = {
-    gestures.isNumberOfWorkflowWarningPresent()
+    ui.isNumberOfWorkflowWarningPresent()
   }
 
   def verifyWrongEntityError(errorText: String): Boolean = {
-    gestures.isErrorTextPresent(errorText)
+    ui.isErrorTextPresent(errorText)
   }
 
   def closeModal() = {
-    gestures.closeModal()
+    ui.closeModal()
   }
 
-  object gestures {
+  object ui {
     private val participantRootEntityFilterButtonQuery: Query = testId("participant-filter-button")
     private val participantSetRootEntityFilterButtonQuery: Query = testId("participant_set-filter-button")
     private val entitySearchInputQuery: Query = testId("entity-table-input")
@@ -200,7 +201,6 @@ class LaunchAnalysisModal(implicit webDriver: WebDriver) extends FireCloudView {
     }
 
   }
-
 }
 
 
