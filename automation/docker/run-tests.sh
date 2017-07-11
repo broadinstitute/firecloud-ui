@@ -15,6 +15,7 @@ TEST_CONTAINER=${4:-automation}
 VAULT_TOKEN=$5
 HOST_NAME=$6
 WORKING_DIR=${7:-$PWD}
+export WORKING_DIR=$WORKING_DIR
 
 if [ -z $VAULT_TOKEN ]; then
     VAULT_TOKEN=$(cat ~/.vault-token)
@@ -83,7 +84,10 @@ docker run -e DOCKERHOST=$DOCKERHOST \
     -v $WORKING_DIR/failure_screenshots:/app/failure_screenshots \
     -v jar-cache:/root/.ivy -v jar-cache:/root/.ivy2 \
     --link docker_hub_1:hub --name ${TEST_CONTAINER} -w /app \
-    ${TEST_CONTAINER}:latest
+    ${TEST_CONTAINER}:latest 
+
+docker logs docker_hub_1 > logs/hublog.txt
+docker logs docker_chrome_1 > logs/nodelog.txt
 
 # Grab exit code of tests
 TEST_EXIT_CODE=$?
