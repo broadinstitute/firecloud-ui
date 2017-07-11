@@ -131,7 +131,6 @@
      (let [{:keys [editing? loaded-config inputs-outputs]} @state
            config (:methodConfiguration loaded-config)
            can-edit? (common/access-greater-than? (:access-level props) "READER")
-           snapshot-id (get-in config [:methodRepoMethod :methodVersion])
            config-id (ws-common/config->id config)]
        [:div {:style {:width 290 :float "left"}}
         [:div {:ref "sidebar"}]
