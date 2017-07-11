@@ -169,9 +169,7 @@
                                      :onClick #(this :-commit)}]
                [comps/SidebarButton {:color :exception-state :margin :top
                                      :text "Cancel Editing" :icon :cancel
-                                     :onClick (fn []
-                                                (swap! state assoc :editing? false)
-                                                (this :cancel-editing))}]))]))]))
+                                     :onClick #(this :-cancel-editing)}]))]))]))
    :-render-main
    (fn [{:keys [state this]}]
      (let [{:keys [editing? loaded-config wdl-parse-error inputs-outputs methods]} @state
@@ -328,12 +326,12 @@
                         (do
                           (swap! state assoc :blocker nil :wdl-parse-error (:message response))
                           (comps/push-error (style/create-server-error-message (:message response)))))))})))
-   :cancel-editing
+   :-cancel-editing
    (fn [{:keys [state props refs]}]
      (let [original-loaded-config (:original-config @state)
            original-inputs-outputs (:original-inputs-outputs @state)
            method-ref (-> original-loaded-config :methodConfiguration :methodRepoMethod)]
-       (swap! state assoc :loaded-config original-loaded-config :inputs-outputs original-inputs-outputs)
+       (swap! state assoc :editing? false :loaded-config original-loaded-config :inputs-outputs original-inputs-outputs)
        ((@refs "methodDetailsViewer") :load-agora-method {:namespace (:methodNamespace method-ref)
                                                           :name (:methodName method-ref)
                                                           :snapshotId (:methodVersion method-ref)})))})
