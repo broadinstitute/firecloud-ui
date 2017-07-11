@@ -44,14 +44,15 @@
    (fn [{:keys [this]}]
      (this :load-agora-method))
    :load-agora-method
-   (fn [{:keys [props state]}]
-     (endpoints/call-ajax-orch
-      {:endpoint (endpoints/get-agora-method (:namespace props) (:name props) (:snapshotId props))
-       :headers utils/content-type=json
-       :on-done (fn [{:keys [success? get-parsed-response status-text]}]
-                  (if success?
-                    (swap! state assoc :loaded-method (get-parsed-response))
-                    (swap! state assoc :error status-text)))}))})
+   (fn [{:keys [props state]} & [method-ref]]
+     (let [{:keys [namespace name snapshotId]} (or method-ref props)]
+       (endpoints/call-ajax-orch
+        {:endpoint (endpoints/get-agora-method namespace name snapshotId)
+         :headers utils/content-type=json
+         :on-done (fn [{:keys [success? get-parsed-response status-text]}]
+                    (if success?
+                      (swap! state assoc :loaded-method (get-parsed-response))
+                      (swap! state assoc :error status-text)))})))})
 
 
 (defn- input-output-list [{:keys [values ref-prefix invalid-values editing? all-values]}]
@@ -69,7 +70,7 @@
                           :backgroundColor (:background-light style/colors)
                           :border style/standard-line :borderRadius 2}}
             (str name ": (" (when optional "optional ") type ")")]
-           (when (and error (not editing?))
+           (when (and error (not editing?) (not optional))
              (icons/icon {:style {:marginLeft "0.5rem" :alignSelf "center"
                                   :color (:exception-state style/colors)}}
                          :error))
@@ -80,7 +81,7 @@
                                        :style {:width 500}}))
            (when-not editing?
              (or field-value [:span {:style {:fontStyle "italic"}} "No value entered"]))]
-          (when error
+          (when (and error (not optional))
             [:div {:style {:padding "0.5em" :marginBottom "0.5rem"
                            :backgroundColor (:exception-state style/colors)
                            :display "inline-block"
@@ -125,7 +126,7 @@
          (common/clear-both)]]))
    :-render-sidebar
    (fn [{:keys [props state this]}]
-     (let [{:keys [editing? loaded-config]} @state
+     (let [{:keys [editing? loaded-config inputs-outputs]} @state
            config (:methodConfiguration loaded-config)]
        [:div {:style {:width 290 :float "left"}}
         [:div {:ref "sidebar"}]
@@ -144,7 +145,8 @@
                [comps/SidebarButton {:style :light :color :button-primary
                                      :text "Edit Configuration" :icon :edit
                                      :disabled? (when locked? "The workspace is locked")
-                                     :onClick #(swap! state assoc :editing? true :prev-snapshot-id snapshot-id)}]
+                                     :onClick #(swap! state assoc :editing? true :original-config loaded-config
+                                                      :original-inputs-outputs inputs-outputs)}]
                [comps/SidebarButton {:style :light :color :exception-state :margin :top
                                      :text "Delete" :icon :delete
                                      :disabled? (when locked? "The workspace is locked")
@@ -167,9 +169,7 @@
                                      :onClick #(this :-commit)}]
                [comps/SidebarButton {:color :exception-state :margin :top
                                      :text "Cancel Editing" :icon :cancel
-                                     :onClick (fn []
-                                                (this :load-new-method-template (:prev-snapshot-id @state))
-                                                (swap! state assoc :editing? false))}]))]))]))
+                                     :onClick #(this :-cancel-editing)}]))]))]))
    :-render-main
    (fn [{:keys [state this]}]
      (let [{:keys [editing? loaded-config wdl-parse-error inputs-outputs methods]} @state
@@ -250,7 +250,6 @@
                         (->> (io-key (:inputs-outputs @state))
                              (map :name)
                              (map (juxt identity #(common/get-text refs (str ref-prefix "_" %))))
-                             (remove (comp empty? val))
                              (into {})))]
        (swap! state assoc :blocker "Updating...")
        (endpoints/call-ajax-orch
@@ -326,4 +325,13 @@
                                          (swap! state assoc :error (:message (get-parsed-response))))))})
                         (do
                           (swap! state assoc :blocker nil :wdl-parse-error (:message response))
-                          (comps/push-error (style/create-server-error-message (:message response)))))))})))})
+                          (comps/push-error (style/create-server-error-message (:message response)))))))})))
+   :-cancel-editing
+   (fn [{:keys [state props refs]}]
+     (let [original-loaded-config (:original-config @state)
+           original-inputs-outputs (:original-inputs-outputs @state)
+           method-ref (-> original-loaded-config :methodConfiguration :methodRepoMethod)]
+       (swap! state assoc :editing? false :loaded-config original-loaded-config :inputs-outputs original-inputs-outputs)
+       ((@refs "methodDetailsViewer") :load-agora-method {:namespace (:methodNamespace method-ref)
+                                                          :name (:methodName method-ref)
+                                                          :snapshotId (:methodVersion method-ref)})))})
