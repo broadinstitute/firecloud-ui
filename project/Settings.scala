@@ -29,9 +29,13 @@ object Settings {
 //    test in assembly := {}
 //  )
 
+  val testSettings = List(
+    testOptions in Test += Tests.Argument("-oF")
+  )
+
   //common settings for all sbt subprojects
   val commonSettings =
-    commonBuildSettings ++ List(
+    commonBuildSettings ++ testSettings ++ List(
 //      commonBuildSettings ++ commonAssemblySettings ++ commonTestSettings ++ List(
     organization  := "org.broadinstitute.dsde.firecloud",
     scalaVersion  := "2.11.8",

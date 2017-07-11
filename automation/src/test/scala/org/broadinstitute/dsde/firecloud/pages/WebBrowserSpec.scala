@@ -62,10 +62,6 @@ trait WebBrowserSpec extends WebBrowserUtil with LazyLogging { self: Suite =>
       withScreenshot {
         testCode(driver)
       }
-    } catch {
-      case t: Throwable =>
-        logger.error(s"Failure in $suiteName", t)
-        throw t
     } finally {
       driver.quit()
     }
