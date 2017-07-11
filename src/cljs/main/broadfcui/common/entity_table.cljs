@@ -76,9 +76,8 @@
               {:style (merge table-style/table-heavy (:style props))
                ;; this :behavior and the 'or' guard on the first column are to make things
                ;; behave when there is no data (and thus no entity-types)
-               :behavior (let [controls? (not (empty? entity-types))]
-                           {:reorderable-columns? controls?
-                            :filterable? controls?})
+               :behavior (when (empty? entity-types)
+                           {:reorderable-columns? false :filterable? false})
                :columns
                (into [{:header (or (get-in entity-metadata [selected-entity-type :idName]) "No data")
                        :initial-width 200
