@@ -53,6 +53,7 @@
        [:a {:className (or class-name "button")
             :style (merge
                     {:display "inline-flex" :alignItems "center" :justifyContent "center"
+                     :flexShrink 0
                      :backgroundColor (if disabled? (:disabled-state style/colors) color)
                      :cursor (when disabled? "default")
                      :color (if disabled? (:text-light style/colors) "white")
@@ -786,12 +787,12 @@
   {:render
    (fn [{:keys [props]}]
      (let [{:keys [filter-groups selected-index data on-change]} props]
-       [:div {}
+       [:div {:style {:display "flex"}}
         (map-indexed (fn [index {:keys [text pred count-override]}]
                        (let [first? (zero? index)
                              last? (= index (dec (count filter-groups)))
                              selected? (= index selected-index)]
-                         [:div {:style {:display "inline-block" :textAlign "center"
+                         [:div {:style {:textAlign "center" :flexShrink 0
                                         :backgroundColor (if selected?
                                                            (:button-primary style/colors)
                                                            (:background-light style/colors))

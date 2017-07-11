@@ -103,8 +103,8 @@
           (data-utils/get-column-defaults (get-in workspace [:workspace :workspace-attributes :workspace-column-defaults]))
           :toolbar-items
           [(when (:selected-entity-type @state) (this :-render-download-link))
-           flex/spring
            [comps/Button {:text "Import Metadata..."
+                          :style {:marginLeft "auto"}
                           :disabled? (when (get-in workspace [:workspace :isLocked]) "This workspace is locked.")
                           :onClick #(this :-handle-import-data-click)}]]
           :on-entity-type-selected #(swap! state assoc :selected-entity-type % :selected-entity nil :selected-attr-list nil)
