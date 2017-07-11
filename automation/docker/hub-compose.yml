@@ -7,6 +7,12 @@ services:
     extra_hosts:
       - "firecloud-fiab.dsde-$ENV.broadinstitute.org:$DOCKERHOST"
       - "firecloud-orchestration-fiab.dsde-$ENV.broadinstitute.org:$DOCKERHOST"
+    logging:
+      driver: syslog
+      options:
+        syslog-address: udp://localhost:514/
+        tag: hub
+
 
   chrome:
     image: selenium/node-chrome
@@ -24,3 +30,14 @@ services:
     extra_hosts:
       - "firecloud-fiab.dsde-$ENV.broadinstitute.org:$DOCKERHOST"
       - "firecloud-orchestration-fiab.dsde-$ENV.broadinstitute.org:$DOCKERHOST"
+    logging:
+      driver: syslog
+      options:
+        syslog-address: udp://localhost:514/
+
+  logs:
+    image: bobrik/syslog-ng
+    volumes:
+      - $WORKING_DIR/logs:/var/log/syslog-ng
+    ports:
+      - "514:514/udp"
