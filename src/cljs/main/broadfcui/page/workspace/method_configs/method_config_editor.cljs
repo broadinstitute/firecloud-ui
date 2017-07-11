@@ -252,7 +252,6 @@
                         (->> (io-key (:inputs-outputs @state))
                              (map :name)
                              (map (juxt identity #(common/get-text refs (str ref-prefix "_" %))))
-                             (remove (comp empty? val))
                              (into {})))]
        (swap! state assoc :blocker "Updating...")
        (endpoints/call-ajax-orch
@@ -335,4 +334,6 @@
            original-inputs-outputs (:original-inputs-outputs @state)
            method-ref (-> original-loaded-config :methodConfiguration :methodRepoMethod)]
        (swap! state assoc :loaded-config original-loaded-config :inputs-outputs original-inputs-outputs)
-       ((@refs "methodDetailsViewer") :load-agora-method method-ref)))})
+       ((@refs "methodDetailsViewer") :load-agora-method {:namespace (:methodNamespace method-ref)
+                                                          :name (:methodName method-ref)
+                                                          :snapshotId (:methodVersion method-ref)})))})
