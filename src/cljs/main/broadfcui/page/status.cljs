@@ -33,23 +33,16 @@
            orch-ok? (:ok parsed-response)
            orch-errors [(str "Status Code: " status-code)
                         (str "Status Text: " status-text)
-                        (str "Response Text: " response-text)]
-           rawls-ok? (get-in parsed-response [:systems :Rawls :ok])
-           rawls-errors (get-in parsed-response [:systems :Rawls :messages])
-           agora-ok? (get-in parsed-response [:systems :Agora :ok])
-           agora-errors (get-in parsed-response [:systems :Agora :messages])
-           thurloe-ok? (get-in parsed-response [:systems :Thurloe :ok])
-           thurloe-errors (get-in parsed-response [:systems :Thurloe :messages])
-           search-ok? (get-in parsed-response [:systems :Search :ok])
-           search-errors (get-in parsed-response [:systems :Search :messages])]
+                        (str "Response Text: " response-text)]]
      [:div {:style {:padding "1em"}}
       [:h2 {} "Service Status"]
       [:div {}
-        [StatusLine {:label "Orchestration" :success? orch-ok?    :errors orch-errors}]
-        [StatusLine {:label "Rawls"         :success? rawls-ok?   :errors rawls-errors}]
-        [StatusLine {:label "Agora"         :success? agora-ok?   :errors agora-errors}]
-        [StatusLine {:label "Thurloe"       :success? thurloe-ok? :errors thurloe-errors}]
-        [StatusLine {:label "Search"        :success? search-ok?  :errors search-errors}]]]))
+        [StatusLine {:label "Orchestration" :success? orch-ok? :errors orch-errors}]
+        (map (fn [system]
+               (let [current (first system)
+                     {:keys [messages ok]} (get-in parsed-response [:systems current])]
+                 [StatusLine {:label (name current) :success? ok :errors messages}]))
+             (:systems parsed-response))]]))
    :component-did-mount
    (fn [{:keys [props state]}]
      (utils/ajax {:url (str (config/api-url-root) "/status")
