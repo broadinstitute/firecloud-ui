@@ -22,10 +22,10 @@
        {:text "Delete"
         :onClick
         #(do (swap! state assoc :deleting? true :error nil)
-          (endpoints/call-ajax-orch
-            {:endpoint (endpoints/delete-workspace-method-config (:workspace-id props) (:config-id props))
-             :on-done (fn [{:keys [success? get-parsed-response]}]
-                        (swap! state dissoc :deleting?)
-                        (if success?
-                          (do (modal/pop-modal) ((:after-delete props)))
-                          (swap! state assoc :error (get-parsed-response false))))}))}}])})
+             (endpoints/call-ajax-orch
+              {:endpoint (endpoints/delete-workspace-method-config (:workspace-id props) (:config-id props))
+               :on-done (fn [{:keys [success? get-parsed-response]}]
+                          (swap! state dissoc :deleting?)
+                          (if success?
+                            (do (modal/pop-modal) ((:after-delete props)))
+                            (swap! state assoc :error (get-parsed-response false))))}))}}])})

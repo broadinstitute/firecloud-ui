@@ -1,7 +1,7 @@
 (ns broadfcui.page.workspace.summary.catalog.questions
   (:require
-    [clojure.string :refer [join split trim]]
     [dmohs.react :as react]
+    [clojure.string :as string]
     [broadfcui.common.components :as comps]
     [broadfcui.common.style :as style]
     [broadfcui.config :as config]
@@ -12,7 +12,7 @@
 
 (def ^:private ENUM_EMPTY_CHOICE "<select an option>")
 
-(defn resolve-enum [value]
+(defn- resolve-enum [value]
   (when-not (= value ENUM_EMPTY_CHOICE)
     value))
 
@@ -25,7 +25,7 @@
             (resolve-enum v)
             (case type
               "integer" (int v)
-              "array" (let [tokens (keep (comp not-empty trim) (split v #","))]
+              "array" (let [tokens (keep (comp not-empty string/trim) (string/split v #","))]
                         (case (:type items)
                           "integer" (map int tokens)
                           tokens))
@@ -95,7 +95,7 @@
 (defn- render-boolean [{:keys [radio required? emptyChoice wording property]}]
   [:div {:style {:display "inline-block" :margin "0.75em 0 0.75em 1em"}}
    (radio {:val true :label (case wording "yes/no" "Yes" "True") :property property})
-   (radio {:val false :label (case wording "yes/no" "No" "False")  :property property})
+   (radio {:val false :label (case wording "yes/no" "No" "False") :property property})
    (when-not required?
      (radio {:val nil :label (or emptyChoice "N/A") :property property}))])
 
@@ -144,8 +144,8 @@
       [:div {}
        (when-not disabled
          (style/create-link {:text "Clear Selection"
-                           :onClick #(apply swap! state update :attributes dissoc property
-                                            (library-utils/get-related-id+label-props library-schema property))}))]]
+                             :onClick #(apply swap! state update :attributes dissoc property
+                                              (library-utils/get-related-id+label-props library-schema property))}))]]
      ;; TODO: why is this causing React to bomb when adding the node?
      #_(when (not-any? clojure.string/blank? [related-id related-label])
          [:div {}
@@ -202,7 +202,7 @@
            processed-attributes (->> (:attributes @state)
                                      (utils/map-values (fn [val]
                                                          (if (string? val)
-                                                           (trim val)
+                                                           (string/trim val)
                                                            val)))
                                      (utils/filter-values some?))
            {:keys [error invalid]} (or (validate-numbers processed-attributes library-schema))]
@@ -216,7 +216,7 @@
    :get-initial-state
    (fn [{:keys [props]}]
      (let [{:keys [questions attributes library-schema]} props
-           prop->string (fn [prop] (if (seq? prop) (join ", " prop) prop))
+           prop->string (fn [prop] (if (seq? prop) (string/join ", " prop) prop))
            get-prop (fn [prop-key] (prop->string (get attributes prop-key
                                                       (get-in library-schema [:properties prop-key :default]))))]
        {:attributes
@@ -225,7 +225,7 @@
                 (map keyword questions))}))
    :render
    (fn [{:keys [props state]}]
-     (let [{:keys [library-schema missing-properties questions required-attributes enumerate editable? publishable? set-discoverable?]} props
+     (let [{:keys [library-schema missing-properties questions required-attributes enumerate editable?]} props
            {:keys [attributes invalid-properties]} @state]
        [(if enumerate :ol :div) {}
         (map

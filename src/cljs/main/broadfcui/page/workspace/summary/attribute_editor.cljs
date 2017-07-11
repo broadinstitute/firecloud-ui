@@ -1,8 +1,7 @@
 (ns broadfcui.page.workspace.summary.attribute-editor
   (:require
-    clojure.set
-    [clojure.string :refer [join trim split]]
     [dmohs.react :as react]
+    [clojure.string :as string]
     [broadfcui.common.components :as comps]
     [broadfcui.common.icons :as icons]
     [broadfcui.common.modal :as modal]
@@ -27,7 +26,7 @@
 
 
 (defn- parse-boolean [attr-value]
-  (if (contains? #{"true" "yes"} (clojure.string/lower-case attr-value))
+  (if (contains? #{"true" "yes"} (string/lower-case attr-value))
     true
     false))
 
@@ -35,7 +34,7 @@
 (defn- process-attribute-value [attr-value]
   (if (and (map? attr-value)
            (= #{:itemsType :items} (set (keys attr-value))))
-    (join ", " (:items attr-value))
+    (string/join ", " (:items attr-value))
     attr-value))
 
 (defn- get-type-and-string-rep [attr-value]
@@ -47,7 +46,7 @@
              (= #{:itemsType :items} (-> attr-value keys set)))
         (let [items (:items attr-value)
               first-item (first items)
-              str-value (join ", " items)]
+              str-value (string/join ", " items)]
           (cond (string? first-item) [LIST_STRING str-value]
                 (number? first-item) [LIST_NUMBER str-value]
                 (boolean? first-item) [LIST_BOOLEAN str-value]
@@ -68,10 +67,10 @@
    (fn [{:keys [state]}]
      (let [{:keys [attributes]} @state
            listified-attributes (map (fn [[key value type]]
-                                       [(trim key)
+                                       [(string/trim key)
                                         (if (contains? list-types type)
-                                          (map trim (split value #","))
-                                          (trim value))
+                                          (map string/trim (string/split value #","))
+                                          (string/trim value))
                                         type])
                                      attributes)
            duplicates (not-empty (utils/find-duplicates (map first listified-attributes)))
@@ -96,10 +95,10 @@
                                     LIST_BOOLEAN (map parse-boolean value)
                                     value)]))
                       (into {}))]
-       (cond duplicates {:error (str "Duplicate keys: " (join ", " duplicates))}
+       (cond duplicates {:error (str "Duplicate keys: " (string/join ", " duplicates))}
              any-empty? {:error "Empty keys and values are not allowed."}
-             with-spaces {:error (str "Keys cannot have spaces: " (join ", " with-spaces))}
-             invalid-numbers {:error (str "Invalid number for key(s): " (join ", " invalid-numbers))}
+             with-spaces {:error (str "Keys cannot have spaces: " (string/join ", " with-spaces))}
+             invalid-numbers {:error (str "Invalid number for key(s): " (string/join ", " invalid-numbers))}
              :else {:success typed})))
    :render
    (fn [{:keys [props state after-update]}]

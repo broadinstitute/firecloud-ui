@@ -1,19 +1,18 @@
 (ns broadfcui.page.method-repo.methods-configs-acl
   (:require
-   [dmohs.react :as react]
-   [clojure.string :refer [trim]]
-   [broadfcui.common :as common]
-   [broadfcui.common.components :as comps]
-   [broadfcui.common.input :as input]
-   [broadfcui.common.modal :as modal]
-   [broadfcui.common.style :as style]
-   [broadfcui.endpoints :as endpoints]
-   [broadfcui.utils :as utils]
-   [broadfcui.net :as net]
-   ))
+    [dmohs.react :as react]
+    [broadfcui.common :as common]
+    [broadfcui.common.components :as comps]
+    [broadfcui.common.input :as input]
+    [broadfcui.common.modal :as modal]
+    [broadfcui.common.style :as style]
+    [broadfcui.endpoints :as endpoints]
+    [broadfcui.net :as net]
+    [broadfcui.utils :as utils]
+    ))
 
 
-(defn- get-ordered-name [entity]
+(defn get-ordered-name [entity]
   (clojure.string/join ":" (replace entity [:namespace :name :snapshotId])))
 
 (def ^:private reader-level "READER")
@@ -114,7 +113,7 @@
              :headers utils/content-type=json
              :payload non-empty-acls-w-public
              :on-done (net/handle-ajax-response
-                       (fn [{:keys [success? parsed-response] :as response}]
+                       (fn [{:keys [success? parsed-response]}]
                          (if success?
                            (modal/pop-modal)
                            (do

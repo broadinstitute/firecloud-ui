@@ -1,8 +1,8 @@
 (ns broadfcui.page.workspace.method-configs.method-config-editor
   (:require
     [dmohs.react :as react]
-    [clojure.string :refer [trim blank?]]
-    [broadfcui.common :refer [clear-both get-text root-entity-types access-greater-than?]]
+    [clojure.string :as string]
+    [broadfcui.common :as common]
     [broadfcui.common.components :as comps]
     [broadfcui.common.icons :as icons]
     [broadfcui.common.modal :as modal]
@@ -16,7 +16,7 @@
     ))
 
 (defn- filter-empty [coll]
-  (->> coll (map trim) (remove blank?) vec))
+  (->> coll (map string/trim) (remove string/blank?) vec))
 
 (defn- create-section-header [text]
   [:div {:style {:fontSize "125%" :fontWeight 500}} text])
@@ -123,7 +123,7 @@
                                                          " to the Google Bucket associated with this workspace."))
                                    :on-success (:on-submission-success props)})])
          (this :-render-main)
-         (clear-both)]]))
+         (common/clear-both)]]))
    :-render-sidebar
    (fn [{:keys [props state this]}]
      (let [{:keys [editing? loaded-config inputs-outputs]} @state
@@ -136,7 +136,7 @@
                   :top (when-not (:sidebar-visible? @state) 4)
                   :width 290}}
          (let [{:keys [locked?]} @state
-               can-edit? (access-greater-than? (:access-level props) "READER")
+               can-edit? (common/access-greater-than? (:access-level props) "READER")
                snapshot-id (get-in config [:methodRepoMethod :methodVersion])
                config-id (ws-common/config->id config)]
            [:div {}
@@ -198,7 +198,7 @@
            (style/create-identity-select {:ref "rootentitytype"
                                           :defaultValue (:rootEntityType config)
                                           :style {:width 500}}
-                                         root-entity-types)
+                                         common/root-entity-types)
            [:div {:style {:padding "0.5em 0 1em 0"}} (:rootEntityType config)]))
         [:datalist {:id "inputs-datalist"}
          [:option {:value "this."}]
@@ -247,11 +247,11 @@
    (fn [{:keys [props state refs]}]
      (let [{:keys [workspace-id]} props
            config (-> @state :loaded-config :methodConfiguration)
-           [name root-entity-type] (get-text refs "confname" "rootentitytype")
+           [name root-entity-type] (common/get-text refs "confname" "rootentitytype")
            deref-vals (fn [io-key ref-prefix]
                         (->> (io-key (:inputs-outputs @state))
                              (map :name)
-                             (map (juxt identity #(get-text refs (str ref-prefix "_" %))))
+                             (map (juxt identity #(common/get-text refs (str ref-prefix "_" %))))
                              (remove (comp empty? val))
                              (into {})))]
        (swap! state assoc :blocker "Updating...")

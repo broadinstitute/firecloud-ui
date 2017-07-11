@@ -6,11 +6,11 @@ var someTestsFailed = false;
 
 function installConsoleListener() {
   page.onConsoleMessage = function(msg) {
-    if (msg.substring(0, logToken.length) == logToken) {
+    if (msg.substring(0, logToken.length) === logToken) {
       var commandString = msg.substring(logToken.length);
-      if (commandString == 'started') {
+      if (commandString === 'started') {
         loggingWorks = true;
-      } else if(commandString == 'fail') {
+      } else if(commandString === 'fail') {
         someTestsFailed = true;
       }
     } else {

@@ -1,17 +1,14 @@
 (ns broadfcui.page.workspace.data.tab
   (:require
     [dmohs.react :as react]
-    [clojure.set :refer [union]]
-    clojure.string
-    goog.net.cookies
+    [clojure.string :as string]
     [broadfcui.common :as common]
     [broadfcui.common.components :as comps]
     [broadfcui.common.entity-table :refer [EntityTable]]
-    [broadfcui.common.gcs-file-preview :refer [GCSFilePreviewLink]]
     [broadfcui.common.icons :as icons]
     [broadfcui.common.modal :as modal]
-    [broadfcui.common.table-utils :as table-utils]
     [broadfcui.common.style :as style]
+    [broadfcui.common.table-utils :as table-utils]
     [broadfcui.config :as config]
     [broadfcui.page.workspace.data.copy-data-workspaces :as copy-data-workspaces]
     [broadfcui.page.workspace.data.entity-viewer :refer [EntityViewer]]
@@ -144,7 +141,7 @@
                              :column-meta
                              (filter :visible?)
                              (map :header)
-                             (clojure.string/join ","))}]
+                             (string/join ","))}]
         [:input {:style {:border "none" :backgroundColor "transparent" :cursor "pointer"
                          :color (:button-primary style/colors) :fontSize "inherit" :fontFamily "inherit"
                          :padding 0 :marginLeft "1em"}

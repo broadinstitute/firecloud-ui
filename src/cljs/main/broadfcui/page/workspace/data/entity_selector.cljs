@@ -1,13 +1,12 @@
 (ns broadfcui.page.workspace.data.entity-selector
   (:require
     [dmohs.react :as react]
-    [clojure.set :refer [union difference]]
-    [broadfcui.common :as common]
+    [clojure.set :as set]
     [broadfcui.common.components :as comps]
     [broadfcui.common.icons :as icons]
     [broadfcui.common.style :as style]
     [broadfcui.common.table :as table]
-    [broadfcui.common.table-utils :refer [default-render render-gcs-links add-right]]
+    [broadfcui.common.table-utils :as table-utils]
     [broadfcui.utils :as utils]
     ))
 
@@ -29,7 +28,7 @@
        (swap! state assoc :selected #{})))
    :render
    (fn [{:keys [state props]}]
-     (let [attribute-keys (apply union (map #(set (keys (% "attributes"))) (:entities props)))
+     (let [attribute-keys (apply set/union (map #(set (keys (% "attributes"))) (:entities props)))
            columns (fn [source?]
                      (into
                       [{:starting-width 40 :resizable? false :reorderable? false :sort-by :none
@@ -46,13 +45,13 @@
                                       (if (and (map? attr-value)
                                                (= (set (keys attr-value)) #{"entityName"}))
                                         (attr-value "entityName")
-                                        ((render-gcs-links (:selected-workspace-bucket props)) attr-value)))})
+                                        ((table-utils/render-gcs-links (:selected-workspace-bucket props)) attr-value)))})
                            attribute-keys)))
            data (fn [source?]
                   (replace
                    (mapv vector (range) (:entities props))
                    (if source?
-                     (difference (-> (:entities props) count range set) (:selected @state))
+                     (set/difference (-> (:entities props) count range set) (:selected @state))
                      (:selected @state))))
            ->row (fn [[index entity]]
                    (into
@@ -64,7 +63,7 @@
                                          :backgroundColor "#fff" :border (str "1px solid" (:line-default style/colors))}}
                            [table/Table {:width :narrow
                                          :toolbar
-                                         (add-right
+                                         (table-utils/add-right
                                           [comps/Button {:onClick #(if source?
                                                                      (swap! state assoc :selected (set (range (count (:entities props)))))
                                                                      (swap! state assoc :selected #{}))

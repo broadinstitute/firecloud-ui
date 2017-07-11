@@ -1,13 +1,13 @@
 (ns broadfcui.common.notifications
   (:require
-   [dmohs.react :as react]
-   [broadfcui.utils :as utils]
-   [broadfcui.config :as config]
-   [broadfcui.common.components :as comps]
-   [broadfcui.common.icons :as icons]
-   [broadfcui.common.style :as style]
-   [broadfcui.components.top-banner :as top-banner]
-   ))
+    [dmohs.react :as react]
+    [broadfcui.common.components :as comps]
+    [broadfcui.common.icons :as icons]
+    [broadfcui.common.style :as style]
+    [broadfcui.components.top-banner :as top-banner]
+    [broadfcui.config :as config]
+    [broadfcui.utils :as utils]
+    ))
 
 (defn render-alert [{:keys [cleared? link message title]} dismiss]
   (let [text-color "#eee"]
