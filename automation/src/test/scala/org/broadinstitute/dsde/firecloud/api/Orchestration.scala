@@ -95,18 +95,23 @@ trait Orchestration extends FireCloudClient with LazyLogging {
    *  Library requests
    */
 
-  def setLibraryAttributes(ns: String, name: String, attributes: Map[String, Any])(implicit token: AuthToken): String = {
-    putRequest(Config.FireCloud.orchApiUrl + "api/library/" + ns + "/" + name + "/metadata", attributes)
-  }
+  object library {
+    def setLibraryAttributes(ns: String, name: String, attributes: Map[String, Any])(implicit token: AuthToken): String = {
+      putRequest(Config.FireCloud.orchApiUrl + "api/library/" + ns + "/" + name + "/metadata", attributes)
+    }
 
-  def setDiscoverableGroups(ns: String, name: String, groupNames: List[String])(implicit token: AuthToken): String = {
-    putRequest(Config.FireCloud.orchApiUrl + "api/library/" + ns + "/" + name + "/discoverableGroups", groupNames)
-  }
+    def setDiscoverableGroups(ns: String, name: String, groupNames: List[String])(implicit token: AuthToken): String = {
+      putRequest(Config.FireCloud.orchApiUrl + "api/library/" + ns + "/" + name + "/discoverableGroups", groupNames)
+    }
 
-  def publishWorkspace(ns: String, name: String)(implicit token: AuthToken): String = {
-    postRequest(Config.FireCloud.orchApiUrl + "api/library/" + ns + "/" + name + "/published")
-  }
+    def publishWorkspace(ns: String, name: String)(implicit token: AuthToken): String = {
+      postRequest(Config.FireCloud.orchApiUrl + "api/library/" + ns + "/" + name + "/published")
+    }
 
+    def unpublishWorkspace(ns: String, name: String)(implicit token: AuthToken): String = {
+      deleteRequest(Config.FireCloud.orchApiUrl + "api/library/" + ns + "/" + name + "/published")
+    }
+  }
 
   /*
    *  Workspace requests

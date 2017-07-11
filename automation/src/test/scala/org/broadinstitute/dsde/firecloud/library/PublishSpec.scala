@@ -2,7 +2,7 @@ package org.broadinstitute.dsde.firecloud.library
 
 import java.util.UUID
 
-import org.broadinstitute.dsde.firecloud.Config
+import org.broadinstitute.dsde.firecloud.{CleanUp, Config}
 import org.broadinstitute.dsde.firecloud.auth.AuthToken
 import org.broadinstitute.dsde.firecloud.data.Library
 import org.broadinstitute.dsde.firecloud.pages._
@@ -11,39 +11,24 @@ import org.scalatest._
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutor}
 
 
-class PublishAsCuratorSpec() extends FreeSpec with WebBrowserSpec with BeforeAndAfterAll with BeforeAndAfterEach {
+class PublishSpec() extends FreeSpec with WebBrowserSpec with CleanUp {
   implicit val ec: ExecutionContextExecutor = ExecutionContext.global
 
-  val unpubName: String = "unpub-" + UUID.randomUUID.toString + "-Publish"
-  val unpubWAttributesName: String = "unpub-withAttributes" + UUID.randomUUID.toString + "-Publish"
   val namespace: String = Config.Projects.default
-  implicit val authToken = AuthToken(Config.Users.curator)
-
-  override def beforeAll(): Unit = {
-    // create workspaces
-    api.workspaces.create(namespace, unpubName)
-    api.workspaces.create(namespace, unpubWAttributesName)
-    api.setLibraryAttributes(namespace, unpubWAttributesName, Library.metadata)
-  }
-
-  override def beforeEach(): Unit = {
-  }
-
-  override def afterEach(): Unit = {
-  }
-
-  override def afterAll(): Unit = {
-    api.workspaces.delete(namespace, unpubName)
-    api.workspaces.delete(namespace, unpubWAttributesName)
-  }
+  implicit val curatorAuthToken = AuthToken(Config.Users.curator)
+  val ronAuthToken = AuthToken(Config.Users.ron)
 
 
   "As a curator" - {
     "on an unpublished workspace" - {
       "without required library attributes" - {
         "publish should open error modal " in withWebDriver { implicit driver =>
+          val wsName = "PublishSpec_curator_unpub_" + randomUuid
+          api.workspaces.create(namespace, wsName)
+          register cleanUp api.workspaces.delete(namespace, wsName)
+
           signIn(Config.Users.curator)
-          val page = new WorkspaceSummaryPage(namespace, unpubName)
+          val page = new WorkspaceSummaryPage(namespace, wsName)
           page.open
           val errormodal = page.ui.clickPublishButton()
           assert(errormodal.validateLocation)
@@ -51,59 +36,50 @@ class PublishAsCuratorSpec() extends FreeSpec with WebBrowserSpec with BeforeAnd
       }
       "with required library attributes" - {
         "should be publishable " in withWebDriver { implicit driver =>
+          val wsName = "PublishSpec_curator_unpub_withAttributes_" + randomUuid
+          api.workspaces.create(namespace, wsName)
+          api.library.setLibraryAttributes(namespace, wsName, Library.metadata)
+          register cleanUp api.workspaces.delete(namespace, wsName)
+
           signIn(Config.Users.curator)
-          val page = new WorkspaceSummaryPage(namespace, unpubWAttributesName)
+          val page = new WorkspaceSummaryPage(namespace, wsName)
           page.open
           assert(page.ui.hasPublishButton)
         }
       }
     }
+    "a published workspace" - {
+      "should be visible in the library table" in withWebDriver { implicit driver =>
+        val wsName = "PublishSpec_curator_pub_" + randomUuid
+        api.workspaces.create(namespace, wsName)
+        val data = Library.metadata + ("library:datasetName" -> wsName)
+        api.library.setLibraryAttributes(namespace, wsName, data)
+        api.library.publishWorkspace(namespace, wsName)
+        register cleanUp api.library.unpublishWorkspace(namespace, wsName)
+        register cleanUp api.workspaces.delete(namespace, wsName)
+
+        signIn(Config.Users.curator)
+        val page = new DataLibraryPage()
+        page.open
+        assert(page.ui.hasDataset(wsName))
+      }
   }
-}
-
-
-
-class PublishAsNonCuratorSpec() extends FreeSpec with WebBrowserSpec with BeforeAndAfterAll with BeforeAndAfterEach {
-
-  implicit val ec: ExecutionContextExecutor = ExecutionContext.global
-
-  val unpubName: String = "unpub-" + UUID.randomUUID.toString + "-Publish"
-  val unpubWAttributesName: String = "unpub-withAttributes-" + UUID.randomUUID.toString + "-Publish"
-  val namespace: String = Config.Projects.default
-  implicit val authToken = AuthToken(Config.Users.harry)
-
-  override def beforeAll(): Unit = {
-    // create workspaces
-    api.workspaces.create(namespace, unpubName)
-    api.updateAcl(namespace, unpubName, Config.Users.ron.email, "WRITER", canshare = false)
-    api.workspaces.create(namespace, unpubWAttributesName)
-    api.setLibraryAttributes(namespace, unpubWAttributesName, Library.metadata)
-    api.updateAcl(namespace, unpubWAttributesName, Config.Users.ron.email, "WRITER", canshare = false)
-  }
-
-  override def beforeEach(): Unit = {
-  }
-
-  override def afterEach(): Unit = {
-  }
-
-  override def afterAll(): Unit = {
-    api.workspaces.delete(namespace, unpubName)
-    api.workspaces.delete(namespace, unpubWAttributesName)
-  }
-
-
   "As a non-curator" - {
     "An unpublished workspace" - {
       "with required org.broadinstitute.dsde.firecloud.library attributes" - {
         "should not be publishable " in withWebDriver { implicit driver =>
-          signIn(Config.Users.ron)
+          val wsName = "PublishSpec_unpub_withAttributes_" + randomUuid
+          api.workspaces.create(namespace, wsName)(ronAuthToken)
+          api.library.setLibraryAttributes(namespace, wsName, Library.metadata)(ronAuthToken)
+          register cleanUp api.workspaces.delete(namespace, wsName)
 
-          val page = new WorkspaceSummaryPage(namespace, unpubName)
+          signIn(Config.Users.ron)
+          val page = new WorkspaceSummaryPage(namespace, wsName)
           page.open
           assert(!page.ui.hasPublishButton)
         }
       }
+    }
     }
   }
 }
