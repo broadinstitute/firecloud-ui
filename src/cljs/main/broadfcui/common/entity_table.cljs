@@ -147,13 +147,13 @@
        (fn [{:keys [query-params on-done]}]
          (if (empty? entity-types)
            (on-done {:total-count 0 :filtered-count 0 :results []})
-           (let [{:keys [current-page rows-per-page filter-text sort-column sort-order]} query-params
+           (let [{:keys [page-number rows-per-page filter-text sort-column sort-order]} query-params
                  entity-type (nth entity-types selected-filter-index)]
              (endpoints/call-ajax-orch
               {:endpoint (endpoints/get-entities-paginated
                           (:workspace-id props)
                           (name entity-type)
-                          {"page" current-page
+                          {"page" page-number
                            "pageSize" rows-per-page
                            "filterTerms" (js/encodeURIComponent filter-text)
                            "sortField" sort-column
