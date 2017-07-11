@@ -47,12 +47,12 @@
    (fn [{:keys [props state]} & [method-ref]]
      (let [{:keys [namespace name snapshotId]} (or method-ref props)]
        (endpoints/call-ajax-orch
-         {:endpoint (endpoints/get-agora-method namespace name snapshotId)
-          :headers utils/content-type=json
-          :on-done (fn [{:keys [success? get-parsed-response status-text]}]
-                     (if success?
-                       (swap! state assoc :loaded-method (utils/log (get-parsed-response)))
-                       (swap! state assoc :error status-text)))})))})
+        {:endpoint (endpoints/get-agora-method namespace name snapshotId)
+         :headers utils/content-type=json
+         :on-done (fn [{:keys [success? get-parsed-response status-text]}]
+                    (if success?
+                      (swap! state assoc :loaded-method (get-parsed-response))
+                      (swap! state assoc :error status-text)))})))})
 
 
 (defn- input-output-list [{:keys [values ref-prefix invalid-values editing? all-values]}]
@@ -123,7 +123,7 @@
                                                          " to the Google Bucket associated with this workspace."))
                                    :on-success (:on-submission-success props)})])
          (this :-render-main)
-         (clear-both)]]))
+         (common/clear-both)]]))
    :-render-sidebar
    (fn [{:keys [props state this]}]
      (let [{:keys [editing? loaded-config inputs-outputs]} @state
@@ -136,7 +136,7 @@
                   :top (when-not (:sidebar-visible? @state) 4)
                   :width 290}}
          (let [{:keys [locked?]} @state
-               can-edit? (access-greater-than? (:access-level props) "READER")
+               can-edit? (common/access-greater-than? (:access-level props) "READER")
                snapshot-id (get-in config [:methodRepoMethod :methodVersion])
                config-id (ws-common/config->id config)]
            [:div {}
@@ -170,8 +170,8 @@
                [comps/SidebarButton {:color :exception-state :margin :top
                                      :text "Cancel Editing" :icon :cancel
                                      :onClick (fn []
-                                                (this :cancel-editing)
-                                                (swap! state assoc :editing? false))}]))]))]))
+                                                (swap! state assoc :editing? false)
+                                                (this :cancel-editing))}]))]))]))
    :-render-main
    (fn [{:keys [state this]}]
      (let [{:keys [editing? loaded-config wdl-parse-error inputs-outputs methods]} @state
@@ -198,7 +198,7 @@
            (style/create-identity-select {:ref "rootentitytype"
                                           :defaultValue (:rootEntityType config)
                                           :style {:width 500}}
-                                         root-entity-types)
+                                         common/root-entity-types)
            [:div {:style {:padding "0.5em 0 1em 0"}} (:rootEntityType config)]))
         [:datalist {:id "inputs-datalist"}
          [:option {:value "this."}]
@@ -247,11 +247,12 @@
    (fn [{:keys [props state refs]}]
      (let [{:keys [workspace-id]} props
            config (-> @state :loaded-config :methodConfiguration)
-           [name root-entity-type] (get-text refs "confname" "rootentitytype")
+           [name root-entity-type] (common/get-text refs "confname" "rootentitytype")
            deref-vals (fn [io-key ref-prefix]
                         (->> (io-key (:inputs-outputs @state))
                              (map :name)
-                             (map (juxt identity #(get-text refs (str ref-prefix "_" %))))
+                             (map (juxt identity #(common/get-text refs (str ref-prefix "_" %))))
+                             (remove (comp empty? val))
                              (into {})))]
        (swap! state assoc :blocker "Updating...")
        (endpoints/call-ajax-orch
@@ -288,13 +289,13 @@
                                      (swap! state assoc :error (:message (get-parsed-response)))))}))
                     (swap! state assoc :error status-text)))}))
    :load-new-method-template
-   (fn [{:keys [state refs props]} new-snapshot-id]
+   (fn [{:keys [state refs]} new-snapshot-id]
      (let [[method-namespace method-name] (map (fn [key]
                                                  (get-in (:loaded-config @state)
                                                          [:methodConfiguration :methodRepoMethod key]))
                                                [:methodNamespace :methodName])
            config-namespace+name (select-keys (get-in @state [:loaded-config :methodConfiguration])
-                                              [:namespace :name :rootEntityType])
+                                              [:namespace :name])
            method-ref {:methodNamespace method-namespace
                        :methodName method-name
                        :methodVersion new-snapshot-id}]
