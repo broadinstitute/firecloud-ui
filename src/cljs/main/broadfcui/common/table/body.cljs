@@ -106,13 +106,7 @@
             properties (merge props (utils/restructure joined-columns start-column-drag column-reset))]
         [:div {:style (merge {:width "-webkit-fit-content" :minWidth "100%"} (:table style))}
          (header properties)
-         [:div {:style {:position "relative"}}
-          [comps/DelayedBlocker {:ref "blocker" :banner "Loading..."}]
-          (body properties)]]))
-    :component-will-receive-props
-    (fn [{:keys [props next-props refs]}]
-      (when-not (= (:loading? props) (:loading? next-props))
-        ((@refs "blocker") (if (:loading? next-props) :show :hide))))
+         (body properties)]))
     :-on-mouse-move
     (fn [{:keys [props state locals]} e]
       (when (:dragging? @state)

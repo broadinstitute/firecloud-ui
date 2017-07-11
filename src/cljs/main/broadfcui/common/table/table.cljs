@@ -52,8 +52,8 @@
          (swap! state assoc :query-params new-state))
        different?))
    :refresh-rows
-   (fn [{:keys [props state]} & [reset-page-number?]]
-     (swap! state assoc :loading? true)
+   (fn [{:keys [props state refs]} & [reset-page-number?]]
+     ((@refs "blocker") :show)
      (let [{:keys [data fetch-data]} props
            data-source (if data (table-utils/local data) fetch-data)
            query-params (merge (:query-params @state)
@@ -61,11 +61,11 @@
        (data-source {:columns (-> props :body :columns)
                      :query-params query-params
                      :on-done (fn [{:keys [total-count filtered-count results]}]
+                                ((@refs "blocker") :hide)
                                 (swap! state assoc
                                        :total-count total-count
                                        :filtered-count filtered-count
                                        :rows results
-                                       :loading? false
                                        :query-params query-params))})))
    :get-default-props
    (fn []
@@ -112,14 +112,15 @@
    :render
    (fn [{:keys [props state]}]
      (let [props (utils/deep-merge default-props props)
-           {:keys [rows column-display filtered-count query-params loading?]} @state
+           {:keys [rows column-display filtered-count query-params]} @state
            {:keys [body toolbar paginator]} props
            {:keys [empty-message columns behavior external-query-params]} body
            {:keys [fixed-column-count allow-no-sort?]} behavior
            total-count (some :total-count [props @state])
            query-params (merge query-params (select-keys props external-query-params))
            update-column-display #(swap! state assoc :column-display %)]
-       [:div {}
+       [:div {:style {:position "relative"}}
+        [comps/DelayedBlocker {:ref "blocker" :banner "Loading..."}]
         [:div {:style (:style toolbar)}
          (when (:reorderable-columns? behavior)
            (let [button-props (:column-edit-button toolbar)]
@@ -143,7 +144,7 @@
             (merge
              body
              (select-keys query-params [:sort-column :sort-order])
-             (utils/restructure rows column-display update-column-display fixed-column-count allow-no-sort? loading?)
+             (utils/restructure rows column-display update-column-display fixed-column-count allow-no-sort?)
              {:set-sort (fn [col order] (swap! state update :query-params
                                                merge {:sort-column col :sort-order order}))})])]
         [Paginator
