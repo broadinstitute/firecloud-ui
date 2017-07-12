@@ -40,4 +40,4 @@ services:
     volumes:
       - $WORKING_DIR/logs:/var/log/syslog-ng
     ports:
-      - "515:515/udp"
+      - "515:514/udp"
