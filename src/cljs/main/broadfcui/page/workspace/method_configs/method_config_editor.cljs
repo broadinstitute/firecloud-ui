@@ -220,12 +220,13 @@
                  error (get invalid-values name-kwd)]
              [:div {:key name :style {:marginBottom "1rem"}}
               (list
-               [:div {:style {:margin "0 0.5rem 0.5rem 0" :padding "0.5rem" :display "inline-block"
+               [:div {:style {:display "inline-block"
+                              :margin "0 0.5rem 0.5rem 0" :padding "0.5rem"
                               :backgroundColor (:background-light style/colors)
                               :border style/standard-line :borderRadius 2}}
                 (str name ": (" (when optional "optional ") type ")")]
                (when (and error (not editing?) (not optional))
-                 (icons/icon {:style {:marginLeft "0.5rem" :alignSelf "center"
+                 (icons/icon {:style {:marginRight "0.5rem" :alignSelf "center"
                                       :color (:exception-state style/colors)}}
                              :error))
                (when editing?
@@ -237,11 +238,12 @@
                (when-not editing?
                  (or field-value [:span {:style {:fontStyle "italic"}} "No value entered"])))
               (when (and error (not optional))
-                [:div {:style {:padding "0.5em" :marginBottom "0.5rem"
-                               :backgroundColor (:exception-state style/colors)
-                               :display "inline-block"
-                               :border style/standard-line :borderRadius 2}}
-                 error])]))
+                [:div {}
+                 [:div {:style {:display "inline-block"
+                                :padding "0.5em" :marginBottom "0.5rem"
+                                :backgroundColor (:exception-state style/colors)
+                                :border style/standard-line :borderRadius 2}}
+                  error]])]))
          all-values))))
    :-commit
    (fn [{:keys [props state refs]}]
