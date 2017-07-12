@@ -133,6 +133,7 @@ class MethodConfigTabSpec extends FreeSpec with WebBrowserSpec with CleanUp {
     val methodConfigDetailsPage = workspaceMethodConfigPage.importMethodConfigFromRepo(TestData.SimpleMethodConfig.namespace,
       TestData.SimpleMethodConfig.name, TestData.SimpleMethodConfig.snapshotId, methodConfigName, TestData.SimpleMethodConfig.rootEntityType)
     val submissionDetailsPage = methodConfigDetailsPage.launchAnalysis(TestData.SimpleMethodConfig.rootEntityType, TestData.SingleParticipant.entityId)
+    submissionDetailsPage.waitUntilSubmissionCompletes()  //This feels like the wrong way to do this?
     assert(submissionDetailsPage.verifyWorkflowFailed())
   }
 
