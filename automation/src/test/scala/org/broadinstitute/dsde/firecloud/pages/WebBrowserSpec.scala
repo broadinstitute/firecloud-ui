@@ -9,13 +9,14 @@ import com.typesafe.scalalogging.LazyLogging
 import org.broadinstitute.dsde.firecloud.api.Orchestration
 import org.broadinstitute.dsde.firecloud.auth.Credentials
 import org.broadinstitute.dsde.firecloud.{Config, WebBrowserUtil}
-import org.openqa.selenium.{OutputType, TakesScreenshot, WebDriver}
 import org.openqa.selenium.chrome.ChromeDriverService
 import org.openqa.selenium.remote.{Augmenter, DesiredCapabilities, LocalFileDetector, RemoteWebDriver}
+import org.openqa.selenium.{OutputType, TakesScreenshot, WebDriver}
 import org.scalatest.Suite
 
 import scala.sys.SystemProperties
 import scala.util.Random
+import scala.util.control.NonFatal
 
 /**
   * Base spec for writing FireCloud web browser tests.
@@ -49,8 +50,8 @@ trait WebBrowserSpec extends WebBrowserUtil with LazyLogging { self: Suite =>
         testCode(driver)
       }
     } finally {
-      driver.quit()
-      service.stop()
+      try driver.quit() catch nonFatalAndLog
+      try service.stop() catch nonFatalAndLog
     }
   }
 
@@ -63,7 +64,7 @@ trait WebBrowserSpec extends WebBrowserUtil with LazyLogging { self: Suite =>
         testCode(driver)
       }
     } finally {
-      driver.quit()
+      try driver.quit() catch nonFatalAndLog
     }
   }
 
@@ -120,11 +121,34 @@ trait WebBrowserSpec extends WebBrowserUtil with LazyLogging { self: Suite =>
 
           val html = tagName("html").element.underlying.getAttribute("outerHTML")
           new FileOutputStream(new File(htmlSourceFileName)).write(html.getBytes)
-        } catch {
-          case t: Throwable =>
-            logger.error(s"FAILED TO SAVE SCREENSHOT $fileName: ${t.getMessage}")
-        }
+        } catch nonFatalAndLog(s"FAILED TO SAVE SCREENSHOT $fileName")
         throw t
     }
+  }
+
+  /**
+    * Return a partial function that logs and suppresses any "non-fatal"
+    * exceptions. To be used liberally during test clean-up operations to
+    * avoid overshadowing exceptions and failures from the test itself:
+    *
+    * <pre>
+    *   try cleanUp() catch nonFatalAndLog
+    * </pre>
+    */
+  def nonFatalAndLog: PartialFunction[Throwable, Unit] = {
+    case NonFatal(e) => logger.warn(e.getMessage)
+  }
+
+  /**
+    * Return a partial function that logs and suppresses any "non-fatal"
+    * exceptions. To be used liberally during test clean-up operations to
+    * avoid overshadowing exceptions and failures from the test itself:
+    *
+    * <pre>
+    *   try cleanUp("Oops") catch nonFatalAndLog
+    * </pre>
+    */
+  def nonFatalAndLog(message: String): PartialFunction[Throwable, Unit] = {
+    case NonFatal(e) => logger.warn(s"$message: ${e.getMessage}" )
   }
 }
