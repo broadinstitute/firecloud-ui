@@ -134,6 +134,10 @@ class LaunchAnalysisModal(implicit webDriver: WebDriver) extends FireCloudView {
     ui.isErrorTextPresent(errorText)
   }
 
+  def verifyMissingInputsError(errorText: String): Boolean = {
+    ui.isErrorTextPresent(errorText)
+  }
+
   def closeModal() = {
     ui.closeModal()
   }
