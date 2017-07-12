@@ -29,7 +29,7 @@ class SignInPage(val baseUrl: String)(implicit webDriver: WebDriver) extends Fir
   private def beginSignIn(): GoogleSignInPopup = {
     val initialWindowHandles = windowHandles
 
-    gestures.clickSignIn()
+    ui.clickSignIn()
     await condition (windowHandles.size > 1)
 
     val popupWindowHandle = (windowHandles -- initialWindowHandles).head
@@ -38,7 +38,7 @@ class SignInPage(val baseUrl: String)(implicit webDriver: WebDriver) extends Fir
     new GoogleSignInPopup
   }
 
-  object gestures {
+  object ui {
 
     private val signInButton = testId("sign-in-button")
 

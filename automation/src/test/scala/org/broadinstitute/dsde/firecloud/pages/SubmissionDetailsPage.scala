@@ -17,21 +17,21 @@ class SubmissionDetailsPage(namespace: String, name: String)(implicit webDriver:
   private val SUBMISSION_COMPLETE_STATS = Array("Done")
 
   def isSubmissionDone():Boolean = {
-    val status = gestures.getSubmissionStatus()
+    val status = ui.getSubmissionStatus()
     (SUBMISSION_COMPLETE_STATS.contains(status))
   }
 
   def getSubmissionId(): String = {
-    gestures.getSubmissionId()
+    ui.getSubmissionId()
   }
 
   def verifyWorkflowSucceeded(): Boolean = {
-    val status = gestures.getWorkflowStatus()
+    val status = ui.getWorkflowStatus()
     SUCCESS_STATS.contains(status)
   }
 
   def verifyWorkflowFailed(): Boolean = {
-    val status = gestures.getWorkflowStatus()
+    val status = ui.getWorkflowStatus()
     FAILED_STATS.contains(status)
   }
 
@@ -41,7 +41,7 @@ class SubmissionDetailsPage(namespace: String, name: String)(implicit webDriver:
     }
   }
 
-  object gestures {
+  trait UI extends super.UI {
     private val submissionStatusQuery: Query = testId("submission-status")
     private val workflowStatusQuery: Query = testId("workflow-status")
     private val submissionIdQuery: Query = testId("submission-id")
@@ -65,5 +65,5 @@ class SubmissionDetailsPage(namespace: String, name: String)(implicit webDriver:
       submissionIdElement.get.text
     }
   }
-
+  object ui extends UI
 }
