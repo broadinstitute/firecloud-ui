@@ -58,17 +58,20 @@
   {:get-initial-state
    (fn [{:keys [props]}]
      {:editing? false
-      :sidebar-visible? true
-      :suggestions (->> (get-in props [:workspace :workspace :workspace-attributes])
-                        keys
-                        (map (comp (partial str "workspace.") name))
-                        (concat ["this." "workspace."]))})
+      :sidebar-visible? true})
    :render
    (fn [{:keys [state this]}]
      (cond (every? @state [:loaded-config :methods]) (this :-render-display)
            (:error @state) (style/create-server-error-message (:error @state))
            :else [:div {:style {:textAlign "center"}}
                   [comps/Spinner {:text "Loading Method Configuration..."}]]))
+   :component-will-mount
+   (fn [{:keys [props locals]}]
+     (swap! locals assoc :engine (comps/create-bloodhound-engine
+                                  {:local (->> (get-in props [:workspace :workspace :workspace-attributes])
+                                               keys
+                                               (map (comp (partial str "workspace.") name))
+                                               (concat ["this." "workspace."]))})))
    :component-did-mount
    (fn [{:keys [state props refs this]}]
      (this :-load-validated-method-config)
@@ -193,9 +196,9 @@
                :ref-prefix "out"
                :invalid-values (:invalidOutputs loaded-config)})]))
    :-render-input-output-list
-   (fn [{:keys [state]}
+   (fn [{:keys [state locals]}
         {:keys [values ref-prefix invalid-values all-values]}]
-     (let [{:keys [editing? suggestions]} @state]
+     (let [{:keys [editing?]} @state]
        (create-section
         (map
          (fn [{:keys [name inputType outputType optional]}]
@@ -218,7 +221,7 @@
                  [comps/Typeahead {:ref (str ref-prefix "_" name)
                                    :field-attributes {:defaultValue field-value
                                                       :style {:width 500 :margin 0}}
-                                   :local suggestions
+                                   :engine (:engine @locals)
                                    :behavior {:minLength 1}}])
                (when-not editing?
                  (or field-value [:span {:style {:fontStyle "italic"}} "No value entered"])))
@@ -238,12 +241,12 @@
         {:endpoint (endpoints/get-entity-types (:workspace-id props))
          :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                     (if success?
-                      (swap! state update :suggestions concat
-                             (->> (get-parsed-response)
-                                  vals
-                                  (map :attributeNames)
-                                  flatten
-                                  (map (partial str "this."))))
+                      (.add (:engine @locals)
+                            (clj->js (->> (get-parsed-response)
+                                          vals
+                                          (map :attributeNames)
+                                          flatten
+                                          (map (partial str "this.")))))
                       ;; FIXME: :data-attribute-load-error is unused
                       (swap! state assoc :data-attribute-load-error status-text)))}))
      (let [{:keys [loaded-config inputs-outputs]} @state]
