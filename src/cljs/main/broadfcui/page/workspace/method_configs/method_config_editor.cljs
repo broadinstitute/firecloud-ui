@@ -82,18 +82,6 @@
                                                      (utils/map-values (partial map :snapshotId))))
                     ;; FIXME: :error-message is unused
                     (swap! state assoc :error-message status-text)))})
-     (endpoints/call-ajax-orch
-      {:endpoint (endpoints/get-entity-types (:workspace-id props))
-       :on-done (fn [{:keys [success? get-parsed-response status-text]}]
-                  (if success?
-                    (swap! state update :suggestions concat
-                           (->> (get-parsed-response)
-                                vals
-                                (map :attributeNames)
-                                flatten
-                                (map (partial str "this."))))
-                    ;; FIXME: :data-attribute-load-error is unused
-                    (swap! state assoc :data-attribute-load-error status-text)))})
      (set! (.-onScrollHandler this)
            (fn []
              (when-let [sidebar (@refs "sidebar")]
@@ -151,10 +139,7 @@
                     [[comps/SidebarButton {:style :light :color :button-primary
                                            :text "Edit Configuration" :icon :edit
                                            :disabled? (when locked? "The workspace is locked")
-                                           :onClick #(swap! state assoc
-                                                            :editing? true
-                                                            :original-config loaded-config
-                                                            :original-inputs-outputs inputs-outputs)}]
+                                           :onClick #(this :-begin-editing)}]
                      [comps/SidebarButton {:style :light :color :exception-state :margin :top
                                            :text "Delete" :icon :delete
                                            :disabled? (when locked? "The workspace is locked")
@@ -245,6 +230,33 @@
                                 :border style/standard-line :borderRadius 2}}
                   error]])]))
          all-values))))
+   :-begin-editing
+   (fn [{:keys [props state locals]}]
+     (when-not (:entities-loaded? @locals)
+       (swap! locals assoc :entities-loaded? true)
+       (endpoints/call-ajax-orch
+        {:endpoint (endpoints/get-entity-types (:workspace-id props))
+         :on-done (fn [{:keys [success? get-parsed-response status-text]}]
+                    (if success?
+                      (swap! state update :suggestions concat
+                             (->> (get-parsed-response)
+                                  vals
+                                  (map :attributeNames)
+                                  flatten
+                                  (map (partial str "this."))))
+                      ;; FIXME: :data-attribute-load-error is unused
+                      (swap! state assoc :data-attribute-load-error status-text)))}))
+     (let [{:keys [loaded-config inputs-outputs]} @state]
+       (swap! state assoc :editing? true :original-config loaded-config :original-inputs-outputs inputs-outputs)))
+   :-cancel-editing
+   (fn [{:keys [state props refs]}]
+     (let [original-loaded-config (:original-config @state)
+           original-inputs-outputs (:original-inputs-outputs @state)
+           method-ref (-> original-loaded-config :methodConfiguration :methodRepoMethod)]
+       (swap! state assoc :editing? false :loaded-config original-loaded-config :inputs-outputs original-inputs-outputs)
+       ((@refs "methodDetailsViewer") :load-agora-method {:namespace (:methodNamespace method-ref)
+                                                          :name (:methodName method-ref)
+                                                          :snapshotId (:methodVersion method-ref)})))
    :-commit
    (fn [{:keys [props state refs]}]
      (let [{:keys [workspace-id]} props
@@ -329,13 +341,4 @@
                                          (swap! state assoc :error (:message (get-parsed-response))))))})
                         (do
                           (swap! state assoc :blocker nil :wdl-parse-error (:message response))
-                          (comps/push-error (style/create-server-error-message (:message response)))))))})))
-   :-cancel-editing
-   (fn [{:keys [state props refs]}]
-     (let [original-loaded-config (:original-config @state)
-           original-inputs-outputs (:original-inputs-outputs @state)
-           method-ref (-> original-loaded-config :methodConfiguration :methodRepoMethod)]
-       (swap! state assoc :editing? false :loaded-config original-loaded-config :inputs-outputs original-inputs-outputs)
-       ((@refs "methodDetailsViewer") :load-agora-method {:namespace (:methodNamespace method-ref)
-                                                          :name (:methodName method-ref)
-                                                          :snapshotId (:methodVersion method-ref)})))})
+                          (comps/push-error (style/create-server-error-message (:message response)))))))})))})
