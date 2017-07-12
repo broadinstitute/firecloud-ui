@@ -60,6 +60,7 @@ trap 'cleanup ; printf "${RED}Tests Failed For Unexpected Reasons${NC}\n"'\
 
 # build and run the composed services
 echo "HOST IP: $DOCKERHOST"
+docker-compose -f hub-compose.yml pull
 docker-compose -f hub-compose.yml up -d
 docker-compose -f hub-compose.yml scale chrome=$NUM_NODES
 

@@ -38,6 +38,6 @@ services:
   logs:
     image: bobrik/syslog-ng
     volumes:
-      - $WORKING_DIR/logs:/var/log/syslog-ng
+      - $WORKING_DIR/logs:/var/log/syslog-ng:rw
     ports:
       - "515:514/udp"
