@@ -68,7 +68,7 @@
          {:keys [runningSubmissionsCount]} :workspaceSubmissionStats} workspace
         status (common/compute-status workspace)
         publishable? (and curator? (or catalog-with-read? owner?))
-        {:keys [sidebar-visible? editing?]
+        {:keys [editing?]
          {:keys [library-schema]} :server-response} @state]
     [:div {:style {:flex "0 0 270px" :paddingRight 30}}
      [:span {:id label-id}
@@ -287,8 +287,7 @@
 (react/defc Summary
   {:get-initial-state
    (fn []
-     {:sidebar-visible? true
-      :label-id (gensym "status")
+     {:label-id (gensym "status")
       :body-id (gensym "summary")})
    :render
    (fn [{:keys [refs state props this]}]

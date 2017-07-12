@@ -198,7 +198,7 @@
    (fn [{:keys [state]}]
      (let [{:keys [body-id]} @state]
        [:div {:style {:padding "1rem"}}
-        [:style {}                                          ; Yeah, yeah, they're overrides, so sue me.
+        [:style {} ; Yeah, yeah, they're overrides, so sue me.
          ".menu .active {background-color: #457fd2; color: white !important;}
          .menu {padding: 0;}
          .menu > li > span {display: block; padding: 0.7rem 1rem; line-height: 1;}
