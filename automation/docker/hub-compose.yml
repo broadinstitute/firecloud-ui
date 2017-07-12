@@ -10,7 +10,7 @@ services:
     logging:
       driver: syslog
       options:
-        syslog-address: udp://localhost:514/
+        syslog-address: udp://localhost:515/
         tag: hub
 
 
@@ -33,11 +33,11 @@ services:
     logging:
       driver: syslog
       options:
-        syslog-address: udp://localhost:514/
+        syslog-address: udp://localhost:515/
 
   logs:
     image: bobrik/syslog-ng
     volumes:
       - $WORKING_DIR/logs:/var/log/syslog-ng
     ports:
-      - "514:514/udp"
+      - "515:515/udp"
