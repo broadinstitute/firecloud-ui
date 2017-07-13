@@ -23,26 +23,27 @@
      [:div {}
       (cond
         (:modal? @state)
-        (modals/render-message
-         {:text "Are you sure you want to delete this group?"
-          :on-confirm (fn []
-                        (net/render-with-ajax
-                         (:group-response @state)
-                         (this :-delete-group)
-                         {:loading-text "Deleting group..."
-                          :rephrase-error
-                          #(if (= 409 (:status-code %))
-                             "Sorry you are unable to delete this group because it is in use"
-                             (get-in % [:parsed-response :message]))}))})
+        (if (:deleting? @state)
+          [comps/Blocker {:banner "Deleting Group"}]
+          (modals/render-message
+           {:text "Are you sure you want to delete this group?"
+            :on-confirm (fn []
+                          (swap! state assoc :deleting? true)
+                          (net/render-with-ajax
+                           (:delete-response @state)
+                           (this :-delete-group)
+                           {:rephrase-error
+                            #(if (= 409 (:status-code %))
+                               "Sorry you are unable to delete this group because it is in use"
+                               (get-in % [:parsed-response :message]))}))}))
         (:error? @state)
         (modals/render-error
          {:text (:error-message @state)
-          :on-confirm #(swap! state dissoc :error? :modal?)
           :on-dismiss #(swap! state dissoc :error? :modal?)}))
-     (net/render-with-ajax
-      (:groups-response @state)
-      #(this :-render-groups-table)
-      {:loading-text "Loading Groups..."})])
+      (net/render-with-ajax
+       (:groups-response @state)
+       #(this :-render-groups-table)
+       {:loading-text "Loading Groups..."})])
    :component-did-mount
    (fn [{:keys [this]}]
      (this :-load-data))
@@ -103,7 +104,6 @@
                {:on-success #(this :-load-data)}]))}]]}}])
    :-delete-group
    (fn [{:keys [state this]}]
-     (swap! state assoc :deleting? true)
      (endpoints/call-ajax-orch
       {:endpoint (endpoints/delete-group (:group-name @state))
        :on-done (net/handle-ajax-response
