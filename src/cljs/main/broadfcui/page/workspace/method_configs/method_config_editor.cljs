@@ -21,7 +21,7 @@
 (defn- create-section-header [text]
   [:div {:style {:fontSize "125%" :fontWeight 500}} text])
 
-(defn- create-section [& children]
+(defn- create-section [children]
   [:div {:style {:padding "1em 0 2em 0"}} children])
 
 
@@ -54,70 +54,63 @@
                       (swap! state assoc :loaded-method (get-parsed-response))
                       (swap! state assoc :error status-text)))})))})
 
-
-(defn- input-output-list [{:keys [values ref-prefix invalid-values editing? all-values]}]
-  (create-section
-   [:div {}
-    (map
-     (fn [{:keys [name inputType outputType optional]}]
-       (let [type (or inputType outputType)
-             name-kwd (keyword name)
-             field-value (get values name-kwd "")
-             error (get invalid-values name-kwd)]
-         [:div {:key name :style {:marginBottom "1rem"}}
-          [:div {}
-           [:div {:style {:margin "0 0.5rem 0.5rem 0" :padding "0.5rem" :display "inline-block"
-                          :backgroundColor (:background-light style/colors)
-                          :border style/standard-line :borderRadius 2}}
-            (str name ": (" (when optional "optional ") type ")")]
-           (when (and error (not editing?) (not optional))
-             (icons/icon {:style {:marginLeft "0.5rem" :alignSelf "center"
-                                  :color (:exception-state style/colors)}}
-                         :error))
-           (when editing?
-             (style/create-text-field {:ref (str ref-prefix "_" name)
-                                       :list "inputs-datalist"
-                                       :defaultValue field-value
-                                       :style {:width 500}}))
-           (when-not editing?
-             (or field-value [:span {:style {:fontStyle "italic"}} "No value entered"]))]
-          (when (and error (not optional))
-            [:div {:style {:padding "0.5em" :marginBottom "0.5rem"
-                           :backgroundColor (:exception-state style/colors)
-                           :display "inline-block"
-                           :border style/standard-line :borderRadius 2}}
-             error])]))
-     all-values)]))
-
-
 (react/defc MethodConfigEditor
   {:get-initial-state
-   (fn []
+   (fn [{:keys [props]}]
      {:editing? false
       :sidebar-visible? true})
    :render
    (fn [{:keys [state this]}]
-     (cond (and (every? @state [:loaded-config :methods])
-                (contains? @state :locked?))
-           (this :-render-display)
-
+     (cond (every? @state [:loaded-config :methods]) (this :-render-display)
            (:error @state) (style/create-server-error-message (:error @state))
            :else [:div {:style {:textAlign "center"}}
                   [comps/Spinner {:text "Loading Method Configuration..."}]]))
+   :component-will-mount
+   (fn [{:keys [props locals]}]
+     (swap! locals assoc :engine (comps/create-bloodhound-engine
+                                  {:local (->> (get-in props [:workspace :workspace :workspace-attributes])
+                                               keys
+                                               (map (comp (partial str "workspace.") name))
+                                               (concat ["this." "workspace."]))})))
+   :component-did-mount
+   (fn [{:keys [state props refs this]}]
+     (this :-load-validated-method-config)
+     (endpoints/call-ajax-orch
+      {:endpoint endpoints/list-methods
+       :on-done (fn [{:keys [success? get-parsed-response status-text]}]
+                  (if success?
+                    (swap! state assoc :methods (->> (get-parsed-response)
+                                                     (map #(select-keys % [:namespace :name :snapshotId]))
+                                                     (group-by (juxt :namespace :name))
+                                                     (utils/map-values (partial map :snapshotId))))
+                    ;; FIXME: :error-message is unused
+                    (swap! state assoc :error-message status-text)))})
+     (set! (.-onScrollHandler this)
+           (fn []
+             (when-let [sidebar (@refs "sidebar")]
+               (let [visible (< (.-scrollY js/window) (.-offsetTop sidebar))]
+                 (when-not (= visible (:sidebar-visible? @state))
+                   (swap! state assoc :sidebar-visible? visible))))))
+     (.addEventListener js/window "scroll" (.-onScrollHandler this)))
+   :component-will-unmount
+   (fn [{:keys [this]}]
+     (.removeEventListener js/window "scroll" (.-onScrollHandler this)))
    :-render-display
    (fn [{:keys [props state this]}]
      (let [{:keys [loaded-config editing?]} @state
-           config (:methodConfiguration loaded-config)]
+           config (:methodConfiguration loaded-config)
+           locked? (get-in props [:workspace :workspace :isLocked])]
        [:div {}
         [comps/Blocker {:banner (:blocker @state)}]
         [:div {:style {:padding "1em 2em"}}
-         (this :-render-sidebar)
+         (this :-render-sidebar locked?)
          (when-not editing?
            [:div {:style {:float "right"}}
             (launch/render-button {:workspace-id (:workspace-id props)
                                    :config-id (ws-common/config->id config)
                                    :root-entity-type (:rootEntityType config)
-                                   :disabled? (cond (:locked? @state) "This workspace is locked."
+                                   :disabled? (cond locked?
+                                                    "This workspace is locked."
                                                     (not (:bucket-access? props))
                                                     (str "You do not currently have access"
                                                          " to the Google Bucket associated with this workspace."))
@@ -125,51 +118,43 @@
          (this :-render-main)
          (common/clear-both)]]))
    :-render-sidebar
-   (fn [{:keys [props state this]}]
+   (fn [{:keys [props state this]} locked?]
      (let [{:keys [editing? loaded-config inputs-outputs]} @state
-           config (:methodConfiguration loaded-config)]
+           config (:methodConfiguration loaded-config)
+           can-edit? (common/access-greater-than? (:access-level props) "READER")
+           config-id (ws-common/config->id config)]
        [:div {:style {:width 290 :float "left"}}
         [:div {:ref "sidebar"}]
-        (style/create-unselectable
-         :div
-         {:style {:position (when-not (:sidebar-visible? @state) "fixed")
-                  :top (when-not (:sidebar-visible? @state) 4)
-                  :width 290}}
-         (let [{:keys [locked?]} @state
-               can-edit? (common/access-greater-than? (:access-level props) "READER")
-               snapshot-id (get-in config [:methodRepoMethod :methodVersion])
-               config-id (ws-common/config->id config)]
-           [:div {}
-            (when (and can-edit? (not editing?))
-              (list
-               [comps/SidebarButton {:style :light :color :button-primary
-                                     :text "Edit Configuration" :icon :edit
-                                     :disabled? (when locked? "The workspace is locked")
-                                     :onClick #(swap! state assoc :editing? true :original-config loaded-config
-                                                      :original-inputs-outputs inputs-outputs)}]
-               [comps/SidebarButton {:style :light :color :exception-state :margin :top
-                                     :text "Delete" :icon :delete
-                                     :disabled? (when locked? "The workspace is locked")
-                                     :onClick #(modal/push-modal
-                                                [delete/DeleteDialog {:config-id config-id
-                                                                      :workspace-id (:workspace-id props)
-                                                                      :after-delete (:after-delete props)}])}]))
-
-            (when-not editing?
-              [comps/SidebarButton {:style :light :color :button-primary :margin (when can-edit? :top)
-                                    :text "Publish..." :icon :share
-                                    :onClick #(modal/push-modal
-                                               [publish/PublishDialog {:config-id config-id
-                                                                       :workspace-id (:workspace-id props)}])}])
-
-            (when editing?
-              (list
-               [comps/SidebarButton {:color :success-state
-                                     :text "Save" :icon :done
-                                     :onClick #(this :-commit)}]
-               [comps/SidebarButton {:color :exception-state :margin :top
-                                     :text "Cancel Editing" :icon :cancel
-                                     :onClick #(this :-cancel-editing)}]))]))]))
+        (apply style/create-unselectable :div
+               {:style {:position (when-not (:sidebar-visible? @state) "fixed")
+                        :top (when-not (:sidebar-visible? @state) 4)
+                        :width 290}}
+               (if editing?
+                 (list
+                  [comps/SidebarButton {:color :success-state
+                                        :text "Save" :icon :done
+                                        :onClick #(this :-commit)}]
+                  [comps/SidebarButton {:color :exception-state :margin :top
+                                        :text "Cancel Editing" :icon :cancel
+                                        :onClick #(this :-cancel-editing)}])
+                 (conj
+                  (when can-edit?
+                    [[comps/SidebarButton {:style :light :color :button-primary
+                                           :text "Edit Configuration" :icon :edit
+                                           :disabled? (when locked? "The workspace is locked")
+                                           :onClick #(this :-begin-editing)}]
+                     [comps/SidebarButton {:style :light :color :exception-state :margin :top
+                                           :text "Delete" :icon :delete
+                                           :disabled? (when locked? "The workspace is locked")
+                                           :onClick #(modal/push-modal
+                                                      [delete/DeleteDialog {:config-id config-id
+                                                                            :workspace-id (:workspace-id props)
+                                                                            :after-delete (:after-delete props)}])}]])
+                  [comps/SidebarButton {:style :light :color :button-primary :margin (when can-edit? :top)
+                                        :text "Publish..." :icon :share
+                                        :onClick #(modal/push-modal
+                                                   [publish/PublishDialog {:config-id config-id
+                                                                           :workspace-id (:workspace-id props)}])}])))]))
    :-render-main
    (fn [{:keys [state this]}]
      (let [{:keys [editing? loaded-config wdl-parse-error inputs-outputs methods]} @state
@@ -188,7 +173,7 @@
                                  :name (:methodName methodRepoMethod)
                                  :namespace (:methodNamespace methodRepoMethod)
                                  :snapshotId (:methodVersion methodRepoMethod)
-                                 :onSnapshotIdChange #(this :load-new-method-template %)}
+                                 :onSnapshotIdChange #(this :-load-new-method-template %)}
                                 (utils/restructure config methods editing? wdl-parse-error))])
         (create-section-header "Root Entity Type")
         (create-section
@@ -198,49 +183,83 @@
                                           :style {:width 500}}
                                          common/root-entity-types)
            [:div {:style {:padding "0.5em 0 1em 0"}} (:rootEntityType config)]))
-        [:datalist {:id "inputs-datalist"}
-         [:option {:value "this."}]
-         [:option {:value "workspace."}]]
         (create-section-header "Inputs")
-        (input-output-list {:values (:inputs config)
-                            :all-values (:inputs inputs-outputs)
-                            :ref-prefix "in"
-                            :invalid-values (:invalidInputs loaded-config)
-                            :editing? editing?})
+        (this :-render-input-output-list
+              {:values (:inputs config)
+               :all-values (:inputs inputs-outputs)
+               :ref-prefix "in"
+               :invalid-values (:invalidInputs loaded-config)})
         (create-section-header "Outputs")
-        (input-output-list {:values (:outputs config)
-                            :all-values (:outputs inputs-outputs)
-                            :ref-prefix "out"
-                            :invalid-values (:invalidOutputs loaded-config)
-                            :editing? editing?})]))
-   :component-did-mount
-   (fn [{:keys [state props refs this]}]
-     (this :load-validated-method-config)
-     (endpoints/call-ajax-orch
-      {:endpoint (endpoints/get-workspace (:workspace-id props))
-       :on-done (fn [{:keys [success? get-parsed-response status-text]}]
-                  (if success?
-                    (swap! state assoc :locked? (get-in (get-parsed-response) [:workspace :isLocked]))
-                    (swap! state assoc :error status-text)))})
-     (endpoints/call-ajax-orch
-      {:endpoint endpoints/list-methods
-       :on-done (fn [{:keys [success? get-parsed-response status-text]}]
-                  (if success?
-                    (swap! state assoc :methods (->> (get-parsed-response)
-                                                     (map #(select-keys % [:namespace :name :snapshotId]))
-                                                     (group-by (juxt :namespace :name))
-                                                     (utils/map-values (partial map :snapshotId))))
-                    (swap! state assoc :error-message status-text)))})
-     (set! (.-onScrollHandler this)
-           (fn []
-             (when-let [sidebar (@refs "sidebar")]
-               (let [visible (< (.-scrollY js/window) (.-offsetTop sidebar))]
-                 (when-not (= visible (:sidebar-visible? @state))
-                   (swap! state assoc :sidebar-visible? visible))))))
-     (.addEventListener js/window "scroll" (.-onScrollHandler this)))
-   :component-will-unmount
-   (fn [{:keys [this]}]
-     (.removeEventListener js/window "scroll" (.-onScrollHandler this)))
+        (this :-render-input-output-list
+              {:values (:outputs config)
+               :all-values (:outputs inputs-outputs)
+               :ref-prefix "out"
+               :invalid-values (:invalidOutputs loaded-config)})]))
+   :-render-input-output-list
+   (fn [{:keys [state locals]}
+        {:keys [values ref-prefix invalid-values all-values]}]
+     (let [{:keys [editing?]} @state]
+       (create-section
+        (map
+         (fn [{:keys [name inputType outputType optional]}]
+           (let [type (or inputType outputType)
+                 name-kwd (keyword name)
+                 field-value (get values name-kwd "")
+                 error (get invalid-values name-kwd)]
+             [:div {:key name :style {:marginBottom "1rem"}}
+              (list
+               [:div {:style {:display "inline-block"
+                              :margin "0 0.5rem 0.5rem 0" :padding "0.5rem"
+                              :backgroundColor (:background-light style/colors)
+                              :border style/standard-line :borderRadius 2}}
+                (str name ": (" (when optional "optional ") type ")")]
+               (when (and error (not editing?) (not optional))
+                 (icons/icon {:style {:marginRight "0.5rem" :alignSelf "center"
+                                      :color (:exception-state style/colors)}}
+                             :error))
+               (when editing?
+                 [comps/Typeahead {:ref (str ref-prefix "_" name)
+                                   :field-attributes {:defaultValue field-value
+                                                      :style {:width 500 :margin 0}}
+                                   :engine (:engine @locals)
+                                   :behavior {:minLength 1}}])
+               (when-not editing?
+                 (or field-value [:span {:style {:fontStyle "italic"}} "No value entered"])))
+              (when (and error (not optional))
+                [:div {}
+                 [:div {:style {:display "inline-block"
+                                :padding "0.5em" :marginBottom "0.5rem"
+                                :backgroundColor (:exception-state style/colors)
+                                :border style/standard-line :borderRadius 2}}
+                  error]])]))
+         all-values))))
+   :-begin-editing
+   (fn [{:keys [props state locals]}]
+     (when-not (:entities-loaded? @locals)
+       (swap! locals assoc :entities-loaded? true)
+       (endpoints/call-ajax-orch
+        {:endpoint (endpoints/get-entity-types (:workspace-id props))
+         :on-done (fn [{:keys [success? get-parsed-response status-text]}]
+                    (if success?
+                      (.add (:engine @locals)
+                            (clj->js (->> (get-parsed-response)
+                                          vals
+                                          (map :attributeNames)
+                                          flatten
+                                          (map (partial str "this.")))))
+                      ;; FIXME: :data-attribute-load-error is unused
+                      (swap! state assoc :data-attribute-load-error status-text)))}))
+     (let [{:keys [loaded-config inputs-outputs]} @state]
+       (swap! state assoc :editing? true :original-config loaded-config :original-inputs-outputs inputs-outputs)))
+   :-cancel-editing
+   (fn [{:keys [state props refs]}]
+     (let [original-loaded-config (:original-config @state)
+           original-inputs-outputs (:original-inputs-outputs @state)
+           method-ref (-> original-loaded-config :methodConfiguration :methodRepoMethod)]
+       (swap! state assoc :editing? false :loaded-config original-loaded-config :inputs-outputs original-inputs-outputs)
+       ((@refs "methodDetailsViewer") :load-agora-method {:namespace (:methodNamespace method-ref)
+                                                          :name (:methodName method-ref)
+                                                          :snapshotId (:methodVersion method-ref)})))
    :-commit
    (fn [{:keys [props state refs]}]
      (let [{:keys [workspace-id]} props
@@ -249,7 +268,7 @@
            deref-vals (fn [io-key ref-prefix]
                         (->> (io-key (:inputs-outputs @state))
                              (map :name)
-                             (map (juxt identity #(common/get-text refs (str ref-prefix "_" %))))
+                             (map (juxt identity #((@refs (str ref-prefix "_" %)) :get-text)))
                              (into {})))]
        (swap! state assoc :blocker "Updating...")
        (endpoints/call-ajax-orch
@@ -269,7 +288,7 @@
                       (do ((:on-rename props) name)
                           (swap! state assoc :loaded-config (get-parsed-response) :blocker nil))
                       (comps/push-error-response (get-parsed-response false))))})))
-   :load-validated-method-config
+   :-load-validated-method-config
    (fn [{:keys [state props]}]
      (endpoints/call-ajax-orch
       {:endpoint (endpoints/get-validated-workspace-method-config (:workspace-id props) (:config-id props))
@@ -285,7 +304,7 @@
                                      (swap! state assoc :loaded-config response :inputs-outputs (get-parsed-response))
                                      (swap! state assoc :error (:message (get-parsed-response)))))}))
                     (swap! state assoc :error status-text)))}))
-   :load-new-method-template
+   :-load-new-method-template
    (fn [{:keys [state refs]} new-snapshot-id]
      (let [[method-namespace method-name] (map (fn [key]
                                                  (get-in (:loaded-config @state)
@@ -325,13 +344,4 @@
                                          (swap! state assoc :error (:message (get-parsed-response))))))})
                         (do
                           (swap! state assoc :blocker nil :wdl-parse-error (:message response))
-                          (comps/push-error (style/create-server-error-message (:message response)))))))})))
-   :-cancel-editing
-   (fn [{:keys [state props refs]}]
-     (let [original-loaded-config (:original-config @state)
-           original-inputs-outputs (:original-inputs-outputs @state)
-           method-ref (-> original-loaded-config :methodConfiguration :methodRepoMethod)]
-       (swap! state assoc :editing? false :loaded-config original-loaded-config :inputs-outputs original-inputs-outputs)
-       ((@refs "methodDetailsViewer") :load-agora-method {:namespace (:methodNamespace method-ref)
-                                                          :name (:methodName method-ref)
-                                                          :snapshotId (:methodVersion method-ref)})))})
+                          (comps/push-error (style/create-server-error-message (:message response)))))))})))})
