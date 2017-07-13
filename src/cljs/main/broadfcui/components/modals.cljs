@@ -74,18 +74,15 @@
   [OKCancelForm
    {:header [:div {:style {:display "inline-flex" :align-items "center"}}
              (icons/icon {:style {:color (:exception-state style/colors)
-                                  :marginRight "0.5em"}} :error)
+                                  :marginRight "0.5rem"}} :error)
              (or header "Error")]
-    :content [:div {:style {:maxWidth "50vw"}} text]
+    :content [:div {:style {:width 500}} text]
     :dismiss on-dismiss
     :show-cancel? false :ok-button "OK"}])
 
 (defn render-message [{:keys [header text on-confirm on-dismiss]}]
   [OKCancelForm
    {:header (or header "Confirm")
-    :content [:div {:style {:maxWidth 500}} text]
+    :content [:div {:style {:width 500}} text]
     :ok-button on-confirm
     :dismiss on-dismiss}])
-
-
-

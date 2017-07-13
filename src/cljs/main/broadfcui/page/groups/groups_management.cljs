@@ -6,10 +6,10 @@
     [broadfcui.common.icons :as icons]
     [broadfcui.common.management-utils :as management-utils]
     [broadfcui.common.modal :as modal]
-    [broadfcui.components.modals :as modals]
     [broadfcui.common.style :as style]
     [broadfcui.common.table.style :as table-style]
     [broadfcui.common.table.table :refer [Table]]
+    [broadfcui.components.modals :as modals]
     [broadfcui.endpoints :as endpoints]
     [broadfcui.nav :as nav]
     [broadfcui.net :as net]
@@ -22,7 +22,7 @@
    (fn [{:keys [this state]}]
      [:div {}
       (cond
-        (:modal? @state)
+        (:delete-modal? @state)
         (if (:deleting? @state)
           [comps/Blocker {:banner "Deleting Group"}]
           (modals/render-message
@@ -39,7 +39,7 @@
         (:error? @state)
         (modals/render-error
          {:text (:error-message @state)
-          :on-dismiss #(swap! state dissoc :error? :modal?)}))
+          :on-dismiss #(swap! state dissoc :error? :delete-modal?)}))
       (net/render-with-ajax
        (:groups-response @state)
        #(this :-render-groups-table)
@@ -88,10 +88,10 @@
                   (when (= role "Admin")
                     (style/create-link
                      {:text (icons/icon {} :delete)
-                      :style {:float "right"}
+                      :style {:float "right" :color (:exception-state style/colors)}
                       :onClick #(do
                                   (swap! state assoc :group-name groupName)
-                                  (swap! state assoc :modal? true))})))}]}
+                                  (swap! state assoc :delete-modal? true))})))}]}
        :toolbar
        {:items
         [flex/spring
@@ -108,7 +108,7 @@
       {:endpoint (endpoints/delete-group (:group-name @state))
        :on-done (net/handle-ajax-response
                  (fn [{:keys [success? status-code parsed-response]}]
-                   (swap! state dissoc :deleting? :modal?)
+                   (swap! state dissoc :deleting? :delete-modal?)
                    (if success?
                      (this :-load-data)
                      (do
