@@ -36,7 +36,9 @@
                                  :onClick #(swap! state update :crumbs (comp vec (partial take 2)))}))]
          [:div {:style {:position "relative"}}
           [:div {:style {:fontSize "1.1rem" :marginBottom "1rem"}}
-           [:span {:style {:display "inline-block"}} [comps/Breadcrumbs {:crumbs (:crumbs @state)}]]
+           [:span {:style {:display "inline-block"}}
+            [comps/Breadcrumbs {:crumbs (map #(select-keys % [:text :onClick :id])
+                                             (:crumbs @state))}]]
            (when-not last-crumb-id
              (common/render-info-box
               {:text [:div {} "For more information about importing files, see our "
