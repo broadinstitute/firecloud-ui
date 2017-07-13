@@ -11,7 +11,6 @@
     [broadfcui.utils :as utils]
     ))
 
-
 (declare push-error)
 (declare create-error-message)
 

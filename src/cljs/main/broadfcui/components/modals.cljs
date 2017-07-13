@@ -77,7 +77,7 @@
              (icons/icon {:style {:color (:exception-state style/colors)
                                   :marginRight "0.5em"}} :error)
              (or header "Error")]
-    :content [:div {:style {:maxWidth "50vs"}} text]
+    :content [:div {:style {:maxWidth "50vw"}} text]
     :dismiss on-dismiss
     :show-cancel? false :ok-button "OK"}])
 
