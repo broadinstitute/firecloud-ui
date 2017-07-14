@@ -22,7 +22,6 @@ class DataLibraryPage(implicit webDriver: WebDriver) extends AuthenticatedPage w
 
   trait UI extends super.UI {
     private def datasetTestId(n: String) = { s"dataset-$n" }
-
     def hasDataset(name: String): Boolean = {
       find(testId(datasetTestId(name))).isDefined
     }

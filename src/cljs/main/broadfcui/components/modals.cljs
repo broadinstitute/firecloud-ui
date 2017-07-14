@@ -15,13 +15,14 @@
       :show-close? true})
    :render
    (fn [{:keys [this props]}]
-     (let [{:keys [header content dismiss ok-button show-cancel? cancel-text show-close?]} props]
+     (let [{:keys [header content dismiss ok-button show-cancel? cancel-text show-close? data-test-id]} props]
        (modal/render
         {:content
          [:div {}
-          [:div {:style {:borderBottom style/standard-line
+          [:div (merge {:style {:borderBottom style/standard-line
                          :padding "1rem 3rem 1rem"
                          :fontSize "140%" :fontWeight 400 :lineHeight 1}}
+                       (when (some? data-test-id) {:data-test-id data-test-id}))
            header
            (when show-close? [comps/XButton {:dismiss dismiss}])]
           [:div {:style {:padding "1rem 3rem 2rem"
@@ -36,15 +37,16 @@
                              :fontWeight 500 :textDecoration "none"
                              :color (:button-primary style/colors)}
                      :href "javascript:;"
+                     :data-test-id "cancel-button"
                      :onClick dismiss
                      :onKeyDown (common/create-key-handler [:space :enter] dismiss)}
                  cancel-text])
               (when ok-button
                 (cond
                   (string? ok-button)
-                  [comps/Button {:text ok-button :ref "ok-button" :onClick dismiss}]
-                  (fn? ok-button) [comps/Button {:text "OK" :ref "ok-button" :onClick ok-button}]
-                  (map? ok-button) [comps/Button (merge {:ref "ok-button"} ok-button)]
+                  [comps/Button {:text ok-button :ref "ok-button" :data-test-id "ok-button" :onClick dismiss}]
+                  (fn? ok-button) [comps/Button {:text "OK" :ref "ok-button" :data-test-id "ok-button" :onClick ok-button}]
+                  (map? ok-button) [comps/Button (merge {:ref "ok-button" :data-test-id "ok-button"} ok-button)]
                   :else ok-button))])]]
          :did-mount #(this :-modal-did-mount)
          :dismiss dismiss})))

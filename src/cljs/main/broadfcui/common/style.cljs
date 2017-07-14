@@ -141,7 +141,7 @@
 (defn create-link [{:keys [text] :as attributes}]
   [:a (utils/deep-merge {:href "javascript:;"
                          :style {:textDecoration "none" :color (:button-primary colors)}}
-                        (utils/cljslog (dissoc attributes :text)))
+                        (dissoc attributes :text))
    text])
 
 ;; An obnoxious amount of effort due to "PROJECT_OWNER" vs. "NO ACCESS"

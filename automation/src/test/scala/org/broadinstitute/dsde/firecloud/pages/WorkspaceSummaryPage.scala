@@ -33,6 +33,12 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
     new WorkspaceSummaryPage(billingProjectName, workspaceName)
   }
 
+  def unpublishWorkspace(): Unit = {
+    ui.clickUnpublishButton()
+    val msgModal = new MessageModal
+    msgModal.clickOk()
+  }
+
   /**
     * Deletes the workspace currently being viewed. Returns while transitioning
     * to the resulting view after successful deletion.
@@ -55,6 +61,7 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
     private val deleteWorkspaceButtonQuery = testId("delete-workspace-button")
     private val nameHeader = testId("header-name")
     private val publishButtonQuery = testId("publish-button")
+    private val unpublishButtonQuery = testId("unpublish-button")
     private val shareWorkspaceButton = testId("share-workspace-button")
     private val workspaceError = testId("workspace-details-error")
 
@@ -68,9 +75,12 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
       new DeleteWorkspaceModal
     }
 
-    def clickPublishButton(): ErrorModal = {
+    def clickPublishButton(): Unit = {
       click on (await enabled publishButtonQuery)
-      new ErrorModal
+    }
+
+    def clickUnpublishButton(): Unit = {
+      click on (await enabled unpublishButtonQuery)
     }
 
     def clickShareWorkspaceButton(): Unit = {
@@ -79,6 +89,10 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
 
     def hasPublishButton: Boolean = {
       find(publishButtonQuery).isDefined
+    }
+
+    def hasUnpublishButton: Boolean = {
+      find(unpublishButtonQuery).isDefined
     }
 
     def hasWorkspaceNotFoundMessage: Boolean = {
