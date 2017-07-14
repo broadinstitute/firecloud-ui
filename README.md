@@ -83,13 +83,33 @@ docker build -f Dockerfile-tests -t automation .
 Then run the run-tests script with the newly created image.  This script will render the `application.conf` and `firecloud-account.pem` from vault to be used by the test container.  Note that if you are running outside of docker you will need to generate these files manually.
 ```
 cd automation/docker
-./run-tests.sh 4 qa <ip of FiaB>
+./run-tests.sh 4 qa <ip of FiaB> automation $(cat ~/.vault-token) <fiab host-name>
 ```
 
 ### Running locally
-Note that you will need to render `automation/docker/application.conf.ctmpl` and copy it to `automation/src/resources/`, as well as `automation/src/firecloud-account.pem.ctmpl`, which should be saved in `/etc`.
-Your local `/etc/hosts` file will need to be configured so that Firecloud DNS names are pointing to the IP of your running FiaB.  For more 
+If you have a FiaB running and its IP configured in your `/etc/hosts`, you can run tests locally and watch them execute in a browser.
+
+#### Set Up
+
+First run render script to generate necessary configs:
+```
+cd automation
+./render-local-env.sh . <fiab host name> $(cat ~/.vault-token)
+```
+
+
+If you have a local UI running, you will need to go into `automation/src/test/resources` and edit the `baseURL` in `application.conf`:
+```
+baseUrl = "http://local.broadinstitute.org"
+```
+
+
+#### Running tests
+
+To run all tests:
 ```
 sbt test -Djsse.enableSNIExtension=false -Dheadless=false
 sbt clean
 ```
+
+TODO - running specific tests/suites
