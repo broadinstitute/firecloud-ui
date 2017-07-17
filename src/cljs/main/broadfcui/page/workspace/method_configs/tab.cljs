@@ -9,7 +9,8 @@
    [broadfcui.nav :as nav]
    [broadfcui.page.workspace.method-configs.import-config :as import-config]
    [broadfcui.page.workspace.method-configs.method-config-editor :refer [MethodConfigEditor]]
-   [broadfcui.page.workspace.workspace-common :as ws-common]
+   [broadfcui.page.workspace.method-configs.synchronize :as sync]
+    [broadfcui.page.workspace.workspace-common :as ws-common]
    [broadfcui.utils :as utils]
    ))
 
@@ -47,6 +48,7 @@
                           {:workspace-id (:workspace-id props)
                            :after-import (fn [{:keys [config-id]}]
                                            (modal/pop-modal)
+                                           (sync/flag-synchronization)
                                            ((:on-config-imported props) config-id))}])}]]})
          :else [:div {:style {:textAlign "center"}}
                 [comps/Spinner {:text "Loading configurations..."}]])))

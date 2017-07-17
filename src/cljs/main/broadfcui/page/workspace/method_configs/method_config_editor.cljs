@@ -12,7 +12,8 @@
    [broadfcui.page.workspace.method-configs.delete-config :as delete]
    [broadfcui.page.workspace.method-configs.launch-analysis :as launch]
    [broadfcui.page.workspace.method-configs.publish :as publish]
-   [broadfcui.page.workspace.workspace-common :as ws-common]
+   [broadfcui.page.workspace.method-configs.synchronize :as sync]
+    [broadfcui.page.workspace.workspace-common :as ws-common]
    [broadfcui.utils :as utils]
    ))
 
@@ -88,6 +89,17 @@
                                                      (utils/map-values (partial map :snapshotId))))
                     ;; FIXME: :error-message is unused
                     (swap! state assoc :error-message status-text)))})
+     (when (sync/check-synchronization)
+       (swap! state assoc :blocker "Checking permissions...")
+       (endpoints/call-ajax-orch
+        {:endpoint (endpoints/get-permission-report (:workspace-id props))
+         :payload {:configs [(:config-id props)]}
+         :headers utils/content-type=json
+         :on-done (fn [{:keys [success? get-parsed-response status-text]}]
+                    (swap! state dissoc :blocker)
+                    (if success?
+                      (sync/handle-sync (get-parsed-response) (get-in props [:workspace :canShare]))
+                      (comps/push-error status-text)))}))
      (set! (.-onScrollHandler this)
            (fn []
              (when-let [sidebar (@refs "sidebar")]

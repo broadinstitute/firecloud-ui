@@ -142,6 +142,10 @@
   {:path (str "/workspaces/" (id-path workspace-id) "/methodconfigs")
    :method :post})
 
+(defn get-permission-report [workspace-id]
+  {:path (str "/workspaces/" (id-path workspace-id) "/permissionReport")
+   :method :post})
+
 (defn get-workspace-method-config [workspace-id config-id]
   {:path (str "/workspaces/" (id-path workspace-id)
               "/method_configs/" (id-path config-id))
