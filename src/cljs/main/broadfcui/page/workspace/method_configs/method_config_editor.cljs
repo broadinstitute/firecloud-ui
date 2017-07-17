@@ -129,24 +129,25 @@
               [comps/SidebarButton {:color :exception-state :margin :top
                                     :text "Cancel Editing" :icon :cancel
                                     :onClick #(this :-cancel-editing)}])
-             (conj
-              (when can-edit?
-                [[comps/SidebarButton {:style :light :color :button-primary
-                                       :text "Edit Configuration" :icon :edit
-                                       :disabled? (when locked? "The workspace is locked")
-                                       :onClick #(this :-begin-editing)}]
-                 [comps/SidebarButton {:style :light :color :exception-state :margin :top
-                                       :text "Delete" :icon :delete
-                                       :disabled? (when locked? "The workspace is locked")
-                                       :onClick #(modal/push-modal
-                                                  [delete/DeleteDialog {:config-id config-id
-                                                                        :workspace-id (:workspace-id props)
-                                                                        :after-delete (:after-delete props)}])}]])
-              [comps/SidebarButton {:style :light :color :button-primary :margin (when can-edit? :top)
-                                    :text "Publish..." :icon :share
-                                    :onClick #(modal/push-modal
-                                               [publish/PublishDialog {:config-id config-id
-                                                                       :workspace-id (:workspace-id props)}])}]))]}]]))
+             (list*
+              (conj
+               (when can-edit?
+                 [[comps/SidebarButton {:style :light :color :button-primary
+                                        :text "Edit Configuration" :icon :edit
+                                        :disabled? (when locked? "The workspace is locked")
+                                        :onClick #(this :-begin-editing)}]
+                  [comps/SidebarButton {:style :light :color :exception-state :margin :top
+                                        :text "Delete" :icon :delete
+                                        :disabled? (when locked? "The workspace is locked")
+                                        :onClick #(modal/push-modal
+                                                   [delete/DeleteDialog {:config-id config-id
+                                                                         :workspace-id (:workspace-id props)
+                                                                         :after-delete (:after-delete props)}])}]])
+               [comps/SidebarButton {:style :light :color :button-primary :margin (when can-edit? :top)
+                                     :text "Publish..." :icon :share
+                                     :onClick #(modal/push-modal
+                                                [publish/PublishDialog {:config-id config-id
+                                                                        :workspace-id (:workspace-id props)}])}])))]}]]))
    :-render-main
    (fn [{:keys [state this locals props]} locked?]
      (let [{:keys [editing? loaded-config wdl-parse-error inputs-outputs methods]} @state
@@ -256,7 +257,7 @@
      (let [{:keys [loaded-config inputs-outputs]} @state]
        (swap! state assoc :editing? true :original-config loaded-config :original-inputs-outputs inputs-outputs)))
    :-cancel-editing
-   (fn [{:keys [state props refs]}]
+   (fn [{:keys [state refs]}]
      (let [original-loaded-config (:original-config @state)
            original-inputs-outputs (:original-inputs-outputs @state)
            method-ref (-> original-loaded-config :methodConfiguration :methodRepoMethod)]
