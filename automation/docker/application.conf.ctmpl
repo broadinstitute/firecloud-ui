@@ -1,5 +1,6 @@
 {{with $environment := env "ENVIRONMENT"}}
 {{with $hostName := env "HOST_NAME"}}
+{{with $dir := env "ROOT_DIR"}}
 {{with $users := vault (printf "secret/dsde/firecloud/%s/common/users" $environment)}}
 {{with $secrets := vault (printf "secret/dsde/firecloud/%s/common/secrets" $environment)}}
 {{with $authDomain := vault (printf "secret/dsde/firecloud/%s/common/hosts/%s" $environment $hostName)}}
@@ -15,7 +16,7 @@ fireCloud {
 gcs {
   serviceProject = "broad-dsde-{{$environment}}"
   qaEmail = "{{$users.Data.service_acct_email}}"
-  qaPemFile = "/app/automation/src/test/resources/firecloud-qa.pem"
+  qaPemFile = "{{$dir}}/automation/src/test/resources/firecloud-qa.pem"
   billingAccount = "{{$users.Data.billing_acct}}"
 }
 
@@ -28,6 +29,7 @@ chromeSettings {
   chromedriverHost = "http://hub:4444/wd/hub"
   chromedriverPath = "/usr/local/bin/chromedriver"
 }
+{{end}}
 {{end}}
 {{end}}
 {{end}}

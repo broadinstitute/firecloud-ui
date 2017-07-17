@@ -43,4 +43,13 @@ object TestData {
       "test.hello.response" -> "workspace.result")
   }
 
+  object InputRequiredMethodConfig {
+    val name = "test_method_input_required"
+    val namespace = "qamethods"
+    val snapshotId = 1
+    val rootEntityType = "participant"
+    val inputs = Map("test.hello.name" -> "\"a\"",
+      "test.hello.response" -> "workspace.result")
+  }
+
 }

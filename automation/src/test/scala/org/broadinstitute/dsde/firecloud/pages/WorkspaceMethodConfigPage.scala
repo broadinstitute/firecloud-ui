@@ -11,19 +11,20 @@ class WorkspaceMethodConfigPage(namespace: String, name: String)(implicit webDri
 
 //To-Do: Make this accept method namespace and participant
   def importMethodConfigFromRepo(methodNamespace: String, methodName: String, snapshotId: Int, methodConfigName: String, rootEntityType: String): MethodConfigDetailsPage = {
-    val chooseSourceModal = gestures.clickImportConfigButton()
+    val chooseSourceModal = ui.clickImportConfigButton()
     chooseSourceModal.chooseConfigFromRepo(methodNamespace, methodName, snapshotId, methodConfigName, rootEntityType)
     new MethodConfigDetailsPage(namespace, name, methodNamespace, methodConfigName)
   }
 
 
-  object gestures {
+  trait UI extends super.UI {
     private val openImportConfigModalButtonQuery: Query = testId("import-config-button")
     def clickImportConfigButton(): ImportMethodChooseSourceModel = {
       click on (await enabled openImportConfigModalButtonQuery)
       new ImportMethodChooseSourceModel()
     }
   }
+  object ui extends UI
 }
 
 class ImportMethodChooseSourceModel(implicit webDriver: WebDriver) extends FireCloudView {
@@ -53,14 +54,14 @@ class ImportMethodConfigModal(implicit webDriver: WebDriver) extends FireCloudVi
     *
     */
   def importMethodConfig(methodNamespace: String, methodName: String, snapshotId: Int, methodConfigName: String, rootEntityType: String): Unit = {
-    gestures.searchMethod(methodName)
-    gestures.selectMethod(methodName, snapshotId)
-    gestures.fillMethodConfigName(methodConfigName)
-    gestures.chooseRootEntityType(rootEntityType)
-    gestures.clickimportMethodConfigButton()
+    ui.searchMethod(methodName)
+    ui.selectMethod(methodName, snapshotId)
+    ui.fillMethodConfigName(methodConfigName)
+    ui.chooseRootEntityType(rootEntityType)
+    ui.clickimportMethodConfigButton()
   }
 
-  object gestures {
+  object ui {
 
     private val methodSearchInputQuery: Query = testId("method-repo-table-input")
     private val methodConfigNameInputQuery: Query = testId("method-config-import-name-input")

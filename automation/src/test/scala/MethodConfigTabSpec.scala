@@ -12,6 +12,7 @@ class MethodConfigTabSpec extends FreeSpec with WebBrowserSpec with CleanUp {
   val methodConfigName: String = "test_method" + UUID.randomUUID().toString
   val wrongRootEntityErrorText: String = "Error: Method configuration expects an entity of type sample, but you gave us an entity of type participant."
   val noExpressionErrorText: String = "Error: Method configuration expects an entity of type sample, but you gave us an entity of type sample_set."
+  val missingInputsErrorText: String = "is missing definitions for these inputs:"
 
   implicit val authToken: AuthToken = AuthTokens.hermione
   val uiUser: Credentials = Config.Users.hermione
@@ -130,11 +131,15 @@ class MethodConfigTabSpec extends FreeSpec with WebBrowserSpec with CleanUp {
     signIn(uiUser)
     val workspaceMethodConfigPage = new WorkspaceMethodConfigPage(billingProject, wsName)
     workspaceMethodConfigPage.open
-    val methodConfigDetailsPage = workspaceMethodConfigPage.importMethodConfigFromRepo(TestData.SimpleMethodConfig.namespace,
-      TestData.SimpleMethodConfig.name, TestData.SimpleMethodConfig.snapshotId, methodConfigName, TestData.SimpleMethodConfig.rootEntityType)
-    val submissionDetailsPage = methodConfigDetailsPage.launchAnalysis(TestData.SimpleMethodConfig.rootEntityType, TestData.SingleParticipant.entityId)
-    submissionDetailsPage.waitUntilSubmissionCompletes()  //This feels like the wrong way to do this?
-    assert(submissionDetailsPage.verifyWorkflowFailed())
+    val methodConfigDetailsPage = workspaceMethodConfigPage.importMethodConfigFromRepo(TestData.InputRequiredMethodConfig.namespace,
+      TestData.InputRequiredMethodConfig.name, TestData.InputRequiredMethodConfig.snapshotId, methodConfigName, TestData.InputRequiredMethodConfig.rootEntityType)
+
+    val launchModal = methodConfigDetailsPage.openlaunchModal()
+    launchModal.filterRootEntityType(TestData.InputRequiredMethodConfig.rootEntityType)
+    launchModal.searchAndSelectEntity(TestData.SingleParticipant.entityId)
+    launchModal.clickLaunchButton()
+    assert(launchModal.verifyMissingInputsError(missingInputsErrorText))
+    launchModal.closeModal()
   }
 
   "import a method config from a workspace" in withWebDriver { implicit driver =>
