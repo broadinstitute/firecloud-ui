@@ -7,6 +7,7 @@
     [broadfcui.common.icons :as icons]
     [broadfcui.common.modal :as modal]
     [broadfcui.common.style :as style]
+    [broadfcui.components.sticky :refer [Sticky]]
     [broadfcui.endpoints :as endpoints]
     [broadfcui.page.workspace.method-configs.delete-config :as delete]
     [broadfcui.page.workspace.method-configs.launch-analysis :as launch]
@@ -94,6 +95,9 @@
    (fn []
      {:editing? false
       :sidebar-visible? true})
+   :component-will-mount
+   (fn [{:keys [locals]}]
+     (swap! locals assoc :body-id (gensym "config")))
    :render
    (fn [{:keys [state this]}]
      (cond (and (every? @state [:loaded-config :methods])
@@ -109,73 +113,74 @@
            config (:methodConfiguration loaded-config)]
        [:div {}
         [comps/Blocker {:banner (:blocker @state)}]
-        [:div {:style {:padding "1em 2em"}}
+        [:div {:style {:padding "1em 2em" :display "flex"}}
          (this :-render-sidebar)
-         (when-not editing?
-           [:div {:style {:float "right"}}
-            (launch/render-button {:workspace-id (:workspace-id props)
-                                   :config-id (ws-common/config->id config)
-                                   :root-entity-type (:rootEntityType config)
-                                   :disabled? (cond (:locked? @state) "This workspace is locked."
-                                                    (not (:bucket-access? props))
-                                                    (str "You do not currently have access"
-                                                         " to the Google Bucket associated with this workspace."))
-                                   :on-success (:on-submission-success props)})])
          (this :-render-main)
          (common/clear-both)]]))
    :-render-sidebar
-   (fn [{:keys [props state this]}]
+   (fn [{:keys [props state this locals]}]
      (let [{:keys [editing? loaded-config]} @state
+           {:keys [body-id]} @locals
            config (:methodConfiguration loaded-config)]
-       [:div {:style {:width 290 :float "left"}}
-        [:div {:ref "sidebar"}]
-        (style/create-unselectable
-         :div
-         {:style {:position (when-not (:sidebar-visible? @state) "fixed")
-                  :top (when-not (:sidebar-visible? @state) 4)
-                  :width 290}}
-         (let [{:keys [locked?]} @state
-               can-edit? (common/access-greater-than? (:access-level props) "READER")
-               snapshot-id (get-in config [:methodRepoMethod :methodVersion])
-               config-id (ws-common/config->id config)]
-           [:div {}
-            (when (and can-edit? (not editing?))
-              (list
-               [comps/SidebarButton {:style :light :color :button-primary
-                                     :text "Edit Configuration" :icon :edit
-                                     :disabled? (when locked? "The workspace is locked")
-                                     :onClick #(swap! state assoc :editing? true :prev-snapshot-id snapshot-id)}]
-               [comps/SidebarButton {:style :light :color :exception-state :margin :top
-                                     :text "Delete" :icon :delete
-                                     :disabled? (when locked? "The workspace is locked")
+       [:div {:style {:flex "0 0 270px" :paddingRight 30}}
+        [Sticky
+         {:outer-style {:width 290 :backgroundColor "#fff"}
+          :anchor body-id
+          :sticky-props {:data-check-every 1}
+          :contents
+          (let [{:keys [locked?]} @state
+                can-edit? (common/access-greater-than? (:access-level props) "READER")
+                snapshot-id (get-in config [:methodRepoMethod :methodVersion])
+                config-id (ws-common/config->id config)]
+            [:div {:style {:width 270 :background "#fff"}}
+             (when (and can-edit? (not editing?))
+               (list
+                [comps/SidebarButton {:style :light :color :button-primary
+                                      :text "Edit Configuration" :icon :edit
+                                      :disabled? (when locked? "The workspace is locked")
+                                      :onClick #(swap! state assoc :editing? true :prev-snapshot-id snapshot-id)}]
+                [comps/SidebarButton {:style :light :color :exception-state :margin :top
+                                      :text "Delete" :icon :delete
+                                      :disabled? (when locked? "The workspace is locked")
+                                      :onClick #(modal/push-modal
+                                                 [delete/DeleteDialog {:config-id config-id
+                                                                       :workspace-id (:workspace-id props)
+                                                                       :after-delete (:after-delete props)}])}]))
+
+             (when-not editing?
+               [comps/SidebarButton {:style :light :color :button-primary :margin (when can-edit? :top)
+                                     :text "Publish..." :icon :share
                                      :onClick #(modal/push-modal
-                                                [delete/DeleteDialog {:config-id config-id
-                                                                      :workspace-id (:workspace-id props)
-                                                                      :after-delete (:after-delete props)}])}]))
+                                                [publish/PublishDialog {:config-id config-id
+                                                                        :workspace-id (:workspace-id props)}])}])
 
-            (when-not editing?
-              [comps/SidebarButton {:style :light :color :button-primary :margin (when can-edit? :top)
-                                    :text "Publish..." :icon :share
-                                    :onClick #(modal/push-modal
-                                               [publish/PublishDialog {:config-id config-id
-                                                                       :workspace-id (:workspace-id props)}])}])
-
-            (when editing?
-              (list
-               [comps/SidebarButton {:color :success-state
-                                     :text "Save" :icon :done
-                                     :onClick #(this :-commit)}]
-               [comps/SidebarButton {:color :exception-state :margin :top
-                                     :text "Cancel Editing" :icon :cancel
-                                     :onClick (fn []
-                                                (this :load-new-method-template (:prev-snapshot-id @state))
-                                                (swap! state assoc :editing? false))}]))]))]))
+             (when editing?
+               (list
+                [comps/SidebarButton {:color :success-state
+                                      :text "Save" :icon :done
+                                      :onClick #(this :-commit)}]
+                [comps/SidebarButton {:color :exception-state :margin :top
+                                      :text "Cancel Editing" :icon :cancel
+                                      :onClick (fn []
+                                                 (this :load-new-method-template (:prev-snapshot-id @state))
+                                                 (swap! state assoc :editing? false))}]))])}]]))
    :-render-main
-   (fn [{:keys [state this]}]
+   (fn [{:keys [state this locals props]}]
      (let [{:keys [editing? loaded-config wdl-parse-error inputs-outputs methods]} @state
            config (:methodConfiguration loaded-config)
-           {:keys [methodRepoMethod]} config]
-       [:div {:style {:marginLeft 330}}
+           {:keys [methodRepoMethod]} config
+           {:keys [body-id]} @locals]
+       [:div {:style {:flex "1 1 auto"} :id body-id}
+        (when-not editing?
+          [:div {:style {:float "right"}}
+           (launch/render-button {:workspace-id (:workspace-id props)
+                                  :config-id (ws-common/config->id config)
+                                  :root-entity-type (:rootEntityType config)
+                                  :disabled? (cond (:locked? @state) "This workspace is locked."
+                                                   (not (:bucket-access? props))
+                                                   (str "You do not currently have access"
+                                                        " to the Google Bucket associated with this workspace."))
+                                  :on-success (:on-submission-success props)})])
         (create-section-header "Method Configuration Name")
         (create-section
          (if editing?

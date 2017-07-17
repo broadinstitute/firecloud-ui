@@ -1,9 +1,9 @@
 (ns broadfcui.components.sticky
   (:require
-   [dmohs.react :as react]
-   [broadfcui.common :as common]
-   [broadfcui.utils :as utils]
-   ))
+    [dmohs.react :as react]
+    [broadfcui.common :as common]
+    [broadfcui.utils :as utils]
+    ))
 
 (react/defc Sticky
   {:render

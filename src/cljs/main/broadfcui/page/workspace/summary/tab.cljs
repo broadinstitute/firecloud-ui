@@ -82,7 +82,7 @@
                                   "Exception" [icons/ExceptionIcon {:size 32}])
                           :color (style/color-for-status status)}]]
      [Sticky
-      {:outer-style {:width 270 :backgroudColor "#fff"}
+      {:outer-style {:width 270 :backgroundColor "#fff"}
        :sticky-props {:data-check-every 1
                       :data-top-anchor (str label-id ":bottom") :data-bottom-anchor body-id}
        :contents
