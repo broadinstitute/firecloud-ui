@@ -82,16 +82,19 @@
         (fn []
           (let [columns (-> props :body :columns)
                 processed-columns (if-let [defaults (-> props :body :column-defaults)]
-                                    (let [by-header (utils/index-by :header columns)
-                                          default-showing (doall
-                                                           (->> (defaults "shown")
-                                                                (replace by-header)
-                                                                (map #(assoc % :show-initial? true))))
-                                          default-hiding (doall
-                                                          (->> (defaults "hidden")
+                                    (let [by-header (utils/index-by (some-fn :id :header) columns)
+                                          default-showing (->> (defaults "shown")
                                                                (replace by-header)
-                                                               (map #(assoc % :show-initial? false))))]
-                                      (concat default-showing default-hiding))
+                                                               (map #(assoc % :show-initial? true)))
+                                          default-hiding (->> (defaults "hidden")
+                                                              (replace by-header)
+                                                              (map #(assoc % :show-initial? false)))
+                                          mentioned (set/union (set (defaults "shown"))
+                                                               (set (defaults "hidden")))]
+                                      (concat default-showing default-hiding
+                                              (remove (fn [{:keys [id header]}]
+                                                        (contains? mentioned (or id header)))
+                                                      columns)))
                                     columns)
                 initial-sort-column (or (first (filter :sort-initial processed-columns))
                                         (when-not (-> props :body :behavior :allow-no-sort?)
