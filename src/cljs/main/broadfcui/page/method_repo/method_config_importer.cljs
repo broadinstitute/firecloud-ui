@@ -123,9 +123,9 @@
              "Destination Workspace:"]
             (style/create-select
              {:defaultValue ""
-              :ref (utils/create-element-ref-handler
+              :ref (common/create-element-ref-handler
                     {:store locals
-                     :key :workspace-select
+                     :element-key :workspace-select
                      :did-mount
                      #(.on (.select2 (js/$ %)) "select2:select"
                            (fn [event]

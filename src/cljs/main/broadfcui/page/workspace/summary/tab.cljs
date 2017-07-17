@@ -285,13 +285,13 @@
   (= "READER" (:accessLevel workspace)))
 
 (react/defc Summary
-  {:get-initial-state
-   (fn []
-     {:label-id (gensym "status")
-      :body-id (gensym "summary")})
+  {:component-will-mount
+   (fn [{:keys [locals]}]
+     (swap! locals assoc :label-id (gensym "status") :body-id (gensym "summary")))
    :render
-   (fn [{:keys [refs state props this]}]
-     (let [{:keys [server-response label-id body-id]} @state
+   (fn [{:keys [refs state props this locals]}]
+     (let [{:keys [server-response]} @state
+           {:keys [label-id body-id]} @locals
            {:keys [workspace]} props
            {:keys [submissions-count billing-projects library-schema curator? server-error]} server-response]
        (cond
@@ -336,7 +336,7 @@
                   (swap! state dissoc :locking?)
                   (react/call :refresh this))}))
    :component-did-mount
-   (fn [{:keys [state refs locals this]}]
+   (fn [{:keys [this]}]
      (react/call :refresh this))
    :refresh
    (fn [{:keys [props state]}]
