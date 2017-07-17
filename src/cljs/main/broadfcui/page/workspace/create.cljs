@@ -3,6 +3,7 @@
     [dmohs.react :as react]
     [broadfcui.common :as common]
     [broadfcui.common.components :as comps]
+    [broadfcui.common.icons :as icons]
     [broadfcui.common.input :as input]
     [broadfcui.common.modal :as modal]
     [broadfcui.common.style :as style]
@@ -50,7 +51,9 @@
                    Once set, it cannot be changed."]
                    (style/create-link {:href "https://software.broadinstitute.org/firecloud/documentation/article?id=9524"
                                        :target "_blank"
-                                       :text "Read more about Authorization Domains"})]})]
+                                       :text [:span {:style {:white-space "pre"}}
+                                              "Read more about Authorization Domains"
+                                              icons/external-link-icon]})]})]
          (style/create-select
           {:ref "auth-domain"
            :defaultValue -1
