@@ -607,11 +607,9 @@
 
 (defn no-billing-projects-message []
   [:div {:style {:textAlign "center"}}
-   [:div {}
-    "You must have a billing project associated with your account to create a new workspace."]
-   [:div {}
-    [:a {:target "_blank" :href (str (config/billing-guide-url))}
-     "Learn how to create a billing project." icons/external-link-icon]]])
+   "You must have a billing project associated with your account to create a new workspace."
+   [:a {:target "_blank" :href (config/billing-guide-url) :style {:display "block"}}
+    "Learn how to create a billing project." icons/external-link-icon]])
 
 (defn push-ok-cancel-modal [props]
   (modal/push-modal [OKCancelForm props]))
