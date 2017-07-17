@@ -57,7 +57,23 @@ trait Orchestration extends FireCloudClient with LazyLogging {
     }
 
     def addUserToGroup(groupName: String, email: String, role: GroupRole.Value)(implicit token: AuthToken): Unit = {
+      logger.info(s"Adding user to group: $groupName $email")
       putRequest(Config.FireCloud.orchApiUrl + s"api/groups/$groupName/${role.toString}/$email")
+    }
+
+    def create(groupName: String)(implicit token: AuthToken): Unit = {
+      logger.info(s"Creating group: $groupName")
+      postRequest(Config.FireCloud.orchApiUrl + s"api/groups/$groupName")
+    }
+
+    def delete(groupName: String)(implicit token: AuthToken): Unit = {
+      logger.info(s"Deleting group: $groupName")
+      deleteRequest(Config.FireCloud.orchApiUrl + s"api/groups/$groupName")
+    }
+
+    def removeUserFromGroup(groupName: String, email: String, role: GroupRole.Value)(implicit token: AuthToken): Unit = {
+      logger.info(s"Removing user from group: $groupName $email")
+      deleteRequest(Config.FireCloud.orchApiUrl + s"api/groups/$groupName/${role.toString}/$email")
     }
   }
 

@@ -4,8 +4,6 @@ import org.broadinstitute.dsde.firecloud.{CleanUp, Config}
 import org.broadinstitute.dsde.firecloud.pages.{DataLibraryPage, RegistrationPage, WebBrowserSpec}
 import org.scalatest.{BeforeAndAfter, FreeSpec, Matchers}
 
-import scala.util.Try
-
 /**
   * Tests for new user registration scenarios.
   */
@@ -20,7 +18,7 @@ class RegistrationSpec extends FreeSpec with BeforeAndAfter with Matchers with W
   // Clean-up anything left over from any previous failures.
   before {
     if (Rawls.admin.doesUserExist(subjectId).getOrElse(false)) {
-      Try(Rawls.admin.deleteUser(subjectId)) recover { case _ => () }
+      try { Rawls.admin.deleteUser(subjectId) } catch nonFatalAndLog("Error deleting user before test but will try running the test anyway")
     }
     Thurloe.keyValuePairs.deleteAll(subjectId)
   }

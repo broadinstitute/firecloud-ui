@@ -32,6 +32,13 @@ abstract class AuthenticatedPage(implicit webDriver: WebDriver) extends FireClou
       click on (await enabled signOutLink)
     }
   }
-  // TODO: figure out how to make this not have to be private? might be okay as long as we never extend a non-abstract page class...
+
+  /*
+   * This must be private so that subclasses can provide their own object
+   * named "ui". The only disadvantage is that subclasses that want one MUST
+   * provide their own "ui" object. However, it should be very rare that a
+   * page class will want a "ui" object without also providing an extension of
+   * the AuthenticatedPage.UI trait.
+   */
   private object ui extends UI
 }
