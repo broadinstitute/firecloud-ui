@@ -75,7 +75,7 @@
        [:div {:style {:padding "1rem 1.5rem"}}
         (if config-id
           [MethodConfigEditor
-           (merge (select-keys props [:workspace-id :bucket-access? :on-submission-success])
+           (merge (select-keys props [:workspace-id :workspace :bucket-access? :on-submission-success])
                   {:key config-id
                    :config-id config-id
                    :access-level (get-in props [:workspace :accessLevel])
