@@ -108,15 +108,13 @@
            :else [:div {:style {:textAlign "center"}}
                   [comps/Spinner {:text "Loading Method Configuration..."}]]))
    :-render-display
-   (fn [{:keys [props state this]}]
-     (let [{:keys [loaded-config editing?]} @state
-           config (:methodConfiguration loaded-config)]
-       [:div {}
-        [comps/Blocker {:banner (:blocker @state)}]
-        [:div {:style {:padding "1em 2em" :display "flex"}}
-         (this :-render-sidebar)
-         (this :-render-main)
-         (common/clear-both)]]))
+   (fn [{:keys [state this]}]
+     [:div {}
+      [comps/Blocker {:banner (:blocker @state)}]
+      [:div {:style {:padding "1em 2em" :display "flex"}}
+       (this :-render-sidebar)
+       (this :-render-main)
+       (common/clear-both)]])
    :-render-sidebar
    (fn [{:keys [props state this locals]}]
      (let [{:keys [editing? loaded-config]} @state
