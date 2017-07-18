@@ -9,7 +9,8 @@ import org.scalatest._
 class MethodConfigTabSpec extends FreeSpec with WebBrowserSpec with CleanUp {
 
   val billingProject: String = Config.Projects.default
-  val methodConfigName: String = "test_method" + UUID.randomUUID().toString
+  val methodName: String = TestData.SimpleMethod.name + "_" + UUID.randomUUID().toString
+  val methodConfigName: String = TestData.SimpleMethodConfig.name + "_" + UUID.randomUUID().toString
   val wrongRootEntityErrorText: String = "Error: Method configuration expects an entity of type sample, but you gave us an entity of type participant."
   val noExpressionErrorText: String = "Error: Method configuration expects an entity of type sample, but you gave us an entity of type sample_set."
   val missingInputsErrorText: String = "is missing definitions for these inputs:"
@@ -25,10 +26,10 @@ class MethodConfigTabSpec extends FreeSpec with WebBrowserSpec with CleanUp {
 
     signIn(uiUser)
     val workspaceMethodConfigPage = new WorkspaceMethodConfigPage(billingProject, wsName).open
-    val methodConfigDetailsPage = workspaceMethodConfigPage.importMethodConfigFromRepo(TestData.SimpleMethodConfig.namespace,
-      TestData.SimpleMethodConfig.name, TestData.SimpleMethodConfig.snapshotId, methodConfigName, TestData.SimpleMethodConfig.rootEntityType)
-    methodConfigDetailsPage.editMethodConfig(inputs = Some(TestData.SimpleMethodConfig.inputs))
-    val submissionDetailsPage = methodConfigDetailsPage.launchAnalysis(TestData.SimpleMethodConfig.rootEntityType, TestData.SingleParticipant.entityId)
+    val methodConfigDetailsPage = workspaceMethodConfigPage.importMethodConfigFromRepo(TestData.SimpleMethod.namespace,
+      TestData.SimpleMethod.name, TestData.SimpleMethod.snapshotId, methodConfigName, Some(TestData.SimpleMethodConfig.rootEntityType))
+    methodConfigDetailsPage.editMethodConfig(inputs = Some(TestData.SimpleMethod.inputs))
+    val submissionDetailsPage = methodConfigDetailsPage.launchAnalysis(TestData.SimpleMethod.rootEntityType, TestData.SingleParticipant.entityId)
 
     submissionDetailsPage.waitUntilSubmissionCompletes()  //This feels like the wrong way to do this?
     assert(submissionDetailsPage.verifyWorkflowSucceeded())
@@ -38,14 +39,14 @@ class MethodConfigTabSpec extends FreeSpec with WebBrowserSpec with CleanUp {
     val wsName = "TestSpec_FireCloud_launch_modal_no_default_entities" + UUID.randomUUID.toString
     api.workspaces.create(billingProject, wsName)
     register cleanUp api.workspaces.delete(billingProject, wsName)
-    api.importMetaData(billingProject, wsName, "entities", TestData.SingleParticipant.participantEntity)
+//    api.importMetaData(billingProject, wsName, "entities", TestData.SingleParticipant.participantEntity)
 
     signIn(uiUser)
     val workspaceMethodConfigPage = new WorkspaceMethodConfigPage(billingProject, wsName)
     workspaceMethodConfigPage.open
-    val methodConfigDetailsPage = workspaceMethodConfigPage.importMethodConfigFromRepo(TestData.SimpleMethodConfig.namespace,
-      TestData.SimpleMethodConfig.name, TestData.SimpleMethodConfig.snapshotId, methodConfigName, "participant_set")
-    methodConfigDetailsPage.editMethodConfig(inputs = Some(TestData.SimpleMethodConfig.inputs))
+    val methodConfigDetailsPage = workspaceMethodConfigPage.importMethodConfigFromRepo(TestData.SimpleMethod.namespace,
+      TestData.SimpleMethod.name, TestData.SimpleMethod.snapshotId, methodConfigName, Some("participant_set"))
+    methodConfigDetailsPage.editMethodConfig(inputs = Some(TestData.SimpleMethod.inputs)) // neccessary?
     val launchModal = methodConfigDetailsPage.openlaunchModal()
     assert(launchModal.verifyNoDefaultEntityMessage())
     launchModal.closeModal()
@@ -64,9 +65,9 @@ class MethodConfigTabSpec extends FreeSpec with WebBrowserSpec with CleanUp {
     signIn(uiUser)
     val workspaceMethodConfigPage = new WorkspaceMethodConfigPage(billingProject, wsName)
     workspaceMethodConfigPage.open
-    val methodConfigDetailsPage = workspaceMethodConfigPage.importMethodConfigFromRepo(TestData.SimpleMethodConfig.namespace,
-      TestData.SimpleMethodConfig.name, TestData.SimpleMethodConfig.snapshotId, methodConfigName, "sample")
-    methodConfigDetailsPage.editMethodConfig(inputs = Some(TestData.SimpleMethodConfig.inputs))
+    val methodConfigDetailsPage = workspaceMethodConfigPage.importMethodConfigFromRepo(TestData.SimpleMethod.namespace,
+      TestData.SimpleMethod.name, TestData.SimpleMethod.snapshotId, methodConfigName, Some("sample"))
+    methodConfigDetailsPage.editMethodConfig(inputs = Some(TestData.SimpleMethod.inputs))
 
     val launchModal = methodConfigDetailsPage.openlaunchModal()
     launchModal.filterRootEntityType("sample_set")
@@ -85,9 +86,9 @@ class MethodConfigTabSpec extends FreeSpec with WebBrowserSpec with CleanUp {
     val workspaceListPage = new WorkspaceListPage
     val workspaceMethodConfigPage = new WorkspaceMethodConfigPage(billingProject, wsName)
     workspaceMethodConfigPage.open
-    val methodConfigDetailsPage = workspaceMethodConfigPage.importMethodConfigFromRepo(TestData.SimpleMethodConfig.namespace,
-      TestData.SimpleMethodConfig.name, TestData.SimpleMethodConfig.snapshotId, methodConfigName, "sample")
-    methodConfigDetailsPage.editMethodConfig(inputs = Some(TestData.SimpleMethodConfig.inputs))
+    val methodConfigDetailsPage = workspaceMethodConfigPage.importMethodConfigFromRepo(TestData.SimpleMethod.namespace,
+      TestData.SimpleMethod.name, TestData.SimpleMethod.snapshotId, methodConfigName, Some("sample"))
+    methodConfigDetailsPage.editMethodConfig(inputs = Some(TestData.SimpleMethod.inputs))
 
     val launchModal = methodConfigDetailsPage.openlaunchModal()
     launchModal.filterRootEntityType("participant")
@@ -110,9 +111,9 @@ class MethodConfigTabSpec extends FreeSpec with WebBrowserSpec with CleanUp {
 
     signIn(uiUser)
     val workspaceMethodConfigPage = new WorkspaceMethodConfigPage(billingProject, wsName).open
-    val methodConfigDetailsPage = workspaceMethodConfigPage.importMethodConfigFromRepo(TestData.SimpleMethodConfig.namespace,
-      TestData.SimpleMethodConfig.name, TestData.SimpleMethodConfig.snapshotId, methodConfigName, "sample")
-    methodConfigDetailsPage.editMethodConfig(inputs = Some(TestData.SimpleMethodConfig.inputs))
+    val methodConfigDetailsPage = workspaceMethodConfigPage.importMethodConfigFromRepo(TestData.SimpleMethod.namespace,
+      TestData.SimpleMethod.name, TestData.SimpleMethod.snapshotId, methodConfigName, Some("sample"))
+    methodConfigDetailsPage.editMethodConfig(inputs = Some(TestData.SimpleMethod.inputs))
 
     val launchModal = methodConfigDetailsPage.openlaunchModal()
     launchModal.filterRootEntityType("sample_set")
@@ -132,7 +133,7 @@ class MethodConfigTabSpec extends FreeSpec with WebBrowserSpec with CleanUp {
     val workspaceMethodConfigPage = new WorkspaceMethodConfigPage(billingProject, wsName)
     workspaceMethodConfigPage.open
     val methodConfigDetailsPage = workspaceMethodConfigPage.importMethodConfigFromRepo(TestData.InputRequiredMethodConfig.namespace,
-      TestData.InputRequiredMethodConfig.name, TestData.InputRequiredMethodConfig.snapshotId, methodConfigName, TestData.InputRequiredMethodConfig.rootEntityType)
+      TestData.InputRequiredMethodConfig.name, TestData.InputRequiredMethodConfig.snapshotId, methodConfigName, Some(TestData.InputRequiredMethodConfig.rootEntityType))
 
     val launchModal = methodConfigDetailsPage.openlaunchModal()
     launchModal.filterRootEntityType(TestData.InputRequiredMethodConfig.rootEntityType)
@@ -155,7 +156,7 @@ class MethodConfigTabSpec extends FreeSpec with WebBrowserSpec with CleanUp {
 
     signIn(uiUser)
     val workspaceMethodConfigPage = new WorkspaceMethodConfigPage(billingProject, wsName).open
-    val methodConfigDetailsPage = workspaceMethodConfigPage.importMethodConfig(TestData.SimpleMethodConfig.namespace,
+    val methodConfigDetailsPage = workspaceMethodConfigPage.importMethodConfigFromRepo(TestData.SimpleMethodConfig.namespace,
       TestData.SimpleMethodConfig.name, TestData.SimpleMethodConfig.snapshotId, methodConfigName)
     //    methodConfigDetailsPage.editMethodConfig(inputs = Some(TestData.SimpleMethodConfig.inputs)) // not needed for config
 
@@ -170,22 +171,22 @@ class MethodConfigTabSpec extends FreeSpec with WebBrowserSpec with CleanUp {
 
     signIn(uiUser)
     val workspaceMethodConfigPage = new WorkspaceMethodConfigPage(billingProject, wsName).open
-    val methodConfigDetailsPage = workspaceMethodConfigPage.importMethod(TestData.SimpleMethod.namespace,
-      TestData.SimpleMethod.name, TestData.SimpleMethod.snapshotId, methodConfigName, TestData.SimpleMethod.rootEntityType)
+    val methodConfigDetailsPage = workspaceMethodConfigPage.importMethodConfigFromRepo(TestData.SimpleMethod.namespace,
+      TestData.SimpleMethod.name, TestData.SimpleMethod.snapshotId, methodName, Some(TestData.SimpleMethod.rootEntityType))
     methodConfigDetailsPage.editMethodConfig(inputs = Some(TestData.SimpleMethod.inputs))
 
     assert(methodConfigDetailsPage.isLoaded)
   }
 
-  "launch a method config into a workspace from the method repo" in withWebDriver { implicit driver =>
-    val wsName = "TestSpec_FireCloud_import_method_config_from_workspace" + UUID.randomUUID.toString
+  "launch a method config from the method repo" in withWebDriver { implicit driver =>
+    val wsName = "TestSpec_FireCloud_launch_method_config_from_workspace" + UUID.randomUUID.toString
     api.workspaces.create(billingProject, wsName)
     register cleanUp api.workspaces.delete(billingProject, wsName)
     api.importMetaData(billingProject, wsName, "entities", TestData.SingleParticipant.participantEntity)
 
     signIn(uiUser)
     val workspaceMethodConfigPage = new WorkspaceMethodConfigPage(billingProject, wsName).open
-    val methodConfigDetailsPage = workspaceMethodConfigPage.importMethodConfig(TestData.SimpleMethodConfig.namespace,
+    val methodConfigDetailsPage = workspaceMethodConfigPage.importMethodConfigFromRepo(TestData.SimpleMethodConfig.namespace,
       TestData.SimpleMethodConfig.name, TestData.SimpleMethodConfig.snapshotId, methodConfigName)
     //    methodConfigDetailsPage.editMethodConfig(inputs = Some(TestData.SimpleMethodConfig.inputs)) // not needed for config
     val submissionDetailsPage = methodConfigDetailsPage.launchAnalysis(TestData.SimpleMethodConfig.rootEntityType, TestData.SingleParticipant.entityId)
@@ -194,16 +195,16 @@ class MethodConfigTabSpec extends FreeSpec with WebBrowserSpec with CleanUp {
     assert(submissionDetailsPage.verifyWorkflowSucceeded())
   }
 
-  "launch a method into a workspace from the method repo" in withWebDriver { implicit driver =>
-    val wsName = "TestSpec_FireCloud_import_method_from_workspace" + UUID.randomUUID.toString
+  "launch a method from the method repo" in withWebDriver { implicit driver =>
+    val wsName = "TestSpec_FireCloud_launch_method_from_workspace" + UUID.randomUUID.toString
     api.workspaces.create(billingProject, wsName)
     register cleanUp api.workspaces.delete(billingProject, wsName)
     api.importMetaData(billingProject, wsName, "entities", TestData.SingleParticipant.participantEntity)
 
     signIn(uiUser)
     val workspaceMethodConfigPage = new WorkspaceMethodConfigPage(billingProject, wsName).open
-    val methodConfigDetailsPage = workspaceMethodConfigPage.importMethod(TestData.SimpleMethod.namespace,
-      TestData.SimpleMethod.name, TestData.SimpleMethod.snapshotId, methodConfigName, TestData.SimpleMethod.rootEntityType)
+    val methodConfigDetailsPage = workspaceMethodConfigPage.importMethodConfigFromRepo(TestData.SimpleMethod.namespace,
+      TestData.SimpleMethod.name, TestData.SimpleMethod.snapshotId, methodName, Some(TestData.SimpleMethod.rootEntityType))
     methodConfigDetailsPage.editMethodConfig(inputs = Some(TestData.SimpleMethod.inputs))
     val submissionDetailsPage = methodConfigDetailsPage.launchAnalysis(TestData.SimpleMethod.rootEntityType, TestData.SingleParticipant.entityId)
 
@@ -219,19 +220,18 @@ class MethodConfigTabSpec extends FreeSpec with WebBrowserSpec with CleanUp {
     api.importMetaData(billingProject, wsName, "entities", TestData.SingleParticipant.participantEntity)
 
     signIn(uiUser)
+    // ATODO import this method via API
     val workspaceMethodConfigPage = new WorkspaceMethodConfigPage(billingProject, wsName).open
-    val methodConfigDetailsPage = workspaceMethodConfigPage.importMethod(TestData.SimpleMethod.namespace,
-      TestData.SimpleMethod.name, TestData.SimpleMethod.snapshotId, methodConfigName, TestData.SimpleMethod.rootEntityType)
+    val methodConfigDetailsPage = workspaceMethodConfigPage.importMethodConfigFromRepo(TestData.SimpleMethod.namespace,
+      TestData.SimpleMethod.name, TestData.SimpleMethod.snapshotId, methodName, Some(TestData.SimpleMethod.rootEntityType))
     methodConfigDetailsPage.editMethodConfig(inputs = Some(TestData.SimpleMethod.inputs))
     val submissionDetailsPage = methodConfigDetailsPage.launchAnalysis(TestData.SimpleMethod.rootEntityType, TestData.SingleParticipant.entityId, "", shouldUseCallCaching)
-
+    // ATODO start the submission via API? - reduce the amount of UI surface.
     submissionDetailsPage.abortSubmission()
     submissionDetailsPage.waitUntilSubmissionCompletes()
     assert(submissionDetailsPage.verifyWorkflowAborted())
 
   }
-
-  // negative tests
 
   "delete a method from a workspace" in withWebDriver { implicit driver =>
     val wsName = "TestSpec_FireCloud_delete_method_from_workspace" + UUID.randomUUID.toString
@@ -241,8 +241,8 @@ class MethodConfigTabSpec extends FreeSpec with WebBrowserSpec with CleanUp {
 
     signIn(uiUser)
     val workspaceMethodConfigPage = new WorkspaceMethodConfigPage(billingProject, wsName).open
-    val methodConfigDetailsPage = workspaceMethodConfigPage.importMethod(TestData.SimpleMethod.namespace,
-      TestData.SimpleMethod.name, TestData.SimpleMethod.snapshotId, methodConfigName, TestData.SimpleMethod.rootEntityType)
+    val methodConfigDetailsPage = workspaceMethodConfigPage.importMethodConfigFromRepo(TestData.SimpleMethod.namespace,
+      TestData.SimpleMethod.name, TestData.SimpleMethod.snapshotId, methodName, Some(TestData.SimpleMethod.rootEntityType))
     methodConfigDetailsPage.editMethodConfig(inputs = Some(TestData.SimpleMethod.inputs))
     methodConfigDetailsPage.deleteMethodConfig()
 
@@ -250,5 +250,7 @@ class MethodConfigTabSpec extends FreeSpec with WebBrowserSpec with CleanUp {
     assert( find(methodConfigName).size == 0 )
   }
 
+
+  // negative tests
 
 }

@@ -71,13 +71,11 @@ class BillingManagementPage(implicit webDriver: WebDriver) extends Authenticated
 
 
   def addUserToBillingProject(userEmail: String, role: String) = {
-    ui.openAddUserDialog()
-    ui.fillUserEmail(userEmail)
-    ui.selectRole(role)
-    ui.confirmAddUserDialog()
+    val modal = ui.openAddUserDialog()
+    modal.addUserToBillingProject(userEmail, role)
   }
 
-  def isUserInBillingProject(userEmail: String) = {
+  def isUserInBillingProject(userEmail: String): Boolean = {
 //    filter(userEmail)
     userEmail == ui.findUser(userEmail)
   }
@@ -88,9 +86,6 @@ class BillingManagementPage(implicit webDriver: WebDriver) extends Authenticated
     private val filterButton = testId("billing-project-list-filter-button")
     private val filterInput = testId("billing-project-list-filter-input")
     private val addUserButton = testId("billing-project-add-user-button")
-    private val addUserModalEmailInput = testId("billing-project-add-user-modal-user-email-input")
-    private val addUserModalRoleSelect = testId("billing-project-add-user-modal-user-role-select")
-    private val addUserModalConfirmButton = testId("billing-project-add-user-modal-confirm-button")
 
     def clickCreateBillingProjectButton(): CreateBillingProjectModal = {
       click on createBillingProjectButton
@@ -124,23 +119,14 @@ class BillingManagementPage(implicit webDriver: WebDriver) extends Authenticated
 
     def openAddUserDialog() = {
       click on (await enabled addUserButton)
-    }
-
-    def fillUserEmail(email: String) = {
-      textField(addUserModalEmailInput).value = email
-    }
-
-    def selectRole(role: String) = {
-      singleSel(addUserModalRoleSelect).value = option value role
-    }
-
-    def confirmAddUserDialog() = {
-      click on addUserModalConfirmButton
+      new AddUserToBillingProjectModal
     }
 
     def findUser(userEmail: String): String = {
-      val userEmailText = testId(userEmail)
-      find(userEmailText).get.text
+      val emailQuery = testId(userEmail)
+      await enabled emailQuery
+      val userEmailElement = find(emailQuery)
+      userEmailElement.get.text
     }
   }
   object ui extends UI
@@ -174,6 +160,39 @@ class CreateBillingProjectModal(implicit webDriver: WebDriver) extends FireCloud
 
     def selectBillingAccount(name: String): Unit = {
       click on testId(name)
+    }
+  }
+}
+
+
+
+/**
+  * Page class for the modal for adding users to a billing project.
+  */
+class AddUserToBillingProjectModal(implicit webDriver: WebDriver) extends FireCloudView {
+
+  def addUserToBillingProject(userEmail: String, role: String): Unit = {
+    ui.fillUserEmail(userEmail)
+    ui.selectRole(role)
+    ui.confirmAddUserDialog()
+  }
+
+  object ui {
+    private val addUserModalEmailInput = testId("billing-project-add-user-modal-user-email-input")
+    private val addUserModalRoleSelect = testId("billing-project-add-user-modal-user-role-select")
+    private val addUserModalConfirmButton = testId("billing-project-add-user-modal-confirm-button")
+
+    def fillUserEmail(email: String) = {
+      await enabled addUserModalEmailInput
+      textField(addUserModalEmailInput).value = email
+    }
+
+    def selectRole(role: String) = {
+      singleSel(addUserModalRoleSelect).value = option value role
+    }
+
+    def confirmAddUserDialog() = {
+      click on addUserModalConfirmButton
     }
   }
 }

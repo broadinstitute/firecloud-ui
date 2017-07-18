@@ -10,15 +10,13 @@ class WorkspaceMethodConfigPage(namespace: String, name: String)(implicit webDri
   override val url: String = s"${Config.FireCloud.baseUrl}#workspaces/$namespace/$name/method-configs"
 
 //To-Do: Make this accept method namespace and participant
-  def importMethodConfigFromRepo(methodNamespace: String, methodName: String, snapshotId: Int, methodConfigName: String, rootEntityType: String): MethodConfigDetailsPage = {
+  /**
+    * Imports Methods and Method Configs from the Method Repo. Note that the rootEntityType is only
+    * necessary for Methods, but not Method Configs
+    */
+  def importMethodConfigFromRepo(methodNamespace: String, methodName: String, snapshotId: Int, methodConfigName: String, rootEntityType: Option[String] = None): MethodConfigDetailsPage = {
     val chooseSourceModal = ui.clickImportConfigButton()
     chooseSourceModal.chooseConfigFromRepo(methodNamespace, methodName, snapshotId, methodConfigName, rootEntityType)
-    new MethodConfigDetailsPage(namespace, name, methodNamespace, methodConfigName)
-  }
-
-  def importMethodConfig(methodNamespace: String, methodName: String, snapshotId: Int, methodConfigName: String): MethodConfigDetailsPage = {
-    val importModal = gestures.clickimportConfigButton()
-    importModal.importMethodOrConfig(methodNamespace, methodName, snapshotId, methodConfigName)
     new MethodConfigDetailsPage(namespace, name, methodNamespace, methodConfigName)
   }
 
@@ -36,7 +34,7 @@ class WorkspaceMethodConfigPage(namespace: String, name: String)(implicit webDri
 
 class ImportMethodChooseSourceModel(implicit webDriver: WebDriver) extends FireCloudView {
 
-  def chooseConfigFromRepo(methodNamespace: String, methodName: String, snapshotId: Int, methodConfigName: String, rootEntityType: String): Unit = {
+  def chooseConfigFromRepo(methodNamespace: String, methodName: String, snapshotId: Int, methodConfigName: String, rootEntityType: Option[String]): Unit = {
     val importModel = gestures.clickChooseFromRepoButton()
     importModel.importMethodConfig(methodNamespace, methodName, snapshotId, methodConfigName, rootEntityType)
   }
@@ -60,17 +58,19 @@ class ImportMethodConfigModal(implicit webDriver: WebDriver) extends FireCloudVi
   /**
     *
     */
-  def importMethodConfig(methodNamespace: String, methodName: String, snapshotId: Int, methodConfigName: String, rootEntityType: String): Unit = {
+  def importMethodConfig(methodNamespace: String, methodName: String, snapshotId: Int, methodConfigName: String, rootEntityType: Option[String]): Unit = {
     ui.searchMethodOrConfig(methodName)
     ui.selectMethodOrConfig(methodName, snapshotId)
+    ui.fillNamespace(methodNamespace)
     ui.fillMethodConfigName(methodConfigName)
-    ui.chooseRootEntityType(rootEntityType)
+    if (rootEntityType != None) { ui.chooseRootEntityType(rootEntityType.get) }
     ui.clickimportMethodConfigButton()
   }
 
   object ui {
 
     private val methodSearchInputQuery: Query = testId("method-repo-table-input")
+    private val methodNamespaceInputQuery: Query = testId("method-config-import-namespace-input")
     private val methodConfigNameInputQuery: Query = testId("method-config-import-name-input")
     private val importMethodConfigButtonQuery: Query = testId("import-button")
     private val rootEntityTypeSelectQuery: Query = testId("import-root-entity-type-select")
@@ -86,6 +86,11 @@ class ImportMethodConfigModal(implicit webDriver: WebDriver) extends FireCloudVi
       click on testId(methodName + "_" + snapshotId)
     }
 
+    def fillNamespace(methodNamespace: String): Unit = {
+      await enabled methodNamespaceInputQuery
+      textField(methodNamespaceInputQuery).value = methodNamespace
+    }
+
     def fillMethodConfigName(methodConfigName: String): Unit = {
       await enabled methodConfigNameInputQuery
       textField(methodConfigNameInputQuery).value = methodConfigName
@@ -96,9 +101,6 @@ class ImportMethodConfigModal(implicit webDriver: WebDriver) extends FireCloudVi
       singleSel(rootEntityTypeSelectQuery).value = rootEntityType
     }
 
-    def verifyNoDefaultEntityMessage() = {
-
-    }
 
     def clickimportMethodConfigButton(): Unit = {
       click on (await enabled importMethodConfigButtonQuery)

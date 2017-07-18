@@ -48,6 +48,7 @@ class BillingSpec extends FreeSpec with WebBrowserSpec with CleanUp
 
           billingPage.waitForCreateCompleted(billingProjectName)
 
+          billingPage.openBillingProject(billingProjectName)
           billingPage.addUserToBillingProject(secondUser, "User")
 
           val isSuccess = billingPage.isUserInBillingProject(secondUser)
@@ -66,7 +67,7 @@ class BillingSpec extends FreeSpec with WebBrowserSpec with CleanUp
           billingPage.createBillingProject(billingProjectName, Config.Projects.billingAccount)
           register cleanUp Rawls.admin.deleteBillingProject(billingProjectName)(AuthTokens.dumbledore)
 
-          val status = billingPage.waitForCreateCompleted(billingProjectName)
+          billingPage.waitForCreateCompleted(billingProjectName)
 
           // create workspace and verify
           val workspaceName = "WorkspaceSpec_create_" + randomUuid
@@ -106,8 +107,8 @@ class BillingSpec extends FreeSpec with WebBrowserSpec with CleanUp
 
 
           val workspaceMethodConfigPage = new WorkspaceMethodConfigPage(billingProjectName, workspaceName).open
-          val methodConfigDetailsPage = workspaceMethodConfigPage.importMethod(TestData.SimpleMethod.namespace,
-            TestData.SimpleMethod.name, TestData.SimpleMethod.snapshotId, methodConfigName, TestData.SimpleMethod.rootEntityType)
+          val methodConfigDetailsPage = workspaceMethodConfigPage.importMethodConfigFromRepo(TestData.SimpleMethod.namespace,
+            TestData.SimpleMethod.name, TestData.SimpleMethod.snapshotId, methodConfigName)
           methodConfigDetailsPage.editMethodConfig(inputs = Some(TestData.SimpleMethod.inputs))
           val submissionDetailsPage = methodConfigDetailsPage.launchAnalysis(TestData.SimpleMethod.rootEntityType, TestData.SingleParticipant.entityId)
 

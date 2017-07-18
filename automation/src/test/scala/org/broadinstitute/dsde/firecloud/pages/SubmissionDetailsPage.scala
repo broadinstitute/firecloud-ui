@@ -37,7 +37,7 @@ class SubmissionDetailsPage(namespace: String, name: String)(implicit webDriver:
   }
 
   def verifyWorkflowAborted(): Boolean = {
-    val status = gestures.getWorkflowStatus()
+    val status = ui.getWorkflowStatus()
     ABORTED_STATS.contains(status)
   }
 
@@ -48,7 +48,7 @@ class SubmissionDetailsPage(namespace: String, name: String)(implicit webDriver:
   }
 
   def abortSubmission() = {
-    gestures.abortSubmission()
+    ui.abortSubmission()
   }
 
   trait UI extends super.UI {

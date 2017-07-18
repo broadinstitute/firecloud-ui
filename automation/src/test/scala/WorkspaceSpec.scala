@@ -61,30 +61,14 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures[
       }
     }
 
-    "should be able to log out and log in as another user" in withWebDriver { implicit driver =>
-      val listPageAsUser1 = signIn(Config.Users.harry)
-      listPageAsUser1.signOut()
-      val listPageAsUser2 = signIn(Config.Users.ron)
-      assert(listPageAsUser2.getUser().startsWith(Config.Users.ron.email))
-    }
-
-    "should be able to log in and out multiple times as multiple users" in withWebDriver { implicit driver =>
-      var listPageAsUser1 = signIn(Config.Users.harry)
-      listPageAsUser1.signOut()
-      val listPageAsUser2 = signIn(Config.Users.ron)
-      listPageAsUser2.signOut()
-      listPageAsUser1 = signIn(Config.Users.harry)
-      assert(listPageAsUser1.getUser().startsWith(Config.Users.harry.email))
-    }
-  }
-
-  // Experimental
-  "A cloned workspace" - {
-    "should retain the source workspace's authorization domain" in withWebDriver { implicit driver =>
-      withClonedWorkspace(Config.Projects.common, Option("AuthDomainSpec_share")) { cloneWorkspaceName =>
-        val listPage = signIn(Config.Users.harry)
-        val summaryPage = listPage.openWorkspaceDetails(Config.Projects.common, cloneWorkspaceName).awaitLoaded()
-        // assert that user who cloned the workspace is the owner
+    // Experimental
+    "A cloned workspace" - {
+      "should retain the source workspace's authorization domain" in withWebDriver { implicit driver =>
+        withClonedWorkspace(Config.Projects.common, Option("AuthDomainSpec_share")) { cloneWorkspaceName =>
+          val listPage = signIn(Config.Users.harry)
+          val summaryPage = listPage.openWorkspaceDetails(Config.Projects.common, cloneWorkspaceName).awaitLoaded()
+          // assert that user who cloned the workspace is the owner
+        }
       }
     }
   }

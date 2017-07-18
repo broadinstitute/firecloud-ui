@@ -31,7 +31,7 @@ class MethodConfigDetailsPage(namespace: String, name: String, methodConfigNames
   }
 
   def isLoaded: Boolean = {
-    gestures.isLaunchAnalysisButtonPresent()
+    ui.isLaunchAnalysisButtonPresent()
   }
 
   override def awaitLoaded(): MethodConfigDetailsPage = {
@@ -40,7 +40,7 @@ class MethodConfigDetailsPage(namespace: String, name: String, methodConfigNames
   }
 
   def deleteMethodConfig() = {
-    gestures.deleteMethodConfig()
+    ui.deleteMethodConfig()
   }
 
   trait UI extends super.UI {
@@ -135,7 +135,6 @@ class LaunchAnalysisModal(implicit webDriver: WebDriver) extends FireCloudView {
     ui.searchEntity(entityId)
     ui.selectEntity(entityId)
     if (!expression.isEmpty()) { ui.fillExpression(expression) }
-    ui.clicklaunchButton()
     if (!enableCallCaching) { ui.clickCallCachingCheckbox() }
     ui.clickLaunchButton()
   }
