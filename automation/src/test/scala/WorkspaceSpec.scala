@@ -4,7 +4,7 @@ import org.broadinstitute.dsde.firecloud.workspaces.WorkspaceFixtures
 import org.broadinstitute.dsde.firecloud.{CleanUp, Config, Util}
 import org.scalatest._
 
-class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures[WorkspaceSpec]
+class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures
   with CleanUp with Matchers {
 
   implicit val authToken: AuthToken = AuthTokens.harry
@@ -27,36 +27,33 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures[
       }
 
       "should be able to clone a workspace" in withWebDriver { implicit driver =>
-        val wsName = "WorkspaceSpec_to_be_cloned_" + randomUuid
-        val wsNameCloned = "WorkspaceSpec_clone_" + randomUuid
-        api.workspaces.create(billingProject, wsName)
-        register cleanUp api.workspaces.delete(billingProject, wsName)
+        withWorkspace(billingProject, "WorkspaceSpec_to_be_cloned") { workspaceName =>
+          val listPage = signIn(Config.Users.harry)
 
-        val listPage = signIn(Config.Users.harry)
-        val workspaceSummaryPage = new WorkspaceSummaryPage(billingProject, wsName).open
-        register cleanUp api.workspaces.delete(billingProject, wsNameCloned)
-        workspaceSummaryPage.cloneWorkspace(billingProject, wsNameCloned).awaitLoaded()
+          val workspaceNameCloned = "WorkspaceSpec_clone_" + randomUuid
+          val workspaceSummaryPage = new WorkspaceSummaryPage(billingProject, workspaceName).open
+          register cleanUp api.workspaces.delete(billingProject, workspaceNameCloned)
+          workspaceSummaryPage.cloneWorkspace(billingProject, workspaceNameCloned).awaitLoaded()
 
-        listPage.open
-        listPage.filter(wsNameCloned)
-        listPage.ui.hasWorkspace(billingProject, wsNameCloned) shouldBe true
+          listPage.open
+          listPage.filter(workspaceNameCloned)
+          listPage.ui.hasWorkspace(billingProject, workspaceNameCloned) shouldBe true
+        }
       }
     }
 
     "who owns a workspace" - {
       "should be able to delete the workspace" in withWebDriver { implicit driver =>
-        val workspaceName = "WorkspaceSpec_delete_" + Util.makeUuid
+        withWorkspace(billingProject, "WorkspaceSpec_delete") { workspaceName =>
+          val listPage = signIn(Config.Users.harry)
 
-        api.workspaces.create(billingProject, workspaceName)
-        register cleanUp api.workspaces.delete(billingProject, workspaceName)
+          val detailPage = listPage.openWorkspaceDetails(billingProject, workspaceName).awaitLoaded()
+          detailPage.deleteWorkspace().awaitLoaded()
 
-        val listPage = signIn(Config.Users.harry)
-        val detailPage = listPage.openWorkspaceDetails(billingProject, workspaceName).awaitLoaded()
-        detailPage.deleteWorkspace().awaitLoaded()
-
-        listPage.validateLocation()
-        listPage.filter(workspaceName)
-        listPage.ui.hasWorkspace(billingProject, workspaceName) shouldBe false
+          listPage.validateLocation()
+          listPage.filter(workspaceName)
+          listPage.ui.hasWorkspace(billingProject, workspaceName) shouldBe false
+        }
       }
     }
   }

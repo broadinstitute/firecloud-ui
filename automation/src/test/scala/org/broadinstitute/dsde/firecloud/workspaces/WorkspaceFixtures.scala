@@ -1,14 +1,16 @@
 package org.broadinstitute.dsde.firecloud.workspaces
 
+import org.broadinstitute.dsde.firecloud.CleanUp
 import org.broadinstitute.dsde.firecloud.Util.{appendUnderscore, makeUuid}
 import org.broadinstitute.dsde.firecloud.api.AclEntry
 import org.broadinstitute.dsde.firecloud.pages.WebBrowserSpec
 import org.broadinstitute.dsde.firecloud.auth.AuthToken
+import org.scalatest.Suite
 
 /**
   * Fixtures for creating and cleaning up test workspaces.
   */
-trait WorkspaceFixtures[A <: WebBrowserSpec] { self: A =>
+trait WorkspaceFixtures extends CleanUp { self: WebBrowserSpec with Suite =>
 
   /**
     * Loan method that creates a workspace that will be cleaned up after the
@@ -30,7 +32,9 @@ trait WorkspaceFixtures[A <: WebBrowserSpec] { self: A =>
     try {
       testCode(workspaceName)
     } finally {
-      api.workspaces.delete(namespace, workspaceName)
+      try {
+        api.workspaces.delete(namespace, workspaceName)
+      } catch nonFatalAndLog(s"Error deleting workspace in withWorkspace clean-up: $namespace/$workspaceName")
     }
   }
 
