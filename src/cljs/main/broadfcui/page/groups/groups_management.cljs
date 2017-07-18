@@ -89,9 +89,7 @@
                     (style/create-link
                      {:text (icons/icon {} :delete)
                       :style {:float "right" :color (:exception-state style/colors)}
-                      :onClick #(do
-                                  (swap! state assoc :group-name groupName)
-                                  (swap! state assoc :delete-modal? true))})))}]}
+                      :onClick #(swap! state assoc :group-name groupName :delete-modal? true)})))}]}
        :toolbar
        {:items
         [flex/spring
@@ -111,9 +109,7 @@
                    (swap! state dissoc :deleting? :delete-modal?)
                    (if success?
                      (this :-load-data)
-                     (do
-                       (swap! state assoc :error-message (:message parsed-response))
-                       (swap! state assoc :error? true)))))}))})
+                     (swap! state assoc :error-message (:message parsed-response) :error? true))))}))})
 
 (react/defc Page
   {:render
