@@ -60,11 +60,8 @@
            selected (if (empty? library:discoverableByGroups) ALL_USERS (first library:discoverableByGroups))]
        [:div {} "Dataset should be discoverable by:"
         (style/create-identity-select {:value selected
-                                       :display "flex" :alignItems "center"
-                                       :margin "0.5rem 0" :padding "1em"
-                                       :border style/standard-line :borderRadius 8
-                                       :cursor "pointer"
                                        :disabled (not editable?)
+                                       :style {:marginTop "0.5rem"}
                                        :onChange #(react/call :set-groups this (.. % -target -value))}
                                       (cons ALL_USERS (:library-groups props)))
         [:div {:style {:fontSize "small" :paddingTop "0.5rem" :fontStyle "italic"}}

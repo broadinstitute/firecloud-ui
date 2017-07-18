@@ -216,6 +216,27 @@
     "FireCloud is not intended to host personally identifiable information. Do not use any patient
      identifier, including name, social security number, or medical record number."]])
 
+(defn create-element-ref-handler
+  "Calls the methods with the element on mount/unmount."
+  [{:keys [element-key store did-mount will-unmount]}]
+  (fn [element]
+    (if element
+      (do (swap! store assoc element-key element)
+          (did-mount element))
+      (will-unmount (element-key @store)))))
+
+(defn create-element-ref-handler-method
+  "Like create-element-ref-handler, but intended to be attached to
+  the component so it can be non-anonymous.
+  Use with react/method."
+  [{:keys [did-mount will-unmount]}]
+  (let [element-key (keyword (gensym "ref-"))]
+    (fn [{:keys [locals] :as c} element]
+      (if element
+        (do (swap! locals assoc element-key element)
+            (did-mount c element))
+        (will-unmount c (element-key @locals))))))
+
 (react/defc FoundationTooltip
   {:component-did-mount
    (fn [{:keys [this]}]
@@ -281,9 +302,9 @@
         dropdown-container)))
    :-create-dropdown-ref-handler
    (fn [{:keys [this props state after-update locals]}]
-     (utils/create-element-ref-handler
+     (create-element-ref-handler
       {:store locals
-       :key :dropdown-element
+       :element-key :dropdown-element
        :did-mount
        (fn [element]
          (let [element$ (js/$ element)

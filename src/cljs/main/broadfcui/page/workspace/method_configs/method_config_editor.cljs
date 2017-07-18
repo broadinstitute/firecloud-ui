@@ -7,6 +7,7 @@
     [broadfcui.common.icons :as icons]
     [broadfcui.common.modal :as modal]
     [broadfcui.common.style :as style]
+    [broadfcui.components.sticky :refer [Sticky]]
     [broadfcui.endpoints :as endpoints]
     [broadfcui.page.workspace.method-configs.delete-config :as delete]
     [broadfcui.page.workspace.method-configs.launch-analysis :as launch]
@@ -56,24 +57,26 @@
 
 (react/defc MethodConfigEditor
   {:get-initial-state
-   (fn [{:keys [props]}]
+   (fn []
      {:editing? false
       :sidebar-visible? true})
+   :component-will-mount
+   (fn [{:keys [locals props]}]
+     (swap! locals assoc
+            :body-id (gensym "config")
+            :engine (comps/create-bloodhound-engine
+                     {:local (->> (get-in props [:workspace :workspace :workspace-attributes])
+                                  keys
+                                  (map (comp (partial str "workspace.") name))
+                                  (concat ["this." "workspace."]))})))
    :render
    (fn [{:keys [state this]}]
      (cond (every? @state [:loaded-config :methods]) (this :-render-display)
            (:error @state) (style/create-server-error-message (:error @state))
            :else [:div {:style {:textAlign "center"}}
                   [comps/Spinner {:text "Loading Method Configuration..."}]]))
-   :component-will-mount
-   (fn [{:keys [props locals]}]
-     (swap! locals assoc :engine (comps/create-bloodhound-engine
-                                  {:local (->> (get-in props [:workspace :workspace :workspace-attributes])
-                                               keys
-                                               (map (comp (partial str "workspace.") name))
-                                               (concat ["this." "workspace."]))})))
    :component-did-mount
-   (fn [{:keys [state props refs this]}]
+   (fn [{:keys [state refs this]}]
      (this :-load-validated-method-config)
      (endpoints/call-ajax-orch
       {:endpoint endpoints/list-methods
@@ -97,70 +100,71 @@
      (.removeEventListener js/window "scroll" (.-onScrollHandler this)))
    :-render-display
    (fn [{:keys [props state this]}]
-     (let [{:keys [loaded-config editing?]} @state
-           config (:methodConfiguration loaded-config)
-           locked? (get-in props [:workspace :workspace :isLocked])]
+     (let [locked? (get-in props [:workspace :workspace :isLocked])]
        [:div {}
         [comps/Blocker {:banner (:blocker @state)}]
-        [:div {:style {:padding "1em 2em"}}
+        [:div {:style {:padding "1em 2em" :display "flex"}}
          (this :-render-sidebar locked?)
-         (when-not editing?
-           [:div {:style {:float "right"}}
-            (launch/render-button {:workspace-id (:workspace-id props)
-                                   :config-id (ws-common/config->id config)
-                                   :root-entity-type (:rootEntityType config)
-                                   :disabled? (cond locked?
-                                                    "This workspace is locked."
-                                                    (not (:bucket-access? props))
-                                                    (str "You do not currently have access"
-                                                         " to the Google Bucket associated with this workspace."))
-                                   :on-success (:on-submission-success props)})])
-         (this :-render-main)
+         (this :-render-main locked?)
          (common/clear-both)]]))
    :-render-sidebar
-   (fn [{:keys [props state this]} locked?]
-     (let [{:keys [editing? loaded-config inputs-outputs]} @state
+   (fn [{:keys [props state this locals]} locked?]
+     (let [{:keys [editing? loaded-config]} @state
+           {:keys [body-id]} @locals
            config (:methodConfiguration loaded-config)
            can-edit? (common/access-greater-than? (:access-level props) "READER")
            config-id (ws-common/config->id config)]
-       [:div {:style {:width 290 :float "left"}}
-        [:div {:ref "sidebar"}]
-        (apply style/create-unselectable :div
-               {:style {:position (when-not (:sidebar-visible? @state) "fixed")
-                        :top (when-not (:sidebar-visible? @state) 4)
-                        :width 290}}
-               (if editing?
-                 (list
-                  [comps/SidebarButton {:color :success-state
-                                        :text "Save" :icon :done
-                                        :onClick #(this :-commit)}]
-                  [comps/SidebarButton {:color :exception-state :margin :top
-                                        :text "Cancel Editing" :icon :cancel
-                                        :onClick #(this :-cancel-editing)}])
-                 (conj
-                  (when can-edit?
-                    [[comps/SidebarButton {:style :light :color :button-primary
-                                           :text "Edit Configuration" :icon :edit
-                                           :disabled? (when locked? "The workspace is locked")
-                                           :onClick #(this :-begin-editing)}]
-                     [comps/SidebarButton {:style :light :color :exception-state :margin :top
-                                           :text "Delete" :icon :delete
-                                           :disabled? (when locked? "The workspace is locked")
-                                           :onClick #(modal/push-modal
-                                                      [delete/DeleteDialog {:config-id config-id
-                                                                            :workspace-id (:workspace-id props)
-                                                                            :after-delete (:after-delete props)}])}]])
-                  [comps/SidebarButton {:style :light :color :button-primary :margin (when can-edit? :top)
-                                        :text "Publish..." :icon :share
-                                        :onClick #(modal/push-modal
-                                                   [publish/PublishDialog {:config-id config-id
-                                                                           :workspace-id (:workspace-id props)}])}])))]))
+       [:div {:style {:flex "0 0 270px" :paddingRight 30}}
+        [Sticky
+         {:outer-style {:width 290 :backgroundColor "#fff"}
+          :anchor body-id
+          :sticky-props {:data-check-every 1}
+          :contents
+          [:div {:style {:width 270 :background "#fff"}}
+           (if editing?
+             (list
+              [comps/SidebarButton {:color :success-state
+                                    :text "Save" :icon :done
+                                    :onClick #(this :-commit)}]
+              [comps/SidebarButton {:color :exception-state :margin :top
+                                    :text "Cancel Editing" :icon :cancel
+                                    :onClick #(this :-cancel-editing)}])
+             (concat
+              (when can-edit?
+                [[comps/SidebarButton {:style :light :color :button-primary
+                                       :text "Edit Configuration" :icon :edit
+                                       :disabled? (when locked? "The workspace is locked")
+                                       :onClick #(this :-begin-editing)}]
+                 [comps/SidebarButton {:style :light :color :exception-state :margin :top
+                                       :text "Delete" :icon :delete
+                                       :disabled? (when locked? "The workspace is locked")
+                                       :onClick #(modal/push-modal
+                                                  [delete/DeleteDialog {:config-id config-id
+                                                                        :workspace-id (:workspace-id props)
+                                                                        :after-delete (:after-delete props)}])}]])
+              [[comps/SidebarButton {:style :light :color :button-primary :margin (when can-edit? :top)
+                                     :text "Publish..." :icon :share
+                                     :onClick #(modal/push-modal
+                                                [publish/PublishDialog {:config-id config-id
+                                                                        :workspace-id (:workspace-id props)}])}]]))]}]]))
    :-render-main
-   (fn [{:keys [state this]}]
+   (fn [{:keys [state this locals props]} locked?]
      (let [{:keys [editing? loaded-config wdl-parse-error inputs-outputs methods]} @state
            config (:methodConfiguration loaded-config)
-           {:keys [methodRepoMethod]} config]
-       [:div {:style {:marginLeft 330}}
+           {:keys [methodRepoMethod]} config
+           {:keys [body-id]} @locals]
+       [:div {:style {:flex "1 1 auto"} :id body-id}
+        (when-not editing?
+          [:div {:style {:float "right"}}
+           (launch/render-button {:workspace-id (:workspace-id props)
+                                  :config-id (ws-common/config->id config)
+                                  :root-entity-type (:rootEntityType config)
+                                  :disabled? (cond locked?
+                                                   "This workspace is locked."
+                                                   (not (:bucket-access? props))
+                                                   (str "You do not currently have access"
+                                                        " to the Google Bucket associated with this workspace."))
+                                  :on-success (:on-submission-success props)})])
         (create-section-header "Method Configuration Name")
         (create-section
          (if editing?
@@ -252,7 +256,7 @@
      (let [{:keys [loaded-config inputs-outputs]} @state]
        (swap! state assoc :editing? true :original-config loaded-config :original-inputs-outputs inputs-outputs)))
    :-cancel-editing
-   (fn [{:keys [state props refs]}]
+   (fn [{:keys [state refs]}]
      (let [original-loaded-config (:original-config @state)
            original-inputs-outputs (:original-inputs-outputs @state)
            method-ref (-> original-loaded-config :methodConfiguration :methodRepoMethod)]
