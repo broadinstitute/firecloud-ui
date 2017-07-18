@@ -191,12 +191,12 @@
    figure out either from context or from clicking, but we want to be explicit."]])
 
 (react/defc Page
-  {:get-initial-state
-   (fn []
-     {:body-id (gensym "style")})
+  {:component-will-mount
+   (fn [{:keys [locals]}]
+     (swap! locals assoc :body-id (gensym "style")))
    :render
-   (fn [{:keys [state]}]
-     (let [{:keys [body-id]} @state]
+   (fn [{:keys [locals]}]
+     (let [{:keys [body-id]} @locals]
        [:div {:style {:padding "1rem"}}
         [:style {} ; Yeah, yeah, they're overrides, so sue me.
          ".menu .active {background-color: #457fd2; color: white !important;}
