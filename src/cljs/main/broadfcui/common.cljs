@@ -230,7 +230,7 @@
   the component so it can be non-anonymous.
   Use with react/method."
   [{:keys [did-mount will-unmount]}]
-  (let [element-key (keyword (gensym))]
+  (let [element-key (keyword (gensym "ref-"))]
     (fn [{:keys [locals] :as c} element]
       (if element
         (do (swap! locals assoc element-key element)
