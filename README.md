@@ -83,7 +83,7 @@ docker build -f Dockerfile-tests -t automation .
 Then run the run-tests script with the newly created image.  This script will render the `application.conf` and `firecloud-account.pem` from vault to be used by the test container.  Note that if you are running outside of docker you will need to generate these files manually.
 ```
 cd automation/docker
-./run-tests.sh 4 qa <ip of FiaB> automation $(cat ~/.vault-token) <fiab host-name>
+./run-tests.sh 4 qa <ip of FiaB> automation $(cat ~/.vault-token)
 ```
 
 ### Running locally
@@ -94,7 +94,7 @@ If you have a FiaB running and its IP configured in your `/etc/hosts`, you can r
 First run render script to generate necessary configs:
 ```
 cd automation
-./render-local-env.sh . <fiab host name> $(cat ~/.vault-token)
+./render-local-env.sh . $(cat ~/.vault-token)
 ```
 
 
