@@ -26,14 +26,15 @@
       (when (:saving? @state)
         [comps/Blocker {:banner "Updating..."}])
       [:div {:style {:padding "0.5rem 0" :fontSize "90%"}} "Billing Project Owner(s)"]
-      (map (fn [acl-entry]
-             [:div {:style {:padding "0.5rem 0" :fontSize "90%" :borderTop style/standard-line}}
-              (:email acl-entry)])
-           (:project-owner-acl-vec @state))
+      (map
+       (fn [ acl-entry]
+         [:div {:style {:padding "0.5rem 0" :fontSize "90%" :borderTop style/standard-line}}
+          (:email acl-entry)])
+       (:project-owner-acl-vec @state))
       [:div {:style {:padding "0.5rem 0" :fontSize "90%" :marginTop "0.5rem"}}
        [:div {:style {:display "inline-block" :width 400}} "User ID"]
        [:div {:style {:display "inline-block" :width 200 :marginLeft "1rem"}} "Access Level"]
-       (if (common/access-greater-than-equal-to? user-access-level "OWNER")
+       (when (common/access-greater-than-equal-to? user-access-level "OWNER")
          [:div {:style {:display "inline-block" :width 80 :marginLeft "1rem"}} "Can Share"])]
       [:datalist {:id "groups-datalist"}
        (when-let [groups (:user-groups @state)]
@@ -56,7 +57,7 @@
               :onChange #(swap! state assoc-in [:non-project-owner-acl-vec i :email] (.. % -target -value))}])
           (let [available-access-levels (filter #(common/access-greater-than-equal-to? user-access-level %) access-levels)
                 disabled? (or (common/access-greater-than? (:accessLevel acl-entry) user-access-level)
-                              (= (:email acl-entry) (-> @utils/auth2-atom (.-currentUser) (.get) (.getBasicProfile) (.getEmail))))]
+                              (= (:email acl-entry) (utils/get-user-email)))]
             (style/create-identity-select
              {:ref (str "acl-value" i)
               :style {:display "inline-block" :width 200 :height 33 :marginLeft "1rem" :marginBottom 0}
@@ -114,7 +115,7 @@
   {:render
    (fn [{:keys [props state this]}]
      (if (or (:non-project-owner-acl-vec @state) (:project-owner-acl-vec @state))
-       (let [persist-acl #(react/call :persist-acl this %)]
+       (let [persist-acl #(this :persist-acl %)]
          (if (:offering-invites? @state)
            (render-invite-offer (:workspace-id props) state persist-acl)
            (render-acl-content (:workspace-id props) (:user-access-level props) state persist-acl)))
@@ -127,14 +128,15 @@
      (swap! state dissoc :save-error :validation-error)
      (let [filtered-acl (->> (concat (:project-owner-acl-vec @state) (:non-project-owner-acl-vec @state))
                              (map #(dissoc % :read-only?))
-                             (map #(update-in % [:email] clojure.string/trim))
-                             (filter #(not (empty? (:email %)))))
+                             (map #(update % :email clojure.string/trim))
+                             (remove (comp empty? :email)))
            grant-filtered-acl (if (common/access-greater-than-equal-to? (:user-access-level props) "OWNER")
                                 filtered-acl
                                 (map #(dissoc % :canShare) filtered-acl))
-           fails (apply input/validate refs (filter
-                                             #(contains? @refs %)
-                                             (map #(str "acl-key" %) (range (count (:non-project-owner-acl-vec @state))))))]
+           fails (->> (:non-project-owner-acl-vec @state) count range
+                      (map (partial str "acl-key"))
+                      (filter @refs)
+                      (apply input/validate refs))]
        (if fails
          (swap! state assoc :validation-error fails)
          (do
@@ -145,16 +147,16 @@
              :payload grant-filtered-acl
              :on-done (fn [{:keys [success? get-parsed-response]}]
                         (swap! state dissoc :saving?)
-                        (if (seq (:usersNotFound (get-parsed-response)))
-                          (react/call :offer-user-invites this (get-parsed-response))
+                        (if-let [users-not-found (seq (:usersNotFound (get-parsed-response)))]
+                          (this :offer-user-invites users-not-found)
                           (if success?
                             (do
                               ((:request-refresh props))
                               (modal/pop-modal))
                             (swap! state assoc :save-error (get-parsed-response false)))))})))))
    :offer-user-invites
-   (fn [{:keys [state]} parsed-response]
-     (swap! state assoc :users-not-found (:usersNotFound parsed-response) :offering-invites? true))
+   (fn [{:keys [state]} users-not-found]
+     (swap! state assoc :users-not-found users-not-found :offering-invites? true))
    :component-did-mount
    (fn [{:keys [props state]}]
      (endpoints/call-ajax-orch
@@ -166,17 +168,17 @@
                   #(reduce
                     (fn [state [k v]]
                       (update state
-                              (if (= (v "accessLevel") "PROJECT_OWNER")
+                              (if (= (:accessLevel v) "PROJECT_OWNER")
                                 :project-owner-acl-vec
                                 :non-project-owner-acl-vec)
-                              conj {:email k
-                                    :accessLevel (v "accessLevel")
-                                    :pending? (v "pending")
-                                    :canShare (v "canShare")
+                              conj {:email (name k)
+                                    :accessLevel (:accessLevel v)
+                                    :pending? (:pending v)
+                                    :canShare (:canShare v)
                                     :read-only? true}))
                     (assoc % :project-owner-acl-vec []
                              :non-project-owner-acl-vec [])
-                    ((get-parsed-response false) "acl")))
+                    (:acl (get-parsed-response))))
            (swap! state assoc :load-error (get-parsed-response false))))})
      (endpoints/get-groups
       (fn [_ groups]
