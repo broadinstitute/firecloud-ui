@@ -1,7 +1,7 @@
 package org.broadinstitute.dsde.firecloud.workspaces
 
-import org.broadinstitute.dsde.firecloud.Util
-import org.broadinstitute.dsde.firecloud.api.{AclEntry}
+import org.broadinstitute.dsde.firecloud.Util.{appendUnderscore, makeUuid}
+import org.broadinstitute.dsde.firecloud.api.AclEntry
 import org.broadinstitute.dsde.firecloud.pages.WebBrowserSpec
 import org.broadinstitute.dsde.firecloud.auth.AuthToken
 
@@ -21,10 +21,10 @@ trait WorkspaceFixtures[A <: WebBrowserSpec] { self: A =>
     * @param testCode test code to run
     * @param token auth token for service API calls
     */
-  def withWorkspace(namespace: String, namePrefix: Option[String] = None,
+  def withWorkspace(namespace: String, namePrefix: String = "",
                     authDomain: Option[String] = None, aclEntries: List[AclEntry] = List())
                    (testCode: (String) => Any)(implicit token: AuthToken): Unit = {
-    val workspaceName = namePrefix.getOrElse("") + "_" + Util.makeUuid
+    val workspaceName = appendUnderscore(namePrefix) + makeUuid
     api.workspaces.create(namespace, workspaceName, authDomain)
     api.workspaces.updateAcl(namespace, workspaceName, aclEntries)
     try {
@@ -34,11 +34,11 @@ trait WorkspaceFixtures[A <: WebBrowserSpec] { self: A =>
     }
   }
 
-  def withClonedWorkspace(namespace: String, namePrefix: Option[String] = None,
+  def withClonedWorkspace(namespace: String, namePrefix: String = "",
                           authDomain: Option[String] = None)
                          (testCode: (String) => Any)(implicit token: AuthToken): Unit = {
     withWorkspace(namespace, namePrefix, authDomain) { _ =>
-      val cloneNamePrefix = Option(namePrefix.map(_ + "_clone").getOrElse("clone"))
+      val cloneNamePrefix = appendUnderscore(namePrefix) + "clone"
       withWorkspace(namespace, cloneNamePrefix, authDomain)(testCode)
     }
   }

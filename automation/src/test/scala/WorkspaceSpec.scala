@@ -64,7 +64,7 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures[
   // Experimental
   "A cloned workspace" - {
     "should retain the source workspace's authorization domain" in withWebDriver { implicit driver =>
-      withClonedWorkspace(Config.Projects.common, Option("AuthDomainSpec_share")) { cloneWorkspaceName =>
+      withClonedWorkspace(Config.Projects.common, "AuthDomainSpec_share") { cloneWorkspaceName =>
         val listPage = signIn(Config.Users.harry)
         val summaryPage = listPage.openWorkspaceDetails(Config.Projects.common, cloneWorkspaceName).awaitLoaded()
         // assert that user who cloned the workspace is the owner
