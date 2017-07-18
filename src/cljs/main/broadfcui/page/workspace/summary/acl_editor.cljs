@@ -16,7 +16,46 @@
 (def ^:private access-levels ["OWNER" "WRITER" "READER" "NO ACCESS"])
 
 
-(defn- render-acl-content [workspace-id user-access-level state persist-acl]
+(react/defc AclEditor
+  {:render
+   (fn [{:keys [props state this]}]
+     (if (or (:non-project-owner-acl-vec @state) (:project-owner-acl-vec @state))
+       (if (:offering-invites? @state)
+         (this :-render-invite-offer)
+         (this :-render-acl-content))
+       [:div {:style {:padding "2em"}}
+        (if (:load-error @state)
+          (style/create-server-error-message (:load-error @state))
+          [comps/Spinner {:text "Loading Permissions..."}])]))
+   :component-did-mount
+   (fn [{:keys [props state]}]
+     (endpoints/call-ajax-orch
+      {:endpoint (endpoints/get-workspace-acl (:workspace-id props))
+       :on-done
+       (fn [{:keys [success? get-parsed-response]}]
+         (if success?
+           (swap! state
+                  #(reduce
+                    (fn [state [k v]]
+                      (update state
+                              (if (= (:accessLevel v) "PROJECT_OWNER")
+                                :project-owner-acl-vec
+                                :non-project-owner-acl-vec)
+                              conj {:email (name k)
+                                    :accessLevel (:accessLevel v)
+                                    :pending? (:pending v)
+                                    :canShare (:canShare v)
+                                    :read-only? true}))
+                    (assoc % :project-owner-acl-vec []
+                             :non-project-owner-acl-vec [])
+                    (:acl (get-parsed-response))))
+           (swap! state assoc :load-error (get-parsed-response false))))})
+     (endpoints/get-groups
+      (fn [_ groups]
+        (swap! state assoc :user-groups groups))))
+   :-render-acl-content
+   (fn [{:keys [props state this]}]
+     (let [{:keys [workspace-id user-access-level ]} props]
   [comps/OKCancelForm
    {:header
     (str "Permissions for " (:namespace workspace-id) "/" (:name workspace-id))
@@ -27,7 +66,7 @@
         [comps/Blocker {:banner "Updating..."}])
       [:div {:style {:padding "0.5rem 0" :fontSize "90%"}} "Billing Project Owner(s)"]
       (map
-       (fn [ acl-entry]
+       (fn [acl-entry]
          [:div {:style {:padding "0.5rem 0" :fontSize "90%" :borderTop style/standard-line}}
           (:email acl-entry)])
        (:project-owner-acl-vec @state))
@@ -88,9 +127,10 @@
                                                 permissions)))}]]
       (style/create-validation-error-message (:validation-error @state))
       [comps/ErrorViewer {:error (:save-error @state)}]])
-    :ok-button {:text "Save" :onClick persist-acl}}])
+    :ok-button {:text "Save" :onClick #(this :-persist-aclfalse)}}]))
 
-(defn- render-invite-offer [workspace-id state persist-acl]
+  :-render-invite-offer(fn [{:keys [props state this]}]
+     (let [{:keys [workspace-id ]} props]
   [comps/OKCancelForm
    {:header (str "Invite new users to " (:namespace workspace-id) "/" (:name workspace-id))
     :content (react/create-element
@@ -100,30 +140,18 @@
                [:div {:style {:padding "0.5rem 0" :fontSize "90%" :marginTop "0.5rem"}}
                 [:div {:style {:display "inline-block" :width 400}} "User ID"]
                 [:div {:style {:display "inline-block" :width 200 :marginLeft "1rem"}} "Access Level"]]
-               (map (fn [acl-entry]
-                      [:div {:style {:borderTop style/standard-line :padding "0.5rem 0"}}
-                       [:div {:style {:display "inline-block" :width 400 :fontSize "88%"}}
-                        (:email acl-entry)]
-                       [:span {:style {:display "inline-block" :lineHeight "33px"
-                                       :width 200 :height 33 :verticalAlign "middle"
-                                       :marginLeft "1rem" :marginBottom 0}}
-                        (:accessLevel acl-entry)]])
-                    (:users-not-found @state))])
-    :ok-button {:text "Invite" :onClick #(persist-acl true)}}])
-
-(react/defc AclEditor
-  {:render
-   (fn [{:keys [props state this]}]
-     (if (or (:non-project-owner-acl-vec @state) (:project-owner-acl-vec @state))
-       (let [persist-acl #(this :persist-acl %)]
-         (if (:offering-invites? @state)
-           (render-invite-offer (:workspace-id props) state persist-acl)
-           (render-acl-content (:workspace-id props) (:user-access-level props) state persist-acl)))
-       [:div {:style {:padding "2em"}}
-        (if (:load-error @state)
-          (style/create-server-error-message (:load-error @state))
-          [comps/Spinner {:text "Loading Permissions..."}])]))
-   :persist-acl
+               (map
+                (fn [ acl-entry]
+                  [:div {:style {:borderTop style/standard-line :padding "0.5rem 0"}}
+                   [:div {:style {:display "inline-block" :width 400 :fontSize "88%"}}
+                    (:email acl-entry)]
+                   [:span {:style {:display "inline-block" :lineHeight "33px"
+                                   :width 200 :height 33 :verticalAlign "middle"
+                                   :marginLeft "1rem" :marginBottom 0}}
+                    (:accessLevel acl-entry)]])
+                (:users-not-found @state))])
+    :ok-button {:text "Invite" :onClick #(this :-persist-acl true)}}]))
+   :-persist-acl
    (fn [{:keys [props state refs this]} invite-new?]
      (swap! state dissoc :save-error :validation-error)
      (let [filtered-acl (->> (concat (:project-owner-acl-vec @state) (:non-project-owner-acl-vec @state))
@@ -148,38 +176,12 @@
              :on-done (fn [{:keys [success? get-parsed-response]}]
                         (swap! state dissoc :saving?)
                         (if-let [users-not-found (seq (:usersNotFound (get-parsed-response)))]
-                          (this :offer-user-invites users-not-found)
+                          (this :-offer-user-invites users-not-found)
                           (if success?
                             (do
                               ((:request-refresh props))
                               (modal/pop-modal))
                             (swap! state assoc :save-error (get-parsed-response false)))))})))))
-   :offer-user-invites
+   :-offer-user-invites
    (fn [{:keys [state]} users-not-found]
-     (swap! state assoc :users-not-found users-not-found :offering-invites? true))
-   :component-did-mount
-   (fn [{:keys [props state]}]
-     (endpoints/call-ajax-orch
-      {:endpoint (endpoints/get-workspace-acl (:workspace-id props))
-       :on-done
-       (fn [{:keys [success? get-parsed-response]}]
-         (if success?
-           (swap! state
-                  #(reduce
-                    (fn [state [k v]]
-                      (update state
-                              (if (= (:accessLevel v) "PROJECT_OWNER")
-                                :project-owner-acl-vec
-                                :non-project-owner-acl-vec)
-                              conj {:email (name k)
-                                    :accessLevel (:accessLevel v)
-                                    :pending? (:pending v)
-                                    :canShare (:canShare v)
-                                    :read-only? true}))
-                    (assoc % :project-owner-acl-vec []
-                             :non-project-owner-acl-vec [])
-                    (:acl (get-parsed-response))))
-           (swap! state assoc :load-error (get-parsed-response false))))})
-     (endpoints/get-groups
-      (fn [_ groups]
-        (swap! state assoc :user-groups groups))))})
+     (swap! state assoc :users-not-found users-not-found :offering-invites? true))})
