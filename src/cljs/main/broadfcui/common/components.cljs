@@ -53,6 +53,7 @@
        [:a {:className (or class-name "button")
             :style (merge
                     {:display "inline-flex" :alignItems "center" :justifyContent "center"
+                     :flexShrink 0
                      :backgroundColor (if disabled? (:disabled-state style/colors) color)
                      :cursor (when disabled? "default")
                      :color (if disabled? (:text-light style/colors) "white")
@@ -525,18 +526,17 @@
      [:div {:style (merge {:position "relative"} (:outer-style props))}
       [:div {:ref "scroller"
              :style (merge {:overflowY "auto"} (:inner-style props))
-             :onScroll #(react/call :update-edges this)}
+             :onScroll #(this :-update-edges)}
        [:div {:ref "content-container"}
         (:content props)]]
-      (react/call :build-shadow this true)
-      (react/call :build-shadow this false)])
+      (this :-build-shadow true)
+      (this :-build-shadow false)])
    :component-did-mount
    (fn [{:keys [refs this]}]
-     (react/call :update-edges this)
-     ;; this listener also fires upon being added
+     (this :-update-edges)
      (.addEventListener (@refs "content-container") "onresize"
-                        #(react/call :update-edges this)))
-   :build-shadow
+                        #(this :-update-edges)))
+   :-build-shadow
    (fn [{:keys [props state]} top?]
      (let [{:keys [vertical blur spread alpha]} props]
        [:div {:style {:position "absolute" :top 0 :left 0 :right 0 :bottom 0
@@ -548,7 +548,7 @@
                                             "rgba(0,0,0," alpha ")")
                       :opacity (if ((if top? :more-above? :more-below?) @state) 1 0)
                       :transition "opacity 0.5s linear"}}]))
-   :update-edges
+   :-update-edges
    (fn [{:keys [state refs]}]
      (let [scroll-top (.-scrollTop (@refs "scroller"))
            scroll-height (.-scrollHeight (@refs "scroller"))
@@ -795,12 +795,12 @@
   {:render
    (fn [{:keys [props]}]
      (let [{:keys [filter-groups selected-index data on-change]} props]
-       [:div {}
+       [:div {:style {:display "flex"}}
         (map-indexed (fn [index {:keys [text pred count-override]}]
                        (let [first? (zero? index)
                              last? (= index (dec (count filter-groups)))
                              selected? (= index selected-index)]
-                         [:div {:style {:display "inline-block" :textAlign "center"
+                         [:div {:style {:textAlign "center" :flexShrink 0
                                         :backgroundColor (if selected?
                                                            (:button-primary style/colors)
                                                            (:background-light style/colors))

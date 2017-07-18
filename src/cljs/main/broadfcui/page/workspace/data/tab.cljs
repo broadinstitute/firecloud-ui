@@ -5,6 +5,7 @@
     [broadfcui.common :as common]
     [broadfcui.common.components :as comps]
     [broadfcui.common.entity-table :refer [EntityTable]]
+    [broadfcui.common.flex-utils :as flex]
     [broadfcui.common.icons :as icons]
     [broadfcui.common.modal :as modal]
     [broadfcui.common.style :as style]
@@ -35,7 +36,9 @@
                                  :onClick #(swap! state update :crumbs (comp vec (partial take 2)))}))]
          [:div {:style {:position "relative"}}
           [:div {:style {:fontSize "1.1rem" :marginBottom "1rem"}}
-           [:span {:style {:display "inline-block"}} [comps/Breadcrumbs {:crumbs (:crumbs @state)}]]
+           [:span {:style {:display "inline-block"}}
+            [comps/Breadcrumbs {:crumbs (map #(select-keys % [:text :onClick :id])
+                                             (:crumbs @state))}]]
            (when-not last-crumb-id
              (common/render-info-box
               {:text [:div {} "For more information about importing files, see our "
@@ -68,11 +71,10 @@
        [:div {:style {:padding "1rem 1.5rem" :display "flex"}}
         (when (:loading-attributes @state)
           [comps/Blocker {:banner "Loading..."}])
-        (cond
-          workspace-error (style/create-server-error-message workspace-error)
-          workspace (this :-render-data)
-          :else
-          [:div {:style {:textAlign "center"}} [comps/Spinner {:text "Checking workspace..."}]])
+        (cond workspace-error (style/create-server-error-message workspace-error)
+              workspace (this :-render-data)
+              :else [:div {:style {:textAlign "center"}}
+                     [comps/Spinner {:text "Checking workspace..."}]])
         (when (:selected-entity @state)
           (let [{:keys [selected-entity-type selected-entity selected-attr-list]} @state]
             [EntityViewer {:workspace-id workspace-id
@@ -91,8 +93,7 @@
         (select-keys props [:workspace-id])
         {:this-auth-domain (get-in props [:workspace :workspace :authorizationDomain :membersGroupName])
          :import-type "data"
-         :on-data-imported #(react/call :refresh (@refs "entity-table")
-                                        (or % (:selected-entity-type @state)) true)})]))
+         :on-data-imported #((@refs "entity-table") :refresh (or % (:selected-entity-type @state)) true)})]))
    :-render-data
    (fn [{:keys [props this state]}]
      (let [{:keys [workspace workspace-id]} props]
@@ -102,17 +103,13 @@
           :workspace-id workspace-id
           :column-defaults
           (data-utils/get-column-defaults (get-in workspace [:workspace :workspace-attributes :workspace-column-defaults]))
-          :toolbar
-          (fn [built-in]
-            (let [layout (fn [item] [:div {:style {:marginRight "1em"}}] item)]
-              [:div {:style {:display "flex" :alignItems "center" :marginBottom "1em"}}
-               (map layout (vals built-in))
-               (when (:selected-entity-type @state) (this :-render-download-link))
-               [:div {:style {:flexGrow 1}}]
-               [comps/Button {:text "Import Metadata..."
-                              :disabled? (when (get-in workspace [:workspace :isLocked]) "This workspace is locked.")
-                              :onClick #(this :-handle-import-data-click)}]]))
-          :on-filter-change #(swap! state assoc :selected-entity-type % :selected-entity nil :selected-attr-list nil)
+          :toolbar-items
+          [(when (:selected-entity-type @state) (this :-render-download-link))
+           [comps/Button {:text "Import Metadata..."
+                          :style {:marginLeft "auto"}
+                          :disabled? (when (get-in workspace [:workspace :isLocked]) "This workspace is locked.")
+                          :onClick #(this :-handle-import-data-click)}]]
+          :on-entity-type-selected #(swap! state assoc :selected-entity-type % :selected-entity nil :selected-attr-list nil)
           :attribute-renderer (table-utils/render-gcs-links (get-in workspace [:workspace :bucketName]))
           :linked-entity-renderer
           (fn [entity]

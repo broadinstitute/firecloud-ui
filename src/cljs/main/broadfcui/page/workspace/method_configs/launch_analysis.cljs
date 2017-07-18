@@ -37,7 +37,7 @@
         (row "Workflows ahead of yours:" queue-position)
         (row "Queue status:" (str queued " Queued; " active " Active"))])]))
 
-(defn- render-form [state props refs]
+(defn- render-form [state props]
   [:div {:style {:width 1000}}
    (when (:launching? @state)
      [comps/Blocker {:banner "Launching analysis..."}])
@@ -54,15 +54,14 @@
     [EntityTable
      {:workspace-id (:workspace-id props)
       :initial-entity-type (:root-entity-type props)
-      :row-style (fn [row-index row-data]
-                   {:backgroundColor
-                    (cond (= (entity->id (first row-data)) (:selected-entity @state)) "yellow"
-                          (even? row-index) (:background-light style/colors)
-                          :else "#fff")
-                    :cursor "pointer"})
-      :on-row-click (fn [_ row]
-                      (let [entity (first row)
-                            entity-id (entity->id entity)]
+      :style {:body-row (fn [{:keys [index row]}]
+                          {:backgroundColor
+                           (cond (= (entity->id row) (:selected-entity @state)) "yellow"
+                                 (even? index) (:background-light style/colors)
+                                 :else "#fff")
+                           :cursor "pointer"})}
+      :on-row-click (fn [_ entity]
+                      (let [entity-id (entity->id entity)]
                         (swap! state assoc
                                :selected-entity entity-id
                                :workflow-count (common/count-workflows
@@ -110,10 +109,10 @@
 
 (react/defc Form
   {:render
-   (fn [{:keys [props state refs this]}]
+   (fn [{:keys [props state this]}]
      [comps/OKCancelForm
       {:header "Launch Analysis"
-       :content (react/create-element (render-form state props refs))
+       :content (react/create-element (render-form state props))
        :ok-button {:text "Launch" :disabled? (:disabled? props) :onClick #(react/call :launch this)}}])
    :component-did-mount
    (fn [{:keys [state]}]
