@@ -47,9 +47,9 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
       }
     }
 
-    "when not shared" - {
+    "when not shared with a user who is not in the authorization domain" - {
 
-      "should not be accessible by a user who is not in the authorization domain" in withWebDriver { implicit driver =>
+      "should not be accessible" in withWebDriver { implicit driver =>
         withGroup("AuthDomainSpec") { authDomainName =>
           withWorkspace(projectName, "AuthDomainSpec", authDomainName) { workspaceName =>
             signIn(Config.Users.ron)
@@ -64,7 +64,20 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
         }
       }
 
-      "should not be accessible by a user who is in the authorization domain" in withWebDriver { implicit driver =>
+      "should not be visible" in withWebDriver { implicit driver =>
+        withGroup("AuthDomainSpec") { authDomainName =>
+          withWorkspace(projectName, "AuthDomainSpec_share", authDomainName) { workspaceName =>
+            val listPage = signIn(Config.Users.ron)
+            listPage.filter(workspaceName)
+            listPage.ui.hasWorkspace(projectName, workspaceName) shouldEqual false
+          }
+        }
+      }
+    }
+
+    "when not shared with a user who is in the authorization domain" - {
+
+      "should not be accessible" in withWebDriver { implicit driver =>
         withGroup("AuthDomainSpec", List(Config.Users.george.email)) { authDomainName =>
           withWorkspace(projectName, "AuthDomainSpec", authDomainName) { workspaceName =>
             signIn(Config.Users.george)
@@ -79,17 +92,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
         }
       }
 
-      "should not be visible to a user who is not in the authorization domain" in withWebDriver { implicit driver =>
-        withGroup("AuthDomainSpec") { authDomainName =>
-          withWorkspace(projectName, "AuthDomainSpec_share", authDomainName) { workspaceName =>
-            val listPage = signIn(Config.Users.ron)
-            listPage.filter(workspaceName)
-            listPage.ui.hasWorkspace(projectName, workspaceName) shouldEqual false
-          }
-        }
-      }
-
-      "should not be visible to a user who is in the authorization domain" in withWebDriver { implicit driver =>
+      "should not be visible" in withWebDriver { implicit driver =>
         withGroup("AuthDomainSpec", List(Config.Users.george.email)) { authDomainName =>
           withWorkspace(projectName, "AuthDomainSpec_share", authDomainName) { workspaceName =>
             val listPage = signIn(Config.Users.george)
