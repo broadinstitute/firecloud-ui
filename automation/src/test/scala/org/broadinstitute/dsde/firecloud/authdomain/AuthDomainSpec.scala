@@ -33,13 +33,12 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
     "can be created by a user who is in a managed group" in withWebDriver { implicit driver =>
       withGroup("AuthDomainSpec") { authDomainName =>
         withCleanUp {
-          val workspaceName = "AuthDomainSpec_create_" + randomUuid
-
           val workspaceListPage = signIn(Config.Users.fred)
-          val workspaceDetailPage = workspaceListPage.createWorkspace(projectName, workspaceName, Option(authDomainName))
-          register cleanUp api.workspaces.delete(projectName, workspaceName)
 
-          workspaceDetailPage.awaitLoaded()
+          val workspaceName = "AuthDomainSpec_create_" + randomUuid
+          register cleanUp api.workspaces.delete(projectName, workspaceName)
+          val workspaceDetailPage = workspaceListPage.createWorkspace(projectName, workspaceName, Option(authDomainName)).awaitLoaded()
+
           workspaceDetailPage.ui.readAuthDomainRestrictionMessage should include (authDomainName)
 
           workspaceListPage.open.filter(workspaceName)
@@ -158,7 +157,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
 
               val cloneWorkspaceName = workspaceName + "_clone"
               register cleanUp { api.workspaces.delete(projectName, cloneWorkspaceName)(AuthTokens.george) }
-              val cloneSummaryPage = summaryPage.cloneWorkspace(projectName, cloneWorkspaceName)
+              val cloneSummaryPage = summaryPage.cloneWorkspace(projectName, cloneWorkspaceName).awaitLoaded()
               cloneSummaryPage.ui.readWorkspaceName should be(cloneWorkspaceName)
               cloneSummaryPage.ui.readAuthDomainRestrictionMessage should include(authDomainName)
             }
@@ -180,9 +179,12 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
             val cloneWorkspaceName = workspaceName + "_clone"
             val cloneModal = summaryPage.ui.clickCloneButton()
             cloneModal.ui.readPresetAuthDomain() should be(Some(authDomainName))
-            cloneModal.cloneWorkspace(projectName, cloneWorkspaceName)
+
             register cleanUp { api.workspaces.delete(projectName, cloneWorkspaceName)(AuthTokens.george) }
-            cloneModal.awaitCloneComplete()
+            cloneModal.cloneWorkspace(projectName, cloneWorkspaceName)
+            cloneModal.cloneWorkspaceWait()
+            summaryPage.cloneWorkspaceWait()
+
             val cloneSummaryPage = new WorkspaceSummaryPage(projectName, cloneWorkspaceName).awaitLoaded()
             cloneSummaryPage.ui.readWorkspaceName should be(cloneWorkspaceName)
             cloneSummaryPage.ui.readAuthDomainRestrictionMessage should include(authDomainName)

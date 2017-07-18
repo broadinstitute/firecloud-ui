@@ -13,13 +13,12 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures[
   "A user" - {
     "with a billing project" - {
       "should be able to create a workspace" in withWebDriver { implicit driver =>
-        val workspaceName = "WorkspaceSpec_create_" + randomUuid
-
         val listPage = signIn(Config.Users.harry)
-        val detailPage = listPage.createWorkspace(billingProject, workspaceName)
-        register cleanUp api.workspaces.delete(billingProject, workspaceName)
 
-        detailPage.awaitLoaded()
+        val workspaceName = "WorkspaceSpec_create_" + randomUuid
+        register cleanUp api.workspaces.delete(billingProject, workspaceName)
+        val detailPage = listPage.createWorkspace(billingProject, workspaceName).awaitLoaded()
+
         detailPage.ui.readWorkspaceName shouldEqual workspaceName
 
         listPage.open
@@ -35,8 +34,8 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures[
 
         val listPage = signIn(Config.Users.harry)
         val workspaceSummaryPage = new WorkspaceSummaryPage(billingProject, wsName).open
-        workspaceSummaryPage.cloneWorkspace(billingProject, wsNameCloned)
         register cleanUp api.workspaces.delete(billingProject, wsNameCloned)
+        workspaceSummaryPage.cloneWorkspace(billingProject, wsNameCloned).awaitLoaded()
 
         listPage.open
         listPage.filter(wsNameCloned)
