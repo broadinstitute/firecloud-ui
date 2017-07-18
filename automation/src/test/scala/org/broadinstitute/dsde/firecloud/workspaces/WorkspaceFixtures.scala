@@ -24,7 +24,7 @@ trait WorkspaceFixtures extends CleanUp { self: WebBrowserSpec with Suite =>
     * @param token auth token for service API calls
     */
   def withWorkspace(namespace: String, namePrefix: String = "",
-                    authDomain: Option[String] = None, aclEntries: List[AclEntry] = List())
+                    authDomain: String = "", aclEntries: List[AclEntry] = List())
                    (testCode: (String) => Any)(implicit token: AuthToken): Unit = {
     val workspaceName = appendUnderscore(namePrefix) + makeUuid
     api.workspaces.create(namespace, workspaceName, authDomain)
@@ -39,7 +39,7 @@ trait WorkspaceFixtures extends CleanUp { self: WebBrowserSpec with Suite =>
   }
 
   def withClonedWorkspace(namespace: String, namePrefix: String = "",
-                          authDomain: Option[String] = None)
+                          authDomain: String = "")
                          (testCode: (String) => Any)(implicit token: AuthToken): Unit = {
     withWorkspace(namespace, namePrefix, authDomain) { _ =>
       val cloneNamePrefix = appendUnderscore(namePrefix) + "clone"
