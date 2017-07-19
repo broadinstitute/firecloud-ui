@@ -134,7 +134,7 @@
                  :name "attributeNames"
                  :value (->> (or (:visible-columns @state) ((@refs "entity-table") :get-ordered-columns))
                              (filter :visible?)
-                             (map (some-fn :id :header))
+                             (map :id)
                              (string/join ","))}]
         [:input {:style {:border "none" :backgroundColor "transparent" :cursor "pointer"
                          :color (:button-primary style/colors) :fontSize "inherit" :fontFamily "inherit"
