@@ -56,7 +56,6 @@ object Config {
     val orchApiUrl: String = fireCloud.getString("orchApiUrl")
     val rawlsApiUrl: String = fireCloud.getString("rawlsApiUrl")
     val thurloeApiUrl: String = fireCloud.getString("thurloeApiUrl")
-    val authDomain: String = fireCloud.getString("authDomain")
   }
 
   object ChromeSettings {

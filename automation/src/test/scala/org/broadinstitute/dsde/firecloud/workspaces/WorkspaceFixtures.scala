@@ -1,14 +1,16 @@
 package org.broadinstitute.dsde.firecloud.workspaces
 
-import org.broadinstitute.dsde.firecloud.Util
-import org.broadinstitute.dsde.firecloud.api.{AclEntry}
+import org.broadinstitute.dsde.firecloud.CleanUp
+import org.broadinstitute.dsde.firecloud.Util.{appendUnderscore, makeUuid}
+import org.broadinstitute.dsde.firecloud.api.AclEntry
 import org.broadinstitute.dsde.firecloud.pages.WebBrowserSpec
 import org.broadinstitute.dsde.firecloud.auth.AuthToken
+import org.scalatest.Suite
 
 /**
   * Fixtures for creating and cleaning up test workspaces.
   */
-trait WorkspaceFixtures[A <: WebBrowserSpec] { self: A =>
+trait WorkspaceFixtures extends CleanUp { self: WebBrowserSpec with Suite =>
 
   /**
     * Loan method that creates a workspace that will be cleaned up after the
@@ -21,24 +23,26 @@ trait WorkspaceFixtures[A <: WebBrowserSpec] { self: A =>
     * @param testCode test code to run
     * @param token auth token for service API calls
     */
-  def withWorkspace(namespace: String, namePrefix: Option[String] = None,
-                    authDomain: Option[String] = None, aclEntries: List[AclEntry] = List())
+  def withWorkspace(namespace: String, namePrefix: String = "",
+                    authDomain: String = "", aclEntries: List[AclEntry] = List())
                    (testCode: (String) => Any)(implicit token: AuthToken): Unit = {
-    val workspaceName = namePrefix.getOrElse("") + "_" + Util.makeUuid
+    val workspaceName = appendUnderscore(namePrefix) + makeUuid
     api.workspaces.create(namespace, workspaceName, authDomain)
     api.workspaces.updateAcl(namespace, workspaceName, aclEntries)
     try {
       testCode(workspaceName)
     } finally {
-      api.workspaces.delete(namespace, workspaceName)
+      try {
+        api.workspaces.delete(namespace, workspaceName)
+      } catch nonFatalAndLog(s"Error deleting workspace in withWorkspace clean-up: $namespace/$workspaceName")
     }
   }
 
-  def withClonedWorkspace(namespace: String, namePrefix: Option[String] = None,
-                          authDomain: Option[String] = None)
+  def withClonedWorkspace(namespace: String, namePrefix: String = "",
+                          authDomain: String = "")
                          (testCode: (String) => Any)(implicit token: AuthToken): Unit = {
     withWorkspace(namespace, namePrefix, authDomain) { _ =>
-      val cloneNamePrefix = Option(namePrefix.map(_ + "_clone").getOrElse("clone"))
+      val cloneNamePrefix = appendUnderscore(namePrefix) + "clone"
       withWorkspace(namespace, cloneNamePrefix, authDomain)(testCode)
     }
   }

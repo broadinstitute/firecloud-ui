@@ -12,11 +12,12 @@ class WorkspaceListPage(implicit webDriver: WebDriver) extends AuthenticatedPage
   override val url: String = s"${Config.FireCloud.baseUrl}#workspaces"
 
   /**
-    * Creates a new workspace. Returns a new WorkspaceDetailPage.
+    * Creates a new workspace. Returns a new WorkspaceSummaryPage.
     *
-    * @param workspaceName the name for the new workspace
     * @param billingProjectName the billing project for the workspace (aka namespace)
-    * @return a WorkspaceDetailPage for the created workspace
+    * @param workspaceName the name for the new workspace
+    * @param authDomain the authorization domain for the new workspace
+    * @return a WorkspaceSummaryPage for the created workspace
     */
   def createWorkspace(billingProjectName: String, workspaceName: String,
                       authDomain: Option[String] = None): WorkspaceSummaryPage = {
@@ -121,7 +122,13 @@ class CreateWorkspaceModal(implicit webDriver: WebDriver) extends FireCloudView 
     authDomain foreach { ui.selectAuthDomain(_) }
 
     ui.clickCreateWorkspaceButton()
-    await toggle(spinner, 15)
+    createWorkspaceWait()
+  }
+
+  def createWorkspaceWait(): Unit = {
+    // Micro-sleep to make sure the spinner has had a chance to render
+    Thread sleep 200
+    await notVisible spinner
   }
 
 

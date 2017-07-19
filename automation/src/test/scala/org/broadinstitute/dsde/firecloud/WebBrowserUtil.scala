@@ -23,6 +23,14 @@ trait WebBrowserUtil extends WebBrowser {
     }
   }
 
+  abstract override def findAll(query: Query)(implicit driver: WebDriver): Iterator[Element] = {
+    try {
+      super.findAll(query)
+    } catch {
+      case _: StaleElementReferenceException => this.findAll(query)
+    }
+  }
+
   /**
     * Extension to ScalaTest's Selenium DSL for waiting on changes in browser
     * state. Example:
@@ -60,12 +68,17 @@ trait WebBrowserUtil extends WebBrowser {
       * @param webDriver implicit WebDriver for the WebDriverWait
       * @return the found element
       */
-    def enabled(query: Query, timeOutInSeconds: Long = defaultTimeOutInSeconds)(implicit webDriver: WebDriver): Element = {
-      val wait = new WebDriverWait(webDriver, timeOutInSeconds)
-      wait until new ExpectedCondition[Element] {
-        override def apply(d: WebDriver): Element = {
-          find(query).filter(_.isEnabled).orNull
-        }
+    def enabled(query: Query, timeOutInSeconds: Long = defaultTimeOutInSeconds)
+               (implicit webDriver: WebDriver): Element = {
+      withWait(timeOutInSeconds) {
+        find(query).filter(_.isEnabled).orNull
+      }
+    }
+
+    def notVisible(query: Query, timeOutInSeconds: Long = defaultTimeOutInSeconds)
+                  (implicit webDriver: WebDriver): Unit = {
+      withWait(timeOutInSeconds) {
+        findAll(query).isEmpty
       }
     }
 
@@ -98,23 +111,11 @@ trait WebBrowserUtil extends WebBrowser {
       await condition (find(withText(text)).isDefined, timeOutInSeconds)
     }
 
-    /**
-      * Waits for an element to appear and then disappear.
-      *
-      * @param query Query to locate the element
-      * @param timeOutInSeconds number of seconds to wait for each change of state
-      * @param webDriver implicit WebDriver for the WebDriverWait
-      */
-    def toggle(query: Query, timeOutInSeconds: Long = defaultTimeOutInSeconds)(implicit webDriver: WebDriver): Unit = {
+    private def withWait[A](timeOutInSeconds: Long)(f: => A)(implicit webDriver: WebDriver): A = {
       val wait = new WebDriverWait(webDriver, timeOutInSeconds)
-      wait until new ExpectedCondition[Boolean] {
-        override def apply(d: WebDriver): Boolean = {
-          find(query).isDefined
-        }
-      }
-      wait until new ExpectedCondition[Boolean] {
-        override def apply(d: WebDriver): Boolean = {
-          find(query).isEmpty
+      wait until new ExpectedCondition[A] {
+        override def apply(d: WebDriver): A = {
+          f
         }
       }
     }

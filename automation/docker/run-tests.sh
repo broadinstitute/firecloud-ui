@@ -13,8 +13,7 @@ DOCKERHOST=${3:-$DOCKERHOST}
 export DOCKERHOST=$DOCKERHOST
 TEST_CONTAINER=${4:-automation}
 VAULT_TOKEN=$5
-HOST_NAME=$6
-WORKING_DIR=${7:-$PWD}
+WORKING_DIR=${6:-$PWD}
 export WORKING_DIR=$WORKING_DIR
 
 if [ -z $VAULT_TOKEN ]; then
@@ -66,7 +65,7 @@ docker-compose -f hub-compose.yml scale chrome=$NUM_NODES
 
 # render ctmpls
 docker pull broadinstitute/dsde-toolbox:dev
-docker run --rm -e VAULT_TOKEN=${VAULT_TOKEN} -e HOST_NAME=${HOST_NAME} \
+docker run --rm -e VAULT_TOKEN=${VAULT_TOKEN} \
     -e ENVIRONMENT=${ENV} -e ROOT_DIR=/app -v ${WORKING_DIR}:/working \
     -e OUT_PATH=/working/target -e INPUT_PATH=/working \
     broadinstitute/dsde-toolbox:dev render-templates.sh

@@ -94,7 +94,7 @@ trait CleanUp extends SuiteMixin with ExceptionHandling with LazyLogging { self:
   }
 
   private def runCleanUpFunctions() = {
-    cleanUpFunctions foreach { f => try f() catch nonFatalAndLog("Failure in clean-up function") }
+    cleanUpFunctions foreach { f => try f() catch nonFatalAndLog("Error in clean-up function") }
     cleanUpFunctions.clear()
   }
 }

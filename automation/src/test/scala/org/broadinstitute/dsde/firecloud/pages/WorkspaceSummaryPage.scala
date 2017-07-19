@@ -26,11 +26,35 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
     val Writer = Value("WRITER")
   }
 
+  /**
+    * Clones the workspace currently being viewed. Returns when the clone
+    * operation is complete.
+    *
+    * @param billingProjectName the billing project for the workspace (aka namespace)
+    * @param workspaceName the name for the new workspace
+    * @param authDomain the authorization domain for the new workspace
+    * @return a WorkspaceSummaryPage for the created workspace
+    */
   def cloneWorkspace(billingProjectName: String, workspaceName: String, authDomain: Option[String] = None): WorkspaceSummaryPage = {
     val cloneModal = ui.clickCloneButton()
     cloneModal.cloneWorkspace(billingProjectName, workspaceName, authDomain)
-    cloneModal.awaitCloneComplete()
+    cloneModal.cloneWorkspaceWait()
+    cloneWorkspaceWait()
     new WorkspaceSummaryPage(billingProjectName, workspaceName)
+  }
+
+  /**
+    * Wait for workspace clone to complete.
+    *
+    * Clone is initiated from the workspace summary page for the source
+    * workspace and ends on the workspace summary page for the cloned
+    * workspace. WorkspaceSummaryPage.awaitLoaded() will complete even if the
+    * browser has not yet navigated to the cloned workspace which could cause
+    * subsequent assertions to fail. This extra wait makes sure that the
+    * browser has navigated somewhere else.
+    */
+  def cloneWorkspaceWait(): Unit = {
+    await condition { currentUrl != url }
   }
 
   def unpublishWorkspace(): Unit = {
@@ -44,8 +68,9 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
     * to the resulting view after successful deletion.
     */
   def deleteWorkspace(): WorkspaceListPage = {
-    val worskspaceDeleteModal = ui.clickDeleteWorkspaceButton()
-    worskspaceDeleteModal.confirmDelete()
+    val workspaceDeleteModal = ui.clickDeleteWorkspaceButton()
+    workspaceDeleteModal.confirmDelete()
+    workspaceDeleteModal.confirmDeleteWait()
     new WorkspaceListPage
   }
 
@@ -131,8 +156,10 @@ class CloneWorkspaceModal(implicit webDriver: WebDriver) extends FireCloudView {
     ui.clickCloneButton()
   }
 
-  def awaitCloneComplete(): Unit = {
-    await toggle(spinner, 30)
+  def cloneWorkspaceWait(): Unit = {
+    // Micro-sleep to make sure the spinner has had a chance to render
+    Thread sleep 200
+    await notVisible spinner
   }
 
 
@@ -177,7 +204,12 @@ class DeleteWorkspaceModal(implicit webDriver: WebDriver) extends FireCloudView 
     */
   def confirmDelete(): Unit = {
     ui.clickConfirmDeleteButton()
-    await toggle spinner
+  }
+
+  def confirmDeleteWait(): Unit = {
+    // Micro-sleep to make sure the spinner has had a chance to render
+    Thread sleep 200
+    await notVisible spinner
   }
 
 
