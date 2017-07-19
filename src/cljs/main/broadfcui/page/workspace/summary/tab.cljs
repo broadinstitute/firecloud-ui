@@ -50,28 +50,54 @@
                     (swap! state assoc :server-error (get-parsed-response false))))}))})
 
 
-(defn- save-attributes [{:keys [new-attributes state workspace-id request-refresh]}]
-  (swap! state assoc :updating-attrs? true)
-  (endpoints/call-ajax-orch
-   {:endpoint (endpoints/set-workspace-attributes workspace-id)
-    :payload new-attributes
-    :headers utils/content-type=json
-    :on-done (fn [{:keys [success? get-parsed-response]}]
-               (swap! state dissoc :updating-attrs? :editing?)
-               (if success?
-                 (request-refresh)
-                 (comps/push-error-response (get-parsed-response false))))}))
+(defn- reader? [workspace]
+  (= "READER" (:accessLevel workspace)))
 
-
-(defn- render-sidebar [state refs this
-                       {:keys [workspace billing-projects owner? writer? curator? catalog-with-read? can-share?
-                               workspace-id request-refresh user-access-level label-id body-id]}]
-  (let [{{:keys [isLocked library-attributes description authorizationDomain]} :workspace
+(react/defc Summary
+  {:component-will-mount
+   (fn [{:keys [locals]}]
+     (swap! locals assoc :label-id (gensym "status") :body-id (gensym "summary")))
+   :render
+   (fn [{:keys [state props this]}]
+     (let [{:keys [server-response]} @state
+           {:keys [workspace]} props
+           {:keys [submissions-count billing-projects library-schema curator? server-error]} server-response]
+       (cond
+         server-error
+         (style/create-server-error-message server-error)
+         (some nil? [workspace submissions-count billing-projects library-schema curator?])
+         [:div {:style {:textAlign "center" :padding "1em"}}
+          [comps/Spinner {:text "Loading workspace..."}]]
+         :else
+         (let [owner? (or (= "PROJECT_OWNER" (:accessLevel workspace)) (= "OWNER" (:accessLevel workspace)))writer? (or owner? (= "WRITER" (:accessLevel workspace)))
+               auth-domain (get-in workspace [:workspace :authorizationDomain])
+               derived (merge {:request-refresh #(this :-refresh)
+                               :reader? (reader? (:workspace props))
+                               :can-share?(:canShare workspace)
+                               :user-access-level (:accessLevelworkspace)
+                               :catalog-with-read? (and (or writer? (reader? workspace)) (:catalog workspace))}
+                              (utils/restructure owner? writer? auth-domain))]
+           [:div {:style {:margin "2.5rem 1.5rem" :display "flex"}}
+            (this :-render-sidebar derived)
+            (this :-render-main derived)
+            (when (:updating-attrs? @state)
+              [comps/Blocker {:banner "Updating Attributes..."}])
+            (when (contains? @state :locking?)
+              [comps/Blocker {:banner (if (:locking? @state) "Unlocking..." "Locking...")}])]))))
+   :component-did-mount
+   (fn [{:keys [this]}]
+     (this :-refresh))
+   :-render-sidebar
+   (fn [{:keys [props state locals refs this]}
+        {:keys [catalog-with-read? owner? writer? request-refresh can-share? user-access-level ]}]
+     (let [{:keys [workspace workspace-id]} props
+           {:keys [label-id body-id]}@locals
+  {:keys [editing?]
+            {:keys [library-schema billing-projects curator?]} :server-response} @state{{:keys [isLocked library-attributes description authorizationDomain]} :workspace
          {:keys [runningSubmissionsCount]} :workspaceSubmissionStats} workspace
         status (common/compute-status workspace)
         publishable? (and curator? (or catalog-with-read? owner?))
-        {:keys [editing?]
-         {:keys [library-schema]} :server-response} @state]
+        ]
     [:div {:style {:flex "0 0 270px" :paddingRight 30}}
      (when (:cloning? @state)
        [create/CreateDialog
@@ -127,7 +153,6 @@
                                               (library-utils/remove-empty-values working-attributes)
                                               questions required-attributes))
                                         "All required dataset attributes must be set before publishing.")})])))
-
         (when (or owner? writer?)
           (if (not editing?)
             [comps/SidebarButton
@@ -144,10 +169,8 @@
                                 new-tags ((@refs "tags-autocomplete") :get-tags)]
                             (if error
                               (comps/push-error error)
-                              (save-attributes {:new-attributes (assoc success :description new-description :tag:tags new-tags)
-                                                :state state
-                                                :workspace-id workspace-id
-                                                :request-refresh request-refresh}))))}]
+                              (this :-save-attributes  (assoc success :description new-description :tag:tags new-tags)))))}]
+
              [comps/SidebarButton
               {:style :light :color :exception-state :margin :top
                :text "Cancel Editing" :icon :cancel
@@ -158,12 +181,12 @@
             :text "Clone..." :icon :clone
             :data-test-id (config/when-debug "open-clone-workspace-modal-button")
             :disabled? (when (empty? billing-projects) (comps/no-billing-projects-message))
-            :onClick #(swap! state assoc :cloning? true)}])
+            :onClick #(swap! state assoc :cloning?true)}])
         (when (and owner? (not editing?))
           [comps/SidebarButton {:style :light :margin :top :color :button-primary
                                 :text (if isLocked "Unlock" "Lock")
                                 :icon (if isLocked :unlock :lock)
-                                :onClick #(this :lock-or-unlock isLocked)}])
+                                :onClick #(this :-lock-or-unlock isLocked)}])
         (when (and owner? (not editing?))
           [comps/SidebarButton {:style :light :margin :top :color (if isLocked :text-lighter :exception-state)
                                 :text "Delete" :icon :delete
@@ -173,11 +196,16 @@
                                            [DeleteDialog {:workspace-id workspace-id}])}])]}]]))
 
 
-(defn- render-main [{:keys [workspace curator? owner? writer? reader? can-share? catalog-with-read? bucket-access? editing? submissions-count
-                            library-schema request-refresh workspace-id storage-cost user-access-level body-id auth-domain]}]
-  (let [{:keys [owners]
-         {:keys [createdBy createdDate bucketName description tags workspace-attributes library-attributes]} :workspace} workspace
-        render-detail-box (fn [title & children]
+  :-render-main
+   (fn [{:keys [props state locals]}
+        {:keys [user-access-level request-refresh can-share? owner? curator? writer?catalog-with-read?]}]
+     (let [{:keys [workspace workspace-id bucket-access? ]} props
+           {:keys [editing?]
+            {:keys [storage-cost submissions-count library-schema]} :server-response} @state
+           {:keys [body-id auth-domain]} @locals
+           {:keys [owners]
+            {:keys [createdBy createdDate bucketName description tags workspace-attributes library-attributes]} :workspace} workspace
+           render-detail-box (fn [title & children]
                             [:div
                              {:style {:flexBasis "50%" :paddingRight "2rem" :marginBottom "2rem"}}
                              [:div {:style {:paddingBottom "0.5rem"}}
@@ -194,126 +222,95 @@
       (render-detail-box
        "Workspace Access"
 
-       "Access Level"
-       (style/prettify-access-level user-access-level)
+          "Access Level"
+          (style/prettify-access-level user-access-level)
 
-       (str "Workspace Owner" (when (> (count owners) 1) "s"))
-       (interpose ", " owners)
+          (str "Workspace Owner" (when (> (count owners) 1) "s"))
+          (interpose ", " owners)
 
-       "Authorization Domain"
+          "Authorization Domain"
        (if-not (empty? auth-domain)
                [:span {:data-test-id (config/when-debug "auth-domain-groups")} (interpose ", " (map :membersGroupName auth-domain))]
                "None")
 
        "Created By"
-       [:div {}
-        [:div {} createdBy]
-        [:div {} (common/format-date createdDate)]])
+          [:div {}
+           [:div {} createdBy]
+           [:div {} (common/format-date createdDate)]])
 
-      (render-detail-box
-       "Storage & Analysis"
+         (render-detail-box
+          "Storage & Analysis"
 
-       "Google Bucket"
-       [:div {}
-        (case bucket-access?
-          nil [:div {:style {:position "absolute" :marginTop "-1.5em"}}
-               [comps/Spinner {:height "1.5ex"}]]
-          true (style/create-link {:text bucketName
-                                   :href (str moncommon/google-cloud-context bucketName "/")
-                                   :style {:color "-webkit-link" :textDecoration "underline"}
-                                   :title "Click to open the Google Cloud Storage browser for this bucket"
-                                   :target "_blank"})
-          false bucketName)
-        (when (not reader?)
-          [:div {:style {:lineHeight "initial"}}
-           [:div {} (str "Total Estimated Storage Fee per month = " storage-cost)]
-           [:div {:style {:fontSize "80%"}} (str "Note: the billing account associated with " (:namespace workspace-id) " will be charged.")]])]
+          "Google Bucket"
+          [:div {}
+           (case bucket-access?
+             nil [:div {:style {:position "absolute" :marginTop "-1.5em"}}
+                  [comps/Spinner {:height "1.5ex"}]]
+             true (style/create-link {:text bucketName
+                                      :href (str moncommon/google-cloud-context bucketName "/")
+                                      :style {:color "-webkit-link" :textDecoration "underline"}
+                                      :title "Click to open the Google Cloud Storage browser for this bucket"
+                                      :target "_blank"})
+             false bucketName)
+           (when (not reader?)
+             [:div {:style {:lineHeight "initial"}}
+              [:div {} (str "Total Estimated Storage Fee per month = " storage-cost)]
+              [:div {:style {:fontSize "80%"}} (str "Note: the billing account associated with " (:namespace workspace-id) " will be charged.")]])]
 
-       "Analysis Submissions"
-       (let [count-all (apply + (vals submissions-count))]
-         [:div {}
-          (str count-all " Submission" (when-not (= 1 count-all) "s"))
-          (when (pos? count-all)
-            [:ul {:style {:marginTop 0}}
-             (for [[status subs] (sort submissions-count)]
-               [:li {} (str subs " " status)])])]))]
-     [Collapse
-      {:style {:marginBottom "2rem"}
-       :title (style/create-section-header "Tags")
-       :contents
-       [:div {:style {:marginTop "1rem" :fontSize "90%" :lineHeight 1.5}}
-        (cond editing? (react/create-element [comps/TagAutocomplete
-                                              {:tags processed-tags :ref "tags-autocomplete"}])
-              (empty? processed-tags) [:em {} "No tags provided"]
-              :else [:div {}
-                     (for [tag processed-tags]
-                       [:div {:style {:display "inline-block" :background (:tag-background style/colors)
-                                      :color (:tag-foreground style/colors) :margin "0.1rem 0.1rem"
-                                      :borderRadius 3 :padding "0.2rem 0.5rem"}} tag])])]}]
+          "Analysis Submissions"
+          (let [count-all (apply + (vals submissions-count))]
+            [:div {}
+             (str count-all " Submission" (when-not (= 1 count-all) "s"))
+             (when (pos? count-all)
+               [:ul {:style {:marginTop 0}}
+                (for [[status subs] (sort submissions-count)]
+                  [:li {} (str subs " " status)])])]))]
+        [Collapse
+         {:style {:marginBottom "2rem"}
+          :title (style/create-section-header "Tags")
+          :contents
+          [:div {:style {:marginTop "1rem" :fontSize "90%" :lineHeight 1.5}}
+           (cond editing? (react/create-element [comps/TagAutocomplete
+                                                 {:tags processed-tags :ref "tags-autocomplete"}])
+                 (empty? processed-tags) [:em {} "No tags provided"]
+                 :else [:div {}
+                        (for [tag processed-tags]
+                          [:div {:style {:display "inline-block" :background (:tag-background style/colors)
+                                         :color (:tag-foreground style/colors) :margin "0.1rem 0.1rem"
+                                         :borderRadius 3 :padding "0.2rem 0.5rem"}} tag])])]}]
 
-     (when editing? [:div {:style {:marginBottom "10px"}} common/PHI-warning])
+        (when editing? [:div {:style {:marginBottom "10px"}} common/PHI-warning])
 
 
-     [Collapse
-      {:style {:marginBottom "2rem"}
-       :title (style/create-section-header "Description")
-       :contents
-       [:div {:style {:marginTop "1rem" :fontSize "90%" :lineHeight 1.5}}
-        (let [description (not-empty description)]
-          (cond editing? (react/create-element [MarkdownEditor
-                                                {:ref "description" :initial-text description}])
-                description [MarkdownView {:text description}]
-                :else [:span {:style {:fontStyle "italic"}} "No description provided"]))]}]
-     (when (seq library-attributes)
-       [LibraryView (utils/restructure library-attributes library-schema workspace workspace-id
-                                       request-refresh can-share? owner? curator? writer? catalog-with-read?)])
-     [attributes/WorkspaceAttributeViewerEditor
-      (merge {:ref "workspace-attribute-editor" :workspace-bucket bucketName}
-             (utils/restructure editing? writer? workspace-attributes workspace-id request-refresh))]]))
-
-(defn- reader? [workspace]
-  (= "READER" (:accessLevel workspace)))
-
-(react/defc Summary
-  {:component-will-mount
-   (fn [{:keys [locals]}]
-     (swap! locals assoc :label-id (gensym "status") :body-id (gensym "summary")))
-   :render
-   (fn [{:keys [refs state props this locals]}]
-     (let [{:keys [server-response]} @state
-           {:keys [label-id body-id]} @locals
-           {:keys [workspace]} props
-           {:keys [submissions-count billing-projects library-schema curator? server-error]} server-response]
-       (cond
-         server-error
-         (style/create-server-error-message server-error)
-         (some nil? [workspace submissions-count billing-projects library-schema curator?])
-         [:div {:style {:textAlign "center" :padding "1em"}}
-          [comps/Spinner {:text "Loading workspace..."}]]
-         :else
-         (let [owner? (or (= "PROJECT_OWNER" (:accessLevel workspace)) (= "OWNER" (:accessLevel workspace)))
-               writer? (or owner? (= "WRITER" (:accessLevel workspace)))
-               can-share? (:canShare workspace)
-               catalog-with-read? (and (or writer? (reader? workspace)) (:catalog workspace))
-               user-access-level (:accessLevel workspace)
-               auth-domain (get-in workspace [:workspace :authorizationDomain])
-               derived (merge {:reader? (reader? (:workspace props)) :request-refresh #(this :refresh)}
-                              (utils/restructure owner? writer? can-share? catalog-with-read?
-                                                 user-access-level label-id body-id auth-domain))]
-           [:div {:style {:margin "2.5rem 1.5rem" :display "flex"}}
-            (render-sidebar state refs this
-                            (merge (select-keys props [:workspace :workspace-id])
-                                   (select-keys server-response [:billing-projects :curator?])
-                                   derived))
-            (render-main (merge (select-keys props [:workspace :workspace-id :bucket-access?])
-                                (select-keys @state [:editing?])
-                                (select-keys server-response [:submissions-count :library-schema :curator? :storage-cost])
-                                derived))
-            (when (:updating-attrs? @state)
-              [comps/Blocker {:banner "Updating Attributes..."}])
-            (when (contains? @state :locking?)
-              [comps/Blocker {:banner (if (:locking? @state) "Unlocking..." "Locking...")}])]))))
-   :lock-or-unlock
+        [Collapse
+         {:style {:marginBottom "2rem"}
+          :title (style/create-section-header "Description")
+          :contents
+          [:div {:style {:marginTop "1rem" :fontSize "90%" :lineHeight 1.5}}
+           (let [description (not-empty description)]
+             (cond editing? (react/create-element [MarkdownEditor
+                                                   {:ref "description" :initial-text description}])
+                   description [MarkdownView {:text description}]
+                   :else [:span {:style {:fontStyle "italic"}} "No description provided"]))]}]
+        (when (seq library-attributes)
+          [LibraryView (utils/restructure library-attributes library-schema workspace workspace-id
+                                          request-refresh can-share? owner? curator? writer? catalog-with-read?)])
+        [attributes/WorkspaceAttributeViewerEditor
+         (merge {:ref "workspace-attribute-editor" :workspace-bucket bucketName}
+                (utils/restructure editing? writer? workspace-attributes workspace-id request-refresh))]]))
+   :-save-attributes
+   (fn [{:keys [props state this]} new-attributes]
+     (swap! state assoc :updating-attrs? true)
+     (endpoints/call-ajax-orch
+      {:endpoint (endpoints/set-workspace-attributes (:workspace-id props))
+       :payload new-attributes
+       :headers utils/content-type=json
+       :on-done (fn [{:keys [success? get-parsed-response]}]
+                  (swap! state dissoc :updating-attrs? :editing?)
+                  (if success?
+                    (this :-refresh)
+                    (comps/push-error-response (get-parsed-response false))))}))
+   :-lock-or-unlock
    (fn [{:keys [props state this]} locked-now?]
      (swap! state assoc :locking? locked-now?)
      (endpoints/call-ajax-orch
@@ -325,11 +322,8 @@
                        "Could not lock workspace, one or more analyses are currently running")
                       (comps/push-error (str "Error: " status-text))))
                   (swap! state dissoc :locking?)
-                  (this :refresh))}))
-   :component-did-mount
-   (fn [{:keys [this]}]
-     (this :refresh))
-   :refresh
+                  (this :-refresh))}))
+   :-refresh
    (fn [{:keys [props state]}]
      (swap! state dissoc :server-response)
      ((:request-refresh props))
