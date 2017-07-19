@@ -1,7 +1,8 @@
 (ns broadfcui.page.workspace.summary.acl-editor
   (:require
    [dmohs.react :as react]
-   [broadfcui.common :as common]
+   [clojure.set :as set]
+    [broadfcui.common :as common]
    [broadfcui.common.components :as comps]
    [broadfcui.common.input :as input]
    [broadfcui.common.modal :as modal]
@@ -28,27 +29,28 @@
           (style/create-server-error-message (:load-error @state))
           [comps/Spinner {:text "Loading Permissions..."}])]))
    :component-did-mount
-   (fn [{:keys [props state]}]
+   (fn [{:keys [props state locals]}]
      (endpoints/call-ajax-orch
       {:endpoint (endpoints/get-workspace-acl (:workspace-id props))
        :on-done
        (fn [{:keys [success? get-parsed-response]}]
          (if success?
-           (swap! state
-                  #(reduce
-                    (fn [state [k v]]
-                      (update state
-                              (if (= (:accessLevel v) "PROJECT_OWNER")
-                                :project-owner-acl-vec
-                                :non-project-owner-acl-vec)
-                              conj {:email (name k)
-                                    :accessLevel (:accessLevel v)
-                                    :pending? (:pending v)
-                                    :canShare (:canShare v)
-                                    :read-only? true}))
-                    (assoc % :project-owner-acl-vec []
-                             :non-project-owner-acl-vec [])
-                    (:acl (get-parsed-response))))
+           (let [acls (reduce
+                       (fn [state [k v]]
+                         (update state
+                                 (if (= (:accessLevel v) "PROJECT_OWNER")
+                                   :project-owner-acl-vec
+                                   :non-project-owner-acl-vec)
+                                 conj {:email (name k)
+                                       :accessLevel (:accessLevel v)
+                                       :pending? (:pending v)
+                                       :canShare (:canShare v)
+                                       :read-only? true}))
+                       {:project-owner-acl-vec []
+                        :non-project-owner-acl-vec []}
+                       (:acl (get-parsed-response)))]
+             (swap! state merge acls)
+             (swap! locals assoc :initial-acl-emails (->> acls vals flatten (map :email) set)))
            (swap! state assoc :load-error (get-parsed-response false))))})
      (endpoints/get-groups
       (fn [_ groups]
@@ -152,7 +154,7 @@
                 (:users-not-found @state))])
     :ok-button {:text "Invite" :onClick #(this :-persist-acl true)}}]))
    :-persist-acl
-   (fn [{:keys [props state refs this]} invite-new?]
+   (fn [{:keys [props state refs locals this]} invite-new?]
      (swap! state dissoc :save-error :validation-error)
      (let [filtered-acl (->> (concat (:project-owner-acl-vec @state) (:non-project-owner-acl-vec @state))
                              (map #(dissoc % :read-only?))
@@ -161,6 +163,8 @@
            grant-filtered-acl (if (common/access-greater-than-equal-to? (:user-access-level props) "OWNER")
                                 filtered-acl
                                 (map #(dissoc % :canShare) filtered-acl))
+           new-emails (set/difference (set (map :email grant-filtered-acl))
+                                      (:initial-acl-emails @locals))
            fails (->> (:non-project-owner-acl-vec @state) count range
                       (map (partial str "acl-key"))
                       (filter @refs)
@@ -178,9 +182,10 @@
                         (if-let [users-not-found (seq (:usersNotFound (get-parsed-response)))]
                           (this :-offer-user-invites users-not-found)
                           (if success?
-                            (do
-                              ((:request-refresh props))
-                              (modal/pop-modal))
+                            (do ((:request-refresh props))
+                                (when (seq new-emails)
+                                  ((:on-users-added props) new-emails))
+                                (modal/pop-modal))
                             (swap! state assoc :save-error (get-parsed-response false)))))})))))
    :-offer-user-invites
    (fn [{:keys [state]} users-not-found]

@@ -128,7 +128,10 @@
             :text "Share..." :icon :share
             :data-test-id (config/when-debug "share-workspace-button")
             :onClick #(modal/push-modal
-                       [AclEditor (utils/restructure workspace-id user-access-level request-refresh)])}])
+                       [AclEditor
+                           (merge (utils/restructure workspace-id user-access-level request-refresh)
+                                  {:on-users-added (fn [new-users]
+                                                     (this :-perform-sync-check new-users))})])}])
         (when (not editing?)
           [comps/SidebarButton
            {:style :light :color :button-primary :margin :top
@@ -363,4 +366,12 @@
                              (if parse-error?
                                (str "Error parsing JSON response with status: " status-text)
                                (let [key (if success? "estimate" "message")]
-                                 (get response key (str "Error: \"" key "\" not found in JSON response with status: " status-text)))))))})))})
+                                 (get response key (str "Error: \"" key "\" not found in JSON response with status: " status-text)))))))})))
+   :-perform-sync-check
+   (fn [{:keys [props]} new-users]
+     (endpoints/call-ajax-orch
+      {:endpoint (endpoints/get-permission-report (:workspace-id props))
+       :payload {:users new-users}
+       :headers utils/content-type=json
+       :on-done (fn [{:keys [success? get-parsed-response]}]
+                  (utils/log (get-parsed-response)))}))})
