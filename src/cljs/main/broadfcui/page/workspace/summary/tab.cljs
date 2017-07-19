@@ -36,7 +36,7 @@
         [:p {:style {:margin 0}} "Are you sure you want to delete this workspace?"]
         [:p {} "Bucket data will be deleted too."]
         [comps/ErrorViewer {:error (:server-error @state)}]]
-       :ok-button {:text "Delete" :onClick #(react/call :delete this)
+       :ok-button {:text "Delete" :onClick #(this :delete)
                    :data-test-id (config/when-debug "confirm-delete-workspace-button")}}])
    :delete
    (fn [{:keys [props state]}]
@@ -102,24 +102,15 @@
             :text "Share..." :icon :share
             :data-test-id (config/when-debug "share-workspace-button")
             :onClick #(modal/push-modal
-                       [AclEditor {:workspace-id workspace-id
-                                   :user-access-level user-access-level
-                                   :request-refresh request-refresh}])}])
+                       [AclEditor (utils/restructure workspace-id user-access-level request-refresh)])}])
         (when (not editing?)
           [comps/SidebarButton
            {:style :light :color :button-primary :margin :top
             :icon :catalog :text "Catalog Dataset..."
             :data-test-id (config/when-debug "catalog-button")
-            :onClick #(modal/push-modal [CatalogWizard (utils/restructure
-                                                        library-schema
-                                                        workspace
-                                                        workspace-id
-                                                        can-share?
-                                                        owner?
-                                                        curator?
-                                                        writer?
-                                                        catalog-with-read?
-                                                        request-refresh)])}])
+            :onClick #(modal/push-modal
+                       [CatalogWizard (utils/restructure library-schema workspace workspace-id can-share?
+                                                         owner? curator? writer? catalog-with-read? request-refresh)])}])
         (when (and publishable? (not editing?))
           (let [working-attributes (library-utils/get-initial-attributes workspace)
                 questions (->> (range (count (:wizard library-schema)))
@@ -127,17 +118,16 @@
                                (apply concat))
                 required-attributes (library-utils/find-required-attributes library-schema)]
             (if (:library:published library-attributes)
-              [publish/UnpublishButton {:workspace-id workspace-id
-                                        :request-refresh request-refresh}]
-              [publish/PublishButton {:disabled? (cond
-                                                   (empty? library-attributes)
-                                                   "Dataset attributes must be created before publishing."
-                                                   (seq (library-utils/validate-required
-                                                         (library-utils/remove-empty-values working-attributes)
-                                                         questions required-attributes))
-                                                   "All required dataset attributes must be set before publishing.")
-                                      :workspace-id workspace-id
-                                      :request-refresh request-refresh}])))
+              [publish/UnpublishButton (utils/restructure workspace-id request-refresh)]
+              [publish/PublishButton
+               (merge (utils/restructure workspace-id request-refresh)
+                      {:disabled? (cond (empty? library-attributes)
+                                        "Dataset attributes must be created before publishing."
+                                        (seq (library-utils/validate-required
+                                              (library-utils/remove-empty-values working-attributes)
+                                              questions required-attributes))
+                                        "All required dataset attributes must be set before publishing.")})])))
+
         (when (or owner? writer?)
           (if (not editing?)
             [comps/SidebarButton
@@ -149,9 +139,9 @@
               {:style :light :color :button-primary :margin :top
                :text "Save" :icon :done
                :onClick (fn [_]
-                          (let [{:keys [success error]} (react/call :get-attributes (@refs "workspace-attribute-editor"))
-                                new-description (react/call :get-text (@refs "description"))
-                                new-tags (react/call :get-tags (@refs "tags-autocomplete"))]
+                          (let [{:keys [success error]} ((@refs "workspace-attribute-editor") :get-attributes)
+                                new-description ((@refs "description") :get-text)
+                                new-tags ((@refs "tags-autocomplete") :get-tags)]
                             (if error
                               (comps/push-error error)
                               (save-attributes {:new-attributes (assoc success :description new-description :tag:tags new-tags)
@@ -173,7 +163,7 @@
           [comps/SidebarButton {:style :light :margin :top :color :button-primary
                                 :text (if isLocked "Unlock" "Lock")
                                 :icon (if isLocked :unlock :lock)
-                                :onClick #(react/call :lock-or-unlock this isLocked)}])
+                                :onClick #(this :lock-or-unlock isLocked)}])
         (when (and owner? (not editing?))
           [comps/SidebarButton {:style :light :margin :top :color (if isLocked :text-lighter :exception-state)
                                 :text "Delete" :icon :delete
@@ -274,18 +264,9 @@
                                                 {:ref "description" :initial-text description}])
                 description [MarkdownView {:text description}]
                 :else [:span {:style {:fontStyle "italic"}} "No description provided"]))]}]
-     (when-not (empty? library-attributes)
-       [LibraryView (utils/restructure
-                     library-attributes
-                     library-schema
-                     workspace
-                     workspace-id
-                     request-refresh
-                     can-share?
-                     owner?
-                     curator?
-                     writer?
-                     catalog-with-read?)])
+     (when (seq library-attributes)
+       [LibraryView (utils/restructure library-attributes library-schema workspace workspace-id
+                                       request-refresh can-share? owner? curator? writer? catalog-with-read?)])
      [attributes/WorkspaceAttributeViewerEditor
       (merge {:ref "workspace-attribute-editor" :workspace-bucket bucketName}
              (utils/restructure editing? writer? workspace-attributes workspace-id request-refresh))]]))
@@ -316,7 +297,7 @@
                catalog-with-read? (and (or writer? (reader? workspace)) (:catalog workspace))
                user-access-level (:accessLevel workspace)
                auth-domain (get-in workspace [:workspace :authorizationDomain])
-               derived (merge {:reader? (reader? (:workspace props)) :request-refresh #(react/call :refresh this)}
+               derived (merge {:reader? (reader? (:workspace props)) :request-refresh #(this :refresh)}
                               (utils/restructure owner? writer? can-share? catalog-with-read?
                                                  user-access-level label-id body-id auth-domain))]
            [:div {:style {:margin "2.5rem 1.5rem" :display "flex"}}
@@ -344,10 +325,10 @@
                        "Could not lock workspace, one or more analyses are currently running")
                       (comps/push-error (str "Error: " status-text))))
                   (swap! state dissoc :locking?)
-                  (react/call :refresh this))}))
+                  (this :refresh))}))
    :component-did-mount
    (fn [{:keys [this]}]
-     (react/call :refresh this))
+     (this :refresh))
    :refresh
    (fn [{:keys [props state]}]
      (swap! state dissoc :server-response)
