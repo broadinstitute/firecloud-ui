@@ -1,8 +1,8 @@
 (ns broadfcui.common.entity-table
   (:require
    [dmohs.react :as react]
-   [clojure.string :as string]
    [inflections.core :as inflections]
+   [clojure.string :as string]
    [broadfcui.common :as common]
    [broadfcui.common.components :as comps]
    [broadfcui.common.style :as style]
