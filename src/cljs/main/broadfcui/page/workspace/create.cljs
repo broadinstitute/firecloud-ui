@@ -11,6 +11,7 @@
     [broadfcui.endpoints :as endpoints]
     [broadfcui.nav :as nav]
     [broadfcui.utils :as utils]
+    [broadfcui.common.icons :as icons]
     ))
 
 
@@ -18,6 +19,8 @@
   {:get-initial-state
    (fn [{:keys [props]}]
      {:selected-project (first (:billing-projects props))
+      :show-selector? true
+      :selected-groups []
       :protected-option :not-loaded})
    :render
    (fn [{:keys [props state refs this]}]
@@ -47,28 +50,50 @@
           (style/create-form-label "Authorization Domain (optional)")
           (common/render-info-box
            {:text [:div {} [:strong {} "Note:"]
-                   [:div {} "An Authorization Domain can only be set when creating a workspace.
+                   [:div {} "An Authorization Domain can only be set when creating a Workspace.
                    Once set, it cannot be changed."]
                    (style/create-link {:href "https://software.broadinstitute.org/firecloud/documentation/article?id=9524"
                                        :target "_blank"
                                        :text [:span {:style {:white-space "pre"}}
                                               "Read more about Authorization Domains"
                                               icons/external-link-icon]})]})]
-         (style/create-select
-          {:ref "auth-domain"
-           :defaultValue -1
-           :onChange #(swap! state assoc :selected-auth-domain (-> % .-target .-value))}
-          (:groups @state)
-          "Select a Group...")
+         (if (nil? (:all-groups @state))
+           [comps/Spinner {:text "Loading Groups..." :style {:margin 0}}]
+           [:div {}
+            (map-indexed
+             (fn [i opt]
+               [:div {}
+                [:div {:style {:float "left" :width "90%"}}
+                 (style/create-select
+                  {:disabled true :defaultValue opt}
+                  [opt])]
+                [:div {:style {:float "right"}}
+                 (if (contains? (:locked-groups @state) opt)
+                   (icons/icon {:style {:color (:text-lightest style/colors)
+                                        :verticalAlign "middle" :fontSize 22
+                                        :padding "0.25rem 0.5rem"}}
+                               :lock)
+                   (icons/icon {:style {:color (:text-lightest style/colors)
+                                        :verticalAlign "middle" :fontSize 22
+                                        :cursor "pointer" :padding "0.25rem 0.5rem"}
+                                :onClick #(swap! state update :selected-groups utils/delete i)}
+                               :remove))]])
+             (:selected-groups @state))
+            (when (not-empty (clojure.set/difference (:all-groups @state) (set (:selected-groups @state))))
+              [:div {}
+               (style/create-identity-select-name
+                {:ref "auth-domain-selector" :defaultValue -1
+                 :onChange #(swap! state update :selected-groups conj (-> % .-target .-value))}
+                (clojure.set/difference (:all-groups @state) (set (:selected-groups @state)))
+                "Select a Group (optional)...")])])
          [comps/ErrorViewer {:error (:server-error @state)}]
          (style/create-validation-error-message (:validation-errors @state))])}])
    :component-did-mount
    (fn [{:keys [state]}]
      (endpoints/get-groups
       (fn [success? parsed-response]
-        (swap! state assoc :groups
-               (conj (map :groupName parsed-response)
-                     "None")))))
+        (swap! state assoc :all-groups
+               (set (map :groupName parsed-response))))))
    :create-workspace
    (fn [{:keys [props state refs]}]
      (swap! state dissoc :server-error :validation-errors)
@@ -78,10 +103,10 @@
              name (input/get-text refs "wsName")
              desc (common/get-text refs "wsDescription")
              attributes (if (clojure.string/blank? desc) {} {:description desc})
-             selected-auth-domain-index (int (:selected-auth-domain @state))
-             auth-domain (when (> selected-auth-domain-index 0)
-                           {:authorizationDomain
-                            {:membersGroupName (nth (:groups @state) selected-auth-domain-index)}})]
+             auth-domain {:authorizationDomain (map
+                                                (fn [group-name]
+                                                  {:membersGroupName group-name})
+                                                (:selected-groups @state))}]
          (swap! state assoc :creating-wf true)
          (endpoints/call-ajax-orch
           {:endpoint (endpoints/create-workspace project name)

@@ -91,7 +91,7 @@
       [MetadataImporter
        (merge
         (select-keys props [:workspace-id])
-        {:this-auth-domain (get-in props [:workspace :workspace :authorizationDomain :membersGroupName])
+        {:this-auth-domain (get-in props [:workspace :workspace :authorizationDomain])
          :import-type "data"
          :on-data-imported #((@refs "entity-table") :refresh (or % (:selected-entity-type @state)) true)})]))
    :-render-data

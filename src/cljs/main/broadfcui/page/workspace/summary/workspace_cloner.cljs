@@ -8,12 +8,15 @@
     [broadfcui.common.style :as style]
     [broadfcui.endpoints :as endpoints]
     [broadfcui.utils :as utils]
+    [broadfcui.common.icons :as icons]
     ))
 
 (react/defc WorkspaceCloner
   {:get-initial-state
    (fn [{:keys [props]}]
-     {:selected-project (first (:billing-projects props))})
+     {:selected-project (first (:billing-projects props))
+      :selected-groups []
+      :show-selector? true})
    :render
    (fn [{:keys [props refs state this]}]
      [comps/OKCancelForm
@@ -45,31 +48,54 @@
           (style/create-form-label (str "Authorization Domain" (when-not (:auth-domain props) " (optional)")))
           (common/render-info-box
            {:text [:div {} [:strong {} "Note:"]
-                   [:div {} "An Authorization Domain can only be set when creating a workspace.
+                   [:div {} "An Authorization Domain can only be set when creating a Workspace.
                      Once set, it cannot be changed."]
                    (style/create-link {:href "https://software.broadinstitute.org/firecloud/documentation/article?id=9524"
                                        :target "_blank"
                                        :text "Read more about Authorization Domains"})]})]
-         (if-let [auth-domain (:auth-domain props)]
+         (when-let [auth-domain (:auth-domain props)]
            [:div {:style {:fontStyle "italic" :fontSize "80%"}}
-            "The cloned workspace will automatically inherit the Authorization Domain "
-            [:strong {} auth-domain] " from this workspace"]
-           (style/create-select
-            {:ref "auth-domain"
-             :defaultValue -1
-             :onChange #(swap! state assoc :selected-auth-domain (-> % .-target .-value))}
-            (:groups @state)
-            "Select a Group..."))
+            "The cloned Workspace will automatically inherit the Authorization Domain from this Workspace."
+            [:div {} "You may add Groups to the Authorization Domain, but you may not remove existing ones."]])
+         (if (nil? (:all-groups @state))
+           [comps/Spinner {:text "Loading Groups..." :style {:margin 0}}]
+           [:div {}
+            (map-indexed
+             (fn [i opt]
+               [:div {}
+                [:div {:style {:float "left" :width "90%"}}
+                 (style/create-select
+                  {:disabled true :defaultValue opt}
+                  [opt])]
+                [:div {:style {:float "right"}}
+                 (if (contains? (:auth-domain props) opt)
+                   (icons/icon {:style {:color (:text-lightest style/colors)
+                                        :verticalAlign "middle" :fontSize 22
+                                        :padding "0.25rem 0.5rem"}}
+                               :lock)
+                   (icons/icon {:style {:color (:text-lightest style/colors)
+                                        :verticalAlign "middle" :fontSize 22
+                                        :cursor "pointer" :padding "0.25rem 0.5rem"}
+                                :onClick #(swap! state update :selected-groups utils/delete i)}
+                               :remove))]])
+             (:selected-groups @state))
+            (when (not-empty (clojure.set/difference (:all-groups @state) (set (:selected-groups @state))))
+              [:div {}
+               (style/create-identity-select-name
+                {:ref "auth-domain-selector" :defaultValue -1
+                 :onChange #(swap! state update :selected-groups conj (-> % .-target .-value))}
+                (clojure.set/difference (:all-groups @state) (set (:selected-groups @state)))
+                "Select a Group (optional)...")])])
          (style/create-validation-error-message (:validation-error @state))
          [comps/ErrorViewer {:error (:error @state)
                              :expect {409 "A workspace with this name already exists in this project"}}]])}])
    :component-did-mount
-   (fn [{:keys [state]}]
+   (fn [{:keys [props state]}]
+     (swap! state assoc :selected-groups (vec (:auth-domain props)))
      (endpoints/get-groups
       (fn [success? parsed-response]
-        (swap! state assoc :groups
-               (conj (map :groupName parsed-response)
-                     "None")))))
+        (swap! state assoc :all-groups
+               (set (map :groupName parsed-response))))))
    :do-clone
    (fn [{:keys [props refs state]}]
      (if-let [fails (input/validate refs "name")]
@@ -81,11 +107,10 @@
                           {:description desc}
                           {})
              selected-auth-domain-index (int (:selected-auth-domain @state))
-             auth-domain (if (:auth-domain props)
-                           {:authorizationDomain {:membersGroupName (:auth-domain props)}}
-                           (when (> selected-auth-domain-index 0)
-                             {:authorizationDomain
-                              {:membersGroupName (nth (:groups @state) selected-auth-domain-index)}}))]
+             auth-domain {:authorizationDomain (map
+                                                (fn [group-name]
+                                                  {:membersGroupName group-name})
+                                                (:selected-groups @state))}]
          (swap! state assoc :working? true :validation-error nil :error nil)
          (endpoints/call-ajax-orch
           {:endpoint (endpoints/clone-workspace (:workspace-id props))
