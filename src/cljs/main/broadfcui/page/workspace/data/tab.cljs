@@ -135,9 +135,9 @@
                               {:key (str (common/workspace-id->string
                                           workspace-id) ":data:" selected-entity-type)
                                :initial (constantly {})})
-                             :column-meta
+                             :column-display
                              (filter :visible?)
-                             (map :header)
+                             (map (some-fn :id :header))
                              (string/join ","))}]
         [:input {:style {:border "none" :backgroundColor "transparent" :cursor "pointer"
                          :color (:button-primary style/colors) :fontSize "inherit" :fontFamily "inherit"
