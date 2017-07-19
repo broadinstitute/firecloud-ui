@@ -763,7 +763,7 @@
    (fn [{:keys [props state]}]
      (let [body
            [:div {:hidden (and (:collapsed? @state) (:label props))
-                  :marginLeft (if (:label props) "0.5rem" 0)}
+                  :style {:marginLeft (if (:label props) "0.5rem" 0)}}
             (map (fn [node]
                    [:ul {:style {:margin "0.2rem" :padding "0.5rem"
                                  :backgroundColor (if (and (:highlight-ends? props)
