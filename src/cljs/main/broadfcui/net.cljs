@@ -21,11 +21,13 @@
   ([ajax-response render-success] (render-with-ajax ajax-response render-success nil))
   ([{:keys [success? parsed-response] :as ajax-response}
     render-success
-    {:keys [loading-text rephrase-error handle-error]}]
+    {:keys [loading-text rephrase-error handle-error blocking?]}]
    (assert (not (and rephrase-error handle-error)) "Provide EITHER handle-error OR rephrase-error")
    (cond
      (nil? ajax-response)
-     [comps/Spinner {:text (or loading-text "Loading...")}]
+     (if blocking?
+       [comps/Blocker {:banner (or loading-text "Loading...")}]
+       [comps/Spinner {:text (or loading-text "Loading...")}])
      (not success?)
      (if handle-error
        (handle-error parsed-response)
