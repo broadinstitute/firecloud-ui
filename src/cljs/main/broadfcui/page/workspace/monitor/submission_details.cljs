@@ -125,10 +125,14 @@
                [comps/Blocker {:banner "Aborting submission..."}])
              [comps/SidebarButton {:color :exception-state :style :light :margin :top
                                    :text "Abort" :icon :warning
+                                   :data-test-id "submission-abort-button"
                                    :onClick (fn [_]
                                               (comps/push-confirm
                                                {:text "Are you sure you want to abort this submission?"
-                                                :on-confirm #(this :abort-submission)}))}])
+                                                :on-confirm
+                                                [comps/Button {:text "Abort Submission"
+                                                               :data-test-id "submission-abort-modal-confirm-button"
+                                                               :onClick #(this :abort-submission)}]}))}])
    :abort-submission (fn [{:keys [props state]}]
                        (modal/pop-modal)
                        (swap! state assoc :aborting-submission? true)

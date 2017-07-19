@@ -145,6 +145,16 @@ trait Orchestration extends FireCloudClient with LazyLogging {
     postRequestWithMultipart(Config.FireCloud.orchApiUrl + "api/workspaces/" + ns + "/" + wsName + "/" + "importEntities", fileName, fileContent)
   }
 
+  def importMethodConfigFromRepo(ns: String, wsName: String, configurationNamespace: String, configurationName: String, configurationSnapshotId: Int, destinationNamespace: String, destinationName: String)(implicit token: AuthToken) = {
+    postRequest(Config.FireCloud.orchApiUrl + "api/workspaces/" + ns + "/" + wsName + "/" + "method_configs/copyFromMethodRepo",
+      Map("configurationNamespace" -> configurationNamespace, "configurationName" -> configurationName, "configurationSnapshotId" -> configurationSnapshotId, "destinationNamespace" -> destinationNamespace, "destinationName" -> destinationName))
+  }
+
+  def launchWorkflow(ns: String, wsName: String, methodConfigurationNamespace: String, methodConfigurationName: String, entityType: String, entityName: String, expression: String, useCallCache: Boolean, workflowFailureMode: String = "NoNewCalls")(implicit token: AuthToken) = {
+    postRequest(Config.FireCloud.orchApiUrl + "api/workspaces/" + ns + "/" + wsName + "/" + "submissions",
+      Map("methodConfigurationNamespace" -> methodConfigurationNamespace,"methodConfigurationName" -> methodConfigurationName,"entityType" -> entityType,"entityName" -> entityName,"expression" -> expression,"useCallCache" -> useCallCache,"workflowFailureMode" -> workflowFailureMode))
+  }
+
 }
 object Orchestration extends Orchestration
 

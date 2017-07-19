@@ -56,7 +56,6 @@ class WorkspaceSpec extends FreeSpec with WebBrowserSpec with WorkspaceFixtures
         }
       }
     }
-  }
 
   // Experimental
   "A cloned workspace" - {

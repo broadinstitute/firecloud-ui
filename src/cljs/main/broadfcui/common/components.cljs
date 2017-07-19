@@ -83,7 +83,7 @@
       :disabled? false})
    :render
    (fn [{:keys [props]}]
-     (let [disabled? (:disabled? props)]
+     (let [{:keys [disabled? data-test-id]} props]
        [:label {:style {:cursor (when-not disabled? "pointer")
                         :color (when disabled? (:text-light style/colors))}
                 :title (when disabled? (:disabled-text props))
@@ -92,7 +92,7 @@
                              (or (:disabled-text props) "This option is not available.")))}
         [:input {:type "checkbox" :ref "check"
                  :defaultChecked (:initial-checked? props)
-                 :disabled disabled?
+                 :disabled disabled? :data-test-id data-test-id
                  :style {:cursor (when-not disabled? "pointer")}}]
         [:span {:style {:marginLeft "0.5ex"}} (:label props)]]))})
 

@@ -20,6 +20,7 @@
           :else "Are you sure you want to delete this method configuration?")]
        :ok-button
        {:text "Delete"
+        :data-test-id "modal-confirm-delete-button"
         :onClick
         #(do (swap! state assoc :deleting? true :error nil)
              (endpoints/call-ajax-orch

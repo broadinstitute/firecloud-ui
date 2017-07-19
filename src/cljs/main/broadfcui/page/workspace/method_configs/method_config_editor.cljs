@@ -149,6 +149,7 @@
                                      :onClick #(swap! state assoc :editing? true :prev-snapshot-id snapshot-id)}]
                [comps/SidebarButton {:style :light :color :exception-state :margin :top
                                      :text "Delete" :icon :delete
+                                     :data-test-id "delete-method-config-button"
                                      :disabled? (when locked? "The workspace is locked")
                                      :onClick #(modal/push-modal
                                                 [delete/DeleteDialog {:config-id config-id

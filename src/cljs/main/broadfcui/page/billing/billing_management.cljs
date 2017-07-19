@@ -98,7 +98,7 @@
                           {:project-name projectName
                            :on-status-change (partial this :-handle-status-change projectName)}]
                          (and (= creationStatus project-status-ready) (contains? (set roles) "Owner"))
-                         (style/create-link {:text projectName
+                         (style/create-link {:text projectName :data-test-id (str projectName "-link")
                                              :href (nav/get-link :billing-project projectName)})
                          :else projectName)
                        (when message

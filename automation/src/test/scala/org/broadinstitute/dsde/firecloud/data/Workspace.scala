@@ -34,12 +34,20 @@ object TestData {
 
 
   /* METHODS */
-  object SimpleMethodConfig {
+  object SimpleMethod {
     val name = "test_method"
     val namespace = "qamethods"
     val snapshotId = 1
     val rootEntityType = "participant"
     val inputs = Map("test.hello.name" -> "\"a\"",
+      "test.hello.response" -> "workspace.result")
+  }
+  object SimpleMethodConfig {
+    val name = "test1_config"
+    val namespace = "qamethods"
+    val snapshotId = 1
+    val rootEntityType = "participant"
+    val inputs = Map("test.hello.name" -> "\"a\"", // shouldn't be needed for config
       "test.hello.response" -> "workspace.result")
   }
 

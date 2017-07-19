@@ -8,9 +8,9 @@ class MethodConfigDetailsPage(namespace: String, name: String, methodConfigNames
 
   override val url: String = s"${Config.FireCloud.baseUrl}#workspaces/$namespace/$name/method-configs/$methodConfigNamespace/$methodConfigName"
 
-  def launchAnalysis(rootEntityType: String, entityId: String) = {
+  def launchAnalysis(rootEntityType: String, entityId: String, expression: String = "", enableCallCaching: Boolean = true) = {
     val launchModal = ui.openLaunchAnalysisModal()
-    launchModal.launchAnalysis(rootEntityType, entityId)
+    launchModal.launchAnalysis(rootEntityType, entityId, expression, enableCallCaching)
     new SubmissionDetailsPage(namespace, name)
   }
 
@@ -30,6 +30,19 @@ class MethodConfigDetailsPage(namespace: String, name: String, methodConfigNames
     ui.openLaunchAnalysisModal()
   }
 
+  def isLoaded: Boolean = {
+    ui.isLaunchAnalysisButtonPresent()
+  }
+
+  override def awaitLoaded(): MethodConfigDetailsPage = {
+    await condition isLoaded
+    this
+  }
+
+  def deleteMethodConfig() = {
+    ui.deleteMethodConfig()
+  }
+
   trait UI extends super.UI {
     private val methodConfigNameTextQuery: Query = testId("method-config-name")
     private val openLaunchAnalysisModalButtonQuery: Query = testId("open-launch-analysis-modal-button")
@@ -39,6 +52,8 @@ class MethodConfigDetailsPage(namespace: String, name: String, methodConfigNames
     private val cancelEditMethodConfigModeButtonQuery: Query = testId("cancel-edit-method-config-button")
     private val editMethodConfigSnapshotIdSelectQuery: Query = testId("edit-method-config-snapshot-id-select")
     private val editMethodConfigRootEntityTypeInputQuery: Query = testId("edit-method-config-root-entity-type-select")
+    private val deleteMethodConfigButtonQuery: Query = testId("delete-method-config-button")
+    private val modalConfirmDeleteButtonQuery: Query = testId("modal-confirm-delete-button")
 
     def openLaunchAnalysisModal(): LaunchAnalysisModal = {
       await enabled methodConfigNameTextQuery
@@ -82,6 +97,24 @@ class MethodConfigDetailsPage(namespace: String, name: String, methodConfigNames
       click on (await enabled cancelEditMethodConfigModeButtonQuery)
     }
 
+    def isLaunchAnalysisButtonPresent() = {
+      await enabled openLaunchAnalysisModalButtonQuery
+      find(openLaunchAnalysisModalButtonQuery).size == 1
+    }
+
+    def verifyMethodConfigurationName(methodConfigName: String) = {
+      await enabled methodConfigNameTextQuery
+
+      val methodConfigNameElement = find(methodConfigNameTextQuery)
+      methodConfigNameElement.get.text == methodConfigName
+
+    }
+
+    def deleteMethodConfig() = {
+      click on (await enabled deleteMethodConfigButtonQuery)
+      click on (await enabled modalConfirmDeleteButtonQuery)
+    }
+
   }
   object ui extends UI
 
@@ -97,12 +130,13 @@ class LaunchAnalysisModal(implicit webDriver: WebDriver) extends FireCloudView {
   /**
     *
     */
-  def launchAnalysis(rootEntityType: String, entityId: String, expression: String = ""): Unit = { //Use Option(String) for expression?
+  def launchAnalysis(rootEntityType: String, entityId: String, expression: String = "", enableCallCaching: Boolean): Unit = { //Use Option(String) for expression?
     ui.filterRootEntityType(rootEntityType)
     ui.searchEntity(entityId)
     ui.selectEntity(entityId)
     if (!expression.isEmpty()) { ui.fillExpression(expression) }
-    ui.clicklaunchButton()
+    if (!enableCallCaching) { ui.clickCallCachingCheckbox() }
+    ui.clickLaunchButton()
   }
 
   def filterRootEntityType(rootEntityType: String) = {
@@ -119,7 +153,7 @@ class LaunchAnalysisModal(implicit webDriver: WebDriver) extends FireCloudView {
   }
 
   def clickLaunchButton() = {
-    ui.clicklaunchButton()
+    ui.clickLaunchButton()
   }
 
   def verifyNoDefaultEntityMessage(): Boolean = {
@@ -151,7 +185,7 @@ class LaunchAnalysisModal(implicit webDriver: WebDriver) extends FireCloudView {
     private val launchAnalysisButtonQuery: Query = testId("launch-button")
     private val closeModalXButtonQuery: Query = testId("x-button")
     private val numberOfWorkflowsWarningQuery: Query = testId("number-of-workflows-warning")
-    //Need to add call-caching check-box
+    private val callCachingCheckboxQuery: Query = testId("call-cache-checkbox")
 
     private val emptyDefaultMessage = "There are no entities to display."
 
@@ -179,7 +213,7 @@ class LaunchAnalysisModal(implicit webDriver: WebDriver) extends FireCloudView {
       searchField(expressionInputQuery).value = expression
     }
 
-    def clicklaunchButton() = {
+    def clickLaunchButton() = {
       click on (await enabled launchAnalysisButtonQuery)
     }
 
@@ -202,6 +236,10 @@ class LaunchAnalysisModal(implicit webDriver: WebDriver) extends FireCloudView {
       await enabled errorTextQuery
       val error = find(errorTextQuery)
       error.size == 1
+    }
+
+    def clickCallCachingCheckbox() = {
+      click on (await enabled callCachingCheckboxQuery)
     }
 
   }
