@@ -267,14 +267,15 @@
          :toolbar {:style {:display "initial"}
                    :filter-bar {:style {:float "left"}
                                 :inner {:width 300}}
-                   :items [[:div {:style {:float "right"}}
-                            [create/Button (select-keys props [:nav-context :billing-projects :disabled-reason])]]
-                           [:div {:style {:clear "left" :float "left" :marginTop "0.5rem"}}
-                            (style/create-link {:text (if filters-expanded? "Collapse" "Show additional filters")
-                                                :onClick #(swap! state update :filters-expanded? not)})]
-                           [:div {:style {:clear "both"}}]
-                           (when filters-expanded?
-                             (this :-render-side-filters))]}
+                   :items (constantly
+                           [[:div {:style {:float "right"}}
+                             [create/Button (select-keys props [:nav-context :billing-projects :disabled-reason])]]
+                            [:div {:style {:clear "left" :float "left" :marginTop "0.5rem"}}
+                             (style/create-link {:text (if filters-expanded? "Collapse" "Show additional filters")
+                                                 :onClick #(swap! state update :filters-expanded? not)})]
+                            [:div {:style {:clear "both"}}]
+                            (when filters-expanded?
+                              (this :-render-side-filters))])}
          :paginator {:style {:clear "both"}}}]))
    :component-did-update
    (fn [{:keys [state]}]

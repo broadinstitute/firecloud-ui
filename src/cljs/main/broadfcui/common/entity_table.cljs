@@ -119,20 +119,22 @@
                :on-row-click (:on-row-click props)
                :on-column-change (:on-column-change props)}
               :toolbar
-              {:items (cons [comps/FilterGroupBar
-                             {:filter-groups (map (fn [entity-type]
-                                                    {:text (name entity-type)
-                                                     :count-override (get-in entity-metadata [entity-type :count])})
-                                                  entity-types)
-                              :selected-index (:selected-filter-index @state)
-                              :on-change (fn [index _]
-                                           (let [selected-entity-type (nth entity-types index)]
-                                             (swap! state assoc
-                                                    :selected-filter-index index
-                                                    :selected-entity-type selected-entity-type)
-                                             (when-let [f (:on-entity-type-selected props)]
-                                               (f selected-entity-type))))}]
-                            (:toolbar-items props))
+              {:items
+               (fn [table-props]
+                (cons [comps/FilterGroupBar
+                       {:filter-groups (map (fn [entity-type]
+                                              {:text (name entity-type)
+                                               :count-override (get-in entity-metadata [entity-type :count])})
+                                            entity-types)
+                        :selected-index (:selected-filter-index @state)
+                        :on-change (fn [index _]
+                                     (let [selected-entity-type (nth entity-types index)]
+                                       (swap! state assoc
+                                              :selected-filter-index index
+                                              :selected-entity-type selected-entity-type)
+                                       (when-let [f (:on-entity-type-selected props)]
+                                         (f selected-entity-type))))}]
+                      ((:toolbar-items props) table-props)))
                :style {:flexWrap "wrap"}}}]))]))
    :component-did-mount
    (fn [{:keys [props this]}]
