@@ -19,7 +19,6 @@
   {:get-initial-state
    (fn [{:keys [props]}]
      {:selected-project (first (:billing-projects props))
-      :show-selector? true
       :selected-groups []
       :protected-option :not-loaded})
    :render
