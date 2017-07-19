@@ -1,19 +1,19 @@
 (ns broadfcui.common.gcs-file-preview
   (:require
-    [dmohs.react :as react]
-    [clojure.string :as string]
-    [broadfcui.common :as common]
-    [broadfcui.common.components :as comps]
-    [broadfcui.common.icons :as icons]
-    [broadfcui.common.modal :as modal]
-    [broadfcui.common.style :as style]
-    [broadfcui.endpoints :as endpoints]
-    [broadfcui.utils :as utils]
-    ))
+   [dmohs.react :as react]
+   [clojure.string :as string]
+   [broadfcui.common :as common]
+   [broadfcui.common.components :as comps]
+   [broadfcui.common.icons :as icons]
+   [broadfcui.common.modal :as modal]
+   [broadfcui.common.style :as style]
+   [broadfcui.endpoints :as endpoints]
+   [broadfcui.utils :as utils]
+   ))
 
 (def ^:private preview-byte-count 20000)
 
-(react/defc PreviewDialog
+(react/defc- PreviewDialog
   {:render
    (fn [{:keys [props state]}]
      [comps/OKCancelForm

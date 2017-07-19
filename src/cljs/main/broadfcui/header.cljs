@@ -1,15 +1,15 @@
 (ns broadfcui.header
   (:require
-    [dmohs.react :as react]
-    [broadfcui.common :as common]
-    [broadfcui.common.style :as style]
-    [broadfcui.config :as config]
-    [broadfcui.endpoints :as endpoints]
-    [broadfcui.nav :as nav]
-    [broadfcui.utils :as utils]
-    ))
+   [dmohs.react :as react]
+   [broadfcui.common :as common]
+   [broadfcui.common.style :as style]
+   [broadfcui.config :as config]
+   [broadfcui.endpoints :as endpoints]
+   [broadfcui.nav :as nav]
+   [broadfcui.utils :as utils]
+   ))
 
-(react/defc TopNavBarLink
+(react/defc- TopNavBarLink
   {:render
    (fn [{:keys [props state]}]
      [:a {:href (:href props)

@@ -1,21 +1,21 @@
 (ns broadfcui.page.workspace.analysis.track-selector
   (:require
-    [dmohs.react :as react]
-    [broadfcui.common :as common]
-    [broadfcui.common.components :as comps]
-    [broadfcui.common.entity-table :refer [EntityTable]]
-    [broadfcui.common.icons :as icons]
-    [broadfcui.common.modal :as modal]
-    [broadfcui.common.style :as style]
-    [broadfcui.common.table-utils :refer [default-render]]
-    [broadfcui.page.workspace.analysis.igv-utils :as igv-utils]
-    [broadfcui.utils :as utils]
-    ))
+   [dmohs.react :as react]
+   [broadfcui.common :as common]
+   [broadfcui.common.components :as comps]
+   [broadfcui.common.entity-table :refer [EntityTable]]
+   [broadfcui.common.icons :as icons]
+   [broadfcui.common.modal :as modal]
+   [broadfcui.common.style :as style]
+   [broadfcui.common.table-utils :refer [default-render]]
+   [broadfcui.page.workspace.analysis.igv-utils :as igv-utils]
+   [broadfcui.utils :as utils]
+   ))
 
 
 (def ^:private supported-file-types [".bam" ".vcf" ".bed"])
 
-(react/defc Left
+(react/defc- Left
   {:render
    (fn [{:keys [props]}]
      [:div {:style {:padding "1em"}}
@@ -37,7 +37,7 @@
                         (default-render data)))}]])})
 
 
-(react/defc Right
+(react/defc- Right
   {:render
    (fn [{:keys [props state refs]}]
      (let [{:keys [tracks]} props]

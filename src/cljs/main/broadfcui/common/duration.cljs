@@ -1,7 +1,7 @@
 (ns broadfcui.common.duration
   (:require
-    [broadfcui.utils :as utils]
-    ))
+   [broadfcui.utils :as utils]
+   ))
 
 (defn fuzzy-time [years months days hours minutes seconds]
   (cond (> years 0) (utils/maybe-pluralize years "year")

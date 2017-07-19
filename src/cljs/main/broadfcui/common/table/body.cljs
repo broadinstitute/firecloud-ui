@@ -1,13 +1,12 @@
 (ns broadfcui.common.table.body
   (:require
-    [dmohs.react :as react]
-    [broadfcui.common :as common]
-    [broadfcui.common.components :as comps]
-    [broadfcui.common.flex-utils :as flex]
-    [broadfcui.common.icons :as icons]
-    [broadfcui.common.table.utils :as table-utils]
-    [broadfcui.utils :as utils]
-    ))
+   [dmohs.react :as react]
+   [broadfcui.common :as common]
+   [broadfcui.common.flex-utils :as flex]
+   [broadfcui.common.icons :as icons]
+   [broadfcui.common.table.utils :as table-utils]
+   [broadfcui.utils :as utils]
+   ))
 
 
 (defn- flex-params [width]

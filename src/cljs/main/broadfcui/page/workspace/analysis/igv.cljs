@@ -1,9 +1,9 @@
 (ns broadfcui.page.workspace.analysis.igv
   (:require
-    [dmohs.react :as react]
-    [broadfcui.common :as common]
-    [broadfcui.utils :as utils]
-    ))
+   [dmohs.react :as react]
+   [broadfcui.common :as common]
+   [broadfcui.utils :as utils]
+   ))
 
 
 (defn- options [tracks]

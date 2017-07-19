@@ -1,17 +1,17 @@
 (ns broadfcui.common.entity-table
   (:require
-    [dmohs.react :as react]
-    [clojure.string :as string]
-    [inflections.core :as inflections]
-    [broadfcui.common :as common]
-    [broadfcui.common.components :as comps]
-    [broadfcui.common.style :as style]
-    [broadfcui.common.table.table :refer [Table]]
-    [broadfcui.common.table.style :as table-style]
-    [broadfcui.common.table.utils :as table-utils]
-    [broadfcui.endpoints :as endpoints]
-    [broadfcui.utils :as utils]
-    ))
+   [dmohs.react :as react]
+   [clojure.string :as string]
+   [inflections.core :as inflections]
+   [broadfcui.common :as common]
+   [broadfcui.common.components :as comps]
+   [broadfcui.common.style :as style]
+   [broadfcui.common.table.table :refer [Table]]
+   [broadfcui.common.table.style :as table-style]
+   [broadfcui.common.table.utils :as table-utils]
+   [broadfcui.endpoints :as endpoints]
+   [broadfcui.utils :as utils]
+   ))
 
 
 ;; for attributes referring to a single other entity

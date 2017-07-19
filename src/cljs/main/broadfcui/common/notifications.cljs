@@ -1,13 +1,13 @@
 (ns broadfcui.common.notifications
   (:require
-    [dmohs.react :as react]
-    [broadfcui.common.components :as comps]
-    [broadfcui.common.icons :as icons]
-    [broadfcui.common.style :as style]
-    [broadfcui.components.top-banner :as top-banner]
-    [broadfcui.config :as config]
-    [broadfcui.utils :as utils]
-    ))
+   [dmohs.react :as react]
+   [broadfcui.common.components :as comps]
+   [broadfcui.common.icons :as icons]
+   [broadfcui.common.style :as style]
+   [broadfcui.components.top-banner :as top-banner]
+   [broadfcui.config :as config]
+   [broadfcui.utils :as utils]
+   ))
 
 (defn render-alert [{:keys [cleared? link message title]} dismiss]
   (let [text-color "#eee"]
@@ -67,7 +67,7 @@
    (fn [{:keys [locals]}]
      (js/clearInterval (:interval-id @locals)))
    :-load-service-alerts
-   (fn [{:keys [this state]} & [first-time?]]
+   (fn [{:keys [this]} & [first-time?]]
      (utils/ajax {:url (config/alerts-json-url)
                   :headers {"Cache-Control" "no-store, no-cache"}
                   :on-done (partial this :-handle-response first-time?)}))

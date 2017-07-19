@@ -16,7 +16,8 @@ The [**Lisp Paredit**](https://atom.io/packages/lisp-paredit) package formats co
 **IntelliJ**  
 The [**Cursive**](https://cursive-ide.com) plugin formats code correctly (after a few configuration changes), but is not free.
 Correct cursive settings are included in this repo in importable form, in the file [`IntelliJ-clojure-style.xml`](IntelliJ-clojure-style.xml).
-The first time you encounter a `defc`, you must manually tell Cursive how to format it:  
+
+The first time you encounter a `defc`, you must manually tell Cursive how to format it:
 
 1. Highlight any usage of that symbol  
 2. Run the IntelliJ command _Show Intention Actions_ (Mac default Option + Return)  
@@ -24,6 +25,8 @@ The first time you encounter a `defc`, you must manually tell Cursive how to for
 4. Select _def_
 
 <img src="https://cloud.githubusercontent.com/assets/22642695/21731936/f7e5a17c-d424-11e6-973b-bf5897bbf833.png" title="resolve defc as def" width="458" height="114"/>
+
+You'll have to repeat this process for `defc-`.
 
 ### Source code layout & organization
 

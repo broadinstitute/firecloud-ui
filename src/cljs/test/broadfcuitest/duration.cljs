@@ -1,9 +1,9 @@
 (ns broadfcuitest.duration
   (:require
-    [cljs.test :refer [deftest is testing]]
-    [broadfcui.common.duration :as duration]
-    [broadfcui.utils :as utils]
-    ))
+   [cljs.test :refer [deftest is testing]]
+   [broadfcui.common.duration :as duration]
+   [broadfcui.utils :as utils]
+   ))
 
 (deftest fuzzy-time
 
