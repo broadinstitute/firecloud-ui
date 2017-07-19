@@ -10,7 +10,7 @@ import akka.stream.scaladsl.{Sink, _}
 import akka.util.ByteString
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.scala.DefaultScalaModule
-import org.broadinstitute.dsde.firecloud.auth.AuthToken
+import org.broadinstitute.dsde.firecloud.config.AuthToken
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, ExecutionContextExecutor, Future}
