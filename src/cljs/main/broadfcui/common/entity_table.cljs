@@ -49,6 +49,9 @@
                         (f selected-entity-type))
                       (after-update #(this :update-data reinitialize?)))
                     (swap! state assoc :server-error (get-parsed-response false))))}))
+   :get-ordered-columns
+   (fn [{:keys [refs]}]
+     ((@refs "table") :get-ordered-columns))
    :get-default-props
    (fn []
      {:empty-message "There are no entities to display."
@@ -113,7 +116,8 @@
                                          :else ((:attribute-renderer props) attr-value)))})
                           attributes))
                :column-defaults (get (:column-defaults props) (some-> selected-entity-type name))
-               :on-row-click (:on-row-click props)}
+               :on-row-click (:on-row-click props)
+               :on-column-change (:on-column-change props)}
               :toolbar
               {:items (cons [comps/FilterGroupBar
                              {:filter-groups (map (fn [entity-type]

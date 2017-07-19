@@ -2,6 +2,7 @@
   (:require
     [dmohs.react :as react]
     [clojure.set :as set]
+    [clojure.string :as string]
     [broadfcui.common.components :as comps]
     [broadfcui.common.style :as style]
     [broadfcui.common.table.body :as body]
@@ -67,6 +68,9 @@
                                        :filtered-count filtered-count
                                        :rows results
                                        :query-params query-params))})))
+   :get-ordered-columns
+   (fn [{:keys [state]}]
+     (:column-display @state))
    :get-default-props
    (fn []
      {:load-on-mount true})
@@ -117,11 +121,13 @@
      (let [props (utils/deep-merge default-props props)
            {:keys [rows column-display filtered-count query-params]} @state
            {:keys [body toolbar paginator]} props
-           {:keys [empty-message columns behavior external-query-params]} body
+           {:keys [empty-message columns behavior external-query-params on-column-change]} body
            {:keys [fixed-column-count allow-no-sort?]} behavior
            total-count (some :total-count [props @state])
            query-params (merge query-params (select-keys props external-query-params))
-           update-column-display #(swap! state assoc :column-display %)]
+           update-column-display (fn [columns]
+                                   (when on-column-change (on-column-change columns))
+                                   (swap! state assoc :column-display columns))]
        [:div {:style {:position "relative"}}
         [comps/DelayedBlocker {:ref "blocker" :banner "Loading..."}]
         [:div {:style (:style toolbar)}

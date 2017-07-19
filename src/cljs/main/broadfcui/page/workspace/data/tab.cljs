@@ -110,6 +110,7 @@
                           :disabled? (when (get-in workspace [:workspace :isLocked]) "This workspace is locked.")
                           :onClick #(this :-handle-import-data-click)}]]
           :on-entity-type-selected #(swap! state assoc :selected-entity-type % :selected-entity nil :selected-attr-list nil)
+          :on-column-change #(swap! state assoc :visible-columns %)
           :attribute-renderer (table-utils/render-gcs-links (get-in workspace [:workspace :bucketName]))
           :linked-entity-renderer
           (fn [entity]
@@ -118,7 +119,7 @@
               (:entity-Name entity)))
           :entity-name-renderer #(this :-render-entity %)}]]))
    :-render-download-link
-   (fn [{:keys [props state]}]
+   (fn [{:keys [props state refs]}]
      (let [{:keys [workspace-id]} props
            selected-entity-type (name (:selected-entity-type @state))]
        [:form {:target "_blank"
@@ -131,11 +132,7 @@
                  :value (utils/get-access-token)}]
         [:input {:type "hidden"
                  :name "attributeNames"
-                 :value (->> (persistence/try-restore
-                              {:key (str (common/workspace-id->string
-                                          workspace-id) ":data:" selected-entity-type)
-                               :initial (constantly {})})
-                             :column-display
+                 :value (->> (or (:visible-columns @state) ((@refs "entity-table") :get-ordered-columns))
                              (filter :visible?)
                              (map (some-fn :id :header))
                              (string/join ","))}]
