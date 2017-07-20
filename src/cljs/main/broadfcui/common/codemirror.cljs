@@ -1,9 +1,9 @@
 (ns broadfcui.common.codemirror
   (:require
-    [dmohs.react :as react]
-    [broadfcui.common.style :as style]
-    [broadfcui.utils :as utils]
-    ))
+   [dmohs.react :as react]
+   [broadfcui.common.style :as style]
+   [broadfcui.utils :as utils]
+   ))
 
 (def ^:private CodeMirror-js (aget js/window "webpack-deps" "CodeMirror"))
 

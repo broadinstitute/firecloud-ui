@@ -1,18 +1,18 @@
 (ns broadfcui.page.workspace.method-configs.launch-analysis
   (:require
-    [clojure.string :as string]
-    [dmohs.react :as react]
-    [broadfcui.common :as common]
-    [broadfcui.common.components :as comps]
-    [broadfcui.common.duration :as duration]
-    [broadfcui.common.icons :as icons]
-    [broadfcui.common.modal :as modal]
-    [broadfcui.common.style :as style]
-    [broadfcui.common.entity-table :refer [EntityTable]]
-    [broadfcui.config :as config]
-    [broadfcui.endpoints :as endpoints]
-    [broadfcui.utils :as utils]
-    ))
+   [clojure.string :as string]
+   [dmohs.react :as react]
+   [broadfcui.common :as common]
+   [broadfcui.common.components :as comps]
+   [broadfcui.common.duration :as duration]
+   [broadfcui.common.icons :as icons]
+   [broadfcui.common.modal :as modal]
+   [broadfcui.common.style :as style]
+   [broadfcui.common.entity-table :refer [EntityTable]]
+   [broadfcui.config :as config]
+   [broadfcui.endpoints :as endpoints]
+   [broadfcui.utils :as utils]
+   ))
 
 
 (defn- entity->id [entity]
@@ -107,7 +107,7 @@
 (defn- parse-cromwell-ver [cromwell-ver-response]
   (first (string/split (:cromwell cromwell-ver-response) #"-")))
 
-(react/defc Form
+(react/defc- Form
   {:render
    (fn [{:keys [props state this]}]
      [comps/OKCancelForm
@@ -151,7 +151,7 @@
        (swap! state assoc :validation-errors ["Please select an entity"])))})
 
 
-(react/defc LaunchAnalysisButton
+(react/defc- LaunchAnalysisButton
   {:render
    (fn [{:keys [props]}]
      [comps/Button

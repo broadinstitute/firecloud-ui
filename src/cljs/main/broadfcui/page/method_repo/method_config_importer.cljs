@@ -1,24 +1,24 @@
 (ns broadfcui.page.method-repo.method-config-importer
   (:require
-    [dmohs.react :as react]
-    [clojure.string :as string]
-    [broadfcui.common :as common]
-    [broadfcui.common.components :as comps]
-    [broadfcui.common.flex-utils :as flex]
-    [broadfcui.common.input :as input]
-    [broadfcui.common.modal :as modal]
-    [broadfcui.common.style :as style]
-    [broadfcui.components.sticky :refer [Sticky]]
-    [broadfcui.endpoints :as endpoints]
-    [broadfcui.nav :as nav]
-    [broadfcui.page.method-repo.create-method :as create]
-    [broadfcui.page.method-repo.method-repo-table :refer [MethodRepoTable]]
-    [broadfcui.page.method-repo.methods-configs-acl :as mca]
-    [broadfcui.utils :as utils]
-    ))
+   [dmohs.react :as react]
+   [clojure.string :as string]
+   [broadfcui.common :as common]
+   [broadfcui.common.components :as comps]
+   [broadfcui.common.flex-utils :as flex]
+   [broadfcui.common.input :as input]
+   [broadfcui.common.modal :as modal]
+   [broadfcui.common.style :as style]
+   [broadfcui.components.sticky :refer [Sticky]]
+   [broadfcui.endpoints :as endpoints]
+   [broadfcui.nav :as nav]
+   [broadfcui.page.method-repo.create-method :as create]
+   [broadfcui.page.method-repo.method-repo-table :refer [MethodRepoTable]]
+   [broadfcui.page.method-repo.methods-configs-acl :as mca]
+   [broadfcui.utils :as utils]
+   ))
 
 
-(react/defc Redactor
+(react/defc- Redactor
   {:render
    (fn [{:keys [props state this]}]
      [comps/OKCancelForm
@@ -150,7 +150,7 @@
                       :onClick #(this :perform-copy)}]]]]))
 
 
-(react/defc ConfigImportForm
+(react/defc- ConfigImportForm
   {:render
    (fn [{:keys [props state this locals]}]
      (cond
@@ -209,7 +209,7 @@
                     (swap! state assoc :error status-text)))}))})
 
 
-(react/defc MethodImportForm
+(react/defc- MethodImportForm
   {:render
    (fn [{:keys [props state this locals]}]
      (cond

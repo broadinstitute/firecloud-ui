@@ -1,13 +1,13 @@
 (ns broadfcui.auth
   (:require
-    [dmohs.react :as react]
-    [clojure.string :as string]
-    [broadfcui.common.components :as comps]
-    [broadfcui.common.style :as style]
-    [broadfcui.config :as config]
-    [broadfcui.nav :as nav]
-    [broadfcui.utils :as utils]
-    ))
+   [dmohs.react :as react]
+   [clojure.string :as string]
+   [broadfcui.common.components :as comps]
+   [broadfcui.common.style :as style]
+   [broadfcui.config :as config]
+   [broadfcui.nav :as nav]
+   [broadfcui.utils :as utils]
+   ))
 
 (react/defc GoogleAuthLibLoader
   {:render
@@ -30,9 +30,9 @@
        (utils/set-google-auth2-instance! auth2)
        (on-loaded auth2)))})
 
-(react/defc Policy
+(react/defc- Policy
   {:render
-   (fn [{:keys [state]}]
+   (fn []
      [:div {:style {:maxWidth 600 :paddingTop "2em"}}
       [:p {:style {:fontWeight "bold"}} "WARNING NOTICE"]
       [:p {}
@@ -78,7 +78,7 @@
         ::logged-out
         #(on-change (js-invoke % "isSignedIn") (:refresh-token-saved? @locals)))))
    :component-will-unmount
-   (fn [{:keys [props locals]}]
+   (fn []
      (utils/remove-user-listener ::logged-out))
    :-handle-sign-in-click
    (fn [{:keys [props locals]}]

@@ -1,36 +1,36 @@
 (ns broadfcui.main
   (:require
-    [dmohs.react :as react]
-    [org.broadinstitute.uicomps.modal :as modal]
-    [clojure.string :as string]
-    [broadfcui.auth :as auth]
-    [broadfcui.common :as common]
-    [broadfcui.common.components :as comps]
-    [broadfcui.common.flex-utils :as flex]
-    [broadfcui.common.icons :as icons]
-    [broadfcui.common.modal :as old-modal]
-    [broadfcui.common.notifications :as notifications]
-    [broadfcui.common.style :as style]
-    [broadfcui.components.top-banner :as top-banner]
-    [broadfcui.config :as config]
-    [broadfcui.config.loader :as config-loader]
-    [broadfcui.endpoints :as endpoints]
-    [broadfcui.footer :as footer]
-    [broadfcui.header :as header]
-    [broadfcui.nav :as nav]
-    [broadfcui.nih-link-warning :refer [NihLinkWarning]]
-    [broadfcui.page.billing.billing-management :as billing-management]
-    [broadfcui.page.groups.groups-management :as group-management]
-    [broadfcui.page.library.library-page :as library-page]
-    [broadfcui.page.method-repo.method-repo-page :as method-repo]
-    [broadfcui.page.notifications :as billing-notifications]
-    [broadfcui.page.profile :as profile-page]
-    [broadfcui.page.status :as status-page]
-    [broadfcui.page.style-guide :as style-guide]
-    [broadfcui.page.workspace.details :as workspace-details]
-    [broadfcui.page.workspaces-list :as workspaces]
-    [broadfcui.utils :as utils]
-    ))
+   [dmohs.react :as react]
+   [org.broadinstitute.uicomps.modal :as modal]
+   [clojure.string :as string]
+   [broadfcui.auth :as auth]
+   [broadfcui.common :as common]
+   [broadfcui.common.components :as comps]
+   [broadfcui.common.flex-utils :as flex]
+   [broadfcui.common.icons :as icons]
+   [broadfcui.common.modal :as old-modal]
+   [broadfcui.common.notifications :as notifications]
+   [broadfcui.common.style :as style]
+   [broadfcui.components.top-banner :as top-banner]
+   [broadfcui.config :as config]
+   [broadfcui.config.loader :as config-loader]
+   [broadfcui.endpoints :as endpoints]
+   [broadfcui.footer :as footer]
+   [broadfcui.header :as header]
+   [broadfcui.nav :as nav]
+   [broadfcui.nih-link-warning :refer [NihLinkWarning]]
+   [broadfcui.page.billing.billing-management :as billing-management]
+   [broadfcui.page.groups.groups-management :as group-management]
+   [broadfcui.page.library.library-page :as library-page]
+   [broadfcui.page.method-repo.method-repo-page :as method-repo]
+   [broadfcui.page.notifications :as billing-notifications]
+   [broadfcui.page.profile :as profile-page]
+   [broadfcui.page.status :as status-page]
+   [broadfcui.page.style-guide :as style-guide]
+   [broadfcui.page.workspace.details :as workspace-details]
+   [broadfcui.page.workspaces-list :as workspaces]
+   [broadfcui.utils :as utils]
+   ))
 
 (defn- init-nav-paths []
   (nav/clear-paths)
@@ -46,7 +46,7 @@
   (workspace-details/add-nav-paths)
   (workspaces/add-nav-paths))
 
-(react/defc LoggedIn
+(react/defc- LoggedIn
   {:render
    (fn [{:keys [this props state]}]
      (let [{:keys [component make-props]} props
@@ -154,7 +154,7 @@
                (aget e "filename")]]
     :show-cancel? false :ok-button "OK"}))
 
-(react/defc App
+(react/defc- App
   {:handle-hash-change
    (fn [{:keys [state]}]
      (let [window-hash (aget js/window "location" "hash")]

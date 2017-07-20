@@ -1,23 +1,23 @@
 (ns broadfcui.page.groups.groups-management
   (:require
-    [dmohs.react :as react]
-    [broadfcui.common.components :as comps]
-    [broadfcui.common.flex-utils :as flex]
-    [broadfcui.common.icons :as icons]
-    [broadfcui.common.management-utils :as management-utils]
-    [broadfcui.common.modal :as modal]
-    [broadfcui.common.style :as style]
-    [broadfcui.common.table.style :as table-style]
-    [broadfcui.common.table.table :refer [Table]]
-    [broadfcui.components.modals :as modals]
-    [broadfcui.endpoints :as endpoints]
-    [broadfcui.nav :as nav]
-    [broadfcui.net :as net]
-    [broadfcui.page.groups.create-group :refer [CreateGroupDialog]]
-    [broadfcui.utils :as utils]
-    ))
+   [dmohs.react :as react]
+   [broadfcui.common.components :as comps]
+   [broadfcui.common.flex-utils :as flex]
+   [broadfcui.common.icons :as icons]
+   [broadfcui.common.management-utils :as management-utils]
+   [broadfcui.common.modal :as modal]
+   [broadfcui.common.style :as style]
+   [broadfcui.common.table.style :as table-style]
+   [broadfcui.common.table.table :refer [Table]]
+   [broadfcui.components.modals :as modals]
+   [broadfcui.endpoints :as endpoints]
+   [broadfcui.nav :as nav]
+   [broadfcui.net :as net]
+   [broadfcui.page.groups.create-group :refer [CreateGroupDialog]]
+   [broadfcui.utils :as utils]
+   ))
 
-(react/defc GroupTable
+(react/defc- GroupTable
   {:render
    (fn [{:keys [this state]}]
      [:div {}
@@ -104,14 +104,14 @@
               [CreateGroupDialog
                {:on-success #(this :-load-data)}]))}]]}}])
    :-delete-group
-   (fn [{:keys [state this]}]
+   (fn [{:keys [state]}]
      (swap! state assoc :deleting? true :delete-modal? nil)
      (endpoints/call-ajax-orch
       {:endpoint (endpoints/delete-group (:group-name @state))
        :on-done (net/handle-ajax-response
                  #(swap! state assoc :delete-response %))}))})
 
-(react/defc Page
+(react/defc- Page
   {:render
    (fn [{:keys [props]}]
      (let [{:keys [group-name]} props]

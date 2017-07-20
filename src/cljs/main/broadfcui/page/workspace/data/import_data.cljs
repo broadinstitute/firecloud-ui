@@ -1,13 +1,13 @@
 (ns broadfcui.page.workspace.data.import-data
   (:require
-    [dmohs.react :as react]
-    [broadfcui.common :as common]
-    [broadfcui.common.components :as comps]
-    [broadfcui.common.icons :as icons]
-    [broadfcui.common.style :as style]
-    [broadfcui.endpoints :as endpoints]
-    [broadfcui.utils :as utils]
-    ))
+   [dmohs.react :as react]
+   [broadfcui.common :as common]
+   [broadfcui.common.components :as comps]
+   [broadfcui.common.icons :as icons]
+   [broadfcui.common.style :as style]
+   [broadfcui.endpoints :as endpoints]
+   [broadfcui.utils :as utils]
+   ))
 
 
 (def ^:private preview-limit 4096)
@@ -70,7 +70,7 @@
                   (:workspace-id props))
        :raw-data (utils/generate-form-data {(if (= "data" (:import-type props)) :entities :attributes) (:file @state)})
        :encType "multipart/form-data"
-       :on-done (fn [{:keys [success? xhr get-parsed-response]}]
+       :on-done (fn [{:keys [success? get-parsed-response]}]
                   (swap! state dissoc :loading? :file :file-contents)
                   (if success?
                     (do

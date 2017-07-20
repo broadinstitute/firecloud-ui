@@ -1,14 +1,14 @@
 (ns broadfcui.page.workspace.data.entity-selector
   (:require
-    [dmohs.react :as react]
-    [clojure.set :as set]
-    [broadfcui.common.components :as comps]
-    [broadfcui.common.icons :as icons]
-    [broadfcui.common.style :as style]
-    [broadfcui.common.table :as table]
-    [broadfcui.common.table-utils :as table-utils]
-    [broadfcui.utils :as utils]
-    ))
+   [dmohs.react :as react]
+   [clojure.set :as set]
+   [broadfcui.common.components :as comps]
+   [broadfcui.common.icons :as icons]
+   [broadfcui.common.style :as style]
+   [broadfcui.common.table :as table]
+   [broadfcui.common.table-utils :as table-utils]
+   [broadfcui.utils :as utils]
+   ))
 
 (def ^:private box-width "calc(50% - 20px)")
 

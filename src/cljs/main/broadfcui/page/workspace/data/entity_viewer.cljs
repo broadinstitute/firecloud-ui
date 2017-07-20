@@ -1,15 +1,15 @@
 (ns broadfcui.page.workspace.data.entity-viewer
   (:require
-    [dmohs.react :as react]
-    [broadfcui.common :as common]
-    [broadfcui.common.entity-table :as entity-table]
-    [broadfcui.common.gcs-file-preview :refer [GCSFilePreviewLink]]
-    [broadfcui.common.icons :as icons]
-    [broadfcui.common.style :as style]
-    [broadfcui.common.table :as table]
-    [broadfcui.page.workspace.data.utils :as data-utils]
-    [broadfcui.utils :as utils]
-    ))
+   [dmohs.react :as react]
+   [broadfcui.common :as common]
+   [broadfcui.common.entity-table :as entity-table]
+   [broadfcui.common.gcs-file-preview :refer [GCSFilePreviewLink]]
+   [broadfcui.common.icons :as icons]
+   [broadfcui.common.style :as style]
+   [broadfcui.common.table :as table]
+   [broadfcui.page.workspace.data.utils :as data-utils]
+   [broadfcui.utils :as utils]
+   ))
 
 (defn- render-list-item [item]
   (if (entity-table/is-single-ref? item)

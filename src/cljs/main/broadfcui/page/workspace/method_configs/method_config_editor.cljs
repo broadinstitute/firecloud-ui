@@ -1,20 +1,20 @@
 (ns broadfcui.page.workspace.method-configs.method-config-editor
   (:require
-    [dmohs.react :as react]
-    [clojure.string :as string]
-    [broadfcui.common :as common]
-    [broadfcui.common.components :as comps]
-    [broadfcui.common.icons :as icons]
-    [broadfcui.common.modal :as modal]
-    [broadfcui.common.style :as style]
-    [broadfcui.components.sticky :refer [Sticky]]
-    [broadfcui.endpoints :as endpoints]
-    [broadfcui.page.workspace.method-configs.delete-config :as delete]
-    [broadfcui.page.workspace.method-configs.launch-analysis :as launch]
-    [broadfcui.page.workspace.method-configs.publish :as publish]
-    [broadfcui.page.workspace.workspace-common :as ws-common]
-    [broadfcui.utils :as utils]
-    ))
+   [dmohs.react :as react]
+   [clojure.string :as string]
+   [broadfcui.common :as common]
+   [broadfcui.common.components :as comps]
+   [broadfcui.common.icons :as icons]
+   [broadfcui.common.modal :as modal]
+   [broadfcui.common.style :as style]
+   [broadfcui.components.sticky :refer [Sticky]]
+   [broadfcui.endpoints :as endpoints]
+   [broadfcui.page.workspace.method-configs.delete-config :as delete]
+   [broadfcui.page.workspace.method-configs.launch-analysis :as launch]
+   [broadfcui.page.workspace.method-configs.publish :as publish]
+   [broadfcui.page.workspace.workspace-common :as ws-common]
+   [broadfcui.utils :as utils]
+   ))
 
 (defn- filter-empty [coll]
   (->> coll (map string/trim) (remove string/blank?) vec))
@@ -26,7 +26,7 @@
   [:div {:style {:padding "1em 0 2em 0"}} children])
 
 
-(react/defc MethodDetailsViewer
+(react/defc- MethodDetailsViewer
   {:get-fields
    (fn [{:keys [refs]}]
      ((@refs "methodDetails") :get-fields))

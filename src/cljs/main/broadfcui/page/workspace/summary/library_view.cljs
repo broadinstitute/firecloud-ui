@@ -1,15 +1,15 @@
 (ns broadfcui.page.workspace.summary.library-view
   (:require
-    [dmohs.react :as react]
-    [broadfcui.common.components :as comps]
-    [broadfcui.common.modal :as modal]
-    [broadfcui.common.style :as style]
-    [broadfcui.components.collapse :refer [Collapse]]
-    [broadfcui.endpoints :as endpoints]
-    [broadfcui.page.workspace.summary.catalog.wizard :refer [CatalogWizard]]
-    [broadfcui.page.workspace.summary.library-utils :as library-utils]
-    [broadfcui.utils :as utils]
-    ))
+   [dmohs.react :as react]
+   [broadfcui.common.components :as comps]
+   [broadfcui.common.modal :as modal]
+   [broadfcui.common.style :as style]
+   [broadfcui.components.collapse :refer [Collapse]]
+   [broadfcui.endpoints :as endpoints]
+   [broadfcui.page.workspace.summary.catalog.wizard :refer [CatalogWizard]]
+   [broadfcui.page.workspace.summary.library-utils :as library-utils]
+   [broadfcui.utils :as utils]
+   ))
 
 
 

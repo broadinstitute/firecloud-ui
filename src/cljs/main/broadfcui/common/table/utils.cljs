@@ -1,8 +1,8 @@
 (ns broadfcui.common.table.utils
   (:require
-    [broadfcui.common :as common]
-    [broadfcui.utils :as utils]
-    ))
+   [broadfcui.common :as common]
+   [broadfcui.utils :as utils]
+   ))
 
 
 (defn resolve-id [{:keys [header id]}]

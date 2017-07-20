@@ -1,16 +1,16 @@
 (ns broadfcui.common.table.table
   (:require
-    [dmohs.react :as react]
-    [clojure.set :as set]
-    [broadfcui.common.components :as comps]
-    [broadfcui.common.style :as style]
-    [broadfcui.common.table.body :as body]
-    [broadfcui.common.table.column-editor :refer [ColumnEditButton]]
-    [broadfcui.common.table.paginator :refer [Paginator]]
-    [broadfcui.common.table.utils :as table-utils]
-    [broadfcui.persistence :as persistence]
-    [broadfcui.utils :as utils]
-    ))
+   [dmohs.react :as react]
+   [clojure.set :as set]
+   [broadfcui.common.components :as comps]
+   [broadfcui.common.style :as style]
+   [broadfcui.common.table.body :as body]
+   [broadfcui.common.table.column-editor :refer [ColumnEditButton]]
+   [broadfcui.common.table.paginator :refer [Paginator]]
+   [broadfcui.common.table.utils :as table-utils]
+   [broadfcui.persistence :as persistence]
+   [broadfcui.utils :as utils]
+   ))
 
 
 ;; Documentation:

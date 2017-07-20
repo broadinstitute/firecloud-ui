@@ -1,7 +1,7 @@
 (ns broadfcui.nav
   (:require
-    [broadfcui.utils :as utils]
-    ))
+   [broadfcui.utils :as utils]
+   ))
 
 (defonce all-path-handlers (atom {}))
 

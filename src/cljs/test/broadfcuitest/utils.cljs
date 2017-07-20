@@ -1,7 +1,7 @@
 (ns broadfcuitest.utils
   (:require
-    cljs.test
-    ))
+   cljs.test
+   ))
 
 ;; cljs.test gets mad if *print-fn* is undefined.
 (enable-console-print!)
@@ -16,19 +16,19 @@
 (defmethod cljs.test/report [:cljs.test/default :begin-test-ns] [m]
   (.group js/console (name (:ns m))))
 
-(defmethod cljs.test/report [:cljs.test/default :end-test-ns] [m]
+(defmethod cljs.test/report [:cljs.test/default :end-test-ns] [_]
   (.groupEnd js/console))
 
-(defmethod cljs.test/report [:cljs.test/default :begin-test-var] [m]
+(defmethod cljs.test/report [:cljs.test/default :begin-test-var] [_]
   (let [env (cljs.test/get-current-env)]
     (.group
      js/console
      (clojure.string/join "." (reverse (map #(:name (meta %)) (:testing-vars env)))))))
 
-(defmethod cljs.test/report [:cljs.test/default :end-test-var] [m]
+(defmethod cljs.test/report [:cljs.test/default :end-test-var] [_]
   (.groupEnd js/console))
 
-(defmethod cljs.test/report [:cljs.test/default :pass] [m]
+(defmethod cljs.test/report [:cljs.test/default :pass] [_]
   (cljs.test/inc-report-counter! :pass)
   (print (get-testing-contexts)))
 

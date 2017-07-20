@@ -1,15 +1,15 @@
 (ns broadfcui.page.workspace.summary.catalog.wizard
   (:require
-    [dmohs.react :as react]
-    [broadfcui.common.components :as comps]
-    [broadfcui.common.flex-utils :as flex]
-    [broadfcui.common.modal :as modal]
-    [broadfcui.common.style :as style]
-    [broadfcui.endpoints :as endpoints]
-    [broadfcui.page.workspace.summary.catalog.questions :refer [Questions]]
-    [broadfcui.page.workspace.summary.library-utils :as library-utils]
-    [broadfcui.utils :as utils]
-    ))
+   [dmohs.react :as react]
+   [broadfcui.common.components :as comps]
+   [broadfcui.common.flex-utils :as flex]
+   [broadfcui.common.modal :as modal]
+   [broadfcui.common.style :as style]
+   [broadfcui.endpoints :as endpoints]
+   [broadfcui.page.workspace.summary.catalog.questions :refer [Questions]]
+   [broadfcui.page.workspace.summary.library-utils :as library-utils]
+   [broadfcui.utils :as utils]
+   ))
 
 
 (defn- render-wizard-breadcrumbs [{:keys [library-schema page-num pages-seen]}]
@@ -41,7 +41,7 @@
         (nil? input) []
         :else [input]))
 
-(react/defc DiscoverabilityPage
+(react/defc- DiscoverabilityPage
   {:validate (constantly nil)
    :get-initial-state
    (fn [{:keys [props]}]

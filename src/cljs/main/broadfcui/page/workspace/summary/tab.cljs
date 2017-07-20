@@ -1,29 +1,29 @@
 (ns broadfcui.page.workspace.summary.tab
   (:require
-    [dmohs.react :as react]
-    [broadfcui.common :as common]
-    [broadfcui.common.components :as comps]
-    [broadfcui.common.icons :as icons]
-    [broadfcui.common.markdown :refer [MarkdownView MarkdownEditor]]
-    [broadfcui.common.modal :as modal]
-    [broadfcui.common.style :as style]
-    [broadfcui.components.collapse :refer [Collapse]]
-    [broadfcui.components.sticky :refer [Sticky]]
-    [broadfcui.endpoints :as endpoints]
-    [broadfcui.nav :as nav]
-    [broadfcui.page.workspace.monitor.common :as moncommon]
-    [broadfcui.page.workspace.summary.acl-editor :refer [AclEditor]]
-    [broadfcui.page.workspace.summary.attribute-editor :as attributes]
-    [broadfcui.page.workspace.summary.catalog.wizard :refer [CatalogWizard]]
-    [broadfcui.page.workspace.summary.library-utils :as library-utils]
-    [broadfcui.page.workspace.summary.library-view :refer [LibraryView]]
-    [broadfcui.page.workspace.summary.publish :as publish]
-    [broadfcui.page.workspace.summary.workspace-cloner :refer [WorkspaceCloner]]
-    [broadfcui.utils :as utils]
-    ))
+   [dmohs.react :as react]
+   [broadfcui.common :as common]
+   [broadfcui.common.components :as comps]
+   [broadfcui.common.icons :as icons]
+   [broadfcui.common.markdown :refer [MarkdownView MarkdownEditor]]
+   [broadfcui.common.modal :as modal]
+   [broadfcui.common.style :as style]
+   [broadfcui.components.collapse :refer [Collapse]]
+   [broadfcui.components.sticky :refer [Sticky]]
+   [broadfcui.endpoints :as endpoints]
+   [broadfcui.nav :as nav]
+   [broadfcui.page.workspace.monitor.common :as moncommon]
+   [broadfcui.page.workspace.summary.acl-editor :refer [AclEditor]]
+   [broadfcui.page.workspace.summary.attribute-editor :as attributes]
+   [broadfcui.page.workspace.summary.catalog.wizard :refer [CatalogWizard]]
+   [broadfcui.page.workspace.summary.library-utils :as library-utils]
+   [broadfcui.page.workspace.summary.library-view :refer [LibraryView]]
+   [broadfcui.page.workspace.summary.publish :as publish]
+   [broadfcui.page.workspace.summary.workspace-cloner :refer [WorkspaceCloner]]
+   [broadfcui.utils :as utils]
+   ))
 
 
-(react/defc DeleteDialog
+(react/defc- DeleteDialog
   {:render
    (fn [{:keys [state this]}]
      [comps/OKCancelForm
