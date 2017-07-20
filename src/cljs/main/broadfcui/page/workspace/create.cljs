@@ -19,6 +19,7 @@
   {:get-initial-state
    (fn [{:keys [props]}]
      {:selected-project (first (:billing-projects props))
+      :show-selector? true
       :selected-groups []
       :protected-option :not-loaded})
    :render
@@ -80,11 +81,20 @@
              (:selected-groups @state))
             (when (not-empty (clojure.set/difference (:all-groups @state) (set (:selected-groups @state))))
               [:div {}
-               (style/create-identity-select-name
-                {:ref "auth-domain-selector" :defaultValue -1
-                 :onChange #(swap! state update :selected-groups conj (-> % .-target .-value))}
-                (clojure.set/difference (:all-groups @state) (set (:selected-groups @state)))
-                "Select a Group (optional)...")])])
+                [:div {:style {:visibility (if (:show-selector? @state) "visible" "hidden") :float "left" :width "90%"}}
+                 (style/create-identity-select-name
+                  {:ref "auth-domain-selector" :defaultValue -1
+                   :onChange #(do
+                                (swap! state update :selected-groups conj (-> % .-target .-value))
+                                (swap! state assoc :show-selector? false))}
+                  (clojure.set/difference (:all-groups @state) (set (:selected-groups @state)))
+                  "Select a Group (optional)...")]
+                [:div {:style {:float "right" :visibility (if (:show-selector? @state) "hidden" "visible")}}
+                 (icons/icon {:style {:color (:text-lightest style/colors)
+                                      :verticalAlign "middle" :fontSize 22
+                                      :cursor "pointer" :padding "0.25rem 0.5rem"}
+                              :onClick #(swap! state assoc :show-selector? true)}
+                             :add)]])])
          [comps/ErrorViewer {:error (:server-error @state)}]
          (style/create-validation-error-message (:validation-errors @state))])}])
    :component-did-mount
