@@ -33,7 +33,8 @@
    (fn [{:keys [state this props]}]
      [modals/OKCancelForm
       {:header "Request Access"
-       :dismiss (:on-cancel props)
+       :cancel-text "Done"
+       :dismiss (:dismiss props)
        :content
        (let [{:keys [my-groups ws-instructions error]} @state]
          (cond
@@ -68,7 +69,7 @@
                 [:tr {}
                  (simple-th "Authorization Domain")
                  (simple-th "Access")
-                 (simple-th "")]]
+                 (simple-th nil)]]
                [:tbody {}
                 (map-indexed (fn [i auth-domain]
                                (let [{:keys [member? requested? requesting?]} (:data auth-domain)
@@ -77,15 +78,14 @@
                                  [:tr {}
                                   (simple-td name)
                                   (simple-td (if member? "Yes" "No"))
-                                  (if instruction
-                                    [:td {:style {:width "34%"}}
-                                     (when-not member?
+                                  [:td {:style {:width "34%"}}
+                                   (when-not member?
+                                     (if instruction
                                        [:div {:style {:fontSize "85%"}}
                                         "Learn how to apply for this Group "
-                                        [:a {:href instruction :target "_blank"} "here" icons/external-link-icon] "."])]
-                                    [:td {:style {:width "34%"}}
-                                     (when-not member?
-                                       [:div {}
+                                        [:a {:href instruction :target "_blank"} "here" icons/external-link-icon] "."]
+
+                                       [:div {:style {:textAlign "center"}}
                                         [comps/Button {:style {:width "125px"}
                                                        :disabled? (or requested? requesting?)
                                                        :text (if requested? "Request Sent" "Request Access")
@@ -95,7 +95,7 @@
                                           (common/render-info-box
                                            {:text [:div {} "Your request has been submitted. When you are granted
                                                    access, the " [:strong {} "Access Level"] " displayed on
-                                                   the Workspace list will be updated."]}))])])]))
+                                                   the Workspace list will be updated."]}))]))]]))
                              (:ws-auth-domain-groups @state))]])]))}])
    :component-did-mount
    (fn [{:keys [this]}]
@@ -190,7 +190,7 @@
        [:div {}
         (when request-access-modal-props
           [RequestAuthDomainAccessDialog
-           (assoc request-access-modal-props :on-cancel #(swap! state dissoc :request-access-modal-props))])
+           (assoc request-access-modal-props :dismiss #(swap! state dissoc :request-access-modal-props))])
         [Table
          {:persistence-key "workspace-table" :v 2
           :data (this :-filter-workspaces) :total-count (:total-count @locals)
@@ -262,7 +262,7 @@
                     :items [[:div {:style {:float "right"}}
                              [create/Button (select-keys props [:nav-context :billing-projects :disabled-reason])]]
                             [:div {:style {:clear "left" :float "left" :marginTop "0.5rem"}}
-                             (style/create-link {:text (if filters-expanded? "Collapse" "Show additional filters")
+                             (style/create-link {:text (if filters-expanded? "Hide filters" "Show filters")
                                                  :onClick #(swap! state update :filters-expanded? not)})]
                             [:div {:style {:clear "both"}}]
                             (when filters-expanded?

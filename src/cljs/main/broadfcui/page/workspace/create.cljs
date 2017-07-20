@@ -1,6 +1,7 @@
 (ns broadfcui.page.workspace.create
   (:require
    [dmohs.react :as react]
+   [clojure.set :as set]
    [broadfcui.common :as common]
    [broadfcui.common.components :as comps]
    [broadfcui.common.icons :as icons]
@@ -23,85 +24,78 @@
       :protected-option :not-loaded})
    :render
    (fn [{:keys [props state refs this]}]
-     [modals/OKCancelForm
-      {:header "Create New Workspace"
-       :ok-button {:text "Create Workspace" :onClick #(react/call :create-workspace this)}
-       :dismiss (:dismiss props)
-       :get-first-element-dom-node #(@refs "project")
-       :content
-       (react/create-element
-        [:div {:style {:marginBottom -20}}
-         (when (:creating-wf @state)
-           [comps/Blocker {:banner "Creating Workspace..."}])
-         (style/create-form-label "Billing Project")
-         (style/create-select
-          {:ref "project" :value (:selected-project @state)
-           :onChange #(swap! state assoc :selected-project (-> % .-target .-value))}
-          (:billing-projects props))
-         (style/create-form-label "Name")
-         [input/TextField {:ref "wsName" :autoFocus true :style {:width "100%"}
-                           :predicates [(input/nonempty "Workspace name")
-                                        (input/alphanumeric_- "Workspace name")]}]
-         (style/create-textfield-hint input/hint-alphanumeric_-)
-         (style/create-form-label "Description (optional)")
-         (style/create-text-area {:style {:width "100%"} :rows 5 :ref "wsDescription"})
-         [:div {:style {:display "flex"}}
-          (style/create-form-label "Authorization Domain (optional)")
-          (common/render-info-box
-           {:text [:div {} [:strong {} "Note:"]
-                   [:div {} "An Authorization Domain can only be set when creating a Workspace.
+     (let [{:keys [creating-wf selected-project all-groups selected-groups locked-groups server-error validation-errors]} @state]
+       [modals/OKCancelForm
+        {:header "Create New Workspace"
+         :ok-button {:text "Create Workspace" :onClick #(react/call :create-workspace this)}
+         :dismiss (:dismiss props)
+         :get-first-element-dom-node #(@refs "project")
+         :content
+         (react/create-element
+          [:div {:style {:marginBottom -20}}
+           (when creating-wf
+             [comps/Blocker {:banner "Creating Workspace..."}])
+           (style/create-form-label "Billing Project")
+           (style/create-select
+            {:ref "project" :value selected-project
+             :onChange #(swap! state assoc :selected-project (-> % .-target .-value))}
+            (:billing-projects props))
+           (style/create-form-label "Name")
+           [input/TextField {:ref "wsName" :autoFocus true :style {:width "100%"}
+                             :predicates [(input/nonempty "Workspace name")
+                                          (input/alphanumeric_- "Workspace name")]}]
+           (style/create-textfield-hint input/hint-alphanumeric_-)
+           (style/create-form-label "Description (optional)")
+           (style/create-text-area {:style {:width "100%"} :rows 5 :ref "wsDescription"})
+           [:div {:style {:display "flex"}}
+            (style/create-form-label "Authorization Domain (optional)")
+            (common/render-info-box
+             {:text [:div {} [:strong {} "Note:"]
+                     [:div {} "An Authorization Domain can only be set when creating a Workspace.
                    Once set, it cannot be changed."]
-                   (style/create-link {:href "https://software.broadinstitute.org/firecloud/documentation/article?id=9524"
-                                       :target "_blank"
-                                       :text [:span {:style {:white-space "pre"}}
-                                              "Read more about Authorization Domains"
-                                              icons/external-link-icon]})]})]
-         (if (nil? (:all-groups @state))
-           [comps/Spinner {:text "Loading Groups..." :style {:margin 0}}]
-           [:div {}
-            (map-indexed
-             (fn [i opt]
-               [:div {}
+                     (style/create-link {:href "https://software.broadinstitute.org/firecloud/documentation/article?id=9524"
+                                         :target "_blank"
+                                         :text [:span {:style {:white-space "pre"}}
+                                                "Read more about Authorization Domains"
+                                                icons/external-link-icon]})]})]
+           (if (nil? all-groups)
+             [comps/Spinner {:text "Loading Groups..." :style {:margin 0}}]
+             [:div {}
+              (map-indexed
+               (fn [i opt]
+                 [:div {}
+                  [:div {:style {:float "left" :width "90%"}}
+                   (style/create-identity-select-name
+                    {:value opt
+                     :onChange #(swap! state update :selected-groups assoc i (-> % .-target .-value))}
+                    (set/difference all-groups (set (utils/delete selected-groups i))))]
+                  [:div {:style {:float "right"}}
+                   (if (contains? locked-groups opt)
+                     (icons/icon {:style {:color (:text-lightest style/colors)
+                                          :verticalAlign "middle" :fontSize 22
+                                          :padding "0.25rem 0.5rem"}}
+                                 :lock)
+                     (icons/icon {:style {:color (:text-lightest style/colors)
+                                          :verticalAlign "middle" :fontSize 22
+                                          :cursor "pointer" :padding "0.25rem 0.5rem"}
+                                  :onClick #(swap! state update :selected-groups utils/delete i)}
+                                 :remove))]])
+               selected-groups)
+              (when (not-empty (set/difference all-groups selected-groups))
                 [:div {:style {:float "left" :width "90%"}}
-                 (style/create-select
-                  {:disabled true :defaultValue opt}
-                  [opt])]
-                [:div {:style {:float "right"}}
-                 (if (contains? (:locked-groups @state) opt)
-                   (icons/icon {:style {:color (:text-lightest style/colors)
-                                        :verticalAlign "middle" :fontSize 22
-                                        :padding "0.25rem 0.5rem"}}
-                               :lock)
-                   (icons/icon {:style {:color (:text-lightest style/colors)
-                                        :verticalAlign "middle" :fontSize 22
-                                        :cursor "pointer" :padding "0.25rem 0.5rem"}
-                                :onClick #(swap! state update :selected-groups utils/delete i)}
-                               :remove))]])
-             (:selected-groups @state))
-            (when (not-empty (clojure.set/difference (:all-groups @state) (set (:selected-groups @state))))
-              [:div {}
-                [:div {:style {:visibility (if (:show-selector? @state) "visible" "hidden") :float "left" :width "90%"}}
                  (style/create-identity-select-name
-                  {:ref "auth-domain-selector" :defaultValue -1
-                   :onChange #(do
-                                (swap! state update :selected-groups conj (-> % .-target .-value))
-                                (swap! state assoc :show-selector? false))}
-                  (clojure.set/difference (:all-groups @state) (set (:selected-groups @state)))
-                  "Select a Group (optional)...")]
-                [:div {:style {:float "right" :visibility (if (:show-selector? @state) "hidden" "visible")}}
-                 (icons/icon {:style {:color (:text-lightest style/colors)
-                                      :verticalAlign "middle" :fontSize 22
-                                      :cursor "pointer" :padding "0.25rem 0.5rem"}
-                              :onClick #(swap! state assoc :show-selector? true)}
-                             :add)]])])
-         [comps/ErrorViewer {:error (:server-error @state)}]
-         (style/create-validation-error-message (:validation-errors @state))])}])
+                  {:defaultValue -1
+                   :onChange #(swap! state update :selected-groups conj (-> % .-target .-value))}
+                  (set/difference all-groups (set selected-groups))
+                  (str "Select " (if (empty? selected-groups) "a" "another") " Group..."))])])
+           [comps/ErrorViewer {:error server-error}]
+           (style/create-validation-error-message validation-errors)])}]))
    :component-did-mount
    (fn [{:keys [state]}]
      (endpoints/get-groups
       (fn [_ parsed-response]
         (swap! state assoc :all-groups
-               (set (map :groupName parsed-response))))))
+               (apply sorted-set (map :groupName parsed-response))))))
    :create-workspace
    (fn [{:keys [props state refs]}]
      (swap! state dissoc :server-error :validation-errors)
