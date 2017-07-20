@@ -591,18 +591,18 @@
    :method :post})
 
 
-(defn get-agora-namespace-acl [namespace is-conf?]
-  {:path (str "/" (if is-conf? "configurations" "methods") "/" namespace "/permissions")
+(defn get-agora-namespace-acl [namespace config?]
+  {:path (str "/" (if config? "configurations" "methods") "/" namespace "/permissions")
    :method :get})
 
-(defn post-agora-namespace-acl [namespace is-conf?]
-  {:path (str "/" (if is-conf? "configurations" "methods") "/" namespace "/permissions")
+(defn post-agora-namespace-acl [namespace config?]
+  {:path (str "/" (if config? "configurations" "methods") "/" namespace "/permissions")
    :method :post})
 
 
-(defn delete-agora-entity [config? ns n sid]
+(defn delete-agora-entity [config? {:keys [namespace name snapshotId]}]
   {:path (let [base (if config? "configurations" "methods")]
-           (str "/" base "/" ns "/" n "/" sid))
+           (str "/" base "/" namespace "/" name "/" snapshotId))
    :method :delete})
 
 
