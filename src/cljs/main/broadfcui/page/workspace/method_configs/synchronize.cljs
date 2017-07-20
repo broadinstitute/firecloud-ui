@@ -2,10 +2,12 @@
   (:require
    [dmohs.react :as react]
    [clojure.set :as set]
+   [clojure.string :as string]
    [broadfcui.common.components :as comps]
    [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
    [broadfcui.components.modals :as modals]
+   [broadfcui.endpoints :as endpoints]
    [broadfcui.utils :as utils]
    ))
 
@@ -41,7 +43,8 @@
          (if (:customize? @state)
            (this :-render-permission-detail)
            (style/create-link {:text "Customize Permissions"
-                               :onClick #(swap! state assoc :customize? true)}))])
+                               :onClick #(swap! state assoc :customize? true)}))
+         [comps/ErrorViewer {:error (:grant-error @state)}]])
        :ok-button [comps/Button {:text (if (:customize? @state)
                                          "Grant Permission"
                                          "Grant Read Permission")
@@ -61,9 +64,18 @@
                   ["No access" "Reader" "Owner"])]]])
             (:users props))]])
    :-grant-permission
-   (fn []
-     ;; TODO: make call
-     (modal/pop-modal))})
+   (fn [{:keys [props state locals]}]
+     (swap! state dissoc :grant-error)
+     (endpoints/call-ajax-orch
+      {:endpoint (endpoints/persist-agora-method-acl (assoc (:method props) :entityType "Workflow"))
+       :payload (if (:customize? @state)
+                  (mapv (fn [[user level]] {:user user :role (string/upper-case level)}) @locals)
+                  (mapv (fn [user] {:user user :role "READER"}) (:users props)))
+       :headers utils/content-type=json
+       :on-done (fn [{:keys [success? get-parsed-response]}]
+                  (if success?
+                    (modal/pop-modal)
+                    (swap! state assoc :grant-error (get-parsed-response false))))}))})
 
 
 (defn- alert-modal [method]
