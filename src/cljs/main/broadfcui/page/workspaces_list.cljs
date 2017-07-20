@@ -100,8 +100,8 @@
                               (:ws-auth-domain-groups @state))]])])))}])
    :component-did-mount
    (fn [{:keys [this]}]
-     (react/call :-load-groups this)
-     (react/call :-get-access-instructions this))
+     (this :-load-groups)
+     (this :-get-access-instructions))
    :-load-groups
    (fn [{:keys [props state]}]
      (endpoints/get-groups
@@ -110,15 +110,14 @@
           (swap! state assoc :error-message err-text)
           (swap! state assoc :ws-auth-domain-groups
                  (let [my-groups (map :groupName groups)]
-                       (vec (map
-                             (fn [group]
-                               {:name group
-                                :data {:member? (contains? (set my-groups) group)
-                                       :requested? false
-                                       :requesting? false}})
-                             (:ws-auth-domain-groups props))))
-
-          (swap! state assoc :my-groups (map :groupName groups))))))
+                   (vec (map
+                         (fn [group]
+                           {:name group
+                            :data {:member? (contains? (set my-groups) group)
+                                   :requested? false
+                                   :requesting? false}})
+                         (:ws-auth-domain-groups props))))
+                 (swap! state assoc :my-groups (map :groupName groups)))))))
    :-get-access-instructions
    (fn [{:keys [props state]}]
      (endpoints/get-ws-access-instructions (:workspace-id props)
@@ -133,7 +132,7 @@
       {:endpoint (endpoints/request-group-access group-name)
        :on-done (fn []
                   (swap! state update-in [:ws-auth-domain-groups group-index :data]
-                         assoc :requesting? false :requested? true))})))})
+                         assoc :requesting? false :requested? true))}))})
 
 (defn- get-workspace-name-string [column-data]
   (str (get-in column-data [:workspace-id :namespace]) "/" (get-in column-data [:workspace-id :name])))
@@ -206,7 +205,7 @@
           (let [column-data (fn [ws]
                               (let [no-access? (= (:accessLevel ws) "NO ACCESS")
                                     tcga? (and no-access? (contains? (map :membersGroupName (get-in ws [:workspace :authorizationDomain]))
-                                                             config/tcga-authorization-domain))]
+                                                                     config/tcga-authorization-domain))]
                                 {:workspace-id (select-keys (:workspace ws) [:namespace :name])
                                  :status (:status ws)
                                  :auth-domain-groups (map :membersGroupName (get-in ws [:workspace :authorizationDomain]))
