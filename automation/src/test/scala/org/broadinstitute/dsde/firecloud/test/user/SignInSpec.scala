@@ -15,10 +15,10 @@ class SignInSpec extends FreeSpec with WebBrowserSpec with CleanUp {
         var listPageAsUser1 = signIn(Config.Users.harry)
         listPageAsUser1.signOut()
         val listPageAsUser2 = signIn(Config.Users.ron)
-        assert(listPageAsUser2.readUserEmail().startsWith(Config.Users.ron.email))
+        assert(listPageAsUser2.readUserEmail().equals(Config.Users.ron.email))
         listPageAsUser2.signOut()
         listPageAsUser1 = signIn(Config.Users.harry)
-        assert(listPageAsUser1.readUserEmail().startsWith(Config.Users.harry.email))
+        assert(listPageAsUser1.readUserEmail().equals(Config.Users.harry.email))
       }
     }
 

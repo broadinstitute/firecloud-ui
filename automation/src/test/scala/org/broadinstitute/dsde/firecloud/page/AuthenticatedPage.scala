@@ -22,8 +22,8 @@ abstract class AuthenticatedPage(implicit webDriver: WebDriver) extends FireClou
 
   trait UI {
     private val accountDropdown = testId("account-dropdown")
+    private val accountDropdownEmail = testId("account-dropdown-email")
     private val signOutLink = testId("sign-out")
-    private val emailRegEx = """(?i)\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}\b""".r
 
     def checkAccountDropdown: Boolean = {
       find(accountDropdown).isDefined
@@ -32,18 +32,14 @@ abstract class AuthenticatedPage(implicit webDriver: WebDriver) extends FireClou
     def clickAccountDropdown(): Unit = {
       click on accountDropdown
     }
-
+we
     def clickSignOut(): Unit = {
       click on (await enabled signOutLink)
     }
 
-    def readUserEmail() = {
-      await enabled accountDropdown
-      val userDropdownText = find(accountDropdown).get.text
-      emailRegEx findFirstIn userDropdownText match {
-        case Some(email) => email
-        case None => ""
-      }
+    def readUserEmail(): String = {
+      await enabled accountDropdownEmail
+      find(accountDropdownEmail).get.text
     }
   }
 
