@@ -82,7 +82,7 @@
                                      (when-not member?
                                        [:div {:style {:fontSize "85%"}}
                                         "Learn how to apply for this Group "
-                                        [:a {:href instruction :target "_blank"} "here"] "."])]
+                                        [:a {:href instruction :target "_blank"} "here" icons/external-link-icon] "."])]
                                     [:td {:style {:width "34%"}}
                                      (when-not member?
                                        [:div {}
@@ -93,10 +93,9 @@
                                         (when requesting? [comps/Spinner])
                                         (when requested?
                                           (common/render-info-box
-                                           {:text [:div {}
-                                                   "Your request has been submitted. When you are granted
+                                           {:text [:div {} "Your request has been submitted. When you are granted
                                                    access, the " [:strong {} "Access Level"] " displayed on
-                                                     the Workspace list will be updated."]}))])])]))
+                                                   the Workspace list will be updated."]}))])])]))
                              (:ws-auth-domain-groups @state))]])]))}])
    :component-did-mount
    (fn [{:keys [this]}]
