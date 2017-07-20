@@ -67,7 +67,7 @@
    (fn [{:keys [props state locals]}]
      (swap! state dissoc :grant-error)
      (endpoints/call-ajax-orch
-      {:endpoint (endpoints/persist-agora-method-acl (assoc (:method props) :entityType "Workflow"))
+      {:endpoint (endpoints/persist-agora-entity-acl false (:method props))
        :payload (if (:customize? @state)
                   (mapv (fn [[user level]] {:user user :role (string/upper-case level)}) @locals)
                   (mapv (fn [user] {:user user :role "READER"}) (:users props)))

@@ -572,8 +572,8 @@
     :outputs [{:name "CancerExomePipeline_v2.M2.m2_output_vcf"
                :outputType "File"}]}})
 
-(defn get-agora-method-acl [ns n sid is-conf]
-  {:path (str "/" (if is-conf "configurations" "methods") "/" ns "/" n "/" sid "/permissions")
+(defn get-agora-entity-acl [config? {:keys [name namespace snapshotId]}]
+  {:path (str "/" (if config? "configurations" "methods") "/" namespace "/" name "/" snapshotId "/permissions")
    :method :get
    :mock-data
    (let [random-data (map (fn [i] {:user (str "user" i "@broadinstitute.org")
@@ -585,6 +585,11 @@
      (if add-public?
        (flatten [public-map random-data])
        random-data))})
+
+(defn persist-agora-entity-acl [config? {:keys [name namespace snapshotId]}]
+  {:path (str "/" (if config? "configurations" "methods") "/" namespace "/" name "/" snapshotId "/permissions")
+   :method :post})
+
 
 (defn get-agora-namespace-acl [namespace is-conf?]
   {:path (str "/" (if is-conf? "configurations" "methods") "/" namespace "/permissions")
@@ -599,17 +604,6 @@
   {:path (let [base (if config? "configurations" "methods")]
            (str "/" base "/" ns "/" n "/" sid))
    :method :delete})
-
-
-(defn persist-agora-method-acl [{:keys [entityType name namespace snapshotId]}]
-  {:path (let [base (cond
-                      (= "Configuration" entityType) "configurations"
-                      (or (= "Task" entityType) (= "Workflow" entityType)) "methods"
-                      :else (do
-                              (utils/log "Error, unknown type : " entityType)
-                              (str "configurations")))]
-           (str "/" base "/" namespace "/" name "/" snapshotId "/permissions"))
-   :method :post})
 
 
 (defn copy-entity-to-workspace [workspace-id re-link-soft-conflicts?]

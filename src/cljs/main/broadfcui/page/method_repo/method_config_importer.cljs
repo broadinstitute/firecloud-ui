@@ -86,9 +86,8 @@
                 :text "Permissions..." :icon :settings :margin :bottom
                 :onClick #(modal/push-modal
                            [mca/AgoraPermsEditor
-                            {:save-endpoint (endpoints/persist-agora-method-acl entity)
-                             :load-endpoint (let [{:keys [name namespace snapshotId]} entity]
-                                              (endpoints/get-agora-method-acl namespace name snapshotId config?))
+                            {:save-endpoint (endpoints/persist-agora-entity-acl config? entity)
+                             :load-endpoint (endpoints/get-agora-entity-acl config? entity)
                              :entityType (:entityType entity)
                              :entityName (mca/get-ordered-name entity)
                              :title (str (:entityType entity) " " (mca/get-ordered-name entity))}])}]
