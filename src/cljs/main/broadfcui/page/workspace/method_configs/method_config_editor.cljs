@@ -77,7 +77,7 @@
            :else [:div {:style {:textAlign "center"}}
                   [comps/Spinner {:text "Loading Method Configuration..."}]]))
    :component-did-mount
-   (fn [{:keys [state refs this]}]
+   (fn [{:keys [props state this]}]
      (this :-load-validated-method-config)
      (endpoints/call-ajax-orch
       {:endpoint endpoints/list-methods
@@ -99,17 +99,7 @@
                     (swap! state dissoc :blocker)
                     (if success?
                       (sync/handle-sync (get-parsed-response) (get-in props [:workspace :canShare]))
-                      (comps/push-error status-text)))}))
-     (set! (.-onScrollHandler this)
-           (fn []
-             (when-let [sidebar (@refs "sidebar")]
-               (let [visible (< (.-scrollY js/window) (.-offsetTop sidebar))]
-                 (when-not (= visible (:sidebar-visible? @state))
-                   (swap! state assoc :sidebar-visible? visible))))))
-     (.addEventListener js/window "scroll" (.-onScrollHandler this)))
-   :component-will-unmount
-   (fn [{:keys [this]}]
-     (.removeEventListener js/window "scroll" (.-onScrollHandler this)))
+                      (comps/push-error status-text)))})))
    :-render-display
    (fn [{:keys [props state this]}]
      (let [locked? (get-in props [:workspace :workspace :isLocked])]
