@@ -15,6 +15,39 @@
    ))
 
 
+(defn auth-domain-builder [{:keys [all-groups update-state selected-groups locked-groups]}]
+  (if-not all-groups
+    [comps/Spinner {:text "Loading Groups..." :style {:margin 0}}]
+    [:div {}
+     (map-indexed
+      (fn [i opt]
+        [:div {}
+         [:div {:style {:float "left" :width "90%"}}
+          (style/create-identity-select-name
+           {:value opt
+            :disabled (utils/vec-contains? locked-groups opt)
+            :onChange #(update-state :selected-groups assoc i (-> % .-target .-value))}
+           (set/difference all-groups (set (utils/delete selected-groups i))))]
+         [:div {:style {:float "right"}}
+          (if (utils/vec-contains? locked-groups opt)
+            (icons/icon {:style {:color (:text-lightest style/colors)
+                                 :verticalAlign "middle" :fontSize 22
+                                 :padding "0.25rem 0.5rem"}}
+                        :lock)
+            (icons/icon {:style {:color (:text-lightest style/colors)
+                                 :verticalAlign "middle" :fontSize 22
+                                 :cursor "pointer" :padding "0.25rem 0.5rem"}
+                         :onClick #(update-state :selected-groups utils/delete i)}
+                        :remove))]])
+      selected-groups)
+     (when (not-empty (set/difference all-groups selected-groups))
+       [:div {:style {:float "left" :width "90%"}}
+        (style/create-identity-select-name
+         {:defaultValue -1
+          :onChange #(update-state :selected-groups conj (-> % .-target .-value))}
+         (set/difference all-groups (set selected-groups))
+         (str "Select " (if (empty? selected-groups) "a" "another") " Group..."))])]))
+
 (react/defc- CreateDialog
   {:get-initial-state
    (fn [{:keys [props]}]
@@ -23,7 +56,7 @@
       :protected-option :not-loaded})
    :render
    (fn [{:keys [props state refs this]}]
-     (let [{:keys [creating-wf selected-project all-groups selected-groups locked-groups server-error validation-errors]} @state]
+     (let [{:keys [creating-wf selected-project all-groups selected-groups server-error validation-errors]} @state]
        [modals/OKCancelForm
         {:header "Create New Workspace"
          :ok-button {:text "Create Workspace" :onClick #(react/call :create-workspace this)}
@@ -57,36 +90,8 @@
                                          :text [:span {:style {:white-space "pre"}}
                                                 "Read more about Authorization Domains"
                                                 icons/external-link-icon]})]})]
-           (if (nil? all-groups)
-             [comps/Spinner {:text "Loading Groups..." :style {:margin 0}}]
-             [:div {}
-              (map-indexed
-               (fn [i opt]
-                 [:div {}
-                  [:div {:style {:float "left" :width "90%"}}
-                   (style/create-identity-select-name
-                    {:value opt
-                     :onChange #(swap! state update :selected-groups assoc i (-> % .-target .-value))}
-                    (set/difference all-groups (set (utils/delete selected-groups i))))]
-                  [:div {:style {:float "right"}}
-                   (if (contains? locked-groups opt)
-                     (icons/icon {:style {:color (:text-lightest style/colors)
-                                          :verticalAlign "middle" :fontSize 22
-                                          :padding "0.25rem 0.5rem"}}
-                                 :lock)
-                     (icons/icon {:style {:color (:text-lightest style/colors)
-                                          :verticalAlign "middle" :fontSize 22
-                                          :cursor "pointer" :padding "0.25rem 0.5rem"}
-                                  :onClick #(swap! state update :selected-groups utils/delete i)}
-                                 :remove))]])
-               selected-groups)
-              (when (not-empty (set/difference all-groups selected-groups))
-                [:div {:style {:float "left" :width "90%"}}
-                 (style/create-identity-select-name
-                  {:defaultValue -1
-                   :onChange #(swap! state update :selected-groups conj (-> % .-target .-value))}
-                  (set/difference all-groups (set selected-groups))
-                  (str "Select " (if (empty? selected-groups) "a" "another") " Group..."))])])
+           (auth-domain-builder (assoc (utils/restructure all-groups selected-groups)
+                                  :update-state (partial swap! state update)))
            [comps/ErrorViewer {:error server-error}]
            (style/create-validation-error-message validation-errors)])}]))
    :component-did-mount

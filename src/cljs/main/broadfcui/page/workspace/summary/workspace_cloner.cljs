@@ -3,11 +3,11 @@
    [dmohs.react :as react]
    [broadfcui.common :as common]
    [broadfcui.common.components :as comps]
-   [broadfcui.common.icons :as icons]
    [broadfcui.common.input :as input]
    [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
    [broadfcui.endpoints :as endpoints]
+   [broadfcui.page.workspace.create :as create]
    [broadfcui.utils :as utils]
    ))
 
@@ -19,88 +19,54 @@
       :show-selector? true})
    :render
    (fn [{:keys [props refs state this]}]
-     [comps/OKCancelForm
-      {:header "Clone Workspace to:"
-       :ok-button {:text "Clone" :onClick #(react/call :do-clone this)}
-       :get-first-element-dom-node #(@refs "project")
-       :content
-       (react/create-element
-        [:div {}
-         (when (:working? @state)
-           [comps/Blocker {:banner "Cloning..."}])
-         (style/create-form-label "Billing Project")
-         (style/create-select {:ref "project"
-                               :value (:selected-project @state)
-                               :onChange #(swap! state assoc :selected-project (-> % .-target .-value))}
-                              (:billing-projects props))
-         (style/create-form-label "Name")
-         [input/TextField {:ref "name" :autoFocus true
-                           :style {:width "100%"}
-                           :defaultValue (str (get-in props [:workspace-id :name]) "_copy")
-                           :placeholder "Required"
-                           :predicates [(input/nonempty "Workspace name")
-                                        (input/alphanumeric_- "Workspace name")]}]
-         (style/create-textfield-hint input/hint-alphanumeric_-)
-         (style/create-form-label "Description (optional)")
-         (style/create-text-area {:style {:width "100%"} :rows 5 :ref "wsDescription"
-                                  :defaultValue (:description props)})
-         [:div {:style {:display "flex"}}
-          (style/create-form-label (str "Authorization Domain" (when-not (:auth-domain props) " (optional)")))
-          (common/render-info-box
-           {:text [:div {} [:strong {} "Note:"]
-                   [:div {} "An Authorization Domain can only be set when creating a Workspace.
+     (let [{:keys [working? selected-project all-groups selected-groups locked-groups error validation-error]} @state]
+       [comps/OKCancelForm
+        {:header "Clone Workspace to:"
+         :ok-button {:text "Clone" :onClick #(react/call :do-clone this)}
+         :get-first-element-dom-node #(@refs "project")
+         :content
+         (react/create-element
+          [:div {}
+           (when working?
+             [comps/Blocker {:banner "Cloning..."}])
+           (style/create-form-label "Billing Project")
+           (style/create-select {:ref "project"
+                                 :value selected-project
+                                 :onChange #(swap! state assoc :selected-project (-> % .-target .-value))}
+                                (:billing-projects props))
+           (style/create-form-label "Name")
+           [input/TextField {:ref "name" :autoFocus true
+                             :style {:width "100%"}
+                             :defaultValue (str (get-in props [:workspace-id :name]) "_copy")
+                             :placeholder "Required"
+                             :predicates [(input/nonempty "Workspace name")
+                                          (input/alphanumeric_- "Workspace name")]}]
+           (style/create-textfield-hint input/hint-alphanumeric_-)
+           (style/create-form-label "Description (optional)")
+           (style/create-text-area {:style {:width "100%"} :rows 5 :ref "wsDescription"
+                                    :defaultValue (:description props)})
+           [:div {:style {:display "flex"}}
+            (style/create-form-label (str "Authorization Domain" (when-not (:auth-domain props) " (optional)")))
+            (common/render-info-box
+             {:text [:div {} [:strong {} "Note:"]
+                     [:div {} "An Authorization Domain can only be set when creating a Workspace.
                      Once set, it cannot be changed."]
-                   (style/create-link {:href "https://software.broadinstitute.org/firecloud/documentation/article?id=9524"
-                                       :target "_blank"
-                                       :text "Read more about Authorization Domains"})]})]
-         (when-let [auth-domain (:auth-domain props)]
-           [:div {:style {:fontStyle "italic" :fontSize "80%"}}
-            "The cloned Workspace will automatically inherit the Authorization Domain from this Workspace."
-            [:div {} "You may add Groups to the Authorization Domain, but you may not remove existing ones."]])
-         (if (nil? (:all-groups @state))
-           [comps/Spinner {:text "Loading Groups..." :style {:margin 0}}]
-           [:div {}
-            (map-indexed
-             (fn [i opt]
-               [:div {}
-                [:div {:style {:float "left" :width "90%"}}
-                 (style/create-select
-                  {:disabled true :defaultValue opt}
-                  [opt])]
-                [:div {:style {:float "right"}}
-                 (if (contains? (:auth-domain props) opt)
-                   (icons/icon {:style {:color (:text-lightest style/colors)
-                                        :verticalAlign "middle" :fontSize 22
-                                        :padding "0.25rem 0.5rem"}}
-                               :lock)
-                   (icons/icon {:style {:color (:text-lightest style/colors)
-                                        :verticalAlign "middle" :fontSize 22
-                                        :cursor "pointer" :padding "0.25rem 0.5rem"}
-                                :onClick #(swap! state update :selected-groups utils/delete i)}
-                               :remove))]])
-             (:selected-groups @state))
-            (when (not-empty (clojure.set/difference (:all-groups @state) (set (:selected-groups @state))))
-              [:div {}
-               [:div {:style {:visibility (if (:show-selector? @state) "visible" "hidden") :float "left" :width "90%"}}
-                (style/create-identity-select-name
-                 {:ref "auth-domain-selector" :defaultValue -1
-                  :onChange #(do
-                               (swap! state update :selected-groups conj (-> % .-target .-value))
-                               (swap! state assoc :show-selector? false))}
-                 (clojure.set/difference (:all-groups @state) (set (:selected-groups @state)))
-                 "Select a Group (optional)...")]
-               [:div {:style {:float "right" :visibility (if (:show-selector? @state) "hidden" "visible")}}
-                (icons/icon {:style {:color (:text-lightest style/colors)
-                                     :verticalAlign "middle" :fontSize 22
-                                     :cursor "pointer" :padding "0.25rem 0.5rem"}
-                             :onClick #(swap! state assoc :show-selector? true)}
-                            :add)]])])
-         (style/create-validation-error-message (:validation-error @state))
-         [comps/ErrorViewer {:error (:error @state)
-                             :expect {409 "A workspace with this name already exists in this project"}}]])}])
+                     (style/create-link {:href "https://software.broadinstitute.org/firecloud/documentation/article?id=9524"
+                                         :target "_blank"
+                                         :text "Read more about Authorization Domains"})]})]
+           (when (:auth-domain props)
+             [:div {:style {:fontStyle "italic" :fontSize "80%" :paddingBottom "0.25rem"}}
+              "The cloned Workspace will automatically inherit the Authorization Domain from this Workspace."
+              [:div {} "You may add Groups to the Authorization Domain, but you may not remove existing ones."]])
+           (create/auth-domain-builder (assoc (utils/restructure all-groups selected-groups locked-groups)
+                                         :update-state (partial swap! state update)))
+           (style/create-validation-error-message validation-error)
+           [comps/ErrorViewer {:error error
+                               :expect {409 "A workspace with this name already exists in this project"}}]])}]))
    :component-did-mount
    (fn [{:keys [props state]}]
-     (swap! state assoc :selected-groups (vec (:auth-domain props)))
+     (let [active-auth (vec (:auth-domain props))]
+       (swap! state assoc :selected-groups active-auth :locked-groups active-auth))
      (endpoints/get-groups
       (fn [_ parsed-response]
         (swap! state assoc :all-groups
