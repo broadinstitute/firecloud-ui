@@ -89,7 +89,7 @@
                                         [comps/Button {:style {:width "125px"}
                                                        :disabled? (or requested? requesting?)
                                                        :text (if requested? "Request Sent" "Request Access")
-                                                       :onClick #(react/call :-request-access this name i)}]
+                                                       :onClick #(this :-request-access name i)}]
                                         (when requesting? [comps/Spinner])
                                         (when requested?
                                           (common/render-info-box
@@ -108,16 +108,14 @@
       (fn [err-text groups]
         (if err-text
           (swap! state assoc :error-message err-text)
-          (swap! state assoc :ws-auth-domain-groups
-                 (let [my-groups (map :groupName groups)]
-                   (vec (map
-                         (fn [group]
-                           {:name group
-                            :data {:member? (contains? (set my-groups) group)
-                                   :requested? false
-                                   :requesting? false}})
-                         (:ws-auth-domain-groups props))))
-                 (swap! state assoc :my-groups (map :groupName groups)))))))
+          (let [my-groups (map :groupName groups)]
+            (swap! state assoc :ws-auth-domain-groups
+                   (mapv
+                    (fn [group]
+                      {:name group
+                       :data {:member? (contains? (set my-groups) group)}})
+                    (:ws-auth-domain-groups props)))
+            (swap! state assoc :my-groups my-groups))))))
    :-get-access-instructions
    (fn [{:keys [props state]}]
      (endpoints/get-ws-access-instructions (:workspace-id props)
@@ -132,7 +130,7 @@
       {:endpoint (endpoints/request-group-access group-name)
        :on-done (fn []
                   (swap! state update-in [:ws-auth-domain-groups group-index :data]
-                         assoc :requesting? false :requested? true))}))})
+                         assoc :requesting? nil :requested? true))}))})
 
 (defn- get-workspace-name-string [column-data]
   (str (get-in column-data [:workspace-id :namespace]) "/" (get-in column-data [:workspace-id :name])))
