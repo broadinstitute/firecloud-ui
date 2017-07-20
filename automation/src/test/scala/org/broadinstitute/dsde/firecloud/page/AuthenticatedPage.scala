@@ -15,19 +15,14 @@ abstract class AuthenticatedPage(implicit webDriver: WebDriver) extends FireClou
     ui.clickSignOut()
   }
 
-  def filter(searchText: String): Unit = {
-    ui.filter(searchText)
-  }
-
-  def getUser(): String = {
-    ui.getUser()
+  def readUserEmail(): String = {
+    ui.readUserEmail()
   }
 
 
   trait UI {
     private val accountDropdown = testId("account-dropdown")
     private val signOutLink = testId("sign-out")
-    private val filterInput = testId("-input")
     private val emailRegEx = """(?i)\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}\b""".r
 
     def checkAccountDropdown: Boolean = {
@@ -42,13 +37,7 @@ abstract class AuthenticatedPage(implicit webDriver: WebDriver) extends FireClou
       click on (await enabled signOutLink)
     }
 
-    def filter(searchText: String) = {
-      await enabled filterInput
-      searchField(filterInput).value = searchText
-      pressKeys("\n")
-    }
-
-    def getUser() = {
+    def readUserEmail() = {
       await enabled accountDropdown
       val userDropdownText = find(accountDropdown).get.text
       emailRegEx findFirstIn userDropdownText match {

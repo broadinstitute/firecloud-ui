@@ -22,13 +22,25 @@ class WorkspaceMethodConfigPage(namespace: String, name: String)(implicit webDri
     new MethodConfigDetailsPage(namespace, name, methodNamespace, methodConfigName)
   }
 
+  def filter(searchText: String): Unit = {
+    ui.filter(searchText)
+  }
+
 //  def is_method_config_present
 
   trait UI extends super.UI {
     private val openImportConfigModalButtonQuery: Query = testId("import-config-button")
+    private val filterInput = testId("-input")
+
     def clickImportConfigButton(): ImportMethodChooseSourceModel = {
       click on (await enabled openImportConfigModalButtonQuery)
       new ImportMethodChooseSourceModel()
+    }
+
+    def filter(searchText: String) = {
+      await enabled filterInput
+      searchField(filterInput).value = searchText
+      pressKeys("\n")
     }
   }
   object ui extends UI

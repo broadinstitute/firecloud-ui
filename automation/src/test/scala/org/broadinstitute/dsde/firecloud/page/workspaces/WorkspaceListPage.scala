@@ -32,7 +32,7 @@ class WorkspaceListPage(implicit webDriver: WebDriver) extends AuthenticatedPage
     *
     * @param text the text to filter by
     */
-  override def filter(text: String): Unit = {
+  def filter(text: String): Unit = {
     ui.fillFilterText(text)
     ui.clickFilterButton()
   }

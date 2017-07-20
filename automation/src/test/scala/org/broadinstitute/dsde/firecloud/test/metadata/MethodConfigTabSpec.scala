@@ -208,12 +208,15 @@ class MethodConfigTabSpec extends FreeSpec with WebBrowserSpec with CleanUp with
     withWorkspace(billingProject, "TestSpec_FireCloud_abort_workflow") { workspaceName =>
       val shouldUseCallCaching = false
       api.importMetaData(billingProject, workspaceName, "entities", TestData.SingleParticipant.participantEntity)
+      api.importMethodConfigFromRepo(billingProject, workspaceName, TestData.SimpleMethod.namespace,
+        TestData.SimpleMethod.name, TestData.SimpleMethod.snapshotId, TestData.SimpleMethod.namespace, methodName)
+      // use this API then if needed change the rootentitytype in another call?
 
       signIn(uiUser)
-      // ATODO import this method via API
       val workspaceMethodConfigPage = new WorkspaceMethodConfigPage(billingProject, workspaceName).open
-      val methodConfigDetailsPage = workspaceMethodConfigPage.importMethodConfigFromRepo(TestData.SimpleMethod.namespace,
-        TestData.SimpleMethod.name, TestData.SimpleMethod.snapshotId, methodName, Some(TestData.SimpleMethod.rootEntityType))
+//      val methodConfigDetailsPage = workspaceMethodConfigPage.importMethodConfigFromRepo(TestData.SimpleMethod.namespace,
+//        TestData.SimpleMethod.name, TestData.SimpleMethod.snapshotId, methodName, Some(TestData.SimpleMethod.rootEntityType))
+      val methodConfigDetailsPage
       methodConfigDetailsPage.editMethodConfig(inputs = Some(TestData.SimpleMethod.inputs))
       val submissionDetailsPage = methodConfigDetailsPage.launchAnalysis(TestData.SimpleMethod.rootEntityType, TestData.SingleParticipant.entityId, "", shouldUseCallCaching)
       // ATODO start the submission via API? - reduce the amount of UI surface.
