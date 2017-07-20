@@ -21,8 +21,8 @@
     val))
 
 
-(defn- get-method-display [{:keys [methodNamespace methodName methodVersion]}]
-  (str methodNamespace "/" methodName " snapshot " methodVersion))
+(defn- get-method-display [{:keys [namespace name snapshotId]}]
+  (str namespace "/" name " snapshot " snapshotId))
 
 (react/defc- SynchronizeModal
   {:render
@@ -58,7 +58,7 @@
                  (style/create-identity-select
                   {:style {:width 120}
                    :onChange #(swap! locals assoc user (.. % -target -value))}
-                  ["No access" "Reader" "Writer" "Owner"])]]])
+                  ["No access" "Reader" "Owner"])]]])
             (:users props))]])
    :-grant-permission
    (fn []
@@ -73,22 +73,30 @@
     :show-cancel? false
     :ok-button "OK"
     :content
-    (react/create-element
-     [:div {:style {:maxWidth 670}}
-      "Users of this configuration may not have access to this method and will not be able to run it.
-       Users will need to contact the Method owner "
-      [:b {} "TODO: get method owner(s)"]
-      " to request access to method "
-      [:b {} (get-method-display method)]])}])
+    (let [owners (:managers method)
+          method-display (get-method-display method)]
+      [:div {:style {:maxWidth 670}}
+       [:p {} "Users of this configuration may not have access to this method and be unable to run it."]
+       (if (= 1 (count owners))
+         [:p {}
+          "Users will need to contact the Method owner "
+          [:b {} (first owners)]
+          " and request access to method "
+          [:b {} method-display]
+          "."]
+         [:p {}
+          "Users will need to contact an owner of Method "
+          [:b {} method-display]
+          " and request access. Method owners:"
+          [:ul {}
+           (map (fn [owner] [:li {} owner]) owners)]])])}])
 
 
 (defn handle-sync [parsed-perms-report]
   (let [workspace-users (->> parsed-perms-report :workspaceACL keys (map name) set)
         method-report (first (:referencedMethods parsed-perms-report)) ;; THERE CAN BE ONLY ONE
         me (utils/get-user-email)
-        method-owner? (some->> method-report :acls
-                               (filter (comp (partial = me) :user)) first
-                               :role (= "OWNER"))
+        method-owner? (-> (get-in method-report [:method :managers]) set (contains? me))
         can-share? (get-in parsed-perms-report [:workspaceACL (keyword me) :canShare])
         method-users (when method-owner? (->> method-report :acls (map :user) set))
         unauthed-users (set/difference workspace-users method-users)]
