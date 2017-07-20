@@ -1,9 +1,9 @@
 (ns broadfcuitest.style
   (:require
-    [cljs.test :refer [deftest is testing]]
-    [broadfcui.common.style :as style]
-    [broadfcui.utils :as utils]
-    ))
+   [cljs.test :refer [deftest is testing]]
+   [broadfcui.common.style :as style]
+   [broadfcui.utils :as utils]
+   ))
 
 (deftest create-text-field
   (let [text-field-map {:placeholder "test" :disabled false :value nil}

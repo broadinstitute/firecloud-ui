@@ -1,9 +1,9 @@
 (ns broadfcui.components.collapse
   (:require
-    [dmohs.react :as react]
-    [broadfcui.common.icons :as icons]
-    [broadfcui.utils :as utils]
-    ))
+   [dmohs.react :as react]
+   [broadfcui.common.icons :as icons]
+   [broadfcui.utils :as utils]
+   ))
 
 (react/defc Collapse
   {:get-initial-state

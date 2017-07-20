@@ -1,25 +1,24 @@
 (ns broadfcui.page.workspace.data.tab
   (:require
-    [dmohs.react :as react]
-    [clojure.string :as string]
-    [broadfcui.common :as common]
-    [broadfcui.common.components :as comps]
-    [broadfcui.common.entity-table :refer [EntityTable]]
-    [broadfcui.common.flex-utils :as flex]
-    [broadfcui.common.icons :as icons]
-    [broadfcui.common.modal :as modal]
-    [broadfcui.common.style :as style]
-    [broadfcui.common.table-utils :as table-utils]
-    [broadfcui.config :as config]
-    [broadfcui.page.workspace.data.copy-data-workspaces :as copy-data-workspaces]
-    [broadfcui.page.workspace.data.entity-viewer :refer [EntityViewer]]
-    [broadfcui.page.workspace.data.import-data :as import-data]
-    [broadfcui.page.workspace.data.utils :as data-utils]
-    [broadfcui.persistence :as persistence]
-    [broadfcui.utils :as utils]
-    ))
+   [dmohs.react :as react]
+   [clojure.string :as string]
+   [broadfcui.common :as common]
+   [broadfcui.common.components :as comps]
+   [broadfcui.common.entity-table :refer [EntityTable]]
+   [broadfcui.common.icons :as icons]
+   [broadfcui.common.modal :as modal]
+   [broadfcui.common.style :as style]
+   [broadfcui.common.table-utils :as table-utils]
+   [broadfcui.config :as config]
+   [broadfcui.page.workspace.data.copy-data-workspaces :as copy-data-workspaces]
+   [broadfcui.page.workspace.data.entity-viewer :refer [EntityViewer]]
+   [broadfcui.page.workspace.data.import-data :as import-data]
+   [broadfcui.page.workspace.data.utils :as data-utils]
+   [broadfcui.persistence :as persistence]
+   [broadfcui.utils :as utils]
+   ))
 
-(react/defc MetadataImporter
+(react/defc- MetadataImporter
   {:get-initial-state
    (fn [{:keys [state]}]
      {:crumbs [{:text "Choose Source"

@@ -1,19 +1,19 @@
 (ns broadfcui.common.management-utils
   (:require
-    [dmohs.react :as react]
-    [broadfcui.common :as common]
-    [broadfcui.common.components :as comps]
-    [broadfcui.common.flex-utils :as flex]
-    [broadfcui.common.input :as input]
-    [broadfcui.common.modal :as modal]
-    [broadfcui.common.style :as style]
-    [broadfcui.common.table.style :as table-style]
-    [broadfcui.common.table.table :as table]
-    [broadfcui.endpoints :as endpoints]
-    [broadfcui.utils :as utils]
-    ))
+   [dmohs.react :as react]
+   [broadfcui.common :as common]
+   [broadfcui.common.components :as comps]
+   [broadfcui.common.flex-utils :as flex]
+   [broadfcui.common.input :as input]
+   [broadfcui.common.modal :as modal]
+   [broadfcui.common.style :as style]
+   [broadfcui.common.table.style :as table-style]
+   [broadfcui.common.table.table :as table]
+   [broadfcui.endpoints :as endpoints]
+   [broadfcui.utils :as utils]
+   ))
 
-(react/defc AddUserDialog
+(react/defc- AddUserDialog
   {:render
    (fn [{:keys [props state this refs]}]
      [comps/OKCancelForm

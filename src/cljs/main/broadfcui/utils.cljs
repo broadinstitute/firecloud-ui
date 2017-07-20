@@ -2,11 +2,11 @@
   (:require-macros
    [broadfcui.utils :refer [log jslog cljslog pause restructure]])
   (:require
-    [clojure.string :as string]
-    cljs.pprint
-    goog.net.cookies
-    [broadfcui.config :as config]
-    ))
+   [clojure.string :as string]
+   cljs.pprint
+   goog.net.cookies
+   [broadfcui.config :as config]
+   ))
 
 
 (defn str-index-of
@@ -68,7 +68,7 @@
                                 (if (nil? value) true value))))
 (add-watch
  use-live-data? :save-to-local-storage
- (fn [k r os ns]
+ (fn [_ _ _ ns]
    (local-storage-write ::use-live-data? ns true)))
 
 
@@ -191,7 +191,7 @@
             :url (str (config/api-url-root) service-prefix path)
             :headers (merge {"Authorization" (str "Bearer " (get-access-token))}
                             (:headers arg-map))
-            :on-done (fn [{:keys [status-code status-text raw-response] :as m}]
+            :on-done (fn [{:keys [status-code status-text] :as m}]
                        (when (and (not @server-down?) (not @maintenance-mode?))
                          (cond
                            (check-maintenance-mode status-code status-text) (reset! maintenance-mode? true)

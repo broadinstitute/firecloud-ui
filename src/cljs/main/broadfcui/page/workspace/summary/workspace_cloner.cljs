@@ -1,15 +1,15 @@
 (ns broadfcui.page.workspace.summary.workspace-cloner
   (:require
-    [dmohs.react :as react]
-    [broadfcui.common :as common]
-    [broadfcui.common.components :as comps]
-    [broadfcui.common.input :as input]
-    [broadfcui.common.modal :as modal]
-    [broadfcui.common.style :as style]
-    [broadfcui.endpoints :as endpoints]
-    [broadfcui.utils :as utils]
-    [broadfcui.common.icons :as icons]
-    ))
+   [dmohs.react :as react]
+   [broadfcui.common :as common]
+   [broadfcui.common.components :as comps]
+   [broadfcui.common.icons :as icons]
+   [broadfcui.common.input :as input]
+   [broadfcui.common.modal :as modal]
+   [broadfcui.common.style :as style]
+   [broadfcui.endpoints :as endpoints]
+   [broadfcui.utils :as utils]
+   ))
 
 (react/defc WorkspaceCloner
   {:get-initial-state
@@ -102,7 +102,7 @@
    (fn [{:keys [props state]}]
      (swap! state assoc :selected-groups (vec (:auth-domain props)))
      (endpoints/get-groups
-      (fn [success? parsed-response]
+      (fn [_ parsed-response]
         (swap! state assoc :all-groups
                (set (map :groupName parsed-response))))))
    :do-clone

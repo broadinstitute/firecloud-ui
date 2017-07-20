@@ -1,16 +1,16 @@
 (ns broadfcui.common.table.table
   (:require
-    [dmohs.react :as react]
-    [clojure.set :as set]
-    [broadfcui.common.components :as comps]
-    [broadfcui.common.style :as style]
-    [broadfcui.common.table.body :as body]
-    [broadfcui.common.table.column-editor :refer [ColumnEditButton]]
-    [broadfcui.common.table.paginator :refer [Paginator]]
-    [broadfcui.common.table.utils :as table-utils]
-    [broadfcui.persistence :as persistence]
-    [broadfcui.utils :as utils]
-    ))
+   [dmohs.react :as react]
+   [clojure.set :as set]
+   [broadfcui.common.components :as comps]
+   [broadfcui.common.style :as style]
+   [broadfcui.common.table.body :as body]
+   [broadfcui.common.table.column-editor :refer [ColumnEditButton]]
+   [broadfcui.common.table.paginator :refer [Paginator]]
+   [broadfcui.common.table.utils :as table-utils]
+   [broadfcui.persistence :as persistence]
+   [broadfcui.utils :as utils]
+   ))
 
 
 ;; Documentation:
@@ -42,7 +42,10 @@
 
 
 (react/defc Table
-  {:update-query-params
+  {:reinitialize
+   (fn [{:keys [state this]}]
+     (swap! state merge (this :-fetch-initial-state)))
+   :update-query-params
    (fn [{:keys [state]} new-params]
      (assert (set/subset? (set (keys new-params)) all-query-params) "Unknown key passed to :update-query-params")
      (let [old-state (:query-params @state)
@@ -71,47 +74,8 @@
    (fn []
      {:load-on-mount true})
    :get-initial-state
-   (fn [{:keys [props]}]
-     (assoc
-      (persistence/try-restore
-       {:key (:persistence-key props)
-        :validator (fn [stored-value]
-                     (or (not (:v props))
-                         (= (:v props) (:v stored-value))))
-        :initial
-        (fn []
-          (let [columns (-> props :body :columns)
-                processed-columns (if-let [defaults (-> props :body :column-defaults)]
-                                    (let [by-header (utils/index-by (some-fn :id :header) columns)
-                                          default-showing (->> (defaults "shown")
-                                                               (replace by-header)
-                                                               (map #(assoc % :show-initial? true)))
-                                          default-hiding (->> (defaults "hidden")
-                                                              (replace by-header)
-                                                              (map #(assoc % :show-initial? false)))
-                                          mentioned (set/union (set (defaults "shown"))
-                                                               (set (defaults "hidden")))]
-                                      (concat default-showing default-hiding
-                                              (remove (fn [{:keys [id header]}]
-                                                        (contains? mentioned (or id header)))
-                                                      columns)))
-                                    columns)
-                initial-sort-column (or (first (filter :sort-initial processed-columns))
-                                        (when-not (-> props :body :behavior :allow-no-sort?)
-                                          (first processed-columns)))
-                initial-sort-order (when initial-sort-column
-                                     (get initial-sort-column :sort-initial :asc))]
-            (merge
-             {:query-params (select-keys
-                             {:page-number 1
-                              :rows-per-page 20
-                              :filter-text ""
-                              :sort-column (table-utils/resolve-id initial-sort-column)
-                              :sort-order initial-sort-order}
-                             (set/difference all-query-params (-> props :body :external-query-params)))
-              :column-display (table-utils/build-column-display processed-columns)}
-             (when-let [v (:v props)] {:v v}))))})
-       :rows []))
+   (fn [{:keys [this]}]
+     (assoc (this :-fetch-initial-state) :rows []))
    :render
    (fn [{:keys [props state]}]
      (let [props (utils/deep-merge default-props props)
@@ -172,4 +136,44 @@
                     (not= (:column-display @state) (:column-display prev-state))))
        (persistence/save {:key (:persistence-key props)
                           :state state
-                          :only [:query-params :column-display :v]})))})
+                          :only [:query-params :column-display :v]})))
+   :-fetch-initial-state
+   (fn [{:keys [props]}]
+     (persistence/try-restore
+      {:key (:persistence-key props)
+       :validator (fn [stored-value]
+                    (or (not (:v props))
+                        (= (:v props) (:v stored-value))))
+       :initial
+       (fn []
+         (let [columns (-> props :body :columns)
+               processed-columns (if-let [defaults (-> props :body :column-defaults)]
+                                   (let [by-header (utils/index-by (some-fn :id :header) columns)
+                                         default-showing (->> (defaults "shown")
+                                                              (replace by-header)
+                                                              (map #(assoc % :show-initial? true)))
+                                         default-hiding (->> (defaults "hidden")
+                                                             (replace by-header)
+                                                             (map #(assoc % :show-initial? false)))
+                                         mentioned (set/union (set (defaults "shown"))
+                                                              (set (defaults "hidden")))]
+                                     (concat default-showing default-hiding
+                                             (remove (fn [{:keys [id header]}]
+                                                       (contains? mentioned (or id header)))
+                                                     columns)))
+                                   columns)
+               initial-sort-column (or (first (filter :sort-initial processed-columns))
+                                       (when-not (-> props :body :behavior :allow-no-sort?)
+                                         (first processed-columns)))
+               initial-sort-order (when initial-sort-column
+                                    (get initial-sort-column :sort-initial :asc))]
+           (merge
+            {:query-params (select-keys
+                            {:page-number 1
+                             :rows-per-page 20
+                             :filter-text ""
+                             :sort-column (table-utils/resolve-id initial-sort-column)
+                             :sort-order initial-sort-order}
+                            (set/difference all-query-params (-> props :body :external-query-params)))
+             :column-display (table-utils/build-column-display processed-columns)}
+            (when-let [v (:v props)] {:v v}))))}))})

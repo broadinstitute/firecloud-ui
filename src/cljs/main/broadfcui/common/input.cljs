@@ -1,9 +1,9 @@
 (ns broadfcui.common.input
   (:require
-    [dmohs.react :as react]
-    [broadfcui.common :as common]
-    [broadfcui.common.style :as style]
-    ))
+   [dmohs.react :as react]
+   [broadfcui.common :as common]
+   [broadfcui.common.style :as style]
+   ))
 
 (react/defc TextField
   {:get-text

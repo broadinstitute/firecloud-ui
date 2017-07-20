@@ -1,8 +1,8 @@
 (ns broadfcuitest.config
   (:require
-    [cljs.test :refer [deftest is testing]]
-    [broadfcui.config :as config]
-    ))
+   [cljs.test :refer [deftest is testing]]
+   [broadfcui.config :as config]
+   ))
 
 (deftest check-config
   (let [valid-config {"apiUrlRoot" "foo"

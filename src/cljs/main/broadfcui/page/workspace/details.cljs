@@ -1,20 +1,20 @@
 (ns broadfcui.page.workspace.details
   (:require
-    [dmohs.react :as react]
-    [broadfcui.common :as common]
-    [broadfcui.common.style :as style]
-    [broadfcui.config :as config]
-    [broadfcui.endpoints :as endpoints]
-    [broadfcui.nav :as nav]
-    [broadfcui.net :as net]
-    [broadfcui.page.notifications :as notifications]
-    [broadfcui.page.workspace.analysis.tab :as analysis-tab]
-    [broadfcui.page.workspace.data.tab :as data-tab]
-    [broadfcui.page.workspace.method-configs.tab :as method-configs-tab]
-    [broadfcui.page.workspace.monitor.tab :as monitor-tab]
-    [broadfcui.page.workspace.summary.tab :as summary-tab]
-    [broadfcui.utils :as utils]
-    ))
+   [dmohs.react :as react]
+   [broadfcui.common :as common]
+   [broadfcui.common.style :as style]
+   [broadfcui.config :as config]
+   [broadfcui.endpoints :as endpoints]
+   [broadfcui.nav :as nav]
+   [broadfcui.net :as net]
+   [broadfcui.page.notifications :as notifications]
+   [broadfcui.page.workspace.analysis.tab :as analysis-tab]
+   [broadfcui.page.workspace.data.tab :as data-tab]
+   [broadfcui.page.workspace.method-configs.tab :as method-configs-tab]
+   [broadfcui.page.workspace.monitor.tab :as monitor-tab]
+   [broadfcui.page.workspace.summary.tab :as summary-tab]
+   [broadfcui.utils :as utils]
+   ))
 
 
 (defn- protected-banner [workspace]
@@ -29,19 +29,19 @@
        [:div {:style {:height 1 :backgroundColor "#bbb" :marginTop 2}}]])))
 
 (defn- bucket-banner [{:keys [bucket-access? bucket-status-code]}]
-     (when (= false bucket-access?)
-       [:div {:style {:paddingTop 2}}
-        [:div {:style {:backgroundColor "#efdcd7"
-                       :fontSize "small"
-                       :padding "4px 0"
-                       :textAlign "center"}}
-         (cond (= 404 bucket-status-code)
-           (str "The Google bucket associated with this workspace"
-                " does not exist. Please contact help@firecloud.org.")
-           :else (str "The Google bucket associated with this workspace is currently"
-                      " unavailable. This should be resolved shortly. If this persists for"
-                      " more than an hour, please contact help@firecloud.org."))]
-        [:div {:style {:height 1 :backgroundColor "#efdcd7" :marginTop 2}}]]))
+  (when (= false bucket-access?)
+    [:div {:style {:paddingTop 2}}
+     [:div {:style {:backgroundColor "#efdcd7"
+                    :fontSize "small"
+                    :padding "4px 0"
+                    :textAlign "center"}}
+      (cond (= 404 bucket-status-code)
+            (str "The Google bucket associated with this workspace"
+                 " does not exist. Please contact help@firecloud.org.")
+            :else (str "The Google bucket associated with this workspace is currently"
+                       " unavailable. This should be resolved shortly. If this persists for"
+                       " more than an hour, please contact help@firecloud.org."))]
+     [:div {:style {:height 1 :backgroundColor "#efdcd7" :marginTop 2}}]]))
 
 
 (def ^:private SUMMARY "Summary")
@@ -69,7 +69,7 @@
         (assoc-in [:workspace :tags] tags)
         (assoc-in [:workspace :library-attributes] library-attributes))))
 
-(react/defc Tab
+(react/defc- Tab
   {:render
    (fn [{:keys [props state]}]
      [:a {:style {:flex "0 0 auto" :padding "1em 2em"
@@ -91,7 +91,7 @@
         [:div {:style {:position "absolute" :bottom -1 :left 0 :width "100%" :height 2
                        :backgroundColor "white"}}])])})
 
-(react/defc WorkspaceDetails
+(react/defc- WorkspaceDetails
   {:render
    (fn [{:keys [props state locals refs this]}]
      (let [{:keys [workspace-id]} props

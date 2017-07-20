@@ -1,13 +1,13 @@
 (ns broadfcui.page.notifications
   (:require
-    [dmohs.react :as react]
-    [broadfcui.common :as common]
-    [broadfcui.common.components :as comps]
-    [broadfcui.common.icons :as icons]
-    [broadfcui.common.style :as style]
-    [broadfcui.nav :as nav]
-    [broadfcui.utils :as utils]
-    ))
+   [dmohs.react :as react]
+   [broadfcui.common :as common]
+   [broadfcui.common.components :as comps]
+   [broadfcui.common.icons :as icons]
+   [broadfcui.common.style :as style]
+   [broadfcui.nav :as nav]
+   [broadfcui.utils :as utils]
+   ))
 
 (def notification-details
   {"WorkspaceChangedNotification"
@@ -26,7 +26,7 @@
       (swap! state assoc k (assoc m :parse-error? true))
       (swap! state assoc k (assoc m :parsed parsed)))))
 
-(defn- start-ajax-calls [{:keys [this props] :as component-attributes} & [did-get-profile]]
+(defn- start-ajax-calls [{:keys [props] :as component-attributes} & [did-get-profile]]
   (let [{:keys [workspace-id]} props
         {:keys [namespace name]} workspace-id
         path (if workspace-id
@@ -82,7 +82,7 @@
     :data (js-invoke js/JSON "stringify" (clj->js data))
     :on-done on-done}))
 
-(react/defc Page
+(react/defc- Page
   {:render
    (fn [{:keys [this] :as m}]
      [:div {:style style/thin-page-style}
@@ -146,14 +146,13 @@
    (fn []
      {:save-disabled? true})
    :render
-   (fn [{:keys [this props] :as m}]
-     (let [{:keys [close-self]} props]
-       [:div {}
-        [:div {:style {:borderBottom style/standard-line
-                       :padding "0 1rem 0.5rem" :margin "0 -1rem 0.5rem"
-                       :fontWeight 500}}
-         "Workspace Notifications"]
-        (render-ajax-or-continue m #(this :-render-notifications))]))
+   (fn [{:keys [this] :as m}]
+     [:div {}
+      [:div {:style {:borderBottom style/standard-line
+                     :padding "0 1rem 0.5rem" :margin "0 -1rem 0.5rem"
+                     :fontWeight 500}}
+       "Workspace Notifications"]
+      (render-ajax-or-continue m #(this :-render-notifications))])
    :component-did-mount
    (fn [m]
      (start-ajax-calls m))
@@ -169,7 +168,7 @@
            checkbox (fn [k checked?]
                       (common/render-foundation-switch
                        {:checked? checked? :on-change (partial set-checked? k)}))
-           row (fn [{:keys [description key value]}]
+           row (fn [{:keys [key value]}]
                  (let [{:keys [id]} (parse-ws-notification-key key)
                        {:keys [label description]} (notification-details id)]
                    [:tr {}
@@ -190,18 +189,17 @@
          (map row notifications)]]))
    :-save
    (fn [{:keys [state after-update]} k]
-     (let [{:keys [pending]} @state]
-       (save
-        {k (str (boolean (get-in @state [:overridden k])))}
-        (fn [{:keys [success?]}]
-          (if success?
-            (do
-              (swap! state assoc-in [:pending k] :done)
-              (after-update
-               (fn [] (js/setTimeout #(swap! state update :pending dissoc k) 1000))))
-            (do
-              (swap! state assoc-in [:pending k] :error)
-              (swap! state update-in [:overridden k] not)))))))})
+     (save
+      {k (str (boolean (get-in @state [:overridden k])))}
+      (fn [{:keys [success?]}]
+        (if success?
+          (do
+            (swap! state assoc-in [:pending k] :done)
+            (after-update
+             (fn [] (js/setTimeout #(swap! state update :pending dissoc k) 1000))))
+          (do
+            (swap! state assoc-in [:pending k] :error)
+            (swap! state update-in [:overridden k] not))))))})
 
 (defn add-nav-paths []
   (nav/defpath

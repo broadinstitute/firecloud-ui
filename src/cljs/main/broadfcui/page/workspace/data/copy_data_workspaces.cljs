@@ -1,13 +1,13 @@
 (ns broadfcui.page.workspace.data.copy-data-workspaces
   (:require
-    [dmohs.react :as react]
-    [broadfcui.common.components :as comps]
-    [broadfcui.common.style :as style]
-    [broadfcui.endpoints :as endpoints]
-    [broadfcui.page.workspace.data.copy-data-entities :as copy-data-entities]
-    [broadfcui.page.workspace.workspace-common :as ws-common]
-    [broadfcui.utils :as utils]
-    ))
+   [dmohs.react :as react]
+   [broadfcui.common.components :as comps]
+   [broadfcui.common.style :as style]
+   [broadfcui.endpoints :as endpoints]
+   [broadfcui.page.workspace.data.copy-data-entities :as copy-data-entities]
+   [broadfcui.page.workspace.workspace-common :as ws-common]
+   [broadfcui.utils :as utils]
+   ))
 
 
 (defn- remove-self [workspace-id workspace-list]

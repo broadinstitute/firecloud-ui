@@ -1,20 +1,20 @@
 (ns broadfcui.page.billing.billing-management
   (:require
-    [dmohs.react :as react]
-    [broadfcui.common :as common]
-    [broadfcui.common.components :as comps]
-    [broadfcui.common.flex-utils :as flex]
-    [broadfcui.common.management-utils :as management-utils]
-    [broadfcui.common.modal :as modal]
-    [broadfcui.common.style :as style]
-    [broadfcui.common.table.style :as table-style]
-    [broadfcui.common.table.table :refer [Table]]
-    [broadfcui.endpoints :as endpoints]
-    [broadfcui.nav :as nav]
-    [broadfcui.page.billing.create-project :refer [CreateBillingProjectDialog]]
-    [broadfcui.page.workspace.monitor.common :as moncommon]
-    [broadfcui.utils :as utils]
-    ))
+   [dmohs.react :as react]
+   [broadfcui.common :as common]
+   [broadfcui.common.components :as comps]
+   [broadfcui.common.flex-utils :as flex]
+   [broadfcui.common.management-utils :as management-utils]
+   [broadfcui.common.modal :as modal]
+   [broadfcui.common.style :as style]
+   [broadfcui.common.table.style :as table-style]
+   [broadfcui.common.table.table :refer [Table]]
+   [broadfcui.endpoints :as endpoints]
+   [broadfcui.nav :as nav]
+   [broadfcui.page.billing.create-project :refer [CreateBillingProjectDialog]]
+   [broadfcui.page.workspace.monitor.common :as moncommon]
+   [broadfcui.utils :as utils]
+   ))
 
 
 (def ^:private project-refresh-interval-ms 10000)
@@ -23,7 +23,7 @@
 (def ^:private project-status-error "Error")
 
 
-(react/defc PendingProjectControl
+(react/defc- PendingProjectControl
   {:render
    (fn [{{:keys [project-name]} :props :keys [state]}]
      [:span {}
@@ -59,7 +59,7 @@
             (js/setTimeout (fn [] (swap! locals update :timeouts dissoc f) (f)) ms)))})
 
 
-(react/defc BillingProjectTable
+(react/defc- BillingProjectTable
   {:reload
    (fn [{:keys [this]}]
      (react/call :load-data this))
@@ -72,7 +72,7 @@
        (let [projects (->>
                        (:projects @state)
                        (group-by :projectName)
-                       (map (fn [[k v]]
+                       (map (fn [[_ v]]
                               (assoc (first v) :roles (sort (map :role v))))))]
          [Table
           {:data projects
@@ -153,7 +153,7 @@
        (swap! state assoc-in [:projects project-index] updated-project)))})
 
 
-(react/defc Page
+(react/defc- Page
   {:render
    (fn [{:keys [props]}]
      (let [{:keys [project-name]} props]

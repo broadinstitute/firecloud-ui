@@ -1,14 +1,14 @@
 (ns broadfcui.common.table
   (:require
-    [dmohs.react :as react]
-    [broadfcui.common :as common]
-    [broadfcui.common.components :as comps]
-    [broadfcui.common.overlay :as overlay]
-    [broadfcui.common.style :as style]
-    [broadfcui.common.table-utils :as table-utils]
-    [broadfcui.persistence :as persistence]
-    [broadfcui.utils :as utils]
-    ))
+   [dmohs.react :as react]
+   [broadfcui.common :as common]
+   [broadfcui.common.components :as comps]
+   [broadfcui.common.overlay :as overlay]
+   [broadfcui.common.style :as style]
+   [broadfcui.common.table-utils :as table-utils]
+   [broadfcui.persistence :as persistence]
+   [broadfcui.utils :as utils]
+   ))
 
 
 (def ^:private default-initial-rows-per-page 20)
@@ -153,7 +153,7 @@
    :always-sort? false
    :filterable? true
    :cell-padding-left "16px"
-   :row-style (fn [index row]
+   :row-style (fn [index _]
                 {:backgroundColor (if (even? index) (:background-light style/colors) "#fff")})})
 
 (defn- restore-table-state [props]

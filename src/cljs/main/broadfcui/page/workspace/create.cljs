@@ -1,21 +1,20 @@
 (ns broadfcui.page.workspace.create
   (:require
-    [dmohs.react :as react]
-    [broadfcui.common :as common]
-    [broadfcui.common.components :as comps]
-    [broadfcui.common.icons :as icons]
-    [broadfcui.common.input :as input]
-    [broadfcui.common.modal :as modal]
-    [broadfcui.common.style :as style]
-    [broadfcui.components.modals :as modals]
-    [broadfcui.endpoints :as endpoints]
-    [broadfcui.nav :as nav]
-    [broadfcui.utils :as utils]
-    [broadfcui.common.icons :as icons]
-    ))
+   [dmohs.react :as react]
+   [broadfcui.common :as common]
+   [broadfcui.common.components :as comps]
+   [broadfcui.common.icons :as icons]
+   [broadfcui.common.input :as input]
+   [broadfcui.common.modal :as modal]
+   [broadfcui.common.style :as style]
+   [broadfcui.components.modals :as modals]
+   [broadfcui.endpoints :as endpoints]
+   [broadfcui.nav :as nav]
+   [broadfcui.utils :as utils]
+   ))
 
 
-(react/defc CreateDialog
+(react/defc- CreateDialog
   {:get-initial-state
    (fn [{:keys [props]}]
      {:selected-project (first (:billing-projects props))
@@ -100,7 +99,7 @@
    :component-did-mount
    (fn [{:keys [state]}]
      (endpoints/get-groups
-      (fn [success? parsed-response]
+      (fn [_ parsed-response]
         (swap! state assoc :all-groups
                (set (map :groupName parsed-response))))))
    :create-workspace

@@ -1,20 +1,20 @@
 (ns broadfcui.page.workspace.method-configs.tab
   (:require
-    [dmohs.react :as react]
-    [broadfcui.common.components :as comps]
-    [broadfcui.common.flex-utils :as flex]
-    [broadfcui.common.modal :as modal]
-    [broadfcui.common.style :as style]
-    [broadfcui.endpoints :as endpoints]
-    [broadfcui.nav :as nav]
-    [broadfcui.page.workspace.method-configs.import-config :as import-config]
-    [broadfcui.page.workspace.method-configs.method-config-editor :refer [MethodConfigEditor]]
-    [broadfcui.page.workspace.workspace-common :as ws-common]
-    [broadfcui.utils :as utils]
-    ))
+   [dmohs.react :as react]
+   [broadfcui.common.components :as comps]
+   [broadfcui.common.flex-utils :as flex]
+   [broadfcui.common.modal :as modal]
+   [broadfcui.common.style :as style]
+   [broadfcui.endpoints :as endpoints]
+   [broadfcui.nav :as nav]
+   [broadfcui.page.workspace.method-configs.import-config :as import-config]
+   [broadfcui.page.workspace.method-configs.method-config-editor :refer [MethodConfigEditor]]
+   [broadfcui.page.workspace.workspace-common :as ws-common]
+   [broadfcui.utils :as utils]
+   ))
 
 
-(react/defc MethodConfigurationsList
+(react/defc- MethodConfigurationsList
   {:reload
    (fn [{:keys [state this]}]
      (swap! state dissoc :server-response)
