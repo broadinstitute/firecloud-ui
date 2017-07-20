@@ -98,7 +98,7 @@
          :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                     (swap! state dissoc :blocker)
                     (if success?
-                      (mc-sync/handle-sync (get-parsed-response) (get-in props [:workspace :canShare]))
+                      (mc-sync/handle-sync (get-parsed-response))
                       (comps/push-error status-text)))})))
    :-render-display
    (fn [{:keys [props state this]}]

@@ -82,12 +82,14 @@
       [:b {} (get-method-display method)]])}])
 
 
-(defn handle-sync [parsed-perms-report can-share?]
+(defn handle-sync [parsed-perms-report]
   (let [workspace-users (->> parsed-perms-report :workspaceACL keys (map name) set)
-        method-report (first (:referencedMethods parsed-perms-report))
+        method-report (first (:referencedMethods parsed-perms-report)) ;; THERE CAN BE ONLY ONE
+        me (utils/get-user-email)
         method-owner? (some->> method-report :acls
-                               (filter (comp (partial = (utils/get-user-email)) :user)) first
+                               (filter (comp (partial = me) :user)) first
                                :role (= "OWNER"))
+        can-share? (get-in parsed-perms-report [:workspaceACL (keyword me) :canShare])
         method-users (when method-owner? (->> method-report :acls (map :user) set))
         unauthed-users (set/difference workspace-users method-users)]
     (cond (and method-owner? can-share? (seq unauthed-users))
