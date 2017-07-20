@@ -8,6 +8,7 @@
    [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
    [broadfcui.components.collapse :refer [Collapse]]
+   [broadfcui.components.modals :as modals]
    [broadfcui.components.sticky :refer [Sticky]]
    [broadfcui.config :as config]
    [broadfcui.endpoints :as endpoints]
@@ -20,6 +21,8 @@
    [broadfcui.page.workspace.summary.library-utils :as library-utils]
    [broadfcui.page.workspace.summary.library-view :refer [LibraryView]]
    [broadfcui.page.workspace.summary.publish :as publish]
+   [broadfcui.page.workspace.summary.synchronize :as ws-sync]
+   [broadfcui.page.workspace.summary.workspace-cloner :refer [WorkspaceCloner]]
    [broadfcui.utils :as utils]
    ))
 
@@ -201,8 +204,8 @@
 
   :-render-main
    (fn [{:keys [props state locals]}
-        {:keys [user-access-level request-refresh can-share? owner? curator? writer?catalog-with-read?]}]
-     (let [{:keys [workspace workspace-id bucket-access? ]} props
+        {:keys [user-access-level request-refresh can-share? owner? curator? writer? catalog-with-read?]}]
+     (let [{:keys [workspace workspace-id bucket-access?]} props
            {:keys [editing?]
             {:keys [storage-cost submissions-count library-schema]} :server-response} @state
            {:keys [body-id auth-domain]} @locals
@@ -374,4 +377,6 @@
        :payload {:users new-users}
        :headers utils/content-type=json
        :on-done (fn [{:keys [success? get-parsed-response]}]
-                  (utils/log (get-parsed-response)))}))})
+                  (if success?
+                    (ws-sync/handle-sync (get-parsed-response))
+                    (comps/push-error-response (get-parsed-response false))))}))})
