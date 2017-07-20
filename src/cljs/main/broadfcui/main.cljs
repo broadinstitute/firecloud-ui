@@ -187,7 +187,7 @@
         [:div {:style {:position "relative"}}
          [:div {:style {:backgroundColor "white" :padding 20}}
           (when-not (contains? user-status :signed-in)
-            (style/render-text-logo))
+            (style/render-logo))
           [:div {}
            (when auth2
              [auth/LoggedOut {:auth2 auth2 :hidden? sign-in-hidden?
