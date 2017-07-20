@@ -13,7 +13,7 @@
    [broadfcui.page.workspace.method-configs.launch-analysis :as launch]
    [broadfcui.page.workspace.method-configs.publish :as publish]
    [broadfcui.page.workspace.method-configs.synchronize :as mc-sync]
-    [broadfcui.page.workspace.workspace-common :as ws-common]
+   [broadfcui.page.workspace.workspace-common :as ws-common]
    [broadfcui.utils :as utils]
    ))
 

@@ -1,13 +1,13 @@
 (ns broadfcui.page.workspace.method-configs.synchronize
   (:require
-    [dmohs.react :as react]
-    [clojure.set :as set]
-    [broadfcui.common.components :as comps]
-    [broadfcui.common.modal :as modal]
-    [broadfcui.common.style :as style]
-    [broadfcui.components.modals :as modals]
-    [broadfcui.utils :as utils]
-    ))
+   [dmohs.react :as react]
+   [clojure.set :as set]
+   [broadfcui.common.components :as comps]
+   [broadfcui.common.modal :as modal]
+   [broadfcui.common.style :as style]
+   [broadfcui.components.modals :as modals]
+   [broadfcui.utils :as utils]
+   ))
 
 
 (defonce ^:private sync-flag (atom false))
@@ -24,7 +24,7 @@
 (defn- get-method-display [{:keys [methodNamespace methodName methodVersion]}]
   (str methodNamespace "/" methodName " snapshot " methodVersion))
 
-(react/defc SynchronizeModal
+(react/defc- SynchronizeModal
   {:render
    (fn [{:keys [props state this]}]
      [modals/OKCancelForm

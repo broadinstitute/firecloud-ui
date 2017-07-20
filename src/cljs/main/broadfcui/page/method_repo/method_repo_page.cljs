@@ -5,7 +5,7 @@
    [broadfcui.common.modal :as modal]
    [broadfcui.page.method-repo.method-config-importer :refer [MethodConfigImporter]]
    [broadfcui.page.workspace.method-configs.synchronize :as sync]
-    [broadfcui.nav :as nav]
+   [broadfcui.nav :as nav]
    [broadfcui.utils :as utils]
    ))
 
