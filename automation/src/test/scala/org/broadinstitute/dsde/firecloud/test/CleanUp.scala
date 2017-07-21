@@ -26,7 +26,7 @@ trait CleanUp extends SuiteMixin with ExceptionHandling with LazyLogging { self:
       * @param f the clean-up function
       */
     def cleanUp(f: => Any): Unit = {
-      cleanUpFunctions += f _
+      f _ +=: cleanUpFunctions
     }
   }
 
