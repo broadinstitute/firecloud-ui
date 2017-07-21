@@ -115,5 +115,6 @@
     (cond (and method-owner? can-share? (seq unauthed-users))
           (modal/push-modal [SynchronizeModal {:method (:method method-report)
                                                :users unauthed-users}])
-          (or (not method-owner?) (not can-share?))
+          (and (not (get-in method-report [:method :public]))
+               (not (or method-owner? can-share?)))
           (modal/push-modal (alert-modal (:method method-report))))))
