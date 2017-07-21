@@ -130,23 +130,13 @@
                                                      (group-by (juxt :namespace :name))
                                                      (utils/map-values (partial map :snapshotId))))
                     ;; FIXME: :error-message is unused
-                    (swap! state assoc :error-message status-text)))})
-     (when (mc-sync/check-synchronization)
-       (swap! state assoc :blocker "Checking permissions...")
-       (endpoints/call-ajax-orch
-        {:endpoint (endpoints/get-permission-report (:workspace-id props))
-         :payload {:configs [(:config-id props)]}
-         :headers utils/content-type=json
-         :on-done (fn [{:keys [success? get-parsed-response status-text]}]
-                    (swap! state dissoc :blocker)
-                    (if success?
-                      (mc-sync/handle-sync (get-parsed-response))
-                      (comps/push-error status-text)))})))
+                    (swap! state assoc :error-message status-text)))}))
    :-render-display
    (fn [{:keys [props state locals this]}]
      (let [locked? (get-in props [:workspace :workspace :isLocked])]
        [:div {}
         [comps/Blocker {:banner (:blocker @state)}]
+        [mc-sync/SyncContainer (select-keys props [:workspace-id :config-id])]
         [:div {:style {:padding "1em 2em" :display "flex"}}
          [Sidebar (merge (select-keys props [:access-level :workspace-id :after-delete])
                          (select-keys @state [:editing? :loaded-config])

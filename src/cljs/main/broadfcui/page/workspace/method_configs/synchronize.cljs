@@ -4,7 +4,6 @@
    [clojure.set :as set]
    [clojure.string :as string]
    [broadfcui.common.components :as comps]
-   [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
    [broadfcui.components.modals :as modals]
    [broadfcui.endpoints :as endpoints]
@@ -17,7 +16,7 @@
 (defn flag-synchronization []
   (reset! sync-flag true))
 
-(defn check-synchronization []
+(defn- check-synchronization []
   (let [val @sync-flag]
     (reset! sync-flag false)
     val))
@@ -31,7 +30,7 @@
    (fn [{:keys [props state this]}]
      [modals/OKCancelForm
       {:header "Synchronize Access to Method"
-       :dismiss modal/pop-modal
+       :dismiss (:dismiss props)
        :content
        (react/create-element
         [:div {:style {:maxWidth 670}}
@@ -74,14 +73,14 @@
        :headers utils/content-type=json
        :on-done (fn [{:keys [success? get-parsed-response]}]
                   (if success?
-                    (modal/pop-modal)
+                    ((:dismiss props))
                     (swap! state assoc :grant-error (get-parsed-response false))))}))})
 
 
-(defn- alert-modal [method]
+(defn- alert-modal [{:keys [method dismiss]}]
   [modals/OKCancelForm
    {:header "Unable to Grant Method Access"
-    :dismiss modal/pop-modal
+    :dismiss dismiss
     :show-cancel? false
     :ok-button "OK"
     :content
@@ -104,17 +103,48 @@
            (map (fn [owner] [:li {} owner]) owners)]])])}])
 
 
-(defn handle-sync [parsed-perms-report]
-  (let [workspace-users (->> parsed-perms-report :workspaceACL keys (map name) set)
-        method-report (first (:referencedMethods parsed-perms-report)) ;; THERE CAN BE ONLY ONE
-        me (utils/get-user-email)
-        method-owner? (-> (get-in method-report [:method :managers]) set (contains? me))
-        can-share? (get-in parsed-perms-report [:workspaceACL (keyword me) :canShare])
-        method-users (when method-owner? (->> method-report :acls (map :user) set))
-        unauthed-users (set/difference workspace-users method-users)]
-    (cond (and method-owner? can-share? (seq unauthed-users))
-          (modal/push-modal [SynchronizeModal {:method (:method method-report)
-                                               :users unauthed-users}])
-          (and (not (get-in method-report [:method :public]))
-               (not (or method-owner? can-share?)))
-          (modal/push-modal (alert-modal (:method method-report))))))
+(react/defc SyncContainer
+  {:render
+   (fn [{:keys [state]}]
+     [:div {}
+      (when-let [banner (:banner @state)]
+        [comps/Blocker {:banner banner}])
+      (when (:show-sync-modal? @state)
+        [SynchronizeModal (merge (select-keys @state [:method :users])
+                                 {:dismiss #(swap! state dissoc :show-sync-modal?)})])
+      (when (:show-alert-modal? @state)
+        (alert-modal (merge (select-keys @state [:method])
+                            {:dismiss #(swap! state dissoc :show-alert-modal?)})))])
+   :component-did-mount
+   (fn [{:keys [props state this]}]
+     (when (check-synchronization)
+       (swap! state assoc :banner "Checking permissions...")
+       (endpoints/call-ajax-orch
+        {:endpoint (endpoints/get-permission-report (:workspace-id props))
+         :payload {:configs [(:config-id props)]}
+         :headers utils/content-type=json
+         :on-done (fn [{:keys [success? get-parsed-response status-text]}]
+                    (swap! state dissoc :banner)
+                    (if success?
+                      (this :-perform-sync-logic (get-parsed-response))
+                      (comps/push-error status-text)))})))
+   :-perform-sync-logic
+   (fn [{:keys [state]} parsed-perms-report]
+     (let [workspace-users (->> parsed-perms-report :workspaceACL keys (map name) set)
+           method-report (first (:referencedMethods parsed-perms-report)) ;; THERE CAN BE ONLY ONE
+           me (utils/get-user-email)
+           method-owner? (-> (get-in method-report [:method :managers]) set (contains? me))
+           can-share? (get-in parsed-perms-report [:workspaceACL (keyword me) :canShare])
+           method-users (when method-owner? (->> method-report :acls (map :user) set))
+           unauthed-users (set/difference workspace-users method-users)]
+       (cond (and method-owner? can-share? (seq unauthed-users))
+             (swap! state assoc
+                    :show-sync-modal? true
+                    :method (:method method-report)
+                    :users unauthed-users)
+
+             (and (not (get-in method-report [:method :public]))
+                  (not (or method-owner? can-share?)))
+             (swap! state assoc
+                    :show-alert-modal? true
+                    :method (:method method-report)))))})
