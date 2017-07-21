@@ -38,9 +38,7 @@
      (utils/ajax-orch
       "/groups"
       {:on-done (net/handle-ajax-response #(swap! state assoc
-                                                  :groups-response %
-                                                  :deleting? nil
-                                                  :delete-response nil))}))
+                                                  :groups-response %))}))
    :-render-groups-table
    (fn [{:keys [this state]}]
      [Table
@@ -95,7 +93,10 @@
      (endpoints/call-ajax-orch
       {:endpoint (endpoints/delete-group (:group-name @state))
        :on-done (net/handle-ajax-response
-                 #(swap! state assoc :delete-response %))}))
+                 #(do
+                    (swap! state assoc :delete-response %)
+                    (this :-load-data))
+                )}))
    :-render-confirmation
    (fn [{:keys [state this]}]
      (modals/render-message
@@ -106,7 +107,7 @@
    (fn [{:keys [state this]}]
      (net/render-with-ajax
       (:delete-response @state)
-      #(this :-load-data)
+      #(constantly nil)
       {:blocking? true
        :loading-text "Deleting group..."
        :handle-error
