@@ -36,7 +36,7 @@
             {:header "Authorization Domain" :starting-width 150
              :column-data (comp :membersGroupName :authorizationDomain :workspace)
              :render #(or % "None")}]}
-    :toolbar {:items toolbar-items}}])
+    :toolbar (constantly {:items toolbar-items})}])
 
 
 (defn config->id [config]
@@ -59,4 +59,4 @@
                       :column-data (comp (juxt :methodNamespace :methodName :methodVersion) :methodRepoMethod)
                       :as-text (partial clojure.string/join "/")
                       :render (partial apply style/render-entity)}]}
-    :toolbar {:items toolbar-items}}])
+    :toolbar (constantly {:items toolbar-items})}])

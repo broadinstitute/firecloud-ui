@@ -76,20 +76,21 @@
                   :header-cell {:padding "0.5rem 0 0.5rem 1rem"}
                   :body-cell {:padding "0.3rem 0 0.3rem 1rem"}}}
          :toolbar ;; FIXME: magic numbers below:
-         {:items [[:div {:style {:fontSize "112%"}}
-                   ;; 112% makes this the same size as "Data Library" / "Workspaces" / "Method Repository" above
-                   [:span {:style {:fontWeight 700 :color (:text-light style/colors) :marginRight "0.5rem"}}
-                    "Matching Cohorts"]
-                   [:span {:style {:fontSize "80%"}}
-                    (let [total (or (:total @state) 0)]
-                      (str total
-                           " Dataset"
-                           (when-not (= 1 total) "s")
-                           " found"))]]
-                  flex/spring]
-          :style {:alignItems "flex-start" :marginBottom 7} ;; 7 makes some lines line up
-          :column-edit-button {:style {:order 1 :marginRight nil}
-                               :anchor :right}}}]))
+         (constantly
+          {:items [[:div {:style {:fontSize "112%"}}
+                    ;; 112% makes this the same size as "Data Library" / "Workspaces" / "Method Repository" above
+                    [:span {:style {:fontWeight 700 :color (:text-light style/colors) :marginRight "0.5rem"}}
+                     "Matching Cohorts"]
+                    [:span {:style {:fontSize "80%"}}
+                     (let [total (or (:total @state) 0)]
+                       (str total
+                            " Dataset"
+                            (when-not (= 1 total) "s")
+                            " found"))]]
+                   flex/spring]
+           :style {:alignItems "flex-start" :marginBottom 7} ;; 7 makes some lines line up
+           :column-edit-button {:style {:order 1 :marginRight nil}
+                                :anchor :right}})}]))
    :execute-search
    (fn [{:keys [refs]} reset-sort?]
      (let [query-params (merge {:page-number 1} (when reset-sort? {:sort-column nil :sort-order nil}))]
