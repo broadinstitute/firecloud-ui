@@ -31,6 +31,7 @@
           {:configs configs
            :render-name (fn [config]
                           (style/create-link {:text (:name config)
+                                              :data-test-id (str "method-config-" (:name config) "-link")
                                               :href (nav/get-link :workspace-method-config
                                                                   (:workspace-id props)
                                                                   (ws-common/config->id config))}))

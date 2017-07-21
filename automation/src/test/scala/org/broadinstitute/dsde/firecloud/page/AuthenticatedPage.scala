@@ -32,7 +32,7 @@ abstract class AuthenticatedPage(implicit webDriver: WebDriver) extends FireClou
     def clickAccountDropdown(): Unit = {
       click on accountDropdown
     }
-we
+
     def clickSignOut(): Unit = {
       click on (await enabled signOutLink)
     }
