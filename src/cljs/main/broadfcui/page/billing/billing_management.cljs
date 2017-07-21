@@ -109,29 +109,30 @@
                     :column-data #(clojure.string/join ", " (:roles %))}]}
            :toolbar
            {:items
-            [flex/spring
-             [comps/Button
-              {:text "Create New Billing Project..."
-               :onClick
-               (fn []
-                 (if (-> @utils/auth2-atom (aget "currentUser") (js-invoke "get")
-                         (js-invoke "hasGrantedScopes" "https://www.googleapis.com/auth/cloud-billing"))
-                   (modal/push-modal
-                    [CreateBillingProjectDialog
-                     {:on-success #(react/call :reload this)}])
-                   (do
-                     (utils/add-user-listener
-                      ::billing
-                      (fn [_]
-                        (utils/remove-user-listener ::billing)
-                        (modal/push-modal
-                         [CreateBillingProjectDialog
-                          {:on-success #(react/call :reload this)}])))
-                     (js-invoke
-                      @utils/auth2-atom
-                      "grantOfflineAccess"
-                      (clj->js {:redirect_uri "postmessage"
-                                :scope "https://www.googleapis.com/auth/cloud-billing"})))))}]]}}])))
+            (constantly
+             [flex/spring
+              [comps/Button
+               {:text "Create New Billing Project..."
+                :onClick
+                (fn []
+                  (if (-> @utils/auth2-atom (aget "currentUser") (js-invoke "get")
+                          (js-invoke "hasGrantedScopes" "https://www.googleapis.com/auth/cloud-billing"))
+                    (modal/push-modal
+                     [CreateBillingProjectDialog
+                      {:on-success #(react/call :reload this)}])
+                    (do
+                      (utils/add-user-listener
+                       ::billing
+                       (fn [_]
+                         (utils/remove-user-listener ::billing)
+                         (modal/push-modal
+                          [CreateBillingProjectDialog
+                           {:on-success #(react/call :reload this)}])))
+                      (js-invoke
+                       @utils/auth2-atom
+                       "grantOfflineAccess"
+                       (clj->js {:redirect_uri "postmessage"
+                                 :scope "https://www.googleapis.com/auth/cloud-billing"})))))}]])}}])))
    :component-did-mount
    (fn [{:keys [this]}]
      (react/call :load-data this))
