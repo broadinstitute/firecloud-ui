@@ -95,14 +95,15 @@
                       :onClick #(swap! state assoc :group-name groupName :delete-modal? true)})))}]}
        :toolbar
        {:items
-        [flex/spring
-         [comps/Button
-          {:text "Create New Group..."
-           :onClick
-           (fn []
-             (modal/push-modal
-              [CreateGroupDialog
-               {:on-success #(this :-load-data)}]))}]]}}])
+        (constantly
+         [flex/spring
+          [comps/Button
+           {:text "Create New Group..."
+            :onClick
+            (fn []
+              (modal/push-modal
+               [CreateGroupDialog
+                {:on-success #(this :-load-data)}]))}]])}}])
    :-delete-group
    (fn [{:keys [state this]}]
      (swap! state assoc :deleting? true :delete-modal? nil)

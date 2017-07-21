@@ -104,11 +104,12 @@
           :column-defaults
           (data-utils/get-column-defaults (get-in workspace [:workspace :workspace-attributes :workspace-column-defaults]))
           :toolbar-items
-          [(when (:selected-entity-type @state) (this :-render-download-link))
-           [comps/Button {:text "Import Metadata..."
-                          :style {:marginLeft "auto"}
-                          :disabled? (when (get-in workspace [:workspace :isLocked]) "This workspace is locked.")
-                          :onClick #(this :-handle-import-data-click)}]]
+          (fn [table-props]
+            [(when (:selected-entity-type @state) (this :-render-download-link table-props))
+             [comps/Button {:text "Import Metadata..."
+                            :style {:marginLeft "auto"}
+                            :disabled? (when (get-in workspace [:workspace :isLocked]) "This workspace is locked.")
+                            :onClick #(this :-handle-import-data-click)}]])
           :on-entity-type-selected #(swap! state assoc :selected-entity-type % :selected-entity nil :selected-attr-list nil)
           :on-column-change #(swap! state assoc :visible-columns %)
           :attribute-renderer (table-utils/render-gcs-links (get-in workspace [:workspace :bucketName]))
@@ -119,7 +120,7 @@
               (:entity-Name entity)))
           :entity-name-renderer #(this :-render-entity %)}]]))
    :-render-download-link
-   (fn [{:keys [props state refs]}]
+   (fn [{:keys [props state refs]} table-props]
      (let [{:keys [workspace-id]} props
            selected-entity-type (name (:selected-entity-type @state))]
        [:form {:target "_blank"
@@ -132,7 +133,7 @@
                  :value (utils/get-access-token)}]
         [:input {:type "hidden"
                  :name "attributeNames"
-                 :value (->> (or (:visible-columns @state) ((@refs "entity-table") :get-ordered-columns))
+                 :value (->> (:columns table-props)
                              (filter :visible?)
                              (map :id)
                              (string/join ","))}]
