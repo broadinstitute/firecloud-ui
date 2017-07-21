@@ -1,18 +1,18 @@
 (ns broadfcui.page.workspace.data.copy-data-entities
   (:require
-    [dmohs.react :as react]
-    [clojure.string :as string]
-    [clojure.walk :as walk]
-    [broadfcui.common :as common]
-    [broadfcui.common.components :as comps]
-    [broadfcui.common.modal :as modal]
-    [broadfcui.endpoints :as endpoints]
-    [broadfcui.page.workspace.data.entity-selector :refer [EntitySelector]]
-    [broadfcui.utils :as utils]
-    ))
+   [dmohs.react :as react]
+   [clojure.string :as string]
+   [clojure.walk :as walk]
+   [broadfcui.common :as common]
+   [broadfcui.common.components :as comps]
+   [broadfcui.common.modal :as modal]
+   [broadfcui.endpoints :as endpoints]
+   [broadfcui.page.workspace.data.entity-selector :refer [EntitySelector]]
+   [broadfcui.utils :as utils]
+   ))
 
 
-(react/defc EntitiesList
+(react/defc- EntitiesList
   {:render
    (fn [{:keys [props state this refs]}]
      (let [swid (:selected-workspace-id props)]
@@ -129,7 +129,7 @@
                       "OK")})))})
 
 
-(react/defc Page
+(react/defc- Page
   {:render
    (fn [{:keys [state props]}]
      (cond

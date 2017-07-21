@@ -1,18 +1,18 @@
 (ns broadfcui.page.workspace.summary.attribute-editor
   (:require
-    [dmohs.react :as react]
-    [clojure.string :as string]
-    [broadfcui.common.components :as comps]
-    [broadfcui.common.icons :as icons]
-    [broadfcui.common.modal :as modal]
-    [broadfcui.common.style :as style]
-    [broadfcui.common.table :as table]
-    [broadfcui.common.table-utils :as table-utils]
-    [broadfcui.components.collapse :refer [Collapse]]
-    [broadfcui.config :as config]
-    [broadfcui.page.workspace.data.import-data :as import-data]
-    [broadfcui.utils :as utils]
-    ))
+   [dmohs.react :as react]
+   [clojure.string :as string]
+   [broadfcui.common.components :as comps]
+   [broadfcui.common.icons :as icons]
+   [broadfcui.common.modal :as modal]
+   [broadfcui.common.style :as style]
+   [broadfcui.common.table :as table]
+   [broadfcui.common.table-utils :as table-utils]
+   [broadfcui.components.collapse :refer [Collapse]]
+   [broadfcui.config :as config]
+   [broadfcui.page.workspace.data.import-data :as import-data]
+   [broadfcui.utils :as utils]
+   ))
 
 
 (def ^:private STRING "String")

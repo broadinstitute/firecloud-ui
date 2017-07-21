@@ -1,15 +1,15 @@
 (ns broadfcui.common.components
   (:require
-    [dmohs.react :as react]
-    [clojure.string :as string]
-    [broadfcui.common :as common]
-    [broadfcui.common.codemirror :refer [CodeMirror]]
-    [broadfcui.common.icons :as icons]
-    [broadfcui.common.modal :as modal]
-    [broadfcui.common.style :as style]
-    [broadfcui.config :as config]
-    [broadfcui.utils :as utils]
-    ))
+   [dmohs.react :as react]
+   [clojure.string :as string]
+   [broadfcui.common :as common]
+   [broadfcui.common.codemirror :refer [CodeMirror]]
+   [broadfcui.common.icons :as icons]
+   [broadfcui.common.modal :as modal]
+   [broadfcui.common.style :as style]
+   [broadfcui.config :as config]
+   [broadfcui.utils :as utils]
+   ))
 
 
 (declare push-error)
@@ -763,7 +763,7 @@
    (fn [{:keys [props state]}]
      (let [body
            [:div {:hidden (and (:collapsed? @state) (:label props))
-                  :marginLeft (if (:label props) "0.5rem" 0)}
+                  :style {:marginLeft (if (:label props) "0.5rem" 0)}}
             (map (fn [node]
                    [:ul {:style {:margin "0.2rem" :padding "0.5rem"
                                  :backgroundColor (if (and (:highlight-ends? props)

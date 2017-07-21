@@ -1,16 +1,16 @@
 (ns broadfcui.page.workspace.method-configs.import-config
   (:require
-    [dmohs.react :as react]
-    [broadfcui.common :as common]
-    [broadfcui.common.components :as comps]
-    [broadfcui.common.input :as input]
-    [broadfcui.common.style :as style]
-    [broadfcui.endpoints :as endpoints]
-    [broadfcui.page.method-repo.method-config-importer :as mci]
-    [broadfcui.page.method-repo.method-repo-table :refer [MethodRepoTable]]
-    [broadfcui.page.workspace.workspace-common :as ws-common]
-    [broadfcui.utils :as utils]
-    ))
+   [dmohs.react :as react]
+   [broadfcui.common :as common]
+   [broadfcui.common.components :as comps]
+   [broadfcui.common.input :as input]
+   [broadfcui.common.style :as style]
+   [broadfcui.endpoints :as endpoints]
+   [broadfcui.page.method-repo.method-config-importer :as mci]
+   [broadfcui.page.method-repo.method-repo-table :refer [MethodRepoTable]]
+   [broadfcui.page.workspace.workspace-common :as ws-common]
+   [broadfcui.utils :as utils]
+   ))
 
 
 (defn- wrap [& components]
@@ -21,7 +21,7 @@
   (str (:namespace id) "/" (:name id)))
 
 
-(react/defc ConfirmWorkspaceConfig
+(react/defc- ConfirmWorkspaceConfig
   {:render
    (fn [{:keys [state this]}]
      (let [{:keys [loaded-config config-load-error loaded-method method-load-error import-error]} @state]
@@ -93,7 +93,7 @@
                           (swap! state assoc :import-error (get-parsed-response false))))})))))})
 
 
-(react/defc WorkspaceConfigChooser
+(react/defc- WorkspaceConfigChooser
   {:render
    (fn [{:keys [props state]}]
      (let [{:keys [push-page]} props
@@ -122,7 +122,7 @@
                                       {:error-message status-text})))}))})
 
 
-(react/defc WorkspaceChooser
+(react/defc- WorkspaceChooser
   {:render
    (fn [{:keys [props]}]
      (let [{:keys [get-workspaces push-page]} props

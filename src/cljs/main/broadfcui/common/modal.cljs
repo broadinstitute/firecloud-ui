@@ -1,9 +1,9 @@
 (ns broadfcui.common.modal
   (:require
-    [dmohs.react :as react]
-    [broadfcui.common :as common]
-    [broadfcui.utils :as utils]
-    ))
+   [dmohs.react :as react]
+   [broadfcui.common :as common]
+   [broadfcui.utils :as utils]
+   ))
 
 
 (defonce ^:private instance (atom nil))

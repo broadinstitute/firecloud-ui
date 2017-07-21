@@ -1,15 +1,15 @@
 (ns broadfcui.page.style-guide
   (:require
-    [dmohs.react :as react]
-    [clojure.string :as string]
-    [broadfcui.common :as common]
-    [broadfcui.common.codemirror :refer [CodeMirror]]
-    [broadfcui.common.icons :as icons]
-    [broadfcui.common.style :as style]
-    [broadfcui.components.sticky :refer [Sticky]]
-    [broadfcui.nav :as nav]
-    [broadfcui.utils :as utils]
-    ))
+   [dmohs.react :as react]
+   [clojure.string :as string]
+   [broadfcui.common :as common]
+   [broadfcui.common.codemirror :refer [CodeMirror]]
+   [broadfcui.common.icons :as icons]
+   [broadfcui.common.style :as style]
+   [broadfcui.components.sticky :refer [Sticky]]
+   [broadfcui.nav :as nav]
+   [broadfcui.utils :as utils]
+   ))
 
 (defn- create-nav-link [label]
   (style/create-link {:text label
@@ -190,7 +190,7 @@
    [:p {} "These are used for description or explanation. Generally, it's something the user could
    figure out either from context or from clicking, but we want to be explicit."]])
 
-(react/defc Page
+(react/defc- Page
   {:component-will-mount
    (fn [{:keys [locals]}]
      (swap! locals assoc :body-id (gensym "style")))

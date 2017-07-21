@@ -1,12 +1,12 @@
 (ns broadfcui.page.workspace.monitor.common
   (:require
-    [broadfcui.common :as common]
-    [broadfcui.common.duration :as duration]
-    [broadfcui.common.icons :as icons]
-    [broadfcui.common.style :as style]
-    [broadfcui.common.table.style :as table-style]
-    [broadfcui.utils :as utils]
-    ))
+   [broadfcui.common :as common]
+   [broadfcui.common.duration :as duration]
+   [broadfcui.common.icons :as icons]
+   [broadfcui.common.style :as style]
+   [broadfcui.common.table.style :as table-style]
+   [broadfcui.utils :as utils]
+   ))
 
 
 (defn render-date [date]

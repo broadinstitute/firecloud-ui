@@ -1,9 +1,9 @@
 (ns broadfcui.page.workspace.summary.library-utils
   (:require
-    [broadfcui.common :as common]
-    [broadfcui.common.style :as style]
-    [broadfcui.utils :as utils]
-    ))
+   [broadfcui.common :as common]
+   [broadfcui.common.style :as style]
+   [broadfcui.utils :as utils]
+   ))
 
 (defn unpack-attribute-list [value]
   (if (map? value)

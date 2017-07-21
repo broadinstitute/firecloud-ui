@@ -1,15 +1,14 @@
 (ns broadfcui.page.status
   (:require
-    [dmohs.react :as react]
-    [broadfcui.common.components :as comps]
-    [broadfcui.common.style :as style]
-    [broadfcui.config :as config]
-    [broadfcui.nav :as nav]
-    [broadfcui.utils :as utils]
-    ))
+   [dmohs.react :as react]
+   [broadfcui.common.components :as comps]
+   [broadfcui.config :as config]
+   [broadfcui.nav :as nav]
+   [broadfcui.utils :as utils]
+   ))
 
 
-(react/defc StatusLine
+(react/defc- StatusLine
   {:render
    (fn [{:keys [props]}]
      [:div {:style {:marginTop "0.5em"}}
@@ -22,13 +21,13 @@
          [:span {} [:span {:style {:color "red"}} "Error"]
           (when (:errors props)
             [:div {:style {:backgroundColor "#eee" :padding 6 :fontSize "smaller"}}
-              [:ul {} (map (fn [e] [:li {} e]) (:errors props))]])]
+             [:ul {} (map (fn [e] [:li {} e]) (:errors props))]])]
          :else
          [:span {:style {:color "green"}} "Okay"])]])})
 
-(react/defc Page
+(react/defc- Page
   {:render
-   (fn [{:keys [props state]}]
+   (fn [{:keys [state]}]
      (let [{:keys [status-code status-text response-text parsed-response]} @state
            orch-ok? (:ok parsed-response)
            orch-errors [(str "Status Code: " status-code)
@@ -44,7 +43,7 @@
                   [StatusLine {:label (name current) :success? ok :errors messages}]))
               (:systems parsed-response))]]))
    :component-did-mount
-   (fn [{:keys [props state]}]
+   (fn [{:keys [state]}]
      (utils/ajax {:url (str (config/api-url-root) "/status")
                   :method "GET"
                   :on-done (fn [{:keys [status-code status-text raw-response get-parsed-response]}]

@@ -1,11 +1,11 @@
 (ns broadfcui.common.table.paginator
   (:require
-    [dmohs.react :as react]
-    [inflections.core :as inflections]
-    [broadfcui.common.icons :as icons]
-    [broadfcui.common.style :as style]
-    [broadfcui.utils :as utils]
-    ))
+   [dmohs.react :as react]
+   [inflections.core :as inflections]
+   [broadfcui.common.icons :as icons]
+   [broadfcui.common.style :as style]
+   [broadfcui.utils :as utils]
+   ))
 
 
 (defn- create-page-range [current-page total-pages]

@@ -1,9 +1,9 @@
 (ns broadfcui.page.workspace.data.utils
   (:require
-    [broadfcui.common :as common]
-    [broadfcui.endpoints :as endpoints]
-    [broadfcui.utils :as utils]
-    ))
+   [broadfcui.common :as common]
+   [broadfcui.endpoints :as endpoints]
+   [broadfcui.utils :as utils]
+   ))
 
 (defn is-entity-set? [entity-type]
   (re-find #"_set" entity-type))

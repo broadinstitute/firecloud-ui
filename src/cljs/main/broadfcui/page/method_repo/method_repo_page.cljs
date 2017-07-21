@@ -1,15 +1,15 @@
 (ns broadfcui.page.method-repo.method-repo-page
   (:require
-    [dmohs.react :as react]
-    [broadfcui.common.components :as comps]
-    [broadfcui.common.modal :as modal]
-    [broadfcui.page.method-repo.method-config-importer :refer [MethodConfigImporter]]
-    [broadfcui.nav :as nav]
-    [broadfcui.utils :as utils]
-    ))
+   [dmohs.react :as react]
+   [broadfcui.common.components :as comps]
+   [broadfcui.common.modal :as modal]
+   [broadfcui.page.method-repo.method-config-importer :refer [MethodConfigImporter]]
+   [broadfcui.nav :as nav]
+   [broadfcui.utils :as utils]
+   ))
 
 
-(react/defc Page
+(react/defc- Page
   {:render
    (fn [{:keys [props]}]
      [:div {:style {:padding "1.5rem 1rem 0"}}

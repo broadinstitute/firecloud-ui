@@ -1,17 +1,17 @@
 (ns broadfcui.page.profile
   (:require
-    [dmohs.react :as react]
-    [clojure.string :as string]
-    [broadfcui.common :as common]
-    [broadfcui.common.components :as components]
-    [broadfcui.common.icons :as icons]
-    [broadfcui.common.input :as input]
-    [broadfcui.common.style :as style]
-    [broadfcui.config :as config]
-    [broadfcui.endpoints :as endpoints]
-    [broadfcui.nav :as nav]
-    [broadfcui.utils :as utils]
-    ))
+   [dmohs.react :as react]
+   [clojure.string :as string]
+   [broadfcui.common :as common]
+   [broadfcui.common.components :as components]
+   [broadfcui.common.icons :as icons]
+   [broadfcui.common.input :as input]
+   [broadfcui.common.style :as style]
+   [broadfcui.config :as config]
+   [broadfcui.endpoints :as endpoints]
+   [broadfcui.nav :as nav]
+   [broadfcui.utils :as utils]
+   ))
 
 
 (defn get-nih-link-href []
@@ -21,7 +21,7 @@
         (let [loc (.-location js/window)]
           (str (.-protocol loc) "//" (.-host loc) "/#profile/nih-username-token={token}")))))
 
-(react/defc NihLink
+(react/defc- NihLink
   {:render
    (fn [{:keys [state]}]
      (let [status (:nih-status @state)
@@ -95,7 +95,7 @@
           :else
           (swap! state assoc :error-message status-text)))))
    :link-nih-account
-   (fn [{:keys [this state]} token]
+   (fn [{:keys [state]} token]
      (endpoints/profile-link-nih-account
       token
       (fn [{:keys [success? get-parsed-response]}]
@@ -105,7 +105,7 @@
           (swap! state assoc :error-message "Failed to link NIH account")))))})
 
 
-(react/defc Form
+(react/defc- Form
   {:get-field-keys
    (fn []
      (list :firstName :lastName :title :contactEmail :institute :institutionalProgram :programLocationCity
@@ -188,7 +188,7 @@
           (swap! state assoc :error-message status-text)))))})
 
 
-(react/defc Page
+(react/defc- Page
   {:render
    (fn [{:keys [this props state]}]
      (let [new? (:new-registration? props)
