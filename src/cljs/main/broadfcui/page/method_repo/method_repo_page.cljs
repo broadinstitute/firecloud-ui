@@ -4,7 +4,7 @@
    [broadfcui.common.components :as comps]
    [broadfcui.common.modal :as modal]
    [broadfcui.page.method-repo.method-config-importer :refer [MethodConfigImporter]]
-   [broadfcui.page.workspace.method-configs.synchronize :as sync]
+   [broadfcui.page.workspace.method-configs.synchronize :as mc-sync]
    [broadfcui.nav :as nav]
    [broadfcui.utils :as utils]
    ))
@@ -28,7 +28,7 @@
              {:text "Yes"
               :onClick (fn [_]
                          (modal/pop-modal)
-                         (sync/flag-synchronization))
+                         (mc-sync/flag-synchronization))
               :href (nav/get-link :workspace-method-config workspace-id config-id)}}))})]])})
 
 (defn add-nav-paths []
