@@ -77,7 +77,7 @@ trait WebBrowserUtil extends WebBrowser {
     def notVisible(query: Query, timeOutInSeconds: Long = defaultTimeOutInSeconds)
                   (implicit webDriver: WebDriver): Unit = {
       withWait(timeOutInSeconds) {
-        findAll(query).isEmpty
+        !findAll(query).exists(_.isDisplayed)
       }
     }
 
@@ -108,6 +108,13 @@ trait WebBrowserUtil extends WebBrowser {
       */
     def text(text: String, timeOutInSeconds: Long = defaultTimeOutInSeconds)(implicit webDriver: WebDriver): Unit = {
       await condition (find(withText(text)).isDefined, timeOutInSeconds)
+    }
+
+    def visible(query: Query, timeOutInSeconds: Long = defaultTimeOutInSeconds)
+               (implicit webDriver: WebDriver): Unit = {
+      withWait(timeOutInSeconds) {
+        find(query).exists(_.isDisplayed)
+      }
     }
 
     private def withWait[A](timeOutInSeconds: Long)(f: => A)(implicit webDriver: WebDriver): A = {
