@@ -118,11 +118,10 @@
            config-id (ws-common/config->id config)]
        [:div {:style {:flex "0 0 270px" :paddingRight 30}}
         [Sticky
-         {:outer-style {:width 290 :backgroundColor "#fff"}
-          :anchor body-id
+         {:anchor body-id
           :sticky-props {:data-check-every 1}
           :contents
-          [:div {:style {:width 270 :background "#fff"}}
+          [:div {:style {:width 270}}
            (if editing?
              (list
               [comps/SidebarButton {:color :success-state
