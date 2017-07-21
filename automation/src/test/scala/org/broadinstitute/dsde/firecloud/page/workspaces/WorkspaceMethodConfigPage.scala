@@ -26,11 +26,17 @@ class WorkspaceMethodConfigPage(namespace: String, name: String)(implicit webDri
     ui.filter(searchText)
   }
 
+  def openMethodConfig(methodNamespace: String, methodName: String): MethodConfigDetailsPage = {
+    ui.openMethodConfig(methodName)
+    new MethodConfigDetailsPage(namespace, name, methodNamespace, methodName)
+  }
+
 //  def is_method_config_present
 
   trait UI extends super.UI {
     private val openImportConfigModalButtonQuery: Query = testId("import-config-button")
     private val filterInput = testId("-input")
+    private val methodConfigLinkId = "method-config-%s-link"
 
     def clickImportConfigButton(): ImportMethodChooseSourceModel = {
       click on (await enabled openImportConfigModalButtonQuery)
@@ -41,6 +47,12 @@ class WorkspaceMethodConfigPage(namespace: String, name: String)(implicit webDri
       await enabled filterInput
       searchField(filterInput).value = searchText
       pressKeys("\n")
+    }
+
+    def openMethodConfig(methodName: String) = {
+      val linkId = methodConfigLinkId.format(methodName)
+      val link = testId(linkId)
+      click on (await enabled link)
     }
   }
   object ui extends UI

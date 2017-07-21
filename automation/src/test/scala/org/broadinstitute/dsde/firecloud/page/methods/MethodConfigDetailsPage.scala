@@ -1,7 +1,7 @@
 package org.broadinstitute.dsde.firecloud.page.methods
 
 import org.broadinstitute.dsde.firecloud.config.Config
-import org.broadinstitute.dsde.firecloud.page.workspaces.{SubmissionDetailsPage, WorkspacePage}
+import org.broadinstitute.dsde.firecloud.page.workspaces.{SubmissionDetailsPage, WorkspacePage, WorkspaceMethodConfigPage}
 import org.broadinstitute.dsde.firecloud.page.{FireCloudView, PageUtil}
 import org.openqa.selenium.WebDriver
 import org.scalatest.selenium.Page
@@ -41,8 +41,9 @@ class MethodConfigDetailsPage(namespace: String, name: String, methodConfigNames
     this
   }
 
-  def deleteMethodConfig() = {
+  def deleteMethodConfig(): WorkspaceMethodConfigPage = {
     ui.deleteMethodConfig()
+    new WorkspaceMethodConfigPage(namespace, name)
   }
 
   trait UI extends super.UI {
