@@ -87,17 +87,10 @@
                             " Dataset"
                             (when-not (= 1 total) "s")
                             " found"))]]
-<<<<<<< HEAD
-                   flex/spring]
-           :style {:alignItems "flex-start" :marginBottom 7} ;; 7 makes some lines line up
-           :column-edit-button {:style {:order 1 :marginRight nil}
-                                :anchor :right}})}]))
-=======
                    flex/spring])
           :style {:alignItems "flex-start" :marginBottom 7} ;; 7 makes some lines line up
           :column-edit-button {:style {:order 1 :marginRight nil}
                                :anchor :right}}}]))
->>>>>>> origin/GAWB-1763
    :execute-search
    (fn [{:keys [refs]} reset-sort?]
      (let [query-params (merge {:page-number 1} (when reset-sort? {:sort-column nil :sort-order nil}))]
