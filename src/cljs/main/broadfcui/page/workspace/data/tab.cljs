@@ -105,7 +105,7 @@
           (data-utils/get-column-defaults (get-in workspace [:workspace :workspace-attributes :workspace-column-defaults]))
           :toolbar-items
           (fn [table-props]
-            [(when (:selected-entity-type @state) (this :-render-download-link))
+            [(when (:selected-entity-type @state) (this :-render-download-link table-props))
              [comps/Button {:text "Import Metadata..."
                             :style {:marginLeft "auto"}
                             :disabled? (when (get-in workspace [:workspace :isLocked]) "This workspace is locked.")

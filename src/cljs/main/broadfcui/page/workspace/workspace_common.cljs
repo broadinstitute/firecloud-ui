@@ -36,7 +36,7 @@
             {:header "Authorization Domain" :starting-width 150
              :column-data (comp :membersGroupName :authorizationDomain :workspace)
              :render #(or % "None")}]}
-    :toolbar (constantly {:items toolbar-items})}])
+    :toolbar {:items (constantly toolbar-items)}}])
 
 
 (defn config->id [config]
@@ -59,4 +59,8 @@
                       :column-data (comp (juxt :methodNamespace :methodName :methodVersion) :methodRepoMethod)
                       :as-text (partial clojure.string/join "/")
                       :render (partial apply style/render-entity)}]}
+<<<<<<< HEAD
     :toolbar (constantly {:items toolbar-items})}])
+=======
+    :toolbar {:items (constantly toolbar-items)}}])
+>>>>>>> origin/GAWB-1763
