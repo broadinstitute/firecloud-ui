@@ -31,6 +31,6 @@ trait ExceptionHandling extends LazyLogging {
     * </pre>
     */
   def nonFatalAndLog(message: String): PartialFunction[Throwable, Unit] = {
-    case NonFatal(e) => logger.warn(s"$message: ${e.getMessage}" )
+    case NonFatal(e) => logger.warn(s"$message", e)
   }
 }
