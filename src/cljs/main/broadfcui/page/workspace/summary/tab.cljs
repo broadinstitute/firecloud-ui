@@ -71,6 +71,17 @@
         {:keys [editing?]
          {:keys [library-schema]} :server-response} @state]
     [:div {:style {:flex "0 0 270px" :paddingRight 30}}
+     (when (:cloning? @state)
+       [WorkspaceCloner
+        {:on-success (fn [namespace name]
+                       (swap! state dissoc :cloning?)
+                       (nav/go-to-path :workspace-summary
+                                       (utils/restructure namespace name)))
+         :dismiss #(swap! state dissoc :cloning?)
+         :workspace-id workspace-id
+         :description description
+         :auth-domain (set (map :membersGroupName authorizationDomain))
+         :billing-projects billing-projects}])
      [:span {:id label-id}
       [comps/StatusLabel {:id label-id
                           :text (str status
@@ -156,16 +167,7 @@
            {:style :light :margin :top :color :button-primary
             :text "Clone..." :icon :clone
             :disabled? (when (empty? billing-projects) (comps/no-billing-projects-message))
-            :onClick #(modal/push-modal
-                       [WorkspaceCloner
-                        {:on-success (fn [namespace name]
-                                       (swap! state dissoc :cloning?)
-                                       (nav/go-to-path :workspace-summary
-                                                       (utils/restructure namespace name)))
-                         :workspace-id workspace-id
-                         :description description
-                         :auth-domain (set (map :membersGroupName authorizationDomain))
-                         :billing-projects billing-projects}])}])
+            :onClick #(swap! state assoc :cloning? true)}])
         (when (and owner? (not editing?))
           [comps/SidebarButton {:style :light :margin :top :color :button-primary
                                 :text (if isLocked "Unlock" "Lock")

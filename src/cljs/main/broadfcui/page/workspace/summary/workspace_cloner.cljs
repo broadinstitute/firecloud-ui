@@ -4,7 +4,7 @@
    [broadfcui.common :as common]
    [broadfcui.common.components :as comps]
    [broadfcui.common.input :as input]
-   [broadfcui.common.modal :as modal]
+   [broadfcui.components.modals :as modals]
    [broadfcui.common.style :as style]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.page.workspace.create :as create]
@@ -20,9 +20,10 @@
    :render
    (fn [{:keys [props refs state this]}]
      (let [{:keys [working? selected-project all-groups selected-groups locked-groups error validation-error]} @state]
-       [comps/OKCancelForm
+       [modals/OKCancelForm
         {:header "Clone Workspace to:"
-         :ok-button {:text "Clone" :onClick #(react/call :do-clone this)}
+         :ok-button {:text "Clone" :onClick #(this :do-clone)}
+         :dismiss (:dismiss props)
          :get-first-element-dom-node #(@refs "project")
          :content
          (react/create-element
@@ -94,5 +95,5 @@
            :on-done (fn [{:keys [success? get-parsed-response]}]
                       (swap! state dissoc :working?)
                       (if success?
-                        (do (modal/pop-modal) ((:on-success props) project name))
+                        ((:on-success props) project name)
                         (swap! state assoc :error (get-parsed-response false))))}))))})
