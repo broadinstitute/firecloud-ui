@@ -143,15 +143,21 @@ class CreateBillingProjectModal(implicit webDriver: WebDriver) extends FireCloud
     ui.fillProjectName(projectName)
     ui.selectBillingAccount(billingAccountName)
     ui.clickCreateButton()
+    ui.clickCreateButtonWait()
   }
 
 
   object ui {
+    private val createBillingProjectModal: Query = testId("create-billing-project-modal")
     private val createButton: Query = testId("create-project-button")
     private val projectNameInput = testId("project-name-input")
 
     def clickCreateButton(): Unit = {
       click on createButton
+    }
+
+    def clickCreateButtonWait(): Unit = {
+      await notVisible createBillingProjectModal
     }
 
     def fillProjectName(name: String): Unit = {

@@ -17,6 +17,7 @@
    (fn [{:keys [state this]}]
      [comps/OKCancelForm
       {:header "Create Billing Project"
+       :data-test-id "create-billing-project-modal"
        :content
        (react/create-element
         (let [{:keys [billing-accounts error]} @state]

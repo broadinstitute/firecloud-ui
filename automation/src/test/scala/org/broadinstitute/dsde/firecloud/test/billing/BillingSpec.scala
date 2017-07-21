@@ -31,7 +31,7 @@ class BillingSpec extends FreeSpec with WebBrowserSpec with CleanUp
         register cleanUp Rawls.admin.deleteBillingProject(billingProjectName)(AuthTokens.dumbledore)
 
         val status = billingPage.waitForCreateCompleted(billingProjectName)
-        status shouldEqual "success"
+        withClue(s"Creating billing project: $billingProjectName") { status shouldEqual "success" }
       }
 
       "with a new billing project" - {
