@@ -30,9 +30,8 @@
        :column-data :submissionId
        :as-text (constantly "View analysis details")
        :render #(style/create-link {:text "View"
-                                    :href (nav/get-link :workspace-submission
-                                                        workspace-id
-                                                        %)})}
+                                    :data-test-id (str "submission-" %)
+                                    :href (nav/get-link :workspace-submission workspace-id %)})}
       {:header "Status" :as-text :status :sort-by :text
        :render (fn [submission]
                  [:div {:style {:height table-style/table-icon-size}}
