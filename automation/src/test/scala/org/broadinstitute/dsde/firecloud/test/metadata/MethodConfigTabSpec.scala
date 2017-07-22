@@ -187,19 +187,13 @@ class MethodConfigTabSpec extends FreeSpec with WebBrowserSpec with CleanUp with
   "launch a method from the method repo" in withWebDriver { implicit driver =>
     withWorkspace(billingProject, "TestSpec_FireCloud_launch_method_from_workspace") { workspaceName =>
       api.importMetaData(billingProject, workspaceName, "entities", TestData.SingleParticipant.participantEntity)
-//      WIP
-//      api.methodConfigurations.createMethodConfigInWorkspace(billingProject, workspaceName, 1,
-//        TestData.SimpleMethod.namespace, TestData.SimpleMethod.name, TestData.SimpleMethod.snapshotId,
-//        TestData.SimpleMethod.namespace, methodName, TestData.SimpleMethod.inputs.head._1, TestData.SimpleMethod.inputs.head._2,
-//        TestData.SimpleMethod.inputs.last._1, TestData.SimpleMethod.inputs.last._2, TestData.SimpleMethod.rootEntityType)
+      api.methodConfigurations.createMethodConfigInWorkspace(billingProject, workspaceName, 1,
+        TestData.SimpleMethod.namespace, TestData.SimpleMethod.name, TestData.SimpleMethod.snapshotId,
+        TestData.SimpleMethod.namespace, methodName, TestData.SimpleMethod.inputs.head._1, TestData.SimpleMethod.inputs.head._2,
+        TestData.SimpleMethod.inputs.last._1, TestData.SimpleMethod.inputs.last._2, TestData.SimpleMethod.rootEntityType)
 
       signIn(uiUser)
-//      val methodConfigDetailsPage = new MethodConfigDetailsPage(billingProject, workspaceName, TestData.SimpleMethod.namespace, methodName).open
-      val workspaceMethodConfigPage = new WorkspaceMethodConfigPage(billingProject, workspaceName).open
-      val methodConfigDetailsPage = workspaceMethodConfigPage.importMethodConfigFromRepo(TestData.SimpleMethod.namespace,
-        TestData.SimpleMethod.name, TestData.SimpleMethod.snapshotId, methodName, Some(TestData.SimpleMethod.rootEntityType))
-      methodConfigDetailsPage.editMethodConfig(inputs = Some(TestData.SimpleMethod.inputs))
-//      /WIP
+      val methodConfigDetailsPage = new MethodConfigDetailsPage(billingProject, workspaceName, TestData.SimpleMethod.namespace, methodName).open
       val submissionDetailsPage = methodConfigDetailsPage.launchAnalysis(TestData.SimpleMethod.rootEntityType, TestData.SingleParticipant.entityId)
 
       submissionDetailsPage.waitUntilSubmissionCompletes()

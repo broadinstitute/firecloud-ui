@@ -148,7 +148,7 @@ trait Orchestration extends FireCloudClient with LazyLogging {
                                       destinationNamespace: String, destinationName: String,
                                       inputName: String, inputText: String, outputName: String, outputText: String,
                                       rootEntityType: String)(implicit token: AuthToken) = {
-      postRequest(Config.FireCloud.orchApiUrl + "api/workspaces/" + ns + "/" + wsName + "/" + "method_configs/copyFromMethodRepo",
+      postRequest(Config.FireCloud.orchApiUrl + "api/workspaces/" + ns + "/" + wsName + "/" + "methodconfigs",
         Map("deleted" -> false,
           "inputs" -> Map(inputName -> inputText),
           "methodConfigVersion" -> methodConfigVersion,
