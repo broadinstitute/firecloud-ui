@@ -572,8 +572,11 @@
     :outputs [{:name "CancerExomePipeline_v2.M2.m2_output_vcf"
                :outputType "File"}]}})
 
+(defn- get-agora-base [config?]
+  (if config? "configurations" "methods"))
+
 (defn get-agora-entity-acl [config? {:keys [name namespace snapshotId]}]
-  {:path (str "/" (if config? "configurations" "methods") "/" namespace "/" name "/" snapshotId "/permissions")
+  {:path (str "/" (get-agora-base config?) "/" namespace "/" name "/" snapshotId "/permissions")
    :method :get
    :mock-data
    (let [random-data (map (fn [i] {:user (str "user" i "@broadinstitute.org")
@@ -587,22 +590,21 @@
        random-data))})
 
 (defn persist-agora-entity-acl [config? {:keys [name namespace snapshotId]}]
-  {:path (str "/" (if config? "configurations" "methods") "/" namespace "/" name "/" snapshotId "/permissions")
+  {:path (str "/" (get-agora-base config?) "/" namespace "/" name "/" snapshotId "/permissions")
    :method :post})
 
 
 (defn get-agora-namespace-acl [namespace config?]
-  {:path (str "/" (if config? "configurations" "methods") "/" namespace "/permissions")
+  {:path (str "/" (get-agora-base config?) "/" namespace "/permissions")
    :method :get})
 
 (defn post-agora-namespace-acl [namespace config?]
-  {:path (str "/" (if config? "configurations" "methods") "/" namespace "/permissions")
+  {:path (str "/" (get-agora-base config?) "/" namespace "/permissions")
    :method :post})
 
 
 (defn delete-agora-entity [config? {:keys [namespace name snapshotId]}]
-  {:path (let [base (if config? "configurations" "methods")]
-           (str "/" base "/" namespace "/" name "/" snapshotId))
+  {:path (str "/" (get-agora-base config?) "/" namespace "/" name "/" snapshotId)
    :method :delete})
 
 
