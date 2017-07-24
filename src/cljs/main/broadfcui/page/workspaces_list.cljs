@@ -68,8 +68,7 @@
                [:thead {}
                 [:tr {}
                  (simple-th "Authorization Domain")
-                 (simple-th "Access")
-                 (simple-th nil)]]
+                 (simple-th "Access")]]
                [:tbody {}
                 (map-indexed (fn [i auth-domain]
                                (let [{:keys [member? requested? requesting?]} (:data auth-domain)
@@ -77,15 +76,15 @@
                                      instruction ((keyword name) instructions)]
                                  [:tr {}
                                   (simple-td name)
-                                  (simple-td (if member? "Yes" "No"))
-                                  [:td {:style {:width "34%"}}
-                                   (when-not member?
+                                  [:td {:style {:width "50%"}}
+                                   (if member?
+                                     "Yes"
                                      (if instruction
-                                       [:div {:style {:fontSize "85%"}}
+                                       [:div {}
                                         "Learn how to apply for this Group "
                                         [:a {:href instruction :target "_blank"} "here" icons/external-link-icon] "."]
 
-                                       [:div {:style {:textAlign "center"}}
+                                       [:div {}
                                         [comps/Button {:style {:width "125px"}
                                                        :disabled? (or requested? requesting?)
                                                        :text (if requested? "Request Sent" "Request Access")
