@@ -21,11 +21,13 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
     * Dictionary of access level labels displayed in the web UI.
     */
   object AccessLevel extends Enumeration {
+    type AccessLevel = Value
     val NoAccess = Value("NO ACCESS")
     val Owner = Value("OWNER")
     val Reader = Value("READER")
     val Writer = Value("WRITER")
   }
+  import AccessLevel._
 
   /**
     * Clones the workspace currently being viewed. Returns when the clone
@@ -75,7 +77,7 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
     new WorkspaceListPage
   }
 
-  def share(emailField: String, accessLevel: AccessLevel.Value) = {
+  def share(emailField: String, accessLevel: AccessLevel) = {
     ui.clickShareWorkspaceButton()
     // TODO: finish this
   }

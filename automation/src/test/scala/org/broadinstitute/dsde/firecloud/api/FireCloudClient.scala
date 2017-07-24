@@ -18,7 +18,7 @@ import scala.concurrent.{Await, ExecutionContext, ExecutionContextExecutor, Futu
 class FireCloudClient {
   implicit val system = ActorSystem()
   implicit val materializer = ActorMaterializer()
-  implicit val ec: ExecutionContextExecutor = ExecutionContext.global
+  implicit val ec: ExecutionContextExecutor = system.dispatcher
 
   val mapper = new ObjectMapper()
   mapper.registerModule(DefaultScalaModule)
