@@ -37,8 +37,7 @@
    (fn [{:keys [state]}]
      (utils/ajax-orch
       "/groups"
-      {:on-done (net/handle-ajax-response #(swap! state assoc
-                                                  :groups-response %))}))
+      {:on-done (net/handle-ajax-response #(swap! state assoc :groups-response %))}))
    :-render-groups-table
    (fn [{:keys [this state]}]
      [Table
@@ -93,10 +92,9 @@
      (endpoints/call-ajax-orch
       {:endpoint (endpoints/delete-group (:group-name @state))
        :on-done (net/handle-ajax-response
-                 #(do
-                    (swap! state assoc :delete-response %)
-                    (this :-load-data))
-                )}))
+                 (fn [response]
+                    (swap! state assoc :delete-response response)
+                    (this :-load-data)))}))
    :-render-confirmation
    (fn [{:keys [state this]}]
      (modals/render-message
@@ -107,7 +105,7 @@
    (fn [{:keys [state this]}]
      (net/render-with-ajax
       (:delete-response @state)
-      #(constantly nil)
+      (constantly nil)
       {:blocking? true
        :loading-text "Deleting group..."
        :handle-error
@@ -116,8 +114,7 @@
           {:text (if (= 409 (:statusCode parsed-response))
                    "This group cannot be deleted because it is in use."
                    (:message parsed-response))
-           :on-dismiss #(swap! state dissoc :deleting? :delete-response)}))}))
-   })
+           :on-dismiss #(swap! state dissoc :deleting? :delete-response)}))}))})
 
 (react/defc Page
   {:render
