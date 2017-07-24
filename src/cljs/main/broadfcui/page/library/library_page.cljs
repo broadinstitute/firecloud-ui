@@ -5,6 +5,7 @@
    [clojure.string :as string]
    [broadfcui.common :as common]
    [broadfcui.common.components :as comps]
+   [broadfcui.common.filter :as filter]
    [broadfcui.common.flex-utils :as flex]
    [broadfcui.common.icons :as icons]
    [broadfcui.common.style :as style]
@@ -329,6 +330,15 @@
                         :on-filter (fn [text]
                                      (swap! state assoc :search-text text)
                                      (after-update #((@refs "dataset-table") :execute-search true)))}]
+        (filter/section
+         {:title "Tags"
+          :content (react/create-element
+                    [comps/TagAutocomplete {:ref "tag-autocomplete"
+                                            :tags ((:facet-filters @state) "Tags")
+                                            :data (:tags @state)
+                                            :show-counts? false :allow-new? false
+                                            :on-change #(swap! state update :filters assoc "Tags" %)}])
+          :on-clear #((@refs "tag-autocomplete") :set-tags [])})
         [FacetSection (merge
                        {:ref "facets"
                         :aggregates (:aggregates @state)
