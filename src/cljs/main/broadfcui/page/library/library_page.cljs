@@ -22,16 +22,14 @@
    [:p {} "For access to TCGA protected data please apply for access via dbGaP [instructions can be found "
     [:a {:href "https://wiki.nci.nih.gov/display/TCGA/Application+Process"
          :target "_blank"}
-     "here" icons/external-link-icon] "]."]
-   [:p {} "After dbGaP approves your application please link your eRA Commons ID in your FireCloud profile page."]])
+     "here" icons/external-link-icon] "]."]])
 
 (defn- target-access-instructions []
   [:span {}
    [:p {} "For access to TARGET protected data please apply for access via dbGaP [instructions can be found "
     [:a {:href "https://ocg.cancer.gov/programs/target/using-target-data"
          :target "_blank"}
-     "here" icons/external-link-icon] "]."]
-   [:p {} "After dbGaP approves your application please link your eRA Commons ID in your FireCloud profile page."]])
+     "here" icons/external-link-icon] "]."]])
 
 (defn- standard-access-instructions [data]
   [:span {}
@@ -134,10 +132,14 @@
                (if (not-empty (clojure.set/difference ws-auth-domains built-in-groups))
                  (standard-access-instructions data)
                  [:span {}
-                  (when (contains? ws-auth-domains "TCGA-dbGaP-Authorized")
-                    (tcga-access-instructions))
-                  (when (contains? ws-auth-domains "TARGET-dbGaP-Authorized")
-                    (target-access-instructions))])]}))}
+                  (let [tcga? (contains? ws-auth-domains "TCGA-dbGaP-Authorized")
+                        target? (contains? ws-auth-domains "TARGET-dbGaP-Authorized")]
+                    [:div {}
+                     (when tcga? (tcga-access-instructions))
+                     (when target? (target-access-instructions))
+                     (when (or tcga? target?)
+                       [:p {} "After dbGaP approves your application please link your eRA
+                       Commons ID in your FireCloud profile page."])])])]}))}
          {:href (nav/get-link :workspace-summary (common/row->workspace-id data))})))
    :build-aggregate-fields
    (fn [{:keys [props]}]
