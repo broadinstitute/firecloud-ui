@@ -48,11 +48,8 @@ trait WebBrowserUtil extends WebBrowser {
       * @param webDriver implicit WebDriver for the WebDriverWait
       */
     def condition(condition: => Boolean, timeOutInSeconds: Long = defaultTimeOutInSeconds)(implicit webDriver: WebDriver): Unit = {
-      val wait = new WebDriverWait(webDriver, timeOutInSeconds)
-      wait until new ExpectedCondition[Boolean] {
-        override def apply(d: WebDriver): Boolean = {
-          condition
-        }
+      withWaitForCondition(timeOutInSeconds) {
+        condition
       }
     }
 
@@ -69,14 +66,14 @@ trait WebBrowserUtil extends WebBrowser {
       */
     def enabled(query: Query, timeOutInSeconds: Long = defaultTimeOutInSeconds)
                (implicit webDriver: WebDriver): Element = {
-      withWait(timeOutInSeconds) {
+      withWaitForElement(timeOutInSeconds) {
         find(query).filter(_.isEnabled).orNull
       }
     }
 
     def notVisible(query: Query, timeOutInSeconds: Long = defaultTimeOutInSeconds)
                   (implicit webDriver: WebDriver): Unit = {
-      withWait(timeOutInSeconds) {
+      withWaitForCondition(timeOutInSeconds) {
         !findAll(query).exists(_.isDisplayed)
       }
     }
@@ -89,12 +86,7 @@ trait WebBrowserUtil extends WebBrowser {
       * @param webDriver implicit WebDriver for the WebDriverWait
       */
     def thenClick(query: Query, timeOutInSeconds: Long = defaultTimeOutInSeconds)(implicit webDriver: WebDriver): Unit = {
-      val wait = new WebDriverWait(webDriver, timeOutInSeconds)
-      val element: Element = wait until new ExpectedCondition[Element] {
-        override def apply(d: WebDriver): Element = {
-          find(query).filter(_.isEnabled).orNull
-        }
-      }
+      val element = await enabled query
       click on element
     }
 
@@ -112,16 +104,33 @@ trait WebBrowserUtil extends WebBrowser {
 
     def visible(query: Query, timeOutInSeconds: Long = defaultTimeOutInSeconds)
                (implicit webDriver: WebDriver): Unit = {
-      withWait(timeOutInSeconds) {
+      withWaitForCondition(timeOutInSeconds) {
         find(query).exists(_.isDisplayed)
       }
     }
 
-    private def withWait[A](timeOutInSeconds: Long)(f: => A)(implicit webDriver: WebDriver): A = {
+    private def withWaitForCondition(timeOutInSeconds: Long)(f: => Boolean)(implicit webDriver: WebDriver): Boolean = {
       val wait = new WebDriverWait(webDriver, timeOutInSeconds)
-      wait until new ExpectedCondition[A] {
-        override def apply(d: WebDriver): A = {
-          f
+      wait until new ExpectedCondition[Boolean] {
+        override def apply(d: WebDriver): Boolean = {
+          try {
+            f
+          } catch {
+            case _: StaleElementReferenceException => false
+          }
+        }
+      }
+    }
+
+    private def withWaitForElement(timeOutInSeconds: Long)(f: => Element)(implicit webDriver: WebDriver): Element = {
+      val wait = new WebDriverWait(webDriver, timeOutInSeconds)
+      wait until new ExpectedCondition[Element] {
+        override def apply(d: WebDriver): Element = {
+          try {
+            f
+          } catch {
+            case _: StaleElementReferenceException => null
+          }
         }
       }
     }
