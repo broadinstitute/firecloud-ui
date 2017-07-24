@@ -25,11 +25,11 @@
          [:div {:style {:float "left" :width "90%"}}
           (style/create-identity-select-name
            {:value opt
-            :disabled (utils/vec-contains? locked-groups opt)
+            :disabled (utils/seq-contains? locked-groups opt)
             :onChange #(update-state :selected-groups assoc i (-> % .-target .-value))}
            (set/difference all-groups (set (utils/delete selected-groups i))))]
          [:div {:style {:float "right"}}
-          (if (utils/vec-contains? locked-groups opt)
+          (if (utils/seq-contains? locked-groups opt)
             (icons/icon {:style {:color (:text-lightest style/colors)
                                  :verticalAlign "middle" :fontSize 22
                                  :padding "0.25rem 0.5rem"}}

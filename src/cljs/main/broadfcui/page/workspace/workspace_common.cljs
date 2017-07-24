@@ -36,7 +36,7 @@
             {:header "Authorization Domain" :starting-width 200
              :column-data (comp :authorizationDomain :workspace)
              :as-text #(if (empty? %) "None" (interpose ", " (map :membersGroupName %)))
-             :sort-by #(count %)}]}
+             :sort-by count}]}
     :toolbar {:items toolbar-items}}])
 
 
