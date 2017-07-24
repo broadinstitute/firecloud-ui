@@ -67,7 +67,7 @@
                                :margin "1em 0 1em 0"}}
                [:thead {}
                 [:tr {}
-                 (simple-th "Authorization Domain")
+                 (simple-th "Group Name")
                  (simple-th "Access")]]
                [:tbody {}
                 (map-indexed (fn [i auth-domain]
