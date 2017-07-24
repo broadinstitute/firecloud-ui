@@ -95,10 +95,11 @@
           " and request access to method "
           [:b {} method-display]
           "."]
-         [:p {}
-          "Users will need to contact an owner of Method "
-          [:b {} method-display]
-          " and request access. Method owners:"
+         [:div {}
+          [:p {}
+           "Users will need to contact an owner of Method "
+           [:b {} method-display]
+           " and request access. Method owners:"]
           [:ul {}
            (map (fn [owner] [:li {} owner]) owners)]])])}])
 
@@ -130,21 +131,21 @@
                       (comps/push-error status-text)))})))
    :-perform-sync-logic
    (fn [{:keys [state]} parsed-perms-report]
-     (let [workspace-users (->> parsed-perms-report :workspaceACL keys (map name) set)
-           method-report (first (:referencedMethods parsed-perms-report)) ;; THERE CAN BE ONLY ONE
-           me (utils/get-user-email)
-           method-owner? (-> (get-in method-report [:method :managers]) set (contains? me))
-           can-share? (get-in parsed-perms-report [:workspaceACL (keyword me) :canShare])
-           method-users (when method-owner? (->> method-report :acls (map :user) set))
-           unauthed-users (set/difference workspace-users method-users)]
-       (cond (and method-owner? can-share? (seq unauthed-users))
-             (swap! state assoc
-                    :show-sync-modal? true
-                    :method (:method method-report)
-                    :users unauthed-users)
+     (let [method-report (first (:referencedMethods parsed-perms-report))]
+       (when-not (get-in method-report [:method :public])
+         (let [workspace-users (->> parsed-perms-report :workspaceACL keys (map name) set)
+               me (utils/get-user-email)
+               method-owner? (-> (get-in method-report [:method :managers]) set (contains? me))
+               can-share? (get-in parsed-perms-report [:workspaceACL (keyword me) :canShare])
+               method-users (when method-owner? (->> method-report :acls (map :user) set))
+               unauthed-users (set/difference workspace-users method-users)]
+           (cond (and method-owner? can-share? (seq unauthed-users))
+                 (swap! state assoc
+                        :show-sync-modal? true
+                        :method (:method method-report)
+                        :users unauthed-users)
 
-             (and (not (get-in method-report [:method :public]))
-                  (not (or method-owner? can-share?)))
-             (swap! state assoc
-                    :show-alert-modal? true
-                    :method (:method method-report)))))})
+                 (not (and method-owner? can-share?))
+                 (swap! state assoc
+                        :show-alert-modal? true
+                        :method (:method method-report)))))))})
