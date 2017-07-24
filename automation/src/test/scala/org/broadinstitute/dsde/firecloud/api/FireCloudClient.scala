@@ -15,7 +15,7 @@ import org.broadinstitute.dsde.firecloud.config.AuthToken
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, ExecutionContextExecutor, Future}
 
-class FireCloudClient {
+trait FireCloudClient {
   implicit val system = ActorSystem()
   implicit val materializer = ActorMaterializer()
   implicit val ec: ExecutionContextExecutor = system.dispatcher
@@ -23,10 +23,8 @@ class FireCloudClient {
   val mapper = new ObjectMapper()
   mapper.registerModule(DefaultScalaModule)
 
-  // TODO: Is this okay here or should it be in a separate object and explicitly imported?
-  implicit class JsonStringUtil(s: String) {
+  implicit protected class JsonStringUtil(s: String) {
     def fromJsonMapAs[A](key: String): Option[A] = parseJsonAsMap.get(key)
-
     def parseJsonAsMap[A]: Map[String, A] = mapper.readValue(s, classOf[Map[String, A]])
   }
 
@@ -47,7 +45,7 @@ class FireCloudClient {
       case _ =>
         val byteStringSink: Sink[ByteString, Future[ByteString]] = Sink.fold(ByteString("")) { (z, i) => z.concat(i) }
         val entityFuture = response.entity.dataBytes.runWith(byteStringSink)
-        throw new APIException(Await.result(entityFuture, 100.millis).decodeString("UTF-8"))
+        throw APIException(Await.result(entityFuture, 100.millis).decodeString("UTF-8"))
     }
   }
 
@@ -60,7 +58,7 @@ class FireCloudClient {
       case _ =>
         val byteStringSink: Sink[ByteString, Future[ByteString]] = Sink.fold(ByteString("")) { (z, i) => z.concat(i) }
         val entityFuture = response.entity.dataBytes.runWith(byteStringSink)
-        throw new APIException(Await.result(entityFuture, 100.millis).decodeString("UTF-8"))
+        throw APIException(Await.result(entityFuture, 100.millis).decodeString("UTF-8"))
     }
   }
 
