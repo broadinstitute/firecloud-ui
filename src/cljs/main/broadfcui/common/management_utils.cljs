@@ -98,17 +98,19 @@
                            [:div {:style {:padding "0.6rem 0 0.6rem 32px"}}
                             (style/create-link {:text "Remove"
                                                 :onClick #(this :-remove-user role email)})])}]}
-                :toolbar {:items [flex/spring
-                                  [comps/Button
-                                   {:text "Add User..." :icon :add-new
-                                    :onClick (fn [_]
-                                               (modal/push-modal
-                                                [AddUserDialog {:endpoint (:add-endpoint props)
-                                                                :group-name (:group-name props)
-                                                                :user (:user-term props)
-                                                                :admin (:admin-term props)
-                                                                :on-add #(this :-load-data)
-                                                                :footer (:add-member-footer props)}]))}]]}}]
+                :toolbar {:items
+                          (constantly
+                           [flex/spring
+                            [comps/Button
+                             {:text "Add User..." :icon :add-new
+                              :onClick (fn [_]
+                                         (modal/push-modal
+                                          [AddUserDialog {:endpoint (:add-endpoint props)
+                                                          :group-name (:group-name props)
+                                                          :user (:user-term props)
+                                                          :admin (:admin-term props)
+                                                          :on-add #(this :-load-data)
+                                                          :footer (:add-member-footer props)}]))}]])}}]
               [comps/ErrorViewer {:error (:remove-error @state)}]])))
    :component-did-mount
    (fn [{:keys [this]}]

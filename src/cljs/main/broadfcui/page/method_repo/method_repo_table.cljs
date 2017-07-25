@@ -59,17 +59,19 @@
                          "N/A"))}]
            :style table-style/table-heavy}
           :toolbar
-          {:items (cons [comps/FilterGroupBar
-                         {:data (concat (:methods @state) (:configs @state))
-                          :selected-index (:filter-group-index @state)
-                          :on-change (fn [index data]
-                                       (swap! state assoc
-                                              :filter-group-index index
-                                              :filtered-data data))
-                          :filter-groups [{:text "All"}
-                                          {:text "Methods Only" :pred (comp (partial = :method) :type)}
-                                          {:text "Configs Only" :pred (comp (partial = :config) :type)}]}]
-                        (:toolbar-items props))}}]))
+          {:items
+           (constantly
+            (cons [comps/FilterGroupBar
+                   {:data (concat (:methods @state) (:configs @state))
+                    :selected-index (:filter-group-index @state)
+                    :on-change (fn [index data]
+                                 (swap! state assoc
+                                        :filter-group-index index
+                                        :filtered-data data))
+                    :filter-groups [{:text "All"}
+                                    {:text "Methods Only" :pred (comp (partial = :method) :type)}
+                                    {:text "Configs Only" :pred (comp (partial = :config) :type)}]}]
+                  (:toolbar-items props)))}}]))
     :component-did-mount
     (fn [{:keys [this]}]
       (this :load-data))

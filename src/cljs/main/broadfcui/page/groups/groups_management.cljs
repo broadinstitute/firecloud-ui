@@ -56,9 +56,11 @@
                                         :href (nav/get-link :group groupName)})
                     groupName))}
                {:header "Role" :initial-width 100
+                :sort-by :text
                 :as-text :role}
                {:header "Email for Sharing Workspaces" :initial-width :auto
                 :resizable? false
+                :sort-by :text
                 :as-text :groupEmail
                 :render
                 (fn [{:keys [groupEmail]}]
@@ -78,14 +80,15 @@
                       :onClick #(swap! state assoc :group-name groupName :delete-modal? true)})))}]}
        :toolbar
        {:items
-        [flex/spring
-         [comps/Button
-          {:text "Create New Group..."
-           :onClick
-           (fn []
-             (modal/push-modal
-              [CreateGroupDialog
-               {:on-success #(this :-load-data)}]))}]]}}])
+        (constantly
+         [flex/spring
+          [comps/Button
+           {:text "Create New Group..."
+            :onClick
+            (fn []
+              (modal/push-modal
+               [CreateGroupDialog
+                {:on-success #(this :-load-data)}]))}]])}}])
    :-delete-group
    (fn [{:keys [state]}]
      (swap! state assoc :deleting? true :delete-modal? nil)

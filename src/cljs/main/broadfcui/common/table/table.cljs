@@ -2,6 +2,7 @@
   (:require
    [dmohs.react :as react]
    [clojure.set :as set]
+   [clojure.string :as string]
    [broadfcui.common.components :as comps]
    [broadfcui.common.style :as style]
    [broadfcui.common.table.body :as body]
@@ -11,7 +12,6 @@
    [broadfcui.persistence :as persistence]
    [broadfcui.utils :as utils]
    ))
-
 
 ;; Documentation:
 ;; https://broadinstitute.atlassian.net/wiki/display/GAWB/The+Table+UI+component
@@ -81,11 +81,13 @@
      (let [props (utils/deep-merge default-props props)
            {:keys [rows column-display filtered-count query-params]} @state
            {:keys [body toolbar paginator]} props
-           {:keys [empty-message columns behavior external-query-params]} body
+           {:keys [empty-message columns behavior external-query-params on-column-change]} body
            {:keys [fixed-column-count allow-no-sort?]} behavior
            total-count (some :total-count [props @state])
            query-params (merge query-params (select-keys props external-query-params))
-           update-column-display #(swap! state assoc :column-display %)]
+           update-column-display (fn [columns]
+                                   (when on-column-change (on-column-change columns))
+                                   (swap! state assoc :column-display columns))]
        [:div {:style {:position "relative"}}
         [comps/DelayedBlocker {:ref "blocker" :banner "Loading..."}]
         [:div {:style (:style toolbar)}
@@ -103,7 +105,7 @@
                                  {:initial-text (:filter-text query-params)
                                   :on-filter #(swap! state update :query-params assoc :filter-text % :page-number 1)}
                                  (:inner filter-bar-props))]]))
-         (list* (:items toolbar))]
+         (list* ((:items toolbar) {:columns column-display}))]
         [:div {:style {:overflowX "auto"}}
          (if (empty? rows)
            (style/create-message-well empty-message)
