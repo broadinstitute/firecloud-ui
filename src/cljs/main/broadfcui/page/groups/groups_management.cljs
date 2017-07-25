@@ -73,9 +73,11 @@
                                         :href (nav/get-link :group groupName)})
                     groupName))}
                {:header "Role" :initial-width 100
+                :sort-by :text
                 :as-text :role}
                {:header "Email for Sharing Workspaces" :initial-width :auto
                 :resizable? false
+                :sort-by :text
                 :as-text :groupEmail
                 :render
                 (fn [{:keys [groupEmail]}]
