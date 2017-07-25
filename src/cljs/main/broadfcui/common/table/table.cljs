@@ -2,7 +2,6 @@
   (:require
    [dmohs.react :as react]
    [clojure.set :as set]
-   [clojure.string :as string]
    [broadfcui.common.components :as comps]
    [broadfcui.common.style :as style]
    [broadfcui.common.table.body :as body]
@@ -105,7 +104,8 @@
                                  {:initial-text (:filter-text query-params)
                                   :on-filter #(swap! state update :query-params assoc :filter-text % :page-number 1)}
                                  (:inner filter-bar-props))]]))
-         (list* ((:items toolbar) {:columns column-display}))]
+         (when-let [items (:items toolbar)]
+           (list* (items {:columns column-display})))]
         [:div {:style {:overflowX "auto"}}
          (if (empty? rows)
            (style/create-message-well empty-message)
