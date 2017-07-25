@@ -12,7 +12,7 @@
   (select-keys (:workspace workspace) [:namespace :name]))
 
 
-(defn workspace-selector [{:keys [workspaces on-workspace-selected toolbar-items]}]
+(defn workspace-selector [{:keys [workspaces on-workspace-selected get-toolbar-items]}]
   (assert workspaces "No workspaces given")
   (assert on-workspace-selected "on-workspace-selected not provided")
   [Table
@@ -36,14 +36,14 @@
             {:header "Authorization Domain" :starting-width 150
              :column-data (comp :membersGroupName :authorizationDomain :workspace)
              :render #(or % "None")}]}
-    :toolbar {:items (constantly toolbar-items)}}])
+    :toolbar {:get-items (constantly get-toolbar-items)}}])
 
 
 (defn config->id [config]
   (select-keys config [:namespace :name]))
 
 
-(defn method-config-selector [{:keys [configs render-name toolbar-items]}]
+(defn method-config-selector [{:keys [configs render-name get-toolbar-items]}]
   (assert configs "No configs given")
   (assert render-name "No name renderer given")
   [Table
@@ -59,4 +59,4 @@
                       :column-data (comp (juxt :methodNamespace :methodName :methodVersion) :methodRepoMethod)
                       :as-text (partial clojure.string/join "/")
                       :render (partial apply style/render-entity)}]}
-    :toolbar {:items (constantly toolbar-items)}}])
+    :toolbar {:get-items (constantly get-toolbar-items)}}])
