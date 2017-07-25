@@ -24,7 +24,7 @@
   {:render
    (fn [{:keys [props]}]
      [:div {}
-      (style/render-logo)
+      (style/render-text-logo)
       [:div {:style {:display "inline-block" :paddingLeft "1em" :fontSize 18 :height 38
                      :verticalAlign "baseline"}}
        (map (fn [item]

@@ -174,5 +174,11 @@
                    :borderRadius "3px"}}
     count]])
 
-(defn render-logo []
+(defn render-broad-logo []
   [:img {:src "assets/broad_logo.png" :style {:height 38}}])
+
+(defn render-text-logo []
+  [:div {:style {:display "inline-block"}}
+   [:a {:href "/#" :style {:fontSize 32 :color (:button-primary colors)
+                           :fontWeight "bold" :textDecoration "none" :height 38}}
+    "FireCloud"]])

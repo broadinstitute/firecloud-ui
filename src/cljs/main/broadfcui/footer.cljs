@@ -45,6 +45,7 @@
                    :color (:text-lightest style/colors) :fontSize "90%"}}
      (when (config/debug?)
        [:div {:style {:float "right"}} [PopUpFooterControl]])
+     [:div {} (style/render-broad-logo)]
      [:div {:style {:display "block"}}
       (str "\u00A9 " yeartext " Broad Institute")
       spacer
