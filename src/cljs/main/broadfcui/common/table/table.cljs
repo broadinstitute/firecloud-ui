@@ -1,17 +1,17 @@
 (ns broadfcui.common.table.table
   (:require
-    [dmohs.react :as react]
-    [clojure.set :as set]
-    [clojure.string :as string]
-    [broadfcui.common.components :as comps]
-    [broadfcui.common.style :as style]
-    [broadfcui.common.table.body :as body]
-    [broadfcui.common.table.column-editor :refer [ColumnEditButton]]
-    [broadfcui.common.table.paginator :refer [Paginator]]
-    [broadfcui.common.table.utils :as table-utils]
-    [broadfcui.persistence :as persistence]
-    [broadfcui.utils :as utils]
-    ))
+   [dmohs.react :as react]
+   [clojure.set :as set]
+   [clojure.string :as string]
+   [broadfcui.common.components :as comps]
+   [broadfcui.common.style :as style]
+   [broadfcui.common.table.body :as body]
+   [broadfcui.common.table.column-editor :refer [ColumnEditButton]]
+   [broadfcui.common.table.paginator :refer [Paginator]]
+   [broadfcui.common.table.utils :as table-utils]
+   [broadfcui.persistence :as persistence]
+   [broadfcui.utils :as utils]
+   ))
 
 ;; Documentation:
 ;; https://broadinstitute.atlassian.net/wiki/display/GAWB/The+Table+UI+component
@@ -70,9 +70,6 @@
                                        :filtered-count filtered-count
                                        :rows results
                                        :query-params query-params))})))
-   :get-ordered-columns
-   (fn [{:keys [state]}]
-     (:column-display @state))
    :get-default-props
    (fn []
      {:load-on-mount true})
