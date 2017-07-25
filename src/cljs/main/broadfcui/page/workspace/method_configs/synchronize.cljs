@@ -42,7 +42,7 @@
          (if (:customize? @state)
            (this :-render-permission-detail)
            (style/create-link {:text "Customize Permissions"
-                               :onClick #(swap! state assoc :customize? true)}))
+                               :onClick #(this :-setup-permission-detail)}))
          [comps/ErrorViewer {:error (:grant-error @state)}]])
        :ok-button [comps/Button {:text (if (:customize? @state)
                                          "Grant Permission"
@@ -64,13 +64,21 @@
                     :onChange #(swap! locals assoc user (.. % -target -value))}
                    ["Reader" "Owner" "No access"])]]])
              (:users props))]]])
+   :-setup-permission-detail
+   (fn [{:keys [props state locals]}]
+     (reset! locals (->> (:users props)
+                         (map (fn [user] {user "Reader"}))
+                         (into {})))
+     (swap! state assoc :customize? true))
    :-grant-permission
    (fn [{:keys [props state locals]}]
      (swap! state dissoc :grant-error)
      (endpoints/call-ajax-orch
       {:endpoint (endpoints/persist-agora-entity-acl false (:method props))
        :payload (if (:customize? @state)
-                  (mapv (fn [[user level]] {:user user :role (string/upper-case level)}) @locals)
+                  (->> @locals
+                       (remove (fn [[_ role]] (= role "No access")))
+                       (mapv (fn [[user role]] {:user user :role (string/upper-case role)})))
                   (mapv (fn [user] {:user user :role "READER"}) (:users props)))
        :headers utils/content-type=json
        :on-done (fn [{:keys [success? get-parsed-response]}]
