@@ -107,11 +107,24 @@ baseUrl = "http://local.broadinstitute.org"
 #### Running tests
 
 To run all tests:
-```
+```bash
 sbt test -Djsse.enableSNIExtension=false -Dheadless=false
 sbt clean
 ```
 
-TODO - running specific tests/suites
+To run a single suite:
+```bash
+sbt -Djsse.enableSNIExtension=false -Dheadless=false "testOnly *GoogleSpec"
+sbt clean
+```
+
+To run a single test within a suite:
+```bash
+# matches test via substring
+sbt -Djsse.enableSNIExtension=false -Dheadless=false "testOnly *GoogleSpec -- -z \"have a search field\""
+sbt clean
+```
+
+For more information see: http://www.scala-sbt.org/0.13/docs/Testing.html#Test+Framework+Arguments
 
 
