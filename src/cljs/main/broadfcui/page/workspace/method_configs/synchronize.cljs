@@ -50,18 +50,20 @@
                                  :onClick #(this :-grant-permission)}]}])
    :-render-permission-detail
    (fn [{:keys [props locals]}]
-     [:table {}
-      [:tbody {}
-       (map (fn [user]
-              [:tr {}
-               [:td {:style {:verticalAlign "baseline"}} user]
-               [:td {:style {:verticalAlign "baseline"}}
-                [:div {:style {:marginLeft "1rem"}}
-                 (style/create-identity-select
-                  {:style {:width 120}
-                   :onChange #(swap! locals assoc user (.. % -target -value))}
-                  ["No access" "Reader" "Owner"])]]])
-            (:users props))]])
+     [:div {}
+      [:p {} "Users currently without access:"]
+      [:table {}
+       [:tbody {}
+        (map (fn [user]
+               [:tr {}
+                [:td {:style {:verticalAlign "baseline"}} user]
+                [:td {:style {:verticalAlign "baseline"}}
+                 [:div {:style {:marginLeft "1rem"}}
+                  (style/create-identity-select
+                   {:style {:width 120}
+                    :onChange #(swap! locals assoc user (.. % -target -value))}
+                   ["Reader" "Owner" "No access"])]]])
+             (:users props))]]])
    :-grant-permission
    (fn [{:keys [props state locals]}]
      (swap! state dissoc :grant-error)
@@ -97,7 +99,7 @@
           "."]
          [:div {}
           [:p {}
-           "Users will need to contact an owner of Method "
+           "Users will need to contact any owner of Method "
            [:b {} method-display]
            " and request access. Method owners:"]
           [:ul {}
