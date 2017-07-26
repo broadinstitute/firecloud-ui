@@ -61,34 +61,41 @@
    (fn [{:keys [locals]}]
      (swap! locals assoc :label-id (gensym "status") :body-id (gensym "summary")))
    :render
-   (fn [{:keys [state props this]}]
+   (fn [{:keys [state props this refs]}]
      (let [{:keys [server-response]} @state
            {:keys [workspace]} props
            {:keys [submissions-count billing-projects library-schema curator? server-error]} server-response]
-       (cond
+       [:div {}
+        [ws-sync/SyncContainer {:ref "sync-container"
+                                :workspace-id (:workspace-id props)}](cond
          server-error
          (style/create-server-error-message server-error)
          (some nil? [workspace submissions-count billing-projects library-schema curator?])
          [:div {:style {:textAlign "center" :padding "1em"}}
           [comps/Spinner {:text "Loading workspace..."}]]
          :else
-         (let [owner? (or (= "PROJECT_OWNER" (:accessLevel workspace)) (= "OWNER" (:accessLevel workspace)))writer? (or owner? (= "WRITER" (:accessLevel workspace)))
-               auth-domain (get-in workspace [:workspace :authorizationDomain])
-               derived (merge {:request-refresh #(this :-refresh)
+         (let [owner? (or (= "PROJECT_OWNER" (:accessLevel workspace)) (= "OWNER" (:accessLevel workspace)))
+               writer? (or owner? (= "WRITER" (:accessLevel workspace)))
+               auth-domain (get-in workspace [:workspace :authorizationDomain])derived (merge {:request-refresh #(this :-refresh)
                                :reader? (reader? (:workspace props))
-                               :can-share?(:canShare workspace)
-                               :user-access-level (:accessLevelworkspace)
+                               :can-share? (:canShare workspace)
+                               :user-access-level (:accessLevel workspace)
                                :catalog-with-read? (and (or writer? (reader? workspace)) (:catalog workspace))}
-                              (utils/restructure owner? writer? auth-domain))]
+                              (utils/restructure owner? writer?auth-domain))]
            [:div {:style {:margin "2.5rem 1.5rem" :display "flex"}}
-            [ws-sync/SyncContainer {:ref "sync-container"
-                                    :workspace-id (:workspace-id props)}]
+            (when (:sharing? @state)
+               [AclEditor
+                                    {:workspace-id (:workspace-id props):user-access-level (:accessLevel workspace)
+                 :request-refresh #(this :-refresh)
+                 :dismiss #(swap! state dissoc :sharing?)
+                 :on-users-added (fn [new-users]
+                                   ((@refs "sync-container") :check-synchronization new-users))}])
             (this :-render-sidebar derived)
             (this :-render-main derived)
             (when (:updating-attrs? @state)
               [comps/Blocker {:banner "Updating Attributes..."}])
             (when (contains? @state :locking?)
-              [comps/Blocker {:banner (if (:locking? @state) "Locking..." "Unlocking...")}])]))))
+              [comps/Blocker {:banner (if (:locking? @state) "Locking..." "Unlocking...")}])]))]))
    :component-did-mount
    (fn [{:keys [this]}]
      (this :-refresh))
@@ -96,115 +103,108 @@
    (fn [{:keys [props state locals refs this]}
         {:keys [catalog-with-read? owner? writer? request-refresh can-share? user-access-level ]}]
      (let [{:keys [workspace workspace-id]} props
-           {:keys [label-id body-id]}@locals
-  {:keys [editing?]
-            {:keys [library-schema billing-projects curator?]} :server-response} @state{{:keys [isLocked library-attributes description authorizationDomain]} :workspace
-         {:keys [runningSubmissionsCount]} :workspaceSubmissionStats} workspace
-        status (common/compute-status workspace)
-        publishable? (and curator? (or catalog-with-read? owner?))
-        ]
-    [:div {:style {:flex "0 0 270px" :paddingRight 30}}
+           {:keys [label-id body-id]} @locals
+           {:keys [editing?]
+            {:keys [library-schema billing-projects curator?]} :server-response} @state
+           {{:keys [isLocked library-attributes description authorizationDomain]} :workspace
+            {:keys [runningSubmissionsCount]} :workspaceSubmissionStats} workspace
+           status (common/compute-status workspace)
+           publishable? (and curator? (or catalog-with-read? owner?))
+       ][:div {:style {:flex "0 0 270px" :paddingRight 30}}
      (when (:cloning? @state)
        [create/CreateDialog
         {:dismiss #(swap! state dissoc :cloning?)
          :workspace-id workspace-id
          :description description
          :auth-domain (set (map :membersGroupName authorizationDomain))
-         :billing-projects billing-projects}])
-     [:span {:id label-id}
-      [comps/StatusLabel {:id label-id
-                          :text (str status
-                                     (when (= status "Running")
-                                       (str " (" runningSubmissionsCount ")")))
-                          :icon (case status
-                                  "Complete" [icons/CompleteIcon {:size 36}]
-                                  "Running" [icons/RunningIcon {:size 36}]
-                                  "Exception" [icons/ExceptionIcon {:size 32}])
-                          :color (style/color-for-status status)}]]
-     [Sticky
-      {:outer-style {:width 270 :backgroundColor "#fff"}
-       :sticky-props {:data-check-every 1
-                      :data-top-anchor (str label-id ":bottom") :data-bottom-anchor body-id}
-       :contents
-       [:div {:style {:width 270 :background "#fff"}}
-        (when (and can-share? (not editing?))
-          [comps/SidebarButton
-           {:style :light :margin :top :color :button-primary
-            :text "Share..." :icon :share
-            :data-test-id (config/when-debug "share-workspace-button")
-            :onClick #(modal/push-modal
-                       [AclEditor
-                           (merge (utils/restructure workspace-id user-access-level request-refresh)
-                                  {:on-users-added (fn [new-users]
-                                                     ((@refs "sync-container") :check-synchronization new-users))})])}])
-        (when (not editing?)
-          [comps/SidebarButton
-           {:style :light :color :button-primary :margin :top
-            :icon :catalog :text "Catalog Dataset..."
-            :data-test-id (config/when-debug "catalog-button")
-            :onClick #(modal/push-modal
-                       [CatalogWizard (utils/restructure library-schema workspace workspace-id can-share?
-                                                         owner? curator? writer? catalog-with-read? request-refresh)])}])
-        (when (and publishable? (not editing?))
-          (let [working-attributes (library-utils/get-initial-attributes workspace)
-                questions (->> (range (count (:wizard library-schema)))
-                               (map (comp first (partial library-utils/get-questions-for-page working-attributes library-schema)))
-                               (apply concat))
-                required-attributes (library-utils/find-required-attributes library-schema)]
-            (if (:library:published library-attributes)
-              [publish/UnpublishButton (utils/restructure workspace-id request-refresh)]
-              [publish/PublishButton
-               (merge (utils/restructure workspace-id request-refresh)
-                      {:disabled? (cond (empty? library-attributes)
-                                        "Dataset attributes must be created before publishing."
-                                        (seq (library-utils/validate-required
-                                              (library-utils/remove-empty-values working-attributes)
-                                              questions required-attributes))
-                                        "All required dataset attributes must be set before publishing.")})])))
-        (when (or owner? writer?)
-          (if (not editing?)
-            [comps/SidebarButton
-             {:style :light :color :button-primary :margin :top
-              :text "Edit" :icon :edit
-              :onClick #(swap! state assoc :editing? true)}]
-            [:div {}
+         :billing-projects billing-projects}])   [:span {:id label-id}
+         [comps/StatusLabel {:id label-id
+                             :text (str status
+                                        (when (= status "Running")
+                                          (str " (" runningSubmissionsCount ")")))
+                             :icon (case status
+                                     "Complete" [icons/CompleteIcon {:size 36}]
+                                     "Running" [icons/RunningIcon {:size 36}]
+                                     "Exception" [icons/ExceptionIcon {:size 32}])
+                             :color (style/color-for-status status)}]]
+        [Sticky
+         {:outer-style {:width 270 :backgroundColor "#fff"}
+          :sticky-props {:data-check-every 1
+                         :data-top-anchor (str label-id ":bottom") :data-bottom-anchor body-id}
+          :contents
+          [:div {:style {:width 270 :background "#fff"}}
+           (when (and can-share? (not editing?))
+             [comps/SidebarButton
+              {:style :light :margin :top :color :button-primary
+               :text "Share..." :icon :share
+               :data-test-id (config/when-debug "share-workspace-button")
+            :onClick #(swap! state assoc :sharing? true)}])
+           (when (not editing?)
              [comps/SidebarButton
               {:style :light :color :button-primary :margin :top
-               :text "Save" :icon :done
-               :onClick (fn [_]
-                          (let [{:keys [success error]} ((@refs "workspace-attribute-editor") :get-attributes)
-                                new-description ((@refs "description") :get-text)
-                                new-tags ((@refs "tags-autocomplete") :get-tags)]
-                            (if error
-                              (comps/push-error error)
-                              (this :-save-attributes  (assoc success :description new-description :tag:tags new-tags)))))}]
+               :icon :catalog :text "Catalog Dataset..."
+               :data-test-id (config/when-debug "catalog-button")
+            :onClick #(modal/push-modal
+                          [CatalogWizard (utils/restructure library-schema workspace workspace-id can-share?
+                                                            owner? curator? writer? catalog-with-read? request-refresh)])}])
+           (when (and publishable? (not editing?))
+             (let [working-attributes (library-utils/get-initial-attributes workspace)
+                   questions (->> (range (count (:wizard library-schema)))
+                                  (map (comp first (partial library-utils/get-questions-for-page working-attributes library-schema)))
+                                  (apply concat))
+                   required-attributes (library-utils/find-required-attributes library-schema)]
+               (if (:library:published library-attributes)
+                 [publish/UnpublishButton (utils/restructure workspace-id request-refresh)]
+                 [publish/PublishButton
+                  (merge (utils/restructure workspace-id request-refresh)
+                         {:disabled? (cond (empty? library-attributes)
+                                           "Dataset attributes must be created before publishing."
+                                           (seq (library-utils/validate-required
+                                                 (library-utils/remove-empty-values working-attributes)
+                                                 questions required-attributes))
+                                           "All required dataset attributes must be set before publishing.")})])))
 
+           (when (or owner? writer?)
+             (if (not editing?)
+               [comps/SidebarButton
+                {:style :light :color :button-primary :margin :top
+                 :text "Edit" :icon :edit
+                 :onClick #(swap! state assoc :editing? true)}]
+               [:div {}
+                [comps/SidebarButton
+                 {:style :light :color :button-primary :margin :top
+                  :text "Save" :icon :done
+                  :onClick (fn [_]
+                             (let [{:keys [success error]} ((@refs "workspace-attribute-editor") :get-attributes)
+                                   new-description ((@refs "description") :get-text)
+                                   new-tags ((@refs "tags-autocomplete") :get-tags)]
+                               (if error
+                                 (comps/push-error error)
+                                 (this :-save-attributes (assoc success :description new-description :tag:tags new-tags)))))}]
+                [comps/SidebarButton
+                 {:style :light :color :exception-state :margin :top
+                  :text "Cancel Editing" :icon :cancel
+                  :onClick #(swap! state dissoc :editing?)}]]))
+           (when-not editing?
              [comps/SidebarButton
-              {:style :light :color :exception-state :margin :top
-               :text "Cancel Editing" :icon :cancel
-               :onClick #(swap! state dissoc :editing?)}]]))
-        (when-not editing?
-          [comps/SidebarButton
-           {:style :light :margin :top :color :button-primary
-            :text "Clone..." :icon :clone
-            :data-test-id (config/when-debug "open-clone-workspace-modal-button")
+              {:style :light :margin :top :color :button-primary
+               :text "Clone..." :icon :clone
+               :data-test-id (config/when-debug "open-clone-workspace-modal-button")
             :disabled? (when (empty? billing-projects) (comps/no-billing-projects-message))
-            :onClick #(swap! state assoc :cloning?true)}])
-        (when (and owner? (not editing?))
-          [comps/SidebarButton {:style :light :margin :top :color :button-primary
-                                :text (if isLocked "Unlock" "Lock")
-                                :icon (if isLocked :unlock :lock)
-                                :onClick #(this :-lock-or-unlock isLocked)}])
-        (when (and owner? (not editing?))
-          [comps/SidebarButton {:style :light :margin :top :color (if isLocked :text-lighter :exception-state)
-                                :text "Delete" :icon :delete
+               :onClick #(swap! state assoc :cloning?true)}])
+           (when (and owner? (not editing?))
+             [comps/SidebarButton {:style :light :margin :top :color :button-primary
+                                   :text (if isLocked "Unlock" "Lock")
+                                   :icon (if isLocked :unlock :lock)
+                                   :onClick #(this :-lock-or-unlock isLocked)}])
+           (when (and owner? (not editing?))
+             [comps/SidebarButton {:style :light :margin :top :color (if isLocked :text-lighter :exception-state)
+                                   :text "Delete" :icon :delete
                                 :data-test-id (config/when-debug "delete-workspace-button")
-                                :disabled? (when isLocked "This workspace is locked.")
-                                :onClick #(modal/push-modal
-                                           [DeleteDialog {:workspace-id workspace-id}])}])]}]]))
-
-
-  :-render-main
+                                   :disabled? (when isLocked "This workspace is locked.")
+                                   :onClick #(modal/push-modal
+                                              [DeleteDialog {:workspace-id workspace-id}])}])]}]]))
+   :-render-main
    (fn [{:keys [props state locals]}
         {:keys [user-access-level request-refresh can-share? owner? curator? writer? reader? catalog-with-read?]}]
      (let [{:keys [workspace workspace-id bucket-access?]} props

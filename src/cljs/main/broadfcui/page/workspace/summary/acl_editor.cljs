@@ -5,8 +5,8 @@
    [broadfcui.common :as common]
    [broadfcui.common.components :as comps]
    [broadfcui.common.input :as input]
-   [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
+   [broadfcui.components.modals :as modals]
    [broadfcui.config :as config]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.utils :as utils]
@@ -24,10 +24,15 @@
        (if (:offering-invites? @state)
          (this :-render-invite-offer)
          (this :-render-acl-content))
-       [:div {:style {:padding "2em"}}
-        (if (:load-error @state)
-          (style/create-server-error-message (:load-error @state))
-          [comps/Spinner {:text "Loading Permissions..."}])]))
+       [modals/OKCancelForm
+        {:dismiss (:dismiss props)
+         :show-cancel? false
+         :content
+         (react/create-element
+          [:div {:style {:padding "2em"}}
+           (if (:load-error @state)
+             (style/create-server-error-message (:load-error @state))
+             [comps/Spinner {:text "Loading Permissions..."}])])}]))
    :component-did-mount
    (fn [{:keys [props state locals]}]
      (endpoints/call-ajax-orch
@@ -58,9 +63,10 @@
    :-render-acl-content
    (fn [{:keys [props state this]}]
      (let [{:keys [workspace-id user-access-level]} props]
-       [comps/OKCancelForm
+       [modals/OKCancelForm
         {:header
          (str "Permissions for " (:namespace workspace-id) "/" (:name workspace-id))
+         :dismiss (:dismiss props)
          :content
          (react/create-element
           [:div {}
@@ -132,8 +138,9 @@
    :-render-invite-offer
    (fn [{:keys [props state this]}]
      (let [{:keys [workspace-id]} props]
-       [comps/OKCancelForm
+       [modals/OKCancelForm
         {:header (str "Invite new users to " (:namespace workspace-id) "/" (:name workspace-id))
+         :dismiss (:dismiss props)
          :content (react/create-element
                    [:div {}
                     (when (:saving? @state)
@@ -183,7 +190,7 @@
                             (do ((:request-refresh props))
                                 (when (seq new-emails)
                                   ((:on-users-added props) new-emails))
-                                (modal/pop-modal))
+                                ((:dismiss props)))
                             (swap! state assoc :save-error (get-parsed-response false)))))})))))
    :-offer-user-invites
    (fn [{:keys [state]} users-not-found]
