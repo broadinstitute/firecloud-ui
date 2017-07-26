@@ -14,59 +14,27 @@
    [broadfcui.utils :as utils]
    ))
 
-
-(defn auth-domain-builder [{:keys [all-groups update-state selected-groups locked-groups]}]
-  (if-not all-groups
-    [comps/Spinner {:text "Loading Groups..." :style {:margin 0}}]
-    [:div {}
-     (map-indexed
-      (fn [i opt]
-        [:div {}
-         [:div {:style {:float "left" :width "90%"}}
-          (style/create-identity-select-name
-           {:value opt
-            :disabled (utils/seq-contains? locked-groups opt)
-            :onChange #(update-state :selected-groups assoc i (-> % .-target .-value))}
-           (set/difference all-groups (set (utils/delete selected-groups i))))]
-         [:div {:style {:float "right"}}
-          (if (utils/seq-contains? locked-groups opt)
-            (icons/icon {:style {:color (:text-lightest style/colors)
-                                 :verticalAlign "middle" :fontSize 22
-                                 :padding "0.25rem 0.5rem"}}
-                        :lock)
-            (icons/icon {:style {:color (:text-lightest style/colors)
-                                 :verticalAlign "middle" :fontSize 22
-                                 :cursor "pointer" :padding "0.25rem 0.5rem"}
-                         :onClick #(update-state :selected-groups utils/delete i)}
-                        :remove))]])
-      selected-groups)
-     (when (not-empty (set/difference all-groups selected-groups))
-       [:div {:style {:float "left" :width "90%"}}
-        (style/create-identity-select-name
-         {:defaultValue -1
-          :onChange #(update-state :selected-groups conj (-> % .-target .-value))}
-         (set/difference all-groups (set selected-groups))
-         (str "Select " (if (empty? selected-groups) "a" "another") " Group..."))])]))
-
 (react/defc- CreateDialog
   {:get-initial-state
    (fn [{:keys [props]}]
      {:selected-project (first (:billing-projects props))
-      :selected-groups []
+      :selected-groups (or (vec (:auth-domain props)) [])
       :protected-option :not-loaded})
    :render
    (fn [{:keys [props state refs this]}]
-     (let [{:keys [creating-wf selected-project all-groups selected-groups server-error validation-errors]} @state]
+     (let [{:keys [creating-ws selected-project server-error validation-errors]} @state
+           {:keys [workspace-id]} props]
        [modals/OKCancelForm
-        {:header "Create New Workspace"
-         :ok-button {:text "Create Workspace" :onClick #(react/call :create-workspace this)}
+        {:header (if workspace-id "Clone Workspace" "Create New Workspace")
+         :ok-button {:text (if workspace-id "Clone Workspace" "Create Workspace")
+                     :onClick #(this :-create-workspace)}
          :dismiss (:dismiss props)
          :get-first-element-dom-node #(@refs "project")
          :content
          (react/create-element
           [:div {:style {:marginBottom -20}}
-           (when creating-wf
-             [comps/Blocker {:banner "Creating Workspace..."}])
+           (when creating-ws
+             [comps/Blocker {:banner (if workspace-id "Cloning Workspace..." "Creating Workspace...")}])
            (style/create-form-label "Billing Project")
            (style/create-select
             {:ref "project" :value selected-project
@@ -74,11 +42,13 @@
             (:billing-projects props))
            (style/create-form-label "Name")
            [input/TextField {:ref "wsName" :autoFocus true :style {:width "100%"}
+                             :defaultValue (when workspace-id (str (:name workspace-id) "_copy"))
                              :predicates [(input/nonempty "Workspace name")
                                           (input/alphanumeric_- "Workspace name")]}]
            (style/create-textfield-hint input/hint-alphanumeric_-)
            (style/create-form-label "Description (optional)")
-           (style/create-text-area {:style {:width "100%"} :rows 5 :ref "wsDescription"})
+           (style/create-text-area {:style {:width "100%"} :rows 5 :ref "wsDescription"
+                                    :defaultValue (:description props)})
            [:div {:style {:display "flex"}}
             (style/create-form-label "Authorization Domain (optional)")
             (common/render-info-box
@@ -90,8 +60,11 @@
                                          :text [:span {:style {:white-space "pre"}}
                                                 "Read more about Authorization Domains"
                                                 icons/external-link-icon]})]})]
-           (auth-domain-builder (assoc (utils/restructure all-groups selected-groups)
-                                  :update-state (partial swap! state update)))
+           (when (:auth-domain props)
+             [:div {:style {:fontStyle "italic" :fontSize "80%" :paddingBottom "0.25rem"}}
+              "The cloned Workspace will automatically inherit the Authorization Domain from this Workspace."
+              [:div {} "You may add Groups to the Authorization Domain, but you may not remove existing ones."]])
+           (this :-auth-domain-builder)
            [comps/ErrorViewer {:error server-error}]
            (style/create-validation-error-message validation-errors)])}]))
    :component-did-mount
@@ -100,7 +73,7 @@
       (fn [_ parsed-response]
         (swap! state assoc :all-groups
                (apply sorted-set (map :groupName parsed-response))))))
-   :create-workspace
+   :-create-workspace
    (fn [{:keys [props state refs]}]
      (swap! state dissoc :server-error :validation-errors)
      (if-let [fails (input/validate refs "wsName")]
@@ -113,17 +86,52 @@
                                                 (fn [group-name]
                                                   {:membersGroupName group-name})
                                                 (:selected-groups @state))}]
-         (swap! state assoc :creating-wf true)
+         (swap! state assoc :creating-ws true)
          (endpoints/call-ajax-orch
           {:endpoint (endpoints/create-workspace project name)
            :payload (conj {:namespace project :name name :attributes attributes} auth-domain)
            :headers utils/content-type=json
            :on-done (fn [{:keys [success? get-parsed-response]}]
-                      (swap! state dissoc :creating-wf)
+                      (swap! state dissoc :creating-ws)
                       (if success?
                         (do (modal/pop-modal)
                             (nav/go-to-path :workspace-summary {:namespace project :name name}))
-                        (swap! state assoc :server-error (get-parsed-response false))))}))))})
+                        (swap! state assoc :server-error (get-parsed-response false))))}))))
+   :-auth-domain-builder
+   (fn [{:keys [state props]}]
+     (let [{:keys [all-groups selected-groups]} @state
+           locked-groups (vec (:auth-domain props))]
+       (if-not all-groups
+         [comps/Spinner {:text "Loading Groups..." :style {:margin 0}}]
+         [:div {}
+          (map-indexed
+           (fn [i opt]
+             [:div {}
+              [:div {:style {:float "left" :width "90%"}}
+               (style/create-identity-select-name
+                {:value opt
+                 :disabled (utils/seq-contains? locked-groups opt)
+                 :onChange #(swap! state update :selected-groups assoc i (-> % .-target .-value))}
+                (set/difference all-groups (set (utils/delete selected-groups i))))]
+              [:div {:style {:float "right"}}
+               (if (utils/seq-contains? locked-groups opt)
+                 (icons/icon {:style {:color (:text-lightest style/colors)
+                                      :verticalAlign "middle" :fontSize 22
+                                      :padding "0.25rem 0.5rem"}}
+                             :lock)
+                 (icons/icon {:style {:color (:text-lightest style/colors)
+                                      :verticalAlign "middle" :fontSize 22
+                                      :cursor "pointer" :padding "0.25rem 0.5rem"}
+                              :onClick #(swap! state update :selected-groups utils/delete i)}
+                             :remove))]])
+           selected-groups)
+          (when (not-empty (set/difference all-groups selected-groups))
+            [:div {:style {:float "left" :width "90%"}}
+             (style/create-identity-select-name
+              {:defaultValue -1
+               :onChange #(swap! state update :selected-groups conj (-> % .-target .-value))}
+              (set/difference all-groups (set selected-groups))
+              (str "Select " (if (empty? selected-groups) "a" "another") " Group..."))])])))})
 
 
 (react/defc Button

@@ -11,6 +11,7 @@
    [broadfcui.components.sticky :refer [Sticky]]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.nav :as nav]
+   [broadfcui.page.workspace.create :as create]
    [broadfcui.page.workspace.monitor.common :as moncommon]
    [broadfcui.page.workspace.summary.acl-editor :refer [AclEditor]]
    [broadfcui.page.workspace.summary.attribute-editor :as attributes]
@@ -18,7 +19,6 @@
    [broadfcui.page.workspace.summary.library-utils :as library-utils]
    [broadfcui.page.workspace.summary.library-view :refer [LibraryView]]
    [broadfcui.page.workspace.summary.publish :as publish]
-   [broadfcui.page.workspace.summary.workspace-cloner :refer [WorkspaceCloner]]
    [broadfcui.utils :as utils]
    ))
 
@@ -72,12 +72,8 @@
          {:keys [library-schema]} :server-response} @state]
     [:div {:style {:flex "0 0 270px" :paddingRight 30}}
      (when (:cloning? @state)
-       [WorkspaceCloner
-        {:on-success (fn [namespace name]
-                       (swap! state dissoc :cloning?)
-                       (nav/go-to-path :workspace-summary
-                                       (utils/restructure namespace name)))
-         :dismiss #(swap! state dissoc :cloning?)
+       [create/CreateDialog
+        {:dismiss #(swap! state dissoc :cloning?)
          :workspace-id workspace-id
          :description description
          :auth-domain (set (map :membersGroupName authorizationDomain))
