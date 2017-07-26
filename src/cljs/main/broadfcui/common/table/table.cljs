@@ -104,7 +104,7 @@
                                  {:initial-text (:filter-text query-params)
                                   :on-filter #(swap! state update :query-params assoc :filter-text % :page-number 1)}
                                  (:inner filter-bar-props))]]))
-         (when-let [items (:items toolbar)]
+         (when-let [items (:get-items toolbar)]
            (list* (items {:columns column-display})))]
         [:div {:style {:overflowX "auto"}}
          (if (empty? rows)

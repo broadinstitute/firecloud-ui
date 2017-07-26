@@ -131,7 +131,7 @@
                                               :selected-entity-type selected-entity-type)
                                        (when-let [f (:on-entity-type-selected props)]
                                          (f selected-entity-type))))}]
-                      (when-let [toolbar-items (:toolbar-items props)]
+                      (when-let [toolbar-items (:get-toolbar-items props)]
                         (toolbar-items table-props))))
                :style {:flexWrap "wrap"}}}]))]))
    :component-did-mount
