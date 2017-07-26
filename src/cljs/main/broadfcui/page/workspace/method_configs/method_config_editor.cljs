@@ -5,13 +5,13 @@
    [broadfcui.common :as common]
    [broadfcui.common.components :as comps]
    [broadfcui.common.icons :as icons]
-   [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
    [broadfcui.components.sticky :refer [Sticky]]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.page.workspace.method-configs.delete-config :as delete]
    [broadfcui.page.workspace.method-configs.launch-analysis :as launch]
    [broadfcui.page.workspace.method-configs.publish :as publish]
+   [broadfcui.page.workspace.method-configs.synchronize :as mc-sync]
    [broadfcui.page.workspace.workspace-common :as ws-common]
    [broadfcui.utils :as utils]
    ))
@@ -55,6 +55,49 @@
                       (swap! state assoc :loaded-method (get-parsed-response))
                       (swap! state assoc :error status-text)))})))})
 
+
+(react/defc- Sidebar
+  {:render
+   (fn [{:keys [props state]}]
+     (let [{:keys [access-level workspace-id after-delete
+                   editing? locked? loaded-config body-id parent]} props
+           can-edit? (common/access-greater-than? access-level "READER")
+           config-id (ws-common/config->id (:methodConfiguration loaded-config))]
+       [:div {:style {:flex "0 0 270px" :paddingRight 30}}
+        (when (:show-delete-dialog? @state)
+          [delete/DeleteDialog (merge (utils/restructure config-id workspace-id after-delete)
+                                      {:dismiss #(swap! state dissoc :show-delete-dialog?)})])
+        (when (:show-publish-dialog? @state)
+          [publish/PublishDialog (merge (utils/restructure config-id workspace-id)
+                                        {:dismiss #(swap! state dissoc :show-publish-dialog?)})])
+        [Sticky
+         {:anchor body-id
+          :sticky-props {:data-check-every 1}
+          :contents
+          [:div {:style {:width 270}}
+           (if editing?
+             (list
+              [comps/SidebarButton {:color :success-state
+                                    :text "Save" :icon :done
+                                    :onClick #(parent :-commit)}]
+              [comps/SidebarButton {:color :exception-state :margin :top
+                                    :text "Cancel Editing" :icon :cancel
+                                    :onClick #(parent :-cancel-editing)}])
+             (concat
+              (when can-edit?
+                [[comps/SidebarButton {:style :light :color :button-primary
+                                       :text "Edit Configuration" :icon :edit
+                                       :disabled? (when locked? "The workspace is locked")
+                                       :onClick #(parent :-begin-editing)}]
+                 [comps/SidebarButton {:style :light :color :exception-state :margin :top
+                                       :text "Delete" :icon :delete
+                                       :disabled? (when locked? "The workspace is locked")
+                                       :onClick #(swap! state assoc :show-delete-dialog? true)}]])
+              [[comps/SidebarButton {:style :light :color :button-primary :margin (when can-edit? :top)
+                                     :text "Publish..." :icon :share
+                                     :onClick #(swap! state assoc :show-publish-dialog? true)}]]))]}]]))})
+
+
 (react/defc MethodConfigEditor
   {:get-initial-state
    (fn []
@@ -76,7 +119,7 @@
            :else [:div {:style {:textAlign "center"}}
                   [comps/Spinner {:text "Loading Method Configuration..."}]]))
    :component-did-mount
-   (fn [{:keys [state refs this]}]
+   (fn [{:keys [props state this]}]
      (this :-load-validated-method-config)
      (endpoints/call-ajax-orch
       {:endpoint endpoints/list-methods
@@ -87,66 +130,20 @@
                                                      (group-by (juxt :namespace :name))
                                                      (utils/map-values (partial map :snapshotId))))
                     ;; FIXME: :error-message is unused
-                    (swap! state assoc :error-message status-text)))})
-     (set! (.-onScrollHandler this)
-           (fn []
-             (when-let [sidebar (@refs "sidebar")]
-               (let [visible (< (.-scrollY js/window) (.-offsetTop sidebar))]
-                 (when-not (= visible (:sidebar-visible? @state))
-                   (swap! state assoc :sidebar-visible? visible))))))
-     (.addEventListener js/window "scroll" (.-onScrollHandler this)))
-   :component-will-unmount
-   (fn [{:keys [this]}]
-     (.removeEventListener js/window "scroll" (.-onScrollHandler this)))
+                    (swap! state assoc :error-message status-text)))}))
    :-render-display
-   (fn [{:keys [props state this]}]
+   (fn [{:keys [props state locals this]}]
      (let [locked? (get-in props [:workspace :workspace :isLocked])]
        [:div {}
         [comps/Blocker {:banner (:blocker @state)}]
+        [mc-sync/SyncContainer (select-keys props [:workspace-id :config-id])]
         [:div {:style {:padding "1em 2em" :display "flex"}}
-         (this :-render-sidebar locked?)
+         [Sidebar (merge (select-keys props [:access-level :workspace-id :after-delete])
+                         (select-keys @state [:editing? :loaded-config])
+                         (select-keys @locals [:body-id])
+                         {:parent this :locked? locked?})]
          (this :-render-main locked?)
          (common/clear-both)]]))
-   :-render-sidebar
-   (fn [{:keys [props state this locals]} locked?]
-     (let [{:keys [editing? loaded-config]} @state
-           {:keys [body-id]} @locals
-           config (:methodConfiguration loaded-config)
-           can-edit? (common/access-greater-than? (:access-level props) "READER")
-           config-id (ws-common/config->id config)]
-       [:div {:style {:flex "0 0 270px" :paddingRight 30}}
-        [Sticky
-         {:outer-style {:width 290 :backgroundColor "#fff"}
-          :anchor body-id
-          :sticky-props {:data-check-every 1}
-          :contents
-          [:div {:style {:width 270 :background "#fff"}}
-           (if editing?
-             (list
-              [comps/SidebarButton {:color :success-state
-                                    :text "Save" :icon :done
-                                    :onClick #(this :-commit)}]
-              [comps/SidebarButton {:color :exception-state :margin :top
-                                    :text "Cancel Editing" :icon :cancel
-                                    :onClick #(this :-cancel-editing)}])
-             (concat
-              (when can-edit?
-                [[comps/SidebarButton {:style :light :color :button-primary
-                                       :text "Edit Configuration" :icon :edit
-                                       :disabled? (when locked? "The workspace is locked")
-                                       :onClick #(this :-begin-editing)}]
-                 [comps/SidebarButton {:style :light :color :exception-state :margin :top
-                                       :text "Delete" :icon :delete
-                                       :disabled? (when locked? "The workspace is locked")
-                                       :onClick #(modal/push-modal
-                                                  [delete/DeleteDialog {:config-id config-id
-                                                                        :workspace-id (:workspace-id props)
-                                                                        :after-delete (:after-delete props)}])}]])
-              [[comps/SidebarButton {:style :light :color :button-primary :margin (when can-edit? :top)
-                                     :text "Publish..." :icon :share
-                                     :onClick #(modal/push-modal
-                                                [publish/PublishDialog {:config-id config-id
-                                                                        :workspace-id (:workspace-id props)}])}]]))]}]]))
    :-render-main
    (fn [{:keys [state this locals props]} locked?]
      (let [{:keys [editing? loaded-config wdl-parse-error inputs-outputs methods]} @state

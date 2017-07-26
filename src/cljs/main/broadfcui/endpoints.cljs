@@ -142,6 +142,10 @@
   {:path (str "/workspaces/" (id-path workspace-id) "/methodconfigs")
    :method :post})
 
+(defn get-permission-report [workspace-id]
+  {:path (str "/workspaces/" (id-path workspace-id) "/permissionReport")
+   :method :post})
+
 (defn get-workspace-method-config [workspace-id config-id]
   {:path (str "/workspaces/" (id-path workspace-id)
               "/method_configs/" (id-path config-id))
@@ -568,8 +572,11 @@
     :outputs [{:name "CancerExomePipeline_v2.M2.m2_output_vcf"
                :outputType "File"}]}})
 
-(defn get-agora-method-acl [ns n sid is-conf]
-  {:path (str "/" (if is-conf "configurations" "methods") "/" ns "/" n "/" sid "/permissions")
+(defn- get-agora-base [config?]
+  (if config? "configurations" "methods"))
+
+(defn get-agora-entity-acl [config? {:keys [name namespace snapshotId]}]
+  {:path (str "/" (get-agora-base config?) "/" namespace "/" name "/" snapshotId "/permissions")
    :method :get
    :mock-data
    (let [random-data (map (fn [i] {:user (str "user" i "@broadinstitute.org")
@@ -582,30 +589,23 @@
        (flatten [public-map random-data])
        random-data))})
 
-(defn get-agora-namespace-acl [namespace is-conf?]
-  {:path (str "/" (if is-conf? "configurations" "methods") "/" namespace "/permissions")
+(defn persist-agora-entity-acl [config? {:keys [name namespace snapshotId]}]
+  {:path (str "/" (get-agora-base config?) "/" namespace "/" name "/" snapshotId "/permissions")
+   :method :post})
+
+
+(defn get-agora-namespace-acl [namespace config?]
+  {:path (str "/" (get-agora-base config?) "/" namespace "/permissions")
    :method :get})
 
-(defn post-agora-namespace-acl [namespace is-conf?]
-  {:path (str "/" (if is-conf? "configurations" "methods") "/" namespace "/permissions")
+(defn post-agora-namespace-acl [namespace config?]
+  {:path (str "/" (get-agora-base config?) "/" namespace "/permissions")
    :method :post})
 
 
-(defn delete-agora-entity [config? ns n sid]
-  {:path (let [base (if config? "configurations" "methods")]
-           (str "/" base "/" ns "/" n "/" sid))
+(defn delete-agora-entity [config? {:keys [namespace name snapshotId]}]
+  {:path (str "/" (get-agora-base config?) "/" namespace "/" name "/" snapshotId)
    :method :delete})
-
-
-(defn persist-agora-method-acl [{:keys [entityType name namespace snapshotId]}]
-  {:path (let [base (cond
-                      (= "Configuration" entityType) "configurations"
-                      (or (= "Task" entityType) (= "Workflow" entityType)) "methods"
-                      :else (do
-                              (utils/log "Error, unknown type : " entityType)
-                              (str "configurations")))]
-           (str "/" base "/" namespace "/" name "/" snapshotId "/permissions"))
-   :method :post})
 
 
 (defn copy-entity-to-workspace [workspace-id re-link-soft-conflicts?]

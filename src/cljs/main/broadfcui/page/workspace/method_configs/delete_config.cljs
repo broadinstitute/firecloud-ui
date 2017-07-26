@@ -2,14 +2,14 @@
   (:require
    [dmohs.react :as react]
    [broadfcui.common.components :as comps]
-   [broadfcui.common.modal :as modal]
+   [broadfcui.components.modals :as modals]
    [broadfcui.endpoints :as endpoints]
    ))
 
 (react/defc DeleteDialog
   {:render
    (fn [{:keys [props state]}]
-     [comps/OKCancelForm
+     [modals/OKCancelForm
       {:header "Confirm Delete"
        :content
        [:div {:style {:width 500}}
@@ -18,6 +18,7 @@
           (:deleting? @state) [:div {:style {:backgroundColor "#fff" :padding "1em"}}
                                [comps/Spinner {:text "Deleting..."}]]
           :else "Are you sure you want to delete this method configuration?")]
+       :dismiss (:dismiss props)
        :ok-button
        {:text "Delete"
         :onClick
@@ -27,5 +28,5 @@
                :on-done (fn [{:keys [success? get-parsed-response]}]
                           (swap! state dissoc :deleting?)
                           (if success?
-                            (do (modal/pop-modal) ((:after-delete props)))
+                            (do ((:dismiss props)) ((:after-delete props)))
                             (swap! state assoc :error (get-parsed-response false))))}))}}])})
