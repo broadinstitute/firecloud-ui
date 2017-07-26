@@ -53,9 +53,6 @@
                     (swap! state assoc :server-error (get-parsed-response false))))}))})
 
 
-(defn- reader? [workspace]
-  (= "READER" (:accessLevel workspace)))
-
 (react/defc Summary
   {:component-will-mount
    (fn [{:keys [locals]}]
@@ -63,39 +60,38 @@
    :render
    (fn [{:keys [state props this refs]}]
      (let [{:keys [server-response]} @state
-           {:keys [workspace]} props
+           {:keys [workspace workspace-id]} props
            {:keys [submissions-count billing-projects library-schema curator? server-error]} server-response]
        [:div {}
-        [ws-sync/SyncContainer {:ref "sync-container"
-                                :workspace-id (:workspace-id props)}](cond
-         server-error
-         (style/create-server-error-message server-error)
-         (some nil? [workspace submissions-count billing-projects library-schema curator?])
-         [:div {:style {:textAlign "center" :padding "1em"}}
-          [comps/Spinner {:text "Loading workspace..."}]]
-         :else
-         (let [owner? (or (= "PROJECT_OWNER" (:accessLevel workspace)) (= "OWNER" (:accessLevel workspace)))
-               writer? (or owner? (= "WRITER" (:accessLevel workspace)))
-               auth-domain (get-in workspace [:workspace :authorizationDomain])derived (merge {:request-refresh #(this :-refresh)
-                               :reader? (reader? (:workspace props))
-                               :can-share? (:canShare workspace)
-                               :user-access-level (:accessLevel workspace)
-                               :catalog-with-read? (and (or writer? (reader? workspace)) (:catalog workspace))}
-                              (utils/restructure owner? writer?auth-domain))]
-           [:div {:style {:margin "2.5rem 1.5rem" :display "flex"}}
-            (when (:sharing? @state)
+        [ws-sync/SyncContainer {:ref "sync-container" :workspace-id workspace-id}]
+        (cond
+          server-error
+          (style/create-server-error-message server-error)
+          (some nil? [workspace submissions-count billing-projects library-schema curator?])
+          [:div {:style {:textAlign "center" :padding "1em"}}
+           [comps/Spinner {:text "Loading workspace..."}]]
+          :else
+          (let [user-access-level (:accessLevel workspace)
+                request-refresh #(this :-refresh)
+                auth-domain (get-in workspace [:workspace :authorizationDomain])
+                derived (merge {:can-share? (:canShare workspace)
+                                :owner? (common/access-greater-than-equal-to? user-access-level "OWNER")
+                                :writer? (common/access-greater-than-equal-to? user-access-level "WRITER")
+                                :catalog-with-read? (and (common/access-greater-than-equal-to? user-access-level "READER") (:catalog workspace))}
+                               (utils/restructure user-access-level request-refresh auth-domain))]
+            [:div {:style {:margin "2.5rem 1.5rem" :display "flex"}}
+             (when (:sharing? @state)
                [AclEditor
-                                    {:workspace-id (:workspace-id props):user-access-level (:accessLevel workspace)
-                 :request-refresh #(this :-refresh)
-                 :dismiss #(swap! state dissoc :sharing?)
+                (merge (utils/restructure user-access-level request-refresh workspace-id)
+                 {:dismiss #(swap! state dissoc :sharing?)
                  :on-users-added (fn [new-users]
-                                   ((@refs "sync-container") :check-synchronization new-users))}])
-            (this :-render-sidebar derived)
-            (this :-render-main derived)
-            (when (:updating-attrs? @state)
-              [comps/Blocker {:banner "Updating Attributes..."}])
-            (when (contains? @state :locking?)
-              [comps/Blocker {:banner (if (:locking? @state) "Locking..." "Unlocking...")}])]))]))
+                                   ((@refs "sync-container") :check-synchronization new-users))})])
+             (this :-render-sidebar derived)
+             (this :-render-main derived)
+             (when (:updating-attrs? @state)
+               [comps/Blocker {:banner "Updating Attributes..."}])
+             (when (contains? @state :locking?)
+               [comps/Blocker {:banner (if (:locking? @state) "Locking..." "Unlocking...")}])]))]))
    :component-did-mount
    (fn [{:keys [this]}]
      (this :-refresh))
@@ -206,7 +202,7 @@
                                               [DeleteDialog {:workspace-id workspace-id}])}])]}]]))
    :-render-main
    (fn [{:keys [props state locals]}
-        {:keys [user-access-level request-refresh can-share? owner? curator? writer? reader? catalog-with-read?]}]
+        {:keys [user-access-level request-refresh can-share? owner? curator? writer? catalog-with-read?]}]
      (let [{:keys [workspace workspace-id bucket-access?]} props
            {:keys [editing?]
             {:keys [storage-cost submissions-count library-schema]} :server-response} @state
@@ -260,7 +256,7 @@
                                       :title "Click to open the Google Cloud Storage browser for this bucket"
                                       :target "_blank"})
              false bucketName)
-           (when (not reader?)
+           (when writer?
              [:div {:style {:lineHeight "initial"}}
               [:div {} (str "Total Estimated Storage Fee per month = " storage-cost)]
               [:div {:style {:fontSize "80%"}} (str "Note: the billing account associated with " (:namespace workspace-id) " will be charged.")]])]
@@ -362,7 +358,7 @@
                   (if success?
                     (swap! state update :server-response assoc :curator? (:curator (get-parsed-response)))
                     (swap! state update :server-response assoc :server-error "Unable to determine curator status")))})
-     (when (not (reader? (:workspace props)))
+     (when (common/access-greater-than-equal-to? (get-in props [:workspace :accessLevel]) "WRITER")
        (endpoints/call-ajax-orch
         {:endpoint (endpoints/storage-cost-estimate (:workspace-id props))
          :on-done (fn [{:keys [success? status-text raw-response]}]
