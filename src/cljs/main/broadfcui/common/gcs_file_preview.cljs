@@ -8,7 +8,6 @@
    [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
    [broadfcui.endpoints :as endpoints]
-   [broadfcui.page.style-guide :as style-guide]
    [broadfcui.utils :as utils]
    ))
 
@@ -28,16 +27,16 @@
                         [:div {:style {:display "inline-block" :width 185}} (str label ": ")]
                         contents])
              data-empty (or (= data-size "0") (string/blank? data-size))
-             bam? (re-find #"\.ba(m|i)$" (:object props))]
+             bam? (re-find #"\.ba[mi]$" (:object props))]
          [:div {:style {:width 700 :overflow "auto"}}
           (labeled "Google Bucket" (:bucket-name props))
           (labeled "Object" (:object props))
           [:div {:style {:marginTop "1em"}}
            [:div {} (if bam?
-                      "Previews for this filetype is unsupported."
+                      "Preview for this filetype is not supported."
                       "Previews for some filetypes may not be supported.")]
-           (when (and (not bam?) (> data-size preview-byte-count)) (str "Last " (:preview-line-count @state)
-                                                                        " lines are shown. Use link below to view entire file." data-size))
+           (when (and (not bam?) (> data-size preview-byte-count))
+             (str "Last " (:preview-line-count @state) " lines are shown. Use link below to view entire file." data-size))
            ;; The max-height of 206 looks random, but it's so that the top line of the log preview is half cut-off
            ;; to hint to the user that they should scroll up.
            (when-not (or data-empty bam?)
@@ -64,12 +63,11 @@
                           [:span {:style {:fontStyle "italic" :color (:text-light style/colors)}}
                            " (right-click to download)"]]))
                       (when (> data-size 100000000)
-                        (react/create-element
-                         [:div {:style {:marginTop "1em" :marginBottom "1em"}}
-                          [:div {} "Downloading large files through the browser may not be successful. Instead use this gsutil"]
-                          [:div {:style {:marginBottom ".5em"}} "command replacing [DESTINATION] with the local file path you wish to download to."]
-                          (style-guide/create-code-sample
-                           (str "gsutil cp gs://" (:bucket-name props) "/" (:object props) " [DESTINATION]"))])))
+                        [:div {:style {:marginTop "1em" :marginBottom "1em"}}
+                         [:div {} "Downloading large files through the browser may not be successful. Instead use this gsutil"]
+                         [:div {:style {:marginBottom ".5em"}} "command replacing [DESTINATION] with the local file path you wish to download to."]
+                         (style/create-code-sample
+                          (str "gsutil cp gs://" (:bucket-name props) "/" (:object props) " [DESTINATION]"))]))
              (when-not data-empty
                (labeled "Estimated download fee"
                         (if (nil? cost) "Unknown" (common/format-price cost))

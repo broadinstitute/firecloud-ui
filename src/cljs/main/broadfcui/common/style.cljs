@@ -112,6 +112,12 @@
                  :padding "1em 0" :borderRadius 8}}
    message])
 
+(defn create-code-sample [text]
+  [:code {:style {:backgroundColor (:background-dark colors) :color "white"
+                  :fontWeight "bold" :fontFamily "Menlo, monospace" :fontSize 12
+                  :padding "0.2rem" :borderRadius "0.2rem" :margin "0 0.1rem"}}
+   text])
+
 (defn center [props & children]
   [:div (utils/deep-merge props {:style {:position "absolute" :top "50%" :left "50%"
                                          :transform "translate(-50%, -50%)"}})
