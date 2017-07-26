@@ -143,6 +143,7 @@
 
 
 (def ^:private access-levels ["PROJECT_OWNER" "OWNER" "WRITER" "READER" "NO ACCESS"])
+(def ^:private access-levels-sortorder (zipmap access-levels (range)))
 
 (def ^:private table-filters
   [{:title "Status"
@@ -247,7 +248,8 @@
              {:id "Access Level" :header [:span {:style {:marginLeft 14}} "Access Level"]
               :initial-width 132 :resizable? false
               :column-data column-data
-              :sort-by (zipmap access-levels (range)) :sort-initial :asc
+              :sort-by (fn [{:keys [access-level]}] (get access-levels-sortorder access-level))
+              :sort-initial :asc
               :render (fn [{:keys [access-level workspace-id auth-domains]}]
                         [:div {:style {:paddingLeft 14}}
                          (if (= access-level "NO ACCESS")
