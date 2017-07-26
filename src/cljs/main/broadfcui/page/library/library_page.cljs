@@ -1,24 +1,24 @@
 (ns broadfcui.page.library.library-page
   (:require
-    [dmohs.react :as react]
-    [clojure.set :as set]
-    [clojure.string :as string]
-    [broadfcui.common :as common]
-    [broadfcui.common.components :as comps]
-    [broadfcui.common.flex-utils :as flex]
-    [broadfcui.common.icons :as icons]
-    [broadfcui.common.style :as style]
-    [broadfcui.common.table.style :as table-style]
-    [broadfcui.common.table.table :refer [Table]]
-    [broadfcui.config :as config]
-    [broadfcui.endpoints :as endpoints]
-    [broadfcui.nav :as nav]
-    [broadfcui.persistence :as persistence]
-    [broadfcui.utils :as utils]
-    ))
+   [dmohs.react :as react]
+   [clojure.set :as set]
+   [clojure.string :as string]
+   [broadfcui.common :as common]
+   [broadfcui.common.components :as comps]
+   [broadfcui.common.flex-utils :as flex]
+   [broadfcui.common.icons :as icons]
+   [broadfcui.common.style :as style]
+   [broadfcui.common.table.style :as table-style]
+   [broadfcui.common.table.table :refer [Table]]
+   [broadfcui.config :as config]
+   [broadfcui.endpoints :as endpoints]
+   [broadfcui.nav :as nav]
+   [broadfcui.persistence :as persistence]
+   [broadfcui.utils :as utils]
+   ))
 
 
-(react/defc DatasetsTable
+(react/defc- DatasetsTable
   {:render
    (fn [{:keys [state this props]}]
      (let [attributes (:library-attributes props)
@@ -157,16 +157,16 @@
                        ((:update-aggregates props) aggregations)))
                    (on-done {:error status-text})))}))))))})
 
-(defn encode [text]
+(defn- encode [text]
   ;; character replacements modeled after Lucene's SimpleHTMLEncoder.
   (string/escape text {\" "&quot;" \& "&amp;" \< "&lt;", \> "&gt;", \\ "&#x27;" \/ "&#x2F;"}))
 
-(defn highlight-suggestion [suggestion highlight]
+(defn- highlight-suggestion [suggestion highlight]
   (if (not (string/blank? highlight))
     (string/replace (encode suggestion) (encode highlight) (str "<strong>" (encode highlight) "</strong>"))
     (encode suggestion)))
 
-(react/defc SearchSection
+(react/defc- SearchSection
   {:get-filters
    (fn [{:keys [props]}]
      (utils/map-keys name (:facet-filters props)))
@@ -208,7 +208,7 @@
                                              display (highlight-suggestion suggestion highlight)]
                                          (str "<div style='textOverflow: ellipsis; overflow: hidden; font-size: smaller;'>" display "</div>")))}]])})
 
-(react/defc FacetCheckboxes
+(react/defc- FacetCheckboxes
   {:render
    (fn [{:keys [props this]}]
      (let [size (:numOtherDocs props)
@@ -258,7 +258,7 @@
                          (:results m)))
                aggregates)))
 
-(react/defc Facet
+(react/defc- Facet
   {:render
    (fn [{:keys [props]}]
      (let [aggregate-field (:aggregate-field props)
@@ -274,7 +274,7 @@
                                       (select-keys props [:expanded? :selected-items :update-filter
                                                           :expanded-callback-function]))])))})
 
-(react/defc FacetSection
+(react/defc- FacetSection
   {:render
    (fn [{:keys [props]}]
      (if (empty? (:aggregates props))
@@ -293,7 +293,7 @@
 (def ^:private PERSISTENCE-KEY "library-page")
 (def ^:private VERSION 4)
 
-(react/defc Page
+(react/defc- Page
   (->>
    {:update-filter
     (fn [{:keys [state after-update refs]} facet-name facet-list]

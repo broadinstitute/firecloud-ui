@@ -1,10 +1,10 @@
 (ns broadfcui.page.workspace.method-configs.delete-config
   (:require
-    [dmohs.react :as react]
-    [broadfcui.common.components :as comps]
-    [broadfcui.common.modal :as modal]
-    [broadfcui.endpoints :as endpoints]
-    ))
+   [dmohs.react :as react]
+   [broadfcui.common.components :as comps]
+   [broadfcui.common.modal :as modal]
+   [broadfcui.endpoints :as endpoints]
+   ))
 
 (react/defc DeleteDialog
   {:render

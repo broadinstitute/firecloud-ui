@@ -1,15 +1,15 @@
 (ns broadfcui.common.table-utils
   (:require
-    [dmohs.react :as react]
-    [inflections.core :as inflections]
-    [broadfcui.common :as common]
-    [broadfcui.common.components :as comps]
-    [broadfcui.common.flex-utils :as flex]
-    [broadfcui.common.gcs-file-preview :refer [GCSFilePreviewLink]]
-    [broadfcui.common.icons :as icons]
-    [broadfcui.common.style :as style]
-    [broadfcui.utils :as utils]
-    ))
+   [dmohs.react :as react]
+   [inflections.core :as inflections]
+   [broadfcui.common :as common]
+   [broadfcui.common.components :as comps]
+   [broadfcui.common.flex-utils :as flex]
+   [broadfcui.common.gcs-file-preview :refer [GCSFilePreviewLink]]
+   [broadfcui.common.icons :as icons]
+   [broadfcui.common.style :as style]
+   [broadfcui.utils :as utils]
+   ))
 
 
 (def ^:private rows-per-page-options [10 20 100 500])

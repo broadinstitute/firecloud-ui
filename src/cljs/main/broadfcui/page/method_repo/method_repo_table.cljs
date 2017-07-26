@@ -1,16 +1,16 @@
 (ns broadfcui.page.method-repo.method-repo-table
   (:require
-    [dmohs.react :as react]
-    [clojure.string :as string]
-    [broadfcui.common.components :as comps]
-    [broadfcui.common.style :as style]
-    [broadfcui.common.table.style :as table-style]
-    [broadfcui.common.table.table :refer [Table]]
-    [broadfcui.common.table.utils :as table-utils]
-    [broadfcui.endpoints :as endpoints]
-    [broadfcui.persistence :as persistence]
-    [broadfcui.utils :as utils]
-    ))
+   [dmohs.react :as react]
+   [clojure.string :as string]
+   [broadfcui.common.components :as comps]
+   [broadfcui.common.style :as style]
+   [broadfcui.common.table.style :as table-style]
+   [broadfcui.common.table.table :refer [Table]]
+   [broadfcui.common.table.utils :as table-utils]
+   [broadfcui.endpoints :as endpoints]
+   [broadfcui.persistence :as persistence]
+   [broadfcui.utils :as utils]
+   ))
 
 
 (react/defc MethodRepoTable

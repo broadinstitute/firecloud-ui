@@ -1,9 +1,9 @@
 (ns broadfcui.common.filter
   (:require
-    [broadfcui.common.flex-utils :as flex]
-    [broadfcui.common.style :as style]
-    [broadfcui.utils :as utils]
-    ))
+   [broadfcui.common.flex-utils :as flex]
+   [broadfcui.common.style :as style]
+   [broadfcui.utils :as utils]
+   ))
 
 
 (defn area [attributes & sections]

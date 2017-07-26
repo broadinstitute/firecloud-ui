@@ -1,8 +1,8 @@
 (ns broadfcui.common.style
   (:require
-    [clojure.string :as string]
-    [broadfcui.utils :as utils]
-    ))
+   [clojure.string :as string]
+   [broadfcui.utils :as utils]
+   ))
 
 (def colors {:background-light "#f4f4f4"
              :background-dark "#4d4d4d"

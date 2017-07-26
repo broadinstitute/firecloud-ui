@@ -1,23 +1,23 @@
 (ns broadfcui.page.workspaces-list
   (:require
-    [dmohs.react :as react]
-    [clojure.string :as string]
-    [broadfcui.common :as common]
-    [broadfcui.common.components :as comps]
-    [broadfcui.common.filter :as filter]
-    [broadfcui.common.icons :as icons]
-    [broadfcui.common.modal :as modal]
-    [broadfcui.common.style :as style]
-    [broadfcui.common.table.style :as table-style]
-    [broadfcui.common.table.table :refer [Table]]
-    [broadfcui.config :as config]
-    [broadfcui.endpoints :as endpoints]
-    [broadfcui.nav :as nav]
-    [broadfcui.net :as net]
-    [broadfcui.page.workspace.create :as create]
-    [broadfcui.persistence :as persistence]
-    [broadfcui.utils :as utils]
-    ))
+   [dmohs.react :as react]
+   [clojure.string :as string]
+   [broadfcui.common :as common]
+   [broadfcui.common.components :as comps]
+   [broadfcui.common.filter :as filter]
+   [broadfcui.common.icons :as icons]
+   [broadfcui.common.modal :as modal]
+   [broadfcui.common.style :as style]
+   [broadfcui.common.table.style :as table-style]
+   [broadfcui.common.table.table :refer [Table]]
+   [broadfcui.config :as config]
+   [broadfcui.endpoints :as endpoints]
+   [broadfcui.nav :as nav]
+   [broadfcui.net :as net]
+   [broadfcui.page.workspace.create :as create]
+   [broadfcui.persistence :as persistence]
+   [broadfcui.utils :as utils]
+   ))
 
 
 (def row-height-px 56)
@@ -28,7 +28,7 @@
 
 (def non-dbGap-disabled-text "Click to request access.")
 
-(react/defc RequestAuthDomainAccessDialog
+(react/defc- RequestAuthDomainAccessDialog
   {:get-initial-state
    (fn [{:keys [props state]}]
      {:ws-auth-domains (vec (map
@@ -180,7 +180,7 @@
     {:workspace-id workspace-id
      :ws-auth-domains auth-domains}]))
 
-(react/defc WorkspaceTable
+(react/defc- WorkspaceTable
   {:get-initial-state
    (fn []
      (persistence/try-restore
@@ -373,7 +373,7 @@
        (filter (apply every-pred tag-filter checkbox-filters) workspaces)))})
 
 
-(react/defc WorkspaceList
+(react/defc- WorkspaceList
   {:get-initial-state
    (fn []
      {:server-response {:disabled-reason :not-loaded}})
@@ -411,7 +411,7 @@
                  :disabled-reason (if (empty? projects) :no-billing nil))))))})
 
 
-(react/defc Page
+(react/defc- Page
   {:render
    (fn []
      [:div {:style {:marginTop "1.5rem"}}

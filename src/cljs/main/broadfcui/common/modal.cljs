@@ -1,9 +1,9 @@
 (ns broadfcui.common.modal
   (:require
-    [dmohs.react :as react]
-    [broadfcui.common :as common]
-    [broadfcui.utils :as utils]
-    ))
+   [dmohs.react :as react]
+   [broadfcui.common :as common]
+   [broadfcui.utils :as utils]
+   ))
 
 
 (defonce ^:private instance (atom nil))
@@ -11,10 +11,12 @@
 (defn set-instance! [x]
   (reset! instance x))
 
+;; Deprecated. Use broadfcui.components.modals instead.
 (defn push-modal [child]
   ;; Forces create-element so the caller can refer to refs in the dialog.
   (react/call :push-modal @instance (react/create-element child)))
 
+;; Deprecated. Use broadfcui.components.modals instead.
 (defn pop-modal []
   (react/call :pop-modal @instance))
 

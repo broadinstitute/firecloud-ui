@@ -1,20 +1,20 @@
 (ns broadfcui.page.workspace.monitor.submission-details
   (:require
-    [dmohs.react :as react]
-    [clojure.string :as string]
-    [broadfcui.common :as common]
-    [broadfcui.common.components :as comps]
-    [broadfcui.common.duration :as duration]
-    [broadfcui.common.icons :as icons]
-    [broadfcui.common.modal :as modal]
-    [broadfcui.common.style :as style]
-    [broadfcui.common.table :refer [Table]]
-    [broadfcui.endpoints :as endpoints]
-    [broadfcui.nav :as nav]
-    [broadfcui.page.workspace.monitor.common :as moncommon]
-    [broadfcui.page.workspace.monitor.workflow-details :as workflow-details]
-    [broadfcui.utils :as utils]
-    ))
+   [dmohs.react :as react]
+   [clojure.string :as string]
+   [broadfcui.common :as common]
+   [broadfcui.common.components :as comps]
+   [broadfcui.common.duration :as duration]
+   [broadfcui.common.icons :as icons]
+   [broadfcui.common.modal :as modal]
+   [broadfcui.common.style :as style]
+   [broadfcui.common.table :refer [Table]]
+   [broadfcui.endpoints :as endpoints]
+   [broadfcui.nav :as nav]
+   [broadfcui.page.workspace.monitor.common :as moncommon]
+   [broadfcui.page.workspace.monitor.workflow-details :as workflow-details]
+   [broadfcui.utils :as utils]
+   ))
 
 
 (defn- color-for-submission [submission]
@@ -28,7 +28,7 @@
         :else [icons/ExceptionIcon {:size 36}]))
 
 
-(react/defc WorkflowsTable
+(react/defc- WorkflowsTable
   {:get-initial-state
    (fn []
      {:active-filter :all})
@@ -119,7 +119,7 @@
                  :workflow-name workflowName}))]))})
 
 
-(react/defc AbortButton
+(react/defc- AbortButton
   {:render (fn [{:keys [state this]}]
              (when (:aborting-submission? @state)
                [comps/Blocker {:banner "Aborting submission..."}])

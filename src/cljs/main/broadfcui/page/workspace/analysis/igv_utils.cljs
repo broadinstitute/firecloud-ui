@@ -1,9 +1,9 @@
 (ns broadfcui.page.workspace.analysis.igv-utils
   (:require
-    [broadfcui.common :as common]
-    [broadfcui.endpoints :as endpoints]
-    [broadfcui.utils :as utils]
-    ))
+   [broadfcui.common :as common]
+   [broadfcui.endpoints :as endpoints]
+   [broadfcui.utils :as utils]
+   ))
 
 
 (defn- finder [{:keys [track-url on-success on-error]} options]

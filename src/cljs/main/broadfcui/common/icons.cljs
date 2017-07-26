@@ -1,9 +1,9 @@
 (ns broadfcui.common.icons
   (:require
-    [dmohs.react :as react]
-    [broadfcui.common.style :as style]
-    [broadfcui.utils :as utils]
-    ))
+   [dmohs.react :as react]
+   [broadfcui.common.style :as style]
+   [broadfcui.utils :as utils]
+   ))
 
 ;; From http://fontawesome.io/icons/
 (def icon-keys

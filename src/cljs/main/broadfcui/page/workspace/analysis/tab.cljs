@@ -1,13 +1,13 @@
 (ns broadfcui.page.workspace.analysis.tab
   (:require
-    [dmohs.react :as react]
-    [broadfcui.common :as common]
-    [broadfcui.common.components :as comps]
-    [broadfcui.common.modal :as modal]
-    [broadfcui.page.workspace.analysis.igv :refer [IGVContainer]]
-    [broadfcui.page.workspace.analysis.track-selector :refer [TrackSelectionDialog]]
-    [broadfcui.utils :as utils]
-    ))
+   [dmohs.react :as react]
+   [broadfcui.common :as common]
+   [broadfcui.common.components :as comps]
+   [broadfcui.common.modal :as modal]
+   [broadfcui.page.workspace.analysis.igv :refer [IGVContainer]]
+   [broadfcui.page.workspace.analysis.track-selector :refer [TrackSelectionDialog]]
+   [broadfcui.utils :as utils]
+   ))
 
 
 (def ^:private tracks-cache (atom {}))

@@ -1,8 +1,8 @@
 (ns broadfcui.config
   (:require
-    [clojure.set :as set]
-    [clojure.string :as string]
-    ))
+   [clojure.set :as set]
+   [clojure.string :as string]
+   ))
 
 (defn- non-empty-string?
   [s]

@@ -1,19 +1,20 @@
 (ns broadfcui.page.workspace.create
   (:require
-    [dmohs.react :as react]
-    [broadfcui.common :as common]
-    [broadfcui.common.components :as comps]
-    [broadfcui.common.input :as input]
-    [broadfcui.common.modal :as modal]
-    [broadfcui.common.style :as style]
-    [broadfcui.components.modals :as modals]
-    [broadfcui.endpoints :as endpoints]
-    [broadfcui.nav :as nav]
-    [broadfcui.utils :as utils]
-    ))
+   [dmohs.react :as react]
+   [broadfcui.common :as common]
+   [broadfcui.common.components :as comps]
+   [broadfcui.common.icons :as icons]
+   [broadfcui.common.input :as input]
+   [broadfcui.common.modal :as modal]
+   [broadfcui.common.style :as style]
+   [broadfcui.components.modals :as modals]
+   [broadfcui.endpoints :as endpoints]
+   [broadfcui.nav :as nav]
+   [broadfcui.utils :as utils]
+   ))
 
 
-(react/defc CreateDialog
+(react/defc- CreateDialog
   {:get-initial-state
    (fn [{:keys [props]}]
      {:selected-project (first (:billing-projects props))
@@ -54,7 +55,9 @@
                    Once set, it cannot be changed."]
                    (style/create-link {:href "https://software.broadinstitute.org/firecloud/documentation/article?id=9524"
                                        :target "_blank"
-                                       :text "Read more about Authorization Domains"})]})]
+                                       :text [:span {:style {:white-space "pre"}}
+                                              "Read more about Authorization Domains"
+                                              icons/external-link-icon]})]})]
          (style/create-select
           {:ref "auth-domain"
            :defaultValue -1
@@ -67,7 +70,7 @@
    :component-did-mount
    (fn [{:keys [state]}]
      (endpoints/get-groups
-      (fn [success? parsed-response]
+      (fn [parsed-response]
         (swap! state assoc :groups
                (conj (map :groupName parsed-response)
                      "None")))))

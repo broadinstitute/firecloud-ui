@@ -1,11 +1,13 @@
 (ns broadfcui.components.modals
   (:require
-    [dmohs.react :as react]
-    [org.broadinstitute.uicomps.modal :as modal]
-    [broadfcui.common :as common]
-    [broadfcui.common.components :as comps]
-    [broadfcui.common.style :as style]
-    ))
+   [dmohs.react :as react]
+   [org.broadinstitute.uicomps.modal :as modal]
+   [broadfcui.common :as common]
+   [broadfcui.common.components :as comps]
+   [broadfcui.common.icons :as icons]
+   [broadfcui.common.style :as style]
+   [broadfcui.utils :as utils]
+   ))
 
 (react/defc OKCancelForm
   {:get-default-props
@@ -69,3 +71,20 @@
                                      (fn [e] (.preventDefault e)
                                        (when (:cycle-focus? props)
                                          (.focus (get-first)))))))))})
+
+(defn render-error [{:keys [header text on-dismiss]}]
+  [OKCancelForm
+   {:header [:div {:style {:display "inline-flex" :align-items "center"}}
+             (icons/icon {:style {:color (:exception-state style/colors)
+                                  :marginRight "0.5rem"}} :error)
+             (or header "Error")]
+    :content [:div {:style {:width 500}} text]
+    :dismiss on-dismiss
+    :show-cancel? false :ok-button "OK"}])
+
+(defn render-message [{:keys [header text on-confirm on-dismiss]}]
+  [OKCancelForm
+   {:header (or header "Confirm")
+    :content [:div {:style {:width 500}} text]
+    :ok-button on-confirm
+    :dismiss on-dismiss}])

@@ -1,55 +1,50 @@
 (ns broadfcui.page.workspace.details
   (:require
-    [dmohs.react :as react]
-    [broadfcui.common :as common]
-    [broadfcui.common.style :as style]
-    [broadfcui.config :as config]
-    [broadfcui.endpoints :as endpoints]
-    [broadfcui.nav :as nav]
-    [broadfcui.net :as net]
-    [broadfcui.page.notifications :as notifications]
-    [broadfcui.page.workspace.analysis.tab :as analysis-tab]
-    [broadfcui.page.workspace.data.tab :as data-tab]
-    [broadfcui.page.workspace.method-configs.tab :as method-configs-tab]
-    [broadfcui.page.workspace.monitor.tab :as monitor-tab]
-    [broadfcui.page.workspace.summary.tab :as summary-tab]
-    [broadfcui.utils :as utils]
-    ))
+   [dmohs.react :as react]
+   [broadfcui.common :as common]
+   [broadfcui.common.style :as style]
+   [broadfcui.config :as config]
+   [broadfcui.endpoints :as endpoints]
+   [broadfcui.nav :as nav]
+   [broadfcui.net :as net]
+   [broadfcui.page.notifications :as notifications]
+   [broadfcui.page.workspace.analysis.tab :as analysis-tab]
+   [broadfcui.page.workspace.data.tab :as data-tab]
+   [broadfcui.page.workspace.method-configs.tab :as method-configs-tab]
+   [broadfcui.page.workspace.monitor.tab :as monitor-tab]
+   [broadfcui.page.workspace.summary.tab :as summary-tab]
+   [broadfcui.utils :as utils]
+   ))
 
-(react/defc ProtectedBanner
-  {:render
-   (fn [{:keys [props]}]
-     (let [{:keys [workspace]} props
-           this-auth-domain (get-in workspace [:workspace :authorizationDomain :membersGroupName])
-           dbGapProtected (= this-auth-domain config/tcga-authorization-domain)]
-       (when this-auth-domain
-         [:div {:style {:paddingTop 2}}
-          [:div {:style {:backgroundColor "#ccc"
-                         :fontSize "small"
-                         :padding "4px 0"
-                         :textAlign "center"}
-                 :data-test-id "auth-domain-restriction-message"}
-           "Access to this workspace is " [:strong {} "restricted"] " to: " this-auth-domain
-           (when dbGapProtected " (TCGA Controlled Access Data)")]
-          [:div {:style {:height 1 :backgroundColor "#bbb" :marginTop 2}}]])))})
 
-(react/defc BucketBanner
-  {:render
-   (fn [{:keys [props]}]
-     (when (= false (:bucket-access? props))
-       [:div {:style {:paddingTop 2}}
-        [:div {:style {:backgroundColor "#efdcd7"
-                       :fontSize "small"
-                       :padding "4px 0"
-                       :textAlign "center"}}
-         (cond (= 404 (:bucket-status-code props))
-               (str "The Google bucket associated with this workspace"
-                    " does not exist. Please contact help@firecloud.org.")
-               :else
-               (str "The Google bucket associated with this workspace is currently"
-                    " unavailable. This should be resolved shortly. If this persists for"
-                    " more than an hour, please contact help@firecloud.org."))]
-        [:div {:style {:height 1 :backgroundColor "#efdcd7" :marginTop 2}}]]))})
+(defn- protected-banner [workspace]
+  (let [this-auth-domain (get-in workspace [:workspace :authorizationDomain :membersGroupName])
+        dbGapProtected (= this-auth-domain config/tcga-authorization-domain)]
+    (when this-auth-domain
+      [:div {:style {:paddingTop 2}}
+       [:div {:style {:backgroundColor "#ccc"
+                      :fontSize "small"
+                      :padding "4px 0"
+                      :textAlign "center"}
+              :data-test-id "auth-domain-restriction-message"}
+        "Access to this workspace is " [:strong {} "restricted"] " to: " this-auth-domain
+        (when dbGapProtected " (TCGA Controlled Access Data)")]
+       [:div {:style {:height 1 :backgroundColor "#bbb" :marginTop 2}}]])))
+
+(defn- bucket-banner [{:keys [bucket-access? bucket-status-code]}]
+  (when (= false bucket-access?)
+    [:div {:style {:paddingTop 2}}
+     [:div {:style {:backgroundColor "#efdcd7"
+                    :fontSize "small"
+                    :padding "4px 0"
+                    :textAlign "center"}}
+      (cond (= 404 bucket-status-code)
+            (str "The Google bucket associated with this workspace"
+                 " does not exist. Please contact help@firecloud.org.")
+            :else (str "The Google bucket associated with this workspace is currently"
+                       " unavailable. This should be resolved shortly. If this persists for"
+                       " more than an hour, please contact help@firecloud.org."))]
+     [:div {:style {:height 1 :backgroundColor "#efdcd7" :marginTop 2}}]]))
 
 
 (def ^:private SUMMARY "Summary")
@@ -77,7 +72,7 @@
         (assoc-in [:workspace :tags] tags)
         (assoc-in [:workspace :library-attributes] library-attributes))))
 
-(react/defc Tab
+(react/defc- Tab
   {:render
    (fn [{:keys [props state]}]
      [:a {:style {:flex "0 0 auto" :padding "1em 2em"
@@ -100,7 +95,7 @@
         [:div {:style {:position "absolute" :bottom -1 :left 0 :width "100%" :height 2
                        :backgroundColor "white"}}])])})
 
-(react/defc WorkspaceDetails
+(react/defc- WorkspaceDetails
   {:render
    (fn [{:keys [props state locals refs this]}]
      (let [{:keys [workspace-id]} props
@@ -111,16 +106,19 @@
                       [Tab {:text text :first? (= text SUMMARY) :active? (is-active? text)
                             :href (nav/get-link
                                    (condp = text
-                                     SUMMARY :workspace-summary DATA :workspace-data
+                                     SUMMARY :workspace-summary
+                                     DATA :workspace-data
                                      ANALYSIS :workspace-analysis
-                                     CONFIGS :workspace-method-configs MONITOR :workspace-monitor)
+                                     CONFIGS :workspace-method-configs
+                                     MONITOR :workspace-monitor)
                                    workspace-id)
-                            :data-test-id (str text "-tab")
-                            :on-active-tab-clicked on-active-tab-clicked}])]
+                            :on-active-tab-clicked on-active-tab-clicked
+                            :data-test-id (str text "-tab")}])
+           request-refresh #(this :-refresh-workspace)]
        [:div {}
         [:div {:style {:minHeight "0.5rem"}}
-         [ProtectedBanner (select-keys @state [:workspace :workspace-error])]
-         [BucketBanner (select-keys @state [:bucket-access? :bucket-status-code])]]
+         (protected-banner workspace)
+         (bucket-banner (select-keys @state [:bucket-access? :bucket-status-code]))]
         [:div {:style {:marginTop "1rem" :padding "0 1.5rem"
                        :display "flex" :justifyContent "space-between"}}
          [:div {:style {:fontSize "125%"}}
@@ -146,11 +144,11 @@
                        :borderTop style/standard-line :borderBottom style/standard-line
                        :padding "0 1.5rem" :justifyContent "space-between"}}
          [:div {:style {:display "flex"}}
-          (make-tab SUMMARY #(react/call :-refresh-workspace this))
-          (make-tab DATA #(react/call :-refresh-workspace this))
-          (make-tab ANALYSIS #(react/call :refresh (@refs ANALYSIS)))
-          (make-tab CONFIGS #(react/call :refresh (@refs CONFIGS)))
-          (make-tab MONITOR #(react/call :refresh (@refs MONITOR)))]]
+          (make-tab SUMMARY request-refresh)
+          (make-tab DATA request-refresh)
+          (make-tab ANALYSIS #((@refs ANALYSIS) :refresh))
+          (make-tab CONFIGS #((@refs CONFIGS) :refresh))
+          (make-tab MONITOR #((@refs MONITOR) :refresh))]]
         [:div {:style {:marginTop "2rem"}}
          (if-let [error (:workspace-error @state)]
            [:div {:style {:textAlign "center" :color (:exception-state style/colors)}
@@ -158,41 +156,33 @@
             "Error loading workspace: " error]
            (condp = active-tab
              nil (react/create-element
-                  [summary-tab/Summary {:key workspace-id :ref SUMMARY
-                                        :workspace-id workspace-id
-                                        :workspace workspace
-                                        :request-refresh #(react/call :-refresh-workspace this)
-                                        :bucket-access? bucket-access?}])
+                  [summary-tab/Summary
+                   (merge {:key workspace-id :ref SUMMARY}
+                          (utils/restructure workspace-id workspace request-refresh bucket-access?))])
              DATA (react/create-element
-                   [data-tab/WorkspaceData {:ref DATA
-                                            :workspace-id workspace-id
-                                            :workspace workspace
-                                            :workspace-error workspace-error
-                                            :request-refresh #(this :-refresh-workspace)}])
+                   [data-tab/WorkspaceData
+                    (merge {:ref DATA}
+                           (utils/restructure workspace-id workspace workspace-error request-refresh))])
              ANALYSIS (react/create-element
                        [analysis-tab/Page {:ref ANALYSIS :workspace-id workspace-id}])
              CONFIGS (react/create-element
                       [method-configs-tab/Page
-                       {:ref CONFIGS
-                        :workspace-id workspace-id
-                        :workspace workspace
-                        :config-id (:config-id props)
-                        :request-refresh #(react/call :-refresh-workspace this)
-                        :bucket-access? bucket-access?
-                        :on-submission-success #(nav/go-to-path
-                                                 :workspace-submission workspace-id %)}])
+                       (merge {:ref CONFIGS
+                               :on-submission-success #(nav/go-to-path
+                                                        :workspace-submission workspace-id %)}
+                              (utils/restructure workspace-id workspace request-refresh bucket-access?)
+                              (select-keys props [:config-id]))])
              MONITOR (react/create-element
                       [monitor-tab/Page
-                       (merge
-                        {:ref MONITOR}
-                        (select-keys props [:submission-id :workflow-id :workspace-id])
-                        (select-keys @state [:workspace]))])))]]))
+                       (merge {:ref MONITOR}
+                              (utils/restructure workspace-id workspace)
+                              (select-keys props [:submission-id :workflow-id]))])))]]))
    :component-did-mount
    (fn [{:keys [props this]}]
      ;; These tabs don't request a refresh, so if we nav straight there then we need to kick one
      ;; off.
      (when (contains? #{ANALYSIS CONFIGS MONITOR} (:tab-name props))
-       (react/call :-refresh-workspace this)))
+       (this :-refresh-workspace)))
    :-refresh-workspace
    (fn [{:keys [props state]}]
      (endpoints/call-ajax-orch

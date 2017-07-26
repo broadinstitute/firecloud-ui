@@ -1,13 +1,13 @@
 (ns broadfcui.page.workspace.summary.catalog.questions
   (:require
-    [dmohs.react :as react]
-    [clojure.string :as string]
-    [broadfcui.common.components :as comps]
-    [broadfcui.common.style :as style]
-    [broadfcui.config :as config]
-    [broadfcui.page.workspace.summary.library-utils :as library-utils]
-    [broadfcui.utils :as utils]
-    ))
+   [dmohs.react :as react]
+   [clojure.string :as string]
+   [broadfcui.common.components :as comps]
+   [broadfcui.common.style :as style]
+   [broadfcui.config :as config]
+   [broadfcui.page.workspace.summary.library-utils :as library-utils]
+   [broadfcui.utils :as utils]
+   ))
 
 
 (def ^:private ENUM_EMPTY_CHOICE "<select an option>")
