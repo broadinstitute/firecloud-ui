@@ -40,9 +40,10 @@
          (this :render-workflow-details workflow-id)
          (this :render-table))))
    :render-table
-   (fn [{:keys [props state]}]
+   (fn [{:keys [props state refs]}]
      [Table
-      {:data (:filtered-data @state)
+      {:ref "table"
+       :data (:filtered-data @state)
        :body
        {:empty-message "No Workflows"
         :style table-style/table-heavy
@@ -109,7 +110,8 @@
             :on-change (fn [index data]
                          (swap! state assoc
                                 :filter-group-index index
-                                :filtered-data data))
+                                :filtered-data data)
+                         ((@refs "table") :update-query-params {:page-number 1}))
             :filter-groups (vec (cons {:text "All" :pred (constantly true)}
                                       (map (fn [status] {:text status :pred #(= status (:status %))})
                                            moncommon/wf-all-statuses)))}]])}}])
