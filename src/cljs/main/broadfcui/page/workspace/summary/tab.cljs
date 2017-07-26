@@ -81,12 +81,14 @@
                                :catalog-with-read? (and (or writer? (reader? workspace)) (:catalog workspace))}
                               (utils/restructure owner? writer? auth-domain))]
            [:div {:style {:margin "2.5rem 1.5rem" :display "flex"}}
+            [ws-sync/SyncContainer {:ref "sync-container"
+                                    :workspace-id (:workspace-id props)}]
             (this :-render-sidebar derived)
             (this :-render-main derived)
             (when (:updating-attrs? @state)
               [comps/Blocker {:banner "Updating Attributes..."}])
             (when (contains? @state :locking?)
-              [comps/Blocker {:banner (if (:locking? @state) "Unlocking..." "Locking...")}])]))))
+              [comps/Blocker {:banner (if (:locking? @state) "Locking..." "Unlocking...")}])]))))
    :component-did-mount
    (fn [{:keys [this]}]
      (this :-refresh))
@@ -134,7 +136,7 @@
                        [AclEditor
                            (merge (utils/restructure workspace-id user-access-level request-refresh)
                                   {:on-users-added (fn [new-users]
-                                                     (this :-perform-sync-check new-users))})])}])
+                                                     ((@refs "sync-container") :check-synchronization new-users))})])}])
         (when (not editing?)
           [comps/SidebarButton
            {:style :light :color :button-primary :margin :top
@@ -318,7 +320,7 @@
                     (comps/push-error-response (get-parsed-response false))))}))
    :-lock-or-unlock
    (fn [{:keys [props state this]} locked-now?]
-     (swap! state assoc :locking? locked-now?)
+     (swap! state assoc :locking? (not locked-now?))
      (endpoints/call-ajax-orch
       {:endpoint (endpoints/lock-or-unlock-workspace (:workspace-id props) locked-now?)
        :on-done (fn [{:keys [success? status-text status-code]}]
@@ -369,14 +371,4 @@
                              (if parse-error?
                                (str "Error parsing JSON response with status: " status-text)
                                (let [key (if success? "estimate" "message")]
-                                 (get response key (str "Error: \"" key "\" not found in JSON response with status: " status-text)))))))})))
-   :-perform-sync-check
-   (fn [{:keys [props]} new-users]
-     (endpoints/call-ajax-orch
-      {:endpoint (endpoints/get-permission-report (:workspace-id props))
-       :payload {:users new-users}
-       :headers utils/content-type=json
-       :on-done (fn [{:keys [success? get-parsed-response]}]
-                  (if success?
-                    (ws-sync/handle-sync (get-parsed-response))
-                    (comps/push-error-response (get-parsed-response false))))}))})
+                                 (get response key (str "Error: \"" key "\" not found in JSON response with status: " status-text)))))))})))})
