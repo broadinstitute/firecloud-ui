@@ -204,7 +204,7 @@
 
   :-render-main
    (fn [{:keys [props state locals]}
-        {:keys [user-access-level request-refresh can-share? owner? curator? writer? catalog-with-read?]}]
+        {:keys [user-access-level request-refresh can-share? owner? curator? writer? reader? catalog-with-read?]}]
      (let [{:keys [workspace workspace-id bucket-access?]} props
            {:keys [editing?]
             {:keys [storage-cost submissions-count library-schema]} :server-response} @state
