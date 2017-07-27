@@ -15,6 +15,7 @@ gcs {
   qaEmail = "{{$users.Data.service_acct_email}}"
   qaPemFile = "{{$dir}}/automation/src/test/resources/firecloud-qa.pem"
   billingAccount = "{{$users.Data.billing_acct}}"
+  billingAccountId = "billingAccounts/0028B7-4F7D57-2D0E40"
 }
 
 users {

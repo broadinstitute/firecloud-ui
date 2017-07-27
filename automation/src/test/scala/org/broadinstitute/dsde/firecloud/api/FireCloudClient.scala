@@ -68,19 +68,9 @@ trait FireCloudClient {
   }
 
   def postRequestWithMultipart(uri:String, name: String, content: String)(implicit token: AuthToken): String = {
-    // val cont = ContentType.parse("text/tab-separated-values")
-    //val ranges = coalesceRanges(iRanges).sortBy(_.start)
-    //val formD = Multipart.ByteRanges(HttpEntity(ByteString("...")))
-    val formData = Multipart.FormData {
-      Source {
-        List (
-          Multipart.FormData.BodyPart.apply(name, HttpEntity(ByteString(content)))
-        )
-      }
-    }
-    //val formData = Multipart.FormData.fromPath("participants", ContentType.parse("text/tab-separated-values"), "")
-    val requestEntity = formData.toEntity()
-    val req = HttpRequest(POST, uri, List(makeAuthHeader(token)), requestEntity)
+    val part = Multipart.FormData.BodyPart(name, HttpEntity(ByteString(content)))
+    val formData = Multipart.FormData(Source.single(part))
+    val req = HttpRequest(POST, uri, List(makeAuthHeader(token)), formData.toEntity())
     handleResponse(sendRequest(req))
   }
 

@@ -23,14 +23,4 @@ object Util {
   def makeUuid: String = {
     UUID.randomUUID().toString
   }
-
-  def retry[T](remainingBackOffIntervals: Seq[FiniteDuration])(op: => Option[T]): Option[T] = {
-    op match {
-      case Some(x) => Some(x)
-      case None if remainingBackOffIntervals.isEmpty => None
-      case None if remainingBackOffIntervals.nonEmpty =>
-        Thread sleep remainingBackOffIntervals.head.toMillis
-        retry(remainingBackOffIntervals.tail)(op)
-    }
-  }
 }

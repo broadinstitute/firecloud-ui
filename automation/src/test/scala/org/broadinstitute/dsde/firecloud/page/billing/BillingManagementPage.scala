@@ -2,7 +2,7 @@ package org.broadinstitute.dsde.firecloud.page.billing
 
 import org.broadinstitute.dsde.firecloud.config.Config
 import org.broadinstitute.dsde.firecloud.page.{AuthenticatedPage, FireCloudView, PageUtil}
-import org.broadinstitute.dsde.firecloud.util.Util.retry
+import org.broadinstitute.dsde.firecloud.util.Retry.retry
 import org.openqa.selenium.WebDriver
 import org.scalatest.selenium.Page
 
@@ -16,7 +16,6 @@ class BillingManagementPage(implicit webDriver: WebDriver) extends Authenticated
   override val url: String = s"${Config.FireCloud.baseUrl}#billing"
 
   override def awaitLoaded(): BillingManagementPage = {
-//    await enabled testId("begin-create-billing-project")
     await condition ui.hasCreateBillingProjectButton
     this
   }
@@ -56,9 +55,9 @@ class BillingManagementPage(implicit webDriver: WebDriver) extends Authenticated
     */
   def waitForCreateCompleted(projectName: String): String = {
     filter(projectName)
-    retry(Seq.fill(60)(10.seconds)) {
-      ui.readCreationStatusForProject(projectName).filterNot(_ equals "running")
-    } match {
+    retry(10.seconds, 5.minutes)({
+          ui.readCreationStatusForProject(projectName).filterNot(_ equals "running")
+        }) match {
       case None => throw new Exception("Billing project creation did not complete")
       case Some(s) => s
     }
@@ -77,7 +76,6 @@ class BillingManagementPage(implicit webDriver: WebDriver) extends Authenticated
   }
 
   def isUserInBillingProject(userEmail: String): Boolean = {
-//    filter(userEmail)
     userEmail == ui.findUser(userEmail)
   }
 

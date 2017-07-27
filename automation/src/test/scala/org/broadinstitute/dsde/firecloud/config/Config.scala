@@ -18,6 +18,7 @@ object Config {
     val default = gcsConfig.getString("serviceProject")
     val common = default
     val billingAccount = gcsConfig.getString("billingAccount")
+    val billingAccountId = gcsConfig.getString("billingAccountId")
   }
 
   object Users {
