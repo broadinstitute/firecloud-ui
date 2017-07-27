@@ -18,17 +18,15 @@
 
 
 (defn- protected-banner [workspace]
-  (let [this-auth-domain (get-in workspace [:workspace :authorizationDomain :membersGroupName])
-        dbGapProtected (= this-auth-domain config/tcga-authorization-domain)]
-    (when this-auth-domain
+  (let [this-auth-domain (get-in workspace [:workspace :authorizationDomain])]
+    (when (not (empty? this-auth-domain))
       [:div {:style {:paddingTop 2}}
        [:div {:style {:backgroundColor "#ccc"
                       :fontSize "small"
                       :padding "4px 0"
                       :textAlign "center"}
               :data-test-id "auth-domain-restriction-message"}
-        "Access to this workspace is " [:strong {} "restricted"] " to: " this-auth-domain
-        (when dbGapProtected " (TCGA Controlled Access Data)")]
+        "Note: Access to this workspace is restricted to an Authorization Domain"]
        [:div {:style {:height 1 :backgroundColor "#bbb" :marginTop 2}}]])))
 
 (defn- bucket-banner [{:keys [bucket-access? bucket-status-code]}]

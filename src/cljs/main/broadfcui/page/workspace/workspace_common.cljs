@@ -33,9 +33,10 @@
             (table-utils/date-column {:column-data (comp :createdDate :workspace)})
             {:header "Access Level" :initial-width 106
              :column-data :accessLevel}
-            {:header "Authorization Domain" :starting-width 150
-             :column-data (comp :membersGroupName :authorizationDomain :workspace)
-             :render #(or % "None")}]}
+            {:header "Authorization Domain" :starting-width 200
+             :column-data (comp :authorizationDomain :workspace)
+             :as-text #(if (empty? %) "None" (interpose ", " (map :membersGroupName %)))
+             :sort-by count}]}
     :toolbar {:items toolbar-items}}])
 
 
