@@ -828,4 +828,6 @@
      (let [{:keys [filter-groups selected-index data on-change]} props]
        (when selected-index
          (let [{:keys [pred]} (nth filter-groups selected-index)]
-           (on-change selected-index (if pred (filter pred data) data))))))})
+           (js/setTimeout
+            #(on-change selected-index (if pred (filter pred data) data))
+            0)))))})
