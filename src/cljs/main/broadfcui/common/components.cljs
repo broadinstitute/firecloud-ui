@@ -709,7 +709,7 @@
      (.select2 (js/$ (@refs "input-element")) "destroy"))
    :-on-change
    (fn [{:keys [props this]}]
-     (when-let [f (:on-change props)]
+     (when-let [f (:on-change props)] ; pulls out on-change callback and calls it when its own on-change is called
        (f (this :get-tags))))
    :-process-results
    (fn [_]

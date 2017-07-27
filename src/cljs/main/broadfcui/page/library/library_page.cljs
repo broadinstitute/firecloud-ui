@@ -259,7 +259,7 @@
 
 (react/defc- Facet
   {:render
-   (fn [{:keys [props]}]
+   (fn [{:keys [this state props refs]}]
      (let [aggregate-field (:aggregate-field props)
            properties (:aggregate-properties props)
            title (:title properties)
@@ -271,7 +271,24 @@
                                       {:title title :field aggregate-field}
                                       (select-keys aggregations [:numOtherDocs :buckets])
                                       (select-keys props [:expanded? :selected-items :update-filter
-                                                          :expanded-callback-function]))])))})
+                                                          :expanded-callback-function]))]
+         (= render-hint "tag-autocomplete") (filter/section
+                                              {:title title
+                                               :content (react/create-element
+                                                         [comps/TagAutocomplete {:ref "tag-autocomplete"
+                                                                                 :tags "Tags"
+                                                                                 :data (:tags @state)
+                                                                                 :show-counts? false
+                                                                                 :allow-new? false
+                                                                                 :on-change #(swap! state update :filters assoc "Tags" %)}])
+                                               :on-clear #((@refs "tag-autocomplete") :set-tags [])
+                                               :onChange #(this :update-selected key (.. % -target -checked))
+                                               })
+       )
+     )
+   )
+  }
+)
 
 (react/defc- FacetSection
   {:render
