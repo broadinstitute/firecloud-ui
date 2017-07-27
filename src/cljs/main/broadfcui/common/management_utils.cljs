@@ -98,7 +98,7 @@
                            [:div {:style {:padding "0.6rem 0 0.6rem 32px"}}
                             (style/create-link {:text "Remove"
                                                 :onClick #(this :-remove-user role email)})])}]}
-                :toolbar {:get-items
+                :toolbar {:items
                           (constantly
                            [flex/spring
                             [comps/Button

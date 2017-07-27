@@ -76,7 +76,7 @@
                   :header-cell {:padding "0.5rem 0 0.5rem 1rem"}
                   :body-cell {:padding "0.3rem 0 0.3rem 1rem"}}}
          :toolbar ;; FIXME: magic numbers below:
-         {:get-items (constantly
+         {:items (constantly
                   [[:div {:style {:fontSize "112%"}}
                     ;; 112% makes this the same size as "Data Library" / "Workspaces" / "Method Repository" above
                     [:span {:style {:fontWeight 700 :color (:text-light style/colors) :marginRight "0.5rem"}}
