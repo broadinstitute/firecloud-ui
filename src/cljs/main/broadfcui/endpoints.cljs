@@ -593,6 +593,10 @@
   {:path (str "/" (get-agora-base config?) "/" namespace "/" name "/" snapshotId "/permissions")
    :method :post})
 
+(def multi-grant-method-acl
+  {:path "/methods/permissions"
+   :method :put})
+
 
 (defn get-agora-namespace-acl [namespace config?]
   {:path (str "/" (get-agora-base config?) "/" namespace "/permissions")

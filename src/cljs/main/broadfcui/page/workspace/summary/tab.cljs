@@ -124,11 +124,10 @@
                                      "Exception" [icons/ExceptionIcon {:size 32}])
                              :color (style/color-for-status status)}]]
         [Sticky
-         {:outer-style {:width 270 :backgroundColor "#fff"}
-          :sticky-props {:data-check-every 1
+         {:sticky-props {:data-check-every 1
                          :data-top-anchor (str label-id ":bottom") :data-bottom-anchor body-id}
           :contents
-          [:div {:style {:width 270 :background "#fff"}}
+          [:div {:style {:width 270}}
            (when (and can-share? (not editing?))
              [comps/SidebarButton
               {:style :light :margin :top :color :button-primary
