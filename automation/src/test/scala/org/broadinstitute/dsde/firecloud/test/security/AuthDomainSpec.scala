@@ -46,7 +46,11 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
       }
     }
 
-    "when not shared with a user who is not in the authorization domain" - {
+    "create workspace with multi-group auth domain"
+
+    // Not shared
+
+    "when not shared with a user who is not in the singular authorization domain" - {
 
       "should not be accessible" in withWebDriver { implicit driver =>
         withGroup("AuthDomainSpec") { authDomainName =>
@@ -74,7 +78,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
       }
     }
 
-    "when not shared with a user who is in the authorization domain" - {
+    "when not shared with a user who is in the singular authorization domain" - {
 
       "should not be accessible" in withWebDriver { implicit driver =>
         withGroup("AuthDomainSpec", List(Config.Users.george.email)) { authDomainName =>
@@ -102,7 +106,33 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
       }
     }
 
-    "when shared with a user who is not in the authorization domain" - {
+    "when not shared with a user who is in a subset of a multiple authorization domain" - {
+      "should not be accessible" in {
+
+      }
+      "should not be visible" in {
+
+      }
+    }
+
+    "when not shared with a user who is in a multiple authorization domain" - {
+      "should not be accessible" in {
+
+      }
+      "should not be visible" in {
+
+      }
+    }
+
+    // Shared
+
+    "workspace in multi-group auth domain: A, B. User in group A but not B. Shared with group A" - {
+      "should be visible but not accessible" - {
+        // Should verify that UI indicates which auth domain the user is missing
+      }
+    }
+
+    "when shared with a user who is not in the singular authorization domain" - {
 
       "should be visible but not accessible" in withWebDriver { implicit driver =>
         withGroup("AuthDomainSpec") { authDomainName =>
@@ -123,7 +153,13 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
       }
     }
 
-    "when shared with a user who is in the authorization domain" - {
+    "when shared with a user who is partially in the multi-group authorization domain" - {
+      "should be visible but not accessible" - {
+        // Should verify that UI indicates which auth domain the user is missing
+      }
+    }
+
+    "when shared with a user who is in the singular authorization domain" - {
 
       "should be visible and accessible when shared with single user" in withWebDriver { implicit driver =>
         withGroup("AuthDomainSpec", List(Config.Users.george.email)) { authDomainName =>
@@ -169,6 +205,36 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
       }
     }
 
+    "when shared with a user who is in the multi-group authorization domain" - {
+      "should be visible and accessible when shared with the single user" - {}
+      "should be visible and accessible when shared with one of the groups?" - {}
+    }
+
+    // Billing project owner
+
+    "when not shared with the billing project owner" - {
+      "when the billing project owner is" - {
+        "not in the singular authorization domain" - {
+          "should be visible but not accessible" - {}
+        }
+        "in a subset of the multiple authorization domain" - {
+          "should be visible but not accessible" - {}
+        }
+        "in the singular authorization domain" - {
+          "should be visible and accessible" - {}
+        }
+        "is in the multiple authorization domain" - {
+          "should be visible and accessible" - {}
+        }
+      }
+    }
+
+    "when shared with the billing project owner" - {
+      "when the billing project owner is in the multiple authorization domain" - {
+        "should be visible and accessible" - {}
+      }
+    }
+
     "cannot lose its authorization domain when cloned" in withWebDriver { implicit driver =>
       withGroup("AuthDomainSpec", List(Config.Users.george.email)) { authDomainName =>
         withWorkspace(projectName, "AuthDomainSpec_share", authDomainName) { workspaceName =>
@@ -194,6 +260,14 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
           }
         }
       }
+    }
+
+    "clone workspace with multi-group auth domain" - {}
+
+    "clone workspace and add auth domain" - {}
+
+    "reader/writer access" - {
+      //multiple tests go here
     }
   }
 }
