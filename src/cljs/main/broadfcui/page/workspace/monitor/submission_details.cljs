@@ -110,7 +110,8 @@
                          (swap! state assoc
                                 :filter-group-index index
                                 :filtered-data data)
-                         ((@refs "table") :update-query-params {:page-number 1}))
+                         (when-let [table (@refs "table")]
+                           (table :update-query-params {:page-number 1})))
             :filter-groups (vec (cons {:text "All" :pred (constantly true)}
                                       (map (fn [status] {:text status :pred #(= status (:status %))})
                                            moncommon/wf-all-statuses)))}]])}}])
