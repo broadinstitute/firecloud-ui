@@ -79,7 +79,7 @@
                       :style {:float "right" :color (:exception-state style/colors)}
                       :onClick #(swap! state assoc :group-name groupName :delete-modal? true)})))}]}
        :toolbar
-       {:items
+       {:get-items
         (constantly
          [flex/spring
           [comps/Button
