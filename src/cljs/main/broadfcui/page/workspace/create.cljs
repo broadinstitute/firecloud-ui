@@ -65,7 +65,8 @@
    :component-did-mount
    (fn [{:keys [state]}]
      (endpoints/get-groups
-      (fn [parsed-response]
+      (fn [_ parsed-response]
+        (utils/cljslog parsed-response)
         (swap! state assoc :groups
                (conj (map :groupName parsed-response)
                      "None")))))
