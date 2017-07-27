@@ -828,4 +828,8 @@
      (let [{:keys [filter-groups selected-index data on-change]} props]
        (when selected-index
          (let [{:keys [pred]} (nth filter-groups selected-index)]
-           (on-change selected-index (if pred (filter pred data) data))))))})
+           ; on-change is likely to refer to the parent component.
+           ; trigger at the end of the event loop to allow the parent to mount
+           (js/setTimeout
+            #(on-change selected-index (if pred (filter pred data) data))
+            0)))))})
