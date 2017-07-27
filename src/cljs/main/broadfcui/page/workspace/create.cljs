@@ -66,7 +66,6 @@
    (fn [{:keys [state]}]
      (endpoints/get-groups
       (fn [_ parsed-response]
-        (utils/cljslog parsed-response)
         (swap! state assoc :groups
                (conj (map :groupName parsed-response)
                      "None")))))
