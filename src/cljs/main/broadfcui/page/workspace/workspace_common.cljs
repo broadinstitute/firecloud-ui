@@ -37,7 +37,7 @@
              :column-data (comp :authorizationDomain :workspace)
              :as-text #(if (empty? %) "None" (interpose ", " (map :membersGroupName %)))
              :sort-by count}]}
-    :toolbar {:items toolbar-items}}])
+    :toolbar {:items (constantly toolbar-items)}}])
 
 (defn config->id [config]
   (select-keys config [:namespace :name]))
