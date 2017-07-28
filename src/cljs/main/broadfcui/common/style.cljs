@@ -95,6 +95,13 @@
        (cons [:option {:value -1 :disabled true} (first placeholder)] option-elements)
        option-elements)]))
 
+(defn create-identity-select-name [props options & [placeholder]]
+  (let [option-elements (map (fn [opt] [:option {:value opt} opt]) options)]
+    [:select (utils/deep-merge {:style select-style} props)
+     (if placeholder
+       (cons [:option {:value -1 :disabled true} placeholder] option-elements)
+       option-elements)]))
+
 (defn create-identity-select [props options]
   [:select (utils/deep-merge {:style select-style} props)
    (map (fn [opt] [:option {:value opt} opt]) options)])
