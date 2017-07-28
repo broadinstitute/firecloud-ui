@@ -35,7 +35,7 @@
                                               :href (nav/get-link :workspace-method-config
                                                                   (:workspace-id props)
                                                                   (ws-common/config->id config))}))
-           :get-toolbar-items
+           :toolbar-items
            [flex/spring
             [comps/Button
              {:text "Import Configuration..."
