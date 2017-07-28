@@ -7,8 +7,8 @@
    [broadfcui.common.components :as comps]
    [broadfcui.common.input :as input]
    [broadfcui.common.links :as links]
-   [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
+   [broadfcui.components.modals :as modals]
    [broadfcui.config :as config]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.utils :as utils]
@@ -38,10 +38,11 @@
    (fn [{:keys [props locals]}]
      (swap! locals assoc :info (build-info props)))
    :render
-   (fn [{:keys [state refs locals this]}]
+   (fn [{:keys [props state refs locals this]}]
      (let [{:keys [info]} @locals]
-       [comps/OKCancelForm
+       [modals/OKCancelForm
         {:header (:header info)
+         :dismiss (:dismiss props)
          :get-first-element-dom-node #(react/find-dom-node (@refs "namespace"))
          :get-last-element-dom-node #(react/find-dom-node (@refs "ok-button"))
          :content
@@ -115,7 +116,11 @@
                [:span {:style {:flex "1 0 auto"}}]
                (link "undo" undo?)
                (link "redo" redo?)]))
-           [CodeMirror {:ref "wdl-editor" :text (:payload info) :read-only? false}]
+           [CodeMirror {:ref "wdl-editor" :text (:payload info) :read-only? false
+                        :initialize (fn [self]
+                                      (self :add-listener "change"
+                                       #(swap! state assoc :undo-history
+                                               (js->clj (self :call-method "historySize")))))}]
            [:div {:style {:marginTop "0.8em" :fontSize "88%"}}
             "WDL must use Docker image digests to allow call caching "
             (links/create-external {:href (config/call-caching-guide-url)} "Learn about call caching")]
@@ -131,11 +136,6 @@
                      [comps/Button {:ref "ok-button"
                                     :text (:ok-text info)
                                     :onClick #(this :-create-method)}])}]))
-   :component-did-mount
-   (fn [{:keys [state refs]}]
-     ((@refs "wdl-editor") :add-listener "change"
-      #(swap! state assoc :undo-history
-              (js->clj ((@refs "wdl-editor") :call-method "historySize")))))
    :-set-wdl-text
    (fn [{:keys [refs]} text]
      ((@refs "wdl-editor") :call-method "setValue" text))
@@ -174,7 +174,7 @@
                  (swap! state assoc :banner nil :upload-error (get-parsed-response false))))})))))
    :-complete
    (fn [{:keys [props]} new-entity-id & [error-message]]
-     (modal/pop-modal)
+     ((:dismiss props))
      ((:on-created props) :method new-entity-id)
      (when error-message
        (comps/push-error error-message)))})

@@ -24,7 +24,10 @@
 (react/defc- Sidebar
   {:render
    (fn [{:keys [props state]}]
-     (let [{:keys [entity config? workflow? on-delete owner? body-id]} props]
+     (let [{:keys [entity config? workflow? on-delete owner? body-id]} props
+           on-method-created (fn [_ id]
+                               (nav/go-to-path :method id)
+                               (common/scroll-to-top))]
        [:div {:style {:flex "0 0 270px" :paddingRight 30}}
         (when (:deleting? @state)
           [Redactor (merge (utils/restructure entity config? on-delete)
@@ -38,6 +41,16 @@
             :entityName (mca/get-ordered-name entity)
             :title (str (:entityType entity) " " (mca/get-ordered-name entity))
             :on-users-added (fn [users] (utils/log "added: " users))}])
+        (when (:cloning? @state)
+          [create/CreateMethodDialog
+           {:dismiss #(swap! state dissoc :cloning?)
+            :duplicate entity
+            :on-created on-method-created}])
+        (when (:editing-method? @state)
+          [create/CreateMethodDialog
+           {:dismiss #(swap! state dissoc :editing-method?)
+            :snapshot entity
+            :on-created on-method-created}])
         [Sticky
          {:anchor body-id
           :sticky-props {:data-check-every 1}
@@ -47,22 +60,14 @@
              [comps/SidebarButton
               {:style :light :color :button-primary
                :text "Clone..." :icon :clone :margin :bottom
-               :onClick #(modal/push-modal [create/CreateMethodDialog
-                                            {:duplicate entity
-                                             :on-created (fn [_ id]
-                                                           (nav/go-to-path :method id)
-                                                           (common/scroll-to-top))}])}])
+               :onClick #(swap! state assoc :cloning? true)}])
            (when owner?
              (list
               (when workflow?
                 [comps/SidebarButton
                  {:style :light :color :button-primary
                   :text "Edit..." :icon :edit :margin :bottom
-                  :onClick #(modal/push-modal [create/CreateMethodDialog
-                                               {:snapshot entity
-                                                :on-created (fn [_ id]
-                                                              (nav/go-to-path :method id)
-                                                              (common/scroll-to-top))}])}])
+                  :onClick #(swap! state assoc :editing-method? true)}])
               [comps/SidebarButton
                {:style :light :color :button-primary
                 :text "Permissions..." :icon :settings :margin :bottom
@@ -292,6 +297,13 @@
               :load-endpoint (endpoints/get-agora-namespace-acl edit-namespace (= :config edit-type))
               :entityType "Namespace" :entityName edit-namespace
               :title (str "Namespace " edit-namespace)}]))
+        (when (:creating? @state)
+          [create/CreateMethodDialog
+           {:dismiss #(swap! state dissoc :creating?)
+            :on-created (fn [type id]
+                          (if (:in-workspace? props)
+                            ((:on-selected props) type id)
+                            (nav/go-to-path :method id)))}])
         (when id
           [:h3 {} (str (:namespace id) "/" (:name id) " #" (:snapshot-id id))])
         (if id
@@ -325,9 +337,4 @@
             [flex/spring
              [comps/Button
               {:text "Create new method..."
-               :onClick #(modal/push-modal
-                          [create/CreateMethodDialog
-                           {:on-created (fn [type id]
-                                          (if (:in-workspace? props)
-                                            ((:on-selected props) type id)
-                                            (nav/go-to-path :method id)))}])}]]}])]))})
+               :onClick #(swap! state assoc :creating? true)}]]}])]))})
