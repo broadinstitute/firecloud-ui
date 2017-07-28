@@ -322,7 +322,7 @@
                                :load-endpoint (endpoints/get-agora-namespace-acl namespace (= :config type))
                                :entityType "Namespace" :entityName namespace
                                :title (str "Namespace " namespace)}])})))
-            :get-toolbar-items
+            :toolbar-items
             [flex/spring
              [comps/Button
               {:text "Create new method..."

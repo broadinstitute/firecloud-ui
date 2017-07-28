@@ -71,7 +71,7 @@
                     :filter-groups [{:text "All"}
                                     {:text "Methods Only" :pred (comp (partial = :method) :type)}
                                     {:text "Configs Only" :pred (comp (partial = :config) :type)}]}]
-                  (:get-toolbar-items props)))}}]))
+                  (:toolbar-items props)))}}]))
     :component-did-mount
     (fn [{:keys [this]}]
       (this :load-data))
