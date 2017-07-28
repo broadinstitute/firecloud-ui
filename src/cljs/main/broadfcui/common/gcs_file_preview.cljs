@@ -33,8 +33,8 @@
           (labeled "Object" (:object props))
           [:div {:style {:marginTop "1em"}}
            [:div {} (if bam?
-                      "Preview for this filetype is not supported."
-                      "Previews for some filetypes may not be supported.")]
+                      "Preview is not supported for this filetype."
+                      "Previews may not be supported for some filetypes.")]
            (when (and (not bam?) (> data-size preview-byte-count))
              (str "Last " (:preview-line-count @state) " lines are shown. Use link below to view entire file." data-size))
            ;; The max-height of 206 looks random, but it's so that the top line of the log preview is half cut-off
@@ -67,7 +67,9 @@
                          [:div {} "Downloading large files through the browser may not be successful. Instead use this gsutil"]
                          [:div {:style {:marginBottom ".5em"}} "command replacing [DESTINATION] with the local file path you wish to download to."]
                          (style/create-code-sample
-                          (str "gsutil cp gs://" (:bucket-name props) "/" (:object props) " [DESTINATION]"))]))
+                          (str "gsutil cp gs://" (:bucket-name props) "/" (:object props) " [DESTINATION]"))
+                         [:div {:style {:marginTop "1em"}} "For more information on the gsutil tool click "
+                          [:a {:href "https://cloud.google.com/storage/docs/gsutil" :target "_blank"} "here" icons/external-link-icon]]]))
              (when-not data-empty
                (labeled "Estimated download fee"
                         (if (nil? cost) "Unknown" (common/format-price cost))
