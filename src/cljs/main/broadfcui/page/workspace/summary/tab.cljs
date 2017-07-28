@@ -11,6 +11,7 @@
    [broadfcui.components.sticky :refer [Sticky]]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.nav :as nav]
+   [broadfcui.page.workspace.create :as create]
    [broadfcui.page.workspace.monitor.common :as moncommon]
    [broadfcui.page.workspace.summary.acl-editor :refer [AclEditor]]
    [broadfcui.page.workspace.summary.attribute-editor :as attributes]
@@ -18,7 +19,6 @@
    [broadfcui.page.workspace.summary.library-utils :as library-utils]
    [broadfcui.page.workspace.summary.library-view :refer [LibraryView]]
    [broadfcui.page.workspace.summary.publish :as publish]
-   [broadfcui.page.workspace.summary.workspace-cloner :refer [WorkspaceCloner]]
    [broadfcui.utils :as utils]
    ))
 
@@ -71,6 +71,13 @@
         {:keys [editing?]
          {:keys [library-schema]} :server-response} @state]
     [:div {:style {:flex "0 0 270px" :paddingRight 30}}
+     (when (:cloning? @state)
+       [create/CreateDialog
+        {:dismiss #(swap! state dissoc :cloning?)
+         :workspace-id workspace-id
+         :description description
+         :auth-domain (set (map :membersGroupName authorizationDomain))
+         :billing-projects billing-projects}])
      [:span {:id label-id}
       [comps/StatusLabel {:id label-id
                           :text (str status
@@ -156,16 +163,7 @@
            {:style :light :margin :top :color :button-primary
             :text "Clone..." :icon :clone
             :disabled? (when (empty? billing-projects) (comps/no-billing-projects-message))
-            :onClick #(modal/push-modal
-                       [WorkspaceCloner
-                        {:on-success (fn [namespace name]
-                                       (swap! state dissoc :cloning?)
-                                       (nav/go-to-path :workspace-summary
-                                                       (utils/restructure namespace name)))
-                         :workspace-id workspace-id
-                         :description description
-                         :auth-domain (:membersGroupName authorizationDomain)
-                         :billing-projects billing-projects}])}])
+            :onClick #(swap! state assoc :cloning? true)}])
         (when (and owner? (not editing?))
           [comps/SidebarButton {:style :light :margin :top :color :button-primary
                                 :text (if isLocked "Unlock" "Lock")
@@ -180,7 +178,7 @@
 
 
 (defn- render-main [{:keys [workspace curator? owner? writer? reader? can-share? catalog-with-read? bucket-access? editing? submissions-count
-                            library-schema request-refresh workspace-id storage-cost user-access-level body-id]}]
+                            library-schema request-refresh workspace-id storage-cost user-access-level body-id auth-domain]}]
   (let [{:keys [owners]
          {:keys [createdBy createdDate bucketName description tags workspace-attributes library-attributes]} :workspace} workspace
         render-detail-box (fn [title & children]
@@ -205,6 +203,9 @@
 
        (str "Workspace Owner" (when (> (count owners) 1) "s"))
        (interpose ", " owners)
+
+       "Authorization Domain"
+       (if-not (empty? auth-domain) (interpose ", " (map :membersGroupName auth-domain)) "None")
 
        "Created By"
        [:div {}
@@ -306,9 +307,10 @@
                can-share? (:canShare workspace)
                catalog-with-read? (and (or writer? (reader? workspace)) (:catalog workspace))
                user-access-level (:accessLevel workspace)
+               auth-domain (get-in workspace [:workspace :authorizationDomain])
                derived (merge {:reader? (reader? (:workspace props)) :request-refresh #(react/call :refresh this)}
                               (utils/restructure owner? writer? can-share? catalog-with-read?
-                                                 user-access-level label-id body-id))]
+                                                 user-access-level label-id body-id auth-domain))]
            [:div {:style {:margin "2.5rem 1.5rem" :display "flex"}}
             (render-sidebar state refs this
                             (merge (select-keys props [:workspace :workspace-id])
