@@ -57,11 +57,10 @@
      (when (and any-actions? (:allow-edit props))
        [:div {:style {:flex "0 0 270px" :paddingRight 30}}
         [Sticky
-         {:outer-style {:width 290 :backgroundColor "#fff"}
-          :anchor body-id
+         {:anchor body-id
           :sticky-props {:data-check-every 1}
           :contents
-          [:div {:style {:width 270 :background "#fff"}}
+          [:div {:style {:width 270}}
            (when workflow?
              [comps/SidebarButton
               {:style :light :color :button-primary
@@ -91,7 +90,8 @@
                              :load-endpoint (endpoints/get-agora-entity-acl config? entity)
                              :entityType (:entityType entity)
                              :entityName (mca/get-ordered-name entity)
-                             :title (str (:entityType entity) " " (mca/get-ordered-name entity))}])}]
+                             :title (str (:entityType entity) " " (mca/get-ordered-name entity))
+                             :on-users-added (fn [users] (utils/log "added: " users))}])}]
               [comps/SidebarButton
                {:style :light :color :exception-state
                 :text "Redact" :icon :delete :margin :bottom
