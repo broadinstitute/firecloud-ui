@@ -108,7 +108,7 @@
                    {:header "Role" :initial-width :auto
                     :column-data #(clojure.string/join ", " (:roles %))}]}
            :toolbar
-           {:items
+           {:get-items
             (constantly
              [flex/spring
               [comps/Button

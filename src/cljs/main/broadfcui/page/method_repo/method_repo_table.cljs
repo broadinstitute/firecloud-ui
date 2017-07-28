@@ -59,7 +59,7 @@
                          "N/A"))}]
            :style table-style/table-heavy}
           :toolbar
-          {:items
+          {:get-items
            (constantly
             (cons [comps/FilterGroupBar
                    {:data (concat (:methods @state) (:configs @state))
@@ -71,7 +71,7 @@
                     :filter-groups [{:text "All"}
                                     {:text "Methods Only" :pred (comp (partial = :method) :type)}
                                     {:text "Configs Only" :pred (comp (partial = :config) :type)}]}]
-                  (:toolbar-items props)))}}]))
+                  (:get-toolbar-items props)))}}]))
     :component-did-mount
     (fn [{:keys [this]}]
       (this :load-data))

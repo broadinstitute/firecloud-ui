@@ -138,7 +138,7 @@
                           (push-page {:breadcrumb-text (id->str id)
                                       :component [WorkspaceConfigChooser
                                                   (assoc props :chosen-workspace-id id)]})))
-                      :toolbar-items
+                      :get-toolbar-items
                       (when (pos? removed-count)
                         [(str removed-count
                               " workspace"
