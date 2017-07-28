@@ -12,7 +12,7 @@ class DataLibraryPage(implicit webDriver: WebDriver) extends AuthenticatedPage w
   override val url: String = s"${Config.FireCloud.baseUrl}#library"
 
   override def awaitLoaded(): DataLibraryPage = {
-    await text "Matching Cohorts"
+    await text "Data Use Limitation"
     this
   }
 

@@ -62,8 +62,7 @@ class PublishSpec extends FreeSpec with WebBrowserSpec with CleanUp {
         api.library.publishWorkspace(namespace, wsName)
 
         signIn(Config.Users.curator)
-        val page = new DataLibraryPage()
-        page.open
+        val page = new DataLibraryPage().open
         assert(page.ui.hasDataset(wsName))
       }
       "should be able to be unpublished" in withWebDriver { implicit driver =>
