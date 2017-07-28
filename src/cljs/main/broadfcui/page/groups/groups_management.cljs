@@ -90,7 +90,7 @@
                [CreateGroupDialog
                 {:on-success #(this :-load-data)}]))}]])}}])
    :-delete-group
-   (fn [{:keys [state]}]
+   (fn [{:keys [state this]}]
      (swap! state assoc :deleting? true :delete-modal? nil)
      (endpoints/call-ajax-orch
       {:endpoint (endpoints/delete-group (:group-name @state))
