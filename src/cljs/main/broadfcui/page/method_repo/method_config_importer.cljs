@@ -16,46 +16,19 @@
    [broadfcui.page.method-repo.create-method :as create]
    [broadfcui.page.method-repo.method-repo-table :refer [MethodRepoTable]]
    [broadfcui.page.method-repo.methods-configs-acl :as mca]
+   [broadfcui.page.method-repo.redact :refer [Redactor]]
    [broadfcui.utils :as utils]
    ))
 
 
-(react/defc- Redactor
+(react/defc- Sidebar
   {:render
-   (fn [{:keys [props state this]}]
-     [comps/OKCancelForm
-      {:header "Confirm redaction"
-       :content
-       [:div {:style {:width 500}}
-        (when (:redacting? @state)
-          [comps/Blocker {:banner "Redacting..."}])
-        [:div {:style {:marginBottom "1em"}}
-         (str "Are you sure you want to redact this " (if (:config? props) "configuration" "method") "?")]
-        [comps/ErrorViewer {:error (:error @state)
-                            :expect {401 "Unauthorized"}}]]
-       :ok-button {:text "Redact" :onClick #(this :redact)}}])
-   :redact
    (fn [{:keys [props state]}]
-     (swap! state assoc :redacting? true :error nil)
-     (endpoints/call-ajax-orch
-      {:endpoint (endpoints/delete-agora-entity (:config? props) (:entity props))
-       :on-done (fn [{:keys [success? get-parsed-response]}]
-                  (swap! state dissoc :redacting?)
-                  (if success?
-                    (do (modal/pop-modal) ((:on-delete props)))
-                    (swap! state assoc :error (get-parsed-response false))))}))})
-
-(defn- create-import-form [state props this locals entity config? fields]
-  (let [{:keys [workspace-id]} props
-        workflow? (= "Workflow" (:entityType entity))
-        owner? (contains? (set (:managers entity)) (utils/get-user-email))
-        any-actions? (or workflow? owner?)
-        body-id (gensym "form")]
-    [:div {:style {:display "flex"}}
-     (when (:blocking-text @state)
-       [comps/Blocker {:banner (:blocking-text @state)}])
-     (when (and any-actions? (:allow-edit props))
+     (let [{:keys [entity config? workflow? on-delete owner? body-id]} props]
        [:div {:style {:flex "0 0 270px" :paddingRight 30}}
+        (when (:deleting? @state)
+          [Redactor (merge (utils/restructure entity config? on-delete)
+                           {:dismiss #(swap! state dissoc :deleting?)})])
         [Sticky
          {:anchor body-id
           :sticky-props {:data-check-every 1}
@@ -95,8 +68,20 @@
               [comps/SidebarButton
                {:style :light :color :exception-state
                 :text "Redact" :icon :delete :margin :bottom
-                :onClick #(modal/push-modal [Redactor {:entity entity :config? config?
-                                                       :on-delete (:on-delete props)}])}]))]}]])
+                :onClick #(swap! state assoc :deleting? true)}]))]}]]))})
+
+
+(defn- create-import-form [state props this locals entity config? fields]
+  (let [{:keys [workspace-id on-delete]} props
+        workflow? (= "Workflow" (:entityType entity))
+        owner? (contains? (set (:managers entity)) (utils/get-user-email))
+        any-actions? (or workflow? owner?)
+        body-id (gensym "form")]
+    [:div {:style {:display "flex"}}
+     (when (:blocking-text @state)
+       [comps/Blocker {:banner (:blocking-text @state)}])
+     (when (and any-actions? (:allow-edit props))
+       [Sidebar (utils/restructure entity config? workflow? on-delete owner? body-id)])
      [:div {:style {:flex "1 1 auto"} :id body-id}
       [comps/EntityDetails {:entity entity}]
       [:div {:style {:border style/standard-line
