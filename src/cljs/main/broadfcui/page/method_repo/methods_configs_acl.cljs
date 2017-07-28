@@ -5,8 +5,8 @@
    [broadfcui.common :as common]
    [broadfcui.common.components :as comps]
    [broadfcui.common.input :as input]
-   [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
+   [broadfcui.components.modals :as modals]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.net :as net]
    [broadfcui.utils :as utils]
@@ -26,8 +26,9 @@
 (react/defc AgoraPermsEditor
   {:render
    (fn [{:keys [props state this]}]
-     [comps/OKCancelForm
+     [modals/OKCancelForm
       {:header (str "Permissions for " (:title props))
+       :dismiss (:dismiss props)
        :content
        (react/create-element
         (net/render-with-ajax
@@ -133,4 +134,4 @@
        (let [diff (set/difference new-users (:initial-users @locals))]
          (when (seq diff)
            ((:on-users-added props) diff))))
-     (modal/pop-modal))})
+     ((:dismiss props)))})

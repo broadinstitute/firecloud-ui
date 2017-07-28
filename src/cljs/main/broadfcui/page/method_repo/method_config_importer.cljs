@@ -29,6 +29,15 @@
         (when (:deleting? @state)
           [Redactor (merge (utils/restructure entity config? on-delete)
                            {:dismiss #(swap! state dissoc :deleting?)})])
+        (when (:editing-acl? @state)
+          [mca/AgoraPermsEditor
+           {:dismiss #(swap! state dissoc :editing-acl?)
+            :save-endpoint (endpoints/persist-agora-entity-acl config? entity)
+            :load-endpoint (endpoints/get-agora-entity-acl config? entity)
+            :entityType (:entityType entity)
+            :entityName (mca/get-ordered-name entity)
+            :title (str (:entityType entity) " " (mca/get-ordered-name entity))
+            :on-users-added (fn [users] (utils/log "added: " users))}])
         [Sticky
          {:anchor body-id
           :sticky-props {:data-check-every 1}
@@ -57,14 +66,7 @@
               [comps/SidebarButton
                {:style :light :color :button-primary
                 :text "Permissions..." :icon :settings :margin :bottom
-                :onClick #(modal/push-modal
-                           [mca/AgoraPermsEditor
-                            {:save-endpoint (endpoints/persist-agora-entity-acl config? entity)
-                             :load-endpoint (endpoints/get-agora-entity-acl config? entity)
-                             :entityType (:entityType entity)
-                             :entityName (mca/get-ordered-name entity)
-                             :title (str (:entityType entity) " " (mca/get-ordered-name entity))
-                             :on-users-added (fn [users] (utils/log "added: " users))}])}]
+                :onClick #(swap! state assoc :editing-acl? true)}]
               [comps/SidebarButton
                {:style :light :color :exception-state
                 :text "Redact" :icon :delete :margin :bottom
@@ -282,6 +284,14 @@
            type (some :type [props @state])
            id (some :id [props @state])]
        [:div {:key (str id)}
+        (when (:editing-namespace-acl? @state)
+          (let [{:keys [edit-namespace edit-type]} @state]
+            [mca/AgoraPermsEditor
+             {:dismiss #(swap! state dissoc :editing-namespace-acl?)
+              :save-endpoint (endpoints/post-agora-namespace-acl edit-namespace (= :config edit-type))
+              :load-endpoint (endpoints/get-agora-namespace-acl edit-namespace (= :config edit-type))
+              :entityType "Namespace" :entityName edit-namespace
+              :title (str "Namespace " edit-namespace)}]))
         (when id
           [:h3 {} (str (:namespace id) "/" (:name id) " #" (:snapshot-id id))])
         (if id
@@ -306,12 +316,10 @@
               (if workspace-id
                 namespace
                 (links/create-internal
-                 {:onClick #(modal/push-modal
-                             [mca/AgoraPermsEditor
-                              {:save-endpoint (endpoints/post-agora-namespace-acl namespace (= :config type))
-                               :load-endpoint (endpoints/get-agora-namespace-acl namespace (= :config type))
-                               :entityType "Namespace" :entityName namespace
-                               :title (str "Namespace " namespace)}])}
+                 {:onClick #(swap! state assoc
+                                   :editing-namespace-acl? true
+                                   :edit-namespace namespace
+                                   :edit-type type)}
                  namespace)))
             :toolbar-items
             [flex/spring
