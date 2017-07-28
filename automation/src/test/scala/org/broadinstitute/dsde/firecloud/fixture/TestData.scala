@@ -22,13 +22,13 @@ object TestData {
 
   private def createSamples(samplePrefix: String, participantId: String, numberOfSamples: Int): String = {
     "entity:sample_id\tparticipant_id\n" +
-      new Array[String](numberOfSamples).zipWithIndex.map { el => samplePrefix + el._2 + "\t" + participantId + "\n" }.mkString.stripSuffix("\n")
+      (0 until numberOfSamples).map(i => s"$samplePrefix$i\t$participantId\n").mkString.stripSuffix("\n")
 
   }
 
   private def createSampleSet(sampleSetName: String, samplePrefix: String, numberOfSamples: Int) = {
     "membership:sample_set_id\tsample_id\n" +
-      new Array[String](numberOfSamples).zipWithIndex.map { el => sampleSetName + "\t" + samplePrefix + el._2 + "\n"}.mkString.stripSuffix("\n")
+      (0 until numberOfSamples).map(i => s"$sampleSetName\t$samplePrefix$i\n").mkString.stripSuffix("\n")
   }
 
 

@@ -92,7 +92,6 @@ class ImportMetadataModal(implicit webDriver: WebDriver) extends FireCloudView {
     }
 
     def uploadData(filePath: String) = {
-      val strThatWorked = "/Users/ansingh/Desktop/ui-11/firecloud-ui/automation/src/test/scala/org/broadinstitute/dsde/firecloud/data/participants.txt"
       executeScript("var field = document.getElementsByName('entities'); field[0].style.display = '';")
       val webElement = find(fileUploadInputQuery).get.underlying
       webElement.clear()

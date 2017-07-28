@@ -51,7 +51,7 @@ case object AuthToken {
       .setServiceAccountPrivateKeyFromPemFile(pemfile)
       .setServiceAccountScopes(authScopes.asJava)
       .setServiceAccountUser(userEmail)
-      .build();
+      .build()
   }
 }
 

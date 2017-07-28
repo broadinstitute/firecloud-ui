@@ -19,7 +19,6 @@ trait PageUtil[P <: Page] { self: P =>
   def open(implicit webDriver: WebDriver): P = {
     go to this
     awaitLoaded()
-    this
   }
 
   /**
