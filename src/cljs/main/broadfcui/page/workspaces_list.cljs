@@ -406,7 +406,6 @@
                  :billing-projects (map :projectName projects)
                  :disabled-reason (if (empty? projects) :no-billing nil))))))})
 
-;;test
 (react/defc- Page
   {:render
    (fn []
