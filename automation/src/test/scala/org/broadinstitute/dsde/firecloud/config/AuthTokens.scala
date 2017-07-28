@@ -4,7 +4,7 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleCredential
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport
 import com.google.api.client.json.jackson2.JacksonFactory
 
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 
 
 object AuthTokens {
@@ -49,7 +49,7 @@ case object AuthToken {
       .setJsonFactory(jsonFactory)
       .setServiceAccountId(email)
       .setServiceAccountPrivateKeyFromPemFile(pemfile)
-      .setServiceAccountScopes(authScopes)
+      .setServiceAccountScopes(authScopes.asJava)
       .setServiceAccountUser(userEmail)
       .build();
   }
