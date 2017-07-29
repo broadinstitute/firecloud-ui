@@ -568,10 +568,10 @@
      (let [{:keys [header content ok-button show-cancel? cancel-text show-close? data-test-id]} props
            cancel-text (or cancel-text "Cancel")]
        [:div {}
-        [:div (merge {:style {:borderBottom style/standard-line
+        [:div {:style {:borderBottom style/standard-line
                        :padding "20px 48px 18px"
-                       :fontSize "137%" :fontWeight 400 :lineHeight 1}}
-                     (when (some? data-test-id) {:data-test-id data-test-id}))
+                       :fontSize "137%" :fontWeight 400 :lineHeight 1}
+               :data-test-id data-test-id}
          header
          (when show-close? [XButton {:dismiss modal/pop-modal}])]
         [:div {:style {:padding "22px 48px 40px" :backgroundColor (:background-light style/colors)}}
@@ -592,7 +592,7 @@
             (when ok-button
               (cond (string? ok-button) [Button {:text ok-button :ref "ok-button" :class-name "ok-button" :data-test-id "ok-button" :onClick modal/pop-modal}]
                     (fn? ok-button) [Button {:text "OK" :ref "ok-button" :class-name "ok-button" :data-test-id "ok-button" :onClick ok-button}]
-                    (map? ok-button) [Button (merge {:ref "ok-button" :class-name "ok-button" :data-test-id "ok-button"} ok-button)]
+                    (map? ok-button) [Button (merge {:text "OK" :ref "ok-button" :class-name "ok-button" :data-test-id "ok-button"} ok-button)]
                     :else ok-button))])]]))
    :component-did-mount
    (fn [{:keys [props refs]}]
