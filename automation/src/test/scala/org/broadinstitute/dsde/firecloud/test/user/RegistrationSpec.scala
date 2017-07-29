@@ -44,7 +44,7 @@ class RegistrationSpec extends FreeSpec with BeforeAndAfter with Matchers with W
         firstName = "Test",
         lastName = "Dummy",
         title = "Tester",
-        contactEmail = "test@firecloud.org",
+        contactEmail = Some("test@firecloud.org"),
         institute = "Broad",
         institutionalProgram = "DSDE",
         nonProfitStatus = true,
