@@ -12,13 +12,10 @@ import org.scalatest.Suite
   */
 trait GroupFixtures extends CleanUp with LazyLogging { self: WebBrowserSpec with Suite =>
 
-  def withGroup(namePrefix: String = "", memberEmails: List[String] = List())
+  def withGroup(namePrefix: String, memberEmails: List[String] = List())
                (testCode: (String) => Any)
                (implicit token: AuthToken): Unit = {
-    val groupName = (namePrefix match {
-      case "" => ""
-      case s => s + "_"
-    }) + Util.makeUuid
+    val groupName = Util.appendUnderscore(namePrefix) + Util.makeUuid
 
     try {
       api.groups.create(groupName)

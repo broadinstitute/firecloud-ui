@@ -14,14 +14,15 @@ class RegistrationPage(implicit webDriver: WebDriver) extends FireCloudView {
     * Fills in and submits the new user registration form. Returns as the browser is being redirected to its post-
     * registration destination.
     */
-  def register(firstName: String, lastName: String, title: String, contactEmail: String = "",
-               institute: String, institutionalProgram: String, nonProfitStatus: Boolean,
+  def register(firstName: String, lastName: String, title: String,
+               contactEmail: Option[String] = None, institute: String,
+               institutionalProgram: String, nonProfitStatus: Boolean,
                principalInvestigator: String, city: String, state: String,
                country: String): Unit = {
     ui.fillFirstName(firstName)
     ui.fillLastName(lastName)
     ui.fillTitle(title)
-    ui.fillContactEmail(contactEmail)
+    contactEmail.foreach(ui.fillContactEmail(_))
     ui.fillInstitute(institute)
     ui.fillInstitutionalProgram(institutionalProgram)
     ui.selectNonProfitStatus(nonProfitStatus)
