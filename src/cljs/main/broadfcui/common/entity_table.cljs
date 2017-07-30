@@ -1,16 +1,17 @@
 (ns broadfcui.common.entity-table
   (:require
-    [dmohs.react :as react]
-    [clojure.string :as string]
-    [broadfcui.common :as common]
-    [broadfcui.common.components :as comps]
-    [broadfcui.common.style :as style]
-    [broadfcui.common.table :refer [Table]]
-    [broadfcui.common.table-utils :as table-utils]
-    [broadfcui.endpoints :as endpoints]
-    [broadfcui.utils :as utils]
-    ))
-
+   [dmohs.react :as react]
+   [inflections.core :as inflections]
+   [clojure.string :as string]
+   [broadfcui.common :as common]
+   [broadfcui.common.components :as comps]
+   [broadfcui.common.style :as style]
+   [broadfcui.common.table.table :refer [Table]]
+   [broadfcui.common.table.style :as table-style]
+   [broadfcui.common.table.utils :as table-utils]
+   [broadfcui.endpoints :as endpoints]
+   [broadfcui.utils :as utils]
+   ))
 
 
 ;; for attributes referring to a single other entity
@@ -27,9 +28,9 @@
 (react/defc EntityTable
   {:update-data
    (fn [{:keys [refs after-update]} reinitialize?]
-     (react/call :refresh-rows (@refs "table"))
+     ((@refs "table") :refresh-rows)
      (when reinitialize?
-       (after-update #(react/call :reinitialize (@refs "table")))))
+       (after-update #((@refs "table") :reinitialize))))
    :refresh
    (fn [{:keys [props state this after-update]} & [entity-type reinitialize?]]
      (endpoints/call-ajax-orch
@@ -37,22 +38,24 @@
        :on-done (fn [{:keys [success? get-parsed-response]}]
                   (if success?
                     (let [metadata (get-parsed-response)
-                          entity-types (utils/sort-match (map keyword common/root-entity-types) (keys metadata))]
-                      (swap! state update :server-response assoc
+                          entity-types (utils/sort-match (map keyword common/root-entity-types) (keys metadata))
+                          selected-entity-type (or (some-> entity-type keyword) (first entity-types))]
+                      (swap! state assoc
                              :entity-metadata metadata
                              :entity-types entity-types
-                             :selected-entity-type (or (some-> entity-type keyword) (first entity-types)))
-                      (after-update #(react/call :update-data this reinitialize?)))
-                    (swap! state update :server-response
-                           assoc :server-error (get-parsed-response false))))}))
+                             :selected-entity-type selected-entity-type
+                             :selected-filter-index (utils/index-of entity-types selected-entity-type))
+                      (when-let [f (:on-entity-type-selected props)]
+                        (f selected-entity-type))
+                      (after-update #(this :update-data reinitialize?)))
+                    (swap! state assoc :server-error (get-parsed-response false))))}))
    :get-default-props
    (fn []
      {:empty-message "There are no entities to display."
       :attribute-renderer table-utils/default-render})
    :render
    (fn [{:keys [props state this]}]
-     (let [{:keys [server-response]} @state
-           {:keys [server-error entity-metadata entity-types selected-entity-type]} server-response]
+     (let [{:keys [server-error entity-metadata entity-types selected-entity-type]} @state]
        [:div {}
         (when (:loading-entities? @state)
           [comps/Blocker {:banner "Loading entities..."}])
@@ -61,91 +64,109 @@
           (nil? entity-metadata) [:div {:style {:textAlign "center"}} [comps/Spinner {:text "Retrieving entity types..."}]]
           :else
           (let [attributes (map keyword (get-in entity-metadata [selected-entity-type :attributeNames]))
-                attr-col-width (->> attributes count (/ (if (= :narrow (:width props)) 500 1000)) int (min 400) (max 100))
-                entity-column {:header (get-in entity-metadata [selected-entity-type :idName]) :starting-width 200
-                               :as-text :name :sort-by :text
-                               :content-renderer (or (:entity-name-renderer props) :name)}
-                attr-columns (map (fn [k] {:header (name k) :starting-width attr-col-width :sort-by :text
-                                           :as-text
-                                           (fn [attr-value]
-                                             (cond
-                                               (is-single-ref? attr-value) (:entityName attr-value)
-                                               (common/attribute-list? attr-value) (map render-list-item (common/attribute-values attr-value))
-                                               :else (str attr-value)))
-                                           :content-renderer
-                                           (fn [attr-value]
-                                             (cond
-                                               (is-single-ref? attr-value)
-                                               (if-let [renderer (:linked-entity-renderer props)]
-                                                 (renderer attr-value)
-                                                 (:entityName attr-value))
-                                               (common/attribute-list? attr-value)
-                                               (let [items (map render-list-item (common/attribute-values attr-value))]
-                                                 (if (empty? items)
-                                                   (case (str selected-entity-type)
-                                                     ":sample_set" "0 samples"
-                                                     ":pair_set" "0 pairs"
-                                                     ":participant_set" "0 participants"
-                                                     "0 items")
-                                                   (case (str selected-entity-type)
-                                                     ":sample_set" (str (count items) " samples")
-                                                     ":pair_set" (str (count items) " pairs")
-                                                     ":participant_set" (str (count items) " participants")
-                                                     (str (count items) " items: " (clojure.string/join ", " items)))))
-                                               :else ((:attribute-renderer props) attr-value)))})
-                                  attributes)
-                columns (vec (cons entity-column attr-columns))]
+                attr-col-width (->> attributes count (/ 1000) int (min 400) (max 100))]
             [Table
-             (merge props
-                    {:key selected-entity-type
-                     :ref "table"
-                     :data-test-id "entity-table"
-                     :state-key (when selected-entity-type
-                                  (str (common/workspace-id->string (:workspace-id props)) ":data" selected-entity-type))
-                     :columns columns
-                     :column-defaults (get (:column-defaults props) (some-> selected-entity-type name))
-                     :always-sort? true
-                     :pagination (react/call :pagination this)
-                     :filter-groups (map (fn [type]
-                                           {:text (name type)
-                                            :count-override (get-in entity-metadata [type :count])
-                                            :pred (constantly true)})
-                                         entity-types)
-                     :initial-filter-group-index (utils/index-of entity-types selected-entity-type)
-                     :on-filter-change (fn [index]
-                                         (let [type (nth entity-types index)]
-                                           (swap! state update :server-response assoc :selected-entity-type type)
-                                           (when-let [func (:on-filter-change props)]
-                                             (func type))))
-                     :->row (fn [m]
-                              (->> attributes
-                                   (map #(get-in m [:attributes %]))
-                                   (cons m)
-                                   vec))})]))]))
+             {:ref "table" :key selected-entity-type
+              :data-test-id "entity-table"
+              :persistence-key (when selected-entity-type
+                                 (str (common/workspace-id->string (:workspace-id props)) ":data" selected-entity-type))
+              :v 1
+              :fetch-data (this :-pagination)
+              :load-on-mount false
+              :body
+              {:style (merge table-style/table-heavy (:style props))
+               ;; this :behavior and the 'or' guard on the first column are to make things
+               ;; behave when there is no data (and thus no entity-types)
+               :behavior {:reorderable-columns? (seq entity-types) :filterable? (seq entity-types)}
+               :columns
+               (into [{:header (or (get-in entity-metadata [selected-entity-type :idName]) "No data")
+                       :initial-width 200
+                       :as-text :name :sort-by :text
+                       :render (or (:entity-name-renderer props) :name)}]
+                     (map (fn [k]
+                            {:header (name k) :initial-width attr-col-width
+                             :column-data (comp k :attributes)
+                             :as-text (fn [attr-value]
+                                        (cond (is-single-ref? attr-value)
+                                              (:entityName attr-value)
+                                              (common/attribute-list? attr-value)
+                                              (map render-list-item (common/attribute-values attr-value))
+                                              :else
+                                              (str attr-value)))
+                             :sort-by :text
+                             :render (fn [attr-value]
+                                       (cond
+                                         (is-single-ref? attr-value)
+                                         (if-let [renderer (:linked-entity-renderer props)]
+                                           (renderer attr-value)
+                                           (:entityName attr-value))
+                                         (common/attribute-list? attr-value)
+                                         (let [items (map render-list-item (common/attribute-values attr-value))
+                                               c (count items)
+                                               entity-type (or (some-> selected-entity-type
+                                                                       name
+                                                                       common/set-type->membership-attribute
+                                                                       inflections/singular)
+                                                               "item")]
+                                           (str (inflections/pluralize c entity-type)
+                                                (when (and (pos? c) (= entity-type "item"))
+                                                  (str ": " (string/join ", " items)))))
+                                         :else ((:attribute-renderer props) attr-value)))})
+                          attributes))
+               :column-defaults (get (:column-defaults props) (some-> selected-entity-type name))
+               :on-row-click (:on-row-click props)
+               :on-column-change (:on-column-change props)}
+              :toolbar
+              {:items
+               (fn [table-props]
+                (cons [comps/FilterGroupBar
+                       {:filter-groups (map (fn [entity-type]
+                                              {:text (name entity-type)
+                                               :count-override (get-in entity-metadata [entity-type :count])})
+                                            entity-types)
+                        :selected-index (:selected-filter-index @state)
+                        :on-change (fn [index _]
+                                     (let [selected-entity-type (nth entity-types index)]
+                                       (swap! state assoc
+                                              :selected-filter-index index
+                                              :selected-entity-type selected-entity-type)
+                                       (when-let [f (:on-entity-type-selected props)]
+                                         (f selected-entity-type))))}]
+                      (when-let [toolbar-items (:toolbar-items props)]
+                        (toolbar-items table-props))))
+               :style {:flexWrap "wrap"}}}]))]))
    :component-did-mount
    (fn [{:keys [props this]}]
-     (react/call :refresh this (:initial-entity-type props)))
-   :pagination
+     (this :refresh (:initial-entity-type props)))
+   :component-did-update
+   (fn [{:keys [state prev-state this]}]
+     (let [prev-index (:selected-filter-index prev-state)
+           this-index (:selected-filter-index @state)]
+       (when (and prev-index
+                  (not= prev-index this-index))
+         (this :update-data))))
+   :-pagination
    (fn [{:keys [props state]}]
-     (let [{{:keys [entity-types]} :server-response} @state]
-       (fn [{:keys [current-page rows-per-page filter-text sort-column sort-order filter-group-index]} callback]
+     (let [{:keys [entity-types selected-filter-index]} @state]
+       (fn [{:keys [query-params on-done]}]
          (if (empty? entity-types)
-           (callback {:group-count 0 :filtered-count 0 :rows []})
-           (let [type (if (string/blank? filter-group-index)
-                        (:initial-entity-type props)
-                        (nth entity-types filter-group-index))]
+           (on-done {:total-count 0 :filtered-count 0 :results []})
+           (let [{:keys [page-number rows-per-page filter-text sort-column sort-order]} query-params
+                 entity-type (nth entity-types selected-filter-index)]
              (endpoints/call-ajax-orch
-              {:endpoint (endpoints/get-entities-paginated (:workspace-id props) (name type)
-                                                           {"page" current-page
-                                                            "pageSize" rows-per-page
-                                                            "filterTerms" (js/encodeURIComponent filter-text)
-                                                            "sortField" sort-column
-                                                            "sortDirection" (name sort-order)})
+              {:endpoint (endpoints/get-entities-paginated
+                          (:workspace-id props)
+                          (name entity-type)
+                          {"page" page-number
+                           "pageSize" rows-per-page
+                           "filterTerms" (js/encodeURIComponent filter-text)
+                           "sortField" sort-column
+                           "sortDirection" (name sort-order)})
                :on-done (fn [{:keys [success? get-parsed-response status-text status-code]}]
                           (if success?
                             (let [{:keys [results]
                                    {:keys [unfilteredCount filteredCount]} :resultMetadata} (get-parsed-response)]
-                              (callback {:group-count unfilteredCount
-                                         :filtered-count filteredCount
-                                         :rows results}))
-                            (callback {:error (str status-text " (" status-code ")")})))}))))))})
+                              (on-done {:total-count unfilteredCount
+                                        :filtered-count filteredCount
+                                        :results results}))
+                            (on-done {:error (str status-text " (" status-code ")")})))}))))))})

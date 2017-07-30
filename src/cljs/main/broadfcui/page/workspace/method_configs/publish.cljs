@@ -1,13 +1,13 @@
 (ns broadfcui.page.workspace.method-configs.publish
   (:require
-    [dmohs.react :as react]
-    [broadfcui.common.components :as comps]
-    [broadfcui.common.input :as input]
-    [broadfcui.common.modal :as modal]
-    [broadfcui.common.style :as style]
-    [broadfcui.endpoints :as endpoints]
-    [broadfcui.utils :as utils]
-    ))
+   [dmohs.react :as react]
+   [broadfcui.common.components :as comps]
+   [broadfcui.common.input :as input]
+   [broadfcui.common.style :as style]
+   [broadfcui.components.modals :as modals]
+   [broadfcui.endpoints :as endpoints]
+   [broadfcui.utils :as utils]
+   ))
 
 
 (react/defc PublishDialog
@@ -15,7 +15,7 @@
    (fn [{:keys [props state refs]}]
      (let [{:keys [workspace-id config-id]} props
            {:keys [namespace name]} config-id]
-       [comps/OKCancelForm
+       [modals/OKCancelForm
         {:header "Publish Method Configuration"
          :get-first-element-dom-node #(react/call :access-field (@refs "mcNamespace"))
          :content
@@ -33,6 +33,7 @@
                              :predicates [(input/nonempty "Name")]}]
            (style/create-validation-error-message (:validation-errors @state))
            [comps/ErrorViewer {:error (:error @state)}]])
+         :dismiss (:dismiss props)
          :ok-button
          {:text "Publish"
           :onClick
@@ -50,5 +51,5 @@
                  :on-done (fn [{:keys [success? get-parsed-response]}]
                             (swap! state dissoc :publishing?)
                             (if success?
-                              (modal/pop-modal)
+                              ((:dismiss props))
                               (swap! state assoc :error (get-parsed-response false))))})))}}]))})

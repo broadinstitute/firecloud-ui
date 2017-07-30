@@ -1,14 +1,14 @@
 (ns broadfcui.common.table.column-editor
   (:require
-    [dmohs.react :as react]
-    [broadfcui.common :as common]
-    [broadfcui.common.components :as comps]
-    [broadfcui.common.icons :as icons]
-    [broadfcui.common.overlay :as overlay]
-    [broadfcui.common.style :as style]
-    [broadfcui.common.table.utils :as table-utils]
-    [broadfcui.utils :as utils]
-    ))
+   [dmohs.react :as react]
+   [broadfcui.common :as common]
+   [broadfcui.common.components :as comps]
+   [broadfcui.common.icons :as icons]
+   [broadfcui.common.overlay :as overlay]
+   [broadfcui.common.style :as style]
+   [broadfcui.common.table.utils :as table-utils]
+   [broadfcui.utils :as utils]
+   ))
 
 
 (defn- set-all [{:keys [column-display update-column-display fixed-column-count]} visible?]

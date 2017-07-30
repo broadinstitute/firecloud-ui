@@ -1,13 +1,12 @@
 (ns broadfcui.common.table.body
   (:require
-    [dmohs.react :as react]
-    [broadfcui.common :as common]
-    [broadfcui.common.components :as comps]
-    [broadfcui.common.flex-utils :as flex]
-    [broadfcui.common.icons :as icons]
-    [broadfcui.common.table.utils :as table-utils]
-    [broadfcui.utils :as utils]
-    ))
+   [dmohs.react :as react]
+   [broadfcui.common :as common]
+   [broadfcui.common.flex-utils :as flex]
+   [broadfcui.common.icons :as icons]
+   [broadfcui.common.table.utils :as table-utils]
+   [broadfcui.utils :as utils]
+   ))
 
 
 (defn- flex-params [width]
@@ -51,14 +50,16 @@
     joined-columns)])
 
 
-(defn- body [{:keys [rows joined-columns style data-props]}]
+(defn- body [{:keys [rows joined-columns style on-row-click data-props]}]
   [:div {:style (:body style)}
    (map-indexed
     (fn [index row]
       [:div (merge (when (and (some? data-props) (some? (:row data-props))) ((:row data-props) row))
                    {:style (merge {:display "flex"}
                            (:row style)
-                           ((or (:body-row style) identity) (utils/restructure index row)))})
+                           ((or (:body-row style) identity) (utils/restructure index row)))
+                    :onClick (when on-row-click
+                               #(on-row-click index row))})
        (map
         (fn [{:keys [width visible? column-data render as-text]}]
           (when visible?
@@ -105,13 +106,7 @@
             properties (merge props (utils/restructure joined-columns start-column-drag column-reset))]
         [:div {:style (merge {:width "-webkit-fit-content" :minWidth "100%"} (:table style))}
          (header properties)
-         [:div {:style {:position "relative"}}
-          [comps/DelayedBlocker {:ref "blocker" :banner "Loading..."}]
-          (body properties)]]))
-    :component-will-receive-props
-    (fn [{:keys [props next-props refs]}]
-      (when-not (= (:loading? props) (:loading? next-props))
-        ((@refs "blocker") (if (:loading? next-props) :show :hide))))
+         (body properties)]))
     :-on-mouse-move
     (fn [{:keys [props state locals]} e]
       (when (:dragging? @state)

@@ -1,11 +1,11 @@
 (ns broadfcui.config.loader
   (:require
-    [dmohs.react :as react]
-    [broadfcui.common.components :as comps]
-    [broadfcui.common.style :as style]
-    [broadfcui.config :as config]
-    [broadfcui.utils :as utils]
-    ))
+   [dmohs.react :as react]
+   [broadfcui.common.components :as comps]
+   [broadfcui.common.style :as style]
+   [broadfcui.config :as config]
+   [broadfcui.utils :as utils]
+   ))
 
 (react/defc Component
   {:render

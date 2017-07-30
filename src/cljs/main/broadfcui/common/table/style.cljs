@@ -1,7 +1,7 @@
 (ns broadfcui.common.table.style
   (:require
-    [broadfcui.common.style :as style]
-    ))
+   [broadfcui.common.style :as style]
+   ))
 
 
 (def table-icon-size 16)

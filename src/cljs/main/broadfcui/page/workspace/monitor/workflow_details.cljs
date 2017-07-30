@@ -1,21 +1,21 @@
 (ns broadfcui.page.workspace.monitor.workflow-details
   (:require
-    [dmohs.react :as react]
-    [clojure.walk :as walk]
-    [clojure.string :as string]
-    [broadfcui.common :as common]
-    [broadfcui.common.codemirror :refer [CodeMirror]]
-    [broadfcui.common.components :as comps]
-    [broadfcui.common.gcs-file-preview :refer [GCSFilePreviewLink]]
-    [broadfcui.common.modal :as modal]
-    [broadfcui.common.style :as style]
-    [broadfcui.common.table.table :refer [Table]]
-    [broadfcui.common.table.style :as table-style]
-    [broadfcui.endpoints :as endpoints]
-    [broadfcui.page.workspace.monitor.common :as moncommon]
-    [broadfcui.utils :as utils]
-    [goog.dom :as gdom]
-    ))
+   [dmohs.react :as react]
+   [clojure.walk :as walk]
+   [clojure.string :as string]
+   [broadfcui.common :as common]
+   [broadfcui.common.codemirror :refer [CodeMirror]]
+   [broadfcui.common.components :as comps]
+   [broadfcui.common.gcs-file-preview :refer [GCSFilePreviewLink]]
+   [broadfcui.common.modal :as modal]
+   [broadfcui.common.style :as style]
+   [broadfcui.common.table.table :refer [Table]]
+   [broadfcui.common.table.style :as table-style]
+   [broadfcui.endpoints :as endpoints]
+   [broadfcui.page.workspace.monitor.common :as moncommon]
+   [broadfcui.utils :as utils]
+   [goog.dom :as gdom]
+   ))
 
 (defn- create-field [label & contents]
   [:div {:style {:paddingBottom "0.25em"}}
@@ -48,7 +48,7 @@
 (defn- call-name [callName]
   (string/join "." (rest (string/split callName "."))))
 
-(react/defc IODetail
+(react/defc- IODetail
   {:get-initial-state
    (fn []
      {:expanded false})
@@ -78,7 +78,7 @@
                                :filterable? false}
                     :columns (if (:call-detail? props) columns (cons task-column columns))}}])])])})
 
-(react/defc WorkflowTiming
+(react/defc- WorkflowTiming
   {:get-initial-state
    (fn []
      {:expanded false})
@@ -117,7 +117,7 @@
           (create-field name (display-value value)))
         log-map)])))
 
-(react/defc Failures
+(react/defc- Failures
   {:get-initial-state
    (fn []
      {:expanded false})
@@ -141,7 +141,7 @@
                                 :else elem))
                             (:data props))}])])})
 
-(react/defc OperationDialog
+(react/defc- OperationDialog
   {:render
    (fn [{:keys [state]}]
      [comps/OKCancelForm
@@ -171,12 +171,12 @@
                           :response (if success? (get-parsed-response false) status-text)
                           :raw-response raw-response}))}))})
 
-(defn operation-link [workspace-id job-id]
+(defn- operation-link [workspace-id job-id]
   ;; Note: using [:a ...] instead of style/create-link to be consistent with GCSFilePreviewLink
   [:a {:href "javascript:;"
        :onClick #(modal/push-modal [OperationDialog (utils/restructure workspace-id job-id)])} job-id])
 
-(react/defc CallDetail
+(react/defc- CallDetail
   {:get-initial-state
    (fn []
      {:expanded false})
@@ -258,7 +258,7 @@
                   :workspace-id workspace-id}])])
 
 
-(react/defc WorkflowDetails
+(react/defc- WorkflowDetails
   {:render
    (fn [{:keys [state props]}]
      (let [server-response (:server-response @state)]

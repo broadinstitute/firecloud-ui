@@ -1,15 +1,15 @@
 (ns broadfcui.page.workspace.summary.catalog.wizard
   (:require
-    [dmohs.react :as react]
-    [broadfcui.common.components :as comps]
-    [broadfcui.common.flex-utils :as flex]
-    [broadfcui.common.modal :as modal]
-    [broadfcui.common.style :as style]
-    [broadfcui.endpoints :as endpoints]
-    [broadfcui.page.workspace.summary.catalog.questions :refer [Questions]]
-    [broadfcui.page.workspace.summary.library-utils :as library-utils]
-    [broadfcui.utils :as utils]
-    ))
+   [dmohs.react :as react]
+   [broadfcui.common.components :as comps]
+   [broadfcui.common.flex-utils :as flex]
+   [broadfcui.common.modal :as modal]
+   [broadfcui.common.style :as style]
+   [broadfcui.endpoints :as endpoints]
+   [broadfcui.page.workspace.summary.catalog.questions :refer [Questions]]
+   [broadfcui.page.workspace.summary.library-utils :as library-utils]
+   [broadfcui.utils :as utils]
+   ))
 
 
 (defn- render-wizard-breadcrumbs [{:keys [library-schema page-num pages-seen]}]
@@ -41,7 +41,7 @@
         (nil? input) []
         :else [input]))
 
-(react/defc DiscoverabilityPage
+(react/defc- DiscoverabilityPage
   {:validate (constantly nil)
    :get-initial-state
    (fn [{:keys [props]}]
@@ -60,11 +60,8 @@
            selected (if (empty? library:discoverableByGroups) ALL_USERS (first library:discoverableByGroups))]
        [:div {} "Dataset should be discoverable by:"
         (style/create-identity-select {:value selected
-                                       :display "flex" :alignItems "center"
-                                       :margin "0.5rem 0" :padding "1em"
-                                       :border style/standard-line :borderRadius 8
-                                       :cursor "pointer"
                                        :disabled (not editable?)
+                                       :style {:marginTop "0.5rem"}
                                        :onChange #(react/call :set-groups this (.. % -target -value))}
                                       (cons ALL_USERS (:library-groups props)))
         [:div {:style {:fontSize "small" :paddingTop "0.5rem" :fontStyle "italic"}}

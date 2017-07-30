@@ -1,18 +1,18 @@
 (ns broadfcui.components.top-banner
   (:require
-    [dmohs.react :as react]
-    [broadfcui.common.icons :as icons]
-    [broadfcui.common.style :as style]
-    ))
+   [dmohs.react :as react]
+   [broadfcui.common.icons :as icons]
+   [broadfcui.common.style :as style]
+   ))
 
 (defonce ^:private instance nil)
 
 (react/defc Container
   {:add
-   (fn [{:keys [props state]} id content]
+   (fn [{:keys [state]} id content]
      (swap! state update :stack assoc id content))
    :remove
-   (fn [{:keys [state after-update]} id]
+   (fn [{:keys [state]} id]
      (swap! state update :stack dissoc id))
    :get-initial-state (constantly {:stack {}})
    :render
@@ -25,12 +25,12 @@
    (fn [{:keys [this]}]
      (set! instance this))
    :component-will-unmount
-   (fn [{:keys [this]}]
+   (fn []
      (set! instance nil))})
 
-(react/defc Banner
+(react/defc- Banner
   {:render
-   (fn [{:keys [props]}]
+   (fn []
      nil)
    :component-did-mount
    (fn [{:keys [props locals]}]

@@ -1,15 +1,22 @@
 (ns broadfcui.common.table
   (:require
-    [dmohs.react :as react]
-    [broadfcui.common :as common]
-    [broadfcui.common.components :as comps]
-    [broadfcui.common.overlay :as overlay]
-    [broadfcui.common.style :as style]
-    [broadfcui.common.table-utils :as table-utils]
-    [broadfcui.persistence :as persistence]
-    [broadfcui.utils :as utils]
-    ))
+   [dmohs.react :as react]
+   [broadfcui.common :as common]
+   [broadfcui.common.components :as comps]
+   [broadfcui.common.overlay :as overlay]
+   [broadfcui.common.style :as style]
+   [broadfcui.common.table-utils :as table-utils]
+   [broadfcui.persistence :as persistence]
+   [broadfcui.utils :as utils]
+   ))
 
+;;;
+;;;
+;;; DEPRECATION NOTICE
+;;;
+;;; This is the OLD table.  It's going away.  Instead of fixing bugs here, convert to the NEW table at broadfcui.common.table.table
+;;;
+;;;
 
 (def ^:private default-initial-rows-per-page 20)
 
@@ -153,7 +160,7 @@
    :always-sort? false
    :filterable? true
    :cell-padding-left "16px"
-   :row-style (fn [index row]
+   :row-style (fn [index _]
                 {:backgroundColor (if (even? index) (:background-light style/colors) "#fff")})})
 
 (defn- restore-table-state [props]
@@ -375,6 +382,13 @@
              (not (= (select-keys @state persistence-keys) (:initial-state @locals))))
     (persistence/save {:key (:state-key props) :state state :only persistence-keys})))
 
+;;;
+;;;
+;;; DEPRECATION NOTICE
+;;;
+;;; This is the OLD table.  It's going away.  Instead of fixing bugs here, convert to the NEW table at broadfcui.common.table.table
+;;;
+;;;
 
 (react/defc Table
   (->>

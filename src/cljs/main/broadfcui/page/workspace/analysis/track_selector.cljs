@@ -1,20 +1,21 @@
 (ns broadfcui.page.workspace.analysis.track-selector
   (:require
-    [dmohs.react :as react]
-    [broadfcui.common :as common]
-    [broadfcui.common.components :as comps]
-    [broadfcui.common.entity-table :refer [EntityTable]]
-    [broadfcui.common.modal :as modal]
-    [broadfcui.common.style :as style]
-    [broadfcui.common.table-utils :refer [default-render]]
-    [broadfcui.page.workspace.analysis.igv-utils :as igv-utils]
-    [broadfcui.utils :as utils]
-    ))
+   [dmohs.react :as react]
+   [broadfcui.common :as common]
+   [broadfcui.common.components :as comps]
+   [broadfcui.common.entity-table :refer [EntityTable]]
+   [broadfcui.common.icons :as icons]
+   [broadfcui.common.modal :as modal]
+   [broadfcui.common.style :as style]
+   [broadfcui.common.table-utils :refer [default-render]]
+   [broadfcui.page.workspace.analysis.igv-utils :as igv-utils]
+   [broadfcui.utils :as utils]
+   ))
 
 
 (def ^:private supported-file-types [".bam" ".vcf" ".bed"])
 
-(react/defc Left
+(react/defc- Left
   {:render
    (fn [{:keys [props]}]
      [:div {:style {:padding "1em"}}
@@ -22,7 +23,7 @@
        "Available data"
        [:span {:style {:fontStyle "italic" :paddingLeft "2em"}}
         (str "Supported file types: " (clojure.string/join ", " supported-file-types))]]
-      [EntityTable {:workspace-id (:workspace-id props) :width :narrow
+      [EntityTable {:workspace-id (:workspace-id props)
                     :attribute-renderer
                     (fn [data]
                       (if (and (string? data)
@@ -36,7 +37,7 @@
                         (default-render data)))}]])})
 
 
-(react/defc Right
+(react/defc- Right
   {:render
    (fn [{:keys [props state refs]}]
      (let [{:keys [tracks]} props]
@@ -72,11 +73,10 @@
                      :style {:display "flex" :alignItems "center" :padding 4 :margin "2px 3px"
                              :border style/standard-line :borderRadius 4}}
                (when (> (count tracks) 1)
-                 [:img {:src "assets/drag_temp.png"
-                        :style {:flex "0 0 auto" :height 16 :cursor "ns-resize"}
-                        :draggable false
-                        :onMouseDown #(swap! state assoc :drag-index index :drop-index index :drag-url track-url
-                                             :text-selection (common/disable-text-selection))}])
+                 (icons/icon {:style {:cursor "ns-resize"}
+                              :onMouseDown #(swap! state assoc :drag-index index :drop-index index :drag-url track-url
+                                                   :text-selection (common/disable-text-selection))}
+                             :reorder))
                (case @index-url
                  :pending [:div {} [comps/Spinner {:height "1em" :text "Searching for index file..."}]]
                  :error (if requires-index?

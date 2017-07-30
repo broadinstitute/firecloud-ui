@@ -1,8 +1,8 @@
 (ns broadfcui.common.table.utils
   (:require
-    [broadfcui.common :as common]
-    [broadfcui.utils :as utils]
-    ))
+   [broadfcui.common :as common]
+   [broadfcui.utils :as utils]
+   ))
 
 
 (defn resolve-id [{:keys [header id]}]
@@ -88,3 +88,9 @@
           :initial-width 200
           :as-text #(common/format-date % (:format props))}
          props))
+
+
+(defn default-render [data]
+  (cond (map? data) (utils/map-to-string data)
+        (sequential? data) (clojure.string/join ", " data)
+        :else (str data)))

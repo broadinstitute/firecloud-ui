@@ -1,13 +1,13 @@
 (ns broadfcui.footer
   (:require
-    [dmohs.react :as react]
-    [broadfcui.common.style :as style]
-    [broadfcui.config :as config]
-    [broadfcui.nav :as nav]
-    [broadfcui.utils :as utils]
-    ))
+   [dmohs.react :as react]
+   [broadfcui.common.style :as style]
+   [broadfcui.config :as config]
+   [broadfcui.nav :as nav]
+   [broadfcui.utils :as utils]
+   ))
 
-(react/defc PopUpFooterControl
+(react/defc- PopUpFooterControl
   {:render
    (fn [{:keys [state]}]
      [:div {:style {:minWidth 50 :minHeight 20}
@@ -45,6 +45,7 @@
                    :color (:text-lightest style/colors) :fontSize "90%"}}
      (when (config/debug?)
        [:div {:style {:float "right"}} [PopUpFooterControl]])
+     [:div {} (style/render-broad-logo)]
      [:div {:style {:display "block"}}
       (str "\u00A9 " yeartext " Broad Institute")
       spacer

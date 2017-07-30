@@ -1,24 +1,47 @@
 (ns broadfcui.page.library.library-page
   (:require
-    [dmohs.react :as react]
-    [clojure.set :as set]
-    [clojure.string :as string]
-    [broadfcui.common :as common]
-    [broadfcui.common.components :as comps]
-    [broadfcui.common.flex-utils :as flex]
-    [broadfcui.common.icons :as icons]
-    [broadfcui.common.style :as style]
-    [broadfcui.common.table.style :as table-style]
-    [broadfcui.common.table.table :refer [Table]]
-    [broadfcui.config :as config]
-    [broadfcui.endpoints :as endpoints]
-    [broadfcui.nav :as nav]
-    [broadfcui.persistence :as persistence]
-    [broadfcui.utils :as utils]
-    ))
+   [dmohs.react :as react]
+   [clojure.set :as set]
+   [clojure.string :as string]
+   [broadfcui.common :as common]
+   [broadfcui.common.components :as comps]
+   [broadfcui.common.flex-utils :as flex]
+   [broadfcui.common.icons :as icons]
+   [broadfcui.common.style :as style]
+   [broadfcui.common.table.style :as table-style]
+   [broadfcui.common.table.table :refer [Table]]
+   [broadfcui.config :as config]
+   [broadfcui.endpoints :as endpoints]
+   [broadfcui.nav :as nav]
+   [broadfcui.persistence :as persistence]
+   [broadfcui.utils :as utils]
+   ))
 
+(defn- tcga-access-instructions []
+  [:span {}
+   [:p {} "For access to TCGA protected data please apply for access via dbGaP [instructions can be found "
+    [:a {:href "https://wiki.nci.nih.gov/display/TCGA/Application+Process"
+         :target "_blank"}
+     "here" icons/external-link-icon] "]."]])
 
-(react/defc DatasetsTable
+(defn- target-access-instructions []
+  [:span {}
+   [:p {} "For access to TARGET protected data please apply for access via dbGaP [instructions can be found "
+    [:a {:href "https://ocg.cancer.gov/programs/target/using-target-data"
+         :target "_blank"}
+     "here" icons/external-link-icon] "]."]])
+
+(defn- standard-access-instructions [data]
+  [:span {}
+   "Please contact "
+   [:a {:target "_blank"
+        :href (str "mailto:" (:library:contactEmail data))}
+    (:library:datasetCustodian data) " <" (:library:contactEmail data) ">"
+    (icons/icon {:style {:paddingLeft "0.25rem" :fontSize "80%"}} :email)]
+   " and request access for the "
+   (:namespace data) "/" (:name data) " workspace."])
+
+(react/defc- DatasetsTable
   {:render
    (fn [{:keys [state this props]}]
      (let [attributes (:library-attributes props)
@@ -77,17 +100,18 @@
                   :header-cell {:padding "0.5rem 0 0.5rem 1rem"}
                   :body-cell {:padding "0.3rem 0 0.3rem 1rem"}}}
          :toolbar ;; FIXME: magic numbers below:
-         {:items [[:div {:style {:fontSize "112%"}}
-                   ;; 112% makes this the same size as "Data Library" / "Workspaces" / "Method Repository" above
-                   [:span {:style {:fontWeight 700 :color (:text-light style/colors) :marginRight "0.5rem"}}
-                    "Matching Cohorts"]
-                   [:span {:style {:fontSize "80%"}}
-                    (let [total (or (:total @state) 0)]
-                      (str total
-                           " Dataset"
-                           (when-not (= 1 total) "s")
-                           " found"))]]
-                  flex/spring]
+         {:items (constantly
+                  [[:div {:style {:fontSize "112%"}}
+                    ;; 112% makes this the same size as "Data Library" / "Workspaces" / "Method Repository" above
+                    [:span {:style {:fontWeight 700 :color (:text-light style/colors) :marginRight "0.5rem"}}
+                     "Matching Cohorts"]
+                    [:span {:style {:fontSize "80%"}}
+                     (let [total (or (:total @state) 0)]
+                       (str total
+                            " Dataset"
+                            (when-not (= 1 total) "s")
+                            " found"))]]
+                   flex/spring])
           :style {:alignItems "flex-start" :marginBottom 7} ;; 7 makes some lines line up
           :column-edit-button {:style {:order 1 :marginRight nil}
                                :anchor :right}}}]))
@@ -98,28 +122,27 @@
          ((@refs "table") :refresh-rows))))
    :-get-link-props
    (fn [_ data]
-     (if (= (:workspaceAccess data) "NO ACCESS")
-       {:onClick
-        (fn [_]
-          (comps/push-message
-           {:header "Request Access"
-            :message
-            (if (= (config/tcga-namespace) (:namespace data))
+     (let [built-in-groups #{"TCGA-dbGaP-Authorized", "TARGET-dbGaP-Authorized"}
+           ws-auth-domains (set (:authorizationDomain data))]
+       (if (= (:workspaceAccess data) "NO ACCESS")
+         {:onClick
+          (fn [_]
+            (comps/push-message
+             {:header "Request Access"
+              :message
               [:span {}
-               [:p {} "For access to TCGA protected data please apply for access via dbGaP [instructions can be found "
-                [:a {:href "https://wiki.nci.nih.gov/display/TCGA/Application+Process"
-                     :target "_blank"}
-                 "here" icons/external-link-icon] "]."]
-               [:p {} "After dbGaP approves your application please link your eRA Commons ID in your FireCloud profile page."]]
-              [:span {}
-               "Please contact "
-               [:a {:target "_blank"
-                    :href (str "mailto:" (:library:contactEmail data))}
-                (:library:datasetCustodian data) " <" (:library:contactEmail data) ">"
-                (icons/icon {:style {:paddingLeft "0.25rem" :fontSize "80%"}} :email)]
-               " and request access for the "
-               (:namespace data) "/" (:name data) " workspace."])}))}
-       {:href (nav/get-link :workspace-summary (common/row->workspace-id data))}))
+               (if (not-empty (clojure.set/difference ws-auth-domains built-in-groups))
+                 (standard-access-instructions data)
+                 [:span {}
+                  (let [tcga? (contains? ws-auth-domains "TCGA-dbGaP-Authorized")
+                        target? (contains? ws-auth-domains "TARGET-dbGaP-Authorized")]
+                    [:div {}
+                     (when tcga? (tcga-access-instructions))
+                     (when target? (target-access-instructions))
+                     (when (or tcga? target?)
+                       [:p {} "After dbGaP approves your application please link your eRA
+                       Commons ID in your FireCloud profile page."])])])]}))}
+         {:href (nav/get-link :workspace-summary (common/row->workspace-id data))})))
    :build-aggregate-fields
    (fn [{:keys [props]}]
      (reduce
@@ -157,16 +180,16 @@
                        ((:update-aggregates props) aggregations)))
                    (on-done {:error status-text})))}))))))})
 
-(defn encode [text]
+(defn- encode [text]
   ;; character replacements modeled after Lucene's SimpleHTMLEncoder.
   (string/escape text {\" "&quot;" \& "&amp;" \< "&lt;", \> "&gt;", \\ "&#x27;" \/ "&#x2F;"}))
 
-(defn highlight-suggestion [suggestion highlight]
+(defn- highlight-suggestion [suggestion highlight]
   (if (not (string/blank? highlight))
     (string/replace (encode suggestion) (encode highlight) (str "<strong>" (encode highlight) "</strong>"))
     (encode suggestion)))
 
-(react/defc SearchSection
+(react/defc- SearchSection
   {:get-filters
    (fn [{:keys [props]}]
      (utils/map-keys name (:facet-filters props)))
@@ -208,7 +231,7 @@
                                              display (highlight-suggestion suggestion highlight)]
                                          (str "<div style='textOverflow: ellipsis; overflow: hidden; font-size: smaller;'>" display "</div>")))}]])})
 
-(react/defc FacetCheckboxes
+(react/defc- FacetCheckboxes
   {:render
    (fn [{:keys [props this]}]
      (let [size (:numOtherDocs props)
@@ -258,7 +281,7 @@
                          (:results m)))
                aggregates)))
 
-(react/defc Facet
+(react/defc- Facet
   {:render
    (fn [{:keys [props]}]
      (let [aggregate-field (:aggregate-field props)
@@ -274,7 +297,7 @@
                                       (select-keys props [:expanded? :selected-items :update-filter
                                                           :expanded-callback-function]))])))})
 
-(react/defc FacetSection
+(react/defc- FacetSection
   {:render
    (fn [{:keys [props]}]
      (if (empty? (:aggregates props))
@@ -293,7 +316,7 @@
 (def ^:private PERSISTENCE-KEY "library-page")
 (def ^:private VERSION 4)
 
-(react/defc Page
+(react/defc- Page
   (->>
    {:update-filter
     (fn [{:keys [state after-update refs]} facet-name facet-list]

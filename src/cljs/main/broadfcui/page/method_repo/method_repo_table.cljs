@@ -1,16 +1,16 @@
 (ns broadfcui.page.method-repo.method-repo-table
   (:require
-    [dmohs.react :as react]
-    [clojure.string :as string]
-    [broadfcui.common.components :as comps]
-    [broadfcui.common.style :as style]
-    [broadfcui.common.table.style :as table-style]
-    [broadfcui.common.table.table :refer [Table]]
-    [broadfcui.common.table.utils :as table-utils]
-    [broadfcui.endpoints :as endpoints]
-    [broadfcui.persistence :as persistence]
-    [broadfcui.utils :as utils]
-    ))
+   [dmohs.react :as react]
+   [clojure.string :as string]
+   [broadfcui.common.components :as comps]
+   [broadfcui.common.style :as style]
+   [broadfcui.common.table.style :as table-style]
+   [broadfcui.common.table.table :refer [Table]]
+   [broadfcui.common.table.utils :as table-utils]
+   [broadfcui.endpoints :as endpoints]
+   [broadfcui.persistence :as persistence]
+   [broadfcui.utils :as utils]
+   ))
 
 
 (react/defc MethodRepoTable
@@ -60,17 +60,19 @@
                          "N/A"))}]
            :style table-style/table-heavy}
           :toolbar
-          {:items (cons [comps/FilterGroupBar
-                         {:data (concat (:methods @state) (:configs @state))
-                          :selected-index (:filter-group-index @state)
-                          :on-change (fn [index data]
-                                       (swap! state assoc
-                                              :filter-group-index index
-                                              :filtered-data data))
-                          :filter-groups [{:text "All"}
-                                          {:text "Methods Only" :pred (comp (partial = :method) :type)}
-                                          {:text "Configs Only" :pred (comp (partial = :config) :type)}]}]
-                        (:toolbar-items props))}}]))
+          {:items
+           (constantly
+            (cons [comps/FilterGroupBar
+                   {:data (concat (:methods @state) (:configs @state))
+                    :selected-index (:filter-group-index @state)
+                    :on-change (fn [index data]
+                                 (swap! state assoc
+                                        :filter-group-index index
+                                        :filtered-data data))
+                    :filter-groups [{:text "All"}
+                                    {:text "Methods Only" :pred (comp (partial = :method) :type)}
+                                    {:text "Configs Only" :pred (comp (partial = :config) :type)}]}]
+                  (:toolbar-items props)))}}]))
     :component-did-mount
     (fn [{:keys [this]}]
       (this :load-data))

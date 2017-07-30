@@ -1,15 +1,15 @@
 (ns broadfcui.common.components
   (:require
-    [dmohs.react :as react]
-    [clojure.string :as string]
-    [broadfcui.common :as common]
-    [broadfcui.common.codemirror :refer [CodeMirror]]
-    [broadfcui.common.icons :as icons]
-    [broadfcui.common.modal :as modal]
-    [broadfcui.common.style :as style]
-    [broadfcui.config :as config]
-    [broadfcui.utils :as utils]
-    ))
+   [dmohs.react :as react]
+   [clojure.string :as string]
+   [broadfcui.common :as common]
+   [broadfcui.common.codemirror :refer [CodeMirror]]
+   [broadfcui.common.icons :as icons]
+   [broadfcui.common.modal :as modal]
+   [broadfcui.common.style :as style]
+   [broadfcui.config :as config]
+   [broadfcui.utils :as utils]
+   ))
 
 
 (declare push-error)
@@ -54,6 +54,7 @@
        [:a {:className (or class-name "button")
             :style (merge
                     {:display "inline-flex" :alignItems "center" :justifyContent "center"
+                     :flexShrink 0
                      :backgroundColor (if disabled? (:disabled-state style/colors) color)
                      :cursor (when disabled? "default")
                      :color (if disabled? (:text-light style/colors) "white")
@@ -431,6 +432,13 @@
                            (react/call :apply-filter this))))})
 
 (def Bloodhound (aget js/window "webpack-deps" "Bloodhound"))
+(def ^:private whitespace-tokenizer (aget Bloodhound "tokenizers" "whitespace"))
+
+(defn create-bloodhound-engine [{:keys [remote local]}]
+  (Bloodhound. (clj->js {:datumTokenizer whitespace-tokenizer
+                         :queryTokenizer whitespace-tokenizer
+                         :remote remote
+                         :local local})))
 
 (react/defc Typeahead
   {:get-text
@@ -448,19 +456,17 @@
       :typeahead-events ["typeahead:select" "typeahead:change"]})
    :render
    (fn [{:keys [props]}]
-     (style/create-search-field (merge {:ref "field" :className "typeahead" :disabled (:disabled props)}
-                                       (:field-attributes props))))
+     (let [{:keys [disabled field-attributes]} props]
+       (style/create-search-field (merge {:ref "field" :className "typeahead" :disabled disabled}
+                                         field-attributes))))
    :component-did-mount
    (fn [{:keys [props refs]}]
      (when (not (:disabled props))
-       (let [{:keys [remote render-display behavior empty-message render-suggestion on-select typeahead-events]} props
-             whitespace-tokenizer (aget Bloodhound "tokenizers" "whitespace")]
+       (let [{:keys [engine render-display behavior empty-message render-suggestion on-select typeahead-events]} props]
          (.typeahead (js/$ (@refs "field"))
                      (clj->js behavior)
                      (clj->js
-                      {:source (Bloodhound. (clj->js {:datumTokenizer whitespace-tokenizer
-                                                      :queryTokenizer whitespace-tokenizer
-                                                      :remote remote}))
+                      {:source (or engine (create-bloodhound-engine (select-keys props [:remote :local])))
                        :display render-display
                        :templates {:empty (str "<div style='padding: 0.5em'>" empty-message "</div>")
                                    :suggestion render-suggestion}}))
@@ -470,7 +476,10 @@
                           (fn []
                             (.typeahead (js/$ (@refs "field")) "close")
                             #(when (and (empty? (.. % -currentTarget -value)) (:on-clear props))
-                               ((:on-clear props)))))))})
+                               ((:on-clear props)))))))
+   :component-will-unmount
+   (fn [{:keys [refs]}]
+     (.typeahead (js/$ (@refs "field")) "destroy"))})
 
 
 (react/defc AutocompleteFilter
@@ -524,18 +533,17 @@
      [:div {:style (merge {:position "relative"} (:outer-style props))}
       [:div {:ref "scroller"
              :style (merge {:overflowY "auto"} (:inner-style props))
-             :onScroll #(react/call :update-edges this)}
+             :onScroll #(this :-update-edges)}
        [:div {:ref "content-container"}
         (:content props)]]
-      (react/call :build-shadow this true)
-      (react/call :build-shadow this false)])
+      (this :-build-shadow true)
+      (this :-build-shadow false)])
    :component-did-mount
    (fn [{:keys [refs this]}]
-     (react/call :update-edges this)
-     ;; this listener also fires upon being added
+     (this :-update-edges)
      (.addEventListener (@refs "content-container") "onresize"
-                        #(react/call :update-edges this)))
-   :build-shadow
+                        #(this :-update-edges)))
+   :-build-shadow
    (fn [{:keys [props state]} top?]
      (let [{:keys [vertical blur spread alpha]} props]
        [:div {:style {:position "absolute" :top 0 :left 0 :right 0 :bottom 0
@@ -547,7 +555,7 @@
                                             "rgba(0,0,0," alpha ")")
                       :opacity (if ((if top? :more-above? :more-below?) @state) 1 0)
                       :transition "opacity 0.5s linear"}}]))
-   :update-edges
+   :-update-edges
    (fn [{:keys [state refs]}]
      (let [scroll-top (.-scrollTop (@refs "scroller"))
            scroll-height (.-scrollHeight (@refs "scroller"))
@@ -616,8 +624,8 @@
 
 (defn no-billing-projects-message []
   [:div {:style {:textAlign "center"}}
-   (str "You must have a billing project associated with your account to create a new workspace. ")
-   [:a {:target "_blank" :href (str (config/billing-guide-url))}
+   "You must have a billing project associated with your account to create a new workspace."
+   [:a {:target "_blank" :href (config/billing-guide-url) :style {:display "block"}}
     "Learn how to create a billing project." icons/external-link-icon]])
 
 (defn push-ok-cancel-modal [props]
@@ -766,7 +774,7 @@
    (fn [{:keys [props state]}]
      (let [body
            [:div {:hidden (and (:collapsed? @state) (:label props))
-                  :marginLeft (if (:label props) "0.5rem" 0)}
+                  :style {:marginLeft (if (:label props) "0.5rem" 0)}}
             (map (fn [node]
                    [:ul {:style {:margin "0.2rem" :padding "0.5rem"
                                  :backgroundColor (if (and (:highlight-ends? props)
@@ -798,12 +806,12 @@
   {:render
    (fn [{:keys [props]}]
      (let [{:keys [filter-groups selected-index data on-change]} props]
-       [:div {}
+       [:div {:style {:display "flex"}}
         (map-indexed (fn [index {:keys [text pred count-override]}]
                        (let [first? (zero? index)
                              last? (= index (dec (count filter-groups)))
                              selected? (= index selected-index)]
-                         [:div {:style {:display "inline-block" :textAlign "center"
+                         [:div {:style {:textAlign "center" :flexShrink 0
                                         :backgroundColor (if selected?
                                                            (:button-primary style/colors)
                                                            (:background-light style/colors))
@@ -832,4 +840,8 @@
      (let [{:keys [filter-groups selected-index data on-change]} props]
        (when selected-index
          (let [{:keys [pred]} (nth filter-groups selected-index)]
-           (on-change selected-index (if pred (filter pred data) data))))))})
+           ; on-change is likely to refer to the parent component.
+           ; trigger at the end of the event loop to allow the parent to mount
+           (js/setTimeout
+            #(on-change selected-index (if pred (filter pred data) data))
+            0)))))})

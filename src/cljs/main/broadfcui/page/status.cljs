@@ -1,58 +1,57 @@
 (ns broadfcui.page.status
   (:require
-    [dmohs.react :as react]
-    [broadfcui.common.components :as comps]
-    [broadfcui.common.style :as style]
-    [broadfcui.nav :as nav]
-    [broadfcui.utils :as utils]
-    ))
+   [dmohs.react :as react]
+   [broadfcui.common.components :as comps]
+   [broadfcui.config :as config]
+   [broadfcui.nav :as nav]
+   [broadfcui.utils :as utils]
+   ))
 
 
-(react/defc StatusLine
+(react/defc- StatusLine
   {:render
-   (fn [{:keys [props state]}]
+   (fn [{:keys [props]}]
      [:div {:style {:marginTop "0.5em"}}
       [:div {}
        (:label props) ": "
        (cond
-         (nil? (:response @state))
+         (nil? (:success? props))
          [comps/Spinner]
-         (not (:success? (:response @state)))
+         (not (:success? props))
          [:span {} [:span {:style {:color "red"}} "Error"]
-          (when-not (:show-error-details? @state)
-            [:span {}
-             " ("
-             (style/create-link
-              {:onClick #(swap! state assoc :show-error-details? true)
-               :text "show details"})
-             ")"])]
+          (when (:errors props)
+            [:div {:style {:backgroundColor "#eee" :padding 6 :fontSize "smaller"}}
+             [:ul {} (map (fn [e] [:li {} e]) (:errors props))]])]
          :else
-         [:span {:style {:color "green"}} "Okay"])]
-      (when (:show-error-details? @state)
-        (let [response (:response @state)]
-          [:div {:style {:backgroundColor "#eee" :padding 6 :fontSize "smaller"}}
-           [:div {} "Status code: " (:status-code response)]
-           [:div {} "Status text: " (:status-text response)]
-           [:div {} "Response text:" [:br] (-> (:xhr response) .-responseText)]]))])
-   :component-did-mount
-   (fn [{:keys [props state]}]
-     (if (= (:path (:request props)) "/profile")
-       (utils/ajax-orch (:path (:request props))
-                        {:on-done #(swap! state assoc :response %)}
-                        :service-prefix "/register")
-       (utils/ajax-orch (:path (:request props))
-                        {:on-done #(swap! state assoc :response %)})))})
+         [:span {:style {:color "green"}} "Okay"])]])})
 
-(react/defc Page
+(react/defc- Page
   {:render
-   (fn [_]
-     [:div {:style {:padding "1em"}}
-      [:h2 {} "Service Status"]
-      [:div {}
-       [StatusLine {:label "Orchestration" :request {:path "/status/ping"}}]
-       [StatusLine {:label "Rawls" :request {:path "/workspaces"}}]
-       [StatusLine {:label "Agora" :request {:path "/methods"}}]
-       [StatusLine {:label "Thurloe" :request {:path "/profile"}}]]])})
+   (fn [{:keys [state]}]
+     (let [{:keys [status-code status-text response-text parsed-response]} @state
+           orch-ok? (:ok parsed-response)
+           orch-errors [(str "Status Code: " status-code)
+                        (str "Status Text: " status-text)
+                        (str "Response Text: " response-text)]]
+       [:div {:style {:padding "1em"}}
+        [:h2 {} "Service Status"]
+        [:div {}
+         [StatusLine {:label "Orchestration" :success? orch-ok? :errors orch-errors}]
+         (map (fn [system]
+                (let [current (first system)
+                      {:keys [messages ok]} (get-in parsed-response [:systems current])]
+                  [StatusLine {:label (name current) :success? ok :errors messages}]))
+              (:systems parsed-response))]]))
+   :component-did-mount
+   (fn [{:keys [state]}]
+     (utils/ajax {:url (str (config/api-url-root) "/status")
+                  :method "GET"
+                  :on-done (fn [{:keys [status-code status-text raw-response get-parsed-response]}]
+                             (swap! state assoc
+                                    :status-code status-code
+                                    :status-text status-text
+                                    :response-text raw-response
+                                    :parsed-response (get-parsed-response)))}))})
 
 (defn add-nav-paths []
   (nav/defpath

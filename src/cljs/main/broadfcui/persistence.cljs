@@ -1,7 +1,7 @@
 (ns broadfcui.persistence
   (:require
-    [broadfcui.utils :as utils]
-    ))
+   [broadfcui.utils :as utils]
+   ))
 
 (defn- generate-persistence-key [key]
   (let [id (-> @utils/auth2-atom (.-currentUser) (.get) (.getBasicProfile) (.getId))]

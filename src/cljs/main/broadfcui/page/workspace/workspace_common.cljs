@@ -1,11 +1,11 @@
 (ns broadfcui.page.workspace.workspace-common
   (:require
-    [broadfcui.common.style :as style]
-    [broadfcui.common.table.style :as table-style]
-    [broadfcui.common.table.table :refer [Table]]
-    [broadfcui.common.table.utils :as table-utils]
-    [broadfcui.utils :as utils]
-    ))
+   [broadfcui.common.style :as style]
+   [broadfcui.common.table.style :as table-style]
+   [broadfcui.common.table.table :refer [Table]]
+   [broadfcui.common.table.utils :as table-utils]
+   [broadfcui.utils :as utils]
+   ))
 
 
 (defn workspace->id [workspace]
@@ -33,11 +33,11 @@
             (table-utils/date-column {:column-data (comp :createdDate :workspace)})
             {:header "Access Level" :initial-width 106
              :column-data :accessLevel}
-            {:header "Authorization Domain" :starting-width 150
-             :column-data (comp :membersGroupName :authorizationDomain :workspace)
-             :render #(or % "None")}]}
-    :toolbar {:items toolbar-items}}])
-
+            {:header "Authorization Domain" :starting-width 200
+             :column-data (comp :authorizationDomain :workspace)
+             :as-text #(if (empty? %) "None" (interpose ", " (map :membersGroupName %)))
+             :sort-by count}]}
+    :toolbar {:items (constantly toolbar-items)}}])
 
 (defn config->id [config]
   (select-keys config [:namespace :name]))
@@ -59,4 +59,4 @@
                       :column-data (comp (juxt :methodNamespace :methodName :methodVersion) :methodRepoMethod)
                       :as-text (partial clojure.string/join "/")
                       :render (partial apply style/render-entity)}]}
-    :toolbar {:items toolbar-items}}])
+    :toolbar {:items (constantly toolbar-items)}}])

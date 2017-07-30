@@ -1,17 +1,17 @@
 (ns broadfcui.page.workspace.monitor.tab
   (:require
-    [dmohs.react :as react]
-    [broadfcui.common :as common]
-    [broadfcui.common.components :as comps]
-    [broadfcui.common.style :as style]
-    [broadfcui.common.table.style :as table-style]
-    [broadfcui.common.table.table :refer [Table]]
-    [broadfcui.endpoints :as endpoints]
-    [broadfcui.nav :as nav]
-    [broadfcui.page.workspace.monitor.common :as moncommon]
-    [broadfcui.page.workspace.monitor.submission-details :as submission-details]
-    [broadfcui.utils :as utils]
-    ))
+   [dmohs.react :as react]
+   [broadfcui.common :as common]
+   [broadfcui.common.components :as comps]
+   [broadfcui.common.style :as style]
+   [broadfcui.common.table.style :as table-style]
+   [broadfcui.common.table.table :refer [Table]]
+   [broadfcui.endpoints :as endpoints]
+   [broadfcui.nav :as nav]
+   [broadfcui.page.workspace.monitor.common :as moncommon]
+   [broadfcui.page.workspace.monitor.submission-details :as submission-details]
+   [broadfcui.utils :as utils]
+   ))
 
 (defn- render-date [submission]
   (common/format-date (:submissionDate submission)))
@@ -59,7 +59,7 @@
                                                 bucketName "/" submission-id "/")}))}]}}])
 
 
-(react/defc SubmissionsList
+(react/defc- SubmissionsList
   {:reload
    (fn [{:keys [state this]}]
      (swap! state dissoc :server-response)

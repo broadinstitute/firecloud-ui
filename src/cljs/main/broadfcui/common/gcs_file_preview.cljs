@@ -1,19 +1,19 @@
 (ns broadfcui.common.gcs-file-preview
   (:require
-    [dmohs.react :as react]
-    [clojure.string :as string]
-    [broadfcui.common :as common]
-    [broadfcui.common.components :as comps]
-    [broadfcui.common.icons :as icons]
-    [broadfcui.common.modal :as modal]
-    [broadfcui.common.style :as style]
-    [broadfcui.endpoints :as endpoints]
-    [broadfcui.utils :as utils]
-    ))
+   [dmohs.react :as react]
+   [clojure.string :as string]
+   [broadfcui.common :as common]
+   [broadfcui.common.components :as comps]
+   [broadfcui.common.icons :as icons]
+   [broadfcui.common.modal :as modal]
+   [broadfcui.common.style :as style]
+   [broadfcui.endpoints :as endpoints]
+   [broadfcui.utils :as utils]
+   ))
 
 (def ^:private preview-byte-count 20000)
 
-(react/defc PreviewDialog
+(react/defc- PreviewDialog
   {:render
    (fn [{:keys [props state]}]
      [comps/OKCancelForm
@@ -26,18 +26,20 @@
                        [:div {}
                         [:div {:style {:display "inline-block" :width 185}} (str label ": ")]
                         contents])
-             data-empty (or (= data-size "0") (string/blank? data-size))]
+             data-empty (or (= data-size "0") (string/blank? data-size))
+             bam? (re-find #"\.ba[mi]$" (:object props))]
          [:div {:style {:width 700 :overflow "auto"}}
           (labeled "Google Bucket" (:bucket-name props))
           (labeled "Object" (:object props))
           [:div {:style {:marginTop "1em"}}
-           [:div {} (when-not data-empty
-                      "Previews for some filetypes may be unsupported. ")]
-           (when (> data-size preview-byte-count) (str "Last " (:preview-line-count @state)
-                                                       " lines are shown. Use link below to view entire file."))
+           [:div {} (if bam?
+                      "Preview is not supported for this filetype."
+                      "Previews may not be supported for some filetypes.")]
+           (when (and (not bam?) (> data-size preview-byte-count))
+             (str "Last " (:preview-line-count @state) " lines are shown. Use link below to view entire file." data-size))
            ;; The max-height of 206 looks random, but it's so that the top line of the log preview is half cut-off
            ;; to hint to the user that they should scroll up.
-           (when-not data-empty
+           (when-not (or data-empty bam?)
              (react/create-element
               [:div {:ref "preview" :style {:marginTop "1em" :whiteSpace "pre-wrap" :fontFamily "monospace"
                                             :fontSize "90%" :overflowY "auto" :maxHeight 206
@@ -59,7 +61,15 @@
                                :target "_blank"}
                            "Open" icons/external-link-icon]
                           [:span {:style {:fontStyle "italic" :color (:text-light style/colors)}}
-                           " (right-click to download)"]])))
+                           " (right-click to download)"]]))
+                      (when (> data-size 100000000)
+                        [:div {:style {:marginTop "1em" :marginBottom "1em"}}
+                         [:div {} "Downloading large files through the browser may not be successful. Instead use this gsutil"]
+                         [:div {:style {:marginBottom ".5em"}} "command replacing [DESTINATION] with the local file path you wish to download to."]
+                         (style/create-code-sample
+                          (str "gsutil cp gs://" (:bucket-name props) "/" (:object props) " [DESTINATION]"))
+                         [:div {:style {:marginTop "1em"}} "For more information on the gsutil tool click "
+                          [:a {:href "https://cloud.google.com/storage/docs/gsutil" :target "_blank"} "here" icons/external-link-icon]]]))
              (when-not data-empty
                (labeled "Estimated download fee"
                         (if (nil? cost) "Unknown" (common/format-price cost))

@@ -1,24 +1,24 @@
 (ns broadfcui.page.workspace.data.tab
   (:require
-    [dmohs.react :as react]
-    [clojure.string :as string]
-    [broadfcui.common :as common]
-    [broadfcui.common.components :as comps]
-    [broadfcui.common.entity-table :refer [EntityTable]]
-    [broadfcui.common.icons :as icons]
-    [broadfcui.common.modal :as modal]
-    [broadfcui.common.style :as style]
-    [broadfcui.common.table-utils :as table-utils]
-    [broadfcui.config :as config]
-    [broadfcui.page.workspace.data.copy-data-workspaces :as copy-data-workspaces]
-    [broadfcui.page.workspace.data.entity-viewer :refer [EntityViewer]]
-    [broadfcui.page.workspace.data.import-data :as import-data]
-    [broadfcui.page.workspace.data.utils :as data-utils]
-    [broadfcui.persistence :as persistence]
-    [broadfcui.utils :as utils]
-    ))
+   [dmohs.react :as react]
+   [clojure.string :as string]
+   [broadfcui.common :as common]
+   [broadfcui.common.components :as comps]
+   [broadfcui.common.entity-table :refer [EntityTable]]
+   [broadfcui.common.icons :as icons]
+   [broadfcui.common.modal :as modal]
+   [broadfcui.common.style :as style]
+   [broadfcui.common.table-utils :as table-utils]
+   [broadfcui.config :as config]
+   [broadfcui.page.workspace.data.copy-data-workspaces :as copy-data-workspaces]
+   [broadfcui.page.workspace.data.entity-viewer :refer [EntityViewer]]
+   [broadfcui.page.workspace.data.import-data :as import-data]
+   [broadfcui.page.workspace.data.utils :as data-utils]
+   [broadfcui.persistence :as persistence]
+   [broadfcui.utils :as utils]
+   ))
 
-(react/defc MetadataImporter
+(react/defc- MetadataImporter
   {:get-initial-state
    (fn [{:keys [state]}]
      {:crumbs [{:text "Choose Source"
@@ -35,7 +35,9 @@
                                  :onClick #(swap! state update :crumbs (comp vec (partial take 2)))}))]
          [:div {:style {:position "relative"}}
           [:div {:style {:fontSize "1.1rem" :marginBottom "1rem"}}
-           [:span {:style {:display "inline-block"}} [comps/Breadcrumbs {:crumbs (:crumbs @state)}]]
+           [:span {:style {:display "inline-block"}}
+            [comps/Breadcrumbs {:crumbs (map #(select-keys % [:text :onClick :id])
+                                             (:crumbs @state))}]]
            (when-not last-crumb-id
              (common/render-info-box
               {:text [:div {} "For more information about importing files, see our "
@@ -68,11 +70,10 @@
        [:div {:style {:padding "1rem 1.5rem" :display "flex"}}
         (when (:loading-attributes @state)
           [comps/Blocker {:banner "Loading..."}])
-        (cond
-          workspace-error (style/create-server-error-message workspace-error)
-          workspace (this :-render-data)
-          :else
-          [:div {:style {:textAlign "center"}} [comps/Spinner {:text "Checking workspace..."}]])
+        (cond workspace-error (style/create-server-error-message workspace-error)
+              workspace (this :-render-data)
+              :else [:div {:style {:textAlign "center"}}
+                     [comps/Spinner {:text "Checking workspace..."}]])
         (when (:selected-entity @state)
           (let [{:keys [selected-entity-type selected-entity selected-attr-list]} @state]
             [EntityViewer {:workspace-id workspace-id
@@ -89,10 +90,9 @@
       [MetadataImporter
        (merge
         (select-keys props [:workspace-id])
-        {:this-auth-domain (get-in props [:workspace :workspace :authorizationDomain :membersGroupName])
+        {:this-auth-domain (get-in props [:workspace :workspace :authorizationDomain])
          :import-type "data"
-         :on-data-imported #(react/call :refresh (@refs "entity-table")
-                                        (or % (:selected-entity-type @state)) true)})]))
+         :on-data-imported #((@refs "entity-table") :refresh (or % (:selected-entity-type @state)) true)})]))
    :-render-data
    (fn [{:keys [props this state]}]
      (let [{:keys [workspace workspace-id]} props]
@@ -102,18 +102,16 @@
           :workspace-id workspace-id
           :column-defaults
           (data-utils/get-column-defaults (get-in workspace [:workspace :workspace-attributes :workspace-column-defaults]))
-          :toolbar
-          (fn [built-in]
-            (let [layout (fn [item] [:div {:style {:marginRight "1em"}}] item)]
-              [:div {:style {:display "flex" :alignItems "center" :marginBottom "1em"}}
-               (map layout (vals built-in))
-               (when (:selected-entity-type @state) (this :-render-download-link))
-               [:div {:style {:flexGrow 1}}]
-               [comps/Button {:text "Import Metadata..."
-                              :data-test-id "import-metadata-button"
-                              :disabled? (when (get-in workspace [:workspace :isLocked]) "This workspace is locked.")
-                              :onClick #(this :-handle-import-data-click)}]]))
-          :on-filter-change #(swap! state assoc :selected-entity-type % :selected-entity nil :selected-attr-list nil)
+          :toolbar-items
+          (fn [table-props]
+            [(when (:selected-entity-type @state) (this :-render-download-link table-props))
+             [comps/Button {:text "Import Metadata..."
+                            :data-test-id "import-metadata-button"
+                            :style {:marginLeft "auto"}
+                            :disabled? (when (get-in workspace [:workspace :isLocked]) "This workspace is locked.")
+                            :onClick #(this :-handle-import-data-click)}]])
+          :on-entity-type-selected #(swap! state assoc :selected-entity-type % :selected-entity nil :selected-attr-list nil)
+          :on-column-change #(swap! state assoc :visible-columns %)
           :attribute-renderer (table-utils/render-gcs-links (get-in workspace [:workspace :bucketName]))
           :linked-entity-renderer
           (fn [entity]
@@ -122,7 +120,7 @@
               (:entity-Name entity)))
           :entity-name-renderer #(this :-render-entity %)}]]))
    :-render-download-link
-   (fn [{:keys [props state]}]
+   (fn [{:keys [props state refs]} table-props]
      (let [{:keys [workspace-id]} props
            selected-entity-type (name (:selected-entity-type @state))]
        [:form {:target "_blank"
@@ -135,13 +133,9 @@
                  :value (utils/get-access-token)}]
         [:input {:type "hidden"
                  :name "attributeNames"
-                 :value (->> (persistence/try-restore
-                              {:key (str (common/workspace-id->string
-                                          workspace-id) ":data:" selected-entity-type)
-                               :initial (constantly {})})
-                             :column-meta
+                 :value (->> (:columns table-props)
                              (filter :visible?)
-                             (map :header)
+                             (map :id)
                              (string/join ","))}]
         [:input {:style {:border "none" :backgroundColor "transparent" :cursor "pointer"
                          :color (:button-primary style/colors) :fontSize "inherit" :fontFamily "inherit"

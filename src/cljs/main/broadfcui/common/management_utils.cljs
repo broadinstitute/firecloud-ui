@@ -1,19 +1,19 @@
 (ns broadfcui.common.management-utils
   (:require
-    [dmohs.react :as react]
-    [broadfcui.common :as common]
-    [broadfcui.common.components :as comps]
-    [broadfcui.common.flex-utils :as flex]
-    [broadfcui.common.input :as input]
-    [broadfcui.common.modal :as modal]
-    [broadfcui.common.style :as style]
-    [broadfcui.common.table.style :as table-style]
-    [broadfcui.common.table.table :as table]
-    [broadfcui.endpoints :as endpoints]
-    [broadfcui.utils :as utils]
-    ))
+   [dmohs.react :as react]
+   [broadfcui.common :as common]
+   [broadfcui.common.components :as comps]
+   [broadfcui.common.flex-utils :as flex]
+   [broadfcui.common.input :as input]
+   [broadfcui.common.modal :as modal]
+   [broadfcui.common.style :as style]
+   [broadfcui.common.table.style :as table-style]
+   [broadfcui.common.table.table :as table]
+   [broadfcui.endpoints :as endpoints]
+   [broadfcui.utils :as utils]
+   ))
 
-(react/defc AddUserDialog
+(react/defc- AddUserDialog
   {:render
    (fn [{:keys [props state this refs]}]
      [comps/OKCancelForm
@@ -99,18 +99,20 @@
                            [:div {:style {:padding "0.6rem 0 0.6rem 32px"}}
                             (style/create-link {:text "Remove"
                                                 :onClick #(this :-remove-user role email)})])}]}
-                :toolbar {:items [flex/spring
-                                  [comps/Button
-                                   {:text "Add User..." :icon :add-new
-                                    :data-test-id "billing-project-add-user-button"
-                                    :onClick (fn [_]
-                                               (modal/push-modal
-                                                [AddUserDialog {:endpoint (:add-endpoint props)
-                                                                :group-name (:group-name props)
-                                                                :user (:user-term props)
-                                                                :admin (:admin-term props)
-                                                                :on-add #(this :-load-data)
-                                                                :footer (:add-member-footer props)}]))}]]}}]
+                :toolbar {:items
+                          (constantly
+                           [flex/spring
+                            [comps/Button
+                             {:text "Add User..." :icon :add-new
+                              :data-test-id "billing-project-add-user-button"
+                              :onClick (fn [_]
+                                         (modal/push-modal
+                                          [AddUserDialog {:endpoint (:add-endpoint props)
+                                                          :group-name (:group-name props)
+                                                          :user (:user-term props)
+                                                          :admin (:admin-term props)
+                                                          :on-add #(this :-load-data)
+                                                          :footer (:add-member-footer props)}]))}]])}}]
               [comps/ErrorViewer {:error (:remove-error @state)}]])))
    :component-did-mount
    (fn [{:keys [this]}]

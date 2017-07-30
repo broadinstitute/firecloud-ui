@@ -1,14 +1,14 @@
 (ns broadfcui.page.workspace.summary.acl-editor
   (:require
-    [dmohs.react :as react]
-    [broadfcui.common :as common]
-    [broadfcui.common.components :as comps]
-    [broadfcui.common.input :as input]
-    [broadfcui.common.modal :as modal]
-    [broadfcui.common.style :as style]
-    [broadfcui.endpoints :as endpoints]
-    [broadfcui.utils :as utils]
-    ))
+   [dmohs.react :as react]
+   [broadfcui.common :as common]
+   [broadfcui.common.components :as comps]
+   [broadfcui.common.input :as input]
+   [broadfcui.common.modal :as modal]
+   [broadfcui.common.style :as style]
+   [broadfcui.endpoints :as endpoints]
+   [broadfcui.utils :as utils]
+   ))
 
 ; The list of all assignable access levels in the system
 ; Note that if you add an access level, you will want to add it in common.cljs as well
@@ -25,11 +25,10 @@
       (when (:saving? @state)
         [comps/Blocker {:banner "Updating..."}])
       [:div {:style {:padding "0.5rem 0" :fontSize "90%"}} "Billing Project Owner(s)"]
-      (map-indexed
-       (fn [i acl-entry]
-         [:div {:style {:padding "0.5rem 0" :fontSize "90%" :borderTop style/standard-line}}
-          (:email acl-entry)])
-       (:project-owner-acl-vec @state))
+      (map (fn [acl-entry]
+             [:div {:style {:padding "0.5rem 0" :fontSize "90%" :borderTop style/standard-line}}
+              (:email acl-entry)])
+           (:project-owner-acl-vec @state))
       [:div {:style {:padding "0.5rem 0" :fontSize "90%" :marginTop "0.5rem"}}
        [:div {:style {:display "inline-block" :width 400}} "User ID"]
        [:div {:style {:display "inline-block" :width 200 :marginLeft "1rem"}} "Access Level"]
@@ -99,16 +98,15 @@
                [:div {:style {:padding "0.5rem 0" :fontSize "90%" :marginTop "0.5rem"}}
                 [:div {:style {:display "inline-block" :width 400}} "User ID"]
                 [:div {:style {:display "inline-block" :width 200 :marginLeft "1rem"}} "Access Level"]]
-               (map-indexed
-                (fn [i acl-entry]
-                  [:div {:style {:borderTop style/standard-line :padding "0.5rem 0"}}
-                   [:div {:style {:display "inline-block" :width 400 :fontSize "88%"}}
-                    (:email acl-entry)]
-                   [:span {:style {:display "inline-block" :lineHeight "33px"
-                                   :width 200 :height 33 :verticalAlign "middle"
-                                   :marginLeft "1rem" :marginBottom 0}}
-                    (:accessLevel acl-entry)]])
-                (:users-not-found @state))])
+               (map (fn [acl-entry]
+                      [:div {:style {:borderTop style/standard-line :padding "0.5rem 0"}}
+                       [:div {:style {:display "inline-block" :width 400 :fontSize "88%"}}
+                        (:email acl-entry)]
+                       [:span {:style {:display "inline-block" :lineHeight "33px"
+                                       :width 200 :height 33 :verticalAlign "middle"
+                                       :marginLeft "1rem" :marginBottom 0}}
+                        (:accessLevel acl-entry)]])
+                    (:users-not-found @state))])
     :ok-button {:text "Invite" :onClick #(persist-acl true)}}])
 
 (react/defc AclEditor
@@ -180,5 +178,5 @@
                     ((get-parsed-response false) "acl")))
            (swap! state assoc :load-error (get-parsed-response false))))})
      (endpoints/get-groups
-      (fn [err-text groups]
+      (fn [_ groups]
         (swap! state assoc :user-groups groups))))})

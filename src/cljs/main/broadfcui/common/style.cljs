@@ -1,8 +1,8 @@
 (ns broadfcui.common.style
   (:require
-    [clojure.string :as string]
-    [broadfcui.utils :as utils]
-    ))
+   [clojure.string :as string]
+   [broadfcui.utils :as utils]
+   ))
 
 (def colors {:background-light "#f4f4f4"
              :background-dark "#4d4d4d"
@@ -95,6 +95,13 @@
        (cons [:option {:value -1 :disabled true} (first placeholder)] option-elements)
        option-elements)]))
 
+(defn create-identity-select-name [props options & [placeholder]]
+  (let [option-elements (map (fn [opt] [:option {:value opt} opt]) options)]
+    [:select (utils/deep-merge {:style select-style} props)
+     (if placeholder
+       (cons [:option {:value -1 :disabled true} placeholder] option-elements)
+       option-elements)]))
+
 (defn create-identity-select [props options]
   [:select (utils/deep-merge {:style select-style} props)
    (map (fn [opt] [:option {:value opt} opt]) options)])
@@ -112,6 +119,12 @@
                  :padding "1em 0" :borderRadius 8}
          :data-test-id "message-well"}
    message])
+
+(defn create-code-sample [text]
+  [:code {:style {:backgroundColor (:background-dark colors) :color "white"
+                  :fontWeight "bold" :fontFamily "Menlo, monospace" :fontSize 12
+                  :padding "0.2rem" :borderRadius "0.2rem" :margin "0 0.1rem"}}
+   text])
 
 (defn center [props & children]
   [:div (utils/deep-merge props {:style {:position "absolute" :top "50%" :left "50%"
@@ -175,10 +188,9 @@
                    :borderRadius "3px"}}
     count]])
 
-(defn render-logo []
+(defn render-broad-logo []
   [:img {:src "assets/broad_logo.png" :style {:height 38}}])
 
-; Temporary replacement for the Broad Logo.
 (defn render-text-logo []
   [:div {:style {:display "inline-block"}}
    [:a {:href "/#" :style {:fontSize 32 :color (:button-primary colors)

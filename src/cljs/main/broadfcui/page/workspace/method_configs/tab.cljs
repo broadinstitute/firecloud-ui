@@ -1,20 +1,21 @@
 (ns broadfcui.page.workspace.method-configs.tab
   (:require
-    [dmohs.react :as react]
-    [broadfcui.common.components :as comps]
-    [broadfcui.common.flex-utils :as flex]
-    [broadfcui.common.modal :as modal]
-    [broadfcui.common.style :as style]
-    [broadfcui.endpoints :as endpoints]
-    [broadfcui.nav :as nav]
-    [broadfcui.page.workspace.method-configs.import-config :as import-config]
-    [broadfcui.page.workspace.method-configs.method-config-editor :refer [MethodConfigEditor]]
-    [broadfcui.page.workspace.workspace-common :as ws-common]
-    [broadfcui.utils :as utils]
-    ))
+   [dmohs.react :as react]
+   [broadfcui.common.components :as comps]
+   [broadfcui.common.flex-utils :as flex]
+   [broadfcui.common.modal :as modal]
+   [broadfcui.common.style :as style]
+   [broadfcui.endpoints :as endpoints]
+   [broadfcui.nav :as nav]
+   [broadfcui.page.workspace.method-configs.import-config :as import-config]
+   [broadfcui.page.workspace.method-configs.method-config-editor :refer [MethodConfigEditor]]
+   [broadfcui.page.workspace.method-configs.synchronize :as mc-sync]
+   [broadfcui.page.workspace.workspace-common :as ws-common]
+   [broadfcui.utils :as utils]
+   ))
 
 
-(react/defc MethodConfigurationsList
+(react/defc- MethodConfigurationsList
   {:reload
    (fn [{:keys [state this]}]
      (swap! state dissoc :server-response)
@@ -50,6 +51,7 @@
                            :data-test-id "import-method-configuration-modal"
                            :after-import (fn [{:keys [config-id]}]
                                            (modal/pop-modal)
+                                           (mc-sync/flag-synchronization)
                                            ((:on-config-imported props) config-id))}])}]]})
          :else [:div {:style {:textAlign "center"}}
                 [comps/Spinner {:text "Loading configurations..."}]])))
@@ -78,7 +80,7 @@
        [:div {:style {:padding "1rem 1.5rem"}}
         (if config-id
           [MethodConfigEditor
-           (merge (select-keys props [:workspace-id :bucket-access? :on-submission-success])
+           (merge (select-keys props [:workspace-id :workspace :bucket-access? :on-submission-success])
                   {:key config-id
                    :config-id config-id
                    :access-level (get-in props [:workspace :accessLevel])
