@@ -36,7 +36,7 @@ class SignInPage(val baseUrl: String)(implicit webDriver: WebDriver) extends Fir
     val popupWindowHandle = (windowHandles -- initialWindowHandles).head
 
     switch to window(popupWindowHandle)
-    new GoogleSignInPopup
+    new GoogleSignInPopup().awaitLoaded()
   }
 
   object ui {
@@ -50,6 +50,11 @@ class SignInPage(val baseUrl: String)(implicit webDriver: WebDriver) extends Fir
 }
 
 class GoogleSignInPopup(implicit webDriver: WebDriver) extends WebBrowser with WebBrowserUtil {
+
+  def awaitLoaded(): GoogleSignInPopup = {
+    await text "to continue to"
+    this
+  }
 
   /**
     * Signs in to Google to authenticate for FireCloud.
