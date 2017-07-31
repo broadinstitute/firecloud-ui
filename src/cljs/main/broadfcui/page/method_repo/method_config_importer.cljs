@@ -34,15 +34,14 @@
        :ok-button {:text "Redact" :onClick #(this :redact)}}])
    :redact
    (fn [{:keys [props state]}]
-     (let [{:keys [name namespace snapshotId]} (:entity props)]
-       (swap! state assoc :redacting? true :error nil)
-       (endpoints/call-ajax-orch
-        {:endpoint (endpoints/delete-agora-entity (:config? props) namespace name snapshotId)
-         :on-done (fn [{:keys [success? get-parsed-response]}]
-                    (swap! state dissoc :redacting?)
-                    (if success?
-                      (do (modal/pop-modal) ((:on-delete props)))
-                      (swap! state assoc :error (get-parsed-response false))))})))})
+     (swap! state assoc :redacting? true :error nil)
+     (endpoints/call-ajax-orch
+      {:endpoint (endpoints/delete-agora-entity (:config? props) (:entity props))
+       :on-done (fn [{:keys [success? get-parsed-response]}]
+                  (swap! state dissoc :redacting?)
+                  (if success?
+                    (do (modal/pop-modal) ((:on-delete props)))
+                    (swap! state assoc :error (get-parsed-response false))))}))})
 
 (defn- create-import-form [state props this locals entity config? fields]
   (let [{:keys [workspace-id]} props
@@ -86,9 +85,8 @@
                 :text "Permissions..." :icon :settings :margin :bottom
                 :onClick #(modal/push-modal
                            [mca/AgoraPermsEditor
-                            {:save-endpoint (endpoints/persist-agora-method-acl entity)
-                             :load-endpoint (let [{:keys [name namespace snapshotId]} entity]
-                                              (endpoints/get-agora-method-acl namespace name snapshotId config?))
+                            {:save-endpoint (endpoints/persist-agora-entity-acl config? entity)
+                             :load-endpoint (endpoints/get-agora-entity-acl config? entity)
                              :entityType (:entityType entity)
                              :entityName (mca/get-ordered-name entity)
                              :title (str (:entityType entity) " " (mca/get-ordered-name entity))}])}]

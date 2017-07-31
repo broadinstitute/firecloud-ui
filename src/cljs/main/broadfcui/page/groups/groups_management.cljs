@@ -23,23 +23,9 @@
      [:div {}
       (cond
         (:delete-modal? @state)
-        (modals/render-message
-         {:text (str "Are you sure you want to delete the group " (:group-name @state) "?")
-          :on-confirm #(this :-delete-group)
-          :on-dismiss #(swap! state dissoc :delete-modal?)})
+        (this :-render-confirmation)
         (:deleting? @state)
-        (net/render-with-ajax
-         (:delete-response @state)
-         #(this :-load-data)
-         {:blocking? true
-          :loading-text "Deleting group..."
-          :handle-error
-          (fn [parsed-response]
-            (modals/render-error
-             {:text (if (= 409 (:statusCode parsed-response))
-                      "This group cannot be deleted because it is in use."
-                      (:message parsed-response))
-              :on-dismiss #(swap! state dissoc :deleting? :delete-response)}))}))
+        (this :-render-deletion-actions))
       (net/render-with-ajax
        (:groups-response @state)
        #(this :-render-groups-table)
@@ -51,10 +37,7 @@
    (fn [{:keys [state]}]
      (utils/ajax-orch
       "/groups"
-      {:on-done (net/handle-ajax-response #(swap! state assoc
-                                                  :groups-response %
-                                                  :deleting? nil
-                                                  :delete-response nil))}))
+      {:on-done (net/handle-ajax-response #(swap! state assoc :groups-response %))}))
    :-render-groups-table
    (fn [{:keys [this state]}]
      [Table
@@ -73,9 +56,11 @@
                                         :href (nav/get-link :group groupName)})
                     groupName))}
                {:header "Role" :initial-width 100
+                :sort-by :text
                 :as-text :role}
                {:header "Email for Sharing Workspaces" :initial-width :auto
                 :resizable? false
+                :sort-by :text
                 :as-text :groupEmail
                 :render
                 (fn [{:keys [groupEmail]}]
@@ -95,21 +80,44 @@
                       :onClick #(swap! state assoc :group-name groupName :delete-modal? true)})))}]}
        :toolbar
        {:items
-        [flex/spring
-         [comps/Button
-          {:text "Create New Group..."
-           :onClick
-           (fn []
-             (modal/push-modal
-              [CreateGroupDialog
-               {:on-success #(this :-load-data)}]))}]]}}])
+        (constantly
+         [flex/spring
+          [comps/Button
+           {:text "Create New Group..."
+            :onClick
+            (fn []
+              (modal/push-modal
+               [CreateGroupDialog
+                {:on-success #(this :-load-data)}]))}]])}}])
    :-delete-group
-   (fn [{:keys [state]}]
+   (fn [{:keys [state this]}]
      (swap! state assoc :deleting? true :delete-modal? nil)
      (endpoints/call-ajax-orch
       {:endpoint (endpoints/delete-group (:group-name @state))
        :on-done (net/handle-ajax-response
-                 #(swap! state assoc :delete-response %))}))})
+                 (fn [response]
+                    (swap! state assoc :delete-response response)
+                    (this :-load-data)))}))
+   :-render-confirmation
+   (fn [{:keys [state this]}]
+     (modals/render-message
+      {:text (str "Are you sure you want to delete the group " (:group-name @state) "?")
+       :on-confirm #(this :-delete-group)
+       :on-dismiss #(swap! state dissoc :delete-modal?)}))
+   :-render-deletion-actions
+   (fn [{:keys [state this]}]
+     (net/render-with-ajax
+      (:delete-response @state)
+      (constantly nil)
+      {:blocking? true
+       :loading-text "Deleting group..."
+       :handle-error
+       (fn [parsed-response]
+         (modals/render-error
+          {:text (if (= 409 (:statusCode parsed-response))
+                   "This group cannot be deleted because it is in use."
+                   (:message parsed-response))
+           :on-dismiss #(swap! state dissoc :deleting? :delete-response)}))}))})
 
 (react/defc- Page
   {:render

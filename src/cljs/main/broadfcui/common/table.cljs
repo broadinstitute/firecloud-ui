@@ -10,6 +10,13 @@
    [broadfcui.utils :as utils]
    ))
 
+;;;
+;;;
+;;; DEPRECATION NOTICE
+;;;
+;;; This is the OLD table.  It's going away.  Instead of fixing bugs here, convert to the NEW table at broadfcui.common.table.table
+;;;
+;;;
 
 (def ^:private default-initial-rows-per-page 20)
 
@@ -374,6 +381,13 @@
              (not (= (select-keys @state persistence-keys) (:initial-state @locals))))
     (persistence/save {:key (:state-key props) :state state :only persistence-keys})))
 
+;;;
+;;;
+;;; DEPRECATION NOTICE
+;;;
+;;; This is the OLD table.  It's going away.  Instead of fixing bugs here, convert to the NEW table at broadfcui.common.table.table
+;;;
+;;;
 
 (react/defc Table
   (->>

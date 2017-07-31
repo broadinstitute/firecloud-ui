@@ -4,6 +4,7 @@
    [broadfcui.common.components :as comps]
    [broadfcui.common.modal :as modal]
    [broadfcui.page.method-repo.method-config-importer :refer [MethodConfigImporter]]
+   [broadfcui.page.workspace.method-configs.synchronize :as mc-sync]
    [broadfcui.nav :as nav]
    [broadfcui.utils :as utils]
    ))
@@ -25,7 +26,9 @@
              :cancel-text "No, stay here"
              :ok-button
              {:text "Yes"
-              :onClick modal/pop-modal
+              :onClick (fn [_]
+                         (modal/pop-modal)
+                         (mc-sync/flag-synchronization))
               :href (nav/get-link :workspace-method-config workspace-id config-id)}}))})]])})
 
 (defn add-nav-paths []

@@ -143,6 +143,7 @@
 
 
 (def ^:private access-levels ["PROJECT_OWNER" "OWNER" "WRITER" "READER" "NO ACCESS"])
+(def ^:private access-levels-sortorder (zipmap access-levels (range)))
 
 (def ^:private table-filters
   [{:title "Status"
@@ -247,7 +248,8 @@
              {:id "Access Level" :header [:span {:style {:marginLeft 14}} "Access Level"]
               :initial-width 132 :resizable? false
               :column-data column-data
-              :sort-by (zipmap access-levels (range)) :sort-initial :asc
+              :sort-by (fn [{:keys [access-level]}] (get access-levels-sortorder access-level))
+              :sort-initial :asc
               :render (fn [{:keys [access-level workspace-id auth-domains]}]
                         [:div {:style {:paddingLeft 14}}
                          (if (= access-level "NO ACCESS")
@@ -267,14 +269,15 @@
          :toolbar {:style {:display "initial"}
                    :filter-bar {:style {:float "left"}
                                 :inner {:width 300}}
-                   :items [[:div {:style {:float "right"}}
-                            [create/Button (select-keys props [:nav-context :billing-projects :disabled-reason])]]
-                           [:div {:style {:clear "left" :float "left" :marginTop "0.5rem"}}
-                            (style/create-link {:text (if filters-expanded? "Collapse" "Show additional filters")
-                                                :onClick #(swap! state update :filters-expanded? not)})]
-                           [:div {:style {:clear "both"}}]
-                           (when filters-expanded?
-                             (this :-render-side-filters))]}
+                   :items (constantly
+                           [[:div {:style {:float "right"}}
+                             [create/Button (select-keys props [:nav-context :billing-projects :disabled-reason])]]
+                            [:div {:style {:clear "left" :float "left" :marginTop "0.5rem"}}
+                             (style/create-link {:text (if filters-expanded? "Collapse" "Show additional filters")
+                                                 :onClick #(swap! state update :filters-expanded? not)})]
+                            [:div {:style {:clear "both"}}]
+                            (when filters-expanded?
+                              (this :-render-side-filters))])}
          :paginator {:style {:clear "both"}}}]))
    :component-did-update
    (fn [{:keys [state]}]

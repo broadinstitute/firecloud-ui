@@ -8,7 +8,8 @@
    [broadfcui.common.icons :as icons]
    [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
-   [broadfcui.common.table :refer [Table]]
+   [broadfcui.common.table.style :as table-style]
+   [broadfcui.common.table.table :refer [Table]]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.nav :as nav]
    [broadfcui.page.workspace.monitor.common :as moncommon]
@@ -27,11 +28,11 @@
         (moncommon/all-success? submission) [icons/CompleteIcon {:size 36}]
         :else [icons/ExceptionIcon {:size 36}]))
 
-
 (react/defc- WorkflowsTable
   {:get-initial-state
-   (fn []
-     {:active-filter :all})
+   (fn [{:keys [props]}]
+     {:filter-group-index 0
+      :filtered-data (:workflows props)})
    :render
    (fn [{:keys [this props]}]
      (let [{:keys [workflow-id]} props]
@@ -39,66 +40,81 @@
          (this :render-workflow-details workflow-id)
          (this :render-table))))
    :render-table
-   (fn [{:keys [props]}]
+   (fn [{:keys [props state refs]}]
      [Table
-      {:empty-message "No Workflows"
-       :columns [{:starting-width 50
-                  :as-text (constantly "View workflow details")
-                  :resizable? false :sort-by :none :reorderable? false
-                  :content-renderer
-                  (fn [id]
-                    (when id
-                      (style/create-link
-                       {:text "View"
-                        :href (nav/get-link :workspace-workflow
-                                            (:workspace-id props)
-                                            (:submission-id props)
-                                            id)})))}
-                 {:header "Data Entity" :starting-width 200
-                  :as-text
-                  (fn [entity]
-                    (str (:entityName entity) " (" (:entityType entity) ")"))
-                  :sort-by :text}
-                 {:header "Last Changed" :starting-width 280 :as-text moncommon/render-date}
-                 {:header "Status" :starting-width 120
-                  :content-renderer (fn [status]
-                                      [:div {}
-                                       (moncommon/icon-for-wf-status status)
-                                       status])}
-                 {:header "Messages" :starting-width 300
-                  :content-renderer (fn [message-list]
-                                      [:div {}
-                                       (map (fn [message]
-                                              [:div {} message])
-                                            message-list)])}
-                 {:header "Workflow ID" :starting-width 300
-                  :as-text
-                  (fn [workflow] (:workflowId workflow))
-                  :sort-by :text
-                  :content-renderer
-                  (fn [workflow]
-                    (let [{:keys [submission-id bucketName]} props
-                          inputs (second (second (first (:inputResolutions workflow))))
-                          input-names (string/split inputs ".")
-                          workflow-name (first input-names)
-                          workflowId (:workflowId workflow)]
-                      (style/create-link {:text workflowId
-                                          :target "_blank"
-                                          :style {:color "-webkit-link" :textDecoration "underline"}
-                                          :href (str moncommon/google-cloud-context bucketName "/" submission-id "/"
-                                                     workflow-name "/" workflowId "/")})))}]
-       :filter-groups
-       (vec (cons {:text "All" :pred (constantly true)}
-                  (map (fn [status] {:text status :pred #(= status (:status %))})
-                       moncommon/wf-all-statuses)))
-       :data (:workflows props)
-       :->row (fn [row]
-                [(:workflowId row)
-                 (:workflowEntity row)
-                 (:statusLastChangedDate row)
-                 (:status row)
-                 (:messages row)
-                 row])}])
+      {:ref "table"
+       :data (:filtered-data @state)
+       :body
+       {:empty-message "No Workflows"
+        :style table-style/table-heavy
+        :behavior {:fixed-column-count 1}
+        :columns [{:id "view"
+                   :column-data :workflowId
+                   :initial-width 50
+                   :as-text (constantly "View workflow details")
+                   :hidden? true
+                   :resizable? false :sortable? false :filterable? false
+                   :render
+                   (fn [id]
+                     (when id
+                       (style/create-link
+                        {:text "View"
+                         :href (nav/get-link :workspace-workflow
+                                             (:workspace-id props)
+                                             (:submission-id props)
+                                             id)})))}
+                  {:header "Data Entity" :initial-width 200
+                   :column-data :workflowEntity
+                   :as-text
+                   (fn [entity]
+                     (str (:entityName entity) " (" (:entityType entity) ")"))
+                   :sort-by :text}
+                  {:header "Last Changed" :initial-width 280
+                   :column-data :statusLastChangedDate
+                   :sort-initial :desc
+                   :as-text moncommon/render-date}
+                  {:header "Status" :initial-width 120
+                   :column-data :status
+                   :render (fn [status]
+                             [:div {}
+                              (moncommon/icon-for-wf-status status)
+                              status])}
+                  {:header "Messages" :initial-width 300
+                   :column-data :messages
+                   :render (fn [message-list]
+                             [:div {}
+                              (map (fn [message]
+                                     [:div {} message])
+                                   message-list)])}
+                  {:header "Workflow ID" :initial-width 300
+                   :as-text :workflowId :sort-by :text
+                   :render
+                   (fn [workflow]
+                     (let [{:keys [submission-id bucketName]} props
+                           inputs (second (second (first (:inputResolutions workflow))))
+                           input-names (string/split inputs ".")
+                           workflow-name (first input-names)
+                           workflowId (:workflowId workflow)]
+                       (style/create-link {:text workflowId
+                                           :target "_blank"
+                                           :style {:color "-webkit-link" :textDecoration "underline"}
+                                           :href (str moncommon/google-cloud-context bucketName "/" submission-id "/"
+                                                      workflow-name "/" workflowId "/")})))}]}
+       :toolbar
+       {:items
+        (constantly
+         [[comps/FilterGroupBar
+           {:data (:workflows props)
+            :selected-index (:filter-group-index @state)
+            :on-change (fn [index data]
+                         (swap! state assoc
+                                :filter-group-index index
+                                :filtered-data data)
+                         (when-let [table (@refs "table")]
+                           (table :update-query-params {:page-number 1})))
+            :filter-groups (vec (cons {:text "All" :pred (constantly true)}
+                                      (map (fn [status] {:text status :pred #(= status (:status %))})
+                                           moncommon/wf-all-statuses)))}]])}}])
    :render-workflow-details
    (fn [{:keys [props]} workflowId]
      (let [workflows (:workflows props)
