@@ -36,4 +36,3 @@
           (rephrase-error ajax-response)
           (:message parsed-response))))
      :else (render-success))))
-

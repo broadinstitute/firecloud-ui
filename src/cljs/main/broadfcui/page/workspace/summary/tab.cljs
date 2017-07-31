@@ -267,17 +267,20 @@
                 description [MarkdownView {:text description}]
                 :else [:span {:style {:fontStyle "italic"}} "No description provided"]))]}]
      (when-not (empty? library-attributes)
-       [LibraryView (utils/restructure
-                     library-attributes
-                     library-schema
-                     workspace
-                     workspace-id
-                     request-refresh
-                     can-share?
-                     owner?
-                     curator?
-                     writer?
-                     catalog-with-read?)])
+       (if-not library-schema
+         [comps/Spinner {:text "Loading Dataset Attributes"
+                         :style {:marginBottom "2rem"}}]
+         [LibraryView (utils/restructure
+                       library-attributes
+                       library-schema
+                       workspace
+                       workspace-id
+                       request-refresh
+                       can-share?
+                       owner?
+                       curator?
+                       writer?
+                       catalog-with-read?)]))
      [attributes/WorkspaceAttributeViewerEditor
       (merge {:ref "workspace-attribute-editor" :workspace-bucket bucketName}
              (utils/restructure editing? writer? workspace-attributes workspace-id request-refresh))]]))
@@ -294,11 +297,11 @@
      (let [{:keys [server-response]} @state
            {:keys [label-id body-id]} @locals
            {:keys [workspace]} props
-           {:keys [submissions-count billing-projects library-schema curator? server-error]} server-response]
+           {:keys [server-error]} server-response]
        (cond
          server-error
          (style/create-server-error-message server-error)
-         (some nil? [workspace submissions-count billing-projects library-schema curator?])
+         (nil? workspace)
          [:div {:style {:textAlign "center" :padding "1em"}}
           [comps/Spinner {:text "Loading workspace..."}]]
          :else
