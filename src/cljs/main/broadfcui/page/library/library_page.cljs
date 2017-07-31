@@ -130,7 +130,8 @@
              {:header "Request Access"
               :message
               [:span {}
-               (if (not-empty (clojure.set/difference ws-auth-domains built-in-groups))
+               (if (or (not-empty (clojure.set/difference ws-auth-domains built-in-groups))
+                       (empty? ws-auth-domains))
                  (standard-access-instructions data)
                  [:span {}
                   (let [tcga? (contains? ws-auth-domains "TCGA-dbGaP-Authorized")
@@ -140,7 +141,7 @@
                      (when target? (target-access-instructions))
                      (when (or tcga? target?)
                        [:p {} "After dbGaP approves your application please link your eRA
-                       Commons ID in your FireCloud profile page."])])])]}))}
+                     Commons ID in your FireCloud profile page."])])])]}))}
          {:href (nav/get-link :workspace-summary (common/row->workspace-id data))})))
    :build-aggregate-fields
    (fn [{:keys [props]}]
