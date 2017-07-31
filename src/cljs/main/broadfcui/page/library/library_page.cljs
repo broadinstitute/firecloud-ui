@@ -130,7 +130,7 @@
              {:header "Request Access"
               :message
               [:span {}
-               (if (or (not-empty (clojure.set/difference ws-auth-domains built-in-groups))
+               (if (or (not-empty (set/difference ws-auth-domains built-in-groups))
                        (empty? ws-auth-domains))
                  (standard-access-instructions data)
                  [:span {}
