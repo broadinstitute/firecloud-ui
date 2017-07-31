@@ -116,7 +116,7 @@
                :on-row-click (:on-row-click props)
                :on-column-change (:on-column-change props)}
               :toolbar
-              {:items
+              {:get-items
                (fn [table-props]
                 (cons [comps/FilterGroupBar
                        {:filter-groups (map (fn [entity-type]
@@ -131,8 +131,8 @@
                                               :selected-entity-type selected-entity-type)
                                        (when-let [f (:on-entity-type-selected props)]
                                          (f selected-entity-type))))}]
-                      (when-let [toolbar-items (:toolbar-items props)]
-                        (toolbar-items table-props))))
+                      (when-let [get-toolbar-items (:get-toolbar-items props)]
+                        (get-toolbar-items table-props))))
                :style {:flexWrap "wrap"}}}]))]))
    :component-did-mount
    (fn [{:keys [props this]}]

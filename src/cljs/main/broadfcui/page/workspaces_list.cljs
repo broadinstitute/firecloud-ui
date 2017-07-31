@@ -260,7 +260,7 @@
           :toolbar {:style {:display "initial"}
                     :filter-bar {:style {:float "left"}
                                  :inner {:width 300}}
-                    :items (constantly
+                    :get-items (constantly
                             [[:div {:style {:float "right"}}
                               [create/Button (select-keys props [:nav-context :billing-projects :disabled-reason])]]
                              [:div {:style {:clear "left" :float "left" :marginTop "0.5rem"}}

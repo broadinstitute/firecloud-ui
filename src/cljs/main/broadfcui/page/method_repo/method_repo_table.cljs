@@ -59,7 +59,7 @@
                          "N/A"))}]
            :style table-style/table-heavy}
           :toolbar
-          {:items
+          {:get-items
            (constantly
             (cons [comps/FilterGroupBar
                    {:data (concat (:methods @state) (:configs @state))

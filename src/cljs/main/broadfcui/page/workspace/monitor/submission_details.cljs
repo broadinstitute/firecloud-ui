@@ -101,7 +101,7 @@
                                            :href (str moncommon/google-cloud-context bucketName "/" submission-id "/"
                                                       workflow-name "/" workflowId "/")})))}]}
        :toolbar
-       {:items
+       {:get-items
         (constantly
          [[comps/FilterGroupBar
            {:data (:workflows props)

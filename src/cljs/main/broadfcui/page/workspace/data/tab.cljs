@@ -102,7 +102,7 @@
           :workspace-id workspace-id
           :column-defaults
           (data-utils/get-column-defaults (get-in workspace [:workspace :workspace-attributes :workspace-column-defaults]))
-          :toolbar-items
+          :get-toolbar-items
           (fn [table-props]
             [(when (:selected-entity-type @state) (this :-render-download-link table-props))
              [comps/Button {:text "Import Metadata..."
