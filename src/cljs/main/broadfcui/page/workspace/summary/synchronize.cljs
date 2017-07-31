@@ -91,7 +91,7 @@
                     (this :-perform-sync-logic (get-parsed-response))
                     (comps/push-error-response (get-parsed-response false))))}))
    :render
-   (fn [{:keys [state this]}]
+   (fn [{:keys [state]}]
      [:div {}
       (when (:show-sync-modal? @state)
         [SyncModal (merge (select-keys @state [:owned-methods :unowned-methods])

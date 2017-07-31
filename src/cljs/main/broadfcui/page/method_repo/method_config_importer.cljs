@@ -17,6 +17,7 @@
    [broadfcui.page.method-repo.create-method :as create]
    [broadfcui.page.method-repo.method-repo-table :refer [MethodRepoTable]]
    [broadfcui.page.method-repo.methods-configs-acl :as mca]
+   [broadfcui.page.method-repo.synchronize :as mr-sync]
    [broadfcui.page.method-repo.redact :refer [Redactor]]
    [broadfcui.utils :as utils]
    ))
@@ -24,12 +25,13 @@
 
 (react/defc- Sidebar
   {:render
-   (fn [{:keys [props state]}]
+   (fn [{:keys [props state refs]}]
      (let [{:keys [entity config? workflow? on-delete owner? body-id]} props
            on-method-created (fn [_ id]
                                (nav/go-to-path :method id)
                                (common/scroll-to-top))]
        [:div {:style {:flex "0 0 270px" :paddingRight 30}}
+        [mr-sync/SyncContainer {:ref "sync-container" :config entity}]
         (modals/show-modals
          state
          {:deleting?
@@ -41,7 +43,7 @@
             :entityType (:entityType entity)
             :entityName (mca/get-ordered-name entity)
             :title (str (:entityType entity) " " (mca/get-ordered-name entity))
-            :on-users-added (fn [users] (utils/log "added: " users))}]
+            :on-users-added #((@refs "sync-container") :check-synchronization %)}]
           :cloning?
           [create/CreateMethodDialog
            {:duplicate entity
