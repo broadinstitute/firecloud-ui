@@ -210,7 +210,9 @@
        (interpose ", " owners)
 
        "Authorization Domain"
-       (if-not (empty? auth-domain) (interpose ", " (map :membersGroupName auth-domain)) "None")
+       (if-not (empty? auth-domain)
+               [:span {:data-test-id "auth-domain-groups"} (interpose ", " (map :membersGroupName auth-domain))]
+               "None")
 
        "Created By"
        [:div {}

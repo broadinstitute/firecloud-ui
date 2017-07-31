@@ -38,7 +38,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
           register cleanUp api.workspaces.delete(projectName, workspaceName)
           val workspaceDetailPage = workspaceListPage.createWorkspace(projectName, workspaceName, Option(authDomainName)).awaitLoaded()
 
-          workspaceDetailPage.ui.readAuthDomainRestrictionMessage should include (authDomainName)
+          workspaceDetailPage.ui.readAuthDomainGroups should include (authDomainName)
 
           workspaceListPage.open.filter(workspaceName)
           workspaceListPage.ui.looksRestricted(projectName, workspaceName) shouldEqual true
@@ -133,7 +133,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
             listPage.ui.looksRestricted(projectName, workspaceName) shouldEqual true
 
             val summaryPage = listPage.openWorkspaceDetails(projectName, workspaceName).awaitLoaded()
-            summaryPage.ui.readAuthDomainRestrictionMessage should include (authDomainName)
+            summaryPage.ui.readAuthDomainGroups should include (authDomainName)
           }
         }
       }
@@ -146,7 +146,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
             listPage.ui.looksRestricted(projectName, workspaceName) shouldEqual true
 
             val summaryPage = listPage.openWorkspaceDetails(projectName, workspaceName).awaitLoaded()
-            summaryPage.ui.readAuthDomainRestrictionMessage should include (authDomainName)
+            summaryPage.ui.readAuthDomainGroups should include (authDomainName)
           }
         }
       }
@@ -162,7 +162,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
               register cleanUp { api.workspaces.delete(projectName, cloneWorkspaceName)(AuthTokens.george) }
               val cloneSummaryPage = summaryPage.cloneWorkspace(projectName, cloneWorkspaceName).awaitLoaded()
               cloneSummaryPage.ui.readWorkspaceName should be(cloneWorkspaceName)
-              cloneSummaryPage.ui.readAuthDomainRestrictionMessage should include(authDomainName)
+              cloneSummaryPage.ui.readAuthDomainGroups should include(authDomainName)
             }
           }
         }
@@ -190,7 +190,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
 
             val cloneSummaryPage = new WorkspaceSummaryPage(projectName, cloneWorkspaceName).awaitLoaded()
             cloneSummaryPage.ui.readWorkspaceName should be(cloneWorkspaceName)
-            cloneSummaryPage.ui.readAuthDomainRestrictionMessage should include(authDomainName)
+            cloneSummaryPage.ui.readAuthDomainGroups should include(authDomainName)
           }
         }
       }

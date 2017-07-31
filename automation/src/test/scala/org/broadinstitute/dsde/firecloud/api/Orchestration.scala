@@ -84,13 +84,13 @@ trait Orchestration extends FireCloudClient with LazyLogging {
               (implicit token: AuthToken): Unit = {
       logger.info(s"Creating workspace: $namespace/$name authDomain: $authDomain")
 
-      val authDomainMap = authDomain match {
-        case Some(a) => Map("authorizationDomain" -> Map("membersGroupName" -> a))
-        case None => Map()
+      val authDomainList = authDomain match {
+        case Some(a) => List(Map("membersGroupName" -> a))
+        case None => List()
       }
 
-      val request = Map("namespace" -> namespace,
-        "name" -> name, "attributes" -> Map.empty) ++ authDomainMap
+      val request = Map("namespace" -> namespace, "name" -> name,
+        "attributes" -> Map.empty, "authorizationDomain" -> authDomainList)
       postRequest(apiUrl(s"api/workspaces"), request)
     }
 

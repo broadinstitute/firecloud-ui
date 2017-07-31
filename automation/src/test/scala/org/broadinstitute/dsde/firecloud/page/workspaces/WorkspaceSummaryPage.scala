@@ -84,6 +84,7 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
 
 
   trait UI extends super.UI {
+    private val authDomainGroups = testId("auth-domain-groups")
     private val authDomainRestrictionMessage = testId("auth-domain-restriction-message")
     private val cloneButton = testId("open-clone-workspace-modal-button")
     private val deleteWorkspaceButtonQuery = testId("delete-workspace-button")
@@ -125,6 +126,10 @@ class WorkspaceSummaryPage(namespace: String, name: String)(implicit webDriver: 
 
     def hasWorkspaceNotFoundMessage: Boolean = {
       find(withText(s"$namespace/$name does not exist")).isDefined
+    }
+
+    def readAuthDomainGroups: String = {
+      readText(authDomainGroups)
     }
 
     def readAuthDomainRestrictionMessage: String = {
@@ -169,7 +174,7 @@ class CloneWorkspaceModal(implicit webDriver: WebDriver) extends FireCloudView {
   object ui {
     private val authDomainSelect = testId("workspace-auth-domain-select")
     private val billingProjectSelect = testId("billing-project-select")
-    private val cloneButtonQuery: Query = testId("clone-workspace-button")
+    private val cloneButtonQuery: Query = testId("create-workspace-button")
     private val presetAuthDomain: Query = testId("required-auth-domain")
     private val workspaceNameInput: Query = testId("workspace-name-input")
 

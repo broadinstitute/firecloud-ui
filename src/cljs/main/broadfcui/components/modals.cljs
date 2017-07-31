@@ -21,10 +21,10 @@
        (modal/render
         {:content
          [:div {}
-          [:div (merge {:style {:borderBottom style/standard-line
+          [:div {:style {:borderBottom style/standard-line
                          :padding "1rem 3rem 1rem"
-                         :fontSize "140%" :fontWeight 400 :lineHeight 1}}
-                       (when (some? data-test-id) {:data-test-id data-test-id}))
+                         :fontSize "140%" :fontWeight 400 :lineHeight 1}
+                 :data-test-id data-test-id}
            header
            (when show-close? [comps/XButton {:dismiss dismiss}])]
           [:div {:style {:padding "2rem 3rem"

@@ -77,8 +77,7 @@ class PublishSpec extends FreeSpec with WebBrowserSpec with CleanUp {
         api.library.publishWorkspace(namespace, wsName)
 
         signIn(Config.Users.curator)
-        val wspage = new WorkspaceSummaryPage(namespace, wsName)
-        wspage.open
+        val wspage = new WorkspaceSummaryPage(namespace, wsName).open.awaitLoaded()
         wspage.unpublishWorkspace()
         val libraryPage = new DataLibraryPage()
         libraryPage.open
