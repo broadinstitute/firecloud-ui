@@ -5,13 +5,10 @@
    [clojure.string :as string]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.common.components :as comps]
+   [broadfcui.common.sync :as sync-common]
    [broadfcui.components.modals :as modals]
    [broadfcui.utils :as utils]
    ))
-
-
-(defn- get-method-display [{:keys [namespace name snapshotId]}]
-  (str namespace "/" name " snapshot " snapshotId))
 
 
 (react/defc- SyncModal
@@ -30,7 +27,7 @@
             [:div {}
              "In order to allow the users you have added to this workspace to run the methods configured
               for it, you must grant them access to the following:"
-             [:ul {} (map (fn [method] [:li {} (get-method-display (:method method))]) owned-methods)]])
+             [:ul {} (map (fn [method] [:li {} (sync-common/get-method-display (:method method))]) owned-methods)]])
           (when unowned-methods
             [:div {}
              (if owned-methods
@@ -46,7 +43,7 @@
                (map (fn [method]
                       [:tr {}
                        [:td {:style {:verticalAlign "top"}}
-                        (get-method-display method)]
+                        (sync-common/get-method-display method)]
                        [:td {:style {:verticalAlign "top" :paddingLeft "1rem"}}
                         (map (fn [owner] [:div {} owner])
                              (:managers method))]])
