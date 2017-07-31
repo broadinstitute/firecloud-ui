@@ -140,7 +140,7 @@
                      (when tcga? (tcga-access-instructions))
                      (when target? (target-access-instructions))
                      (when (or tcga? target?)
-                       [:p {} "After dbGaP approves your application please link your eRA 
+                       [:p {} "After dbGaP approves your application please link your eRA
                        Commons ID in your FireCloud profile page."])])])]}))}
          {:href (nav/get-link :workspace-summary (common/row->workspace-id data))})))
    :build-aggregate-fields
