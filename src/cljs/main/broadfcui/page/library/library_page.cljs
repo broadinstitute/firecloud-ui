@@ -130,7 +130,8 @@
              {:header "Request Access"
               :message
               [:span {}
-               (if (not-empty (clojure.set/difference ws-auth-domains built-in-groups))
+               (if (or (not-empty (set/difference ws-auth-domains built-in-groups))
+                       (empty? ws-auth-domains))
                  (standard-access-instructions data)
                  [:span {}
                   (let [tcga? (contains? ws-auth-domains "TCGA-dbGaP-Authorized")
