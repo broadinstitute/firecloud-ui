@@ -227,9 +227,9 @@
                              :error))
                (when editing?
                  [comps/Typeahead {:ref (str ref-prefix "_" name)
-                                   :data-test-id (str name "-text-input")
                                    :field-attributes {:defaultValue field-value
-                                                      :style {:width 500 :margin 0}}
+                                                      :style {:width 500 :margin 0}
+                                                      :data-test-id (str name "-text-input")}
                                    :engine (:engine @locals)
                                    :behavior {:minLength 1}}])
                (when-not editing?

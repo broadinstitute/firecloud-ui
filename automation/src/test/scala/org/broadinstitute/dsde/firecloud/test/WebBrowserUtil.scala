@@ -71,6 +71,13 @@ trait WebBrowserUtil extends WebBrowser {
       }
     }
 
+    def writable(query: Query, timeoutInSeconds: Long = defaultTimeOutInSeconds)
+                (implicit webDriver: WebDriver): Element = {
+      withWaitForElement(timeoutInSeconds) {
+        findAll(query).find(_.attribute("readonly").isEmpty).orNull
+      }
+    }
+
     def notVisible(query: Query, timeOutInSeconds: Long = defaultTimeOutInSeconds)
                   (implicit webDriver: WebDriver): Unit = {
       withWaitForCondition(timeOutInSeconds) {

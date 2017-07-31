@@ -87,8 +87,8 @@ class MethodConfigDetailsPage(namespace: String, name: String, methodConfigNames
     def changeInputsOutputs(fields: Map[String, String]) = {
       for ((field, expression) <- fields) {
         val fieldInputQuery: Query = testId(field + "-text-input")
-        await enabled fieldInputQuery
-        textField(fieldInputQuery).value = expression
+        click on(await writable fieldInputQuery)
+        enter(expression)
       }
     }
 
