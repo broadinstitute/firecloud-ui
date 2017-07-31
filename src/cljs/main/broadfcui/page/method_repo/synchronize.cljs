@@ -15,12 +15,15 @@
    (fn [{:keys [props state this]} new-users]
      (swap! state assoc :loading? true)
      (endpoints/call-ajax-orch
-      {:endpoint (endpoints/get-agora-entity-acl false (get-in props [:config :method]))
+      {:endpoint (let [{:keys [namespace name snapshotId]} (get-in props [:config :method])]
+                   (endpoints/get-agora-method namespace name snapshotId))
        :on-done (fn [{:keys [success? get-parsed-response]}]
                   (swap! state dissoc :loading?)
-                  (if success?
-                    (this :-check-users-and-show-sync new-users (get-parsed-response))
-                    (swap! state assoc :show-alert-modal? true)))}))
+                  (let [method (get-parsed-response)
+                        managers (set (:managers method))]
+                    (if (contains? managers (utils/get-user-email))
+                      (this :-check-users-and-show-sync new-users method)
+                      (swap! state assoc :show-alert-modal? true :method method))))}))
    :render
    (fn [{:keys [props state]}]
      [:div {}
@@ -28,14 +31,17 @@
         [comps/Blocker {:banner "Checking method access..."}])
       (modals/show-modals
        state
-       {:show-sync-modal?
-        [sync-common/SynchronizeModal (merge {:method (get-in props [:config :method])}
-                                             (select-keys @state [:users]))]
-        :show-alert-modal?
-        (sync-common/alert-modal {:method (get-in props [:config :method])})})])
+       {:show-sync-modal? [sync-common/SynchronizeModal (select-keys @state [:method :users])]
+        :show-alert-modal? (sync-common/alert-modal (select-keys @state [:method]))})])
    :-check-users-and-show-sync
-   (fn [{:keys [state]} new-users parsed-acl]
-     (let [existing-users (set (map :user parsed-acl))
-           needing-access (set/difference new-users existing-users)]
-       (when (seq needing-access)
-         (swap! state assoc :users needing-access :show-sync-modal? true))))})
+   (fn [{:keys [state]} new-users method]
+     (endpoints/call-ajax-orch
+      {:endpoint (endpoints/get-agora-entity-acl false method)
+       :on-done (fn [{:keys [success? get-parsed-response]}]
+                  (let [existing-users (set (map :user (get-parsed-response)))
+                        needing-access (set/difference new-users existing-users)]
+                    (when (seq needing-access)
+                      (swap! state assoc
+                             :users needing-access
+                             :method method
+                             :show-sync-modal? true))))}))})

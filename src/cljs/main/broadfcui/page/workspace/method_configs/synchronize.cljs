@@ -30,12 +30,12 @@
      [:div {}
       (when-let [banner (:banner @state)]
         [comps/Blocker {:banner banner}])
-      (when (:show-sync-modal? @state)
-        [sync-common/SynchronizeModal (merge (select-keys @state [:method :users])
-                                             {:dismiss #(swap! state dissoc :show-sync-modal?)})])
-      (when (:show-alert-modal? @state)
-        (sync-common/alert-modal (merge (select-keys @state [:method])
-                                        {:dismiss #(swap! state dissoc :show-alert-modal?)})))])
+      (modals/show-modals
+       state
+       {:show-sync-modal?
+        [sync-common/SynchronizeModal (select-keys @state [:method :users])]
+        :show-alert-modal?
+        (sync-common/alert-modal (select-keys @state [:method]))})])
    :component-did-mount
    (fn [{:keys [props state this]}]
      (when (check-synchronization)

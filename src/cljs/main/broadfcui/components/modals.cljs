@@ -14,7 +14,7 @@
 (defn show-modals [state m]
   (map (fn [[k [modal args]]]
          (when (k @state)
-           [modal (merge {:dismiss #(swap! state dissoc k)} args)]))
+           [modal (assoc args :dismiss #(swap! state dissoc k))]))
        m))
 
 
