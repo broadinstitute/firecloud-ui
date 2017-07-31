@@ -10,6 +10,7 @@
    [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
    [broadfcui.components.sticky :refer [Sticky]]
+   [broadfcui.components.modals :as modals]
    [broadfcui.config :as config]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.nav :as nav]
@@ -29,28 +30,26 @@
                                (nav/go-to-path :method id)
                                (common/scroll-to-top))]
        [:div {:style {:flex "0 0 270px" :paddingRight 30}}
-        (when (:deleting? @state)
-          [Redactor (merge (utils/restructure entity config? on-delete)
-                           {:dismiss #(swap! state dissoc :deleting?)})])
-        (when (:editing-acl? @state)
+        (modals/show-modals
+         state
+         {:deleting?
+          [Redactor (utils/restructure entity config? on-delete)]
+          :editing-acl?
           [mca/AgoraPermsEditor
-           {:dismiss #(swap! state dissoc :editing-acl?)
-            :save-endpoint (endpoints/persist-agora-entity-acl config? entity)
+           {:save-endpoint (endpoints/persist-agora-entity-acl config? entity)
             :load-endpoint (endpoints/get-agora-entity-acl config? entity)
             :entityType (:entityType entity)
             :entityName (mca/get-ordered-name entity)
             :title (str (:entityType entity) " " (mca/get-ordered-name entity))
-            :on-users-added (fn [users] (utils/log "added: " users))}])
-        (when (:cloning? @state)
+            :on-users-added (fn [users] (utils/log "added: " users))}]
+          :cloning?
           [create/CreateMethodDialog
-           {:dismiss #(swap! state dissoc :cloning?)
-            :duplicate entity
-            :on-created on-method-created}])
-        (when (:editing-method? @state)
+           {:duplicate entity
+            :on-created on-method-created}]
+          :editing-method?
           [create/CreateMethodDialog
-           {:dismiss #(swap! state dissoc :editing-method?)
-            :snapshot entity
-            :on-created on-method-created}])
+           {:snapshot entity
+            :on-created on-method-created}]})
         [Sticky
          {:anchor body-id
           :sticky-props {:data-check-every 1}

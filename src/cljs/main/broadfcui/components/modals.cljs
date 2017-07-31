@@ -10,6 +10,14 @@
    [broadfcui.utils :as utils]
    ))
 
+
+(defn show-modals [state m]
+  (map (fn [[k [modal args]]]
+         (when (k @state)
+           [modal (merge {:dismiss #(swap! state dissoc k)} args)]))
+       m))
+
+
 (react/defc OKCancelForm
   {:get-default-props
    (fn []
