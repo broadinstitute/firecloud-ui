@@ -95,6 +95,13 @@
        (cons [:option {:value -1 :disabled true} (first placeholder)] option-elements)
        option-elements)]))
 
+(defn create-identity-select-name [props options & [placeholder]]
+  (let [option-elements (map (fn [opt] [:option {:value opt} opt]) options)]
+    [:select (utils/deep-merge {:style select-style} props)
+     (if placeholder
+       (cons [:option {:value -1 :disabled true} placeholder] option-elements)
+       option-elements)]))
+
 (defn create-identity-select [props options]
   [:select (utils/deep-merge {:style select-style} props)
    (map (fn [opt] [:option {:value opt} opt]) options)])
@@ -111,6 +118,12 @@
   [:div {:style {:textAlign "center" :backgroundColor (:background-light colors)
                  :padding "1em 0" :borderRadius 8}}
    message])
+
+(defn create-code-sample [text]
+  [:code {:style {:backgroundColor (:background-dark colors) :color "white"
+                  :fontWeight "bold" :fontFamily "Menlo, monospace" :fontSize 12
+                  :padding "0.2rem" :borderRadius "0.2rem" :margin "0 0.1rem"}}
+   text])
 
 (defn center [props & children]
   [:div (utils/deep-merge props {:style {:position "absolute" :top "50%" :left "50%"

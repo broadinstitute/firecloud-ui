@@ -38,7 +38,6 @@
              :render #(or % "None")}]}
     :toolbar {:get-items (constantly toolbar-items)}}])
 
-
 (defn config->id [config]
   (select-keys config [:namespace :name]))
 

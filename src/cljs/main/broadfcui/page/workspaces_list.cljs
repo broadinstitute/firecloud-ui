@@ -6,7 +6,7 @@
    [broadfcui.common.components :as comps]
    [broadfcui.common.filter :as filter]
    [broadfcui.common.icons :as icons]
-   [broadfcui.common.modal :as modal]
+   [broadfcui.components.modals :as modals]
    [broadfcui.common.style :as style]
    [broadfcui.common.table.style :as table-style]
    [broadfcui.common.table.table :refer [Table]]
@@ -29,96 +29,91 @@
 (def non-dbGap-disabled-text "Click to request access.")
 
 (react/defc- RequestAuthDomainAccessDialog
-  {:get-initial-state
-   (fn [{:keys [props state]}]
-     {:ws-auth-domains (vec (map
-                             (fn [group]
-                               {:name group
-                                :data {:member? (contains? (:my-auth-domains @state) group)
-                                       :requested? false
-                                       :requesting? false}})
-                             (:ws-auth-domains props)))})
-   :render
-   (fn [{:keys [state this]}]
-     [comps/OKCancelForm
+  {:render
+   (fn [{:keys [state this props]}]
+     [modals/OKCancelForm
       {:header "Request Access"
+       :cancel-text "Done"
+       :dismiss (:dismiss props)
        :content
-       (react/create-element
-        (let [{:keys [my-auth-domains ws-instructions error]} @state]
-          (cond
-            (not (or (and my-auth-domains ws-instructions) error))
-            [comps/Spinner {:text "Loading Authorization Domains..."}]
-            error
-            (case (:code error)
-              (:unknown :parse-error)
-              [:div {:style {:color (:exception-state style/colors)}}
-               "Error:" [:div {} (:details error)]]
-              [comps/ErrorViewer {:error (:details error)}])
-            :else
-            [:div {:style {:width 750}}
-             [:div {} "You cannot access this workspace because it contains restricted data.
-                         You need permission from the admin(s) of all of the Authorization Domains
-                         protecting the workspace."]
-             (let [simple-th (fn [text]
-                               [:th {:style {:textAlign "left" :padding "0 0.5rem"
-                                             :borderBottom style/standard-line}}
-                                text])
-                   simple-td (fn [text]
-                               [:td {}
-                                [:label {:style {:display "block" :padding "1rem 0.5rem"
-                                                 :width "33%"}}
-                                 text]])
-                   instructions (reduce
-                                 (fn [m ad]
-                                   (assoc m (keyword (:groupName ad)) (:instructions ad))) {}
-                                 ws-instructions)]
-               [:table {:style {:width "100%" :borderCollapse "collapse"
-                                :margin "1em 0 1em 0"}}
-                [:thead {}
-                 [:tr {}
-                  (simple-th "Authorization Domain")
-                  (simple-th "Access")
-                  (simple-th "")]]
-                [:tbody {}
-                 (map-indexed (fn [i auth-domain]
-                                (let [{:keys [member? requested? requesting?]} (:data auth-domain)
-                                      name (:name auth-domain)
-                                      instruction ((keyword name) instructions)]
-                                  [:tr {}
-                                   (simple-td name)
-                                   (simple-td (if member? "Yes" "No"))
-                                   (if instruction
-                                     [:td {:style {:width "34%"}}
-                                      (when-not member?
-                                        [:div {:style {:fontSize "85%"}}
-                                         "Learn how to apply for this Authorization Domain  "
-                                         [:a {:href instruction :target "_blank"} "here"] "."])]
-                                     [:td {:style {:width "34%"}}
-                                      (when-not member?
-                                        [:div {}
-                                         [comps/Button {:style {:width "125px"}
-                                                        :disabled? (or requested? requesting?)
-                                                        :text (if requested? "Request Sent" "Request Access")
-                                                        :onClick #(react/call :-request-access this name i)}]
-                                         (when requesting? [comps/Spinner])
-                                         (when requested?
-                                           (common/render-info-box
-                                            {:text [:div {}
-                                                    "Your request has been submitted. When you are granted
-                                                    access, the " [:strong {} "Access Level"] " displayed on
-                                                     the Workspace list will be updated."]}))])])]))
-                              (:ws-auth-domains @state))]])])))}])
+       (let [{:keys [my-groups ws-instructions error]} @state]
+         (cond
+           (not (or (and my-groups ws-instructions) error))
+           [comps/Spinner {:text "Loading Authorization Domain..."}]
+           error
+           (case (:code error)
+             (:unknown :parse-error)
+             [:div {:style {:color (:exception-state style/colors)}}
+              "Error:" [:div {} (:details error)]]
+             [comps/ErrorViewer {:error (:details error)}])
+           :else
+           [:div {:style {:width 750}}
+            [:div {} "You cannot access this Workspace because it contains restricted data.
+                         You need permission from the admin(s) of all of the Groups in the
+                         Authorization Domain protecting the workspace."]
+            (let [simple-th (fn [text]
+                              [:th {:style {:textAlign "left" :padding "0 0.5rem"
+                                            :borderBottom style/standard-line}}
+                               text])
+                  simple-td (fn [text]
+                              [:td {}
+                               [:label {:style {:display "block" :padding "1rem 0.5rem"}}
+                                text]])
+                  instructions (reduce
+                                (fn [m ad]
+                                  (assoc m (keyword (:groupName ad)) (:instructions ad))) {}
+                                ws-instructions)]
+              [:table {:style {:width "100%" :borderCollapse "collapse"
+                               :margin "1em 0 1em 0"}}
+               [:thead {}
+                [:tr {}
+                 (simple-th "Group Name")
+                 (simple-th "Access")]]
+               [:tbody {}
+                (map-indexed (fn [i auth-domain]
+                               (let [{:keys [member? requested? requesting?]} (:data auth-domain)
+                                     name (:name auth-domain)
+                                     instruction ((keyword name) instructions)]
+                                 [:tr {}
+                                  (simple-td name)
+                                  [:td {:style {:width "50%"}}
+                                   (if member?
+                                     "Yes"
+                                     (if instruction
+                                       [:div {}
+                                        "Learn how to apply for this Group "
+                                        [:a {:href instruction :target "_blank"} "here" icons/external-link-icon] "."]
+
+                                       [:div {}
+                                        [comps/Button {:style {:width "125px"}
+                                                       :disabled? (or requested? requesting?)
+                                                       :text (if requested? "Request Sent" "Request Access")
+                                                       :onClick #(this :-request-access name i)}]
+                                        (when requesting? [comps/Spinner])
+                                        (when requested?
+                                          (common/render-info-box
+                                           {:text [:div {} "Your request has been submitted. When you are granted
+                                                   access, the " [:strong {} "Access Level"] " displayed on
+                                                   the Workspace list will be updated."]}))]))]]))
+                             (:ws-auth-domain-groups @state))]])]))}])
    :component-did-mount
    (fn [{:keys [this]}]
-     (react/call :-load-groups this)
-     (react/call :-get-access-instructions this))
+     (this :-load-groups)
+     (this :-get-access-instructions))
    :-load-groups
-   (fn [{:keys [state]}]
+   (fn [{:keys [props state]}]
      (endpoints/get-groups
       (fn [err-text groups]
         (if err-text
           (swap! state assoc :error-message err-text)
-          (swap! state assoc :my-auth-domains (map :groupName groups))))))
+          (let [my-groups (map :groupName groups)]
+            (swap! state assoc :ws-auth-domain-groups
+                   (mapv
+                    (fn [group]
+                      {:name group
+                       :data {:member? (contains? (set my-groups) group)}})
+                    (:ws-auth-domain-groups props)))
+            (swap! state assoc :my-groups my-groups))))))
    :-get-access-instructions
    (fn [{:keys [props state]}]
      (endpoints/get-ws-access-instructions (:workspace-id props)
@@ -128,12 +123,12 @@
                                                (swap! state assoc :ws-instructions instructions)))))
    :-request-access
    (fn [{:keys [state]} group-name group-index]
-     (swap! state update-in [:ws-auth-domains group-index :data] assoc :requesting? true)
+     (swap! state update-in [:ws-auth-domain-groups group-index :data] assoc :requesting? true)
      (endpoints/call-ajax-orch
       {:endpoint (endpoints/request-group-access group-name)
        :on-done (fn []
-                  (swap! state update-in [:ws-auth-domains group-index :data]
-                         assoc :requesting? false :requested? true))}))})
+                  (swap! state update-in [:ws-auth-domain-groups group-index :data]
+                         assoc :requesting? nil :requested? true))}))})
 
 (defn- get-workspace-name-string [column-data]
   (str (get-in column-data [:workspace-id :namespace]) "/" (get-in column-data [:workspace-id :name])))
@@ -174,13 +169,6 @@
        (keep #(some-> % :workspace :attributes :tag:tags :items set))
        (apply clojure.set/union)))
 
-
-(defn- push-request-access-modal [workspace-id auth-domains]
-  (modal/push-modal
-   [RequestAuthDomainAccessDialog
-    {:workspace-id workspace-id
-     :ws-auth-domains auth-domains}]))
-
 (react/defc- WorkspaceTable
   {:get-initial-state
    (fn []
@@ -198,96 +186,102 @@
             :total-count (count (:workspaces props))))
    :render
    (fn [{:keys [props state this locals]}]
-     (let [{:keys [filters-expanded?]} @state]
-       [Table
-        {:persistence-key "workspace-table" :v 2
-         :data (this :-filter-workspaces) :total-count (:total-count @locals)
-         :body
-         {:columns
-          (let [column-data (fn [ws]
-                              (let [no-access? (= (:accessLevel ws) "NO ACCESS")
-                                    tcga? (and no-access? (= (get-in ws [:workspace :authorizationDomain :membersGroupName])
-                                                             config/tcga-authorization-domain))]
-                                {:workspace-id (select-keys (:workspace ws) [:namespace :name])
-                                 :status (:status ws)
-                                 ;; this will very soon return multiple auth domains, so im future-proofing it now
-                                 :auth-domains [(get-in ws [:workspace :authorizationDomain :membersGroupName])]
-                                 :no-access? no-access?
-                                 :access-level (:accessLevel ws)
-                                 :hover-text (when no-access?
-                                               (if tcga?
-                                                 tcga-disabled-text
-                                                 non-dbGap-disabled-text))
-                                 :restricted? (some? (get-in ws [:workspace :authorizationDomain :membersGroupName]))}))]
-            ;; All of this margining is terrible, but since this table
-            ;; will be redesigned soon I'm leaving it as-is.
-            [{:id "Status" :header [:span {:style {:marginLeft 7}} "Status"]
-              :sortable? false :resizable? false :filterable? false :initial-width row-height-px
-              :column-data column-data :as-text :status
-              :render #(this :-render-status-cell %)}
-             {:id "Workspace" :header [:span {:style {:marginLeft 24}} "Workspace"]
-              :initial-width 300
-              :column-data column-data :as-text get-workspace-name-string
-              :sort-by #(mapv clojure.string/lower-case (replace (:workspace-id %) [:namespace :name]))
-              :render #(this :-render-workspace-cell %)}
-             {:id "Description" :header [:span {:style {:marginLeft 14}} "Description"]
-              :initial-width 350
-              :column-data get-workspace-description
-              :render (fn [description]
-                        [:div {:style {:paddingLeft 14}}
-                         (if description
-                           (-> description string/split-lines first)
-                           [:span {:style {:fontStyle "italic"}}
-                            "No description provided"])])}
-             {:id "Last Modified" :header [:span {:style {:marginLeft 14}} "Last Modified"]
-              :initial-width 200
-              :column-data (comp :lastModified :workspace)
-              :render (fn [date]
-                        [:div {:style {:paddingLeft 14}} (common/format-date date common/short-date-format)])
-              :as-text common/format-date}
-             {:id "Access Level" :header [:span {:style {:marginLeft 14}} "Access Level"]
-              :initial-width 132 :resizable? false
-              :column-data column-data
-              :sort-by (fn [{:keys [access-level]}] (get access-levels-sortorder access-level))
-              :sort-initial :asc
-              :render (fn [{:keys [access-level workspace-id auth-domains]}]
-                        [:div {:style {:paddingLeft 14}}
-                         (if (= access-level "NO ACCESS")
-                           (style/create-link {:text (style/prettify-access-level access-level)
-                                               :onClick #(push-request-access-modal workspace-id auth-domains)})
-                           (style/prettify-access-level access-level))])}])
-          :behavior {:reorderable-columns? false}
-          :style {:header-row {:color (:text-lighter style/colors) :fontSize "90%"}
-                  :header-cell {:padding "0.4rem 0"}
-                  :resize-tab (table-style/tab :line-default)
-                  :body {:border style/standard-line}
-                  :body-row (fn [{:keys [index]}]
-                              (merge {:alignItems "center"}
-                                     (when (pos? index)
-                                       {:borderTop style/standard-line})))
-                  :cell table-style/clip-text}}
-         :toolbar {:style {:display "initial"}
-                   :filter-bar {:style {:float "left"}
-                                :inner {:width 300}}
-                   :get-items (constantly
-                           [[:div {:style {:float "right"}}
-                             [create/Button (select-keys props [:nav-context :billing-projects :disabled-reason])]]
-                            [:div {:style {:clear "left" :float "left" :marginTop "0.5rem"}}
-                             (style/create-link {:text (if filters-expanded? "Collapse" "Show additional filters")
-                                                 :onClick #(swap! state update :filters-expanded? not)})]
-                            [:div {:style {:clear "both"}}]
-                            (when filters-expanded?
-                              (this :-render-side-filters))])}
-         :paginator {:style {:clear "both"}}}]))
+     (let [{:keys [filters-expanded? request-access-modal-props]} @state]
+       [:div {}
+        (when request-access-modal-props
+          [RequestAuthDomainAccessDialog
+           (assoc request-access-modal-props :dismiss #(swap! state dissoc :request-access-modal-props))])
+        [Table
+         {:persistence-key "workspace-table" :v 2
+          :data (this :-filter-workspaces) :total-count (:total-count @locals)
+          :body
+          {:columns
+           (let [column-data (fn [ws]
+                               (let [no-access? (= (:accessLevel ws) "NO ACCESS")
+                                     tcga? (and no-access? (contains? (map :membersGroupName (get-in ws [:workspace :authorizationDomain]))
+                                                                      config/tcga-authorization-domain))]
+                                 {:workspace-id (select-keys (:workspace ws) [:namespace :name])
+                                  :status (:status ws)
+                                  :auth-domain-groups (map :membersGroupName (get-in ws [:workspace :authorizationDomain]))
+                                  :no-access? no-access?
+                                  :access-level (:accessLevel ws)
+                                  :hover-text (when no-access?
+                                                (if tcga?
+                                                  tcga-disabled-text
+                                                  non-dbGap-disabled-text))
+                                  :restricted? (not (empty? (get-in ws [:workspace :authorizationDomain])))}))]
+             ;; All of this margining is terrible, but since this table
+             ;; will be redesigned soon I'm leaving it as-is.
+             [{:id "Status" :header [:span {:style {:marginLeft 7}} "Status"]
+               :sortable? false :resizable? false :filterable? false :initial-width row-height-px
+               :column-data column-data :as-text :status
+               :render #(this :-render-status-cell %)}
+              {:id "Workspace" :header [:span {:style {:marginLeft 24}} "Workspace"]
+               :initial-width 300
+               :column-data column-data :as-text get-workspace-name-string
+               :sort-by #(mapv clojure.string/lower-case (replace (:workspace-id %) [:namespace :name]))
+               :render #(this :-render-workspace-cell %)}
+              {:id "Description" :header [:span {:style {:marginLeft 14}} "Description"]
+               :initial-width 350
+               :column-data get-workspace-description
+               :render (fn [description]
+                         [:div {:style {:paddingLeft 14}}
+                          (if description
+                            (-> description string/split-lines first)
+                            [:span {:style {:fontStyle "italic"}}
+                             "No description provided"])])}
+              {:id "Last Modified" :header [:span {:style {:marginLeft 14}} "Last Modified"]
+               :initial-width 200
+               :column-data (comp :lastModified :workspace)
+               :render (fn [date]
+                         [:div {:style {:paddingLeft 14}} (common/format-date date common/short-date-format)])
+               :as-text common/format-date}
+              {:id "Access Level" :header [:span {:style {:marginLeft 14}} "Access Level"]
+               :initial-width 132 :resizable? false
+               :column-data column-data
+               :sort-by (fn [{:keys [access-level]}] (get access-levels-sortorder access-level))
+               :sort-initial :asc
+               :render (fn [{:keys [access-level workspace-id auth-domain-groups]}]
+                         [:div {:style {:paddingLeft 14}}
+                          (if (= access-level "NO ACCESS")
+                            (style/create-link {:text (style/prettify-access-level access-level)
+                                                :onClick #(this :-show-request-access-modal workspace-id auth-domain-groups)})
+                            (style/prettify-access-level access-level))])}])
+           :behavior {:reorderable-columns? false}
+           :style {:header-row {:color (:text-lighter style/colors) :fontSize "90%"}
+                   :header-cell {:padding "0.4rem 0"}
+                   :resize-tab (table-style/tab :line-default)
+                   :body {:border style/standard-line}
+                   :body-row (fn [{:keys [index]}]
+                               (merge {:alignItems "center"}
+                                      (when (pos? index)
+                                        {:borderTop style/standard-line})))
+                   :cell table-style/clip-text}}
+          :toolbar {:style {:display "initial"}
+                    :filter-bar {:style {:float "left"}
+                                 :inner {:width 300}}
+                    :get-items (constantly
+                            [[:div {:style {:float "right"}}
+                              [create/Button (select-keys props [:nav-context :billing-projects :disabled-reason])]]
+                             [:div {:style {:clear "left" :float "left" :marginTop "0.5rem"}}
+                              (style/create-link {:text (if filters-expanded? "Collapse" "Show additional filters")
+                                                  :onClick #(swap! state update :filters-expanded? not)})]
+                             [:div {:style {:clear "both"}}]
+                             (when filters-expanded?
+                               (this :-render-side-filters))])}
+          :paginator {:style {:clear "both"}}}]]))
    :component-did-update
    (fn [{:keys [state]}]
      (persistence/save {:key persistence-key :state state}))
+   :-show-request-access-modal
+   (fn [{:keys [state]} workspace-id auth-domain-groups]
+     (swap! state assoc :request-access-modal-props {:workspace-id workspace-id :ws-auth-domain-groups auth-domain-groups}))
    :-render-status-cell
-   (fn [_ {:keys [status no-access? hover-text workspace-id auth-domains]}]
+   (fn [{:keys [this]} {:keys [status no-access? hover-text workspace-id auth-domain-groups]}]
      [:a {:href (if no-access?
                   "javascript:;"
                   (nav/get-link :workspace-summary workspace-id))
-          :onClick (if no-access? #(push-request-access-modal workspace-id auth-domains))
+          :onClick (if no-access? #(this :-show-request-access-modal workspace-id auth-domain-groups))
           :style {:display "block" :position "relative"
                   :backgroundColor (if no-access?
                                      (:disabled-state style/colors)
@@ -302,13 +296,13 @@
                       "Running" [icons/RunningIcon]
                       "Exception" [icons/ExceptionIcon]))])
    :-render-workspace-cell
-   (fn [_ {:keys [status restricted? no-access? hover-text workspace-id auth-domains]}]
+   (fn [{:keys [this]} {:keys [status restricted? no-access? hover-text workspace-id auth-domain-groups]}]
      (let [{:keys [namespace name]} workspace-id
            color (style/color-for-status status)]
        [:a {:href (if no-access?
                     "javascript:;"
                     (nav/get-link :workspace-summary workspace-id))
-            :onClick (if no-access? #(push-request-access-modal workspace-id auth-domains))
+            :onClick (if no-access? #(this :-show-request-access-modal workspace-id auth-domain-groups))
             :style {:display "flex" :alignItems "center"
                     :backgroundColor (if no-access? (:disabled-state style/colors) color)
                     :color "white" :textDecoration "none"
@@ -411,7 +405,6 @@
           (swap! state update :server-response assoc
                  :billing-projects (map :projectName projects)
                  :disabled-reason (if (empty? projects) :no-billing nil))))))})
-
 
 (react/defc- Page
   {:render

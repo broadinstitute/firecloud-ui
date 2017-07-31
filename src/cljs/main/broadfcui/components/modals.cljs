@@ -26,7 +26,7 @@
                          :fontSize "140%" :fontWeight 400 :lineHeight 1}}
            header
            (when show-close? [comps/XButton {:dismiss dismiss}])]
-          [:div {:style {:padding "1rem 3rem 2rem"
+          [:div {:style {:padding "2rem 3rem"
                          :backgroundColor (:background-light style/colors)}}
            content
            (when (or show-cancel? ok-button)

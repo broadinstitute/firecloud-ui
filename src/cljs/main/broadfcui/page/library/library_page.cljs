@@ -17,6 +17,29 @@
    [broadfcui.utils :as utils]
    ))
 
+(defn- tcga-access-instructions []
+  [:span {}
+   [:p {} "For access to TCGA protected data please apply for access via dbGaP [instructions can be found "
+    [:a {:href "https://wiki.nci.nih.gov/display/TCGA/Application+Process"
+         :target "_blank"}
+     "here" icons/external-link-icon] "]."]])
+
+(defn- target-access-instructions []
+  [:span {}
+   [:p {} "For access to TARGET protected data please apply for access via dbGaP [instructions can be found "
+    [:a {:href "https://ocg.cancer.gov/programs/target/using-target-data"
+         :target "_blank"}
+     "here" icons/external-link-icon] "]."]])
+
+(defn- standard-access-instructions [data]
+  [:span {}
+   "Please contact "
+   [:a {:target "_blank"
+        :href (str "mailto:" (:library:contactEmail data))}
+    (:library:datasetCustodian data) " <" (:library:contactEmail data) ">"
+    (icons/icon {:style {:paddingLeft "0.25rem" :fontSize "80%"}} :email)]
+   " and request access for the "
+   (:namespace data) "/" (:name data) " workspace."])
 
 (react/defc- DatasetsTable
   {:render
@@ -98,28 +121,27 @@
          ((@refs "table") :refresh-rows))))
    :-get-link-props
    (fn [_ data]
-     (if (= (:workspaceAccess data) "NO ACCESS")
-       {:onClick
-        (fn [_]
-          (comps/push-message
-           {:header "Request Access"
-            :message
-            (if (= (config/tcga-namespace) (:namespace data))
+     (let [built-in-groups #{"TCGA-dbGaP-Authorized", "TARGET-dbGaP-Authorized"}
+           ws-auth-domains (set (:authorizationDomain data))]
+       (if (= (:workspaceAccess data) "NO ACCESS")
+         {:onClick
+          (fn [_]
+            (comps/push-message
+             {:header "Request Access"
+              :message
               [:span {}
-               [:p {} "For access to TCGA protected data please apply for access via dbGaP [instructions can be found "
-                [:a {:href "https://wiki.nci.nih.gov/display/TCGA/Application+Process"
-                     :target "_blank"}
-                 "here" icons/external-link-icon] "]."]
-               [:p {} "After dbGaP approves your application please link your eRA Commons ID in your FireCloud profile page."]]
-              [:span {}
-               "Please contact "
-               [:a {:target "_blank"
-                    :href (str "mailto:" (:library:contactEmail data))}
-                (:library:datasetCustodian data) " <" (:library:contactEmail data) ">"
-                (icons/icon {:style {:paddingLeft "0.25rem" :fontSize "80%"}} :email)]
-               " and request access for the "
-               (:namespace data) "/" (:name data) " workspace."])}))}
-       {:href (nav/get-link :workspace-summary (common/row->workspace-id data))}))
+               (if (not-empty (clojure.set/difference ws-auth-domains built-in-groups))
+                 (standard-access-instructions data)
+                 [:span {}
+                  (let [tcga? (contains? ws-auth-domains "TCGA-dbGaP-Authorized")
+                        target? (contains? ws-auth-domains "TARGET-dbGaP-Authorized")]
+                    [:div {}
+                     (when tcga? (tcga-access-instructions))
+                     (when target? (target-access-instructions))
+                     (when (or tcga? target?)
+                       [:p {} "After dbGaP approves your application please link your eRA
+                       Commons ID in your FireCloud profile page."])])])]}))}
+         {:href (nav/get-link :workspace-summary (common/row->workspace-id data))})))
    :build-aggregate-fields
    (fn [{:keys [props]}]
      (reduce

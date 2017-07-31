@@ -14,9 +14,9 @@
   (remove (comp (partial = workspace-id) ws-common/workspace->id) workspace-list))
 
 (defn- filter-workspaces [this-auth-domain workspace-list]
-  (filter #(let [src-auth-domain (get-in % [:workspace :authorizationDomain :membersGroupName])]
+  (filter #(let [src-auth-domain (set (map :membersGroupName (get-in % [:workspace :authorizationDomain])))]
              (and
-              (or (nil? src-auth-domain) (= src-auth-domain this-auth-domain))
+              (or (empty? src-auth-domain) (clojure.set/subset? src-auth-domain this-auth-domain))
               (not= (:accessLevel %) "NO ACCESS")))
           workspace-list))
 
@@ -60,7 +60,7 @@
        :on-done (fn [{:keys [success? status-text get-parsed-response]}]
                   (if success?
                     (let [all-workspaces (remove-self (:workspace-id props) (get-parsed-response))
-                          filtered-workspaces (filter-workspaces (:this-auth-domain props) all-workspaces)]
+                          filtered-workspaces (filter-workspaces (set (map :membersGroupName (:this-auth-domain props))) all-workspaces)]
                       (swap! state assoc :workspaces filtered-workspaces
                              :num-filtered (- (count all-workspaces) (count filtered-workspaces))))
                     (swap! state assoc :error-message status-text)))}))})
