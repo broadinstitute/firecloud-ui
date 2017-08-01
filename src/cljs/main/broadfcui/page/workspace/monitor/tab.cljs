@@ -38,7 +38,7 @@
                  [:div {:style {:height table-style/table-icon-size}}
                   (case (:status submission)
                     "Done" (moncommon/icon-for-sub-status (:workflowStatuses submission))
-                    "Aborted" moncommon/failure-icon
+                    "Aborted" moncommon/render-failure-icon
                     nil)
                   (:status submission)])}
       {:header "Method Configuration" :initial-width 300
