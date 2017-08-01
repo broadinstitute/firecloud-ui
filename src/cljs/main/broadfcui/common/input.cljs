@@ -71,7 +71,7 @@
 (def hint-alphanumeric_- "Only letters, numbers, underscores, and dashes allowed")
 
 (defn max-string-length [field-name max-length]
-  {:test #(<= (.-length %) max-length)
+  {:test #(<= (count %) max-length)
    :message (str field-name " must be no more than " max-length " characters.")})
 
 (defn alphanumeric_-period [field-name]
