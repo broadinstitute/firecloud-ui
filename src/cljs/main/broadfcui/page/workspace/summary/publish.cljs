@@ -2,6 +2,7 @@
   (:require
    [dmohs.react :as react]
    [broadfcui.common.components :as comps]
+   [broadfcui.config :as config]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.utils :as utils]
    ))
@@ -15,7 +16,7 @@
         [comps/Blocker {:banner "Publishing..."}])
       [comps/SidebarButton
        {:style :light :color :button-primary :margin :top
-        :data-test-id "publish-button"
+        :data-test-id (config/when-debug "publish-button")
         :icon :library :text "Publish in Library"
         :disabled? (:disabled? props)
         :onClick (fn [_]
@@ -40,7 +41,7 @@
         [comps/Blocker {:banner "Unpublishing..."}])
       [comps/SidebarButton
        {:style :light :color :exception-state :margin :top
-        :data-test-id "unpublish-button"
+        :data-test-id (config/when-debug "unpublish-button")
         :icon :library :text "Unpublish"
         :onClick (fn [_]
                    (swap! state assoc :unpublishing? true)

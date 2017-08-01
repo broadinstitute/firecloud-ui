@@ -6,6 +6,7 @@
    [broadfcui.common.style :as style]
    [broadfcui.common.table.style :as table-style]
    [broadfcui.common.table.table :refer [Table]]
+   [broadfcui.config :as config]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.nav :as nav]
    [broadfcui.page.workspace.monitor.common :as moncommon]
@@ -30,7 +31,7 @@
        :column-data :submissionId
        :as-text (constantly "View analysis details")
        :render #(style/create-link {:text "View"
-                                    :data-test-id (str "submission-" %)
+                                    :data-test-id (config/when-debug (str "submission-" %))
                                     :href (nav/get-link :workspace-submission workspace-id %)})}
       {:header "Status" :as-text :status :sort-by :text
        :render (fn [submission]

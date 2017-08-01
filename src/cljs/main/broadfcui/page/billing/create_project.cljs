@@ -17,7 +17,7 @@
    (fn [{:keys [state this]}]
      [comps/OKCancelForm
       {:header "Create Billing Project"
-       :data-test-id "create-billing-project-modal"
+       :data-test-id (config/when-debug "create-billing-project-modal")
        :content
        (react/create-element
         (let [{:keys [billing-accounts error]} @state]
@@ -35,13 +35,13 @@
                [:a {:target "_blank" :href (str (config/billing-guide-url))} "Learn how to create a billing account."
                 icons/external-link-icon]]
               [:div {:style {:width 750}
-                     :data-test-id "create-billing-project-form"}
+                     :data-test-id (config/when-debug "create-billing-project-form")}
                (when (:creating? @state)
                  [comps/Blocker {:banner "Creating billing account..."}])
                [:div {:style {:fontSize "120%"}}
                 "1. Enter a unique name:"]
                [input/TextField {:ref "name-field" :autoFocus true
-                                 :data-test-id "project-name-input"
+                                 :data-test-id (config/when-debug "project-name-input")
                                  :style {:width "100%" :marginTop "1em" :marginBottom 0}
                                  :predicates [{:test #(<= 6 (count %) 30) :message "Name must be 6-30 characters long"}
                                               {:test #(re-matches #"[a-z0-9\-]*" %) :message "Name contains invalid characters"}
@@ -72,7 +72,7 @@
                            [:tr {:style {:borderTop style/standard-line}}
                             [:td {:style {:borderTop style/standard-line}}
                              [:input {:type "radio" :value (account "accountName")
-                                      :data-test-id (account "displayName")
+                                      :data-test-id (config/when-debug (account "displayName"))
                                       :name "billing-account-select"
                                       :disabled (not (account "firecloudHasAccess"))
                                       :id (account "accountName")
@@ -92,7 +92,7 @@
                          billing-accounts)]]
                   (style/create-validation-error-message (:account-errors @state))])
                [comps/ErrorViewer {:error (:server-error @state)}]]))))
-       :ok-button {:data-test-id "create-project-button"
+       :ok-button {:data-test-id (config/when-debug "create-project-button")
                    :onClick (when-not (empty? (:billing-accounts @state))
                               #(react/call :create-billing-project this))}}])
    :component-did-mount

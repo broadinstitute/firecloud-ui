@@ -5,6 +5,7 @@
    [broadfcui.common.icons :as icons]
    [broadfcui.common.style :as style]
    [broadfcui.common.table.style :as table-style]
+   [broadfcui.config :as config]
    [broadfcui.utils :as utils]
    ))
 

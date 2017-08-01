@@ -5,6 +5,7 @@
    [broadfcui.common.flex-utils :as flex]
    [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
+   [broadfcui.config :as config]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.nav :as nav]
    [broadfcui.page.workspace.method-configs.import-config :as import-config]
@@ -32,7 +33,7 @@
           {:configs configs
            :render-name (fn [config]
                           (style/create-link {:text (:name config)
-                                              :data-test-id (str "method-config-" (:name config) "-link")
+                                              :data-test-id (config/when-debug (str "method-config-" (:name config) "-link"))
                                               :href (nav/get-link :workspace-method-config
                                                                   (:workspace-id props)
                                                                   (ws-common/config->id config))}))
@@ -44,11 +45,11 @@
                            nil "Looking up workspace status..."
                            true "This workspace is locked."
                            false)
-              :data-test-id "import-config-button"
+              :data-test-id (config/when-debug "import-config-button")
               :onClick #(modal/push-modal
                          [import-config/ConfigImporter
                           {:workspace-id (:workspace-id props)
-                           :data-test-id "import-method-configuration-modal"
+                           :data-test-id (config/when-debug "import-method-configuration-modal")
                            :after-import (fn [{:keys [config-id]}]
                                            (modal/pop-modal)
                                            (mc-sync/flag-synchronization)

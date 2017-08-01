@@ -77,10 +77,13 @@ class PublishSpec extends FreeSpec with WebBrowserSpec with CleanUp {
         api.library.publishWorkspace(namespace, wsName)
 
         signIn(Config.Users.curator)
-        val wspage = new WorkspaceSummaryPage(namespace, wsName).open.awaitLoaded()
+        val wspage = new WorkspaceSummaryPage(namespace, wsName).open
         wspage.unpublishWorkspace()
-        val libraryPage = new DataLibraryPage()
-        libraryPage.open
+
+        // Micro-sleep to keep the test from failing (let Elasticsearch catch up?)
+        Thread sleep 200
+
+        val libraryPage = new DataLibraryPage().open
         assert(!libraryPage.ui.hasDataset(wsName))
       }
 

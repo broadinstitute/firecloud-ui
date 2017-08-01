@@ -259,7 +259,7 @@
                    :cell table-style/clip-text}}
           :toolbar {:style {:display "initial"}
                     :filter-bar {:style {:float "left"}
-                                 :inner {:width 300 :data-test-id "workspace-list-filter"}}
+                                 :inner {:width 300 :data-test-id (config/when-debug "workspace-list-filter")}}
                     :items (constantly
                             [[:div {:style {:float "right"}}
                               [create/Button (select-keys props [:nav-context :billing-projects :disabled-reason])]]
@@ -315,7 +315,7 @@
                            :width (- row-height-px 4) :padding "4px 0"
                            :backgroundColor "white" :color "#666" :fontSize "xx-small"
                            :transform "rotate(-90deg)"}
-                   :data-test-id (str "restricted-" namespace "-" name)}
+                   :data-test-id (config/when-debug (str "restricted-" namespace "-" name))}
             "RESTRICTED"]])
         [:div {:style {:paddingLeft 24}}
          [:div {:style {:fontSize "80%"}} namespace]

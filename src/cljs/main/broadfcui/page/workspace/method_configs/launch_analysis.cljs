@@ -75,16 +75,16 @@
                                :value (if disabled
                                         "Disabled - selected entity is of root entity type"
                                         (:expression @state))
-                               :data-test-id "define-expression-input"
+                               :data-test-id (config/when-debug "define-expression-input")
                                :onChange #(let [text (-> % .-target .-value string/trim)]
                                             (swap! state assoc :expression text))}))
    [:div {:style {:marginTop "1em"}}
     [comps/Checkbox
      {:ref "callCache-check"
-      :label [:span {:data-test-id "call-cache-text" :style {:marginBottom "0.8em"}} "Use Call Caching "
+      :label [:span {:data-test-id (config/when-debug "call-cache-text") :style {:marginBottom "0.8em"}} "Use Call Caching "
               [:a {:target "_blank" :href (str (config/call-caching-guide-url))}
                "Learn about call caching" icons/external-link-icon]]
-      :data-test-id "call-cache-checkbox"
+      :data-test-id (config/when-debug "call-cache-checkbox")
       :initial-checked? true
       :disabled-text (case (:protected-option @state)
                        :not-loaded "Call Caching status has not finished loading."
@@ -95,7 +95,7 @@
        [:div {:style {:textAlign "center"}}
         [:div {:style {:display "inline-flex" :alignItems "center" :margin "1em 0 -1em 0" :padding "0.5em"
                        :backgroundColor "white" :border style/standard-line :borderRadius 3}
-               :data-test-id "number-of-workflows-warning"}
+               :data-test-id (config/when-debug "number-of-workflows-warning")}
          (icons/icon {:style {:color (:exception-state style/colors) :marginRight 5 :verticalAlign "middle"}}
                      :warning)
          (str "Warning: This will launch " wf-count " workflows")]]))
@@ -116,7 +116,7 @@
      [comps/OKCancelForm
       {:header "Launch Analysis"
        :content (react/create-element (render-form state props))
-       :ok-button {:text "Launch" :disabled? (:disabled? props) :onClick #(react/call :launch this) :data-test-id "launch-button"}}])
+       :ok-button {:text "Launch" :disabled? (:disabled? props) :onClick #(react/call :launch this) :data-test-id (config/when-debug "launch-button")}}])
    :component-did-mount
    (fn [{:keys [state]}]
      (endpoints/call-ajax-orch
@@ -159,7 +159,7 @@
    (fn [{:keys [props]}]
      [comps/Button
       {:text "Launch Analysis..."
-       :data-test-id "open-launch-analysis-modal-button"
+       :data-test-id (config/when-debug "open-launch-analysis-modal-button")
        :disabled? (:disabled? props)
        :onClick #(modal/push-modal
                   [Form (select-keys props [:config-id :workspace-id

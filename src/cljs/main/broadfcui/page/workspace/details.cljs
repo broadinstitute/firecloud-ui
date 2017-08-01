@@ -25,7 +25,7 @@
                       :fontSize "small"
                       :padding "4px 0"
                       :textAlign "center"}
-              :data-test-id "auth-domain-restriction-message"}
+              :data-test-id (config/when-debug "auth-domain-restriction-message")}
         "Note: Access to this workspace is restricted to an Authorization Domain"]
        [:div {:style {:height 1 :backgroundColor "#bbb" :marginTop 2}}]])))
 
@@ -110,7 +110,7 @@
                                      CONFIGS :workspace-method-configs
                                      MONITOR :workspace-monitor)
                                    workspace-id)
-                            :data-test-id (str text "-tab")
+                            :data-test-id (config/when-debug (str text "-tab"))
                             :on-active-tab-clicked on-active-tab-clicked}])
            request-refresh #(this :-refresh-workspace)]
        [:div {}
@@ -122,7 +122,7 @@
          [:div {:style {:fontSize "125%"}}
           "Workspace: "
           [:span {:style {:fontWeight 500}}
-           [:span {:data-test-id "header-namespace"} (:namespace workspace-id)] "/" [:span {:data-test-id "header-name"} (:name workspace-id)]]]
+           [:span {:data-test-id (config/when-debug "header-namespace")} (:namespace workspace-id)] "/" [:span {:data-test-id (config/when-debug "header-name")} (:name workspace-id)]]]
          [common/FoundationTooltip
           {:tooltip "Adjust notifications for this workspace"
            :position "left"
@@ -150,7 +150,7 @@
         [:div {:style {:marginTop "2rem"}}
          (if-let [error (:workspace-error @state)]
            [:div {:style {:textAlign "center" :color (:exception-state style/colors)}
-                  :data-test-id "workspace-details-error"}
+                  :data-test-id (config/when-debug "workspace-details-error")}
             "Error loading workspace: " error]
            (condp = active-tab
              nil (react/create-element

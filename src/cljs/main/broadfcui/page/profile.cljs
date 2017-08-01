@@ -158,7 +158,7 @@
       [:label {}
        [:div {:style {:fontSize "88%"}} label]]
       [input/TextField {:style {:marginRight "1em" :width 200}
-                        :data-test-id key
+                        :data-test-id (config/when-debug key)
                         :defaultValue (get-in @state [:values key])
                         :ref (name key)
                         :predicates [(when required (input/nonempty label))]
@@ -169,7 +169,7 @@
       [:label {}
        (style/create-form-label label)
        [input/TextField {:style {:width 200}
-                         :data-test-id key
+                         :data-test-id (config/when-debug key)
                          :defaultValue (get-in @state [:values key])
                          :ref (name key)
                          :placeholder (when valid-email-or-empty
@@ -221,7 +221,7 @@
            [components/Spinner {:text "Saving..."}]
            :else
            [components/Button {:text (if new? "Register" "Save Profile")
-                               :data-test-id (if new? "register-button" "save-profile-button")
+                               :data-test-id (config/when-debug (if new? "register-button" "save-profile-button"))
                                :onClick #(react/call :save this)}])]]))
    :save
    (fn [{:keys [props state refs]}]

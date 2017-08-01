@@ -5,6 +5,7 @@
    [broadfcui.common.components :as comps]
    [broadfcui.common.icons :as icons]
    [broadfcui.common.style :as style]
+   [broadfcui.config :as config]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.utils :as utils]
    ))
@@ -18,14 +19,14 @@
      {:file-input-key (gensym "file-input-")})
    :render
    (fn [{:keys [state refs this]}]
-     [:div {:style {:textAlign "center"} :data-test-id "data-upload-container"}
+     [:div {:style {:textAlign "center"} :data-test-id (config/when-debug "data-upload-container")}
       (when (:loading? @state)
         [comps/Blocker {:banner "Uploading file..."}])
       ;; This key is changed every time a file is selected causing React to completely replace the
       ;; element. Otherwise, if a user selects the same file (even after having modified it), the
       ;; browser will not fire the onChange event.
       [:input {:key (:file-input-key @state)
-               :data-test-id "data-upload-input"
+               :data-test-id (config/when-debug "data-upload-input")
                :type "file" :name "entities" :ref "entities"
                :style {:display "none"}
                :onChange (fn [e]
@@ -41,7 +42,7 @@
                                (.readAsText reader (.slice file 0 preview-limit)))))}]
       common/PHI-warning
       [comps/Button {:text (if (:upload-result @state) "Choose another file..." "Choose file...")
-                     :data-test-id "choose-file-button"
+                     :data-test-id (config/when-debug "choose-file-button")
                      :onClick #(-> (@refs "entities") .click)}]
       (when (:file-contents @state)
         [:div {:style {:margin "0.5em 2em" :padding "0.5em" :border style/standard-line}}
@@ -53,14 +54,14 @@
             [:em {} "(file truncated for preview)"])]])
       (when (and (:file @state) (not (:upload-result @state)))
         [comps/Button {:text "Upload"
-                       :data-test-id "confirm-upload-metadata-button"
+                       :data-test-id (config/when-debug "confirm-upload-metadata-button")
                        :onClick #(react/call :do-upload this)}])
       (if-let [result (:upload-result @state)]
         (if (:success? result)
           (style/create-flexbox
            {:style {:justifyContent "center" :paddingTop "1em"}}
            (icons/icon {:style {:fontSize "200%" :color (:success-state style/colors)}} :done)
-           [:span {:style {:marginLeft "1em"} :data-test-id "upload-success-message"} "Success!"])
+           [:span {:style {:marginLeft "1em"} :data-test-id (config/when-debug "upload-success-message")} "Success!"])
           [:div {:style {:paddingTop "1em"}}
            [comps/ErrorViewer {:error (:error result)}]]))])
    :do-upload

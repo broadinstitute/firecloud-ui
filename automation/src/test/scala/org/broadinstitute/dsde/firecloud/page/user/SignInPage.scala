@@ -66,6 +66,7 @@ class GoogleSignInPopup(implicit webDriver: WebDriver) extends WebBrowser with W
     emailField(id("identifierId")).value = email
     pressKeys("\n")
 
+    await enabled id("passwordNext")
     await enabled name("password")
     pwdField(name("password")).value = password
     pressKeys("\n")

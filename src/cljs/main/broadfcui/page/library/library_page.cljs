@@ -72,7 +72,7 @@
                       :as-text :library:datasetDescription
                       :render (fn [data]
                                 (style/create-link (merge {:text (:library:datasetName data)
-                                                           :data-test-id (str "dataset-" (:library:datasetName data))}
+                                                           :data-test-id (config/when-debug (str "dataset-" (:library:datasetName data)))}
                                                           (this :-get-link-props data))))}
                      {:id "library:indication" :header (:title (:library:indication attributes))
                       :column-data :library:indication :initial-width 180}

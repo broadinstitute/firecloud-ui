@@ -60,9 +60,7 @@ class SubmissionDetailsPage(namespace: String, name: String)(implicit webDriver:
     private val submissionAbortModalConfirmButtonQuery: Query = testId("submission-abort-modal-confirm-button")
 
     def getSubmissionStatus(): String = {
-      await enabled submissionStatusQuery
-      val submissionStatusElement = find(submissionStatusQuery)
-      submissionStatusElement.get.text
+      (await enabled submissionStatusQuery).text
     }
 
     //This currently only works for 1 workflow!!!

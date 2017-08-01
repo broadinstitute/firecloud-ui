@@ -41,8 +41,8 @@
                             :backgroundColor (:background-light style/colors)
                             :color "#000" :textDecoration "none"
                             :padding "0.5rem" :border style/standard-line}
-                    :data-test-id "account-dropdown"}
-              [:span {:data-test-id "account-dropdown-email"} (-> auth2 (.-currentUser) (.get) (.getBasicProfile) (.getEmail))]
+                    :data-test-id (config/when-debug "account-dropdown")}
+              [:span {:data-test-id (config/when-debug "account-dropdown-email")} (-> auth2 (.-currentUser) (.get) (.getBasicProfile) (.getEmail))]
               [:div {:style {:display "inline-block" :marginLeft "1em" :fontSize 8}} "▼"]]
       :width :auto
       :button-style {:height 32}
@@ -50,7 +50,7 @@
               {:href (nav/get-link :groups) :text "Groups"}
               {:href (nav/get-link :billing) :text "Billing"}
               {:href (nav/get-link :notifications) :text "Notifications"}
-              {:text "Sign Out" :dismiss #(.signOut auth2) :data-test-id "sign-out"}]})))
+              {:text "Sign Out" :dismiss #(.signOut auth2) :data-test-id (config/when-debug "sign-out")}]})))
 
 (react/defc GlobalSubmissionStatus
   {:render

@@ -6,6 +6,7 @@
    [broadfcui.common.input :as input]
    [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
+   [broadfcui.config :as config]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.utils :as utils]
    ))
@@ -76,7 +77,7 @@
        (:non-project-owner-acl-vec @state))
       [:div {:style {:margin "0.5rem 0"}}
        [comps/Button {:text "Add new" :icon :add-new
-                      :data-test-id "add-new-acl-button"
+                      :data-test-id (config/when-debug "add-new-acl-button")
                       :onClick #(swap! state update :non-project-owner-acl-vec
                                        conj (let [permissions {:email "" :accessLevel "READER"}]
                                               ; Only owners can set new canShare permissions, so we only want to include
