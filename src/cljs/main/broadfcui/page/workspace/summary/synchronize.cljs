@@ -97,14 +97,15 @@
                           {:dismiss #(swap! state dissoc :show-sync-modal?)})])])
    :-perform-sync-logic
    (fn [{:keys [state]} parsed-perms-report]
-     (let [new-users (->> (:workspaceACL parsed-perms-report) keys (map name) set)
+     (let [workspace-users (->> (:workspaceACL parsed-perms-report) keys (map name) set)
            methods (:referencedMethods parsed-perms-report)
            private-methods (remove (comp :public :method) methods)
-           private-unowned (filter (comp empty? :acls) private-methods)
-           private-owned (filter (comp seq :acls) private-methods)
+           by-ownership (group-by (comp empty? :acls) private-methods)
+           private-owned (by-ownership false)
+           private-unowned (by-ownership true)
            access-needed-by-method (map (fn [method]
                                           (assoc (select-keys method [:method])
-                                            :new-users (set/difference new-users
+                                            :new-users (set/difference workspace-users
                                                                        (->> (:acls method) (map :user) set))))
                                         private-owned)]
        (when (or (seq access-needed-by-method) (seq private-unowned))
