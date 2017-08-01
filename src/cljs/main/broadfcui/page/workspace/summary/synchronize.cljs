@@ -37,13 +37,19 @@
                "Additionally, users will need to request access to the following methods:"
                "In order to run the methods configured for this workspace, users will need to request
                 access to the following:")
-             [:ul {} (map (fn [method]
-                            [:li {}
-                             [:div {} (get-method-display method)]
-                             [:div {} (str "Owner"
-                                           (when (> (count (:managers method)) 1) "s")
-                                           ": " (string/join ", " (:managers method)))]])
-                          unowned-methods)]])
+             [:table {:style {:marginTop "1rem"}}
+              [:thead {}
+               [:tr {:style {:fontWeight "bold"}}
+                [:td {} "Method"]
+                [:td {:style {:paddingLeft "1rem"}} "Owners"]]]
+              [:tbody {}
+               (map (fn [method]
+                      [:tr {}
+                       [:td {} (get-method-display method)]
+                       [:td {:style {:paddingLeft "1rem"}}
+                        (map (fn [owner] [:div {} owner])
+                             (:managers method))]])
+                    unowned-methods)]]])
           [comps/ErrorViewer {:error (:grant-error @state)}]]
          :ok-button [comps/Button
                      (if owned-methods
@@ -104,5 +110,5 @@
        (when (or (seq access-needed-by-method) (seq private-unowned))
          (swap! state assoc
                 :show-sync-modal? true
-                :unowned-methods (not-empty (map :method private-unowned))
+                :unowned-methods (not-empty (distinct (map :method private-unowned)))
                 :owned-methods (not-empty access-needed-by-method)))))})
