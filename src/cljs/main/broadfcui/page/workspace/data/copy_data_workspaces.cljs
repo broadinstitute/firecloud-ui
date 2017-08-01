@@ -48,7 +48,7 @@
                                      (when (> num-filtered 1) "s")
                                      " unavailable because "
                                      (if (= num-filtered 1) "it contains" "they contain")
-                                     " data from an incompatible Authorization Domain.")]))})]
+                                     " data from other authorization domains.")]))})]
          (:error-message @state) (style/create-server-error-message (:error-message @state))
          :else [:div {:style {:textAlign "center"}}
                 [comps/Spinner {:text "Loading workspaces..."}]])))

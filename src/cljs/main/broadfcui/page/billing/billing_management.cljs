@@ -111,7 +111,7 @@
                     :column-data #(clojure.string/join ", " (:roles %))}]}
            :toolbar
            {:filter-bar {:inner {:data-test-id (config/when-debug "billing-project-list-filter")}}
-            :items
+            :get-items
             (constantly
              [flex/spring
               [comps/Button
