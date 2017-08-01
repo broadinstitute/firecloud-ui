@@ -70,6 +70,10 @@
 
 (def hint-alphanumeric_- "Only letters, numbers, underscores, and dashes allowed")
 
+(defn max-string-length [field-name length]
+  {:test #(<= (.-length %) length)
+   :message (str field-name " must be no more than " length " characters.")})
+
 (defn alphanumeric_-period [field-name]
   {:test #(re-matches #"[A-Za-z0-9_\-.]*" %)
    :message (str field-name " may only contain letters, numbers, underscores, dashes, and periods.")})
