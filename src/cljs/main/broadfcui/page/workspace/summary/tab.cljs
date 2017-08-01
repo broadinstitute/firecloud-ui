@@ -9,6 +9,7 @@
    [broadfcui.common.style :as style]
    [broadfcui.components.collapse :refer [Collapse]]
    [broadfcui.components.sticky :refer [Sticky]]
+   [broadfcui.config :as config]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.nav :as nav]
    [broadfcui.page.workspace.create :as create]
@@ -35,7 +36,8 @@
         [:p {:style {:margin 0}} "Are you sure you want to delete this workspace?"]
         [:p {} "Bucket data will be deleted too."]
         [comps/ErrorViewer {:error (:server-error @state)}]]
-       :ok-button {:text "Delete" :onClick #(react/call :delete this)}}])
+       :ok-button {:text "Delete" :onClick #(react/call :delete this)
+                   :data-test-id (config/when-debug "confirm-delete-workspace-button")}}])
    :delete
    (fn [{:keys [props state]}]
      (swap! state assoc :deleting? true :server-error nil)
@@ -98,6 +100,7 @@
           [comps/SidebarButton
            {:style :light :margin :top :color :button-primary
             :text "Share..." :icon :share
+            :data-test-id (config/when-debug "share-workspace-button")
             :onClick #(modal/push-modal
                        [AclEditor {:workspace-id workspace-id
                                    :user-access-level user-access-level
@@ -106,6 +109,7 @@
           [comps/SidebarButton
            {:style :light :color :button-primary :margin :top
             :icon :catalog :text "Catalog Dataset..."
+            :data-test-id (config/when-debug "catalog-button")
             :onClick #(modal/push-modal [CatalogWizard (utils/restructure
                                                         library-schema
                                                         workspace
@@ -162,6 +166,7 @@
           [comps/SidebarButton
            {:style :light :margin :top :color :button-primary
             :text "Clone..." :icon :clone
+            :data-test-id (config/when-debug "open-clone-workspace-modal-button")
             :disabled? (when (empty? billing-projects) (comps/no-billing-projects-message))
             :onClick #(swap! state assoc :cloning? true)}])
         (when (and owner? (not editing?))
@@ -172,6 +177,7 @@
         (when (and owner? (not editing?))
           [comps/SidebarButton {:style :light :margin :top :color (if isLocked :text-lighter :exception-state)
                                 :text "Delete" :icon :delete
+                                :data-test-id (config/when-debug "delete-workspace-button")
                                 :disabled? (when isLocked "This workspace is locked.")
                                 :onClick #(modal/push-modal
                                            [DeleteDialog {:workspace-id workspace-id}])}])]}]]))
@@ -205,7 +211,9 @@
        (interpose ", " owners)
 
        "Authorization Domain"
-       (if-not (empty? auth-domain) (interpose ", " (map :membersGroupName auth-domain)) "None")
+       (if-not (empty? auth-domain)
+               [:span {:data-test-id (config/when-debug "auth-domain-groups")} (interpose ", " (map :membersGroupName auth-domain))]
+               "None")
 
        "Created By"
        [:div {}

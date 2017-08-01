@@ -57,9 +57,9 @@
                           :backgroundColor (:button-primary style/colors)
                           :color "#fff" :padding "1rem" :borderRadius 8}]
                [:div {:style {:display "flex" :justifyContent "center"}}
-                [:div {:style style :onClick #(add-crumb :file-import "File")}
+                [:div {:style style :data-test-id (config/when-debug "import-from-file-button") :onClick #(add-crumb :file-import "File")}
                  "Import from file"]
-                [:div {:style style :onClick #(add-crumb :workspace-import "Choose Workspace")}
+                [:div {:style style :data-test-id (config/when-debug "copy-from-another-workspace-button") :onClick #(add-crumb :workspace-import "Choose Workspace")}
                  "Copy from another workspace"]]))]])}])})
 
 
@@ -106,6 +106,7 @@
           (fn [table-props]
             [(when (:selected-entity-type @state) (this :-render-download-link table-props))
              [comps/Button {:text "Import Metadata..."
+                            :data-test-id (config/when-debug "import-metadata-button")
                             :style {:marginLeft "auto"}
                             :disabled? (when (get-in workspace [:workspace :isLocked]) "This workspace is locked.")
                             :onClick #(this :-handle-import-data-click)}]])

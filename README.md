@@ -68,3 +68,63 @@ To compile and build the `broadinstitute/firecloud-ui` docker image, run
 ```
 ./script/build.sh compile -d build
 ```
+
+## Selenium tests
+
+Selenium tests are found in the `automation` directory.  They should run against a firecloud-in-a-box (FiaB).
+
+### Running with docker
+
+First build the docker image
+```
+docker build -f Dockerfile-tests -t automation .
+```
+
+Then run the run-tests script with the newly created image.  This script will render the `application.conf` and `firecloud-account.pem` from vault to be used by the test container.  Note that if you are running outside of docker you will need to generate these files manually.
+```
+cd automation/docker
+./run-tests.sh 4 qa <ip of FiaB> automation $(cat ~/.vault-token)
+```
+
+### Running locally
+If you have a FiaB running and its IP configured in your `/etc/hosts`, you can run tests locally and watch them execute in a browser.
+
+#### Set Up
+
+First run render script to generate necessary configs:
+```
+cd automation
+./render-local-env.sh . $(cat ~/.vault-token)
+```
+
+
+If you have a local UI running, you will need to go into `automation/src/test/resources` and edit the `baseURL` in `application.conf`:
+```
+baseUrl = "http://local.broadinstitute.org"
+```
+
+
+#### Running tests
+
+To run all tests:
+```bash
+sbt test -Djsse.enableSNIExtension=false -Dheadless=false
+sbt clean
+```
+
+To run a single suite:
+```bash
+sbt -Djsse.enableSNIExtension=false -Dheadless=false "testOnly *GoogleSpec"
+sbt clean
+```
+
+To run a single test within a suite:
+```bash
+# matches test via substring
+sbt -Djsse.enableSNIExtension=false -Dheadless=false "testOnly *GoogleSpec -- -z \"have a search field\""
+sbt clean
+```
+
+For more information see: http://www.scala-sbt.org/0.13/docs/Testing.html#Test+Framework+Arguments
+
+

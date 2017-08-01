@@ -5,6 +5,7 @@
    [broadfcui.common.components :as comps]
    [broadfcui.common.input :as input]
    [broadfcui.common.style :as style]
+   [broadfcui.config :as config]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.page.method-repo.method-config-importer :as mci]
    [broadfcui.page.method-repo.method-repo-table :refer [MethodRepoTable]]
@@ -165,6 +166,7 @@
             type (if (= entityType "Configuration") :method-config :method)]
         (style/create-link
          {:text (style/render-name-id name snapshotId)
+          :data-test-id (config/when-debug (str name "_" snapshotId))
           :onClick #(push-page {:breadcrumb-text (style/render-entity namespace name snapshotId)
                                 :component (confirm-entity (assoc props :type type :id id))})})))}])
 
@@ -172,10 +174,12 @@
 (defn- source-chooser [{:keys [push-page] :as props}]
   [:div {}
    [comps/Button {:text "Import from Method Repository"
+                  :data-test-id (config/when-debug "import-from-repo-button")
                   :onClick #(push-page {:breadcrumb-text "Method Repository"
                                         :component (wrap (method-chooser props))})
                   :style {:marginRight "1rem"}}]
    [comps/Button {:text "Copy from another Workspace"
+                  :data-test-id (config/when-debug "copy-from-workspace-button")
                   :onClick #(push-page {:breadcrumb-text "Choose Workspace"
                                         :component [WorkspaceChooser props]})}]])
 

@@ -369,16 +369,18 @@
                     (react/create-class
                      {:render
                       (fn [{:keys [props state]}]
-                        [:a {:style {:display "block"
-                                     :color "#000" :textDecoration "none" :fontSize 14
-                                     :padding "0.5rem"
-                                     :backgroundColor (when (:hovering? @state) "#e8f5ff")}
-                             :href (:href props)
-                             :target (:target props)
-                             :onMouseOver #(swap! state assoc :hovering? true)
-                             :onMouseOut #(swap! state assoc :hovering? false)
-                             :onClick (:dismiss props)}
-                         (:text props)])})]
+                        (let [{:keys [data-test-id dismiss href target text]} props]
+                          [:a {:style {:display "block"
+                                       :color "#000" :textDecoration "none" :fontSize 14
+                                       :padding "0.5rem"
+                                       :backgroundColor (when (:hovering? @state) "#e8f5ff")}
+                               :href href
+                               :target target
+                               :onMouseOver #(swap! state assoc :hovering? true)
+                               :onMouseOut #(swap! state assoc :hovering? false)
+                               :onClick dismiss
+                               :data-test-id data-test-id}
+                           text]))})]
                 [:div {}
                  (map (fn [item]
                         [DropdownItem (merge {:href "javascript:;" :target "_self"}

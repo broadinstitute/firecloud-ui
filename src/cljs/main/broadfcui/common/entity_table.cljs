@@ -9,6 +9,7 @@
    [broadfcui.common.table.table :refer [Table]]
    [broadfcui.common.table.style :as table-style]
    [broadfcui.common.table.utils :as table-utils]
+   [broadfcui.config :as config]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.utils :as utils]
    ))
@@ -67,6 +68,7 @@
                 attr-col-width (->> attributes count (/ 1000) int (min 400) (max 100))]
             [Table
              {:ref "table" :key selected-entity-type
+              :data-test-id (config/when-debug "entity-table")
               :persistence-key (when selected-entity-type
                                  (str (common/workspace-id->string (:workspace-id props)) ":data" selected-entity-type))
               :v 1

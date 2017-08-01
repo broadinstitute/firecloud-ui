@@ -40,6 +40,8 @@
 
 (defn api-url-root [] (get @config "apiUrlRoot"))
 (defn debug? [] (get @config "isDebug"))
+(defn when-debug [x]
+  (when (debug?) x))
 (defn google-client-id [] (get @config "googleClientId"))
 (defn tcga-namespace [] (get @config "tcgaNamespace"))
 (defn workflow-count-warning-threshold [] (get @config "workflowCountWarningThreshold" 100))
