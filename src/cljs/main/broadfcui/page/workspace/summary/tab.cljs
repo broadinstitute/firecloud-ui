@@ -83,9 +83,9 @@
              (when (:sharing? @state)
                [AclEditor
                 (merge (utils/restructure user-access-level request-refresh workspace-id)
-                 {:dismiss #(swap! state dissoc :sharing?)
-                 :on-users-added (fn [new-users]
-                                   ((@refs "sync-container") :check-synchronization new-users))})])
+                       {:dismiss #(swap! state dissoc :sharing?)
+                        :on-users-added (fn [new-users]
+                                          ((@refs "sync-container") :check-synchronization new-users))})])
              (this :-render-sidebar derived)
              (this :-render-main derived)
              (when (:updating-attrs? @state)
@@ -97,7 +97,7 @@
      (this :-refresh))
    :-render-sidebar
    (fn [{:keys [props state locals refs this]}
-        {:keys [catalog-with-read? owner? writer? request-refresh can-share? user-access-level ]}]
+        {:keys [catalog-with-read? owner? writer? request-refresh can-share? user-access-level]}]
      (let [{:keys [workspace workspace-id]} props
            {:keys [label-id body-id]} @locals
            {:keys [editing?]
@@ -105,15 +105,16 @@
            {{:keys [isLocked library-attributes description authorizationDomain]} :workspace
             {:keys [runningSubmissionsCount]} :workspaceSubmissionStats} workspace
            status (common/compute-status workspace)
-           publishable? (and curator? (or catalog-with-read? owner?))
-       ][:div {:style {:flex "0 0 270px" :paddingRight 30}}
-     (when (:cloning? @state)
-       [create/CreateDialog
-        {:dismiss #(swap! state dissoc :cloning?)
-         :workspace-id workspace-id
-         :description description
-         :auth-domain (set (map :membersGroupName authorizationDomain))
-         :billing-projects billing-projects}])   [:span {:id label-id}
+           publishable? (and curator? (or catalog-with-read? owner?))]
+       [:div {:style {:flex "0 0 270px" :paddingRight 30}}
+        (when (:cloning? @state)
+          [create/CreateDialog
+           {:dismiss #(swap! state dissoc :cloning?)
+            :workspace-id workspace-id
+            :description description
+            :auth-domain (set (map :membersGroupName authorizationDomain))
+            :billing-projects billing-projects}])
+        [:span {:id label-id}
          [comps/StatusLabel {:id label-id
                              :text (str status
                                         (when (= status "Running")
@@ -186,7 +187,7 @@
                :text "Clone..." :icon :clone
                :data-test-id (config/when-debug "open-clone-workspace-modal-button")
             :disabled? (when (empty? billing-projects) (comps/no-billing-projects-message))
-               :onClick #(swap! state assoc :cloning?true)}])
+               :onClick #(swap! state assoc :cloning? true)}])
            (when (and owner? (not editing?))
              [comps/SidebarButton {:style :light :margin :top :color :button-primary
                                    :text (if isLocked "Unlock" "Lock")
@@ -209,21 +210,21 @@
            {:keys [owners]
             {:keys [createdBy createdDate bucketName description tags workspace-attributes library-attributes]} :workspace} workspace
            render-detail-box (fn [title & children]
-                            [:div
-                             {:style {:flexBasis "50%" :paddingRight "2rem" :marginBottom "2rem"}}
-                             [:div {:style {:paddingBottom "0.5rem"}}
-                              (style/create-section-header title)]
-                             (map-indexed
-                              (fn [i child]
-                                (if (even? i)
-                                  [:div {:style {:fontWeight 500 :paddingTop "0.5rem"}} child]
-                                  [:div {:style {:fontSize "90%" :lineHeight 1.5}} child]))
-                              children)])
-        processed-tags (flatten (map :items (vals tags)))]
-    [:div {:style {:flex "1 1 auto" :overflow "hidden"} :id body-id}
-     [:div {:style {:display "flex"}}
-      (render-detail-box
-       "Workspace Access"
+                               [:div
+                                {:style {:flexBasis "50%" :paddingRight "2rem" :marginBottom "2rem"}}
+                                [:div {:style {:paddingBottom "0.5rem"}}
+                                 (style/create-section-header title)]
+                                (map-indexed
+                                 (fn [i child]
+                                   (if (even? i)
+                                     [:div {:style {:fontWeight 500 :paddingTop "0.5rem"}} child]
+                                     [:div {:style {:fontSize "90%" :lineHeight 1.5}} child]))
+                                 children)])
+           processed-tags (flatten (map :items (vals tags)))]
+       [:div {:style {:flex "1 1 auto" :overflow "hidden"} :id body-id}
+        [:div {:style {:display "flex"}}
+         (render-detail-box
+          "Workspace Access"
 
           "Access Level"
           (style/prettify-access-level user-access-level)
@@ -232,11 +233,11 @@
           (interpose ", " owners)
 
           "Authorization Domain"
-       (if-not (empty? auth-domain)
+          (if-not (empty? auth-domain)
                [:span {:data-test-id (config/when-debug "auth-domain-groups")} (interpose ", " (map :membersGroupName auth-domain))]
                "None")
 
-       "Created By"
+          "Created By"
           [:div {}
            [:div {} createdBy]
            [:div {} (common/format-date createdDate)]])
@@ -283,7 +284,6 @@
                                          :borderRadius 3 :padding "0.2rem 0.5rem"}} tag])])]}]
 
         (when editing? [:div {:style {:marginBottom "10px"}} common/PHI-warning])
-
 
         [Collapse
          {:style {:marginBottom "2rem"}
