@@ -138,12 +138,11 @@
                           (push-page {:breadcrumb-text (id->str id)
                                       :component [WorkspaceConfigChooser
                                                   (assoc props :chosen-workspace-id id)]})))
-                      :get-toolbar-items (constantly
-                                          (when (pos? removed-count)
-                                            [(str removed-count
-                                                  " workspace"
-                                                  (when (> removed-count 1) "s")
-                                                  " hidden due to permissions")]))})))))
+                      :get-toolbar-items (when (pos? removed-count)
+                                           [(str removed-count
+                                                 " workspace"
+                                                 (when (> removed-count 1) "s")
+                                                 " hidden due to permissions.")])})))))
    :component-did-mount
    (fn [{:keys [props]}]
      ((:load-workspaces props)))})

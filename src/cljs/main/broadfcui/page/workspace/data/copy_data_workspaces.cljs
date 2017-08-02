@@ -42,14 +42,14 @@
                                                   (get-in ws [:workspace :name]))
                                        :onClick #((:pop-to-depth props) 3)
                                        :selected-workspace ws}))
-            :toolbar-items (when-let [num-filtered (:num-filtered @state)]
-                                  (when (pos? num-filtered)
-                                    [(str num-filtered
-                                          " workspace"
-                                          (when (> num-filtered 1) "s")
-                                          " unavailable because "
-                                          (if (= num-filtered 1) "it contains" "they contain")
-                                          " data from an incompatible Authorization Domain.")]))})]
+            :get-toolbar-items (when-let [num-filtered (:num-filtered @state)]
+                                 (when (pos? num-filtered)
+                                   [(str num-filtered
+                                         " workspace"
+                                         (when (> num-filtered 1) "s")
+                                         " unavailable because "
+                                         (if (= num-filtered 1) "it contains" "they contain")
+                                         " data from an incompatible Authorization Domain.")]))})]
          (:error-message @state) (style/create-server-error-message (:error-message @state))
          :else [:div {:style {:textAlign "center"}}
                 [comps/Spinner {:text "Loading workspaces..."}]])))
