@@ -1,6 +1,7 @@
 (ns broadfcui.page.workspace.summary.tab
   (:require
    [dmohs.react :as react]
+   [clojure.string :as string]
    [broadfcui.common :as common]
    [broadfcui.common.components :as comps]
    [broadfcui.common.icons :as icons]
@@ -201,11 +202,11 @@
                                               [DeleteDialog {:workspace-id workspace-id}])}])]}]]))
    :-render-main
    (fn [{:keys [props state locals]}
-        {:keys [user-access-level request-refresh can-share? owner? curator? writer? catalog-with-read?]}]
+        {:keys [user-access-level auth-domain request-refresh can-share? owner? curator? writer? catalog-with-read?]}]
      (let [{:keys [workspace workspace-id bucket-access?]} props
            {:keys [editing?]
             {:keys [storage-cost submissions-count library-schema]} :server-response} @state
-           {:keys [body-id auth-domain]} @locals
+           {:keys [body-id]} @locals
            {:keys [owners]
             {:keys [createdBy createdDate bucketName description tags workspace-attributes library-attributes]} :workspace} workspace
            render-detail-box (fn [title & children]
@@ -229,11 +230,11 @@
           (style/prettify-access-level user-access-level)
 
           (str "Workspace Owner" (when (> (count owners) 1) "s"))
-          (interpose ", " owners)
+          (string/join ", " owners)
 
           "Authorization Domain"
           (if-not (empty? auth-domain)
-               [:span {:data-test-id (config/when-debug "auth-domain-groups")} (interpose ", " (map :membersGroupName auth-domain))]
+               [:span {:data-test-id (config/when-debug "auth-domain-groups")} (string/join ", " (map :membersGroupName auth-domain))]
                "None")
 
           "Created By"
