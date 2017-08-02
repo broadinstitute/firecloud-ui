@@ -242,7 +242,6 @@
            hidden-items (set/difference (:selected-items props) (set all-buckets))
            hidden-items-formatted (mapv (fn [item] {:key item}) hidden-items)]
        [:div {:style {:paddingBottom "1em"}}
-        [:hr {}]
         [:span {:style {:fontWeight "bold"}} title]
         [:div {:style {:fontSize "80%" :float "right"}}
          (links/create-internal {:onClick #(this :clear-all)} "Clear")]
@@ -289,6 +288,8 @@
            title (:title properties)
            render-hint (get-in properties [:aggregate :renderHint])
            aggregations (get-aggregations-for-property aggregate-field (:aggregates props))]
+       [:div {}
+        [:hr {}]
        (cond
          (= render-hint "checkbox") [FacetCheckboxes
                                      (merge
@@ -296,23 +297,17 @@
                                       (select-keys aggregations [:numOtherDocs :buckets])
                                       (select-keys props [:expanded? :selected-items :update-filter
                                                           :expanded-callback-function]))]
-         (= render-hint "tag-autocomplete") (filter/section
-                                              {:title title
-                                               :content (react/create-element
-                                                         [comps/TagAutocomplete {:ref "tag-autocomplete"
-                                                                                 :tags "Tags"
-                                                                                 :data (:tags @state)
-                                                                                 :show-counts? false
-                                                                                 :allow-new? false
-                                                                                 :on-change #(swap! state update :filters assoc "Tags" %)}])
-                                               :on-clear #((@refs "tag-autocomplete") :set-tags [])
-                                               :onChange #(this :update-selected key (.. % -target -checked))
-                                               })
-       )
-     )
-   )
-  }
-)
+         (= render-hint "typeahead-multiselect")
+           [:div {}
+            (filter/section
+            {:title title
+             :content (react/create-element
+                       [comps/TagAutocomplete {:ref "tag-autocomplete"
+                                               :tags "Tags"
+                                               :data (:tags @state)
+                                               :show-counts? false :allow-new? false
+                                               :on-change #(swap! state update :filters assoc "Tags" %)}])
+             :on-clear #((@refs "tag-autocomplete") :set-tags [])})])]))})
 
 (react/defc- FacetSection
   {:render
@@ -370,15 +365,6 @@
                         :on-filter (fn [text]
                                      (swap! state assoc :search-text text)
                                      (after-update #((@refs "dataset-table") :execute-search true)))}]
-        (filter/section
-         {:title "Tags"
-          :content (react/create-element
-                    [comps/TagAutocomplete {:ref "tag-autocomplete"
-                                            :tags ((:facet-filters @state) "Tags")
-                                            :data (:tags @state)
-                                            :show-counts? false :allow-new? false
-                                            :on-change #(swap! state update :filters assoc "Tags" %)}])
-          :on-clear #((@refs "tag-autocomplete") :set-tags [])})
         [FacetSection (merge
                        {:ref "facets"
                         :aggregates (:aggregates @state)
