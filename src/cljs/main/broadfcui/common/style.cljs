@@ -1,6 +1,7 @@
 (ns broadfcui.common.style
   (:require
    [clojure.string :as string]
+   [broadfcui.config :as config]
    [broadfcui.utils :as utils]
    ))
 
@@ -116,7 +117,8 @@
 
 (defn create-message-well [message]
   [:div {:style {:textAlign "center" :backgroundColor (:background-light colors)
-                 :padding "1em 0" :borderRadius 8}}
+                 :padding "1em 0" :borderRadius 8}
+         :data-test-id (config/when-debug "message-well")}
    message])
 
 (defn create-code-sample [text]

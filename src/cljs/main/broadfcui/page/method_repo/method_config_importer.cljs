@@ -9,6 +9,7 @@
    [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
    [broadfcui.components.sticky :refer [Sticky]]
+   [broadfcui.config :as config]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.nav :as nav]
    [broadfcui.page.method-repo.create-method :as create]
@@ -111,10 +112,12 @@
              (style/create-form-label (:label field))
              (if (= (:type field) "identity-select")
                (style/create-identity-select {:ref field-name
+                                              :data-test-id (config/when-debug "import-root-entity-type-select")
                                               :defaultValue entity-val}
                                              (:options field))
                [input/TextField {:ref field-name
                                  :defaultValue entity-val
+                                 :data-test-id (config/when-debug (str "method-config-import-" field-name "-input"))
                                  :placeholder "Required"
                                  :predicates [(input/nonempty "Fields")]}])]))
         fields)
@@ -145,6 +148,7 @@
        (style/create-validation-error-message (:validation-error @state))
        [comps/ErrorViewer {:error (:server-error @state)}]
        [comps/Button {:text (if workspace-id "Import" "Export")
+                      :data-test-id (config/when-debug (if workspace-id "import-button" "export-button"))
                       :onClick #(this :perform-copy)}]]]]))
 
 
@@ -307,6 +311,7 @@
                     type (if (= entityType "Configuration") :method-config :method)]
                 (style/create-link
                  {:text (style/render-name-id name snapshotId)
+                  :data-test-id (config/when-debug (str name "_" snapshotId))
                   :href (if workspace-id "javascript:;" (nav/get-link type id))
                   :onClick (when workspace-id
                              #(swap! state assoc :type type :id id))})))

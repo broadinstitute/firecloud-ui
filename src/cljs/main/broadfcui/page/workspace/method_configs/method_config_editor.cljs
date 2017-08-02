@@ -7,6 +7,7 @@
    [broadfcui.common.icons :as icons]
    [broadfcui.common.style :as style]
    [broadfcui.components.sticky :refer [Sticky]]
+   [broadfcui.config :as config]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.page.workspace.method-configs.delete-config :as delete]
    [broadfcui.page.workspace.method-configs.launch-analysis :as launch]
@@ -79,19 +80,23 @@
              (list
               [comps/SidebarButton {:color :success-state
                                     :text "Save" :icon :done
+                                    :data-test-id (config/when-debug "save-editted-method-config-button")
                                     :onClick #(parent :-commit)}]
               [comps/SidebarButton {:color :exception-state :margin :top
                                     :text "Cancel Editing" :icon :cancel
+                                    :data-test-id (config/when-debug "cancel-edit-method-config-button")
                                     :onClick #(parent :-cancel-editing)}])
              (concat
               (when can-edit?
                 [[comps/SidebarButton {:style :light :color :button-primary
                                        :text "Edit Configuration" :icon :edit
                                        :disabled? (when locked? "The workspace is locked")
+                                       :data-test-id (config/when-debug "edit-method-config-button")
                                        :onClick #(parent :-begin-editing)}]
                  [comps/SidebarButton {:style :light :color :exception-state :margin :top
                                        :text "Delete" :icon :delete
                                        :disabled? (when locked? "The workspace is locked")
+                                       :data-test-id (config/when-debug "delete-method-config-button")
                                        :onClick #(swap! state assoc :show-delete-dialog? true)}]])
               [[comps/SidebarButton {:style :light :color :button-primary :margin (when can-edit? :top)
                                      :text "Publish..." :icon :share
@@ -166,8 +171,10 @@
         (create-section
          (if editing?
            (style/create-text-field {:ref "confname" :style {:width 500}
+                                     :data-test-id (config/when-debug "edit-method-config-name-input")
                                      :defaultValue (:name config)})
-           [:div {:style {:padding "0.5em 0 1em 0"}} (:name config)]))
+           [:div {:style {:padding "0.5em 0 1em 0"}
+                  :data-test-id (config/when-debug "method-config-name")} (:name config)]))
         (create-section-header "Referenced Method")
         (create-section [MethodDetailsViewer
                          (merge {:ref "methodDetailsViewer"
@@ -180,6 +187,7 @@
         (create-section
          (if editing?
            (style/create-identity-select {:ref "rootentitytype"
+                                          :data-test-id (config/when-debug "edit-method-config-root-entity-type-select")
                                           :defaultValue (:rootEntityType config)
                                           :style {:width 500}}
                                          common/root-entity-types)
@@ -221,7 +229,8 @@
                (when editing?
                  [comps/Typeahead {:ref (str ref-prefix "_" name)
                                    :field-attributes {:defaultValue field-value
-                                                      :style {:width 500 :margin 0}}
+                                                      :style {:width 500 :margin 0}
+                                                      :data-test-id (config/when-debug (str name "-text-input"))}
                                    :engine (:engine @locals)
                                    :behavior {:minLength 1}}])
                (when-not editing?

@@ -18,7 +18,8 @@
 (react/defc Spinner
   {:render
    (fn [{:keys [props]}]
-     [:span {:style (merge {:margin "1em" :whiteSpace "nowrap" :display "inline-block"} (:style props))}
+     [:span {:style (merge {:margin "1em" :whiteSpace "nowrap" :display "inline-block"} (:style props))
+             :data-test-id (config/when-debug "spinner")}
       (icons/icon {:className "fa-pulse fa-lg fa-fw" :style {:marginRight "0.5rem"}} :spinner)
       (:text props)])})
 
@@ -49,7 +50,7 @@
      {:color (:button-primary style/colors)})
    :render
    (fn [{:keys [props]}]
-     (let [{:keys [color icon href disabled? onClick text style class-name]} props]
+     (let [{:keys [color icon href disabled? onClick text style class-name data-test-id]} props]
        [:a {:className (or class-name "button")
             :style (merge
                     {:display "inline-flex" :alignItems "center" :justifyContent "center"
@@ -62,6 +63,7 @@
                      :borderRadius 2 :padding (if text "0.7em 1em" "0.4em")
                      :textDecoration "none"}
                     (if (map? style) style {}))
+            :data-test-id data-test-id
             :href (or href "javascript:;")
             :onClick (if disabled? (create-error-message disabled?) onClick)
             :onKeyDown (when (and onClick (not disabled?))
@@ -82,7 +84,7 @@
       :disabled? false})
    :render
    (fn [{:keys [props]}]
-     (let [disabled? (:disabled? props)]
+     (let [{:keys [disabled? data-test-id]} props]
        [:label {:style {:cursor (when-not disabled? "pointer")
                         :color (when disabled? (:text-light style/colors))}
                 :title (when disabled? (:disabled-text props))
@@ -91,7 +93,7 @@
                              (or (:disabled-text props) "This option is not available.")))}
         [:input {:type "checkbox" :ref "check"
                  :defaultChecked (:initial-checked? props)
-                 :disabled disabled?
+                 :disabled disabled? :data-test-id data-test-id
                  :style {:cursor (when-not disabled? "pointer")}}]
         [:span {:style {:marginLeft "0.5ex"}} (:label props)]]))})
 
@@ -103,7 +105,7 @@
       [:a {:style {:color (:text-light style/colors)}
            :href "javascript:;"
            :onClick (:dismiss props)
-           :id (:id props)}
+           :id (:id props) :data-test-id (config/when-debug "x-button")}
        (icons/icon {:style {:fontSize "80%"}} :close)]])})
 
 
@@ -148,7 +150,8 @@
                     :alignItems "center" :justifyContent "center"}}
       (:icon props)
       [:span {:style {:marginLeft "1em" :fontSize "125%" :fontWeight 400
-                      :verticalAlign "middle"}}
+                      :verticalAlign "middle"}
+              :data-test-id (config/when-debug "submission-status")}
        (:text props)]])})
 
 (react/defc SidebarButton
@@ -172,6 +175,7 @@
                       :color (if heavy? "#fff" color)
                       :border (when-not heavy? style/standard-line)
                       :borderRadius 5}
+              :data-test-id (:data-test-id props)
               :onClick (if disabled? (create-error-message disabled?) (:onClick props))}
         (icons/icon {:style {:padding "0 20px" :borderRight style/standard-line} :className "fa-fw"} (:icon props))
         [:div {:style {:textAlign "center" :margin "auto"}}
@@ -212,6 +216,7 @@
                              :whiteSpace (when-not wrap? "nowrap")}}
                (if (and editing? dropdown?)
                  (style/create-identity-select {:ref key
+                                                :data-test-id (config/when-debug "edit-method-config-snapshot-id-select")
                                                 :style {:width 100}
                                                 :defaultValue (key entity)
                                                 :onChange (when-let [f (:onSnapshotIdChange props)]
@@ -406,14 +411,16 @@
      (set! (.-value (@refs "filter-field")) text))
    :render
    (fn [{:keys [props this]}]
-     (let [{:keys [initial-text placeholder width]} props]
+     (let [{:keys [initial-text placeholder width data-test-id]} props]
        [:div {:style {:display "inline-flex" :width width}}
         (style/create-search-field
          {:ref "filter-field" :autoSave "true" :results 5 :auto-focus "true"
+          :data-test-id (config/when-debug (str data-test-id "-input"))
           :placeholder (or placeholder "Filter") :defaultValue initial-text
           :style {:flex "1 0 auto" :borderRadius "3px 0 0 3px" :marginBottom 0}
           :onKeyDown (common/create-key-handler [:enter] #(react/call :apply-filter this))})
         [Button {:icon :search :onClick #(react/call :apply-filter this)
+                 :data-test-id (config/when-debug (str data-test-id "-button"))
                  :style {:flex "0 0 auto" :borderRadius "0 3px 3px 0"}}]]))
    :apply-filter
    (fn [{:keys [props refs]}]
@@ -566,12 +573,13 @@
       :show-close? true})
    :render
    (fn [{:keys [props]}]
-     (let [{:keys [header content ok-button show-cancel? cancel-text show-close?]} props
+     (let [{:keys [header content ok-button show-cancel? cancel-text show-close? data-test-id]} props
            cancel-text (or cancel-text "Cancel")]
        [:div {}
         [:div {:style {:borderBottom style/standard-line
                        :padding "20px 48px 18px"
-                       :fontSize "137%" :fontWeight 400 :lineHeight 1}}
+                       :fontSize "137%" :fontWeight 400 :lineHeight 1}
+               :data-test-id data-test-id}
          header
          (when show-close? [XButton {:dismiss modal/pop-modal}])]
         [:div {:style {:padding "22px 48px 40px" :backgroundColor (:background-light style/colors)}}
@@ -585,13 +593,14 @@
                            :fontSize "106%" :fontWeight 500 :textDecoration "none"
                            :color (:button-primary style/colors)}
                    :href "javascript:;"
+                   :data-test-id (config/when-debug "cancel-button")
                    :onClick modal/pop-modal
                    :onKeyDown (common/create-key-handler [:space :enter] modal/pop-modal)}
                cancel-text])
             (when ok-button
-              (cond (string? ok-button) [Button {:text ok-button :ref "ok-button" :class-name "ok-button" :onClick modal/pop-modal}]
-                    (fn? ok-button) [Button {:text "OK" :ref "ok-button" :class-name "ok-button" :onClick ok-button}]
-                    (map? ok-button) [Button (merge {:ref "ok-button" :class-name "ok-button"} ok-button)]
+              (cond (string? ok-button) [Button {:text ok-button :ref "ok-button" :class-name "ok-button" :data-test-id (config/when-debug "ok-button") :onClick modal/pop-modal}]
+                    (fn? ok-button) [Button {:text "OK" :ref "ok-button" :class-name "ok-button" :data-test-id (config/when-debug "ok-button") :onClick ok-button}]
+                    (map? ok-button) [Button (merge {:text "OK" :ref "ok-button" :class-name "ok-button" :data-test-id (config/when-debug "ok-button")} ok-button)]
                     :else ok-button))])]]))
    :component-did-mount
    (fn [{:keys [props refs]}]
@@ -625,15 +634,17 @@
 (defn push-message [{:keys [header message]}]
   (push-ok-cancel-modal
    {:header (or header "Message")
+    :data-test-id (config/when-debug "push-message")
     :content [:div {:style {:maxWidth 500}} message]
     :show-cancel? false :ok-button "OK"}))
 
 (defn push-error [content]
   (push-ok-cancel-modal
-   {:header [:div {:style {:display "inline-flex" :alignItems "center"}}
+   {:header [:div {:style {:display "inline-flex" :alignItems "center"} :data-test-id (config/when-debug "push-error")}
              (icons/icon {:style {:color (:exception-state style/colors)
                                   :marginRight "0.5em"}} :error)
              "Error"]
+    :data-test-id (config/when-debug "push-error")
     :content [:div {:style {:maxWidth "50vw"}} content]
     :show-cancel? false :ok-button "OK"}))
 
@@ -813,6 +824,7 @@
                                         :borderTopRightRadius (when last? 8)
                                         :borderBottomRightRadius (when last? 8)
                                         :cursor "pointer"}
+                                :data-test-id (config/when-debug (str text "-filter-button"))
                                 :onClick #(on-change
                                            index
                                            (if pred (filter pred data) data))}
