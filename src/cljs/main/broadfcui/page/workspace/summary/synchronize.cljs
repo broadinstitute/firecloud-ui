@@ -45,8 +45,9 @@
               [:tbody {}
                (map (fn [method]
                       [:tr {}
-                       [:td {} (get-method-display method)]
-                       [:td {:style {:paddingLeft "1rem"}}
+                       [:td {:style {:verticalAlign "top"}}
+                        (get-method-display method)]
+                       [:td {:style {:verticalAlign "top" :paddingLeft "1rem"}}
                         (map (fn [owner] [:div {} owner])
                              (:managers method))]])
                     unowned-methods)]]])
@@ -103,13 +104,16 @@
            by-ownership (group-by (comp empty? :acls) private-methods)
            private-owned (by-ownership false)
            private-unowned (by-ownership true)
-           access-needed-by-method (map (fn [method]
-                                          (assoc (select-keys method [:method])
-                                            :new-users (set/difference workspace-users
-                                                                       (->> (:acls method) (map :user) set))))
-                                        private-owned)]
+           access-needed-by-method (->> private-owned
+                                        (map (fn [method]
+                                               (assoc (select-keys method [:method])
+                                                 :new-users (not-empty (set/difference
+                                                                        workspace-users
+                                                                        (->> (:acls method) (map :user) set))))))
+                                        (filter (comp some? :new-users))
+                                        not-empty)]
        (when (or (seq access-needed-by-method) (seq private-unowned))
          (swap! state assoc
                 :show-sync-modal? true
                 :unowned-methods (not-empty (distinct (map :method private-unowned)))
-                :owned-methods (not-empty access-needed-by-method)))))})
+                :owned-methods access-needed-by-method))))})
