@@ -134,13 +134,13 @@
               {:style :light :margin :top :color :button-primary
                :text "Share..." :icon :share
                :data-test-id (config/when-debug "share-workspace-button")
-            :onClick #(swap! state assoc :sharing? true)}])
+               :onClick #(swap! state assoc :sharing? true)}])
            (when (not editing?)
              [comps/SidebarButton
               {:style :light :color :button-primary :margin :top
                :icon :catalog :text "Catalog Dataset..."
                :data-test-id (config/when-debug "catalog-button")
-            :onClick #(modal/push-modal
+               :onClick #(modal/push-modal
                           [CatalogWizard (utils/restructure library-schema workspace workspace-id can-share?
                                                             owner? curator? writer? catalog-with-read? request-refresh)])}])
            (when (and publishable? (not editing?))
@@ -186,7 +186,7 @@
               {:style :light :margin :top :color :button-primary
                :text "Clone..." :icon :clone
                :data-test-id (config/when-debug "open-clone-workspace-modal-button")
-            :disabled? (when (empty? billing-projects) (comps/no-billing-projects-message))
+               :disabled? (when (empty? billing-projects) (comps/no-billing-projects-message))
                :onClick #(swap! state assoc :cloning? true)}])
            (when (and owner? (not editing?))
              [comps/SidebarButton {:style :light :margin :top :color :button-primary
@@ -196,7 +196,7 @@
            (when (and owner? (not editing?))
              [comps/SidebarButton {:style :light :margin :top :color (if isLocked :text-lighter :exception-state)
                                    :text "Delete" :icon :delete
-                                :data-test-id (config/when-debug "delete-workspace-button")
+                                   :data-test-id (config/when-debug "delete-workspace-button")
                                    :disabled? (when isLocked "This workspace is locked.")
                                    :onClick #(modal/push-modal
                                               [DeleteDialog {:workspace-id workspace-id}])}])]}]]))
@@ -234,8 +234,9 @@
 
           "Authorization Domain"
           (if-not (empty? auth-domain)
-               [:span {:data-test-id (config/when-debug "auth-domain-groups")} (string/join ", " (map :membersGroupName auth-domain))]
-               "None")
+            [:span {:data-test-id (config/when-debug "auth-domain-groups")}
+             (string/join ", " (map :membersGroupName auth-domain))]
+            "None")
 
           "Created By"
           [:div {}
@@ -259,7 +260,8 @@
            (when writer?
              [:div {:style {:lineHeight "initial"}}
               [:div {} (str "Total Estimated Storage Fee per month = " storage-cost)]
-              [:div {:style {:fontSize "80%"}} (str "Note: the billing account associated with " (:namespace workspace-id) " will be charged.")]])]
+              [:div {:style {:fontSize "80%"}}
+               (str "Note: the billing account associated with " (:namespace workspace-id) " will be charged.")]])]
 
           "Analysis Submissions"
           (let [count-all (apply + (vals submissions-count))]
