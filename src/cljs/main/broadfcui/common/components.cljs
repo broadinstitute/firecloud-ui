@@ -678,7 +678,7 @@
    :render
    (fn [{:keys [props]}]
      (style/create-identity-select {:ref "input-element"
-                                    :defaultValue (:tags props)
+                                    :defaultValue (utils/log (:tags props)) ;
                                     :multiple true}
                                    (or (:data props) (:tags props))))
    :component-did-mount
