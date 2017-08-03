@@ -1,5 +1,6 @@
 (ns broadfcui.page.workspace.data.copy-data-workspaces
   (:require
+   [clojure.set :as set]
    [dmohs.react :as react]
    [broadfcui.common.components :as comps]
    [broadfcui.common.style :as style]
@@ -16,7 +17,7 @@
 (defn- filter-workspaces [this-auth-domain workspace-list]
   (filter #(let [src-auth-domain (set (map :membersGroupName (get-in % [:workspace :authorizationDomain])))]
              (and
-              (or (empty? src-auth-domain) (clojure.set/subset? src-auth-domain this-auth-domain))
+              (or (empty? src-auth-domain) (set/subset? src-auth-domain this-auth-domain))
               (not= (:accessLevel %) "NO ACCESS")))
           workspace-list))
 
@@ -48,7 +49,7 @@
                                      (when (> num-filtered 1) "s")
                                      " unavailable because "
                                      (if (= num-filtered 1) "it contains" "they contain")
-                                     " data from other authorization domains.")]))})]
+                                     " data from an incompatible Authorization Domain.")]))})]
          (:error-message @state) (style/create-server-error-message (:error-message @state))
          :else [:div {:style {:textAlign "center"}}
                 [comps/Spinner {:text "Loading workspaces..."}]])))
