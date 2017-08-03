@@ -13,7 +13,7 @@
   (select-keys (:workspace workspace) [:namespace :name]))
 
 
-(defn workspace-selector [{:keys [workspaces on-workspace-selected get-toolbar-items]}]
+(defn workspace-selector [{:keys [workspaces on-workspace-selected toolbar-items]}]
   (assert workspaces "No workspaces given")
   (assert on-workspace-selected "on-workspace-selected not provided")
   [Table
@@ -38,7 +38,7 @@
              :column-data (comp :authorizationDomain :workspace)
              :as-text #(if (empty? %) "None" (string/join ", " (map :membersGroupName %)))
              :sort-by count}]}
-    :toolbar {:get-items (constantly get-toolbar-items)}}])
+    :toolbar {:get-items (constantly toolbar-items)}}])
 
 (defn config->id [config]
   (select-keys config [:namespace :name]))

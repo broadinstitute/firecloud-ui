@@ -42,7 +42,7 @@
                                                   (get-in ws [:workspace :name]))
                                        :onClick #((:pop-to-depth props) 3)
                                        :selected-workspace ws}))
-            :get-toolbar-items (when-let [num-filtered (:num-filtered @state)]
+            :toolbar-items (when-let [num-filtered (:num-filtered @state)]
                              (when (pos? num-filtered)
                                [(str num-filtered
                                      " workspace"
