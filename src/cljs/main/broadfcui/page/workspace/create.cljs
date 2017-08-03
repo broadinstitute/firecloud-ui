@@ -67,8 +67,7 @@
               [:div {} "You may add Groups to the Authorization Domain, but you may not remove existing ones."]])
            (this :-auth-domain-builder)
            [:div {:style {:display "flex" :float "left"}}
-            [comps/ErrorViewer {:error server-error}]]
-           [:div {:style {:display "flex" :float "left"}}
+            [comps/ErrorViewer {:error server-error}]
             (style/create-validation-error-message validation-errors)]])}]))
    :component-did-mount
    (fn [{:keys [state]}]
