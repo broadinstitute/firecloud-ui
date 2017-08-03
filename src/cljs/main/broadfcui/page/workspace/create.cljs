@@ -66,8 +66,10 @@
               "The cloned Workspace will automatically inherit the Authorization Domain from this Workspace."
               [:div {} "You may add Groups to the Authorization Domain, but you may not remove existing ones."]])
            (this :-auth-domain-builder)
-           [comps/ErrorViewer {:error server-error}]
-           (style/create-validation-error-message validation-errors)])}]))
+           [:div {:style {:display "flex" :float "left"}}
+            [comps/ErrorViewer {:error server-error}]]
+           [:div {:style {:display "flex" :float "left"}}
+            (style/create-validation-error-message validation-errors)]])}]))
    :component-did-mount
    (fn [{:keys [state]}]
      (endpoints/get-groups
@@ -100,8 +102,9 @@
                         (swap! state assoc :server-error (get-parsed-response false))))}))))
    :-do-clone
    (fn [{:keys [props refs state]}]
+     (swap! state dissoc :server-error :validation-errors)
      (if-let [fails (input/validate refs "wsName")]
-       (swap! state assoc :validation-error fails)
+       (swap! state assoc :validation-errors fails)
        (let [name (input/get-text refs "wsName")
              project (nth (:billing-projects props) (int (:selected-project @state)))
              desc (common/get-text refs "wsDescription")
@@ -113,7 +116,7 @@
                                                 (fn [group-name]
                                                   {:membersGroupName group-name})
                                                 (:selected-groups @state))}]
-         (swap! state assoc :creating-ws true :validation-error nil :error nil)
+         (swap! state assoc :creating-ws true)
          (endpoints/call-ajax-orch
           {:endpoint (endpoints/clone-workspace (:workspace-id props))
            :payload (conj {:namespace project :name name :attributes attributes} auth-domain)
