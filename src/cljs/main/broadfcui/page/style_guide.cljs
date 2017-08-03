@@ -95,7 +95,7 @@
     (links/create-internal {:text "look like this"}) "."]
    (create-code-block "(links/create-internal {:text \"link text\" :onClick #(...)})")
    [:p {} "External links are created using " (style/create-code-sample "links/create-external") ", and "
-    (links/create-external {:text "look like this"}) "."]
+    (links/create-external {:text "look like this" :href "javascript:;"}) "."]
    (create-code-block "(links/create-external {:text \"link text\" :href \"...\"})")
 
    (create-sub-head "Switches")
