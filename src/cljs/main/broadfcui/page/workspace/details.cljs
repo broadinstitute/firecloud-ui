@@ -104,7 +104,7 @@
            active-tab (:tab-name props)
            is-active? (fn [tab] (if (= tab SUMMARY) (nil? active-tab) (= tab active-tab)))
            request-refresh #(this :-refresh-workspace)
-           make-tab (fn [text active-tab]
+           make-tab (fn [text]
                       [Tab {:text text :first? (= text SUMMARY) :active? (is-active? text)
                             :href (nav/get-link
                                    (condp = text
@@ -115,7 +115,7 @@
                                      MONITOR :workspace-monitor)
                                    workspace-id)
                             :data-test-id (config/when-debug (str text "-tab"))
-                            :on-active-tab-clicked #(active-tab :refresh)
+                            :on-active-tab-clicked #((@refs text) :refresh)
                             :refresh-workspace request-refresh}])]
        [:div {}
         [:div {:style {:minHeight "0.5rem"}}
@@ -146,11 +146,11 @@
                        :borderTop style/standard-line :borderBottom style/standard-line
                        :padding "0 1.5rem" :justifyContent "space-between"}}
          [:div {:style {:display "flex"}}
-          (make-tab SUMMARY (@refs SUMMARY))
-          (make-tab DATA (@refs DATA))
-          (make-tab ANALYSIS (@refs ANALYSIS))
-          (make-tab CONFIGS (@refs CONFIGS))
-          (make-tab MONITOR (@refs MONITOR))]]
+          (make-tab SUMMARY)
+          (make-tab DATA)
+          (make-tab ANALYSIS)
+          (make-tab CONFIGS)
+          (make-tab MONITOR)]]
         [:div {:style {:marginTop "2rem"}}
          (if-let [error (:workspace-error @state)]
            [:div {:style {:textAlign "center" :color (:exception-state style/colors)}

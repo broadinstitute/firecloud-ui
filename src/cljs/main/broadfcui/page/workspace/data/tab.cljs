@@ -114,7 +114,7 @@
               (:entity-Name entity)))
           :entity-name-renderer #(this :-render-entity %)}]]))
    :-render-download-link
-   (fn [{:keys [props state refs]} table-props]
+   (fn [{:keys [props state]} table-props]
      (let [{:keys [workspace-id]} props
            selected-entity-type (name (:selected-entity-type @state))]
        [:form {:target "_blank"
@@ -151,6 +151,9 @@
                               :selected-entity entity-name)
                        (data-utils/get-entity-attrs
                         (utils/restructure entity-name entity-type workspace-id update-parent-state)))})))
+   :refresh
+   (fn [{:keys [refs state]}]
+     ((@refs "entity-table") :refresh (:selected-entity-type @state) true))
    :update-state
    (fn [{:keys [state]} & args]
      (apply swap! state assoc args))})
