@@ -2,6 +2,7 @@
   (:require
    [dmohs.react :as react]
    [broadfcui.common.components :as comps]
+   [broadfcui.common.links :as links]
    [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
    [broadfcui.components.collapse :refer [Collapse]]
@@ -25,9 +26,9 @@
          :title (style/create-section-header "Dataset Attributes")
          :title-expand
          (style/create-section-header
-          (style/create-link {:style {:fontSize "0.8em" :fontWeight "normal" :marginLeft "1em"}
-                              :text "Edit..."
-                              :onClick #(modal/push-modal [CatalogWizard wizard-properties])}))
+          (links/create-internal {:style {:fontSize "0.8em" :fontWeight "normal" :marginLeft "1em"}
+                                  :text "Edit..."
+                                  :onClick #(modal/push-modal [CatalogWizard wizard-properties])}))
          :contents
          [:div {:style {:marginTop "1rem" :fontSize "90%" :lineHeight 1.5}}
           (map (partial library-utils/render-property library-schema library-attributes) (-> library-schema :display :primary))
@@ -41,8 +42,8 @@
                  :else (library-utils/render-library-row (str "Retrieving information for " orsp-id) [comps/Spinner]))
                (library-utils/render-consent-codes library-schema library-attributes))])
           [:div {:style {:marginTop "0.5em"}}
-           (style/create-link {:text (if (:expanded? @state) "Collapse" "See more attributes")
-                               :onClick #(swap! state update :expanded? not)})]]}]))
+           (links/create-internal {:text (if (:expanded? @state) "Collapse" "See more attributes")
+                                   :onClick #(swap! state update :expanded? not)})]]}]))
    :component-did-mount
    (fn [{:keys [props state]}]
      (when-let [orsp-id (:library:orsp (:library-attributes props))]

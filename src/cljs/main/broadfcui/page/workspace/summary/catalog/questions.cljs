@@ -3,6 +3,7 @@
    [dmohs.react :as react]
    [clojure.string :as string]
    [broadfcui.common.components :as comps]
+   [broadfcui.common.links :as links]
    [broadfcui.common.style :as style]
    [broadfcui.config :as config]
    [broadfcui.page.workspace.summary.library-utils :as library-utils]
@@ -143,18 +144,18 @@
       [:span {:style {:fontSize "small" :float "right"}} related-id]
       [:div {}
        (when-not disabled
-         (style/create-link {:text "Clear Selection"
-                             :onClick #(apply swap! state update :attributes dissoc property
-                                              (library-utils/get-related-id+label-props library-schema property))}))]]
+         (links/create-internal {:text "Clear Selection"
+                                 :onClick #(apply swap! state update :attributes dissoc property
+                                                  (library-utils/get-related-id+label-props library-schema property))}))]]
      ;; TODO: why is this causing React to bomb when adding the node?
      #_(when (not-any? clojure.string/blank? [related-id related-label])
          [:div {}
           [:span {:style {:fontWeight "bold"}} related-label]
           [:span {:style {:fontSize "small" :float "right"}} related-id]
           [:div {}
-           (style/create-link {:text "Clear Selection"
-                               :onClick #(apply swap! state update :attributes dissoc property
-                                                (library-utils/get-related-id+label-props library-schema property))})]]))])
+           (links/create-internal {:text "Clear Selection"
+                                   :onClick #(apply swap! state update :attributes dissoc property
+                                                    (library-utils/get-related-id+label-props library-schema property))})]]))])
 
 (defn- render-populate-typeahead [{:keys [value-nullsafe property inputHint colorize set-property update-property disabled]}]
   [:div {:style {:marginBottom "0.75em"}}

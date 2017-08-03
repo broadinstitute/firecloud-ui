@@ -4,6 +4,7 @@
    [clojure.string :as string]
    [broadfcui.common.components :as comps]
    [broadfcui.common.icons :as icons]
+   [broadfcui.common.links :as links]
    [broadfcui.common.input :as input]
    [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
@@ -32,8 +33,8 @@
             :else
             (if (empty? billing-accounts)
               [:div {} "You do not have any billing accounts available. "
-               [:a {:target "_blank" :href (str (config/billing-guide-url))} "Learn how to create a billing account."
-                icons/external-link-icon]]
+               (links/create-external {:href (config/billing-guide-url)
+                                       :text "Learn how to create a billing account."})]
               [:div {:style {:width 750}
                      :data-test-id (config/when-debug "create-billing-project-form")}
                (when (:creating? @state)

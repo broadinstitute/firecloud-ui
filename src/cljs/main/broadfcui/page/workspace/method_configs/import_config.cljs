@@ -4,6 +4,7 @@
    [broadfcui.common :as common]
    [broadfcui.common.components :as comps]
    [broadfcui.common.input :as input]
+   [broadfcui.common.links :as links]
    [broadfcui.common.style :as style]
    [broadfcui.config :as config]
    [broadfcui.endpoints :as endpoints]
@@ -107,7 +108,7 @@
                {:configs configs
                 :render-name
                 (fn [config]
-                  (style/create-link
+                  (links/create-internal
                    {:text (:name config)
                     :onClick #(push-page {:breadcrumb-text (id->str config)
                                           :component [ConfirmWorkspaceConfig
@@ -164,7 +165,7 @@
                 :name name
                 :snapshot-id snapshotId}
             type (if (= entityType "Configuration") :method-config :method)]
-        (style/create-link
+        (links/create-internal
          {:text (style/render-name-id name snapshotId)
           :data-test-id (config/when-debug (str name "_" snapshotId))
           :onClick #(push-page {:breadcrumb-text (style/render-entity namespace name snapshotId)

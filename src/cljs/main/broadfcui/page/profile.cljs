@@ -5,6 +5,7 @@
    [broadfcui.common :as common]
    [broadfcui.common.components :as components]
    [broadfcui.common.icons :as icons]
+   [broadfcui.common.links :as links]
    [broadfcui.common.input :as input]
    [broadfcui.common.style :as style]
    [broadfcui.config :as config]
@@ -37,8 +38,7 @@
           (:pending-nih-username-token @state)
           [components/Spinner {:ref "pending-spinner" :text "Linking NIH account..."}]
           (nil? username)
-          [:a {:href (get-nih-link-href)}
-           "Log-In to NIH to link your account" icons/external-link-icon]
+          (links/create-external {:href (get-nih-link-href) :text "Log-In to NIH to link your account"})
           :else
           [:div {}
            [:div {:style {:display "flex"}}
@@ -51,8 +51,7 @@
                [:span {:style {:color "red"}} "Expired"]
                [:span {:style {:color (when expiring-soon? "red")}} (common/format-date expire-time)])
              [:div {}
-              [:a {:href (get-nih-link-href)}
-               "Log-In to NIH to re-link your account" icons/external-link-icon]]]]
+              (links/create-external {:href (get-nih-link-href) :text "Log-In to NIH to re-link your account"})]]]
            (map
             (fn [whitelist]
               [:div {:style {:display "flex" :marginTop "1rem"}}
@@ -66,8 +65,8 @@
                     {:text
                      [:div {} "Your account was linked, but you are not authorized to view
                      this protected dataset. Please go "
-                      [:a {:href "https://dbgap.ncbi.nlm.nih.gov/aa/wga.cgi?page=login" :target "_blank"}
-                       "here" icons/external-link-icon]
+                      (links/create-external {:href "https://dbgap.ncbi.nlm.nih.gov/aa/wga.cgi?page=login"
+                                              :text "here"})
                       " to check your credentials."]})])]])
             datasets)])]))
    :component-did-mount

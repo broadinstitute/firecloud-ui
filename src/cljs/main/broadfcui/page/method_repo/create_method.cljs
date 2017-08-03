@@ -6,6 +6,7 @@
    [broadfcui.common.components :as comps]
    [broadfcui.common.icons :as icons]
    [broadfcui.common.input :as input]
+   [broadfcui.common.links :as links]
    [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
    [broadfcui.config :as config]
@@ -94,33 +95,33 @@
                   [undo? redo?] (map pos? [undo redo])
                   link (fn [label enabled?]
                          (if enabled?
-                           (style/create-link {:text (clojure.string/capitalize label)
-                                               :onClick #((@refs "wdl-editor") :call-method label)
-                                               :style {:color (:text-light style/colors)
-                                                       :backgroundColor "white"
-                                                       :padding "0 6px"
-                                                       :border style/standard-line}})
+                           (links/create-internal {:text (clojure.string/capitalize label)
+                                                   :onClick #((@refs "wdl-editor") :call-method label)
+                                                   :style {:color (:text-light style/colors)
+                                                           :backgroundColor "white"
+                                                           :padding "0 6px"
+                                                           :border style/standard-line}})
                            [:span {:style {:color (:text-lighter style/colors)
                                            :padding "0 6px"
                                            :border style/standard-line}}
                             (clojure.string/capitalize label)]))]
               [:div {:style {:display "flex" :alignItems "baseline" :width "100%"}}
                [:span {:style {:paddingRight "1em"}} "WDL"]
-               (style/create-link {:text "Load from file..."
-                                   :onClick #(.click (@refs "wdl-uploader"))})
+               (links/create-internal {:text "Load from file..."
+                                       :onClick #(.click (@refs "wdl-uploader"))})
                (when file-name
                  [:span {}
                   [:span {:style {:padding "0 1em 0 25px"}} (str "Selected: " file-name)]
-                  (style/create-link {:text "Reset to file"
-                                      :onClick #(this :-set-wdl-text (:file-contents @state))})])
+                  (links/create-internal {:text "Reset to file"
+                                          :onClick #(this :-set-wdl-text (:file-contents @state))})])
                [:span {:style {:flex "1 0 auto"}}]
                (link "undo" undo?)
                (link "redo" redo?)]))
            [CodeMirror {:ref "wdl-editor" :text (:payload info) :read-only? false}]
            [:div {:style {:marginTop "0.8em" :fontSize "88%"}}
             "WDL must use Docker image digests to allow call caching "
-            [:a {:target "_blank" :href (str (config/call-caching-guide-url))}
-             "Learn about call caching" icons/external-link-icon]]
+            (links/create-external {:href (config/call-caching-guide-url)
+                                    :text "Learn about call caching"})]
 
            (when (:edit-mode? info)
              [:div {:style {:margin "1rem 0 -1rem"}}

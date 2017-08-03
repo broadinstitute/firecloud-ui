@@ -3,6 +3,7 @@
    [dmohs.react :as react]
    [broadfcui.common.components :as comps]
    [broadfcui.common.flex-utils :as flex]
+   [broadfcui.common.links :as links]
    [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
    [broadfcui.config :as config]
@@ -32,11 +33,12 @@
          (ws-common/method-config-selector
           {:configs configs
            :render-name (fn [config]
-                          (style/create-link {:text (:name config)
-                                              :data-test-id (config/when-debug (str "method-config-" (:name config) "-link"))
-                                              :href (nav/get-link :workspace-method-config
-                                                                  (:workspace-id props)
-                                                                  (ws-common/config->id config))}))
+                          (links/create-internal
+                           {:text (:name config)
+                            :data-test-id (config/when-debug (str "method-config-" (:name config) "-link"))
+                            :href (nav/get-link :workspace-method-config
+                                                (:workspace-id props)
+                                                (ws-common/config->id config))}))
            :toolbar-items
            [flex/spring
             [comps/Button

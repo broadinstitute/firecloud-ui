@@ -5,6 +5,7 @@
    [broadfcui.common :as common]
    [broadfcui.common.codemirror :refer [CodeMirror]]
    [broadfcui.common.icons :as icons]
+   [broadfcui.common.links :as links]
    [broadfcui.common.style :as style]
    [broadfcui.components.sticky :refer [Sticky]]
    [broadfcui.nav :as nav]
@@ -12,8 +13,8 @@
    ))
 
 (defn- create-nav-link [label]
-  (style/create-link {:text label
-                      :href (str "#" (string/lower-case label))}))
+  (links/create-internal {:text label
+                          :href (str "#" (string/lower-case label))}))
 
 (defn- style-nav [body-id]
   [Sticky
@@ -59,11 +60,12 @@
    [:h2 {:style {:marginBottom "0.5rem"}} "Overview"]
    (create-sub-head "Summary")
    [:p {} "FireCloud's font is "
-    [:a {:href "https://fonts.google.com/specimen/Roboto" :target "_blank"} "Roboto" icons/external-link-icon]
+    (links/create-external {:href "https://fonts.google.com/specimen/Roboto" :text "Roboto"})
     ", and icons come from "
-    [:a {:href "http://fontawesome.io/icons/" :target "_blank"} "Font Awesome" icons/external-link-icon]
+    (links/create-external {:href "http://fontawesome.io/icons/" :text "Font Awesome"})
     ". We use some widgets from "
-    [:a {:href "http://foundation.zurb.com/sites/docs/" :target "_blank"} "Foundation" icons/external-link-icon] "."]
+    (links/create-external {:href "http://foundation.zurb.com/sites/docs/" :text "Foundation"})
+    "."]
    [:p {} "When you're working on any part of FireCloud, remember
     that its purpose is to put the user in touch with their data. That is, FireCloud should never come
     between its users and what they came to do. It may seem obvious, but it's important to keep in mind."]
@@ -85,19 +87,16 @@
    [:p {} "We prefer " (style/create-code-sample "rem") " over " (style/create-code-sample "em") ", "
     (style/create-code-sample "ex") ", " (style/create-code-sample "px") ", etc. for size values, since these
     are always the same size wherever they are used. If you're unfamiliar with these units, find out more "
-    [:a {:href "https://developer.mozilla.org/en-US/docs/Web/CSS/length" :target "_blank"}
-     "at the MDN" icons/external-link-icon] "."]
+    (links/create-external {:href "https://developer.mozilla.org/en-US/docs/Web/CSS/length" :text "at the MDN"})
+    "."]
 
    (create-sub-head "Links")
-   [:p {} "Internal links are created using " (style/create-code-sample "style/create-link") ", and "
-    (style/create-link {:text "look like this"}) "."]
-   (create-code-block "(style/create-link {:text \"link text\" :onClick #(...)})")
-   [:p {} "Links that go to an external location should be created as regular "
-    (style/create-code-sample "[:a]")
-    "'s, and followed by an "
-    (style/create-code-sample "icons/external-link-icon") ", so that they "
-    [:a {:href "javascript:;"} "look like this" icons/external-link-icon] "."]
-   (create-code-block "[:a {:href \"url\" :target \"_blank\"} \"link text\" icons/external-link-icon]")
+   [:p {} "Internal links are created using " (style/create-code-sample "links/create-internal") ", and "
+    (links/create-internal {:text "look like this"}) "."]
+   (create-code-block "(links/create-internal {:text \"link text\" :onClick #(...)})")
+   [:p {} "External links are created using " (style/create-code-sample "links/create-external") ", and "
+    (links/create-external {:text "look like this"}) "."]
+   (create-code-block "(links/create-external {:text \"link text\" :href \"...\"})")
 
    (create-sub-head "Switches")
    [:p {} "As an alternative to checkboxes, we have switches."]

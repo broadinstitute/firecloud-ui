@@ -4,6 +4,7 @@
    [clojure.set :as set]
    [broadfcui.common.components :as comps]
    [broadfcui.common.icons :as icons]
+   [broadfcui.common.links :as links]
    [broadfcui.common.style :as style]
    [broadfcui.common.table :as table]
    [broadfcui.common.table-utils :as table-utils]
@@ -34,9 +35,9 @@
                       [{:starting-width 40 :resizable? false :reorderable? false :sort-by :none
                         :content-renderer
                         (fn [index]
-                          (style/create-link {:text (icons/icon {} (if source? :add :remove))
-                                              :onClick #(swap! state update :selected
-                                                               (if source? conj disj) index)}))}
+                          (links/create-internal {:text (icons/icon {} (if source? :add :remove))
+                                                  :onClick #(swap! state update :selected
+                                                                   (if source? conj disj) index)}))}
                        {:header (:id-name props) :starting-width 150
                         :as-text #(% "name") :sort-by :text}]
                       (map (fn [k] {:header k :starting-width 100

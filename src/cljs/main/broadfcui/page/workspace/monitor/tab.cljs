@@ -3,6 +3,7 @@
    [dmohs.react :as react]
    [broadfcui.common :as common]
    [broadfcui.common.components :as comps]
+   [broadfcui.common.links :as links]
    [broadfcui.common.style :as style]
    [broadfcui.common.table.style :as table-style]
    [broadfcui.common.table.table :refer [Table]]
@@ -30,9 +31,9 @@
        :resizable? false :sortable? false :filterable? false :hidden? true
        :column-data :submissionId
        :as-text (constantly "View analysis details")
-       :render #(style/create-link {:text "View"
-                                    :data-test-id (config/when-debug (str "submission-" %))
-                                    :href (nav/get-link :workspace-submission workspace-id %)})}
+       :render #(links/create-internal {:text "View"
+                                        :data-test-id (config/when-debug (str "submission-" %))
+                                        :href (nav/get-link :workspace-submission workspace-id %)})}
       {:header "Status" :as-text :status :sort-by :text
        :render (fn [submission]
                  [:div {:style {:height table-style/table-icon-size}}
@@ -53,11 +54,11 @@
       {:header "Submitted By" :initial-width 220 :column-data :submitter}
       {:header "Submission ID" :initial-width 235 :column-data :submissionId
        :render (fn [submission-id]
-                 (style/create-link {:text submission-id
-                                     :target "_blank"
-                                     :style {:color "-webkit-link" :textDecoration "underline"}
-                                     :href (str moncommon/google-cloud-context
-                                                bucketName "/" submission-id "/")}))}]}}])
+                 (links/create-internal {:text submission-id
+                                         :target "_blank"
+                                         :style {:color "-webkit-link" :textDecoration "underline"}
+                                         :href (str moncommon/google-cloud-context
+                                                    bucketName "/" submission-id "/")}))}]}}])
 
 
 (react/defc- SubmissionsList

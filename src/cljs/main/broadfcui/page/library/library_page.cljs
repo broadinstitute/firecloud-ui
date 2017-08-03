@@ -7,6 +7,7 @@
    [broadfcui.common.components :as comps]
    [broadfcui.common.flex-utils :as flex]
    [broadfcui.common.icons :as icons]
+   [broadfcui.common.links :as links]
    [broadfcui.common.style :as style]
    [broadfcui.common.table.style :as table-style]
    [broadfcui.common.table.table :refer [Table]]
@@ -17,19 +18,17 @@
    [broadfcui.utils :as utils]
    ))
 
-(defn- tcga-access-instructions []
+(def ^:private tcga-access-instructions
   [:span {}
    [:p {} "For access to TCGA protected data please apply for access via dbGaP [instructions can be found "
-    [:a {:href "https://wiki.nci.nih.gov/display/TCGA/Application+Process"
-         :target "_blank"}
-     "here" icons/external-link-icon] "]."]])
+    (links/create-external {:href "https://wiki.nci.nih.gov/display/TCGA/Application+Process" :text "here"})
+    "]."]])
 
-(defn- target-access-instructions []
+(def ^:private target-access-instructions
   [:span {}
    [:p {} "For access to TARGET protected data please apply for access via dbGaP [instructions can be found "
-    [:a {:href "https://ocg.cancer.gov/programs/target/using-target-data"
-         :target "_blank"}
-     "here" icons/external-link-icon] "]."]])
+    (links/create-external {:href "https://ocg.cancer.gov/programs/target/using-target-data" :text "here"})
+    "]."]])
 
 (defn- standard-access-instructions [data]
   [:span {}
@@ -71,9 +70,10 @@
                       :sort-initial :asc :sort-by :library:datasetName
                       :as-text :library:datasetDescription
                       :render (fn [data]
-                                (style/create-link (merge {:text (:library:datasetName data)
-                                                           :data-test-id (config/when-debug (str "dataset-" (:library:datasetName data)))}
-                                                          (this :-get-link-props data))))}
+                                (links/create-internal
+                                 (merge {:text (:library:datasetName data)
+                                         :data-test-id (config/when-debug (str "dataset-" (:library:datasetName data)))}
+                                        (this :-get-link-props data))))}
                      {:id "library:indication" :header (:title (:library:indication attributes))
                       :column-data :library:indication :initial-width 180}
                      {:id "library:dataUseRestriction" :header (:title (:library:dataUseRestriction attributes))
@@ -101,17 +101,17 @@
                   :body-cell {:padding "0.3rem 0 0.3rem 1rem"}}}
          :toolbar ;; FIXME: magic numbers below:
          {:get-items (constantly
-                  [[:div {:style {:fontSize "112%"}}
-                    ;; 112% makes this the same size as "Data Library" / "Workspaces" / "Method Repository" above
-                    [:span {:style {:fontWeight 700 :color (:text-light style/colors) :marginRight "0.5rem"}}
-                     "Matching Cohorts"]
-                    [:span {:style {:fontSize "80%"}}
-                     (let [total (or (:total @state) 0)]
-                       (str total
-                            " Dataset"
-                            (when-not (= 1 total) "s")
-                            " found"))]]
-                   flex/spring])
+                      [[:div {:style {:fontSize "112%"}}
+                        ;; 112% makes this the same size as "Data Library" / "Workspaces" / "Method Repository" above
+                        [:span {:style {:fontWeight 700 :color (:text-light style/colors) :marginRight "0.5rem"}}
+                         "Matching Cohorts"]
+                        [:span {:style {:fontSize "80%"}}
+                         (let [total (or (:total @state) 0)]
+                           (str total
+                                " Dataset"
+                                (when-not (= 1 total) "s")
+                                " found"))]]
+                       flex/spring])
           :style {:alignItems "flex-start" :marginBottom 7} ;; 7 makes some lines line up
           :column-edit-button {:style {:order 1 :marginRight nil}
                                :anchor :right}}}]))
@@ -138,8 +138,8 @@
                   (let [tcga? (contains? ws-auth-domains "TCGA-dbGaP-Authorized")
                         target? (contains? ws-auth-domains "TARGET-dbGaP-Authorized")]
                     [:div {}
-                     (when tcga? (tcga-access-instructions))
-                     (when target? (target-access-instructions))
+                     (when tcga? tcga-access-instructions)
+                     (when target? target-access-instructions)
                      (when (or tcga? target?)
                        [:p {} "After dbGaP approves your application please link your eRA
                        Commons ID in your FireCloud profile page."])])])]}))}
@@ -244,7 +244,7 @@
         [:hr {}]
         [:span {:style {:fontWeight "bold"}} title]
         [:div {:style {:fontSize "80%" :float "right"}}
-         (style/create-link {:text "Clear" :onClick #(this :clear-all)})]
+         (links/create-internal {:text "Clear" :onClick #(this :clear-all)})]
         [:div {:style {:paddingTop "1em"}}
          (map
           (fn [{:keys [key doc_count]}]
@@ -261,11 +261,11 @@
          [:div {:style {:paddingTop 5}}
           (if (:expanded? props)
             (when (> (count (:buckets props)) 5)
-              (style/create-link {:text " less..."
-                                  :onClick #(this :update-expanded false)}))
+              (links/create-internal {:text " less..."
+                                      :onClick #(this :update-expanded false)}))
             (when (> size 0)
-              (style/create-link {:text " more..."
-                                  :onClick #(this :update-expanded true)})))]]]))
+              (links/create-internal {:text " more..."
+                                      :onClick #(this :update-expanded true)})))]]]))
    :clear-all
    (fn [{:keys [props]}]
      ((:update-filter props) (:field props) #{}))

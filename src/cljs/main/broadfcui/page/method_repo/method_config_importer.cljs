@@ -6,6 +6,7 @@
    [broadfcui.common.components :as comps]
    [broadfcui.common.flex-utils :as flex]
    [broadfcui.common.input :as input]
+   [broadfcui.common.links :as links]
    [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
    [broadfcui.components.sticky :refer [Sticky]]
@@ -309,7 +310,7 @@
                         :name name
                         :snapshot-id snapshotId}
                     type (if (= entityType "Configuration") :method-config :method)]
-                (style/create-link
+                (links/create-internal
                  {:text (style/render-name-id name snapshotId)
                   :data-test-id (config/when-debug (str name "_" snapshotId))
                   :href (if workspace-id "javascript:;" (nav/get-link type id))
@@ -319,7 +320,7 @@
             (fn [{:keys [namespace type]}]
               (if workspace-id
                 namespace
-                (style/create-link
+                (links/create-internal
                  {:text namespace
                   :onClick #(modal/push-modal
                              [mca/AgoraPermsEditor

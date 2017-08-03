@@ -5,6 +5,7 @@
    [broadfcui.common.entity-table :as entity-table]
    [broadfcui.common.gcs-file-preview :refer [GCSFilePreviewLink]]
    [broadfcui.common.icons :as icons]
+   [broadfcui.common.links :as links]
    [broadfcui.common.style :as style]
    [broadfcui.common.table :as table]
    [broadfcui.page.workspace.data.utils :as data-utils]
@@ -41,7 +42,7 @@
                                                            :workspace-id (:workspace-id props)
                                                            :update-parent-state update-parent-state}))
            item-link (fn [item-type item-name]
-                       (style/create-link
+                       (links/create-internal
                         {:text item-name
                          :onClick (fn []
                                     (swap! state update

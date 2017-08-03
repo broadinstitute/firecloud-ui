@@ -4,6 +4,7 @@
    [broadfcui.common :as common]
    [broadfcui.common.components :as comps]
    [broadfcui.common.flex-utils :as flex]
+   [broadfcui.common.links :as links]
    [broadfcui.common.management-utils :as management-utils]
    [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
@@ -99,8 +100,8 @@
                           {:project-name projectName
                            :on-status-change (partial this :-handle-status-change projectName)}]
                          (and (= creationStatus project-status-ready) (contains? (set roles) "Owner"))
-                         (style/create-link {:text projectName :data-test-id (config/when-debug (str projectName "-link"))
-                                             :href (nav/get-link :billing-project projectName)})
+                         (links/create-internal {:text projectName :data-test-id (config/when-debug (str projectName "-link"))
+                                                 :href (nav/get-link :billing-project projectName)})
                          :else projectName)
                        (when message
                          [:div {:style {:float "right" :position "relative"

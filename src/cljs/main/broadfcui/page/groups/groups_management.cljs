@@ -4,6 +4,7 @@
    [broadfcui.common.components :as comps]
    [broadfcui.common.flex-utils :as flex]
    [broadfcui.common.icons :as icons]
+   [broadfcui.common.links :as links]
    [broadfcui.common.management-utils :as management-utils]
    [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
@@ -52,8 +53,8 @@
                 (fn [{:keys [groupName role]}]
                   (if
                    (= role "Admin")
-                    (style/create-link {:text groupName
-                                        :href (nav/get-link :group groupName)})
+                    (links/create-internal {:text groupName
+                                            :href (nav/get-link :group groupName)})
                     groupName))}
                {:header "Role" :initial-width 100
                 :sort-by :text
@@ -74,7 +75,7 @@
                 :render
                 (fn [{:keys [groupName role]}]
                   (when (= role "Admin")
-                    (style/create-link
+                    (links/create-internal
                      {:text (icons/icon {} :delete)
                       :style {:float "right" :color (:exception-state style/colors)}
                       :onClick #(swap! state assoc :group-name groupName :delete-modal? true)})))}]}

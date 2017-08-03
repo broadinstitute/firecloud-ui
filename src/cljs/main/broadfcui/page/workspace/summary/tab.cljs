@@ -5,6 +5,7 @@
    [broadfcui.common :as common]
    [broadfcui.common.components :as comps]
    [broadfcui.common.icons :as icons]
+   [broadfcui.common.links :as links]
    [broadfcui.common.markdown :refer [MarkdownView MarkdownEditor]]
    [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
@@ -251,11 +252,11 @@
            (case bucket-access?
              nil [:div {:style {:position "absolute" :marginTop "-1.5em"}}
                   [comps/Spinner {:height "1.5ex"}]]
-             true (style/create-link {:text bucketName
-                                      :href (str moncommon/google-cloud-context bucketName "/")
-                                      :style {:color "-webkit-link" :textDecoration "underline"}
-                                      :title "Click to open the Google Cloud Storage browser for this bucket"
-                                      :target "_blank"})
+             true (links/create-internal {:text bucketName
+                                          :href (str moncommon/google-cloud-context bucketName "/")
+                                          :style {:color "-webkit-link" :textDecoration "underline"}
+                                          :title "Click to open the Google Cloud Storage browser for this bucket"
+                                          :target "_blank"})
              false bucketName)
            (when writer?
              [:div {:style {:lineHeight "initial"}}

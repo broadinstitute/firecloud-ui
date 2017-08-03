@@ -1,6 +1,7 @@
 (ns broadfcui.page.workspace.workspace-common
   (:require
    [clojure.string :as string]
+   [broadfcui.common.links :as links]
    [broadfcui.common.style :as style]
    [broadfcui.common.table.style :as table-style]
    [broadfcui.common.table.table :refer [Table]]
@@ -27,8 +28,8 @@
             {:header "Name" :initial-width 150
              :as-text (comp :name :workspace) :sort-by :text
              :render (fn [ws]
-                       (style/create-link {:text (get-in ws [:workspace :name])
-                                           :onClick #(on-workspace-selected ws)}))}
+                       (links/create-internal {:text (get-in ws [:workspace :name])
+                                               :onClick #(on-workspace-selected ws)}))}
             {:header "Created By" :initial-width 200
              :column-data (comp :createdBy :workspace)}
             (table-utils/date-column {:column-data (comp :createdDate :workspace)})
