@@ -18,8 +18,9 @@
 
 (react/defc- MethodConfigurationsList
   {:reload
-   (fn [{:keys [state this]}]
+   (fn [{:keys [state this props]}]
      (swap! state dissoc :server-response)
+     ((:request-refresh props))
      (react/call :load this))
    :render
    (fn [{:keys [props state]}]
@@ -61,7 +62,6 @@
      (react/call :load this))
    :load
    (fn [{:keys [props state]}]
-     ((:request-refresh props))
      (endpoints/call-ajax-orch
       {:endpoint (endpoints/list-workspace-method-configs (:workspace-id props))
        :on-done (fn [{:keys [success? get-parsed-response status-text]}]

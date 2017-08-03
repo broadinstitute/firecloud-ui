@@ -14,7 +14,6 @@
    [broadfcui.page.workspace.data.entity-viewer :refer [EntityViewer]]
    [broadfcui.page.workspace.data.import-data :as import-data]
    [broadfcui.page.workspace.data.utils :as data-utils]
-   [broadfcui.persistence :as persistence]
    [broadfcui.utils :as utils]
    ))
 
@@ -71,9 +70,7 @@
         (when (:loading-attributes @state)
           [comps/Blocker {:banner "Loading..."}])
         (cond workspace-error (style/create-server-error-message workspace-error)
-              workspace (this :-render-data)
-              :else [:div {:style {:textAlign "center"}}
-                     [comps/Spinner {:text "Checking workspace..."}]])
+              workspace (this :-render-data))
         (when (:selected-entity @state)
           (let [{:keys [selected-entity-type selected-entity selected-attr-list]} @state]
             [EntityViewer {:workspace-id workspace-id
@@ -81,9 +78,6 @@
                            :entity-name selected-entity
                            :attr-list selected-attr-list
                            :update-parent-state (partial this :update-state)}]))]))
-   :component-did-mount
-   (fn [{:keys [props]}]
-     ((:request-refresh props)))
    :-handle-import-data-click
    (fn [{:keys [props state refs]}]
      (modal/push-modal
