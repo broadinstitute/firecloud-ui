@@ -66,7 +66,7 @@
               "The cloned Workspace will automatically inherit the Authorization Domain from this Workspace."
               [:div {} "You may add Groups to the Authorization Domain, but you may not remove existing ones."]])
            (this :-auth-domain-builder)
-           [:div {:style {:display "flex" :float "left"}}
+           [:div {}
             [comps/ErrorViewer {:error server-error}]
             (style/create-validation-error-message validation-errors)]])}]))
    :component-did-mount
@@ -162,7 +162,8 @@
               {:defaultValue -1
                :onChange #(swap! state update :selected-groups conj (-> % .-target .-value))}
               (set/difference all-groups (set selected-groups))
-              (str "Select " (if (empty? selected-groups) "a" "another") " Group..."))])])))})
+              (str "Select " (if (empty? selected-groups) "a" "another") " Group..."))])
+          (common/clear-both)])))})
 
 
 (react/defc Button
