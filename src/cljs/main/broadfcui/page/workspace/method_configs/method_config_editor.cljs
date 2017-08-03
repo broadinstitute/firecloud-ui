@@ -31,7 +31,6 @@
         workspace-datums (map (partial str "workspace.") (map name (keys workspace-attributes)))
         entity-datums (map (partial str "this.") (get-in entity-types [(keyword selected-entity-type) :attributeNames]))
         datums (concat entity-datums workspace-datums)]
-    ; (utils/cljslog (str "repopulating engine: " datums))
     (.clear engine)
     (.add (:engine props) (clj->js datums))))
 
