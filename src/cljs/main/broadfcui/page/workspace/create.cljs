@@ -28,7 +28,7 @@
        [modals/OKCancelForm
         {:header (if workspace-id "Clone Workspace" "Create New Workspace")
          :ok-button {:text (if workspace-id "Clone Workspace" "Create Workspace")
-                     :onClick #(this :-create-workspace)}
+                     :onClick (if workspace-id #(this :-do-clone) #(this :-create-workspace))}
          :dismiss (:dismiss props)
          :get-first-element-dom-node #(@refs "project")
          :content
@@ -97,6 +97,32 @@
                       (if success?
                         (do (modal/pop-modal)
                             (nav/go-to-path :workspace-summary {:namespace project :name name}))
+                        (swap! state assoc :server-error (get-parsed-response false))))}))))
+   :-do-clone
+   (fn [{:keys [props refs state]}]
+     (if-let [fails (input/validate refs "wsName")]
+       (swap! state assoc :validation-error fails)
+       (let [name (input/get-text refs "wsName")
+             project (nth (:billing-projects props) (int (:selected-project @state)))
+             desc (common/get-text refs "wsDescription")
+             attributes (if (or (:description props) (not (clojure.string/blank? desc)))
+                          {:description desc}
+                          {})
+             selected-auth-domain-index (int (:selected-auth-domain @state))
+             auth-domain {:authorizationDomain (map
+                                                (fn [group-name]
+                                                  {:membersGroupName group-name})
+                                                (:selected-groups @state))}]
+         (swap! state assoc :creating-ws true :validation-error nil :error nil)
+         (endpoints/call-ajax-orch
+          {:endpoint (endpoints/clone-workspace (:workspace-id props))
+           :payload (conj {:namespace project :name name :attributes attributes} auth-domain)
+           :headers utils/content-type=json
+           :on-done (fn [{:keys [success? get-parsed-response]}]
+                      (swap! state dissoc :creating-ws)
+                      (if success?
+                        (do (modal/pop-modal)
+                          (nav/go-to-path :workspace-summary {:namespace project :name name}))
                         (swap! state assoc :server-error (get-parsed-response false))))}))))
    :-auth-domain-builder
    (fn [{:keys [state props]}]
