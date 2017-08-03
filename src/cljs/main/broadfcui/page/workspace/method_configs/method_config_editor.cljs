@@ -26,13 +26,12 @@
 (defn- create-section [children]
   [:div {:style {:padding "1em 0 2em 0"}} children])
 
-(defn- refresh-autocomplete [props]
-  (let [{:keys [engine workspace-attributes entity-types selected-entity-type]} props
-        workspace-datums (map (partial str "workspace.") (map name (keys workspace-attributes)))
+(defn- refresh-autocomplete [{:keys [engine workspace-attributes entity-types selected-entity-type]}]
+  (let [workspace-datums (map (partial str "workspace.") (map name (keys workspace-attributes)))
         entity-datums (map (partial str "this.") (get-in entity-types [(keyword selected-entity-type) :attributeNames]))
         datums (concat entity-datums workspace-datums)]
     (.clear engine)
-    (.add (:engine props) (clj->js datums))))
+    (.add engine (clj->js datums))))
 
 (react/defc- MethodDetailsViewer
   {:get-fields
