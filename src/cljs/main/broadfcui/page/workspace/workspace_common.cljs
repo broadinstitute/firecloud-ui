@@ -1,5 +1,6 @@
 (ns broadfcui.page.workspace.workspace-common
   (:require
+   [clojure.string :as string]
    [broadfcui.common.style :as style]
    [broadfcui.common.table.style :as table-style]
    [broadfcui.common.table.table :refer [Table]]
@@ -12,7 +13,7 @@
   (select-keys (:workspace workspace) [:namespace :name]))
 
 
-(defn workspace-selector [{:keys [workspaces on-workspace-selected toolbar-items]}]
+(defn workspace-selector [{:keys [workspaces on-workspace-selected get-toolbar-items]}]
   (assert workspaces "No workspaces given")
   (assert on-workspace-selected "on-workspace-selected not provided")
   [Table
@@ -34,9 +35,10 @@
             {:header "Access Level" :initial-width 106
              :column-data :accessLevel}
             {:header "Authorization Domain" :starting-width 150
-             :column-data (comp :membersGroupName :authorizationDomain :workspace)
-             :render #(or % "None")}]}
-    :toolbar {:get-items (constantly toolbar-items)}}])
+             :column-data (comp :authorizationDomain :workspace)
+             :as-text #(if (empty? %) "None" (string/join ", " (map :membersGroupName %)))
+             :sort-by count}]}
+    :toolbar {:get-items (constantly get-toolbar-items)}}])
 
 (defn config->id [config]
   (select-keys config [:namespace :name]))
