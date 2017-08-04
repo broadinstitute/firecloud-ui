@@ -71,9 +71,8 @@
               "The cloned Workspace will automatically inherit the Authorization Domain from this Workspace."
               [:div {} "You may add Groups to the Authorization Domain, but you may not remove existing ones."]])
            (this :-auth-domain-builder)
-           [:div {}
-            [comps/ErrorViewer {:error server-error}]
-            (style/create-validation-error-message validation-errors)]])}]))
+           [comps/ErrorViewer {:error server-error}]
+           (style/create-validation-error-message validation-errors)])}]))
    :component-did-mount
    (fn [{:keys [state]}]
      (endpoints/get-groups
