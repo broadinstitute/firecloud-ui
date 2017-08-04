@@ -60,7 +60,7 @@
        (:label props)
        (if (empty? (:data props))
          "None"
-         (links/create-internal {:onClick #(swap! state assoc :expanded (not (:expanded @state)))}
+         (links/create-internal {:onClick #(swap! state update :expanded not)}
                                 (if (:expanded @state) "Hide" "Show"))))
       (when (:expanded @state)
         [:div {:style {:padding "0.25em 0 0.25em 1em"}}
@@ -127,7 +127,7 @@
      [:div {}
       (create-field
        "Failures"
-       (links/create-internal {:onClick #(swap! state assoc :expanded (not (:expanded @state)))}
+       (links/create-internal {:onClick #(swap! state update :expanded not)}
                               (if (:expanded @state) "Hide" "Show")))
       (when (:expanded @state)
         [comps/Tree {:start-collapsed? false
@@ -190,7 +190,7 @@
          (links/create-external {:href (str moncommon/google-cloud-context (:bucketName props) "/" (:submission-id props)
                                             "/" workflow-name "/" (:workflowId props) "/call-" call-name "/")}
                                 (:label props)))]
-      (links/create-internal {:onClick #(swap! state assoc :expanded (not (:expanded @state)))}
+      (links/create-internal {:onClick #(swap! state update :expanded not)}
                              (if (:expanded @state) "Hide" "Show"))
       (when (:expanded @state)
         (map-indexed

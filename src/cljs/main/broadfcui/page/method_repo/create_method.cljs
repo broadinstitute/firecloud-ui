@@ -1,10 +1,10 @@
 (ns broadfcui.page.method-repo.create-method
   (:require
    [dmohs.react :as react]
+   [clojure.string :as string]
    [broadfcui.common :as common]
    [broadfcui.common.codemirror :refer [CodeMirror]]
    [broadfcui.common.components :as comps]
-   [broadfcui.common.icons :as icons]
    [broadfcui.common.input :as input]
    [broadfcui.common.links :as links]
    [broadfcui.common.modal :as modal]
@@ -100,11 +100,11 @@
                                                            :backgroundColor "white"
                                                            :padding "0 6px"
                                                            :border style/standard-line}}
-                                                  (clojure.string/capitalize label))
+                                                  (string/capitalize label))
                            [:span {:style {:color (:text-lighter style/colors)
                                            :padding "0 6px"
                                            :border style/standard-line}}
-                            (clojure.string/capitalize label)]))]
+                            (string/capitalize label)]))]
               [:div {:style {:display "flex" :alignItems "baseline" :width "100%"}}
                [:span {:style {:paddingRight "1em"}} "WDL"]
                (links/create-internal {:onClick #(.click (@refs "wdl-uploader"))} "Load from file...")
@@ -144,7 +144,7 @@
      (let [[namespace name & fails] (input/get-and-validate refs "namespace" "name")
            [synopsis documentation] (common/get-text refs "synopsis" "documentation")
            wdl ((@refs "wdl-editor") :call-method "getValue")
-           fails (or fails (when (clojure.string/blank? wdl) ["Please enter the WDL payload"]))]
+           fails (or fails (when (string/blank? wdl) ["Please enter the WDL payload"]))]
        (swap! state assoc :validation-errors fails)
        (when-not fails
          (swap! state assoc :banner "Uploading...")

@@ -262,15 +262,16 @@
           :toolbar {:style {:display "initial"}
                     :filter-bar {:style {:float "left"}
                                  :inner {:width 300 :data-test-id (config/when-debug "workspace-list-filter")}}
-                    :get-items (constantly
-                            [[:div {:style {:float "right"}}
-                              [create/Button (select-keys props [:nav-context :billing-projects :disabled-reason])]]
-                             [:div {:style {:clear "left" :float "left" :marginTop "0.5rem"}}
-                              (links/create-internal {:onClick #(swap! state update :filters-expanded? not)}
-                                                     (if filters-expanded? "Collapse" "Show additional filters"))]
-                             [:div {:style {:clear "both"}}]
-                             (when filters-expanded?
-                               (this :-render-side-filters))])}
+                    :get-items
+                    (constantly
+                     [[:div {:style {:float "right"}}
+                       [create/Button (select-keys props [:nav-context :billing-projects :disabled-reason])]]
+                      [:div {:style {:clear "left" :float "left" :marginTop "0.5rem"}}
+                       (links/create-internal {:onClick #(swap! state update :filters-expanded? not)}
+                                              (if filters-expanded? "Collapse filters" "Expand filters"))]
+                      [:div {:style {:clear "both"}}]
+                      (when filters-expanded?
+                        (this :-render-side-filters))])}
           :paginator {:style {:clear "both"}}}]]))
    :component-did-update
    (fn [{:keys [state]}]

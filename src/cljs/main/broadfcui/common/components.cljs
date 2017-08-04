@@ -197,7 +197,7 @@
          (this :render-details entity)
          [:div {:style {:paddingTop "0.5rem"}}
           [:span {:style {:fontWeight 500 :marginRight "1rem"}} (if config? "Referenced Method:" "WDL:")]
-          (links/create-internal {:onClick #(swap! state assoc :payload-expanded (not (:payload-expanded @state)))}
+          (links/create-internal {:onClick #(swap! state update :payload-expanded not)}
                                  (if (:payload-expanded @state) "Collapse" "Expand"))]
          (when (:payload-expanded @state)
            (if config?
@@ -796,9 +796,8 @@
        (if (:label props)
          [:span {}
           (:label props) " "
-          (links/create-internal
-           {:onClick #(swap! state assoc :collapsed? (not (:collapsed? @state)))}
-           (icons/icon {} (if (:collapsed? @state) :expand :collapse)))
+          (links/create-internal {:onClick #(swap! state update :collapsed? not)}
+                                 (icons/icon {} (if (:collapsed? @state) :expand :collapse)))
           body]
          body)))})
 
