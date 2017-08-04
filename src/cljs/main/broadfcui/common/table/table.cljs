@@ -176,7 +176,7 @@
                             {:page-number 1
                              :rows-per-page (if (= :none (:paginator props)) Infinity 20)
                              :filter-text ""
-                             :sort-column (table-utils/resolve-id initial-sort-column)
+                             :sort-column (some-> initial-sort-column table-utils/resolve-id)
                              :sort-order initial-sort-order}
                             (set/difference all-query-params (-> props :body :external-query-params)))
              :column-display (table-utils/build-column-display processed-columns)}
