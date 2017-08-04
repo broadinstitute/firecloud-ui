@@ -42,8 +42,7 @@
      (let [{:keys [loaded-method error]} @state]
        (cond loaded-method [comps/EntityDetails
                             (merge {:ref "methodDetails"
-                                    :snapshots (get (:methods props)
-                                                    (replace loaded-method [:namespace :name]))
+                                    :snapshots (:snapshots props)
                                     :entity loaded-method}
                                    (select-keys props [:editing? :wdl-parse-error :onSnapshotIdChange]))]
              error (style/create-server-error-message error)
@@ -60,7 +59,8 @@
          :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                     (if success?
                       (swap! state assoc :loaded-method (get-parsed-response))
-                      (swap! state assoc :error status-text)))})))})
+                      (swap! state assoc :loaded-method {})
+                      #_(swap! state assoc :error status-text)))})))})
 
 
 (react/defc- Sidebar
@@ -129,7 +129,7 @@
            :else [:div {:style {:textAlign "center"}}
                   [comps/Spinner {:text "Loading Method Configuration..."}]]))
    :component-did-mount
-   (fn [{:keys [props state this]}]
+   (fn [{:keys [state this]}]
      (this :-load-validated-method-config)
      (endpoints/call-ajax-orch
       {:endpoint endpoints/list-methods
@@ -187,7 +187,8 @@
                                  :name (:methodName methodRepoMethod)
                                  :namespace (:methodNamespace methodRepoMethod)
                                  :snapshotId (:methodVersion methodRepoMethod)
-                                 :onSnapshotIdChange #(this :-load-new-method-template %)}
+                                 :onSnapshotIdChange #(this :-load-new-method-template %)
+                                 :snapshots (get methods [(:methodNamespace methodRepoMethod) (:methodName methodRepoMethod)])}
                                 (utils/restructure config methods editing? wdl-parse-error))])
         (create-section-header "Root Entity Type")
         (create-section
@@ -325,7 +326,8 @@
                         :on-done (fn [{:keys [success? get-parsed-response]}]
                                    (if success?
                                      (swap! state assoc :loaded-config response :inputs-outputs (get-parsed-response))
-                                     (swap! state assoc :error (:message (get-parsed-response)))))}))
+                                     (swap! state assoc :loaded-config response :inputs-outputs {})
+                                     #_(swap! state assoc :error (:message (get-parsed-response)))))}))
                     (swap! state assoc :error status-text)))}))
    :-load-new-method-template
    (fn [{:keys [state refs]} new-snapshot-id]
