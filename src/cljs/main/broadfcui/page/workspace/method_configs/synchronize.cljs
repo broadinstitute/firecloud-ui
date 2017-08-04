@@ -33,9 +33,9 @@
       (modals/show-modals
        state
        {:show-sync-modal?
-        [sync-common/SynchronizeModal (select-keys @state [:method :users])]
+        [sync-common/SynchronizeModal (assoc (select-keys @state [:method :users]) :flavor "workspace")]
         :show-alert-modal?
-        (sync-common/alert-modal (select-keys @state [:method]))})])
+        (sync-common/alert-modal (assoc (select-keys @state [:method]) :flavor "workspace"))})])
    :component-did-mount
    (fn [{:keys [props state this]}]
      (when (check-synchronization)

@@ -24,8 +24,9 @@
        (react/create-element
         [:div {:style {:maxWidth 670}}
          [:div {:style {:marginBottom "1.5rem"}}
-          "In order to allow other users of this workspace to run this method, you will need
-           to grant them access to "
+          (str "In order to allow other users of this "
+               (:flavor props)
+               " to run this method, you will need to grant them access to ")
           [:b {} (get-method-display (:method props))]
           "."]
          (if (:customize? @state)
@@ -76,7 +77,7 @@
                     (swap! state assoc :grant-error (get-parsed-response false))))}))})
 
 
-(defn alert-modal [{:keys [method dismiss]}]
+(defn alert-modal [{:keys [method dismiss flavor]}]
   [modals/OKCancelForm
    {:header "Unable to Grant Method Access"
     :dismiss dismiss
@@ -86,7 +87,10 @@
     (let [owners (:managers method)
           method-display (get-method-display method)]
       [:div {:style {:maxWidth 670}}
-       [:p {} "Users of this configuration may not have access to this method and be unable to run it."]
+       [:p {}
+        (str "Users of this "
+             flavor
+             " may not have access to this method and be unable to run it.")]
        (if (= 1 (count owners))
          [:p {}
           "Users will need to contact the Method owner "
