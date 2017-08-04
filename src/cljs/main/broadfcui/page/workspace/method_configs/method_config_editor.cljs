@@ -26,6 +26,12 @@
 (defn- create-section [children]
   [:div {:style {:padding "1em 0 2em 0"}} children])
 
+(defn- refresh-autocomplete [{:keys [engine workspace-attributes entity-types selected-entity-type]}]
+  (let [workspace-datums (map (partial str "workspace.") (map name (keys workspace-attributes)))
+        entity-datums (map (partial str "this.") (get-in entity-types [(keyword selected-entity-type) :attributeNames]))
+        datums (concat entity-datums workspace-datums)]
+    (.clear engine)
+    (.add engine (clj->js datums))))
 
 (react/defc- MethodDetailsViewer
   {:get-fields
@@ -113,10 +119,9 @@
      (swap! locals assoc
             :body-id (gensym "config")
             :engine (comps/create-bloodhound-engine
-                     {:local (->> (get-in props [:workspace :workspace :workspace-attributes])
-                                  keys
-                                  (map (comp (partial str "workspace.") name))
-                                  (concat ["this." "workspace."]))})))
+                     {:local []
+                      :datum-tokenizer (aget comps/Bloodhound "tokenizers" "nonword")
+                      :query-tokenizer (aget comps/Bloodhound "tokenizers" "nonword")})))
    :render
    (fn [{:keys [state this]}]
      (cond (every? @state [:loaded-config :methods]) (this :-render-display)
@@ -151,10 +156,11 @@
          (common/clear-both)]]))
    :-render-main
    (fn [{:keys [state this locals props]} locked?]
-     (let [{:keys [editing? loaded-config wdl-parse-error inputs-outputs methods]} @state
+     (let [{:keys [editing? loaded-config wdl-parse-error inputs-outputs methods entity-types]} @state
            config (:methodConfiguration loaded-config)
            {:keys [methodRepoMethod]} config
-           {:keys [body-id]} @locals]
+           {:keys [body-id engine]} @locals
+           workspace-attributes (get-in props [:workspace :workspace :workspace-attributes])]
        [:div {:style {:flex "1 1 auto"} :id body-id}
         (when-not editing?
           [:div {:style {:float "right"}}
@@ -189,7 +195,11 @@
            (style/create-identity-select {:ref "rootentitytype"
                                           :data-test-id (config/when-debug "edit-method-config-root-entity-type-select")
                                           :defaultValue (:rootEntityType config)
-                                          :style {:width 500}}
+                                          :style {:width 500}
+                                          :onChange #(refresh-autocomplete {:engine engine
+                                                                            :workspace-attributes workspace-attributes
+                                                                            :entity-types entity-types
+                                                                            :selected-entity-type (.. % -target -value)})}
                                          common/root-entity-types)
            [:div {:style {:padding "0.5em 0 1em 0"}} (:rootEntityType config)]))
         (create-section-header "Inputs")
@@ -251,12 +261,15 @@
         {:endpoint (endpoints/get-entity-types (:workspace-id props))
          :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                     (if success?
-                      (.add (:engine @locals)
-                            (clj->js (->> (get-parsed-response)
-                                          vals
-                                          (map :attributeNames)
-                                          flatten
-                                          (map (partial str "this.")))))
+                      (let [loaded-config (:loaded-config @state)
+                            entity-types (get-parsed-response)
+                            workspace-attributes (get-in props [:workspace :workspace :workspace-attributes])
+                            selected-entity-type (get-in loaded-config [:methodConfiguration :rootEntityType])]
+                        (refresh-autocomplete {:engine (:engine @locals)
+                                               :workspace-attributes workspace-attributes
+                                               :entity-types entity-types
+                                               :selected-entity-type selected-entity-type})
+                        (swap! state assoc :entity-types entity-types))
                       ;; FIXME: :data-attribute-load-error is unused
                       (swap! state assoc :data-attribute-load-error status-text)))}))
      (let [{:keys [loaded-config inputs-outputs]} @state]

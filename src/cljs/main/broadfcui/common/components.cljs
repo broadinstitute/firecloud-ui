@@ -434,9 +434,9 @@
 (def Bloodhound (aget js/window "webpack-deps" "Bloodhound"))
 (def ^:private whitespace-tokenizer (aget Bloodhound "tokenizers" "whitespace"))
 
-(defn create-bloodhound-engine [{:keys [remote local]}]
-  (Bloodhound. (clj->js {:datumTokenizer whitespace-tokenizer
-                         :queryTokenizer whitespace-tokenizer
+(defn create-bloodhound-engine [{:keys [remote local datum-tokenizer query-tokenizer]}]
+  (Bloodhound. (clj->js {:datumTokenizer (or datum-tokenizer whitespace-tokenizer)
+                         :queryTokenizer (or query-tokenizer whitespace-tokenizer)
                          :remote remote
                          :local local})))
 
@@ -466,7 +466,7 @@
          (.typeahead (js/$ (@refs "field"))
                      (clj->js behavior)
                      (clj->js
-                      {:source (or engine (create-bloodhound-engine (select-keys props [:remote :local])))
+                      {:source (or engine (create-bloodhound-engine (select-keys props [:remote :local :datum-tokenizer :query-tokenizer])))
                        :display render-display
                        :templates {:empty (str "<div style='padding: 0.5em'>" empty-message "</div>")
                                    :suggestion render-suggestion}}))
