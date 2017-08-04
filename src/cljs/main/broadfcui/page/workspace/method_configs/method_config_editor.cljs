@@ -99,7 +99,7 @@
                                       :data-test-id (config/when-debug "edit-method-config-button")
                                       :onClick #(parent :-begin-editing snapshots)}])
               (when can-edit?
-                [comps/SidebarButton {:style :light :color :exception-state :margin :top
+                [comps/SidebarButton {:style :light :color :exception-state :margin (when (or (not redacted?) snapshots) :top)
                                       :text "Delete" :icon :delete
                                       :disabled? (when locked? "The workspace is locked")
                                       :data-test-id (config/when-debug "delete-method-config-button")
@@ -189,15 +189,19 @@
         (if redacted?
           (create-section-header "Referenced Method - REDACTED")
           (create-section-header "Referenced Method"))
-        (create-section [MethodDetailsViewer
-                         (merge {:ref "methodDetailsViewer"
-                                 :name methodName
-                                 :namespace methodNamespace
-                                 :snapshotId methodVersion
-                                 :onSnapshotIdChange #(this :-load-new-method-template %)
-                                 :method (first (filter #(and (= methodNamespace (:namespace %)) (= methodName (:name %))) methods-response))
-                                 :snapshots (get methods [(:methodNamespace methodRepoMethod) (:methodName methodRepoMethod)])}
-                                (utils/restructure redacted? config methods editing? wdl-parse-error))])
+        (let [matching-methods (filter #(and (= methodNamespace (:namespace %)) (= methodName (:name %))) methods-response)
+              method (if (empty? matching-methods)
+                       {:name methodName :namespace methodNamespace}
+                       (first matching-methods))]
+          (create-section [MethodDetailsViewer
+                           (merge {:ref "methodDetailsViewer"
+                                   :name methodName
+                                   :namespace methodNamespace
+                                   :snapshotId methodVersion
+                                   :onSnapshotIdChange #(this :-load-new-method-template %)
+                                   :method method
+                                   :snapshots (get methods [(:methodNamespace methodRepoMethod) (:methodName methodRepoMethod)])}
+                                  (utils/restructure redacted? config methods editing? wdl-parse-error))]))
         (create-section-header "Root Entity Type")
         (create-section
          (if editing?
