@@ -167,9 +167,8 @@
                                    columns)
                initial-sort-column (or (first (filter :sort-initial processed-columns))
                                        (when-not (-> props :body :behavior :allow-no-sort?)
-                                         (first processed-columns)))
-               initial-sort-order (when initial-sort-column
-                                    (get initial-sort-column :sort-initial :asc))]
+                                         (first (filter #(get % :sortable? true) processed-columns))))
+               initial-sort-order (some-> initial-sort-column (get :sort-initial :asc))]
            (merge
             {:query-params (select-keys
                             {:page-number 1

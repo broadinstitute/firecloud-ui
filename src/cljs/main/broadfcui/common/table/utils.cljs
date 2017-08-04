@@ -1,6 +1,8 @@
 (ns broadfcui.common.table.utils
   (:require
+   [clojure.string :as string]
    [broadfcui.common :as common]
+   [broadfcui.common.gcs-file-preview :refer [GCSFilePreviewLink]]
    [broadfcui.utils :as utils]
    ))
 
@@ -37,7 +39,7 @@
         columns))
 
 (defn- filter-rows [{:keys [filter-text]} columns data]
-  (if (clojure.string/blank? filter-text)
+  (if (string/blank? filter-text)
     data
     (filter (fn [row]
               (some (partial utils/matches-filter-text filter-text)
@@ -92,5 +94,18 @@
 
 (defn default-render [data]
   (cond (map? data) (utils/map-to-string data)
-        (sequential? data) (clojure.string/join ", " data)
+        (sequential? data) (string/join ", " data)
         :else (str data)))
+
+(defn render-gcs-links [workspace-bucket]
+  (fn [maybe-uri]
+    (if (string? maybe-uri)
+      (if-let [parsed (common/parse-gcs-uri maybe-uri)]
+        [GCSFilePreviewLink
+         (assoc parsed
+           :workspace-bucket workspace-bucket
+           :attributes {:style {:direction "rtl" :marginRight "0.5em"
+                                :overflow "hidden" :textOverflow "ellipsis"
+                                :textAlign "left"}})]
+        maybe-uri)
+      (default-render maybe-uri))))
