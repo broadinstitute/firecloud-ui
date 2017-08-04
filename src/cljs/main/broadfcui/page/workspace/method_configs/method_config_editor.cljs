@@ -116,7 +116,7 @@
      {:editing? false
       :sidebar-visible? true})
    :component-will-mount
-   (fn [{:keys [locals props]}]
+   (fn [{:keys [locals]}]
      (swap! locals assoc
             :body-id (gensym "config")
             :engine (comps/create-bloodhound-engine
@@ -136,13 +136,13 @@
       {:endpoint endpoints/list-methods
        :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                   (let [response (get-parsed-response)]
-                  (if success?
-                    (swap! state assoc :methods-response response :methods (->> response
-                                                     (map #(select-keys % [:namespace :name :snapshotId]))
-                                                     (group-by (juxt :namespace :name))
-                                                     (utils/map-values (partial map :snapshotId))))
-                    ;; FIXME: :error-message is unused
-                    (swap! state assoc :error-message status-text))))}))
+                    (if success?
+                      (swap! state assoc :methods-response response :methods (->> response
+                                                                                  (map #(select-keys % [:namespace :name :snapshotId]))
+                                                                                  (group-by (juxt :namespace :name))
+                                                                                  (utils/map-values (partial map :snapshotId))))
+                      ;; FIXME: :error-message is unused
+                      (swap! state assoc :error-message status-text))))}))
    :-render-display
    (fn [{:keys [props state locals this]}]
      (let [locked? (get-in props [:workspace :workspace :isLocked])
@@ -341,8 +341,7 @@
                         :on-done (fn [{:keys [success? get-parsed-response]}]
                                    (if success?
                                      (swap! state assoc :loaded-config response :inputs-outputs (get-parsed-response) :redacted? false)
-                                     (swap! state assoc :loaded-config response :inputs-outputs {} :redacted? true)
-                                     #_(swap! state assoc :error (:message (get-parsed-response)))))}))
+                                     (swap! state assoc :loaded-config response :inputs-outputs {} :redacted? true)))}))
                     (swap! state assoc :error status-text)))}))
    :-load-new-method-template
    (fn [{:keys [state refs]} new-snapshot-id]
