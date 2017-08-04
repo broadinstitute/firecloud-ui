@@ -16,6 +16,15 @@
    [broadfcui.utils :as utils]
    ))
 
+(defn add-redacted-attribute [config methods]
+  (let [methodRepoMethod (:methodRepoMethod config)
+        name (:methodName methodRepoMethod)
+        namespace (:methodNamespace methodRepoMethod)
+        version (:methodVersion methodRepoMethod)
+        snapshots (set (get methods [namespace name]))]
+    (if (contains? snapshots version)
+      (assoc config :redacted false)
+      (assoc config :redacted true))))
 
 (react/defc- MethodConfigurationsList
   {:reload
@@ -25,14 +34,14 @@
      (react/call :load this))
    :render
    (fn [{:keys [props state]}]
-     (let [server-response (:server-response @state)
+     (let [{:keys [server-response methods]} @state
            {:keys [configs error-message]} server-response
            locked? (get-in props [:workspace :workspace :isLocked])]
        (cond
          error-message (style/create-server-error-message error-message)
-         configs
+         (and configs methods)
          (ws-common/method-config-selector
-          {:configs configs
+          {:configs (map #(add-redacted-attribute % methods) configs)
            :render-name (fn [config]
                           (links/create-internal
                            {:data-test-id (config/when-debug (str "method-config-" (:name config) "-link"))
@@ -64,6 +73,14 @@
      (react/call :load this))
    :load
    (fn [{:keys [props state]}]
+     (endpoints/call-ajax-orch
+      {:endpoint endpoints/list-methods
+       :on-done (fn [{:keys [success? get-parsed-response]}]
+                  (when success?
+                    (swap! state assoc :methods (->> (get-parsed-response)
+                                                     (map #(select-keys % [:namespace :name :snapshotId]))
+                                                     (group-by (juxt :namespace :name))
+                                                     (utils/map-values (partial map :snapshotId))))))})
      (endpoints/call-ajax-orch
       {:endpoint (endpoints/list-workspace-method-configs (:workspace-id props))
        :on-done (fn [{:keys [success? get-parsed-response status-text]}]

@@ -190,11 +190,13 @@
    (fn [{:keys [props state this]}]
      [:div {} (when-let [wdl-parse-error (:wdl-parse-error props)] (style/create-server-error-message wdl-parse-error))
       (let [entity (:entity props)
+            redacted? (:redacted? props)
             config? (contains? entity :method)]
         [:div {:style {:backgroundColor (:background-light style/colors)
                        :borderRadius 8 :border style/standard-line
                        :padding "1rem"}}
          (this :render-details entity)
+         (when (not redacted?)
          [:div {:style {:paddingTop "0.5rem"}}
           [:span {:style {:fontWeight 500 :marginRight "1rem"}} (if config? "Referenced Method:" "WDL:")]
           (links/create-internal {:onClick #(swap! state update :payload-expanded not)}
@@ -205,10 +207,10 @@
               (this :render-details (:method entity))
               [:div {:style {:fontWeight 500 :marginTop "1rem"}} "WDL:"]
               [CodeMirror {:text (get-in entity [:method :payload])}]]
-             [CodeMirror {:text (:payload entity)}]))])])
+             [CodeMirror {:text (:payload entity)}])))])])
    :render-details
    (fn [{:keys [props refs]} entity]
-     (let [{:keys [editing?]} props
+     (let [{:keys [editing? redacted?]} props
            make-field
            (fn [key label & {:keys [dropdown? wrap? render]}]
              [:div {:style {:display "flex" :alignItems "baseline" :paddingBottom "0.25rem"}}
@@ -232,15 +234,17 @@
           (make-field :name "Name")
           (make-field :snapshotId "Snapshot ID" :dropdown? true)
           (make-field :entityType "Entity Type")]
+         (when (not redacted?)
          [:div {:style {:flex "1 1 50%"}}
           (make-field :createDate "Created" :render common/format-date)
           (make-field :managers "Owners" :render (partial clojure.string/join ", ") :wrap? true)
-          (make-field :synopsis "Synopsis")]]
+          (make-field :synopsis "Synopsis")])]
+        (when (not redacted?)
         [:div {:style {:fontWeight 500 :padding "0.5rem 0 0.3rem 0"}}
          "Documentation:"]
         (if (string/blank? (:documentation entity))
           [:div {:style {:fontStyle "italic" :fontSize "90%"}} "No documentation provided"]
-          [:div {:style {:fontSize "90%"}} (:documentation entity)])]))})
+          [:div {:style {:fontSize "90%"}} (:documentation entity)]))]))})
 
 
 (react/defc StackTraceViewer
