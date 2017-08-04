@@ -3,6 +3,7 @@
    [dmohs.react :as react]
    [clojure.string :as string]
    [broadfcui.common.components :as comps]
+   [broadfcui.common.links :as links]
    [broadfcui.common.style :as style]
    [broadfcui.components.modals :as modals]
    [broadfcui.endpoints :as endpoints]
@@ -31,8 +32,7 @@
           "."]
          (if (:customize? @state)
            (this :-render-permission-detail)
-           (style/create-link {:text "Customize Permissions"
-                               :onClick #(this :-setup-permission-detail)}))
+           (links/create-internal {:onClick #(this :-setup-permission-detail)} "Customize Permissions"))
          [comps/ErrorViewer {:error (:grant-error @state)}]])
        :ok-button [comps/Button {:text (if (:customize? @state)
                                          "Grant Permission"
