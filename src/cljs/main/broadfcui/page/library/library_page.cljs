@@ -124,7 +124,7 @@
    :build-aggregate-fields
    (fn [{:keys [props]}]
      (reduce
-      (fn [results field] (assoc results field (if (contains? (:expanded-aggregates props) field) 0 5)))
+      (fn [results field] (assoc results field (if (contains? (:expanded-aggregates props) field) 0 5))) ;
       {}
       (:aggregate-fields props)))
    :pagination
@@ -259,33 +259,39 @@
                aggregates)))
 
 (react/defc- Facet
-  {:render
-   (fn [{:keys [this state props refs]}]
-     (let [aggregate-field (:aggregate-field props)
-           properties (:aggregate-properties props)
-           title (:title properties)
-           render-hint (get-in properties [:aggregate :renderHint])
-           aggregations (get-aggregations-for-property aggregate-field (:aggregates props))]
-       [:div {}
-        [:hr {}]
-       (cond
-         (= render-hint "checkbox") [FacetCheckboxes
-                                     (merge
-                                      {:title title :field aggregate-field}
-                                      (select-keys aggregations [:numOtherDocs :buckets])
-                                      (select-keys props [:expanded? :selected-items :update-filter
-                                                          :expanded-callback-function]))]
-         (= render-hint "typeahead-multiselect")
-           [:div {}
-            (filter/section
-            {:title title
-             :content (react/create-element
-                       [comps/TagAutocomplete {:ref "tag-autocomplete"
-                                               :tags "Tags"
-                                               :data (:tags @state)
-                                               :show-counts? false :allow-new? false
-                                               :on-change #(swap! state update :filters assoc "Tags" %)}])
-             :on-clear #((@refs "tag-autocomplete") :set-tags [])})])]))})
+             {:render
+              (fn [{:keys [this state props refs]}]
+                (let [aggregate-field (:aggregate-field props)
+                      properties (:aggregate-properties props)
+                      title (:title properties)
+                      render-hint (get-in properties [:aggregate :renderHint])
+                      aggregations (get-aggregations-for-property aggregate-field (:aggregates props))]
+                  [:div {}
+                   [:hr {}]
+                   (cond
+                     (= render-hint "checkbox") [FacetCheckboxes
+                                                 (merge
+                                                  {:title title :field aggregate-field}
+                                                  (select-keys aggregations [:numOtherDocs :buckets])
+                                                  (select-keys props [:expanded? :selected-items :update-filter ; 4A
+                                                                      :expanded-callback-function]))]
+                     (= render-hint "typeahead-multiselect")
+                     [:div {}
+                      (let [possible-tags (mapv :key (:buckets aggregations))
+                            selected-possible-tags (clojure.set/intersection (utils/log (:selected-items props)) possible-tags)] ; subset of selected tags that are "possible"
+                        ; The above because a tag that has disappeared from the universe of selectable possibilities may still be included in a query from persistence, and not show in the UI
+
+                        (filter/section
+                       {:title title
+                        :content (react/create-element
+                                  [comps/TagAutocomplete {:ref "tag-autocomplete"
+                                                          :tags  ; need to fetch from persistence
+                                                          :data  ;(utils/log (:tags @state)) ; if null calls autocomplete endpoint
+                                                          :show-counts? false
+                                                          :allow-new? false
+                                                          :on-change (partial (:update-filter props) aggregate-field) ; 4B
+                                                          }])
+                        :on-clear #((@refs "tag-autocomplete") :set-tags #{})}))])]))})
 
 (react/defc- FacetSection
   {:render
@@ -299,7 +305,7 @@
                                        :aggregates (:aggregates props)
                                        :expanded? (contains? (:expanded-aggregates props) aggregate-field)
                                        :selected-items (set (get-in props [:facet-filters aggregate-field]))
-                                       :update-filter (:update-filter props)
+                                       :update-filter (:update-filter props) ; 3
                                        :expanded-callback-function (:expanded-callback-function props)}])
          (:aggregate-fields props))]))})
 
@@ -308,7 +314,7 @@
 
 (react/defc- Page
   (->>
-   {:update-filter
+   {:update-filter ; 1
     (fn [{:keys [state after-update refs]} facet-name facet-list]
       (if (empty? facet-list)
         (swap! state update :facet-filters dissoc facet-name)
@@ -347,8 +353,10 @@
                        {:ref "facets"
                         :aggregates (:aggregates @state)
                         :aggregate-properties (:library-attributes @state)
-                        :update-filter (fn [facet-name facet-list]
-                                         (this :update-filter facet-name facet-list))
+                        :update-filter (fn [facet-name facet-list] ; 2
+                                         (this :update-filter
+                                               (utils/log "facet section" facet-name)
+                                               (utils/log "facet section" facet-list))) ;
                         :expanded-callback-function (fn [facet-name expanded?]
                                                       (this :set-expanded-aggregate facet-name expanded?))}
                        (select-keys @state [:aggregate-fields :facet-filters :expanded-aggregates]))]]
