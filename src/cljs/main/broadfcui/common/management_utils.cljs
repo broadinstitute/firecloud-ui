@@ -5,6 +5,7 @@
    [broadfcui.common.components :as comps]
    [broadfcui.common.flex-utils :as flex]
    [broadfcui.common.input :as input]
+   [broadfcui.common.links :as links]
    [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
    [broadfcui.common.table.style :as table-style]
@@ -98,8 +99,7 @@
                          :render
                          (fn [{:keys [email role]}]
                            [:div {:style {:padding "0.6rem 0 0.6rem 32px"}}
-                            (style/create-link {:text "Remove"
-                                                :onClick #(this :-remove-user role email)})])}]}
+                            (links/create-internal {:onClick #(this :-remove-user role email)} "Remove")])}]}
                 :toolbar {:get-items
                           (constantly
                            [flex/spring

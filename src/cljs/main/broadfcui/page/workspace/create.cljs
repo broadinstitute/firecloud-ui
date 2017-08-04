@@ -6,6 +6,7 @@
    [broadfcui.common.components :as comps]
    [broadfcui.common.icons :as icons]
    [broadfcui.common.input :as input]
+   [broadfcui.common.links :as links]
    [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
    [broadfcui.components.modals :as modals]
@@ -59,13 +60,13 @@
             (style/create-form-label "Authorization Domain (optional)")
             (common/render-info-box
              {:text [:div {} [:strong {} "Note:"]
-                     [:div {} "An Authorization Domain can only be set when creating a Workspace.
-                   Once set, it cannot be changed."]
-                     (style/create-link {:href "https://software.broadinstitute.org/firecloud/documentation/article?id=9524"
-                                         :target "_blank"
-                                         :text [:span {:style {:white-space "pre"}}
-                                                "Read more about Authorization Domains"
-                                                icons/external-link-icon]})]})]
+                     [:div {}
+                      "An Authorization Domain can only be set when creating a Workspace.
+                       Once set, it cannot be changed."]
+                     [:span {:style {:white-space "pre"}}
+                      (links/create-external
+                       {:href "https://software.broadinstitute.org/firecloud/documentation/article?id=9524"}
+                       "Read more about Authorization Domains")]]})]
            (when (:auth-domain props)
              [:div {:style {:fontStyle "italic" :fontSize "80%" :paddingBottom "0.25rem"}}
               "The cloned Workspace will automatically inherit the Authorization Domain from this Workspace."
