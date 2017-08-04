@@ -60,6 +60,7 @@
            data-source (if data (table-utils/local data) fetch-data)
            query-params (merge (:query-params @state)
                                (when reset-page-number? {:page-number 1}))]
+       (assert data-source "No data provided")
        (data-source {:columns (-> props :body :columns)
                      :query-params query-params
                      :on-done (fn [{:keys [total-count filtered-count results]}]
@@ -117,13 +118,14 @@
              (utils/restructure rows column-display update-column-display fixed-column-count allow-no-sort?)
              {:set-sort (fn [col order] (swap! state update :query-params
                                                merge {:sort-column col :sort-order order}))})])]
-        [Paginator
-         (merge paginator
-                (select-keys query-params [:rows-per-page :page-number])
-                (utils/restructure total-count filtered-count)
-                {:page-selected #(swap! state assoc-in [:query-params :page-number] %)
-                 :per-page-selected #(swap! state update :query-params
-                                            merge {:rows-per-page % :page-number 1})})]]))
+        (when (not= paginator :none)
+          [Paginator
+           (merge paginator
+                  (select-keys query-params [:rows-per-page :page-number])
+                  (utils/restructure total-count filtered-count)
+                  {:page-selected #(swap! state assoc-in [:query-params :page-number] %)
+                   :per-page-selected #(swap! state update :query-params
+                                              merge {:rows-per-page % :page-number 1})})])]))
    :component-did-mount
    (fn [{:keys [props this]}]
      (when (:load-on-mount props)
@@ -172,7 +174,7 @@
            (merge
             {:query-params (select-keys
                             {:page-number 1
-                             :rows-per-page 20
+                             :rows-per-page (if (= :none (:paginator props)) Infinity 20)
                              :filter-text ""
                              :sort-column (table-utils/resolve-id initial-sort-column)
                              :sort-order initial-sort-order}
