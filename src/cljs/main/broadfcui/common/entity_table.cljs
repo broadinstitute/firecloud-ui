@@ -6,7 +6,7 @@
    [broadfcui.common :as common]
    [broadfcui.common.components :as comps]
    [broadfcui.common.style :as style]
-   [broadfcui.common.table.table :refer [Table]]
+   [broadfcui.common.table :refer [Table]]
    [broadfcui.common.table.style :as table-style]
    [broadfcui.common.table.utils :as table-utils]
    [broadfcui.config :as config]

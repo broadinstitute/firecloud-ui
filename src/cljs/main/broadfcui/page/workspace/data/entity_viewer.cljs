@@ -8,8 +8,8 @@
    [broadfcui.common.icons :as icons]
    [broadfcui.common.links :as links]
    [broadfcui.common.style :as style]
+   [broadfcui.common.table :refer [Table]]
    [broadfcui.common.table.style :as table-style]
-   [broadfcui.common.table.table :refer [Table]]
    [broadfcui.page.workspace.data.utils :as data-utils]
    [broadfcui.utils :as utils]
    ))

@@ -8,7 +8,7 @@
    [broadfcui.common.links :as links]
    [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
-   [broadfcui.common.table-utils :refer [default-render]]
+   [broadfcui.common.table.utils :refer [default-render]]
    [broadfcui.page.workspace.analysis.igv-utils :as igv-utils]
    [broadfcui.utils :as utils]
    ))

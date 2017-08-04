@@ -5,17 +5,15 @@
    [broadfcui.common :as common]
    [broadfcui.common.components :as comps]
    [broadfcui.common.entity-table :refer [EntityTable]]
-   [broadfcui.common.icons :as icons]
    [broadfcui.common.links :as links]
    [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
-   [broadfcui.common.table-utils :as table-utils]
+   [broadfcui.common.table.utils :as table-utils]
    [broadfcui.config :as config]
    [broadfcui.page.workspace.data.copy-data-workspaces :as copy-data-workspaces]
    [broadfcui.page.workspace.data.entity-viewer :refer [EntityViewer]]
    [broadfcui.page.workspace.data.import-data :as import-data]
    [broadfcui.page.workspace.data.utils :as data-utils]
-   [broadfcui.persistence :as persistence]
    [broadfcui.utils :as utils]
    ))
 
