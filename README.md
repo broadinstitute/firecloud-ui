@@ -128,3 +128,22 @@ sbt clean
 For more information see: http://www.scala-sbt.org/0.13/docs/Testing.html#Test+Framework+Arguments
 
 
+### IntelliJ
+After opening the project, if IntelliJ shows errors in scala source or running a test
+throws a `MethodNotFoundException`, open the SBT panel and click the button for "Refresh
+all SBT projects" (and keep reading).
+
+If IntelliJ shows errors in cljs source (which will happen after refreshing SBT projects),
+open the Leiningen panel and click the button for "Refresh Leiningen Projects". Then open
+Project Structure > Modules > firecloue-ui > Paths and change "Test output path" to be
+different than the value for "Output path", e.g.
+`/{your firecloud-ui project root}/firecloud-ui/resources/public/target/test-classes`
+(and keep reading to learn why).
+
+There is currently an issue with IntelliJ's scala/SBT support that causes the scala build
+to incorrectly pay attention to unrelated (i.e. Leiningen) modules. Cursive sets both
+"Output path" and "Test output path" to the same value. The result is that, when building
+the scala code, you'll see an error about shared compile output paths. An issue has been
+filed against IntelliJ: [https://youtrack.jetbrains.com/issue/SCL-12358](). (Please vote for
+it if you want to see it fixed.) A workaround feature for Cursive has been requested in a
+related issue: [https://github.com/cursive-ide/cursive/issues/282]().
