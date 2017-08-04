@@ -29,6 +29,7 @@
        [modals/OKCancelForm
         {:header (if workspace-id "Clone Workspace" "Create New Workspace")
          :ok-button {:text (if workspace-id "Clone Workspace" "Create Workspace")
+                     :onClick (if workspace-id #(this :-do-clone) #(this :-create-workspace))
                      :data-test-id (config/when-debug "create-workspace-button")
                      :onClick #(this :-create-workspace)}
          :dismiss (:dismiss props)
@@ -71,8 +72,9 @@
               "The cloned Workspace will automatically inherit the Authorization Domain from this Workspace."
               [:div {} "You may add Groups to the Authorization Domain, but you may not remove existing ones."]])
            (this :-auth-domain-builder)
-           [comps/ErrorViewer {:error server-error}]
-           (style/create-validation-error-message validation-errors)])}]))
+           [:div {}
+            [comps/ErrorViewer {:error server-error}]
+            (style/create-validation-error-message validation-errors)]])}]))
    :component-did-mount
    (fn [{:keys [state]}]
      (endpoints/get-groups
@@ -102,6 +104,33 @@
                       (if success?
                         (do (modal/pop-modal)
                             (nav/go-to-path :workspace-summary {:namespace project :name name}))
+                        (swap! state assoc :server-error (get-parsed-response false))))}))))
+   :-do-clone
+   (fn [{:keys [props refs state]}]
+     (swap! state dissoc :server-error :validation-errors)
+     (if-let [fails (input/validate refs "wsName")]
+       (swap! state assoc :validation-errors fails)
+       (let [name (input/get-text refs "wsName")
+             project (nth (:billing-projects props) (int (:selected-project @state)))
+             desc (common/get-text refs "wsDescription")
+             attributes (if (or (:description props) (not (clojure.string/blank? desc)))
+                          {:description desc}
+                          {})
+             selected-auth-domain-index (int (:selected-auth-domain @state))
+             auth-domain {:authorizationDomain (map
+                                                (fn [group-name]
+                                                  {:membersGroupName group-name})
+                                                (:selected-groups @state))}]
+         (swap! state assoc :creating-ws true)
+         (endpoints/call-ajax-orch
+          {:endpoint (endpoints/clone-workspace (:workspace-id props))
+           :payload (conj {:namespace project :name name :attributes attributes} auth-domain)
+           :headers utils/content-type=json
+           :on-done (fn [{:keys [success? get-parsed-response]}]
+                      (swap! state dissoc :creating-ws)
+                      (if success?
+                        (do (modal/pop-modal)
+                          (nav/go-to-path :workspace-summary {:namespace project :name name}))
                         (swap! state assoc :server-error (get-parsed-response false))))}))))
    :-auth-domain-builder
    (fn [{:keys [state props]}]
@@ -140,7 +169,8 @@
                :data-test-id (config/when-debug "workspace-auth-domain-select")
                :onChange #(swap! state update :selected-groups conj (-> % .-target .-value))}
               (set/difference all-groups (set selected-groups))
-              (str "Select " (if (empty? selected-groups) "a" "another") " Group..."))])])))})
+              (str "Select " (if (empty? selected-groups) "a" "another") " Group..."))])
+          (common/clear-both)])))})
 
 
 (react/defc Button
