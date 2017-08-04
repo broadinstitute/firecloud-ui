@@ -24,7 +24,7 @@
       flex/spring
       (when on-clear
         [:div {:style {:fontSize "80%"}}
-         (links/create-internal {:text "Clear" :onClick on-clear})])))
+         (links/create-internal {:onClick on-clear} "Clear")])))
    content])
 
 (defn checkboxes [{:keys [items checked-items on-change]}]

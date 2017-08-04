@@ -83,7 +83,7 @@
     [comps/Checkbox
      {:ref "callCache-check"
       :label [:span {:data-test-id (config/when-debug "call-cache-text") :style {:marginBottom "0.8em"}} "Use Call Caching "
-              (links/create-external {:href (config/call-caching-guide-url) :text "Learn about call caching"})]
+              (links/create-external {:href (config/call-caching-guide-url)} "Learn about call caching")]
       :data-test-id (config/when-debug "call-cache-checkbox")
       :initial-checked? true
       :disabled-text (case (:protected-option @state)
@@ -100,10 +100,9 @@
                      :warning)
          (str "Warning: This will launch " wf-count " workflows")]]))
    [:div {:style {:textAlign "right" :fontSize "80%"}}
-    (links/create-internal {:text (str "Cromwell Version: " (:cromwell-version @state))
-                            :target "_blank"
-                            :href (str "https://github.com/broadinstitute/cromwell/releases/tag/"
-                                       (:cromwell-version @state))})]
+    (links/create-external {:href (str "https://github.com/broadinstitute/cromwell/releases/tag/"
+                                       (:cromwell-version @state))}
+                           (str "Cromwell Version: " (:cromwell-version @state)))]
    (style/create-validation-error-message (:validation-errors @state))
    [comps/ErrorViewer {:error (:launch-server-error @state)}]])
 

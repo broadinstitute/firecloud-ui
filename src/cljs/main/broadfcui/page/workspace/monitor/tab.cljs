@@ -31,9 +31,9 @@
        :resizable? false :sortable? false :filterable? false :hidden? true
        :column-data :submissionId
        :as-text (constantly "View analysis details")
-       :render #(links/create-internal {:text "View"
-                                        :data-test-id (config/when-debug (str "submission-" %))
-                                        :href (nav/get-link :workspace-submission workspace-id %)})}
+       :render #(links/create-internal {:data-test-id (config/when-debug (str "submission-" %))
+                                        :href (nav/get-link :workspace-submission workspace-id %)}
+                                       "View")}
       {:header "Status" :as-text :status :sort-by :text
        :render (fn [submission]
                  [:div {:style {:height table-style/table-icon-size}}
@@ -54,11 +54,9 @@
       {:header "Submitted By" :initial-width 220 :column-data :submitter}
       {:header "Submission ID" :initial-width 235 :column-data :submissionId
        :render (fn [submission-id]
-                 (links/create-internal {:text submission-id
-                                         :target "_blank"
-                                         :style {:color "-webkit-link" :textDecoration "underline"}
-                                         :href (str moncommon/google-cloud-context
-                                                    bucketName "/" submission-id "/")}))}]}}])
+                 (links/create-external {:href (str moncommon/google-cloud-context
+                                                    bucketName "/" submission-id "/")}
+                                        submission-id))}]}}])
 
 
 (react/defc- SubmissionsList

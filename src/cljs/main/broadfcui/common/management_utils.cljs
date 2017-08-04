@@ -99,8 +99,7 @@
                          :render
                          (fn [{:keys [email role]}]
                            [:div {:style {:padding "0.6rem 0 0.6rem 32px"}}
-                            (links/create-internal {:text "Remove"
-                                                    :onClick #(this :-remove-user role email)})])}]}
+                            (links/create-internal {:onClick #(this :-remove-user role email)} "Remove")])}]}
                 :toolbar {:get-items
                           (constantly
                            [flex/spring

@@ -147,7 +147,7 @@
              "Something Went Wrong"]
     :content [:div {:style {:width 800}}
               "A JavaScript error occurred; please try reloading the page. If the error persists, please report it to our "
-              (links/create-external {:text "forum" :href (config/forum-url)})
+              (links/create-external {:href (config/forum-url)} "forum")
               " for help. Details of the error message are below."
               [:div {:style {:fontFamily "monospace" :whiteSpace "pre" :overflow "auto"
                              :backgroundColor "black" :color "white"

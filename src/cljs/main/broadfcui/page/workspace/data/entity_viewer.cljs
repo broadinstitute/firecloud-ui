@@ -43,12 +43,12 @@
                                                            :update-parent-state update-parent-state}))
            item-link (fn [item-type item-name]
                        (links/create-internal
-                        {:text item-name
-                         :onClick (fn []
+                        {:onClick (fn []
                                     (swap! state update
                                            :last-entity conj {:type (:entity-type props)
                                                               :name (:entity-name props)})
-                                    (update-and-load item-type item-name))}))]
+                                    (update-and-load item-type item-name))}
+                        item-name))]
        [:div {:style {:width "30%" :padding "0.5rem" :marginLeft ".38em"
                       :border (str "1px solid " (:line-default style/colors))}}
         [:a {:onClick #(update-parent-state :selected-entity nil)

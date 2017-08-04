@@ -5,13 +5,13 @@
    [broadfcui.utils :as utils]
    ))
 
-(defn create-internal [{:keys [text] :as attributes}]
+(defn create-internal [attributes & contents]
   [:a (utils/deep-merge {:href "javascript:;"
                          :style {:textDecoration "none" :color (:button-primary style/colors)}}
-                        (dissoc attributes :text))
-   text])
+                        attributes)
+   contents])
 
-(defn create-external [{:keys [text] :as attributes}]
-  [:a (merge {:target "_blank"} (dissoc attributes :text))
-   text
+(defn create-external [attributes & contents]
+  [:a (merge {:target "_blank"} attributes)
+   contents
    icons/external-link-icon])

@@ -42,7 +42,7 @@
            (when-not last-crumb-id
              (common/render-info-box
               {:text [:div {} "For more information about importing files, see our "
-                      (links/create-external {:href (config/user-guide-url) :text "user guide."})]}))]
+                      (links/create-external {:href (config/user-guide-url)} "user guide.")]}))]
           [:div {:style {:backgroundColor "white" :padding "1em"}}
            (case last-crumb-id
              :file-import
@@ -150,14 +150,15 @@
            {:keys [workspace-id]} props
            update-parent-state (partial this :update-state)]
        (links/create-internal
-        {:text entity-name
-         :onClick #(do (swap! state assoc
-                              :selected-entity-type entity-type
-                              :selected-attr-list nil
-                              :loading-attributes true
-                              :selected-entity entity-name)
-                       (data-utils/get-entity-attrs
-                        (utils/restructure entity-name entity-type workspace-id update-parent-state)))})))
+        {:onClick (fn [_]
+                    (swap! state assoc
+                           :selected-entity-type entity-type
+                           :selected-attr-list nil
+                           :loading-attributes true
+                           :selected-entity entity-name)
+                    (data-utils/get-entity-attrs
+                     (utils/restructure entity-name entity-type workspace-id update-parent-state)))}
+        entity-name)))
    :update-state
    (fn [{:keys [state]} & args]
      (apply swap! state assoc args))})

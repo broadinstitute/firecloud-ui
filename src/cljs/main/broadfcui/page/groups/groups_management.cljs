@@ -53,8 +53,7 @@
                 (fn [{:keys [groupName role]}]
                   (if
                    (= role "Admin")
-                    (links/create-internal {:text groupName
-                                            :href (nav/get-link :group groupName)})
+                    (links/create-internal {:href (nav/get-link :group groupName)} groupName)
                     groupName))}
                {:header "Role" :initial-width 100
                 :sort-by :text
@@ -76,9 +75,9 @@
                 (fn [{:keys [groupName role]}]
                   (when (= role "Admin")
                     (links/create-internal
-                     {:text (icons/icon {} :delete)
-                      :style {:float "right" :color (:exception-state style/colors)}
-                      :onClick #(swap! state assoc :group-name groupName :delete-modal? true)})))}]}
+                     {:style {:float "right" :color (:exception-state style/colors)}
+                      :onClick #(swap! state assoc :group-name groupName :delete-modal? true)}
+                     (icons/icon {} :delete))))}]}
        :toolbar
        {:get-items
         (constantly

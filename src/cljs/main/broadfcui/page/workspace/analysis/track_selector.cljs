@@ -33,8 +33,7 @@
                                (let [lc-data (clojure.string/lower-case data)]
                                  (some #(.endsWith lc-data %) supported-file-types)))
                         (style/left-ellipses {:style {:marginRight "0.5em"}}
-                                             (links/create-internal {:text data
-                                                                     :onClick #((:on-select props) data)}))
+                                             (links/create-internal {:onClick #((:on-select props) data)} data))
                         (default-render data)))}]])})
 
 

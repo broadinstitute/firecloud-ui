@@ -83,7 +83,7 @@
                                      (if instruction
                                        [:div {}
                                         "Learn how to apply for this Group "
-                                        (links/create-external {:href instruction :text "here"})
+                                        (links/create-external {:href instruction} "here")
                                         "."]
 
                                        [:div {}
@@ -246,8 +246,8 @@
                :render (fn [{:keys [access-level workspace-id auth-domain-groups]}]
                          [:div {:style {:paddingLeft 14}}
                           (if (= access-level "NO ACCESS")
-                            (links/create-internal {:text (style/prettify-access-level access-level)
-                                                    :onClick #(this :-show-request-access-modal workspace-id auth-domain-groups)})
+                            (links/create-internal {:onClick #(this :-show-request-access-modal workspace-id auth-domain-groups)}
+                                                   (style/prettify-access-level access-level))
                             (style/prettify-access-level access-level))])}])
            :behavior {:reorderable-columns? false}
            :style {:header-row {:color (:text-lighter style/colors) :fontSize "90%"}
@@ -266,8 +266,8 @@
                             [[:div {:style {:float "right"}}
                               [create/Button (select-keys props [:nav-context :billing-projects :disabled-reason])]]
                              [:div {:style {:clear "left" :float "left" :marginTop "0.5rem"}}
-                              (links/create-internal {:text (if filters-expanded? "Collapse" "Show additional filters")
-                                                      :onClick #(swap! state update :filters-expanded? not)})]
+                              (links/create-internal {:onClick #(swap! state update :filters-expanded? not)}
+                                                     (if filters-expanded? "Collapse" "Show additional filters"))]
                              [:div {:style {:clear "both"}}]
                              (when filters-expanded?
                                (this :-render-side-filters))])}

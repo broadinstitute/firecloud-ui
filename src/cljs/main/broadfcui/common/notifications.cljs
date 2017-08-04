@@ -30,8 +30,9 @@
        [:span {:style {:color text-color :fontSize "90%" :margin-left "1rem"}}
         message
         (when link
-          (links/create-external {:href link :text "Read more..."
-                                  :style {:color text-color :margin-left "1rem"}}))]]])))
+          (links/create-external {:href link
+                                  :style {:color text-color :margin-left "1rem"}}
+                                 "Read more..."))]]])))
 
 (defn- status-alert-interval [attempt]
   (cond

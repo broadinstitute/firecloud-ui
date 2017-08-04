@@ -33,8 +33,8 @@
             :else
             (if (empty? billing-accounts)
               [:div {} "You do not have any billing accounts available. "
-               (links/create-external {:href (config/billing-guide-url)
-                                       :text "Learn how to create a billing account."})]
+               (links/create-external {:href (config/billing-guide-url)}
+                                      "Learn how to create a billing account.")]
               [:div {:style {:width 750}
                      :data-test-id (config/when-debug "create-billing-project-form")}
                (when (:creating? @state)

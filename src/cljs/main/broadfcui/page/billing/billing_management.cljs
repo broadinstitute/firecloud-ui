@@ -100,8 +100,9 @@
                           {:project-name projectName
                            :on-status-change (partial this :-handle-status-change projectName)}]
                          (and (= creationStatus project-status-ready) (contains? (set roles) "Owner"))
-                         (links/create-internal {:text projectName :data-test-id (config/when-debug (str projectName "-link"))
-                                                 :href (nav/get-link :billing-project projectName)})
+                         (links/create-internal {:data-test-id (config/when-debug (str projectName "-link"))
+                                                 :href (nav/get-link :billing-project projectName)}
+                                                projectName)
                          :else projectName)
                        (when message
                          [:div {:style {:float "right" :position "relative"

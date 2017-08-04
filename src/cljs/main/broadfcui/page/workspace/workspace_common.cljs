@@ -28,8 +28,8 @@
             {:header "Name" :initial-width 150
              :as-text (comp :name :workspace) :sort-by :text
              :render (fn [ws]
-                       (links/create-internal {:text (get-in ws [:workspace :name])
-                                               :onClick #(on-workspace-selected ws)}))}
+                       (links/create-internal {:onClick #(on-workspace-selected ws)}
+                                              (get-in ws [:workspace :name])))}
             {:header "Created By" :initial-width 200
              :column-data (comp :createdBy :workspace)}
             (table-utils/date-column {:column-data (comp :createdDate :workspace)})

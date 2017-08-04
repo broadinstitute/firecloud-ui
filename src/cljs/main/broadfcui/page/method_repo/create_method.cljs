@@ -95,33 +95,30 @@
                   [undo? redo?] (map pos? [undo redo])
                   link (fn [label enabled?]
                          (if enabled?
-                           (links/create-internal {:text (clojure.string/capitalize label)
-                                                   :onClick #((@refs "wdl-editor") :call-method label)
+                           (links/create-internal {:onClick #((@refs "wdl-editor") :call-method label)
                                                    :style {:color (:text-light style/colors)
                                                            :backgroundColor "white"
                                                            :padding "0 6px"
-                                                           :border style/standard-line}})
+                                                           :border style/standard-line}}
+                                                  (clojure.string/capitalize label))
                            [:span {:style {:color (:text-lighter style/colors)
                                            :padding "0 6px"
                                            :border style/standard-line}}
                             (clojure.string/capitalize label)]))]
               [:div {:style {:display "flex" :alignItems "baseline" :width "100%"}}
                [:span {:style {:paddingRight "1em"}} "WDL"]
-               (links/create-internal {:text "Load from file..."
-                                       :onClick #(.click (@refs "wdl-uploader"))})
+               (links/create-internal {:onClick #(.click (@refs "wdl-uploader"))} "Load from file...")
                (when file-name
                  [:span {}
                   [:span {:style {:padding "0 1em 0 25px"}} (str "Selected: " file-name)]
-                  (links/create-internal {:text "Reset to file"
-                                          :onClick #(this :-set-wdl-text (:file-contents @state))})])
+                  (links/create-internal {:onClick #(this :-set-wdl-text (:file-contents @state))} "Reset to file")])
                [:span {:style {:flex "1 0 auto"}}]
                (link "undo" undo?)
                (link "redo" redo?)]))
            [CodeMirror {:ref "wdl-editor" :text (:payload info) :read-only? false}]
            [:div {:style {:marginTop "0.8em" :fontSize "88%"}}
             "WDL must use Docker image digests to allow call caching "
-            (links/create-external {:href (config/call-caching-guide-url)
-                                    :text "Learn about call caching"})]
+            (links/create-external {:href (config/call-caching-guide-url)} "Learn about call caching")]
 
            (when (:edit-mode? info)
              [:div {:style {:margin "1rem 0 -1rem"}}

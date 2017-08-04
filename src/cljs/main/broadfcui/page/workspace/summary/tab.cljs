@@ -252,11 +252,9 @@
            (case bucket-access?
              nil [:div {:style {:position "absolute" :marginTop "-1.5em"}}
                   [comps/Spinner {:height "1.5ex"}]]
-             true (links/create-internal {:text bucketName
-                                          :href (str moncommon/google-cloud-context bucketName "/")
-                                          :style {:color "-webkit-link" :textDecoration "underline"}
-                                          :title "Click to open the Google Cloud Storage browser for this bucket"
-                                          :target "_blank"})
+             true (links/create-external {:href (str moncommon/google-cloud-context bucketName "/")
+                                          :title "Click to open the Google Cloud Storage browser for this bucket"}
+                                         bucketName)
              false bucketName)
            (when writer?
              [:div {:style {:lineHeight "initial"}}

@@ -197,8 +197,8 @@
          (this :render-details entity)
          [:div {:style {:paddingTop "0.5rem"}}
           [:span {:style {:fontWeight 500 :marginRight "1rem"}} (if config? "Referenced Method:" "WDL:")]
-          (links/create-internal {:text (if (:payload-expanded @state) "Collapse" "Expand")
-                                  :onClick #(swap! state assoc :payload-expanded (not (:payload-expanded @state)))})]
+          (links/create-internal {:onClick #(swap! state assoc :payload-expanded (not (:payload-expanded @state)))}
+                                 (if (:payload-expanded @state) "Collapse" "Expand"))]
          (when (:payload-expanded @state)
            (if config?
              [:div {:style {:margin "0.5rem 0 0 1rem"}}
@@ -256,8 +256,8 @@
              [:div {:style {:marginLeft "1em" :whiteSpace "nowrap"}}
               (str "at " class "." method " (" file ":" num ")")]))
          (:lines props))
-        (links/create-internal {:text "Hide Stack Trace" :onClick #(swap! state assoc :expanded? false)})]
-       [:div {} (links/create-internal {:text "Show Stack Trace" :onClick #(swap! state assoc :expanded? true)})]))})
+        (links/create-internal {:onClick #(swap! state assoc :expanded? false)} "Hide Stack Trace")]
+       [:div {} (links/create-internal {:onClick #(swap! state assoc :expanded? true)} "Show Stack Trace")]))})
 
 
 (declare CauseViewer)
@@ -278,8 +278,8 @@
              (map (fn [cause] [CauseViewer cause]) causes)])
           (when (seq stack-trace)
             [StackTraceViewer {:lines stack-trace}])
-          (links/create-internal {:text "Hide Cause" :onClick #(swap! state assoc :expanded? false)})])
-       [:div {} (links/create-internal {:text "Show Cause" :onClick #(swap! state assoc :expanded? true)})]))})
+          (links/create-internal {:onClick #(swap! state assoc :expanded? false)} "Hide Cause")])
+       [:div {} (links/create-internal {:onClick #(swap! state assoc :expanded? true)} "Show Cause")]))})
 
 (react/defc ErrorViewer
   {:render
@@ -303,10 +303,9 @@
                                   (str "Error: " message))
             (if (:expanded? @state)
               [:div {}
-               (links/create-internal {:text [:span {}
-                                              (icons/icon {:className "fa-fw"} :disclosure-opened)
-                                              "Hide Details"]
-                                       :onClick #(swap! state assoc :expanded? false)})
+               (links/create-internal {:onClick #(swap! state assoc :expanded? false)}
+                                      (icons/icon {:className "fa-fw"} :disclosure-opened)
+                                      "Hide Details")
                ;; Padding is specifically em rather than rem to match fa-fw
                [:div {:style {:overflowX "auto" :paddingLeft "1.3em"}}
                 [:div {} (str "Code: " status-code)]
@@ -326,10 +325,9 @@
                 (when (seq stack-trace)
                   [StackTraceViewer {:lines stack-trace}])]]
               [:div {}
-               (links/create-internal {:text [:span {}
-                                              (icons/icon {:className "fa-fw"} :disclosure-closed)
-                                              "Show Details"]
-                                       :onClick #(swap! state assoc :expanded? true)})])]))))})
+               (links/create-internal {:onClick #(swap! state assoc :expanded? true)}
+                                      (icons/icon {:className "fa-fw"} :disclosure-closed)
+                                      "Show Details")])]))))})
 
 
 (react/defc Breadcrumbs
@@ -347,7 +345,7 @@
             (fn [{:keys [text onClick href] :as link-props}]
               [:span {:style {:whiteSpace "pre"}}
                (if (or onClick href)
-                 (links/create-internal link-props)
+                 (links/create-internal (dissoc link-props :text) text)
                  text)])
             (butlast crumbs)))
           sep
@@ -626,9 +624,9 @@
 (defn no-billing-projects-message []
   [:div {:style {:textAlign "center"}}
    "You must have a billing project associated with your account to create a new workspace."
-   (links/create-external {:text "Learn how to create a billing project."
-                           :href (config/billing-guide-url)
-                           :style {:display "block"}})])
+   (links/create-external {:href (config/billing-guide-url)
+                           :style {:display "block"}}
+                          "Learn how to create a billing project.")])
 
 (defn push-ok-cancel-modal [props]
   (modal/push-modal [OKCancelForm props]))
@@ -799,8 +797,8 @@
          [:span {}
           (:label props) " "
           (links/create-internal
-           {:text (icons/icon {} (if (:collapsed? @state) :expand :collapse))
-            :onClick #(swap! state assoc :collapsed? (not (:collapsed? @state)))})
+           {:onClick #(swap! state assoc :collapsed? (not (:collapsed? @state)))}
+           (icons/icon {} (if (:collapsed? @state) :expand :collapse)))
           body]
          body)))})
 

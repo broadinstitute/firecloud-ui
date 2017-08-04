@@ -63,9 +63,9 @@
                      [:div {} "An Authorization Domain can only be set when creating a Workspace.
                    Once set, it cannot be changed."]
                      (links/create-external
-                      {:href "https://software.broadinstitute.org/firecloud/documentation/article?id=9524"
-                       :text [:span {:style {:white-space "pre"}}
-                              "Read more about Authorization Domains"]})]})]
+                      {:href "https://software.broadinstitute.org/firecloud/documentation/article?id=9524"}
+                      [:span {:style {:white-space "pre"}}
+                       "Read more about Authorization Domains"])]})]
            (when (:auth-domain props)
              [:div {:style {:fontStyle "italic" :fontSize "80%" :paddingBottom "0.25rem"}}
               "The cloned Workspace will automatically inherit the Authorization Domain from this Workspace."

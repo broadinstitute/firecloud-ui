@@ -21,13 +21,13 @@
 (def ^:private tcga-access-instructions
   [:span {}
    [:p {} "For access to TCGA protected data please apply for access via dbGaP [instructions can be found "
-    (links/create-external {:href "https://wiki.nci.nih.gov/display/TCGA/Application+Process" :text "here"})
+    (links/create-external {:href "https://wiki.nci.nih.gov/display/TCGA/Application+Process"} "here")
     "]."]])
 
 (def ^:private target-access-instructions
   [:span {}
    [:p {} "For access to TARGET protected data please apply for access via dbGaP [instructions can be found "
-    (links/create-external {:href "https://ocg.cancer.gov/programs/target/using-target-data" :text "here"})
+    (links/create-external {:href "https://ocg.cancer.gov/programs/target/using-target-data"} "here")
     "]."]])
 
 (defn- standard-access-instructions [data]
@@ -71,9 +71,9 @@
                       :as-text :library:datasetDescription
                       :render (fn [data]
                                 (links/create-internal
-                                 (merge {:text (:library:datasetName data)
-                                         :data-test-id (config/when-debug (str "dataset-" (:library:datasetName data)))}
-                                        (this :-get-link-props data))))}
+                                 (merge {:data-test-id (config/when-debug (str "dataset-" (:library:datasetName data)))}
+                                        (this :-get-link-props data))
+                                 (:library:datasetName data)))}
                      {:id "library:indication" :header (:title (:library:indication attributes))
                       :column-data :library:indication :initial-width 180}
                      {:id "library:dataUseRestriction" :header (:title (:library:dataUseRestriction attributes))
@@ -244,7 +244,7 @@
         [:hr {}]
         [:span {:style {:fontWeight "bold"}} title]
         [:div {:style {:fontSize "80%" :float "right"}}
-         (links/create-internal {:text "Clear" :onClick #(this :clear-all)})]
+         (links/create-internal {:onClick #(this :clear-all)} "Clear")]
         [:div {:style {:paddingTop "1em"}}
          (map
           (fn [{:keys [key doc_count]}]
@@ -261,11 +261,9 @@
          [:div {:style {:paddingTop 5}}
           (if (:expanded? props)
             (when (> (count (:buckets props)) 5)
-              (links/create-internal {:text " less..."
-                                      :onClick #(this :update-expanded false)}))
+              (links/create-internal {:onClick #(this :update-expanded false)} " less..."))
             (when (> size 0)
-              (links/create-internal {:text " more..."
-                                      :onClick #(this :update-expanded true)})))]]]))
+              (links/create-internal {:onClick #(this :update-expanded true)} " more...")))]]]))
    :clear-all
    (fn [{:keys [props]}]
      ((:update-filter props) (:field props) #{}))

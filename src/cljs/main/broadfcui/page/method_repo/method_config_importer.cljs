@@ -311,23 +311,23 @@
                         :snapshot-id snapshotId}
                     type (if (= entityType "Configuration") :method-config :method)]
                 (links/create-internal
-                 {:text (style/render-name-id name snapshotId)
-                  :data-test-id (config/when-debug (str name "_" snapshotId))
+                 {:data-test-id (config/when-debug (str name "_" snapshotId))
                   :href (if workspace-id "javascript:;" (nav/get-link type id))
                   :onClick (when workspace-id
-                             #(swap! state assoc :type type :id id))})))
+                             #(swap! state assoc :type type :id id))}
+                 (style/render-name-id name snapshotId))))
             :render-namespace
             (fn [{:keys [namespace type]}]
               (if workspace-id
                 namespace
                 (links/create-internal
-                 {:text namespace
-                  :onClick #(modal/push-modal
+                 {:onClick #(modal/push-modal
                              [mca/AgoraPermsEditor
                               {:save-endpoint (endpoints/post-agora-namespace-acl namespace (= :config type))
                                :load-endpoint (endpoints/get-agora-namespace-acl namespace (= :config type))
                                :entityType "Namespace" :entityName namespace
-                               :title (str "Namespace " namespace)}])})))
+                               :title (str "Namespace " namespace)}])}
+                 namespace)))
             :toolbar-items
             [flex/spring
              [comps/Button

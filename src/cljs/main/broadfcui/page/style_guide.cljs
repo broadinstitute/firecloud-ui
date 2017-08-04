@@ -13,8 +13,7 @@
    ))
 
 (defn- create-nav-link [label]
-  (links/create-internal {:text label
-                          :href (str "#" (string/lower-case label))}))
+  (links/create-internal {:href (str "#" (string/lower-case label))} label))
 
 (defn- style-nav [body-id]
   [Sticky
@@ -60,11 +59,11 @@
    [:h2 {:style {:marginBottom "0.5rem"}} "Overview"]
    (create-sub-head "Summary")
    [:p {} "FireCloud's font is "
-    (links/create-external {:href "https://fonts.google.com/specimen/Roboto" :text "Roboto"})
+    (links/create-external {:href "https://fonts.google.com/specimen/Roboto"} "Roboto")
     ", and icons come from "
-    (links/create-external {:href "http://fontawesome.io/icons/" :text "Font Awesome"})
+    (links/create-external {:href "http://fontawesome.io/icons/"} "Font Awesome")
     ". We use some widgets from "
-    (links/create-external {:href "http://foundation.zurb.com/sites/docs/" :text "Foundation"})
+    (links/create-external {:href "http://foundation.zurb.com/sites/docs/"} "Foundation")
     "."]
    [:p {} "When you're working on any part of FireCloud, remember
     that its purpose is to put the user in touch with their data. That is, FireCloud should never come
@@ -87,16 +86,16 @@
    [:p {} "We prefer " (style/create-code-sample "rem") " over " (style/create-code-sample "em") ", "
     (style/create-code-sample "ex") ", " (style/create-code-sample "px") ", etc. for size values, since these
     are always the same size wherever they are used. If you're unfamiliar with these units, find out more "
-    (links/create-external {:href "https://developer.mozilla.org/en-US/docs/Web/CSS/length" :text "at the MDN"})
+    (links/create-external {:href "https://developer.mozilla.org/en-US/docs/Web/CSS/length"} "at the MDN")
     "."]
 
    (create-sub-head "Links")
    [:p {} "Internal links are created using " (style/create-code-sample "links/create-internal") ", and "
-    (links/create-internal {:text "look like this"}) "."]
-   (create-code-block "(links/create-internal {:text \"link text\" :onClick #(...)})")
+    (links/create-internal {} "look like this") "."]
+   (create-code-block "(links/create-internal {:onClick #(...)} \"link text\")")
    [:p {} "External links are created using " (style/create-code-sample "links/create-external") ", and "
-    (links/create-external {:text "look like this" :href "javascript:;"}) "."]
-   (create-code-block "(links/create-external {:text \"link text\" :href \"...\"})")
+    (links/create-external {:href "javascript:;"} "look like this") "."]
+   (create-code-block "(links/create-external {:href \"...\"} \"link text\")")
 
    (create-sub-head "Switches")
    [:p {} "As an alternative to checkboxes, we have switches."]

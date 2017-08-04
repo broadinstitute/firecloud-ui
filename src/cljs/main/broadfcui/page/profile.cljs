@@ -38,7 +38,7 @@
           (:pending-nih-username-token @state)
           [components/Spinner {:ref "pending-spinner" :text "Linking NIH account..."}]
           (nil? username)
-          (links/create-external {:href (get-nih-link-href) :text "Log-In to NIH to link your account"})
+          (links/create-external {:href (get-nih-link-href)} "Log-In to NIH to link your account")
           :else
           [:div {}
            [:div {:style {:display "flex"}}
@@ -51,7 +51,7 @@
                [:span {:style {:color "red"}} "Expired"]
                [:span {:style {:color (when expiring-soon? "red")}} (common/format-date expire-time)])
              [:div {}
-              (links/create-external {:href (get-nih-link-href) :text "Log-In to NIH to re-link your account"})]]]
+              (links/create-external {:href (get-nih-link-href)} "Log-In to NIH to re-link your account")]]]
            (map
             (fn [whitelist]
               [:div {:style {:display "flex" :marginTop "1rem"}}
@@ -63,10 +63,9 @@
                    "Not Authorized"
                    (common/render-info-box
                     {:text
-                     [:div {} "Your account was linked, but you are not authorized to view
-                     this protected dataset. Please go "
-                      (links/create-external {:href "https://dbgap.ncbi.nlm.nih.gov/aa/wga.cgi?page=login"
-                                              :text "here"})
+                     [:div {}
+                      "Your account was linked, but you are not authorized to view this protected dataset. Please go "
+                      (links/create-external {:href "https://dbgap.ncbi.nlm.nih.gov/aa/wga.cgi?page=login"} "here")
                       " to check your credentials."]})])]])
             datasets)])]))
    :component-did-mount

@@ -34,11 +34,11 @@
           {:configs configs
            :render-name (fn [config]
                           (links/create-internal
-                           {:text (:name config)
-                            :data-test-id (config/when-debug (str "method-config-" (:name config) "-link"))
+                           {:data-test-id (config/when-debug (str "method-config-" (:name config) "-link"))
                             :href (nav/get-link :workspace-method-config
                                                 (:workspace-id props)
-                                                (ws-common/config->id config))}))
+                                                (ws-common/config->id config))}
+                           (:name config)))
            :toolbar-items
            [flex/spring
             [comps/Button

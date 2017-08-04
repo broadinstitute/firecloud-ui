@@ -27,8 +27,8 @@
          :title-expand
          (style/create-section-header
           (links/create-internal {:style {:fontSize "0.8em" :fontWeight "normal" :marginLeft "1em"}
-                                  :text "Edit..."
-                                  :onClick #(modal/push-modal [CatalogWizard wizard-properties])}))
+                                  :onClick #(modal/push-modal [CatalogWizard wizard-properties])}
+                                 "Edit..."))
          :contents
          [:div {:style {:marginTop "1rem" :fontSize "90%" :lineHeight 1.5}}
           (map (partial library-utils/render-property library-schema library-attributes) (-> library-schema :display :primary))
@@ -42,8 +42,8 @@
                  :else (library-utils/render-library-row (str "Retrieving information for " orsp-id) [comps/Spinner]))
                (library-utils/render-consent-codes library-schema library-attributes))])
           [:div {:style {:marginTop "0.5em"}}
-           (links/create-internal {:text (if (:expanded? @state) "Collapse" "See more attributes")
-                                   :onClick #(swap! state update :expanded? not)})]]}]))
+           (links/create-internal {:onClick #(swap! state update :expanded? not)}
+                                  (if (:expanded? @state) "Collapse" "See more attributes"))]]}]))
    :component-did-mount
    (fn [{:keys [props state]}]
      (when-let [orsp-id (:library:orsp (:library-attributes props))]

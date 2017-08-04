@@ -144,18 +144,18 @@
       [:span {:style {:fontSize "small" :float "right"}} related-id]
       [:div {}
        (when-not disabled
-         (links/create-internal {:text "Clear Selection"
-                                 :onClick #(apply swap! state update :attributes dissoc property
-                                                  (library-utils/get-related-id+label-props library-schema property))}))]]
+         (links/create-internal {:onClick #(apply swap! state update :attributes dissoc property
+                                                  (library-utils/get-related-id+label-props library-schema property))}
+                                "Clear Selection"))]]
      ;; TODO: why is this causing React to bomb when adding the node?
      #_(when (not-any? clojure.string/blank? [related-id related-label])
          [:div {}
           [:span {:style {:fontWeight "bold"}} related-label]
           [:span {:style {:fontSize "small" :float "right"}} related-id]
           [:div {}
-           (links/create-internal {:text "Clear Selection"
-                                   :onClick #(apply swap! state update :attributes dissoc property
-                                                    (library-utils/get-related-id+label-props library-schema property))})]]))])
+           (links/create-internal {:onClick #(apply swap! state update :attributes dissoc property
+                                                    (library-utils/get-related-id+label-props library-schema property))}
+                                  "Clear Selection")]]))])
 
 (defn- render-populate-typeahead [{:keys [value-nullsafe property inputHint colorize set-property update-property disabled]}]
   [:div {:style {:marginBottom "0.75em"}}

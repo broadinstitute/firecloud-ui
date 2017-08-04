@@ -35,9 +35,9 @@
                       [{:starting-width 40 :resizable? false :reorderable? false :sort-by :none
                         :content-renderer
                         (fn [index]
-                          (links/create-internal {:text (icons/icon {} (if source? :add :remove))
-                                                  :onClick #(swap! state update :selected
-                                                                   (if source? conj disj) index)}))}
+                          (links/create-internal {:onClick #(swap! state update :selected
+                                                                   (if source? conj disj) index)}
+                                                 (icons/icon {} (if source? :add :remove))))}
                        {:header (:id-name props) :starting-width 150
                         :as-text #(% "name") :sort-by :text}]
                       (map (fn [k] {:header k :starting-width 100
