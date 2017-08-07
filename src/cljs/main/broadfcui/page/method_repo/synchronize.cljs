@@ -3,7 +3,7 @@
    [dmohs.react :as react]
    [clojure.set :as set]
    [broadfcui.common.components :as comps]
-   [broadfcui.common.sync :as sync-common]
+   [broadfcui.common.method.sync :as sync-common]
    [broadfcui.components.modals :as modals]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.utils :as utils]

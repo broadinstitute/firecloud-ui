@@ -2,11 +2,8 @@
   (:require
    [dmohs.react :as react]
    [clojure.set :as set]
-   [clojure.string :as string]
    [broadfcui.common.components :as comps]
-   [broadfcui.common.links :as links]
-   [broadfcui.common.style :as style]
-   [broadfcui.common.sync :as sync-common]
+   [broadfcui.common.method.sync :as sync-common]
    [broadfcui.components.modals :as modals]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.utils :as utils]

@@ -1,4 +1,4 @@
-(ns broadfcui.common.sync
+(ns broadfcui.common.method.sync
   (:require
    [dmohs.react :as react]
    [clojure.string :as string]
