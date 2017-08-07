@@ -181,7 +181,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
 
             val cloneWorkspaceName = workspaceName + "_clone"
             val cloneModal = summaryPage.ui.clickCloneButton()
-            cloneModal.ui.readLockedAuthDomainGroups(authDomainName) should be(Some(authDomainName))
+            cloneModal.ui.readLockedAuthDomainGroups() should contain((authDomainName, false))
 
             register cleanUp { api.workspaces.delete(projectName, cloneWorkspaceName)(AuthTokens.george) }
             cloneModal.cloneWorkspace(projectName, cloneWorkspaceName)

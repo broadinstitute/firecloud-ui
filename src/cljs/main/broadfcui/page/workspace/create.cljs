@@ -118,7 +118,7 @@
                 [:div {:style {:float "left" :width "90%"}}
                  (style/create-identity-select-name
                   {:value opt
-                   :data-test-id (config/when-debug (str "locked-auth-domain-group-" opt))
+                   :data-test-id (config/when-debug "locked-auth-domain-group")
                    :disabled (utils/seq-contains? locked-groups opt)
                    :onChange #(swap! state update :selected-groups assoc i (-> % .-target .-value))}
                   (set/difference all-groups (set (utils/delete selected-groups i))))]
