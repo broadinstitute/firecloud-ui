@@ -10,43 +10,77 @@
    [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
    [broadfcui.components.sticky :refer [Sticky]]
+   [broadfcui.components.modals :as modals]
    [broadfcui.config :as config]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.nav :as nav]
    [broadfcui.page.method-repo.create-method :as create]
    [broadfcui.page.method-repo.method-repo-table :refer [MethodRepoTable]]
    [broadfcui.page.method-repo.methods-configs-acl :as mca]
+   [broadfcui.page.method-repo.synchronize :as mr-sync]
+   [broadfcui.page.method-repo.redact :refer [Redactor]]
    [broadfcui.utils :as utils]
    ))
 
 
-(react/defc- Redactor
+(react/defc- Sidebar
   {:render
-   (fn [{:keys [props state this]}]
-     [comps/OKCancelForm
-      {:header "Confirm redaction"
-       :content
-       [:div {:style {:width 500}}
-        (when (:redacting? @state)
-          [comps/Blocker {:banner "Redacting..."}])
-        [:div {:style {:marginBottom "1em"}}
-         (str "Are you sure you want to redact this " (if (:config? props) "configuration" "method") "?")]
-        [comps/ErrorViewer {:error (:error @state)
-                            :expect {401 "Unauthorized"}}]]
-       :ok-button {:text "Redact" :onClick #(this :redact)}}])
-   :redact
-   (fn [{:keys [props state]}]
-     (swap! state assoc :redacting? true :error nil)
-     (endpoints/call-ajax-orch
-      {:endpoint (endpoints/delete-agora-entity (:config? props) (:entity props))
-       :on-done (fn [{:keys [success? get-parsed-response]}]
-                  (swap! state dissoc :redacting?)
-                  (if success?
-                    (do (modal/pop-modal) ((:on-delete props)))
-                    (swap! state assoc :error (get-parsed-response false))))}))})
+   (fn [{:keys [props state refs]}]
+     (let [{:keys [entity config? workflow? on-delete owner? body-id]} props
+           on-method-created (fn [_ id]
+                               (nav/go-to-path :method id)
+                               (common/scroll-to-top))]
+       [:div {:style {:flex "0 0 270px" :paddingRight 30}}
+        [mr-sync/SyncContainer {:ref "sync-container" :config entity}]
+        (modals/show-modals
+         state
+         {:deleting?
+          [Redactor (utils/restructure entity config? on-delete)]
+          :editing-acl?
+          [mca/AgoraPermsEditor
+           {:save-endpoint (endpoints/persist-agora-entity-acl config? entity)
+            :load-endpoint (endpoints/get-agora-entity-acl config? entity)
+            :entityType (:entityType entity)
+            :entityName (mca/get-ordered-name entity)
+            :title (str (:entityType entity) " " (mca/get-ordered-name entity))
+            :on-users-added #((@refs "sync-container") :check-synchronization %)}]
+          :cloning?
+          [create/CreateMethodDialog
+           {:duplicate entity
+            :on-created on-method-created}]
+          :editing-method?
+          [create/CreateMethodDialog
+           {:snapshot entity
+            :on-created on-method-created}]})
+        [Sticky
+         {:anchor body-id
+          :sticky-props {:data-check-every 1}
+          :contents
+          [:div {:style {:width 270}}
+           (when workflow?
+             [comps/SidebarButton
+              {:style :light :color :button-primary
+               :text "Clone..." :icon :clone :margin :bottom
+               :onClick #(swap! state assoc :cloning? true)}])
+           (when owner?
+             (list
+              (when workflow?
+                [comps/SidebarButton
+                 {:style :light :color :button-primary
+                  :text "Edit..." :icon :edit :margin :bottom
+                  :onClick #(swap! state assoc :editing-method? true)}])
+              [comps/SidebarButton
+               {:style :light :color :button-primary
+                :text "Permissions..." :icon :settings :margin :bottom
+                :onClick #(swap! state assoc :editing-acl? true)}]
+              [comps/SidebarButton
+               {:style :light :color :exception-state
+                :text "Redact" :icon :delete :margin :bottom
+                :onClick #(swap! state assoc :deleting? true)}]))]}]]))})
+
 
 (defn- create-import-form [state props this locals entity config? fields]
-  (let [{:keys [workspace-id]} props
+  (let [{:keys [workspace-id on-delete]} props
         workflow? (= "Workflow" (:entityType entity))
         owner? (contains? (set (:managers entity)) (utils/get-user-email))
         any-actions? (or workflow? owner?)
@@ -55,48 +89,7 @@
      (when (:blocking-text @state)
        [comps/Blocker {:banner (:blocking-text @state)}])
      (when (and any-actions? (:allow-edit props))
-       [:div {:style {:flex "0 0 270px" :paddingRight 30}}
-        [Sticky
-         {:outer-style {:width 290 :backgroundColor "#fff"}
-          :anchor body-id
-          :sticky-props {:data-check-every 1}
-          :contents
-          [:div {:style {:width 270 :background "#fff"}}
-           (when workflow?
-             [comps/SidebarButton
-              {:style :light :color :button-primary
-               :text "Clone..." :icon :clone :margin :bottom
-               :onClick #(modal/push-modal [create/CreateMethodDialog
-                                            {:duplicate entity
-                                             :on-created (fn [_ id]
-                                                           (nav/go-to-path :method id)
-                                                           (common/scroll-to-top))}])}])
-           (when owner?
-             (list
-              (when workflow?
-                [comps/SidebarButton
-                 {:style :light :color :button-primary
-                  :text "Edit..." :icon :edit :margin :bottom
-                  :onClick #(modal/push-modal [create/CreateMethodDialog
-                                               {:snapshot entity
-                                                :on-created (fn [_ id]
-                                                              (nav/go-to-path :method id)
-                                                              (common/scroll-to-top))}])}])
-              [comps/SidebarButton
-               {:style :light :color :button-primary
-                :text "Permissions..." :icon :settings :margin :bottom
-                :onClick #(modal/push-modal
-                           [mca/AgoraPermsEditor
-                            {:save-endpoint (endpoints/persist-agora-entity-acl config? entity)
-                             :load-endpoint (endpoints/get-agora-entity-acl config? entity)
-                             :entityType (:entityType entity)
-                             :entityName (mca/get-ordered-name entity)
-                             :title (str (:entityType entity) " " (mca/get-ordered-name entity))}])}]
-              [comps/SidebarButton
-               {:style :light :color :exception-state
-                :text "Redact" :icon :delete :margin :bottom
-                :onClick #(modal/push-modal [Redactor {:entity entity :config? config?
-                                                       :on-delete (:on-delete props)}])}]))]}]])
+       [Sidebar (utils/restructure entity config? workflow? on-delete owner? body-id)])
      [:div {:style {:flex "1 1 auto"} :id body-id}
       [comps/EntityDetails {:entity entity}]
       [:div {:style {:border style/standard-line
@@ -297,6 +290,21 @@
            type (some :type [props @state])
            id (some :id [props @state])]
        [:div {:key (str id)}
+        (when (:editing-namespace-acl? @state)
+          (let [{:keys [edit-namespace edit-type]} @state]
+            [mca/AgoraPermsEditor
+             {:dismiss #(swap! state dissoc :editing-namespace-acl?)
+              :save-endpoint (endpoints/post-agora-namespace-acl edit-namespace (= :config edit-type))
+              :load-endpoint (endpoints/get-agora-namespace-acl edit-namespace (= :config edit-type))
+              :entityType "Namespace" :entityName edit-namespace
+              :title (str "Namespace " edit-namespace)}]))
+        (when (:creating? @state)
+          [create/CreateMethodDialog
+           {:dismiss #(swap! state dissoc :creating?)
+            :on-created (fn [type id]
+                          (if (:in-workspace? props)
+                            ((:on-selected props) type id)
+                            (nav/go-to-path :method id)))}])
         (when id
           [:h3 {} (str (:namespace id) "/" (:name id) " #" (:snapshot-id id))])
         (if id
@@ -321,20 +329,13 @@
               (if workspace-id
                 namespace
                 (links/create-internal
-                 {:onClick #(modal/push-modal
-                             [mca/AgoraPermsEditor
-                              {:save-endpoint (endpoints/post-agora-namespace-acl namespace (= :config type))
-                               :load-endpoint (endpoints/get-agora-namespace-acl namespace (= :config type))
-                               :entityType "Namespace" :entityName namespace
-                               :title (str "Namespace " namespace)}])}
+                 {:onClick #(swap! state assoc
+                                   :editing-namespace-acl? true
+                                   :edit-namespace namespace
+                                   :edit-type type)}
                  namespace)))
             :toolbar-items
             [flex/spring
              [comps/Button
               {:text "Create new method..."
-               :onClick #(modal/push-modal
-                          [create/CreateMethodDialog
-                           {:on-created (fn [type id]
-                                          (if (:in-workspace? props)
-                                            ((:on-selected props) type id)
-                                            (nav/go-to-path :method id)))}])}]]}])]))})
+               :onClick #(swap! state assoc :creating? true)}]]}])]))})
