@@ -9,6 +9,7 @@
    [broadfcui.common.table.table :refer [Table]]
    [broadfcui.common.table.style :as table-style]
    [broadfcui.common.table.utils :as table-utils]
+   [broadfcui.config :as config]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.utils :as utils]
    ))
@@ -67,6 +68,7 @@
                 attr-col-width (->> attributes count (/ 1000) int (min 400) (max 100))]
             [Table
              {:ref "table" :key selected-entity-type
+              :data-test-id (config/when-debug "entity-table")
               :persistence-key (when selected-entity-type
                                  (str (common/workspace-id->string (:workspace-id props)) ":data" selected-entity-type))
               :v 1
@@ -116,7 +118,7 @@
                :on-row-click (:on-row-click props)
                :on-column-change (:on-column-change props)}
               :toolbar
-              {:items
+              {:get-items
                (fn [table-props]
                 (cons [comps/FilterGroupBar
                        {:filter-groups (map (fn [entity-type]
@@ -131,8 +133,8 @@
                                               :selected-entity-type selected-entity-type)
                                        (when-let [f (:on-entity-type-selected props)]
                                          (f selected-entity-type))))}]
-                      (when-let [toolbar-items (:toolbar-items props)]
-                        (toolbar-items table-props))))
+                      (when-let [get-toolbar-items (:get-toolbar-items props)]
+                        (get-toolbar-items table-props))))
                :style {:flexWrap "wrap"}}}]))]))
    :component-did-mount
    (fn [{:keys [props this]}]

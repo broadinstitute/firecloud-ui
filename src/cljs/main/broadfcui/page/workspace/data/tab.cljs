@@ -57,9 +57,9 @@
                           :backgroundColor (:button-primary style/colors)
                           :color "#fff" :padding "1rem" :borderRadius 8}]
                [:div {:style {:display "flex" :justifyContent "center"}}
-                [:div {:style style :onClick #(add-crumb :file-import "File")}
+                [:div {:style style :data-test-id (config/when-debug "import-from-file-button") :onClick #(add-crumb :file-import "File")}
                  "Import from file"]
-                [:div {:style style :onClick #(add-crumb :workspace-import "Choose Workspace")}
+                [:div {:style style :data-test-id (config/when-debug "copy-from-another-workspace-button") :onClick #(add-crumb :workspace-import "Choose Workspace")}
                  "Copy from another workspace"]]))]])}])})
 
 
@@ -90,7 +90,7 @@
       [MetadataImporter
        (merge
         (select-keys props [:workspace-id])
-        {:this-auth-domain (get-in props [:workspace :workspace :authorizationDomain :membersGroupName])
+        {:this-auth-domain (get-in props [:workspace :workspace :authorizationDomain])
          :import-type "data"
          :on-data-imported #((@refs "entity-table") :refresh (or % (:selected-entity-type @state)) true)})]))
    :-render-data
@@ -102,10 +102,11 @@
           :workspace-id workspace-id
           :column-defaults
           (data-utils/get-column-defaults (get-in workspace [:workspace :workspace-attributes :workspace-column-defaults]))
-          :toolbar-items
+          :get-toolbar-items
           (fn [table-props]
             [(when (:selected-entity-type @state) (this :-render-download-link table-props))
              [comps/Button {:text "Import Metadata..."
+                            :data-test-id (config/when-debug "import-metadata-button")
                             :style {:marginLeft "auto"}
                             :disabled? (when (get-in workspace [:workspace :isLocked]) "This workspace is locked.")
                             :onClick #(this :-handle-import-data-click)}]])

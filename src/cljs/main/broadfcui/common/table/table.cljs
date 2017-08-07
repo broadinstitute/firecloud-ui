@@ -102,10 +102,11 @@
              [:div {:style (:style filter-bar-props)}
               [comps/TextFilter (merge
                                  {:initial-text (:filter-text query-params)
+                                  :data-test-id (:data-test-id props)
                                   :on-filter #(swap! state update :query-params assoc :filter-text % :page-number 1)}
                                  (:inner filter-bar-props))]]))
-         (when-let [items (:items toolbar)]
-           (list* (items {:columns column-display})))]
+         (when-let [get-items (:get-items toolbar)]
+           (list* (get-items {:columns column-display})))]
         [:div {:style {:overflowX "auto"}}
          (if (empty? rows)
            (style/create-message-well empty-message)

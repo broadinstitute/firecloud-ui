@@ -6,6 +6,7 @@
    [broadfcui.common.style :as style]
    [broadfcui.common.table.style :as table-style]
    [broadfcui.common.table.table :refer [Table]]
+   [broadfcui.config :as config]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.nav :as nav]
    [broadfcui.page.workspace.monitor.common :as moncommon]
@@ -30,15 +31,14 @@
        :column-data :submissionId
        :as-text (constantly "View analysis details")
        :render #(style/create-link {:text "View"
-                                    :href (nav/get-link :workspace-submission
-                                                        workspace-id
-                                                        %)})}
+                                    :data-test-id (config/when-debug (str "submission-" %))
+                                    :href (nav/get-link :workspace-submission workspace-id %)})}
       {:header "Status" :as-text :status :sort-by :text
        :render (fn [submission]
                  [:div {:style {:height table-style/table-icon-size}}
                   (case (:status submission)
                     "Done" (moncommon/icon-for-sub-status (:workflowStatuses submission))
-                    "Aborted" moncommon/failure-icon
+                    "Aborted" moncommon/render-failure-icon
                     nil)
                   (:status submission)])}
       {:header "Method Configuration" :initial-width 300

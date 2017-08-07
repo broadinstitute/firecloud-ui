@@ -1,5 +1,6 @@
 (ns broadfcui.page.workspace.data.copy-data-workspaces
   (:require
+   [clojure.set :as set]
    [dmohs.react :as react]
    [broadfcui.common.components :as comps]
    [broadfcui.common.style :as style]
@@ -14,9 +15,9 @@
   (remove (comp (partial = workspace-id) ws-common/workspace->id) workspace-list))
 
 (defn- filter-workspaces [this-auth-domain workspace-list]
-  (filter #(let [src-auth-domain (get-in % [:workspace :authorizationDomain :membersGroupName])]
+  (filter #(let [src-auth-domain (set (map :membersGroupName (get-in % [:workspace :authorizationDomain])))]
              (and
-              (or (nil? src-auth-domain) (= src-auth-domain this-auth-domain))
+              (or (empty? src-auth-domain) (set/subset? src-auth-domain this-auth-domain))
               (not= (:accessLevel %) "NO ACCESS")))
           workspace-list))
 
@@ -48,7 +49,7 @@
                                      (when (> num-filtered 1) "s")
                                      " unavailable because "
                                      (if (= num-filtered 1) "it contains" "they contain")
-                                     " data from other authorization domains.")]))})]
+                                     " data from an incompatible Authorization Domain.")]))})]
          (:error-message @state) (style/create-server-error-message (:error-message @state))
          :else [:div {:style {:textAlign "center"}}
                 [comps/Spinner {:text "Loading workspaces..."}]])))
@@ -59,7 +60,7 @@
        :on-done (fn [{:keys [success? status-text get-parsed-response]}]
                   (if success?
                     (let [all-workspaces (remove-self (:workspace-id props) (get-parsed-response))
-                          filtered-workspaces (filter-workspaces (:this-auth-domain props) all-workspaces)]
+                          filtered-workspaces (filter-workspaces (set (map :membersGroupName (:this-auth-domain props))) all-workspaces)]
                       (swap! state assoc :workspaces filtered-workspaces
                              :num-filtered (- (count all-workspaces) (count filtered-workspaces))))
                     (swap! state assoc :error-message status-text)))}))})

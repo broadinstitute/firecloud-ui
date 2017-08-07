@@ -7,6 +7,7 @@
    [broadfcui.common.table.style :as table-style]
    [broadfcui.common.table.table :refer [Table]]
    [broadfcui.common.table.utils :as table-utils]
+   [broadfcui.config :as config]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.persistence :as persistence]
    [broadfcui.utils :as utils]
@@ -29,6 +30,7 @@
         [Table
          {:persistence-key "method-repo-table" :v 1
           :data (or (:filtered-data @state) [])
+          :data-test-id (config/when-debug "method-repo-table")
           :body
           {:columns
            [{:header "Type" :initial-width 100
@@ -59,7 +61,7 @@
                          "N/A"))}]
            :style table-style/table-heavy}
           :toolbar
-          {:items
+          {:get-items
            (constantly
             (cons [comps/FilterGroupBar
                    {:data (concat (:methods @state) (:configs @state))

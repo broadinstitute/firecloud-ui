@@ -1,6 +1,7 @@
 (ns broadfcui.common.style
   (:require
    [clojure.string :as string]
+   [broadfcui.config :as config]
    [broadfcui.utils :as utils]
    ))
 
@@ -95,6 +96,13 @@
        (cons [:option {:value -1 :disabled true} (first placeholder)] option-elements)
        option-elements)]))
 
+(defn create-identity-select-name [props options & [placeholder]]
+  (let [option-elements (map (fn [opt] [:option {:value opt} opt]) options)]
+    [:select (utils/deep-merge {:style select-style} props)
+     (if placeholder
+       (cons [:option {:value -1 :disabled true} placeholder] option-elements)
+       option-elements)]))
+
 (defn create-identity-select [props options]
   [:select (utils/deep-merge {:style select-style} props)
    (map (fn [opt] [:option {:value opt} opt]) options)])
@@ -109,7 +117,8 @@
 
 (defn create-message-well [message]
   [:div {:style {:textAlign "center" :backgroundColor (:background-light colors)
-                 :padding "1em 0" :borderRadius 8}}
+                 :padding "1em 0" :borderRadius 8}
+         :data-test-id (config/when-debug "message-well")}
    message])
 
 (defn create-code-sample [text]

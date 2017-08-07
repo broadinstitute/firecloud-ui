@@ -18,16 +18,15 @@
 
 
 (defn- protected-banner [workspace]
-  (let [this-auth-domain (get-in workspace [:workspace :authorizationDomain :membersGroupName])
-        dbGapProtected (= this-auth-domain config/tcga-authorization-domain)]
-    (when this-auth-domain
+  (let [this-auth-domain (get-in workspace [:workspace :authorizationDomain])]
+    (when (not (empty? this-auth-domain))
       [:div {:style {:paddingTop 2}}
        [:div {:style {:backgroundColor "#ccc"
                       :fontSize "small"
                       :padding "4px 0"
-                      :textAlign "center"}}
-        "Access to this workspace is " [:strong {} "restricted"] " to: " this-auth-domain
-        (when dbGapProtected " (TCGA Controlled Access Data)")]
+                      :textAlign "center"}
+              :data-test-id (config/when-debug "auth-domain-restriction-message")}
+        "Note: Access to this workspace is restricted to an Authorization Domain"]
        [:div {:style {:height 1 :backgroundColor "#bbb" :marginTop 2}}]])))
 
 (defn- bucket-banner [{:keys [bucket-access? bucket-status-code]}]
@@ -81,6 +80,7 @@
                   :cursor "pointer" :textDecoration "none" :color "inherit"
                   :position "relative"}
           :href (:href props)
+          :data-test-id (:data-test-id props)
           :onMouseOver #(swap! state assoc :hovering? true)
           :onMouseOut #(swap! state dissoc :hovering?)
           :onClick #(when (:active? props) ((:on-active-tab-clicked props)))}
@@ -110,6 +110,7 @@
                                      CONFIGS :workspace-method-configs
                                      MONITOR :workspace-monitor)
                                    workspace-id)
+                            :data-test-id (config/when-debug (str text "-tab"))
                             :on-active-tab-clicked on-active-tab-clicked}])
            request-refresh #(this :-refresh-workspace)]
        [:div {}
@@ -120,7 +121,8 @@
                        :display "flex" :justifyContent "space-between"}}
          [:div {:style {:fontSize "125%"}}
           "Workspace: "
-          [:span {:style {:fontWeight 500}} (:namespace workspace-id) "/" (:name workspace-id)]]
+          [:span {:style {:fontWeight 500}}
+           [:span {:data-test-id (config/when-debug "header-namespace")} (:namespace workspace-id)] "/" [:span {:data-test-id (config/when-debug "header-name")} (:name workspace-id)]]]
          [common/FoundationTooltip
           {:tooltip "Adjust notifications for this workspace"
            :position "left"
@@ -147,7 +149,8 @@
           (make-tab MONITOR #((@refs MONITOR) :refresh))]]
         [:div {:style {:marginTop "2rem"}}
          (if-let [error (:workspace-error @state)]
-           [:div {:style {:textAlign "center" :color (:exception-state style/colors)}}
+           [:div {:style {:textAlign "center" :color (:exception-state style/colors)}
+                  :data-test-id (config/when-debug "workspace-details-error")}
             "Error loading workspace: " error]
            (condp = active-tab
              nil (react/create-element

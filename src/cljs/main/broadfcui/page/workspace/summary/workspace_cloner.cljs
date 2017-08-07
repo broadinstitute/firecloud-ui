@@ -6,6 +6,7 @@
    [broadfcui.common.input :as input]
    [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
+   [broadfcui.config :as config]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.utils :as utils]
    ))
@@ -18,7 +19,8 @@
    (fn [{:keys [props refs state this]}]
      [comps/OKCancelForm
       {:header "Clone Workspace to:"
-       :ok-button {:text "Clone" :onClick #(react/call :do-clone this)}
+       :ok-button {:text "Clone" :onClick #(react/call :do-clone this)
+                   :data-test-id (config/when-debug "clone-workspace-button")}
        :get-first-element-dom-node #(@refs "project")
        :content
        (react/create-element
@@ -27,11 +29,13 @@
            [comps/Blocker {:banner "Cloning..."}])
          (style/create-form-label "Billing Project")
          (style/create-select {:ref "project"
+                               :data-test-id (config/when-debug "billing-project-select")
                                :value (:selected-project @state)
                                :onChange #(swap! state assoc :selected-project (-> % .-target .-value))}
                               (:billing-projects props))
          (style/create-form-label "Name")
          [input/TextField {:ref "name" :autoFocus true
+                           :data-test-id (config/when-debug "workspace-name-input")
                            :style {:width "100%"}
                            :defaultValue (str (get-in props [:workspace-id :name]) "_copy")
                            :placeholder "Required"
@@ -40,6 +44,7 @@
          (style/create-textfield-hint input/hint-alphanumeric_-)
          (style/create-form-label "Description (optional)")
          (style/create-text-area {:style {:width "100%"} :rows 5 :ref "wsDescription"
+                                  :data-test-id (config/when-debug "workspace-description-text-field")
                                   :defaultValue (:description props)})
          [:div {:style {:display "flex"}}
           (style/create-form-label (str "Authorization Domain" (when-not (:auth-domain props) " (optional)")))
@@ -53,9 +58,10 @@
          (if-let [auth-domain (:auth-domain props)]
            [:div {:style {:fontStyle "italic" :fontSize "80%"}}
             "The cloned workspace will automatically inherit the Authorization Domain "
-            [:strong {} auth-domain] " from this workspace"]
+            [:strong {:data-test-id (config/when-debug "required-auth-domain")} auth-domain] " from this workspace"]
            (style/create-select
             {:ref "auth-domain"
+             :data-test-id (config/when-debug "workspace-auth-domain-select")
              :defaultValue -1
              :onChange #(swap! state assoc :selected-auth-domain (-> % .-target .-value))}
             (:groups @state)
@@ -66,7 +72,7 @@
    :component-did-mount
    (fn [{:keys [state]}]
      (endpoints/get-groups
-      (fn [_ parsed-response]
+      (fn [success? parsed-response]
         (swap! state assoc :groups
                (conj (map :groupName parsed-response)
                      "None")))))

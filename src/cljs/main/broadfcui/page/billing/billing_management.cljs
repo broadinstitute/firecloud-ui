@@ -9,6 +9,7 @@
    [broadfcui.common.style :as style]
    [broadfcui.common.table.style :as table-style]
    [broadfcui.common.table.table :refer [Table]]
+   [broadfcui.config :as config]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.nav :as nav]
    [broadfcui.page.billing.create-project :refer [CreateBillingProjectDialog]]
@@ -78,6 +79,7 @@
           {:data projects
            :body {:behavior {:reorderable-columns? false}
                   :style table-style/table-light
+                  :data-props {:row (fn [project] {:data-test-id (config/when-debug (str (:projectName project) "-row"))})}
                   :columns
                   [{:id "Status Icon" :initial-width 16
                     :resizable? false :sortable? false :filterable? false
@@ -97,7 +99,7 @@
                           {:project-name projectName
                            :on-status-change (partial this :-handle-status-change projectName)}]
                          (and (= creationStatus project-status-ready) (contains? (set roles) "Owner"))
-                         (style/create-link {:text projectName
+                         (style/create-link {:text projectName :data-test-id (config/when-debug (str projectName "-link"))
                                              :href (nav/get-link :billing-project projectName)})
                          :else projectName)
                        (when message
@@ -108,11 +110,13 @@
                    {:header "Role" :initial-width :auto
                     :column-data #(clojure.string/join ", " (:roles %))}]}
            :toolbar
-           {:items
+           {:filter-bar {:inner {:data-test-id (config/when-debug "billing-project-list-filter")}}
+            :get-items
             (constantly
              [flex/spring
               [comps/Button
                {:text "Create New Billing Project..."
+                :data-test-id (config/when-debug "begin-create-billing-project")
                 :onClick
                 (fn []
                   (if (-> @utils/auth2-atom (aget "currentUser") (js-invoke "get")

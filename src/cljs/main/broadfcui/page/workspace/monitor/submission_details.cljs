@@ -10,6 +10,7 @@
    [broadfcui.common.style :as style]
    [broadfcui.common.table.style :as table-style]
    [broadfcui.common.table.table :refer [Table]]
+   [broadfcui.config :as config]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.nav :as nav]
    [broadfcui.page.workspace.monitor.common :as moncommon]
@@ -76,7 +77,7 @@
                   {:header "Status" :initial-width 120
                    :column-data :status
                    :render (fn [status]
-                             [:div {}
+                             [:div {:data-test-id (config/when-debug "workflow-status")}
                               (moncommon/icon-for-wf-status status)
                               status])}
                   {:header "Messages" :initial-width 300
@@ -101,7 +102,7 @@
                                            :href (str moncommon/google-cloud-context bucketName "/" submission-id "/"
                                                       workflow-name "/" workflowId "/")})))}]}
        :toolbar
-       {:items
+       {:get-items
         (constantly
          [[comps/FilterGroupBar
            {:data (:workflows props)
@@ -141,10 +142,14 @@
                [comps/Blocker {:banner "Aborting submission..."}])
              [comps/SidebarButton {:color :exception-state :style :light :margin :top
                                    :text "Abort" :icon :warning
+                                   :data-test-id (config/when-debug "submission-abort-button")
                                    :onClick (fn [_]
                                               (comps/push-confirm
                                                {:text "Are you sure you want to abort this submission?"
-                                                :on-confirm #(this :abort-submission)}))}])
+                                                :on-confirm
+                                                [comps/Button {:text "Abort Submission"
+                                                               :data-test-id (config/when-debug "submission-abort-modal-confirm-button")
+                                                               :onClick #(this :abort-submission)}]}))}])
    :abort-submission (fn [{:keys [props state]}]
                        (modal/pop-modal)
                        (swap! state assoc :aborting-submission? true)
@@ -206,7 +211,7 @@
              (duration/fuzzy-time-from-now-ms (.parse js/Date (:submissionDate submission)) true) ")"])
            (style/create-section-header "Submission ID")
            (style/create-link {:text (style/create-paragraph (:submissionId submission))
-                               :target "_blank"
+                               :target "_blank" :data-test-id (config/when-debug "submission-id")
                                :style {:color "-webkit-link" :textDecoration "underline"}
                                :href (str moncommon/google-cloud-context
                                           (:bucketName props) "/" (:submissionId submission) "/")})]

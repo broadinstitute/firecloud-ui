@@ -245,6 +245,9 @@
 (defn first-matching-index [pred coll]
   (first (keep-indexed (fn [i x] (when (pred x) i)) coll)))
 
+(defn seq-contains? [coll item]
+  (contains? (set coll) item))
+
 (defn find-duplicates [coll]
   (for [[elem freq] (frequencies coll)
         :when (> freq 1)]
