@@ -6,6 +6,7 @@
    [broadfcui.common.components :as comps]
    [broadfcui.common.entity-table :refer [EntityTable]]
    [broadfcui.common.icons :as icons]
+   [broadfcui.common.links :as links]
    [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
    [broadfcui.common.table-utils :as table-utils]
@@ -40,7 +41,7 @@
            (when-not last-crumb-id
              (common/render-info-box
               {:text [:div {} "For more information about importing files, see our "
-                      [:a {:href (config/user-guide-url) :target "_blank"} "user guide." icons/external-link-icon]]}))]
+                      (links/create-external {:href (config/user-guide-url)} "user guide.")]}))]
           [:div {:style {:backgroundColor "white" :padding "1em"}}
            (case last-crumb-id
              :file-import
@@ -142,15 +143,16 @@
            entity-type (:entityType e)
            {:keys [workspace-id]} props
            update-parent-state (partial this :update-state)]
-       (style/create-link
-        {:text entity-name
-         :onClick #(do (swap! state assoc
-                              :selected-entity-type entity-type
-                              :selected-attr-list nil
-                              :loading-attributes true
-                              :selected-entity entity-name)
-                       (data-utils/get-entity-attrs
-                        (utils/restructure entity-name entity-type workspace-id update-parent-state)))})))
+       (links/create-internal
+        {:onClick (fn [_]
+                    (swap! state assoc
+                           :selected-entity-type entity-type
+                           :selected-attr-list nil
+                           :loading-attributes true
+                           :selected-entity entity-name)
+                    (data-utils/get-entity-attrs
+                     (utils/restructure entity-name entity-type workspace-id update-parent-state)))}
+        entity-name)))
    :refresh
    (fn [{:keys [refs state]}]
      ((@refs "entity-table") :refresh (:selected-entity-type @state) true))

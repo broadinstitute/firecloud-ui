@@ -5,6 +5,7 @@
    [broadfcui.common :as common]
    [broadfcui.common.components :as comps]
    [broadfcui.common.icons :as icons]
+   [broadfcui.common.links :as links]
    [broadfcui.common.markdown :refer [MarkdownView MarkdownEditor]]
    [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
@@ -289,10 +290,9 @@
            (case bucket-access?
              nil [:div {:style {:position "absolute" :marginTop "-1.5em"}}
                   [comps/Spinner {:height "1.5ex"}]]
-             true [:a {:href (str moncommon/google-cloud-context bucketName "/")
-                       :title "Click to open the Google Cloud Storage browser for this bucket"
-                       :target "_blank"}
-                   bucketName " " icons/external-link-icon]
+             true (links/create-external {:href (str moncommon/google-cloud-context bucketName "/")
+                                          :title "Click to open the Google Cloud Storage browser for this bucket"}
+                                         bucketName)
              false bucketName)
            (when writer?
              [StorageCostEstimate {:workspace-id workspace-id :ref "storage-estimate"}])]

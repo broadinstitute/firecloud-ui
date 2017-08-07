@@ -6,6 +6,7 @@
    [broadfcui.common.components :as comps]
    [broadfcui.common.flex-utils :as flex]
    [broadfcui.common.input :as input]
+   [broadfcui.common.links :as links]
    [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
    [broadfcui.components.sticky :refer [Sticky]]
@@ -309,24 +310,24 @@
                         :name name
                         :snapshot-id snapshotId}
                     type (if (= entityType "Configuration") :method-config :method)]
-                (style/create-link
-                 {:text (style/render-name-id name snapshotId)
-                  :data-test-id (config/when-debug (str name "_" snapshotId))
+                (links/create-internal
+                 {:data-test-id (config/when-debug (str name "_" snapshotId))
                   :href (if workspace-id "javascript:;" (nav/get-link type id))
                   :onClick (when workspace-id
-                             #(swap! state assoc :type type :id id))})))
+                             #(swap! state assoc :type type :id id))}
+                 (style/render-name-id name snapshotId))))
             :render-namespace
             (fn [{:keys [namespace type]}]
               (if workspace-id
                 namespace
-                (style/create-link
-                 {:text namespace
-                  :onClick #(modal/push-modal
+                (links/create-internal
+                 {:onClick #(modal/push-modal
                              [mca/AgoraPermsEditor
                               {:save-endpoint (endpoints/post-agora-namespace-acl namespace (= :config type))
                                :load-endpoint (endpoints/get-agora-namespace-acl namespace (= :config type))
                                :entityType "Namespace" :entityName namespace
-                               :title (str "Namespace " namespace)}])})))
+                               :title (str "Namespace " namespace)}])}
+                 namespace)))
             :toolbar-items
             [flex/spring
              [comps/Button

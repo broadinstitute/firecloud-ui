@@ -6,6 +6,7 @@
    [broadfcui.common.components :as comps]
    [broadfcui.common.filter :as filter]
    [broadfcui.common.icons :as icons]
+   [broadfcui.common.links :as links]
    [broadfcui.components.modals :as modals]
    [broadfcui.common.style :as style]
    [broadfcui.common.table.style :as table-style]
@@ -82,7 +83,8 @@
                                      (if instruction
                                        [:div {}
                                         "Learn how to apply for this Group "
-                                        [:a {:href instruction :target "_blank"} "here" icons/external-link-icon] "."]
+                                        (links/create-external {:href instruction} "here")
+                                        "."]
 
                                        [:div {}
                                         [comps/Button {:style {:width "125px"}
@@ -244,8 +246,8 @@
                :render (fn [{:keys [access-level workspace-id auth-domain-groups]}]
                          [:div {:style {:paddingLeft 14}}
                           (if (= access-level "NO ACCESS")
-                            (style/create-link {:text (style/prettify-access-level access-level)
-                                                :onClick #(this :-show-request-access-modal workspace-id auth-domain-groups)})
+                            (links/create-internal {:onClick #(this :-show-request-access-modal workspace-id auth-domain-groups)}
+                                                   (style/prettify-access-level access-level))
                             (style/prettify-access-level access-level))])}])
            :behavior {:reorderable-columns? false}
            :style {:header-row {:color (:text-lighter style/colors) :fontSize "90%"}
@@ -260,15 +262,16 @@
           :toolbar {:style {:display "initial"}
                     :filter-bar {:style {:float "left"}
                                  :inner {:width 300 :data-test-id (config/when-debug "workspace-list-filter")}}
-                    :get-items (constantly
-                            [[:div {:style {:float "right"}}
-                              [create/Button (select-keys props [:nav-context :billing-projects :disabled-reason])]]
-                             [:div {:style {:clear "left" :float "left" :marginTop "0.5rem"}}
-                              (style/create-link {:text (if filters-expanded? "Collapse" "Show additional filters")
-                                                  :onClick #(swap! state update :filters-expanded? not)})]
-                             [:div {:style {:clear "both"}}]
-                             (when filters-expanded?
-                               (this :-render-side-filters))])}
+                    :get-items
+                    (constantly
+                     [[:div {:style {:float "right"}}
+                       [create/Button (select-keys props [:nav-context :billing-projects :disabled-reason])]]
+                      [:div {:style {:clear "left" :float "left" :marginTop "0.5rem"}}
+                       (links/create-internal {:onClick #(swap! state update :filters-expanded? not)}
+                                              (if filters-expanded? "Collapse filters" "Expand filters"))]
+                      [:div {:style {:clear "both"}}]
+                      (when filters-expanded?
+                        (this :-render-side-filters))])}
           :paginator {:style {:clear "both"}}}]]))
    :component-did-update
    (fn [{:keys [state]}]

@@ -6,6 +6,7 @@
    [broadfcui.common.components :as comps]
    [broadfcui.common.duration :as duration]
    [broadfcui.common.icons :as icons]
+   [broadfcui.common.links :as links]
    [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
    [broadfcui.common.table.style :as table-style]
@@ -58,12 +59,12 @@
                    :render
                    (fn [id]
                      (when id
-                       (style/create-link
-                        {:text "View"
-                         :href (nav/get-link :workspace-workflow
+                       (links/create-internal
+                        {:href (nav/get-link :workspace-workflow
                                              (:workspace-id props)
                                              (:submission-id props)
-                                             id)})))}
+                                             id)}
+                        "View")))}
                   {:header "Data Entity" :initial-width 200
                    :column-data :workflowEntity
                    :as-text
@@ -96,11 +97,10 @@
                            input-names (string/split inputs ".")
                            workflow-name (first input-names)
                            workflowId (:workflowId workflow)]
-                       (style/create-link {:text workflowId
-                                           :target "_blank"
-                                           :style {:color "-webkit-link" :textDecoration "underline"}
-                                           :href (str moncommon/google-cloud-context bucketName "/" submission-id "/"
-                                                      workflow-name "/" workflowId "/")})))}]}
+                       (links/create-external
+                        {:href (str moncommon/google-cloud-context bucketName "/" submission-id "/"
+                                    workflow-name "/" workflowId "/")}
+                        workflowId)))}]}
        :toolbar
        {:get-items
         (constantly
@@ -210,11 +210,10 @@
             [:div {} (common/format-date (:submissionDate submission)) " ("
              (duration/fuzzy-time-from-now-ms (.parse js/Date (:submissionDate submission)) true) ")"])
            (style/create-section-header "Submission ID")
-           (style/create-link {:text (style/create-paragraph (:submissionId submission))
-                               :target "_blank" :data-test-id (config/when-debug "submission-id")
-                               :style {:color "-webkit-link" :textDecoration "underline"}
-                               :href (str moncommon/google-cloud-context
-                                          (:bucketName props) "/" (:submissionId submission) "/")})]
+           (links/create-external {:data-test-id (config/when-debug "submission-id")
+                                   :href (str moncommon/google-cloud-context
+                                              (:bucketName props) "/" (:submissionId submission) "/")}
+                                  (style/create-paragraph (:submissionId submission)))]
           (common/clear-both)
           [:h2 {} "Workflows:"]
           [WorkflowsTable {:workflows (:workflows submission)

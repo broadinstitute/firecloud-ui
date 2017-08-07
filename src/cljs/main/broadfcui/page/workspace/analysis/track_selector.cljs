@@ -5,6 +5,7 @@
    [broadfcui.common.components :as comps]
    [broadfcui.common.entity-table :refer [EntityTable]]
    [broadfcui.common.icons :as icons]
+   [broadfcui.common.links :as links]
    [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
    [broadfcui.common.table-utils :refer [default-render]]
@@ -32,8 +33,7 @@
                                (let [lc-data (clojure.string/lower-case data)]
                                  (some #(.endsWith lc-data %) supported-file-types)))
                         (style/left-ellipses {:style {:marginRight "0.5em"}}
-                                             (style/create-link {:text data
-                                                                 :onClick #((:on-select props) data)}))
+                                             (links/create-internal {:onClick #((:on-select props) data)} data))
                         (default-render data)))}]])})
 
 

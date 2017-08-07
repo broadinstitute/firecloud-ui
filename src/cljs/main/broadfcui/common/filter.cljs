@@ -1,6 +1,7 @@
 (ns broadfcui.common.filter
   (:require
    [broadfcui.common.flex-utils :as flex]
+   [broadfcui.common.links :as links]
    [broadfcui.common.style :as style]
    [broadfcui.utils :as utils]
    ))
@@ -23,7 +24,7 @@
       flex/spring
       (when on-clear
         [:div {:style {:fontSize "80%"}}
-         (style/create-link {:text "Clear" :onClick on-clear})])))
+         (links/create-internal {:onClick on-clear} "Clear")])))
    content])
 
 (defn checkboxes [{:keys [items checked-items on-change]}]

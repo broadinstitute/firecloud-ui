@@ -1,5 +1,7 @@
 (ns broadfcui.page.workspace.workspace-common
   (:require
+   [clojure.string :as string]
+   [broadfcui.common.links :as links]
    [broadfcui.common.style :as style]
    [broadfcui.common.table.style :as table-style]
    [broadfcui.common.table.table :refer [Table]]
@@ -26,16 +28,17 @@
             {:header "Name" :initial-width 150
              :as-text (comp :name :workspace) :sort-by :text
              :render (fn [ws]
-                       (style/create-link {:text (get-in ws [:workspace :name])
-                                           :onClick #(on-workspace-selected ws)}))}
+                       (links/create-internal {:onClick #(on-workspace-selected ws)}
+                                              (get-in ws [:workspace :name])))}
             {:header "Created By" :initial-width 200
              :column-data (comp :createdBy :workspace)}
             (table-utils/date-column {:column-data (comp :createdDate :workspace)})
             {:header "Access Level" :initial-width 106
              :column-data :accessLevel}
             {:header "Authorization Domain" :starting-width 150
-             :column-data (comp :membersGroupName :authorizationDomain :workspace)
-             :render #(or % "None")}]}
+             :column-data (comp :authorizationDomain :workspace)
+             :as-text #(if (empty? %) "None" (string/join ", " (map :membersGroupName %)))
+             :sort-by count}]}
     :toolbar {:get-items (constantly toolbar-items)}}])
 
 (defn config->id [config]
