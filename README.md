@@ -94,7 +94,7 @@ If you have a FiaB running and its IP configured in your `/etc/hosts`, you can r
 First run render script to generate necessary configs:
 ```
 cd automation
-./render-local-env.sh $PWD $(cat ~/.vault-token) <env of fiab>
+./render-local-env.sh $PWD $(cat ~/.vault-token) <"qa" or "dev">
 ```
 
 
