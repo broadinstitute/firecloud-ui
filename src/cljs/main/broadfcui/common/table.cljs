@@ -79,8 +79,8 @@
    :render
    (fn [{:keys [props state]}]
      (let [props (utils/deep-merge default-props props)
-           {:keys [rows column-display filtered-count query-params]} @state
-           {:keys [body toolbar paginator]} props
+           {:keys [rows column-display filtered-count query-params selected-tab-index]} @state
+           {:keys [toolbar sidebar tabs body paginator data]} props
            {:keys [empty-message columns behavior external-query-params on-column-change]} body
            {:keys [fixed-column-count allow-no-sort?]} behavior
            total-count (some :total-count [props @state])
@@ -108,24 +108,39 @@
                                  (:inner filter-bar-props))]]))
          (when-let [get-items (:get-items toolbar)]
            (list* (get-items {:columns column-display})))]
-        [:div {:style {:overflowX "auto"}}
-         (if (empty? rows)
-           (style/create-message-well empty-message)
-           [body/TableBody
-            (merge
-             body
-             (select-keys query-params [:sort-column :sort-order])
-             (utils/restructure rows column-display update-column-display fixed-column-count allow-no-sort?)
-             {:set-sort (fn [col order] (swap! state update :query-params
-                                               merge {:sort-column col :sort-order order}))})])]
-        (when (not= paginator :none)
-          [Paginator
-           (merge paginator
-                  (select-keys query-params [:rows-per-page :page-number])
-                  (utils/restructure total-count filtered-count)
-                  {:page-selected #(swap! state assoc-in [:query-params :page-number] %)
-                   :per-page-selected #(swap! state update :query-params
-                                              merge {:rows-per-page % :page-number 1})})])]))
+        [:div {:style {:display "flex"}}
+         sidebar
+         [:div {:style {:flex "1 1 auto" :width "100%"}}
+          (when tabs
+            [:div {:style {:marginBottom "0.3rem"}}
+             (map-indexed (fn [index {:keys [label size predicate]}]
+                            (let [selected? (= index selected-tab-index)]
+                              [:div {:style {:display "inline-block" :textAlign "center"
+                                             :padding "0.5rem 1rem" :cursor "pointer"
+                                             :fontWeight (when selected? 500)
+                                             :letterSpacing (when-not selected? "0.005em") ; stops size from shifting when selected
+                                             :borderBottom (when selected? (str "3px solid " (:button-primary style/colors)))}
+                                     :onClick #(swap! state assoc :selected-tab-index index)}
+                               (str label " (" (or size (count (filter predicate data))) ")")]))
+                          tabs)])
+          (if (empty? rows)
+            (style/create-message-well empty-message)
+            [:div {:style {:overflowX "auto"}}
+             [body/TableBody
+              (merge
+               body
+               (select-keys query-params [:sort-column :sort-order])
+               (utils/restructure rows column-display update-column-display fixed-column-count allow-no-sort?)
+               {:set-sort (fn [col order] (swap! state update :query-params
+                                                 merge {:sort-column col :sort-order order}))})]])
+          (when (not= paginator :none)
+            [Paginator
+             (merge paginator
+                    (select-keys query-params [:rows-per-page :page-number])
+                    (utils/restructure total-count filtered-count)
+                    {:page-selected #(swap! state assoc-in [:query-params :page-number] %)
+                     :per-page-selected #(swap! state update :query-params
+                                                merge {:rows-per-page % :page-number 1})})])]]]))
    :component-did-mount
    (fn [{:keys [props this]}]
      (when (:load-on-mount props)
@@ -138,10 +153,11 @@
          (this :refresh-rows data-change?)))
      (when (and (:persistence-key props)
                 (or (not= (:query-params @state) (:query-params prev-state))
-                    (not= (:column-display @state) (:column-display prev-state))))
+                    (not= (:column-display @state) (:column-display prev-state))
+                    (not= (:selected-tab-index @state) (:selected-tab-index prev-state))))
        (persistence/save {:key (:persistence-key props)
                           :state state
-                          :only [:query-params :column-display :v]})))
+                          :only [:query-params :column-display :selected-tab-index :v]})))
    :-fetch-initial-state
    (fn [{:keys [props]}]
      (persistence/try-restore
@@ -180,4 +196,5 @@
                              :sort-order initial-sort-order}
                             (set/difference all-query-params (-> props :body :external-query-params)))
              :column-display (table-utils/build-column-display processed-columns)}
+            (when (:tabs props) {:selected-tab-index 0})
             (when-let [v (:v props)] {:v v}))))}))})

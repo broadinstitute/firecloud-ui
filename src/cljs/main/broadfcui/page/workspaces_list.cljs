@@ -5,6 +5,7 @@
    [broadfcui.common :as common]
    [broadfcui.common.components :as comps]
    [broadfcui.common.filter :as filter]
+   [broadfcui.common.flex-utils :as flex]
    [broadfcui.common.icons :as icons]
    [broadfcui.common.links :as links]
    [broadfcui.common.style :as style]
@@ -194,8 +195,12 @@
           [RequestAuthDomainAccessDialog
            (assoc request-access-modal-props :dismiss #(swap! state dissoc :request-access-modal-props))])
         [Table
-         {:persistence-key "workspace-table" :v 2
+         {:persistence-key "workspace-table" :v 3
           :data (this :-filter-workspaces) :total-count (:total-count @locals)
+          :tabs [{:label "My Workspaces"
+                  :predicate #(common/access-greater-than-equal-to? (:accessLevel %) "WRITER")}
+                 {:label "Public Workspaces"
+                  :predicate (constantly true)}]
           :body
           {:columns
            (let [column-data (fn [ws]
@@ -259,20 +264,15 @@
                                       (when (pos? index)
                                         {:borderTop style/standard-line})))
                    :cell table-style/clip-text}}
-          :toolbar {:style {:display "initial"}
-                    :filter-bar {:style {:float "left"}
-                                 :inner {:width 300 :data-test-id (config/when-debug "workspace-list-filter")}}
+          :toolbar {:filter-bar {:inner {:width 300 :data-test-id (config/when-debug "workspace-list-filter")}}
                     :get-items
                     (constantly
-                     [[:div {:style {:float "right"}}
-                       [create/Button (select-keys props [:nav-context :billing-projects :disabled-reason])]]
-                      [:div {:style {:clear "left" :float "left" :marginTop "0.5rem"}}
-                       (links/create-internal {:onClick #(swap! state update :filters-expanded? not)}
-                                              (if filters-expanded? "Collapse filters" "Expand filters"))]
-                      [:div {:style {:clear "both"}}]
-                      (when filters-expanded?
-                        (this :-render-side-filters))])}
-          :paginator {:style {:clear "both"}}}]]))
+                     [(links/create-internal {:onClick #(swap! state update :filters-expanded? not)}
+                                             (if filters-expanded? "Collapse filters" "Expand filters"))
+                      flex/spring
+                      [create/Button (select-keys props [:nav-context :billing-projects :disabled-reason])]])}
+          :sidebar (when filters-expanded?
+                     (this :-render-side-filters))}]]))
    :component-did-update
    (fn [{:keys [state]}]
      (persistence/save {:key persistence-key :state state}))
@@ -328,7 +328,7 @@
      (let [{:keys [filters]} @state]
        (apply
         filter/area
-        {:style {:float "left" :margin "0 1rem 1rem 0" :width 175}}
+        {:style {:margin "0 1rem 1rem 0" :width 175}}
         (filter/section
          {:title "Tags"
           :content (react/create-element
