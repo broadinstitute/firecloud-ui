@@ -66,8 +66,10 @@
      [:div {:style {:border style/standard-line}}
       [:textarea {:ref "code-text" :defaultValue (:text props)}]])
    :component-did-mount
-   (fn [{:keys [this]}]
-     (this :display-code))
+   (fn [{:keys [props this]}]
+     (this :display-code)
+     (when-let [init (:initialize props)]
+       (init this)))
    :display-code
    (fn [{:keys [refs props locals]}]
      (let [{:keys [mode line-numbers read-only?]} props]

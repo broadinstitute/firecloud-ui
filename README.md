@@ -99,7 +99,7 @@ First run render script to generate necessary configs:
 
 ```sh
 cd automation
-./render-local-env.sh . $(cat ~/.vault-token)
+./render-local-env.sh $PWD $(cat ~/.vault-token) <"qa" or "dev">
 ```
 
 
