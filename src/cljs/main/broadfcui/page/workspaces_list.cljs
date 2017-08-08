@@ -216,7 +216,7 @@
                                                 (if tcga?
                                                   tcga-disabled-text
                                                   non-dbGap-disabled-text))
-                                  :restricted? (not (empty? (get-in ws [:workspace :authorizationDomain])))}))]
+                                  :restricted? (seq (get-in ws [:workspace :authorizationDomain]))}))]
              ;; All of this margining is terrible, but since this table
              ;; will be redesigned soon I'm leaving it as-is.
              [{:id "Status" :header [:span {:style {:marginLeft 7}} "Status"]
@@ -251,8 +251,9 @@
                :render (fn [{:keys [access-level workspace-id auth-domain-groups]}]
                          [:div {:style {:paddingLeft 14}}
                           (if (= access-level "NO ACCESS")
-                            (links/create-internal {:onClick #(this :-show-request-access-modal workspace-id auth-domain-groups)}
-                                                   (style/prettify-access-level access-level))
+                            (links/create-internal
+                              {:onClick #(this :-show-request-access-modal workspace-id auth-domain-groups)}
+                              (style/prettify-access-level access-level))
                             (style/prettify-access-level access-level))])}])
            :behavior {:reorderable-columns? false}
            :style {:header-row {:color (:text-lighter style/colors) :fontSize "90%"}
@@ -328,7 +329,7 @@
      (let [{:keys [filters]} @state]
        (apply
         filter/area
-        {:style {:margin "0 1rem 1rem 0" :width 175}}
+        {:style {:marginRight "1rem" :flex "0 0 175px"}}
         (filter/section
          {:title "Tags"
           :content (react/create-element

@@ -110,7 +110,7 @@
            (list* (get-items {:columns column-display})))]
         [:div {:style {:display "flex"}}
          sidebar
-         [:div {:style {:flex "1 1 auto" :width "100%"}}
+         [:div {:style {:flex "1 1 auto"}}
           (when tabs
             [:div {:style {:marginBottom "0.3rem"}}
              (map-indexed (fn [index {:keys [label size predicate]}]
