@@ -2,6 +2,7 @@
 
 WORKING_DIR=${1-$(pwd)}
 VAULT_TOKEN=$2
+ENV=$3
 
 # render ctmpls
 docker pull broadinstitute/dsde-toolbox:dev
