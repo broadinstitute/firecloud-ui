@@ -150,7 +150,7 @@
       {:endpoint (endpoints/get-entities-of-type (:selected-workspace-id props) (:type props))
        :on-done (fn [{:keys [success? get-parsed-response]}]
                   (if success?
-                    (swap! state assoc :entity-list (get-parsed-response false))
+                    (swap! state assoc :entity-list (get-parsed-response))
                     (swap! state assoc :server-error (get-parsed-response false))))}))})
 
 

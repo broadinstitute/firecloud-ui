@@ -1,6 +1,8 @@
 (ns broadfcui.common.table.utils
   (:require
+   [clojure.string :as string]
    [broadfcui.common :as common]
+   [broadfcui.common.gcs-file-preview :refer [GCSFilePreviewLink]]
    [broadfcui.utils :as utils]
    ))
 
@@ -37,7 +39,7 @@
         columns))
 
 (defn- filter-rows [{:keys [filter-text]} columns data]
-  (if (clojure.string/blank? filter-text)
+  (if (string/blank? filter-text)
     data
     (filter (fn [row]
               (some (partial utils/matches-filter-text filter-text)
@@ -45,16 +47,18 @@
             data)))
 
 (defn- sort-rows [{:keys [sort-column sort-order]} columns data]
-  (let [column (find-by-id sort-column columns)
-        column-data (or (:column-data column) identity)
-        sorter (let [sort-by (:sort-by column)]
-                 (cond (= sort-by :text) (:as-text column)
-                       (nil? sort-by) identity
-                       :else sort-by))
-        sorted (sort-by (comp sorter column-data) data)]
-    (if (= sort-order :desc)
-      (reverse sorted)
-      sorted)))
+  (if sort-column
+    (let [column (find-by-id sort-column columns)
+          column-data (or (:column-data column) identity)
+          sorter (let [sort-by (:sort-by column)]
+                   (cond (= sort-by :text) (:as-text column)
+                         (nil? sort-by) identity
+                         :else sort-by))
+          sorted (sort-by (comp sorter column-data) data)]
+      (if (= sort-order :desc)
+        (reverse sorted)
+        sorted))
+    data))
 
 (defn- trim-rows [{:keys [page-number rows-per-page]} data]
   (->> data
@@ -92,5 +96,18 @@
 
 (defn default-render [data]
   (cond (map? data) (utils/map-to-string data)
-        (sequential? data) (clojure.string/join ", " data)
+        (sequential? data) (string/join ", " data)
         :else (str data)))
+
+(defn render-gcs-links [workspace-bucket]
+  (fn [maybe-uri]
+    (if (string? maybe-uri)
+      (if-let [parsed (common/parse-gcs-uri maybe-uri)]
+        [GCSFilePreviewLink
+         (assoc parsed
+           :workspace-bucket workspace-bucket
+           :attributes {:style {:direction "rtl" :marginRight "0.5em"
+                                :overflow "hidden" :textOverflow "ellipsis"
+                                :textAlign "left"}})]
+        maybe-uri)
+      (default-render maybe-uri))))

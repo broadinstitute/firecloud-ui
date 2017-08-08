@@ -10,8 +10,9 @@
 
 
 (defn- flex-params [width]
-  (when (= width :auto)
-    {:flex "1 1 auto"}))
+  (if (= width :auto)
+    {:flex "1 1 auto"}
+    {:flex (str "0 0 " width "px")}))
 
 
 (def ^:private column-drag-margin 11)
@@ -65,7 +66,7 @@
           (when visible?
             (let [column-value (column-data row)
                   rendered (render column-value)]
-              [:div {:style (merge (flex-params width) {:width width} (:cell style) (:body-cell style))
+              [:div {:style (merge (flex-params width) (:cell style) (:body-cell style))
                      :title (cond as-text (as-text column-value)
                                   (string? rendered) rendered)}
                rendered])))
