@@ -8,7 +8,7 @@
    [broadfcui.common.links :as links]
    [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
-   [broadfcui.common.table.utils :refer [default-render]]
+   [broadfcui.common.table.utils :as table-utils]
    [broadfcui.page.workspace.analysis.igv-utils :as igv-utils]
    [broadfcui.utils :as utils]
    ))
@@ -34,7 +34,7 @@
                                  (some #(.endsWith lc-data %) supported-file-types)))
                         (style/left-ellipses {:style {:marginRight "0.5em"}}
                                              (links/create-internal {:onClick #((:on-select props) data)} data))
-                        (default-render data)))}]])})
+                        (table-utils/default-render data)))}]])})
 
 
 (react/defc- Right
