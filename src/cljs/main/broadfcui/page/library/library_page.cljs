@@ -148,7 +148,7 @@
    :build-aggregate-fields
    (fn [{:keys [props]}]
      (reduce
-      (fn [results field] (assoc results field (if (contains? (utils/log field (:expanded-aggregates props)) field) 0 5))) ;
+      (fn [results field] (assoc results field (if (or (contains? (:expanded-aggregates props) field) (= field :tag:tags)) 0 5)))
       {}
       (:aggregate-fields props)))
    :pagination
