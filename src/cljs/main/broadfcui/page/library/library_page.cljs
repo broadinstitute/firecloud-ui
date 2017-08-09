@@ -148,6 +148,7 @@
    :build-aggregate-fields
    (fn [{:keys [props]}]
      (reduce
+      ;; Limit results to 5 unless (1) the section is expanded or (2) it's the tags section
       (fn [results field] (assoc results field (if (or (contains? (:expanded-aggregates props) field) (= field :tag:tags)) 0 5)))
       {}
       (:aggregate-fields props)))
@@ -310,10 +311,10 @@
                          [comps/TagAutocomplete
                           {:ref "tag-autocomplete"
                            :tags (utils/log ":tags " selected-tags)
-                           :data (utils/log ":data " (set tags)) ;(set/difference (set tags) selected-tags)) ; don't show twice
+                           :data (utils/log ":data " (set tags))
                            :show-counts? false
                            :allow-new? false
-                           :on-change (partial (:update-filter props) aggregate-field) ; arity 2; field name passed here, value(s) in component
+                           :on-change (partial (:update-filter props) aggregate-field) ; arity 2; field name provided here, value(s) in component
                            }])
                :on-clear #((@refs "tag-autocomplete") :set-tags #{})}))])]))})
 
