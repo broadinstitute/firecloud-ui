@@ -718,6 +718,9 @@
    :component-will-unmount
    (fn [{:keys [refs]}]
      (.select2 (js/$ (@refs "input-element")) "destroy"))
+   :component-will-receive-props
+   (fn []
+     (utils/log "will receive!")) ; per Isaac, inexplicably fixes React trying to remove a non-React element
    :-on-change
    (fn [{:keys [props this]}]
      (when-let [f (:on-change props)] ; 5B
