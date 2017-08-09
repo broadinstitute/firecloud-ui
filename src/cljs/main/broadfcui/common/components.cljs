@@ -723,7 +723,7 @@
      (utils/log "will receive!"))
    :-on-change
    (fn [{:keys [props this]}]
-     (when-let [f (:on-change props)] ; 5B
+     (when-let [f (:on-change props)]
        (f (this :get-tags)))) ; currently selected tags
    :-process-results
    (fn [_]
