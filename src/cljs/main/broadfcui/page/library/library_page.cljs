@@ -298,7 +298,7 @@
                                       (merge
                                        {:title title :field aggregate-field}
                                        (select-keys aggregations [:numOtherDocs :buckets])
-                                       (select-keys props [:expanded? :selected-items :update-filter ; 4A
+                                       (select-keys props [:expanded? :selected-items :update-filter
                                                            :expanded-callback-function]))]
           (= render-hint "typeahead-multiselect")
           [:div {}
@@ -314,7 +314,7 @@
                            :data (utils/log ":data " (set tags))
                            :show-counts? false
                            :allow-new? false
-                           :on-change (partial (:update-filter props) aggregate-field) ; arity 2; field name provided here, value(s) in component
+                           :on-change (partial (:update-filter props) aggregate-field) ;; arity 2; field name provided here, value(s) in component
                            }])
                :on-clear #((@refs "tag-autocomplete") :set-tags #{})}))])]))})
 
@@ -330,7 +330,7 @@
                                        :aggregates (:aggregates props)
                                        :expanded? (contains? (:expanded-aggregates props) aggregate-field)
                                        :selected-items (set (get-in props [:facet-filters aggregate-field]))
-                                       :update-filter (:update-filter props) ; 3
+                                       :update-filter (:update-filter props)
                                        :expanded-callback-function (:expanded-callback-function props)}])
          (:aggregate-fields props))]))})
 
@@ -339,7 +339,7 @@
 
 (react/defc- Page
   (->>
-   {:update-filter ; 1
+   {:update-filter
     (fn [{:keys [state after-update refs]} facet-name facet-list]
       (if (empty? facet-list)
         (swap! state update :facet-filters dissoc facet-name)
@@ -378,10 +378,8 @@
                        {:ref "facets"
                         :aggregates (:aggregates @state)
                         :aggregate-properties (:library-attributes @state)
-                        :update-filter (fn [facet-name facet-list] ; 2
-                                         (this :update-filter
-                                               (utils/log "facet section" facet-name)
-                                               (utils/log "facet section" facet-list))) ;
+                        :update-filter (fn [facet-name facet-list]
+                                         (this :update-filter facet-name facet-list))
                         :expanded-callback-function (fn [facet-name expanded?]
                                                       (this :set-expanded-aggregate facet-name expanded?))}
                        (select-keys @state [:aggregate-fields :facet-filters :expanded-aggregates]))]]
