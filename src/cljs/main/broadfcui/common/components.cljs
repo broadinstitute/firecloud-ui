@@ -689,14 +689,14 @@
    :render
    (fn [{:keys [props]}]
      (style/create-identity-select {:ref "input-element"
-                                    :defaultValue (:tags props) ;;;
+                                    :defaultValue (:tags props)
                                     :multiple true}
                                    (or (:data props) (:tags props))))
    :component-did-mount
    (fn [{:keys [props refs this]}]
      (let [{:keys [data allow-new? minimum-input-length]} props
            component (js/$ (@refs "input-element"))
-           data-source (if data ;
+           data-source (if data
                          {:data data}
                          {:ajax {:url (str (config/api-url-root) "/api/workspaces/tags")
                                  :dataType "json"
@@ -720,7 +720,7 @@
      (.select2 (js/$ (@refs "input-element")) "destroy"))
    :component-will-receive-props
    (fn []
-     (utils/log "will receive!")) ; per Isaac, inexplicably fixes React trying to remove a non-React element
+     (utils/log "will receive!"))
    :-on-change
    (fn [{:keys [props this]}]
      (when-let [f (:on-change props)] ; 5B
