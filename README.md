@@ -111,6 +111,12 @@ FIAB=true ENV=qa ./config/docker-rsync-local-ui.sh
 ```
 
 
+When starting your UI, run:
+```bash
+FIAB=true ENV=qa ./config/docker-rsync-local-ui.sh
+```
+
+
 #### Running tests
 
 ##### From intellij
