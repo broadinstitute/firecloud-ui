@@ -12,6 +12,8 @@ import org.scalatest.Suite
   */
 trait GroupFixtures extends CleanUp with LazyLogging { self: WebBrowserSpec with Suite =>
 
+  def groupNameToEmail(groupName: String): String = s"GROUP_$groupName@quality.firecloud.org" //probably want to pull the apps domain from config if it's there
+
   def withGroup(namePrefix: String, memberEmails: List[String] = List())
                (testCode: (String) => Any)
                (implicit token: AuthToken): Unit = {

@@ -21,7 +21,7 @@ class WorkspaceListPage(implicit webDriver: WebDriver) extends AuthenticatedPage
     * @return a WorkspaceSummaryPage for the created workspace
     */
   def createWorkspace(billingProjectName: String, workspaceName: String,
-                      authDomain: Option[String] = None): WorkspaceSummaryPage = {
+                      authDomain: Set[String] = Set.empty): WorkspaceSummaryPage = {
     ui.clickCreateWorkspaceButton()
           .createWorkspace(billingProjectName, workspaceName, authDomain)
     new WorkspaceSummaryPage(billingProjectName, workspaceName)
@@ -117,7 +117,7 @@ class CreateWorkspaceModal(implicit webDriver: WebDriver) extends FireCloudView 
     * @param workspaceName the name for the new workspace
     * @param billingProjectName the billing project for the workspace
     */
-  def createWorkspace(billingProjectName: String, workspaceName: String, authDomain: Option[String] = None): Unit = {
+  def createWorkspace(billingProjectName: String, workspaceName: String, authDomain: Set[String] = Set.empty): Unit = {
     ui.selectBillingProject(billingProjectName)
     ui.fillWorkspaceName(workspaceName)
     authDomain foreach { ui.selectAuthDomain(_) }
