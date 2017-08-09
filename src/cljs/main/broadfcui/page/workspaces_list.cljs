@@ -197,10 +197,13 @@
         [Table
          {:persistence-key "workspace-table" :v 3
           :data (this :-filter-workspaces) :total-count (:total-count @locals)
-          :tabs [{:label "My Workspaces"
-                  :predicate #(common/access-greater-than-equal-to? (:accessLevel %) "WRITER")}
-                 {:label "Public Workspaces"
-                  :predicate (constantly true)}]
+          :tabs {:style {:backgroundColor (:background-light style/colors)
+                         :paddingLeft 12}
+                 :items
+                 [{:label "My Workspaces"
+                   :predicate #(common/access-greater-than-equal-to? (:accessLevel %) "WRITER")}
+                  {:label "Public Workspaces"
+                   :predicate (constantly true)}]}
           :body
           {:columns
            (let [column-data (fn [ws]
@@ -256,7 +259,8 @@
                               (style/prettify-access-level access-level))
                             (style/prettify-access-level access-level))])}])
            :behavior {:reorderable-columns? false}
-           :style {:header-row {:color (:text-lighter style/colors) :fontSize "90%"}
+           :style {:table {:paddingLeft 12}
+                   :header-row {:color (:text-lighter style/colors) :fontSize "90%"}
                    :header-cell {:padding "0.4rem 0"}
                    :resize-tab (table-style/tab :line-default)
                    :body {:border style/standard-line}
@@ -266,6 +270,8 @@
                                         {:borderTop style/standard-line})))
                    :cell table-style/clip-text}}
           :toolbar {:filter-bar {:inner {:width 300 :data-test-id (config/when-debug "workspace-list-filter")}}
+                    :style {:padding "12px 12px 0" :margin 0
+                            :backgroundColor (:background-light style/colors)}
                     :get-items
                     (constantly
                      [(links/create-internal {:onClick #(swap! state update :filters-expanded? not)}
@@ -273,7 +279,8 @@
                       flex/spring
                       [create/Button (select-keys props [:nav-context :billing-projects :disabled-reason])]])}
           :sidebar (when filters-expanded?
-                     (this :-render-side-filters))}]]))
+                     (this :-render-side-filters))
+          :paginator {:style {:paddingLeft 12}}}]]))
    :component-did-update
    (fn [{:keys [state]}]
      (persistence/save {:key persistence-key :state state}))
@@ -329,7 +336,7 @@
      (let [{:keys [filters]} @state]
        (apply
         filter/area
-        {:style {:marginRight "1rem" :flex "0 0 175px"}}
+        {:style {:flex "0 0 175px"}}
         (filter/section
          {:title "Tags"
           :content (react/create-element
@@ -388,12 +395,11 @@
        (net/render-with-ajax
         (:workspaces-response server-response)
         (fn []
-          [:div {:style {:padding "0 1rem"}}
-           [WorkspaceTable
-            (assoc props
-              :workspaces workspaces
-              :billing-projects billing-projects
-              :disabled-reason disabled-reason)]])
+          [WorkspaceTable
+           (assoc props
+             :workspaces workspaces
+             :billing-projects billing-projects
+             :disabled-reason disabled-reason)])
         {:loading-text "Loading workspaces..."
          :rephrase-error #(get-in % [:parsed-response :workspaces :error-message])})))
    :component-did-mount
@@ -411,17 +417,12 @@
                  :billing-projects (map :projectName projects)
                  :disabled-reason (if (empty? projects) :no-billing nil))))))})
 
-(react/defc- Page
-  {:render
-   (fn []
-     [:div {:style {:marginTop "1.5rem"}}
-      [WorkspaceList]])})
 
 (defn add-nav-paths []
   (nav/defredirect {:regex #"workspaces" :make-path (fn [] "")})
   (nav/defpath
    :workspaces
-   {:component Page
+   {:component WorkspaceList
     :regex #""
     :make-props (fn [] {})
     :make-path (fn [] "")}))

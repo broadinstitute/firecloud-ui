@@ -9,8 +9,7 @@
 
 (defn area [attributes & sections]
   [:div (utils/deep-merge {:style {:fontSize "85%" :padding "16px 12px"
-                                   :background (:background-light style/colors)
-                                   :border style/standard-line}}
+                                   :background (:background-light style/colors)}}
                           attributes)
    (interpose [:hr {:style {:marginTop "0.9rem"}}] sections)])
 

@@ -112,7 +112,8 @@
          sidebar
          [:div {:style {:flex "1 1 0" :overflow "hidden"}}
           (when tabs
-            [:div {:style {:marginBottom "0.3rem"}}
+            [:div {:style (merge {:marginBottom "0.3rem"}
+                                 (:style tabs))}
              (map-indexed (fn [index {:keys [label size predicate]}]
                             (let [selected? (= index selected-tab-index)]
                               [:div {:style {:display "inline-block" :textAlign "center"
@@ -122,7 +123,7 @@
                                              :borderBottom (when selected? (str "3px solid " (:button-primary style/colors)))}
                                      :onClick #(swap! state assoc :selected-tab-index index)}
                                (str label " (" (or size (count (filter predicate data))) ")")]))
-                          tabs)])
+                          (:items tabs))])
           (if (empty? rows)
             (style/create-message-well empty-message)
             [body/TableBody
