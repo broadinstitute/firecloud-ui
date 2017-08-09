@@ -110,7 +110,7 @@
            (list* (get-items {:columns column-display})))]
         [:div {:style {:display "flex"}}
          sidebar
-         [:div {:style {:flex "1 1 auto"}}
+         [:div {:style {:flex "1 1 0" :overflow "hidden"}}
           (when tabs
             [:div {:style {:marginBottom "0.3rem"}}
              (map-indexed (fn [index {:keys [label size predicate]}]
@@ -125,14 +125,13 @@
                           tabs)])
           (if (empty? rows)
             (style/create-message-well empty-message)
-            [:div {:style {:overflowX "auto"}}
-             [body/TableBody
-              (merge
-               body
-               (select-keys query-params [:sort-column :sort-order])
-               (utils/restructure rows column-display update-column-display fixed-column-count allow-no-sort?)
-               {:set-sort (fn [col order] (swap! state update :query-params
-                                                 merge {:sort-column col :sort-order order}))})]])
+            [body/TableBody
+             (merge
+              body
+              (select-keys query-params [:sort-column :sort-order])
+              (utils/restructure rows column-display update-column-display fixed-column-count allow-no-sort?)
+              {:set-sort (fn [col order] (swap! state update :query-params
+                                                merge {:sort-column col :sort-order order}))})])
           (when (not= paginator :none)
             [Paginator
              (merge paginator
