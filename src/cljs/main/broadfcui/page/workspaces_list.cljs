@@ -198,12 +198,13 @@
          {:persistence-key "workspace-table" :v 3
           :data (this :-filter-workspaces) :total-count (:total-count @locals)
           :tabs {:style {:backgroundColor (:background-light style/colors)
-                         :paddingLeft 12}
+                         :marginLeft -12 :paddingLeft 12}
                  :items
                  [{:label "My Workspaces"
                    :predicate #(common/access-greater-than-equal-to? (:accessLevel %) "WRITER")}
                   {:label "Public Workspaces"
                    :predicate (constantly true)}]}
+          :style {:content {:paddingLeft 12}}
           :body
           {:columns
            (let [column-data (fn [ws]
@@ -259,8 +260,7 @@
                               (style/prettify-access-level access-level))
                             (style/prettify-access-level access-level))])}])
            :behavior {:reorderable-columns? false}
-           :style {:table {:paddingLeft 12}
-                   :header-row {:color (:text-lighter style/colors) :fontSize "90%"}
+           :style {:header-row {:color (:text-lighter style/colors) :fontSize "90%"}
                    :header-cell {:padding "0.4rem 0"}
                    :resize-tab (table-style/tab :line-default)
                    :body {:border style/standard-line}
@@ -279,8 +279,7 @@
                       flex/spring
                       [create/Button (select-keys props [:nav-context :billing-projects :disabled-reason])]])}
           :sidebar (when filters-expanded?
-                     (this :-render-side-filters))
-          :paginator {:style {:paddingLeft 12}}}]]))
+                     (this :-render-side-filters))}]]))
    :component-did-update
    (fn [{:keys [state]}]
      (persistence/save {:key persistence-key :state state}))

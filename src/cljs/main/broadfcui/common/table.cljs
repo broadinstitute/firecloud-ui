@@ -80,7 +80,7 @@
    (fn [{:keys [props state]}]
      (let [props (utils/deep-merge default-props props)
            {:keys [rows column-display filtered-count query-params selected-tab-index]} @state
-           {:keys [toolbar sidebar tabs body paginator data]} props
+           {:keys [toolbar sidebar tabs body paginator style data]} props
            {:keys [empty-message columns behavior external-query-params on-column-change]} body
            {:keys [fixed-column-count allow-no-sort?]} behavior
            total-count (some :total-count [props @state])
@@ -88,7 +88,7 @@
            update-column-display (fn [columns]
                                    (when on-column-change (on-column-change columns))
                                    (swap! state assoc :column-display columns))]
-       [:div {:style {:position "relative"}}
+       [:div {:style (merge {:position "relative"} (:main style))}
         [comps/DelayedBlocker {:ref "blocker" :banner "Loading..."}]
         [:div {:style (:style toolbar)}
          (when (:reorderable-columns? behavior)
@@ -108,9 +108,9 @@
                                  (:inner filter-bar-props))]]))
          (when-let [get-items (:get-items toolbar)]
            (list* (get-items {:columns column-display})))]
-        [:div {:style {:display "flex"}}
+        [:div {:style (merge {:display "flex"} (:content+sidebar style))}
          sidebar
-         [:div {:style {:flex "1 1 0" :overflow "hidden"}}
+         [:div {:style (merge {:flex "1 1 0" :overflow "hidden"} (:content style))}
           (when tabs
             [:div {:style (merge {:marginBottom "0.3rem"}
                                  (:style tabs))}
