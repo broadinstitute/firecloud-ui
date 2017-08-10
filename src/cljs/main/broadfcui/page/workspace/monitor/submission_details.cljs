@@ -31,45 +31,41 @@
         :else [icons/ExceptionIcon {:size 36}]))
 
 (react/defc- WorkflowsTable
-  {:get-initial-state
-   (fn [{:keys [props]}]
-     {:filter-group-index 0
-      :filtered-data (:workflows props)})
-   :render
+  {:render
    (fn [{:keys [this props]}]
      (let [{:keys [workflow-id]} props]
        (if workflow-id
          (this :render-workflow-details workflow-id)
          (this :render-table))))
    :render-table
-   (fn [{:keys [props state refs]}]
+   (fn [{:keys [props]}]
      [Table
       {:ref "table"
-       :data (:filtered-data @state)
+       :data (:workflows props)
+       :tabs {:items (->> moncommon/wf-all-statuses
+                          (map (fn [status] {:label status :predicate #(= status (:status %))}))
+                          (cons {:label "All" :predicate (constantly true)})
+                          vec)}
        :body
        {:empty-message "No Workflows"
         :style table-style/table-heavy
         :behavior {:fixed-column-count 1}
-        :columns [{:id "view"
+        :columns [{:id "view" :initial-width 50
+                   :hidden? true :resizable? false :sortable? false :filterable? false
                    :column-data :workflowId
-                   :initial-width 50
                    :as-text (constantly "View workflow details")
-                   :hidden? true
-                   :resizable? false :sortable? false :filterable? false
-                   :render
-                   (fn [id]
-                     (when id
-                       (links/create-internal
-                        {:href (nav/get-link :workspace-workflow
-                                             (:workspace-id props)
-                                             (:submission-id props)
-                                             id)}
-                        "View")))}
+                   :render (fn [id]
+                             (when id
+                               (links/create-internal
+                                 {:href (nav/get-link :workspace-workflow
+                                                      (:workspace-id props)
+                                                      (:submission-id props)
+                                                      id)}
+                                 "View")))}
                   {:header "Data Entity" :initial-width 200
                    :column-data :workflowEntity
-                   :as-text
-                   (fn [entity]
-                     (str (:entityName entity) " (" (:entityType entity) ")"))
+                   :as-text (fn [{:keys [entityName entityType]}]
+                              (str entityName " (" entityType ")"))
                    :sort-by :text}
                   {:header "Last Changed" :initial-width 280
                    :column-data :statusLastChangedDate
@@ -84,38 +80,20 @@
                   {:header "Messages" :initial-width 300
                    :column-data :messages
                    :render (fn [message-list]
-                             [:div {}
-                              (map (fn [message]
-                                     [:div {} message])
-                                   message-list)])}
+                             [:div {} (map (fn [message] [:div {} message]) message-list)])}
                   {:header "Workflow ID" :initial-width 300
                    :as-text :workflowId :sort-by :text
                    :render
-                   (fn [workflow]
-                     (let [{:keys [submission-id bucketName]} props
-                           inputs (second (second (first (:inputResolutions workflow))))
-                           input-names (string/split inputs ".")
-                           workflow-name (first input-names)
-                           workflowId (:workflowId workflow)]
-                       (links/create-external
-                        {:href (str moncommon/google-cloud-context bucketName "/" submission-id "/"
-                                    workflow-name "/" workflowId "/")}
-                        workflowId)))}]}
-       :toolbar
-       {:get-items
-        (constantly
-         [[comps/FilterGroupBar
-           {:data (:workflows props)
-            :selected-index (:filter-group-index @state)
-            :on-change (fn [index data]
-                         (swap! state assoc
-                                :filter-group-index index
-                                :filtered-data data)
-                         (when-let [table (@refs "table")]
-                           (table :update-query-params {:page-number 1})))
-            :filter-groups (vec (cons {:text "All" :pred (constantly true)}
-                                      (map (fn [status] {:text status :pred #(= status (:status %))})
-                                           moncommon/wf-all-statuses)))}]])}}])
+                   (fn [{:keys [workflowId inputResolutions]}]
+                     (when workflowId
+                       (let [{:keys [submission-id bucketName]} props
+                             inputs (second (second (first inputResolutions)))
+                             input-names (string/split inputs ".")
+                             workflow-name (first input-names)]
+                         (links/create-external
+                          {:href (str moncommon/google-cloud-context bucketName "/" submission-id "/"
+                                      workflow-name "/" workflowId "/")}
+                          workflowId))))}]}}])
    :render-workflow-details
    (fn [{:keys [props]} workflowId]
      (let [workflows (:workflows props)

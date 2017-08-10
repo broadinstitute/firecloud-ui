@@ -120,7 +120,7 @@
                               [:div {:style {:display "inline-block" :textAlign "center"
                                              :padding "0.5rem 1rem" :cursor "pointer"
                                              :fontWeight (when selected? 500)
-                                             :letterSpacing (when-not selected? "0.005em") ; stops size from shifting when selected
+                                             :letterSpacing (when-not selected? "0.007em") ; stops size from shifting when selected
                                              :borderBottom (when selected? (str "3px solid " (:button-primary style/colors)))}
                                      :onClick #(swap! state assoc :selected-tab-index index)}
                                (str label " (" (or size (count (filter predicate data))) ")")]))
@@ -148,18 +148,17 @@
        (this :refresh-rows)))
    :component-did-update
    (fn [{:keys [props state prev-props prev-state this]}]
-     (let [data-change? (not= (:data props) (:data prev-props))]
-       (when (or (not= (:query-params @state) (:query-params prev-state))
-                 (not= (:selected-tab-index @state) (:selected-tab-index prev-state))
-                 data-change?)
-         (this :refresh-rows data-change?)))
-     (when (and (:persistence-key props)
-                (or (not= (:query-params @state) (:query-params prev-state))
-                    (not= (:column-display @state) (:column-display prev-state))
-                    (not= (:selected-tab-index @state) (:selected-tab-index prev-state))))
-       (persistence/save {:key (:persistence-key props)
-                          :state state
-                          :only [:query-params :column-display :selected-tab-index :v]})))
+     (let [data-change? (not= (:data props) (:data prev-props))
+           query-params-change? (not= (:query-params @state) (:query-params prev-state))
+           selected-tab-change? (not= (:selected-tab-index @state) (:selected-tab-index prev-state))
+           column-display-change? (not= (:column-display @state) (:column-display prev-state))]
+       (when (or query-params-change? selected-tab-change? data-change?)
+         (this :refresh-rows (or data-change? selected-tab-change?)))
+       (when (and (:persistence-key props)
+                  (or query-params-change? selected-tab-change? column-display-change?))
+         (persistence/save {:key (:persistence-key props)
+                            :state state
+                            :only [:query-params :column-display :selected-tab-index :v]}))))
    :-fetch-initial-state
    (fn [{:keys [props]}]
      (persistence/try-restore
