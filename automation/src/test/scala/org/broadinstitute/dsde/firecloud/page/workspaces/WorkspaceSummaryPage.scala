@@ -175,7 +175,7 @@ class CloneWorkspaceModal(implicit webDriver: WebDriver) extends FireCloudView {
     private val authDomainSelect = testId("workspace-auth-domain-select")
     private val billingProjectSelect = testId("billing-project-select")
     private val cloneButtonQuery: Query = testId("create-workspace-button")
-    private val lockedAuthDomainGroupsQuery: Query = testId("locked-auth-domain-group")
+    private val authDomainGroupsQuery: Query = testId("selected-auth-domain-group")
     private val workspaceNameInput: Query = testId("workspace-name-input")
 
     def clickCloneButton(): Unit = {
@@ -187,9 +187,9 @@ class CloneWorkspaceModal(implicit webDriver: WebDriver) extends FireCloudView {
     }
 
     def readAuthDomainGroups(): List[(String, Boolean)] = {
-      await visible lockedAuthDomainGroupsQuery
+      await visible authDomainGroupsQuery
 
-      findAll(lockedAuthDomainGroupsQuery).map { element =>
+      findAll(authDomainGroupsQuery).map { element =>
         (element.attribute("value").get, element.isEnabled)
       }.toList
     }
