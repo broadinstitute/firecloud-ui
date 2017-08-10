@@ -62,6 +62,7 @@
                                (when reset-page-number? {:page-number 1}))]
        (assert data-source "No data provided")
        (data-source {:columns (-> props :body :columns)
+                     :tab (some-> (:tabs props) :items (get (:selected-tab-index @state)))
                      :query-params query-params
                      :on-done (fn [{:keys [total-count filtered-count results]}]
                                 ((@refs "blocker") :hide)
@@ -149,6 +150,7 @@
    (fn [{:keys [props state prev-props prev-state this]}]
      (let [data-change? (not= (:data props) (:data prev-props))]
        (when (or (not= (:query-params @state) (:query-params prev-state))
+                 (not= (:selected-tab-index @state) (:selected-tab-index prev-state))
                  data-change?)
          (this :refresh-rows data-change?)))
      (when (and (:persistence-key props)

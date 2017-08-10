@@ -38,6 +38,11 @@
               (func column-data))))
         columns))
 
+(defn- apply-tab [{:keys [predicate]} data]
+  (if predicate
+    (filter predicate data)
+    data))
+
 (defn- filter-rows [{:keys [filter-text]} columns data]
   (if (string/blank? filter-text)
     data
@@ -68,8 +73,9 @@
 (defn local
   "Create a data source from a local sequence"
   [data & [total-count]]
-  (fn [{:keys [columns query-params on-done]}]
-    (let [filtered (filter-rows query-params columns data)
+  (fn [{:keys [columns tab query-params on-done]}]
+    (let [tabbed (apply-tab tab data)
+          filtered (filter-rows query-params columns tabbed)
           displayed (->> filtered
                          (sort-rows query-params columns)
                          (trim-rows query-params))]
