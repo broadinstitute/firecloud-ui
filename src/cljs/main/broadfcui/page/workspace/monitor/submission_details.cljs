@@ -44,7 +44,7 @@
        :data (:workflows props)
        :tabs {:items (->> moncommon/wf-all-statuses
                           (map (fn [status] {:label status :predicate #(= status (:status %))}))
-                          (cons {:label "All" :predicate (constantly true)})
+                          (cons {:label "All"})
                           vec)}
        :body
        {:empty-message "No Workflows"

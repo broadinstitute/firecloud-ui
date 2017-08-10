@@ -123,7 +123,12 @@
                                              :letterSpacing (when-not selected? "0.007em") ; stops size from shifting when selected
                                              :borderBottom (when selected? (str "3px solid " (:button-primary style/colors)))}
                                      :onClick #(swap! state assoc :selected-tab-index index)}
-                               (str label " (" (or size (count (filter predicate data))) ")")]))
+                               (str label
+                                    " ("
+                                    (cond size size
+                                          predicate (count (filter predicate data))
+                                          :else (count data))
+                                    ")")]))
                           (:items tabs))])
           (if (empty? rows)
             (style/create-message-well empty-message)
