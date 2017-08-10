@@ -121,9 +121,6 @@
                                       (self :add-listener "change"
                                        #(swap! state assoc :undo-history
                                                (js->clj (self :call-method "historySize")))))}]
-           [:div {:style {:marginTop "0.8em" :fontSize "88%"}}
-            "WDL must use Docker image digests to allow call caching "
-            (links/create-external {:href (config/call-caching-guide-url)} "Learn about call caching")]
 
            (when (:edit-mode? info)
              [:div {:style {:margin "1rem 0 -1rem"}}
