@@ -149,9 +149,8 @@
    :component-did-update
    (fn [{:keys [props state prev-props prev-state this]}]
      (let [data-change? (not= (:data props) (:data prev-props))
-           query-params-change? (not= (:query-params @state) (:query-params prev-state))
-           selected-tab-change? (not= (:selected-tab-index @state) (:selected-tab-index prev-state))
-           column-display-change? (not= (:column-display @state) (:column-display prev-state))]
+           [query-params-change? selected-tab-change? column-display-change?]
+           (utils/changes [:query-params :selected-tab-index :column-display] @state prev-state)]
        (when (or query-params-change? selected-tab-change? data-change?)
          (this :refresh-rows (or data-change? selected-tab-change?)))
        (when (and (:persistence-key props)
