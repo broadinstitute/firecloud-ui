@@ -195,7 +195,7 @@ class CloneWorkspaceModal(implicit webDriver: WebDriver) extends FireCloudView {
     }
 
     def readLockedAuthDomainGroups(): List[String] = {
-      readAuthDomainGroups().filterNot(_._2).map(_._1)
+      readAuthDomainGroups().filterNot{ case (_, isEnabled) => isEnabled }.map { case (name, _) => name }
     }
 
     def selectAuthDomain(authDomain: String): Unit = {
