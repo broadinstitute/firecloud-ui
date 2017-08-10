@@ -719,7 +719,7 @@
    (fn [{:keys [refs]}]
      (.select2 (js/$ (@refs "input-element")) "destroy"))
    :should-component-update ; prevent React from trying to re-render non-React components (the typeahead) that were added since the initial render
-   (fn [] false)
+   (constantly false)
    :-on-change
    (fn [{:keys [props this]}]
      (when-let [f (:on-change props)]
