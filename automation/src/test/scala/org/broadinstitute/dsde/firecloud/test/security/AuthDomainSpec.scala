@@ -60,7 +60,7 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
 
               val cloneWorkspaceName = workspaceName + "_clone"
               val cloneModal = summaryPage.ui.clickCloneButton()
-              cloneModal.ui.readLockedAuthDomainGroups() should contain((authDomainName, false))
+              cloneModal.ui.readLockedAuthDomainGroups() should contain(authDomainName)
 
               register cleanUp {
                 api.workspaces.delete(projectName, cloneWorkspaceName)(AuthTokens.george)
@@ -253,8 +253,8 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
 
                 val cloneWorkspaceName = workspaceName + "_clone"
                 val cloneModal = summaryPage.ui.clickCloneButton()
-                cloneModal.ui.readLockedAuthDomainGroups() should contain((groupOneName, false))
-                cloneModal.ui.readLockedAuthDomainGroups() should contain((groupTwoName, false))
+                cloneModal.ui.readLockedAuthDomainGroups() should contain(groupOneName)
+                cloneModal.ui.readLockedAuthDomainGroups() should contain(groupTwoName)
 
                 register cleanUp {
                   api.workspaces.delete(projectName, cloneWorkspaceName)(AuthTokens.george)
@@ -286,8 +286,8 @@ class AuthDomainSpec extends FreeSpec /*with ParallelTestExecution*/ with Matche
 
                   val cloneWorkspaceName = workspaceName + "_clone"
                   val cloneModal = summaryPage.ui.clickCloneButton()
-                  cloneModal.ui.readLockedAuthDomainGroups() should contain((groupOneName, false))
-                  cloneModal.ui.readLockedAuthDomainGroups() should contain((groupTwoName, false))
+                  cloneModal.ui.readLockedAuthDomainGroups() should contain(groupOneName)
+                  cloneModal.ui.readLockedAuthDomainGroups() should contain(groupTwoName)
                   cloneModal.ui.selectAuthDomain(groupThreeName)
 
                   register cleanUp {
