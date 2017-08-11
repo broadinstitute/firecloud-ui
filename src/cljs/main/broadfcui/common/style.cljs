@@ -170,18 +170,11 @@
   (render-name-id (str namespace "/" name) snapshot-id))
 
 (defn render-count [count]
-  [:div {:style {:fontSize "80%" :fontWeight "normal" :float "right"}}
-   [:span {:style {:display "inline-block"
-                   :minWidth "10px"
-                   :padding "3px 7px"
-                   :color "#fff"
-                   :fontWeight "bold"
-                   :textAlign "center"
-                   :whiteSpace "nowrap"
-                   :verticalAlign "middle"
-                   :backgroundColor "#aaa"
-                   :borderRadius "3px"}}
-    count]])
+  [:span {:style {:minWidth "10px" :padding "3px 7px" :borderRadius "3px"
+                  :fontSize "80%" :fontWeight "bold"
+                  :color "white" :backgroundColor "#aaa"
+                  :textAlign "center" :whiteSpace "nowrap" :verticalAlign "middle"}}
+   count])
 
 (defn render-broad-logo []
   [:img {:src "assets/broad_logo.png" :style {:height 38}}])

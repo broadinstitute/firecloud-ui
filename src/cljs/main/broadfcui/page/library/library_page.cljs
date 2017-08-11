@@ -247,18 +247,11 @@
         [:div {:style {:fontSize "80%" :float "right"}}
          (links/create-internal {:onClick #(this :clear-all)} "Clear")]
         [:div {:style {:paddingTop "1em"}}
-         (map
-          (fn [{:keys [key doc_count]}]
-            [:div {:style {:paddingTop 5}}
-             [:label {:style {:display "inline-block" :width "calc(100% - 30px)"
-                              :textOverflow "ellipsis" :overflow "hidden" :whiteSpace "nowrap"}
-                      :title key}
-              [:input {:type "checkbox"
-                       :checked (contains? (:selected-items props) key)
-                       :onChange #(this :update-selected key (.. % -target -checked))}]
-              [:span {:style {:marginLeft "0.3em"}} key]]
-             (some-> doc_count style/render-count)])
-          (concat (:buckets props) hidden-items-formatted))
+         (filter/checkboxes {:items (map (fn [{:keys [key doc_count]}]
+                                           {:item key :hit-count doc_count})
+                                         (concat (:buckets props) hidden-items-formatted))
+                             :checked-items (:selected-items props)
+                             :on-change (fn [item checked?] (this :update-selected item checked?))})
          [:div {:style {:paddingTop 5}}
           (if (:expanded? props)
             (when (> (count (:buckets props)) 5)
