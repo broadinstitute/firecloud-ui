@@ -29,8 +29,11 @@
         :else
         [Table
          {:persistence-key "method-repo-table" :v 1
-          :data (or (:filtered-data @state) [])
+          :data (concat (:methods @state) (:configs @state))
           :data-test-id (config/when-debug "method-repo-table")
+          :tabs {:items [{:label "All"}
+                         {:label "Methods Only" :predicate (comp (partial = :method) :type)}
+                         {:label "Configs Only" :predicate (comp (partial = :config) :type)}]}
           :body
           {:columns
            [{:header "Type" :initial-width 100
@@ -61,19 +64,7 @@
                          "N/A"))}]
            :style table-style/table-heavy}
           :toolbar
-          {:get-items
-           (constantly
-            (cons [comps/FilterGroupBar
-                   {:data (concat (:methods @state) (:configs @state))
-                    :selected-index (:filter-group-index @state)
-                    :on-change (fn [index data]
-                                 (swap! state assoc
-                                        :filter-group-index index
-                                        :filtered-data data))
-                    :filter-groups [{:text "All"}
-                                    {:text "Methods Only" :pred (comp (partial = :method) :type)}
-                                    {:text "Configs Only" :pred (comp (partial = :config) :type)}]}]
-                  (:toolbar-items props)))}}]))
+          {:get-items (constantly (:toolbar-items props))}}]))
     :component-did-mount
     (fn [{:keys [this]}]
       (this :load-data))
