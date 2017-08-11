@@ -121,7 +121,8 @@
                                              :padding "0.5rem 1rem" :cursor "pointer"
                                              :fontWeight (when selected? 500)
                                              :letterSpacing (when-not selected? "0.007em") ; stops size from shifting when selected
-                                             :borderBottom (when selected? (str "3px solid " (:button-primary style/colors)))}
+                                             :borderBottom (when selected? (str "3px solid " (:button-primary style/colors)))
+                                             :marginBottom (when-not selected? 3)}
                                      :onClick (fn []
                                                 (swap! state assoc :selected-tab-index index)
                                                 (when-let [f (:on-tab-selected tabs)]
