@@ -150,7 +150,7 @@
    (fn [{:keys [props state]}]
      (let [{:keys [entity-types selected-filter-index]} @state]
        (fn [{:keys [query-params on-done]}]
-         (if (empty? entity-types)
+         (if (or (empty? entity-types) (nil? selected-filter-index))
            (on-done {:total-count 0 :filtered-count 0 :results []})
            (let [{:keys [page-number rows-per-page filter-text sort-column sort-order]} query-params
                  entity-type (nth entity-types selected-filter-index)]
