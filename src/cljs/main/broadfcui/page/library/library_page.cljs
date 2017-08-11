@@ -313,7 +313,7 @@
 (defn- facet-section [{:keys [aggregates aggregate-properties expanded-aggregates
                               facet-filters aggregate-fields] :as props}]
   (if (empty? aggregates)
-    ["loading..."]
+    [[comps/Spinner {:text "Loading..."}]]
     (map (fn [aggregate-field]
            [Facet (merge (utils/restructure aggregate-field aggregates)
                          (select-keys props [:update-filter :expanded-callback-function])
