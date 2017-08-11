@@ -44,8 +44,7 @@
                       (swap! state assoc
                              :entity-metadata metadata
                              :entity-types entity-types
-                             :selected-entity-type selected-entity-type
-                             :selected-filter-index (utils/index-of entity-types selected-entity-type))
+                             :selected-entity-type selected-entity-type)
                       (when-let [f (:on-entity-type-selected props)]
                         (f selected-entity-type))
                       (after-update #(this :update-data reinitialize?)))
@@ -71,9 +70,18 @@
               :data-test-id (config/when-debug "entity-table")
               :persistence-key (when selected-entity-type
                                  (str (common/workspace-id->string (:workspace-id props)) ":data" selected-entity-type))
-              :v 1
+              :v 2
               :fetch-data (this :-pagination)
-              :load-on-mount false
+              :tabs {:items (->> entity-types
+                                 (map (fn [entity-type]
+                                        {:label (name entity-type)
+                                         :entity-type entity-type
+                                         :size (get-in entity-metadata [entity-type :count])}))
+                                 vec)
+                     :on-tab-selected (fn [{:keys [entity-type]}]
+                                        (swap! state assoc :selected-entity-type entity-type)
+                                        (when-let [f (:on-entity-type-selected props)]
+                                          (f entity-type)))}
               :body
               {:style (merge table-style/table-heavy (:style props))
                ;; this :behavior and the 'or' guard on the first column are to make things
@@ -120,42 +128,20 @@
               :toolbar
               {:get-items
                (fn [table-props]
-                (cons [comps/FilterGroupBar
-                       {:filter-groups (map (fn [entity-type]
-                                              {:text (name entity-type)
-                                               :count-override (get-in entity-metadata [entity-type :count])})
-                                            entity-types)
-                        :selected-index (:selected-filter-index @state)
-                        :on-change (fn [index _]
-                                     (let [selected-entity-type (nth entity-types index)]
-                                       (swap! state assoc
-                                              :selected-filter-index index
-                                              :selected-entity-type selected-entity-type)
-                                       (when-let [f (:on-entity-type-selected props)]
-                                         (f selected-entity-type))))}]
-                      (when-let [get-toolbar-items (:get-toolbar-items props)]
-                        (get-toolbar-items table-props))))
+                 (when-let [get-toolbar-items (:get-toolbar-items props)]
+                   (get-toolbar-items table-props)))
                :style {:flexWrap "wrap"}}}]))]))
    :component-did-mount
    (fn [{:keys [props this]}]
      (this :refresh (:initial-entity-type props)))
-   :component-did-update
-   (fn [{:keys [state prev-state this]}]
-     (let [prev-index (:selected-filter-index prev-state)
-           this-index (:selected-filter-index @state)]
-       (when (and prev-index
-                  (not= prev-index this-index))
-         (this :update-data))))
    :-pagination
    (fn [{:keys [props state]}]
-     (let [{:keys [entity-types selected-filter-index]} @state]
-       (fn [{:keys [query-params on-done]}]
+     (let [{:keys [entity-types]} @state]
+       (fn [{:keys [query-params tab on-done]}]
          (if (empty? entity-types)
            (on-done {:total-count 0 :filtered-count 0 :results []})
            (let [{:keys [page-number rows-per-page filter-text sort-column sort-order]} query-params
-                 entity-type (if (nil? selected-filter-index)
-                               (first entity-types)
-                               (nth entity-types selected-filter-index))]
+                 entity-type (:entity-type tab)]
              (endpoints/call-ajax-orch
               {:endpoint (endpoints/get-entities-paginated
                           (:workspace-id props)
