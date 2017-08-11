@@ -308,8 +308,7 @@
                           :data (utils/log ":data " (set tags))
                           :show-counts? false
                           :allow-new? false
-                          ;; arity 2; field name provided here, value(s) in component
-                          :on-change (partial (:update-filter props) aggregate-field)}])
+                          :on-change #((:update-filter props) aggregate-field %)}])
               :on-clear #((@refs "tag-autocomplete") :set-tags #{})})))]))})
 
 (react/defc- FacetSection
