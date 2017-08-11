@@ -204,5 +204,7 @@
                              :sort-order initial-sort-order}
                             (set/difference all-query-params (-> props :body :external-query-params)))
              :column-display (table-utils/build-column-display processed-columns)}
-            (when (:tabs props) {:selected-tab-index 0})
+            (when-let [tabs (:tabs props)]
+              {:selected-tab-index (or (some-> (:initial-selection tabs) (utils/first-matching-index (:items tabs)))
+                                       0)})
             (when-let [v (:v props)] {:v v}))))}))})

@@ -39,8 +39,8 @@
        :on-done (fn [{:keys [success? get-parsed-response]}]
                   (if success?
                     (let [metadata (get-parsed-response)
-                          entity-types (utils/sort-match (map keyword common/root-entity-types) (keys metadata))
-                          selected-entity-type (or (some-> entity-type keyword) (first entity-types))]
+                          entity-types (utils/sort-match common/root-entity-types (map name (keys metadata)))
+                          selected-entity-type (or entity-type (first entity-types))]
                       (swap! state assoc
                              :entity-metadata metadata
                              :entity-types entity-types
@@ -63,21 +63,22 @@
           server-error (style/create-server-error-message server-error)
           (nil? entity-metadata) [:div {:style {:textAlign "center"}} [comps/Spinner {:text "Retrieving entity types..."}]]
           :else
-          (let [attributes (map keyword (get-in entity-metadata [selected-entity-type :attributeNames]))
+          (let [attributes (map keyword (get-in entity-metadata [(keyword selected-entity-type) :attributeNames]))
                 attr-col-width (->> attributes count (/ 1000) int (min 400) (max 100))]
             [Table
              {:ref "table" :key selected-entity-type
               :data-test-id (config/when-debug "entity-table")
               :persistence-key (when selected-entity-type
-                                 (str (common/workspace-id->string (:workspace-id props)) ":data" selected-entity-type))
+                                 (str (common/workspace-id->string (:workspace-id props)) ":data:" selected-entity-type))
               :v 2
               :fetch-data (this :-pagination)
               :tabs {:items (->> entity-types
                                  (map (fn [entity-type]
-                                        {:label (name entity-type)
+                                        {:label entity-type
                                          :entity-type entity-type
-                                         :size (get-in entity-metadata [entity-type :count])}))
+                                         :size (get-in entity-metadata [(keyword entity-type) :count])}))
                                  vec)
+                     :initial-selection #(= (:entity-type %) selected-entity-type)
                      :on-tab-selected (fn [{:keys [entity-type]}]
                                         (swap! state assoc :selected-entity-type entity-type)
                                         (when-let [f (:on-entity-type-selected props)]
@@ -88,7 +89,7 @@
                ;; behave when there is no data (and thus no entity-types)
                :behavior {:reorderable-columns? (seq entity-types) :filterable? (seq entity-types)}
                :columns
-               (into [{:header (or (get-in entity-metadata [selected-entity-type :idName]) "No data")
+               (into [{:header (or (get-in entity-metadata [(keyword selected-entity-type) :idName]) "No data")
                        :initial-width 200
                        :as-text :name :sort-by :text
                        :render (or (:entity-name-renderer props) :name)}]
@@ -113,7 +114,6 @@
                                          (let [items (map render-list-item (common/attribute-values attr-value))
                                                c (count items)
                                                entity-type (or (some-> selected-entity-type
-                                                                       name
                                                                        common/set-type->membership-attribute
                                                                        inflections/singular)
                                                                "item")]
@@ -122,7 +122,7 @@
                                                   (str ": " (string/join ", " items)))))
                                          :else ((:attribute-renderer props) attr-value)))})
                           attributes))
-               :column-defaults (get (:column-defaults props) (some-> selected-entity-type name))
+               :column-defaults (get (:column-defaults props) selected-entity-type)
                :on-row-click (:on-row-click props)
                :on-column-change (:on-column-change props)}
               :toolbar
@@ -145,7 +145,7 @@
              (endpoints/call-ajax-orch
               {:endpoint (endpoints/get-entities-paginated
                           (:workspace-id props)
-                          (name entity-type)
+                          entity-type
                           {"page" page-number
                            "pageSize" rows-per-page
                            "filterTerms" (js/encodeURIComponent filter-text)
