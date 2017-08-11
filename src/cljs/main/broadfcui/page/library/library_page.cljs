@@ -149,7 +149,11 @@
    (fn [{:keys [props]}]
      (reduce
       ;; Limit results to 5 unless (1) the section is expanded or (2) it's the tags section
-      (fn [results field] (assoc results field (if (or (contains? (:expanded-aggregates props) field) (= field :tag:tags)) 0 5)))
+      (fn [results field]
+        (assoc results field (if (or (contains? (:expanded-aggregates props) field)
+                                     (= field :tag:tags))
+                               0
+                               5)))
       {}
       (:aggregate-fields props)))
    :pagination
@@ -276,7 +280,7 @@
 
 (react/defc- Facet
   {:render
-   (fn [{:keys [this state props refs]}]
+   (fn [{:keys [props refs]}]
      (let [aggregate-field (:aggregate-field props)
            properties (:aggregate-properties props)
            title (:title properties)
@@ -285,29 +289,28 @@
        [:div {}
         [:hr {}]
         (cond
-          (= render-hint "checkbox") [FacetCheckboxes
-                                      (merge
-                                       {:title title :field aggregate-field}
-                                       (select-keys aggregations [:numOtherDocs :buckets])
-                                       (select-keys props [:expanded? :selected-items :update-filter
-                                                           :expanded-callback-function]))]
+          (= render-hint "checkbox")
+          [FacetCheckboxes
+           (merge
+            {:title title :field aggregate-field}
+            (select-keys aggregations [:numOtherDocs :buckets])
+            (select-keys props [:expanded? :selected-items :update-filter :expanded-callback-function]))]
           (= render-hint "typeahead-multiselect")
-          [:div {}
-           (let [tags (mapv :key (:buckets aggregations))
-                 ;; Don't show tags that we pulled out of persistence, but which no longer exist (workspace or tag deletion)
-                 selected-tags (set/intersection (:selected-items props) (set tags))]
-             (filter/section
-              {:title title
-               :content (react/create-element
-                         [comps/TagAutocomplete
-                          {:ref "tag-autocomplete"
-                           :tags (utils/log ":tags " selected-tags)
-                           :data (utils/log ":data " (set tags))
-                           :show-counts? false
-                           :allow-new? false
-                           :on-change (partial (:update-filter props) aggregate-field) ;; arity 2; field name provided here, value(s) in component
-                           }])
-               :on-clear #((@refs "tag-autocomplete") :set-tags #{})}))])]))})
+          (let [tags (mapv :key (:buckets aggregations))
+                ;; Don't show tags that we pulled out of persistence, but which no longer exist (workspace or tag deletion)
+                selected-tags (set/intersection (:selected-items props) (set tags))]
+            (filter/section
+             {:title title
+              :content (react/create-element
+                        [comps/TagAutocomplete
+                         {:ref "tag-autocomplete"
+                          :tags (utils/log ":tags " selected-tags)
+                          :data (utils/log ":data " (set tags))
+                          :show-counts? false
+                          :allow-new? false
+                          ;; arity 2; field name provided here, value(s) in component
+                          :on-change (partial (:update-filter props) aggregate-field)}])
+              :on-clear #((@refs "tag-autocomplete") :set-tags #{})})))]))})
 
 (react/defc- FacetSection
   {:render
@@ -316,13 +319,14 @@
        [:div {:style {:fontSize "80%"}} "loading..."]
        [:div {:style {:fontSize "85%" :padding "16px 12px"}}
         (map
-         (fn [aggregate-field] [Facet {:aggregate-field aggregate-field
-                                       :aggregate-properties (get (:aggregate-properties props) aggregate-field)
-                                       :aggregates (:aggregates props)
-                                       :expanded? (contains? (:expanded-aggregates props) aggregate-field)
-                                       :selected-items (set (get-in props [:facet-filters aggregate-field]))
-                                       :update-filter (:update-filter props)
-                                       :expanded-callback-function (:expanded-callback-function props)}])
+         (fn [aggregate-field]
+           [Facet {:aggregate-field aggregate-field
+                   :aggregate-properties (get (:aggregate-properties props) aggregate-field)
+                   :aggregates (:aggregates props)
+                   :expanded? (contains? (:expanded-aggregates props) aggregate-field)
+                   :selected-items (set (get-in props [:facet-filters aggregate-field]))
+                   :update-filter (:update-filter props)
+                   :expanded-callback-function (:expanded-callback-function props)}])
          (:aggregate-fields props))]))})
 
 (def ^:private PERSISTENCE-KEY "library-page")
