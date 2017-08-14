@@ -201,9 +201,11 @@
                          :margin "-0.6rem -1rem 0.3rem" :paddingLeft "1rem"}
                  :items
                  [{:label "My Workspaces"
-                   :predicate #(common/access-greater-than-equal-to? (:accessLevel %) "WRITER")}
+                   :predicate (fn [{:keys [public accessLevel]}]
+                                (or (not public)
+                                    (common/access-greater-than-equal-to? accessLevel "WRITER")))}
                   {:label "Public Workspaces"
-                   :predicate (constantly true)}]}
+                   :predicate :public}]}
           :style {:content {:paddingLeft "1rem" :paddingRight "1rem"}}
           :body
           {:columns
