@@ -80,13 +80,14 @@ First build the docker image
 docker build -f Dockerfile-tests -t automation .
 ```
 
-Then run the run-tests script with the newly created image.  This script will render the `application.conf` and `firecloud-account.pem` from vault to be used by the test container.  Note that if you are running outside of docker you will need to generate these files manually.
+Then run the run-tests script with the newly created image. Sometimes using 4 instances is too many and will cause the docker to crash. If this happens use 2 or 3 instances. This script will render the `application.conf` and `firecloud-account.pem` from vault to be used by the test container.  Note that if you are running outside of docker you will need to generate these files manually.
 ```
 cd automation/docker
 ./run-tests.sh 4 qa <ip of FiaB> automation $(cat ~/.vault-token)
 ```
 
 ### Running locally
+
 If you have a FiaB running and its IP configured in your `/etc/hosts`, you can run tests locally and watch them execute in a browser.
 
 #### Set Up
@@ -100,11 +101,24 @@ cd automation
 
 If you have a local UI running, you will need to go into `automation/src/test/resources` and edit the `baseURL` in `application.conf`:
 ```
-baseUrl = "http://local.broadinstitute.org"
+baseUrl = "http://local.broadinstitute.org/"
+```
+
+
+When starting your UI, run:
+```bash
+FIAB=true ENV=qa ./config/docker-rsync-local-ui.sh
 ```
 
 
 #### Running tests
+
+##### From intellij
+
+Edit your run config defaults for ScalaTest.
+Add this to the VM parameters: `-Djsse.enableSNIExtension=false  -Dheadless=false`
+
+##### From the command line
 
 To run all tests:
 ```bash
