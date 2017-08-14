@@ -27,7 +27,7 @@
                      :allow-no-sort? false
                      :resizable-columns? true
                      :filterable? true}}
-   :toolbar {:style {:display "flex" :alignItems "baseline" :marginBottom "1rem"}
+   :toolbar {:style {:display "flex" :alignItems "baseline"}
              :column-edit-button {:style {:marginRight "1rem"}
                                   :button {:text "Columns" :icon :settings
                                            :style {:padding "0.4rem 0.8rem 0.4rem 0.4rem"}}
@@ -91,7 +91,8 @@
                                    (swap! state assoc :column-display columns))]
        [:div {:style (merge {:position "relative"} (:main style))}
         [comps/DelayedBlocker {:ref "blocker" :banner "Loading..."}]
-        [:div {:style (:style toolbar)}
+        [:div {:style (merge {:marginBottom (if tabs "0.3rem" "1rem")}
+                             (:style toolbar))}
          (when (:reorderable-columns? behavior)
            (let [button-props (:column-edit-button toolbar)]
              [:div {:style (:style button-props)}
