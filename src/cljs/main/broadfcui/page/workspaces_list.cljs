@@ -198,13 +198,13 @@
          {:persistence-key "workspace-table" :v 3
           :data (this :-filter-workspaces) :total-count (:total-count @locals)
           :tabs {:style {:backgroundColor (:background-light style/colors)
-                         :marginLeft -12 :paddingLeft 12}
+                         :margin "-0.6rem -1rem 0.3rem" :paddingLeft "1rem"}
                  :items
                  [{:label "My Workspaces"
                    :predicate #(common/access-greater-than-equal-to? (:accessLevel %) "WRITER")}
                   {:label "Public Workspaces"
                    :predicate (constantly true)}]}
-          :style {:content {:paddingLeft 12}}
+          :style {:content {:paddingLeft "1rem" :paddingRight "1rem"}}
           :body
           {:columns
            (let [column-data (fn [ws]
@@ -270,7 +270,7 @@
                                         {:borderTop style/standard-line})))
                    :cell table-style/clip-text}}
           :toolbar {:filter-bar {:inner {:width 300 :data-test-id (config/when-debug "workspace-list-filter")}}
-                    :style {:padding "12px 12px 0" :margin 0
+                    :style {:padding "1rem" :margin 0
                             :backgroundColor (:background-light style/colors)}
                     :get-items
                     (constantly
