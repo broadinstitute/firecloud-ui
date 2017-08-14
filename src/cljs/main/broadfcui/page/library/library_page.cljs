@@ -302,8 +302,8 @@
              :content (react/create-element
                        [comps/TagAutocomplete
                         {:ref "tag-autocomplete"
-                         :tags (utils/log ":tags " selected-tags)
-                         :data (utils/log ":data " (set tags))
+                         :tags selected-tags
+                         :data (set tags)
                          :show-counts? false
                          :allow-new? false
                          :on-change #((:update-filter props) aggregate-field %)}])
