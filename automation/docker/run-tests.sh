@@ -75,8 +75,8 @@ docker run -e DOCKERHOST=$DOCKERHOST \
     --net=docker_default \
     -e ENV=$ENV \
     --add-host=firecloud-fiab.dsde-${ENV}.broadinstitute.org:${DOCKERHOST} \
-    --add-host=firecloud-orchestration-fiab.dsde-${ENV}.broadinstitute.org:${DOCKERHOST} \
-    --add-host=rawls.dsde-${ENV}.broadinstitute.org:${DOCKERHOST} \
+    --add-host=firecloud-orchestration-fiab.dsde-${ENV}.broadinstitute.org:${DOCKERHOST} \		
+    --add-host=rawls.dsde-${ENV}.broadinstitute.org:${DOCKERHOST} \		
     --add-host=thurloe.dsde-${ENV}.broadinstitute.org:${DOCKERHOST} \
     -P --rm -t -e CHROME_URL="http://hub:4444/" \
     -v $WORKING_DIR/target/application.conf:/app/automation/src/test/resources/application.conf \
