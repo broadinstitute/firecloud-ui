@@ -27,19 +27,21 @@
                         [:div {:style {:display "inline-block" :width 185}} (str label ": ")]
                         contents])
              data-empty (or (= data-size "0") (string/blank? data-size))
-             bam? (re-find #"\.ba[mi]$" (:object props))]
+             bam? (re-find #"\.ba[mi]$" (:object props))
+             img? (re-find #"\.jpe?g|png|gif|bmp$" (:object props))
+             hide-preview? (or bam? img?)]
          [:div {:style {:width 700 :overflow "auto"}}
           (labeled "Google Bucket" (:bucket-name props))
           (labeled "Object" (:object props))
           [:div {:style {:marginTop "1em"}}
-           [:div {} (if bam?
+           [:div {} (if hide-preview?
                       "Preview is not supported for this filetype."
                       "Previews may not be supported for some filetypes.")]
-           (when (and (not bam?) (> data-size preview-byte-count))
+           (when (and (not hide-preview?) (> data-size preview-byte-count))
              (str "Last " (:preview-line-count @state) " lines are shown. Use link below to view entire file." data-size))
            ;; The max-height of 206 looks random, but it's so that the top line of the log preview is half cut-off
            ;; to hint to the user that they should scroll up.
-           (when-not (or data-empty bam?)
+           (when-not (or data-empty hide-preview?)
              (react/create-element
               [:div {:ref "preview" :style {:marginTop "1em" :whiteSpace "pre-wrap" :fontFamily "monospace"
                                             :fontSize "90%" :overflowY "auto" :maxHeight 206
