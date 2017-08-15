@@ -11,8 +11,7 @@
 (def default-cell-left {:paddingLeft "16px"})
 
 (defn tab [color]
-  {:borderRight (str "1px solid " (if (keyword? color) (color style/colors) color))
-   :marginRight -1})
+  {:borderRight (str "1px solid " (if (keyword? color) (color style/colors) color))})
 
 (def table-light
   {:table {:fontSize "0.8rem"}
