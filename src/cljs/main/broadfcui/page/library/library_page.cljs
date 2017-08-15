@@ -50,6 +50,7 @@
        [Table
         {:ref "table" :persistence-key "library-table" :v 4
          :fetch-data (this :pagination)
+         :style {:content {:marginLeft "2rem"}}
          :body
          {:behavior {:allow-no-sort? true
                      :fixed-column-count 2}
@@ -113,7 +114,10 @@
                                 (when-not (= 1 total) "s")
                                 " found"))]]
                        flex/spring])
-          :style {:alignItems "flex-start" :marginBottom "0.5rem"}
+          :style {:alignItems "baseline" :marginBottom "0.5rem" :padding "1rem"
+                  ;; The following to line up "Matching Cohorts" to the first (real) column
+                  :paddingLeft "calc(3rem + 16px)"
+                  :backgroundColor (:background-light style/colors)}
           :column-edit-button {:style {:order 1 :marginRight nil}
                                :anchor :right}}}]))
    :execute-search
@@ -352,10 +356,9 @@
                     :search-result-columns (mapv keyword searchResultColumns)))))))
     :render
     (fn [{:keys [this refs state after-update]}]
-      ;; TODO: Refactor this to use filter.cljs
-      [:div {:style {:display "flex" :margin "1.5rem 1rem 0"}}
+      [:div {:style {:display "flex"}}
        (apply
-        filter/area {:style {:width 260 :boxSizing "border-box" :marginRight "2em"}}
+        filter/area {:style {:width 260 :boxSizing "border-box"}}
         [SearchSection {:search-text (:search-text @state)
                         :facet-filters (:facet-filters @state)
                         :on-filter (fn [text]
