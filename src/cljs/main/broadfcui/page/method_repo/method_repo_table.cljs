@@ -25,7 +25,8 @@
       (cond
         (:error-message @state) (style/create-server-error-message (:error-message @state))
         (or (nil? (:methods @state)) (nil? (:configs @state)))
-        [comps/Spinner {:text "Loading methods and configurations..."}]
+        [comps/Spinner {:text "Loading methods and configurations..."
+                        :style {:display "inline-block"}}]
         :else
         [Table
          (utils/deep-merge
