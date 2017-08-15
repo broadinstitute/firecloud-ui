@@ -116,7 +116,7 @@
                        flex/spring])
           :style {:alignItems "baseline" :marginBottom "0.5rem" :padding "1rem"
                   ;; The following to line up "Matching Cohorts" to the first (real) column
-                  :paddingLeft "calc(3rem + 16px)"
+                  :paddingLeft "calc(3rem + 12px)"
                   :backgroundColor (:background-light style/colors)}
           :column-edit-button {:style {:order 1 :marginRight nil}
                                :anchor :right}}}]))
