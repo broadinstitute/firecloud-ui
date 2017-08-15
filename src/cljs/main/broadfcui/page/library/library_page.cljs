@@ -320,7 +320,7 @@
                          {:aggregate-properties (get aggregate-properties aggregate-field)
                           :expanded? (contains? expanded-aggregates aggregate-field)
                           :selected-items (set (get facet-filters aggregate-field))})])
-         aggregate-fields)))
+                          (cons :tag:tags (remove (partial = :tag:tags) aggregate-fields)))))
 
 (def ^:private PERSISTENCE-KEY "library-page")
 (def ^:private VERSION 4)
