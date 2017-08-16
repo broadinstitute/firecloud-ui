@@ -5,6 +5,7 @@
    [broadfcui.common :as common]
    [broadfcui.common.components :as comps]
    [broadfcui.common.icons :as icons]
+   [broadfcui.common.method.config-io :refer [IOTables]]
    [broadfcui.common.style :as style]
    [broadfcui.components.sticky :refer [Sticky]]
    [broadfcui.config :as config]
@@ -115,7 +116,7 @@
      {:editing? false
       :sidebar-visible? true})
    :component-will-mount
-   (fn [{:keys [locals props]}]
+   (fn [{:keys [locals]}]
      (swap! locals assoc
             :body-id (gensym "config")
             :engine (comps/create-bloodhound-engine
@@ -129,7 +130,7 @@
            :else [:div {:style {:textAlign "center"}}
                   [comps/Spinner {:text "Loading Method Configuration..."}]]))
    :component-did-mount
-   (fn [{:keys [props state this]}]
+   (fn [{:keys [state this]}]
      (this :-load-validated-method-config)
      (endpoints/call-ajax-orch
       {:endpoint endpoints/list-methods
@@ -202,59 +203,16 @@
                                                                             :selected-entity-type (.. % -target -value)})}
                                          common/root-entity-types)
            [:div {:style {:padding "0.5em 0 1em 0"}} (:rootEntityType config)]))
-        (create-section-header "Inputs")
-        (this :-render-input-output-list
-              {:values (:inputs config)
-               :all-values (:inputs inputs-outputs)
-               :ref-prefix "in"
-               :invalid-values (:invalidInputs loaded-config)})
-        (create-section-header "Outputs")
-        (this :-render-input-output-list
-              {:values (:outputs config)
-               :all-values (:outputs inputs-outputs)
-               :ref-prefix "out"
-               :invalid-values (:invalidOutputs loaded-config)})]))
-   :-render-input-output-list
-   (fn [{:keys [state locals]}
-        {:keys [values ref-prefix invalid-values all-values]}]
-     (let [{:keys [editing?]} @state]
-       (create-section
-        (map
-         (fn [{:keys [name inputType outputType optional]}]
-           (let [type (or inputType outputType)
-                 name-kwd (keyword name)
-                 field-value (get values name-kwd "")
-                 error (get invalid-values name-kwd)]
-             [:div {:key name :style {:marginBottom "1rem"}}
-              (list
-               [:div {:style {:display "inline-block"
-                              :margin "0 0.5rem 0.5rem 0" :padding "0.5rem"
-                              :backgroundColor (:background-light style/colors)
-                              :border style/standard-line :borderRadius 2}}
-                (str name ": (" (when optional "optional ") type ")")]
-               (when (and error (not editing?) (not optional))
-                 (icons/icon {:style {:marginRight "0.5rem" :alignSelf "center"
-                                      :color (:exception-state style/colors)}}
-                             :error))
-               (when editing?
-                 [comps/Typeahead {:ref (str ref-prefix "_" name)
-                                   :field-attributes {:defaultValue field-value
-                                                      :style {:width 500 :margin 0}
-                                                      :data-test-id (config/when-debug (str name "-text-input"))}
-                                   :engine (:engine @locals)
-                                   :behavior {:minLength 1}}])
-               (when-not editing?
-                 (or field-value [:span {:style {:fontStyle "italic"}} "No value entered"])))
-              (when (and error (not optional))
-                [:div {}
-                 [:div {:style {:display "inline-block"
-                                :padding "0.5em" :marginBottom "0.5rem"
-                                :backgroundColor (:exception-state style/colors)
-                                :border style/standard-line :borderRadius 2}}
-                  error]])]))
-         all-values))))
+        (create-section-header "Connections")
+        (create-section [IOTables {:ref "IOTables"
+                                   :inputs-outputs inputs-outputs
+                                   :values (select-keys config [:inputs :outputs])
+                                   :invalid-values {:inputs (:invalidInputs loaded-config)
+                                                    :outputs (:invalidOutputs loaded-config)}
+                                   :engine engine}])]))
    :-begin-editing
-   (fn [{:keys [props state locals]}]
+   (fn [{:keys [props state locals refs]}]
+     ((@refs "IOTables") :start-editing)
      (when-not (:entities-loaded? @locals)
        (swap! locals assoc :entities-loaded? true)
        (endpoints/call-ajax-orch
@@ -276,6 +234,7 @@
        (swap! state assoc :editing? true :original-config loaded-config :original-inputs-outputs inputs-outputs)))
    :-cancel-editing
    (fn [{:keys [state refs]}]
+     ((@refs "IOTables") :cancel-editing)
      (let [original-loaded-config (:original-config @state)
            original-inputs-outputs (:original-inputs-outputs @state)
            method-ref (-> original-loaded-config :methodConfiguration :methodRepoMethod)]

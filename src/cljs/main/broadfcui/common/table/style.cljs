@@ -18,7 +18,7 @@
    :cell (merge clip-text default-cell-left {:paddingTop "0.6rem" :paddingBottom "0.6rem"})
    :header-row {:color (:text-light style/colors)}
    :body {:fontWeight 500}
-   :body-row (constantly {:borderTop style/standard-line})
+   :body-row (constantly {:borderTop style/standard-line :alignItems "baseline"})
    :resize-tab (tab :line-default)})
 
 (def table-heavy
@@ -36,7 +36,11 @@
    :padding "0.6rem 0 0.6rem 16px"
    :backgroundColor (:background-light style/colors)})
 
+(def table-cell-plank-middle
+  {:padding "0.6rem 0 0.6rem 16px"
+   :backgroundColor (:background-light style/colors)})
+
 (def table-cell-plank-right
   {:borderRadius "0 8px 8px 0"
-   :padding "0.6rem calc(0.6rem + 16px) 0.6rem 32px"
+   :padding "0.6rem calc(0.6rem + 16px) 0.6rem 16px"
    :backgroundColor (:background-light style/colors)})
