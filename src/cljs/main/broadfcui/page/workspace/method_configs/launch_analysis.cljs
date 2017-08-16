@@ -45,7 +45,8 @@
    (style/create-form-label "Select Entity")
    [:div {:style {:backgroundColor "#fff" :border style/standard-line
                   :padding "1em" :marginBottom "0.5em"}}
-    [:div {:style {:marginBottom "1em" :fontSize "140%" :float "left"}}
+    [:div {:style {:marginBottom "1em" :fontSize "140%" :float "left"}
+           :data-test-id (config/when-debug "selected-entity")}
      (str "Selected: "
           (if-let [e (:selected-entity @state)]
             (str (:name e) " (" (:type e) ")")
