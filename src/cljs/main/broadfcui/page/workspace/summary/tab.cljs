@@ -154,8 +154,7 @@
             :auth-domain (set (map :membersGroupName authorizationDomain))
             :billing-projects billing-projects}])
         [:span {:id label-id}
-         [comps/StatusLabel {:id label-id
-                             :text (str status
+         [comps/StatusLabel {:text (str status
                                         (when (= status "Running")
                                           (str " (" runningSubmissionsCount ")")))
                              :icon (case status
