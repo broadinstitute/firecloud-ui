@@ -10,7 +10,6 @@
    [broadfcui.common.modal :as modal]
    [broadfcui.common.style :as style]
    [broadfcui.components.collapse :refer [Collapse]]
-   [broadfcui.components.modals :as modals]
    [broadfcui.components.sticky :refer [Sticky]]
    [broadfcui.config :as config]
    [broadfcui.endpoints :as endpoints]
@@ -53,6 +52,51 @@
                     (do (modal/pop-modal) (nav/go-to-path :workspaces))
                     (swap! state assoc :server-error (get-parsed-response false))))}))})
 
+(react/defc- StorageCostEstimate
+  {:render
+   (fn [{:keys [state props]}]
+     (let [{:keys [workspace-id]} props]
+       [:div {:style {:lineHeight "initial"}}
+        [:div {} "Estimated Monthly Storage Fee: " (or (:response @state) "Loading...")]
+        [:div {:style {:fontSize "80%"}} (str "Note: the billing account associated with " (:namespace workspace-id) " will be charged.")]]))
+   :refresh
+   (fn [{:keys [state props]}]
+     (endpoints/call-ajax-orch
+      {:endpoint (endpoints/storage-cost-estimate (:workspace-id props))
+       :on-done (fn [{:keys [success? status-text raw-response]}]
+                  (let [[response parse-error?] (utils/parse-json-string raw-response false false)]
+                    (swap! state assoc :response
+                           (if parse-error?
+                             (str "Error parsing JSON response with status: " status-text)
+                             (let [key (if success? "estimate" "message")]
+                               (get response key (str "Error: \"" key "\" not found in JSON response with status: " status-text)))))))}))})
+
+(react/defc- SubmissionCounter
+  {:render
+   (fn [{:keys [state]}]
+     (let [{:keys [server-error submissions-count]} @state]
+       (cond
+         server-error
+         [:div {} server-error]
+         submissions-count
+         (let [count-all (apply + (vals submissions-count))]
+           [:div {}
+            (str count-all " Submission" (when-not (= 1 count-all) "s"))
+            (when (pos? count-all)
+              [:ul {:style {:marginTop 0}}
+               (for [[status subs] (sort submissions-count)]
+                 [:li {} (str subs " " status)])])])
+         :else
+         [:div {} "Loading..."])))
+   :refresh
+   (fn [{:keys [props state]}]
+     (endpoints/call-ajax-orch
+      {:endpoint (endpoints/count-submissions (:workspace-id props))
+       :on-done (fn [{:keys [success? status-text get-parsed-response]}]
+                  (if success?
+                    (swap! state assoc :submissions-count (get-parsed-response false))
+                    (swap! state assoc :server-error status-text)))}))})
+
 
 (react/defc Summary
   {:component-will-mount
@@ -61,25 +105,19 @@
    :render
    (fn [{:keys [state props this refs]}]
      (let [{:keys [server-response]} @state
-           {:keys [workspace workspace-id]} props
-           {:keys [submissions-count billing-projects library-schema curator? server-error]} server-response]
+           {:keys [workspace workspace-id request-refresh]} props
+           {:keys [server-error]} server-response]
        [:div {}
         [ws-sync/SyncContainer {:ref "sync-container" :workspace-id workspace-id}]
-        (cond
-          server-error
+        (if server-error
           (style/create-server-error-message server-error)
-          (some nil? [workspace submissions-count billing-projects library-schema curator?])
-          [:div {:style {:textAlign "center" :padding "1em"}}
-           [comps/Spinner {:text "Loading workspace..."}]]
-          :else
           (let [user-access-level (:accessLevel workspace)
-                request-refresh #(this :-refresh)
                 auth-domain (get-in workspace [:workspace :authorizationDomain])
                 derived (merge {:can-share? (:canShare workspace)
                                 :owner? (common/access-greater-than-equal-to? user-access-level "OWNER")
                                 :writer? (common/access-greater-than-equal-to? user-access-level "WRITER")
                                 :catalog-with-read? (and (common/access-greater-than-equal-to? user-access-level "READER") (:catalog workspace))}
-                               (utils/restructure user-access-level request-refresh auth-domain))]
+                               (utils/restructure user-access-level auth-domain))]
             [:div {:style {:margin "2.5rem 1.5rem" :display "flex"}}
              (when (:sharing? @state)
                [AclEditor
@@ -95,11 +133,11 @@
                [comps/Blocker {:banner (if (:locking? @state) "Locking..." "Unlocking...")}])]))]))
    :component-did-mount
    (fn [{:keys [this]}]
-     (this :-refresh))
+     (this :refresh))
    :-render-sidebar
    (fn [{:keys [props state locals refs this]}
-        {:keys [catalog-with-read? owner? writer? request-refresh can-share? user-access-level]}]
-     (let [{:keys [workspace workspace-id]} props
+        {:keys [catalog-with-read? owner? writer? can-share?]}]
+     (let [{:keys [workspace workspace-id request-refresh]} props
            {:keys [label-id body-id]} @locals
            {:keys [editing?]
             {:keys [library-schema billing-projects curator?]} :server-response} @state
@@ -116,8 +154,7 @@
             :auth-domain (set (map :membersGroupName authorizationDomain))
             :billing-projects billing-projects}])
         [:span {:id label-id}
-         [comps/StatusLabel {:id label-id
-                             :text (str status
+         [comps/StatusLabel {:text (str status
                                         (when (= status "Running")
                                           (str " (" runningSubmissionsCount ")")))
                              :icon (case status
@@ -203,10 +240,10 @@
                                               [DeleteDialog {:workspace-id workspace-id}])}])]}]]))
    :-render-main
    (fn [{:keys [props state locals]}
-        {:keys [user-access-level auth-domain request-refresh can-share? owner? curator? writer? catalog-with-read?]}]
-     (let [{:keys [workspace workspace-id bucket-access?]} props
-           {:keys [editing?]
-            {:keys [storage-cost submissions-count library-schema]} :server-response} @state
+        {:keys [user-access-level auth-domain can-share? owner? curator? writer? catalog-with-read?]}]
+     (let [{:keys [workspace workspace-id bucket-access? request-refresh]} props
+           {:keys [editing? server-response]} @state
+           {:keys [library-schema]} server-response
            {:keys [body-id]} @locals
            {:keys [owners]
             {:keys [createdBy createdDate bucketName description tags workspace-attributes library-attributes]} :workspace} workspace
@@ -257,19 +294,10 @@
                                          bucketName)
              false bucketName)
            (when writer?
-             [:div {:style {:lineHeight "initial"}}
-              [:div {} (str "Total Estimated Storage Fee per month = " storage-cost)]
-              [:div {:style {:fontSize "80%"}}
-               (str "Note: the billing account associated with " (:namespace workspace-id) " will be charged.")]])]
+             [StorageCostEstimate {:workspace-id workspace-id :ref "storage-estimate"}])]
 
           "Analysis Submissions"
-          (let [count-all (apply + (vals submissions-count))]
-            [:div {}
-             (str count-all " Submission" (when-not (= 1 count-all) "s"))
-             (when (pos? count-all)
-               [:ul {:style {:marginTop 0}}
-                (for [[status subs] (sort submissions-count)]
-                  [:li {} (str subs " " status)])])]))]
+          [SubmissionCounter {:workspace-id workspace-id :ref "submission-count"}])]
         [Collapse
          {:style {:marginBottom "2rem"}
           :title (style/create-section-header "Tags")
@@ -297,8 +325,11 @@
                    description [MarkdownView {:text description}]
                    :else [:span {:style {:fontStyle "italic"}} "No description provided"]))]}]
         (when (seq library-attributes)
-          [LibraryView (utils/restructure library-attributes library-schema workspace workspace-id
-                                          request-refresh can-share? owner? curator? writer? catalog-with-read?)])
+          (if-not library-schema
+            [comps/Spinner {:text "Loading Dataset Attributes"
+                            :style {:marginBottom "2rem"}}]
+            [LibraryView (utils/restructure library-attributes library-schema workspace workspace-id
+                                            request-refresh can-share? owner? curator? writer? catalog-with-read?)]))
         [attributes/WorkspaceAttributeViewerEditor
          (merge {:ref "workspace-attribute-editor" :workspace-bucket bucketName}
                 (utils/restructure editing? writer? workspace-attributes workspace-id request-refresh))]]))
@@ -312,10 +343,10 @@
        :on-done (fn [{:keys [success? get-parsed-response]}]
                   (swap! state dissoc :updating-attrs? :editing?)
                   (if success?
-                    (this :-refresh)
+                    (this :refresh)
                     (comps/push-error-response (get-parsed-response false))))}))
    :-lock-or-unlock
-   (fn [{:keys [props state this]} locked-now?]
+   (fn [{:keys [props state]} locked-now?]
      (swap! state assoc :locking? (not locked-now?))
      (endpoints/call-ajax-orch
       {:endpoint (endpoints/lock-or-unlock-workspace (:workspace-id props) locked-now?)
@@ -326,17 +357,12 @@
                        "Could not lock workspace, one or more analyses are currently running")
                       (comps/push-error (str "Error: " status-text))))
                   (swap! state dissoc :locking?)
-                  (this :-refresh))}))
-   :-refresh
-   (fn [{:keys [props state]}]
+                  ((:request-refresh props)))}))
+   :refresh
+   (fn [{:keys [state refs]}]
      (swap! state dissoc :server-response)
-     ((:request-refresh props))
-     (endpoints/call-ajax-orch
-      {:endpoint (endpoints/count-submissions (:workspace-id props))
-       :on-done (fn [{:keys [success? status-text get-parsed-response]}]
-                  (if success?
-                    (swap! state update :server-response assoc :submissions-count (get-parsed-response false))
-                    (swap! state update :server-response assoc :server-error status-text)))})
+     ((@refs "storage-estimate") :refresh)
+     ((@refs "submission-count") :refresh)
      (endpoints/get-billing-projects
       (fn [err-text projects]
         (if err-text
@@ -357,14 +383,4 @@
        :on-done (fn [{:keys [success? get-parsed-response]}]
                   (if success?
                     (swap! state update :server-response assoc :curator? (:curator (get-parsed-response)))
-                    (swap! state update :server-response assoc :server-error "Unable to determine curator status")))})
-     (when (common/access-greater-than-equal-to? (get-in props [:workspace :accessLevel]) "WRITER")
-       (endpoints/call-ajax-orch
-        {:endpoint (endpoints/storage-cost-estimate (:workspace-id props))
-         :on-done (fn [{:keys [success? status-text raw-response]}]
-                    (let [[response parse-error?] (utils/parse-json-string raw-response false false)]
-                      (swap! state update :server-response assoc :storage-cost
-                             (if parse-error?
-                               (str "Error parsing JSON response with status: " status-text)
-                               (let [key (if success? "estimate" "message")]
-                                 (get response key (str "Error: \"" key "\" not found in JSON response with status: " status-text)))))))})))})
+                    (swap! state update :server-response assoc :server-error "Unable to determine curator status")))}))})

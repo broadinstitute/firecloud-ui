@@ -70,9 +70,7 @@
         (when (:loading-attributes @state)
           [comps/Blocker {:banner "Loading..."}])
         (cond workspace-error (style/create-server-error-message workspace-error)
-              workspace (this :-render-data)
-              :else [:div {:style {:textAlign "center"}}
-                     [comps/Spinner {:text "Checking workspace..."}]])
+              workspace (this :-render-data))
         (when (:selected-entity @state)
           (let [{:keys [selected-entity-type selected-entity selected-attr-list]} @state]
             [EntityViewer {:workspace-id workspace-id
@@ -80,9 +78,6 @@
                            :entity-name selected-entity
                            :attr-list selected-attr-list
                            :update-parent-state (partial this :update-state)}]))]))
-   :component-did-mount
-   (fn [{:keys [props]}]
-     ((:request-refresh props)))
    :-handle-import-data-click
    (fn [{:keys [props state refs]}]
      (modal/push-modal
@@ -119,7 +114,7 @@
               (:entity-Name entity)))
           :entity-name-renderer #(this :-render-entity %)}]]))
    :-render-download-link
-   (fn [{:keys [props state refs]} table-props]
+   (fn [{:keys [props state]} table-props]
      (let [{:keys [workspace-id]} props
            selected-entity-type (name (:selected-entity-type @state))]
        [:form {:target "_blank"
@@ -157,6 +152,9 @@
                     (data-utils/get-entity-attrs
                      (utils/restructure entity-name entity-type workspace-id update-parent-state)))}
         entity-name)))
+   :refresh
+   (fn [{:keys [refs state]}]
+     ((@refs "entity-table") :refresh (:selected-entity-type @state) true))
    :update-state
    (fn [{:keys [state]} & args]
      (apply swap! state assoc args))})

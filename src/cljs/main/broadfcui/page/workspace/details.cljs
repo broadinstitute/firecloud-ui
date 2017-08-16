@@ -2,6 +2,7 @@
   (:require
    [dmohs.react :as react]
    [broadfcui.common :as common]
+   [broadfcui.common.components :as comps]
    [broadfcui.common.style :as style]
    [broadfcui.config :as config]
    [broadfcui.endpoints :as endpoints]
@@ -83,7 +84,9 @@
           :data-test-id (:data-test-id props)
           :onMouseOver #(swap! state assoc :hovering? true)
           :onMouseOut #(swap! state dissoc :hovering?)
-          :onClick #(when (:active? props) ((:on-active-tab-clicked props)))}
+          :onClick (fn []
+                     (when (:active? props) ((:on-active-tab-clicked props)))
+                     ((:refresh-workspace props)))}
       (:text props)
       (when (or (:active? props) (:hovering? @state))
         [:div {:style {:position "absolute" :top "-0.25rem" :left 0
@@ -100,7 +103,8 @@
            {:keys [workspace workspace-error bucket-access?]} @state
            active-tab (:tab-name props)
            is-active? (fn [tab] (if (= tab SUMMARY) (nil? active-tab) (= tab active-tab)))
-           make-tab (fn [text on-active-tab-clicked]
+           request-refresh #(this :-refresh-workspace)
+           make-tab (fn [text]
                       [Tab {:text text :first? (= text SUMMARY) :active? (is-active? text)
                             :href (nav/get-link
                                    (condp = text
@@ -111,8 +115,8 @@
                                      MONITOR :workspace-monitor)
                                    workspace-id)
                             :data-test-id (config/when-debug (str text "-tab"))
-                            :on-active-tab-clicked on-active-tab-clicked}])
-           request-refresh #(this :-refresh-workspace)]
+                            :on-active-tab-clicked #((@refs text) :refresh)
+                            :refresh-workspace request-refresh}])]
        [:div {}
         [:div {:style {:minHeight "0.5rem"}}
          (protected-banner workspace)
@@ -142,45 +146,45 @@
                        :borderTop style/standard-line :borderBottom style/standard-line
                        :padding "0 1.5rem" :justifyContent "space-between"}}
          [:div {:style {:display "flex"}}
-          (make-tab SUMMARY request-refresh)
-          (make-tab DATA request-refresh)
-          (make-tab ANALYSIS #((@refs ANALYSIS) :refresh))
-          (make-tab CONFIGS #((@refs CONFIGS) :refresh))
-          (make-tab MONITOR #((@refs MONITOR) :refresh))]]
+          (make-tab SUMMARY)
+          (make-tab DATA)
+          (make-tab ANALYSIS)
+          (make-tab CONFIGS)
+          (make-tab MONITOR)]]
         [:div {:style {:marginTop "2rem"}}
          (if-let [error (:workspace-error @state)]
            [:div {:style {:textAlign "center" :color (:exception-state style/colors)}
                   :data-test-id (config/when-debug "workspace-details-error")}
             "Error loading workspace: " error]
-           (condp = active-tab
-             nil (react/create-element
-                  [summary-tab/Summary
-                   (merge {:key workspace-id :ref SUMMARY}
-                          (utils/restructure workspace-id workspace request-refresh bucket-access?))])
-             DATA (react/create-element
-                   [data-tab/WorkspaceData
-                    (merge {:ref DATA}
-                           (utils/restructure workspace-id workspace workspace-error request-refresh))])
-             ANALYSIS (react/create-element
-                       [analysis-tab/Page {:ref ANALYSIS :workspace-id workspace-id}])
-             CONFIGS (react/create-element
-                      [method-configs-tab/Page
-                       (merge {:ref CONFIGS
-                               :on-submission-success #(nav/go-to-path
-                                                        :workspace-submission workspace-id %)}
-                              (utils/restructure workspace-id workspace request-refresh bucket-access?)
-                              (select-keys props [:config-id]))])
-             MONITOR (react/create-element
-                      [monitor-tab/Page
-                       (merge {:ref MONITOR}
-                              (utils/restructure workspace-id workspace)
-                              (select-keys props [:submission-id :workflow-id]))])))]]))
-   :component-did-mount
-   (fn [{:keys [props this]}]
-     ;; These tabs don't request a refresh, so if we nav straight there then we need to kick one
-     ;; off.
-     (when (contains? #{ANALYSIS CONFIGS MONITOR} (:tab-name props))
-       (this :-refresh-workspace)))
+           (if-not workspace
+             [:div {:style {:textAlign "center" :padding "1rem"}}
+              [comps/Spinner {:text "Loading workspace..."}]]
+             (condp = active-tab
+               nil (react/create-element
+                    [summary-tab/Summary
+                     (merge {:key workspace-id :ref SUMMARY}
+                            (utils/restructure workspace-id workspace request-refresh bucket-access?))])
+               DATA (react/create-element
+                     [data-tab/WorkspaceData
+                      (merge {:ref DATA}
+                             (utils/restructure workspace-id workspace workspace-error request-refresh))])
+               ANALYSIS (react/create-element
+                         [analysis-tab/Page {:ref ANALYSIS :workspace-id workspace-id}])
+               CONFIGS (react/create-element
+                        [method-configs-tab/Page
+                         (merge {:ref CONFIGS
+                                 :on-submission-success #(nav/go-to-path
+                                                          :workspace-submission workspace-id %)}
+                                (utils/restructure workspace-id workspace request-refresh bucket-access?)
+                                (select-keys props [:config-id]))])
+               MONITOR (react/create-element
+                        [monitor-tab/Page
+                         (merge {:ref MONITOR}
+                                (utils/restructure workspace-id workspace)
+                                (select-keys props [:submission-id :workflow-id]))]))))]]))
+   :component-will-mount
+   (fn [{:keys [this]}]
+     (this :-refresh-workspace))
    :-refresh-workspace
    (fn [{:keys [props state]}]
      (endpoints/call-ajax-orch
