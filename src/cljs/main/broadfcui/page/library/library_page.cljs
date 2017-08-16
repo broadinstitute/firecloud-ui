@@ -63,7 +63,7 @@
                       :render (fn [data]
                                 (when (= (:workspaceAccess data) "NO ACCESS")
                                   (icons/icon (merge
-                                               {:style {:alignSelf "center" :cursor "pointer"}}
+                                               {:style {:cursor "pointer" :marginLeft "-0.7rem"}}
                                                (this :-get-link-props data))
                                               :shield)))}
                      {:id "library:datasetName"
