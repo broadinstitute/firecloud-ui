@@ -32,10 +32,10 @@
             "Please select at least one entity to copy"])
          [:div {:style {:marginTop "1em"}}
           [comps/Button {:text "Import"
-                         :onClick #(let [selected (react/call :get-selected-entities (@refs "EntitySelector"))]
+                         :onClick #(let [selected ((@refs "EntitySelector") :get-selected-entities)]
                                      (if (empty? selected)
                                        (swap! state assoc :selection-error true)
-                                       (react/call :perform-copy this selected)))}]]]]))
+                                       (this :perform-copy selected)))}]]]]))
    :perform-copy
    (fn [{:keys [props state this]} selected re-link?]
      (swap! state assoc :selection-error nil :server-error nil :copying? true)
@@ -43,13 +43,13 @@
       {:endpoint (endpoints/copy-entity-to-workspace (:workspace-id props) re-link?)
        :payload {:sourceWorkspace (:selected-workspace-id props)
                  :entityType (:type props)
-                 :entityNames (map #(% "name") selected)}
+                 :entityNames (map :name selected)}
        :headers utils/content-type=json
        :on-done (fn [{:keys [success? get-parsed-response]}]
                   (swap! state dissoc :copying?)
                   (when success?
                     ((:on-data-imported props) (:type props)))
-                  (react/call :show-import-result this (get-parsed-response false) selected))}))
+                  (this :show-import-result (get-parsed-response false) selected))}))
    :show-import-result
    (fn [{:keys [this props]} parsed-response selected]
      (let [formatted-response (walk/postwalk
@@ -125,7 +125,7 @@
                       {:text "Re-link"
                        :onClick (fn []
                                   (modal/pop-modal)
-                                  (react/call :perform-copy this selected true))}
+                                  (this :perform-copy selected true))}
                       "OK")})))})
 
 
@@ -143,14 +143,14 @@
        :else [:div {:style {:textAlign "center"}} [comps/Spinner {:text "Loading entities..."}]]))
    :component-did-mount
    (fn [{:keys [this]}]
-     (react/call :load-entities this))
+     (this :load-entities))
    :load-entities
    (fn [{:keys [state props]}]
      (endpoints/call-ajax-orch
       {:endpoint (endpoints/get-entities-of-type (:selected-workspace-id props) (:type props))
        :on-done (fn [{:keys [success? get-parsed-response]}]
                   (if success?
-                    (swap! state assoc :entity-list (get-parsed-response false))
+                    (swap! state assoc :entity-list (get-parsed-response))
                     (swap! state assoc :server-error (get-parsed-response false))))}))})
 
 

@@ -10,8 +10,9 @@
 
 
 (defn- flex-params [width]
-  (when (= width :auto)
-    {:flex "1 1 auto"}))
+  (if (= width :auto)
+    {:flex "1 1 auto"}
+    {:flex (str "0 0 auto") :width width}))
 
 
 (def ^:private column-drag-margin 11)
@@ -24,10 +25,11 @@
     (fn [index {:keys [id width initial-width header visible? resizable? sortable?]}]
       (when visible?
         [:div {:style (merge (flex-params width)
-                             {:position "relative" :cursor (when sortable? "pointer")}
+                             {:position "relative" :cursor (when sortable? "pointer")
+                              :boxSizing "border-box"}
                              (when resizable? (or (:resize-tab style)
-                                                  {:borderRight "1px solid" :marginRight -1})))}
-         [:div {:style (merge {:display "flex" :width width}
+                                                  {:borderRight "1px solid"})))}
+         [:div {:style (merge {:display "flex"}
                               (:cell style)
                               (:header-cell style))
                 :onClick (when sortable?
@@ -54,22 +56,24 @@
   [:div {:style (:body style)}
    (map-indexed
     (fn [index row]
-      [:div (merge (when (and (some? data-props) (some? (:row data-props))) ((:row data-props) row))
+      [:div (merge (when (and (some? data-props)
+                              (some? (:row data-props)))
+                     ((:row data-props) row))
                    {:style (merge {:display "flex"}
-                           (:row style)
-                           ((or (:body-row style) identity) (utils/restructure index row)))
+                                  (:row style)
+                                  (when-let [f (:body-row style)]
+                                    (f (utils/restructure index row))))
                     :onClick (when on-row-click
                                #(on-row-click index row))})
-       (map
-        (fn [{:keys [width visible? column-data render as-text]}]
-          (when visible?
-            (let [column-value (column-data row)
-                  rendered (render column-value)]
-              [:div {:style (merge (flex-params width) {:width width} (:cell style) (:body-cell style))
-                     :title (cond as-text (as-text column-value)
-                                  (string? rendered) rendered)}
-               rendered])))
-        joined-columns)])
+       (map (fn [{:keys [width visible? column-data render as-text]}]
+              (when visible?
+                (let [column-value (column-data row)
+                      rendered (render column-value)]
+                  [:div {:style (merge {:boxSizing "border-box"} (flex-params width) (:cell style) (:body-cell style))
+                         :title (cond as-text (as-text column-value)
+                                      (string? rendered) rendered)}
+                   rendered])))
+            joined-columns)])
     rows)])
 
 

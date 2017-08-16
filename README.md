@@ -61,13 +61,13 @@ Now, each time that file is saved, Figwheel will reload it and the tests will au
 
 To compile the clojure project into the target directory, run 
 
-```sh
+```bash
 ./script/build.sh compile
 ```
 
 To compile and build the `broadinstitute/firecloud-ui` docker image, run
 
-```sh
+```bash
 ./script/build.sh compile -d build
 ```
 
@@ -79,25 +79,26 @@ Selenium tests are found in the `automation` directory.  They should run against
 
 First build the docker image
 
-```sh
+```bash
 docker build -f Dockerfile-tests -t automation .
 ```
 
-Then run the run-tests script with the newly created image.  This script will render the `application.conf` and `firecloud-account.pem` from vault to be used by the test container.  Note that if you are running outside of docker you will need to generate these files manually.
+Then run the run-tests script with the newly created image. Sometimes using 4 instances is too many and will cause the docker to crash. If this happens use 2 or 3 instances. This script will render the `application.conf` and `firecloud-account.pem` from vault to be used by the test container.  Note that if you are running outside of docker you will need to generate these files manually.
 
-```sh
+```bash
 cd automation/docker
 ./run-tests.sh 4 qa <ip of FiaB> automation $(cat ~/.vault-token)
 ```
 
 ### Running locally
+
 If you have a FiaB running and its IP configured in your `/etc/hosts`, you can run tests locally and watch them execute in a browser.
 
 #### Set Up
 
 First run render script to generate necessary configs:
 
-```sh
+```bash
 cd automation
 ./render-local-env.sh $PWD $(cat ~/.vault-token) <"qa" or "dev">
 ```
@@ -106,29 +107,43 @@ cd automation
 If you have a local UI running, you will need to go into `automation/src/test/resources` and edit the `baseURL` in `application.conf`:
 
 ```
-baseUrl = "http://local.broadinstitute.org"
+baseUrl = "http://local.broadinstitute.org/"
+```
+
+
+When starting your UI, run:
+
+```bash
+FIAB=true ENV=qa ./config/docker-rsync-local-ui.sh
 ```
 
 
 #### Running tests
 
+##### From intellij
+
+Edit your run config defaults for ScalaTest.
+Add this to the VM parameters: `-Djsse.enableSNIExtension=false  -Dheadless=false`
+
+##### From the command line
+
 To run all tests:
 
-```sh
+```bash
 sbt test -Djsse.enableSNIExtension=false -Dheadless=false
 sbt clean
 ```
 
 To run a single suite:
 
-```sh
+```bash
 sbt -Djsse.enableSNIExtension=false -Dheadless=false "testOnly *GoogleSpec"
 sbt clean
 ```
 
 To run a single test within a suite:
 
-```sh
+```bash
 # matches test via substring
 sbt -Djsse.enableSNIExtension=false -Dheadless=false "testOnly *GoogleSpec -- -z \"have a search field\""
 sbt clean
@@ -137,3 +152,22 @@ sbt clean
 For more information see: http://www.scala-sbt.org/0.13/docs/Testing.html#Test+Framework+Arguments
 
 
+### IntelliJ
+After opening the project, if IntelliJ shows errors in scala source or running a test
+throws a `MethodNotFoundException`, open the SBT panel and click the button for "Refresh
+all SBT projects" (and keep reading).
+
+If IntelliJ shows errors in cljs source (which will happen after refreshing SBT projects),
+open the Leiningen panel and click the button for "Refresh Leiningen Projects". Then open
+Project Structure > Modules > firecloue-ui > Paths and change "Test output path" to be
+different than the value for "Output path", e.g.
+`/{your firecloud-ui project root}/firecloud-ui/resources/public/target/test-classes`
+(and keep reading to learn why).
+
+There is currently an issue with IntelliJ's scala/SBT support that causes the scala build
+to incorrectly pay attention to unrelated (i.e. Leiningen) modules. Cursive sets both
+"Output path" and "Test output path" to the same value. The result is that, when building
+the scala code, you'll see an error about shared compile output paths. An issue has been
+filed against IntelliJ: [https://youtrack.jetbrains.com/issue/SCL-12358](). (Please vote for
+it if you want to see it fixed.) A workaround feature for Cursive has been requested in a
+related issue: [https://github.com/cursive-ide/cursive/issues/282]().

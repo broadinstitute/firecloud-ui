@@ -5,12 +5,13 @@
    [clojure.string :as string]
    [broadfcui.common :as common]
    [broadfcui.common.components :as comps]
+   [broadfcui.common.filter :as filter]
    [broadfcui.common.flex-utils :as flex]
    [broadfcui.common.icons :as icons]
    [broadfcui.common.links :as links]
    [broadfcui.common.style :as style]
+   [broadfcui.common.table :refer [Table]]
    [broadfcui.common.table.style :as table-style]
-   [broadfcui.common.table.table :refer [Table]]
    [broadfcui.config :as config]
    [broadfcui.endpoints :as endpoints]
    [broadfcui.nav :as nav]
@@ -112,7 +113,7 @@
                                 (when-not (= 1 total) "s")
                                 " found"))]]
                        flex/spring])
-          :style {:alignItems "flex-start" :marginBottom 7} ;; 7 makes some lines line up
+          :style {:alignItems "flex-start" :marginBottom "0.5rem"}
           :column-edit-button {:style {:order 1 :marginRight nil}
                                :anchor :right}}}]))
    :execute-search
@@ -147,7 +148,12 @@
    :build-aggregate-fields
    (fn [{:keys [props]}]
      (reduce
-      (fn [results field] (assoc results field (if (contains? (:expanded-aggregates props) field) 0 5)))
+      ;; Limit results to 5 unless (1) the section is expanded or (2) it's the tags section
+      (fn [results field]
+        (assoc results field (if (or (contains? (:expanded-aggregates props) field)
+                                     (= field :tag:tags))
+                               0
+                               5)))
       {}
       (:aggregate-fields props)))
    :pagination
@@ -196,7 +202,7 @@
      (utils/map-keys name (:facet-filters props)))
    :render
    (fn [{:keys [props this]}]
-     [:div {:style {:padding "16px 12px 0 12px"}}
+     [:div {:style {:paddingBottom "calc(16px - 0.9rem)"}} ;; cancel the padding on the hr and match the outer padding
       [comps/AutocompleteFilter
        {:ref "text-filter"
         :on-filter (:on-filter props)
@@ -240,30 +246,22 @@
            all-buckets (mapv :key (:buckets props))
            hidden-items (set/difference (:selected-items props) (set all-buckets))
            hidden-items-formatted (mapv (fn [item] {:key item}) hidden-items)]
-       [:div {:style {:paddingBottom "1em"}}
-        [:hr {}]
-        [:span {:style {:fontWeight "bold"}} title]
-        [:div {:style {:fontSize "80%" :float "right"}}
-         (links/create-internal {:onClick #(this :clear-all)} "Clear")]
-        [:div {:style {:paddingTop "1em"}}
-         (map
-          (fn [{:keys [key doc_count]}]
-            [:div {:style {:paddingTop 5}}
-             [:label {:style {:display "inline-block" :width "calc(100% - 30px)"
-                              :textOverflow "ellipsis" :overflow "hidden" :whiteSpace "nowrap"}
-                      :title key}
-              [:input {:type "checkbox"
-                       :checked (contains? (:selected-items props) key)
-                       :onChange #(this :update-selected key (.. % -target -checked))}]
-              [:span {:style {:marginLeft "0.3em"}} key]]
-             (some-> doc_count style/render-count)])
-          (concat (:buckets props) hidden-items-formatted))
-         [:div {:style {:paddingTop 5}}
-          (if (:expanded? props)
-            (when (> (count (:buckets props)) 5)
-              (links/create-internal {:onClick #(this :update-expanded false)} " less..."))
-            (when (> size 0)
-              (links/create-internal {:onClick #(this :update-expanded true)} " more...")))]]]))
+       (filter/section
+        {:title title
+         :on-clear #(this :clear-all)
+         :content
+         [:div {}
+          (filter/checkboxes {:items (map (fn [{:keys [key doc_count]}]
+                                            {:item key :hit-count doc_count})
+                                          (concat (:buckets props) hidden-items-formatted))
+                              :checked-items (:selected-items props)
+                              :on-change (fn [item checked?] (this :update-selected item checked?))})
+          [:div {:style {:paddingTop 5}}
+           (if (:expanded? props)
+             (when (> (count (:buckets props)) 5)
+               (links/create-internal {:onClick #(this :update-expanded false)} " less..."))
+             (when (> size 0)
+               (links/create-internal {:onClick #(this :update-expanded true)} " more...")))]]})))
    :clear-all
    (fn [{:keys [props]}]
      ((:update-filter props) (:field props) #{}))
@@ -282,35 +280,47 @@
 
 (react/defc- Facet
   {:render
-   (fn [{:keys [props]}]
+   (fn [{:keys [props refs]}]
      (let [aggregate-field (:aggregate-field props)
            properties (:aggregate-properties props)
            title (:title properties)
            render-hint (get-in properties [:aggregate :renderHint])
            aggregations (get-aggregations-for-property aggregate-field (:aggregates props))]
-       (cond
-         (= render-hint "checkbox") [FacetCheckboxes
-                                     (merge
-                                      {:title title :field aggregate-field}
-                                      (select-keys aggregations [:numOtherDocs :buckets])
-                                      (select-keys props [:expanded? :selected-items :update-filter
-                                                          :expanded-callback-function]))])))})
+       (case render-hint
+         "checkbox"
+         [FacetCheckboxes
+          (merge
+           {:title title :field aggregate-field}
+           (select-keys aggregations [:numOtherDocs :buckets])
+           (select-keys props [:expanded? :selected-items :update-filter :expanded-callback-function]))]
+         "typeahead-multiselect"
+         (let [tags (mapv :key (:buckets aggregations))
+               ;; Don't show tags that we pulled out of persistence, but which no longer exist (workspace or tag deletion)
+               selected-tags (set/intersection (:selected-items props) (set tags))]
+           (filter/section
+            {:title title
+             :content (react/create-element
+                       [comps/TagAutocomplete
+                        {:ref "tag-autocomplete"
+                         :tags selected-tags
+                         :data (set tags)
+                         :show-counts? false
+                         :allow-new? false
+                         :on-change #((:update-filter props) aggregate-field %)}])
+             :on-clear #((@refs "tag-autocomplete") :set-tags #{})})))))})
 
-(react/defc- FacetSection
-  {:render
-   (fn [{:keys [props]}]
-     (if (empty? (:aggregates props))
-       [:div {:style {:fontSize "80%"}} "loading..."]
-       [:div {:style {:fontSize "85%" :padding "16px 12px"}}
-        (map
-         (fn [aggregate-field] [Facet {:aggregate-field aggregate-field
-                                       :aggregate-properties (get (:aggregate-properties props) aggregate-field)
-                                       :aggregates (:aggregates props)
-                                       :expanded? (contains? (:expanded-aggregates props) aggregate-field)
-                                       :selected-items (set (get-in props [:facet-filters aggregate-field]))
-                                       :update-filter (:update-filter props)
-                                       :expanded-callback-function (:expanded-callback-function props)}])
-         (:aggregate-fields props))]))})
+
+(defn- facet-section [{:keys [aggregates aggregate-properties expanded-aggregates
+                              facet-filters aggregate-fields] :as props}]
+  (if (empty? aggregates)
+    [[comps/Spinner {:text "Loading..."}]]
+    (map (fn [aggregate-field]
+           [Facet (merge (utils/restructure aggregate-field aggregates)
+                         (select-keys props [:update-filter :expanded-callback-function])
+                         {:aggregate-properties (get aggregate-properties aggregate-field)
+                          :expanded? (contains? expanded-aggregates aggregate-field)
+                          :selected-items (set (get facet-filters aggregate-field))})])
+                          (cons :tag:tags (remove (partial = :tag:tags) aggregate-fields)))))
 
 (def ^:private PERSISTENCE-KEY "library-page")
 (def ^:private VERSION 4)
@@ -344,23 +354,21 @@
     (fn [{:keys [this refs state after-update]}]
       ;; TODO: Refactor this to use filter.cljs
       [:div {:style {:display "flex" :margin "1.5rem 1rem 0"}}
-       [:div {:style {:width 260 :marginRight "2em"
-                      :background (:background-light style/colors)
-                      :border style/standard-line}}
+       (apply
+        filter/area {:style {:width 260 :boxSizing "border-box" :marginRight "2em"}}
         [SearchSection {:search-text (:search-text @state)
                         :facet-filters (:facet-filters @state)
                         :on-filter (fn [text]
                                      (swap! state assoc :search-text text)
                                      (after-update #((@refs "dataset-table") :execute-search true)))}]
-        [FacetSection (merge
-                       {:ref "facets"
-                        :aggregates (:aggregates @state)
-                        :aggregate-properties (:library-attributes @state)
-                        :update-filter (fn [facet-name facet-list]
-                                         (this :update-filter facet-name facet-list))
-                        :expanded-callback-function (fn [facet-name expanded?]
-                                                      (this :set-expanded-aggregate facet-name expanded?))}
-                       (select-keys @state [:aggregate-fields :facet-filters :expanded-aggregates]))]]
+        (facet-section (merge
+                        {:aggregates (:aggregates @state)
+                         :aggregate-properties (:library-attributes @state)
+                         :update-filter (fn [facet-name facet-list]
+                                          (this :update-filter facet-name facet-list))
+                         :expanded-callback-function (fn [facet-name expanded?]
+                                                       (this :set-expanded-aggregate facet-name expanded?))}
+                        (select-keys @state [:aggregate-fields :facet-filters :expanded-aggregates]))))
        [:div {:style {:flex "1 1 auto" :overflowX "auto"}}
         (when (and (:library-attributes @state) (:search-result-columns @state))
           [DatasetsTable (merge

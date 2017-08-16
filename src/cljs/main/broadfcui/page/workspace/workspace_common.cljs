@@ -3,8 +3,8 @@
    [clojure.string :as string]
    [broadfcui.common.links :as links]
    [broadfcui.common.style :as style]
+   [broadfcui.common.table :refer [Table]]
    [broadfcui.common.table.style :as table-style]
-   [broadfcui.common.table.table :refer [Table]]
    [broadfcui.common.table.utils :as table-utils]
    [broadfcui.utils :as utils]
    ))

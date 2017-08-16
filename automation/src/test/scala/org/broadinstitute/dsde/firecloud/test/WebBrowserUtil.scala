@@ -59,6 +59,17 @@ trait WebBrowserUtil extends WebBrowser {
       *
       *   click on (await enabled id("my-button"))
       *
+      * Returns null if the element is not found. Why null instead of None? It
+      * would be too easy for callers to map/flatmap an Option which is likely
+      * to delay failure of the test if it's None. For example, if trying to
+      * click on a button, nothing would happen instead of the test failing.
+      * The test would (hopefully) fail only when the next action it tries to
+      * do is not available. Understanding the cause of the failure would
+      * require more work, including probably looking at the failure
+      * screenshot. A NullPointerException when trying to interact with the
+      * element will result in a more immediate failure with a more obvious
+      * cause.
+      *
       * @param query Query to locate the element
       * @param timeOutInSeconds number of seconds to wait for the enabled element
       * @param webDriver implicit WebDriver for the WebDriverWait

@@ -3,11 +3,13 @@
    [dmohs.react :as react]
    [clojure.set :as set]
    [broadfcui.common.components :as comps]
+   [broadfcui.common.flex-utils :as flex]
    [broadfcui.common.icons :as icons]
    [broadfcui.common.links :as links]
    [broadfcui.common.style :as style]
-   [broadfcui.common.table :as table]
-   [broadfcui.common.table-utils :as table-utils]
+   [broadfcui.common.table :refer [Table]]
+   [broadfcui.common.table.style :as table-style]
+   [broadfcui.common.table.utils :as table-utils]
    [broadfcui.utils :as utils]
    ))
 
@@ -19,7 +21,8 @@
      (replace (:entities props) (:selected @state)))
    :get-default-props
    (fn []
-     {:right-empty-text "Nothing selected"})
+     {:left-empty-text "No entities available"
+      :right-empty-text "Nothing selected"})
    :get-initial-state
    (fn []
      {:selected #{}})
@@ -29,23 +32,29 @@
        (swap! state assoc :selected #{})))
    :render
    (fn [{:keys [state props]}]
-     (let [attribute-keys (apply set/union (map #(set (keys (% "attributes"))) (:entities props)))
+     (let [attribute-keys (->> (:entities props)
+                               (map (comp set keys :attributes))
+                               (apply set/union))
            columns (fn [source?]
                      (into
-                      [{:starting-width 40 :resizable? false :reorderable? false :sort-by :none
-                        :content-renderer
+                      [{:id "add-button" :initial-width 40
+                        :hidden? true :resizable? false :sortable? false :filterable? false
+                        :column-data first
+                        :render
                         (fn [index]
                           (links/create-internal {:onClick #(swap! state update :selected
                                                                    (if source? conj disj) index)}
                                                  (icons/icon {} (if source? :add :remove))))}
-                       {:header (:id-name props) :starting-width 150
-                        :as-text #(% "name") :sort-by :text}]
-                      (map (fn [k] {:header k :starting-width 100
-                                    :content-renderer
+                       {:header (:id-name props) :initial-width 150
+                        :column-data second
+                        :as-text :name :sort-by :text}]
+                      (map (fn [k] {:header (name k) :initial-width 100
+                                    :column-data (comp k :attributes second)
+                                    :render
                                     (fn [attr-value]
                                       (if (and (map? attr-value)
-                                               (= (set (keys attr-value)) #{"entityName"}))
-                                        (attr-value "entityName")
+                                               (= (set (keys attr-value)) #{:entityName :entityType}))
+                                        (:entityName attr-value)
                                         ((table-utils/render-gcs-links (:selected-workspace-bucket props)) attr-value)))})
                            attribute-keys)))
            data (fn [source?]
@@ -54,25 +63,24 @@
                    (if source?
                      (set/difference (-> (:entities props) count range set) (:selected @state))
                      (:selected @state))))
-           ->row (fn [[index entity]]
-                   (into
-                    [index entity]
-                    (map (fn [k] (get-in entity ["attributes" k])) attribute-keys)))
            create-table (fn [source?]
                           [:div {:style {:width box-width :display "inline-block"
                                          :padding "0.5em" :boxSizing "border-box"
                                          :backgroundColor "#fff" :border (str "1px solid" (:line-default style/colors))}}
-                           [table/Table {:width :narrow
-                                         :toolbar
-                                         (table-utils/add-right
-                                          [comps/Button {:onClick #(if source?
-                                                                     (swap! state assoc :selected (set (range (count (:entities props)))))
-                                                                     (swap! state assoc :selected #{}))
-                                                         :text (if source? (str "Add all " (:type props) "s") "Clear")}])
-                                         :empty-message ((if source? :left-empty-text :right-empty-text) props)
-                                         :columns (columns source?)
-                                         :data (data source?)
-                                         :->row ->row}]])]
+                           [Table
+                            {:data (data source?)
+                             :body {:empty-message ((if source? :left-empty-text :right-empty-text) props)
+                                    :style table-style/table-heavy
+                                    :columns (columns source?)}
+                             :toolbar
+                             {:get-items
+                              (constantly
+                               [flex/spring
+                                [comps/Button {:onClick #(swap! state assoc :selected
+                                                                (if source?
+                                                                  (-> (:entities props) count range set)
+                                                                  #{}))
+                                               :text (if source? (str "Add all " (:type props) "s") "Clear")}]])}}]])]
        [:div {}
         [:div {:style {:width box-width :paddingBottom "0.5rem" :display "inline-block"
                        :fontWeight 500}}

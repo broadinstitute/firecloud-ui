@@ -1,13 +1,8 @@
 import Dependencies._
-//import Merging._
-//import Testing._
-//import Version._
 import sbt.Keys._
 import sbt._
-//import sbtassembly.AssemblyPlugin.autoImport._
 
 object Settings {
-
 
   //coreDefaultSettings + defaultConfigs = the now deprecated defaultSettings
   val commonBuildSettings = Defaults.coreDefaultSettings ++ Defaults.defaultConfigs ++ Seq(
@@ -23,12 +18,6 @@ object Settings {
     "-target:jvm-1.8"
   )
 
-  //sbt assembly settings
-//  val commonAssemblySettings = Seq(
-//    assemblyMergeStrategy in assembly := customMergeStrategy((assemblyMergeStrategy in assembly).value),
-//    test in assembly := {}
-//  )
-
   val testSettings = List(
     testOptions in Test += Tests.Argument("-oF")
   )
@@ -36,10 +25,8 @@ object Settings {
   //common settings for all sbt subprojects
   val commonSettings =
     commonBuildSettings ++ testSettings ++ List(
-//      commonBuildSettings ++ commonAssemblySettings ++ commonTestSettings ++ List(
-    organization  := "org.broadinstitute.dsde.firecloud",
+    organization  := "org.broadinstitute.d sde.firecloud",
     scalaVersion  := "2.11.8",
-//    resolvers ++= commonResolvers,
     scalacOptions ++= commonCompilerSettings
   )
 
@@ -47,9 +34,7 @@ object Settings {
   //coreDefaultSettings (inside commonSettings) sets the project name, which we want to override, so ordering is important.
   //thus commonSettings needs to be added first.
   val rootSettings = commonSettings ++ List(
-    name := "QAAutomation-scala",
+    name := "FireCloud-UITests",
     libraryDependencies ++= rootDependencies
-  ) //++ commonAssemblySettings ++ rootVersionSettings
-
-
+  )
 }
