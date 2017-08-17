@@ -43,6 +43,7 @@
                :body {:style (merge
                               table-style/table-light
                               {:body-cell {:padding 0}
+                               :header-row {:borderBottom style/standard-line}
                                :body-row (constantly {:margin "4px 0" :alignItems (if editing? "center" "baseline")})})
                       :behavior {:filterable? false :reorderable-columns? false :allow-no-sort? true}
                       :columns
@@ -67,19 +68,20 @@
                                    (str type (when optional? (" (optional)")))])}]
                               (when values
                                 [{:header "Attribute" :initial-width 200
-                                  :column-data (fn [{:keys [name]}]
-                                                 (get (io-key values) (keyword name)))
                                   :render
-                                  (fn [value]
-                                    [:div {:style table-style/default-cell-left}
-                                     (if editing?
-                                       [comps/Typeahead {:field-attributes {:defaultValue value
-                                                                            :style {:width "calc(100% - 4px)" :margin 0}
-                                                                            :data-test-id (config/when-debug (str name "-text-input"))}
-                                                         :engine engine
-                                                         :behavior {:minLength 1}}]
-                                       value)])}
-                                 {:header "Message" :initial-width 400
+                                  (fn [{:keys [name]}]
+                                    (let [value (get (io-key values) (keyword name))]
+                                      [:div {:style table-style/default-cell-left}
+                                       (if editing?
+                                         [comps/Typeahead {:field-attributes {:defaultValue value
+                                                                              :style {:position "absolute"
+                                                                                      :width "calc(100% - 4px)" :margin 0}
+                                                                              :data-test-id (config/when-debug (str name "-text-input"))}
+                                                           :engine engine
+                                                           :behavior {:minLength 1}}]
+                                         value)]))}])
+                              (when invalid-values
+                                [{:header "Message" :initial-width 400
                                   :column-data (fn [{:keys [name]}]
                                                  (get (io-key invalid-values) (keyword name)))
                                   :render
