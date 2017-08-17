@@ -348,7 +348,9 @@
        :on-done (fn [{:keys [success? get-parsed-response]}]
                   (if success?
                     ((:request-refresh props))
-                    (comps/push-error-response (get-parsed-response false))))}))
+                    (do
+                      (swap! state dissoc :updating-attrs?)
+                      (comps/push-error-response (get-parsed-response false)))))}))
    :-lock-or-unlock
    (fn [{:keys [props state]} locked-now?]
      (swap! state assoc :locking? (not locked-now?))
