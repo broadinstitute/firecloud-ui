@@ -114,27 +114,27 @@
          sidebar
          [:div {:style (merge {:flex "1 1 0" :overflow "hidden"} (:content style))}
           (when tabs
-            [:div {:style (merge {:marginBottom "0.3rem"}
-                                 (:style tabs))}
-             (map-indexed (fn [index {:keys [label size predicate] :as tab}]
-                            (let [selected? (= index selected-tab-index)]
-                              [:div {:style {:display "inline-block" :textAlign "center"
-                                             :padding "0.5rem 1rem" :cursor "pointer"
-                                             :fontWeight (when selected? 500)
-                                             :letterSpacing (when-not selected? "0.007em") ; stops size from shifting when selected
-                                             :borderBottom (when selected? (str "3px solid " (:button-primary style/colors)))
-                                             :marginBottom (when-not selected? 3)}
-                                     :onClick (fn []
-                                                (swap! state assoc :selected-tab-index index)
-                                                (when-let [f (:on-tab-selected tabs)]
-                                                  (f tab)))}
-                               (str label
-                                    " ("
-                                    (cond size size
-                                          predicate (count (filter predicate data))
-                                          :else (count data))
-                                    ")")]))
-                          (:items tabs))])
+            (let [tab-counts (table-utils/compute-tab-counts (utils/restructure tabs columns query-params data))]
+              [:div {:style (merge {:marginBottom "0.3rem"}
+                                   (:style tabs))}
+               (map-indexed (fn [index {:keys [label size] :as tab}]
+                              (let [selected? (= index selected-tab-index)
+                                    tab-count (get tab-counts label)]
+                                [:div {:style {:display "inline-block" :textAlign "center"
+                                               :padding "0.5rem 1rem" :cursor "pointer"
+                                               :fontWeight (when selected? 500)
+                                               :letterSpacing (when-not selected? "0.007em") ; stops size from shifting when selected
+                                               :borderBottom (when selected? (str "3px solid " (:button-primary style/colors)))
+                                               :marginBottom (when-not selected? 3)}
+                                       :onClick (fn []
+                                                  (swap! state assoc :selected-tab-index index)
+                                                  (when-let [f (:on-tab-selected tabs)]
+                                                    (f tab)))}
+                                 (str label
+                                      " ("
+                                      (or size tab-count (count data))
+                                      ")")]))
+                            (:items tabs))]))
           (if (empty? rows)
             (style/create-message-well empty-message)
             [body/TableBody

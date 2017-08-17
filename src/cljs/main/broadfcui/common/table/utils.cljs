@@ -85,6 +85,17 @@
         :results displayed}))))
 
 
+(defn compute-tab-counts
+  "Compute the number of items in each tab"
+  [{:keys [tabs query-params columns data]}]
+  (->> (:items tabs)
+       ;; Ignore ones that have an explicit size (we wouldn't use the result anyway)
+       (remove :size)
+       (map (fn [{:keys [predicate label]}]
+              [label (->> data (filter-rows query-params columns) (filter (or predicate identity)) count)]))
+       (into {})))
+
+
 (defn build-column-display [user-columns]
   (mapv (fn [column]
           {:id (resolve-id column)
