@@ -337,7 +337,7 @@
      (let [{:keys [filters]} @state]
        (apply
         filter/area
-        {:style {:flex "0 0 175px"}}
+        {:style {:flex "0 0 175px" :marginTop -12}}
         (filter/section
          {:title "Tags"
           :content (react/create-element
