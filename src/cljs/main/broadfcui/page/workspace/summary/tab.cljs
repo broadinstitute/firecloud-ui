@@ -134,6 +134,10 @@
    :component-did-mount
    (fn [{:keys [this]}]
      (this :refresh))
+   :component-will-receive-props
+   (fn [{:keys [state this]}]
+     (this :refresh)
+     (swap! state dissoc :updating-attrs? :editing?))
    :-render-sidebar
    (fn [{:keys [props state locals refs this]}
         {:keys [catalog-with-read? owner? writer? can-share?]}]
@@ -164,7 +168,8 @@
                              :color (style/color-for-status status)}]]
         [Sticky
          {:sticky-props {:data-check-every 1
-                         :data-top-anchor (str label-id ":bottom") :data-bottom-anchor body-id}
+                         :data-top-anchor (str label-id ":bottom")
+                         :data-bottom-anchor (str body-id ":bottom")}
           :contents
           [:div {:style {:width 270}}
            (when (and can-share? (not editing?))
@@ -334,16 +339,15 @@
          (merge {:ref "workspace-attribute-editor" :workspace-bucket bucketName}
                 (utils/restructure editing? writer? workspace-attributes workspace-id request-refresh))]]))
    :-save-attributes
-   (fn [{:keys [props state this]} new-attributes]
+   (fn [{:keys [props state]} new-attributes]
      (swap! state assoc :updating-attrs? true)
      (endpoints/call-ajax-orch
       {:endpoint (endpoints/set-workspace-attributes (:workspace-id props))
        :payload new-attributes
        :headers utils/content-type=json
        :on-done (fn [{:keys [success? get-parsed-response]}]
-                  (swap! state dissoc :updating-attrs? :editing?)
                   (if success?
-                    (this :refresh)
+                    ((:request-refresh props))
                     (comps/push-error-response (get-parsed-response false))))}))
    :-lock-or-unlock
    (fn [{:keys [props state]} locked-now?]
