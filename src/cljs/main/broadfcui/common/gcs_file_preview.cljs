@@ -28,7 +28,7 @@
                         contents])
              data-empty (or (= data-size "0") (string/blank? data-size))
              bam? (re-find #"\.ba[mi]$" (:object props))
-             img? (re-find #"\.jpe?g$|png$|gif$|bmp$" (:object props))
+             img? (re-find #"\.(?:(jpe?g|png|gif|bmp))$" (:object props))
              hide-preview? (or bam? img?)]
          [:div {:style {:width 700 :overflow "auto"}}
           (labeled "Google Bucket" (:bucket-name props))
