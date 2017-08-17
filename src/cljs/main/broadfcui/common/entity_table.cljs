@@ -82,7 +82,8 @@
                      :on-tab-selected (fn [{:keys [entity-type]}]
                                         (swap! state assoc :selected-entity-type entity-type)
                                         (when-let [f (:on-entity-type-selected props)]
-                                          (f entity-type)))}
+                                          (f entity-type)))
+                     :render (fn [label count] (str label " (" count " total)"))}
               :body
               {:style (merge table-style/table-heavy (:style props))
                ;; this :behavior and the 'or' guard on the first column are to make things

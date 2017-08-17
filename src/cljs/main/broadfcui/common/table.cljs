@@ -19,7 +19,8 @@
 ;; Define nested default props this way because we need to do a deep-merge,
 ;; instead of React's regular merge.
 (def ^:private default-props
-  {:body {:empty-message "There are no rows to display."
+  {:tabs {:render (fn [label count] (str label " (" count ")"))}
+   :body {:empty-message "There are no rows to display."
           :external-query-params #{}
           :behavior {:reorderable-columns? true
                      :fixed-column-count 0
@@ -130,10 +131,7 @@
                                                   (swap! state assoc :selected-tab-index index)
                                                   (when-let [f (:on-tab-selected tabs)]
                                                     (f tab)))}
-                                 (str label
-                                      " ("
-                                      (or size tab-count (count data))
-                                      ")")]))
+                                 ((:render tabs) label (or size tab-count (count data)))]))
                             (:items tabs))]))
           (if (empty? rows)
             (style/create-message-well empty-message)
