@@ -90,6 +90,6 @@
             (swap! state assoc :methods (map #(assoc % :type :method) (get-parsed-response)))
             (swap! state assoc :error-message status-text)))}))}
    (persistence/with-state-persistence
-    {:key "method-repo-table-container" :version 1
+    {:key "method-repo-table-container" :version 2
      :initial {:filter-group-index 0}
      :only [:v :filter-group-index]})))
