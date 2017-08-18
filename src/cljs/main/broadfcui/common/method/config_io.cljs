@@ -90,7 +90,8 @@
                                          [comps/TagAutocomplete
                                           {:multiple false :show-counts? false :allow-clear? true
                                            :minimum-input-length 0
-                                           :tags value :data data
+                                           :tags value
+                                           :data (cons "" data) ;; empty option allows for initial empty selection
                                            :placeholder "Select a value"
                                            :on-change (fn [value]
                                                         (swap! locals update io-key assoc (keyword name)
