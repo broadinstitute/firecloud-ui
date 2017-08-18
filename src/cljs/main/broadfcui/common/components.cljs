@@ -230,6 +230,9 @@
        [:div {}
         [:div {:style {:display "flex"}}
          [:div {:style {:flex "1 1 50%" :paddingRight "0.5rem"}}
+          (when redacted?
+                [:div {:style {:fontWeight 500 :paddingBottom "0.25rem"}}
+                 (icons/icon {:style {:color (:warning-state style/colors)}} :warning) " Snapshot Redacted"])
           (make-field :namespace "Namespace")
           (make-field :name "Name")
           (make-field :snapshotId "Snapshot ID" :dropdown? true)

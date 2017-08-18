@@ -58,7 +58,7 @@
                                    "The method snapshot referenced by this config has been redacted."))
                       :render (fn [config]
                                 (when (:redacted config)
-                                  (icons/icon {:style {:alignSelf "center" :cursor "pointer"}}
+                                  (icons/icon {:style {:alignSelf "center" :cursor "pointer" :color (:warning-state style/colors)}}
                                               ;(this :-get-link-props data))
                                               :warning)))}
                      {:header "Name" :initial-width 240

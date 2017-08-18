@@ -33,6 +33,13 @@
     (.clear engine)
     (.add engine (clj->js datums))))
 
+(defn- fake-inputs-outputs [data]
+  (utils/log data)
+  (let [method-config (:methodConfiguration data)]
+    {:inputs (mapv #(identity {:name (name %)}) (keys (:inputs method-config)))
+     :outputs (mapv #(identity {:name (name %)}) (keys (:outputs method-config)))}))
+
+
 (react/defc- MethodDetailsViewer
   {:get-fields
    (fn [{:keys [refs]}]
@@ -59,7 +66,7 @@
          :on-done (fn [{:keys [success? get-parsed-response status-text]}]
                     (if success?
                       (swap! state assoc :loaded-method (get-parsed-response))
-                      (swap! state assoc :loaded-method (merge (select-keys method [:name :namespace :entityType]) {:snapshotId "Redacted"}))))})))})
+                      (swap! state assoc :loaded-method (merge (select-keys method [:name :namespace :entityType]) {:snapshotId "-"}))))})))})
 
 
 (react/defc- Sidebar
@@ -167,7 +174,7 @@
            {:keys [body-id engine]} @locals
            workspace-attributes (get-in props [:workspace :workspace :workspace-attributes])]
        [:div {:style {:flex "1 1 auto"} :id body-id}
-        (when-not (or editing? redacted?)
+        (when-not editing?
           [:div {:style {:float "right"}}
            (launch/render-button {:workspace-id (:workspace-id props)
                                   :config-id (ws-common/config->id config)
@@ -176,7 +183,9 @@
                                                    "This workspace is locked."
                                                    (not (:bucket-access? props))
                                                    (str "You do not currently have access"
-                                                        " to the Google Bucket associated with this workspace."))
+                                                        " to the Google Bucket associated with this workspace.")
+                                                   redacted?
+                                                   "The method snapshot this config references has been redacted.")
                                   :on-success (:on-submission-success props)})])
         (create-section-header "Method Configuration Name")
         (create-section
@@ -186,9 +195,7 @@
                                      :defaultValue (:name config)})
            [:div {:style {:padding "0.5em 0 1em 0"}
                   :data-test-id (config/when-debug "method-config-name")} (:name config)]))
-        (if redacted?
-          (create-section-header "Referenced Method - REDACTED")
-          (create-section-header "Referenced Method"))
+        (create-section-header "Referenced Method")
         (let [matching-methods (filter #(and (= methodNamespace (:namespace %)) (= methodName (:name %))) methods-response)
               method (if (empty? matching-methods)
                        {:name methodName :namespace methodNamespace}
@@ -341,7 +348,7 @@
                         :on-done (fn [{:keys [success? get-parsed-response]}]
                                    (if success?
                                      (swap! state assoc :loaded-config response :inputs-outputs (get-parsed-response) :redacted? false)
-                                     (swap! state assoc :loaded-config response :inputs-outputs {} :redacted? true)))}))
+                                     (swap! state assoc :loaded-config response :inputs-outputs (fake-inputs-outputs response) :redacted? true)))}))
                     (swap! state assoc :error status-text)))}))
    :-load-new-method-template
    (fn [{:keys [state refs]} new-snapshot-id]
