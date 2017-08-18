@@ -48,7 +48,7 @@ class MethodConfigTabSpec extends FreeSpec with WebBrowserSpec with CleanUp with
 
       methodConfigDetailsPage.editMethodConfig(newRootEntityType = Some("participant_set"))
       val launchModal = methodConfigDetailsPage.openlaunchModal()
-      assert(launchModal.ui.getSelectedEntityText() == "Selected: None")
+      assert(launchModal.verifyNoDefaultEntityMessage())
       launchModal.closeModal()
     }
   }
