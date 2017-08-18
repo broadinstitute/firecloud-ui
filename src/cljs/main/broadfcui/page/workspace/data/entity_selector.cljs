@@ -73,7 +73,8 @@
                                     :style table-style/table-heavy
                                     :columns (columns source?)}
                              :toolbar
-                             {:get-items
+                             {:style {:minWidth 600}
+                              :get-items
                               (constantly
                                [flex/spring
                                 [comps/Button {:onClick #(swap! state assoc :selected
