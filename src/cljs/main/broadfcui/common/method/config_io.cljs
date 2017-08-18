@@ -22,11 +22,16 @@
 
 (react/defc IOTables
   {:start-editing
-   (fn [{:keys [state]}]
+   (fn [{:keys [props state locals]}]
+     (swap! locals merge (:values props))
      (swap! state assoc :editing? true))
    :cancel-editing
    (fn [{:keys [state]}]
      (swap! state dissoc :editing?))
+   :save
+   (fn [{:keys [state locals]}]
+     (swap! state dissoc :editing?)
+     @locals)
    :render
    (fn [{:keys [this]}]
      [:div {}
@@ -38,7 +43,7 @@
         :title "Outputs"
         :contents (this :-render-table :outputs)}]])
    :-render-table
-   (fn [{:keys [props state]} io-key]
+   (fn [{:keys [props state locals]} io-key]
      (let [{:keys [inputs-outputs values invalid-values data]} props
            {:keys [editing?]} @state]
        [Table {:data (map process-name (io-key inputs-outputs))
@@ -77,14 +82,18 @@
                                   :render
                                   (fn [{:keys [name]}]
                                     (let [value (get (io-key values) (keyword name))]
-                                      [:div {:style table-style/default-cell-left}
+                                      [:div {:style (clip table-style/default-cell-left)}
                                        (if editing?
                                          ;; (ab)using TagAutocomplete instead of Typeahead because it
                                          ;; plays nicer with tables
                                          [comps/TagAutocomplete
                                           {:multiple false :show-counts? false :allow-clear? true
+                                           :minimum-input-length 0
                                            :tags value :data data
-                                           :placeholder "Select a value"}]
+                                           :placeholder "Select a value"
+                                           :on-change (fn [value]
+                                                        (swap! locals update io-key assoc (keyword name)
+                                                               (if (empty? value) "" value)))}]
                                          value)]))}])
                               (when invalid-values
                                 [{:header "Message" :initial-width 400
@@ -93,7 +102,7 @@
                                   :render
                                   (fn [message]
                                     (when message
-                                      [:div {:style (merge table-style/clip-text table-style/default-cell-left)
+                                      [:div {:style (clip table-style/default-cell-left)
                                              :title message}
                                        (icons/icon {:style {:marginRight "0.5rem"
                                                             :color (:exception-state style/colors)}}

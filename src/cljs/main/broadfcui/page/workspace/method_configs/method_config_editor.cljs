@@ -243,22 +243,17 @@
      (let [{:keys [workspace-id]} props
            config (-> @state :loaded-config :methodConfiguration)
            [name root-entity-type] (common/get-text refs "confname" "rootentitytype")
-           deref-vals (fn [io-key ref-prefix]
-                        (->> (io-key (:inputs-outputs @state))
-                             (map :name)
-                             (map (juxt identity #((@refs (str ref-prefix "_" %)) :get-text)))
-                             (into {})))]
+           selected-values ((@refs "IOTables") :save)]
        (swap! state assoc :blocker "Updating...")
        (endpoints/call-ajax-orch
         {:endpoint (endpoints/update-workspace-method-config workspace-id (ws-common/config->id config))
-         :payload (assoc config
-                    :name name
-                    :rootEntityType root-entity-type
-                    :inputs (deref-vals :inputs "in")
-                    :outputs (deref-vals :outputs "out")
-                    :methodRepoMethod (merge (:methodRepoMethod config)
-                                             ((@refs "methodDetailsViewer") :get-fields))
-                    :workspaceName workspace-id)
+         :payload (merge config
+                         selected-values
+                         {:name name
+                          :rootEntityType root-entity-type
+                          :methodRepoMethod (merge (:methodRepoMethod config)
+                                                   ((@refs "methodDetailsViewer") :get-fields))
+                          :workspaceName workspace-id})
          :headers utils/content-type=json
          :on-done (fn [{:keys [success? get-parsed-response]}]
                     (swap! state dissoc :blocker :editing?)
