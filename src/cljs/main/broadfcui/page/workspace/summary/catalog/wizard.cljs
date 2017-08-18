@@ -38,7 +38,7 @@
 (defn- ensure-sequence [input]
   ;;input may or maynot be a sequence, make it a sequence
   (cond (sequential? input) input
-        (nil? input) []
+        (or (= input "") (nil? input)) []
         :else [input]))
 
 (react/defc- DiscoverabilityPage
@@ -237,9 +237,14 @@
      (if (and (:published? @state) (not-empty (:invalid-properties @state)))
        (swap! state assoc :validation-error "You will need to complete all required metadata attributes to be able to re-publish the workspace in the Data Library")
        (let [attributes-seen (apply merge (vals (select-keys (:page-attributes @locals) (:pages-stack @state))))
+             discoverable-by (:library:discoverableByGroups attributes-seen)
              invoke-args (if (and set-discoverable? (not editable?))
-                           {:name endpoints/save-discoverable-by-groups :data (:library:discoverableByGroups attributes-seen)}
-                           {:name endpoints/save-library-metadata :data (library-utils/remove-empty-values (merge attributes-seen (:version-attributes @state)))})]
+                           {:name endpoints/save-discoverable-by-groups :data discoverable-by}
+                           {:name endpoints/save-library-metadata :data (merge
+                                                                         (library-utils/remove-empty-values (merge attributes-seen (:version-attributes @state)))
+                                                                         ; ensure discoverable by is being sent. when it is reset to all users, it is the empty list
+                                                                         ; and therefore removed by the call above
+                                                                         {:library:discoverableByGroups discoverable-by})})]
          (swap! state assoc :submitting? true :submit-error nil)
          (endpoints/call-ajax-orch
           {:endpoint ((:name invoke-args) (:workspace-id props))
