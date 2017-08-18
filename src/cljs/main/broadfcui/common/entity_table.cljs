@@ -76,6 +76,7 @@
                                  (str (common/workspace-id->string (:workspace-id props)) ":data:" selected-entity-type))
               :v 2
               :fetch-data (this :-pagination)
+              :blocker-delay-time-ms 100
               :tabs {:items (->> entity-types
                                  (map (fn [entity-type]
                                         {:label entity-type
