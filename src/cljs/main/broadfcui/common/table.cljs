@@ -8,6 +8,7 @@
    [broadfcui.common.table.column-editor :refer [ColumnEditButton]]
    [broadfcui.common.table.paginator :refer [Paginator]]
    [broadfcui.common.table.utils :as table-utils]
+   [broadfcui.config :as config]
    [broadfcui.persistence :as persistence]
    [broadfcui.utils :as utils]
    ))
@@ -121,7 +122,8 @@
                (map-indexed (fn [index {:keys [label size] :as tab}]
                               (let [selected? (= index selected-tab-index)
                                     tab-count (get tab-counts label)]
-                                [:div {:style {:display "inline-block" :textAlign "center"
+                                [:div {:data-test-id (config/when-debug (str label "-filter-button"))
+                                       :style {:display "inline-block" :textAlign "center"
                                                :padding "0.5rem 1rem" :cursor "pointer"
                                                :fontWeight (when selected? 500)
                                                :letterSpacing (when-not selected? "0.007em") ; stops size from shifting when selected
