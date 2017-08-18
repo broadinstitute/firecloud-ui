@@ -111,7 +111,7 @@
 
 
 ;; TODO: find out if :position "absolute" would work everywhere, or possibly get rid of Blocker entirely
-(defn- blocker [text position]
+(defn render-blocker [text position]
   [:div {:style {:backgroundColor "rgba(210, 210, 210, 0.4)"
                  :position position :top 0 :bottom 0 :right 0 :left 0 :zIndex 9999
                  :display "flex" :justifyContent "center" :alignItems "center"}}
@@ -122,7 +122,7 @@
   {:render
    (fn [{:keys [props]}]
      (when-let [text (:banner props)]
-       (blocker text "fixed")))})
+       (render-blocker text "fixed")))})
 
 (react/defc DelayedBlocker
   {:show
@@ -140,7 +140,7 @@
    :render
    (fn [{:keys [props state]}]
      (when (:showing? @state)
-       (blocker (:banner props) "absolute")))})
+       (render-blocker (:banner props) "absolute")))})
 
 
 (react/defc StatusLabel

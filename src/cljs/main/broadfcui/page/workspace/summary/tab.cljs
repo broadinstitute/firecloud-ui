@@ -172,6 +172,8 @@
                          :data-btm-anchor (str body-id ":bottom")}
           :contents
           [:div {:style {:width 270}}
+           (when-not (and library-schema billing-projects curator?)
+             (comps/render-blocker "Loading..." "absolute"))
            (when (and can-share? (not editing?))
              [comps/SidebarButton
               {:style :light :margin :top :color :button-primary
