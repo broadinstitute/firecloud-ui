@@ -251,7 +251,7 @@
                :as-text common/format-date}
               {:id "Access Level" :header [:span {:style {:marginLeft 14}} "Access Level"]
                :initial-width 132 :resizable? false
-               :column-data column-data
+               :column-data column-data :as-text (comp style/prettify-access-level :access-level)
                :sort-by (fn [{:keys [access-level]}] (get access-levels-sortorder access-level))
                :sort-initial :asc
                :render (fn [{:keys [access-level workspace-id auth-domain-groups]}]

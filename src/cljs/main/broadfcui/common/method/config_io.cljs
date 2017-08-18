@@ -103,8 +103,7 @@
                                   :render
                                   (fn [message]
                                     (when message
-                                      [:div {:style (clip table-style/default-cell-left)
-                                             :title message}
+                                      [:div {:style (clip table-style/default-cell-left)}
                                        (icons/icon {:style {:marginRight "0.5rem"
                                                             :color (:exception-state style/colors)}}
                                                    :error)

@@ -79,6 +79,7 @@
                               status])}
                   {:header "Messages" :initial-width 300
                    :column-data :messages
+                   :as-text (partial string/join "\n")
                    :render (fn [message-list]
                              [:div {} (map (fn [message] [:div {} message]) message-list)])}
                   {:header "Workflow ID" :initial-width 300
