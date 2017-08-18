@@ -169,7 +169,7 @@
         [Sticky
          {:sticky-props {:data-check-every 1
                          :data-top-anchor (str label-id ":bottom")
-                         :data-bottom-anchor (str body-id ":bottom")}
+                         :data-btm-anchor (str body-id ":bottom")}
           :contents
           [:div {:style {:width 270}}
            (when (and can-share? (not editing?))
