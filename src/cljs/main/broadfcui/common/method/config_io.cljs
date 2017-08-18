@@ -17,6 +17,10 @@
     (merge item (utils/restructure task variable))))
 
 
+(defn- process-type [string]
+  (re-find #"[^?]+" string))
+
+
 (def clip (partial merge table-style/clip-text))
 
 
@@ -66,15 +70,15 @@
                                           [:div {:style (clip table-style/table-cell-plank-middle)} variable])}
                                {:header "Type" :initial-width 100
                                 :column-data (fn [{:keys [inputType outputType optional]}]
-                                               {:type (or inputType outputType)
+                                               {:type (process-type (or inputType outputType))
                                                 :optional? optional})
                                 :sort-by :type
                                 :as-text (fn [{:keys [type optional?]}]
-                                           (str type (when optional? (" (optional)"))))
+                                           (str type (when optional? " (optional)")))
                                 :render
                                 (fn [{:keys [type optional?]}]
                                   [:div {:style (clip table-style/table-cell-plank-right)}
-                                   (str type (when optional? (" (optional)")))])}]
+                                   (str type (when optional? " (optional)"))])}]
                               (when values
                                 [{:header "Attribute" :initial-width 200
                                   :as-text (fn [{:keys [name]}] (get (io-key values) (keyword name)))
@@ -91,7 +95,7 @@
                                           {:multiple false :show-counts? false :allow-clear? true
                                            :minimum-input-length 0
                                            :tags value
-                                           :data (cons "" data) ;; empty option allows for initial empty selection
+                                           :data (concat ["" value] data) ;; empty option allows for initial empty selection
                                            :placeholder "Select a value"
                                            :on-change (fn [value]
                                                         (swap! locals update io-key assoc (keyword name)

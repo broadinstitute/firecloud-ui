@@ -42,5 +42,5 @@
 
 (def table-cell-plank-right
   {:borderRadius "0 8px 8px 0"
-   :padding "0.6rem calc(0.6rem + 16px) 0.6rem 16px"
+   :padding "0.6rem 16px"
    :backgroundColor (:background-light style/colors)})
