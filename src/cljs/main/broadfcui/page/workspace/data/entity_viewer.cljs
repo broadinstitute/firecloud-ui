@@ -36,7 +36,6 @@
            item-column-name (get-column-name entity-type)
            update-and-load (fn [item-type item-name]
                              (update-parent-state :selected-entity item-name
-                                                  :selected-entity-type item-type
                                                   :selected-attr-list nil
                                                   :loading-attributes true)
                              (data-utils/get-entity-attrs {:entity-name item-name
