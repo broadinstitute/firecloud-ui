@@ -12,7 +12,7 @@
 (defn- flex-params [width]
   (if (= width :auto)
     {:flex "1 1 auto"}
-    {:flex (str "0 0 auto") :width width}))
+    {:flex "0 0 auto" :width width}))
 
 
 (def ^:private column-drag-margin 11)
@@ -108,9 +108,10 @@
             (fn [{:keys [index initial-width]}]
               (update-column-display (assoc-in column-display [index :width] initial-width)))
             properties (merge props (utils/restructure joined-columns start-column-drag column-reset))]
-        [:div {:style (merge {:width "-webkit-fit-content" :minWidth "100%"} (:table style))}
-         (header properties)
-         (body properties)]))
+        [:div {:style {:overflowX "auto"}}
+         [:div {:style (merge {:width "-webkit-fit-content" :minWidth "100%"} (:table style))}
+          (header properties)
+          (body properties)]]))
     :-on-mouse-move
     (fn [{:keys [props state locals]} e]
       (when (:dragging? @state)

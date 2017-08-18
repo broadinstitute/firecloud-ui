@@ -132,8 +132,7 @@
                              (map :id)
                              (string/join ","))}]
         [:input {:style {:border "none" :backgroundColor "transparent" :cursor "pointer"
-                         :color (:button-primary style/colors) :fontSize "inherit" :fontFamily "inherit"
-                         :padding 0 :marginLeft "1em"}
+                         :color (:button-primary style/colors) :fontSize "inherit" :fontFamily "inherit"}
                  :type "submit"
                  :value (str "Download '" selected-entity-type "' metadata")}]]))
    :-render-entity

@@ -312,28 +312,33 @@
                               (select-keys props [:workspace-id :allow-edit :after-import])
                               {:on-delete #(nav/go-to-path :method-repo)}))
           [MethodRepoTable
-           {:render-name
+           {:table-props {:toolbar {:style {:padding "1rem" :margin 0
+                                            :backgroundColor (:background-light style/colors)}}
+                          :tabs {:style {:padding "0 1rem" :marginLeft "-1rem" :marginRight "-1rem"
+                                         :backgroundColor (:background-light style/colors)}}
+                          :style {:content {:padding "0 1rem"}}}
+            :render-name
             (fn [{:keys [namespace name snapshotId entityType]}]
               (let [id {:namespace namespace
                         :name name
                         :snapshot-id snapshotId}
                     type (if (= entityType "Configuration") :method-config :method)]
                 (links/create-internal
-                 {:data-test-id (config/when-debug (str name "_" snapshotId))
-                  :href (if workspace-id "javascript:;" (nav/get-link type id))
-                  :onClick (when workspace-id
-                             #(swap! state assoc :type type :id id))}
-                 (style/render-name-id name snapshotId))))
+                  {:data-test-id (config/when-debug (str name "_" snapshotId))
+                   :href (if workspace-id "javascript:;" (nav/get-link type id))
+                   :onClick (when workspace-id
+                              #(swap! state assoc :type type :id id))}
+                  (style/render-name-id name snapshotId))))
             :render-namespace
             (fn [{:keys [namespace type]}]
               (if workspace-id
                 namespace
                 (links/create-internal
-                 {:onClick #(swap! state assoc
-                                   :editing-namespace-acl? true
-                                   :edit-namespace namespace
-                                   :edit-type type)}
-                 namespace)))
+                  {:onClick #(swap! state assoc
+                                    :editing-namespace-acl? true
+                                    :edit-namespace namespace
+                                    :edit-type type)}
+                  namespace)))
             :toolbar-items
             [flex/spring
              [comps/Button

@@ -25,55 +25,50 @@
       (cond
         (:error-message @state) (style/create-server-error-message (:error-message @state))
         (or (nil? (:methods @state)) (nil? (:configs @state)))
-        [comps/Spinner {:text "Loading methods and configurations..."}]
+        [comps/Spinner {:text "Loading methods and configurations..."
+                        :style {:display "inline-block"}}]
         :else
         [Table
-         {:persistence-key "method-repo-table" :v 1
-          :data (or (:filtered-data @state) [])
-          :data-test-id (config/when-debug "method-repo-table")
-          :body
-          {:columns
-           [{:header "Type" :initial-width 100
-             :column-data :entityType}
-            {:header "Name" :initial-width 350
-             :sort-by (juxt (comp string/lower-case :name) (comp int :snapshotId))
-             :filter-by (fn [{:keys [name snapshotId]}] (str name " " (int snapshotId)))
-             :as-text (fn [{:keys [name snapshotId]}] (str name " Snapshot ID: " snapshotId))
-             :render (:render-name props)}
-            {:header "Namespace" :initial-width 160
-             :sort-by (comp string/lower-case :namespace)
-             :sort-initial :asc
-             :as-text :namespace
-             :render (or (:render-namespace props) :namespace)}
-            {:header "Synopsis" :initial-width 160 :column-data :synopsis}
-            (table-utils/date-column {:header "Created" :column-data :createDate})
-            {:header "Referenced Method" :initial-width 250
-             :column-data (fn [item]
-                            (when (= :config (:type item))
-                              (mapv (get item :method {}) [:namespace :name :snapshotId])))
-             :as-text (fn [[namespace name snapshotId]]
-                        (if namespace
-                          (str namespace "/" name " Snapshot ID: " snapshotId)
-                          "N/A"))
-             :render (fn [fields]
-                       (if fields
-                         (apply style/render-entity fields)
-                         "N/A"))}]
-           :style table-style/table-heavy}
-          :toolbar
-          {:get-items
-           (constantly
-            (cons [comps/FilterGroupBar
-                   {:data (concat (:methods @state) (:configs @state))
-                    :selected-index (:filter-group-index @state)
-                    :on-change (fn [index data]
-                                 (swap! state assoc
-                                        :filter-group-index index
-                                        :filtered-data data))
-                    :filter-groups [{:text "All"}
-                                    {:text "Methods Only" :pred (comp (partial = :method) :type)}
-                                    {:text "Configs Only" :pred (comp (partial = :config) :type)}]}]
-                  (:toolbar-items props)))}}]))
+         (utils/deep-merge
+          {:persistence-key "method-repo-table" :v 1
+           :data (concat (:methods @state) (:configs @state))
+           :data-test-id (config/when-debug "method-repo-table")
+           :tabs {:style {:marginTop "-0.6rem" :marginBottom "0.3rem"}
+                  :items [{:label "All"}
+                          {:label "Methods Only" :predicate (comp (partial = :method) :type)}
+                          {:label "Configs Only" :predicate (comp (partial = :config) :type)}]}
+           :body
+           {:columns
+            [{:header "Type" :initial-width 100
+              :column-data :entityType}
+             {:header "Name" :initial-width 350
+              :sort-by (juxt (comp string/lower-case :name) (comp int :snapshotId))
+              :filter-by (fn [{:keys [name snapshotId]}] (str name " " (int snapshotId)))
+              :as-text (fn [{:keys [name snapshotId]}] (str name " Snapshot ID: " snapshotId))
+              :render (:render-name props)}
+             {:header "Namespace" :initial-width 160
+              :sort-by (comp string/lower-case :namespace)
+              :sort-initial :asc
+              :as-text :namespace
+              :render (or (:render-namespace props) :namespace)}
+             {:header "Synopsis" :initial-width 160 :column-data :synopsis}
+             (table-utils/date-column {:header "Created" :column-data :createDate})
+             {:header "Referenced Method" :initial-width 250
+              :column-data (fn [item]
+                             (when (= :config (:type item))
+                               (mapv (get item :method {}) [:namespace :name :snapshotId])))
+              :as-text (fn [[namespace name snapshotId]]
+                         (if namespace
+                           (str namespace "/" name " Snapshot ID: " snapshotId)
+                           "N/A"))
+              :render (fn [fields]
+                        (if fields
+                          (apply style/render-entity fields)
+                          "N/A"))}]
+            :style table-style/table-heavy}
+           :toolbar
+           {:get-items (constantly (:toolbar-items props))}}
+          (:table-props props))]))
     :component-did-mount
     (fn [{:keys [this]}]
       (this :load-data))
@@ -95,6 +90,6 @@
             (swap! state assoc :methods (map #(assoc % :type :method) (get-parsed-response)))
             (swap! state assoc :error-message status-text)))}))}
    (persistence/with-state-persistence
-    {:key "method-repo-table-container" :version 1
+    {:key "method-repo-table-container" :version 2
      :initial {:filter-group-index 0}
      :only [:v :filter-group-index]})))

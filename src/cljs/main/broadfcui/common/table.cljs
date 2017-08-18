@@ -8,6 +8,7 @@
    [broadfcui.common.table.column-editor :refer [ColumnEditButton]]
    [broadfcui.common.table.paginator :refer [Paginator]]
    [broadfcui.common.table.utils :as table-utils]
+   [broadfcui.config :as config]
    [broadfcui.persistence :as persistence]
    [broadfcui.utils :as utils]
    ))
@@ -19,7 +20,8 @@
 ;; Define nested default props this way because we need to do a deep-merge,
 ;; instead of React's regular merge.
 (def ^:private default-props
-  {:body {:empty-message "There are no rows to display."
+  {:tabs {:render (fn [label count] (str label " (" count ")"))}
+   :body {:empty-message "There are no rows to display."
           :external-query-params #{}
           :behavior {:reorderable-columns? true
                      :fixed-column-count 0
@@ -27,7 +29,7 @@
                      :allow-no-sort? false
                      :resizable-columns? true
                      :filterable? true}}
-   :toolbar {:style {:display "flex" :alignItems "baseline" :marginBottom "1rem"}
+   :toolbar {:style {:display "flex" :alignItems "baseline"}
              :column-edit-button {:style {:marginRight "1rem"}
                                   :button {:text "Columns" :icon :settings
                                            :style {:padding "0.4rem 0.8rem 0.4rem 0.4rem"}}
@@ -62,6 +64,7 @@
                                (when reset-page-number? {:page-number 1}))]
        (assert data-source "No data provided")
        (data-source {:columns (-> props :body :columns)
+                     :tab (some-> (:tabs props) :items (get (:selected-tab-index @state)))
                      :query-params query-params
                      :on-done (fn [{:keys [total-count filtered-count results]}]
                                 ((@refs "blocker") :hide)
@@ -79,8 +82,8 @@
    :render
    (fn [{:keys [props state]}]
      (let [props (utils/deep-merge default-props props)
-           {:keys [rows column-display filtered-count query-params]} @state
-           {:keys [body toolbar paginator]} props
+           {:keys [rows column-display filtered-count query-params selected-tab-index]} @state
+           {:keys [toolbar sidebar tabs body paginator style data]} props
            {:keys [empty-message columns behavior external-query-params on-column-change]} body
            {:keys [fixed-column-count allow-no-sort?]} behavior
            total-count (some :total-count [props @state])
@@ -88,9 +91,10 @@
            update-column-display (fn [columns]
                                    (when on-column-change (on-column-change columns))
                                    (swap! state assoc :column-display columns))]
-       [:div {:style {:position "relative"}}
+       [:div {:style (merge {:position "relative"} (:main style))}
         [comps/DelayedBlocker {:ref "blocker" :banner "Loading..."}]
-        [:div {:style (:style toolbar)}
+        [:div {:style (merge {:marginBottom (if tabs "0.3rem" "1rem")}
+                             (:style toolbar))}
          (when (:reorderable-columns? behavior)
            (let [button-props (:column-edit-button toolbar)]
              [:div {:style (:style button-props)}
@@ -108,40 +112,62 @@
                                  (:inner filter-bar-props))]]))
          (when-let [get-items (:get-items toolbar)]
            (list* (get-items {:columns column-display})))]
-        [:div {:style {:overflowX "auto"}}
-         (if (empty? rows)
-           (style/create-message-well empty-message)
-           [body/TableBody
-            (merge
-             body
-             (select-keys query-params [:sort-column :sort-order])
-             (utils/restructure rows column-display update-column-display fixed-column-count allow-no-sort?)
-             {:set-sort (fn [col order] (swap! state update :query-params
-                                               merge {:sort-column col :sort-order order}))})])]
-        (when (not= paginator :none)
-          [Paginator
-           (merge paginator
-                  (select-keys query-params [:rows-per-page :page-number])
-                  (utils/restructure total-count filtered-count)
-                  {:page-selected #(swap! state assoc-in [:query-params :page-number] %)
-                   :per-page-selected #(swap! state update :query-params
-                                              merge {:rows-per-page % :page-number 1})})])]))
+        [:div {:style (merge {:display "flex"} (:content+sidebar style))}
+         sidebar
+         [:div {:style (merge {:flex "1 1 0" :overflow "hidden"} (:content style))}
+          (when tabs
+            (let [tab-counts (table-utils/compute-tab-counts (utils/restructure tabs columns query-params data))]
+              [:div {:style (merge {:marginBottom "0.3rem"}
+                                   (:style tabs))}
+               (map-indexed (fn [index {:keys [label size] :as tab}]
+                              (let [selected? (= index selected-tab-index)
+                                    tab-count (get tab-counts label)]
+                                [:div {:data-test-id (config/when-debug (str label "-filter-button"))
+                                       :style {:display "inline-block" :textAlign "center"
+                                               :padding "0.5rem 1rem" :cursor "pointer"
+                                               :fontWeight (when selected? 500)
+                                               :letterSpacing (when-not selected? "0.007em") ; stops size from shifting when selected
+                                               :borderBottom (when selected? (str "3px solid " (:button-primary style/colors)))
+                                               :marginBottom (when-not selected? 3)}
+                                       :onClick (fn []
+                                                  (swap! state assoc :selected-tab-index index)
+                                                  (when-let [f (:on-tab-selected tabs)]
+                                                    (f tab)))}
+                                 ((:render tabs) label (or size tab-count (count data)))]))
+                            (:items tabs))]))
+          (if (empty? rows)
+            (style/create-message-well empty-message)
+            [body/TableBody
+             (merge
+              body
+              (select-keys query-params [:sort-column :sort-order])
+              (utils/restructure rows column-display update-column-display fixed-column-count allow-no-sort?)
+              {:set-sort (fn [col order] (swap! state update :query-params
+                                                merge {:sort-column col :sort-order order}))})])
+          (when (not= paginator :none)
+            [Paginator
+             (merge paginator
+                    (select-keys query-params [:rows-per-page :page-number])
+                    (utils/restructure total-count filtered-count)
+                    {:page-selected #(swap! state assoc-in [:query-params :page-number] %)
+                     :per-page-selected #(swap! state update :query-params
+                                                merge {:rows-per-page % :page-number 1})})])]]]))
    :component-did-mount
    (fn [{:keys [props this]}]
      (when (:load-on-mount props)
        (this :refresh-rows)))
    :component-did-update
    (fn [{:keys [props state prev-props prev-state this]}]
-     (let [data-change? (not= (:data props) (:data prev-props))]
-       (when (or (not= (:query-params @state) (:query-params prev-state))
-                 data-change?)
-         (this :refresh-rows data-change?)))
-     (when (and (:persistence-key props)
-                (or (not= (:query-params @state) (:query-params prev-state))
-                    (not= (:column-display @state) (:column-display prev-state))))
-       (persistence/save {:key (:persistence-key props)
-                          :state state
-                          :only [:query-params :column-display :v]})))
+     (let [data-change? (not= (:data props) (:data prev-props))
+           [query-params-change? selected-tab-change? column-display-change?]
+           (utils/changes [:query-params :selected-tab-index :column-display] @state prev-state)]
+       (when (or query-params-change? selected-tab-change? data-change?)
+         (this :refresh-rows (or data-change? selected-tab-change?)))
+       (when (and (:persistence-key props)
+                  (or query-params-change? selected-tab-change? column-display-change?))
+         (persistence/save {:key (:persistence-key props)
+                            :state state
+                            :only [:query-params :column-display :selected-tab-index :v]}))))
    :-fetch-initial-state
    (fn [{:keys [props]}]
      (persistence/try-restore
@@ -180,4 +206,7 @@
                              :sort-order initial-sort-order}
                             (set/difference all-query-params (-> props :body :external-query-params)))
              :column-display (table-utils/build-column-display processed-columns)}
+            (when-let [tabs (:tabs props)]
+              {:selected-tab-index (or (some-> (:initial-selection tabs) (utils/first-matching-index (:items tabs)))
+                                       0)})
             (when-let [v (:v props)] {:v v}))))}))})

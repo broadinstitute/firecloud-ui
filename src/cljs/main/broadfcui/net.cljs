@@ -27,7 +27,8 @@
      (nil? ajax-response)
      (if blocking?
        [comps/Blocker {:banner (or loading-text "Loading...")}]
-       [comps/Spinner {:text (or loading-text "Loading...")}])
+       [comps/Spinner {:text (or loading-text "Loading...")
+                       :style {:display "inline-block"}}])
      (not success?)
      (if handle-error
        (handle-error parsed-response)

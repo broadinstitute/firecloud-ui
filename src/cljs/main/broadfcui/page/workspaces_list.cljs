@@ -5,6 +5,7 @@
    [broadfcui.common :as common]
    [broadfcui.common.components :as comps]
    [broadfcui.common.filter :as filter]
+   [broadfcui.common.flex-utils :as flex]
    [broadfcui.common.icons :as icons]
    [broadfcui.common.links :as links]
    [broadfcui.common.style :as style]
@@ -194,8 +195,18 @@
           [RequestAuthDomainAccessDialog
            (assoc request-access-modal-props :dismiss #(swap! state dissoc :request-access-modal-props))])
         [Table
-         {:persistence-key "workspace-table" :v 2
+         {:persistence-key "workspace-table" :v 3
           :data (this :-filter-workspaces) :total-count (:total-count @locals)
+          :tabs {:style {:backgroundColor (:background-light style/colors)
+                         :margin "-0.6rem -1rem 0.3rem" :paddingLeft "1rem"}
+                 :items
+                 [{:label "My Workspaces"
+                   :predicate (fn [{:keys [public accessLevel]}]
+                                (or (not public)
+                                    (common/access-greater-than-equal-to? accessLevel "WRITER")))}
+                  {:label "Public Workspaces"
+                   :predicate :public}]}
+          :style {:content {:paddingLeft "1rem" :paddingRight "1rem"}}
           :body
           {:columns
            (let [column-data (fn [ws]
@@ -211,7 +222,7 @@
                                                 (if tcga?
                                                   tcga-disabled-text
                                                   non-dbGap-disabled-text))
-                                  :restricted? (not (empty? (get-in ws [:workspace :authorizationDomain])))}))]
+                                  :restricted? (seq (get-in ws [:workspace :authorizationDomain]))}))]
              ;; All of this margining is terrible, but since this table
              ;; will be redesigned soon I'm leaving it as-is.
              [{:id "Status" :header [:span {:style {:marginLeft 7}} "Status"]
@@ -246,8 +257,9 @@
                :render (fn [{:keys [access-level workspace-id auth-domain-groups]}]
                          [:div {:style {:paddingLeft 14}}
                           (if (= access-level "NO ACCESS")
-                            (links/create-internal {:onClick #(this :-show-request-access-modal workspace-id auth-domain-groups)}
-                                                   (style/prettify-access-level access-level))
+                            (links/create-internal
+                              {:onClick #(this :-show-request-access-modal workspace-id auth-domain-groups)}
+                              (style/prettify-access-level access-level))
                             (style/prettify-access-level access-level))])}])
            :behavior {:reorderable-columns? false}
            :style {:header-row {:color (:text-lighter style/colors) :fontSize "90%"}
@@ -259,20 +271,17 @@
                                       (when (pos? index)
                                         {:borderTop style/standard-line})))
                    :cell table-style/clip-text}}
-          :toolbar {:style {:display "initial"}
-                    :filter-bar {:style {:float "left"}
-                                 :inner {:width 300 :data-test-id (config/when-debug "workspace-list-filter")}}
+          :toolbar {:filter-bar {:inner {:width 300 :data-test-id (config/when-debug "workspace-list-filter")}}
+                    :style {:padding "1rem" :margin 0
+                            :backgroundColor (:background-light style/colors)}
                     :get-items
                     (constantly
-                     [[:div {:style {:float "right"}}
-                       [create/Button (select-keys props [:nav-context :billing-projects :disabled-reason])]]
-                      [:div {:style {:clear "left" :float "left" :marginTop "0.5rem"}}
-                       (links/create-internal {:onClick #(swap! state update :filters-expanded? not)}
-                                              (if filters-expanded? "Collapse filters" "Expand filters"))]
-                      [:div {:style {:clear "both"}}]
-                      (when filters-expanded?
-                        (this :-render-side-filters))])}
-          :paginator {:style {:clear "both"}}}]]))
+                     [(links/create-internal {:onClick #(swap! state update :filters-expanded? not)}
+                                             (if filters-expanded? "Collapse filters" "Expand filters"))
+                      flex/spring
+                      [create/Button (select-keys props [:nav-context :billing-projects :disabled-reason])]])}
+          :sidebar (when filters-expanded?
+                     (this :-render-side-filters))}]]))
    :component-did-update
    (fn [{:keys [state]}]
      (persistence/save {:key persistence-key :state state}))
@@ -328,7 +337,7 @@
      (let [{:keys [filters]} @state]
        (apply
         filter/area
-        {:style {:float "left" :margin "0 1rem 1rem 0" :width 175}}
+        {:style {:flex "0 0 175px" :marginTop -12}}
         (filter/section
          {:title "Tags"
           :content (react/create-element
@@ -387,12 +396,11 @@
        (net/render-with-ajax
         (:workspaces-response server-response)
         (fn []
-          [:div {:style {:padding "0 1rem"}}
-           [WorkspaceTable
-            (assoc props
-              :workspaces workspaces
-              :billing-projects billing-projects
-              :disabled-reason disabled-reason)]])
+          [WorkspaceTable
+           (assoc props
+             :workspaces workspaces
+             :billing-projects billing-projects
+             :disabled-reason disabled-reason)])
         {:loading-text "Loading workspaces..."
          :rephrase-error #(get-in % [:parsed-response :workspaces :error-message])})))
    :component-did-mount
@@ -410,17 +418,12 @@
                  :billing-projects (map :projectName projects)
                  :disabled-reason (if (empty? projects) :no-billing nil))))))})
 
-(react/defc- Page
-  {:render
-   (fn []
-     [:div {:style {:marginTop "1.5rem"}}
-      [WorkspaceList]])})
 
 (defn add-nav-paths []
   (nav/defredirect {:regex #"workspaces" :make-path (fn [] "")})
   (nav/defpath
    :workspaces
-   {:component Page
+   {:component WorkspaceList
     :regex #""
     :make-props (fn [] {})
     :make-path (fn [] "")}))
