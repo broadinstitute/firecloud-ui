@@ -685,16 +685,18 @@
    (fn []
      {:show-counts? true
       :allow-new? true
+      :allow-clear? false
+      :multiple true
       :minimum-input-length 3})
    :render
    (fn [{:keys [props]}]
      (style/create-identity-select {:ref "input-element"
                                     :defaultValue (:tags props)
-                                    :multiple true}
+                                    :multiple (:multiple props)}
                                    (or (:data props) (:tags props))))
    :component-did-mount
    (fn [{:keys [props refs this]}]
-     (let [{:keys [data allow-new? minimum-input-length]} props
+     (let [{:keys [data allow-new? minimum-input-length placeholder allow-clear?]} props
            component (js/$ (@refs "input-element"))
            data-source (if data
                          {:data data}
@@ -709,8 +711,12 @@
         component
         (clj->js (merge
                   data-source
-                  {:templateResult (this :-template-result)
-                   :templateSelection (some-fn #(aget % "tag") #(aget % "text"))
+                  {:placeholder placeholder
+                   :allowClear allow-clear?
+                   :templateResult (this :-template-result)
+                   :templateSelection (fn [x]
+                                        (when x
+                                          (or (aget x "tag") (aget x "text"))))
                    :tags allow-new?
                    :minimumInputLength minimum-input-length
                    :language {:inputTooShort #(str "Enter at least " minimum-input-length " characters to search")}})))

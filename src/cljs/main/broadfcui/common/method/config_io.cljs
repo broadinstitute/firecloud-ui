@@ -8,7 +8,6 @@
    [broadfcui.common.table :refer [Table]]
    [broadfcui.common.table.style :as table-style]
    [broadfcui.components.collapse :refer [Collapse]]
-   [broadfcui.config :as config]
    [broadfcui.utils :as utils]
    ))
 
@@ -37,15 +36,17 @@
         :contents (this :-render-table :outputs)}]])
    :-render-table
    (fn [{:keys [props state]} io-key]
-     (let [{:keys [inputs-outputs values invalid-values engine]} props
+     (let [{:keys [inputs-outputs values invalid-values data]} props
            {:keys [editing?]} @state]
        [Table {:data (map process-name (io-key inputs-outputs))
-               :body {:style (merge
+               :body {:empty-message (str "No " (string/capitalize (name io-key)))
+                      :style (merge
                               table-style/table-light
                               {:body-cell {:padding 0}
                                :header-row {:borderBottom style/standard-line}
                                :body-row (constantly {:margin "4px 0" :alignItems (if editing? "center" "baseline")})})
-                      :behavior {:filterable? false :reorderable-columns? false :allow-no-sort? true}
+                      :behavior {:filterable? false :reorderable-columns? false :allow-no-sort? true
+                                 :sortable-columns? (not editing?)}
                       :columns
                       (concat [{:header "Task" :initial-width 200
                                 :column-data :task
@@ -68,17 +69,19 @@
                                    (str type (when optional? (" (optional)")))])}]
                               (when values
                                 [{:header "Attribute" :initial-width 200
+                                  :as-text (fn [{:keys [name]}] (get (io-key values) (keyword name)))
+                                  :sort-by :text
                                   :render
                                   (fn [{:keys [name]}]
                                     (let [value (get (io-key values) (keyword name))]
                                       [:div {:style table-style/default-cell-left}
                                        (if editing?
-                                         [comps/Typeahead {:field-attributes {:defaultValue value
-                                                                              :style {:position "absolute"
-                                                                                      :width "calc(100% - 4px)" :margin 0}
-                                                                              :data-test-id (config/when-debug (str name "-text-input"))}
-                                                           :engine engine
-                                                           :behavior {:minLength 1}}]
+                                         ;; (ab)using TagAutocomplete instead of Typeahead because it
+                                         ;; plays nicer with tables
+                                         [comps/TagAutocomplete
+                                          {:multiple false :show-counts? false :allow-clear? true
+                                           :tags value :data data
+                                           :placeholder "Select a value"}]
                                          value)]))}])
                               (when invalid-values
                                 [{:header "Message" :initial-width 400
