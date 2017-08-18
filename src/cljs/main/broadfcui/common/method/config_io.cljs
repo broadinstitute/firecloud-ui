@@ -52,7 +52,7 @@
                               table-style/table-light
                               {:body-cell {:padding 0}
                                :header-row {:borderBottom style/standard-line}
-                               :body-row (constantly {:margin "4px 0" :alignItems (if editing? "center" "baseline")})})
+                               :body-row (constantly {:margin "4px 0" :alignItems "baseline"})})
                       :behavior {:filterable? false :reorderable-columns? false :allow-no-sort? true
                                  :sortable-columns? (not editing?)}
                       :columns
@@ -82,7 +82,8 @@
                                   :render
                                   (fn [{:keys [name]}]
                                     (let [value (get (io-key values) (keyword name))]
-                                      [:div {:style (clip table-style/default-cell-left)}
+                                      [:div {:style (merge (clip table-style/default-cell-left)
+                                                           (when editing? {:alignSelf "center"}))}
                                        (if editing?
                                          ;; (ab)using TagAutocomplete instead of Typeahead because it
                                          ;; plays nicer with tables
