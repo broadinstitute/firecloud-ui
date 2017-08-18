@@ -39,11 +39,15 @@
        :on-done (fn [{:keys [success? get-parsed-response]}]
                   (if success?
                     (let [metadata (get-parsed-response)
-                          entity-types (utils/sort-match common/root-entity-types (map name (keys metadata)))
-                          selected-entity-type (or entity-type (first entity-types))]
+                          entity-types-from-response (map name (keys metadata))
+                          entity-types-with-given (if entity-type
+                                                    (distinct (conj entity-types-from-response entity-type))
+                                                    entity-types-from-response)
+                          entity-types-sorted (utils/sort-match common/root-entity-types entity-types-with-given)
+                          selected-entity-type (or entity-type (first entity-types-sorted))]
                       (swap! state assoc
                              :entity-metadata metadata
-                             :entity-types entity-types
+                             :entity-types entity-types-sorted
                              :selected-entity-type selected-entity-type)
                       (when-let [f (:on-entity-type-selected props)]
                         (f selected-entity-type))
