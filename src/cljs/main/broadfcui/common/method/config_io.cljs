@@ -13,8 +13,11 @@
 
 
 (defn- process-name [{:keys [name] :as item}]
-  (let [[_ task variable] (string/split name ".")]
+  (let [[task variable] (take-last 2 (string/split name "."))]
     (merge item (utils/restructure task variable))))
+
+
+(def clip (partial merge table-style/clip-text))
 
 
 (react/defc IOTables
@@ -51,11 +54,11 @@
                       (concat [{:header "Task" :initial-width 200
                                 :column-data :task
                                 :render (fn [task]
-                                          [:div {:style table-style/table-cell-plank-left} task])}
+                                          [:div {:style (clip table-style/table-cell-plank-left)} task])}
                                {:header "Variable" :initial-width 200
                                 :column-data :variable
                                 :render (fn [variable]
-                                          [:div {:style table-style/table-cell-plank-middle} variable])}
+                                          [:div {:style (clip table-style/table-cell-plank-middle)} variable])}
                                {:header "Type" :initial-width 100
                                 :column-data (fn [{:keys [inputType outputType optional]}]
                                                {:type (or inputType outputType)
@@ -65,7 +68,7 @@
                                            (str type (when optional? (" (optional)"))))
                                 :render
                                 (fn [{:keys [type optional?]}]
-                                  [:div {:style table-style/table-cell-plank-right}
+                                  [:div {:style (clip table-style/table-cell-plank-right)}
                                    (str type (when optional? (" (optional)")))])}]
                               (when values
                                 [{:header "Attribute" :initial-width 200
