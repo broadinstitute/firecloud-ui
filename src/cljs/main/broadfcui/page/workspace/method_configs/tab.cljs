@@ -16,13 +16,11 @@
    [broadfcui.utils :as utils]
    ))
 
-(defn add-redacted-attribute [config methods]
+(defn- add-redacted-attribute [config methods]
   (let [methodRepoMethod (:methodRepoMethod config)
-        name (:methodName methodRepoMethod)
-        namespace (:methodNamespace methodRepoMethod)
-        version (:methodVersion methodRepoMethod)
-        snapshots (set (get methods [namespace name]))]
-    (if (contains? snapshots version)
+        {:keys [methodName methodNamespace methodVersion]} methodRepoMethod
+        snapshots (set (get methods [methodNamespace methodName]))]
+    (if (contains? snapshots methodVersion)
       (assoc config :redacted false)
       (assoc config :redacted true))))
 
@@ -41,7 +39,7 @@
          error-message (style/create-server-error-message error-message)
          (and configs methods)
          (ws-common/method-config-selector
-          {:configs (map #(add-redacted-attribute % methods) configs)
+          {:configs (utils/log (map #(add-redacted-attribute % methods) configs))
            :render-name (fn [config]
                           (links/create-internal
                            {:data-test-id (config/when-debug (str "method-config-" (:name config) "-link"))

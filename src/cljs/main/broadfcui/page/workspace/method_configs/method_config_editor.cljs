@@ -111,7 +111,7 @@
                                       :disabled? (when locked? "The workspace is locked")
                                       :data-test-id (config/when-debug "delete-method-config-button")
                                       :onClick #(swap! state assoc :show-delete-dialog? true)}])
-              (when (not redacted?)
+              (when-not redacted?
                 [comps/SidebarButton {:style :light :color :button-primary :margin (when can-edit? :top)
                                       :text "Publish..." :icon :share
                                       :onClick #(swap! state assoc :show-publish-dialog? true)}])))]}]]))})
