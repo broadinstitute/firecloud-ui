@@ -39,7 +39,7 @@
          error-message (style/create-server-error-message error-message)
          (and configs methods)
          (ws-common/method-config-selector
-          {:configs (utils/log (map #(add-redacted-attribute % methods) configs))
+          {:configs (map #(add-redacted-attribute % methods) configs)
            :render-name (fn [config]
                           (links/create-internal
                            {:data-test-id (config/when-debug (str "method-config-" (:name config) "-link"))

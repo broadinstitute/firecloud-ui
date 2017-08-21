@@ -36,8 +36,8 @@
 (defn- fake-inputs-outputs [data]
   (utils/log data)
   (let [method-config (:methodConfiguration data)]
-    {:inputs (mapv #(identity {:name (name %)}) (keys (:inputs method-config)))
-     :outputs (mapv #(identity {:name (name %)}) (keys (:outputs method-config)))}))
+    {:inputs (mapv (fn [k] {:name (name k)}) (keys (:inputs method-config)))
+     :outputs (mapv (fn [k] {:name (name k)}) (keys (:outputs method-config)))}))
 
 
 (react/defc- MethodDetailsViewer
@@ -99,14 +99,15 @@
                                     :data-test-id (config/when-debug "cancel-edit-method-config-button")
                                     :onClick #(parent :-cancel-editing)}])
              (list
-              (when (and can-edit? (or (not redacted?) snapshots))
+              (when can-edit?
                 [comps/SidebarButton {:style :light :color :button-primary
                                       :text "Edit Configuration" :icon :edit
-                                      :disabled? (when locked? "The workspace is locked")
+                                      :disabled? (cond locked? "The workspace is locked"
+                                                       (and redacted? (empty? snapshots)) "There are no available method snapshots")
                                       :data-test-id (config/when-debug "edit-method-config-button")
                                       :onClick #(parent :-begin-editing snapshots)}])
               (when can-edit?
-                [comps/SidebarButton {:style :light :color :exception-state :margin (when (or (not redacted?) snapshots) :top)
+                [comps/SidebarButton {:style :light :color :exception-state :margin :top
                                       :text "Delete" :icon :delete
                                       :disabled? (when locked? "The workspace is locked")
                                       :data-test-id (config/when-debug "delete-method-config-button")
