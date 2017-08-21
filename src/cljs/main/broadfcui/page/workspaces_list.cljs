@@ -172,6 +172,26 @@
        (keep #(some-> % :workspace :attributes :tag:tags :items set))
        (apply clojure.set/union)))
 
+(defn- attach-table-data [{:keys [accessLevel workspace status] :as ws}]
+  (let [workspace-id (select-keys workspace [:namespace :name])
+        no-access? (= accessLevel "NO ACCESS")
+        auth-domain (:authorizationDomain workspace)
+        domain-groups (map :membersGroupName auth-domain)]
+    (assoc ws
+      :workspace-id workspace-id
+      :workspace-column-sort-value (mapv string/lower-case (replace workspace-id [:namespace :name]))
+      :access-level-index (get access-levels-sortorder accessLevel)
+      :status status
+      :auth-domain-groups domain-groups
+      :no-access? no-access?
+      :access-level accessLevel
+      :hover-text (when no-access?
+                    (if (contains? domain-groups config/tcga-authorization-domain)
+                      tcga-disabled-text
+                      non-dbGap-disabled-text))
+      :restricted? (seq auth-domain))))
+
+
 (react/defc- WorkspaceTable
   {:get-initial-state
    (fn []
@@ -209,61 +229,44 @@
           :style {:content {:paddingLeft "1rem" :paddingRight "1rem"}}
           :body
           {:columns
-           (let [column-data (fn [{:keys [accessLevel workspace status]}]
-                               (let [no-access? (= accessLevel "NO ACCESS")
-                                     auth-domain (:authorizationDomain workspace)
-                                     domain-groups (map :membersGroupName auth-domain)
-                                     tcga? (and no-access? (contains? domain-groups config/tcga-authorization-domain))]
-                                 {:workspace-id (select-keys workspace [:namespace :name])
-                                  :access-level-index (get access-levels-sortorder accessLevel)
-                                  :status status
-                                  :auth-domain-groups domain-groups
-                                  :no-access? no-access?
-                                  :access-level accessLevel
-                                  :hover-text (when no-access?
-                                                (if tcga?
-                                                  tcga-disabled-text
-                                                  non-dbGap-disabled-text))
-                                  :restricted? (seq auth-domain)}))]
-             ;; All of this margining is terrible, but since this table
-             ;; will be redesigned soon I'm leaving it as-is.
-             [{:id "Status" :header [:span {:style {:marginLeft 7}} "Status"]
-               :sortable? false :resizable? false :filterable? false :initial-width row-height-px
-               :column-data column-data :as-text :status
-               :render #(this :-render-status-cell %)}
-              {:id "Workspace" :header [:span {:style {:marginLeft 24}} "Workspace"]
-               :initial-width 300
-               :column-data column-data :as-text get-workspace-name-string
-               :sort-by #(mapv clojure.string/lower-case (replace (:workspace-id %) [:namespace :name]))
-               :render #(this :-render-workspace-cell %)}
-              {:id "Description" :header [:span {:style {:marginLeft 14}} "Description"]
-               :initial-width 350
-               :column-data get-workspace-description
-               :render (fn [description]
-                         [:div {:style {:paddingLeft 14}}
-                          (if description
-                            (-> description string/split-lines first)
-                            [:span {:style {:fontStyle "italic"}}
-                             "No description provided"])])}
-              {:id "Last Modified" :header [:span {:style {:marginLeft 14}} "Last Modified"]
-               :filterable? false
-               :initial-width 200
-               :column-data (comp :lastModified :workspace)
-               :render (fn [date]
-                         [:div {:style {:paddingLeft 14}} (common/format-date date common/short-date-format)])
-               :as-text common/format-date}
-              {:id "Access Level" :header [:span {:style {:marginLeft 14}} "Access Level"]
-               :initial-width 132 :resizable? false :filterable? false
-               :column-data column-data
-               :sort-by :access-level-index
-               :sort-initial :asc
-               :render (fn [{:keys [access-level workspace-id auth-domain-groups]}]
-                         [:div {:style {:paddingLeft 14}}
-                          (if (= access-level "NO ACCESS")
-                            (links/create-internal
-                              {:onClick #(this :-show-request-access-modal workspace-id auth-domain-groups)}
-                              (style/prettify-access-level access-level))
-                            (style/prettify-access-level access-level))])}])
+           ;; All of this margining is terrible, but since this table
+           ;; will be redesigned soon I'm leaving it as-is.
+           [{:id "Status" :header [:span {:style {:marginLeft 7}} "Status"]
+             :sortable? false :resizable? false :filterable? false :initial-width row-height-px
+             :as-text :status
+             :render #(this :-render-status-cell %)}
+            {:id "Workspace" :header [:span {:style {:marginLeft 24}} "Workspace"]
+             :initial-width 300
+             :as-text get-workspace-name-string
+             :sort-by :workspace-column-sort-value
+             :render #(this :-render-workspace-cell %)}
+            {:id "Description" :header [:span {:style {:marginLeft 14}} "Description"]
+             :initial-width 350
+             :column-data get-workspace-description
+             :render (fn [description]
+                       [:div {:style {:paddingLeft 14}}
+                        (if description
+                          (-> description string/split-lines first)
+                          [:span {:style {:fontStyle "italic"}}
+                           "No description provided"])])}
+            {:id "Last Modified" :header [:span {:style {:marginLeft 14}} "Last Modified"]
+             :filterable? false
+             :initial-width 200
+             :column-data (comp :lastModified :workspace)
+             :render (fn [date]
+                       [:div {:style {:paddingLeft 14}} (common/format-date date common/short-date-format)])
+             :as-text common/format-date}
+            {:id "Access Level" :header [:span {:style {:marginLeft 14}} "Access Level"]
+             :initial-width 132 :resizable? false :filterable? false
+             :sort-by :access-level-index
+             :sort-initial :asc
+             :render (fn [{:keys [access-level workspace-id auth-domain-groups]}]
+                       [:div {:style {:paddingLeft 14}}
+                        (if (= access-level "NO ACCESS")
+                          (links/create-internal
+                            {:onClick #(this :-show-request-access-modal workspace-id auth-domain-groups)}
+                            (style/prettify-access-level access-level))
+                          (style/prettify-access-level access-level))])}]
            :behavior {:reorderable-columns? false}
            :style {:header-row {:color (:text-lighter style/colors) :fontSize "90%"}
                    :header-cell {:padding "0.4rem 0"}
@@ -382,7 +385,9 @@
                         (fn [ws]
                           (let [ws-tags (set (get-in ws [:workspace :attributes :tag:tags :items]))]
                             (every? (partial contains? ws-tags) selected-tags))))]
-       (filter (apply every-pred tag-filter checkbox-filters) workspaces)))})
+       (->> workspaces
+            (filter (apply every-pred tag-filter checkbox-filters))
+            (map attach-table-data))))})
 
 
 (react/defc- WorkspaceList
