@@ -86,8 +86,7 @@
                                   :render
                                   (fn [{:keys [name]}]
                                     (let [value (get (io-key values) (keyword name))]
-                                      [:div {:style (merge (clip table-style/default-cell-left)
-                                                           (when editing? {:alignSelf "center"}))}
+                                      [:div {:style (clip table-style/default-cell-left)}
                                        (if editing?
                                          ;; (ab)using TagAutocomplete instead of Typeahead because it
                                          ;; plays nicer with tables
