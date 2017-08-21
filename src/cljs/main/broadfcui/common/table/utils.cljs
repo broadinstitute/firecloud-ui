@@ -30,13 +30,12 @@
 
 
 (defn- row->text [row columns]
-  (keep (fn [column]
-          (when (get column :filterable? true)
-            (let [func (or (:as-text column) str)
-                  column-data-fn (or (:column-data column) identity)
-                  column-data (column-data-fn row)]
-              (func column-data))))
-        columns))
+  (map (fn [column]
+         (let [func (or (:as-text column) str)
+               column-data-fn (or (:column-data column) identity)
+               column-data (column-data-fn row)]
+           (func column-data)))
+       columns))
 
 (defn- apply-tab [{:keys [predicate]} data]
   (if predicate
@@ -50,10 +49,11 @@
 (defn- filter-rows [{:keys [filter-text]} columns data]
   (if (string/blank? filter-text)
     data
-    (let [filter-tokens (string/split (string/lower-case filter-text) #"\s+")]
+    (let [filter-tokens (string/split (string/lower-case filter-text) #"\s+")
+          filterable-columns (filter #(get % :filterable? true) columns)]
       (filter (fn [row]
                 (some (partial matches-filter-text filter-tokens)
-                      (row->text row columns)))
+                      (row->text row filterable-columns)))
               data))))
 
 (defn- sort-rows [{:keys [sort-column sort-order]} columns data]
