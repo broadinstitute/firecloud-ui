@@ -115,7 +115,6 @@
              attributes (if (or (:description props) (not (clojure.string/blank? desc)))
                           {:description desc}
                           {})
-             selected-auth-domain-index (int (:selected-auth-domain @state))
              auth-domain {:authorizationDomain (map
                                                 (fn [group-name]
                                                   {:membersGroupName group-name})

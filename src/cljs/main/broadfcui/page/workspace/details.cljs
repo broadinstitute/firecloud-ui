@@ -185,6 +185,9 @@
    :component-will-mount
    (fn [{:keys [this]}]
      (this :-refresh-workspace))
+   :component-will-receive-props
+   (fn [{:keys [this after-update]}]
+     (after-update this :-refresh-workspace))
    :-refresh-workspace
    (fn [{:keys [props state]}]
      (endpoints/call-ajax-orch
