@@ -43,13 +43,18 @@
     (filter predicate data)
     data))
 
+(defn- matches-filter-text [filter-tokens source]
+  (let [lc-source (string/lower-case source)]
+    (every? (fn [word] (utils/contains lc-source word)) filter-tokens)))
+
 (defn- filter-rows [{:keys [filter-text]} columns data]
   (if (string/blank? filter-text)
     data
-    (filter (fn [row]
-              (some (partial utils/matches-filter-text filter-text)
-                    (row->text row columns)))
-            data)))
+    (let [filter-tokens (string/split (string/lower-case filter-text) #"\s+")]
+      (filter (fn [row]
+                (some (partial matches-filter-text filter-tokens)
+                      (row->text row columns)))
+              data))))
 
 (defn- sort-rows [{:keys [sort-column sort-order]} columns data]
   (if sort-column
