@@ -38,7 +38,7 @@
 (defn- ensure-sequence [input]
   ;;input may or maynot be a sequence, make it a sequence
   (cond (sequential? input) input
-        (or (= input "") (nil? input)) []
+        (empty? input) []
         :else [input]))
 
 (react/defc- DiscoverabilityPage
