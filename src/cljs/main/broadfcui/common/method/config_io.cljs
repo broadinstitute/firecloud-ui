@@ -94,7 +94,10 @@
                                           {:multiple false :show-counts? false :allow-clear? true
                                            :minimum-input-length 0
                                            :tags value
-                                           :data (concat ["" value] data) ;; empty option allows for initial empty selection
+                                           ;; "" allows for initial empty selection
+                                           ;; `value` ensures that custom selections are initially selected when going to edit
+                                           ;; `distinct` because having multiple copies of the same screws things up
+                                           :data (distinct (concat ["" value] data))
                                            :placeholder "Select a value"
                                            :on-change (fn [value]
                                                         (swap! locals update io-key assoc (keyword name)
