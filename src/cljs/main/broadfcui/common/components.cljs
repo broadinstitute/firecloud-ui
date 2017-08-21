@@ -196,17 +196,17 @@
                        :padding "1rem"}}
          (this :render-details entity)
          (when-not redacted?
-         [:div {:style {:paddingTop "0.5rem"}}
-          [:span {:style {:fontWeight 500 :marginRight "1rem"}} (if config? "Referenced Method:" "WDL:")]
-          (links/create-internal {:onClick #(swap! state update :payload-expanded not)}
-                                 (if (:payload-expanded @state) "Collapse" "Expand"))]
-         (when (:payload-expanded @state)
-           (if config?
-             [:div {:style {:margin "0.5rem 0 0 1rem"}}
-              (this :render-details (:method entity))
-              [:div {:style {:fontWeight 500 :marginTop "1rem"}} "WDL:"]
-              [CodeMirror {:text (get-in entity [:method :payload])}]]
-             [CodeMirror {:text (:payload entity)}])))])])
+           [:div {:style {:paddingTop "0.5rem"}}
+            [:span {:style {:fontWeight 500 :marginRight "1rem"}} (if config? "Referenced Method:" "WDL:")]
+            (links/create-internal {:onClick #(swap! state update :payload-expanded not)}
+                                   (if (:payload-expanded @state) "Collapse" "Expand"))]
+           (when (:payload-expanded @state)
+             (if config?
+               [:div {:style {:margin "0.5rem 0 0 1rem"}}
+                (this :render-details (:method entity))
+                [:div {:style {:fontWeight 500 :marginTop "1rem"}} "WDL:"]
+                [CodeMirror {:text (get-in entity [:method :payload])}]]
+               [CodeMirror {:text (:payload entity)}])))])])
    :render-details
    (fn [{:keys [props refs]} entity]
      (let [{:keys [editing? redacted?]} props
@@ -230,23 +230,23 @@
         [:div {:style {:display "flex"}}
          [:div {:style {:flex "1 1 50%" :paddingRight "0.5rem"}}
           (when redacted?
-                [:div {:style {:fontWeight 500 :paddingBottom "0.25rem"}}
-                 (icons/icon {:style {:color (:warning-state style/colors)}} :warning) " Snapshot Redacted"])
+            [:div {:style {:fontWeight 500 :paddingBottom "0.25rem"}}
+             (icons/icon {:style {:color (:warning-state style/colors)}} :warning) " Snapshot Redacted"])
           (make-field :namespace "Namespace")
           (make-field :name "Name")
           (make-field :snapshotId "Snapshot ID" :dropdown? true)
           (make-field :entityType "Entity Type")]
          (when-not redacted?
-         [:div {:style {:flex "1 1 50%"}}
-          (make-field :createDate "Created" :render common/format-date)
-          (make-field :managers "Owners" :render (partial clojure.string/join ", ") :wrap? true)
-          (make-field :synopsis "Synopsis")])]
+           [:div {:style {:flex "1 1 50%"}}
+            (make-field :createDate "Created" :render common/format-date)
+            (make-field :managers "Owners" :render (partial clojure.string/join ", ") :wrap? true)
+            (make-field :synopsis "Synopsis")])]
         (when-not redacted?
-        [:div {:style {:fontWeight 500 :padding "0.5rem 0 0.3rem 0"}}
-         "Documentation:"]
-        (if (string/blank? (:documentation entity))
-          [:div {:style {:fontStyle "italic" :fontSize "90%"}} "No documentation provided"]
-          [:div {:style {:fontSize "90%"}} (:documentation entity)]))]))})
+          [:div {:style {:fontWeight 500 :padding "0.5rem 0 0.3rem 0"}}
+           "Documentation:"]
+          (if (string/blank? (:documentation entity))
+            [:div {:style {:fontStyle "italic" :fontSize "90%"}} "No documentation provided"]
+            [:div {:style {:fontSize "90%"}} (:documentation entity)]))]))})
 
 
 (react/defc StackTraceViewer
