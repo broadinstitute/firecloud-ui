@@ -209,21 +209,22 @@
           :style {:content {:paddingLeft "1rem" :paddingRight "1rem"}}
           :body
           {:columns
-           (let [column-data (fn [ws]
-                               (let [no-access? (= (:accessLevel ws) "NO ACCESS")
-                                     tcga? (and no-access? (contains? (map :membersGroupName (get-in ws [:workspace :authorizationDomain]))
-                                                                      config/tcga-authorization-domain))]
-                                 {:workspace-id (select-keys (:workspace ws) [:namespace :name])
-                                  :access-level-index (get access-levels-sortorder (:accessLevel ws))
-                                  :status (:status ws)
-                                  :auth-domain-groups (map :membersGroupName (get-in ws [:workspace :authorizationDomain]))
+           (let [column-data (fn [{:keys [accessLevel workspace status]}]
+                               (let [no-access? (= accessLevel "NO ACCESS")
+                                     auth-domain (:authorizationDomain workspace)
+                                     domain-groups (map :membersGroupName auth-domain)
+                                     tcga? (and no-access? (contains? domain-groups config/tcga-authorization-domain))]
+                                 {:workspace-id (select-keys workspace [:namespace :name])
+                                  :access-level-index (get access-levels-sortorder accessLevel)
+                                  :status status
+                                  :auth-domain-groups domain-groups
                                   :no-access? no-access?
-                                  :access-level (:accessLevel ws)
+                                  :access-level accessLevel
                                   :hover-text (when no-access?
                                                 (if tcga?
                                                   tcga-disabled-text
                                                   non-dbGap-disabled-text))
-                                  :restricted? (seq (get-in ws [:workspace :authorizationDomain]))}))]
+                                  :restricted? (seq auth-domain)}))]
              ;; All of this margining is terrible, but since this table
              ;; will be redesigned soon I'm leaving it as-is.
              [{:id "Status" :header [:span {:style {:marginLeft 7}} "Status"]
