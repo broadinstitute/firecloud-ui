@@ -214,6 +214,7 @@
                                      tcga? (and no-access? (contains? (map :membersGroupName (get-in ws [:workspace :authorizationDomain]))
                                                                       config/tcga-authorization-domain))]
                                  {:workspace-id (select-keys (:workspace ws) [:namespace :name])
+                                  :access-level-index (get access-levels-sortorder (:accessLevel ws))
                                   :status (:status ws)
                                   :auth-domain-groups (map :membersGroupName (get-in ws [:workspace :authorizationDomain]))
                                   :no-access? no-access?
@@ -244,15 +245,16 @@
                             [:span {:style {:fontStyle "italic"}}
                              "No description provided"])])}
               {:id "Last Modified" :header [:span {:style {:marginLeft 14}} "Last Modified"]
+               :filterable? false
                :initial-width 200
                :column-data (comp :lastModified :workspace)
                :render (fn [date]
                          [:div {:style {:paddingLeft 14}} (common/format-date date common/short-date-format)])
                :as-text common/format-date}
               {:id "Access Level" :header [:span {:style {:marginLeft 14}} "Access Level"]
-               :initial-width 132 :resizable? false
+               :initial-width 132 :resizable? false :filterable? false
                :column-data column-data
-               :sort-by (fn [{:keys [access-level]}] (get access-levels-sortorder access-level))
+               :sort-by :access-level-index
                :sort-initial :asc
                :render (fn [{:keys [access-level workspace-id auth-domain-groups]}]
                          [:div {:style {:paddingLeft 14}}
