@@ -66,13 +66,11 @@
        (data-source {:columns (-> props :body :columns)
                      :tab (some-> (:tabs props) :items (get (:selected-tab-index @state)))
                      :query-params query-params
-                     :on-done (fn [{:keys [total-count filtered-count results]}]
+                     :on-done (fn [{:keys [total-count tab-count filtered-rows results]}]
                                 ((@refs "blocker") :hide)
-                                (swap! state assoc
-                                       :total-count total-count
-                                       :filtered-count filtered-count
-                                       :rows results
-                                       :query-params query-params))})))
+                                (swap! state merge
+                                       {:rows results}
+                                       (utils/restructure total-count filtered-rows tab-count query-params)))})))
    :get-default-props
    (fn []
      {:load-on-mount true})
@@ -82,8 +80,8 @@
    :render
    (fn [{:keys [props state]}]
      (let [props (utils/deep-merge default-props props)
-           {:keys [rows column-display filtered-count query-params selected-tab-index]} @state
-           {:keys [toolbar sidebar tabs body paginator style data]} props
+           {:keys [rows column-display tab-count query-params selected-tab-index filtered-rows]} @state
+           {:keys [toolbar sidebar tabs body paginator style]} props
            {:keys [empty-message columns behavior external-query-params on-column-change]} body
            {:keys [fixed-column-count allow-no-sort?]} behavior
            total-count (some :total-count [props @state])
@@ -116,7 +114,7 @@
          sidebar
          [:div {:style (merge {:flex "1 1 0" :overflow "hidden"} (:content style))}
           (when tabs
-            (let [tab-counts (table-utils/compute-tab-counts (utils/restructure tabs columns query-params data))]
+            (let [tab-counts (table-utils/compute-tab-counts {:tabs tabs :rows filtered-rows})]
               [:div {:style (merge {:marginBottom "0.3rem"}
                                    (:style tabs))}
                (map-indexed (fn [index {:keys [label size] :as tab}]
@@ -133,7 +131,7 @@
                                                   (swap! state assoc :selected-tab-index index)
                                                   (when-let [f (:on-tab-selected tabs)]
                                                     (f tab)))}
-                                 ((:render tabs) label (or size tab-count (count data)))]))
+                                 ((:render tabs) label (or size tab-count (count filtered-rows)))]))
                             (:items tabs))]))
           (if (empty? rows)
             (style/create-message-well empty-message)
@@ -148,7 +146,7 @@
             [Paginator
              (merge paginator
                     (select-keys query-params [:rows-per-page :page-number])
-                    (utils/restructure total-count filtered-count)
+                    (utils/restructure total-count tab-count)
                     {:page-selected #(swap! state assoc-in [:query-params :page-number] %)
                      :per-page-selected #(swap! state update :query-params
                                                 merge {:rows-per-page % :page-number 1})})])]]]))

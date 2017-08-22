@@ -79,25 +79,28 @@
   "Create a data source from a local sequence"
   [data & [total-count]]
   (fn [{:keys [columns tab query-params on-done]}]
-    (let [tabbed (apply-tab tab data)
-          filtered (filter-rows query-params columns tabbed)
-          displayed (->> filtered
+    (let [filtered (filter-rows query-params columns data)
+          tabbed (apply-tab tab filtered)
+          displayed (->> tabbed
                          (sort-rows query-params columns)
                          (trim-rows query-params))]
       (on-done
        {:total-count (or total-count (count data))
-        :filtered-count (count filtered)
+        :filtered-rows filtered
+        :tab-count (count tabbed)
         :results displayed}))))
 
 
 (defn compute-tab-counts
   "Compute the number of items in each tab"
-  [{:keys [tabs query-params columns data]}]
+  [{:keys [tabs rows]}]
   (->> (:items tabs)
        ;; Ignore ones that have an explicit size (we wouldn't use the result anyway)
        (remove :size)
        (map (fn [{:keys [predicate label]}]
-              [label (->> data (filter-rows query-params columns) (filter (or predicate identity)) count)]))
+              [label (if predicate
+                       (->> rows (filter predicate) count)
+                       (count rows))]))
        (into {})))
 
 
