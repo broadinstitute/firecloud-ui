@@ -332,8 +332,7 @@
          :on-done (fn [{:keys [success? get-parsed-response]}]
                     (swap! state dissoc :blocker :editing?)
                     (if success?
-                      (do (when (:redacted? @state)
-                            (swap! state assoc :redacted? false))
+                      (do (swap! state dissoc :redacted?)
                           ((:on-rename props) name)
                           (swap! state assoc :loaded-config (get-parsed-response) :blocker nil))
                       (comps/push-error-response (get-parsed-response false))))})))
