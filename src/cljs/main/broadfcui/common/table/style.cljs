@@ -44,3 +44,24 @@
   {:borderRadius "0 8px 8px 0"
    :padding "0.6rem 16px"
    :backgroundColor (:background-light style/colors)})
+
+(def ^:private table-cell-plank-optional-base
+  {:backgroundColor "none"
+   :padding "calc(0.6rem - 2px) 14px"
+   :borderColor (:line-default style/colors)
+   :borderStyle "solid"})
+
+(def table-cell-plank-left-optional
+  (merge table-cell-plank-left
+         table-cell-plank-optional-base
+         {:borderWidth "2px 0 2px 2px"}))
+
+(def table-cell-plank-middle-optional
+  (merge table-cell-plank-middle
+         table-cell-plank-optional-base
+         {:borderWidth "2px 0"}))
+
+(def table-cell-plank-right-optional
+  (merge table-cell-plank-right
+         table-cell-plank-optional-base
+         {:borderWidth "2px 2px 2px 0"}))
