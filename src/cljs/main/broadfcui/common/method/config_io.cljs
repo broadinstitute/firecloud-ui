@@ -117,7 +117,7 @@
                                             :language {:maximumSelected (fn [] "")}
                                             ;; `value` ensures that custom selections are initially selected when going to edit
                                             ;; `distinct` because having multiple copies of the same screws things up
-                                            :data (distinct (if value (concat [value] data) data))
+                                            :data (distinct (if value (conj data value) data))
                                             :placeholder (if optional? "Optional" "Select or enter")
                                             :on-change (fn [value]
                                                          (swap! locals update io-key assoc (keyword name)
@@ -128,7 +128,7 @@
                                               [:span {:style {:color (:text-lighter style/colors)}} "Optional"])))]))}])
                                (when invalid-values
                                  [{:header "Message" :initial-width 400
-                                   :as-text :error-message
+                                   :as-text :error-message :sort-by :text
                                    :render
                                    (fn [{:keys [optional? error-message]}]
                                      (when (and error-message (not optional?))
