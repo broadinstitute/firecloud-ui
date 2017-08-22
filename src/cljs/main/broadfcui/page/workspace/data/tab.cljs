@@ -74,7 +74,7 @@
         (when (:selected-entity @state)
           (let [{:keys [selected-entity-type selected-entity selected-attr-list]} @state]
             [EntityViewer {:workspace-id workspace-id
-                           :entity-type selected-entity-type
+                           :entity-type (name selected-entity-type)
                            :entity-name selected-entity
                            :attr-list selected-attr-list
                            :update-parent-state (partial this :update-state)}]))]))
@@ -144,7 +144,6 @@
        (links/create-internal
         {:onClick (fn [_]
                     (swap! state assoc
-                           :selected-entity-type entity-type
                            :selected-attr-list nil
                            :loading-attributes true
                            :selected-entity entity-name)

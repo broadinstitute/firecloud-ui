@@ -20,7 +20,8 @@
 ;; Define nested default props this way because we need to do a deep-merge,
 ;; instead of React's regular merge.
 (def ^:private default-props
-  {:tabs {:render (fn [label count] (str label " (" count ")"))}
+  {:blocker-delay-time-ms 200
+   :tabs {:render (fn [label count] (str label " (" count ")"))}
    :body {:empty-message "There are no rows to display."
           :external-query-params #{}
           :behavior {:reorderable-columns? true
@@ -92,7 +93,8 @@
                                    (when on-column-change (on-column-change columns))
                                    (swap! state assoc :column-display columns))]
        [:div {:style (merge {:position "relative"} (:main style))}
-        [comps/DelayedBlocker {:ref "blocker" :banner "Loading..."}]
+        [comps/DelayedBlocker {:ref "blocker" :banner "Loading..."
+                               :delay-time-ms (:blocker-delay-time-ms props)}]
         [:div {:style (merge {:marginBottom (if tabs "0.3rem" "1rem")}
                              (:style toolbar))}
          (when (:reorderable-columns? behavior)
