@@ -42,6 +42,12 @@
 (def ^:private all-query-params #{:page-number :rows-per-page :filter-text :sort-column :sort-order})
 
 
+;; !!!!!!!!!!!!!
+;; !! WARNING !!
+;; !!!!!!!!!!!!!
+;;
+;; Tabs are broken for a particular combination of properties. See the documentation for more details.
+;;
 (react/defc Table
   {:reinitialize
    (fn [{:keys [state this]}]
@@ -69,8 +75,9 @@
                      :on-done (fn [{:keys [total-count tab-count filtered-rows results]}]
                                 ((@refs "blocker") :hide)
                                 (swap! state merge
-                                       {:rows results}
-                                       (utils/restructure total-count filtered-rows tab-count query-params)))})))
+                                       {:rows results
+                                        :tab-count (or tab-count total-count)}
+                                       (utils/restructure total-count filtered-rows query-params)))})))
    :get-default-props
    (fn []
      {:load-on-mount true})

@@ -185,7 +185,6 @@
                    (let [{:keys [total results aggregations]} (get-parsed-response)]
                      (swap! state assoc :total total)
                      (on-done {:total-count total
-                               :filtered-count total
                                :results results})
                      (when update-aggregates?
                        ((:update-aggregates props) aggregations)))

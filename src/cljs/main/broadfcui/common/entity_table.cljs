@@ -144,7 +144,7 @@
      (let [{:keys [entity-types]} @state]
        (fn [{:keys [query-params tab on-done]}]
          (if (empty? entity-types)
-           (on-done {:total-count 0 :filtered-count 0 :results []})
+           (on-done {:total-count 0 :tab-count 0 :results []})
            (let [{:keys [page-number rows-per-page filter-text sort-column sort-order]} query-params
                  entity-type (:entity-type tab)]
              (endpoints/call-ajax-orch
@@ -161,6 +161,6 @@
                             (let [{:keys [results]
                                    {:keys [unfilteredCount filteredCount]} :resultMetadata} (get-parsed-response)]
                               (on-done {:total-count unfilteredCount
-                                        :filtered-count filteredCount
+                                        :tab-count filteredCount
                                         :results results}))
                             (on-done {:error (str status-text " (" status-code ")")})))}))))))})
