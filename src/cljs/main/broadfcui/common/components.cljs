@@ -746,7 +746,8 @@
        (if (.-loading res)
          "Loading..."
          (let [show-counts? (:show-counts? props)
-               tag-text (.createTextNode js/document (or (.-tag res) (.-text res)))
+               ;; Insert zero-width space after underscore to allow line wrapping
+               tag-text (.createTextNode js/document (string/replace-all (or (.-tag res) (.-text res)) #"\_" "_\u200b"))
                element (.createElement js/document "div")]
            (when show-counts?
              (react/render (react/create-element (style/render-count (or (.-count res) 0))) element))

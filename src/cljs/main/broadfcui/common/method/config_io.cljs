@@ -12,11 +12,6 @@
    ))
 
 
-(defn- process-name [{:keys [name] :as item}]
-  (let [[task variable] (take-last 2 (string/split name "."))]
-    (merge item (utils/restructure task variable))))
-
-
 (defn- process-type [string]
   (re-find #"[^?]+" string))
 
@@ -39,13 +34,11 @@
    :render
    (fn [{:keys [this]}]
      [:div {}
-      [Collapse
-       {:title "Inputs"
-        :contents (this :-render-table :inputs)}]
-      [Collapse
-       {:style {:marginTop "1rem"}
-        :title "Outputs"
-        :contents (this :-render-table :outputs)}]])
+      [Collapse {:title "Inputs"
+                 :contents (this :-render-table :inputs)}]
+      [Collapse {:style {:marginTop "1rem"}
+                 :title "Outputs"
+                 :contents (this :-render-table :outputs)}]])
    :-render-table
    (fn [{:keys [props state locals]} io-key]
      (let [{:keys [inputs-outputs values invalid-values data]} props
@@ -57,7 +50,16 @@
                           "{padding-right: 8px}"
                           "#" id " .select2-container--default .select2-selection--single .select2-selection__arrow"
                           "{display: none}")])
-        [Table {:data (map process-name (io-key inputs-outputs))
+        [Table {:data (->> (io-key inputs-outputs)
+                           (map (fn [{:keys [name inputType outputType optional] :as item}]
+                                  (let [[task variable] (take-last 2 (string/split name "."))
+                                        k-name (keyword name)
+                                        error-message (get-in invalid-values [io-key k-name])
+                                        value (get-in values [io-key k-name])]
+                                    (merge (dissoc item :inputType :outputType :optional)
+                                           (utils/restructure task variable error-message value)
+                                           {:type (process-type (or inputType outputType))
+                                            :optional? optional})))))
                 :body {:empty-message (str "No " (string/capitalize (name io-key)))
                        :style (merge
                                table-style/table-light
@@ -72,18 +74,15 @@
                                  :render (fn [task]
                                            [:div {:style (clip table-style/table-cell-plank-left)} task])}
                                 {:header "Variable" :initial-width 200
-                                 :as-text (fn [{:keys [variable optional]}]
-                                            (str variable (when optional " (optional)")))
+                                 :as-text (fn [{:keys [variable optional?]}]
+                                            (str variable (when optional? " (optional)")))
                                  :sort-by :text
-                                 :render (fn [{:keys [variable optional]}]
-                                           [:div {:style (clip (if optional
+                                 :render (fn [{:keys [variable optional?]}]
+                                           [:div {:style (clip (if optional?
                                                                  (merge table-style/table-cell-plank-middle
                                                                         table-style/table-cell-optional)
                                                                  table-style/table-cell-plank-middle))} variable])}
                                 {:header "Type" :initial-width 100
-                                 :column-data (fn [{:keys [inputType outputType optional]}]
-                                                {:type (process-type (or inputType outputType))
-                                                 :optional? optional})
                                  :sort-by :type
                                  :as-text (fn [{:keys [type optional?]}]
                                             (str type (when optional? " (optional)")))
@@ -96,11 +95,10 @@
                                     type])}]
                                (when values
                                  [{:header "Attribute" :initial-width 200
-                                   :as-text (fn [{:keys [name]}] (get (io-key values) (keyword name)))
+                                   :as-text :value
                                    :sort-by :text
                                    :render
-                                   (fn [{:keys [name optional]}]
-                                     (let [value (get (io-key values) (keyword name))]
+                                   (fn [{:keys [name value optional?]}]
                                        [:div {:style (clip table-style/default-cell-left)}
                                         (if editing?
                                           ;; (ab)using TagAutocomplete instead of Typeahead because it
@@ -113,24 +111,23 @@
                                             ;; `value` ensures that custom selections are initially selected when going to edit
                                             ;; `distinct` because having multiple copies of the same screws things up
                                             :data (distinct (concat ["" value] data))
-                                            :placeholder (if optional "Optional" "Select or enter")
+                                            :placeholder (if optional? "Optional" "Select or enter")
                                             :on-change (fn [value]
                                                          (swap! locals update io-key assoc (keyword name)
                                                                 (if (empty? value) "" value)))}]
                                           (if-not (string/blank? value)
-                                            [:span {:style (when optional table-style/table-cell-optional)} value]
-                                            (when optional
-                                              [:span {:style {:color (:text-lighter style/colors)}} "Optional"])))]))}])
+                                            [:span {:style (when optional? table-style/table-cell-optional)} value]
+                                            (when optional?
+                                              [:span {:style {:color (:text-lighter style/colors)}} "Optional"])))])}])
                                (when invalid-values
                                  [{:header "Message" :initial-width 400
-                                   :column-data (fn [{:keys [name]}]
-                                                  (get (io-key invalid-values) (keyword name)))
+                                   :as-text :error-message
                                    :render
-                                   (fn [message]
-                                     (when message
+                                   (fn [{:keys [optional? error-message]}]
+                                     (when (and error-message (not optional?))
                                        [:div {:style (clip table-style/default-cell-left)}
                                         (icons/icon {:style {:marginRight "0.5rem"
                                                              :color (:exception-state style/colors)}}
                                                     :error)
-                                        message]))}]))}
+                                        error-message]))}]))}
                 :paginator :none}]]))})
